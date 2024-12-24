@@ -1,11 +1,13 @@
 import { faker } from "@faker-js/faker";
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
+import { db } from "~/kysely/database";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { seedCommunity } from "../seed/seedCommunity";
 
-export const seedArcadia = (communityId?: CommunitiesId) => {
+export const seedArcadia = async (communityId?: CommunitiesId) => {
 	const articleSeed = (number = 1_000, asRelation = false) =>
 		Array.from({ length: number }, (_, idx) => {
 			const pub = {
@@ -21,7 +23,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					Abstract: faker.lorem.paragraphs(2),
 					License: "CC-BY 4.0",
 					PubContent: "Some content",
-					DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+					URL: "https://www.pubpub.org",
 					"Inline Citation Style": "Author Year",
 					"Citation Style": "APA 7",
 				},
@@ -100,7 +102,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 								pubType: "ExternalBook",
 								values: {
 									Title: "A Great Book",
-									DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+									DOI: "10.82234/arcadia-ad7f-7a6d",
 									Year: "2022",
 								},
 							},
@@ -112,7 +114,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 								pubType: "ExternalJournalArticle",
 								values: {
 									Title: "A Great Journal Article",
-									DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+									DOI: "10.82234/arcadia-ad7f-7a6d",
 									Year: "2022",
 								},
 							},
@@ -132,7 +134,11 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 			};
 		}) as any;
 
-	return seedCommunity(
+	const articleId2 = crypto.randomUUID();
+	const articleId = crypto.randomUUID();
+	const authorId = crypto.randomUUID();
+
+	const seed = await seedCommunity(
 		{
 			community: {
 				id: communityId,
@@ -152,7 +158,9 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 				Abstract: { schemaName: CoreSchemaType.String },
 				License: { schemaName: CoreSchemaType.String },
 				PubContent: { schemaName: CoreSchemaType.String },
-				DOI: { schemaName: CoreSchemaType.URL },
+				DOI: { schemaName: CoreSchemaType.String },
+				"DOI Suffix": { schemaName: CoreSchemaType.String },
+				URL: { schemaName: CoreSchemaType.URL },
 				"PDF Download Displayname": { schemaName: CoreSchemaType.String },
 				PDF: { schemaName: CoreSchemaType.FileUpload },
 				"Pub Image": { schemaName: CoreSchemaType.FileUpload },
@@ -313,6 +321,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					"Last Edited": { isTitle: false },
 					"Publication Date": { isTitle: false },
 					DOI: { isTitle: false },
+					"DOI Suffix": { isTitle: false },
+					URL: { isTitle: false },
 					PubContent: { isTitle: false },
 					License: { isTitle: false },
 					Description: { isTitle: false },
@@ -343,6 +353,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					ORCiD: { isTitle: false },
 					Affiliation: { isTitle: false },
 					MemberId: { isTitle: false },
+					Articles: { isTitle: false },
 				},
 				Editor: {
 					Name: { isTitle: true },
@@ -379,6 +390,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 					members: { "arcadia-user-1": MemberRole.editor },
 				},
 				// these stages are mostly here to provide slightly easier grouping of the relevant pubs
+				Authors: {},
 				Sites: {},
 				Journals: {},
 				Issues: {},
@@ -501,7 +513,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 									stage: "Journals",
 									values: {
 										Title: "Arcadia Research",
-										DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+										DOI: "10.82234/arcadia-ad7f-7a6d",
 										ISSN: "2998-4084",
 										Slug: "arcadia-research",
 									},
@@ -516,7 +528,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 													values: {
 														Title: "Issue 1",
 														ISSN: "2998-4084",
-														DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+														DOI: "10.82234/arcadia-ad7f-7a6d",
 														Description: "A cool description",
 													},
 													relatedPubs: {
@@ -525,6 +537,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																value: null,
 																alsoAsChild: true,
 																pub: {
+																	id: articleId,
 																	pubType: "Journal Article",
 																	stage: "Articles",
 																	values: {
@@ -539,7 +552,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																		Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
 																		License: "CC-BY 4.0",
 																		PubContent: "Some content",
-																		DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+																		DOI: "10.82234/arcadia-14b2-6f27",
+																		URL: "https://www.pubpub.org",
 																		"Inline Citation Style":
 																			"Author Year",
 																		"Citation Style": "APA 7",
@@ -565,6 +579,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																			{
 																				value: "isCommentOn",
 																				pub: {
+																					id: articleId2,
 																					pubType:
 																						"Journal Article",
 																					values: {
@@ -579,6 +594,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																				value: "Editing & Draft Preparation",
 																				alsoAsChild: true,
 																				pub: {
+																					id: authorId,
+																					stage: "Authors",
 																					pubType:
 																						"Author",
 																					values: {
@@ -586,6 +603,20 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						ORCiD: "https://orcid.org/0000-0000-0000-0000",
 																						Affiliation:
 																							"University of Somewhere",
+																						// We can't do this because of foreign key constraints even though we know the IDs in advance
+																						// These values are explicitly added after the seed function runs
+																						// Articles: [
+																						// 	{
+																						// 		relatedPubId:
+																						// 			articleId,
+																						// 		value: "Edited",
+																						// 	},
+																						// 	{
+																						// 		value: "Wrote",
+																						// 		relatedPubId:
+																						// 			articleId2,
+																						// 	},
+																						// ],
 																					},
 																				},
 																			},
@@ -654,7 +685,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						"ExternalBook",
 																					values: {
 																						Title: "A Great Book",
-																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/arcadia-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
@@ -667,7 +698,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						"ExternalJournalArticle",
 																					values: {
 																						Title: "A Great Journal Article",
-																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/arcadia-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
@@ -693,8 +724,31 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 		},
 		{
 			randomSlug: false,
-			withApiToken: "00000000-0000-0000-0000-000000000000.xxxxxxxxxxxxxxxx.",
+			withApiToken: "00000000-0000-0000-0000-000000000000.xxxxxxxxxxxxxxxx",
 			parallelPubs: true,
 		}
 	);
+
+	// Give jimothy a circular reference
+	await db
+		.insertInto("pub_values")
+		.values([
+			{
+				pubId: authorId as PubsId,
+				relatedPubId: articleId as PubsId,
+				value: '"Edited"',
+				fieldId: seed.pubFields.Articles.id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			},
+			{
+				pubId: authorId as PubsId,
+				value: '"Wrote"',
+				relatedPubId: articleId2 as PubsId,
+				fieldId: seed.pubFields.Articles.id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			},
+		])
+		.execute();
+
+	return seed;
 };

@@ -58,5 +58,6 @@ export const resolveWithPubfields = <T extends Record<string, any>>(
 	return {
 		...rest,
 		...pv,
+		pubFields,
 	};
 };

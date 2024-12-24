@@ -188,9 +188,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 		let v6Pub: { id: string };
 
+		const v6PubId = pub.values.find((value) => value.fieldSlug === corePubFields.v6PubId.slug)
+			?.value as string;
 		// Fetch the pub if the v7 pub already had a v6 pub id
-		if (pub.values[corePubFields.v6PubId.slug]) {
-			const v6PubId = pub.values[corePubFields.v6PubId.slug] as string;
+		if (v6PubId) {
 			const v6PubResult = await getV6Pub(v6PubId, config.communitySlug, config.authToken);
 
 			if (isClientExceptionOptions(v6PubResult)) {

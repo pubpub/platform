@@ -44,7 +44,7 @@ import type { MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
-import { mergeSlugsWithFields } from "../fields/utils";
+import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -436,27 +436,30 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 /**
  * @throws
  */
-export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>({
-	body,
-	communityId,
-	parent,
-	lastModifiedBy,
-	...options
-}:
-	| {
-			body: Body;
-			trx?: Kysely<Database>;
-			communityId: CommunitiesId;
-			parent?: never;
-			lastModifiedBy: LastModifiedBy;
-	  }
-	| {
-			body: MaybeHas<Body, "stageId">;
-			trx?: Kysely<Database>;
-			communityId: CommunitiesId;
-			parent: { id: PubsId };
-			lastModifiedBy: LastModifiedBy;
-	  }): Promise<ProcessedPub> => {
+export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>(
+	{
+		body,
+		communityId,
+		parent,
+		lastModifiedBy,
+		...options
+	}:
+		| {
+				body: Body;
+				trx?: Kysely<Database>;
+				communityId: CommunitiesId;
+				parent?: never;
+				lastModifiedBy: LastModifiedBy;
+		  }
+		| {
+				body: MaybeHas<Body, "stageId">;
+				trx?: Kysely<Database>;
+				communityId: CommunitiesId;
+				parent: { id: PubsId };
+				lastModifiedBy: LastModifiedBy;
+		  },
+	depth = 0
+): Promise<ProcessedPub> => {
 	const trx = options?.trx ?? db;
 
 	const parentId = parent?.id ?? body.parentId;
@@ -564,21 +567,25 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: [],
+				depth,
 			} satisfies ProcessedPub;
 		}
 
 		// TODO: could be parallelized with relatedPubs if we want to
 		const children = await Promise.all(
 			body.children?.map(async (child) => {
-				const childPub = await createPubRecursiveNew({
-					body: child,
-					communityId,
-					parent: {
-						id: newPub.id,
+				const childPub = await createPubRecursiveNew(
+					{
+						body: child,
+						communityId,
+						parent: {
+							id: newPub.id,
+						},
+						trx,
+						lastModifiedBy,
 					},
-					trx,
-					lastModifiedBy,
-				});
+					depth + 1
+				);
 				return childPub;
 			}) ?? []
 		);
@@ -589,29 +596,35 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: children.length ? children : [],
+				depth,
 			} satisfies ProcessedPub;
 		}
 
 		// this fn itself calls createPubRecursiveNew, be mindful of infinite loops
-		const relatedPubs = await upsertPubRelations({
-			pubId: newPub.id,
-			relations: Object.entries(body.relatedPubs).flatMap(([fieldSlug, relatedPubBodies]) =>
-				relatedPubBodies.map(({ pub, value }) => ({
-					slug: fieldSlug,
-					value,
-					relatedPub: pub,
-				}))
-			),
-			communityId,
-			lastModifiedBy,
-			trx,
-		});
+		const relatedPubs = await upsertPubRelations(
+			{
+				pubId: newPub.id,
+				relations: Object.entries(body.relatedPubs).flatMap(
+					([fieldSlug, relatedPubBodies]) =>
+						relatedPubBodies.map(({ pub, value }) => ({
+							slug: fieldSlug,
+							value,
+							relatedPub: pub,
+						}))
+				),
+				communityId,
+				lastModifiedBy,
+				trx,
+			},
+			depth
+		);
 
 		return {
 			...pub,
 			stageId: createdStageId,
 			values: [...pubValues, ...relatedPubs],
 			children,
+			depth,
 		} as ProcessedPub;
 	});
 
@@ -712,30 +725,6 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
-/**
- * This should maybe go somewhere else
- */
-const hydratePubValues = <T extends { slug: string; value: unknown; schemaName: CoreSchemaType }>(
-	pubValues: T[]
-) => {
-	return pubValues.map(({ value, schemaName, slug, ...rest }) => {
-		if (schemaName === CoreSchemaType.DateTime) {
-			try {
-				value = new Date(value as string);
-			} catch {
-				throw new BadRequestError(`Invalid date value for field ${slug}`);
-			}
-		}
-
-		return {
-			slug,
-			schemaName,
-			value,
-			...rest,
-		};
-	});
-};
-
 const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
@@ -798,19 +787,22 @@ export const normalizeRelationValues = (
  * Note: it is the responsibility of the caller to ensure that the pub exists
  *
  */
-export const upsertPubRelations = async ({
-	pubId,
-	relations,
-	communityId,
-	lastModifiedBy,
-	trx = db,
-}: {
-	pubId: PubsId;
-	relations: AddPubRelationsInput[];
-	communityId: CommunitiesId;
-	lastModifiedBy: LastModifiedBy;
-	trx?: typeof db;
-}): Promise<ProcessedPub["values"]> => {
+export const upsertPubRelations = async (
+	{
+		pubId,
+		relations,
+		communityId,
+		lastModifiedBy,
+		trx = db,
+	}: {
+		pubId: PubsId;
+		relations: AddPubRelationsInput[];
+		communityId: CommunitiesId;
+		lastModifiedBy: LastModifiedBy;
+		trx?: typeof db;
+	},
+	depth = 0
+): Promise<ProcessedPub["values"]> => {
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
 	const validatedRelationValues = await validatePubValues({
@@ -847,12 +839,15 @@ export const upsertPubRelations = async ({
 	const pubRelations = await maybeWithTrx(trx, async (trx) => {
 		const newlyCreatedPubs = await Promise.all(
 			newPubs.map((pub) =>
-				createPubRecursiveNew({
-					trx,
-					communityId,
-					body: pub.relatedPub,
-					lastModifiedBy: lastModifiedBy,
-				})
+				createPubRecursiveNew(
+					{
+						trx,
+						communityId,
+						body: pub.relatedPub,
+						lastModifiedBy: lastModifiedBy,
+					},
+					depth + 1
+				)
 			)
 		);
 
@@ -1776,9 +1771,9 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 	const processedPubsById = new Map<PubsId, ProcessedPub<Options>>();
 
 	function processPub(pubId: PubsId, depth: number): ProcessedPub<Options> | undefined {
-		// if (depth < 0) {
-		// 	return processedPubsById.get(pubId);
-		// }
+		if (depth < 0) {
+			return processedPubsById.get(pubId);
+		}
 
 		const alreadyProcessedPub = processedPubsById.get(pubId);
 		if (alreadyProcessedPub) {
@@ -1805,7 +1800,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			?.map((child) => processPub(child.id, depth - 1))
 			?.filter((child) => !!child);
 
-		const { depth: _, isCycle, values, path, ...usefulProcessedPubColumns } = unprocessedPub;
+		const { values, path, ...usefulProcessedPubColumns } = unprocessedPub;
 
 		const processedPub = {
 			...usefulProcessedPubColumns,
@@ -1869,3 +1864,10 @@ export const getPubsCount = async (props: {
 
 	return pubs.count;
 };
+export type FullProcessedPub = ProcessedPub<{
+	withRelatedPubs: true;
+	withChildren: true;
+	withMembers: true;
+	withPubType: true;
+	withStage: true;
+}>;

@@ -31,6 +31,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				"ok?": { schemaName: CoreSchemaType.Boolean },
 				File: { schemaName: CoreSchemaType.FileUpload },
 				Confidence: { schemaName: CoreSchemaType.Vector3 },
+				"Published At": { schemaName: CoreSchemaType.DateTime },
 			},
 			pubTypes: {
 				Submission: {
@@ -42,6 +43,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					"ok?": { isTitle: false },
 					File: { isTitle: false },
 					Confidence: { isTitle: false },
+					"Published At": { isTitle: false },
 				},
 				Evaluation: {
 					Title: { isTitle: true },
@@ -52,6 +54,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					"ok?": { isTitle: false },
 					File: { isTitle: false },
 					Confidence: { isTitle: false },
+					"Published At": { isTitle: false },
 				},
 			},
 			users: {
@@ -72,19 +75,21 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					assignee: "new",
 					pubType: "Submission",
 					values: {
-						Title: "Evaluation of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present",
+						Title: "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present",
 						Content: "New Pub 1 Content",
 						Email: "new@pubpub.org",
 						URL: "https://pubpub.org",
 						MemberID: memberId,
 						"ok?": true,
 						Confidence: [0, 0, 0],
+						"Published At": new Date(),
 					},
 					children: [
 						{
 							pubType: "Evaluation",
 							values: {
-								Title: "Evaluation of Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present",
+								Title: "Evaluation of Ancient Giants",
+								"Published At": new Date(),
 							},
 						},
 					],
@@ -141,7 +146,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 							config: {
 								subject: "HELLO :recipientName REVIEW OUR STUFF PLEASE",
 								recipient: memberId,
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}`,
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
 							},
 							name: "Send Review email",
 						},
@@ -179,6 +184,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 		{
 			// this makes sure that the slug is `croccroc`, not `croccroc-${new Date().toISOString()}
 			randomSlug: false,
+			withApiToken: "11111111-1111-1111-1111-111111111111.yyyyyyyyyyyyyyyy",
 		}
 	);
 }

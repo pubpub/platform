@@ -502,6 +502,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				"parentId",
 				"title",
 				"communityId",
+				"depth",
+				"isCycle",
 			].sort()
 		);
 	});

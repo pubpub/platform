@@ -7,7 +7,10 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { action } from "./action";
-import type { RenderWithPubPub } from "~/lib/server/render/pub/renderWithPubUtils";
+import type {
+	RenderWithPubContext,
+	RenderWithPubPub,
+} from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -64,7 +67,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			recipient,
 			pub,
 			parentPub,
-		};
+		} as RenderWithPubContext;
 
 		const html = await renderMarkdownWithPub(
 			args?.body ?? config.body,

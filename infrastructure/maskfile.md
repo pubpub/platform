@@ -1,7 +1,7 @@
 # Infrastructure operations for pubpub v7
 
 This "Maskfile" is the code AND documentation for common operations
-workflows in this `infrastructure` directory. The commands declared 
+workflows in this `infrastructure` directory. The commands declared
 here are automatically available as CLI commands when running [`mask`](https://github.com/jacobdeichert/mask)
 in this directory.
 
@@ -10,7 +10,7 @@ To get started, install important command line tools:
 `brew bundle`
 
 Then you can call `mask --help` to see these commands in the
-familiar command line help format. You can also modify the 
+familiar command line help format. You can also modify the
 invocations here when the required script changes, or copy & paste
 the command parts as needed.
 
@@ -153,7 +153,7 @@ is not assumed all developers have access to this. To run these commands, set
 ( cd ..
     if [[ -z $image_tag_override ]]; then
         echo "Deploying HEAD ($(git rev-parse --dirty HEAD)) ... ensure this tag has been pushed!"
-    else 
+    else
         echo "Deploying override ($image_tag_override) ... ensure this tag has been pushed!"
     fi
 
@@ -203,7 +203,7 @@ is not assumed all developers have access to this. To run these commands, set
 ( cd ..
     if [[ -z $image_tag_override ]]; then
         echo "Deploying HEAD ($(git rev-parse --dirty HEAD)) ... ensure this tag has been pushed!"
-    else 
+    else
         echo "Deploying override ($image_tag_override) ... ensure this tag has been pushed!"
     fi
 
