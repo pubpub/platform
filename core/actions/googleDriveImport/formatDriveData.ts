@@ -36,13 +36,12 @@ export type FormattedDriveData = {
 	discussions: { id: PubsId; values: {} }[];
 };
 
-export const formatDriveData = async (
-	dataFromDrive: DriveData,
-	communitySlug: string
-): Promise<FormattedDriveData> => {
-	const formattedPubHtml = await rehype()
+const processHtml = async (html: string): Promise<string> => {
+	const result = await rehype()
 		.use(structureFormatting)
 		.use(removeVerboseFormatting)
+		.use(removeGoogleLinkForwards)
+		.use(processLocalLinks)
 		.use(structureImages)
 		.use(structureVideos)
 		.use(structureAudio)
@@ -57,7 +56,15 @@ export const formatDriveData = async (
 		.use(structureReferences)
 		.use(structureFootnotes)
 		.use(rehypeFormat)
-		.process(dataFromDrive.pubHtml);
+		.process(html);
+	return String(result);
+};
+
+export const formatDriveData = async (
+	dataFromDrive: DriveData,
+	communitySlug: string
+): Promise<FormattedDriveData> => {
+	const formattedPubHtml = await processHtml(dataFromDrive.pubHtml);
 
 	const releases: any = dataFromDrive.legacyData?.releases || [];
 	const findDescription = (timestamp: string) => {
@@ -69,26 +76,7 @@ export const formatDriveData = async (
 	};
 
 	for (const version of dataFromDrive.versions) {
-		const processedHtml = await rehype()
-			.use(structureFormatting)
-			.use(removeVerboseFormatting)
-			.use(removeGoogleLinkForwards)
-			.use(processLocalLinks)
-			.use(structureImages)
-			.use(structureVideos)
-			.use(structureAudio)
-			.use(structureFiles)
-			.use(structureIframes)
-			.use(structureBlockMath)
-			.use(structureInlineMath)
-			.use(structureBlockquote)
-			.use(structureCodeBlock)
-			.use(structureInlineCode)
-			.use(structureAnchors)
-			.use(structureReferences)
-			.use(structureFootnotes)
-			.use(rehypeFormat)
-			.process(version.html);
+		const processedHtml = await processHtml(version.html);
 		version.html = String(processedHtml);
 	}
 	const versions = dataFromDrive.versions.map((version) => {
