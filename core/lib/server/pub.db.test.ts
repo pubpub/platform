@@ -8,7 +8,6 @@ import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { createLastModifiedBy } from "../lastModifiedBy";
-import { removeAllPubRelationsBySlugs } from "./pub";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -489,6 +488,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				"parentId",
 				"title",
 				"communityId",
+				"depth",
+				"isCycle",
 			].sort()
 		);
 	});
