@@ -117,8 +117,6 @@ export const run = defineRun<typeof action>(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
 
-					console.log("FOODATE", fooDateField, "BARDATE", barDateField);
-
 					const fooDate: Date = fooDateField
 						? fooDateField.value
 						: foo.relatedPub!.createdAt;
