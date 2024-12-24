@@ -1,3 +1,5 @@
+import { ReplicationStatus } from "@aws-sdk/client-s3";
+
 import type { StagesId } from "db/public";
 import { logger } from "logger";
 
@@ -36,41 +38,52 @@ export const run = defineRun<typeof action>(
 			/* If the main doc is updated, make a new version */
 
 			/* MIGRATION */
-			/* Check for existence of legacy ids in Platform */
-			const legacyIds = formattedData.discussions.map((pub) => pub.id);
-			const legacyVersionDates = formattedData.versions.map(
-				(pub) => pub[`${communitySlug}:publication-date`]
-			);
-			const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
-			const existingPubIds = existingPubs.map((pub) => pub.id);
 
-			// const nonExistingVersionRelations = nonExistingVersions.map((version) => {
-			// 	return { relatedPub: { ...version }, value: null, slug: "arcadia-research:versions" };
-			// });
+			// Check for legacy discussion IDs on platform
+			const legacyDiscussionIds = formattedData.discussions.map((pub) => pub.id);
+			const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId);
+			const existingDiscussionPubIds = existingPubs.map((pub) => pub.id);
 
-			// if it exists on the pub already, update it
+			// Versions don't have IDs so we compare timestamps
+			const existingVersionDates = pub.values
+				.filter(
+					(values) =>
+						values.fieldSlug === `${communitySlug}:versions` &&
+						values.relatedPubId &&
+						values.relatedPub
+				)
+				.map((values) => {
+					const publicationDate: Date = values.relatedPub!.values.filter(
+						(value) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0].value as Date;
+					return publicationDate.toISOString();
+				});
+
 			const pubTypes = await getPubTypesForCommunity(communityId);
 			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
 			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
 
-			upsertPubRelations({
-				pubId: pub.id,
-				communityId,
-				lastModifiedBy,
-				relations: [
-					...formattedData.discussions
-						.filter((discussion) => !existingPubIds.includes(discussion.id))
-						.map((discussion) => {
-							return {
-								slug: `${communitySlug}:discussions`,
-								value: null,
-								relatedPub: {
-									pubTypeId: DiscussionType?.id || "",
-									...discussion,
-								},
-							};
-						}),
-					...formattedData.versions.map((version) => {
+			const relations = [
+				...formattedData.discussions
+					.filter((discussion) => !existingDiscussionPubIds.includes(discussion.id))
+					.map((discussion) => {
+						return {
+							slug: `${communitySlug}:discussions`,
+							value: null,
+							relatedPub: {
+								pubTypeId: DiscussionType?.id || "",
+								...discussion,
+							},
+						};
+					}),
+				...formattedData.versions
+					.filter(
+						(version) =>
+							!existingVersionDates.includes(
+								version[`${communitySlug}:publication-date`]
+							)
+					)
+					.map((version) => {
 						return {
 							slug: `${communitySlug}:versions`,
 							value: null,
@@ -82,20 +95,15 @@ export const run = defineRun<typeof action>(
 							},
 						};
 					}),
-					// { relatedPubId: , value: null },
-					// {
-					// 	slug: 'arcadia:discussions',
-					// 	value: null,
-					// 	relatedPub: {
-					// 		/* createPubRecursive body */
-					// 		/* This is my discussion */
-					// 		// {
-					// 		// 	'arcadia-science:timestamp':
-					// 		// }
-					// 	},
-					// },
-				],
-			});
+			];
+			if (relations.length > 0) {
+				upsertPubRelations({
+					pubId: pub.id,
+					communityId,
+					lastModifiedBy,
+					relations,
+				});
+			}
 
 			return {
 				success: true,
