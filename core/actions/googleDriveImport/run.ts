@@ -1,6 +1,7 @@
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
 import { action } from "./action";
 import { formatDriveData } from "./formatDriveData";
@@ -14,6 +15,7 @@ export const run = defineRun<typeof action>(
 		};
 
 		try {
+			const communitySlug = getCommunitySlug();
 			/*
 				- Get folder Id from inputGCLOUD_KEY_FILE
 				- Pull html content and metadata content from folder
@@ -27,7 +29,7 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			const formattedData = await formatDriveData(dataFromDrive);
+			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
 
 			/* NON-MIGRATION */
 			/* If the main doc is updated, make a new version */
@@ -57,7 +59,7 @@ export const run = defineRun<typeof action>(
 				relations: [
 					...formattedData.discussions.map((discussion) => {
 						return {
-							slug: "arcadia:discussions",
+							slug: `${communitySlug}:discussions`,
 							value: null,
 							relatedPub: {
 								pubTypeId: DiscussionType?.id || "",
@@ -67,7 +69,7 @@ export const run = defineRun<typeof action>(
 					}),
 					...formattedData.versions.map((version) => {
 						return {
-							slug: "arcadia:versions",
+							slug: `${communitySlug}:versions`,
 							value: null,
 							relatedPub: {
 								pubTypeId: VersionType?.id || "",

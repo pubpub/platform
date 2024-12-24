@@ -27,14 +27,17 @@ import {
 export type FormattedDriveData = {
 	pubHtml: string;
 	versions: {
-		"arcadia:description": string;
-		"arcadia:publication-date": string;
-		"arcadia:content": string;
+		[description: `${string}:description`]: string;
+		[publicationDate: `${string}:publication-date`]: string;
+		[content: `${string}:content`]: string;
 	}[];
 	discussions: { id: string; values: {} }[];
 };
 
-export const formatDriveData = async (dataFromDrive: DriveData): Promise<FormattedDriveData> => {
+export const formatDriveData = async (
+	dataFromDrive: DriveData,
+	communitySlug: string
+): Promise<FormattedDriveData> => {
 	const formattedPubHtml = await rehype()
 		.use(structureFormatting)
 		.use(removeVerboseFormatting)
@@ -89,9 +92,9 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 	const versions = dataFromDrive.versions.map((version) => {
 		const { timestamp, html } = version;
 		const outputVersion: any = {
-			"arcadia:description": findDescription(timestamp),
-			"arcadia:publication-date": timestamp,
-			"arcadia:content": html,
+			[`${communitySlug}:description`]: findDescription(timestamp),
+			[`${communitySlug}:publication-date`]: timestamp,
+			[`${communitySlug}:content`]: html,
 		};
 		Object.keys(outputVersion).forEach((key) => {
 			if (outputVersion[key] === undefined || outputVersion[key] === null) {
@@ -118,17 +121,18 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 					const commentObject: any = {
 						id: comment.id,
 						values: {
-							"arcadia:anchor":
+							[`${communitySlug}:anchor`]:
 								index === 0 && discussion.anchors.length
 									? JSON.stringify(discussion.anchors[0])
 									: undefined,
-							"arcadia:content": comment.text,
-							"arcadia:publication-date": comment.createdAt,
-							"arcadia:full-name": comment.author.fullName,
-							"arcadia:orcid": `https://orcid.org/${comment.author.orcid}`,
-							"arcadia:avatar": comment.author.avatar,
-							"arcadia:is-closed": discussion.isClosed,
-							"arcadia:parent-id": index !== 0 ? firstCommentId : undefined,
+							[`${communitySlug}:content`]: comment.text,
+							[`${communitySlug}:publication-date`]: comment.createdAt,
+							[`${communitySlug}:full-name`]: comment.author.fullName,
+							[`${communitySlug}:orcid`]: `https://orcid.org/${comment.author.orcid}`,
+							[`${communitySlug}:avatar`]: comment.author.avatar,
+							[`${communitySlug}:is-closed`]: discussion.isClosed,
+							[`${communitySlug}:parent-id`]:
+								index !== 0 ? firstCommentId : undefined,
 						},
 					};
 
