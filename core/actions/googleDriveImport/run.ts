@@ -1,4 +1,5 @@
 import { ReplicationStatus } from "@aws-sdk/client-s3";
+import { ValuesNode } from "kysely";
 
 import type { StagesId } from "db/public";
 import { logger } from "logger";
@@ -34,10 +35,8 @@ export const run = defineRun<typeof action>(
 			}
 			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
 
-			/* NON-MIGRATION */
-			/* If the main doc is updated, make a new version */
-
 			/* MIGRATION */
+			// TODO: Check and make sure the relations exist, not just the pubs.
 
 			// Check for legacy discussion IDs on platform
 			const legacyDiscussionIds = formattedData.discussions.map((pub) => pub.id);
@@ -53,9 +52,12 @@ export const run = defineRun<typeof action>(
 						values.relatedPub
 				)
 				.map((values) => {
-					const publicationDate: Date = values.relatedPub!.values.filter(
+					const publicationDateField = values.relatedPub!.values.filter(
 						(value) => value.fieldSlug === `${communitySlug}:publication-date`
-					)[0].value as Date;
+					)[0];
+					const publicationDate: Date = publicationDateField
+						? (publicationDateField.value as Date)
+						: new Date(values.relatedPub!.createdAt);
 					return publicationDate.toISOString();
 				});
 
@@ -96,6 +98,57 @@ export const run = defineRun<typeof action>(
 						};
 					}),
 			];
+
+			/* NON-MIGRATION */
+			/* If the main doc is updated, make a new version */
+			const orderedVersions = pub.values
+				.filter(
+					(values) =>
+						values.fieldSlug === `${communitySlug}:versions` &&
+						values.relatedPubId &&
+						values.relatedPub
+				)
+				// TODO: make this work if there's no publication-date field
+				.sort((foo: any, bar: any) => {
+					const fooDateField = foo.relatedPub!.values.filter(
+						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+					const barDateField = foo.relatedPub!.values.filter(
+						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+
+					console.log("FOODATE", fooDateField, "BARDATE", barDateField);
+
+					const fooDate: Date = fooDateField
+						? fooDateField.value
+						: foo.relatedPub!.createdAt;
+					const barDate: Date = barDateField
+						? barDateField.value
+						: foo.relatedPub!.createdAt;
+					return barDate.getTime() - fooDate.getTime();
+				});
+
+			if (orderedVersions[0]) {
+				const latestVersionContent = orderedVersions[0].relatedPub!.values.filter(
+					(value) => value.fieldSlug === `${communitySlug}:content`
+				)[0].value;
+
+				if (latestVersionContent !== formattedData.pubHtml) {
+					relations.push({
+						slug: `${communitySlug}:versions`,
+						value: null,
+						relatedPub: {
+							pubTypeId: VersionType?.id || "",
+							values: {
+								[`${communitySlug}:description`]: "",
+								//[`${communitySlug}:publication-date`]: new Date().toISOString(),
+								[`${communitySlug}:content`]: formattedData.pubHtml,
+							},
+						},
+					});
+				}
+			}
+
 			if (relations.length > 0) {
 				upsertPubRelations({
 					pubId: pub.id,
