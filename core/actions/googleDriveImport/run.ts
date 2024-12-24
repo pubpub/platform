@@ -1,3 +1,4 @@
+import type { StagesId } from "db/public";
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
@@ -36,18 +37,18 @@ export const run = defineRun<typeof action>(
 
 			/* MIGRATION */
 			/* Check for existence of legacy ids in Platform */
-			// const legacyIds = [...versions, ...discussions, ...contributors].map((pub) => pub.id);
-
-			// // Don't need to do Tags, on the pub
-			// // Don't need to do Narratives
-			// // Don't need to do contributors
-
-			// const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
-			// const existingPubIds = existingPubs.map((pub) => pub.id);
+			const legacyIds = formattedData.discussions.map((pub) => pub.id);
+			const legacyVersionDates = formattedData.versions.map(
+				(pub) => pub[`${communitySlug}:publication-date`]
+			);
+			const { pubs: existingPubs } = await doPubsExist(legacyIds, communityId);
+			const existingPubIds = existingPubs.map((pub) => pub.id);
 
 			// const nonExistingVersionRelations = nonExistingVersions.map((version) => {
 			// 	return { relatedPub: { ...version }, value: null, slug: "arcadia-research:versions" };
 			// });
+
+			// if it exists on the pub already, update it
 			const pubTypes = await getPubTypesForCommunity(communityId);
 			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
 			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
@@ -57,16 +58,18 @@ export const run = defineRun<typeof action>(
 				communityId,
 				lastModifiedBy,
 				relations: [
-					...formattedData.discussions.map((discussion) => {
-						return {
-							slug: `${communitySlug}:discussions`,
-							value: null,
-							relatedPub: {
-								pubTypeId: DiscussionType?.id || "",
-								...discussion,
-							},
-						};
-					}),
+					...formattedData.discussions
+						.filter((discussion) => !existingPubIds.includes(discussion.id))
+						.map((discussion) => {
+							return {
+								slug: `${communitySlug}:discussions`,
+								value: null,
+								relatedPub: {
+									pubTypeId: DiscussionType?.id || "",
+									...discussion,
+								},
+							};
+						}),
 					...formattedData.versions.map((version) => {
 						return {
 							slug: `${communitySlug}:versions`,

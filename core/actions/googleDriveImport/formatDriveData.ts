@@ -3,6 +3,8 @@ import { writeFile } from "fs/promises";
 import { rehype } from "rehype";
 import rehypeFormat from "rehype-format";
 
+import type { PubsId } from "db/public";
+
 import type { DriveData } from "./getGDriveFiles";
 import {
 	processLocalLinks,
@@ -31,7 +33,7 @@ export type FormattedDriveData = {
 		[publicationDate: `${string}:publication-date`]: string;
 		[content: `${string}:content`]: string;
 	}[];
-	discussions: { id: string; values: {} }[];
+	discussions: { id: PubsId; values: {} }[];
 };
 
 export const formatDriveData = async (
