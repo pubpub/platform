@@ -33,6 +33,7 @@
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore",
 		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore",
 		"start": "next start",
+		"start:dev": "dotenv -e .env.local -e .env.development pnpm start | pino-pretty",
 		"reset-base": "dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force | pino-pretty",
 		"reset": "pnpm reset-base && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
