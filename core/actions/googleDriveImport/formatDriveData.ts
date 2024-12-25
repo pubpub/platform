@@ -108,6 +108,22 @@ export const formatDriveData = async (
 					if (index === 0) {
 						firstCommentId = comment.id;
 					}
+					// we apparently can't assume the comment.author exists, sometimes it's comment.commenter
+					const commentAuthorName = comment.author
+						? comment.author.fullName
+						: comment.commenter
+							? comment.commenter.name
+							: "";
+					const commentAuthorAvatar = comment.author
+						? comment.author.avatar
+						: comment.commenter
+							? comment.commenter.avatar
+							: "";
+					const commentAuthorORCID = comment.author
+						? comment.author.orcid
+						: comment.commenter
+							? comment.commenter.orcid
+							: "";
 					const commentObject: any = {
 						id: comment.id,
 						values: {
@@ -117,9 +133,9 @@ export const formatDriveData = async (
 									: undefined,
 							[`${communitySlug}:content`]: comment.text,
 							[`${communitySlug}:publication-date`]: comment.createdAt,
-							[`${communitySlug}:full-name`]: comment.author.fullName,
-							[`${communitySlug}:orcid`]: `https://orcid.org/${comment.author.orcid}`,
-							[`${communitySlug}:avatar`]: comment.author.avatar,
+							[`${communitySlug}:full-name`]: commentAuthorName,
+							[`${communitySlug}:orcid`]: `https://orcid.org/${commentAuthorORCID}`,
+							[`${communitySlug}:avatar`]: commentAuthorAvatar,
 							[`${communitySlug}:is-closed`]: discussion.isClosed,
 							[`${communitySlug}:parent-id`]:
 								index !== 0 ? firstCommentId : undefined,
