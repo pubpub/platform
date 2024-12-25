@@ -119,11 +119,12 @@ export const formatDriveData = async (
 						: comment.commenter
 							? comment.commenter.avatar
 							: "";
-					const commentAuthorORCID = comment.author
-						? comment.author.orcid
-						: comment.commenter
-							? comment.commenter.orcid
-							: "";
+					const commentAuthorORCID =
+						comment.author && comment.author.orcid
+							? `https://orcid.org/${comment.author.orcid}`
+							: comment.commenter && comment.commenter.orcid
+								? `https://orcid.org/${comment.commenter.orcid}`
+								: null;
 					const commentObject: any = {
 						id: comment.id,
 						values: {
@@ -134,7 +135,7 @@ export const formatDriveData = async (
 							[`${communitySlug}:content`]: comment.text,
 							[`${communitySlug}:publication-date`]: comment.createdAt,
 							[`${communitySlug}:full-name`]: commentAuthorName,
-							[`${communitySlug}:orcid`]: `https://orcid.org/${commentAuthorORCID}`,
+							[`${communitySlug}:orcid`]: commentAuthorORCID,
 							[`${communitySlug}:avatar`]: commentAuthorAvatar,
 							[`${communitySlug}:is-closed`]: discussion.isClosed,
 							[`${communitySlug}:parent-id`]:
