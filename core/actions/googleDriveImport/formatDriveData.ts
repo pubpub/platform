@@ -113,12 +113,13 @@ export const formatDriveData = async (
 						? comment.author.fullName
 						: comment.commenter
 							? comment.commenter.name
-							: "";
-					const commentAuthorAvatar = comment.author
-						? comment.author.avatar
-						: comment.commenter
-							? comment.commenter.avatar
-							: "";
+							: null;
+					const commentAuthorAvatar =
+						comment.author && comment.author.avatar
+							? comment.author.avatar
+							: comment.commenter && comment.commenter.avatar
+								? comment.commenter.avatar
+								: null;
 					const commentAuthorORCID =
 						comment.author && comment.author.orcid
 							? `https://orcid.org/${comment.author.orcid}`
