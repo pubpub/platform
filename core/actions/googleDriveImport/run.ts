@@ -40,8 +40,11 @@ export const run = defineRun<typeof action>(
 
 			// Check for legacy discussion IDs on platform
 			const legacyDiscussionIds = formattedData.discussions.map((pub) => pub.id);
-			const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId);
-			const existingDiscussionPubIds = existingPubs.map((pub) => pub.id);
+			const existingDiscussionPubIds: any[] = [];
+			if (legacyDiscussionIds.length > 0) {
+				const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId);
+				existingPubs.forEach((pub) => existingDiscussionPubIds.push(pub.id));
+			}
 
 			// Versions don't have IDs so we compare timestamps
 			const existingVersionDates = pub.values
