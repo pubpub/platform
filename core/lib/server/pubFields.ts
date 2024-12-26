@@ -17,7 +17,6 @@ type GetPubFieldsInput =
 	  }
 	| {
 			pubId: PubsId;
-			valuesOnly?: boolean;
 			pubTypeId?: never;
 			communityId: CommunitiesId;
 			includeRelations?: boolean;
@@ -35,8 +34,7 @@ type GetPubFieldsInput =
  * Get pub fields
  *
  * @param props  - When nothing is supplied, return all the pub fields
- * @param props.pubId - When supplied, return all the pub fields associated with the pub through pub values and the pub type of that pub
- * When props.valuesOnly is true, only return the pub fields associated with the pub through pub values, not through the pub type
+ * @param props.pubId - When supplied, return all the pub fields that the pub has values for
  * @param props.pubTypeId - When supplied, return all the pub fields associated with the pub type
  * @param props.communityId - When supplied, return all the pub fields associated with the community ID
  * @param props.slugs - Adds a `where('pub_fields.slug', 'in', props.slugs)` clause
@@ -59,20 +57,6 @@ export const _getPubFields = (props: GetPubFieldsInput) =>
 						.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
 						.innerJoin("pubs", "pubs.id", "pub_values.pubId")
 						.where("pubs.id", "=", props.pubId!)
-						// all the pubfields associated with the pubtype of the pub, as long as we're not asking for values only
-						.$if(props.pubId !== undefined && props.valuesOnly !== true, (qb) =>
-							qb.union(
-								eb
-									.selectFrom("pubs")
-									.innerJoin(
-										"_PubFieldToPubType",
-										"pubs.pubTypeId",
-										"_PubFieldToPubType.B"
-									)
-									.where("pubs.id", "=", props.pubId!)
-									.select("_PubFieldToPubType.A as id")
-							)
-						)
 				)
 				.where("pub_fields.communityId", "=", props.communityId)
 				.$if(Boolean(props.slugs), (qb) => qb.where("pub_fields.slug", "in", props.slugs!))
