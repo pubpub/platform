@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, UsersId } from "db/public";
 import { Button } from "ui/button";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -19,14 +19,15 @@ import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
 
 type Props = {
+	userId: UsersId;
 	communityId: CommunitiesId;
 	pageContext: PageContext;
 };
 
 export async function StageList(props: Props) {
-	const { communityId } = props;
+	const { communityId, userId } = props;
 	const [communityStages, communityMembers] = await Promise.all([
-		getStages({ communityId }).execute(),
+		getStages({ communityId, userId }).execute(),
 		selectCommunityMembers({ communityId }).execute(),
 	]);
 

@@ -581,6 +581,7 @@ const handler = createNextHandler(
 						},
 					},
 				});
+				// TODO: plop user id in here
 				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
@@ -597,6 +598,7 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
+				// TODO: plop user id in here
 				const stages = await getStages({ communityId: community.id }).execute();
 				return {
 					status: 200,

@@ -104,7 +104,10 @@ export default async function Page({
 	);
 
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
-	const communityStagesPromise = getStages({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({
+		communityId: community.id,
+		userId: user.id,
+	}).execute();
 
 	const pub = await getPubsWithRelatedValuesAndChildren(
 		{ pubId: params.pubId, communityId: community.id },

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { CommunitiesId, StagesId } from "db/public";
+import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
@@ -10,11 +10,12 @@ import { StagePanelRuleCreator } from "./StagePanelRuleCreator";
 
 type PropsInner = {
 	stageId: StagesId;
+	userId: UsersId;
 };
 
 const StagePanelRulesInner = async (props: PropsInner) => {
 	const [stage, actionInstances, rules] = await Promise.all([
-		getStage(props.stageId).executeTakeFirst(),
+		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageActions(props.stageId).execute(),
 		getStageRules(props.stageId).execute(),
 	]);
@@ -66,6 +67,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 
 type Props = {
 	stageId?: StagesId;
+	userId: UsersId;
 };
 
 export const StagePanelRules = async (props: Props) => {
@@ -75,7 +77,7 @@ export const StagePanelRules = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelRulesInner stageId={props.stageId} />
+			<StagePanelRulesInner stageId={props.stageId} userId={props.userId} />
 		</Suspense>
 	);
 };
