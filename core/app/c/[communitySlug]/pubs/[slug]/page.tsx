@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import type { PubsId } from "db/public";
+import type { CommunitiesId, PubsId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
@@ -37,26 +37,41 @@ import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 import { PubValues } from "./components/PubValues";
 import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
+const getPubsWithRelatedValuesAndChildrenCached = cache(
+	async (slug: string, communityId: CommunitiesId) => {
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ slug, communityId },
+			{
+				withPubType: true,
+				withChildren: true,
+				withRelatedPubs: true,
+				withStage: true,
+				withMembers: true,
+				depth: 3,
+			}
+		);
+		return pub;
+	}
+);
+
 export async function generateMetadata({
-	params: { pubId },
+	params,
 }: {
-	params: { pubId: PubsId; communitySlug: string };
+	params: { slug: string; communitySlug: string };
 }): Promise<Metadata> {
 	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
+	const community = await findCommunityBySlug(params.communitySlug);
+	if (!community) {
+		return { title: "Community Not Found" };
+	}
 
-	const pub = await autoCache(
-		db
-			.selectFrom("pubs")
-			.selectAll("pubs")
-			.select(pubValuesByVal(pubId))
-			.where("id", "=", pubId)
-	).executeTakeFirst();
+	const pub = await getPubsWithRelatedValuesAndChildrenCached(params.slug, community.id);
 
 	if (!pub) {
 		return { title: "Pub Not Found" };
 	}
 
-	const title = Object.entries(pub.values).find(([key]) => /title/.test(key))?.[1];
+	const title = getPubTitle(pub);
 
 	if (!title) {
 		return { title: `Pub ${pub.id}` };
@@ -69,14 +84,14 @@ export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { pubId: PubsId; communitySlug: string };
+	params: { slug: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const { pubId, communitySlug } = params;
+	const { slug, communitySlug } = params;
 
 	const { user } = await getPageLoginData();
 
-	if (!pubId || !communitySlug) {
+	if (!slug || !communitySlug) {
 		return null;
 	}
 
@@ -86,37 +101,32 @@ export default async function Page({
 		notFound();
 	}
 
+	const pub = await getPubsWithRelatedValuesAndChildrenCached(slug, community.id);
+
+	if (!pub) {
+		return notFound();
+	}
+
 	const canAddMember = await userCan(
 		Capabilities.addPubMember,
 		{
 			type: MembershipType.pub,
-			pubId,
+			pubId: pub.id,
 		},
 		user.id
 	);
+
 	const canRemoveMember = await userCan(
 		Capabilities.removePubMember,
 		{
 			type: MembershipType.pub,
-			pubId,
+			pubId: pub.id,
 		},
 		user.id
 	);
 
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
 	const communityStagesPromise = getStages({ communityId: community.id }).execute();
-
-	const pub = await getPubsWithRelatedValuesAndChildren(
-		{ pubId: params.pubId, communityId: community.id },
-		{
-			withPubType: true,
-			withChildren: true,
-			withRelatedPubs: true,
-			withStage: true,
-			withMembers: true,
-			depth: 3,
-		}
-	);
 
 	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
 
@@ -125,9 +135,6 @@ export default async function Page({
 		communityMembersPromise,
 		communityStagesPromise,
 	]);
-	if (!pub) {
-		return null;
-	}
 
 	const { stage, children, ...slimPub } = pub;
 	return (
@@ -172,7 +179,7 @@ export default async function Page({
 							<div className="ml-4">
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pubId={pubId}
+									pubId={pub.id}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -193,8 +200,8 @@ export default async function Page({
 							<span className="text-lg font-bold">Members</span>
 							{canAddMember && (
 								<AddMemberDialog
-									addMember={addPubMember.bind(null, pubId)}
-									addUserMember={addUserWithPubMembership.bind(null, pubId)}
+									addMember={addPubMember.bind(null, pub.id)}
+									addUserMember={addUserWithPubMembership.bind(null, pub.id)}
 									existingMembers={pub.members.map((member) => member.id)}
 									isSuperAdmin={user.isSuperAdmin}
 								/>
@@ -204,7 +211,7 @@ export default async function Page({
 							members={pub.members}
 							setRole={setPubMemberRole}
 							removeMember={removePubMember}
-							targetId={pubId}
+							targetId={pub.id}
 							readOnly={!canRemoveMember}
 						/>
 					</div>
