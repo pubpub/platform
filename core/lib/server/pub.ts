@@ -1509,6 +1509,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
 				"pt.pubId",
+				"pt.slug",
 				"pt.parentId",
 				"pt.depth",
 				"pt.pubTypeId",
