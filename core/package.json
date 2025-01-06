@@ -102,7 +102,7 @@
 		"lodash.partition": "^4.6.0",
 		"logger": "workspace:*",
 		"lucia": "^3.2.0",
-		"lucide-react": "^0.357.0",
+		"lucide-react": "^0.469.0",
 		"micromark-extension-directive": "^3.0.0",
 		"next": "catalog:",
 		"next-connect": "^1.0.0",
