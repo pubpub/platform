@@ -19,11 +19,11 @@ import { getCommunitySlug } from "./getCommunitySlug";
  * @param communitySlug - Optionally, the slug of the community to revalidate tags for. can also be an array, in case you want to revalidate tags for multiple communities.
  * @returns Void
  */
-export const revalidateTagsForCommunity = <S extends CacheScope>(
+export const revalidateTagsForCommunity = async <S extends CacheScope>(
 	scope: S | S[],
 	communitySlug?: string | string[]
-): void => {
-	const slug = communitySlug ?? await getCommunitySlug();
+): Promise<void> => {
+	const slug = communitySlug ?? (await getCommunitySlug());
 
 	const scopes = Array.isArray(scope) ? scope : [scope];
 

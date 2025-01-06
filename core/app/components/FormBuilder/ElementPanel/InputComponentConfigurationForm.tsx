@@ -45,7 +45,7 @@ import { ComponentConfig } from "./ComponentConfig";
 type SchemaComponentData = {
 	name?: string;
 	placeholder?: string;
-	demoComponent?: (props: { element: InputElement }) => JSX.Element;
+	demoComponent?: (props: { element: InputElement }) => React.ReactNode;
 };
 
 const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.DatePicker), {

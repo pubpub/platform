@@ -30,7 +30,7 @@ const executeWithRevalidate = <
 		// https://github.com/microsoft/TypeScript/issues/241
 		const result = await (qb[method](...args) as ReturnType<Q[M]>);
 
-		revalidateTagsForCommunity(tables, communitySlugs);
+		await revalidateTagsForCommunity(tables, communitySlugs);
 
 		// const tableTags = createCommunityCacheTags(tables, communitySlug);
 

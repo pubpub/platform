@@ -62,7 +62,7 @@ export const FormElement = ({
 		slug: element.slug,
 	};
 
-	let input: JSX.Element | undefined;
+	let input: React.ReactNode | undefined;
 
 	if (element.component === InputComponent.textInput) {
 		input = (
