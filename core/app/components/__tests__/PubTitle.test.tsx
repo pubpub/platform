@@ -9,6 +9,7 @@ test("PubTitle component includes the pub title", async () => {
 
 	const pub: PubPayload = {
 		id: "b5702ef8-29b9-43ad-866c-4c337f598d88",
+		slug: "why-cyclamates-were-banned",
 		assigneeId: null,
 		valuesBlob: null,
 		pubTypeId: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225",
