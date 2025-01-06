@@ -152,7 +152,7 @@ export interface PubEditorClientProps {
 	elements: BasicFormElements[];
 	children: ReactNode;
 	isUpdating: boolean;
-	pub: Pick<ProcessedPub, "id" | "values" | "pubTypeId">;
+	pub: Pick<ProcessedPub, "id" | "values" | "pubTypeId" | "slug">;
 	onSuccess: (args: {
 		values: FieldValues;
 		submitButtonId?: string;

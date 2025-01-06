@@ -31,7 +31,7 @@ export const PubEditorWrapper = ({
 		if (props.isUpdating) {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		} else {
-			const editPath = `/c/${community.slug}/pubs/${props.pub.id}/edit`;
+			const editPath = `/c/${community.slug}/pubs/${props.pub.slug}/edit`;
 			router.push(`${editPath}?${newParams.toString()}`);
 		}
 	};

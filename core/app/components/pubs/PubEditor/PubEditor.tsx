@@ -13,6 +13,7 @@ import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getPubTypesForCommunity } from "~/lib/server/pubtype";
+import { createRandomSlug } from "~/lib/string";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
@@ -27,16 +28,25 @@ export type PubEditorProps = {
 	formId?: string;
 } & (
 	| {
-			pubId: PubsId;
+			pubId?: never;
+			slug: string;
 			communityId: CommunitiesId;
 			parentId?: PubsId;
+			stageId?: never;
 	  }
 	| {
+			pubId: PubsId;
+			slug?: never;
 			communityId: CommunitiesId;
+			parentId?: PubsId;
+			stageId?: never;
 	  }
 	| {
+			pubId?: never;
+			slug?: never;
 			communityId: CommunitiesId;
 			stageId: StagesId;
+			parentId?: never;
 	  }
 );
 
@@ -48,25 +58,20 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const { user } = await getLoginData();
 
-	if ("pubId" in props) {
-		pub = await getPubsWithRelatedValuesAndChildren(
-			{
-				pubId: props.pubId,
-				communityId: props.communityId,
-			},
-			{
-				withPubType: true,
-				withStage: true,
-				withLegacyAssignee: true,
-			}
-		);
+	if (props.pubId || props.slug) {
+		const { stageId, parentId, ...input } = props;
+		pub = await getPubsWithRelatedValuesAndChildren(input, {
+			withPubType: true,
+			withStage: true,
+			withLegacyAssignee: true,
+		});
 		community = await getCommunityById(
 			// @ts-expect-error FIXME: I don't know how to fix this,
 			// not sure what the common type between EB and the DB is
 			db,
 			pub.communityId
 		).executeTakeFirstOrThrow();
-	} else if ("stageId" in props) {
+	} else if (props.stageId) {
 		const result = await getStage(props.stageId).executeTakeFirstOrThrow();
 		community = result.community;
 	} else {
@@ -100,6 +105,7 @@ export async function PubEditor(props: PubEditorProps) {
 	// FileUpload needs the pubId when uploading the file before the pub exists
 	const isUpdating = !!pub?.id;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
+	const pubSlug = pub?.slug ?? createRandomSlug();
 
 	if (pub === undefined) {
 		if (props.searchParams.pubTypeId) {
@@ -190,7 +196,7 @@ export async function PubEditor(props: PubEditorProps) {
 	});
 
 	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId, slug: pubSlug };
 
 	return (
 		<FormElementToggleProvider fieldSlugs={allSlugs}>
