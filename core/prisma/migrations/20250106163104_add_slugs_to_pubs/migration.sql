@@ -4,8 +4,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE DOMAIN slug AS TEXT CHECK (VALUE ~ '^[a-z0-9-]+$');
+
 -- AlterTable
-ALTER TABLE "pubs" ADD COLUMN     "slug" TEXT NOT NULL DEFAULT gen_random_slug();
+ALTER TABLE "pubs" ADD COLUMN     "slug" slug NOT NULL DEFAULT gen_random_slug();
 
 -- CreateIndex
 CREATE UNIQUE INDEX "pubs_communityId_slug_key" ON "pubs"("communityId", "slug");

@@ -1717,8 +1717,8 @@ export const databaseTables = [
 			},
 			{
 				name: "slug",
-				dataType: "text",
-				dataTypeSchema: "pg_catalog",
+				dataType: "slug",
+				dataTypeSchema: "public",
 				isNullable: false,
 				isAutoIncrementing: false,
 				hasDefaultValue: true,

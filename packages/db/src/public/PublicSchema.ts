@@ -37,10 +37,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	member_groups: MemberGroupsTable;
-
-	integrations: IntegrationsTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -50,6 +46,10 @@ export interface PublicSchema {
 	pub_types: PubTypesTable;
 
 	stages: StagesTable;
+
+	member_groups: MemberGroupsTable;
+
+	integrations: IntegrationsTable;
 
 	communities: CommunitiesTable;
 
