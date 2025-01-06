@@ -216,8 +216,9 @@ type ValueBase = {
 	fieldName: string;
 };
 
-type ProcessedPubBase = {
+export type ProcessedPubBase = {
 	id: PubsId;
+	slug: string;
 	stageId: StagesId | null;
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
@@ -259,6 +260,7 @@ export interface NonGenericProcessedPub extends ProcessedPubBase {
 
 const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	id: pubsIdSchema,
+	slug: z.string(),
 	stageId: stagesIdSchema.nullable(),
 	communityId: communitiesIdSchema,
 	pubTypeId: pubTypesIdSchema,

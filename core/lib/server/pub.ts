@@ -17,6 +17,7 @@ import type {
 	JsonValue,
 	MaybePubOptions,
 	ProcessedPub,
+	ProcessedPubBase,
 	PubTypePubField,
 } from "contracts";
 import type { Database } from "db/Database";
@@ -1131,20 +1132,11 @@ export const updatePub = async ({
 
 	return result;
 };
-export type UnprocessedPub = {
-	id: PubsId;
+export interface UnprocessedPub extends ProcessedPubBase {
 	depth: number;
-	parentId: PubsId | null;
-	stageId: StagesId | null;
 	stage?: Stages;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
 	pubType?: PubTypes & { fields: PubTypePubField[] };
 	members?: SafeUser & { role: MemberRole };
-	createdAt: Date;
-	updatedAt: Date;
-	isCycle?: boolean;
-	title: string | null;
 	assignee?: SafeUser | null;
 	path: PubsId[];
 	values: {
@@ -1159,7 +1151,7 @@ export type UnprocessedPub = {
 		fieldName: string;
 	}[];
 	children?: { id: PubsId }[];
-};
+}
 
 interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, MaybePubOptions {
 	/**
@@ -1304,6 +1296,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					)
 					.select([
 						"p.id as pubId",
+						"p.slug",
 						"p.pubTypeId",
 						"p.communityId",
 						"p.createdAt",
@@ -1361,6 +1354,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 								)
 								.select([
 									"pubs.id as pubId",
+									"pubs.slug",
 									"pubs.pubTypeId",
 									"pubs.communityId",
 									"pubs.createdAt",
@@ -1415,6 +1409,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 			.selectFrom("pub_tree as pt")
 			.select((eb) => [
 				"pt.pubId as id",
+				"pt.slug",
 				"pt.parentId",
 				"pt.pubTypeId",
 				"pt.depth",
