@@ -1184,13 +1184,22 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
+			pubId?: never;
+			slug: string;
+			stageId?: never;
+			pubTypeId?: never;
+			communityId: CommunitiesId;
+	  }
+	| {
 			pubId: PubsId;
+			slug?: never;
 			pubTypeId?: never;
 			stageId?: never;
 			communityId: CommunitiesId;
 	  }
 	| {
 			pubId?: never;
+			slug?: never;
 			pubTypeId?: PubTypesId;
 			stageId?: StagesId;
 			communityId: CommunitiesId;
@@ -1211,14 +1220,14 @@ const DEFAULT_OPTIONS = {
 export async function getPubsWithRelatedValuesAndChildren<
 	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
 >(
-	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
+	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId } | { slug: string }>,
 	options?: Options
 	// if only pubId + communityId is provided, we return a single pub
 ): Promise<ProcessedPub<Options>>;
 export async function getPubsWithRelatedValuesAndChildren<
 	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
 >(
-	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
+	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId } | { slug: string }>,
 	options?: Options
 	// if any other props are provided, we return an array of pubs
 ): Promise<ProcessedPub<Options>[]>;
@@ -1395,6 +1404,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.selectAll("pubs")
 					.where("pubs.communityId", "=", props.communityId)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
+					.$if(Boolean(props.slug), (qb) => qb.where("pubs.slug", "=", props.slug!))
 					.$if(Boolean(props.stageId), (qb) =>
 						qb
 							.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
