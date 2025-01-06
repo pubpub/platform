@@ -76,9 +76,6 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 	};
 
 	const community = useCommunity();
-	if (!community) {
-		return notFound();
-	}
 	const runCreatePubType = useServerAction(createPubType);
 	const onSubmit = async ({
 		name,
