@@ -10,7 +10,7 @@ export const configure = async (instanceId: string, instanceConfig: InstanceConf
 	return withServerActionInstrumentation(
 		"configure",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {

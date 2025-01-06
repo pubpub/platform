@@ -6,14 +6,14 @@ import { getInstanceConfig } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 type Props = {
-	searchParams: {
+	searchParams: Promise<{
 		instanceId: string;
 		pubId: string;
-	};
+	}>;
 };
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId } = props.searchParams;
+	const { instanceId, pubId } = (await props.searchParams);
 	if (!(instanceId && pubId)) {
 		notFound();
 	}

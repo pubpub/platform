@@ -11,15 +11,15 @@ import { decline } from "./actions";
 import { Respond } from "./respond";
 
 type Props = {
-	searchParams: {
+	searchParams: Promise<{
 		instanceId: string;
 		pubId: string;
 		intent: "accept" | "decline" | "info";
-	};
+	}>;
 };
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId, intent } = props.searchParams;
+	const { instanceId, pubId, intent } = (await props.searchParams);
 	if (!(instanceId && pubId)) {
 		notFound();
 	}

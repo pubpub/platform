@@ -13,7 +13,7 @@ export const submit = async (instanceId: string, values: PubValues, assigneeId: 
 	return withServerActionInstrumentation(
 		"submit",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {
@@ -48,7 +48,7 @@ export const resolveMetadata = async (
 	return withServerActionInstrumentation(
 		"resolveMetadata",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			const resolve = metadataResolvers[identifierName];

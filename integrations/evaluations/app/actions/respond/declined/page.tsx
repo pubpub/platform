@@ -7,20 +7,20 @@ import { getInstanceConfig } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
 
 type Props = {
-	searchParams: {
+	searchParams: Promise<{
 		pubId: string;
 		instanceId: string;
-	};
+	}>;
 };
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId } = props.searchParams;
+	const { instanceId, pubId } = (await props.searchParams);
 	if (!(instanceId && pubId)) {
 		notFound();
 	}
 	const instanceConfig = expect(await getInstanceConfig(instanceId), "Instance not configured");
 	const pub = await client.getPub(instanceId, pubId);
-	const params = new URLSearchParams(props.searchParams);
+	const params = new URLSearchParams((await props.searchParams));
 	params.set("intent", "info");
 	const infoUrl = "/actions/respond" + "?" + params.toString();
 	const submissionUrl = pub.values["legacy-unjournal:url"] as string;

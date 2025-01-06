@@ -29,7 +29,7 @@ export const save = async (
 	return withServerActionInstrumentation(
 		"manage/save",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {
@@ -124,7 +124,7 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 	return withServerActionInstrumentation(
 		"manage/suggest",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {
@@ -142,7 +142,7 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 	return withServerActionInstrumentation(
 		"manage/remove",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {

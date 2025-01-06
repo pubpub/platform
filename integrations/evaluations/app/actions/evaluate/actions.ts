@@ -21,7 +21,7 @@ export const submit = async (instanceId: string, submissionPubId: string, values
 	return withServerActionInstrumentation(
 		"evaluate/submit",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {
@@ -78,7 +78,7 @@ export const upload = async (instanceId: string, pubId: string, fileName: string
 	return withServerActionInstrumentation(
 		"evaluate/upload",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {

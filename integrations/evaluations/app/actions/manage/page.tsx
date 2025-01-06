@@ -9,14 +9,14 @@ import { isInvited } from "~/lib/types";
 import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
 
 type Props = {
-	searchParams: {
+	searchParams: Promise<{
 		instanceId: string;
 		pubId: string;
-	};
+	}>;
 };
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId } = props.searchParams;
+	const { instanceId, pubId } = (await props.searchParams);
 	if (!(instanceId && pubId)) {
 		notFound();
 	}

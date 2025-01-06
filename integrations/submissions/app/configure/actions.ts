@@ -9,7 +9,7 @@ export const configure = async (instanceId: string, pubTypeId: string) => {
 	return withServerActionInstrumentation(
 		"configure",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {

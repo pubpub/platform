@@ -37,7 +37,7 @@ export const accept = async (
 	return withServerActionInstrumentation(
 		"respond/accept",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			try {
@@ -161,7 +161,7 @@ export const decline = async (
 	return withServerActionInstrumentation(
 		"evaluations/respond/decline",
 		{
-			headers: headers(),
+			headers: await headers(),
 		},
 		async () => {
 			const redirectParams = `?token=${cookie(
