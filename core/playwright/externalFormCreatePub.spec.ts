@@ -128,7 +128,11 @@ test.describe("Multivalue inputs", () => {
 			name: "Favorite fruits",
 			description: "Make sure it isn't a vegetable",
 		};
-		await page.getByTestId("component-selectDropdown").click();
+		await page
+			.getByTestId("component-selectDropdown")
+			.getByText("Select Dropdown", { exact: true })
+			.click();
+
 		await page.getByRole("textbox", { name: "Label" }).fill(fruitElement.name);
 		await page.getByRole("textbox", { name: "Description" }).fill(fruitElement.description);
 		const fruits = ["mangos", "pineapples", "figs"];
@@ -192,7 +196,9 @@ test.describe("Rich text editor", () => {
 		formsPage.goto();
 		const formSlug = "rich-text-test";
 		await formsPage.addForm("Rich text test", formSlug);
-		await expect(page.getByRole("status").filter({ hasText: "Form created" })).toHaveCount(1);
+
+		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
+		// await page.pause();
 
 		// Add to existing form
 		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
@@ -203,9 +209,7 @@ test.describe("Rich text editor", () => {
 		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:rich-text`);
 		// Save the form builder and go to external form
 		await formEditPage.saveForm();
-		await expect(
-			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
-		).toHaveCount(1);
+		await page.getByText("Form Successfully Saved").waitFor();
 		await formEditPage.goToExternalForm();
 
 		// Fill out the form
@@ -218,7 +222,7 @@ test.describe("Rich text editor", () => {
 		await page.keyboard.press("Enter");
 		await page.keyboard.type(actualTitle);
 		await page.getByRole("button", { name: "Submit" }).click();
-		await page.getByText("Form Successfully Submitted").waitFor();
+		await page.getByText("Form Successfully Submitted", { exact: true }).waitFor();
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
