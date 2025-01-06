@@ -31,22 +31,22 @@ export type PubEditorProps = {
 			pubId?: never;
 			slug: string;
 			communityId: CommunitiesId;
-			parentId?: PubsId;
 			stageId?: never;
+			parentId?: PubsId;
 	  }
 	| {
 			pubId: PubsId;
 			slug?: never;
 			communityId: CommunitiesId;
-			parentId?: PubsId;
 			stageId?: never;
+			parentId?: PubsId;
 	  }
 	| {
 			pubId?: never;
 			slug?: never;
 			communityId: CommunitiesId;
-			stageId: StagesId;
-			parentId?: never;
+			stageId?: StagesId;
+			parentId?: PubsId;
 	  }
 );
 

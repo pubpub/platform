@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
@@ -60,12 +60,18 @@ export default async function Page({
 	const formId = `create-pub`;
 
 	// Build the specifiers conditionally since PubEditor checks for the existence of the prop
-	const pubEditorSpecifiers: Record<string, string> = {};
+	const pubEditorSpecifiers: {
+		stageId?: StagesId;
+		parentId?: PubsId;
+		communityId: CommunitiesId;
+	} = {
+		communityId: community.id,
+	};
 	if (searchParams["stageId"]) {
-		pubEditorSpecifiers.stageId = searchParams["stageId"];
+		pubEditorSpecifiers.stageId = searchParams["stageId"] as StagesId;
 	}
 	if (searchParams["parentId"]) {
-		pubEditorSpecifiers.parentId = searchParams["parentId"];
+		pubEditorSpecifiers.parentId = searchParams["parentId"] as PubsId;
 	}
 
 	return (
@@ -82,7 +88,6 @@ export default async function Page({
 				<div className="max-w-prose">
 					<PubEditor
 						searchParams={searchParams}
-						communityId={community.id}
 						formId={formId}
 						{...pubEditorSpecifiers}
 					/>
