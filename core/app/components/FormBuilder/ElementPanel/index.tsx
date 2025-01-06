@@ -8,7 +8,7 @@ import { Input } from "ui/input";
 import type { PanelState } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
-import { isFieldInput } from "../types";
+import { isFieldInput, isStructuralElement } from "../types";
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
 import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm";
 import { SelectAccess } from "./SelectAccess";
@@ -52,17 +52,31 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 				return <div>No selected element</div>;
 			}
 
-			if (!selectedElement || !isFieldInput(selectedElement)) {
+			if (!selectedElement) {
+				return <div>No selected element</div>;
+			}
+
+			if (isStructuralElement(selectedElement)) {
 				return (
-					<StructuralElementConfigurationForm index={panelState.selectedElementIndex} />
+					<StructuralElementConfigurationForm
+						index={panelState.selectedElementIndex}
+						structuralElement={selectedElement}
+					/>
 				);
 			}
 
-			return (
-				<InputComponentConfigurationForm
-					fieldInputElement={selectedElement}
-					index={panelState.selectedElementIndex}
-				/>
+			if (isFieldInput(selectedElement)) {
+				return (
+					<InputComponentConfigurationForm
+						fieldInputElement={selectedElement}
+						index={panelState.selectedElementIndex}
+					/>
+				);
+			}
+
+			// should never happen
+			throw new Error(
+				`Non-field and non-configuration input element selected in configuration form. This should never happen.`
 			);
 		}
 		case "editingButton":
