@@ -5,7 +5,9 @@ import { withSentryConfig } from "@sentry/nextjs";
 
 import "./lib/env/env.mjs";
 
-// import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
+import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
+
+import { env } from "./lib/env/env.mjs";
 
 /**
  * @type {import("next").NextConfig}
@@ -51,6 +53,7 @@ const nextConfig = {
 			"graphile-worker",
 			"@node-rs/argon2",
 		],
+		typedRoutes: Boolean(env.TYPED_ROUTES),
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173

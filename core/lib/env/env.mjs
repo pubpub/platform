@@ -34,6 +34,7 @@ export const env = createEnv({
 		DATACITE_API_URL: z.string().optional(),
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
+		TYPED_ROUTES: z.string().optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {

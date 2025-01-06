@@ -17,6 +17,7 @@
 		"db:generate-history-table": "pnpm exec tsx prisma/scripts/history-tables/generate-history-table.mts",
 		"clear-cache": "rm -rf .next/cache/fetch-cache",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
+		"generate-typed-routes": "pnpm exec tsx scripts/generate-typed-routes.ts",
 		"build": "SKIP_VALIDATION=true next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"load-test": "dotenv -e .env.local -e .env.development artillery run load-test.yaml",
@@ -39,7 +40,7 @@
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
 		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
 		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
-		"type-check": "tsc --noEmit",
+		"type-check": "generate-typed-routes && tsc --noEmit",
 		"type-check-watch": "tsc --watch",
 		"start-standalone": "node server.js"
 	},

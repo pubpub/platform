@@ -26,12 +26,13 @@
 		"next-env.d.ts",
 		"**/*.ts",
 		"**/*.tsx",
-		".next/types/**/*.ts",
+		".next/types/link.d.ts",
 		"instrumentation.node.mts",
 		"../packages/db/scripts/scripts/generateDatabaseObject.mts",
 		"../packages/db/src/prisma/comment-generator.ts",
 		"cache-handler.js",
-		"prisma/generate-history-table.mts"
+		"prisma/generate-history-table.mts",
+		".next/types/**/*.ts"
 	],
-	"exclude": ["node_modules", ".next/types/**/*.ts"]
+	"exclude": ["node_modules", ".next/types/app/**/*.ts"]
 }
