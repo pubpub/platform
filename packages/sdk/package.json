@@ -30,14 +30,14 @@
 	},
 	"peerDependencies": {
 		"contracts": "workspace:*",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"ui": "workspace:*"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
-		"@types/react": "catalog:react18",
-		"react": "catalog:react18",
+		"@types/react": "catalog:react19",
+		"react": "catalog:react19",
 		"contracts": "workspace:*",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",

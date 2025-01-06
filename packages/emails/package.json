@@ -16,10 +16,10 @@
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
-		"@types/react": "catalog:react18",
+		"@types/react": "catalog:react19",
 		"dotenv-cli": "^7.2.1",
 		"tsconfig": "workspace:*",
-		"react": "catalog:react18"
+		"react": "catalog:react19"
 	},
 	"dependencies": {
 		"@react-email/components": "0.0.25",
@@ -27,7 +27,7 @@
 		"browserslist": "^4.22.2",
 		"db": "workspace:*",
 		"eslint": "catalog:",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"react-email": "3.0.1",
 		"tsconfig": "workspace:*"
 	},

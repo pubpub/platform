@@ -353,7 +353,7 @@
 	},
 	"peerDependencies": {
 		"next": "catalog:",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"react-hook-form": "^7.46.1",
 		"tailwindcss": "catalog:",
 		"zod": "catalog:"
@@ -361,10 +361,10 @@
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/react": "catalog:react18",
+		"@types/react": "catalog:react19",
 		"eslint": "catalog:",
 		"postcss": "catalog:",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"react-hook-form": "^7.46.1",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
