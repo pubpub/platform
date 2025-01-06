@@ -15,9 +15,6 @@ const nextConfig = {
 	basePath: process.env.DOCKERBUILD ? "/intg/evaluations" : undefined,
 	assetPrefix: process.env.DOCKERBUILD ? "/intg/evaluations/" : undefined,
 	reactStrictMode: true,
-	experimental: {
-		instrumentationHook: true,
-	},
 };
 
 export default withPreconstruct(
