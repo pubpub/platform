@@ -27,7 +27,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubTypesForCommunity } from "~/lib/server/pubtype";
-import { capitalize } from "~/lib/string";
+import { capitalize, createRandomSlug } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
 import { handleFormToken } from "./utils";
@@ -254,7 +254,8 @@ export default async function FormPage({
 
 	const isUpdating = !!pub;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const pubSlug = pub?.slug ?? createRandomSlug();
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId, slug: pubSlug };
 
 	return (
 		<div className="isolate min-h-screen">

@@ -7,6 +7,7 @@ import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import type { PubValues } from "~/lib/server";
+import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getPubTypeBase, pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -59,13 +60,21 @@ const memberFields = (pubId: Expression<string>) =>
 const pubType = (pubTypeId: Expression<string>) =>
 	jsonObjectFrom(getPubTypeBase().whereRef("pub_types.id", "=", pubTypeId));
 
-export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTypesId) => {
+export const getPubChildrenTable = (
+	input: XOR<{ parentPubId: PubsId }, { parentPubSlug: string }>,
+	selectedPubTypeId?: PubTypesId
+) => {
 	return autoCache(
 		db
 			.with("all_children", (eb) =>
 				eb
 					.selectFrom("pubs")
-					.where("parentId", "=", parentId)
+					.$if(Boolean(input.parentPubId), (eb) =>
+						eb.where("id", "=", input.parentPubId!)
+					)
+					.$if(Boolean(input.parentPubSlug), (eb) =>
+						eb.where("slug", "=", input.parentPubSlug!)
+					)
 					.select((eb) => ["id", "pubTypeId", "createdAt"])
 					.orderBy("createdAt", "desc")
 			)

@@ -9,6 +9,7 @@ import { cn } from "utils";
 import type { ChildPubRow } from "./types";
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { pubPath } from "~/lib/paths";
 import { PubChildrenTable } from "./PubChildrenTable";
 import { getPubChildrenTable } from "./queries";
 
@@ -46,13 +47,13 @@ const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContex
 
 type Props = {
 	communitySlug: string;
-	parentPubId: PubsId;
+	parentPubSlug: string;
 	pageContext: PageContext;
 };
 
 type PubTypeSwitcherProps = {
 	communitySlug: string;
-	pubId: string;
+	pubSlug: string;
 	pubTypes: {
 		count: number;
 		name: string;
@@ -75,7 +76,7 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 					<Link
 						prefetch
 						key={pubType.pubTypeId}
-						href={`/c/${props.communitySlug}/pubs/${props.pubId}?${linkSearchParams}`}
+						href={pubPath(props.communitySlug, props.pubSlug)}
 						className={cn(
 							buttonVariants({
 								variant: isSelected ? "default" : "ghost",
@@ -107,7 +108,7 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 
 async function PubChildrenTableWrapper(props: Props) {
 	const pubChildren = await getPubChildrenTable(
-		props.parentPubId,
+		{ parentPubSlug: props.parentPubSlug },
 		props.pageContext.searchParams.selectedPubType as PubTypesId
 	).executeTakeFirst();
 
@@ -122,7 +123,7 @@ async function PubChildrenTableWrapper(props: Props) {
 		<>
 			<PubTypeSwitcher
 				communitySlug={props.communitySlug}
-				pubId={props.parentPubId}
+				pubSlug={props.parentPubSlug}
 				pubTypes={pubChildren.counts_of_all_pub_types}
 				searchParams={props.pageContext.searchParams}
 				selectedPubTypeId={selectedPubTypeId}
