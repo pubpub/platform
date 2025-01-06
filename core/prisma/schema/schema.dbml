@@ -84,6 +84,7 @@ Table communities {
 
 Table pubs {
   id String [pk]
+  slug String [not null]
   valuesBlob Json
   pubType pub_types [not null]
   pubTypeId String [not null]
@@ -105,6 +106,10 @@ Table pubs {
   relatedValues pub_values [not null]
   members pub_memberships [not null]
   formMemberships form_memberships [not null]
+
+  indexes {
+    (communityId, slug) [unique]
+  }
 }
 
 Table pub_fields {

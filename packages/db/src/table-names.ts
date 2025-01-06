@@ -1715,6 +1715,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "slug",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: true,
+			},
 		],
 	},
 	{

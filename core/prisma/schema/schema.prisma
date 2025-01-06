@@ -109,6 +109,7 @@ model Community {
 
 model Pub {
   id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  slug        String    @default(dbgenerated("gen_random_slug()"))
   valuesBlob  Json?
   pubType     PubType   @relation(fields: [pubTypeId], references: [id])
   pubTypeId   String
@@ -137,6 +138,8 @@ model Pub {
   members                  PubMembership[]
   formMemberships          FormMembership[]
 
+  // slugs are unique within a community
+  @@unique([communityId, slug])
   @@map(name: "pubs")
 }
 
