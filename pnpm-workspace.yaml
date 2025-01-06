@@ -17,7 +17,7 @@ catalog:
     postcss: ^8.4.27
     date-fns: ^3.6.0
     tsx: ^4.19.0
-    typescript: ^5.6.2
+    typescript: 5.7.2
     zod: ^3.23.8
     "@sinclair/typebox": ^0.32.34
     "@types/node": ^20
