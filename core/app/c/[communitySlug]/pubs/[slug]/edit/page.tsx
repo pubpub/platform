@@ -14,6 +14,7 @@ import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWi
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { pubPath } from "~/lib/paths";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -115,7 +116,7 @@ export default async function Page({
 			title={<PageTitleWithStatus title="Edit pub" />}
 			right={
 				<Button variant="link" asChild>
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
+					<Link href={pubPath(communitySlug, pub.slug)}>View Pub</Link>
 				</Button>
 			}
 		>

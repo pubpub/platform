@@ -2,7 +2,6 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { FieldsPage } from "./fixtures/fields-page";
@@ -20,7 +19,7 @@ const COMMUNITY_SLUG = `playwright-test-community-${now}`;
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
-let pubId: PubsId;
+let pubSlug: string;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
@@ -46,7 +45,7 @@ test.beforeAll(async ({ browser }) => {
 
 	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 	await pubsPage.goTo();
-	pubId = await pubsPage.createPub({
+	pubSlug = await pubsPage.createPub({
 		stage: "Submitted",
 		values: { title: "The Activity of Snails", content: "Mostly crawling" },
 	});
@@ -58,7 +57,7 @@ test.afterAll(async () => {
 
 test.describe("Moving a pub", () => {
 	test("Can move a pub across linked stages", async () => {
-		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubSlug);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Submitted");
 		// For this initial stage, there are only destinations ,no sources
@@ -88,7 +87,7 @@ test.describe("Moving a pub", () => {
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
 
-		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubSlug);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Shelved");
 		await expect(page.getByRole("button", { name: "Move" })).toHaveCount(0);
@@ -100,8 +99,8 @@ test.describe("Creating a pub", () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		const title = "Pub without a stage";
 		await pubsPage.goTo();
-		const pubId = await pubsPage.createPub({ values: { title, content: "Some content" } });
-		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		const pubSlug = await pubsPage.createPub({ values: { title, content: "Some content" } });
+		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubSlug);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveCount(0);
 	});
@@ -111,11 +110,11 @@ test.describe("Creating a pub", () => {
 		const title = "Pub with a stage";
 		const stage = "Submitted";
 		await pubsPage.goTo();
-		const pubId = await pubsPage.createPub({
+		const pubSlug = await pubsPage.createPub({
 			stage,
 			values: { title, content: "Some content" },
 		});
-		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubSlug);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText(stage);
 	});
@@ -219,7 +218,7 @@ test.describe("Creating a pub", () => {
 	});
 
 	test("Can create a child pub", async () => {
-		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubSlug);
 		await pubPage.goTo();
 		await expect(page.getByRole("table").first()).toContainText("No results.");
 		await page.getByRole("button", { name: "Add New Pub" }).click();
@@ -266,7 +265,7 @@ test.describe("Updating a pub", () => {
 	test("Can update a pub from pubs list page", async () => {
 		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 		pubsPage.goTo();
-		await page.getByTestId(`pub-row-${pubId}`).getByTestId("pub-dropdown-button").click();
+		await page.getByTestId(`pub-row-${pubSlug}`).getByTestId("pub-dropdown-button").click();
 		await page.getByRole("link", { name: "Update Pub" }).click();
 		await expect(page.getByTestId("save-status")).toHaveText(
 			"Form will save when you click save"

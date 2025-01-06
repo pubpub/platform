@@ -9,6 +9,7 @@ import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import type { XOR } from "~/lib/types";
+import { pubPath } from "~/lib/paths";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -63,7 +64,7 @@ const ChildHierarchy = ({ pub, communitySlug }: { pub: PubRowPub; communitySlug:
 									{group.pubType.name}
 								</span>
 								<Link
-									href={`/c/${communitySlug}/pubs/${child.id}`}
+									href={pubPath(communitySlug, child.slug)}
 									className="text-sm hover:underline"
 								>
 									{getPubTitle(child)}

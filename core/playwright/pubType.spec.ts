@@ -2,15 +2,12 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { FieldsPage } from "./fixtures/fields-page";
-import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { LoginPage } from "./fixtures/login-page";
-import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
-import { choosePubType, PubsPage } from "./fixtures/pubs-page";
+import { PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
 import { createCommunity } from "./helpers";
 
@@ -20,7 +17,7 @@ const COMMUNITY_SLUG = `playwright-test-community-${now}`;
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
-let pubId: PubsId;
+let pubSlug: string;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
@@ -46,7 +43,7 @@ test.beforeAll(async ({ browser }) => {
 
 	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 	await pubsPage.goTo();
-	pubId = await pubsPage.createPub({
+	pubSlug = await pubsPage.createPub({
 		stage: "Submitted",
 		values: { title: "The Activity of Snails", content: "Mostly crawling" },
 	});
