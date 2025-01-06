@@ -21,7 +21,12 @@ type PubRowPub = ProcessedPub<{ withPubType: true; withRelatedPubs: false; withS
 type Props = {
 	actions?: React.ReactNode;
 	searchParams: Record<string, unknown>;
-} & XOR<{ pub: PubRowPub }, { pubId: PubsId; communityId: CommunitiesId }>;
+} & XOR<
+	{ pub: PubRowPub },
+	({ pubId: PubsId; slug?: never } | { pubId?: never; slug: string }) & {
+		communityId: CommunitiesId;
+	}
+>;
 
 const groupPubChildrenByPubType = (pubs: PubRowPub[]) => {
 	const pubTypes = pubs.reduce(
@@ -76,16 +81,15 @@ const ChildHierarchy = ({ pub, communitySlug }: { pub: PubRowPub; communitySlug:
 };
 
 const PubRow: React.FC<Props> = async (props: Props) => {
-	const pub = props.pubId
-		? await getPubsWithRelatedValuesAndChildren(
-				{ pubId: props.pubId, communityId: props.communityId },
-				{
-					withPubType: true,
-					withRelatedPubs: false,
-					withStage: true,
-				}
-			)
-		: props.pub;
+	const { actions, searchParams, ...input } = props;
+
+	const pub =
+		input.pub ??
+		(await getPubsWithRelatedValuesAndChildren(input, {
+			withPubType: true,
+			withRelatedPubs: false,
+			withStage: true,
+		}));
 	if (!pub) {
 		return null;
 	}
@@ -108,7 +112,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 				<RowContent className="flex items-start justify-between">
 					<h3 className="text-md font-medium">
 						<Link
-							href={`/c/${communitySlug}/pubs/${pub.id}`}
+							href={`/c/${communitySlug}/pubs/${pub.slug}`}
 							className="hover:underline"
 						>
 							<PubTitle pub={pub} />
