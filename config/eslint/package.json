@@ -38,6 +38,7 @@
 		"@types/node": "catalog:",
 		"eslint": "catalog:",
 		"eslint-config-turbo": "^2.1.1",
+		"eslint-plugin-react-compiler": "19.0.0-beta-63e3235-20250105",
 		"eslint-plugin-validate-jsx-nesting": "^0.1.1",
 		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
