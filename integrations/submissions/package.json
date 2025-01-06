@@ -17,7 +17,7 @@
 	],
 	"dependencies": {
 		"@honeycombio/opentelemetry-node": "catalog:",
-		"@hookform/resolvers": "^3.3.1",
+		"@hookform/resolvers": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@pubpub/sdk": "workspace:*",
 		"@sentry/nextjs": "catalog:",
@@ -29,7 +29,7 @@
 		"parse5-sax-parser": "^7.0.0",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19",
-		"react-hook-form": "^7.46.1",
+		"react-hook-form": "catalog:",
 		"require-in-the-middle": "^7.4.0",
 		"tailwind-merge": "catalog:",
 		"ui": "workspace:*",

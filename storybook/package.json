@@ -32,8 +32,8 @@
 		"tsconfig": "workspace:*"
 	},
 	"dependencies": {
-		"@hookform/resolvers": "^3.3.1",
-		"react-hook-form": "^7.46.1",
+		"@hookform/resolvers": "catalog:",
+		"react-hook-form": "catalog:",
 		"ui": "workspace:",
 		"zod": "^3.23.8"
 	}
