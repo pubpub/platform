@@ -14,12 +14,17 @@ export class FormsPage {
 		await this.page.goto(`/c/${this.communitySlug}/forms`);
 	}
 
-	async addForm(name: string, slug: string) {
+	async addForm(name: string, slug: string, wait = true) {
 		await this.page.getByRole("banner").getByTestId("new-form-button").click();
 		await this.page.getByRole("combobox").click();
 		await this.page.getByRole("option", { name: "Submission" }).click();
 		await this.page.getByRole("textbox", { name: "name" }).fill(name);
 		await this.page.getByRole("textbox", { name: "slug" }).fill(slug);
 		await this.page.getByRole("button", { name: "Create" }).click();
+
+		if (!wait) {
+			return;
+		}
+		await this.page.waitForURL(`/c/${this.communitySlug}/forms/${slug}/edit`);
 	}
 }
