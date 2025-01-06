@@ -475,6 +475,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(Object.keys(pub).sort()).toEqual(
 			[
 				"id",
+				"slug",
 				"pubType",
 				"stage",
 				"members",
