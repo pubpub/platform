@@ -18,19 +18,25 @@ export const metadata: Metadata = {
 
 // we load the web component through a script tag here to prevent react incompatibility issues,
 // as stoplight uses react 16 still
-export default async function IndexPage({
-	params: { communitySlug },
-}: {
-	params: { communitySlug: string };
-}) {
-	const { user } = await getPageLoginData();
+export default async function IndexPage(
+    props: {
+        params: Promise<{ communitySlug: string }>;
+    }
+) {
+    const params = await props.params;
 
-	// TODO: add capability for this
-	if (!isCommunityAdmin(user, { slug: communitySlug })) {
+    const {
+        communitySlug
+    } = params;
+
+    const { user } = await getPageLoginData();
+
+    // TODO: add capability for this
+    if (!isCommunityAdmin(user, { slug: communitySlug })) {
 		return redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	return (
+    return (
 		<div className="absolute inset-0 min-h-screen">
 			<Script src="https://unpkg.com/@stoplight/elements@8.5.2/web-components.min.js" />
 			<div

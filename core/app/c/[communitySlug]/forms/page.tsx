@@ -22,21 +22,27 @@ export const metadata: Metadata = {
 	title: "Forms",
 };
 
-export default async function Page({
-	params: { communitySlug },
-}: {
-	params: {
-		communitySlug: string;
-	};
-}) {
-	const { user } = await getPageLoginData();
+export default async function Page(
+    props: {
+        params: Promise<{
+            communitySlug: string;
+        }>;
+    }
+) {
+    const params = await props.params;
 
-	const community = await findCommunityBySlug();
-	if (!community) {
+    const {
+        communitySlug
+    } = params;
+
+    const { user } = await getPageLoginData();
+
+    const community = await findCommunityBySlug();
+    if (!community) {
 		notFound();
 	}
 
-	if (
+    if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -46,7 +52,7 @@ export default async function Page({
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const forms = await autoCache(
+    const forms = await autoCache(
 		db
 			.selectFrom("forms")
 			.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
@@ -64,9 +70,9 @@ export default async function Page({
 			.where("communities.slug", "=", communitySlug)
 	).execute();
 
-	const [active, archived] = partition(forms, (form) => !form.isArchived);
+    const [active, archived] = partition(forms, (form) => !form.isArchived);
 
-	const tableForms = (formList: typeof forms) =>
+    const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
 			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault } = form;
 			return {
@@ -80,9 +86,9 @@ export default async function Page({
 			};
 		});
 
-	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
+    const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
 
-	return (
+    return (
 		<ContentLayout
 			title={
 				<>

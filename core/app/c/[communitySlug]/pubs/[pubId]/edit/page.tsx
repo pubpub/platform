@@ -32,46 +32,54 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 	}
 );
 
-export async function generateMetadata({
-	params: { pubId, communitySlug },
-}: {
-	params: { pubId: string; communitySlug: string };
-}): Promise<Metadata> {
-	const community = await findCommunityBySlug(communitySlug);
-	if (!community) {
+export async function generateMetadata(
+    props: {
+        params: Promise<{ pubId: string; communitySlug: string }>;
+    }
+): Promise<Metadata> {
+    const params = await props.params;
+
+    const {
+        pubId,
+        communitySlug
+    } = params;
+
+    const community = await findCommunityBySlug(communitySlug);
+    if (!community) {
 		return { title: "Community Not Found" };
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
+    const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: pubId as PubsId,
 		communityId: community.id as CommunitiesId,
 	});
 
-	if (!pub) {
+    if (!pub) {
 		return { title: "Pub Not Found" };
 	}
 
-	const title = getPubTitle(pub);
+    const title = getPubTitle(pub);
 
-	if (!title) {
+    if (!title) {
 		return { title: `Edit Pub ${pub.id}` };
 	}
 
-	return { title: title as string };
+    return { title: title as string };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	params: { pubId: PubsId; communitySlug: string };
-	searchParams: Record<string, string>;
-}) {
-	const { pubId, communitySlug } = params;
+export default async function Page(
+    props: {
+        params: Promise<{ pubId: PubsId; communitySlug: string }>;
+        searchParams: Promise<Record<string, string>>;
+    }
+) {
+    const searchParams = await props.searchParams;
+    const params = await props.params;
+    const { pubId, communitySlug } = params;
 
-	const { user } = await getPageLoginData();
+    const { user } = await getPageLoginData();
 
-	const canUpdatePub = await userCan(
+    const canUpdatePub = await userCan(
 		Capabilities.updatePubValues,
 		{
 			type: MembershipType.pub,
@@ -80,32 +88,32 @@ export default async function Page({
 		user.id
 	);
 
-	if (!pubId || !communitySlug) {
+    if (!pubId || !communitySlug) {
 		return null;
 	}
 
-	if (!canUpdatePub) {
+    if (!canUpdatePub) {
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const community = await findCommunityBySlug(communitySlug);
+    const community = await findCommunityBySlug(communitySlug);
 
-	if (!community) {
+    if (!community) {
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
+    const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id,
 	});
 
-	if (!pub) {
+    if (!pub) {
 		return null;
 	}
 
-	const formId = `edit-pub-${pub.id}`;
+    const formId = `edit-pub-${pub.id}`;
 
-	return (
+    return (
 		<ContentLayout
 			left={
 				<Button form={formId} type="submit">

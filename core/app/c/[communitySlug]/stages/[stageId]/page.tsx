@@ -21,56 +21,64 @@ const getStageCached = cache(async (stageId: StagesId, communityId: CommunitiesI
 	return getStages({ stageId, communityId }).executeTakeFirst();
 });
 
-export async function generateMetadata({
-	params: { stageId, communitySlug },
-}: {
-	params: { stageId: StagesId; communitySlug: string };
-}): Promise<Metadata> {
-	const community = await findCommunityBySlug(communitySlug);
-	if (!community) {
+export async function generateMetadata(
+    props: {
+        params: Promise<{ stageId: StagesId; communitySlug: string }>;
+    }
+): Promise<Metadata> {
+    const params = await props.params;
+
+    const {
+        stageId,
+        communitySlug
+    } = params;
+
+    const community = await findCommunityBySlug(communitySlug);
+    if (!community) {
 		notFound();
 	}
-	const stage = await getStageCached(stageId, community.id);
-	if (!stage) {
+    const stage = await getStageCached(stageId, community.id);
+    if (!stage) {
 		notFound();
 	}
 
-	return { title: `${stage.name} Stage` };
+    return { title: `${stage.name} Stage` };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	searchParams: Record<string, string> & { page?: string };
+export default async function Page(
+    props: {
+        searchParams: Promise<Record<string, string> & { page?: string }>;
 
-	params: { communitySlug: string; stageId: StagesId };
-}) {
-	const { communitySlug, stageId } = params;
-	const [{ user }, community] = await Promise.all([
+        params: Promise<{ communitySlug: string; stageId: StagesId }>;
+    }
+) {
+    const searchParams = await props.searchParams;
+    const params = await props.params;
+    const { communitySlug, stageId } = params;
+    const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(communitySlug),
 	]);
 
-	if (!community) {
+    if (!community) {
 		notFound();
 	}
 
-	const page = searchParams.page ? parseInt(searchParams.page) : 1;
+    const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const stagePromise = getStageCached(stageId, community.id);
-	const capabilityPromise = userCan(
+    const stagePromise = getStageCached(stageId, community.id);
+    const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
 	);
-	const [stage, showEditButton] = await Promise.all([stagePromise, capabilityPromise]);
+    const [stage, showEditButton] = await Promise.all([stagePromise, capabilityPromise]);
 
-	if (!stage) {
+    if (!stage) {
 		notFound();
 	}
 
-	return (
+    return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">{stage.name}</h1>

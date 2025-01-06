@@ -4,12 +4,18 @@ import { Button } from "ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { AlertCircle } from "ui/icon";
 
-export default function InvalidTokenPage({
-	searchParams: { redirectTo },
-}: {
-	searchParams: { redirectTo: string };
-}) {
-	return (
+export default async function InvalidTokenPage(
+    props: {
+        searchParams: Promise<{ redirectTo: string }>;
+    }
+) {
+    const searchParams = await props.searchParams;
+
+    const {
+        redirectTo
+    } = searchParams;
+
+    return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
 			<Card className="w-full max-w-md">
 				<CardHeader>

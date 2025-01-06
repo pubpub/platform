@@ -20,43 +20,56 @@ import { StagePanel } from "./components/panel/StagePanel";
 import { StagesProvider } from "./StagesContext";
 
 type Props = {
-	params: { communitySlug: string };
-	searchParams: {
+	params: Promise<{ communitySlug: string }>;
+	searchParams: Promise<{
 		editingStageId: string | undefined;
-	};
+	}>;
 };
 
-export async function generateMetadata({
-	params: { communitySlug },
-	searchParams: { editingStageId },
-}: {
-	params: { communitySlug: string };
-	searchParams: {
-		editingStageId: string | undefined;
-	};
-}): Promise<Metadata> {
-	if (!editingStageId) {
+export async function generateMetadata(
+    props: {
+        params: Promise<{ communitySlug: string }>;
+        searchParams: Promise<{
+            editingStageId: string | undefined;
+        }>;
+    }
+): Promise<Metadata> {
+    const searchParams = await props.searchParams;
+
+    const {
+        editingStageId
+    } = searchParams;
+
+    const params = await props.params;
+
+    const {
+        communitySlug
+    } = params;
+
+    if (!editingStageId) {
 		return { title: "Workflow Editor" };
 	}
 
-	const stage = await getStage(editingStageId as StagesId).executeTakeFirst();
+    const stage = await getStage(editingStageId as StagesId).executeTakeFirst();
 
-	if (!stage) {
+    if (!stage) {
 		return { title: "Stage" };
 	}
 
-	return { title: stage.name };
+    return { title: stage.name };
 }
 
-export default async function Page({ params, searchParams }: Props) {
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug();
+export default async function Page(props: Props) {
+    const searchParams = await props.searchParams;
+    const params = await props.params;
+    const { user } = await getPageLoginData();
+    const community = await findCommunityBySlug();
 
-	if (!community) {
+    if (!community) {
 		return null;
 	}
 
-	if (
+    if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ communityId: community.id, type: MembershipType.community },
@@ -66,14 +79,14 @@ export default async function Page({ params, searchParams }: Props) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	const stages = await getStages({ communityId: community.id }).execute();
+    const stages = await getStages({ communityId: community.id }).execute();
 
-	const pageContext = {
+    const pageContext = {
 		params,
 		searchParams,
 	};
 
-	return (
+    return (
 		<StagesProvider stages={stages} communityId={community.id}>
 			<StageEditorProvider communitySlug={params.communitySlug}>
 				<LocalStorageProvider timeout={200}>

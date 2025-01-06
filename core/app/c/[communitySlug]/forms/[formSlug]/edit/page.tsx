@@ -27,26 +27,38 @@ const FormCopyButton = dynamic(
 const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
-export default async function Page({
-	params: { formSlug, communitySlug },
-	searchParams: { unsavedChanges },
-}: {
-	params: {
-		formSlug: string;
-		communitySlug: string;
-	};
-	searchParams: {
-		unsavedChanges: boolean;
-	};
-}) {
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug();
+export default async function Page(
+    props: {
+        params: Promise<{
+            formSlug: string;
+            communitySlug: string;
+        }>;
+        searchParams: Promise<{
+            unsavedChanges: boolean;
+        }>;
+    }
+) {
+    const searchParams = await props.searchParams;
 
-	if (!community) {
+    const {
+        unsavedChanges
+    } = searchParams;
+
+    const params = await props.params;
+
+    const {
+        formSlug,
+        communitySlug
+    } = params;
+
+    const { user } = await getPageLoginData();
+    const community = await findCommunityBySlug();
+
+    if (!community) {
 		notFound();
 	}
 
-	if (
+    if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -56,10 +68,10 @@ export default async function Page({
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const communityId = community.id as CommunitiesId;
-	const communityStages = await getCommunityStages(communityId).execute();
+    const communityId = community.id as CommunitiesId;
+    const communityStages = await getCommunityStages(communityId).execute();
 
-	const [form, { fields }] = await Promise.all([
+    const [form, { fields }] = await Promise.all([
 		getForm({
 			slug: formSlug,
 			communityId,
@@ -67,9 +79,9 @@ export default async function Page({
 		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 	]);
 
-	const formBuilderId = "formbuilderform";
+    const formBuilderId = "formbuilderform";
 
-	return (
+    return (
 		<ContentLayout
 			title={
 				<div className="flex flex-col">

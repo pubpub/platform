@@ -250,7 +250,7 @@ export const validateRequest = cache(
 			...opts,
 		};
 
-		const sessionCookies = cookies().get(lucia.sessionCookieName);
+		const sessionCookies = (await cookies()).get(lucia.sessionCookieName);
 
 		const sessionId = sessionCookies?.value ?? null;
 
@@ -277,12 +277,12 @@ export const validateRequest = cache(
 			// therefore we set the session cookie again with the updated experation dates
 			if (result.session?.fresh) {
 				const sessionCookie = lucia.createSessionCookie(result.session.id);
-				cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+				(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 			}
 
 			if (!result.session) {
 				const sessionCookie = lucia.createBlankSessionCookie();
-				cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+				(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 			}
 		} catch {
 			// TODO: handle this?

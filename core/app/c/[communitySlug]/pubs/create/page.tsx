@@ -14,37 +14,44 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 
-export async function generateMetadata({
-	params: { communitySlug },
-}: {
-	params: { pubId: string; communitySlug: string };
-}): Promise<Metadata> {
-	const community = await findCommunityBySlug(communitySlug);
-	if (!community) {
+export async function generateMetadata(
+    props: {
+        params: Promise<{ pubId: string; communitySlug: string }>;
+    }
+): Promise<Metadata> {
+    const params = await props.params;
+
+    const {
+        communitySlug
+    } = params;
+
+    const community = await findCommunityBySlug(communitySlug);
+    if (!community) {
 		return { title: "Community Not Found" };
 	}
 
-	return { title: `Create pub in ${community.name}` };
+    return { title: `Create pub in ${community.name}` };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	params: { communitySlug: string };
-	searchParams: Record<string, string>;
-}) {
-	const { communitySlug } = params;
+export default async function Page(
+    props: {
+        params: Promise<{ communitySlug: string }>;
+        searchParams: Promise<Record<string, string>>;
+    }
+) {
+    const searchParams = await props.searchParams;
+    const params = await props.params;
+    const { communitySlug } = params;
 
-	const { user } = await getPageLoginData();
+    const { user } = await getPageLoginData();
 
-	const community = await findCommunityBySlug(communitySlug);
+    const community = await findCommunityBySlug(communitySlug);
 
-	if (!community) {
+    if (!community) {
 		notFound();
 	}
 
-	const canCreatePub = await userCan(
+    const canCreatePub = await userCan(
 		Capabilities.createPub,
 		{
 			type: MembershipType.community,
@@ -53,22 +60,22 @@ export default async function Page({
 		user.id
 	);
 
-	if (!canCreatePub) {
+    if (!canCreatePub) {
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const formId = `create-pub`;
+    const formId = `create-pub`;
 
-	// Build the specifiers conditionally since PubEditor checks for the existence of the prop
-	const pubEditorSpecifiers: Record<string, string> = {};
-	if (searchParams["stageId"]) {
+    // Build the specifiers conditionally since PubEditor checks for the existence of the prop
+    const pubEditorSpecifiers: Record<string, string> = {};
+    if (searchParams["stageId"]) {
 		pubEditorSpecifiers.stageId = searchParams["stageId"];
 	}
-	if (searchParams["parentId"]) {
+    if (searchParams["parentId"]) {
 		pubEditorSpecifiers.parentId = searchParams["parentId"];
 	}
 
-	return (
+    return (
 		<ContentLayout
 			left={
 				<Button form={formId} type="submit">

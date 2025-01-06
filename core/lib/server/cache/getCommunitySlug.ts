@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { cookies, headers } from "next/headers";
+import { cookies, headers, type UnsafeUnwrappedHeaders } from "next/headers";
 import { getParams } from "@nimpl/getters/get-params";
 
 import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME, PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./constants";
@@ -32,7 +32,7 @@ export class NotInCommunityError extends Error {
  * i.e. `/c/[communitySlug]` or `/api/v0/c/[communitySlug]`.
  */
 export const getCommunitySlug = cache(() => {
-	const header = headers();
+	const header = (headers() as unknown as UnsafeUnwrappedHeaders);
 	const communitySlugHeader = header.get(PUBPUB_COMMUNITY_SLUG_HEADER_NAME);
 	if (!communitySlugHeader) {
 		throw new NotInCommunityError();

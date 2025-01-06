@@ -60,7 +60,7 @@ const bearerSchema = z
 	.transform((string) => string.replace(bearerRegex, "$1"));
 
 const getAuthorization = async () => {
-	const authorizationTokenWithBearer = headers().get("Authorization");
+	const authorizationTokenWithBearer = (await headers()).get("Authorization");
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
 	if (!apiKeyParse.success) {
@@ -124,7 +124,7 @@ const checkAuthorization = async <
 		  }
 		| boolean;
 }): Promise<AuthorizationOutput<S, AT>> => {
-	const authorizationTokenWithBearer = headers().get("Authorization");
+	const authorizationTokenWithBearer = (await headers()).get("Authorization");
 
 	if (authorizationTokenWithBearer) {
 		const { authorization, community, apiAccessTokenId } = await getAuthorization();
@@ -185,8 +185,8 @@ const checkAuthorization = async <
 	return { authorization: true as const, community, lastModifiedBy };
 };
 
-const shouldReturnRepresentation = () => {
-	const prefer = headers().get("Prefer");
+const shouldReturnRepresentation = async () => {
+	const prefer = (await headers()).get("Prefer");
 
 	if (prefer === "return=representation") {
 		return true;

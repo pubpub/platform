@@ -11,19 +11,21 @@ export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = { params: Promise<{ communitySlug: string }>; searchParams: Record<string, unknown> };
 
-export default async function Page({ params, searchParams }: Props) {
-	const [{ user }, community] = await Promise.all([
+export default async function Page(props: Props) {
+    const searchParams = await props.searchParams;
+    const params = await props.params;
+    const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(params.communitySlug),
 	]);
 
-	if (!community) {
+    if (!community) {
 		notFound();
 	}
 
-	return (
+    return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Stages</h1>
