@@ -47,22 +47,24 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 			);
 		case "selecting":
 			return <SelectElement panelState={panelState} />;
-		case "editing":
-			const ConfigForm =
-				selectedElement && isFieldInput(selectedElement)
-					? InputComponentConfigurationForm
-					: StructuralElementConfigurationForm;
+		case "editing": {
+			if (panelState.selectedElementIndex === null) {
+				return <div>No selected element</div>;
+			}
+
+			if (!selectedElement || !isFieldInput(selectedElement)) {
+				return (
+					<StructuralElementConfigurationForm index={panelState.selectedElementIndex} />
+				);
+			}
 
 			return (
-				<>
-					{panelState.selectedElementIndex === null ? (
-						// Shouldn't be possible
-						<div>No selected element</div>
-					) : (
-						<ConfigForm index={panelState.selectedElementIndex} />
-					)}
-				</>
+				<InputComponentConfigurationForm
+					fieldInputElement={selectedElement}
+					index={panelState.selectedElementIndex}
+				/>
 			);
+		}
 		case "editingButton":
 			return (
 				<>
