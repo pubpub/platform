@@ -3,7 +3,6 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import type { PubsId } from "db/public";
 import { Action } from "db/public";
 
 import { FormsPage } from "./fixtures/forms-page";
@@ -24,8 +23,8 @@ const email = `${firstName}@example.com`;
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
-let pubId: PubsId;
-let pubId2: PubsId;
+let pubSlug: string;
+let pubSlug2: string;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
@@ -50,12 +49,12 @@ test.beforeAll(async ({ browser }) => {
 
 	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
 	await pubsPage.goTo();
-	pubId = await pubsPage.createPub({
+	pubSlug = await pubsPage.createPub({
 		stage: "Evaluating",
 		values: { title: "The Activity of Snails" },
 	});
 	await pubsPage.goTo();
-	pubId2 = await pubsPage.createPub({
+	pubSlug2 = await pubsPage.createPub({
 		stage: "Evaluating",
 		values: { title: "Do not let anyone edit me" },
 	});
@@ -67,7 +66,7 @@ test.afterAll(async () => {
 
 test.describe("Inviting a new user to fill out a form", () => {
 	test("Admin can invite a new user and send them a form link with an email action", async () => {
-		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId!);
+		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubSlug!);
 		await pubDetailsPage.goTo();
 
 		await page.getByRole("button", { name: "Run action", exact: true }).click();
@@ -161,15 +160,15 @@ test.describe("Inviting a new user to fill out a form", () => {
 		expect(await newPage.url()).toMatch(/\/settings$/);
 
 		// Creating a pub without a pubId should work
-		const createPage = decodedUrl.replace(`pubId%3D${pubId}`, "");
+		const createPage = decodedUrl.replace(`pubId%3D${pubSlug}`, "");
 		await newPage.goto(createPage);
 		await newPage.getByLabel("Title").fill("new pub");
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 		await newPage.getByText("Form Successfully Submitted").waitFor();
 
 		// Try to sneakily swap out the pubId in our decoded url for a different pubId
-		const swappedPubIdUrl = decodedUrl.replace(pubId, pubId2);
-		await newPage.goto(swappedPubIdUrl);
+		const swappedPubSlugUrl = decodedUrl.replace(pubSlug, pubSlug2);
+		await newPage.goto(swappedPubSlugUrl);
 		// Expect 404 page
 		await expect(newPage.getByText("This page could not be found.")).toHaveCount(1);
 	});

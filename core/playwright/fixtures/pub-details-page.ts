@@ -1,15 +1,15 @@
 import type { Page } from "@playwright/test";
 
-import type { PubsId } from "db/public";
+import { pubPath } from "~/lib/paths";
 
 export class PubDetailsPage {
 	constructor(
 		public readonly page: Page,
 		private readonly communitySlug: string,
-		private readonly pubId: PubsId
+		private readonly pubSlug: string
 	) {}
 
 	async goTo() {
-		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`);
+		await this.page.goto(pubPath(this.communitySlug, this.pubSlug));
 	}
 }

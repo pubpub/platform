@@ -86,12 +86,13 @@ export class PubsPage {
 
 		await this.page.getByRole("button", { name: "Save", exact: true }).click();
 		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/*/edit?*`);
-		const pubId = this.page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)\/edit/)?.groups?.pubId;
+		const pubSlug = this.page.url().match(/.*\/c\/.+\/pubs\/(?<pubSlug>.+)\/edit/)
+			?.groups?.pubSlug;
 
-		if (!pubId) {
-			throw new Error("Unable to get pub id from newly created pub");
+		if (!pubSlug) {
+			throw new Error("Unable to get pub slug from newly created pub");
 		}
 
-		return pubId as PubsId;
+		return pubSlug;
 	}
 }
