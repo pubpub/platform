@@ -37,20 +37,16 @@ import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 import { PubValues } from "./components/PubValues";
 import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
-export async function generateMetadata(
-    props: {
-        params: Promise<{ pubId: PubsId; communitySlug: string }>;
-    }
-): Promise<Metadata> {
-    const params = await props.params;
+export async function generateMetadata(props: {
+	params: Promise<{ pubId: PubsId; communitySlug: string }>;
+}): Promise<Metadata> {
+	const params = await props.params;
 
-    const {
-        pubId
-    } = params;
+	const { pubId } = params;
 
-    // TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
+	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
 
-    const pub = await autoCache(
+	const pub = await autoCache(
 		db
 			.selectFrom("pubs")
 			.selectAll("pubs")
@@ -58,42 +54,40 @@ export async function generateMetadata(
 			.where("id", "=", pubId)
 	).executeTakeFirst();
 
-    if (!pub) {
+	if (!pub) {
 		return { title: "Pub Not Found" };
 	}
 
-    const title = Object.entries(pub.values).find(([key]) => /title/.test(key))?.[1];
+	const title = Object.entries(pub.values).find(([key]) => /title/.test(key))?.[1];
 
-    if (!title) {
+	if (!title) {
 		return { title: `Pub ${pub.id}` };
 	}
 
-    return { title: title as string };
+	return { title: title as string };
 }
 
-export default async function Page(
-    props: {
-        params: Promise<{ pubId: PubsId; communitySlug: string }>;
-        searchParams: Promise<Record<string, string>>;
-    }
-) {
-    const searchParams = await props.searchParams;
-    const params = await props.params;
-    const { pubId, communitySlug } = params;
+export default async function Page(props: {
+	params: Promise<{ pubId: PubsId; communitySlug: string }>;
+	searchParams: Promise<Record<string, string>>;
+}) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
+	const { pubId, communitySlug } = params;
 
-    const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData();
 
-    if (!pubId || !communitySlug) {
+	if (!pubId || !communitySlug) {
 		return null;
 	}
 
-    const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 
-    if (!community) {
+	if (!community) {
 		notFound();
 	}
 
-    const canAddMember = await userCan(
+	const canAddMember = await userCan(
 		Capabilities.addPubMember,
 		{
 			type: MembershipType.pub,
@@ -101,7 +95,7 @@ export default async function Page(
 		},
 		user.id
 	);
-    const canRemoveMember = await userCan(
+	const canRemoveMember = await userCan(
 		Capabilities.removePubMember,
 		{
 			type: MembershipType.pub,
@@ -110,10 +104,10 @@ export default async function Page(
 		user.id
 	);
 
-    const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
-    const communityStagesPromise = getStages({ communityId: community.id }).execute();
+	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({ communityId: community.id }).execute();
 
-    const pub = await getPubsWithRelatedValuesAndChildren(
+	const pub = await getPubsWithRelatedValuesAndChildren(
 		{ pubId: params.pubId, communityId: community.id },
 		{
 			withPubType: true,
@@ -125,19 +119,19 @@ export default async function Page(
 		}
 	);
 
-    const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
 
-    const [actions, communityMembers, communityStages] = await Promise.all([
+	const [actions, communityMembers, communityStages] = await Promise.all([
 		actionsPromise,
 		communityMembersPromise,
 		communityStagesPromise,
 	]);
-    if (!pub) {
+	if (!pub) {
 		return null;
 	}
 
-    const { stage, children, ...slimPub } = pub;
-    return (
+	const { stage, children, ...slimPub } = pub;
+	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
 				<div>

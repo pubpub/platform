@@ -7,6 +7,6 @@ type Props = {
 };
 
 export default async function Page(props: Props) {
-	const { instanceId } = (await props.searchParams);
+	const { instanceId } = await props.searchParams;
 	return <Submit instanceId={instanceId} />;
 }

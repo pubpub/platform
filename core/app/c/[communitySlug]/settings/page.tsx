@@ -15,17 +15,17 @@ export const metadata: Metadata = {
 };
 
 export default async function Page(props: { params: Promise<{ communitySlug: string }> }) {
-    const params = await props.params;
-    const { user } = await getPageLoginData();
-    const { communitySlug } = params;
+	const params = await props.params;
+	const { user } = await getPageLoginData();
+	const { communitySlug } = params;
 
-    const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 
-    if (!community) {
+	if (!community) {
 		notFound();
 	}
 
-    if (
+	if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -35,7 +35,7 @@ export default async function Page(props: { params: Promise<{ communitySlug: str
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-    return (
+	return (
 		<main className="flex flex-col items-start gap-y-4">
 			<h1 className="text-xl font-bold">Community Settings</h1>
 			<div className="prose">

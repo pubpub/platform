@@ -19,27 +19,23 @@ export const metadata: Metadata = {
 	title: "Action Log",
 };
 
-export default async function Page(
-    props: {
-        params: Promise<{
-            communitySlug: string;
-        }>;
-    }
-) {
-    const params = await props.params;
+export default async function Page(props: {
+	params: Promise<{
+		communitySlug: string;
+	}>;
+}) {
+	const params = await props.params;
 
-    const {
-        communitySlug
-    } = params;
+	const { communitySlug } = params;
 
-    const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData();
 
-    const community = await findCommunityBySlug(communitySlug);
-    if (!community) {
+	const community = await findCommunityBySlug(communitySlug);
+	if (!community) {
 		notFound();
 	}
 
-    if (
+	if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -49,7 +45,7 @@ export default async function Page(
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-    const actionRuns = (await autoCache(
+	const actionRuns = (await autoCache(
 		db
 			.selectFrom("stages")
 			.where("stages.communityId", "=", community.id)
@@ -107,7 +103,7 @@ export default async function Page(
 			.orderBy("action_runs.createdAt", "desc")
 	).execute()) as ActionRun[];
 
-    return (
+	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Action Activity</h1>

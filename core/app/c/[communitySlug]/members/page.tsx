@@ -18,33 +18,29 @@ export const metadata: Metadata = {
 	title: "Members",
 };
 
-export default async function Page(
-    props: {
-        params: Promise<{
-            communitySlug: string;
-        }>;
-        searchParams: Promise<{
-            page?: string;
-            email?: string;
-        }>;
-    }
-) {
-    const searchParams = await props.searchParams;
-    const params = await props.params;
+export default async function Page(props: {
+	params: Promise<{
+		communitySlug: string;
+	}>;
+	searchParams: Promise<{
+		page?: string;
+		email?: string;
+	}>;
+}) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 
-    const {
-        communitySlug
-    } = params;
+	const { communitySlug } = params;
 
-    const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 
-    if (!community) {
+	if (!community) {
 		return notFound();
 	}
 
-    const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData();
 
-    if (
+	if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -54,14 +50,14 @@ export default async function Page(
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-    const page = parseInt(searchParams.page ?? "1", 10);
-    const members = await selectCommunityMembers({ communityId: community.id }).execute();
+	const page = parseInt(searchParams.page ?? "1", 10);
+	const members = await selectCommunityMembers({ communityId: community.id }).execute();
 
-    if (!members.length && page !== 1) {
+	if (!members.length && page !== 1) {
 		return notFound();
 	}
 
-    const tableMembers = members.map((member) => {
+	const tableMembers = members.map((member) => {
 		const { id, createdAt, user, role } = member;
 		return {
 			id,
@@ -74,7 +70,7 @@ export default async function Page(
 		} satisfies TableMember;
 	});
 
-    return (
+	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Members</h1>

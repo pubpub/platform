@@ -17,21 +17,21 @@ type Props = {
 };
 
 export default async function Page(props: Props) {
-    const searchParams = await props.searchParams;
-    const params = await props.params;
-    const { user } = await getPageLoginData();
+	const searchParams = await props.searchParams;
+	const params = await props.params;
+	const { user } = await getPageLoginData();
 
-    const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug);
 
-    if (!community) {
+	if (!community) {
 		return null;
 	}
 
-    const page = searchParams.page ? parseInt(searchParams.page) : 1;
+	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-    const basePath = `/c/${community.slug}/pubs`;
+	const basePath = `/c/${community.slug}/pubs`;
 
-    return (
+	return (
 		<>
 			<PubHeader communityId={community.id as CommunitiesId} />
 			<PaginatedPubList

@@ -274,7 +274,11 @@ export const signup = defineServerAction(async function signup(props: {
 	// lucia authentication
 	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
-	(await cookies()).set(newSessionCookie.name, newSessionCookie.value, newSessionCookie.attributes);
+	(await cookies()).set(
+		newSessionCookie.name,
+		newSessionCookie.value,
+		newSessionCookie.attributes
+	);
 
 	if (props.redirect) {
 		redirect(props.redirect);

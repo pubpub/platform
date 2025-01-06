@@ -40,15 +40,15 @@ const EmptyState = ({ className }: { className?: string }) => {
 };
 
 export default async function Page(props: Props) {
-    const params = await props.params;
-    const { user } = await getPageLoginData();
+	const params = await props.params;
+	const { user } = await getPageLoginData();
 
-    const community = await findCommunityBySlug(params.communitySlug);
-    if (!community) {
+	const community = await findCommunityBySlug(params.communitySlug);
+	if (!community) {
 		notFound();
 	}
 
-    if (
+	if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -58,20 +58,20 @@ export default async function Page(props: Props) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-    const pubFields = await getPubFields({
+	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
 		includeRelations: true,
 	}).executeTakeFirst();
 
-    if (!pubFields || !pubFields.fields) {
+	if (!pubFields || !pubFields.fields) {
 		return null;
 	}
 
-    const fields = Object.values(pubFields.fields);
-    const hasFields = !!Object.keys(fields).length;
-    const [active, archived] = partition(fields, (field) => !field.isArchived);
+	const fields = Object.values(pubFields.fields);
+	const hasFields = !!Object.keys(fields).length;
+	const [active, archived] = partition(fields, (field) => !field.isArchived);
 
-    return (
+	return (
 		<PubFieldProvider pubFields={pubFields.fields}>
 			<ContentLayout
 				title={

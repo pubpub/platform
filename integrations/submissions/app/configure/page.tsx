@@ -8,7 +8,7 @@ type Props = {
 };
 
 export default async function Page(props: Props) {
-	const { instanceId } = (await props.searchParams);
+	const { instanceId } = await props.searchParams;
 	const instanceConfig = await getInstanceConfig(instanceId);
 	return <Configure instanceId={instanceId} pubTypeId={instanceConfig?.pubTypeId} />;
 }

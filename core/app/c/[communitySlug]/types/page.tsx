@@ -19,28 +19,24 @@ export const metadata: Metadata = {
 	title: "Pub Types",
 };
 
-export default async function Page(
-    props: {
-        params: Promise<{
-            communitySlug: string;
-        }>;
-    }
-) {
-    const params = await props.params;
+export default async function Page(props: {
+	params: Promise<{
+		communitySlug: string;
+	}>;
+}) {
+	const params = await props.params;
 
-    const {
-        communitySlug
-    } = params;
+	const { communitySlug } = params;
 
-    const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData();
 
-    const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug();
 
-    if (!user || !community) {
+	if (!user || !community) {
 		return notFound();
 	}
 
-    if (
+	if (
 		!(await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
@@ -50,9 +46,9 @@ export default async function Page(
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-    const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
+	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
 
-    const [types, { fields }] = await Promise.all([
+	const [types, { fields }] = await Promise.all([
 		getAllPubTypesForCommunity(communitySlug).execute(),
 		getPubFields({
 			communityId: community.id,
@@ -60,11 +56,11 @@ export default async function Page(
 		}).executeTakeFirstOrThrow(),
 	]);
 
-    if (!types || !fields) {
+	if (!types || !fields) {
 		return null;
 	}
 
-    return (
+	return (
 		<PubFieldProvider pubFields={fields}>
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="flex-grow text-xl font-bold">Pub Types</h1>

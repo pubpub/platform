@@ -98,48 +98,44 @@ const ExpiredTokenPage = ({
 	);
 };
 
-export async function generateMetadata(
-    props: {
-        params: Promise<FormFillPageParams>;
-        searchParams: Promise<FormFillPageSearchParams>;
-    }
-): Promise<Metadata> {
-    const params = await props.params;
-    const community = await findCommunityBySlug(params.communitySlug);
+export async function generateMetadata(props: {
+	params: Promise<FormFillPageParams>;
+	searchParams: Promise<FormFillPageSearchParams>;
+}): Promise<Metadata> {
+	const params = await props.params;
+	const community = await findCommunityBySlug(params.communitySlug);
 
-    if (!community) {
+	if (!community) {
 		return { title: "Community Not Found" };
 	}
 
-    const form = await getForm({
+	const form = await getForm({
 		slug: params.formSlug,
 		communityId: community.id,
 	}).executeTakeFirst();
 
-    if (!form) {
+	if (!form) {
 		return { title: "Form Not Found" };
 	}
 
-    return {
+	return {
 		title: form.name,
 	};
 }
 
-export default async function FormPage(
-    props: {
-        params: Promise<FormFillPageParams>;
-        searchParams: Promise<FormFillPageSearchParams>;
-    }
-) {
-    const searchParams = await props.searchParams;
-    const params = await props.params;
-    const community = await findCommunityBySlug(params.communitySlug);
+export default async function FormPage(props: {
+	params: Promise<FormFillPageParams>;
+	searchParams: Promise<FormFillPageSearchParams>;
+}) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
+	const community = await findCommunityBySlug(params.communitySlug);
 
-    if (!community) {
+	if (!community) {
 		return notFound();
 	}
 
-    const [form, pub, pubs, pubTypes] = await Promise.all([
+	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
@@ -162,13 +158,13 @@ export default async function FormPage(
 		getPubTypesForCommunity(community.id),
 	]);
 
-    if (!form) {
+	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
 
-    const { user, session } = await getLoginData();
+	const { user, session } = await getLoginData();
 
-    if (!user && !session) {
+	if (!user && !session) {
 		const result = await handleFormToken({
 			params,
 			searchParams,
@@ -187,14 +183,14 @@ export default async function FormPage(
 		);
 	}
 
-    const role = getCommunityRole(user, { slug: params.communitySlug });
-    if (!role) {
+	const role = getCommunityRole(user, { slug: params.communitySlug });
+	if (!role) {
 		// TODO: show no access page
 		return notFound();
 	}
 
-    // all other roles always have access to the form
-    if (role === MemberRole.contributor) {
+	// all other roles always have access to the form
+	if (role === MemberRole.contributor) {
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
@@ -207,16 +203,16 @@ export default async function FormPage(
 		}
 	}
 
-    const parentPub = pub?.parentId
+	const parentPub = pub?.parentId
 		? await getPubsWithRelatedValuesAndChildren(
 				{ pubId: pub.parentId, communityId: community.id },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
 		: undefined;
 
-    const member = expect(user.memberships.find((m) => m.communityId === community?.id));
+	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
-    const memberWithUser = {
+	const memberWithUser = {
 		...member,
 		id: member.id,
 		user: {
@@ -225,12 +221,12 @@ export default async function FormPage(
 		},
 	};
 
-    const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
-    const submitElement = form.elements.find(
+	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
+	const submitElement = form.elements.find(
 		(e) => e.type === ElementType.button && e.id === submitId
 	);
 
-    const renderWithPubContext = {
+	const renderWithPubContext = {
 		communityId: community.id,
 		recipient: memberWithUser,
 		communitySlug: params.communitySlug,
@@ -238,7 +234,7 @@ export default async function FormPage(
 		parentPub,
 	};
 
-    if (submitId && submitElement) {
+	if (submitId && submitElement) {
 		// The post-submission page will only render once we have a pub
 		if (pub) {
 			submitElement.content = await renderElementMarkdownContent(
@@ -253,11 +249,11 @@ export default async function FormPage(
 		});
 	}
 
-    const isUpdating = !!pub;
-    const pubId = pub?.id ?? (randomUUID() as PubsId);
-    const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const isUpdating = !!pub;
+	const pubId = pub?.id ?? (randomUUID() as PubsId);
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
-    return (
+	return (
 		<div className="isolate min-h-screen">
 			<Header>
 				<div className="flex flex-col items-center">
