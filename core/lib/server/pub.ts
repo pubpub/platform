@@ -1529,9 +1529,9 @@ export async function getPubsWithRelatedValuesAndChildren<
 		return result;
 	}
 
-	if (props.pubId) {
+	if (props.pubId || props.slug) {
 		return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
-			rootPubId: props.pubId,
+			rootPubId: result[0]?.id,
 			...opts,
 		}) as ProcessedPub<Options>;
 	}
