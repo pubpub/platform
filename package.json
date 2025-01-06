@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"scripts": {
-		"build": "pnpm p:build && turbo build",
+		"build": "pnpm p:build && turbo build --filter=!storybook",
 		"dev": "pnpm p:dev && turbo dev --filter=!integration-* --filter=!emails --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
