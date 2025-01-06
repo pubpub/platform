@@ -45,7 +45,10 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
 						<Link
-							href={pubPath(props.pageContext.params.communitySlug, pub.slug)}
+							href={pubPath(
+								props.pageContext.params.communitySlug as string,
+								pub.slug
+							)}
 							className="hover:underline"
 						>
 							<PubTitle pub={pub} />

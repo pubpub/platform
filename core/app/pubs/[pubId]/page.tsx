@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
+import { pubPath } from "~/lib/paths";
 import prisma from "~/prisma/db";
 
 export type Props = {
@@ -22,5 +23,5 @@ export default async function Page(props: Props) {
 	if (pub === null) {
 		notFound();
 	}
-	redirect(`/c/${pub.community.slug}/pubs/${pub.id}`);
+	redirect(pubPath(pub.community.slug, pub.slug));
 }

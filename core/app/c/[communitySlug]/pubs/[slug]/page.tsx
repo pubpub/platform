@@ -21,6 +21,7 @@ import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
+import { pubEditPath } from "~/lib/paths";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
@@ -147,7 +148,7 @@ export default async function Page({
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
 				<Button variant="outline" asChild className="flex items-center gap-1">
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+					<Link href={pubEditPath(communitySlug, pub.slug)}>
 						<Pencil size="14" />
 						Update
 					</Link>
