@@ -6,7 +6,7 @@ import { captureException, withServerActionInstrumentation } from "@sentry/nextj
 import type { InstanceConfig } from "~/lib/types";
 import { setInstanceConfig } from "~/lib/instance";
 
-export const configure = (instanceId: string, instanceConfig: InstanceConfig) => {
+export const configure = async (instanceId: string, instanceConfig: InstanceConfig) => {
 	return withServerActionInstrumentation(
 		"configure",
 		{
