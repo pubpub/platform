@@ -1,6 +1,6 @@
 CREATE OR REPLACE FUNCTION gen_random_slug() RETURNS TEXT AS $$
 BEGIN
-  RETURN md5(random()::text);
+  RETURN substr(md5(random()::text), 1, 10);
 END;
 $$ LANGUAGE plpgsql;
 
