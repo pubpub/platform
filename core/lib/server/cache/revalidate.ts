@@ -23,7 +23,7 @@ export const revalidateTagsForCommunity = <S extends CacheScope>(
 	scope: S | S[],
 	communitySlug?: string | string[]
 ): void => {
-	const slug = communitySlug ?? getCommunitySlug();
+	const slug = communitySlug ?? await getCommunitySlug();
 
 	const scopes = Array.isArray(scope) ? scope : [scope];
 

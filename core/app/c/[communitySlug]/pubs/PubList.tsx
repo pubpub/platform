@@ -42,7 +42,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 
 	const totalPages = Math.ceil(count / PAGE_SIZE);
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
 
 	return (

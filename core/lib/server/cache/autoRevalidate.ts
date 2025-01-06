@@ -18,7 +18,7 @@ const executeWithRevalidate = <
 	options?: AutoRevalidateOptions
 ) => {
 	const executeFn = async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? getCommunitySlug();
+		const communitySlug = options?.communitySlug ?? (await getCommunitySlug());
 
 		const communitySlugs = Array.isArray(communitySlug) ? communitySlug : [communitySlug];
 

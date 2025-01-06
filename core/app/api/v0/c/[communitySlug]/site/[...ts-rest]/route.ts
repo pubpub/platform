@@ -68,7 +68,7 @@ const getAuthorization = async () => {
 	}
 	const apiKey = apiKeyParse.data;
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
@@ -149,7 +149,7 @@ const checkAuthorization = async <
 		throw new UnauthorizedError("This resource is only accessible using an API key");
 	}
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const [{ user }, community] = await Promise.all([
 		getLoginData(),
 		findCommunityBySlug(communitySlug),
