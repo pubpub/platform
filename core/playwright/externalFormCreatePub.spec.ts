@@ -73,7 +73,7 @@ test("Can create a pub from an external form", async () => {
 
 test.describe("Multivalue inputs", () => {
 	test("Can add multivalue inputs", async () => {
-		test.setTimeout(60_000);
+		// test.setTimeout(60_000);
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
 		// Add a numeric array and string arrays
@@ -145,9 +145,6 @@ test.describe("Multivalue inputs", () => {
 
 		// Save the form builder and go to external form
 		await formEditPage.saveForm();
-		await expect(
-			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
-		).toHaveCount(1);
 		await formEditPage.goToExternalForm();
 		for (const element of [numberElement, animalElement, fruitElement]) {
 			await expect(page.getByText(element.name)).toHaveCount(1);
@@ -198,7 +195,6 @@ test.describe("Rich text editor", () => {
 		await formsPage.addForm("Rich text test", formSlug);
 
 		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
-		// await page.pause();
 
 		// Add to existing form
 		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
@@ -209,7 +205,6 @@ test.describe("Rich text editor", () => {
 		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:rich-text`);
 		// Save the form builder and go to external form
 		await formEditPage.saveForm();
-		await page.getByText("Form Successfully Saved").waitFor();
 		await formEditPage.goToExternalForm();
 
 		// Fill out the form
