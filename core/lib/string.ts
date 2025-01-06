@@ -1,6 +1,10 @@
 import { remove as removeDiacritics } from "diacritics";
 
+import type { PubsId } from "db/public";
 import { logger } from "logger";
+import { isUuid } from "utils";
+
+import type { Prettify, XOR } from "./types";
 
 export const genHumanSlug = (title: string, slug: string): string => {
 	const titleSlug = slugifyString(title).slice(0, 25);
@@ -70,4 +74,31 @@ export const generateHash = (length: number, customCharacters?: string) => {
 
 export const getSlugSuffix = (slug: string) => {
 	return slug.split("-").pop() || "";
+};
+
+type IdLike = `${string}Id`;
+
+/**
+ * From a union of a string and a brand, extract the branded type if it's present,
+ * otherwise return the string.
+ */
+type BrandedOrString<T extends string> = Extract<T, { __brand: string }>;
+
+type BrandedOrStringResult<
+	T extends string,
+	Key extends IdLike | undefined = undefined,
+> = Key extends IdLike
+	?
+			| Prettify<{ [k in Key]?: never | undefined } & { slug: string; id?: never }>
+			| Prettify<{ [k in Key]: BrandedOrString<T> } & { slug?: never; id?: never }>
+	: { slug: string; id: BrandedOrString<T> };
+
+export const idOrSlug = <T extends string = string, Key extends IdLike | undefined = undefined>(
+	idOrSlug: T,
+	key?: Key
+): BrandedOrStringResult<T, Key> => {
+	if (isUuid(idOrSlug)) {
+		return { [key ?? "id"]: idOrSlug as T } as BrandedOrStringResult<T, Key>;
+	}
+	return { slug: idOrSlug } as BrandedOrStringResult<T, Key>;
 };

@@ -1,7 +1,16 @@
+import type {
+	DeleteQueryBuilder,
+	ExpressionBuilder,
+	InsertQueryBuilder,
+	SelectQueryBuilder,
+	UpdateQueryBuilder,
+} from "kysely";
+
 import type { CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 
+import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 
 export const pubCapabilities = [
@@ -60,8 +69,7 @@ export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
 
 type PubTarget = {
 	type: MembershipType.pub;
-	pubId: PubsId;
-};
+} & XOR<{ slug: string }, { pubId: PubsId }>;
 
 type StageTarget = {
 	type: MembershipType.stage;
@@ -77,6 +85,21 @@ type FormTarget = {
 	type: MembershipType.form;
 	formId: FormsId;
 };
+type IdLike = `${string}Id`;
+
+export const whereIdOrSlug = <EB extends ExpressionBuilder<any, any>, T extends string>(
+	eb: EB,
+	table: string,
+	idOrSlug: XOR<{ slug: string }, { [K in IdLike]: string }>
+) => {
+	if ("slug" in idOrSlug) {
+		return eb(`${table}.slug`, "=", idOrSlug.slug);
+	}
+	const { slug, ...id } = idOrSlug;
+	const value = Object.values(id)[0];
+
+	return eb(`${table}.id`, "=", value);
+};
 
 export const userCan = async <T extends CapabilityTarget>(
 	capability: CapabilitiesArg[T["type"]][number],
@@ -84,15 +107,16 @@ export const userCan = async <T extends CapabilityTarget>(
 	userId: UsersId
 ) => {
 	if (target.type === MembershipType.pub) {
+		const { type, ...input } = target;
+
 		const capabilitiesQuery = db
-			.with("stage", (db) =>
+			.with("pub", (db) =>
 				db
-					.selectFrom("PubsInStages")
-					.where("PubsInStages.pubId", "=", target.pubId)
-					.select("PubsInStages.stageId")
-			)
-			.with("community", (db) =>
-				db.selectFrom("pubs").where("pubs.id", "=", target.pubId).select("pubs.communityId")
+					.selectFrom("pubs")
+					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+					.where((eb) => whereIdOrSlug(eb, "pubs", input))
+					.selectAll("pubs")
+					.select("PubsInStages.stageId as stageId")
 			)
 			.with("stage_ms", (db) =>
 				db
@@ -105,7 +129,7 @@ export const userCan = async <T extends CapabilityTarget>(
 							// one stage. But we don't actually expect there to be multiple stageIds
 							// returned (for now)
 							"in",
-							eb.selectFrom("stage").select("stageId")
+							eb.selectFrom("pub").select("stageId")
 						)
 					)
 					.select("role")
@@ -114,14 +138,14 @@ export const userCan = async <T extends CapabilityTarget>(
 				db
 					.selectFrom("pub_memberships")
 					.where("pub_memberships.userId", "=", userId)
-					.where("pub_memberships.pubId", "=", target.pubId)
+					.where("pub_memberships.pubId", "=", db.selectFrom("pub").select("pub.id"))
 					.select("role")
 			)
 			.with("community_ms", (db) =>
 				db
 					.selectFrom("community_memberships")
 					.where("community_memberships.userId", "=", userId)
-					.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
+					.whereRef("communityId", "=", db.selectFrom("pub").select("communityId"))
 					.select("role")
 			)
 

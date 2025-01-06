@@ -3,3 +3,4 @@ export * from "./classnames";
 export * from "./url";
 export * from "./doi";
 export * from "./sleep";
+export * from "./uuid";

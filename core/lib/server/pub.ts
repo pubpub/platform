@@ -39,9 +39,10 @@ import type { LastModifiedBy } from "db/types";
 import { CoreSchemaType, OperationType } from "db/public";
 import { assert, expect } from "utils";
 
-import type { MaybeHas, Prettify, XOR } from "../types";
+import type { MaybeHas, OR, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
+import { whereIdOrSlug } from "../authorization/capabilities";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
@@ -384,20 +385,25 @@ const PubNotFoundError = new NotFoundError("Pub not found");
  * Utility function to check if a pub exists in a community
  */
 export const doPubsExist = async (
-	pubIds: PubsId[],
+	pubIdsOrSlugs: OR<{ pubIds: PubsId[] }, { slugs: string[] }>,
 	communitiyId: CommunitiesId,
 	trx = db
-): Promise<{ exists: boolean; pubs: Pubs[] }> => {
+): Promise<{ allExist: boolean; pubs: Pubs[] }> => {
+	const { pubIds, slugs } = {
+		pubIds: pubIdsOrSlugs.pubIds ?? [],
+		slugs: pubIdsOrSlugs.slugs ?? [],
+	};
 	const pubs = await autoCache(
 		trx
 			.selectFrom("pubs")
-			.where("id", "in", pubIds)
+			.$if(pubIds.length > 0, (eb) => eb.where("id", "in", pubIds))
+			.$if(slugs.length > 0, (eb) => eb.where("slug", "in", slugs))
 			.where("communityId", "=", communitiyId)
 			.selectAll()
 	).execute();
 
 	return {
-		exists: pubIds.every((pubId) => !!pubs.find((p) => p.id === pubId)),
+		allExist: pubs.length === pubIds.length + slugs.length,
 		pubs,
 	};
 };
@@ -406,12 +412,19 @@ export const doPubsExist = async (
  * Utility function to check if a pub exists in a community
  */
 export const doesPubExist = async (
-	pubId: PubsId,
+	pubIdOrSlug: XOR<{ pubId: PubsId }, { slug: string }>,
 	communitiyId: CommunitiesId,
 	trx = db
 ): Promise<{ exists: false; pub?: undefined } | { exists: true; pub: Pubs }> => {
-	const { exists, pubs } = await doPubsExist([pubId], communitiyId, trx);
-	return exists ? { exists: true as const, pub: pubs[0] } : { exists: false as const };
+	const pub = await autoCache(
+		trx
+			.selectFrom("pubs")
+			.where((eb) => whereIdOrSlug(eb, "pubs", pubIdOrSlug))
+			.where("communityId", "=", communitiyId)
+			.selectAll()
+	).executeTakeFirst();
+
+	return pub ? { exists: true as const, pub } : { exists: false as const };
 };
 
 /**

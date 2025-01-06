@@ -300,6 +300,10 @@ const preferRepresentationHeaderSchema = z.object({
 		.default("return=minimal"),
 });
 
+const pubIdOrSlugParamsSchema = z.object({
+	pubIdOrSlug: z.string() as z.Schema<PubsId | string>,
+});
+
 const getPubQuerySchema = z
 	.object({
 		depth: z
@@ -334,13 +338,11 @@ export const siteApi = contract.router(
 		pubs: {
 			get: {
 				method: "GET",
-				path: "/pubs/:pubId",
+				path: "/pubs/:pubIdOrSlug",
 				summary: "Gets a pub",
 				description:
 					"Get a pub and its children by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
-				pathParams: z.object({
-					pubId: z.string().uuid(),
-				}),
+				pathParams: pubIdOrSlugParamsSchema,
 				query: getPubQuerySchema,
 				responses: {
 					200: processedPubSchema,
@@ -380,8 +382,9 @@ export const siteApi = contract.router(
 				summary: "Updates a pub",
 				description: "Updates a pubs values.",
 				method: "PATCH",
-				path: "/pubs/:pubId",
+				path: "/pubs/:pubIdOrSlug",
 				headers: preferRepresentationHeaderSchema,
+				pathParams: pubIdOrSlugParamsSchema,
 				body: z.record(jsonSchema),
 				responses: {
 					200: processedPubSchema,
@@ -393,7 +396,8 @@ export const siteApi = contract.router(
 				description: "Archives a pub by ID.",
 				method: "DELETE",
 				body: z.never().nullish(),
-				path: "/pubs/:pubId",
+				path: "/pubs/:pubIdOrSlug",
+				pathParams: pubIdOrSlugParamsSchema,
 				responses: {
 					204: z.never().optional(),
 					404: z.literal("Pub not found"),
@@ -405,8 +409,9 @@ export const siteApi = contract.router(
 					description:
 						"Updates pub relations for the specified slugs. Only adds or modifies specified relations, leaves existing relations alone. If you want to replace all relations for a field, use PUT.",
 					method: "PATCH",
-					path: "/pubs/:pubId/relations",
+					path: "/pubs/:pubIdOrSlug/relations",
 					headers: preferRepresentationHeaderSchema,
+					pathParams: pubIdOrSlugParamsSchema,
 					body: upsertPubRelationsSchema,
 					responses: {
 						200: processedPubSchema,
@@ -418,8 +423,9 @@ export const siteApi = contract.router(
 					description:
 						"Replaces all pub relations for the specified slugs. If you want to add or modify relations without overwriting existing ones, use PATCH.",
 					method: "PUT",
-					path: "/pubs/:pubId/relations",
+					path: "/pubs/:pubIdOrSlug/relations",
 					headers: preferRepresentationHeaderSchema,
+					pathParams: pubIdOrSlugParamsSchema,
 					body: upsertPubRelationsSchema,
 					responses: {
 						200: processedPubSchema,
@@ -431,8 +437,9 @@ export const siteApi = contract.router(
 					description:
 						"Removes related pubs from the specified pubfields. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.\n Note: This endpoint does not remove the related pubs themselves, only the relations.",
 					method: "DELETE",
-					path: "/pubs/:pubId/relations",
+					path: "/pubs/:pubIdOrSlug/relations",
 					headers: preferRepresentationHeaderSchema,
+					pathParams: pubIdOrSlugParamsSchema,
 					body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
 					responses: {
 						200: processedPubSchema,

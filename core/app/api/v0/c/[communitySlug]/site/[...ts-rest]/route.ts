@@ -40,6 +40,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getSuggestedUsers } from "~/lib/server/user";
+import { idOrSlug } from "~/lib/string";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -199,18 +200,19 @@ const handler = createNextHandler(
 	{
 		pubs: {
 			get: async ({ params, query }) => {
+				const pubIdOrSlug = idOrSlug(params.pubIdOrSlug, "pubId");
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewPub,
-						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						target: { type: MembershipType.pub, ...pubIdOrSlug },
 					},
 				});
 
 				const pub = await getPubsWithRelatedValuesAndChildren(
 					{
-						pubId: params.pubId as PubsId,
 						communityId: community.id,
+						...pubIdOrSlug,
 					},
 					query
 				);
@@ -280,26 +282,27 @@ const handler = createNextHandler(
 				};
 			},
 			update: async ({ params, body }) => {
+				const pubIdOrSlug = idOrSlug(params.pubIdOrSlug, "pubId");
 				const { community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.updatePubValues,
-						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						target: { type: MembershipType.pub, ...pubIdOrSlug },
 					},
 				});
 
-				const { exists } = await doesPubExist(
-					params.pubId as PubsId,
+				const { exists, pub } = await doesPubExist(
+					pubIdOrSlug,
 					community.id as CommunitiesId
 				);
 
 				if (!exists) {
-					throw new NotFoundError(`Pub ${params.pubId} not found`);
+					throw new NotFoundError(`Pub ${params.pubIdOrSlug} not found`);
 				}
 
 				const updatedPub = await updatePub({
 					pubValues: body,
-					pubId: params.pubId as PubsId,
+					pubId: pub.id as PubsId,
 					communityId: community.id,
 					continueOnValidationError: false,
 					lastModifiedBy,
@@ -313,27 +316,38 @@ const handler = createNextHandler(
 					};
 				}
 
-				const pub = await getPubsWithRelatedValuesAndChildren({
-					pubId: params.pubId as PubsId,
+				const fullPub = await getPubsWithRelatedValuesAndChildren({
+					pubId: pub.id as PubsId,
 					communityId: community.id,
 				});
 
 				return {
 					status: 200,
-					body: pub,
+					body: fullPub,
 				};
 			},
 			archive: async ({ params }) => {
-				const { lastModifiedBy } = await checkAuthorization({
+				const pubIdOrSlug = idOrSlug(params.pubIdOrSlug, "pubId");
+
+				const { lastModifiedBy, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.deletePub,
-						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+						target: { type: MembershipType.pub, ...pubIdOrSlug },
 					},
 				});
 
+				const { exists, pub } = await doesPubExist(
+					pubIdOrSlug,
+					community.id as CommunitiesId
+				);
+
+				if (!exists) {
+					throw new NotFoundError(`Pub ${params.pubIdOrSlug} not found`);
+				}
+
 				const result = await deletePub({
-					pubId: params.pubId as PubsId,
+					pubId: pub.id as PubsId,
 					lastModifiedBy,
 				});
 
@@ -350,21 +364,23 @@ const handler = createNextHandler(
 			},
 			relations: {
 				remove: async ({ params, body }) => {
+					const pubIdOrSlug = idOrSlug(params.pubIdOrSlug, "pubId");
+
 					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
-							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+							target: { type: MembershipType.pub, ...pubIdOrSlug },
 						},
 					});
 
-					const { exists } = await doesPubExist(
-						params.pubId as PubsId,
+					const { exists, pub } = await doesPubExist(
+						pubIdOrSlug,
 						community.id as CommunitiesId
 					);
 
 					if (!exists) {
-						throw new NotFoundError(`Pub ${params.pubId} not found`);
+						throw new NotFoundError(`Pub ${params.pubIdOrSlug} not found`);
 					}
 
 					const { all, some } = Object.entries(body).reduce(
@@ -389,13 +405,13 @@ const handler = createNextHandler(
 
 					const [removedAllSettled, removedSomeSettled] = await Promise.allSettled([
 						removeAllPubRelationsBySlugs({
-							pubId: params.pubId as PubsId,
+							pubId: pub.id,
 							slugs: all,
 							communityId: community.id,
 							lastModifiedBy,
 						}),
 						removePubRelations({
-							pubId: params.pubId as PubsId,
+							pubId: pub.id,
 							relations: some,
 							communityId: community.id,
 							lastModifiedBy,
@@ -426,32 +442,34 @@ const handler = createNextHandler(
 						};
 					}
 
-					const pub = await getPubsWithRelatedValuesAndChildren({
-						pubId: params.pubId as PubsId,
+					const fullPub = await getPubsWithRelatedValuesAndChildren({
+						pubId: pub.id,
 						communityId: community.id,
 					});
 
 					return {
 						status: 200,
-						body: pub,
+						body: fullPub,
 					};
 				},
 				update: async ({ params, body }) => {
+					const pubIdOrSlug = idOrSlug(params.pubIdOrSlug, "pubId");
+
 					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
-							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+							target: { type: MembershipType.pub, ...pubIdOrSlug },
 						},
 					});
 
-					const { exists } = await doesPubExist(
-						params.pubId as PubsId,
+					const { exists, pub } = await doesPubExist(
+						pubIdOrSlug,
 						community.id as CommunitiesId
 					);
 
 					if (!exists) {
-						throw new NotFoundError(`Pub ${params.pubId} not found`);
+						throw new NotFoundError(`Pub ${params.pubIdOrSlug} not found`);
 					}
 
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
@@ -459,7 +477,7 @@ const handler = createNextHandler(
 					);
 
 					await upsertPubRelations({
-						pubId: params.pubId as PubsId,
+						pubId: pub.id,
 						relations,
 						communityId: community.id,
 						lastModifiedBy,
@@ -473,39 +491,41 @@ const handler = createNextHandler(
 						};
 					}
 
-					const pub = await getPubsWithRelatedValuesAndChildren({
-						pubId: params.pubId as PubsId,
+					const fullPub = await getPubsWithRelatedValuesAndChildren({
+						pubId: pub.id,
 						communityId: community.id,
 					});
 
 					return {
 						status: 200,
-						body: pub,
+						body: fullPub,
 					};
 				},
 				replace: async ({ params, body }) => {
+					const pubIdOrSlug = idOrSlug(params.pubIdOrSlug, "pubId");
+
 					const { community, lastModifiedBy } = await checkAuthorization({
 						token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 						cookies: {
 							capability: Capabilities.deletePub,
-							target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
+							target: { type: MembershipType.pub, ...pubIdOrSlug },
 						},
 					});
 
-					const { exists } = await doesPubExist(
-						params.pubId as PubsId,
+					const { exists, pub } = await doesPubExist(
+						pubIdOrSlug,
 						community.id as CommunitiesId
 					);
 
 					if (!exists) {
-						throw new NotFoundError(`Pub ${params.pubId} not found`);
+						throw new NotFoundError(`Pub ${params.pubIdOrSlug} not found`);
 					}
 					const relations = Object.entries(body).flatMap(([slug, data]) =>
 						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
 					);
 
 					await replacePubRelationsBySlug({
-						pubId: params.pubId as PubsId,
+						pubId: pub.id,
 						relations,
 						communityId: community.id,
 						lastModifiedBy,
@@ -519,14 +539,14 @@ const handler = createNextHandler(
 						};
 					}
 
-					const pub = await getPubsWithRelatedValuesAndChildren({
-						pubId: params.pubId as PubsId,
+					const fullPub = await getPubsWithRelatedValuesAndChildren({
+						pubId: pub.id,
 						communityId: community.id,
 					});
 
 					return {
 						status: 200,
-						body: pub,
+						body: fullPub,
 					};
 				},
 			},
