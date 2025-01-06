@@ -152,7 +152,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${token}`,
 					},
 					params: { instanceId },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -170,8 +169,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					body: pub,
-					// TODO: investigate @ts-rest/next cache invalidation
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -188,7 +185,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId, pubId },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -206,7 +202,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId, pubId: pub.id! },
 					body: pub,
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -224,7 +219,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					body: {},
 					params: { instanceId, pubId },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return;
@@ -242,7 +236,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					body: email,
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -260,7 +253,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					query,
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -277,7 +269,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId, pubTypeId },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -296,7 +287,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					params: { instanceId },
 					body: email,
 					query: jobOptions,
-					cache: "no-cache",
 				});
 				if (response.status === 202) {
 					return response.body;
@@ -314,7 +304,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					body: {},
 					params: { instanceId, key },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return;
@@ -332,7 +321,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					query: { userIds },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -350,7 +338,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					body: user,
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -373,7 +360,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						pubId: pubId,
 						fileName: fileName,
 					},
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -391,7 +377,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId },
 					body: instance,
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -408,7 +393,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -426,7 +410,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 					},
 					params: { instanceId, pubId },
 					body: state,
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
@@ -443,7 +426,6 @@ export const makeClient = <T extends Manifest>(manifest: T): Client<T> => {
 						authorization: `Bearer ${process.env.API_KEY}`,
 					},
 					params: { instanceId, pubId },
-					cache: "no-cache",
 				});
 				if (response.status === 200) {
 					return response.body;
