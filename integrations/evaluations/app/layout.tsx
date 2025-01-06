@@ -21,8 +21,8 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-	const instanceId = expect(cookie("instanceId"), "instanceId missing");
-	const user: User = JSON.parse(expect(cookie("user"), "user missing"));
+	const instanceId = expect(await cookie("instanceId"), "instanceId missing");
+	const user: User = JSON.parse(expect(await cookie("user"), "user missing"));
 	let instanceConfig: InstanceConfig | undefined;
 	if (instanceId) {
 		instanceConfig = await getInstanceConfig(instanceId);

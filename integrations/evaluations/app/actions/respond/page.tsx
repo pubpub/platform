@@ -23,7 +23,7 @@ export default async function Page(props: Props) {
 	if (!(instanceId && pubId)) {
 		notFound();
 	}
-	const user: SafeUser = JSON.parse(expect(cookie("user")));
+	const user: SafeUser = JSON.parse(expect(await cookie("user")));
 	const instanceConfig = expect(await getInstanceConfig(instanceId), "Instance not configured");
 	const instanceState = await getInstanceState(instanceId, pubId);
 	const pub = await client.getPub(instanceId, pubId);

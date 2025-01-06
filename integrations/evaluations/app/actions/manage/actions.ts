@@ -34,7 +34,7 @@ export const save = async (
 		async () => {
 			try {
 				const submissionPub = await client.getPub(instanceId, submissionPubId);
-				const user = JSON.parse(expect(cookie("user")));
+				const user = JSON.parse(expect(await cookie("user")));
 				const instanceConfig = expect(
 					await getInstanceConfig(instanceId),
 					"Instance not configured"

@@ -1,8 +1,8 @@
 import { cookies, headers } from "next/headers";
 
-export const cookie = (name: string) => {
-	const _cookies = cookies();
-	const _headers = headers().get("Set-Cookie");
+export const cookie = async (name: string) => {
+	const _cookies = await cookies();
+	const _headers = (await headers()).get("Set-Cookie");
 	const setCookiePatern = new RegExp(`${name}=(.*?);`);
 	if (_headers) {
 		const m = _headers.match(setCookiePatern);

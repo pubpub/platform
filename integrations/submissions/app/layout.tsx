@@ -22,9 +22,9 @@ export const metadata = {
 	description: "",
 };
 
-const cookie = (name: string) => {
-	const _cookies = cookies();
-	const _headers = headers().get("Set-Cookie");
+const cookie = async (name: string) => {
+	const _cookies = await cookies();
+	const _headers = (await headers()).get("Set-Cookie");
 	const setCookiePatern = new RegExp(`${name}=(.*?);`);
 	if (_headers) {
 		const m = _headers.match(setCookiePatern);
@@ -39,8 +39,8 @@ const cookie = (name: string) => {
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-	const instanceId = expect(cookie("instanceId"), "instanceId missing");
-	const user: User = JSON.parse(expect(cookie("user"), "user missing"));
+	const instanceId = expect(await cookie("instanceId"), "instanceId missing");
+	const user: User = JSON.parse(expect(await cookie("user"), "user missing"));
 	let instanceConfig: InstanceConfig | undefined;
 	if (instanceId) {
 		instanceConfig = await getInstanceConfig(instanceId);

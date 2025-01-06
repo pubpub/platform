@@ -1,8 +1,10 @@
-import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+
+import { expect } from "utils";
 
 import { getInstanceConfig, getInstanceState } from "~/lib/instance";
 import { client } from "~/lib/pubpub";
+import { cookie } from "~/lib/request";
 import { isInvited } from "~/lib/types";
 import { EvaluatorInviteForm } from "./EvaluatorInviteForm";
 
@@ -24,7 +26,7 @@ export default async function Page(props: Props) {
 	}
 	const instanceState = (await getInstanceState(instanceId, pubId)) ?? {};
 	const pub = await client.getPub(instanceId, pubId);
-	const user = JSON.parse(cookies().get("user")?.value!);
+	const user = JSON.parse(expect(await cookie("user")));
 	const evaluators = Object.values(instanceState).sort((a, b) => {
 		if (isInvited(a) && !isInvited(b)) return -1;
 		if (isInvited(b) && !isInvited(a)) return 1;
