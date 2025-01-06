@@ -1,6 +1,6 @@
 "use client";
 
-import type { UppyFile } from "@uppy/core";
+import type { Body, Meta, UppyFile } from "@uppy/core";
 
 import React, { forwardRef, useEffect } from "react";
 import Uppy from "@uppy/core";
@@ -41,7 +41,8 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 		});
 	}, [props.onUpdateFiles]);
 	uppy.getPlugin("AwsS3")!.setOptions({
-		getUploadParameters: async (file: UppyFile) => {
+		// TODO: maybe use more specific types for Meta and Body
+		getUploadParameters: async (file: UppyFile<Meta, Body>) => {
 			if (!file || !file.type) {
 				throw new Error("Could not read file.");
 			}
