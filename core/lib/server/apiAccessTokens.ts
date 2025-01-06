@@ -71,8 +71,8 @@ export const validateApiAccessToken = async (token: string, communityId: Communi
 	let isEqual = false;
 	try {
 		isEqual = crypto.timingSafeEqual(
-			new Uint8Array(Buffer.from(tokenString).buffer),
-			new Uint8Array(Buffer.from(dbToken.token).buffer)
+			new Uint8Array(Buffer.from(tokenString)),
+			new Uint8Array(Buffer.from(dbToken.token))
 		);
 	} catch (e) {
 		// token is probably formatted incorrectly, the two strings are not equal in length

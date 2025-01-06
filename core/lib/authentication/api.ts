@@ -13,10 +13,7 @@ export const getBearerToken = (authHeader: string) => {
 export const compareAPIKeys = (key1: string, key2: string) => {
 	if (
 		key1.length === key2.length &&
-		crypto.timingSafeEqual(
-			new Uint8Array(Buffer.from(key1).buffer),
-			new Uint8Array(Buffer.from(key2).buffer)
-		)
+		crypto.timingSafeEqual(new Uint8Array(Buffer.from(key1)), new Uint8Array(Buffer.from(key2)))
 	) {
 		return;
 	}
