@@ -64,6 +64,7 @@ const unmockFetch = () => {
 
 const pub = {
 	id: "" as PubsId,
+	slug: "a-preprint",
 	values: [
 		{
 			id: "" as PubValuesId,
