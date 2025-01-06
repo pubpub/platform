@@ -60,6 +60,11 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"@radix-ui/react-alert-dialog@1>@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
+			"react-style-singleton": "2.2.3",
+			"use-sidecar@1>@types/react": "-",
+			"use-sidecar@1>react": "-",
+			"@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
 			"@radix-ui/react-dismissable-layer": "^1.0.5",
 			"@radix-ui/react-focus-scope": "^1.0.4"
 		}

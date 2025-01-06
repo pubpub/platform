@@ -90,8 +90,13 @@ catalogs:
       version: 19.0.0
 
 overrides:
+  '@radix-ui/react-alert-dialog@1>@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton': 2.2.3
+  react-style-singleton: 2.2.3
+  '@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton': 2.2.3
   '@radix-ui/react-dismissable-layer': ^1.0.5
   '@radix-ui/react-focus-scope': ^1.0.4
+  use-sidecar@1>@types/react: '-'
+  use-sidecar@1>react: '-'
 
 importers:
 
@@ -405,7 +410,7 @@ importers:
         specifier: ^1.12.0
         version: 1.13.1
       prosemirror-model:
-        specifier: ^1.23.0
+        specifier: ^1.24.1
         version: 1.24.1
       react:
         specifier: catalog:react19
@@ -864,7 +869,7 @@ importers:
     dependencies:
       '@nytimes/react-prosemirror':
         specifier: ^1.0.0
-        version: 1.0.0(prosemirror-model@1.23.0)(prosemirror-state@1.4.3)(prosemirror-view@1.34.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        version: 1.0.0(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@prosemirror-adapter/react':
         specifier: ^0.4.0
         version: 0.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -885,7 +890,7 @@ importers:
         version: 0.4.3
       prosemirror-commands:
         specifier: ^1.6.0
-        version: 1.6.1
+        version: 1.6.2
       prosemirror-example-setup:
         specifier: ^1.2.3
         version: 1.2.3
@@ -902,8 +907,8 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2
       prosemirror-model:
-        specifier: ^1.22.3
-        version: 1.23.0
+        specifier: ^1.24.1
+        version: 1.24.1
       prosemirror-schema-basic:
         specifier: ^1.2.3
         version: 1.2.3
@@ -912,13 +917,13 @@ importers:
         version: 1.4.3
       prosemirror-suggest:
         specifier: ^3.0.0
-        version: 3.0.0(prosemirror-model@1.23.0)(prosemirror-state@1.4.3)(prosemirror-view@1.34.3)
+        version: 3.0.0(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1)
       prosemirror-transform:
         specifier: ^1.10.0
         version: 1.10.2
       prosemirror-view:
         specifier: ^1.34.2
-        version: 1.34.3
+        version: 1.37.1
       react:
         specifier: catalog:react19
         version: 19.0.0
@@ -8883,9 +8888,6 @@ packages:
     resolution: {integrity: sha512-6xwYfHbajpoF0xLW+iwLkhwgvLoZDfjYfoFNu8ftMoXINzwuymNLd9u/KmwtdT2GbR+/Cz66otEGEVVUHX9QLQ==}
     engines: {node: '>=10.13.0'}
 
-  invariant@2.2.4:
-    resolution: {integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==}
-
   ip-address@9.0.5:
     resolution: {integrity: sha512-zHtQzGojZXTwZTHQqra+ETKd4Sn3vgi7uBmlPoXVWZqYvuKmtI0l/VZTjqGmJY9x88GGOaZ9+G9ES8hC4T4X8g==}
     engines: {node: '>= 12'}
@@ -10663,8 +10665,8 @@ packages:
   prosemirror-autocomplete@0.4.3:
     resolution: {integrity: sha512-a4w/SOzgrTjXaWpSYMrai6H3KHSUBuADZC/DBm4VApiD9LGHpv98zQbHzsHgInrEoWcBGzYVT0HUD3tLgrsEVQ==}
 
-  prosemirror-commands@1.6.1:
-    resolution: {integrity: sha512-tNy4uaGWzvuUYXDke7B28krndIrdQJhSh0OLpubtwtEwFbjItOj/eoAfPvstBJyyV0S2+b5t4G+4XPXdxar6pg==}
+  prosemirror-commands@1.6.2:
+    resolution: {integrity: sha512-0nDHH++qcf/BuPLYvmqZTUUsPJUCPBUXt0J1ErTcDIS369CTp773itzLGIgIXG4LJXOlwYCr44+Mh4ii6MP1QA==}
 
   prosemirror-dev-tools@4.1.0:
     resolution: {integrity: sha512-TqMyXLiY8EUoq4f4LV+8dQVuRejwGfeOJdJWjrHNXR9ttKy3MVYBCqmiu3CDULgjv8gtLsqoZY6+ab6BZRmr1g==}
@@ -10697,9 +10699,6 @@ packages:
   prosemirror-menu@1.2.4:
     resolution: {integrity: sha512-S/bXlc0ODQup6aiBbWVsX/eM+xJgCTAfMq/nLqaO5ID/am4wS0tTCIkzwytmao7ypEtjj39i7YbJjAgO20mIqA==}
 
-  prosemirror-model@1.23.0:
-    resolution: {integrity: sha512-Q/fgsgl/dlOAW9ILu4OOhYWQbc7TQd4BwKH/RwmUjyVf8682Be4zj3rOYdLnYEcGzyg8LL9Q5IWYKD8tdToreQ==}
-
   prosemirror-model@1.24.1:
     resolution: {integrity: sha512-YM053N+vTThzlWJ/AtPtF1j0ebO36nvbmDy4U7qA2XQB8JVaQp1FmB9Jhrps8s+z+uxhhVTny4m20ptUvhk0Mg==}
 
@@ -10722,8 +10721,8 @@ packages:
   prosemirror-transform@1.10.2:
     resolution: {integrity: sha512-2iUq0wv2iRoJO/zj5mv8uDUriOHWzXRnOTVgCzSXnktS/2iQRa3UUQwVlkBlYZFtygw6Nh1+X4mGqoYBINn5KQ==}
 
-  prosemirror-view@1.34.3:
-    resolution: {integrity: sha512-mKZ54PrX19sSaQye+sef+YjBbNu2voNwLS1ivb6aD2IRmxRGW64HU9B644+7OfJStGLyxvOreKqEgfvXa91WIA==}
+  prosemirror-view@1.37.1:
+    resolution: {integrity: sha512-MEAnjOdXU1InxEmhjgmEzQAikaS6lF3hD64MveTPpjOGNTl87iRLA1HupC/DEV6YuK7m4Q9DHFNTjwIVtqz5NA==}
 
   protobufjs@7.4.0:
     resolution: {integrity: sha512-mRUWCc3KUU4w1jU8sGxICXH/gNS94DvI1gxqDvBzhj1JpcsimQkYiOJfwsPUykUI5ZaspFbSgmBLER8IrQ3tqw==}
@@ -10896,16 +10895,6 @@ packages:
     resolution: {integrity: sha512-xLE65euP920QMTOmv5haPlml+hmOPDkbIr5WeF7ADIXWBYt5kW/vwpNfWg8EKMab8aeDxIZ6QjffVh8v2dUyhg==}
     peerDependencies:
       react-dom: ^16.8.0 || ^17 || ^18
-
-  react-style-singleton@2.2.1:
-    resolution: {integrity: sha512-ZWj0fHEMyWkHzKYUr2Bs/4zU6XLmq9HsgBURm7g5pAVfyn49DgUiNgY2d4lXRlYSiCif9YBGpQleewkcqddc7g==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      '@types/react': ^16.8.0 || ^17.0.0 || ^18.0.0
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
-    peerDependenciesMeta:
-      '@types/react':
-        optional: true
 
   react-style-singleton@2.2.3:
     resolution: {integrity: sha512-b6jSvxvVnyptAiLjbkWLE/lOnR4lfTtDAl+eUC7RZy+QQWc6wRzIV2CE6xBuMmDxc2qIihtDCZD5NPOFl7fRBQ==}
@@ -12077,8 +12066,7 @@ packages:
     resolution: {integrity: sha512-epTbsLuzZ7lPClpz2TyryBfztm7m+28DlEv2ZCQ3MDr5ssiwyOwGH/e5F9CkfWjJ1t4clvI58yF822/GUkjjhw==}
     engines: {node: '>=10'}
     peerDependencies:
-      '@types/react': ^16.9.0 || ^17.0.0 || ^18.0.0
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0
+      '@types/react': '*'
     peerDependenciesMeta:
       '@types/react':
         optional: true
@@ -15252,11 +15240,11 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.17.1
 
-  '@nytimes/react-prosemirror@1.0.0(prosemirror-model@1.23.0)(prosemirror-state@1.4.3)(prosemirror-view@1.34.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@nytimes/react-prosemirror@1.0.0(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
@@ -19036,7 +19024,7 @@ snapshots:
 
   '@types/pg@8.11.8':
     dependencies:
-      '@types/node': 20.16.5
+      '@types/node': 20.17.12
       pg-protocol: 1.6.1
       pg-types: 4.0.2
 
@@ -19050,7 +19038,7 @@ snapshots:
 
   '@types/prosemirror-dev-tools@3.0.6':
     dependencies:
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
 
   '@types/react-dom@19.0.2(@types/react@19.0.3)':
     dependencies:
@@ -21884,10 +21872,6 @@ snapshots:
 
   interpret@3.1.1: {}
 
-  invariant@2.2.4:
-    dependencies:
-      loose-envify: 1.4.0
-
   ip-address@9.0.5:
     dependencies:
       jsbn: 1.1.0
@@ -23848,11 +23832,11 @@ snapshots:
     dependencies:
       prosemirror-inputrules: 1.4.0
       prosemirror-state: 1.4.3
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
 
-  prosemirror-commands@1.6.1:
+  prosemirror-commands@1.6.2:
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.2
 
@@ -23864,7 +23848,7 @@ snapshots:
       jotai: 1.13.1(@babel/core@7.26.0)(@babel/template@7.25.9)(react@19.0.0)
       jsondiffpatch: 0.4.1
       nanoid: 2.1.11
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
       react: 19.0.0
       react-dock: 0.6.0(@types/react@19.0.3)(react@19.0.0)
@@ -23888,11 +23872,11 @@ snapshots:
     dependencies:
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.2
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
 
   prosemirror-example-setup@1.2.3:
     dependencies:
-      prosemirror-commands: 1.6.1
+      prosemirror-commands: 1.6.2
       prosemirror-dropcursor: 1.8.1
       prosemirror-gapcursor: 1.3.2
       prosemirror-history: 1.4.1
@@ -23905,15 +23889,15 @@ snapshots:
   prosemirror-gapcursor@1.3.2:
     dependencies:
       prosemirror-keymap: 1.2.2
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
 
   prosemirror-history@1.4.1:
     dependencies:
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.2
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
       rope-sequence: 1.3.4
 
   prosemirror-inputrules@1.4.0:
@@ -23935,13 +23919,9 @@ snapshots:
   prosemirror-menu@1.2.4:
     dependencies:
       crelt: 1.0.6
-      prosemirror-commands: 1.6.1
+      prosemirror-commands: 1.6.2
       prosemirror-history: 1.4.1
       prosemirror-state: 1.4.3
-
-  prosemirror-model@1.23.0:
-    dependencies:
-      orderedmap: 2.1.1
 
   prosemirror-model@1.24.1:
     dependencies:
@@ -23949,38 +23929,38 @@ snapshots:
 
   prosemirror-schema-basic@1.2.3:
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
 
   prosemirror-schema-list@1.4.1:
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.2
 
   prosemirror-state@1.4.3:
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-transform: 1.10.2
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
 
-  prosemirror-suggest@3.0.0(prosemirror-model@1.23.0)(prosemirror-state@1.4.3)(prosemirror-view@1.34.3):
+  prosemirror-suggest@3.0.0(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1):
     dependencies:
       '@babel/runtime': 7.25.6
       '@remirror/core-constants': 3.0.0
       '@remirror/core-helpers': 4.0.0
       '@remirror/types': 2.0.0
       escape-string-regexp: 4.0.0
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
-      prosemirror-view: 1.34.3
+      prosemirror-view: 1.37.1
 
   prosemirror-transform@1.10.2:
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
 
-  prosemirror-view@1.34.3:
+  prosemirror-view@1.37.1:
     dependencies:
-      prosemirror-model: 1.23.0
+      prosemirror-model: 1.24.1
       prosemirror-state: 1.4.3
       prosemirror-transform: 1.10.2
 
@@ -24207,25 +24187,16 @@ snapshots:
     dependencies:
       react: 19.0.0
       react-remove-scroll-bar: 2.3.8(@types/react@19.0.3)(react@19.0.0)
-      react-style-singleton: 2.2.1(@types/react@19.0.3)(react@19.0.0)
+      react-style-singleton: 2.2.3(@types/react@19.0.3)(react@19.0.0)
       tslib: 2.8.1
       use-callback-ref: 1.3.3(@types/react@19.0.3)(react@19.0.0)
-      use-sidecar: 1.1.2(@types/react@19.0.3)(react@19.0.0)
+      use-sidecar: 1.1.2(@types/react@19.0.3)
     optionalDependencies:
       '@types/react': 19.0.3
 
   react-simple-animate@3.5.2(react-dom@19.0.0(react@19.0.0)):
     dependencies:
       react-dom: 19.0.0(react@19.0.0)
-
-  react-style-singleton@2.2.1(@types/react@19.0.3)(react@19.0.0):
-    dependencies:
-      get-nonce: 1.0.1
-      invariant: 2.2.4
-      react: 19.0.0
-      tslib: 2.8.1
-    optionalDependencies:
-      '@types/react': 19.0.3
 
   react-style-singleton@2.2.3(@types/react@19.0.3)(react@19.0.0):
     dependencies:
@@ -25667,10 +25638,9 @@ snapshots:
       dequal: 2.0.3
       react: 19.0.0
 
-  use-sidecar@1.1.2(@types/react@19.0.3)(react@19.0.0):
+  use-sidecar@1.1.2(@types/react@19.0.3):
     dependencies:
       detect-node-es: 1.1.0
-      react: 19.0.0
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.0.3
