@@ -218,8 +218,7 @@ const ComponentSelect = ({
 							>
 								<div
 									// 'inert' allows demo components to not be interactive unless they are selected
-									// @ts-ignore inert isn't typed properly in React 18, but will be in 19
-									inert={selected ? undefined : ""}
+									inert={selected ? undefined : true}
 									className="flex h-24 w-full items-center justify-center p-3"
 								>
 									{Component && <Component element={element} />}

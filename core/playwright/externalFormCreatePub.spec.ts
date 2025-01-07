@@ -20,6 +20,12 @@ let page: Page;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
+	page.on("console", async (msg) => {
+		if (msg.type() === "error") {
+			// eslint-disable-next-line no-console
+			console.error("Error:", msg, msg.location());
+		}
+	});
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
