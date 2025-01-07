@@ -1,4 +1,6 @@
 /* eslint-disable no-restricted-properties */
+import * as Sentry from "@sentry/nextjs";
+
 import { logger } from "logger";
 
 export async function register() {
@@ -26,3 +28,5 @@ export async function register() {
 		logger.info("NEXT_RUNTIME is not `nodejs`; skipping OTEL registration.");
 	}
 }
+
+export const onRequestError = Sentry.captureRequestError;
