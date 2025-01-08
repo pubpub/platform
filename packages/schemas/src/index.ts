@@ -1,4 +1,4 @@
-import type { Static } from "@sinclair/typebox";
+import type { Static, TSchema } from "@sinclair/typebox";
 
 import { CoreSchemaType } from "db/public";
 
@@ -19,41 +19,32 @@ import {
 	Vector3,
 } from "./schemas";
 
-export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, config?: unknown) {
-	switch (coreSchemaType) {
-		case CoreSchemaType.Boolean:
-			return Boolean;
-		case CoreSchemaType.DateTime:
-			return DateTime;
-		case CoreSchemaType.Email:
-			return Email;
-		case CoreSchemaType.FileUpload:
-			return FileUpload;
-		case CoreSchemaType.MemberId:
-			return MemberId;
-		case CoreSchemaType.Null:
-			return Null;
-		case CoreSchemaType.Number:
-			return Number;
-		case CoreSchemaType.NumericArray:
-			return getNumericArrayWithMinMax(config);
-		case CoreSchemaType.RichText:
-			return RichText;
-		case CoreSchemaType.String:
-			return String;
-		case CoreSchemaType.StringArray:
-			return getStringArrayWithMinMax(config);
-		case CoreSchemaType.URL:
-			return URL;
-		case CoreSchemaType.Vector3:
-			return Vector3;
-		default:
-			const _exhaustiveCheck: never = coreSchemaType;
-			return _exhaustiveCheck;
-	}
-}
+const SCHEMA_TYPE_SCHEMA_MAP = {
+	[CoreSchemaType.Boolean]: (config: unknown) => Boolean,
+	[CoreSchemaType.DateTime]: (config: unknown) => DateTime,
+	[CoreSchemaType.Email]: (config: unknown) => Email,
+	[CoreSchemaType.FileUpload]: (config: unknown) => FileUpload,
+	[CoreSchemaType.MemberId]: (config: unknown) => MemberId,
+	[CoreSchemaType.Null]: (config: unknown) => Null,
+	[CoreSchemaType.Number]: (config: unknown) => Number,
+	[CoreSchemaType.NumericArray]: getNumericArrayWithMinMax,
+	[CoreSchemaType.RichText]: (config: unknown) => RichText,
+	[CoreSchemaType.String]: (config: unknown) => String,
+	[CoreSchemaType.StringArray]: getStringArrayWithMinMax,
+	[CoreSchemaType.URL]: (config: unknown) => URL,
+	[CoreSchemaType.Vector3]: (config: unknown) => Vector3,
+} as const satisfies Record<CoreSchemaType, (config: unknown) => TSchema>;
 
-export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = (typeof Schemas)[C];
+export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = ReturnType<
+	(typeof SCHEMA_TYPE_SCHEMA_MAP)[C]
+>;
+
+export function getJsonSchemaByCoreSchemaType<T extends CoreSchemaType>(
+	coreSchemaType: T,
+	config?: unknown
+) {
+	return SCHEMA_TYPE_SCHEMA_MAP[coreSchemaType](config) as JSONSchemaForCoreSchemaType<T>;
+}
 
 export type InputTypeForCoreSchemaType<C extends CoreSchemaType> = Static<(typeof Schemas)[C]>;
 

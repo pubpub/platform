@@ -1,0 +1,44 @@
+{
+	"name": "@pubpub/platform-sdk",
+	"private": true,
+	"version": "0.0.1",
+	"description": "SDK for the PubPub platform",
+	"main": "dist/pubpub-platform-sdk.cjs.js",
+	"module": "dist/pubpub-platform-sdk.esm.js",
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit",
+		"test": "vitest"
+	},
+	"keywords": [
+		"pubpub",
+		"api",
+		"sdk"
+	],
+	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
+	"license": "GPL-2.0+",
+	"dependencies": {
+		"@ts-rest/core": "catalog:",
+		"contracts": "workspace:*",
+		"db": "workspace:*",
+		"utils": "workspace:*"
+	},
+	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
+		"@types/node": "catalog:",
+		"tsconfig": "workspace:*",
+		"typescript": "catalog:",
+		"vite-tsconfig-paths": "^5.0.1",
+		"vitest": "^2.1.8"
+	},
+	"preconstruct": {
+		"entrypoints": [
+			"index.ts"
+		]
+	},
+	"prettier": "@pubpub/prettier-config"
+}

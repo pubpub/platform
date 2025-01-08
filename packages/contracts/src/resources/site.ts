@@ -1,3 +1,5 @@
+import type { Prettify } from "@ts-rest/core";
+
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
@@ -247,15 +249,42 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	MaybePubMembers<Options> &
 	MaybePubLegacyAssignee<Options>;
 
+export type PubTypeWithFields = Prettify<
+	PubTypes & {
+		fields: Prettify<
+			Pick<PubFields, "id" | "name" | "slug" | "schemaName" | "isRelation"> & {
+				isTitle: boolean;
+			}
+		>[];
+	}
+>;
+
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages | null;
-	pubType?: PubTypes;
+	pubType?: PubTypeWithFields;
 	children?: NonGenericProcessedPub[];
 	values?: (ValueBase & {
 		relatedPub?: NonGenericProcessedPub | null;
 		relatedPubId: PubsId | null;
 	})[];
 }
+
+const pubTypeReturnSchema = pubTypesSchema.extend({
+	fields: z.array(
+		pubFieldsSchema
+			.omit({
+				createdAt: true,
+				updatedAt: true,
+				communityId: true,
+				isArchived: true,
+				integrationId: true,
+				pubFieldSchemaId: true,
+			})
+			.extend({
+				isTitle: z.boolean(),
+			})
+	),
+}) satisfies z.ZodType<PubTypeWithFields>;
 
 const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	id: pubsIdSchema,
@@ -279,11 +308,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	stage: stagesSchema.nullish(),
-	pubType: pubTypesSchema
-		.extend({
-			fields: z.array(pubFieldsSchema),
-		})
-		.optional(),
+	pubType: pubTypeReturnSchema.optional(),
 	children: z.lazy(() => z.array(processedPubSchema)).optional(),
 	assignee: usersSchema.nullish(),
 });
@@ -327,208 +352,236 @@ const getPubQuerySchema = z
 	})
 	.passthrough();
 
-export const siteApi = contract.router(
-	{
-		pubs: {
-			get: {
-				method: "GET",
-				path: "/pubs/:pubId",
-				summary: "Gets a pub",
-				description:
-					"Get a pub and its children by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
-				pathParams: z.object({
-					pubId: z.string().uuid(),
-				}),
-				query: getPubQuerySchema,
-				responses: {
-					200: processedPubSchema,
+export interface CommunitySpecificTypes {
+	Pub?: {};
+	PubType?: {};
+}
+
+type MaybePub<C extends CommunitySpecificTypes> = C extends {
+	Pub: infer P;
+}
+	? P
+	: NonGenericProcessedPub;
+
+type MaybePubType<C extends CommunitySpecificTypes> = C extends {
+	PubType: infer P;
+}
+	? P
+	: z.infer<typeof pubTypeReturnSchema>;
+
+export const createSiteApi = <
+	C extends CommunitySpecificTypes = CommunitySpecificTypes,
+	Pub extends MaybePub<C> = MaybePub<C>,
+	PubType extends MaybePubType<C> = MaybePubType<C>,
+>() =>
+	contract.router(
+		{
+			pubs: {
+				get: {
+					method: "GET",
+					path: "/pubs/:pubId",
+					summary: "Gets a pub",
+					description:
+						"Get a pub and its children by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
+					pathParams: z.object({
+						pubId: z.string().uuid(),
+					}),
+					query: getPubQuerySchema.optional(),
+					responses: {
+						200: processedPubSchema as unknown as z.ZodType<Pub>,
+					},
 				},
-			},
-			getMany: {
-				method: "GET",
-				path: "/pubs",
-				summary: "Gets a list of pubs",
-				description:
-					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
-				query: getPubQuerySchema.extend({
-					pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
-					stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
-				responses: {
-					200: z.array(processedPubSchema),
+				getMany: {
+					method: "GET",
+					path: "/pubs",
+					summary: "Gets a list of pubs",
+					description:
+						"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
+					query: getPubQuerySchema
+						.extend({
+							pubTypeId: pubTypesIdSchema
+								.optional()
+								.describe("Filter by pub type ID."),
+							stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
+							limit: z.number().default(10),
+							offset: z.number().default(0).optional(),
+							orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+							orderDirection: z.enum(["asc", "desc"]).optional(),
+						})
+						.optional(),
+					responses: {
+						200: z.array(processedPubSchema) as unknown as z.ZodType<Pub[]>,
+					},
 				},
-			},
-			create: {
-				summary: "Creates a pub",
-				description: "Creates a pub.",
-				method: "POST",
-				path: "/pubs",
-				headers: preferRepresentationHeaderSchema,
-				body: CreatePubRequestBodyWithNullsNew,
-				responses: {
-					201: processedPubSchema,
-					204: z.never().optional(),
+				create: {
+					summary: "Creates a pub",
+					description: "Creates a pub.",
+					method: "POST",
+					path: "/pubs",
+					headers: preferRepresentationHeaderSchema,
+					body: CreatePubRequestBodyWithNullsNew,
+					responses: {
+						201: processedPubSchema as unknown as z.ZodType<Pub>,
+						204: z.never().optional(),
+					},
 				},
-			},
-			update: {
-				summary: "Updates a pub",
-				description: "Updates a pubs values.",
-				method: "PATCH",
-				path: "/pubs/:pubId",
-				headers: preferRepresentationHeaderSchema,
-				body: z.record(jsonSchema),
-				responses: {
-					200: processedPubSchema,
-					204: z.never().optional(),
-				},
-			},
-			archive: {
-				summary: "Archives a pub",
-				description: "Archives a pub by ID.",
-				method: "DELETE",
-				body: z.never().nullish(),
-				path: "/pubs/:pubId",
-				responses: {
-					204: z.never().optional(),
-					404: z.literal("Pub not found"),
-				},
-			},
-			relations: {
 				update: {
-					summary: "Update pub relation fields",
-					description:
-						"Updates pub relations for the specified slugs. Only adds or modifies specified relations, leaves existing relations alone. If you want to replace all relations for a field, use PUT.",
+					summary: "Updates a pub",
+					description: "Updates a pubs values.",
 					method: "PATCH",
-					path: "/pubs/:pubId/relations",
+					path: "/pubs/:pubId",
 					headers: preferRepresentationHeaderSchema,
-					body: upsertPubRelationsSchema,
+					body: z.record(jsonSchema),
 					responses: {
-						200: processedPubSchema,
+						200: processedPubSchema as unknown as z.ZodType<Pub>,
 						204: z.never().optional(),
 					},
 				},
-				replace: {
-					summary: "Replace pub relation fields",
-					description:
-						"Replaces all pub relations for the specified slugs. If you want to add or modify relations without overwriting existing ones, use PATCH.",
-					method: "PUT",
-					path: "/pubs/:pubId/relations",
-					headers: preferRepresentationHeaderSchema,
-					body: upsertPubRelationsSchema,
-					responses: {
-						200: processedPubSchema,
-						204: z.never().optional(),
-					},
-				},
-				remove: {
-					summary: "Remove pub relation fields",
-					description:
-						"Removes related pubs from the specified pubfields. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.\n Note: This endpoint does not remove the related pubs themselves, only the relations.",
+				archive: {
+					summary: "Archives a pub",
+					description: "Archives a pub by ID.",
 					method: "DELETE",
-					path: "/pubs/:pubId/relations",
-					headers: preferRepresentationHeaderSchema,
-					body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
+					body: z.never().nullish(),
+					path: "/pubs/:pubId",
 					responses: {
-						200: processedPubSchema,
 						204: z.never().optional(),
+						404: z.literal("Pub not found"),
+					},
+				},
+				relations: {
+					update: {
+						summary: "Update pub relation fields",
+						description:
+							"Updates pub relations for the specified slugs. Only adds or modifies specified relations, leaves existing relations alone. If you want to replace all relations for a field, use PUT.",
+						method: "PATCH",
+						path: "/pubs/:pubId/relations",
+						headers: preferRepresentationHeaderSchema,
+						body: upsertPubRelationsSchema,
+						responses: {
+							200: processedPubSchema as unknown as z.ZodType<Pub>,
+							204: z.never().optional(),
+						},
+					},
+					replace: {
+						summary: "Replace pub relation fields",
+						description:
+							"Replaces all pub relations for the specified slugs. If you want to add or modify relations without overwriting existing ones, use PATCH.",
+						method: "PUT",
+						path: "/pubs/:pubId/relations",
+						headers: preferRepresentationHeaderSchema,
+						body: upsertPubRelationsSchema,
+						responses: {
+							200: processedPubSchema as unknown as z.ZodType<Pub>,
+							204: z.never().optional(),
+						},
+					},
+					remove: {
+						summary: "Remove pub relation fields",
+						description:
+							"Removes related pubs from the specified pubfields. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.\n Note: This endpoint does not remove the related pubs themselves, only the relations.",
+						method: "DELETE",
+						path: "/pubs/:pubId/relations",
+						headers: preferRepresentationHeaderSchema,
+						body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
+						responses: {
+							200: processedPubSchema as unknown as z.ZodType<Pub>,
+							204: z.never().optional(),
+						},
+					},
+				},
+			},
+			pubTypes: {
+				get: {
+					path: "/pub-types/:pubTypeId",
+					method: "GET",
+					summary: "Gets a pub type",
+					description:
+						"Get a pub type by ID. This endpoint is used by the PubPub site builder to get a pub type's details.",
+					pathParams: z.object({
+						pubTypeId: z.string().uuid(),
+					}),
+					responses: {
+						200: pubTypeReturnSchema as unknown as z.ZodType<PubType>,
+					},
+				},
+				getMany: {
+					path: "/pub-types",
+					method: "GET",
+					summary: "Gets a list of pub types",
+					description:
+						"Get a list of pub types by ID. This endpoint is used by the PubPub site builder to get a list of pub types.",
+					query: z.object({
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+					}),
+					responses: {
+						200: z.array(pubTypeReturnSchema) as unknown as z.ZodType<PubType[]>,
+					},
+				},
+			},
+			stages: {
+				get: {
+					path: "/stages/:stageId",
+					method: "GET",
+					summary: "Gets a stage",
+					description:
+						"Get a stage by ID. This endpoint is used by the PubPub site builder to get a stage's details.",
+					pathParams: z.object({
+						stageId: z.string().uuid(),
+					}),
+					responses: {
+						200: stagesSchema,
+					},
+				},
+				getMany: {
+					path: "/stages",
+					method: "GET",
+					summary: "Gets a list of stages",
+					description:
+						"Get a list of stages by ID. This endpoint is used by the PubPub site builder to get a list of stages.",
+					query: z.object({
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+					}),
+					responses: {
+						200: stagesSchema.array(),
+					},
+				},
+			},
+			users: {
+				search: {
+					path: "/users/search",
+					method: "GET",
+					summary: "Get a list of matching users for autocomplete",
+					description:
+						"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
+					query: z.object({
+						communityId: communitiesIdSchema,
+						email: z.string(),
+						name: z.string().optional(),
+						limit: z.number().optional(),
+					}),
+					responses: {
+						200: safeUserSchema
+							.extend({ member: communityMembershipsSchema.nullable().optional() })
+							.array(),
 					},
 				},
 			},
 		},
-		pubTypes: {
-			get: {
-				path: "/pub-types/:pubTypeId",
-				method: "GET",
-				summary: "Gets a pub type",
-				description:
-					"Get a pub type by ID. This endpoint is used by the PubPub site builder to get a pub type's details.",
-				pathParams: z.object({
-					pubTypeId: z.string().uuid(),
-				}),
-				responses: {
-					200: pubTypesSchema,
-				},
-			},
-			getMany: {
-				path: "/pub-types",
-				method: "GET",
-				summary: "Gets a list of pub types",
-				description:
-					"Get a list of pub types by ID. This endpoint is used by the PubPub site builder to get a list of pub types.",
-				query: z.object({
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
-				responses: {
-					200: pubTypesSchema.array(),
-				},
-			},
-		},
-		stages: {
-			get: {
-				path: "/stages/:stageId",
-				method: "GET",
-				summary: "Gets a stage",
-				description:
-					"Get a stage by ID. This endpoint is used by the PubPub site builder to get a stage's details.",
-				pathParams: z.object({
-					stageId: z.string().uuid(),
-				}),
-				responses: {
-					200: stagesSchema,
-				},
-			},
-			getMany: {
-				path: "/stages",
-				method: "GET",
-				summary: "Gets a list of stages",
-				description:
-					"Get a list of stages by ID. This endpoint is used by the PubPub site builder to get a list of stages.",
-				query: z.object({
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
-				responses: {
-					200: stagesSchema.array(),
-				},
-			},
-		},
-		users: {
-			search: {
-				path: "/users/search",
-				method: "GET",
-				summary: "Get a list of matching users for autocomplete",
-				description:
-					"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
-				query: z.object({
-					communityId: communitiesIdSchema,
-					email: z.string(),
-					name: z.string().optional(),
-					limit: z.number().optional(),
-				}),
-				responses: {
-					200: safeUserSchema
-						.extend({ member: communityMembershipsSchema.nullable().optional() })
-						.array(),
-				},
-			},
-		},
-	},
-	{
-		pathPrefix: "/api/v0/c/:communitySlug/site",
-		baseHeaders: z.object({
-			authorization: z
-				.string()
-				.regex(/^Bearer /)
-				.optional(),
-		}),
-	}
-);
+		{
+			pathPrefix: "/api/v0/c/:communitySlug/site",
+			baseHeaders: z.object({
+				authorization: z
+					.string()
+					.regex(/^Bearer /)
+					.optional(),
+			}),
+		}
+	);
+
+export const siteApi = createSiteApi();
