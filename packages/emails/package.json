@@ -1,5 +1,6 @@
 {
 	"name": "emails",
+	"type": "module",
 	"version": "1.0.0",
 	"main": "dist/emails.cjs.js",
 	"private": true,

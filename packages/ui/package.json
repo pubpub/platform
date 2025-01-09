@@ -1,5 +1,6 @@
 {
 	"name": "ui",
+	"type": "module",
 	"private": true,
 	"version": "0.1.0",
 	"main": "dist/ui.cjs.js",
