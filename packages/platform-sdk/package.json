@@ -9,8 +9,8 @@
 		"dist"
 	],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
+		"format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore --ignore-path .prettierignore",
 		"type-check": "tsc --noEmit",
 		"test": "vitest"
 	},
