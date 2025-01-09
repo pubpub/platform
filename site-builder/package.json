@@ -6,7 +6,7 @@
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore",
-		"type-check": "tsc --noEmit",
+		"type-check": "astro check",
 		"dev": "astro dev",
 		"build": "astro build",
 		"preview": "astro preview",
@@ -23,6 +23,7 @@
 		"react-dom": "catalog:react18"
 	},
 	"devDependencies": {
+		"@astrojs/check": "^0.9.4",
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/react": "catalog:react18",
