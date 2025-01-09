@@ -1137,6 +1137,9 @@ importers:
       utils:
         specifier: workspace:*
         version: link:../utils
+      zod:
+        specifier: 'catalog:'
+        version: 3.23.8
     devDependencies:
       '@pubpub/prettier-config':
         specifier: workspace:*

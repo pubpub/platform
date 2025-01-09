@@ -25,7 +25,8 @@
 		"@ts-rest/core": "catalog:",
 		"contracts": "workspace:*",
 		"db": "workspace:*",
-		"utils": "workspace:*"
+		"utils": "workspace:*",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
