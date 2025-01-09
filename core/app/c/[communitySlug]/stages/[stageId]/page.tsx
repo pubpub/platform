@@ -77,7 +77,9 @@ export default async function Page({
 				<div className="flex gap-2">
 					{showEditButton && (
 						<Button variant="outline" size="sm" asChild>
-							<Link href={`./manage?editingStageId=${stageId}`}>
+							<Link
+								href={`/c/${community.slug}/stages/manage?editingStageId=${stageId}`}
+							>
 								Edit Stage Settings
 							</Link>
 						</Button>

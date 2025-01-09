@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef, Suspense, useCallback, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import type { ButtonProps } from "ui/button";
 import type { LucideIcon } from "ui/icon";
@@ -9,6 +9,7 @@ import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
 import { cn } from "utils";
 
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { SkeletonCard } from "./skeletons/SkeletonCard";
 
 export type PathAwareDialogProps = {
@@ -32,7 +33,7 @@ export type PathAwareDialogProps = {
 
 export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => {
 	const searchParams = useSearchParams();
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const router = useRouter();
 	const isOpen = searchParams.get(props.param) === props.id;
 

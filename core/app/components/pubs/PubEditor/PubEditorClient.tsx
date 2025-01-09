@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
@@ -27,6 +27,7 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
 import { serializeProseMirrorDoc } from "~/lib/fields/richText";
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const SAVE_WAIT_MS = 5000;
@@ -186,7 +187,7 @@ export const PubEditorClient = ({
 	onSuccess,
 }: PubEditorClientProps) => {
 	const router = useRouter();
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const community = useCommunity();
 	const [saveTimer, setSaveTimer] = useState<NodeJS.Timeout>();
 	const runUpdatePub = useServerAction(actions.updatePub);

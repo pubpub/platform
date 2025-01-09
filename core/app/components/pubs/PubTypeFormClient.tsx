@@ -3,7 +3,7 @@
 import type { FieldValues } from "react-hook-form";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
@@ -22,6 +22,7 @@ import {
 import { Loader2 } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { useCommunity } from "../providers/CommunityProvider";
 
 export interface PubEditorSpecifiers {
@@ -45,7 +46,7 @@ export const PubTypeFormClient = ({
 		resolver: typeboxResolver(schema),
 	});
 
-	const path = usePathname();
+	const path = useTypedPathname();
 	const searchParams = useSearchParams();
 	const router = useRouter();
 	const community = useCommunity();
@@ -53,7 +54,7 @@ export const PubTypeFormClient = ({
 	const pathWithoutFormParam = useMemo(() => {
 		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 		urlSearchParams.delete("create-pub-form");
-		return `${path}?${urlSearchParams.toString()}`;
+		return `${path}?${urlSearchParams.toString()}` as const;
 	}, [path, searchParams]);
 
 	const closeForm = useCallback(() => {
@@ -65,7 +66,7 @@ export const PubTypeFormClient = ({
 			pubTypeId: values.pubTypeId,
 			...editorSpecifiers,
 		});
-		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
+		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}` as const;
 		router.push(createPubPath);
 	};
 

@@ -9,9 +9,10 @@ import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 
 type Props = {
 	communityId: CommunitiesId;
+	communitySlug: string;
 };
 
-const PubHeader: React.FC<Props> = ({ communityId }) => {
+const PubHeader: React.FC<Props> = ({ communityId, communitySlug }) => {
 	return (
 		<div className="mb-16 flex items-center justify-between">
 			<h1 className="flex-grow text-xl font-bold">Pubs</h1>
@@ -20,7 +21,7 @@ const PubHeader: React.FC<Props> = ({ communityId }) => {
 					<CreatePubButton communityId={communityId} />
 				</Suspense>
 				<Button variant="outline" size="sm" asChild>
-					<Link href="types">Manage Types</Link>
+					<Link href={`/c/${communitySlug}/types`}>Manage Types</Link>
 				</Button>
 			</div>
 		</div>

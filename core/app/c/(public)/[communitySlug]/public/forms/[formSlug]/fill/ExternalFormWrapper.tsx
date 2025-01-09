@@ -2,7 +2,7 @@
 
 import type { FieldValues } from "react-hook-form";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import type { BasicFormElements } from "~/app/components/forms/types";
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
@@ -11,6 +11,7 @@ import {
 	SUBMIT_ID_QUERY_PARAM,
 } from "~/app/components/pubs/PubEditor/constants";
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
+import { useTypedPathname } from "~/lib/routing-hooks";
 
 const isComplete = (formElements: BasicFormElements[], values: FieldValues) => {
 	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
@@ -28,7 +29,7 @@ export const ExternalFormWrapper = ({
 	...props
 }: Omit<PubEditorClientProps, "onSuccess">) => {
 	const router = useRouter();
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const params = useSearchParams();
 
 	const onSuccess = ({

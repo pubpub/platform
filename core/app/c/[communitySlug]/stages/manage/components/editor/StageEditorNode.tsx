@@ -3,7 +3,6 @@ import type { NodeProps } from "reactflow";
 
 import { memo, useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Handle, Position } from "reactflow";
 
 import type { StagesId } from "db/public";
@@ -12,6 +11,7 @@ import { Settings } from "ui/icon";
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { slugifyString } from "~/lib/string";
 import { useStages } from "../../StagesContext";
 
@@ -19,7 +19,7 @@ export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
 
 export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>) => {
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const { updateStageName } = useStages();
 	const [isEditingName, setIsEditingName] = useState(false);
 	const nodeRef = useRef<HTMLDivElement>(null);

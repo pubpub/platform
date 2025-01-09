@@ -27,11 +27,11 @@ export default async function Page({ params, searchParams }: Props) {
 
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const basePath = `/c/${community.slug}/pubs`;
+	const basePath = `/c/${community.slug}/pubs` as const;
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
+			<PubHeader communityId={community.id as CommunitiesId} communitySlug={community.slug} />
 			<PaginatedPubList
 				communityId={community.id}
 				searchParams={searchParams}

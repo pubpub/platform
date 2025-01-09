@@ -4,7 +4,6 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import type { PubTypes, Stages } from "db/public";
 import { Badge } from "ui/badge";
@@ -14,7 +13,9 @@ import { DataTableColumnHeader } from "ui/data-table";
 
 import type { FullProcessedPub } from "~/lib/server/pub";
 import { DataTable } from "~/app/components/DataTable/DataTable";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { getPubTitle } from "~/lib/pubs";
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { createdAtDateOptions } from "./getPubChildrenTableColumns";
 
 const getRelatedPubsColumns = () => {
@@ -46,8 +47,8 @@ const getRelatedPubsColumns = () => {
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
 			cell: ({ row }) => {
-				const pathname = usePathname();
-				const path = pathname.split("/").slice(0, 4).join("/");
+				const pathname = useCommunity();
+				const path = `/c/${pathname.slug}/pubs/${row.original.id}` as const;
 				const title = getPubTitle(row.original);
 				return (
 					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>

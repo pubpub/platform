@@ -16,6 +16,7 @@ import { ChevronDown, ChevronRight } from "ui/icon";
 import type { FileUpload } from "~/lib/fields/fileUpload";
 import type { FullProcessedPub } from "~/lib/server/pub";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
 
 const PubValueHeading = ({
@@ -71,6 +72,7 @@ export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 
 const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 	const [isOpen, setIsOpen] = useState(false);
+	const community = useCommunity();
 	if (value.relatedPub) {
 		const { relatedPub, ...justValue } = value;
 		const justValueElement = justValue.value ? (
@@ -91,7 +93,10 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 				<div className="flex items-center">
 					{justValueElement}
-					<Link className="inline underline" href={`./${relatedPub.id}`}>
+					<Link
+						className="inline underline"
+						href={`/c/${community.slug}/pubs/${relatedPub.id}`}
+					>
 						{getPubTitle(value.relatedPub)}
 					</Link>
 					{renderRelatedValues && (

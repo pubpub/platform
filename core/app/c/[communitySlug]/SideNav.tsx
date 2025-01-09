@@ -21,7 +21,7 @@ const Links = ({
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	communityPrefix: string;
+	communityPrefix: `/c/${string}`;
 }) => {
 	return (
 		<>
@@ -40,7 +40,7 @@ const ViewLinks = ({
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	prefix: string;
+	prefix: `/c/${string}`;
 	/* Whether the user is an admin */
 	isAdmin?: boolean;
 }) => {
@@ -63,7 +63,7 @@ const ManageLinks = ({
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	communityPrefix: string;
+	communityPrefix: `/c/${string}`;
 	/* Whether the user is an admin */
 	showCommunityEditorLinks?: boolean;
 }) => {
@@ -121,7 +121,7 @@ const ManageLinks = ({
 };
 
 const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
-	const prefix = `/c/${community.slug}`;
+	const prefix = `/c/${community.slug}` as const;
 	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
 
 	const { user } = await getLoginData();

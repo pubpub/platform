@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import type { PubsId } from "db/public";
@@ -10,6 +10,7 @@ import { Form } from "ui/form";
 import { Loader2, Trash } from "ui/icon";
 import { toast } from "ui/use-toast";
 
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./PubEditor/actions";
 
@@ -21,14 +22,14 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 
 	const runRemovePub = useServerAction(actions.removePub);
 
-	const path = usePathname();
+	const path = useTypedPathname();
 	const searchParams = useSearchParams();
 	const router = useRouter();
 
 	const pathWithoutFormParam = useMemo(() => {
 		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
 		urlSearchParams.delete("remove-pub-form");
-		return `${path}?${urlSearchParams.toString()}`;
+		return `${path}?${urlSearchParams.toString()}` as const;
 	}, [path, searchParams]);
 
 	const closeForm = useCallback(() => {

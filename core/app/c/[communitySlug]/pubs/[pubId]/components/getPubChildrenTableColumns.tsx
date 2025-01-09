@@ -3,7 +3,6 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
 import type { Stages } from "db/public";
 import { CoreSchemaType } from "db/public";
@@ -12,7 +11,9 @@ import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
 import type { ChildPubRow, ChildPubRowPubType } from "./types";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { UserCard } from "~/app/components/UserCard";
+import { getPubTitle } from "~/lib/pubs";
 
 export const createdAtDateOptions = {
 	month: "short",
@@ -86,12 +87,13 @@ export const getPubChildrenTableColumns = (
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
 			cell: ({ row }) => {
-				const pathname = usePathname();
-				const path = pathname.split("/").slice(0, 4).join("/");
-				const titleLikeValue = Object.entries(row.original.values).find(
-					([slug]) => slug.split(":")[1]?.indexOf("title") !== -1
-				)?.[1] as string | undefined;
-				const title = titleLikeValue || childPubType?.name || "Child";
+				const pathname = useCommunity();
+				const path = `/c/${pathname.slug}/pubs/${row.original.id}` as const;
+
+				const title = getPubTitle({
+					...row.original,
+					pubType: childPubType ?? { name: "Child" },
+				});
 				return (
 					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
 						{title}

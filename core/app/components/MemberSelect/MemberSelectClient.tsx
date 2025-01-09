@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
 import type { Communities } from "db/public";
@@ -21,6 +21,7 @@ import { cn, expect } from "utils";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { addMember } from "~/app/c/[communitySlug]/members/actions";
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
 import { UserAvatar } from "../UserAvatar";
@@ -74,7 +75,7 @@ export function MemberSelectClient({
 	helpText,
 }: Props) {
 	const router = useRouter();
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useCallback, useReducer, useRef } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { DndContext } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -22,6 +22,7 @@ import { toast } from "ui/use-toast";
 
 import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from "./types";
 import type { Form as PubForm } from "~/lib/server/form";
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { saveForm } from "./actions";
@@ -140,7 +141,7 @@ function PanelWrapper({
 
 export function FormBuilder({ pubForm, id, stages }: Props) {
 	const router = useRouter();
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const params = useSearchParams();
 	const form = useForm<FormBuilderSchema>({
 		resolver: zodResolver(formBuilderSchema),

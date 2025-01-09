@@ -1,11 +1,12 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { toast } from "ui/use-toast";
 
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
+import { useTypedPathname } from "~/lib/routing-hooks";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { SAVE_STATUS_QUERY_PARAM } from "./constants";
 
@@ -14,7 +15,7 @@ export const PubEditorWrapper = ({
 	...props
 }: Omit<PubEditorClientProps, "onSuccess">) => {
 	const router = useRouter();
-	const pathname = usePathname();
+	const pathname = useTypedPathname();
 	const params = useSearchParams();
 	const community = useCommunity();
 
@@ -31,7 +32,7 @@ export const PubEditorWrapper = ({
 		if (props.isUpdating) {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		} else {
-			const editPath = `/c/${community.slug}/pubs/${props.pub.id}/edit`;
+			const editPath = `/c/${community.slug}/pubs/${props.pub.id}/edit` as const;
 			router.push(`${editPath}?${newParams.toString()}`);
 		}
 	};
