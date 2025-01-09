@@ -3,6 +3,8 @@
 	"private": true,
 	"version": "0.0.1",
 	"scripts": {
+		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"dev": "astro dev",
 		"build": "astro build",
 		"preview": "astro preview",
