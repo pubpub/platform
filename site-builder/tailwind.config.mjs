@@ -1,7 +1,7 @@
 // @ts-check
 import { dirname, join } from "path";
 
-import sharedConfig from "ui/tailwind.config.js";
+import sharedConfig from "ui/tailwind.config.cjs";
 
 /** @param {string} id */
 const packagePath = (id) => dirname(require.resolve(`${id}/package.json`));
