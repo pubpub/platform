@@ -1,4 +1,0 @@
-{
-	"main": "dist/db-table-names.cjs.js",
-	"module": "dist/db-table-names.esm.js"
-}

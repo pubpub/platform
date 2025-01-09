@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-checkbox.cjs.js",
-	"module": "dist/ui-checkbox.esm.js"
-}
