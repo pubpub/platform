@@ -5,10 +5,7 @@
 	"main": "dist/utils.cjs.js",
 	"module": "dist/utils.esm.js",
 	"exports": {
-		".": {
-			"module": "./dist/utils.esm.js",
-			"default": "./dist/utils.cjs.js"
-		},
+		".": "./dist/utils.js",
 		"./package.json": "./package.json"
 	},
 	"scripts": {

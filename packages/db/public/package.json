@@ -1,4 +1,0 @@
-{
-	"main": "dist/db-public.cjs.js",
-	"module": "dist/db-public.esm.js"
-}

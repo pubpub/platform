@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-badge.cjs.js",
-	"module": "dist/ui-badge.esm.js"
-}

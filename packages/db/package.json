@@ -5,22 +5,10 @@
 	"version": "0.0.0",
 	"description": "",
 	"exports": {
-		"./public": {
-			"module": "./public/dist/db-public.esm.js",
-			"default": "./public/dist/db-public.cjs.js"
-		},
-		"./Database": {
-			"module": "./Database/dist/db-Database.esm.js",
-			"default": "./Database/dist/db-Database.cjs.js"
-		},
-		"./table-names": {
-			"module": "./table-names/dist/db-table-names.esm.js",
-			"default": "./table-names/dist/db-table-names.cjs.js"
-		},
-		"./types": {
-			"module": "./types/dist/db-types.esm.js",
-			"default": "./types/dist/db-types.cjs.js"
-		},
+		"./public": "./dist/db-public.js",
+		"./Database": "./dist/db-Database.js",
+		"./table-names": "./dist/db-table-names.js",
+		"./types": "./dist/db-types.js",
 		"./package.json": "./package.json"
 	},
 	"files": [

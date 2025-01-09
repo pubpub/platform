@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-hover-card.cjs.js",
-	"module": "dist/ui-hover-card.esm.js"
-}

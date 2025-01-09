@@ -5,10 +5,7 @@
 	"main": "dist/emails.cjs.js",
 	"module": "dist/emails.esm.js",
 	"exports": {
-		".": {
-			"module": "./dist/emails.esm.js",
-			"default": "./dist/emails.cjs.js"
-		},
+		".": "./dist/emails.js",
 		"./package.json": "./package.json"
 	},
 	"private": true,

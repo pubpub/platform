@@ -5,10 +5,7 @@
 	"main": "dist/logger.cjs.js",
 	"module": "dist/logger.esm.js",
 	"exports": {
-		".": {
-			"module": "./dist/logger.esm.js",
-			"default": "./dist/logger.cjs.js"
-		},
+		".": "./dist/logger.js",
 		"./package.json": "./package.json"
 	},
 	"scripts": {

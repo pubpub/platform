@@ -7,10 +7,7 @@
 	"main": "dist/contracts.cjs.js",
 	"module": "dist/contracts.esm.js",
 	"exports": {
-		".": {
-			"module": "./dist/contracts.esm.js",
-			"default": "./dist/contracts.cjs.js"
-		},
+		".": "./dist/contracts.js",
 		"./package.json": "./package.json"
 	},
 	"files": [

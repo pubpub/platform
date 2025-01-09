@@ -5,10 +5,7 @@
 	"main": "dist/schemas.cjs.js",
 	"module": "dist/schemas.esm.js",
 	"exports": {
-		".": {
-			"module": "./dist/schemas.esm.js",
-			"default": "./dist/schemas.cjs.js"
-		},
+		".": "./dist/schemas.js",
 		"./package.json": "./package.json"
 	},
 	"scripts": {

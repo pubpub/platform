@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-auto-form-dependencyType.cjs.js",
-	"module": "dist/ui-auto-form-dependencyType.esm.js"
-}

@@ -7,14 +7,8 @@
 	"main": "dist/pubpub-sdk.cjs.js",
 	"module": "dist/pubpub-sdk.esm.js",
 	"exports": {
-		".": {
-			"module": "./dist/pubpub-sdk.esm.js",
-			"default": "./dist/pubpub-sdk.cjs.js"
-		},
-		"./react": {
-			"module": "./react/dist/pubpub-sdk-react.esm.js",
-			"default": "./react/dist/pubpub-sdk-react.cjs.js"
-		},
+		".": "./dist/pubpub-sdk.js",
+		"./react": "./dist/pubpub-sdk-react.js",
 		"./package.json": "./package.json"
 	},
 	"files": [
