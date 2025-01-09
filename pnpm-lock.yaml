@@ -1141,6 +1141,9 @@ importers:
         specifier: 'catalog:'
         version: 3.23.8
     devDependencies:
+      '@pubpub/eslint-config':
+        specifier: workspace:*
+        version: link:../../config/eslint
       '@pubpub/prettier-config':
         specifier: workspace:*
         version: link:../../config/prettier

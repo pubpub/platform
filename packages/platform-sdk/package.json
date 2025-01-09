@@ -11,6 +11,8 @@
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore --ignore-path .prettierignore",
 		"format:fix": "prettier -w . --ignore-path ../../.gitignore --ignore-path .prettierignore",
+		"lint": "eslint **/*.ts",
+		"lint:fix": "eslint --fix **/*.ts",
 		"type-check": "tsc --noEmit",
 		"test": "vitest"
 	},
@@ -30,6 +32,7 @@
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
+		"@pubpub/eslint-config": "workspace:*",
 		"@types/node": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
