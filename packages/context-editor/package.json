@@ -13,7 +13,7 @@
 			"module": "./src/style.css",
 			"default": "./src/style.css"
 		},
-		"./tailwind.config.js": "./tailwind.config.js"
+		"./tailwind.config.cjs": "./tailwind.config.cjs"
 	},
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
@@ -80,7 +80,7 @@
 					"module": "./src/style.css",
 					"default": "./src/style.css"
 				},
-				"./tailwind.config.js": "./tailwind.config.js"
+				"./tailwind.config.cjs": "./tailwind.config.cjs"
 			}
 		},
 		"entrypoints": [

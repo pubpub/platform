@@ -59,7 +59,7 @@
 		"./package.json": "./package.json",
 		"./customRenderers/confidence": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.js",
 		"./customRenderers/fileUpload": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.js",
-		"./tailwind.config.js": "./tailwind.config.js",
+		"./tailwind.config.cjs": "./tailwind.config.cjs",
 		"./styles.css": "./styles.css"
 	},
 	"files": [
@@ -212,7 +212,7 @@
 			"extra": {
 				"./customRenderers/confidence": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.js",
 				"./customRenderers/fileUpload": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.js",
-				"./tailwind.config.js": "./tailwind.config.js",
+				"./tailwind.config.cjs": "./tailwind.config.cjs",
 				"./styles.css": "./styles.css"
 			}
 		},
