@@ -1,3 +1,4 @@
 {
-	"main": "dist/db-Database.cjs.js"
+	"main": "dist/db-Database.cjs.js",
+	"module": "dist/db-Database.esm.js"
 }

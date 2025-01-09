@@ -13,9 +13,7 @@ import type {
 	UsersId,
 	UsersUpdate,
 } from "db/public";
-import { MemberRole } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MemberRole, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "../authorization/capabilities";
 import type { XOR } from "../types";
