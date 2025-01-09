@@ -40,7 +40,7 @@
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
 		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
 		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
-		"type-check": "generate-typed-routes && tsc --noEmit",
+		"type-check": "pnpm generate-typed-routes && tsc --noEmit",
 		"type-check-watch": "tsc --watch",
 		"start-standalone": "node server.js"
 	},
