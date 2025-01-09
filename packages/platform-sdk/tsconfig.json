@@ -1,10 +1,10 @@
 {
-	"extends": "tsconfig/react-library.json",
+	"extends": "tsconfig/base.json",
 	"compilerOptions": {
 		"noEmit": true,
-		"jsx": "react",
+		"module": "ESNext",
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
 	},
-	"include": ["."],
+	"include": ["./src/**/*.ts"],
 	"exclude": ["dist", "build", "node_modules"]
 }
