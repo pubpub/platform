@@ -373,6 +373,11 @@
 		"zod": "catalog:"
 	},
 	"preconstruct": {
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		},
 		"exports": {
 			"extra": {
 				"./customRenderers/confidence": {

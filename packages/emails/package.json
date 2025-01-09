@@ -3,6 +3,14 @@
 	"type": "module",
 	"version": "1.0.0",
 	"main": "dist/emails.cjs.js",
+	"module": "dist/emails.esm.js",
+	"exports": {
+		".": {
+			"module": "./dist/emails.esm.js",
+			"default": "./dist/emails.cjs.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"private": true,
 	"scripts": {
 		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
@@ -35,7 +43,13 @@
 	"preconstruct": {
 		"entrypoints": [
 			"index.tsx"
-		]
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"files": [
 		"dist"

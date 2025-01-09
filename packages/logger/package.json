@@ -4,6 +4,13 @@
 	"version": "0.0.1",
 	"main": "dist/logger.cjs.js",
 	"module": "dist/logger.esm.js",
+	"exports": {
+		".": {
+			"module": "./dist/logger.esm.js",
+			"default": "./dist/logger.cjs.js"
+		},
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
@@ -17,6 +24,14 @@
 	},
 	"dependencies": {
 		"pino": "^8.19.0"
+	},
+	"preconstruct": {
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config"
 }
