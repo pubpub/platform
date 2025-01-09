@@ -31,7 +31,9 @@
 		"../packages/db/scripts/scripts/generateDatabaseObject.mts",
 		"../packages/db/src/prisma/comment-generator.ts",
 		"cache-handler.js",
-		"prisma/generate-history-table.mts"
+		"prisma/generate-history-table.mts",
+		"prisma/seed.cts",
+		"prisma/scripts/comment-generator.mts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
