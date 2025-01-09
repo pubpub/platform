@@ -5,10 +5,10 @@ import type { CommunitiesId, CommunityMembershipsId } from "db/public";
 import { MemberRole } from "db/public";
 import { logger } from "logger";
 
-import { db } from "../kysely/database";
-import { isUniqueConstraintError } from "../kysely/errors";
-import { createPasswordHash } from "../lib/authentication/password";
-import { env } from "../lib/env/env.mjs";
+import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
+import { createPasswordHash } from "~/lib/authentication/password";
+import { env } from "~/lib/env/env.mjs";
 import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
 import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
 import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
