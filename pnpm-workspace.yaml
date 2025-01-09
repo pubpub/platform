@@ -1,5 +1,6 @@
 packages:
     - "core"
+    - "site-builder"
     - "jobs"
     - "config/*"
     - "integrations/*"

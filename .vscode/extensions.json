@@ -3,6 +3,7 @@
 		"ms-playwright.playwright",
 		"YoavBls.pretty-ts-errors",
 		"esbenp.prettier-vscode",
-		"dbaeumer.vscode-eslint"
+		"dbaeumer.vscode-eslint",
+		"astro-build.astro-vscode"
 	]
 }

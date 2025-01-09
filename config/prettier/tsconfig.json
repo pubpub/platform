@@ -5,6 +5,6 @@
 		"noEmit": true,
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
 	},
-	"include": ["./*.js"],
+	"include": ["./*.js", "index.mjs", "astro.mjs"],
 	"exclude": ["node_modules"]
 }
