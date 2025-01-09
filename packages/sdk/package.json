@@ -4,8 +4,6 @@
 	"private": true,
 	"version": "0.0.6",
 	"description": "",
-	"main": "dist/pubpub-sdk.cjs.js",
-	"module": "dist/pubpub-sdk.esm.js",
 	"exports": {
 		".": "./dist/pubpub-sdk.js",
 		"./react": "./dist/pubpub-sdk-react.js",

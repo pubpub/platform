@@ -11,9 +11,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Event, stagesIdSchema } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, Event, MembershipType, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";

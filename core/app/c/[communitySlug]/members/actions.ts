@@ -3,8 +3,7 @@
 import { cache } from "react";
 
 import type { UsersId } from "db/public";
-import { MemberRole } from "db/public";
-import { MembershipType } from "db/src/public/MembershipType";
+import { MemberRole, MembershipType } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema";

@@ -15,8 +15,7 @@ import {
 	Text,
 } from "@react-email/components";
 
-import type { Communities } from "db/public";
-import type { MembershipType } from "db/src/public/MembershipType";
+import type { Communities, MembershipType } from "db/public";
 import { MemberRole } from "db/public";
 
 interface SignupInviteProps {

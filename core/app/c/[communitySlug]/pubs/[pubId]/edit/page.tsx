@@ -5,8 +5,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
