@@ -1,9 +1,10 @@
 // @ts-check
 
+import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
-import "./lib/env/env.mjs";
+import { env } from "./lib/env/env.mjs";
 
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
@@ -71,6 +72,7 @@ const modifiedConfig = withPreconstruct(
 		silent: true,
 		org: "kfg",
 		project: "v7-core",
+		authToken: env.SENTRY_AUTH_TOKEN,
 		// For all available options, see:
 		// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
@@ -88,4 +90,14 @@ const modifiedConfig = withPreconstruct(
 	})
 );
 
-export default modifiedConfig;
+export default (phase, { defaultConfig }) => {
+	console.log(phase, env);
+	if (phase === PHASE_PRODUCTION_BUILD) {
+		if (!env.SENTRY_AUTH_TOKEN && env.CI) {
+			throw new Error(
+				"SENTRY_AUTH_TOKEN is required for production builds in CI in order to upload source maps to sentry"
+			);
+		}
+	}
+	return modifiedConfig;
+};
