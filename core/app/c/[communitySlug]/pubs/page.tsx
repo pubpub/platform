@@ -17,6 +17,8 @@ type Props = {
 };
 
 export default async function Page({ params, searchParams }: Props) {
+	throw new Error("Test error for testing sourcemaps, do not be alarmed.");
+
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
