@@ -19,27 +19,27 @@ type Props = {
 export default async function Page({ params, searchParams }: Props) {
 	throw new Error("Test error for testing sourcemaps, do not be alarmed.");
 
-	const { user } = await getPageLoginData();
+	// const { user } = await getPageLoginData();
 
-	const community = await findCommunityBySlug(params.communitySlug);
+	// const community = await findCommunityBySlug(params.communitySlug);
 
-	if (!community) {
-		return null;
-	}
+	// if (!community) {
+	// 	return null;
+	// }
 
-	const page = searchParams.page ? parseInt(searchParams.page) : 1;
+	// const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const basePath = `/c/${community.slug}/pubs`;
+	// const basePath = `/c/${community.slug}/pubs`;
 
-	return (
-		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
-			<PaginatedPubList
-				communityId={community.id}
-				searchParams={searchParams}
-				page={page}
-				basePath={basePath}
-			/>
-		</>
-	);
+	// return (
+	// 	<>
+	// 		<PubHeader communityId={community.id as CommunitiesId} />
+	// 		<PaginatedPubList
+	// 			communityId={community.id}
+	// 			searchParams={searchParams}
+	// 			page={page}
+	// 			basePath={basePath}
+	// 		/>
+	// 	</>
+	// );
 }
