@@ -86,7 +86,7 @@ resource "aws_iam_policy" "github_actions_secrets" {
         ],
         Resource : [
           # necessary to set during build in order to upload source maps to sentry
-          aws_secretsmanager_secret.sentry_auth_token.arn
+          "arn:aws:secretsmanager:*:*:secret:sentry-auth-token-*"
         ]
       }
     ]
