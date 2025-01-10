@@ -116,8 +116,10 @@ export default async function Page({
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
 	const communityStagesPromise = getStages({ communityId: community.id }).execute();
 
+	// We don't pass the userId here because we want to include related pubs regardless of authorization
+	// This is safe because we've already explicitly checked authorization for the root pub
 	const pub = await getPubsWithRelatedValuesAndChildren(
-		{ pubId: params.pubId, communityId: community.id, userId: user.id },
+		{ pubId: params.pubId, communityId: community.id },
 		{
 			withPubType: true,
 			withChildren: true,
@@ -175,7 +177,6 @@ export default async function Page({
 							</div>
 						</div>
 					) : null}
-
 					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (
