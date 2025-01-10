@@ -45,6 +45,14 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v2
 
+              # necessary in order to upload build source maps to sentry
+            - name: Get sentry token
+              id: sentry-token
+              uses: aws-actions/aws-secretsmanager-get-secrets@v2
+              with:
+                  secret-ids: |
+                      SENTRY_AUTH_TOKEN, ${{ vars.SENTRY_AUTH_TOKEN_ARN }}
+
             - name: setup docker buildx
               uses: docker/setup-buildx-action@v3
 
@@ -75,6 +83,7 @@ jobs:
                   REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}-${{env.PACKAGE}}:cache
                   LABEL: ${{ steps.label.outputs.label }}
                   TARGET: ${{ steps.label.outputs.target }}
+                  SENTRY_AUTH_TOKEN: ${{ env.SENTRY_AUTH_TOKEN }}
               with:
                   context: .
                   # cache-from: type=registry,ref=${{env.REGISTRY_REF}}
