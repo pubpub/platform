@@ -1,5 +1,4 @@
 import { afterEach } from "node:test";
-import { isNull } from "util";
 
 import { describe, expect, it, vitest } from "vitest";
 
@@ -128,6 +127,7 @@ const pub = {
 	pubTypeId: "" as PubTypesId,
 	stageId: null,
 	parentId: null,
+	depth: 1,
 } as ActionPub;
 
 const RUN_OPTIONS: RunProps<typeof action> = {

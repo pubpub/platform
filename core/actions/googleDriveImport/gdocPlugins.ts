@@ -1,6 +1,6 @@
 import path from "path";
 
-import type { Element, Root } from "hast";
+import type { Element, Node, Root } from "hast";
 
 import katex from "katex";
 import { rehype } from "rehype";
@@ -9,6 +9,12 @@ import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
 import { filter } from "unist-util-filter";
 import { visit } from "unist-util-visit";
+
+const removeProperties = () => (tree: Root) => {
+	visit(tree, "element", (node: any) => {
+		node.properties = {};
+	});
+};
 
 export const mathStringToRehypeElement = (htmlString: string): Element[] => {
 	const parser = String(rehype().processSync(htmlString));
@@ -36,7 +42,7 @@ export const latexToRehypeNode = (latexString: string, isBlock: boolean): Elemen
 	};
 };
 
-const getTextContent = (node: any): string => {
+export const getTextContent = (node: any): string => {
 	if (!node) {
 		return "";
 	}
@@ -149,27 +155,26 @@ export const structureFormatting = () => (tree: Root) => {
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.properties && node.properties.style) {
 			const style = node.properties.style as string;
-
 			if (node.tagName === "span") {
-				const styles = style.split(";").map((s) => s.trim());
+				const styles = style.split(";").map((s) => s.trim().replace(/\s+/g, ""));
 				const tags = [];
 
-				if (styles.includes("font-weight: 700")) {
+				if (styles.includes("font-weight:700")) {
 					tags.push("b");
 				}
-				if (styles.includes("font-style: italic")) {
+				if (styles.includes("font-style:italic")) {
 					tags.push("i");
 				}
-				if (styles.includes("text-decoration: line-through")) {
+				if (styles.includes("text-decoration:line-through")) {
 					tags.push("s");
 				}
-				if (styles.includes("text-decoration: underline")) {
+				if (styles.includes("text-decoration:underline")) {
 					tags.push("u");
 				}
-				if (styles.includes("vertical-align: sub")) {
+				if (styles.includes("vertical-align:sub")) {
 					tags.push("sub");
 				}
-				if (styles.includes("vertical-align: super")) {
+				if (styles.includes("vertical-align:super")) {
 					tags.push("sup");
 				}
 
@@ -649,5 +654,27 @@ export const structureFootnotes = () => (tree: Root) => {
 			children: [{ type: "text", value: `[${index + 1}]` }],
 		};
 		insertVariables(tree, footnoteData.id, newNode);
+	});
+};
+
+export const removeGoogleLinkForwards = () => (tree: Root) => {
+	visit(tree, "element", (node: any) => {
+		if (
+			node.tagName === "a" &&
+			node.properties.href?.startsWith("https://www.google.com/url")
+		) {
+			const url = new URL(node.properties.href);
+			const q = url.searchParams.get("q");
+			node.properties.href = q;
+		}
+	});
+};
+
+export const processLocalLinks = () => (tree: Root) => {
+	visit(tree, "element", (node: any) => {
+		if (node.tagName === "a" && node.properties.href?.startsWith("https://local.pubpub/")) {
+			const href = decodeURIComponent(node.properties.href);
+			node.properties.href = href.split("local.pubpub/")[1].split("&")[0];
+		}
 	});
 };
