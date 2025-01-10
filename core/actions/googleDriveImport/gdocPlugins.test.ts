@@ -5,6 +5,8 @@ import { logger } from "logger";
 
 import {
 	basic,
+	processLocalLinks,
+	removeGoogleLinkForwards,
 	removeVerboseFormatting,
 	structureAnchors,
 	structureAudio,
@@ -761,6 +763,108 @@ test("Structure Footnotes", async () => {
 
 	const result = await rehype()
 		.use(structureFootnotes)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("removeGoogleLinkForwards", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<div><p>Here is some text {ref2}, {ref1}, {ref38}</p></div>
+				<p>
+					<sup>
+						<u>
+							<a
+								href="https://www.google.com/url?q=https://research.arcadiascience.com/icebox&#x26;sa=D&#x26;source=editors&#x26;ust=1735008185029653&#x26;usg=AOvVaw3BrkYrphpexOt8IFnAV6MN"
+							>
+								Learn more
+							</a>
+						</u>
+					</sup>
+				</p>
+				<p>Another <a href="https://www.google.com/url?q=https://local.pubpub/%23n84lvlagdc2&amp;sa=D&amp;source=editors&amp;ust=1735008267184897&amp;usg=AOvVaw3-emucfkfJE8CHmFXlcgUo">Figure 1</a>.</p>
+				<sup> about the Icebox and the different reasons we ice projects.</sup>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `<html>
+			<head></head>
+			<body>
+				<div><p>Here is some text {ref2}, {ref1}, {ref38}</p></div>
+				<p>
+					<sup>
+						<u>
+							<a href="https://research.arcadiascience.com/icebox">
+								Learn more
+							</a>
+						</u>
+					</sup>
+				</p>
+				<p>Another <a href="https://local.pubpub/#n84lvlagdc2">Figure 1</a>.</p>
+				<sup> about the Icebox and the different reasons we ice projects.</sup>
+			</body>
+		</html>`;
+
+	const result = await rehype()
+		.use(removeGoogleLinkForwards)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("processLocalLinks", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<div><p>Here is some text {ref2}, {ref1}, {ref38}</p></div>
+				<p>
+					<sup>
+						<u>
+							<a href="https://research.arcadiascience.com/icebox">
+								Learn more
+							</a>
+						</u>
+					</sup>
+				</p>
+				<p>Another <a href="https://local.pubpub/#n84lvlagdc2">Figure 1</a>.</p>
+				<sup> about the Icebox and the different reasons we ice projects.</sup>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `<html>
+			<head></head>
+			<body>
+				<div><p>Here is some text {ref2}, {ref1}, {ref38}</p></div>
+				<p>
+					<sup>
+						<u>
+							<a href="https://research.arcadiascience.com/icebox">
+								Learn more
+							</a>
+						</u>
+					</sup>
+				</p>
+				<p>Another <a href="#n84lvlagdc2">Figure 1</a>.</p>
+				<sup> about the Icebox and the different reasons we ice projects.</sup>
+			</body>
+		</html>`;
+
+	const result = await rehype()
+		.use(processLocalLinks)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {

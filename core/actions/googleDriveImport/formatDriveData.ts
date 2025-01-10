@@ -3,8 +3,12 @@ import { writeFile } from "fs/promises";
 import { rehype } from "rehype";
 import rehypeFormat from "rehype-format";
 
+import type { PubsId } from "db/public";
+
 import type { DriveData } from "./getGDriveFiles";
 import {
+	processLocalLinks,
+	removeGoogleLinkForwards,
 	removeVerboseFormatting,
 	structureAnchors,
 	structureAudio,
@@ -25,17 +29,19 @@ import {
 export type FormattedDriveData = {
 	pubHtml: string;
 	versions: {
-		"arcadia:description": string;
-		"arcadia:publication-date": string;
-		"arcadia:content": string;
+		[description: `${string}:description`]: string;
+		[publicationDate: `${string}:publication-date`]: string;
+		[content: `${string}:content`]: string;
 	}[];
-	discussions: { id: string; values: {} }[];
+	discussions: { id: PubsId; values: {} }[];
 };
 
-export const formatDriveData = async (dataFromDrive: DriveData): Promise<FormattedDriveData> => {
-	const formattedPubHtml = await rehype()
+const processHtml = async (html: string): Promise<string> => {
+	const result = await rehype()
 		.use(structureFormatting)
 		.use(removeVerboseFormatting)
+		.use(removeGoogleLinkForwards)
+		.use(processLocalLinks)
 		.use(structureImages)
 		.use(structureVideos)
 		.use(structureAudio)
@@ -50,7 +56,15 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 		.use(structureReferences)
 		.use(structureFootnotes)
 		.use(rehypeFormat)
-		.process(dataFromDrive.pubHtml);
+		.process(html);
+	return String(result);
+};
+
+export const formatDriveData = async (
+	dataFromDrive: DriveData,
+	communitySlug: string
+): Promise<FormattedDriveData> => {
+	const formattedPubHtml = await processHtml(dataFromDrive.pubHtml);
 
 	const releases: any = dataFromDrive.legacyData?.releases || [];
 	const findDescription = (timestamp: string) => {
@@ -62,32 +76,15 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 	};
 
 	for (const version of dataFromDrive.versions) {
-		const processedHtml = await rehype()
-			.use(structureFormatting)
-			.use(removeVerboseFormatting)
-			.use(structureImages)
-			.use(structureVideos)
-			.use(structureAudio)
-			.use(structureFiles)
-			.use(structureIframes)
-			.use(structureBlockMath)
-			.use(structureInlineMath)
-			.use(structureBlockquote)
-			.use(structureCodeBlock)
-			.use(structureInlineCode)
-			.use(structureAnchors)
-			.use(structureReferences)
-			.use(structureFootnotes)
-			.use(rehypeFormat)
-			.process(version.html);
+		const processedHtml = await processHtml(version.html);
 		version.html = String(processedHtml);
 	}
 	const versions = dataFromDrive.versions.map((version) => {
 		const { timestamp, html } = version;
 		const outputVersion: any = {
-			"arcadia:description": findDescription(timestamp),
-			"arcadia:publication-date": timestamp,
-			"arcadia:content": html,
+			[`${communitySlug}:description`]: findDescription(timestamp),
+			[`${communitySlug}:publication-date`]: timestamp,
+			[`${communitySlug}:content`]: html,
 		};
 		Object.keys(outputVersion).forEach((key) => {
 			if (outputVersion[key] === undefined || outputVersion[key] === null) {
@@ -111,20 +108,39 @@ export const formatDriveData = async (dataFromDrive: DriveData): Promise<Formatt
 					if (index === 0) {
 						firstCommentId = comment.id;
 					}
+					// we apparently can't assume the comment.author exists, sometimes it's comment.commenter
+					const commentAuthorName = comment.author
+						? comment.author.fullName
+						: comment.commenter
+							? comment.commenter.name
+							: null;
+					const commentAuthorAvatar =
+						comment.author && comment.author.avatar
+							? comment.author.avatar
+							: comment.commenter && comment.commenter.avatar
+								? comment.commenter.avatar
+								: null;
+					const commentAuthorORCID =
+						comment.author && comment.author.orcid
+							? `https://orcid.org/${comment.author.orcid}`
+							: comment.commenter && comment.commenter.orcid
+								? `https://orcid.org/${comment.commenter.orcid}`
+								: null;
 					const commentObject: any = {
 						id: comment.id,
 						values: {
-							"arcadia:anchor":
+							[`${communitySlug}:anchor`]:
 								index === 0 && discussion.anchors.length
-									? discussion.anchors[0]
+									? JSON.stringify(discussion.anchors[0])
 									: undefined,
-							"arcadia:content": comment.text,
-							"arcadia:publication-date": comment.createdAt,
-							"arcadia:full-name": comment.author.fullName,
-							"arcadia:orcid": comment.author.orcid,
-							"arcadia:avatar": comment.author.avatar,
-							"arcadia:is-closed": discussion.isClosed,
-							"arcadia:parent-id": index !== 0 ? firstCommentId : undefined,
+							[`${communitySlug}:content`]: comment.text,
+							[`${communitySlug}:publication-date`]: comment.createdAt,
+							[`${communitySlug}:full-name`]: commentAuthorName,
+							[`${communitySlug}:orcid`]: commentAuthorORCID,
+							[`${communitySlug}:avatar`]: commentAuthorAvatar,
+							[`${communitySlug}:is-closed`]: discussion.isClosed,
+							[`${communitySlug}:parent-id`]:
+								index !== 0 ? firstCommentId : undefined,
 						},
 					};
 
