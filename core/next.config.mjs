@@ -87,6 +87,10 @@ const modifiedConfig = withPreconstruct(
 
 		// Automatically tree-shake Sentry logger statements to reduce bundle size
 		disableLogger: true,
+		sourcemaps: {
+			// necessary to prevent OOM errors
+			deleteSourcemapsAfterUpload: true,
+		},
 	})
 );
 
