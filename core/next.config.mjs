@@ -91,6 +91,10 @@ const modifiedConfig = withPreconstruct(
 );
 
 export default (phase, { defaultConfig }) => {
+	if (!env.SENTRY_AUTH_TOKEN) {
+		console.warn("⚠️ SENTRY_AUTH_TOKEN is not set");
+	}
+
 	if (phase === PHASE_PRODUCTION_BUILD && env.CI) {
 		if (!env.SENTRY_AUTH_TOKEN) {
 			throw new Error(

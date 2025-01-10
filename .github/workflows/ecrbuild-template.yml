@@ -76,6 +76,14 @@ jobs:
                   fi
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
 
+            - name: Check if SENTRY_AUTH_TOKEN is set
+              run: |
+                  if [[ -z ${{ env.SENTRY_AUTH_TOKEN }} ]]
+                  then
+                      echo "SENTRY_AUTH_TOKEN is not set"
+                      exit 1
+                  fi
+
             - name: Build, tag, and push image to Amazon ECR
               uses: docker/build-push-action@v5
               id: build-image
@@ -83,7 +91,6 @@ jobs:
                   REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}-${{env.PACKAGE}}:cache
                   LABEL: ${{ steps.label.outputs.label }}
                   TARGET: ${{ steps.label.outputs.target }}
-                  CI: ${{ env.CI }}
                   SENTRY_AUTH_TOKEN: ${{ env.SENTRY_AUTH_TOKEN }}
               with:
                   context: .
@@ -92,7 +99,7 @@ jobs:
                   builder: cached-builder
                   build-args: |
                       PACKAGE=${{ inputs.package }}
-                      CI=${{ env.CI }}
+                      CI=true
                   secrets: |
                       SENTRY_AUTH_TOKEN=${{ env.SENTRY_AUTH_TOKEN }}
                   target: ${{ steps.label.outputs.target }}

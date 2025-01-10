@@ -77,9 +77,7 @@ ENV DOCKERBUILD=1
 ARG CI
 ENV CI $CI
 
-RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \ 
-  # need to manually set token as an env var
-  SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) \
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
   pnpm --filter $PACKAGE build 
 
 FROM withpackage as prepare-jobs
