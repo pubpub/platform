@@ -52,15 +52,16 @@ const nextConfig = {
 			"graphile-worker",
 			"@node-rs/argon2",
 		],
+		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
-	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
-		if (isServer) {
-			config.ignoreWarnings = [{ module: /opentelemetry/ }];
-		}
-		return config;
-	},
+	// webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
+	// 	if (isServer) {
+	// 		config.ignoreWarnings = [{ module: /opentelemetry/ }];
+	// 	}
+	// 	return config;
+	// },
 };
 
 const modifiedConfig = withPreconstruct(
