@@ -92,6 +92,9 @@ jobs:
                   builder: cached-builder
                   build-args: |
                       PACKAGE=${{ inputs.package }}
+                      CI=${{ env.CI }}
+                  secrets: |
+                      SENTRY_AUTH_TOKEN=${{ env.SENTRY_AUTH_TOKEN }}
                   target: ${{ steps.label.outputs.target }}
                   tags: ${{ steps.label.outputs.label }}
                   platforms: linux/amd64

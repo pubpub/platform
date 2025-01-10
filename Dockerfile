@@ -74,7 +74,13 @@ RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && 
 
 ENV DOCKERBUILD=1
 
-RUN pnpm --filter $PACKAGE build 
+ARG CI
+ENV CI $CI
+
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \ 
+  # need to manually set token as an env var
+  SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN) \
+  pnpm --filter $PACKAGE build 
 
 FROM withpackage as prepare-jobs
 
@@ -117,11 +123,6 @@ ENV NODE_ENV production
 
 # otherwise it will use the strange default docker hostname
 ENV HOSTNAME "0.0.0.0"
-
-# set CI and SENTRY_AUTH_TOKEN 
-ENV CI $CI
-# necessary for sentry to upload source maps
-ENV SENTRY_AUTH_TOKEN $SENTRY_AUTH_TOKEN
 
 ### Core
 
