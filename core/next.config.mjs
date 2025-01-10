@@ -91,13 +91,13 @@ const modifiedConfig = withPreconstruct(
 );
 
 export default (phase, { defaultConfig }) => {
-	console.log(phase, env);
-	if (phase === PHASE_PRODUCTION_BUILD) {
-		if (!env.SENTRY_AUTH_TOKEN && env.CI) {
+	if (phase === PHASE_PRODUCTION_BUILD && env.CI) {
+		if (!env.SENTRY_AUTH_TOKEN) {
 			throw new Error(
 				"SENTRY_AUTH_TOKEN is required for production builds in CI in order to upload source maps to sentry"
 			);
 		}
+		console.log("✅ SENTRY_AUTH_TOKEN is successfully set");
 	}
 	return modifiedConfig;
 };

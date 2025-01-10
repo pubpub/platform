@@ -83,6 +83,7 @@ jobs:
                   REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}-${{env.PACKAGE}}:cache
                   LABEL: ${{ steps.label.outputs.label }}
                   TARGET: ${{ steps.label.outputs.target }}
+                  CI: ${{ env.CI }}
                   SENTRY_AUTH_TOKEN: ${{ env.SENTRY_AUTH_TOKEN }}
               with:
                   context: .

@@ -118,6 +118,11 @@ ENV NODE_ENV production
 # otherwise it will use the strange default docker hostname
 ENV HOSTNAME "0.0.0.0"
 
+# set CI and SENTRY_AUTH_TOKEN 
+ENV CI $CI
+# necessary for sentry to upload source maps
+ENV SENTRY_AUTH_TOKEN $SENTRY_AUTH_TOKEN
+
 ### Core
 
 FROM prod-setup AS next-app-core
