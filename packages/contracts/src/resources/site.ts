@@ -14,6 +14,7 @@ import type {
 	Stages,
 	StagesId,
 	Users,
+	UsersId,
 } from "db/public";
 import {
 	communitiesIdSchema,
