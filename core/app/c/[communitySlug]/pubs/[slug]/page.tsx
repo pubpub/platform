@@ -105,17 +105,9 @@ export default async function Page({
 		notFound();
 	}
 
-	// We don't pass the userId here because we want to include related pubs regardless of authorization
-	// This is safe because we've already explicitly checked authorization for the root pub
-	const pub = await getPubsWithRelatedValuesAndChildrenCached(slug, community.id);
-
-	if (!pub) {
-		return notFound();
-	}
-
 	const canView = await userCan(
 		Capabilities.viewPub,
-		{ type: MembershipType.pub, pubId: pub.id },
+		{ type: MembershipType.pub, slug, communityId: community.id },
 		user.id
 	);
 
@@ -127,7 +119,8 @@ export default async function Page({
 		Capabilities.addPubMember,
 		{
 			type: MembershipType.pub,
-			pubId: pub.id,
+			slug,
+			communityId: community.id,
 		},
 		user.id
 	);
@@ -136,10 +129,19 @@ export default async function Page({
 		Capabilities.removePubMember,
 		{
 			type: MembershipType.pub,
-			pubId: pub.id,
+			slug,
+			communityId: community.id,
 		},
 		user.id
 	);
+
+	// We don't pass the userId here because we want to include related pubs regardless of authorization
+	// This is safe because we've already explicitly checked authorization for the root pub
+	const pub = await getPubsWithRelatedValuesAndChildrenCached(slug, community.id);
+
+	if (!pub) {
+		return notFound();
+	}
 
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
 	const communityStagesPromise = getStages({ communityId: community.id }).execute();
