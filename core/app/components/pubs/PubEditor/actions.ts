@@ -84,6 +84,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 
 export const updatePub = defineServerAction(async function updatePub({
 	pubId,
+	slug,
 	pubValues,
 	stageId,
 	formSlug,
@@ -93,6 +94,7 @@ export const updatePub = defineServerAction(async function updatePub({
 	pubValues: PubValues;
 	stageId?: StagesId;
 	formSlug?: string;
+	slug?: string;
 	continueOnValidationError: boolean;
 }) {
 	const loginData = await getLoginData();
@@ -127,6 +129,7 @@ export const updatePub = defineServerAction(async function updatePub({
 	try {
 		const result = await _updatePub({
 			pubId,
+			slug,
 			communityId: community.id,
 			pubValues,
 			stageId,

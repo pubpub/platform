@@ -77,16 +77,8 @@ const preparePayload = ({
  * Set all default values
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (
-	elements: BasicFormElements[],
-	pubValues: ProcessedPub["values"],
-	defaultSlug: string
-) => {
+const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
 	const defaultValues: FieldValues = { ...pubValues };
-
-	if (defaultSlug) {
-		defaultValues.slug = defaultSlug;
-	}
 
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
@@ -231,8 +223,8 @@ export const PubEditorClient = ({
 	const toggleContext = useFormElementToggleContext();
 
 	const defaultValues = useMemo(() => {
-		const defaultPubValues = buildDefaultValues(formElements, pub.values, pub.slug);
-		return { ...defaultPubValues, stageId };
+		const defaultPubValues = buildDefaultValues(formElements, pub.values);
+		return { ...defaultPubValues, stageId, slug: pub.slug };
 	}, [formElements, pub]);
 
 	const resolver = useMemo(
@@ -272,6 +264,7 @@ export const PubEditorClient = ({
 			if (isUpdating) {
 				result = await runUpdatePub({
 					pubId: pubId,
+					slug: formValues.slug !== defaultValues.slug ? formValues.slug : undefined,
 					pubValues,
 					stageId,
 					formSlug,

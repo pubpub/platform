@@ -1069,6 +1069,7 @@ export const replacePubRelationsBySlug = async ({
 
 export const updatePub = async ({
 	pubId,
+	slug,
 	pubValues,
 	communityId,
 	stageId,
@@ -1076,6 +1077,10 @@ export const updatePub = async ({
 	lastModifiedBy,
 }: {
 	pubId: PubsId;
+	/**
+	 * To update the slug of the pub
+	 */
+	slug?: string;
 	pubValues: Record<string, Json>;
 	communityId: CommunitiesId;
 	lastModifiedBy: LastModifiedBy;
@@ -1090,6 +1095,12 @@ export const updatePub = async ({
 			).execute();
 			await autoRevalidate(
 				trx.insertInto("PubsInStages").values({ pubId, stageId })
+			).execute();
+		}
+
+		if (slug) {
+			await autoRevalidate(
+				trx.updateTable("pubs").set({ slug }).where("id", "=", pubId)
 			).execute();
 		}
 
@@ -1113,6 +1124,13 @@ export const updatePub = async ({
 		});
 
 		if (!pubValuesWithSchemaNameAndFieldId.length) {
+			if (slug || stageId) {
+				return {
+					success: true,
+					report: "Pub updated",
+				};
+			}
+
 			return {
 				success: true,
 				report: "Pub not updated, no pub values to update",
@@ -1748,8 +1766,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 		return result;
 	}
 
-	console.log("result", result);
-
 	if (props.pubId || props.slug) {
 		if (result.length === 0) {
 			throw PubNotFoundError;
@@ -1842,7 +1858,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 
 	return topLevelPubs
 		.map((pub) => processPub(pub.id, depth - 1))
-		.filter((processedPub) => !!processedPub);
+		.filter((processedPub) => processedPub != undefined);
 }
 
 export const getPubTitle = (pubId: PubsId, trx = db) =>

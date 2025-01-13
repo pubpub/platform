@@ -20,19 +20,11 @@ import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
-	async ({
-		userId,
-		pubId,
-		communityId,
-	}: {
-		userId?: UsersId;
-		pubId: PubsId;
-		communityId: CommunitiesId;
-	}) => {
+	async (communityId: CommunitiesId, slug: string, userId?: UsersId) => {
 		return getPubsWithRelatedValuesAndChildren(
 			{
-				pubId,
 				communityId,
+				slug,
 				userId,
 			},
 			{
@@ -43,19 +35,19 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 );
 
 export async function generateMetadata({
-	params: { pubId, communitySlug },
+	params: { slug, communitySlug },
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { slug: string; communitySlug: string };
 }): Promise<Metadata> {
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return { title: "Community Not Found" };
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
-		pubId: pubId as PubsId,
-		communityId: community.id as CommunitiesId,
-	});
+	const pub = await getPubsWithRelatedValuesAndChildrenCached(
+		community.id as CommunitiesId,
+		slug
+	);
 
 	if (!pub) {
 		return { title: "Pub Not Found" };
@@ -74,29 +66,12 @@ export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { pubId: PubsId; communitySlug: string };
+	params: { slug: string; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
-	const { pubId, communitySlug } = params;
+	const { slug, communitySlug } = params;
 
 	const { user } = await getPageLoginData();
-
-	const canUpdatePub = await userCan(
-		Capabilities.updatePubValues,
-		{
-			type: MembershipType.pub,
-			pubId,
-		},
-		user.id
-	);
-
-	if (!pubId || !communitySlug) {
-		return null;
-	}
-
-	if (!canUpdatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
 
 	const community = await findCommunityBySlug(communitySlug);
 
@@ -104,14 +79,28 @@ export default async function Page({
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
-		pubId: params.pubId as PubsId,
-		communityId: community.id,
-		userId: user.id,
-	});
+	const canUpdatePub = await userCan(
+		Capabilities.updatePubValues,
+		{
+			type: MembershipType.pub,
+			slug,
+			communityId: community.id as CommunitiesId,
+		},
+		user.id
+	);
+
+	if (!canUpdatePub) {
+		redirect(`/c/${communitySlug}/unauthorized`);
+	}
+
+	const pub = await getPubsWithRelatedValuesAndChildrenCached(
+		community.id as CommunitiesId,
+		params.slug,
+		user.id
+	);
 
 	if (!pub) {
-		return null;
+		notFound();
 	}
 
 	const formId = `edit-pub-${pub.id}`;
@@ -133,6 +122,7 @@ export default async function Page({
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose">
 					<PubEditor
+						withSlug={true}
 						searchParams={searchParams}
 						pubId={pub.id}
 						formId={formId}
