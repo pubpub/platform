@@ -1,12 +1,10 @@
 import { describe, expect, test } from "vitest";
 
-import type { UsersId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
-const { createForEachMockedTransaction, getLoginData, findCommunityBySlug } =
-	await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
 
@@ -30,13 +28,13 @@ describe("getStages", () => {
 			},
 			stages: {
 				"Stage 1": {
-					members: ["admin", "stage1admin"],
+					members: { admin: MemberRole.admin, stage1admin: MemberRole.admin },
 				},
 				"Stage 2": {
-					members: ["admin"],
+					members: { admin: MemberRole.admin },
 				},
 				"Stage 3": {
-					members: ["admin"],
+					members: { admin: MemberRole.admin },
 				},
 			},
 			pubs: [
