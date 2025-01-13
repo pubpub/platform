@@ -1,27 +1,27 @@
-import type { Action as ActionName } from "db/public";
-import { logger } from "logger";
+import type { Action as ActionName } from "db/public"
+import { logger } from "logger"
 
-import type { Action, ZodObjectOrWrappedOrOptional } from "../../types";
-import type { ActionConfigServerComponentProps } from "./defineConfigServerComponent";
-import { getActionByName } from "../../api";
-import { getCustomConfigComponentByActionName } from "./getCustomConfigComponent";
+import type { Action, ZodObjectOrWrappedOrOptional } from "../../types"
+import type { ActionConfigServerComponentProps } from "./defineConfigServerComponent"
+import { getActionByName } from "../../api"
+import { getCustomConfigComponentByActionName } from "./getCustomConfigComponent"
 
 const isSchemaKey = <S extends ZodObjectOrWrappedOrOptional>(
 	schema: S,
 	key: string
 ): key is Extract<keyof S["_output"], string> => {
-	const def = schema["_def"];
+	const def = schema["_def"]
 
 	if (def.typeName === "ZodOptional") {
-		return isSchemaKey(def.innerType, key);
+		return isSchemaKey(def.innerType, key)
 	}
 
 	if (def.typeName === "ZodEffects") {
-		return isSchemaKey(def.schema, key);
+		return isSchemaKey(def.schema, key)
 	}
 
-	return key in def.shape();
-};
+	return key in def.shape()
+}
 
 export const resolveFieldConfig = async <
 	A extends ActionName,
@@ -35,22 +35,22 @@ export const resolveFieldConfig = async <
 	type: T,
 	props: C
 ) => {
-	const action = getActionByName(actionName);
+	const action = getActionByName(actionName)
 
-	const fieldConfig = action[type].fieldConfig;
+	const fieldConfig = action[type].fieldConfig
 
 	if (!fieldConfig) {
-		return undefined;
+		return undefined
 	}
 
 	const resolvedFields = await Promise.all(
 		Object.entries(fieldConfig).map(async ([fieldName, fieldConfig]) => {
 			if (fieldConfig.fieldType !== "custom") {
-				return [fieldName, fieldConfig] as const;
+				return [fieldName, fieldConfig] as const
 			}
 
 			if (!isSchemaKey(action[type].schema, fieldName)) {
-				return [fieldName, fieldConfig] as const;
+				return [fieldName, fieldConfig] as const
 			}
 
 			try {
@@ -58,15 +58,15 @@ export const resolveFieldConfig = async <
 					actionName,
 					type,
 					fieldName
-				);
+				)
 
 				if (!CustomComponent) {
 					throw new Error(
 						`Custom field ${fieldName} for ${type} form for action ${action.name} does not export a default component`
-					);
+					)
 				}
 
-				const fullComponent = CustomComponent(props);
+				const fullComponent = CustomComponent(props)
 
 				return [
 					fieldName,
@@ -74,13 +74,13 @@ export const resolveFieldConfig = async <
 						...fieldConfig,
 						fieldType: fullComponent,
 					},
-				] as const;
+				] as const
 			} catch (error) {
-				logger.error(error);
-				throw error;
+				logger.error(error)
+				throw error
 			}
 		})
-	);
+	)
 
-	return Object.fromEntries(resolvedFields);
-};
+	return Object.fromEntries(resolvedFields)
+}

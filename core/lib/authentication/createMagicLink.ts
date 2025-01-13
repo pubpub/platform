@@ -1,15 +1,15 @@
-import type { AuthTokenType, UsersId } from "db/public";
+import type { AuthTokenType, UsersId } from "db/public"
 
-import { db } from "~/kysely/database";
-import { env } from "../env/env.mjs";
-import { createToken } from "../server/token";
+import { db } from "~/kysely/database"
+import { env } from "../env/env.mjs"
+import { createToken } from "../server/token"
 
 type NativeMagicLinkOptions = {
-	userId: UsersId;
-	type: AuthTokenType;
-	expiresAt: Date;
-	path: `/${string}`;
-};
+	userId: UsersId
+	type: AuthTokenType
+	expiresAt: Date
+	path: `/${string}`
+}
 
 export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db) => {
 	const token = await createToken(
@@ -19,7 +19,7 @@ export const createMagicLink = async (options: NativeMagicLinkOptions, trx = db)
 			expiresAt: options.expiresAt,
 		},
 		trx
-	);
+	)
 
-	return `${env.PUBPUB_URL}/magic-link?token=${token}&redirectTo=${encodeURIComponent(options.path)}`;
-};
+	return `${env.PUBPUB_URL}/magic-link?token=${token}&redirectTo=${encodeURIComponent(options.path)}`
+}

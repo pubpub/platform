@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -8,22 +8,22 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Mail } from "ui/icon";
-import { Input } from "ui/input";
-import { Textarea } from "ui/textarea";
+} from "ui/dialog"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Mail } from "ui/icon"
+import { Input } from "ui/input"
+import { Textarea } from "ui/textarea"
 
-import { isInvited } from "~/lib/types";
-import { InviteFormEvaluator } from "./types";
+import { isInvited } from "~/lib/types"
+import { InviteFormEvaluator } from "./types"
 
 export type EvaluatorInviteRowEmailDialogProps = {
-	index: number;
-	evaluator: InviteFormEvaluator;
-};
+	index: number
+	evaluator: InviteFormEvaluator
+}
 
 export const EvaluatorInviteRowEmailDialog = (props: EvaluatorInviteRowEmailDialogProps) => {
-	const evaluatorHasInvite = isInvited(props.evaluator);
+	const evaluatorHasInvite = isInvited(props.evaluator)
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -77,5 +77,5 @@ export const EvaluatorInviteRowEmailDialog = (props: EvaluatorInviteRowEmailDial
 				</div>
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

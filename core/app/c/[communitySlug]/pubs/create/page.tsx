@@ -1,47 +1,47 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import type { CommunitiesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { Button } from "ui/button";
+import type { CommunitiesId } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { Button } from "ui/button"
 
-import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
-import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
-import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
+import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
+import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
+import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
 
 export async function generateMetadata({
 	params: { communitySlug },
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { pubId: string; communitySlug: string }
 }): Promise<Metadata> {
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 	if (!community) {
-		return { title: "Community Not Found" };
+		return { title: "Community Not Found" }
 	}
 
-	return { title: `Create pub in ${community.name}` };
+	return { title: `Create pub in ${community.name}` }
 }
 
 export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { communitySlug: string };
-	searchParams: Record<string, string>;
+	params: { communitySlug: string }
+	searchParams: Record<string, string>
 }) {
-	const { communitySlug } = params;
+	const { communitySlug } = params
 
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	const canCreatePub = await userCan(
@@ -51,21 +51,21 @@ export default async function Page({
 			communityId: community.id,
 		},
 		user.id
-	);
+	)
 
 	if (!canCreatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const formId = `create-pub`;
+	const formId = `create-pub`
 
 	// Build the specifiers conditionally since PubEditor checks for the existence of the prop
-	const pubEditorSpecifiers: Record<string, string> = {};
+	const pubEditorSpecifiers: Record<string, string> = {}
 	if (searchParams["stageId"]) {
-		pubEditorSpecifiers.stageId = searchParams["stageId"];
+		pubEditorSpecifiers.stageId = searchParams["stageId"]
 	}
 	if (searchParams["parentId"]) {
-		pubEditorSpecifiers.parentId = searchParams["parentId"];
+		pubEditorSpecifiers.parentId = searchParams["parentId"]
 	}
 
 	return (
@@ -89,5 +89,5 @@ export default async function Page({
 				</div>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

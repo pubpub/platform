@@ -1,27 +1,27 @@
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { Button } from "ui/button";
-import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
-import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { Button } from "ui/button"
+import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon"
+import { Sheet, SheetContent, SheetTrigger } from "ui/sheet"
 
-import type { CommunityData } from "~/lib/server/community";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import CommunitySwitcher from "./CommunitySwitcher";
-import LoginSwitcher from "./LoginSwitcher";
-import NavLink from "./NavLink";
+import type { CommunityData } from "~/lib/server/community"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import CommunitySwitcher from "./CommunitySwitcher"
+import LoginSwitcher from "./LoginSwitcher"
+import NavLink from "./NavLink"
 
 type Props = {
-	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<CommunityData>[];
-};
+	community: NonNullable<CommunityData>
+	availableCommunities: NonNullable<CommunityData>[]
+}
 
 const Links = ({
 	communityPrefix,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	communityPrefix: string;
+	communityPrefix: string
 }) => {
 	return (
 		<>
@@ -31,8 +31,8 @@ const Links = ({
 				icon={<img src="/icons/pub.svg" alt="" />}
 			/>
 		</>
-	);
-};
+	)
+}
 
 const ViewLinks = ({
 	prefix,
@@ -40,9 +40,9 @@ const ViewLinks = ({
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	prefix: string;
+	prefix: string
 	/* Whether the user is an admin */
-	isAdmin?: boolean;
+	isAdmin?: boolean
 }) => {
 	return (
 		<>
@@ -54,8 +54,8 @@ const ViewLinks = ({
 				/>
 			)}
 		</>
-	);
-};
+	)
+}
 
 const ManageLinks = ({
 	communityPrefix,
@@ -63,9 +63,9 @@ const ManageLinks = ({
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	communityPrefix: string;
+	communityPrefix: string
 	/* Whether the user is an admin */
-	showCommunityEditorLinks?: boolean;
+	showCommunityEditorLinks?: boolean
 }) => {
 	return (
 		<>
@@ -117,24 +117,24 @@ const ManageLinks = ({
 				/>
 			)}
 		</>
-	);
-};
+	)
+}
 
 const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
-	const prefix = `/c/${community.slug}`;
-	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
+	const prefix = `/c/${community.slug}`
+	const divider = <div className="my-4 h-[1px] bg-gray-200" />
 
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
 	if (!user) {
-		return null;
+		return null
 	}
 
 	const userCanEditCommunity = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
-	);
+	)
 
 	return (
 		<>
@@ -197,7 +197,7 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 				</div>
 			</div>
 		</>
-	);
-};
+	)
+}
 
-export default SideNav;
+export default SideNav

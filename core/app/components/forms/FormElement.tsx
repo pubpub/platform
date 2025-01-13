@@ -1,33 +1,33 @@
-import { defaultComponent } from "schemas";
+import { defaultComponent } from "schemas"
 
-import type { ProcessedPub } from "contracts";
-import type { CommunityMembershipsId, PubsId } from "db/public";
-import { CoreSchemaType, ElementType, InputComponent } from "db/public";
-import { logger } from "logger";
-import { expect } from "utils";
+import type { ProcessedPub } from "contracts"
+import type { CommunityMembershipsId, PubsId } from "db/public"
+import { CoreSchemaType, ElementType, InputComponent } from "db/public"
+import { logger } from "logger"
+import { expect } from "utils"
 
-import type { FormElements } from "./types";
-import { CheckboxElement } from "./elements/CheckboxElement";
-import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
-import { ConfidenceElement } from "./elements/ConfidenceElement";
-import { ContextEditorElement } from "./elements/ContextEditorElement";
-import { DateElement } from "./elements/DateElement";
-import { FileUploadElement } from "./elements/FileUploadElement";
-import { MemberSelectElement } from "./elements/MemberSelectElement";
-import { MultivalueInputElement } from "./elements/MultivalueInputElement";
-import { RadioGroupElement } from "./elements/RadioGroupElement";
-import { SelectDropdownElement } from "./elements/SelectDropdownElement";
-import { TextAreaElement } from "./elements/TextAreaElement";
-import { TextInputElement } from "./elements/TextInputElement";
-import { FormElementToggle } from "./FormElementToggle";
+import type { FormElements } from "./types"
+import { CheckboxElement } from "./elements/CheckboxElement"
+import { CheckboxGroupElement } from "./elements/CheckboxGroupElement"
+import { ConfidenceElement } from "./elements/ConfidenceElement"
+import { ContextEditorElement } from "./elements/ContextEditorElement"
+import { DateElement } from "./elements/DateElement"
+import { FileUploadElement } from "./elements/FileUploadElement"
+import { MemberSelectElement } from "./elements/MemberSelectElement"
+import { MultivalueInputElement } from "./elements/MultivalueInputElement"
+import { RadioGroupElement } from "./elements/RadioGroupElement"
+import { SelectDropdownElement } from "./elements/SelectDropdownElement"
+import { TextAreaElement } from "./elements/TextAreaElement"
+import { TextInputElement } from "./elements/TextInputElement"
+import { FormElementToggle } from "./FormElementToggle"
 
 export type FormElementProps = {
-	pubId: PubsId;
-	element: FormElements;
-	searchParams: Record<string, unknown>;
-	communitySlug: string;
-	values: ProcessedPub["values"];
-};
+	pubId: PubsId
+	element: FormElements
+	searchParams: Record<string, unknown>
+	communitySlug: string
+	values: ProcessedPub["values"]
+}
 
 export const FormElement = ({
 	pubId,
@@ -38,7 +38,7 @@ export const FormElement = ({
 }: FormElementProps) => {
 	element.component =
 		element.component ??
-		((element.schemaName && defaultComponent(element.schemaName)) as typeof element.component);
+		((element.schemaName && defaultComponent(element.schemaName)) as typeof element.component)
 
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
@@ -48,21 +48,21 @@ export const FormElement = ({
 					// TODO: sanitize content
 					dangerouslySetInnerHTML={{ __html: expect(element.content) }}
 				/>
-			);
+			)
 		}
-		return null;
+		return null
 	}
 
 	if (!element.schemaName || !element.component) {
-		return null;
+		return null
 	}
 
 	const basicProps = {
 		label: element.config.label || element.label || element.slug,
 		slug: element.slug,
-	};
+	}
 
-	let input: JSX.Element | undefined;
+	let input: JSX.Element | undefined
 
 	if (element.component === InputComponent.textInput) {
 		input = (
@@ -72,7 +72,7 @@ export const FormElement = ({
 				schemaName={element.schemaName}
 				type={element.schemaName === CoreSchemaType.Number ? "number" : undefined}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.textArea) {
 		input = (
 			<TextAreaElement
@@ -80,7 +80,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.checkbox) {
 		input = (
 			<CheckboxElement
@@ -88,7 +88,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.fileUpload) {
 		input = (
 			<FileUploadElement
@@ -97,7 +97,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.confidenceInterval) {
 		input = (
 			<ConfidenceElement
@@ -105,15 +105,15 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.datePicker) {
 		input = (
 			<DateElement {...basicProps} config={element.config} schemaName={element.schemaName} />
-		);
+		)
 	} else if (element.component === InputComponent.memberSelect) {
 		const userId = values.find((v) => v.fieldSlug === element.slug)?.value as
 			| CommunityMembershipsId
-			| undefined;
+			| undefined
 		input = (
 			<MemberSelectElement
 				{...basicProps}
@@ -124,7 +124,7 @@ export const FormElement = ({
 				value={userId}
 				communitySlug={communitySlug}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.radioGroup) {
 		input = (
 			<RadioGroupElement
@@ -132,7 +132,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.checkboxGroup) {
 		input = (
 			<CheckboxGroupElement
@@ -140,7 +140,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.selectDropdown) {
 		input = (
 			<SelectDropdownElement
@@ -148,7 +148,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.multivalueInput) {
 		input = (
 			<MultivalueInputElement
@@ -156,7 +156,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	} else if (element.component === InputComponent.richText) {
 		input = (
 			<ContextEditorElement
@@ -164,7 +164,7 @@ export const FormElement = ({
 				config={element.config}
 				schemaName={element.schemaName}
 			/>
-		);
+		)
 	}
 
 	if (input) {
@@ -174,7 +174,7 @@ export const FormElement = ({
 			<FormElementToggle {...element} {...basicProps}>
 				{input}
 			</FormElementToggle>
-		);
+		)
 	}
 
 	logger.error({
@@ -182,6 +182,6 @@ export const FormElement = ({
 		component: element.component,
 		element,
 		pubId,
-	});
-	return null;
-};
+	})
+	return null
+}

@@ -1,43 +1,43 @@
-"use client";
+"use client"
 
-import type { z } from "zod";
+import type { z } from "zod"
 
-import { Suspense, useCallback, useTransition } from "react";
+import { Suspense, useCallback, useTransition } from "react"
 
-import type { ActionInstances, ActionInstancesId, CommunitiesId, PubsId } from "db/public";
-import type { FieldConfig } from "ui/auto-form";
-import { logger } from "logger";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
-import { Loader2, Play } from "ui/icon";
-import { toast } from "ui/use-toast";
+import type { ActionInstances, ActionInstancesId, CommunitiesId, PubsId } from "db/public"
+import type { FieldConfig } from "ui/auto-form"
+import { logger } from "logger"
+import AutoForm, { AutoFormSubmit } from "ui/auto-form"
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog"
+import { Loader2, Play } from "ui/icon"
+import { toast } from "ui/use-toast"
 
-import { getActionByName } from "~/actions/api";
-import { runActionInstance } from "~/actions/api/serverAction";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { useServerAction } from "~/lib/serverActions";
-import { useCommunity } from "../providers/CommunityProvider";
+import { getActionByName } from "~/actions/api"
+import { runActionInstance } from "~/actions/api/serverAction"
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { useServerAction } from "~/lib/serverActions"
+import { useCommunity } from "../providers/CommunityProvider"
 
 export const ActionRunForm = ({
 	actionInstance,
 	pubId,
 	fieldConfig,
 }: {
-	actionInstance: ActionInstances;
-	pubId: PubsId;
-	fieldConfig: FieldConfig<any>;
+	actionInstance: ActionInstances
+	pubId: PubsId
+	fieldConfig: FieldConfig<any>
 }) => {
-	const community = useCommunity();
-	const runAction = useServerAction(runActionInstance);
+	const community = useCommunity()
+	const runAction = useServerAction(runActionInstance)
 
-	const [isPending, startTransition] = useTransition();
+	const [isPending, startTransition] = useTransition()
 
-	const action = getActionByName(actionInstance.action);
+	const action = getActionByName(actionInstance.action)
 
 	if (!action) {
-		logger.info(`Invalid action name ${actionInstance.action}`);
-		return null;
+		logger.info(`Invalid action name ${actionInstance.action}`)
+		return null
 	}
 
 	const onSubmit = useCallback(
@@ -48,7 +48,7 @@ export const ActionRunForm = ({
 					pubId,
 					actionInstanceArgs: values,
 					communityId: community.id as CommunitiesId,
-				});
+				})
 
 				if ("success" in result) {
 					toast({
@@ -61,12 +61,12 @@ export const ActionRunForm = ({
 								dangerouslySetInnerHTML={{ __html: result.report ?? "" }}
 							/>
 						),
-					});
+					})
 				}
-			});
+			})
 		},
 		[runAction, actionInstance.id, pubId]
-	);
+	)
 
 	return (
 		<Dialog>
@@ -106,5 +106,5 @@ export const ActionRunForm = ({
 				</Suspense>
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

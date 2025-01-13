@@ -1,8 +1,8 @@
-import type { Kysely, Transaction } from "kysely";
+import type { Kysely, Transaction } from "kysely"
 
-import { afterEach, beforeEach, vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest"
 
-import type { PublicSchema } from "db/public";
+import type { PublicSchema } from "db/public"
 
 /**
  * Taken from https://github.com/kysely-org/kysely/issues/257#issuecomment-1676079354
@@ -14,159 +14,159 @@ import type { PublicSchema } from "db/public";
  * rollback();
  */
 export async function beginTransaction(db: Kysely<PublicSchema>) {
-	const connection = new Deferred<Transaction<PublicSchema>>();
-	const result = new Deferred<any>();
+	const connection = new Deferred<Transaction<PublicSchema>>()
+	const result = new Deferred<any>()
 
 	// Do NOT await this line.
 	db.transaction()
 		.execute((trx) => {
-			connection.resolve(trx);
-			return result.promise;
+			connection.resolve(trx)
+			return result.promise
 		})
 		.catch((err) => {
 			// Don't do anything here. Just swallow the exception.
-		});
+		})
 
-	const trx = await connection.promise;
+	const trx = await connection.promise
 
 	return {
 		trx,
 		commit() {
-			result.resolve(null);
+			result.resolve(null)
 		},
 		rollback() {
-			result.reject(new Error("rollback"));
+			result.reject(new Error("rollback"))
 		},
-	};
+	}
 }
 
 export class Deferred<T> {
-	readonly #promise: Promise<T>;
+	readonly #promise: Promise<T>
 
-	#resolve?: (value: T | PromiseLike<T>) => void;
-	#reject?: (reason?: any) => void;
+	#resolve?: (value: T | PromiseLike<T>) => void
+	#reject?: (reason?: any) => void
 
 	constructor() {
 		this.#promise = new Promise<T>((resolve, reject) => {
-			this.#reject = reject;
-			this.#resolve = resolve;
-		});
+			this.#reject = reject
+			this.#resolve = resolve
+		})
 	}
 
 	get promise(): Promise<T> {
-		return this.#promise;
+		return this.#promise
 	}
 
 	resolve = (value: T | PromiseLike<T>): void => {
 		if (this.#resolve) {
-			this.#resolve(value);
+			this.#resolve(value)
 		}
-	};
+	}
 
 	reject = (reason?: any): void => {
 		if (this.#reject) {
-			this.#reject(reason);
+			this.#reject(reason)
 		}
-	};
+	}
 }
 
 export const mockServerCode = async () => {
 	const { getLoginData, findCommunityBySlug, testDb } = await vi.hoisted(async () => {
-		const testDb = await import("./db").then((m) => m.testDb);
+		const testDb = await import("./db").then((m) => m.testDb)
 
 		return {
 			testDb,
 			getLoginData: vi.fn(),
 			findCommunityBySlug: vi.fn(),
-		};
-	});
+		}
+	})
 
 	vi.mock("~/lib/server/cache/autoRevalidate", () => ({
 		autoRevalidate: (db: any) => {
-			return db;
+			return db
 		},
-	}));
+	}))
 
 	vi.mock("~/lib/server/cache/autoCache", () => ({
 		autoCache: (db: any) => {
-			return db;
+			return db
 		},
-	}));
+	}))
 
 	vi.mock("~/lib/authentication/loginData", () => {
 		return {
 			getLoginData: getLoginData,
-		};
-	});
+		}
+	})
 
 	vi.mock("~/lib/server/community", () => {
 		return {
 			findCommunityBySlug: findCommunityBySlug,
-		};
-	});
+		}
+	})
 
 	vi.mock("server-only", () => {
 		return {
 			// mock server-only module
-		};
-	});
+		}
+	})
 
 	vi.mock("react", () => {
 		return {
 			cache: (fn: any) => fn,
 			forwardRef: (fn: any) => fn,
-		};
-	});
+		}
+	})
 
 	vi.mock("next/headers", () => {
 		return {
 			cookies: vi.fn(),
 			headers: vi.fn(),
-		};
-	});
+		}
+	})
 
 	vi.mock("next/cache", () => {
 		return {
 			unstable_cache: (fn: any) => fn,
-		};
-	});
+		}
+	})
 
 	const createSingleMockedTransaction = async (db = testDb) => {
-		const { trx, rollback, commit } = await beginTransaction(db);
+		const { trx, rollback, commit } = await beginTransaction(db)
 		vi.doMock("~/kysely/database", () => ({
 			db: trx,
-		}));
+		}))
 
 		return {
 			trx,
 			rollback,
 			commit,
-		};
-	};
+		}
+	}
 
 	const createForEachMockedTransaction = (db = testDb) => {
-		let trx: Transaction<PublicSchema> = {} as Transaction<PublicSchema>;
-		let rollback: () => void = () => {};
-		let commit: () => void = () => {};
+		let trx: Transaction<PublicSchema> = {} as Transaction<PublicSchema>
+		let rollback: () => void = () => {}
+		let commit: () => void = () => {}
 
 		beforeEach(async () => {
-			const transaction = await beginTransaction(db);
-			trx = transaction.trx;
+			const transaction = await beginTransaction(db)
+			trx = transaction.trx
 
 			vi.doMock("~/kysely/database", () => ({
 				db: trx,
-			}));
+			}))
 
-			rollback = transaction.rollback;
-			commit = transaction.commit;
-		});
+			rollback = transaction.rollback
+			commit = transaction.commit
+		})
 
 		afterEach(() => {
-			rollback();
-			vi.resetModules();
+			rollback()
+			vi.resetModules()
 			// just to be sure
-			vi.unmock("~/kysely/database");
-		});
+			vi.unmock("~/kysely/database")
+		})
 
 		return {
 			/**
@@ -177,8 +177,8 @@ export const mockServerCode = async () => {
 			getTrx: () => trx,
 			rollback,
 			commit,
-		};
-	};
+		}
+	}
 
 	return {
 		getLoginData,
@@ -254,5 +254,5 @@ export const mockServerCode = async () => {
 		 *
 		 */
 		createForEachMockedTransaction,
-	};
-};
+	}
+}

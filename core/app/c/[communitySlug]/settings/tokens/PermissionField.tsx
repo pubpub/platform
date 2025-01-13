@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import type { ControllerRenderProps } from "react-hook-form";
+import type { ControllerRenderProps } from "react-hook-form"
 
-import { createContext, useContext, useMemo } from "react";
+import { createContext, useContext, useMemo } from "react"
 
-import type { ApiAccessScope } from "db/public";
-import type { ApiAccessPermissionConstraintsInput, CreateTokenFormContext } from "db/types";
-import { ApiAccessType } from "db/public";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { MultiSelect } from "ui/multi-select";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import type { ApiAccessScope } from "db/public"
+import type { ApiAccessPermissionConstraintsInput, CreateTokenFormContext } from "db/types"
+import { ApiAccessType } from "db/public"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { MultiSelect } from "ui/multi-select"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
 
-import type { CreateTokenForm, CreateTokenFormSchema } from "./CreateTokenForm";
+import type { CreateTokenForm, CreateTokenFormSchema } from "./CreateTokenForm"
 
 /**
  * This is a type for a configuration object for form fields. It allows you to specify
@@ -61,13 +61,13 @@ import type { CreateTokenForm, CreateTokenFormSchema } from "./CreateTokenForm";
  */
 type PermissionContraintMap<I = ApiAccessPermissionConstraintsInput> = {
 	[K in ScopesWithSpecialConstraint<I>]: {
-		[T in SpecialConstraintKeys<I[K]>]: CustomConstraintFormElement<I[K][T]>;
+		[T in SpecialConstraintKeys<I[K]>]: CustomConstraintFormElement<I[K][T]>
 	} & {
-		[T in NormalConstraintKeys<I[K]>]?: undefined;
-	};
+		[T in NormalConstraintKeys<I[K]>]?: undefined
+	}
 } & {
-	[K in ScopesWithOnlyNormalConstraints<I>]: null;
-};
+	[K in ScopesWithOnlyNormalConstraints<I>]: null
+}
 
 /**
  * The keys of a scope that have a constraint different from `boolean | undefined`
@@ -85,12 +85,12 @@ type SpecialConstraintKeys<Scope, Keys extends keyof Scope = keyof Scope> = Keys
 	? Scope[Keys] extends boolean | undefined
 		? never
 		: Keys
-	: never;
+	: never
 
 type NormalConstraintKeys<Scope, Keys extends keyof Scope = keyof Scope> = Exclude<
 	Keys,
 	SpecialConstraintKeys<Scope, Keys>
->;
+>
 
 /**
  * Only those scopes that have a constraint different from `boolean | undefined`
@@ -114,19 +114,19 @@ type ScopesWithSpecialConstraint<
 	? keyof I[K] extends NormalConstraintKeys<I[K]>
 		? never // this means the scope only has normal constraints
 		: K
-	: never;
+	: never
 
 type ScopesWithOnlyNormalConstraints<
 	I = ApiAccessPermissionConstraintsInput,
 	K extends keyof I = keyof I,
-> = Exclude<K, ScopesWithSpecialConstraint<I, K>>;
+> = Exclude<K, ScopesWithSpecialConstraint<I, K>>
 
 type CustomConstraintFormElement<Value> = (props: {
-	value: boolean | Value;
-	onChange: (...args: any[]) => void;
-}) => JSX.Element;
+	value: boolean | Value
+	onChange: (...args: any[]) => void
+}) => JSX.Element
 
-const CreateTokenFormContextContext = createContext<CreateTokenFormContext>({ stages: [] });
+const CreateTokenFormContextContext = createContext<CreateTokenFormContext>({ stages: [] })
 
 /**
  * Here you configure the specific form elements for each permission type
@@ -135,7 +135,7 @@ const permissionContraintMap: PermissionContraintMap = {
 	community: null,
 	pub: {
 		[ApiAccessType.write]: ({ value, onChange }) => {
-			const context = useContext(CreateTokenFormContextContext);
+			const context = useContext(CreateTokenFormContextContext)
 			return (
 				<div className="flex flex-col gap-2">
 					<h3 className="text-lg font-semibold">Stages</h3>
@@ -165,17 +165,17 @@ const permissionContraintMap: PermissionContraintMap = {
 								value.length > 0 && value.length !== context.stages.length
 									? { stages: value }
 									: true
-							);
+							)
 						}}
 						animation={0}
 					/>
 				</div>
-			);
+			)
 		},
 	},
 	stage: {
 		[ApiAccessType.read]: ({ value, onChange }) => {
-			const context = useContext(CreateTokenFormContextContext);
+			const context = useContext(CreateTokenFormContextContext)
 			return (
 				<div className="flex flex-col gap-2">
 					<h3 className="text-lg font-semibold">Stages</h3>
@@ -196,17 +196,17 @@ const permissionContraintMap: PermissionContraintMap = {
 									: value.stages
 						}
 						onValueChange={(value) => {
-							onChange(value.length > 0 ? value : true);
+							onChange(value.length > 0 ? value : true)
 						}}
 						animation={0}
 					/>
 				</div>
-			);
+			)
 		},
 	},
 	member: null,
 	pubType: null,
-};
+}
 
 export const PermissionField = ({
 	form,
@@ -214,10 +214,10 @@ export const PermissionField = ({
 	prettyName,
 	context,
 }: {
-	form: CreateTokenForm;
-	name: ApiAccessScope;
-	prettyName: string;
-	context: CreateTokenFormContext;
+	form: CreateTokenForm
+	name: ApiAccessScope
+	prettyName: string
+	context: CreateTokenFormContext
 }) => {
 	return (
 		<CreateTokenFormContextContext.Provider value={context}>
@@ -241,8 +241,8 @@ export const PermissionField = ({
 				)}
 			/>
 		</CreateTokenFormContextContext.Provider>
-	);
-};
+	)
+}
 
 function FormItemWrapper({
 	children,
@@ -251,10 +251,10 @@ function FormItemWrapper({
 	onChange,
 	type,
 }: {
-	children?: React.ReactNode;
-	checked: boolean;
-	onChange: (change: boolean) => void;
-	type: ApiAccessType;
+	children?: React.ReactNode
+	checked: boolean
+	onChange: (change: boolean) => void
+	type: ApiAccessType
 }) {
 	return (
 		<FormItem className="flex items-center gap-x-2 space-y-0">
@@ -263,7 +263,7 @@ function FormItemWrapper({
 					checked={checked}
 					onCheckedChange={(change) => {
 						if (typeof change === "boolean") {
-							onChange(change);
+							onChange(change)
 						}
 					}}
 				/>
@@ -272,13 +272,13 @@ function FormItemWrapper({
 			{children}
 			<FormMessage />
 		</FormItem>
-	);
+	)
 }
 
 type SplitPath<Path extends `${string}.${string}.${string}`> =
 	Path extends `${infer _permissions extends "permissions"}.${infer scope extends ApiAccessScope}.${infer type extends ApiAccessType}`
 		? [_permissions, scope, type]
-		: never;
+		: never
 
 export const ConstraintFormFieldRender = ({
 	field,
@@ -286,34 +286,34 @@ export const ConstraintFormFieldRender = ({
 	field: ControllerRenderProps<
 		CreateTokenFormSchema,
 		`permissions.${ApiAccessScope}.${ApiAccessType}`
-	>;
+	>
 }) => {
-	const [_permissions, scope, type] = field.name.split(".") as SplitPath<typeof field.name>;
+	const [_permissions, scope, type] = field.name.split(".") as SplitPath<typeof field.name>
 
 	const ExtraContrainstsFormItem = useMemo(() => {
-		const scopeConstraints = permissionContraintMap[scope];
+		const scopeConstraints = permissionContraintMap[scope]
 
 		if (!scopeConstraints || !(type in scopeConstraints)) {
-			return null;
+			return null
 		}
 
 		if (!(type in scopeConstraints)) {
-			return null;
+			return null
 		}
 
-		const ExtraContraints = scopeConstraints[type];
+		const ExtraContraints = scopeConstraints[type]
 
 		if (!ExtraContraints) {
-			return null;
+			return null
 		}
 
-		return ExtraContraints;
-	}, [scope, type]);
+		return ExtraContraints
+	}, [scope, type])
 
 	if (!ExtraContrainstsFormItem) {
 		return (
 			<FormItemWrapper checked={Boolean(field.value)} onChange={field.onChange} type={type} />
-		);
+		)
 	}
 
 	return (
@@ -329,5 +329,5 @@ export const ConstraintFormFieldRender = ({
 				</PopoverContent>
 			</Popover>
 		</FormItemWrapper>
-	);
-};
+	)
+}

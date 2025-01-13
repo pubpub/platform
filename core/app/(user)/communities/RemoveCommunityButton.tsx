@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
 	AlertDialog,
@@ -8,18 +8,18 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTrigger,
-} from "ui/alert-dialog";
-import { Button } from "ui/button";
-import { Trash } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { toast } from "ui/use-toast";
+} from "ui/alert-dialog"
+import { Button } from "ui/button"
+import { Trash } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { toast } from "ui/use-toast"
 
-import type { TableCommunity } from "./getCommunityTableColumns";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { removeCommunity } from "./actions";
+import type { TableCommunity } from "./getCommunityTableColumns"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { removeCommunity } from "./actions"
 
 export const RemoveCommunityButton = ({ community }: { community: TableCommunity }) => {
-	const runRemoveCommunity = useServerAction(removeCommunity);
+	const runRemoveCommunity = useServerAction(removeCommunity)
 	return (
 		<AlertDialog>
 			<Tooltip>
@@ -46,13 +46,13 @@ export const RemoveCommunityButton = ({ community }: { community: TableCommunity
 					<Button asChild variant="destructive">
 						<AlertDialogAction
 							onClick={async () => {
-								const response = await runRemoveCommunity({ community });
+								const response = await runRemoveCommunity({ community })
 								if (didSucceed(response)) {
 									toast({
 										title: "Success",
 										description: "Community successfully removed",
 										variant: "default",
-									});
+									})
 								}
 							}}
 						>
@@ -63,5 +63,5 @@ export const RemoveCommunityButton = ({ community }: { community: TableCommunity
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
-	);
-};
+	)
+}

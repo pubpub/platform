@@ -1,8 +1,8 @@
-import type { CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import type { CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import { db } from "~/kysely/database";
+import { db } from "~/kysely/database"
 
 export const pubCapabilities = [
 	Capabilities.movePub,
@@ -14,7 +14,7 @@ export const pubCapabilities = [
 	Capabilities.addPubMember,
 	Capabilities.removePubMember,
 	Capabilities.runAction,
-] as const;
+] as const
 
 export const communityCapabilities = [
 	Capabilities.createPub,
@@ -32,14 +32,14 @@ export const communityCapabilities = [
 	Capabilities.createForm,
 	Capabilities.createApiToken,
 	Capabilities.revokeApiToken,
-] as const;
+] as const
 export const stageCapabilities = [
 	Capabilities.viewStage,
 	Capabilities.manageStage,
 	Capabilities.deleteStage,
 	Capabilities.addStageMember,
 	Capabilities.removeStageMember,
-] as const;
+] as const
 export const formCapabilities = [
 	Capabilities.createPubWithForm,
 	Capabilities.editPubWithForm,
@@ -47,36 +47,36 @@ export const formCapabilities = [
 	Capabilities.removeFormMember,
 	Capabilities.editForm,
 	Capabilities.archiveForm,
-] as const;
+] as const
 
 type CapabilitiesArg = {
-	[MembershipType.pub]: typeof pubCapabilities;
-	[MembershipType.stage]: typeof stageCapabilities;
-	[MembershipType.community]: typeof communityCapabilities;
-	[MembershipType.form]: typeof formCapabilities;
-};
+	[MembershipType.pub]: typeof pubCapabilities
+	[MembershipType.stage]: typeof stageCapabilities
+	[MembershipType.community]: typeof communityCapabilities
+	[MembershipType.form]: typeof formCapabilities
+}
 
-export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
+export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget
 
 type PubTarget = {
-	type: MembershipType.pub;
-	pubId: PubsId;
-};
+	type: MembershipType.pub
+	pubId: PubsId
+}
 
 type StageTarget = {
-	type: MembershipType.stage;
-	stageId: StagesId;
-};
+	type: MembershipType.stage
+	stageId: StagesId
+}
 
 type CommunityTarget = {
-	type: MembershipType.community;
-	communityId: CommunitiesId;
-};
+	type: MembershipType.community
+	communityId: CommunitiesId
+}
 
 type FormTarget = {
-	type: MembershipType.form;
-	formId: FormsId;
-};
+	type: MembershipType.form
+	formId: FormsId
+}
 
 export const userCan = async <T extends CapabilityTarget>(
 	capability: CapabilitiesArg[T["type"]][number],
@@ -156,9 +156,9 @@ export const userCan = async <T extends CapabilityTarget>(
 			)
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
-			.select("capability");
+			.select("capability")
 
-		return Boolean((await capabilitiesQuery.execute()).length);
+		return Boolean((await capabilitiesQuery.execute()).length)
 	} else if (target.type === MembershipType.stage) {
 		const capabilitiesQuery = db
 			.with("community", (db) =>
@@ -204,9 +204,9 @@ export const userCan = async <T extends CapabilityTarget>(
 			)
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
-			.select("capability");
+			.select("capability")
 
-		return Boolean((await capabilitiesQuery.execute()).length);
+		return Boolean((await capabilitiesQuery.execute()).length)
 	} else if (target.type === MembershipType.community) {
 		const capabilitiesQuery = db
 			.with("community_ms", (db) =>
@@ -229,9 +229,9 @@ export const userCan = async <T extends CapabilityTarget>(
 			)
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
-			.select("capability");
+			.select("capability")
 
-		return Boolean((await capabilitiesQuery.execute()).length);
+		return Boolean((await capabilitiesQuery.execute()).length)
 	}
-	return false;
-};
+	return false
+}

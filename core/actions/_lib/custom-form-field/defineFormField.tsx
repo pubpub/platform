@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import type React from "react";
-import type { Path, UseFormReturn } from "react-hook-form";
-import type { z } from "zod";
+import type React from "react"
+import type { Path, UseFormReturn } from "react-hook-form"
+import type { z } from "zod"
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
 
-import type { Action } from "../../types";
+import type { Action } from "../../types"
 
 type CustomFormFieldComponentProps<
 	A extends Action,
@@ -14,10 +14,10 @@ type CustomFormFieldComponentProps<
 	S extends NonNullable<z.infer<A[T]["schema"]>>,
 	F extends Path<S>,
 > = {
-	form: UseFormReturn<S>;
-	action: A;
-	fieldName: F;
-};
+	form: UseFormReturn<S>
+	action: A
+	fieldName: F
+}
 
 /**
  * A convenient wrapper for defining a custom form field for an action
@@ -44,9 +44,9 @@ export function defineCustomFormField<
 	const CustomFormFieldComponent = ({
 		context,
 	}: Omit<CustomFormFieldComponentProps<A, T, S, F>, "action" | "fieldName" | "form"> & {
-		context: C;
+		context: C
 	}) => {
-		const form = useFormContext<S>();
+		const form = useFormContext<S>()
 
 		return FormField(
 			{
@@ -55,8 +55,8 @@ export function defineCustomFormField<
 				fieldName,
 			},
 			context
-		);
-	};
+		)
+	}
 
-	return CustomFormFieldComponent;
+	return CustomFormFieldComponent
 }

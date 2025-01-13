@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import type { JSONSchemaType } from "ajv";
-import type { Control, ControllerRenderProps } from "react-hook-form";
+import type { JSONSchemaType } from "ajv"
+import type { Control, ControllerRenderProps } from "react-hook-form"
 
-import * as React from "react";
-import Ajv from "ajv";
+import * as React from "react"
+import Ajv from "ajv"
 
-import { GetPubTypeResponseBody } from "contracts";
-import { Checkbox } from "ui/checkbox";
-import { Confidence } from "ui/customRenderers/confidence/confidence";
-import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { Separator } from "ui/separator";
-import { Textarea } from "ui/textarea";
-import { cn } from "utils";
+import { GetPubTypeResponseBody } from "contracts"
+import { Checkbox } from "ui/checkbox"
+import { Confidence } from "ui/customRenderers/confidence/confidence"
+import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { Separator } from "ui/separator"
+import { Textarea } from "ui/textarea"
+import { cn } from "utils"
 
 // a bit of a hack, but allows us to use AJV's JSON schema type
-type AnySchema = {};
+type AnySchema = {}
 
 /**
  * Takes a pubType and returns an ajv JSON schema based on the pubType's fields
@@ -34,14 +34,13 @@ export const buildSchemaFromPubFields = (
 		title: `${pubType.name}`,
 		type: "object",
 		properties: {},
-	} as JSONSchemaType<AnySchema>;
+	} as JSONSchemaType<AnySchema>
 
 	if (pubType.fields) {
 		for (const field of pubType.fields) {
 			if (!exclude.includes(field.slug)) {
 				if (field.schema) {
-					schema.properties[field.slug] = field.schema
-						.schema as JSONSchemaType<AnySchema>;
+					schema.properties[field.slug] = field.schema.schema as JSONSchemaType<AnySchema>
 				} else {
 					schema.properties[field.slug] = {
 						type: "string",
@@ -52,23 +51,23 @@ export const buildSchemaFromPubFields = (
 						// and rendered as <input type="text">.
 						// TODO: Add maxLength to long-form string fields.
 						maxLength: 100,
-					};
+					}
 				}
 			}
 		}
 	}
-	return schema;
-};
+	return schema
+}
 
 // todo: array, and more complex types that we might want to handle
 export const getFormField = (schema: JSONSchemaType<AnySchema>, field: ControllerRenderProps) => {
-	const { title, description, type } = schema;
+	const { title, description, type } = schema
 	const descriptionComponentWithHtml = (
 		<FormDescription
 			className="text-[0.8em]"
 			dangerouslySetInnerHTML={{ __html: description }}
 		/>
-	);
+	)
 	switch (type) {
 		case "number":
 			return (
@@ -84,7 +83,7 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 					</FormControl>
 					<FormMessage />
 				</FormItem>
-			);
+			)
 		case "boolean":
 			return (
 				<FormItem className={cn("mb-6 flex flex-row items-start space-x-3 space-y-0")}>
@@ -94,7 +93,7 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 							className="relative top-1"
 							defaultChecked={field.value}
 							onCheckedChange={(checked) => {
-								field.onChange(checked);
+								field.onChange(checked)
 							}}
 						/>
 					</FormControl>
@@ -104,7 +103,7 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 						<FormMessage />
 					</div>
 				</FormItem>
-			);
+			)
 		default:
 			return (
 				<FormItem className="mb-6">
@@ -119,16 +118,16 @@ export const getFormField = (schema: JSONSchemaType<AnySchema>, field: Controlle
 					</FormControl>
 					<FormMessage />
 				</FormItem>
-			);
+			)
 	}
-};
+}
 
 type ScalarFieldProps = {
-	title: string;
-	schema: JSONSchemaType<AnySchema>;
-	control: Control;
-	defaultValue?: unknown;
-};
+	title: string
+	schema: JSONSchemaType<AnySchema>
+	control: Control
+	defaultValue?: unknown
+}
 
 const ScalarField = (props: ScalarFieldProps) => {
 	return (
@@ -138,38 +137,38 @@ const ScalarField = (props: ScalarFieldProps) => {
 			defaultValue={props.defaultValue ?? props.schema.default ?? ""}
 			render={({ field }) => getFormField(props.schema, field)}
 		/>
-	);
-};
+	)
+}
 
-const customScalars = ["unjournal:100confidence", "unjournal:5confidence", "unjournal:fileUpload"];
+const customScalars = ["unjournal:100confidence", "unjournal:5confidence", "unjournal:fileUpload"]
 
 const hasCustomRenderer = (id: string) => {
-	return customScalars.includes(id);
-};
+	return customScalars.includes(id)
+}
 
 type CustomRendererProps = {
-	control: Control;
-	fieldSchema: JSONSchemaType<AnySchema>;
-	fieldName: string;
-	upload: Function;
-};
+	control: Control
+	fieldSchema: JSONSchemaType<AnySchema>
+	fieldName: string
+	upload: Function
+}
 // todo: don't just use if statements, make more dynamic
 const CustomRenderer = (props: CustomRendererProps) => {
-	const { control, fieldSchema, fieldName } = props;
+	const { control, fieldSchema, fieldName } = props
 	if (
 		fieldSchema.$id === "unjournal:100confidence" ||
 		fieldSchema.$id === "unjournal:5confidence"
 	) {
 		// not sure why, but these need to be set outside of the render in FormField?
-		const min = fieldSchema.items.minimum;
-		const max = fieldSchema.items.maximum;
+		const min = fieldSchema.items.minimum
+		const max = fieldSchema.items.maximum
 		return (
 			<FormField
 				control={control}
 				name={fieldName}
 				defaultValue={fieldSchema.default ?? [0, 0, 0]}
 				render={({ field }) => {
-					const { onChange, ...fieldProps } = field;
+					const { onChange, ...fieldProps } = field
 					return (
 						<FormItem className="mb-6">
 							<FormLabel className="text-[0.9em]">{fieldSchema.title}</FormLabel>
@@ -188,10 +187,10 @@ const CustomRenderer = (props: CustomRendererProps) => {
 							</FormControl>
 							<FormMessage />
 						</FormItem>
-					);
+					)
 				}}
 			/>
-		);
+		)
 	}
 	if (fieldSchema.$id === "unjournal:fileUpload") {
 		return (
@@ -216,24 +215,24 @@ const CustomRenderer = (props: CustomRendererProps) => {
 					</FormItem>
 				)}
 			/>
-		);
+		)
 	}
-};
+}
 
 const isObjectSchema = (
 	schema: JSONSchemaType<AnySchema>
 ): schema is JSONSchemaType<AnySchema> & { properties: JSONSchemaType<AnySchema>[] } => {
-	return schema.properties && Object.keys(schema.properties).length > 0;
-};
+	return schema.properties && Object.keys(schema.properties).length > 0
+}
 
 const hasRef = (schema: JSONSchemaType<AnySchema>) => {
-	return schema.$ref;
-};
+	return schema.$ref
+}
 
 const hasResolvedSchema = (compiledSchema: Ajv, schemaKey: string) => {
-	const resolvedSchema = compiledSchema.getSchema(schemaKey);
-	return resolvedSchema && resolvedSchema.schema;
-};
+	const resolvedSchema = compiledSchema.getSchema(schemaKey)
+	return resolvedSchema && resolvedSchema.schema
+}
 
 const getDereferencedSchema = (
 	schema: JSONSchemaType<AnySchema>,
@@ -246,28 +245,28 @@ const getDereferencedSchema = (
 				? schema.$id
 					? `${path}/${schema.$id}`
 					: path
-				: `${schema.$id}#/properties`;
-			const dereffedField = getDereferencedSchema(fieldSchema, compiledSchema, fieldPath);
+				: `${schema.$id}#/properties`
+			const dereffedField = getDereferencedSchema(fieldSchema, compiledSchema, fieldPath)
 		}
 	} else {
 		if (schema.$ref) {
-			const fieldPath = path + schema.$ref.split("#")[1];
-			return compiledSchema.getSchema(fieldPath)!.schema;
+			const fieldPath = path + schema.$ref.split("#")[1]
+			return compiledSchema.getSchema(fieldPath)!.schema
 		}
 	}
-};
+}
 
 // type NestedPubValues = PubValues; //| { [key: string]: NestedPubValues };
 
 type SchemaBasedFormFieldsProps = {
-	compiledSchema: Ajv;
-	control: Control;
-	upload: Function;
-	path?: string;
-	fieldSchema?: JSONSchemaType<AnySchema>;
-	schemaPath?: string;
-	existingValues?: Record<string, unknown>;
-};
+	compiledSchema: Ajv
+	control: Control
+	upload: Function
+	path?: string
+	fieldSchema?: JSONSchemaType<AnySchema>
+	schemaPath?: string
+	existingValues?: Record<string, unknown>
+}
 
 /**
  * Returns an array of JSX form fields based on an Ajv schema
@@ -281,16 +280,16 @@ type SchemaBasedFormFieldsProps = {
  * @returns
  */
 export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsProps) => {
-	const fields: React.JSX.Element[] = [];
+	const fields: React.JSX.Element[] = []
 
 	// probably should refactor into function and throw an error if the schema can't be resolved from the compiled schema
 	const resolvedSchema = props.fieldSchema
 		? props.fieldSchema
-		: (props.compiledSchema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>);
+		: (props.compiledSchema.getSchema("schema")!.schema as JSONSchemaType<AnySchema>)
 
 	if (isObjectSchema(resolvedSchema)) {
 		for (const [fieldKey, fieldSchema] of Object.entries(resolvedSchema.properties)) {
-			const fieldPath = props.path ? `${props.path}.${fieldKey}` : fieldKey;
+			const fieldPath = props.path ? `${props.path}.${fieldKey}` : fieldKey
 
 			// for querying the compiled schema later -- pretty robust, but does assume defs are not at top level
 			// may be better way to query just at last schema id, for example
@@ -298,9 +297,9 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 				? resolvedSchema.$id
 					? `${props.schemaPath}/${resolvedSchema.$id}`
 					: props.schemaPath
-				: `${resolvedSchema.$id}#/properties`;
+				: `${resolvedSchema.$id}#/properties`
 
-			const existingValue = props.existingValues?.[fieldKey];
+			const existingValue = props.existingValues?.[fieldKey]
 
 			const fieldContent = isObjectSchema(fieldSchema)
 				? [
@@ -330,9 +329,9 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 							fieldSchema={fieldSchema}
 							schemaPath={fieldSchemaPath}
 						/>,
-					];
+					]
 
-			fields.push(...fieldContent);
+			fields.push(...fieldContent)
 		}
 	} else {
 		const scalarSchema =
@@ -340,7 +339,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 				? (props.compiledSchema.getSchema(
 						`${props.schemaPath}${resolvedSchema.$ref!.split("#")[1]}`
 					)!.schema as JSONSchemaType<AnySchema>)
-				: resolvedSchema;
+				: resolvedSchema
 		fields.push(
 			scalarSchema.$id && hasCustomRenderer(scalarSchema.$id) ? (
 				<CustomRenderer
@@ -361,7 +360,7 @@ export const SchemaBasedFormFields = React.memo((props: SchemaBasedFormFieldsPro
 					}
 				/>
 			)
-		);
+		)
 	}
-	return fields;
-});
+	return fields
+})

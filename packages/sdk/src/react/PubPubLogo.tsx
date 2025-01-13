@@ -1,6 +1,6 @@
-import * as React from "react";
+import * as React from "react"
 
-type Props = React.SVGProps<SVGSVGElement>;
+type Props = React.SVGProps<SVGSVGElement>
 
 export const PubpubLogo = (props: Props) => (
 	<svg xmlns="http://www.w3.org/2000/svg" width={100} height={114} {...props}>
@@ -18,4 +18,4 @@ export const PubpubLogo = (props: Props) => (
 			</g>
 		</svg>
 	</svg>
-);
+)

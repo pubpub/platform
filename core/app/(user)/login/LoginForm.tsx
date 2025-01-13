@@ -1,40 +1,40 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import Link from "next/link"
+import { useSearchParams } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
-import { Check, Loader2 } from "ui/icon";
-import { Input } from "ui/input";
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form"
+import { Check, Loader2 } from "ui/icon"
+import { Input } from "ui/input"
 
-import * as actions from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
+import * as actions from "~/lib/authentication/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 export const loginFormSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1),
-});
+})
 
 export default function LoginForm() {
-	const searchParams = useSearchParams();
+	const searchParams = useSearchParams()
 	const form = useForm<z.infer<typeof loginFormSchema>>({
 		resolver: zodResolver(loginFormSchema),
-	});
+	})
 
-	const runLoginWithPassword = useServerAction(actions.loginWithPassword);
+	const runLoginWithPassword = useServerAction(actions.loginWithPassword)
 
 	const handleSubmit = async (formData: z.infer<typeof loginFormSchema>) => {
 		await runLoginWithPassword({
 			email: formData.email,
 			password: formData.password,
 			redirectTo: searchParams.get("redirectTo") ?? null,
-		});
-	};
+		})
+	}
 
 	return (
 		<Form {...form}>
@@ -100,5 +100,5 @@ export default function LoginForm() {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

@@ -1,18 +1,18 @@
-import type { AliasedRawBuilder, Expression } from "kysely";
+import type { AliasedRawBuilder, Expression } from "kysely"
 
-import { sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { sql } from "kysely"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { PubsId, PubTypesId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import type { PubsId, PubTypesId } from "db/public"
+import { CoreSchemaType } from "db/public"
 
-import type { PubValues } from "~/lib/server";
-import { db } from "~/kysely/database";
-import { getPubTypeBase, pubValuesByRef } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
+import type { PubValues } from "~/lib/server"
+import { db } from "~/kysely/database"
+import { getPubTypeBase, pubValuesByRef } from "~/lib/server"
+import { autoCache } from "~/lib/server/cache/autoCache"
 
 const stages = (stageId: Expression<string | null>) =>
-	jsonArrayFrom(db.selectFrom("stages").whereRef("stages.id", "=", stageId).selectAll());
+	jsonArrayFrom(db.selectFrom("stages").whereRef("stages.id", "=", stageId).selectAll())
 
 const actionInstances = (stageId: Expression<string | null>) =>
 	jsonArrayFrom(
@@ -20,7 +20,7 @@ const actionInstances = (stageId: Expression<string | null>) =>
 			.selectFrom("action_instances")
 			.whereRef("action_instances.stageId", "=", stageId)
 			.selectAll()
-	);
+	)
 
 const memberFields = (pubId: Expression<string>) =>
 	jsonArrayFrom(
@@ -54,10 +54,10 @@ const memberFields = (pubId: Expression<string>) =>
 			.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
 			.distinctOn("pub_fields.id")
 			.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
-	);
+	)
 
 const pubType = (pubTypeId: Expression<string>) =>
-	jsonObjectFrom(getPubTypeBase().whereRef("pub_types.id", "=", pubTypeId));
+	jsonObjectFrom(getPubTypeBase().whereRef("pub_types.id", "=", pubTypeId))
 
 export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTypesId) => {
 	return autoCache(
@@ -141,5 +141,5 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 				).as("counts_of_all_pub_types"),
 			])
 		// .limit(1)
-	);
-};
+	)
+}

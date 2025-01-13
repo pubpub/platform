@@ -1,17 +1,17 @@
-import * as React from "react";
+import * as React from "react"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { FormControl, FormItem, FormMessage } from "../../form";
+import type { AutoFormInputComponentProps } from "../types"
+import { FormControl, FormItem, FormMessage } from "../../form"
 import {
 	PubFieldSelect,
 	PubFieldSelectProvider,
 	PubFieldSelectToggleButton,
 	PubFieldSelectWrapper,
-} from "../../pubFields/pubFieldSelect";
-import { Textarea } from "../../textarea";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+} from "../../pubFields/pubFieldSelect"
+import { Textarea } from "../../textarea"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 export default function AutoFormTextarea({
 	label,
@@ -23,8 +23,8 @@ export default function AutoFormTextarea({
 	field,
 	zodItem,
 }: AutoFormInputComponentProps) {
-	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
-	const showLabel = _showLabel === undefined ? true : _showLabel;
+	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps
+	const showLabel = _showLabel === undefined ? true : _showLabel
 	return (
 		<PubFieldSelectProvider
 			field={field}
@@ -56,5 +56,5 @@ export default function AutoFormTextarea({
 				<FormMessage />
 			</FormItem>
 		</PubFieldSelectProvider>
-	);
+	)
 }

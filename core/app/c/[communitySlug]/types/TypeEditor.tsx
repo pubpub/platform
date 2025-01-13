@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import React, { useMemo } from "react";
-import { notFound } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
-import { z } from "zod";
+import React, { useMemo } from "react"
+import { notFound } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useFieldArray, useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type { PubFieldsId } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { Button } from "ui/button";
+import type { PubFieldsId } from "db/public"
+import { CoreSchemaType } from "db/public"
+import { Button } from "ui/button"
 import {
 	Form,
 	FormControl,
@@ -17,21 +17,21 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2, X } from "ui/icon";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { RadioGroup, RadioGroupItem } from "ui/radio-group";
+} from "ui/form"
+import { Loader2, X } from "ui/icon"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { RadioGroup, RadioGroupItem } from "ui/radio-group"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { useServerAction } from "~/lib/serverActions";
-import { createPubType } from "./actions";
-import { FieldSelect } from "./FieldSelect";
-import { pubFieldCanBeTitle } from "./utils";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { useServerAction } from "~/lib/serverActions"
+import { createPubType } from "./actions"
+import { FieldSelect } from "./FieldSelect"
+import { pubFieldCanBeTitle } from "./utils"
 
 type Props = {
-	onTypeCreation: () => void;
-};
+	onTypeCreation: () => void
+}
 
 const schema = z.object({
 	name: z.string(),
@@ -48,13 +48,13 @@ const schema = z.object({
 		)
 		.min(1, { message: "Add at least one field" }),
 	titleField: z.string(),
-});
+})
 
 export const TypeEditor = ({ onTypeCreation }: Props) => {
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: { name: "", description: "", pubFields: [], titleField: "" },
-	});
+	})
 
 	const {
 		fields: pubFields,
@@ -63,7 +63,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 	} = useFieldArray({
 		control: form.control,
 		name: "pubFields",
-	});
+	})
 
 	const onFieldSelect = (
 		fieldId: PubFieldsId,
@@ -72,14 +72,14 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 		schemaName: CoreSchemaType | null,
 		isRelation?: boolean | null
 	) => {
-		append({ fieldId, name, slug, schemaName, isRelation });
-	};
-
-	const community = useCommunity();
-	if (!community) {
-		return notFound();
+		append({ fieldId, name, slug, schemaName, isRelation })
 	}
-	const runCreatePubType = useServerAction(createPubType);
+
+	const community = useCommunity()
+	if (!community) {
+		return notFound()
+	}
+	const runCreatePubType = useServerAction(createPubType)
 	const onSubmit = async ({
 		name,
 		description,
@@ -92,9 +92,9 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 			description,
 			pubFields.map((f) => f.fieldId as PubFieldsId),
 			titleField as PubFieldsId
-		);
-		onTypeCreation();
-	};
+		)
+		onTypeCreation()
+	}
 
 	return (
 		<div className="ml-4 mt-4">
@@ -234,5 +234,5 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 				</form>
 			</Form>
 		</div>
-	);
-};
+	)
+}

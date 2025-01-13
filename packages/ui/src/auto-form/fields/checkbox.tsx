@@ -1,11 +1,11 @@
-import * as React from "react";
+import * as React from "react"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { Checkbox } from "../../checkbox";
-import { FormControl, FormItem } from "../../form";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+import type { AutoFormInputComponentProps } from "../types"
+import { Checkbox } from "../../checkbox"
+import { FormControl, FormItem } from "../../form"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 export default function AutoFormCheckbox({
 	label,
@@ -32,5 +32,5 @@ export default function AutoFormCheckbox({
 			</FormItem>
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 		</div>
-	);
+	)
 }

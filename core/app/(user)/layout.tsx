@@ -6,5 +6,5 @@ export default async function UserLayout({ children }: { children: React.ReactNo
 			</div>
 			<div className="container mx-auto">{children}</div>
 		</div>
-	);
+	)
 }

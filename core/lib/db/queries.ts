@@ -1,15 +1,15 @@
-import { cache } from "react";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { cache } from "react"
+import { jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { StagesId } from "db/public";
+import type { StagesId } from "db/public"
 
-import type { RuleConfig } from "~/actions/types";
-import { db } from "~/kysely/database";
-import prisma from "~/prisma/db";
-import { pubType, pubValuesByRef } from "../server";
-import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries";
-import { autoCache } from "../server/cache/autoCache";
-import { SAFE_USER_SELECT } from "../server/user";
+import type { RuleConfig } from "~/actions/types"
+import { db } from "~/kysely/database"
+import prisma from "~/prisma/db"
+import { pubType, pubValuesByRef } from "../server"
+import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries"
+import { autoCache } from "../server/cache/autoCache"
+import { SAFE_USER_SELECT } from "../server/user"
 
 export const getStage = cache((stageId: StagesId) => {
 	return autoCache(
@@ -24,16 +24,16 @@ export const getStage = cache((stageId: StagesId) => {
 				"updatedAt",
 			])
 			.where("stages.id", "=", stageId)
-	);
-});
+	)
+})
 
 export const getStageActions = cache((stageId: StagesId) => {
-	return autoCache(db.selectFrom("action_instances").selectAll().where("stageId", "=", stageId));
-});
+	return autoCache(db.selectFrom("action_instances").selectAll().where("stageId", "=", stageId))
+})
 
 export type StagePub = Awaited<
 	ReturnType<ReturnType<typeof getStagePubs>["executeTakeFirstOrThrow"]>
->;
+>
 
 export const getStagePubs = cache((stageId: StagesId) => {
 	return autoCache(
@@ -44,8 +44,8 @@ export const getStagePubs = cache((stageId: StagesId) => {
 			.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 			.innerJoin("PubsInStages", "PubsInStages.pubId", "pubs.id")
 			.where("PubsInStages.stageId", "=", stageId)
-	);
-});
+	)
+})
 
 export const getStageMembers = cache((stageId: StagesId) => {
 	return autoCache(
@@ -55,8 +55,8 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.innerJoin("users", "users.id", "stage_memberships.userId")
 			.select(SAFE_USER_SELECT)
 			.select("stage_memberships.role")
-	);
-});
+	)
+})
 
 export const getStageRules = cache((stageId: string) => {
 	return autoCache(
@@ -73,8 +73,8 @@ export const getStageRules = cache((stageId: string) => {
 				"actionInstanceId",
 			])
 			.$narrowType<{ config: RuleConfig | null }>()
-	);
-});
+	)
+})
 
 export const getCommunityBySlug = async (communitySlug: string) => {
 	return await prisma.community.findUnique({
@@ -87,5 +87,5 @@ export const getCommunityBySlug = async (communitySlug: string) => {
 				include: communityMemberInclude,
 			},
 		},
-	});
-};
+	})
+}

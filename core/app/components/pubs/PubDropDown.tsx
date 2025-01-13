@@ -1,26 +1,26 @@
-import { Suspense } from "react";
-import Link from "next/link";
+import { Suspense } from "react"
+import Link from "next/link"
 
-import type { PubsId } from "db/public";
-import { Button } from "ui/button";
+import type { PubsId } from "db/public"
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical, Pencil } from "ui/icon";
+} from "ui/dropdown-menu"
+import { MoreVertical, Pencil } from "ui/icon"
 
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { RemovePubButton } from "./RemovePubButton";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { RemovePubButton } from "./RemovePubButton"
 
 type Props = {
-	pubId: PubsId;
-	searchParams: Record<string, unknown>;
-};
+	pubId: PubsId
+	searchParams: Record<string, unknown>
+}
 
 export const PubDropDown = (props: Props) => {
-	const communitySlug = getCommunitySlug();
+	const communitySlug = getCommunitySlug()
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -48,5 +48,5 @@ export const PubDropDown = (props: Props) => {
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

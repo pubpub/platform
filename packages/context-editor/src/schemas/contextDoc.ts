@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 export default {
 	selectable: false,
@@ -20,13 +20,13 @@ export default {
 			tag: "section",
 			getAttrs: (node) => {
 				if ((node as Element).getAttribute("data-atom")) {
-					return false;
+					return false
 				}
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
 					pubId: (node as Element).getAttribute("data-pub-id"),
-				};
+				}
 			},
 		},
 	],
@@ -39,9 +39,9 @@ export default {
 				"data-pub-id": node.attrs.pubId.toString(),
 			},
 			0,
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec
 
 /* 
 I didn't call this "transclude" because that implies real-time, 

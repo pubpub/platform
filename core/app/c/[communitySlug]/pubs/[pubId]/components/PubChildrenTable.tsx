@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
+import { useMemo } from "react"
 
-import type { ChildPubRow, ChildPubRowPubType } from "./types";
-import { DataTable } from "~/app/components/DataTable/DataTable";
-import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
+import type { ChildPubRow, ChildPubRowPubType } from "./types"
+import { DataTable } from "~/app/components/DataTable/DataTable"
+import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns"
 
 type Props = {
-	childPubRows: ChildPubRow[];
-	childPubRunActionDropdowns: JSX.Element[];
-	childPubType?: ChildPubRowPubType;
-};
+	childPubRows: ChildPubRow[]
+	childPubRunActionDropdowns: JSX.Element[]
+	childPubType?: ChildPubRowPubType
+}
 
 export const PubChildrenTable = (props: Props) => {
 	const columns = useMemo(
@@ -22,6 +22,6 @@ export const PubChildrenTable = (props: Props) => {
 		// row will be closed when this happens. To prevent this, we memoize the
 		// columns object so that it only changes when the childPubType changes.
 		[props.childPubType?.id]
-	);
-	return <DataTable columns={columns} data={props.childPubRows} hidePaginationWhenSinglePage />;
-};
+	)
+	return <DataTable columns={columns} data={props.childPubRows} hidePaginationWhenSinglePage />
+}

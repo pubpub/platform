@@ -1,16 +1,16 @@
-import { useFormState } from "react-hook-form";
+import { useFormState } from "react-hook-form"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 
 export type EvaluatorInviteFormSaveButtonProps = {
-	onClick: () => void;
-};
+	onClick: () => void
+}
 
 export function EvaluatorInviteFormSaveButton(props: EvaluatorInviteFormSaveButtonProps) {
-	const formState = useFormState();
+	const formState = useFormState()
 	return (
 		<Button onClick={props.onClick} disabled={formState.isSubmitting}>
 			Save
 		</Button>
-	);
+	)
 }

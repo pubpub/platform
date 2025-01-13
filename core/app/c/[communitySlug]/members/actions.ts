@@ -1,44 +1,44 @@
-"use server";
+"use server"
 
-import { cache } from "react";
+import { cache } from "react"
 
-import type { UsersId } from "db/public";
-import { MemberRole } from "db/public";
-import { MembershipType } from "db/src/public/MembershipType";
+import type { UsersId } from "db/public"
+import { MemberRole } from "db/public"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import type { TableMember } from "./getMemberTableColumns";
-import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema";
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member";
-import { createUserWithMembership } from "~/lib/server/user";
+import type { TableMember } from "./getMemberTableColumns"
+import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema"
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member"
+import { createUserWithMembership } from "~/lib/server/user"
 
 const isCommunityAdmin = cache(async () => {
-	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
 
 	if (!user) {
 		return {
 			error: "You are not logged in",
-		};
+		}
 	}
 
 	if (!community) {
 		return {
 			error: "Community not found",
-		};
+		}
 	}
 
 	if (!isAdminOfCommunity(user, community)) {
 		return {
 			error: "You do not have permission to invite members to this community",
-		};
+		}
 	}
 
-	return { user, error: null, community };
-});
+	return { user, error: null, community }
+})
 
 /**
  * Adds a member to a community.
@@ -56,15 +56,15 @@ export const addMember = defineServerAction(async function addMember({
 	userId,
 	role,
 }: {
-	userId: UsersId;
-	role: MemberRole;
+	userId: UsersId
+	role: MemberRole
 }) {
-	const result = await isCommunityAdmin();
+	const result = await isCommunityAdmin()
 	if (result.error !== null) {
 		return {
 			title: "Failed to add member",
 			error: "You do not have permission to invite members to this community",
-		};
+		}
 	}
 
 	try {
@@ -72,26 +72,26 @@ export const addMember = defineServerAction(async function addMember({
 			userId,
 			communityId: result.community.id,
 			role,
-		}).executeTakeFirst();
+		}).executeTakeFirst()
 
 		// TODO: send email to user confirming their membership,
 		// don't just add them
 
-		return { member };
+		return { member }
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
 				title: "Failed to add member",
 				error: "User is already a member of this community",
-			};
+			}
 		}
 		return {
 			title: "Failed to add member",
 			error: "An unexpected error occurred",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 /**
  * Create a new user and add them as a member to a community
@@ -100,75 +100,75 @@ export const createUserWithCommunityMembership = defineServerAction(
 	async function createUserWithCommunityMembership({
 		...data
 	}: {
-		firstName: string;
-		lastName?: string | null;
-		email: string;
-		role: MemberRole;
-		isSuperAdmin?: boolean;
+		firstName: string
+		lastName?: string | null
+		email: string
+		role: MemberRole
+		isSuperAdmin?: boolean
 	}) {
 		const parsed = memberInviteFormSchema
 			.required({ firstName: true, lastName: true })
-			.safeParse(data);
+			.safeParse(data)
 
 		if (!parsed.success) {
 			return {
 				title: "Form values are invalid",
 				error: parsed.error.message,
-			};
+			}
 		}
 
 		try {
 			return await createUserWithMembership({
 				...parsed.data,
 				membership: { type: MembershipType.community, role: data.role },
-			});
+			})
 		} catch (error) {
 			return {
 				title: "Failed to add member",
 				error: "An unexpected error occurred",
 				cause: error,
-			};
+			}
 		}
 	}
-);
+)
 
 export const removeMember = defineServerAction(async function removeMember({
 	member,
 }: {
-	member: TableMember;
+	member: TableMember
 }) {
 	try {
-		const { user, error: adminError, community } = await isCommunityAdmin();
+		const { user, error: adminError, community } = await isCommunityAdmin()
 
 		if (adminError !== null) {
 			return {
 				title: "Failed to remove member",
 				error: adminError,
-			};
+			}
 		}
 
 		if (user?.memberships.find((m) => m.id === member.id)) {
 			return {
 				title: "Failed to remove member",
 				error: "You cannot remove yourself from the community",
-			};
+			}
 		}
 
-		const removedMember = await deleteCommunityMember(member.id).executeTakeFirst();
+		const removedMember = await deleteCommunityMember(member.id).executeTakeFirst()
 
 		if (!removedMember) {
 			return {
 				title: "Failed to remove member",
 				error: "An unexpected error occurred",
-			};
+			}
 		}
 
-		return { success: true };
+		return { success: true }
 	} catch (error) {
 		return {
 			title: "Failed to remove member",
 			error: "An unexpected error occurred",
 			cause: error,
-		};
+		}
 	}
-});
+})

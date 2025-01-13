@@ -1,34 +1,34 @@
-"use client";
+"use client"
 
-import { useFieldArray } from "react-hook-form";
+import { useFieldArray } from "react-hook-form"
 
-import type { PubFieldSchemaId, PubFieldsId } from "db/public";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
-import { Button } from "ui/button";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { ArrowRight, Info, Plus, Trash } from "ui/icon";
-import { Input } from "ui/input";
-import { usePubFieldContext } from "ui/pubFields";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { Separator } from "ui/separator";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+import type { PubFieldSchemaId, PubFieldsId } from "db/public"
+import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion"
+import { Button } from "ui/button"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { ArrowRight, Info, Plus, Trash } from "ui/icon"
+import { Input } from "ui/input"
+import { usePubFieldContext } from "ui/pubFields"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { Separator } from "ui/separator"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 
-import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
-import { action } from "../../action";
+import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField"
+import { action } from "../../action"
 
 type PubField = {
-	id: PubFieldsId;
-	name: string;
-	slug: string;
-	pubFieldSchemaId: PubFieldSchemaId | null;
-};
+	id: PubFieldsId
+	name: string
+	slug: string
+	pubFieldSchemaId: PubFieldSchemaId | null
+}
 
 const OutputMapField = ({
 	unselectedPubFields,
 	fieldName,
 }: {
-	unselectedPubFields: PubField[];
-	fieldName: string;
+	unselectedPubFields: PubField[]
+	fieldName: string
 }) => (
 	<TooltipProvider>
 		<div className="flex items-start gap-x-2 overflow-visible">
@@ -108,34 +108,34 @@ const OutputMapField = ({
 								</Select>
 							</FormControl>
 						</FormItem>
-					);
+					)
 				}}
 			/>
 		</div>
 	</TooltipProvider>
-);
+)
 
 export const FieldOutputMap = defineCustomFormField(
 	action,
 	"config",
 	"outputMap",
 	function FieldOutputMap({ form, fieldName }) {
-		const pubFields = Object.values(usePubFieldContext());
-		const values = form.watch();
+		const pubFields = Object.values(usePubFieldContext())
+		const values = form.watch()
 
 		const { fields, append, remove } = useFieldArray({
 			control: form.control,
 			name: fieldName,
-		});
-		const itemName = "Output Map";
+		})
+		const itemName = "Output Map"
 
-		const [title] = itemName.split("|");
+		const [title] = itemName.split("|")
 
-		const alreadySelectedPubFields = values[fieldName] ?? [];
+		const alreadySelectedPubFields = values[fieldName] ?? []
 		const unselectedPubFields = pubFields.filter(
 			(pubField) =>
 				!alreadySelectedPubFields.some((field) => field.pubField === pubField.slug)
-		);
+		)
 
 		return (
 			<AccordionItem value={"a"} className="border-none">
@@ -160,7 +160,7 @@ export const FieldOutputMap = defineCustomFormField(
 													fieldName={`outputMap.[${index}]`}
 												/>
 											</FormItem>
-										);
+										)
 									}}
 								/>
 								<div className="flex justify-end">
@@ -177,7 +177,7 @@ export const FieldOutputMap = defineCustomFormField(
 
 								<Separator />
 							</div>
-						);
+						)
 					})}
 					{fields.length !== pubFields.length && (
 						<Button
@@ -192,8 +192,8 @@ export const FieldOutputMap = defineCustomFormField(
 					)}
 				</AccordionContent>
 			</AccordionItem>
-		);
+		)
 	}
-);
+)
 
-export default FieldOutputMap;
+export default FieldOutputMap

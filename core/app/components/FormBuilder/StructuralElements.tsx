@@ -1,12 +1,12 @@
-import type { ZodObject } from "zod";
+import type { ZodObject } from "zod"
 
-import { z } from "zod";
+import { z } from "zod"
 
-import type { LucideIcon } from "ui/icon";
-import { StructuralFormElement } from "db/public";
-import { CaseSensitive, Heading2, Heading3, Minus } from "ui/icon";
+import type { LucideIcon } from "ui/icon"
+import { StructuralFormElement } from "db/public"
+import { CaseSensitive, Heading2, Heading3, Minus } from "ui/icon"
 
-import { markdown } from "~/actions/_lib/zodTypes";
+import { markdown } from "~/actions/_lib/zodTypes"
 
 export const structuralElements: Record<
 	StructuralFormElement,
@@ -37,4 +37,4 @@ export const structuralElements: Record<
 		name: "Heading 3",
 	},
 	[StructuralFormElement.hr]: { Icon: Minus, enabled: false, name: "Divider" },
-} as const;
+} as const

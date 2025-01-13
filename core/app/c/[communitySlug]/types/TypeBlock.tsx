@@ -1,30 +1,30 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 
-import type { CoreSchemaType, PubFieldsId } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
-import { Check, ChevronDown, ChevronUp, Pencil } from "ui/icon";
-import { Label } from "ui/label";
-import { usePubFieldContext } from "ui/pubFields";
-import { RadioGroup, RadioGroupItem } from "ui/radio-group";
-import { ToastAction } from "ui/toast";
-import { toast } from "ui/use-toast";
+import type { CoreSchemaType, PubFieldsId } from "db/public"
+import { Button } from "ui/button"
+import { Card, CardContent } from "ui/card"
+import { Check, ChevronDown, ChevronUp, Pencil } from "ui/icon"
+import { Label } from "ui/label"
+import { usePubFieldContext } from "ui/pubFields"
+import { RadioGroup, RadioGroupItem } from "ui/radio-group"
+import { ToastAction } from "ui/toast"
+import { toast } from "ui/use-toast"
 
-import type { PubTypeWithFieldIds } from "~/lib/types";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { defaultFormSlug } from "~/lib/form";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { addPubField, updateTitleField } from "./actions";
-import { FieldSelect } from "./FieldSelect";
-import { RemoveFieldButton } from "./RemoveFieldButton";
-import { pubFieldCanBeTitle } from "./utils";
+import type { PubTypeWithFieldIds } from "~/lib/types"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { defaultFormSlug } from "~/lib/form"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { addPubField, updateTitleField } from "./actions"
+import { FieldSelect } from "./FieldSelect"
+import { RemoveFieldButton } from "./RemoveFieldButton"
+import { pubFieldCanBeTitle } from "./utils"
 
 type Props = {
-	type: PubTypeWithFieldIds;
-	allowEditing: boolean;
-};
+	type: PubTypeWithFieldIds
+	allowEditing: boolean
+}
 
 const IsTitleCell = ({
 	pubField,
@@ -32,10 +32,10 @@ const IsTitleCell = ({
 	isTitle,
 	pubTypeName,
 }: {
-	pubField: { id: PubFieldsId; schemaName: CoreSchemaType | null; slug: string };
-	isEditing: boolean;
-	pubTypeName: string;
-	isTitle: boolean;
+	pubField: { id: PubFieldsId; schemaName: CoreSchemaType | null; slug: string }
+	isEditing: boolean
+	pubTypeName: string
+	isTitle: boolean
 }) => {
 	if (isEditing) {
 		if (pubFieldCanBeTitle(pubField)) {
@@ -44,29 +44,29 @@ const IsTitleCell = ({
 					value={pubField.id}
 					data-testid={`${pubTypeName}:${pubField.slug}-titleField`}
 				/>
-			);
+			)
 		}
-		return null;
+		return null
 	}
 	if (isTitle) {
-		return <Check size="16" />;
+		return <Check size="16" />
 	}
-	return null;
-};
+	return null
+}
 
 const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
-	const [expanded, setExpanded] = useState(false);
-	const [editing, setEditing] = useState(false);
-	const runAddPubField = useServerAction(addPubField);
-	const runUpdateTitleField = useServerAction(updateTitleField);
-	const community = useCommunity();
-	const fields = usePubFieldContext();
-	const titleField = type.fields.filter((f) => f.isTitle)[0]?.id ?? "";
+	const [expanded, setExpanded] = useState(false)
+	const [editing, setEditing] = useState(false)
+	const runAddPubField = useServerAction(addPubField)
+	const runUpdateTitleField = useServerAction(updateTitleField)
+	const community = useCommunity()
+	const fields = usePubFieldContext()
+	const titleField = type.fields.filter((f) => f.isTitle)[0]?.id ?? ""
 	const handleTitleFieldChange = async (newTitleField: string) => {
-		await runUpdateTitleField(type.id, newTitleField as PubFieldsId);
-	};
+		await runUpdateTitleField(type.id, newTitleField as PubFieldsId)
+	}
 	const handleAddPubField = async (fieldId: PubFieldsId) => {
-		const result = await runAddPubField(type.id, fieldId);
+		const result = await runAddPubField(type.id, fieldId)
 		if (didSucceed(result)) {
 			toast({
 				title: "Field added successfully",
@@ -85,9 +85,9 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 						</a>
 					</ToastAction>
 				),
-			});
+			})
 		}
-	};
+	}
 	return (
 		<Card>
 			<CardContent className="px-6 py-2">
@@ -98,7 +98,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 						variant={"ghost"}
 						aria-label="Expand"
 						onClick={() => {
-							setExpanded(!expanded);
+							setExpanded(!expanded)
 						}}
 					>
 						{expanded ? <ChevronUp /> : <ChevronDown />}
@@ -110,7 +110,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 							variant={editing ? "secondary" : "ghost"}
 							aria-label="Edit"
 							onClick={() => {
-								setEditing(!editing);
+								setEditing(!editing)
 							}}
 							data-testid={`edit-pubtype-${type.name}`}
 						>
@@ -146,21 +146,21 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 									{type.fields
 										// Sort so that title is first, then alphabetical
 										.sort((a, b) => {
-											const aField = fields[a.id];
-											const bField = fields[b.id];
+											const aField = fields[a.id]
+											const bField = fields[b.id]
 											if (a.isTitle) {
-												return -2;
+												return -2
 											}
 											if (b.isTitle) {
-												return 2;
+												return 2
 											}
 											if (aField.name === bField.name) {
-												return 0;
+												return 0
 											}
-											return aField.name > bField.name ? 1 : -1;
+											return aField.name > bField.name ? 1 : -1
 										})
 										.map(({ id, isTitle }) => {
-											const field = fields[id];
+											const field = fields[id]
 											return (
 												<tr key={field.id}>
 													<td>
@@ -188,7 +188,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 														/>
 													</td>
 												</tr>
-											);
+											)
 										})}
 								</tbody>
 							</table>
@@ -208,6 +208,6 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 				)}
 			</CardContent>
 		</Card>
-	);
-};
-export default TypeBlock;
+	)
+}
+export default TypeBlock

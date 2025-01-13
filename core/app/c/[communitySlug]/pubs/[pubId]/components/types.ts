@@ -1,4 +1,4 @@
-import type { JsonValue } from "contracts";
+import type { JsonValue } from "contracts"
 import type {
 	ActionInstances,
 	CommunityMembershipsId,
@@ -7,35 +7,35 @@ import type {
 	PubsId,
 	PubTypesId,
 	Stages,
-} from "db/public";
+} from "db/public"
 
 export type ChildPubRowPubType = {
-	id: PubTypesId;
-	name: string;
+	id: PubTypesId
+	name: string
 	fields: {
-		id: PubFieldsId;
-		name: string;
-		schemaName: CoreSchemaType | null;
-	}[];
-};
+		id: PubFieldsId
+		name: string
+		schemaName: CoreSchemaType | null
+	}[]
+}
 
 export type ChildPubRowMemberField = {
-	id: CommunityMembershipsId;
-	fieldId: PubFieldsId;
+	id: CommunityMembershipsId
+	fieldId: PubFieldsId
 	user: {
-		avatar: string | null;
-		email: string;
-		firstName: string;
-		lastName: string | null;
-	};
-};
+		avatar: string | null
+		email: string
+		firstName: string
+		lastName: string | null
+	}
+}
 
 export type ChildPubRow = {
-	id: PubsId;
-	createdAt: Date;
-	stages: Stages[];
-	memberFields: ChildPubRowMemberField[];
-	actionInstances: ActionInstances[];
-	values: Record<string, JsonValue>;
-	pubTypeId: PubTypesId;
-};
+	id: PubsId
+	createdAt: Date
+	stages: Stages[]
+	memberFields: ChildPubRowMemberField[]
+	actionInstances: ActionInstances[]
+	values: Record<string, JsonValue>
+	pubTypeId: PubTypesId
+}

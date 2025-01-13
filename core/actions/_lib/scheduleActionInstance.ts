@@ -1,28 +1,28 @@
 // "use server";
 
-import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom } from "kysely/helpers/postgres"
 
-import type { ActionInstancesId, PubsId, Rules, StagesId } from "db/public";
-import { ActionRunStatus, Event } from "db/public";
-import { logger } from "logger";
+import type { ActionInstancesId, PubsId, Rules, StagesId } from "db/public"
+import { ActionRunStatus, Event } from "db/public"
+import { logger } from "logger"
 
-import type { RuleConfig } from "./rules";
-import { db } from "~/kysely/database";
-import { addDuration } from "~/lib/dates";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
+import type { RuleConfig } from "./rules"
+import { db } from "~/kysely/database"
+import { addDuration } from "~/lib/dates"
+import { autoCache } from "~/lib/server/cache/autoCache"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs"
 
 export const scheduleActionInstances = async ({
 	pubId,
 	stageId,
 }: {
-	pubId: PubsId;
-	stageId: StagesId;
+	pubId: PubsId
+	stageId: StagesId
 }) => {
 	if (!pubId || !stageId) {
-		throw new Error("pubId and stageId are required");
+		throw new Error("pubId and stageId are required")
 	}
 
 	const instances = await autoCache(
@@ -47,7 +47,7 @@ export const scheduleActionInstances = async ({
 						.where("rules.event", "=", Event.pubInStageForDuration)
 				).as("rules"),
 			])
-	).execute();
+	).execute()
 
 	if (!instances.length) {
 		logger.debug({
@@ -55,8 +55,8 @@ export const scheduleActionInstances = async ({
 			pubId,
 			stageId,
 			instances,
-		});
-		return;
+		})
+		return
 	}
 
 	const validRules = instances.flatMap((instance) =>
@@ -76,7 +76,7 @@ export const scheduleActionInstances = async ({
 				actionName: instance.name,
 				actionInstanceConfig: instance.config,
 			}))
-	);
+	)
 
 	if (!validRules.length) {
 		logger.debug({
@@ -84,11 +84,11 @@ export const scheduleActionInstances = async ({
 			pubId,
 			stageId,
 			instances,
-		});
-		return;
+		})
+		return
 	}
 
-	const jobsClient = await getJobsClient();
+	const jobsClient = await getJobsClient()
 
 	const results = await Promise.all(
 		validRules.flatMap(async (rule) => {
@@ -101,12 +101,12 @@ export const scheduleActionInstances = async ({
 				community: {
 					slug: getCommunitySlug(),
 				},
-			});
+			})
 
 			const runAt = addDuration({
 				duration: rule.config.duration,
 				interval: rule.config.interval,
-			}).toISOString();
+			}).toISOString()
 
 			if (job.id) {
 				await autoRevalidate(
@@ -118,7 +118,7 @@ export const scheduleActionInstances = async ({
 						result: { scheduled: `Action scheduled for ${runAt}` },
 						event: Event.pubInStageForDuration,
 					})
-				).execute();
+				).execute()
 			}
 
 			return {
@@ -126,26 +126,26 @@ export const scheduleActionInstances = async ({
 				actionInstanceId: rule.actionInstanceId,
 				actionInstanceName: rule.actionName,
 				runAt,
-			};
+			}
 		})
-	);
+	)
 
-	return results;
-};
+	return results
+}
 
 export const unscheduleAction = async ({
 	actionInstanceId,
 	stageId,
 	pubId,
 }: {
-	actionInstanceId: ActionInstancesId;
-	stageId: StagesId;
-	pubId: PubsId;
+	actionInstanceId: ActionInstancesId
+	stageId: StagesId
+	pubId: PubsId
 }) => {
-	const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
+	const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId })
 	try {
-		const jobsClient = await getJobsClient();
-		await jobsClient.unscheduleJob(jobKey);
+		const jobsClient = await getJobsClient()
+		await jobsClient.unscheduleJob(jobKey)
 
 		// TODO: this should probably be set to "canceled" instead of deleting the run
 		await autoRevalidate(
@@ -154,14 +154,14 @@ export const unscheduleAction = async ({
 				.where("actionInstanceId", "=", actionInstanceId)
 				.where("pubId", "=", pubId)
 				.where("action_runs.status", "=", ActionRunStatus.scheduled)
-		).execute();
+		).execute()
 
-		logger.debug({ msg: "Unscheduled action", actionInstanceId, stageId, pubId });
+		logger.debug({ msg: "Unscheduled action", actionInstanceId, stageId, pubId })
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		return {
 			error: "Failed to unschedule action",
 			cause: error,
-		};
+		}
 	}
-};
+}

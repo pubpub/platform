@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import type { z } from "zod";
+import type { z } from "zod"
 
-import { useEffect, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { skipToken } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { skipToken } from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
 
-import type { NewUsers, UsersId } from "db/public";
-import { MemberRole } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
-import { Checkbox } from "ui/checkbox";
+import type { NewUsers, UsersId } from "db/public"
+import { MemberRole } from "db/public"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { Card, CardContent } from "ui/card"
+import { Checkbox } from "ui/checkbox"
 import {
 	Form,
 	FormControl,
@@ -21,16 +21,16 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2, Mail, UserPlus } from "ui/icon";
-import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { toast } from "ui/use-toast";
+} from "ui/form"
+import { Loader2, Mail, UserPlus } from "ui/icon"
+import { Input } from "ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { toast } from "ui/use-toast"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { client } from "~/lib/api";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { memberInviteFormSchema } from "./memberInviteFormSchema";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { client } from "~/lib/api"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { memberInviteFormSchema } from "./memberInviteFormSchema"
 
 export const MemberInviteForm = ({
 	existingMembers,
@@ -39,22 +39,22 @@ export const MemberInviteForm = ({
 	addUserMember,
 	closeForm,
 }: {
-	existingMembers: UsersId[];
-	isSuperAdmin?: boolean;
-	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>;
+	existingMembers: UsersId[]
+	isSuperAdmin?: boolean
+	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>
 	addUserMember: ({
 		email,
 		firstName,
 		lastName,
 		isSuperAdmin,
 		role,
-	}: Omit<NewUsers, "slug"> & { role: MemberRole }) => Promise<unknown>;
-	closeForm: () => void;
+	}: Omit<NewUsers, "slug"> & { role: MemberRole }) => Promise<unknown>
+	closeForm: () => void
 }) => {
-	const community = useCommunity();
+	const community = useCommunity()
 
-	const runCreateUserWithMembership = useServerAction(addUserMember);
-	const runAddMember = useServerAction(addMember);
+	const runCreateUserWithMembership = useServerAction(addUserMember)
+	const runAddMember = useServerAction(addMember)
 
 	const form = useForm<z.infer<typeof memberInviteFormSchema>>({
 		resolver: zodResolver(memberInviteFormSchema),
@@ -63,30 +63,30 @@ export const MemberInviteForm = ({
 			isSuperAdmin: false,
 		},
 		mode: "onChange",
-	});
-	const email = form.watch("email");
-	const emailState = form.getFieldState("email", form.formState);
-	const query = { email, limit: 1, communityId: community.id };
-	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember");
+	})
+	const email = form.watch("email")
+	const emailState = form.getFieldState("email", form.formState)
+	const query = { email, limit: 1, communityId: community.id }
+	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember")
 	const { data: userSuggestions, status } = client.users.search.useQuery({
 		queryKey: ["searchUsers", query, community.slug],
 		queryData: shouldSearch ? { query, params: { communitySlug: community.slug } } : skipToken,
-	});
-	const user = userSuggestions?.body?.[0];
-	const isPending = email && !emailState.invalid && status === "pending";
+	})
+	const user = userSuggestions?.body?.[0]
+	const isPending = email && !emailState.invalid && status === "pending"
 
 	const userIsAlreadyMember = useMemo(
 		() => user && existingMembers.includes(user.id),
 		[user, existingMembers]
-	);
+	)
 	useEffect(() => {
 		if (userIsAlreadyMember) {
 			form.setError("email", {
 				type: "alreadyMember",
 				message: "This user is already a member",
-			});
+			})
 		}
-	}, [userIsAlreadyMember, form.setError]);
+	}, [userIsAlreadyMember, form.setError])
 
 	async function onSubmit(data: z.infer<typeof memberInviteFormSchema>) {
 		if (!user) {
@@ -97,8 +97,8 @@ export const MemberInviteForm = ({
 				form.setError(!data.firstName ? "firstName" : "lastName", {
 					type: "manual",
 					message: `Please provide a ${!data.firstName ? "first" : "last"} name`,
-				});
-				return;
+				})
+				return
 			}
 
 			const result = await runCreateUserWithMembership({
@@ -107,31 +107,31 @@ export const MemberInviteForm = ({
 				lastName: data.lastName,
 				role: data.role,
 				isSuperAdmin: data.isSuperAdmin,
-			});
+			})
 
 			if (didSucceed(result)) {
 				toast({
 					title: "Success",
 					description: "User successfully invited",
-				});
-				closeForm();
+				})
+				closeForm()
 			}
 
-			return;
+			return
 		}
 
 		const result = await runAddMember({
 			userId: user.id,
 			role: data.role,
-		});
+		})
 
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "Member added successfully",
-			});
+			})
 
-			closeForm();
+			closeForm()
 		}
 	}
 
@@ -290,5 +290,5 @@ export const MemberInviteForm = ({
 				)}
 			</form>
 		</Form>
-	);
-};
+	)
+}

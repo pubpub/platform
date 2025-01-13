@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import Link from "next/link";
-import { useSelectedLayoutSegment } from "next/navigation";
+import * as React from "react"
+import Link from "next/link"
+import { useSelectedLayoutSegment } from "next/navigation"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-type Props = { href: string; text: string; icon: React.ReactNode; count?: number };
+type Props = { href: string; text: string; icon: React.ReactNode; count?: number }
 
 export default function NavLink({ href, text, icon, count }: Props) {
-	const layoutSegment = useSelectedLayoutSegment();
-	const isActive = layoutSegment ? new RegExp(`c\\/.*?\\/${layoutSegment}$`).test(href) : false;
+	const layoutSegment = useSelectedLayoutSegment()
+	const isActive = layoutSegment ? new RegExp(`c\\/.*?\\/${layoutSegment}$`).test(href) : false
 	return (
 		<Link
 			className={cn(
@@ -27,5 +27,5 @@ export default function NavLink({ href, text, icon, count }: Props) {
 				</div>
 			)}
 		</Link>
-	);
+	)
 }

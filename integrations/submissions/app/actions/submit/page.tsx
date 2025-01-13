@@ -1,12 +1,12 @@
-import { Submit } from "./submit";
+import { Submit } from "./submit"
 
 type Props = {
 	searchParams: {
-		instanceId: string;
-	};
-};
+		instanceId: string
+	}
+}
 
 export default async function Page(props: Props) {
-	const { instanceId } = props.searchParams;
-	return <Submit instanceId={instanceId} />;
+	const { instanceId } = props.searchParams
+	return <Submit instanceId={instanceId} />
 }

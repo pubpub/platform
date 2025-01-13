@@ -1,7 +1,7 @@
-const Module = require("module");
-const path = require("path");
+const Module = require("module")
+const path = require("path")
 
-const originalResolveFilename = Module._resolveFilename;
+const originalResolveFilename = Module._resolveFilename
 
 Module._resolveFilename = function (request, parent, isMain, options) {
 	if (
@@ -11,8 +11,8 @@ Module._resolveFilename = function (request, parent, isMain, options) {
 		/\/loginData/.test(request) ||
 		/react-email/.test(request)
 	) {
-		return path.resolve(__dirname, "stubs.js");
+		return path.resolve(__dirname, "stubs.js")
 	}
 
-	return originalResolveFilename(request, parent, isMain, options);
-};
+	return originalResolveFilename(request, parent, isMain, options)
+}

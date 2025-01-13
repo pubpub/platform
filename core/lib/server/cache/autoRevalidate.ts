@@ -1,13 +1,13 @@
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
-import type { autoCache } from "./autoCache";
-import type { AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, QB } from "./types";
-import { env } from "~/lib/env/env.mjs";
-import { getCommunitySlug } from "./getCommunitySlug";
-import { revalidateTagsForCommunity } from "./revalidate";
-import { cachedFindTables, directAutoOutput } from "./sharedAuto";
+import type { autoCache } from "./autoCache"
+import type { AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, QB } from "./types"
+import { env } from "~/lib/env/env.mjs"
+import { getCommunitySlug } from "./getCommunitySlug"
+import { revalidateTagsForCommunity } from "./revalidate"
+import { cachedFindTables, directAutoOutput } from "./sharedAuto"
 
 const executeWithRevalidate = <
 	Q extends QB<any>,
@@ -18,41 +18,41 @@ const executeWithRevalidate = <
 	options?: AutoRevalidateOptions
 ) => {
 	const executeFn = async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? getCommunitySlug();
+		const communitySlug = options?.communitySlug ?? getCommunitySlug()
 
-		const communitySlugs = Array.isArray(communitySlug) ? communitySlug : [communitySlug];
+		const communitySlugs = Array.isArray(communitySlug) ? communitySlug : [communitySlug]
 
-		const compiledQuery = qb.compile();
+		const compiledQuery = qb.compile()
 
-		const tables = await cachedFindTables(compiledQuery, "mutation");
+		const tables = await cachedFindTables(compiledQuery, "mutation")
 
 		// necessary assertion here due to
 		// https://github.com/microsoft/TypeScript/issues/241
-		const result = await (qb[method](...args) as ReturnType<Q[M]>);
+		const result = await (qb[method](...args) as ReturnType<Q[M]>)
 
-		revalidateTagsForCommunity(tables, communitySlugs);
+		revalidateTagsForCommunity(tables, communitySlugs)
 
 		// const tableTags = createCommunityCacheTags(tables, communitySlug);
 
 		// const tagsToRevalidate = [...tableTags, ...(options?.additionalRevalidateTags ?? [])];
-		[...(options?.additionalRevalidateTags ?? [])].forEach((tag) => {
+		;[...(options?.additionalRevalidateTags ?? [])].forEach((tag) => {
 			if (env.CACHE_LOG) {
-				logger.debug(`AUTOREVALIDATE: Revalidating tag: ${tag}`);
+				logger.debug(`AUTOREVALIDATE: Revalidating tag: ${tag}`)
 			}
-			revalidateTag(tag);
-		});
+			revalidateTag(tag)
+		})
 
 		if (options?.additionalRevalidatePaths) {
 			options?.additionalRevalidatePaths.forEach((path) => {
 				if (env.CACHE_LOG) {
-					logger.debug(`AUTOREVALIDATE: Revalidating path: ${path}`);
+					logger.debug(`AUTOREVALIDATE: Revalidating path: ${path}`)
 				}
-				revalidatePath(path);
-			});
+				revalidatePath(path)
+			})
 		}
 
-		return result;
-	};
+		return result
+	}
 
 	// we are reaching the limit of typescript's type inference here
 	// without this cast, the return type of the function
@@ -60,8 +60,8 @@ const executeWithRevalidate = <
 	// possibly an instance of this 10(!) year old issue, as when
 	// i leave out the type in qb[method], you get ()=>any
 	// https://github.com/microsoft/TypeScript/issues/241
-	return executeFn as ExecuteFn<Q, M>;
-};
+	return executeFn as ExecuteFn<Q, M>
+}
 
 /**
  * **🪄 autoRevalidate**
@@ -80,5 +80,5 @@ export function autoRevalidate<Q extends QB<any>>(
 		// @ts-expect-error FIXME: this should just work, no clue
 		// why typescript is being so difficult
 		options
-	);
+	)
 }

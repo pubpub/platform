@@ -60,5 +60,5 @@ export const About = () => {
 				.
 			</p>
 		</>
-	);
-};
+	)
+}

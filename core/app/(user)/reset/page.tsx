@@ -1,29 +1,29 @@
-import { AuthTokenType } from "db/public";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
+import { AuthTokenType } from "db/public"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
 
-import { getLoginData } from "~/lib/authentication/loginData";
-import ResetForm from "./ResetForm";
+import { getLoginData } from "~/lib/authentication/loginData"
+import ResetForm from "./ResetForm"
 
 export default async function Page({
 	searchParams,
 }: {
 	searchParams:
 		| {
-				access_token: string;
-				type: string;
-				token_type: string;
+				access_token: string
+				type: string
+				token_type: string
 		  }
 		| {
-				error: string;
-				error_code: string;
-				error_description: string;
+				error: string
+				error_code: string
+				error_description: string
 		  }
-		| {};
+		| {}
 }) {
 	// TODO: add reset token validation
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.passwordReset],
-	});
+	})
 
 	if (!user) {
 		return (
@@ -31,7 +31,7 @@ export default async function Page({
 				<h1>Invalid</h1>
 				<p>It looks like this link has expired. Please request a new one.</p>
 			</div>
-		);
+		)
 	}
 
 	return (
@@ -50,5 +50,5 @@ export default async function Page({
 				</Card>
 			</div>
 		</>
-	);
+	)
 }

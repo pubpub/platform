@@ -1,6 +1,6 @@
-import { captureException } from "@sentry/nextjs";
-import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { captureException } from "@sentry/nextjs"
+import { sql } from "kysely"
+import { jsonObjectFrom } from "kysely/helpers/postgres"
 
 import type {
 	ActionInstancesId,
@@ -9,36 +9,36 @@ import type {
 	PubsId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import { ActionRunStatus, Event } from "db/public";
-import { logger } from "logger";
+} from "db/public"
+import { ActionRunStatus, Event } from "db/public"
+import { logger } from "logger"
 
-import type { ActionSuccess } from "../types";
-import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
-import { db } from "~/kysely/database";
-import { hydratePubValues } from "~/lib/fields/utils";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { isClientException } from "~/lib/serverActions";
-import { getActionByName } from "../api";
-import { getActionRunByName } from "./getRuns";
-import { resolveWithPubfields } from "./resolvePubfields";
+import type { ActionSuccess } from "../types"
+import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions"
+import { db } from "~/kysely/database"
+import { hydratePubValues } from "~/lib/fields/utils"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { isClientException } from "~/lib/serverActions"
+import { getActionByName } from "../api"
+import { getActionRunByName } from "./getRuns"
+import { resolveWithPubfields } from "./resolvePubfields"
 
-export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
+export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess
 
 export type RunActionInstanceArgs = {
-	pubId: PubsId;
-	communityId: CommunitiesId;
-	actionInstanceId: ActionInstancesId;
-	actionInstanceArgs?: Record<string, unknown>;
-} & ({ event: Event } | { userId: UsersId });
+	pubId: PubsId
+	communityId: CommunitiesId
+	actionInstanceId: ActionInstancesId
+	actionInstanceArgs?: Record<string, unknown>
+} & ({ event: Event } | { userId: UsersId })
 
 const _runActionInstance = async (
 	args: RunActionInstanceArgs & { actionRunId: ActionRunsId },
 	trx = db
 ): Promise<ActionInstanceRunResult> => {
-	const isActionUserInitiated = "userId" in args;
+	const isActionUserInitiated = "userId" in args
 
 	const pubPromise = getPubsWithRelatedValuesAndChildren(
 		{
@@ -50,7 +50,7 @@ const _runActionInstance = async (
 			withPubType: true,
 			withStage: true,
 		}
-	);
+	)
 
 	const actionInstancePromise = trx
 		.selectFrom("action_instances")
@@ -72,30 +72,30 @@ const _runActionInstance = async (
 					.whereRef("stageId", "=", "action_instances.stageId")
 			).as("pubInStage"),
 		])
-		.executeTakeFirstOrThrow();
+		.executeTakeFirstOrThrow()
 
 	const [pubResult, actionInstanceResult] = await Promise.allSettled([
 		pubPromise,
 		actionInstancePromise,
-	]);
+	])
 
 	if (pubResult.status === "rejected") {
 		return {
 			error: "Pub not found",
 			cause: pubResult.reason,
-		};
+		}
 	}
 
 	if (actionInstanceResult.status === "rejected") {
-		logger.error({ msg: actionInstanceResult.reason });
+		logger.error({ msg: actionInstanceResult.reason })
 		return {
 			error: "Action instance not found",
 			cause: actionInstanceResult.reason,
-		};
+		}
 	}
 
-	const actionInstance = actionInstanceResult.value;
-	const pub = pubResult.value;
+	const actionInstance = actionInstanceResult.value
+	const pub = pubResult.value
 
 	if (!actionInstance.pubInStage) {
 		logger.warn({
@@ -103,54 +103,54 @@ const _runActionInstance = async (
 			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
 			pubId: args.pubId,
 			actionInstanceId: args.actionInstanceId,
-		});
+		})
 		return {
 			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
 			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
-		};
+		}
 	}
 
 	if (!actionInstance.action) {
 		return {
 			error: "Action not found",
-		};
+		}
 	}
 
-	const action = getActionByName(actionInstance.action);
-	const actionRun = await getActionRunByName(actionInstance.action);
+	const action = getActionByName(actionInstance.action)
+	const actionRun = await getActionRunByName(actionInstance.action)
 
 	if (!actionRun || !action) {
 		return {
 			error: "Action not found",
-		};
+		}
 	}
 
-	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
+	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {})
 
 	if (!parsedConfig.success) {
 		const err = {
 			error: "Invalid config",
 			cause: parsedConfig.error,
-		};
+		}
 		if (args.actionInstanceArgs) {
 			// Check if the args passed can substitute for missing or invalid config
-			const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs);
+			const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs)
 			if (!argsParsedAsConfig.success) {
-				return err;
+				return err
 			}
 		} else {
-			return err;
+			return err
 		}
 	}
 
-	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
+	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {})
 
 	if (!parsedArgs.success) {
 		return {
 			title: "Invalid pub config",
 			cause: parsedArgs.error,
 			error: "The action was run with invalid parameters",
-		};
+		}
 	}
 
 	// TODO: restore validation https://github.com/pubpub/v7/issues/455
@@ -165,25 +165,25 @@ const _runActionInstance = async (
 	// 	};
 	// }
 
-	const argsFieldOverrides = new Set<string>();
-	const configFieldOverrides = new Set<string>();
+	const argsFieldOverrides = new Set<string>()
+	const configFieldOverrides = new Set<string>()
 
 	const argsWithPubfields = resolveWithPubfields(
 		{ ...parsedArgs.data, ...args.actionInstanceArgs },
 		pub.values,
 		argsFieldOverrides
-	);
+	)
 	const configWithPubfields = resolveWithPubfields(
 		{ ...(actionInstance.config as {}), ...parsedConfig.data },
 		pub.values,
 		configFieldOverrides
-	);
+	)
 
-	const hydratedPubValues = hydratePubValues(pub.values);
+	const hydratedPubValues = hydratePubValues(pub.values)
 
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
-	});
+	})
 
 	try {
 		const result = await actionRun({
@@ -201,21 +201,21 @@ const _runActionInstance = async (
 			communityId: pub.communityId as CommunitiesId,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
-		});
+		})
 
-		return result;
+		return result
 	} catch (error) {
-		captureException(error);
-		logger.error(error);
+		captureException(error)
+		logger.error(error)
 		return {
 			title: "Failed to run action",
 			error: error.message,
-		};
+		}
 	}
-};
+}
 
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
-	const isActionUserInitiated = "userId" in args;
+	const isActionUserInitiated = "userId" in args
 
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
@@ -262,14 +262,14 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					event: "userId" in args ? undefined : args.event,
 				})
 			)
-	).execute();
+	).execute()
 
 	if (actionRuns.length > 1) {
 		const errorMessage: ActionInstanceRunResult = {
 			title: "Action run failed",
 			error: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
 			cause: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
-		};
+		}
 
 		await autoRevalidate(
 			trx
@@ -283,18 +283,18 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					"in",
 					actionRuns.map((ar) => ar.id)
 				)
-		).execute();
+		).execute()
 
 		throw new Error(
 			`Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`
-		);
+		)
 	}
 
-	const actionRun = actionRuns[0];
+	const actionRun = actionRuns[0]
 
-	const result = await _runActionInstance({ ...args, actionRunId: actionRun.id });
+	const result = await _runActionInstance({ ...args, actionRunId: actionRun.id })
 
-	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success;
+	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success
 
 	// update the action run with the result
 	await autoRevalidate(
@@ -304,9 +304,9 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 			new Error(
 				`Failed to update action run ${actionRun.id} for pub ${args.pubId} and action instance ${args.actionInstanceId}`
 			)
-	);
+	)
 
-	return result;
+	return result
 }
 
 export const runInstancesForEvent = async (
@@ -322,7 +322,7 @@ export const runInstancesForEvent = async (
 		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
 		.where("rules.event", "=", event)
 		.selectAll()
-		.execute();
+		.execute()
 
 	const results = await Promise.all(
 		instances.map(async (instance) => {
@@ -338,9 +338,9 @@ export const runInstancesForEvent = async (
 					},
 					trx
 				),
-			};
+			}
 		})
-	);
+	)
 
-	return results;
-};
+	return results
+}

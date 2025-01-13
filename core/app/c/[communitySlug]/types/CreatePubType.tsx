@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { Suspense, useState } from "react";
+import { Suspense, useState } from "react"
 
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog";
-import { Plus } from "ui/icon";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogOverlay, DialogTitle, DialogTrigger } from "ui/dialog"
+import { Plus } from "ui/icon"
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { TypeEditor } from "./TypeEditor";
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { TypeEditor } from "./TypeEditor"
 
 export const CreatePubType = () => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 
 	return (
 		<Dialog onOpenChange={setIsOpen} defaultOpen={false} open={isOpen}>
@@ -31,5 +31,5 @@ export const CreatePubType = () => {
 				)}
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

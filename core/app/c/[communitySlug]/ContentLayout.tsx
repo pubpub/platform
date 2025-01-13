@@ -1,13 +1,13 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
 const Heading = ({
 	title,
 	left,
 	right,
 }: {
-	title: ReactNode;
-	left?: ReactNode;
-	right?: ReactNode;
+	title: ReactNode
+	left?: ReactNode
+	right?: ReactNode
 }) => {
 	return (
 		<header className="z-40 flex h-[72px] items-center justify-between border-b bg-gray-50 p-4 shadow-md">
@@ -17,8 +17,8 @@ const Heading = ({
 			</h1>
 			{right}
 		</header>
-	);
-};
+	)
+}
 
 export const ContentLayout = ({
 	title,
@@ -26,10 +26,10 @@ export const ContentLayout = ({
 	right,
 	children,
 }: {
-	title: ReactNode;
-	left?: ReactNode;
-	right?: ReactNode;
-	children: ReactNode;
+	title: ReactNode
+	left?: ReactNode
+	right?: ReactNode
+	children: ReactNode
 }) => {
 	return (
 		<div className="absolute inset-0 w-full">
@@ -38,5 +38,5 @@ export const ContentLayout = ({
 				<div className="h-full flex-1 overflow-auto">{children}</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

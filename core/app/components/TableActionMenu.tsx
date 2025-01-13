@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import { forwardRef } from "react";
+import { forwardRef } from "react"
 
-import type { ButtonProps } from "ui/button";
-import { Button } from "ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
-import { Ellipsis } from "ui/icon";
-import { cn } from "utils";
+import type { ButtonProps } from "ui/button"
+import { Button } from "ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
+import { Ellipsis } from "ui/icon"
+import { cn } from "utils"
 
 /**
  * Menu item that renders as a button. Need forwardRef to pass on asChild
@@ -24,9 +24,9 @@ export const MenuItemButton = forwardRef<HTMLButtonElement, ButtonProps>(
 			>
 				{children}
 			</Button>
-		);
+		)
 	}
-);
+)
 
 export const TableActionMenu = ({ children }: { children: ReactNode }) => {
 	return (
@@ -41,5 +41,5 @@ export const TableActionMenu = ({ children }: { children: ReactNode }) => {
 				{children}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

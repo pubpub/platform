@@ -1,44 +1,44 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo } from "react";
-import { ajvResolver } from "@hookform/resolvers/ajv";
-import Ajv from "ajv";
-import { fullFormats } from "ajv-formats/dist/formats";
-import { useForm } from "react-hook-form";
+import { useEffect, useMemo } from "react"
+import { ajvResolver } from "@hookform/resolvers/ajv"
+import Ajv from "ajv"
+import { fullFormats } from "ajv-formats/dist/formats"
+import { useForm } from "react-hook-form"
 
-import type { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk";
-import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react";
-import { Button } from "ui/button";
-import { Form } from "ui/form";
-import { useLocalStorage } from "ui/hooks";
-import { Loader2 } from "ui/icon";
-import { useToast } from "ui/use-toast";
+import type { GetPubResponseBody, GetPubTypeResponseBody, PubValues } from "@pubpub/sdk"
+import { buildSchemaFromPubFields, SchemaBasedFormFields } from "@pubpub/sdk/react"
+import { Button } from "ui/button"
+import { Form } from "ui/form"
+import { useLocalStorage } from "ui/hooks"
+import { Loader2 } from "ui/icon"
+import { useToast } from "ui/use-toast"
 
-import type { InstanceConfig } from "~/lib/types";
-import { Process } from "~/lib/components/Process";
-import { Research } from "~/lib/components/Research";
-import { getDeadline } from "~/lib/emails";
-import { EvaluatorWhoAccepted } from "~/lib/types";
-import { submit, upload } from "./actions";
+import type { InstanceConfig } from "~/lib/types"
+import { Process } from "~/lib/components/Process"
+import { Research } from "~/lib/components/Research"
+import { getDeadline } from "~/lib/emails"
+import { EvaluatorWhoAccepted } from "~/lib/types"
+import { submit, upload } from "./actions"
 
 type Props = {
-	instanceId: string;
-	instanceConfig: InstanceConfig;
-	pub: GetPubResponseBody;
-	pubType: GetPubTypeResponseBody;
-	evaluator: EvaluatorWhoAccepted;
-};
+	instanceId: string
+	instanceConfig: InstanceConfig
+	pub: GetPubResponseBody
+	pubType: GetPubTypeResponseBody
+	evaluator: EvaluatorWhoAccepted
+}
 
 export function Evaluate(props: Props) {
-	const { pub, pubType } = props;
-	const { toast } = useToast();
+	const { pub, pubType } = props
+	const { toast } = useToast()
 
 	const { compiledSchema, uncompiledSchema } = useMemo(() => {
 		const exclude = [
 			props.instanceConfig.titleFieldSlug,
 			props.instanceConfig.evaluatorFieldSlug,
-		];
-		const uncompiledSchema = buildSchemaFromPubFields(pubType, exclude);
+		]
+		const uncompiledSchema = buildSchemaFromPubFields(pubType, exclude)
 		// https://ajv.js.org/api.html#ajv-addschema-schema-object-object-key-string-ajv
 		// Add schema(s) to validator instance. This method does not compile schemas
 		// (but it still validates them). Because of that dependencies can be added in
@@ -60,9 +60,9 @@ export function Evaluate(props: Props) {
 		const compiledSchema = new Ajv({ formats: fullFormats }).addSchema(
 			uncompiledSchema,
 			"schema"
-		);
-		return { compiledSchema, uncompiledSchema };
-	}, [pubType]);
+		)
+		return { compiledSchema, uncompiledSchema }
+	}, [pubType])
 
 	const form = useForm({
 		mode: "onChange",
@@ -72,49 +72,49 @@ export function Evaluate(props: Props) {
 			formats: fullFormats,
 		}),
 		defaultValues: {},
-	});
+	})
 
-	const [persistedValues, persist] = useLocalStorage<PubValues>(props.instanceId);
+	const [persistedValues, persist] = useLocalStorage<PubValues>(props.instanceId)
 
 	const onSubmit = async (values: PubValues) => {
 		values[props.instanceConfig.titleFieldSlug] = `Evaluation of "${
 			pub.values[props.instanceConfig.titleFieldSlug]
-		}"`;
-		const result = await submit(props.instanceId, pub.id, values);
+		}"`
+		const result = await submit(props.instanceId, pub.id, values)
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
 				description: result.error,
 				variant: "destructive",
-			});
+			})
 		} else {
 			toast({
 				title: "Success",
 				description: "Your evaluation was submitted successfully!",
-			});
-			form.reset();
+			})
+			form.reset()
 		}
-	};
+	}
 
-	const { reset } = form;
+	const { reset } = form
 	useEffect(() => {
-		reset(persistedValues, { keepDefaultValues: true });
-	}, [reset]);
+		reset(persistedValues, { keepDefaultValues: true })
+	}, [reset])
 
-	const values = form.watch();
+	const values = form.watch()
 	useEffect(() => {
-		persist(values);
-	}, [values]);
+		persist(values)
+	}, [values])
 
 	const signedUploadUrl = (fileName) => {
-		return upload(props.instanceId, pub.id, fileName);
-	};
+		return upload(props.instanceId, pub.id, fileName)
+	}
 
-	const submissionUrl = pub.values["legacy-unjournal:url"] as string;
-	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string;
-	const submissionAbstract = pub.values["legacy-unjournal:description"] as string;
-	const managersNotes = pub.values["legacy-unjournal:managers-notes"] as string;
-	const deadline = getDeadline(props.instanceConfig, props.evaluator);
+	const submissionUrl = pub.values["legacy-unjournal:url"] as string
+	const submissionTitle = pub.values[props.instanceConfig.titleFieldSlug] as string
+	const submissionAbstract = pub.values["legacy-unjournal:description"] as string
+	const managersNotes = pub.values["legacy-unjournal:managers-notes"] as string
+	const deadline = getDeadline(props.instanceConfig, props.evaluator)
 
 	return (
 		<>
@@ -145,5 +145,5 @@ export function Evaluate(props: Props) {
 				</Form>
 			</div>
 		</>
-	);
+	)
 }

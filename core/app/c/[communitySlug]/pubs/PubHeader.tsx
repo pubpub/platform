@@ -1,15 +1,15 @@
-import { Suspense } from "react";
-import Link from "next/link";
+import { Suspense } from "react"
+import Link from "next/link"
 
-import type { CommunitiesId } from "db/public";
-import { Button } from "ui/button";
+import type { CommunitiesId } from "db/public"
+import { Button } from "ui/button"
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
 
 type Props = {
-	communityId: CommunitiesId;
-};
+	communityId: CommunitiesId
+}
 
 const PubHeader: React.FC<Props> = ({ communityId }) => {
 	return (
@@ -24,6 +24,6 @@ const PubHeader: React.FC<Props> = ({ communityId }) => {
 				</Button>
 			</div>
 		</div>
-	);
-};
-export default PubHeader;
+	)
+}
+export default PubHeader

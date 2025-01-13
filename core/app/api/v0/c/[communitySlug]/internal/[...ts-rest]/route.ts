@@ -1,32 +1,32 @@
-import { createNextHandler } from "@ts-rest/serverless/next";
+import { createNextHandler } from "@ts-rest/serverless/next"
 
-import type { ActionInstancesId, CommunitiesId, Event, PubsId, StagesId } from "db/public";
-import { api } from "contracts";
+import type { ActionInstancesId, CommunitiesId, Event, PubsId, StagesId } from "db/public"
+import { api } from "contracts"
 
-import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
-import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
-import { runActionInstance } from "~/actions/api/server";
-import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
-import { env } from "~/lib/env/env.mjs";
-import { NotFoundError, tsRestHandleErrors } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
+import { runInstancesForEvent } from "~/actions/_lib/runActionInstance"
+import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance"
+import { runActionInstance } from "~/actions/api/server"
+import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api"
+import { env } from "~/lib/env/env.mjs"
+import { NotFoundError, tsRestHandleErrors } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
 
 const checkAuthentication = (authHeader: string) => {
-	const apiKey = getBearerToken(authHeader);
-	compareAPIKeys(env.API_KEY, apiKey);
-};
+	const apiKey = getBearerToken(authHeader)
+	compareAPIKeys(env.API_KEY, apiKey)
+}
 
 const handler = createNextHandler(
 	api.internal,
 	{
 		triggerAction: async ({ headers, params, body }) => {
-			checkAuthentication(headers.authorization);
-			const { pubId, event } = body;
+			checkAuthentication(headers.authorization)
+			const { pubId, event } = body
 
-			const { actionInstanceId } = params;
-			const community = await findCommunityBySlug();
+			const { actionInstanceId } = params
+			const community = await findCommunityBySlug()
 			if (!community) {
-				throw new NotFoundError("Community not found");
+				throw new NotFoundError("Community not found")
 			}
 
 			const actionRunResults = await runActionInstance({
@@ -34,22 +34,22 @@ const handler = createNextHandler(
 				event: event as Event,
 				actionInstanceId: actionInstanceId as ActionInstancesId,
 				communityId: community.id as CommunitiesId,
-			});
+			})
 
 			return {
 				status: 200,
 				body: { result: actionRunResults, actionInstanceId },
-			};
+			}
 		},
 		triggerActions: async ({ headers, params, body }) => {
-			checkAuthentication(headers.authorization);
-			const { event, pubId } = body;
+			checkAuthentication(headers.authorization)
+			const { event, pubId } = body
 
-			const { stageId } = params;
+			const { stageId } = params
 
-			const community = await findCommunityBySlug();
+			const community = await findCommunityBySlug()
 			if (!community) {
-				throw new NotFoundError("Community not found");
+				throw new NotFoundError("Community not found")
 			}
 
 			const actionRunResults = await runInstancesForEvent(
@@ -57,31 +57,31 @@ const handler = createNextHandler(
 				stageId as StagesId,
 				event as Event,
 				community.id as CommunitiesId
-			);
+			)
 
 			return {
 				status: 200,
 				body: actionRunResults,
-			};
+			}
 		},
 		scheduleAction: async ({ headers, params, body }) => {
-			checkAuthentication(headers.authorization);
-			const { pubId } = body;
-			const { stageId } = params;
-			const community = await findCommunityBySlug();
+			checkAuthentication(headers.authorization)
+			const { pubId } = body
+			const { stageId } = params
+			const community = await findCommunityBySlug()
 			if (!community) {
-				throw new NotFoundError("Community not found");
+				throw new NotFoundError("Community not found")
 			}
 
 			const actionScheduleResults = await scheduleActionInstances({
 				pubId: pubId as PubsId,
 				stageId: stageId as StagesId,
-			});
+			})
 
 			return {
 				status: 200,
 				body: actionScheduleResults ?? [],
-			};
+			}
 		},
 	},
 	{
@@ -89,6 +89,6 @@ const handler = createNextHandler(
 		jsonQuery: true,
 		errorHandler: tsRestHandleErrors,
 	}
-);
+)
 
-export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE };
+export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE }

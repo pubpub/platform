@@ -1,4 +1,4 @@
-const stubFn = (fn) => fn;
+const stubFn = (fn) => fn
 
 module.exports = {
 	cache: stubFn,
@@ -7,4 +7,4 @@ module.exports = {
 	autoCache: stubFn,
 	autoRevalidate: stubFn,
 	// Add other stubbed methods as needed
-};
+}

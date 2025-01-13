@@ -1,8 +1,8 @@
 type Props = {
 	params: {
-		communitySlug: string;
-	};
-};
+		communitySlug: string
+	}
+}
 
 export default async function Page(props: Props) {
 	return (
@@ -14,5 +14,5 @@ export default async function Page(props: Props) {
 				</p>
 			</div>
 		</div>
-	);
+	)
 }

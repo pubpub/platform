@@ -1,10 +1,10 @@
-import type { Users } from "db/public";
+import type { Users } from "db/public"
 
-import { UserAvatar } from "./UserAvatar";
+import { UserAvatar } from "./UserAvatar"
 
 type Props = {
-	user: Pick<Users, "avatar" | "firstName" | "lastName" | "email">;
-};
+	user: Pick<Users, "avatar" | "firstName" | "lastName" | "email">
+}
 
 export const UserCard = (props: Props) => {
 	return (
@@ -17,5 +17,5 @@ export const UserCard = (props: Props) => {
 				<p className="text-sm text-muted-foreground">{props.user.email}</p>
 			</div>
 		</div>
-	);
-};
+	)
+}

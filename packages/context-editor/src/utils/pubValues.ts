@@ -1,32 +1,32 @@
-import type { Node } from "prosemirror-model";
+import type { Node } from "prosemirror-model"
 
-import deepMerge from "deepmerge";
+import deepMerge from "deepmerge"
 
 interface DocValue {
-	type: string;
+	type: string
 	attrs: {
-		id: string | null;
-		class: string | null;
-	};
+		id: string | null
+		class: string | null
+	}
 	content: {
-		type: string;
-		text: string;
-	}[];
+		type: string
+		text: string
+	}[]
 }
 
 interface EditedPubs {
 	[pubId: string]: {
-		parentPubId: string;
-		pubId: string;
-		pubTypeId: string;
+		parentPubId: string
+		pubId: string
+		pubTypeId: string
 		values: {
-			[fieldSlug: string]: DocValue[] | string;
-		};
-	};
+			[fieldSlug: string]: DocValue[] | string
+		}
+	}
 }
 
 export const getPubValues = (editorState: { doc: Node }, pubId: string) => {
-	const editedPubs: EditedPubs = {};
+	const editedPubs: EditedPubs = {}
 	// TODO: figure out how to handle "main content"
 	// editedPubs[pubId] = {
 	// 	id: pubId,
@@ -44,17 +44,17 @@ export const getPubValues = (editorState: { doc: Node }, pubId: string) => {
 				parentPubId: node.attrs.parentPubId,
 				pubTypeId: node.attrs.pubTypeId,
 				values: { ...node.attrs.data },
-			};
+			}
 			if (node.type.name === "contextDoc") {
-				const fieldSlug = node.attrs.fieldSlug || "rd:content";
+				const fieldSlug = node.attrs.fieldSlug || "rd:content"
 				/* TODO: remove demo example from abstract */
 				content.values[fieldSlug] =
-					fieldSlug === "rd:abstract" ? node.textContent : node.toJSON().content;
+					fieldSlug === "rd:abstract" ? node.textContent : node.toJSON().content
 			}
-			const existingContent = editedPubs[node.attrs.pubId];
-			editedPubs[node.attrs.pubId] = deepMerge(existingContent, content);
+			const existingContent = editedPubs[node.attrs.pubId]
+			editedPubs[node.attrs.pubId] = deepMerge(existingContent, content)
 		}
-	});
+	})
 
-	return editedPubs;
-};
+	return editedPubs
+}

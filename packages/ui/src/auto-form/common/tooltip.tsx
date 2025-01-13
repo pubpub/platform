@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "react"
 
 function AutoFormTooltip({ fieldConfigItem }: { fieldConfigItem: any }) {
 	return (
@@ -9,7 +9,7 @@ function AutoFormTooltip({ fieldConfigItem }: { fieldConfigItem: any }) {
 				</p>
 			)}
 		</>
-	);
+	)
 }
 
-export default AutoFormTooltip;
+export default AutoFormTooltip

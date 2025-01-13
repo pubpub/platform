@@ -1,21 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getCommunityRole } from "~/lib/authentication/roles";
-import { findCommunityBySlug } from "~/lib/server/community";
+import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { getCommunityRole } from "~/lib/authentication/roles"
+import { findCommunityBySlug } from "~/lib/server/community"
 
-type Props = { children: React.ReactNode; params: { communitySlug: string } };
+type Props = { children: React.ReactNode; params: { communitySlug: string } }
 
 export async function generateMetadata({
 	params,
 }: {
-	params: { communitySlug: string };
+	params: { communitySlug: string }
 }): Promise<Metadata> {
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 
 	if (!community) {
-		return { title: "Community Not Found" };
+		return { title: "Community Not Found" }
 	}
 
 	return {
@@ -23,25 +23,25 @@ export async function generateMetadata({
 			template: `%s | ${community.name}`,
 			default: `${community.name} on PubPub`,
 		},
-	};
+	}
 }
 
 export default async function MainLayout({ children, params }: Props) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 
 	if (!community) {
-		return null;
+		return null
 	}
 
-	const role = getCommunityRole(user, { slug: params.communitySlug });
+	const role = getCommunityRole(user, { slug: params.communitySlug })
 
 	// the user is logged in, but not a member of the community
 	// we should bar them from accessing the page
 	if (user && !role) {
-		return null;
+		return null
 	}
 
-	return <CommunityProvider community={community}>{children}</CommunityProvider>;
+	return <CommunityProvider community={community}>{children}</CommunityProvider>
 }

@@ -1,12 +1,12 @@
-import { InputComponent } from "db/public";
-import { Checkbox } from "ui/checkbox";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { InputComponent } from "db/public"
+import { Checkbox } from "ui/checkbox"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 
-import type { ComponentConfigFormProps, FormType } from "./types";
-import MultivalueBase from "./MultivalueBase";
+import type { ComponentConfigFormProps, FormType } from "./types"
+import MultivalueBase from "./MultivalueBase"
 
 export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) => {
-	const { form, component, ...rest } = props;
+	const { form, component, ...rest } = props
 	return (
 		<MultivalueBase
 			{...rest}
@@ -35,5 +35,5 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 				)}
 			/>
 		</MultivalueBase>
-	);
-};
+	)
+}

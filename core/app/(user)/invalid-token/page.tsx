@@ -1,13 +1,13 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Button } from "ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { AlertCircle } from "ui/icon";
+import { Button } from "ui/button"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { AlertCircle } from "ui/icon"
 
 export default function InvalidTokenPage({
 	searchParams: { redirectTo },
 }: {
-	searchParams: { redirectTo: string };
+	searchParams: { redirectTo: string }
 }) {
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
@@ -32,5 +32,5 @@ export default function InvalidTokenPage({
 				</CardFooter>
 			</Card>
 		</div>
-	);
+	)
 }

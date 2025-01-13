@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import type { graphlib } from "@dagrejs/dagre";
-import type { Connection, Edge, Node, NodeMouseHandler, OnSelectionChangeParams } from "reactflow";
+import type { graphlib } from "@dagrejs/dagre"
+import type { Connection, Edge, Node, NodeMouseHandler, OnSelectionChangeParams } from "reactflow"
 
-import { useCallback, useEffect, useMemo } from "react";
-import Dagre from "@dagrejs/dagre";
+import { useCallback, useEffect, useMemo } from "react"
+import Dagre from "@dagrejs/dagre"
 import ReactFlow, {
 	Background,
 	Controls,
@@ -13,20 +13,20 @@ import ReactFlow, {
 	useEdgesState,
 	useNodesState,
 	useStoreApi,
-} from "reactflow";
+} from "reactflow"
 
-import "reactflow/dist/style.css";
+import "reactflow/dist/style.css"
 
-import type { StagesId } from "db/public";
-import { expect } from "utils";
+import type { StagesId } from "db/public"
+import { expect } from "utils"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import { useStages } from "../../StagesContext";
-import { useStageEditor } from "./StageEditorContext";
-import { StageEditorContextMenu } from "./StageEditorContextMenu";
-import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls";
-import { StageEditorMenubar } from "./StageEditorMenubar";
-import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageEditorNode } from "./StageEditorNode";
+import type { CommunityStage } from "~/lib/server/stages"
+import { useStages } from "../../StagesContext"
+import { useStageEditor } from "./StageEditorContext"
+import { StageEditorContextMenu } from "./StageEditorContextMenu"
+import { StageEditorKeyboardControls } from "./StageEditorKeyboardControls"
+import { StageEditorMenubar } from "./StageEditorMenubar"
+import { STAGE_NODE_HEIGHT, STAGE_NODE_WIDTH, StageEditorNode } from "./StageEditorNode"
 
 const makeNode = (stage: CommunityStage) => {
 	return {
@@ -36,8 +36,8 @@ const makeNode = (stage: CommunityStage) => {
 		width: STAGE_NODE_WIDTH,
 		height: STAGE_NODE_HEIGHT,
 		type: "stage",
-	};
-};
+	}
+}
 
 const makeEdge = (
 	id: string,
@@ -54,54 +54,54 @@ const makeEdge = (
 			type: MarkerType.Arrow,
 		},
 		type: "smoothstep",
-	};
-};
+	}
+}
 
 const makeEdges = (edges: Map<string, Edge>, stage: CommunityStage) => {
 	for (const prevEdge of stage.moveConstraintSources) {
-		const edgeId = `${prevEdge.id}:${stage.id}`;
+		const edgeId = `${prevEdge.id}:${stage.id}`
 		if (!edges.has(edgeId)) {
-			edges.set(edgeId, makeEdge(edgeId, prevEdge.id, stage.id, prevEdge));
+			edges.set(edgeId, makeEdge(edgeId, prevEdge.id, stage.id, prevEdge))
 		}
 	}
 	for (const nextEdge of stage.moveConstraints) {
-		const edgeId = `${stage.id}:${nextEdge.id}`;
+		const edgeId = `${stage.id}:${nextEdge.id}`
 		if (!edges.has(edgeId)) {
-			edges.set(edgeId, makeEdge(edgeId, stage.id, nextEdge.id, nextEdge));
+			edges.set(edgeId, makeEdge(edgeId, stage.id, nextEdge.id, nextEdge))
 		}
 	}
-	return edges;
-};
+	return edges
+}
 
 const makeLayoutedElements = (graph: graphlib.Graph, nodes: Node[], edges: Edge[]) => {
-	graph.setGraph({ rankdir: "LR" });
-	edges.forEach((edge) => graph.setEdge(edge.source, edge.target));
+	graph.setGraph({ rankdir: "LR" })
+	edges.forEach((edge) => graph.setEdge(edge.source, edge.target))
 	nodes.forEach((node) =>
 		graph.setNode(node.id, {
 			...node,
 			width: expect(node.width),
 			height: expect(node.height),
 		})
-	);
+	)
 	if (nodes.length === 0) {
 		return {
 			nodes: [],
 			edges: [],
-		};
+		}
 	}
-	Dagre.layout(graph);
+	Dagre.layout(graph)
 	return {
 		nodes: nodes.map((node) => {
-			const { x, y } = graph.node(node.id);
+			const { x, y } = graph.node(node.id)
 			// @ts-ignore
-			node.targetPosition = "left";
+			node.targetPosition = "left"
 			// @ts-ignore
-			node.sourcePosition = "right";
-			return { ...node, position: { x, y } };
+			node.sourcePosition = "right"
+			return { ...node, position: { x, y } }
 		}),
 		edges,
-	};
-};
+	}
+}
 
 const useLayout = (
 	stages: CommunityStage[],
@@ -110,87 +110,87 @@ const useLayout = (
 	const graph = useMemo(
 		() => new Dagre.graphlib.Graph().setDefaultEdgeLabel(() => ({})),
 		[stages]
-	);
-	const initialNodes = useMemo(() => stages.map(makeNode), [stages, getExistingNodePosition]);
+	)
+	const initialNodes = useMemo(() => stages.map(makeNode), [stages, getExistingNodePosition])
 	const initialEdges = useMemo(
 		() => Array.from(stages.reduce(makeEdges, new Map<string, Edge>()).values()),
 		[stages]
-	);
+	)
 	const layout = useMemo(
 		() => makeLayoutedElements(graph, initialNodes, initialEdges),
 		[graph, initialNodes, initialEdges]
-	);
+	)
 	const layoutWithExistingNodePositions = useMemo(() => {
 		return {
 			nodes: layout.nodes.map((node) => {
-				const position = getExistingNodePosition(node.id);
+				const position = getExistingNodePosition(node.id)
 				if (position) {
-					return { ...node, position };
+					return { ...node, position }
 				}
-				return node;
+				return node
 			}),
 			edges: layout.edges,
-		};
-	}, [layout, getExistingNodePosition]);
+		}
+	}, [layout, getExistingNodePosition])
 
-	return layoutWithExistingNodePositions;
-};
+	return layoutWithExistingNodePositions
+}
 
-const nodeTypes = { stage: StageEditorNode };
+const nodeTypes = { stage: StageEditorNode }
 
 export const StageEditorGraph = () => {
-	const { stages, deleteStages, createMoveConstraint, deleteMoveConstraints } = useStages();
+	const { stages, deleteStages, createMoveConstraint, deleteMoveConstraints } = useStages()
 	const {
 		selectedStages,
 		selectStages,
 		selectMoveConstraints,
 		getNodePosition,
 		setNodePositions,
-	} = useStageEditor();
-	const layout = useLayout(stages, getNodePosition);
-	const store = useStoreApi().getState();
-	const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges);
+	} = useStageEditor()
+	const layout = useLayout(stages, getNodePosition)
+	const store = useStoreApi().getState()
+	const [nodes, setNodes, onNodesChange] = useNodesState(layout.nodes)
+	const [edges, setEdges, onEdgesChange] = useEdgesState(layout.edges)
 
 	const onNodeContextMenu: NodeMouseHandler = (_, node) =>
-		store.addSelectedNodes([...selectedStages.map((stage) => stage.id), node.id]);
+		store.addSelectedNodes([...selectedStages.map((stage) => stage.id), node.id])
 
 	const onConnect = useCallback(
 		({ source, target }: Connection) => {
 			if (source && target) {
-				createMoveConstraint(source as StagesId, target as StagesId);
+				createMoveConstraint(source as StagesId, target as StagesId)
 			}
 		},
 		[createMoveConstraint]
-	);
+	)
 
 	const onNodesDelete = useCallback(
 		(nodes: Node[]) => {
-			deleteStages(nodes.map((node) => node.id as StagesId));
+			deleteStages(nodes.map((node) => node.id as StagesId))
 		},
 		[deleteStages]
-	);
+	)
 
 	const onEdgesDelete = useCallback(
 		(edges: Edge[]) => {
-			deleteMoveConstraints(edges.map((edge) => edge.target as StagesId));
+			deleteMoveConstraints(edges.map((edge) => edge.target as StagesId))
 		},
 		[deleteMoveConstraints]
-	);
+	)
 
 	const onSelectionChange = useCallback(({ nodes, edges }: OnSelectionChangeParams) => {
-		selectStages(nodes.map((node) => node.data.stage));
-		selectMoveConstraints(edges.map((edge) => edge.data.moveConstraint));
-	}, []);
+		selectStages(nodes.map((node) => node.data.stage))
+		selectMoveConstraints(edges.map((edge) => edge.data.moveConstraint))
+	}, [])
 
 	useEffect(() => {
-		setNodes(layout.nodes);
-		setEdges(layout.edges);
-	}, [layout, setNodes, setEdges]);
+		setNodes(layout.nodes)
+		setEdges(layout.edges)
+	}, [layout, setNodes, setEdges])
 
 	useEffect(() => {
-		setNodePositions(nodes);
-	}, [nodes]);
+		setNodePositions(nodes)
+	}, [nodes])
 
 	return (
 		<div className="h-full">
@@ -211,8 +211,8 @@ export const StageEditorGraph = () => {
 				<Controls />
 			</ReactFlow>
 		</div>
-	);
-};
+	)
+}
 
 export const StageEditor = () => {
 	return (
@@ -223,5 +223,5 @@ export const StageEditor = () => {
 				<StageEditorKeyboardControls />
 			</StageEditorContextMenu>
 		</ReactFlowProvider>
-	);
-};
+	)
+}

@@ -1,28 +1,28 @@
-"use server";
+"use server"
 
-import { defaultMarkdownParser } from "prosemirror-markdown";
+import { defaultMarkdownParser } from "prosemirror-markdown"
 
-import type { PubsId } from "db/public";
-import type { LastModifiedBy } from "db/types";
-import { logger } from "logger";
+import type { PubsId } from "db/public"
+import type { LastModifiedBy } from "db/types"
+import { logger } from "logger"
 
-import type { action } from "./action";
-import type { ClientExceptionOptions } from "~/lib/serverActions";
-import { db } from "~/kysely/database";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { isClientExceptionOptions } from "~/lib/serverActions";
-import * as corePubFields from "../corePubFields";
-import { defineRun } from "../types";
+import type { action } from "./action"
+import type { ClientExceptionOptions } from "~/lib/serverActions"
+import { db } from "~/kysely/database"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { isClientExceptionOptions } from "~/lib/serverActions"
+import * as corePubFields from "../corePubFields"
+import { defineRun } from "../types"
 
 const authError = {
 	title: "Error pushing pub to v6",
 	error: "The auth token provided is does not grant access to the provided community",
-};
+}
 
 const communitySlugError = {
 	title: "Error pushing pub to v6",
 	error: "The community slug provided does not exist",
-};
+}
 
 const getV6Community = async (
 	communitySlug: string,
@@ -37,22 +37,22 @@ const getV6Community = async (
 				Authorization: `Bearer ${authToken}`,
 			},
 		}
-	);
+	)
 
 	switch (getV6CommunityRequest.status) {
 		case 403:
-			return authError;
+			return authError
 		case 404:
-			return communitySlugError;
+			return communitySlugError
 		case 200:
-			return ((await getV6CommunityRequest.json()) as { id: string }[])[0];
+			return ((await getV6CommunityRequest.json()) as { id: string }[])[0]
 		default:
 			return {
 				title: "Error finding v6 community",
 				error: "An error occurred while getting the v6 community",
-			};
+			}
 	}
-};
+}
 
 const createV6Pub = async (
 	communitySlug: string,
@@ -71,22 +71,22 @@ const createV6Pub = async (
 			communityId,
 			title,
 		}),
-	});
+	})
 
 	switch (createV6PubResponse.status) {
 		case 403:
-			return authError;
+			return authError
 		case 404:
-			return communitySlugError;
+			return communitySlugError
 		case 201:
-			return await createV6PubResponse.json();
+			return await createV6PubResponse.json()
 		default:
 			return {
 				title: "Error creating v6 pub",
 				error: "An error occurred while creating a new v6 pub",
-			};
+			}
 	}
-};
+}
 
 const getV6Pub = async (
 	v6PubId: string,
@@ -102,22 +102,22 @@ const getV6Pub = async (
 				Authorization: `Bearer ${authToken}`,
 			},
 		}
-	);
+	)
 
 	switch (getV6PubResponse.status) {
 		case 403:
-			return authError;
+			return authError
 		case 404:
-			return null;
+			return null
 		case 200:
-			return (await getV6PubResponse.json()) as { id: string };
+			return (await getV6PubResponse.json()) as { id: string }
 		default:
 			return {
 				title: "Error getting v6 pub",
 				error: "An error occurred while getting the v6 pub",
-			};
+			}
 	}
-};
+}
 
 const updateV6PubText = async (
 	v6PubId: string,
@@ -138,26 +138,26 @@ const updateV6PubText = async (
 				doc: defaultMarkdownParser.parse(content),
 			}),
 		}
-	);
+	)
 
 	switch (updateV6PubTextRequest.status) {
 		case 403:
-			return authError;
+			return authError
 		case 404:
 			return {
 				title: "Error updating v6 pub content",
 				error: "The related v6 pub does not exist",
-			};
+			}
 		case 200:
 		case 204:
-			return true;
+			return true
 		default:
 			return {
 				title: "Error updating v6 pub content",
 				error: "An error occurred while updating the v6 pub content",
-			};
+			}
 	}
-};
+}
 
 const updateV6PubId = async (pubId: PubsId, v6PubId: string, lastModifiedBy: LastModifiedBy) => {
 	await autoRevalidate(
@@ -175,31 +175,31 @@ const updateV6PubId = async (pubId: PubsId, v6PubId: string, lastModifiedBy: Las
 				value: `"${v6PubId}"`,
 				lastModifiedBy,
 			}))
-	).execute();
-};
+	).execute()
+}
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, lastModifiedBy }) => {
 	try {
-		const v6Community = await getV6Community(config.communitySlug, config.authToken);
+		const v6Community = await getV6Community(config.communitySlug, config.authToken)
 
 		if (isClientExceptionOptions(v6Community)) {
-			return v6Community;
+			return v6Community
 		}
 
-		let v6Pub: { id: string };
+		let v6Pub: { id: string }
 
 		const v6PubId = pub.values.find((value) => value.fieldSlug === corePubFields.v6PubId.slug)
-			?.value as string;
+			?.value as string
 		// Fetch the pub if the v7 pub already had a v6 pub id
 		if (v6PubId) {
-			const v6PubResult = await getV6Pub(v6PubId, config.communitySlug, config.authToken);
+			const v6PubResult = await getV6Pub(v6PubId, config.communitySlug, config.authToken)
 
 			if (isClientExceptionOptions(v6PubResult)) {
-				return v6PubResult;
+				return v6PubResult
 			}
 
 			if (v6PubResult !== null) {
-				v6Pub = v6PubResult;
+				v6Pub = v6PubResult
 			}
 		}
 
@@ -211,16 +211,16 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 				config.authToken,
 				v6Community.id,
 				config.title
-			);
+			)
 
 			if (isClientExceptionOptions(createV6PubResponse)) {
-				return createV6PubResponse;
+				return createV6PubResponse
 			}
 
-			v6Pub = createV6PubResponse;
+			v6Pub = createV6PubResponse
 
 			// Update the v6 pub id in the v7 pub
-			await updateV6PubId(pub.id, v6Pub.id, lastModifiedBy);
+			await updateV6PubId(pub.id, v6Pub.id, lastModifiedBy)
 		}
 
 		// Update the v6 pub content
@@ -229,24 +229,24 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 			config.communitySlug,
 			config.authToken,
 			config.content
-		);
+		)
 
 		if (isClientExceptionOptions(updateV6PubTextRequest)) {
-			return updateV6PubTextRequest;
+			return updateV6PubTextRequest
 		}
 	} catch (error) {
 		return {
 			title: "Error pushing pub to v6",
 			error: "An error occurred while pushing the pub to v6",
 			cause: error,
-		};
+		}
 	}
 
-	logger.info({ msg: "pub pushed to v6", pub, config, args });
+	logger.info({ msg: "pub pushed to v6", pub, config, args })
 
 	return {
 		success: true,
 		report: "The pub was successfully pushed to v6",
 		data: {},
-	};
-});
+	}
+})

@@ -73,6 +73,6 @@ export {
 	Wand2,
 	X,
 	XCircle,
-} from "lucide-react";
+} from "lucide-react"
 
-export type { LucideIcon } from "lucide-react";
+export type { LucideIcon } from "lucide-react"

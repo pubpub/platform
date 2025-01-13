@@ -1,8 +1,8 @@
-import type { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
+import type { InputComponent } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
 
-import type { ComponentConfigFormProps } from "./types";
+import type { ComponentConfigFormProps } from "./types"
 
 export default ({ form }: ComponentConfigFormProps<InputComponent.memberSelect>) => {
 	return (
@@ -35,5 +35,5 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.memberSelect>)
 				)}
 			/>
 		</>
-	);
-};
+	)
+}

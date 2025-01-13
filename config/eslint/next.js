@@ -1,6 +1,6 @@
 // @ts-check
 
-import nextPlugin from "@next/eslint-plugin-next";
+import nextPlugin from "@next/eslint-plugin-next"
 
 /** @type {Awaited<import('typescript-eslint').Config>} */
 export default [
@@ -30,4 +30,4 @@ export default [
 			],
 		},
 	},
-];
+]

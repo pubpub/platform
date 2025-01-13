@@ -1,4 +1,4 @@
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonObjectFrom } from "kysely/helpers/postgres"
 
 import type {
 	CommunitiesId,
@@ -7,13 +7,13 @@ import type {
 	NewPubMemberships,
 	NewStageMemberships,
 	UsersId,
-} from "db/public";
+} from "db/public"
 
-import type { XOR } from "../types";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { SAFE_USER_SELECT } from "./user";
+import type { XOR } from "../types"
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { SAFE_USER_SELECT } from "./user"
 
 /**
  * Either get a member by their community membership id, or by userId and communityId
@@ -48,8 +48,8 @@ export const selectCommunityMember = (
 				eb.where("community_memberships.communityId", "=", props.communityId!)
 			)
 			.$if(Boolean(props.id), (eb) => eb.where("community_memberships.id", "=", props.id!))
-	);
-};
+	)
+}
 
 export const selectCommunityMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
 	autoCache(
@@ -72,7 +72,7 @@ export const selectCommunityMembers = ({ communityId }: { communityId: Communiti
 					.as("user"),
 			])
 			.where("community_memberships.communityId", "=", communityId)
-	);
+	)
 
 export const insertCommunityMember = (
 	props: NewCommunityMemberships & { userId: UsersId },
@@ -87,10 +87,10 @@ export const insertCommunityMember = (
 				role: props.role,
 			})
 			.returningAll()
-	);
+	)
 
 export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
+	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll())
 
 export const insertStageMember = (
 	{
@@ -98,10 +98,10 @@ export const insertStageMember = (
 		stageId,
 		role,
 	}: NewStageMemberships & {
-		userId: UsersId;
+		userId: UsersId
 	},
 	trx = db
-) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }));
+) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }))
 
 export const insertPubMember = (
 	{
@@ -109,7 +109,7 @@ export const insertPubMember = (
 		pubId,
 		role,
 	}: NewPubMemberships & {
-		userId: UsersId;
+		userId: UsersId
 	},
 	trx = db
-) => autoRevalidate(trx.insertInto("pub_memberships").values({ userId, pubId, role }));
+) => autoRevalidate(trx.insertInto("pub_memberships").values({ userId, pubId, role }))

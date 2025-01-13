@@ -1,16 +1,16 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
+import { InputComponent } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
 
-import type { ComponentConfigFormProps } from "./types";
+import type { ComponentConfigFormProps } from "./types"
 
 export default ({
 	form,
 }: ComponentConfigFormProps<InputComponent.multivalueInput> & {
-	label: string;
-	children?: ReactNode;
+	label: string
+	children?: ReactNode
 }) => {
 	return (
 		<div className="flex flex-col gap-6">
@@ -42,5 +42,5 @@ export default ({
 				)}
 			/>
 		</div>
-	);
-};
+	)
+}

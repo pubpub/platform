@@ -1,6 +1,6 @@
-import * as React from "react";
+import * as React from "react"
 
-import { IntegrationLayoutHeader } from "./IntegrationLayoutHeader";
+import { IntegrationLayoutHeader } from "./IntegrationLayoutHeader"
 
 export const IntegrationLayout = (props: React.PropsWithChildren) => {
 	return (
@@ -10,5 +10,5 @@ export const IntegrationLayout = (props: React.PropsWithChildren) => {
 				<div className="flex-auto">{props.children}</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

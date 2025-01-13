@@ -1,11 +1,11 @@
-import { faker } from "@faker-js/faker";
+import { faker } from "@faker-js/faker"
 
-import type { CommunitiesId, PubsId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import type { CommunitiesId, PubsId } from "db/public"
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import { db } from "~/kysely/database";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { seedCommunity } from "../seed/seedCommunity";
+import { db } from "~/kysely/database"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { seedCommunity } from "../seed/seedCommunity"
 
 export const seedArcadia = async (communityId?: CommunitiesId) => {
 	const articleSeed = (number = 1_000, asRelation = false) =>
@@ -121,22 +121,22 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						},
 					],
 				},
-			};
+			}
 
 			if (!asRelation) {
-				return pub;
+				return pub
 			}
 
 			return {
 				value: null,
 				alsoAsChild: true,
 				pub,
-			};
-		}) as any;
+			}
+		}) as any
 
-	const articleId2 = crypto.randomUUID();
-	const articleId = crypto.randomUUID();
-	const authorId = crypto.randomUUID();
+	const articleId2 = crypto.randomUUID()
+	const articleId = crypto.randomUUID()
+	const authorId = crypto.randomUUID()
 
 	const seed = await seedCommunity(
 		{
@@ -727,7 +727,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 			withApiToken: "00000000-0000-0000-0000-000000000000.xxxxxxxxxxxxxxxx",
 			parallelPubs: true,
 		}
-	);
+	)
 
 	// Give jimothy a circular reference
 	await db
@@ -748,7 +748,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				lastModifiedBy: createLastModifiedBy("system"),
 			},
 		])
-		.execute();
+		.execute()
 
-	return seed;
-};
+	return seed
+}

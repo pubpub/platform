@@ -1,33 +1,33 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import Script from "next/script";
+import Script from "next/script"
 
-import "./stoplight.styles.css";
+import "./stoplight.styles.css"
 
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"
 
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { env } from "~/lib/env/env.mjs";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { isCommunityAdmin } from "~/lib/authentication/roles"
+import { env } from "~/lib/env/env.mjs"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
 	title: "API Docs",
-};
+}
 
 // we load the web component through a script tag here to prevent react incompatibility issues,
 // as stoplight uses react 16 still
 export default async function IndexPage({
 	params: { communitySlug },
 }: {
-	params: { communitySlug: string };
+	params: { communitySlug: string }
 }) {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
 	// TODO: add capability for this
 	if (!isCommunityAdmin(user, { slug: communitySlug })) {
-		return redirect(`/c/${communitySlug}/unauthorized`);
+		return redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
 	return (
@@ -47,5 +47,5 @@ export default async function IndexPage({
 				}}
 			/>
 		</div>
-	);
+	)
 }

@@ -1,4 +1,4 @@
-import { fileURLToPath } from "url";
+import { fileURLToPath } from "url"
 
 /** @typedef {import("prettier").Config} PrettierConfig */
 /** @typedef {import("prettier-plugin-tailwindcss").PluginOptions} TailwindConfig */
@@ -12,6 +12,7 @@ const config = {
 	trailingComma: "es5",
 	useTabs: true,
 	singleQuote: false,
+	semi: false,
 	plugins: [
 		"@ianvs/prettier-plugin-sort-imports",
 		"prettier-plugin-tailwindcss",
@@ -45,6 +46,6 @@ const config = {
 	importOrderTypeScriptVersion: "4.5.0",
 	// jsdocPreferCodeFences: true,
 	// tsdoc: true,
-};
+}
 
-export default config;
+export default config

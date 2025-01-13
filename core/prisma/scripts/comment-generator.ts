@@ -18,105 +18,105 @@
  * in Prisma itself.
  */
 
-import { createHash } from "crypto";
-import { promises as fs } from "fs";
+import { createHash } from "crypto"
+import { promises as fs } from "fs"
 
-import type { DMMF, EnvValue, GeneratorOptions } from "@prisma/generator-helper";
+import type { DMMF, EnvValue, GeneratorOptions } from "@prisma/generator-helper"
 
-import { generatorHandler } from "@prisma/generator-helper";
-import { getDMMF, parseEnvValue } from "@prisma/internals";
+import { generatorHandler } from "@prisma/generator-helper"
+import { getDMMF, parseEnvValue } from "@prisma/internals"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
 async function generateModelComment(model: DMMF.Model): Promise<string[]> {
-	const modelName = model.dbName ?? model.name;
+	const modelName = model.dbName ?? model.name
 
-	const commentStatements: string[] = [];
+	const commentStatements: string[] = []
 
 	model.fields.forEach((field: any) => {
 		if (!field.documentation) {
-			return;
+			return
 		}
 
-		logger.debug(`Generating comment for ${modelName}.${field.name}...`);
+		logger.debug(`Generating comment for ${modelName}.${field.name}...`)
 
-		const escapedComment = field.documentation?.replace(/'/g, "''") ?? "";
+		const escapedComment = field.documentation?.replace(/'/g, "''") ?? ""
 
-		const commentTemplate = `COMMENT ON COLUMN "${modelName}"."${field.name}" IS '${escapedComment}';`;
-		commentStatements.push(commentTemplate);
-	});
+		const commentTemplate = `COMMENT ON COLUMN "${modelName}"."${field.name}" IS '${escapedComment}';`
+		commentStatements.push(commentTemplate)
+	})
 
-	return [`-- Model ${modelName} comments`, "", ...commentStatements, ""];
+	return [`-- Model ${modelName} comments`, "", ...commentStatements, ""]
 }
 
 async function generateEnumComment(enumModel: DMMF.DatamodelEnum): Promise<string[]> {
-	const enumName = enumModel.name;
+	const enumName = enumModel.name
 
-	const documentation = enumModel.documentation;
+	const documentation = enumModel.documentation
 
-	logger.debug({ msg: `Generating comment for ${enumName}..., ` });
+	logger.debug({ msg: `Generating comment for ${enumName}..., ` })
 
-	const commentStatement = `COMMENT ON TYPE "${enumName}" IS '${documentation?.replace(/'/g, "''") ?? ""}';`;
+	const commentStatement = `COMMENT ON TYPE "${enumName}" IS '${documentation?.replace(/'/g, "''") ?? ""}';`
 
-	return [`-- Enum ${enumName} comments`, "", documentation ? commentStatement : "", ""];
+	return [`-- Enum ${enumName} comments`, "", documentation ? commentStatement : "", ""]
 }
 
 async function fileHash(file: string, allowEmpty = false): Promise<string> {
 	try {
-		const fileContent = await fs.readFile(file, "utf-8");
+		const fileContent = await fs.readFile(file, "utf-8")
 
 		// now use sha256 to hash the content and return it
-		return createHash("sha256").update(fileContent).digest("hex");
+		return createHash("sha256").update(fileContent).digest("hex")
 	} catch (e: any) {
 		if (e.code === "ENOENT" && allowEmpty) {
-			return "";
+			return ""
 		}
 
-		throw e;
+		throw e
 	}
 }
 
 async function lockChanged(lockFile: string, tmpLockFile: string): Promise<boolean> {
-	return (await fileHash(lockFile, true)) !== (await fileHash(tmpLockFile));
+	return (await fileHash(lockFile, true)) !== (await fileHash(tmpLockFile))
 }
 
 export async function generate(options: GeneratorOptions) {
-	const outputDir = parseEnvValue(options.generator.output as EnvValue);
-	await fs.mkdir(outputDir, { recursive: true });
+	const outputDir = parseEnvValue(options.generator.output as EnvValue)
+	await fs.mkdir(outputDir, { recursive: true })
 
 	const prismaClientProvider = options.otherGenerators.find(
 		(it) => parseEnvValue(it.provider) === "prisma-client-js"
-	);
+	)
 
 	const prismaClientDmmf = await getDMMF({
 		datamodel: options.datamodel,
 		previewFeatures: prismaClientProvider?.previewFeatures,
-	});
+	})
 
-	const promises: Promise<string[]>[] = [];
+	const promises: Promise<string[]>[] = []
 
 	prismaClientDmmf.datamodel.models.forEach((model: any) => {
-		logger.debug(`Generating comment for ${model.name}...`);
-		promises.push(generateModelComment(model));
-	});
+		logger.debug(`Generating comment for ${model.name}...`)
+		promises.push(generateModelComment(model))
+	})
 	prismaClientDmmf.datamodel.enums.forEach((enumModel) => {
-		logger.debug(`Generating comment for ${enumModel.name}...`);
-		promises.push(generateEnumComment(enumModel));
-	});
+		logger.debug(`Generating comment for ${enumModel.name}...`)
+		promises.push(generateEnumComment(enumModel))
+	})
 
-	const allStatements = await Promise.all(promises);
+	const allStatements = await Promise.all(promises)
 
-	const tmpLock = await fs.open(`${outputDir}/.comments-lock.tmp`, "w+");
+	const tmpLock = await fs.open(`${outputDir}/.comments-lock.tmp`, "w+")
 
-	await tmpLock.write("-- generator-version: 1.0.0\n\n");
+	await tmpLock.write("-- generator-version: 1.0.0\n\n")
 
 	// concat all promises and separate with new line and two newlines between each model
 	const allStatementsString = allStatements
 		.map((statements) => statements.join("\n"))
-		.join("\n\n");
+		.join("\n\n")
 
-	await tmpLock.write(allStatementsString);
-	await tmpLock.close();
+	await tmpLock.write(allStatementsString)
+	await tmpLock.close()
 
 	// compare hashes of tmp lock file and existing lock file
 	// if they are the same, do nothing
@@ -125,34 +125,34 @@ export async function generate(options: GeneratorOptions) {
 	const isChanged = await lockChanged(
 		`${outputDir}/.comments-lock`,
 		`${outputDir}/.comments-lock.tmp`
-	);
+	)
 
 	if (isChanged) {
-		await fs.copyFile(`${outputDir}/.comments-lock.tmp`, `${outputDir}/.comments-lock`);
+		await fs.copyFile(`${outputDir}/.comments-lock.tmp`, `${outputDir}/.comments-lock`)
 
 		// when lockfile changed we generate a new migration file too
-		const date = new Date();
-		date.setMilliseconds(0);
+		const date = new Date()
+		date.setMilliseconds(0)
 
 		const dateStr = date
 			.toISOString()
 			.replace(/[:\-TZ]/g, "")
-			.replace(".000", "");
-		const migrationDir = `prisma/migrations/${dateStr}_update_comments`;
+			.replace(".000", "")
+		const migrationDir = `prisma/migrations/${dateStr}_update_comments`
 
-		logger.info(`Lock file changed, creating a new migration at ${migrationDir}...`);
+		logger.info(`Lock file changed, creating a new migration at ${migrationDir}...`)
 
-		await fs.mkdir(migrationDir, { recursive: true });
+		await fs.mkdir(migrationDir, { recursive: true })
 
-		await fs.copyFile(`${outputDir}/.comments-lock`, `${migrationDir}/migration.sql`);
+		await fs.copyFile(`${outputDir}/.comments-lock`, `${migrationDir}/migration.sql`)
 	} else {
-		logger.info("No changes detected, skipping creating a fresh comment migration...");
+		logger.info("No changes detected, skipping creating a fresh comment migration...")
 	}
 
 	// always delete tmp lock file
-	await fs.unlink(`${outputDir}/.comments-lock.tmp`);
+	await fs.unlink(`${outputDir}/.comments-lock.tmp`)
 
-	logger.info("Comment generation completed");
+	logger.info("Comment generation completed")
 }
 
 generatorHandler({
@@ -160,7 +160,7 @@ generatorHandler({
 		return {
 			defaultOutput: "comments",
 			prettyName: "Prisma Database comments Generator",
-		};
+		}
 	},
 	onGenerate: generate,
-});
+})

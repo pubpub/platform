@@ -1,13 +1,13 @@
-"use server";
+"use server"
 
-import { headers } from "next/headers";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
+import { headers } from "next/headers"
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs"
 
-import type { PubValues } from "@pubpub/sdk";
+import type { PubValues } from "@pubpub/sdk"
 
-import { getInstanceConfig } from "~/lib/instance";
-import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata";
-import { client } from "~/lib/pubpub";
+import { getInstanceConfig } from "~/lib/instance"
+import { makePubFromDoi, makePubFromTitle, makePubFromUrl } from "~/lib/metadata"
+import { client } from "~/lib/pubpub"
 
 export const submit = async (instanceId: string, values: PubValues, assigneeId: string) => {
 	return withServerActionInstrumentation(
@@ -17,29 +17,29 @@ export const submit = async (instanceId: string, values: PubValues, assigneeId: 
 		},
 		async () => {
 			try {
-				const instance = await getInstanceConfig(instanceId);
+				const instance = await getInstanceConfig(instanceId)
 				if (instance === undefined) {
-					return { error: "Instance not configured" };
+					return { error: "Instance not configured" }
 				}
 				const pub = await client.createPub(instanceId, {
 					assigneeId,
 					values,
 					pubTypeId: instance.pubTypeId,
-				});
-				return pub;
+				})
+				return pub
 			} catch (error) {
-				captureException(error);
-				return { error: error.message };
+				captureException(error)
+				return { error: error.message }
 			}
 		}
-	);
-};
+	)
+}
 
 const metadataResolvers = {
 	"legacy-unjournal:doi": makePubFromDoi,
 	"legacy-unjournal:url": makePubFromUrl,
 	"legacy-unjournal:title": makePubFromTitle,
-};
+}
 
 export const resolveMetadata = async (
 	identifierName: string,
@@ -51,19 +51,19 @@ export const resolveMetadata = async (
 			headers: headers(),
 		},
 		async () => {
-			const resolve = metadataResolvers[identifierName];
+			const resolve = metadataResolvers[identifierName]
 			try {
 				if (resolve !== undefined) {
-					const pub = await resolve(identifierValue);
+					const pub = await resolve(identifierValue)
 					if (pub !== null) {
-						return pub;
+						return pub
 					}
 				}
 			} catch (error) {
-				captureException(error);
-				return { error: "There was an error resolving metadata." };
+				captureException(error)
+				return { error: "There was an error resolving metadata." }
 			}
-			return { error: "No metdata found." };
+			return { error: "No metdata found." }
 		}
-	);
-};
+	)
+}

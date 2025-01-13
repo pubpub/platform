@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import type { Node } from "prosemirror-model";
+import type { Node } from "prosemirror-model"
 
-import { useState } from "react";
-import { Value } from "@sinclair/typebox/value";
-import { docHasChanged } from "context-editor/utils";
-import { useFormContext } from "react-hook-form";
-import { richTextInputConfigSchema } from "schemas";
+import { useState } from "react"
+import { Value } from "@sinclair/typebox/value"
+import { docHasChanged } from "context-editor/utils"
+import { useFormContext } from "react-hook-form"
+import { richTextInputConfigSchema } from "schemas"
 
-import { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { InputComponent } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 
-import type { ElementProps } from "../types";
-import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
-import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import type { ElementProps } from "../types"
+import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient"
+import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext"
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 const EMPTY_DOC = {
 	type: "doc",
@@ -30,7 +30,7 @@ const EMPTY_DOC = {
 			},
 		},
 	],
-};
+}
 
 const EditorFormElement = ({
 	label,
@@ -39,17 +39,17 @@ const EditorFormElement = ({
 	initialValue,
 	disabled,
 }: {
-	label: string;
-	help?: string;
-	onChange: (state: any) => void;
-	initialValue?: Node;
-	disabled?: boolean;
+	label: string
+	help?: string
+	onChange: (state: any) => void
+	initialValue?: Node
+	disabled?: boolean
 }) => {
-	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
-	const [initialDoc] = useState(initialValue);
+	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext()
+	const [initialDoc] = useState(initialValue)
 
 	if (!pubId || !pubTypeId) {
-		return null;
+		return null
 	}
 
 	return (
@@ -66,9 +66,9 @@ const EditorFormElement = ({
 							// Control changing the state more granularly or else the dirty field will trigger on load
 							// Since we can't control the dirty state directly, even this workaround does not handle the case of
 							// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
-							const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
+							const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state)
 							if (hasChanged) {
-								onChange(state);
+								onChange(state)
 							}
 						}}
 						initialDoc={initialDoc}
@@ -79,21 +79,21 @@ const EditorFormElement = ({
 			<FormDescription>{help}</FormDescription>
 			<FormMessage />
 		</FormItem>
-	);
-};
+	)
+}
 
 export const ContextEditorElement = ({
 	slug,
 	label,
 	config,
 }: ElementProps<InputComponent.richText>) => {
-	const { control } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const { control } = useFormContext()
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(slug)
 
-	Value.Default(richTextInputConfigSchema, config);
+	Value.Default(richTextInputConfigSchema, config)
 	if (!Value.Check(richTextInputConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -109,8 +109,8 @@ export const ContextEditorElement = ({
 						initialValue={field.value}
 						disabled={!isEnabled}
 					/>
-				);
+				)
 			}}
 		/>
-	);
-};
+	)
+}

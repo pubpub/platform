@@ -1,32 +1,32 @@
-import { Suspense } from "react";
+import { Suspense } from "react"
 
-import type { StagesId } from "db/public";
-import { Card, CardContent } from "ui/card";
-import { Separator } from "ui/separator";
+import type { StagesId } from "db/public"
+import { Card, CardContent } from "ui/card"
+import { Separator } from "ui/separator"
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage } from "~/lib/db/queries";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { deleteStage, updateStageName } from "../../actions";
-import { StageNameInput } from "./StageNameInput";
-import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { getStage } from "~/lib/db/queries"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { deleteStage, updateStageName } from "../../actions"
+import { StageNameInput } from "./StageNameInput"
+import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement"
 
 type PropsInner = {
-	stageId: StagesId;
-};
+	stageId: StagesId
+}
 
 const StagePanelOverviewInner = async (props: PropsInner) => {
 	const [stage, communitySlug] = await Promise.all([
 		getStage(props.stageId).executeTakeFirst(),
 		getCommunitySlug(),
-	]);
+	])
 
 	if (stage === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
-	const onNameChange = updateStageName.bind(null, stage.id);
-	const onDelete = deleteStage.bind(null, stage.id);
+	const onNameChange = updateStageName.bind(null, stage.id)
+	const onDelete = deleteStage.bind(null, stage.id)
 
 	return (
 		<Card>
@@ -42,21 +42,21 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 				</div>
 			</CardContent>
 		</Card>
-	);
-};
+	)
+}
 
 type Props = {
-	stageId: string | undefined;
-};
+	stageId: string | undefined
+}
 
 export const StagePanelOverview = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
 			<StagePanelOverviewInner stageId={props.stageId as StagesId} />
 		</Suspense>
-	);
-};
+	)
+}

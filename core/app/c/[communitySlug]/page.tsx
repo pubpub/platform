@@ -1,10 +1,10 @@
-import { getPageLoginData } from "~/lib/authentication/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData"
 
 export default async function Page() {
-	await getPageLoginData();
+	await getPageLoginData()
 	return (
 		<>
 			<h1>Dashboard</h1>
 		</>
-	);
+	)
 }

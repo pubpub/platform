@@ -1,20 +1,20 @@
-import type React from "react";
+import type React from "react"
 
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId } from "db/public"
 
-import type { Action, ActionInstanceOf } from "../../types";
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import type { Action, ActionInstanceOf } from "../../types"
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
 
 export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
-	actionInstance: ActionInstanceOf<T>;
-	communityId: CommunitiesId;
-	stageId: StagesId;
-	pageContext: PageContext;
+	actionInstance: ActionInstanceOf<T>
+	communityId: CommunitiesId
+	stageId: StagesId
+	pageContext: PageContext
 } & (Type extends "params"
 	? {
-			pubId: PubsId;
+			pubId: PubsId
 		}
-	: { pubId?: never });
+	: { pubId?: never })
 
 export const defineActionFormFieldServerComponent = <
 	T extends Action,
@@ -29,27 +29,27 @@ export const defineActionFormFieldServerComponent = <
 		communityId,
 		pageContext,
 	}: ActionFormFieldBaseProps<T, Type> & {
-		action: T;
+		action: T
 	}) => Promise<React.AwaitedReactNode>
 ) => {
 	const serverComponent = async (props: ActionFormFieldBaseProps<T, Type>) => {
 		const F = await FormField({
 			action,
 			...props,
-		});
+		})
 
-		return F;
-	};
+		return F
+	}
 
-	return serverComponent;
-};
+	return serverComponent
+}
 
 export type ActionConfigServerComponent<
 	T extends Action,
 	Type extends "config" | "params",
-> = ReturnType<typeof defineActionFormFieldServerComponent<T, Type>>;
+> = ReturnType<typeof defineActionFormFieldServerComponent<T, Type>>
 
 export type ActionConfigServerComponentProps<
 	T extends Action,
 	Type extends "config" | "params",
-> = ActionFormFieldBaseProps<T, Type>;
+> = ActionFormFieldBaseProps<T, Type>

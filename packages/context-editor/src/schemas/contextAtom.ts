@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { DOMOutputSpec, NodeSpec } from "prosemirror-model"
 
 export default {
 	atom: true,
@@ -17,13 +17,13 @@ export default {
 			tag: "section",
 			getAttrs: (node) => {
 				if (!(node as Element).getAttribute("data-atom")) {
-					return false;
+					return false
 				}
 				return {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
 					pubId: (node as Element).getAttribute("data-pub-id"),
-				};
+				}
 			},
 		},
 	],
@@ -36,6 +36,6 @@ export default {
 				...(node.attrs.id && { id: node.attrs.id }),
 				"data-pub-id": node.attrs.pubId.toString(),
 			},
-		] as DOMOutputSpec;
+		] as DOMOutputSpec
 	},
-} satisfies NodeSpec;
+} satisfies NodeSpec

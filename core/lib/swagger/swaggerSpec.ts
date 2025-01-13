@@ -1,8 +1,8 @@
-import type { OpenAPIObject } from "openapi3-ts/oas30";
+import type { OpenAPIObject } from "openapi3-ts/oas30"
 
-import { generateOpenApi } from "@ts-rest/open-api";
+import { generateOpenApi } from "@ts-rest/open-api"
 
-import { api } from "contracts";
+import { api } from "contracts"
 
 export const openApiDocument: OpenAPIObject = generateOpenApi(api, {
 	openapi: "3.0.0",
@@ -37,4 +37,4 @@ export const openApiDocument: OpenAPIObject = generateOpenApi(api, {
 			description: "The production API server",
 		},
 	],
-});
+})

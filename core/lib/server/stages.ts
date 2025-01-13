@@ -1,5 +1,5 @@
-import { sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { sql } from "kysely"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
 import type {
 	CommunitiesId,
@@ -8,18 +8,18 @@ import type {
 	PubsId,
 	StagesId,
 	StagesUpdate,
-} from "db/public";
+} from "db/public"
 
-import type { AutoReturnType } from "../types";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
+import type { AutoReturnType } from "../types"
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
 
 export const createStage = (props: NewStages) =>
-	autoRevalidate(db.insertInto("stages").values(props));
+	autoRevalidate(db.insertInto("stages").values(props))
 
 export const updateStage = (stageId: StagesId, props: StagesUpdate) =>
-	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId));
+	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId))
 
 export const removeStages = (stageIds: StagesId[]) =>
 	autoRevalidate(
@@ -32,10 +32,10 @@ export const removeStages = (stageIds: StagesId[]) =>
 			)
 			.deleteFrom("PubsInStages")
 			.where("stageId", "in", (eb) => eb.selectFrom("deleted_stages").select("id"))
-	);
+	)
 
 export const createMoveConstraint = (props: NewMoveConstraint) =>
-	autoRevalidate(db.insertInto("move_constraint").values(props));
+	autoRevalidate(db.insertInto("move_constraint").values(props))
 
 /**
  * You should use `executeTakeFirst` here
@@ -46,9 +46,9 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.selectFrom("PubsInStages")
 			.select(sql<PubsId[]>`array_agg("pubId")`.as("pubIds"))
 			.where("stageId", "=", stageId)
-	);
+	)
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId };
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId }
 export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 	autoCache(
 		db
@@ -100,9 +100,9 @@ export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 			])
 			.selectAll("stages")
 			.orderBy("order asc")
-	);
+	)
 
-export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
+export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"]
 
 export const getIntegrationInstanceBase = (trx = db) =>
 	trx
@@ -117,8 +117,8 @@ export const getIntegrationInstanceBase = (trx = db) =>
 			)
 				.$notNull()
 				.as("integration")
-		);
+		)
 
 export const getIntegrationInstancesForStage = (stageId: StagesId) => {
-	return autoCache(getIntegrationInstanceBase().where("stageId", "=", stageId));
-};
+	return autoCache(getIntegrationInstanceBase().where("stageId", "=", stageId))
+}

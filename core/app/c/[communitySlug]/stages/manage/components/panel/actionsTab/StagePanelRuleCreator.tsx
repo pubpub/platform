@@ -1,20 +1,14 @@
-"use client";
+"use client"
 
-import { useCallback, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { useCallback, useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type {
-	Action,
-	ActionInstances,
-	ActionInstancesId,
-	CommunitiesId,
-	StagesId,
-} from "db/public";
-import { Event } from "db/public";
-import { AutoFormObject } from "ui/auto-form";
-import { Button } from "ui/button";
+import type { Action, ActionInstances, ActionInstancesId, CommunitiesId, StagesId } from "db/public"
+import { Event } from "db/public"
+import { AutoFormObject } from "ui/auto-form"
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -23,27 +17,27 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+} from "ui/dialog"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
-import type { Rules } from "~/actions/_lib/rules";
-import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
-import { addRule } from "../../../actions";
+import type { Rules } from "~/actions/_lib/rules"
+import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api"
+import { useServerAction } from "~/lib/serverActions"
+import { addRule } from "../../../actions"
 
 type Props = {
-	stageId: StagesId;
-	actionInstances: ActionInstances[];
-	communityId: CommunitiesId;
+	stageId: StagesId
+	actionInstances: ActionInstances[]
+	communityId: CommunitiesId
 	rules: {
-		id: string;
-		event: Event;
-		instanceName: string;
-		action: Action;
-		actionInstanceId: ActionInstancesId;
-	}[];
-};
+		id: string
+		event: Event
+		instanceName: string
+		action: Action
+		actionInstanceId: ActionInstancesId
+	}[]
+}
 
 const schema = z.discriminatedUnion("event", [
 	z.object({
@@ -68,39 +62,39 @@ const schema = z.discriminatedUnion("event", [
 					: z.null().optional(),
 			})
 		),
-]);
+])
 
-export type CreateRuleSchema = z.infer<typeof schema>;
+export type CreateRuleSchema = z.infer<typeof schema>
 
 export const StagePanelRuleCreator = (props: Props) => {
-	const runAddRule = useServerAction(addRule);
-	const [isOpen, setIsOpen] = useState(false);
+	const runAddRule = useServerAction(addRule)
+	const [isOpen, setIsOpen] = useState(false)
 	const onSubmit = useCallback(
 		async (data: CreateRuleSchema) => {
-			setIsOpen(false);
-			runAddRule({ stageId: props.stageId, data });
+			setIsOpen(false)
+			runAddRule({ stageId: props.stageId, data })
 		},
 		[props.communityId]
-	);
+	)
 
 	const onOpenChange = useCallback((open: boolean) => {
-		setIsOpen(open);
-	}, []);
+		setIsOpen(open)
+	}, [])
 
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
-	});
+	})
 
-	const event = form.watch("event");
+	const event = form.watch("event")
 
-	const selectedAction = form.watch("actionInstanceId");
+	const selectedAction = form.watch("actionInstanceId")
 
 	const disallowedEvents = props.rules
 		.filter((rule) => rule.actionInstanceId === selectedAction)
-		.map((rule) => rule.event);
-	const allowedEvents = Object.values(Event).filter((event) => !disallowedEvents.includes(event));
+		.map((rule) => rule.event)
+	const allowedEvents = Object.values(Event).filter((event) => !disallowedEvents.includes(event))
 
-	const rule = getRuleByName(event);
+	const rule = getRuleByName(event)
 
 	return (
 		<div className="space-y-2 py-2">
@@ -136,7 +130,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 												</SelectTrigger>
 												<SelectContent>
 													{props.actionInstances.map((instance) => {
-														const action = actions[instance.action];
+														const action = actions[instance.action]
 
 														return (
 															<SelectItem
@@ -149,7 +143,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 																	<span>{instance.name}</span>
 																</div>
 															</SelectItem>
-														);
+														)
 													})}
 												</SelectContent>
 											</Select>
@@ -221,5 +215,5 @@ export const StagePanelRuleCreator = (props: Props) => {
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
-};
+	)
+}

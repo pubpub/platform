@@ -1,37 +1,37 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { PubFieldProvider } from "ui/pubFields";
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { PubFieldProvider } from "ui/pubFields"
 
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
-import { CreatePubType } from "./CreatePubType";
-import TypeList from "./TypeList";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { isCommunityAdmin } from "~/lib/authentication/roles"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getPubFields } from "~/lib/server/pubFields"
+import { getAllPubTypesForCommunity } from "~/lib/server/pubtype"
+import { CreatePubType } from "./CreatePubType"
+import TypeList from "./TypeList"
 
 export const metadata: Metadata = {
 	title: "Pub Types",
-};
+}
 
 export default async function Page({
 	params: { communitySlug },
 }: {
 	params: {
-		communitySlug: string;
-	};
+		communitySlug: string
+	}
 }) {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!user || !community) {
-		return notFound();
+		return notFound()
 	}
 
 	if (
@@ -41,10 +41,10 @@ export default async function Page({
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
+	const allowEditing = isCommunityAdmin(user, { slug: communitySlug })
 
 	const [types, { fields }] = await Promise.all([
 		getAllPubTypesForCommunity(communitySlug).execute(),
@@ -52,10 +52,10 @@ export default async function Page({
 			communityId: community.id,
 			includeRelations: true,
 		}).executeTakeFirstOrThrow(),
-	]);
+	])
 
 	if (!types || !fields) {
-		return null;
+		return null
 	}
 
 	return (
@@ -68,5 +68,5 @@ export default async function Page({
 			</div>
 			<TypeList types={types} allowEditing={allowEditing} />
 		</PubFieldProvider>
-	);
+	)
 }

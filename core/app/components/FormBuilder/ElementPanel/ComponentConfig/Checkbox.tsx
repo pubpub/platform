@@ -1,9 +1,9 @@
-import type { InputComponent } from "db/public";
-import { Checkbox } from "ui/checkbox";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
+import type { InputComponent } from "db/public"
+import { Checkbox } from "ui/checkbox"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
 
-import type { ComponentConfigFormProps } from "./types";
+import type { ComponentConfigFormProps } from "./types"
 
 export default ({ form }: ComponentConfigFormProps<InputComponent.checkbox>) => {
 	return (
@@ -67,5 +67,5 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.checkbox>) => 
 				)}
 			/>
 		</>
-	);
-};
+	)
+}

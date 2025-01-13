@@ -1,8 +1,8 @@
-import { CoreSchemaType } from "@prisma/client";
+import { CoreSchemaType } from "@prisma/client"
 
-import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-field/defineConfigServerComponent";
-import { action } from "../action";
-import OutputField from "../OutputField";
+import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-field/defineConfigServerComponent"
+import { action } from "../action"
+import OutputField from "../OutputField"
 
 const component = defineActionFormFieldServerComponent(
 	action,
@@ -14,8 +14,8 @@ const component = defineActionFormFieldServerComponent(
 					allowedSchemaTypes: [CoreSchemaType.String],
 				}}
 			/>
-		);
+		)
 	}
-);
+)
 
-export default component;
+export default component

@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import type { Static } from "@sinclair/typebox";
+import type { Static } from "@sinclair/typebox"
 
-import React, { useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import { useForm } from "react-hook-form";
-import { registerFormats } from "schemas";
+import React, { useCallback, useMemo } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import { useForm } from "react-hook-form"
+import { registerFormats } from "schemas"
 
-import type { Users } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
+import type { Users } from "db/public"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
 
-import { signup } from "~/lib/authentication/actions";
-import { isClientException, useServerAction } from "~/lib/serverActions";
+import { signup } from "~/lib/authentication/actions"
+import { isClientException, useServerAction } from "~/lib/serverActions"
 
-registerFormats();
+registerFormats()
 
 const formSchema = Type.Object({
 	firstName: Type.String(),
@@ -28,21 +28,21 @@ const formSchema = Type.Object({
 		minLength: 8,
 		maxLength: 72,
 	}),
-});
+})
 
 export function SignupForm(props: {
-	user: Pick<Users, "firstName" | "lastName" | "email" | "id">;
+	user: Pick<Users, "firstName" | "lastName" | "email" | "id">
 }) {
-	const runSignup = useServerAction(signup);
+	const runSignup = useServerAction(signup)
 
-	const resolver = useMemo(() => typeboxResolver(formSchema), []);
+	const resolver = useMemo(() => typeboxResolver(formSchema), [])
 
 	const form = useForm<Static<typeof formSchema>>({
 		resolver,
 		defaultValues: { ...props.user, lastName: props.user.lastName ?? undefined },
-	});
+	})
 
-	const searchParams = useSearchParams();
+	const searchParams = useSearchParams()
 
 	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
 		await runSignup({
@@ -52,8 +52,8 @@ export function SignupForm(props: {
 			email: data.email,
 			password: data.password,
 			redirect: searchParams.get("redirectTo"),
-		});
-	}, []);
+		})
+	}, [])
 
 	return (
 		<Form {...form}>
@@ -139,5 +139,5 @@ export function SignupForm(props: {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

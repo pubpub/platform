@@ -6,6 +6,6 @@
  * We run into this limit somewhat quickly if we fetch more than 100 pubs.
  */
 
-import FileSystemCache from "next/dist/server/lib/incremental-cache/file-system-cache.js";
+import FileSystemCache from "next/dist/server/lib/incremental-cache/file-system-cache.js"
 
-export default FileSystemCache;
+export default FileSystemCache

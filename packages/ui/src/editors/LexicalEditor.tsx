@@ -1,44 +1,44 @@
-import type { EditorState } from "lexical";
+import type { EditorState } from "lexical"
 
-import * as React from "react";
-import { CodeNode } from "@lexical/code";
-import { LinkNode } from "@lexical/link";
-import { ListItemNode, ListNode } from "@lexical/list";
+import * as React from "react"
+import { CodeNode } from "@lexical/code"
+import { LinkNode } from "@lexical/link"
+import { ListItemNode, ListNode } from "@lexical/list"
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
 	TRANSFORMERS,
-} from "@lexical/markdown";
-import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
-import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+} from "@lexical/markdown"
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode"
+import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin"
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import type { AutoFormInputComponentProps } from "../auto-form";
-import AutoFormDescription from "../auto-form/common/description";
-import AutoFormLabel from "../auto-form/common/label";
-import AutoFormTooltip from "../auto-form/common/tooltip";
-import { FormControl, FormItem, FormMessage } from "../form";
-import { useTokenContext } from "../tokens";
-import { SingleLinePlugin } from "./SingleLinePlugin";
-import { TokenNode } from "./TokenNode";
-import { TokenPlugin } from "./TokenPlugin";
+import type { AutoFormInputComponentProps } from "../auto-form"
+import AutoFormDescription from "../auto-form/common/description"
+import AutoFormLabel from "../auto-form/common/label"
+import AutoFormTooltip from "../auto-form/common/tooltip"
+import { FormControl, FormItem, FormMessage } from "../form"
+import { useTokenContext } from "../tokens"
+import { SingleLinePlugin } from "./SingleLinePlugin"
+import { TokenNode } from "./TokenNode"
+import { TokenPlugin } from "./TokenPlugin"
 
 const theme = {
 	token: "token",
-};
+}
 
 function onError(error: unknown) {
 	// eslint-disable-next-line no-console
-	console.error(error);
+	console.error(error)
 }
 
 const NODES = [
@@ -50,27 +50,27 @@ const NODES = [
 	ListItemNode,
 	QuoteNode,
 	TokenNode,
-];
+]
 
 const makeSyntheticChangeEvent = (value: string) => {
 	return {
 		target: {
 			value,
 		},
-	};
-};
+	}
+}
 
 export const LexicalEditor = (
 	props: AutoFormInputComponentProps & {
-		withMarkdown?: boolean;
+		withMarkdown?: boolean
 		/** If the size of the input should just be a single line. Will also prevent line breaks */
-		singleLine?: boolean;
+		singleLine?: boolean
 	}
 ) => {
-	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = props.fieldProps;
-	const showLabel = _showLabel === undefined ? true : _showLabel;
-	const { descriptionPlacement = "top" } = props;
-	const initialValue = React.useMemo(() => props.field.value ?? "", []);
+	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = props.fieldProps
+	const showLabel = _showLabel === undefined ? true : _showLabel
+	const { descriptionPlacement = "top" } = props
+	const initialValue = React.useMemo(() => props.field.value ?? "", [])
 	const initialConfig = React.useMemo(() => {
 		return {
 			namespace: "LexicalEditor",
@@ -78,21 +78,21 @@ export const LexicalEditor = (
 			onError,
 			editorState: () => $convertFromMarkdownString(initialValue, TRANSFORMERS),
 			nodes: NODES,
-		};
-	}, [initialValue]);
-	const tokens = useTokenContext();
+		}
+	}, [initialValue])
+	const tokens = useTokenContext()
 
 	const onChange = React.useCallback(
 		(editorState: EditorState) => {
 			editorState.read(() => {
-				const markdown = $convertToMarkdownString(TRANSFORMERS);
-				fieldPropsWithoutShowLabel.onChange(makeSyntheticChangeEvent(markdown));
-			});
+				const markdown = $convertToMarkdownString(TRANSFORMERS)
+				fieldPropsWithoutShowLabel.onChange(makeSyntheticChangeEvent(markdown))
+			})
 		},
 		[fieldPropsWithoutShowLabel.onChange]
-	);
+	)
 
-	const labelId = React.useId();
+	const labelId = React.useId()
 
 	return (
 		<div className="flex flex-row items-center space-x-2">
@@ -142,5 +142,5 @@ export const LexicalEditor = (
 				<FormMessage />
 			</FormItem>
 		</div>
-	);
-};
+	)
+}

@@ -1,41 +1,41 @@
-import type { FieldArrayWithId } from "react-hook-form";
+import type { FieldArrayWithId } from "react-hook-form"
 
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import Markdown from "react-markdown";
-import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import Markdown from "react-markdown"
+import { SCHEMA_TYPES_WITH_ICONS } from "schemas"
 
-import type { PubFieldsId } from "db/public";
-import type { LucideIcon } from "ui/icon";
-import { Button } from "ui/button";
-import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon";
-import { usePubFieldContext } from "ui/pubFields";
-import { cn } from "utils";
+import type { PubFieldsId } from "db/public"
+import type { LucideIcon } from "ui/icon"
+import { Button } from "ui/button"
+import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon"
+import { usePubFieldContext } from "ui/pubFields"
+import { cn } from "utils"
 
-import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
-import { useFormBuilder } from "./FormBuilderContext";
-import { structuralElements } from "./StructuralElements";
-import { isFieldInput, isStructuralElement } from "./types";
+import type { FormBuilderSchema, InputElement, StructuralElement } from "./types"
+import { useFormBuilder } from "./FormBuilderContext"
+import { structuralElements } from "./StructuralElements"
+import { isFieldInput, isStructuralElement } from "./types"
 
 type FormElementProps = {
-	element: FieldArrayWithId<FormBuilderSchema, "elements", "id">;
-	index: number;
-	isEditing: boolean;
-	isDisabled: boolean;
-};
+	element: FieldArrayWithId<FormBuilderSchema, "elements", "id">
+	index: number
+	isEditing: boolean
+	isDisabled: boolean
+}
 
 export const FormElement = ({ element, index, isEditing, isDisabled }: FormElementProps) => {
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
 		id: element.id,
 		disabled: isDisabled,
-	});
+	})
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	};
+	}
 
-	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder();
+	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder()
 
 	const restoreRemoveButton = element.deleted ? (
 		<>
@@ -47,7 +47,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				className="invisible p-2 hover:bg-white group-hover:visible"
 				aria-label="Restore element"
 				onClick={() => {
-					restoreElement(index);
+					restoreElement(index)
 				}}
 			>
 				<ArchiveRestore size={24} className="text-neutral-400 hover:text-red-500" />
@@ -61,12 +61,12 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			className="invisible p-2 hover:bg-white group-hover:visible"
 			aria-label="Delete element"
 			onClick={() => {
-				removeElement(index);
+				removeElement(index)
 			}}
 		>
 			<Trash size={24} className="text-neutral-400 hover:text-red-500" />
 		</Button>
-	);
+	)
 	return (
 		<div
 			ref={setNodeRef}
@@ -97,7 +97,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							variant="ghost"
 							className="invisible p-2 group-hover:visible"
 							onClick={() => {
-								openConfigPanel(index);
+								openConfigPanel(index)
 							}}
 						>
 							<Pencil size={24} className="text-neutral-400" />
@@ -115,21 +115,21 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				)}
 			</div>
 		</div>
-	);
-};
+	)
+}
 
 type FieldInputElementProps = {
-	element: InputElement;
-	isEditing: boolean;
-};
+	element: InputElement
+	isEditing: boolean
+}
 export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
-	const pubFields = usePubFieldContext();
-	const field = pubFields[element.fieldId as PubFieldsId];
-	let Icon: LucideIcon;
+	const pubFields = usePubFieldContext()
+	const field = pubFields[element.fieldId as PubFieldsId]
+	let Icon: LucideIcon
 	if (!field.schemaName) {
-		Icon = Type;
+		Icon = Type
 	} else {
-		Icon = SCHEMA_TYPES_WITH_ICONS[field.schemaName].icon;
+		Icon = SCHEMA_TYPES_WITH_ICONS[field.schemaName].icon
 	}
 
 	return (
@@ -149,15 +149,15 @@ export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps
 				</div>
 			</div>
 		</>
-	);
-};
+	)
+}
 
 type StructuralElementProps = {
-	element: StructuralElement;
-	isEditing: boolean;
-};
+	element: StructuralElement
+	isEditing: boolean
+}
 const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
-	const { Icon, name } = structuralElements[element.element];
+	const { Icon, name } = structuralElements[element.element]
 
 	return (
 		<>
@@ -177,5 +177,5 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 				</div>
 			</div>
 		</>
-	);
-};
+	)
+}

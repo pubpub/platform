@@ -3,4 +3,4 @@ export {
 	PubFieldSelectWrapper,
 	PubFieldSelectProvider,
 	PubFieldSelectToggleButton,
-} from "./PubFieldSelect";
+} from "./PubFieldSelect"

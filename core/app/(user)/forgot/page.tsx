@@ -1,6 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
 
-import ForgotForm from "./ForgotForm";
+import ForgotForm from "./ForgotForm"
 
 export default async function Page() {
 	return (
@@ -18,5 +18,5 @@ export default async function Page() {
 				</CardContent>
 			</Card>
 		</div>
-	);
+	)
 }

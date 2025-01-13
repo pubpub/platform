@@ -1,11 +1,11 @@
-"use server";
+"use server"
 
-import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
+import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs"
 
-import type { SuggestedMembersQuery } from "@pubpub/sdk";
-import { expect } from "utils";
+import type { SuggestedMembersQuery } from "@pubpub/sdk"
+import { expect } from "utils"
 
 import {
 	scheduleInvitationReminderEmail,
@@ -13,12 +13,12 @@ import {
 	sendInviteEmail,
 	unscheduleAllDeadlineReminderEmails,
 	unscheduleAllManagerEmails,
-} from "~/lib/emails";
-import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance";
-import { client } from "~/lib/pubpub";
-import { cookie } from "~/lib/request";
-import { assertHasAccepted, isInvited } from "~/lib/types";
-import { InviteFormEvaluator } from "./types";
+} from "~/lib/emails"
+import { getInstanceConfig, getInstanceState, setInstanceState } from "~/lib/instance"
+import { client } from "~/lib/pubpub"
+import { cookie } from "~/lib/request"
+import { assertHasAccepted, isInvited } from "~/lib/types"
+import { InviteFormEvaluator } from "./types"
 
 export const save = async (
 	instanceId: string,
@@ -33,35 +33,35 @@ export const save = async (
 		},
 		async () => {
 			try {
-				const submissionPub = await client.getPub(instanceId, submissionPubId);
-				const user = JSON.parse(expect(cookie("user")));
+				const submissionPub = await client.getPub(instanceId, submissionPubId)
+				const user = JSON.parse(expect(cookie("user")))
 				const instanceConfig = expect(
 					await getInstanceConfig(instanceId),
 					"Instance not configured"
-				);
-				const instanceState = (await getInstanceState(instanceId, submissionPubId)) ?? {};
-				const evaluatorUserIds = new Set<string>();
+				)
+				const instanceState = (await getInstanceState(instanceId, submissionPubId)) ?? {}
+				const evaluatorUserIds = new Set<string>()
 				for (let i = 0; i < evaluators.length; i++) {
-					let evaluator = evaluators[i];
+					let evaluator = evaluators[i]
 					// Invited evaluators are read-only and already persisted, so we can skip
 					// them.
 					if (isInvited(evaluator)) {
 						// We still need to add the userId to the set so we can check for
 						// duplicates. We don't need to check, however, because the invite
 						// should already be unique.
-						evaluatorUserIds.add(evaluator.userId);
-						continue;
+						evaluatorUserIds.add(evaluator.userId)
+						continue
 					}
 					// Find or create a PubPub user for the evaluator.
-					const evaluatorUser = await client.getOrCreateUser(instanceId, evaluator);
+					const evaluatorUser = await client.getOrCreateUser(instanceId, evaluator)
 					// If the user has already been saved or invited, halt and notify the
 					// user.
 					if (evaluatorUserIds.has(evaluatorUser.id)) {
-						const { firstName, lastName } = evaluator;
-						const name = `${firstName}${lastName ? ` ${lastName}` : ""}`;
+						const { firstName, lastName } = evaluator
+						const name = `${firstName}${lastName ? ` ${lastName}` : ""}`
 						return {
 							error: `${name} was added more than once.`,
-						};
+						}
 					}
 					// Update the evaluator to reflect that they have been persisted.
 					evaluator = {
@@ -70,7 +70,7 @@ export const save = async (
 						firstName: evaluatorUser.firstName,
 						lastName: evaluatorUser.lastName ?? undefined,
 						status: "saved",
-					};
+					}
 					// If the user intends to invite selected evaluators, send an email to
 					// the evaluator with the invite link.
 					if (send && evaluator.selected) {
@@ -80,16 +80,16 @@ export const save = async (
 							status: "invited",
 							invitedAt: new Date().toString(),
 							invitedBy: user.id,
-						};
+						}
 						// Immediately send the invite email.
-						await sendInviteEmail(instanceId, submissionPubId, evaluator);
+						await sendInviteEmail(instanceId, submissionPubId, evaluator)
 						// Scehdule a reminder email to person who was invited to evaluate.
 						await scheduleInvitationReminderEmail(
 							instanceId,
 							instanceConfig,
 							submissionPubId,
 							evaluator
-						);
+						)
 						// Schedule no-reply notification email to person who invited the
 						// evaluator.
 						await scheduleNoReplyNotificationEmail(
@@ -98,27 +98,27 @@ export const save = async (
 							submissionPubId,
 							evaluator,
 							submissionPub.assignee
-						);
+						)
 					}
 					// Remove the form's selected property from the evaluator before
 					// persisting.
-					const { selected, ...rest } = evaluator;
-					instanceState[evaluator.userId] = rest;
+					const { selected, ...rest } = evaluator
+					instanceState[evaluator.userId] = rest
 					// Add the user id to the set so we can check for duplicates.
-					evaluatorUserIds.add(evaluatorUser.id);
+					evaluatorUserIds.add(evaluatorUser.id)
 				}
 				// Persist the updated instance state.
-				await setInstanceState(instanceId, submissionPubId, instanceState);
+				await setInstanceState(instanceId, submissionPubId, instanceState)
 				// Reload the page to reflect the changes.
-				revalidatePath("/");
-				return { success: true };
+				revalidatePath("/")
+				return { success: true }
 			} catch (error) {
-				captureException(error);
-				return { error: error.message };
+				captureException(error)
+				return { error: error.message }
 			}
 		}
-	);
-};
+	)
+}
 
 export const suggest = async (instanceId: string, query: SuggestedMembersQuery) => {
 	return withServerActionInstrumentation(
@@ -128,15 +128,15 @@ export const suggest = async (instanceId: string, query: SuggestedMembersQuery) 
 		},
 		async () => {
 			try {
-				const users = await client.getSuggestedMembers(instanceId, query);
-				return users;
+				const users = await client.getSuggestedMembers(instanceId, query)
+				return users
 			} catch (error) {
-				captureException(error);
-				return { error: error.message };
+				captureException(error)
+				return { error: error.message }
 			}
 		}
-	);
-};
+	)
+}
 
 export const remove = async (instanceId: string, pubId: string, userId: string) => {
 	return withServerActionInstrumentation(
@@ -149,33 +149,33 @@ export const remove = async (instanceId: string, pubId: string, userId: string) 
 				const instanceConfig = expect(
 					await getInstanceConfig(instanceId),
 					"Instance not configured"
-				);
-				const instanceState = await getInstanceState(instanceId, pubId);
-				const pub = await client.getPub(instanceId, pubId);
+				)
+				const instanceState = await getInstanceState(instanceId, pubId)
+				const pub = await client.getPub(instanceId, pubId)
 				const evaluation = pub.children.find(
 					(child) => child.values[instanceConfig.evaluatorFieldSlug] === userId
-				);
+				)
 
 				if (evaluation !== undefined) {
-					await client.deletePub(instanceId, evaluation.id);
+					await client.deletePub(instanceId, evaluation.id)
 				}
 				if (instanceState !== undefined) {
 					let evaluator = expect(
 						instanceState[userId],
 						`User was not invited to evaluate pub ${pubId}`
-					);
-					assertHasAccepted(evaluator);
-					await unscheduleAllDeadlineReminderEmails(instanceId, pubId, evaluator);
-					await unscheduleAllManagerEmails(instanceId, pubId, evaluator);
-					delete instanceState[userId];
-					await setInstanceState(instanceId, pubId, instanceState);
+					)
+					assertHasAccepted(evaluator)
+					await unscheduleAllDeadlineReminderEmails(instanceId, pubId, evaluator)
+					await unscheduleAllManagerEmails(instanceId, pubId, evaluator)
+					delete instanceState[userId]
+					await setInstanceState(instanceId, pubId, instanceState)
 				}
 
-				return { success: true };
+				return { success: true }
 			} catch (error) {
-				captureException(error);
-				return { error: error.message };
+				captureException(error)
+				return { error: error.message }
 			}
 		}
-	);
-};
+	)
+}

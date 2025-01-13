@@ -1,10 +1,10 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { DependencyType } from "ui/auto-form/dependencyType";
-import { Globe } from "ui/icon";
+import { Action } from "db/public"
+import { DependencyType } from "ui/auto-form/dependencyType"
+import { Globe } from "ui/icon"
 
-import { defineAction } from "../types";
+import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.http,
@@ -33,15 +33,15 @@ export const action = defineAction({
 					// this makes sure that the body is valid JSON
 					.transform((str, ctx) => {
 						if (!str) {
-							return undefined;
+							return undefined
 						}
 						try {
 							// we just want to check if it can be parsed
-							const parsed = JSON.parse(str);
-							return str;
+							const parsed = JSON.parse(str)
+							return str
 						} catch (e) {
-							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
-							return z.NEVER;
+							ctx.addIssue({ code: "custom", message: "Invalid JSON" })
+							return z.NEVER
 						}
 					})
 					.optional()
@@ -59,7 +59,7 @@ export const action = defineAction({
 						message: "Body is not allowed for GET requests",
 						code: "custom",
 						path: ["body"],
-					});
+					})
 				}
 			}),
 		fieldConfig: {
@@ -110,15 +110,15 @@ export const action = defineAction({
 					.string()
 					.transform((str, ctx) => {
 						if (!str) {
-							return undefined;
+							return undefined
 						}
 						try {
 							// we just want to check if it can be parsed
-							const parsed = JSON.parse(str);
-							return str;
+							const parsed = JSON.parse(str)
+							return str
 						} catch (e) {
-							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
-							return z.NEVER;
+							ctx.addIssue({ code: "custom", message: "Invalid JSON" })
+							return z.NEVER
 						}
 					})
 					.optional()
@@ -136,7 +136,7 @@ export const action = defineAction({
 						message: "Body is not allowed for GET requests",
 						code: "custom",
 						path: ["body"],
-					});
+					})
 				}
 			})
 			.optional(),
@@ -164,4 +164,4 @@ export const action = defineAction({
 	},
 	icon: Globe,
 	experimental: true,
-});
+})

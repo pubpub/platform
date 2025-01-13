@@ -1,37 +1,37 @@
-import { Suspense } from "react";
-import Link from "next/link";
+import { Suspense } from "react"
+import Link from "next/link"
 
-import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, UsersId } from "db/public";
-import { Button } from "ui/button";
+import type { ProcessedPub } from "contracts"
+import type { CommunitiesId, UsersId } from "db/public"
+import { Button } from "ui/button"
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { CommunityStage } from "~/lib/server/stages";
-import type { MemberWithUser } from "~/lib/types";
-import { BasicPagination } from "~/app/components/Pagination";
-import PubRow from "~/app/components/PubRow";
-import { getStageActions } from "~/lib/db/queries";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
-import { selectCommunityMembers } from "~/lib/server/member";
-import { getStages } from "~/lib/server/stages";
-import { getStageWorkflows } from "~/lib/stages";
-import { PubListSkeleton } from "../../pubs/PubList";
-import { StagePubActions } from "./StagePubActions";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import type { CommunityStage } from "~/lib/server/stages"
+import type { MemberWithUser } from "~/lib/types"
+import { BasicPagination } from "~/app/components/Pagination"
+import PubRow from "~/app/components/PubRow"
+import { getStageActions } from "~/lib/db/queries"
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server"
+import { selectCommunityMembers } from "~/lib/server/member"
+import { getStages } from "~/lib/server/stages"
+import { getStageWorkflows } from "~/lib/stages"
+import { PubListSkeleton } from "../../pubs/PubList"
+import { StagePubActions } from "./StagePubActions"
 
 type Props = {
-	communityId: CommunitiesId;
-	pageContext: PageContext;
-	userId: UsersId;
-};
+	communityId: CommunitiesId
+	pageContext: PageContext
+	userId: UsersId
+}
 
 export async function StageList(props: Props) {
-	const { communityId } = props;
+	const { communityId } = props
 	const [communityStages, communityMembers] = await Promise.all([
 		getStages({ communityId }).execute(),
 		selectCommunityMembers({ communityId }).execute(),
-	]);
+	])
 
-	const stageWorkflows = getStageWorkflows(communityStages);
+	const stageWorkflows = getStageWorkflows(communityStages)
 
 	return (
 		<div>
@@ -49,7 +49,7 @@ export async function StageList(props: Props) {
 				</div>
 			))}
 		</div>
-	);
+	)
 }
 
 async function StageCard({
@@ -58,10 +58,10 @@ async function StageCard({
 	members,
 	userId,
 }: {
-	stage: CommunityStage;
-	members?: MemberWithUser[];
-	pageContext: PageContext;
-	userId: UsersId;
+	stage: CommunityStage
+	members?: MemberWithUser[]
+	pageContext: PageContext
+	userId: UsersId
 }) {
 	return (
 		<div key={stage.id} className="mb-20">
@@ -85,7 +85,7 @@ async function StageCard({
 				/>
 			</Suspense>
 		</div>
-	);
+	)
 }
 
 export async function StagePubs({
@@ -97,13 +97,13 @@ export async function StagePubs({
 	pagination,
 	userId,
 }: {
-	stage: CommunityStage;
-	pageContext: PageContext;
-	members?: MemberWithUser[];
-	totalPubLimit?: number;
-	pagination?: { page: number; pubsPerPage: number };
-	basePath: string;
-	userId: UsersId;
+	stage: CommunityStage
+	pageContext: PageContext
+	members?: MemberWithUser[]
+	totalPubLimit?: number
+	pagination?: { page: number; pubsPerPage: number }
+	basePath: string
+	userId: UsersId
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
 		getPubsWithRelatedValuesAndChildren(
@@ -121,28 +121,28 @@ export async function StagePubs({
 			}
 		),
 		getStageActions(stage.id).execute(),
-	]);
+	])
 
 	const totalPages =
-		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;
+		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0
 
 	return (
 		<div className="flex flex-col gap-8">
 			{stagePubs.map((pub, index) => {
 				if (totalPubLimit && index > totalPubLimit - 1) {
-					return null;
+					return null
 				}
 				// this way we don't pass unecessary data to the client
-				const { children, ...basePub } = pub;
+				const { children, ...basePub } = pub
 				return (
 					<PubRow
 						key={pub.id}
 						userId={userId}
 						pub={
 							pub as ProcessedPub<{
-								withStage: true;
-								withPubType: true;
-								withRelatedPubs: false;
+								withStage: true
+								withPubType: true
+								withRelatedPubs: false
 							}>
 						}
 						actions={
@@ -157,7 +157,7 @@ export async function StagePubs({
 						}
 						searchParams={pageContext.searchParams}
 					/>
-				);
+				)
 			})}
 			{pagination && (
 				<BasicPagination
@@ -180,5 +180,5 @@ export async function StagePubs({
 				</Button>
 			)}
 		</div>
-	);
+	)
 }

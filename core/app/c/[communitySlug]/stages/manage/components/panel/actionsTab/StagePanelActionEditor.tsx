@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import { useCallback, useState } from "react";
+import { useCallback, useState } from "react"
 
-import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
-import { logger } from "logger";
-import { Button } from "ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
-import { ChevronUp, Pencil, Trash } from "ui/icon";
-import { Input } from "ui/input";
+import type { ActionInstances, ActionInstancesId, StagesId } from "db/public"
+import { logger } from "logger"
+import { Button } from "ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
+import { ChevronUp, Pencil, Trash } from "ui/icon"
+import { Input } from "ui/input"
 
-import { getActionByName } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "../../../actions";
+import { getActionByName } from "~/actions/api"
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "../../../actions"
 
 type Props = {
-	actionInstance: ActionInstances;
-	onDelete: (actionInstanceId: ActionInstancesId, stageId: StagesId) => Promise<unknown>;
-	communityId: string;
-	children: React.ReactNode;
-	stageId: StagesId;
-};
+	actionInstance: ActionInstances
+	onDelete: (actionInstanceId: ActionInstancesId, stageId: StagesId) => Promise<unknown>
+	communityId: string
+	children: React.ReactNode
+	stageId: StagesId
+}
 
 export const StagePanelActionEditor = (props: Props) => {
-	const runOnDelete = useServerAction(props.onDelete);
-	const [isOpen, setIsOpen] = useState(false);
+	const runOnDelete = useServerAction(props.onDelete)
+	const [isOpen, setIsOpen] = useState(false)
 	const onDeleteClick = useCallback(async () => {
-		runOnDelete(props.actionInstance.id, props.stageId);
-	}, [props.actionInstance, runOnDelete]);
-	const action = getActionByName(props.actionInstance.action);
+		runOnDelete(props.actionInstance.id, props.stageId)
+	}, [props.actionInstance, runOnDelete])
+	const action = getActionByName(props.actionInstance.action)
 
 	if (!action) {
-		logger.warn(`Invalid action name ${props.actionInstance.action}`);
-		return null;
+		logger.warn(`Invalid action name ${props.actionInstance.action}`)
+		return null
 	}
 
 	return (
@@ -56,7 +56,7 @@ export const StagePanelActionEditor = (props: Props) => {
 									{
 										name: evt.target.value?.trim(),
 									}
-								);
+								)
 							}}
 						/>
 					) : (
@@ -91,5 +91,5 @@ export const StagePanelActionEditor = (props: Props) => {
 				</div>
 			</CollapsibleContent>
 		</Collapsible>
-	);
-};
+	)
+}

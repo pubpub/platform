@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import { CoreSchemaType, InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { MultiValueInput } from "ui/multivalue-input";
+import { CoreSchemaType, InputComponent } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { MultiValueInput } from "ui/multivalue-input"
 
-import type { ComponentConfigFormProps } from "./types";
+import type { ComponentConfigFormProps } from "./types"
 
 export default ({
 	form,
@@ -13,10 +13,10 @@ export default ({
 	label,
 	children,
 }: ComponentConfigFormProps<InputComponent.selectDropdown> & {
-	label: string;
-	children?: ReactNode;
+	label: string
+	children?: ReactNode
 }) => {
-	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+	const isNumeric = schemaName === CoreSchemaType.NumericArray
 	return (
 		<div className="flex flex-col gap-6">
 			<FormField
@@ -57,9 +57,9 @@ export default ({
 								type={isNumeric ? "number" : undefined}
 								onChange={(e: string[]) => {
 									if (isNumeric) {
-										return field.onChange(e.map((v) => +v));
+										return field.onChange(e.map((v) => +v))
 									}
-									field.onChange(e);
+									field.onChange(e)
 								}}
 								value={field.value ? field.value.map((v) => `${v}`) : []}
 							/>
@@ -70,5 +70,5 @@ export default ({
 			/>
 			{children}
 		</div>
-	);
-};
+	)
+}

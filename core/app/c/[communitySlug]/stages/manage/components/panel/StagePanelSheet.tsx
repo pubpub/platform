@@ -1,29 +1,29 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react"
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react"
+import { usePathname, useRouter } from "next/navigation"
 
-import { Sheet, SheetContent } from "ui/sheet";
+import { Sheet, SheetContent } from "ui/sheet"
 
 type Props = PropsWithChildren<{
-	open: boolean;
-}>;
+	open: boolean
+}>
 
 export const StagePanelSheet = (props: Props) => {
-	const [open, setOpen] = useState(false);
-	const router = useRouter();
-	const pathname = usePathname();
+	const [open, setOpen] = useState(false)
+	const router = useRouter()
+	const pathname = usePathname()
 	const onOpenChange = (open: boolean) => {
 		if (!open) {
-			router.push(pathname!);
+			router.push(pathname!)
 		}
-	};
+	}
 
 	useEffect(() => {
-		setOpen(props.open);
-	}, [props.open]);
+		setOpen(props.open)
+	}, [props.open])
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
@@ -31,5 +31,5 @@ export const StagePanelSheet = (props: Props) => {
 				{props.children}
 			</SheetContent>
 		</Sheet>
-	);
-};
+	)
+}

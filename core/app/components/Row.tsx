@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react"
 
-import { Card, CardContent, CardFooter, CardHeader } from "ui/card";
-import { cn } from "utils";
+import { Card, CardContent, CardFooter, CardHeader } from "ui/card"
+import { cn } from "utils"
 
-type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>;
+type Props = PropsWithChildren<React.HTMLAttributes<HTMLDivElement>>
 
 export const Row = ({ className, children, ...rest }: Props) => {
 	return (
@@ -18,17 +18,17 @@ export const Row = ({ className, children, ...rest }: Props) => {
 		>
 			{children}
 		</Card>
-	);
-};
+	)
+}
 
 export const RowHeader = (props: Props) => {
-	return <CardHeader className={cn("p-0", props.className)}>{props.children}</CardHeader>;
-};
+	return <CardHeader className={cn("p-0", props.className)}>{props.children}</CardHeader>
+}
 
 export const RowContent = (props: Props) => {
-	return <CardContent className={cn("p-0", props.className)}>{props.children}</CardContent>;
-};
+	return <CardContent className={cn("p-0", props.className)}>{props.children}</CardContent>
+}
 
 export const RowFooter = (props: Props) => {
-	return <CardFooter className={cn("p-0", props.className)}>{props.children}</CardFooter>;
-};
+	return <CardFooter className={cn("p-0", props.className)}>{props.children}</CardFooter>
+}

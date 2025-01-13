@@ -1,9 +1,9 @@
 // @ts-check
 
-import withPreconstruct from "@preconstruct/next";
-import { withSentryConfig } from "@sentry/nextjs";
+import withPreconstruct from "@preconstruct/next"
+import { withSentryConfig } from "@sentry/nextjs"
 
-import "./lib/env/env.mjs";
+import "./lib/env/env.mjs"
 
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
@@ -56,11 +56,11 @@ const nextConfig = {
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
 	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
 		if (isServer) {
-			config.ignoreWarnings = [{ module: /opentelemetry/ }];
+			config.ignoreWarnings = [{ module: /opentelemetry/ }]
 		}
-		return config;
+		return config
 	},
-};
+}
 
 const modifiedConfig = withPreconstruct(
 	withSentryConfig(nextConfig, {
@@ -86,6 +86,6 @@ const modifiedConfig = withPreconstruct(
 		// Automatically tree-shake Sentry logger statements to reduce bundle size
 		disableLogger: true,
 	})
-);
+)
 
-export default modifiedConfig;
+export default modifiedConfig

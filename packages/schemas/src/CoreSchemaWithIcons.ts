@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react"
 
 import {
 	BookType,
@@ -12,15 +12,15 @@ import {
 	Mail,
 	Type,
 	User,
-} from "lucide-react";
+} from "lucide-react"
 
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public"
 
 export const SCHEMA_TYPES_WITH_ICONS: Record<
 	CoreSchemaType,
 	{
-		description: string;
-		icon: LucideIcon;
+		description: string
+		icon: LucideIcon
 	}
 > = {
 	[CoreSchemaType.Boolean]: {
@@ -75,4 +75,4 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 		description: "Rich text of any length",
 		icon: BookType,
 	},
-} as const;
+} as const

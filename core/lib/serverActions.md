@@ -5,7 +5,7 @@ Next.js server actions should be defined with `defineServerAction`. This higher-
 ```ts
 export const generatePDF = defineServerAction(async function generatePDF(pubId: string) {
 	// ...
-});
+})
 ```
 
 Uncaught/unhandled errors within server actions are automatically captured by Sentry. If an expected error occurs within the server action, the server action should return an object containing an `error` entry. The value of `error` must be a string. For example:
@@ -25,11 +25,11 @@ Payloads with an `error` property are called **client exceptions**.
 Client exceptions can be automatically handled on the client using the `useServerAction` hook:
 
 ```ts
-const runGeneratePDF = useServerAction(generatePDF);
+const runGeneratePDF = useServerAction(generatePDF)
 const onClick = async (pubId: string) => {
-	const result = await runGeneratePDF(pubId);
+	const result = await runGeneratePDF(pubId)
 	// do something with the result
-};
+}
 ```
 
 Client exceptions returned by the wrapped server action will be revealed to the user in a popup. They can also have a `title` entry which controls the title of the error popup. The popup will be titled "Error" if a `title` entry is not provided.
@@ -60,38 +60,38 @@ Below is a complete example which
 // actions.ts
 export const generatePDF = defineServerAction(async function generatePDF(pubId: string) {
 	try {
-		const pub = await getPubById(pubId);
-		const pdf = await pdflib.render(makePdfOptions(pub));
-		const url = await uploadToS3(pdf);
-		return { url };
+		const pub = await getPubById(pubId)
+		const pdf = await pdflib.render(makePdfOptions(pub))
+		const url = await uploadToS3(pdf)
+		return { url }
 	} catch (error) {
 		return {
 			title: "Oh nooooooooooOoo",
 			error: "An unexpected issue occurred when generating a PDF",
 			cause: error,
-		};
+		}
 	}
-});
+})
 ```
 
 ```tsx
 // GeneratePDFButton.tsx
-import { generatePDF } from "./actions.ts";
+import { generatePDF } from "./actions.ts"
 
 export function GeneratePdfButton(props: { pubId: string }) {
-	const [url, setUrl] = useState<string>();
-	const runGeneratePDF = useServerAction(generatePDF);
+	const [url, setUrl] = useState<string>()
+	const runGeneratePDF = useServerAction(generatePDF)
 	const onClick = async () => {
-		const result = await runGeneratePDF(props.pubId);
+		const result = await runGeneratePDF(props.pubId)
 		if (didSucceed(result)) {
-			setUrl(result.url);
+			setUrl(result.url)
 		}
-	};
+	}
 	return (
 		<div>
 			<Button onClick={onClick}>Generate PDF</Button>
 			{url && <p>URL: {url}</p>}
 		</div>
-	);
+	)
 }
 ```

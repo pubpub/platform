@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import type { CoreSchemaType } from "@prisma/client";
+import type { CoreSchemaType } from "@prisma/client"
 
-import type { PubFieldSchemaId, PubFieldsId } from "db/public";
-import { FormControl, FormField, FormItem, FormLabel } from "ui/form";
-import { Info } from "ui/icon";
-import { usePubFieldContext } from "ui/pubFields";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import type { PubFieldSchemaId, PubFieldsId } from "db/public"
+import { FormControl, FormField, FormItem, FormLabel } from "ui/form"
+import { Info } from "ui/icon"
+import { usePubFieldContext } from "ui/pubFields"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField";
-import { action } from "./action";
+import { defineCustomFormField } from "~/actions/_lib/custom-form-field/defineFormField"
+import { action } from "./action"
 
 type PubField = {
-	id: PubFieldsId;
-	name: string;
-	slug: string;
-	pubFieldSchemaId: PubFieldSchemaId | null;
-};
+	id: PubFieldsId
+	name: string
+	slug: string
+	pubFieldSchemaId: PubFieldSchemaId | null
+}
 
 export const OutputField = defineCustomFormField(
 	action,
@@ -29,20 +29,20 @@ export const OutputField = defineCustomFormField(
 			/**
 			 * The schema types that are allowed to be used as the output field.
 			 */
-			allowedSchemaTypes?: CoreSchemaType[];
+			allowedSchemaTypes?: CoreSchemaType[]
 		}
 	) {
-		const pubFields = Object.values(usePubFieldContext());
+		const pubFields = Object.values(usePubFieldContext())
 
 		const allowedPubFields = context.allowedSchemaTypes?.length
 			? pubFields.filter((field) =>
 					context.allowedSchemaTypes?.includes(field.schemaName as CoreSchemaType)
 				)
-			: pubFields;
+			: pubFields
 
-		const itemName = "Output Field";
+		const itemName = "Output Field"
 
-		const [title] = itemName.split("|");
+		const [title] = itemName.split("|")
 
 		return (
 			<FormField
@@ -91,11 +91,11 @@ export const OutputField = defineCustomFormField(
 								</Select>
 							</FormControl>
 						</FormItem>
-					);
+					)
 				}}
 			/>
-		);
+		)
 	}
-);
+)
 
-export default OutputField;
+export default OutputField

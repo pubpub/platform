@@ -1,79 +1,79 @@
-import type { JsonValue } from "contracts";
-import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { assert, expect } from "utils";
+import type { JsonValue } from "contracts"
+import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public"
+import { CoreSchemaType } from "db/public"
+import { assert, expect } from "utils"
 
-import { db } from "~/kysely/database";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { addMemberToForm, createFormInviteLink } from "../../form";
+import { db } from "~/kysely/database"
+import { autoCache } from "~/lib/server/cache/autoCache"
+import { addMemberToForm, createFormInviteLink } from "../../form"
 
-export type RenderWithPubRel = "parent" | "self";
+export type RenderWithPubRel = "parent" | "self"
 
 export type RenderWithPubPub = {
-	id: string;
+	id: string
 	values: {
-		fieldName: string;
-		fieldSlug: string;
-		value: unknown;
-		schemaName: CoreSchemaType;
-	}[];
-	createdAt: Date;
+		fieldName: string
+		fieldSlug: string
+		value: unknown
+		schemaName: CoreSchemaType
+	}[]
+	createdAt: Date
 	assignee?: {
-		firstName: string;
-		lastName: string | null;
-		email: string;
-	} | null;
-	title: string | null;
+		firstName: string
+		lastName: string | null
+		email: string
+	} | null
+	title: string | null
 	pubType: {
-		name: string;
-	};
-};
+		name: string
+	}
+}
 
 export type RenderWithPubContext = {
 	recipient: {
-		id: CommunityMembershipsId;
+		id: CommunityMembershipsId
 		user: {
-			id: UsersId;
-			firstName: string;
-			lastName: string | null;
-			email: string;
-		};
-	};
-	communityId: CommunitiesId;
-	communitySlug: string;
-	pub: RenderWithPubPub;
-	parentPub?: RenderWithPubPub | null;
-};
+			id: UsersId
+			firstName: string
+			lastName: string | null
+			email: string
+		}
+	}
+	communityId: CommunitiesId
+	communitySlug: string
+	pub: RenderWithPubPub
+	parentPub?: RenderWithPubPub | null
+}
 
-export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const;
+export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const
 
 const parseRel = (rel: string | undefined): RenderWithPubRel => {
 	if (rel === undefined) {
-		return "self";
+		return "self"
 	}
-	assert(rel === "parent" || rel === "self", 'Invalid value for "rel" attribute');
-	return rel;
-};
+	assert(rel === "parent" || rel === "self", 'Invalid value for "rel" attribute')
+	return rel
+}
 
 const getPub = (context: RenderWithPubContext, rel?: string) => {
-	const parsedRel = parseRel(rel);
+	const parsedRel = parseRel(rel)
 	if (parsedRel === "parent") {
-		return expect(context.parentPub, 'Expected pub to have parent when rel is "parent"');
+		return expect(context.parentPub, 'Expected pub to have parent when rel is "parent"')
 	} else {
-		return context.pub;
+		return context.pub
 	}
-};
+}
 
 const getAssignee = (context: RenderWithPubContext, rel?: string) => {
-	const pub = getPub(context, rel);
-	return expect(pub.assignee, `Expected pub to have assignee`);
-};
+	const pub = getPub(context, rel)
+	return expect(pub.assignee, `Expected pub to have assignee`)
+}
 
 const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: string) => {
-	const pub = getPub(context, rel);
-	const pubValue = pub.values.find((value) => value.fieldSlug === fieldSlug);
-	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
-};
+	const pub = getPub(context, rel)
+	const pubValue = pub.values.find((value) => value.fieldSlug === fieldSlug)
+	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`)
+}
 
 export const renderFormInviteLink = async ({
 	formSlug,
@@ -81,14 +81,14 @@ export const renderFormInviteLink = async ({
 	communityId,
 	pubId,
 }: {
-	formSlug: string;
-	userId: UsersId;
-	communityId: CommunitiesId;
-	pubId: PubsId;
+	formSlug: string
+	userId: UsersId
+	communityId: CommunitiesId
+	pubId: PubsId
 }) => {
-	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, communityId, pubId });
-};
+	await addMemberToForm({ userId, communityId, pubId, slug: formSlug })
+	return createFormInviteLink({ userId, formSlug, communityId, pubId })
+}
 
 export const renderMemberFields = async ({
 	fieldSlug,
@@ -96,10 +96,10 @@ export const renderMemberFields = async ({
 	memberId,
 	communitySlug,
 }: {
-	fieldSlug: string;
-	communitySlug: string;
-	attributes: string[];
-	memberId: CommunityMembershipsId;
+	fieldSlug: string
+	communitySlug: string
+	attributes: string[]
+	memberId: CommunityMembershipsId
 }) => {
 	// Make sure this field is a member type
 	const fieldIsMemberTypeQuery = autoCache(
@@ -109,7 +109,7 @@ export const renderMemberFields = async ({
 			.where("pub_fields.slug", "=", fieldSlug)
 			.where("communities.slug", "=", communitySlug)
 			.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
-	);
+	)
 
 	const userQuery = autoCache(
 		db
@@ -117,7 +117,7 @@ export const renderMemberFields = async ({
 			.innerJoin("users", "users.id", "community_memberships.userId")
 			.select(ALLOWED_MEMBER_ATTRIBUTES)
 			.where("community_memberships.id", "=", memberId)
-	);
+	)
 
 	const [, user] = await Promise.all([
 		fieldIsMemberTypeQuery.executeTakeFirstOrThrow(
@@ -126,103 +126,103 @@ export const renderMemberFields = async ({
 		userQuery.executeTakeFirstOrThrow(
 			() => new Error(`Did not find user with member ID "${memberId}"`)
 		),
-	]);
+	])
 
 	const relevantAttrs = attributes.filter(
 		(attr): attr is (typeof ALLOWED_MEMBER_ATTRIBUTES)[number] =>
 			(ALLOWED_MEMBER_ATTRIBUTES as ReadonlyArray<string>).includes(attr)
-	);
+	)
 	if (relevantAttrs.length) {
-		return relevantAttrs.map((attr) => user[attr]).join(" ");
+		return relevantAttrs.map((attr) => user[attr]).join(" ")
 	}
 
-	return memberId;
-};
+	return memberId
+}
 
 type LinkEmailOptions = {
-	address: string;
-	rel?: string;
-};
+	address: string
+	rel?: string
+}
 
 type LinkFormOptions = {
-	form: string;
-};
+	form: string
+}
 
 type LinkUrlOptions = {
-	url: string;
-};
+	url: string
+}
 
 type LinkFieldOptions = {
-	field: string;
-	rel?: string;
-};
+	field: string
+	rel?: string
+}
 
-type LinkOptions = LinkEmailOptions | LinkFormOptions | LinkUrlOptions | LinkFieldOptions;
+type LinkOptions = LinkEmailOptions | LinkFormOptions | LinkUrlOptions | LinkFieldOptions
 
 const isLinkEmailOptions = (options: LinkOptions): options is LinkEmailOptions => {
-	return "address" in options;
-};
+	return "address" in options
+}
 
 const isLinkFormOptions = (options: LinkOptions): options is LinkFormOptions => {
-	return "form" in options;
-};
+	return "form" in options
+}
 
 const isLinkUrlOptions = (options: LinkOptions): options is LinkUrlOptions => {
-	return "url" in options;
-};
+	return "url" in options
+}
 
 const isLinkFieldOptions = (options: LinkOptions): options is LinkFieldOptions => {
-	return "field" in options;
-};
+	return "field" in options
+}
 
 export const renderLink = (context: RenderWithPubContext, options: LinkOptions) => {
-	let href: string;
+	let href: string
 	if (isLinkEmailOptions(options)) {
-		let to = options.address;
+		let to = options.address
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
 		if (to === "assignee") {
-			const assignee = getAssignee(context, options.rel);
-			to = assignee.email;
+			const assignee = getAssignee(context, options.rel)
+			to = assignee.email
 		}
-		href = `mailto:${to}`;
+		href = `mailto:${to}`
 	} else if (isLinkFormOptions(options)) {
 		// Form hrefs are handled by `ensureFormMembershipAndCreateInviteLink`
-		href = "";
+		href = ""
 	} else if (isLinkUrlOptions(options)) {
-		href = options.url;
+		href = options.url
 	} else if (isLinkFieldOptions(options)) {
-		href = getPubValue(context, options.field, options.rel).value as string;
+		href = getPubValue(context, options.field, options.rel).value as string
 	} else {
-		throw new Error("Unexpected link variant");
+		throw new Error("Unexpected link variant")
 	}
-	return href;
-};
+	return href
+}
 
 export const renderRecipientFirstName = (context: RenderWithPubContext) => {
-	return context.recipient.user.firstName;
-};
+	return context.recipient.user.firstName
+}
 
 export const renderRecipientLastName = (context: RenderWithPubContext) => {
-	return context.recipient.user.lastName ?? "";
-};
+	return context.recipient.user.lastName ?? ""
+}
 
 export const renderRecipientFullName = (context: RenderWithPubContext) => {
-	const lastName = renderRecipientLastName(context);
-	return `${renderRecipientFirstName(context)}${lastName && ` ${lastName}`}`;
-};
+	const lastName = renderRecipientLastName(context)
+	return `${renderRecipientFirstName(context)}${lastName && ` ${lastName}`}`
+}
 
 export const renderAssigneeFirstName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = getAssignee(context, rel);
-	return assignee.firstName;
-};
+	const assignee = getAssignee(context, rel)
+	return assignee.firstName
+}
 
 export const renderAssigneeLastName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = getAssignee(context, rel);
-	return assignee.lastName ?? "";
-};
+	const assignee = getAssignee(context, rel)
+	return assignee.lastName ?? ""
+}
 
 export const renderAssigneeFullName = (context: RenderWithPubContext, rel?: string) => {
-	const lastName = renderAssigneeLastName(context);
-	return `${renderAssigneeFirstName(context)}${lastName && ` ${lastName}`}`;
-};
+	const lastName = renderAssigneeLastName(context)
+	return `${renderAssigneeFirstName(context)}${lastName && ` ${lastName}`}`
+}

@@ -5,8 +5,8 @@
 You need to import the component from the `ui/\<component\>` path. For example:
 
 ```tsx
-import { Button } from "ui/button";
-import { Loader2 } from "ui/icon";
+import { Button } from "ui/button"
+import { Loader2 } from "ui/icon"
 ```
 
 ## How to add a new component

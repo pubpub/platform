@@ -1,18 +1,18 @@
 // shared actions between server and client
 
-import type * as z from "zod";
+import type * as z from "zod"
 
-import type { Event } from "db/public";
+import type { Event } from "db/public"
 
-import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
-import * as datacite from "../datacite/action";
-import * as email from "../email/action";
-import * as googleDriveImport from "../googleDriveImport/action";
-import * as http from "../http/action";
-import * as log from "../log/action";
-import * as move from "../move/action";
-import * as pdf from "../pdf/action";
-import * as pushToV6 from "../pushToV6/action";
+import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules"
+import * as datacite from "../datacite/action"
+import * as email from "../email/action"
+import * as googleDriveImport from "../googleDriveImport/action"
+import * as http from "../http/action"
+import * as log from "../log/action"
+import * as move from "../move/action"
+import * as pdf from "../pdf/action"
+import * as pushToV6 from "../pushToV6/action"
 
 export const actions = {
 	[log.action.name]: log.action,
@@ -23,29 +23,29 @@ export const actions = {
 	[move.action.name]: move.action,
 	[googleDriveImport.action.name]: googleDriveImport.action,
 	[datacite.action.name]: datacite.action,
-} as const;
+} as const
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {
 	if (!(name in actions)) {
-		throw new Error(`Action ${name} not found`);
+		throw new Error(`Action ${name} not found`)
 	}
 
-	return actions[name];
-};
+	return actions[name]
+}
 
 export const getActionNames = () => {
-	return Object.keys(actions) as (keyof typeof actions)[];
-};
+	return Object.keys(actions) as (keyof typeof actions)[]
+}
 
 export const rules = {
 	[pubInStageForDuration.event]: pubInStageForDuration,
 	[pubEnteredStage.event]: pubEnteredStage,
 	[pubLeftStage.event]: pubLeftStage,
-} as const;
+} as const
 
 export const getRuleByName = <T extends Event>(name: T) => {
-	return rules[name];
-};
+	return rules[name]
+}
 
 export const humanReadableEvent = <T extends Event>(
 	event: T,
@@ -53,13 +53,13 @@ export const humanReadableEvent = <T extends Event>(
 		? never
 		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
 ) => {
-	const rule = getRuleByName(event);
+	const rule = getRuleByName(event)
 	if (config && rule.additionalConfig) {
-		return rule.display.withConfig(config);
+		return rule.display.withConfig(config)
 	}
 
-	return rule.display.base;
-};
+	return rule.display.base
+}
 
 export const serializeRule = <T extends Event>(
 	event: T,
@@ -67,4 +67,4 @@ export const serializeRule = <T extends Event>(
 	config?: (typeof rules)[T]["additionalConfig"] extends undefined
 		? never
 		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
-) => `${instanceName} will run when ${humanReadableEvent(event, config)}`;
+) => `${instanceName} will run when ${humanReadableEvent(event, config)}`

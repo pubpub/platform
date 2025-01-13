@@ -1,42 +1,42 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import type { TableMember } from "./getMemberTableColumns";
-import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { selectCommunityMembers } from "~/lib/server/member";
-import { addMember, createUserWithCommunityMembership } from "./actions";
-import { MemberTable } from "./MemberTable";
+import type { TableMember } from "./getMemberTableColumns"
+import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { selectCommunityMembers } from "~/lib/server/member"
+import { addMember, createUserWithCommunityMembership } from "./actions"
+import { MemberTable } from "./MemberTable"
 
 export const metadata: Metadata = {
 	title: "Members",
-};
+}
 
 export default async function Page({
 	params: { communitySlug },
 	searchParams,
 }: {
 	params: {
-		communitySlug: string;
-	};
+		communitySlug: string
+	}
 	searchParams: {
-		page?: string;
-		email?: string;
-	};
+		page?: string
+		email?: string
+	}
 }) {
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 
 	if (!community) {
-		return notFound();
+		return notFound()
 	}
 
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
 	if (
 		!(await userCan(
@@ -45,18 +45,18 @@ export default async function Page({
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const page = parseInt(searchParams.page ?? "1", 10);
-	const members = await selectCommunityMembers({ communityId: community.id }).execute();
+	const page = parseInt(searchParams.page ?? "1", 10)
+	const members = await selectCommunityMembers({ communityId: community.id }).execute()
 
 	if (!members.length && page !== 1) {
-		return notFound();
+		return notFound()
 	}
 
 	const tableMembers = members.map((member) => {
-		const { id, createdAt, user, role } = member;
+		const { id, createdAt, user, role } = member
 		return {
 			id,
 			avatar: user.avatar,
@@ -65,8 +65,8 @@ export default async function Page({
 			role,
 			email: user.email,
 			joined: new Date(createdAt).toLocaleString(),
-		} satisfies TableMember;
-	});
+		} satisfies TableMember
+	})
 
 	return (
 		<>
@@ -81,5 +81,5 @@ export default async function Page({
 			</div>
 			<MemberTable members={tableMembers} />
 		</>
-	);
+	)
 }

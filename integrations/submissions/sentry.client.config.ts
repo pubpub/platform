@@ -2,9 +2,9 @@
 // The config you add here will be used whenever a users loads a page in their browser.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs"
 
-import { env } from "~/lib/env.mjs";
+import { env } from "~/lib/env.mjs"
 
 if (env.NODE_ENV === "production") {
 	Sentry.init({
@@ -30,5 +30,5 @@ if (env.NODE_ENV === "production") {
 				blockAllMedia: true,
 			}),
 		],
-	});
+	})
 }

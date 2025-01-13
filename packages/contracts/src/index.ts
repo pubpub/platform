@@ -1,14 +1,14 @@
-import { initContract } from "@ts-rest/core";
+import { initContract } from "@ts-rest/core"
 
-import { integrationsApi } from "./resources/integrations";
-import { internalApi } from "./resources/internal";
-import { siteApi } from "./resources/site";
+import { integrationsApi } from "./resources/integrations"
+import { internalApi } from "./resources/internal"
+import { siteApi } from "./resources/site"
 
-export * from "./resources/integrations";
-export * from "./resources/internal";
-export * from "./resources/site";
+export * from "./resources/integrations"
+export * from "./resources/internal"
+export * from "./resources/site"
 
-const contract = initContract();
+const contract = initContract()
 
 export const api = contract.router({
 	/**
@@ -20,4 +20,4 @@ export const api = contract.router({
 	 * Site builder API
 	 */
 	site: siteApi,
-});
+})

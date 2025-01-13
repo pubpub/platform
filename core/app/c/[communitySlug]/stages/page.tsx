@@ -1,26 +1,26 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { StageList } from "./components/StageList";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { StageList } from "./components/StageList"
 
 export const metadata: Metadata = {
 	title: "Workflows",
-};
+}
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> }
 
 export default async function Page({ params, searchParams }: Props) {
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(params.communitySlug),
-	]);
+	])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	return (
@@ -38,5 +38,5 @@ export default async function Page({ params, searchParams }: Props) {
 				}}
 			/>
 		</>
-	);
+	)
 }

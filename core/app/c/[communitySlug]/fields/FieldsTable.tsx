@@ -1,34 +1,34 @@
-"use client";
+"use client"
 
-import type { Row } from "@tanstack/react-table";
+import type { Row } from "@tanstack/react-table"
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react"
 
-import type { CoreSchemaType } from "db/public";
+import type { CoreSchemaType } from "db/public"
 
-import type { DefaultFieldFormValues } from "./FieldForm";
-import type { TableData } from "./getFieldTableColumns";
-import type { PubField } from "~/lib/types";
-import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog";
-import { DataTable } from "~/app/components/DataTable/v2/DataTable";
-import { FieldForm } from "./FieldForm";
-import { getFieldTableColumns } from "./getFieldTableColumns";
+import type { DefaultFieldFormValues } from "./FieldForm"
+import type { TableData } from "./getFieldTableColumns"
+import type { PubField } from "~/lib/types"
+import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog"
+import { DataTable } from "~/app/components/DataTable/v2/DataTable"
+import { FieldForm } from "./FieldForm"
+import { getFieldTableColumns } from "./getFieldTableColumns"
 
 type NonLegacyField = Omit<TableData, "schemaName" | "isRelation"> &
 	(
 		| {
-				schemaName: null;
-				isRelation: true;
+				schemaName: null
+				isRelation: true
 		  }
 		| {
-				schemaName: CoreSchemaType;
-				isRelation: false;
+				schemaName: CoreSchemaType
+				isRelation: false
 		  }
-	);
+	)
 
 const isNonLegacyField = (field: TableData): field is NonLegacyField => {
-	return field.schemaName !== null || field.isRelation !== false;
-};
+	return field.schemaName !== null || field.isRelation !== false
+}
 
 export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 	const data = useMemo(() => {
@@ -41,23 +41,23 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 				isArchived: d.isArchived,
 				slug: d.slug,
 				isRelation: d.isRelation,
-			};
-		});
-	}, [fields]);
-	const [editField, setEditField] = useState<DefaultFieldFormValues>();
+			}
+		})
+	}, [fields])
+	const [editField, setEditField] = useState<DefaultFieldFormValues>()
 	const handleModalToggle = () => {
 		if (editField) {
-			setEditField(undefined);
+			setEditField(undefined)
 		}
-	};
+	}
 
-	const columns = getFieldTableColumns();
+	const columns = getFieldTableColumns()
 	const handleRowClick = (row: Row<TableData>) => {
 		// logic change: Legacy fields can no longer be edited
 		if (isNonLegacyField(row.original)) {
-			setEditField(row.original);
+			setEditField(row.original)
 		}
-	};
+	}
 
 	return (
 		<>
@@ -72,5 +72,5 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 				</FieldForm>
 			</CreateEditDialog>
 		</>
-	);
-};
+	)
+}

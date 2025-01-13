@@ -1,30 +1,30 @@
-"use client";
+"use client"
 
-import type { z } from "zod";
+import type { z } from "zod"
 
-import { startTransition, useCallback } from "react";
+import { startTransition, useCallback } from "react"
 
-import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
-import type { FieldConfig } from "ui/auto-form";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
-import { toast } from "ui/use-toast";
+import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public"
+import type { FieldConfig } from "ui/auto-form"
+import AutoForm, { AutoFormSubmit } from "ui/auto-form"
+import { toast } from "ui/use-toast"
 
-import { getActionByName } from "~/actions/api";
-import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
-import { useServerAction } from "~/lib/serverActions";
+import { getActionByName } from "~/actions/api"
+import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 export type Props = {
-	actionName: ActionName;
-	instance: ActionInstances;
-	communityId: string;
-	fieldConfig: FieldConfig<any>;
-	stageId: StagesId;
-};
+	actionName: ActionName
+	instance: ActionInstances
+	communityId: string
+	fieldConfig: FieldConfig<any>
+	stageId: StagesId
+}
 
 export const ActionConfigForm = (props: Props) => {
-	const action = getActionByName(props.actionName);
+	const action = getActionByName(props.actionName)
 
-	const runUpdateAction = useServerAction(updateAction);
+	const runUpdateAction = useServerAction(updateAction)
 
 	const onSubmit = useCallback(
 		async (values: z.infer<typeof action.config.schema>) => {
@@ -35,7 +35,7 @@ export const ActionConfigForm = (props: Props) => {
 					{
 						config: values,
 					}
-				);
+				)
 
 				if (result && "success" in result) {
 					toast({
@@ -45,12 +45,12 @@ export const ActionConfigForm = (props: Props) => {
 						description: (
 							<div dangerouslySetInnerHTML={{ __html: result.report ?? "" }} />
 						),
-					});
+					})
 				}
-			});
+			})
 		},
 		[runUpdateAction, props.instance.id, props.communityId]
-	);
+	)
 
 	return (
 		<AutoForm
@@ -62,5 +62,5 @@ export const ActionConfigForm = (props: Props) => {
 		>
 			<AutoFormSubmit>Update config</AutoFormSubmit>
 		</AutoForm>
-	);
-};
+	)
+}

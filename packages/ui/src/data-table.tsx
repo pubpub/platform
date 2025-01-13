@@ -1,6 +1,6 @@
-import type { Column, Table } from "@tanstack/react-table";
+import type { Column, Table } from "@tanstack/react-table"
 
-import * as React from "react";
+import * as React from "react"
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -10,21 +10,21 @@ import {
 	DoubleArrowLeftIcon,
 	DoubleArrowRightIcon,
 	EyeNoneIcon,
-} from "@radix-ui/react-icons";
+} from "@radix-ui/react-icons"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { Button } from "./button";
+import { Button } from "./button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "./dropdown-menu";
+} from "./dropdown-menu"
 
 interface DataTablePaginationProps<TData> {
-	table: Table<TData>;
+	table: Table<TData>
 }
 
 export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
@@ -74,13 +74,13 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
-	column: Column<TData, TValue>;
-	title: string;
-	icon?: React.ReactNode;
+	column: Column<TData, TValue>
+	title: string
+	icon?: React.ReactNode
 }
 
 export function DataTableColumnHeader<TData, TValue>({
@@ -90,7 +90,7 @@ export function DataTableColumnHeader<TData, TValue>({
 	icon,
 }: DataTableColumnHeaderProps<TData, TValue>) {
 	if (!column.getCanSort()) {
-		return <div className={cn(className)}>{title}</div>;
+		return <div className={cn(className)}>{title}</div>
 	}
 
 	return (
@@ -132,5 +132,5 @@ export function DataTableColumnHeader<TData, TValue>({
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
-	);
+	)
 }
