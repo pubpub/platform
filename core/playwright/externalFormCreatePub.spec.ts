@@ -7,7 +7,8 @@ import { CoreSchemaType } from "db/public";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
-import { createCommunity, login } from "./helpers";
+import { LoginPage } from "./fixtures/login-page";
+import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
@@ -19,14 +20,16 @@ let page: Page;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	await login({ page });
+
+	const loginPage = new LoginPage(page);
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation();
+
 	await createCommunity({
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
 	});
 
-	// this seems necessary
-	await page.waitForTimeout(1000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields
@@ -161,15 +164,64 @@ test.describe("Multivalue inputs", () => {
 		await page.getByRole("combobox").click();
 		await page.getByRole("option", { name: "mangos" }).click();
 		await page.getByRole("button", { name: "Submit" }).click();
+		await page.getByText("Form Successfully Submitted").waitFor();
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
 		await page.getByRole("link", { name: title }).click();
+		// Make sure pub details page has loaded before making assertions
+		await page.getByText("Assignee").waitFor();
 		await expect(page.getByText(numberElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0");
 		await expect(page.getByText(animalElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${animalElement.name}-value`)).toHaveText("cats,otters");
 		await expect(page.getByText(fruitElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${fruitElement.name}-value`)).toHaveText("mangos");
+	});
+});
+
+test.describe("Rich text editor", () => {
+	test("Can edit a rich text field", async () => {
+		// Add rich text field
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("Rich text", CoreSchemaType.RichText);
+
+		// Add a new form
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		formsPage.goto();
+		const formSlug = "rich-text-test";
+		await formsPage.addForm("Rich text test", formSlug);
+		await expect(page.getByRole("status").filter({ hasText: "Form created" })).toHaveCount(1);
+
+		// Add to existing form
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		await formEditPage.goto();
+		await formEditPage.openAddForm();
+
+		// Add rich text field to form
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:rich-text`);
+		// Save the form builder and go to external form
+		await formEditPage.saveForm();
+		await expect(
+			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
+		).toHaveCount(1);
+		await formEditPage.goToExternalForm();
+
+		// Fill out the form
+		const actualTitle = "rich text title";
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill("form title");
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		// Rich text field
+		await page.locator(".ProseMirror").click();
+		await page.keyboard.type("@title");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type(actualTitle);
+		await page.getByRole("button", { name: "Submit" }).click();
+		await page.getByText("Form Successfully Submitted").waitFor();
+
+		// Check the pub page to make sure the values we expect are there
+		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
 	});
 });

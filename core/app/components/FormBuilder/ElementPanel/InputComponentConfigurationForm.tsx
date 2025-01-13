@@ -10,6 +10,7 @@ import { Value } from "@sinclair/typebox/value";
 import { useForm } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema } from "schemas";
 
+import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
@@ -35,6 +36,7 @@ import { Textarea } from "ui/textarea";
 
 import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
+import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
 import { isFieldInput } from "../types";
@@ -159,8 +161,20 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.richText]: {
 		name: "Rich Text",
 		demoComponent: () => {
-			// TODO
-			return <div></div>;
+			return (
+				<div className="isolate h-full w-full text-sm">
+					<div className="relative z-10 bg-white text-gray-500">Label</div>
+					<ContextEditorClient
+						pubs={[]}
+						pubTypes={[]}
+						onChange={() => {}}
+						// Casting since this is a demo component where the pubId and pubTypeId doesn't really matter
+						pubId={"" as PubsId}
+						pubTypeId={"" as PubTypesId}
+						className="-ml-6 -mt-4 h-full w-full overflow-scroll"
+					/>
+				</div>
+			);
 		},
 	},
 } as const;

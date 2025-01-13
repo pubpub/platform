@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { notFound, redirect } from "next/navigation";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
-import { pubValuesByRef } from "~/lib/server";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
+import { pubType, pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ActionRunsTable } from "./ActionRunsTable";
@@ -27,12 +30,17 @@ export default async function Page({
 
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
-		return notFound();
+		notFound();
 	}
 
-	const isAdmin = isCommunityAdmin(user, community);
-	if (!isAdmin) {
-		return null;
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const actionRuns = (await autoCache(
@@ -65,9 +73,23 @@ export default async function Page({
 				jsonObjectFrom(
 					eb
 						.selectFrom("pubs")
+						.select(["pubs.id", "pubs.createdAt", "pubs.title"])
 						.whereRef("pubs.id", "=", "action_runs.pubId")
-						.select(["pubs.id", "pubs.createdAt"])
-						.select(pubValuesByRef("action_runs.pubId"))
+						.select((eb) =>
+							jsonArrayFrom(
+								eb
+									.selectFrom("pub_values")
+									.leftJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
+									.select([
+										"pub_values.value",
+										"pub_fields.name as fieldName",
+										"pub_fields.schemaName as schemaName",
+										"pub_fields.slug as fieldSlug",
+									])
+									.whereRef("pub_values.pubId", "=", "pubs.id")
+							).as("values")
+						)
+						.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 				).as("pub"),
 				jsonObjectFrom(
 					eb

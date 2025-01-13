@@ -92,22 +92,29 @@ export const LexicalEditor = (
 		[fieldPropsWithoutShowLabel.onChange]
 	);
 
+	const labelId = React.useId();
+
 	return (
 		<div className="flex flex-row items-center space-x-2">
 			<FormItem className="flex w-full flex-col justify-start">
 				{showLabel && (
 					<>
-						<AutoFormLabel label={props.label} isRequired={props.isRequired} />
+						<AutoFormLabel
+							id={labelId}
+							label={props.label}
+							isRequired={props.isRequired}
+						/>
 						{props.description && descriptionPlacement === "top" && (
 							<AutoFormDescription description={props.description} />
 						)}
 					</>
 				)}
-				<FormControl>
-					<LexicalComposer initialConfig={initialConfig}>
-						<RichTextPlugin
-							contentEditable={
+				<LexicalComposer initialConfig={initialConfig}>
+					<RichTextPlugin
+						contentEditable={
+							<FormControl>
 								<ContentEditable
+									ariaLabelledBy={labelId}
 									className={cn(
 										"editor",
 										"prose prose-sm",
@@ -116,20 +123,18 @@ export const LexicalEditor = (
 										"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 									)}
 								/>
-							}
-							placeholder={null}
-							ErrorBoundary={LexicalErrorBoundary}
-						/>
-						<OnChangePlugin onChange={onChange} />
-						<HistoryPlugin />
-						<AutoFocusPlugin />
-						{props.singleLine && <SingleLinePlugin />}
-						{props.withMarkdown && (
-							<MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-						)}
-						<TokenPlugin tokens={Object.keys(tokens[props.field.name] ?? {})} />
-					</LexicalComposer>
-				</FormControl>
+							</FormControl>
+						}
+						placeholder={null}
+						ErrorBoundary={LexicalErrorBoundary}
+					/>
+					<OnChangePlugin onChange={onChange} />
+					<HistoryPlugin />
+					<AutoFocusPlugin />
+					{props.singleLine && <SingleLinePlugin />}
+					{props.withMarkdown && <MarkdownShortcutPlugin transformers={TRANSFORMERS} />}
+					<TokenPlugin tokens={Object.keys(tokens[props.field.name] ?? {})} />
+				</LexicalComposer>
 				<AutoFormTooltip fieldConfigItem={props.fieldConfigItem} />
 				{props.description && descriptionPlacement === "bottom" && (
 					<AutoFormDescription description={props.description} />

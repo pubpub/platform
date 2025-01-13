@@ -1,6 +1,6 @@
 import { AuthTokenType } from "db/public";
-import { getLoginData } from "lib/auth/loginData";
 
+import { getLoginData } from "~/lib/authentication/loginData";
 import { SignupForm } from "./SignupForm";
 
 export default async function Page() {
@@ -12,7 +12,7 @@ export default async function Page() {
 		return (
 			<div>
 				You are not allowed to signup for an account, or the link that you clicked is
-				invalid expired. Please try again
+				invalid or expired. Please try again
 			</div>
 		);
 	}

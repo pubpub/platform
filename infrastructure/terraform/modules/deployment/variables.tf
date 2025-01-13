@@ -71,3 +71,8 @@ variable "ASSETS_BUCKET_NAME" {
   description = "Name of the S3 bucket to store assets"
   type        = string
 }
+
+variable "DATACITE_API_URL" {
+  description = "DataCite API URL used by the DataCite action to deposit pubs and allocate DOIs"
+  type        = string
+}

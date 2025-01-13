@@ -1,7 +1,7 @@
-import type { Communities, MembersId } from "db/public";
+import type { Communities, CommunityMembershipsId } from "db/public";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { getMember } from "~/lib/server/member";
+import { selectCommunityMember } from "~/lib/server/member";
 import { getSuggestedUsers } from "~/lib/server/user";
 import { MemberSelectClient } from "./MemberSelectClient";
 
@@ -17,7 +17,7 @@ type Props = {
 	 * would result in the same query parameter being used for all instances.
 	 */
 	queryParamName: string;
-	value?: MembersId;
+	value?: CommunityMembershipsId;
 	allowPubFieldSubstitution?: boolean;
 	helpText?: string;
 };
@@ -35,7 +35,7 @@ export async function MemberSelectServer({
 	let member: MemberSelectUserWithMembership | undefined | null;
 
 	if (value !== undefined) {
-		const inbetweenMember = await getMember({
+		const inbetweenMember = await selectCommunityMember({
 			id: value,
 		}).executeTakeFirst();
 

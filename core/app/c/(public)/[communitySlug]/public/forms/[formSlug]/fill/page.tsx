@@ -5,30 +5,31 @@ import type { ReactNode } from "react";
 
 import { notFound } from "next/navigation";
 
-import type { Communities, MembersId, PubsId, UsersId } from "db/public";
-import { MemberRole, StructuralFormElement } from "db/public";
+import type { Communities, PubsId } from "db/public";
+import { ElementType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
-import { isButtonElement } from "~/app/components/FormBuilder/types";
+import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getCommunityRole } from "~/lib/auth/roles";
-import { getPub, getPubCached } from "~/lib/server";
+import {
+	hydrateMarkdownElements,
+	renderElementMarkdownContent,
+} from "~/app/components/forms/structural";
+import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
+import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import {
-	renderMarkdownAsHtml,
-	renderMarkdownWithPub,
-} from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
+import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { capitalize } from "~/lib/string";
-import { SUBMIT_ID_QUERY_PARAM } from "./constants";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
-import { SaveStatus } from "./SaveStatus";
 import { handleFormToken } from "./utils";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
@@ -89,27 +90,12 @@ const ExpiredTokenPage = ({
 				<RequestLink
 					formSlug={params.formSlug}
 					token={searchParams.token}
-					pubId={searchParams.pubId as PubsId}
+					// TODO: handle undefined pubId
+					pubId={searchParams.pubId!}
 				/>
 			</div>
 		</div>
 	);
-};
-
-const renderElementMarkdownContent = async (
-	element: Form["elements"][number],
-	renderWithPubContext: RenderWithPubContext | undefined
-) => {
-	if (element.content === null) {
-		return "";
-	}
-	if (renderWithPubContext) {
-		// Parses the markdown with the pub and returns as HTML
-		return renderMarkdownWithPub(element.content, renderWithPubContext).catch(
-			() => element.content
-		);
-	}
-	return renderMarkdownAsHtml(element.content);
 };
 
 export async function generateMetadata({
@@ -151,20 +137,34 @@ export default async function FormPage({
 	if (!community) {
 		return notFound();
 	}
+	const { user, session } = await getLoginData();
 
-	const [form, pub] = await Promise.all([
+	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
 		}).executeTakeFirst(),
-		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
+		searchParams.pubId
+			? await getPubsWithRelatedValuesAndChildren(
+					{ pubId: searchParams.pubId, communityId: community.id },
+					{ withStage: true, withLegacyAssignee: true, withPubType: true }
+				)
+			: undefined,
+		getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id, userId: user?.id },
+			{
+				limit: 30,
+				withStage: true,
+				withLegacyAssignee: true,
+				withPubType: true,
+			}
+		),
+		getPubTypesForCommunity(community.id),
 	]);
 
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
-
-	const { user, session } = await getLoginData();
 
 	if (!user && !session) {
 		const result = await handleFormToken({
@@ -196,6 +196,7 @@ export default async function FormPage({
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
+			pubId: pub?.id,
 		});
 
 		if (!memberHasAccessToForm) {
@@ -204,60 +205,55 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub?.parentId ? await getPub(pub.parentId as PubsId) : undefined;
+	const parentPub = pub?.parentId
+		? await getPubsWithRelatedValuesAndChildren(
+				{ pubId: pub.parentId, communityId: community.id, userId: user?.id },
+				{ withStage: true, withLegacyAssignee: true, withPubType: true }
+			)
+		: undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
 	const memberWithUser = {
 		...member,
-		id: member.id as MembersId,
+		id: member.id,
 		user: {
 			...user,
-			id: user.id as UsersId,
+			id: user.id,
 		},
 	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
-	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
+	const submitElement = form.elements.find(
+		(e) => e.type === ElementType.button && e.id === submitId
+	);
+
+	const renderWithPubContext = {
+		communityId: community.id,
+		recipient: memberWithUser,
+		communitySlug: params.communitySlug,
+		pub,
+		parentPub,
+	};
 
 	if (submitId && submitElement) {
 		// The post-submission page will only render once we have a pub
 		if (pub) {
-			const renderWithPubContext = {
-				communityId: community.id,
-				recipient: memberWithUser,
-				communitySlug: params.communitySlug,
-				pub,
-				parentPub,
-			};
 			submitElement.content = await renderElementMarkdownContent(
 				submitElement,
-				renderWithPubContext
+				renderWithPubContext as RenderWithPubContext
 			);
 		}
 	} else {
-		const elementsWithMarkdownContent = form.elements.filter(
-			(element) => element.element === StructuralFormElement.p
-		);
-		const renderWithPubContext = pub
-			? {
-					communityId: community.id,
-					recipient: memberWithUser,
-					communitySlug: params.communitySlug,
-					pub,
-					parentPub,
-				}
-			: undefined;
-		await Promise.all(
-			elementsWithMarkdownContent.map(async (element) => {
-				element.content = await renderElementMarkdownContent(element, renderWithPubContext);
-			})
-		);
+		await hydrateMarkdownElements({
+			elements: form.elements,
+			renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
+		});
 	}
 
 	const isUpdating = !!pub;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
 	return (
 		<div className="isolate min-h-screen">
@@ -280,23 +276,34 @@ export default async function FormPage({
 								[] as string[]
 							)}
 						>
-							<ExternalFormWrapper
-								pub={pubForForm}
-								elements={form.elements}
-								isUpdating={isUpdating}
-								className="col-span-2 col-start-2"
+							<ContextEditorContextProvider
+								pubId={pubId}
+								pubTypeId={form.pubTypeId}
+								pubs={pubs}
+								pubTypes={pubTypes}
 							>
-								{form.elements.map((e) => (
-									<FormElement
-										key={e.elementId}
-										pubId={pubId as PubsId}
-										element={e}
-										searchParams={searchParams}
-										communitySlug={params.communitySlug}
-										values={pub ? pub.values : {}}
-									/>
-								))}
-							</ExternalFormWrapper>
+								<ExternalFormWrapper
+									pub={pubForForm}
+									elements={form.elements}
+									formSlug={form.slug}
+									isUpdating={isUpdating}
+									withAutoSave={isUpdating}
+									withButtonElements
+									isExternalForm
+									className="col-span-2 col-start-2"
+								>
+									{form.elements.map((e) => (
+										<FormElement
+											key={e.id}
+											pubId={pubId}
+											element={e}
+											searchParams={searchParams}
+											communitySlug={params.communitySlug}
+											values={pub ? pub.values : []}
+										/>
+									))}
+								</ExternalFormWrapper>
+							</ContextEditorContextProvider>
 						</FormElementToggleProvider>
 					</div>
 				)}

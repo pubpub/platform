@@ -7,7 +7,7 @@ import { logger } from "logger";
 
 import type { action } from "./action";
 import type { PubValues } from "~/lib/server";
-import { _updatePub } from "~/app/components/pubs/PubEditor/actions";
+import { updatePub } from "~/lib/server/pub";
 import { defineRun } from "../types";
 
 const findNestedStructure = (json: unknown, path: string) => {
@@ -20,7 +20,7 @@ const findNestedStructure = (json: unknown, path: string) => {
 };
 
 export const run = defineRun<typeof action>(
-	async ({ pub, config, configFieldOverrides, args, argsFieldOverrides }) => {
+	async ({ pub, config, configFieldOverrides, args, argsFieldOverrides, lastModifiedBy }) => {
 		const { url, method, authToken } = {
 			url: args?.url ?? config.url,
 			method: args?.method ?? config.method,
@@ -97,7 +97,7 @@ export const run = defineRun<typeof action>(
 			<p>HTTP request ran successfully</p>
 			<p>The resulting mapping would have been:</p>
 			<div>
-${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pubField]} ➡️ ${resValue}</p>`).join("\n")}
+${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`).join("\n")}
 <span>Data</span>
 				<p>${JSON.stringify(result, null, 2)}</p>
 			</div>`,
@@ -111,10 +111,12 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 		}, {} as PubValues);
 
 		try {
-			await _updatePub({
+			await updatePub({
 				pubId: pub.id as PubsId,
+				communityId: pub.communityId,
 				pubValues,
 				continueOnValidationError: false,
+				lastModifiedBy,
 			});
 		} catch (error) {
 			logger.debug(error);
@@ -129,7 +131,7 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pu
 			success: true,
 			report: `<p>Successfully updated fields</p>
 			<div>
-${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values[pubField]} ➡️ ${resValue}</p>`).join("\n")}`,
+${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`).join("\n")}`,
 			data: { result },
 		};
 	}

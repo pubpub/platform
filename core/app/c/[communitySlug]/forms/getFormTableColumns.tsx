@@ -23,6 +23,7 @@ export type TableForm = {
 	pubType: string;
 	updated: Date;
 	isArchived: boolean;
+	isDefault: boolean;
 };
 
 export const getFormTableColumns = () =>
@@ -55,6 +56,13 @@ export const getFormTableColumns = () =>
 				<DataTableColumnHeader className="w-52" column={column} title="Name" />
 			),
 			accessorKey: "formName",
+		},
+		{
+			header: ({ column }) => (
+				<DataTableColumnHeader className="w-52" column={column} title="Default" />
+			),
+			accessorKey: "isDefault",
+			cell: ({ row }) => (row.original.isDefault ? "Yes" : "No"),
 		},
 		{
 			header: ({ column }) => (

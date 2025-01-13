@@ -1,10 +1,144 @@
-import type { CommunitiesId } from "db/public";
+import { faker } from "@faker-js/faker";
+
+import type { CommunitiesId, PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
+import { db } from "~/kysely/database";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { seedCommunity } from "../seed/seedCommunity";
 
-export const seedArcadia = (communityId?: CommunitiesId) => {
-	return seedCommunity(
+export const seedArcadia = async (communityId?: CommunitiesId) => {
+	const articleSeed = (number = 1_000, asRelation = false) =>
+		Array.from({ length: number }, (_, idx) => {
+			const pub = {
+				pubType: "Journal Article",
+				stage: "Articles",
+				values: {
+					Title: faker.lorem.sentence(),
+					"Publication Date": new Date(Date.now() - idx * 1000 * 60 * 60 * 24),
+					"Creation Date": new Date(Date.now() - idx * 1000 * 60 * 60 * 24),
+					"Last Edited": new Date(Date.now() - idx * 1000 * 60 * 60 * 24),
+					Avatar: faker.image.url(),
+					Description: faker.lorem.paragraph(),
+					Abstract: faker.lorem.paragraphs(2),
+					License: "CC-BY 4.0",
+					PubContent: "Some content",
+					URL: "https://www.pubpub.org",
+					"Inline Citation Style": "Author Year",
+					"Citation Style": "APA 7",
+				},
+				// the relevant pubs are implemented as both children
+				// and related pubs for demonstration purposes
+				relatedPubs: {
+					// connections in Legacy
+					// all of the below are also added as children to make it easier to see them in the ui as of OCt 22
+					Contributors: [
+						{
+							value: "Editing & Draft Preparation",
+							alsoAsChild: true,
+							pub: {
+								pubType: "Author",
+								values: {
+									Name: faker.person.fullName(),
+									ORCiD: "https://orcid.org/0000-0000-0000-0000",
+									Affiliation: "University of Somewhere",
+								},
+							},
+						},
+					],
+					Downloads: [
+						{
+							// acting as a description of the download
+							value: "PDF Download",
+							alsoAsChild: true,
+							pub: {
+								pubType: "PDF Download",
+								// can't really add the actual file here
+								values: {},
+							},
+						},
+					],
+					Tables: [
+						{
+							value: null,
+							alsoAsChild: true,
+							pub: {
+								pubType: "Table",
+								values: {
+									Caption: "A beautiful table, about things.",
+									CSV: [],
+								},
+							},
+						},
+						{
+							value: null,
+							alsoAsChild: true,
+							pub: {
+								pubType: "Table",
+								values: {
+									Caption: "A table, about things.",
+									CSV: [],
+								},
+							},
+						},
+					],
+					Images: [
+						{
+							value: null,
+							alsoAsChild: true,
+							pub: {
+								pubType: "Pub Image",
+								values: {
+									Caption: "A beautiful image, about things.",
+								},
+							},
+						},
+					],
+					Citations: [
+						{
+							value: "Chapter 5",
+							alsoAsChild: true,
+							pub: {
+								pubType: "ExternalBook",
+								values: {
+									Title: "A Great Book",
+									DOI: "10.82234/arcadia-ad7f-7a6d",
+									Year: "2022",
+								},
+							},
+						},
+						{
+							value: "pp. 35-53",
+							alsoAsChild: true,
+							pub: {
+								pubType: "ExternalJournalArticle",
+								values: {
+									Title: "A Great Journal Article",
+									DOI: "10.82234/arcadia-ad7f-7a6d",
+									Year: "2022",
+								},
+							},
+						},
+					],
+				},
+			};
+
+			if (!asRelation) {
+				return pub;
+			}
+
+			return {
+				value: null,
+				alsoAsChild: true,
+				pub,
+			};
+		}) as any;
+
+	const articleId2 = crypto.randomUUID();
+	const articleId = crypto.randomUUID();
+	const authorId = crypto.randomUUID();
+
+	const seed = await seedCommunity(
 		{
 			community: {
 				id: communityId,
@@ -24,7 +158,9 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 				Abstract: { schemaName: CoreSchemaType.String },
 				License: { schemaName: CoreSchemaType.String },
 				PubContent: { schemaName: CoreSchemaType.String },
-				DOI: { schemaName: CoreSchemaType.URL },
+				DOI: { schemaName: CoreSchemaType.String },
+				"DOI Suffix": { schemaName: CoreSchemaType.String },
+				URL: { schemaName: CoreSchemaType.URL },
 				"PDF Download Displayname": { schemaName: CoreSchemaType.String },
 				PDF: { schemaName: CoreSchemaType.FileUpload },
 				"Pub Image": { schemaName: CoreSchemaType.FileUpload },
@@ -95,144 +231,151 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 			},
 			pubTypes: {
 				"Navigation Item": {
-					Title: true,
-					"External Link": true,
-					"Open In New Tab": true,
+					Title: { isTitle: true },
+					"External Link": { isTitle: false },
+					"Open In New Tab": { isTitle: false },
 					// nested navigation
-					"Navigation Items": true,
+					"Navigation Items": { isTitle: false },
 				},
 				Navigation: {
-					Title: true,
-					"Navigation Items": true,
+					Title: { isTitle: true },
+					"Navigation Items": { isTitle: false },
 				},
 				"Banner Button": {
-					Title: true,
-					"External Link": true,
+					Title: { isTitle: true },
+					"External Link": { isTitle: false },
 				},
 				Banner: {
-					Title: true,
-					Description: true,
-					"Text Color": true,
-					"Background Color": true,
-					"Background Image": true,
-					Logo: true,
-					"External Link": true,
-					Align: true,
-					"Banner Buttons": true,
+					Title: { isTitle: true },
+					Description: { isTitle: false },
+					"Text Color": { isTitle: false },
+					"Background Color": { isTitle: false },
+					"Background Image": { isTitle: false },
+					Logo: { isTitle: false },
+					"External Link": { isTitle: false },
+					Align: { isTitle: false },
+					"Banner Buttons": { isTitle: false },
 				},
 				Header: {
-					Logo: true,
-					"Background Color": true,
-					"Text Color": true,
+					Title: { isTitle: true },
+					Logo: { isTitle: false },
+					"Background Color": { isTitle: false },
+					"Text Color": { isTitle: false },
 					// header has a banner
-					Banner: true,
+					Banner: { isTitle: false },
 					// header has navigation
-					Navigation: true,
+					Navigation: { isTitle: false },
 				},
 				Page: {
-					Title: true,
-					Slug: true,
-					Avatar: true,
-					Description: true,
-					Width: true,
-					Privacy: true,
-					PubContent: true,
+					Title: { isTitle: true },
+					Slug: { isTitle: false },
+					Avatar: { isTitle: false },
+					Description: { isTitle: false },
+					Width: { isTitle: false },
+					Privacy: { isTitle: false },
+					PubContent: { isTitle: false },
 				},
 				Footer: {
-					Title: true,
-					"Text Color": true,
-					"Background Color": true,
-					"Background Image": true,
-					Logo: true,
-					"External Link": true,
-					Navigation: true,
+					Title: { isTitle: true },
+					"Text Color": { isTitle: false },
+					"Background Color": { isTitle: false },
+					"Background Image": { isTitle: false },
+					Logo: { isTitle: false },
+					"External Link": { isTitle: false },
+					Navigation: { isTitle: false },
 				},
 				Site: {
-					Title: true,
-					Description: true,
-					Slug: true,
-					Pages: true,
-					Journals: true,
-					Header: true,
-					Footer: true,
+					Title: { isTitle: true },
+					Description: { isTitle: false },
+					Slug: { isTitle: false },
+					Pages: { isTitle: false },
+					Journals: { isTitle: false },
+					Header: { isTitle: false },
+					Footer: { isTitle: false },
 				},
 				Tag: {
-					Title: true,
+					Title: { isTitle: true },
 				},
 				Journal: {
-					Title: true,
-					Description: true,
-					Slug: true,
-					ISSN: true,
-					DOI: true,
-					Avatar: true,
-					Issues: true,
-					Editors: true,
+					Title: { isTitle: true },
+					Description: { isTitle: false },
+					Slug: { isTitle: false },
+					ISSN: { isTitle: false },
+					DOI: { isTitle: false },
+					Avatar: { isTitle: false },
+					Issues: { isTitle: false },
+					Editors: { isTitle: false },
 				},
 				Issue: {
-					Title: true,
-					Articles: true,
-					Description: true,
-					DOI: true,
-					Downloads: true,
-					ISSN: true,
+					Title: { isTitle: true },
+					Articles: { isTitle: false },
+					Description: { isTitle: false },
+					DOI: { isTitle: false },
+					Downloads: { isTitle: false },
+					ISSN: { isTitle: false },
 				},
 				"Journal Article": {
-					Title: true,
-					Slug: true,
-					Abstract: true,
-					"Last Edited": true,
-					"Publication Date": true,
-					DOI: true,
-					PubContent: true,
-					License: true,
-					Description: true,
-					"Creation Date": true,
-					Avatar: true,
-					Contributors: true,
-					Tag: true,
-					Editors: true,
-					Downloads: true,
-					Images: true,
-					Citations: true,
-					"Inline Citation Style": true,
-					"Citation Style": true,
-					Tables: true,
-					ConnectedPubs: true,
+					Title: { isTitle: true },
+					Slug: { isTitle: false },
+					Abstract: { isTitle: false },
+					"Last Edited": { isTitle: false },
+					"Publication Date": { isTitle: false },
+					DOI: { isTitle: false },
+					"DOI Suffix": { isTitle: false },
+					URL: { isTitle: false },
+					PubContent: { isTitle: false },
+					License: { isTitle: false },
+					Description: { isTitle: false },
+					"Creation Date": { isTitle: false },
+					Avatar: { isTitle: false },
+					Contributors: { isTitle: false },
+					Tag: { isTitle: false },
+					Editors: { isTitle: false },
+					Downloads: { isTitle: false },
+					Images: { isTitle: false },
+					Citations: { isTitle: false },
+					"Inline Citation Style": { isTitle: false },
+					"Citation Style": { isTitle: false },
+					Tables: { isTitle: false },
+					ConnectedPubs: { isTitle: false },
 				},
 				"PDF Download": {
-					PDF: true,
+					Title: { isTitle: true },
+					PDF: { isTitle: false },
 				},
 				"Pub Image": {
-					"Pub Image": true,
-					Caption: true,
+					Title: { isTitle: true },
+					"Pub Image": { isTitle: false },
+					Caption: { isTitle: false },
 				},
 				Author: {
-					Name: true,
-					ORCiD: true,
-					Affiliation: true,
-					MemberId: true,
+					Name: { isTitle: true },
+					ORCiD: { isTitle: false },
+					Affiliation: { isTitle: false },
+					MemberId: { isTitle: false },
+					Articles: { isTitle: false },
 				},
 				Editor: {
-					Name: true,
-					ORCiD: true,
-					Affiliation: true,
+					Name: { isTitle: true },
+					ORCiD: { isTitle: false },
+					Affiliation: { isTitle: false },
 				},
 				ExternalBook: {
-					Title: true,
-					Year: true,
-					DOI: true,
-					"External Link": true,
+					Title: { isTitle: true },
+					Year: { isTitle: false },
+					DOI: { isTitle: false },
+					"External Link": { isTitle: false },
 				},
 				ExternalJournalArticle: {
-					Title: true,
-					Year: true,
-					DOI: true,
-					"External Link": true,
+					Title: { isTitle: true },
+					Year: { isTitle: false },
+					DOI: { isTitle: false },
+					"External Link": { isTitle: false },
 				},
 				Table: {
-					Caption: true,
-					CSV: true,
+					Title: { isTitle: true },
+					Caption: { isTitle: false },
+					CSV: { isTitle: false },
 				},
 			},
 			users: {
@@ -244,16 +387,17 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 			},
 			stages: {
 				Articles: {
-					members: ["arcadia-user-1"],
+					members: { "arcadia-user-1": MemberRole.editor },
 				},
 				// these stages are mostly here to provide slightly easier grouping of the relevant pubs
+				Authors: {},
 				Sites: {},
 				Journals: {},
 				Issues: {},
 				Navigations: {},
 				Tags: {},
 				"Stage 2": {
-					members: ["arcadia-user-1"],
+					members: { "arcadia-user-1": MemberRole.editor },
 				},
 			},
 			stageConnections: {
@@ -369,7 +513,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 									stage: "Journals",
 									values: {
 										Title: "Arcadia Research",
-										DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+										DOI: "10.82234/arcadia-ad7f-7a6d",
 										ISSN: "2998-4084",
 										Slug: "arcadia-research",
 									},
@@ -384,7 +528,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 													values: {
 														Title: "Issue 1",
 														ISSN: "2998-4084",
-														DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+														DOI: "10.82234/arcadia-ad7f-7a6d",
 														Description: "A cool description",
 													},
 													relatedPubs: {
@@ -393,6 +537,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																value: null,
 																alsoAsChild: true,
 																pub: {
+																	id: articleId,
 																	pubType: "Journal Article",
 																	stage: "Articles",
 																	values: {
@@ -407,7 +552,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																		Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
 																		License: "CC-BY 4.0",
 																		PubContent: "Some content",
-																		DOI: "https://doi.org/10.57844/arcadia-14b2-6f27",
+																		DOI: "10.82234/arcadia-14b2-6f27",
+																		URL: "https://www.pubpub.org",
 																		"Inline Citation Style":
 																			"Author Year",
 																		"Citation Style": "APA 7",
@@ -433,6 +579,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																			{
 																				value: "isCommentOn",
 																				pub: {
+																					id: articleId2,
 																					pubType:
 																						"Journal Article",
 																					values: {
@@ -447,6 +594,8 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																				value: "Editing & Draft Preparation",
 																				alsoAsChild: true,
 																				pub: {
+																					id: authorId,
+																					stage: "Authors",
 																					pubType:
 																						"Author",
 																					values: {
@@ -454,6 +603,20 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						ORCiD: "https://orcid.org/0000-0000-0000-0000",
 																						Affiliation:
 																							"University of Somewhere",
+																						// We can't do this because of foreign key constraints even though we know the IDs in advance
+																						// These values are explicitly added after the seed function runs
+																						// Articles: [
+																						// 	{
+																						// 		relatedPubId:
+																						// 			articleId,
+																						// 		value: "Edited",
+																						// 	},
+																						// 	{
+																						// 		value: "Wrote",
+																						// 		relatedPubId:
+																						// 			articleId2,
+																						// 	},
+																						// ],
 																					},
 																				},
 																			},
@@ -522,7 +685,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						"ExternalBook",
 																					values: {
 																						Title: "A Great Book",
-																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/arcadia-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
@@ -535,7 +698,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																						"ExternalJournalArticle",
 																					values: {
 																						Title: "A Great Journal Article",
-																						DOI: "https://doi.org/10.57844/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/arcadia-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
@@ -544,6 +707,7 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 																	},
 																},
 															},
+															...articleSeed(100, true),
 														],
 													},
 												},
@@ -560,6 +724,31 @@ export const seedArcadia = (communityId?: CommunitiesId) => {
 		},
 		{
 			randomSlug: false,
+			withApiToken: "00000000-0000-0000-0000-000000000000.xxxxxxxxxxxxxxxx",
+			parallelPubs: true,
 		}
 	);
+
+	// Give jimothy a circular reference
+	await db
+		.insertInto("pub_values")
+		.values([
+			{
+				pubId: authorId as PubsId,
+				relatedPubId: articleId as PubsId,
+				value: '"Edited"',
+				fieldId: seed.pubFields.Articles.id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			},
+			{
+				pubId: authorId as PubsId,
+				value: '"Wrote"',
+				relatedPubId: articleId2 as PubsId,
+				fieldId: seed.pubFields.Articles.id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			},
+		])
+		.execute();
+
+	return seed;
 };

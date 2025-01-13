@@ -30,6 +30,10 @@ export const env = createEnv({
 		PUBPUB_URL: z.string().url(),
 		INBUCKET_URL: z.string().url().optional(),
 		CI: z.string().or(z.boolean()).optional(),
+		GCLOUD_KEY_FILE: z.string(),
+		DATACITE_API_URL: z.string().optional(),
+		DATACITE_REPOSITORY_ID: z.string().optional(),
+		DATACITE_PASSWORD: z.string().optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {

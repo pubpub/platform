@@ -10,12 +10,11 @@ import {
 import { ChevronDown } from "ui/icon";
 import { SidebarMenuButton } from "ui/sidebar";
 
-import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
-import { HEADER_HEIGHT } from "~/lib/ui";
+import type { CommunityData } from "~/lib/server/community";
 
 type Props = {
 	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<AvailableCommunitiesData>;
+	availableCommunities: NonNullable<CommunityData>[];
 };
 
 const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommunities }) {

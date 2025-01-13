@@ -1,38 +1,29 @@
-import type { Page } from "@playwright/test";
-
 import { expect, test } from "@playwright/test";
 
+import { LoginPage } from "./fixtures/login-page";
 import { inbucketClient } from "./helpers";
-
-const authFile = "playwright/.auth/user.json";
+import * as loginFlows from "./login.flows";
 
 test.describe("general auth", () => {
 	test("Login with invalid credentials", async ({ page }) => {
-		await page.goto("/login");
-		await page.getByLabel("email").fill("all@pubpub.org");
-		await page.getByRole("textbox", { name: "password" }).fill("pubpub-all-wrong");
-		await page.getByRole("button", { name: "Sign in" }).click();
-
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.login("all@pubpub.org", "pubpub-all-wrong");
 		await page.getByText("Incorrect email or password", { exact: true }).waitFor();
 	});
 });
 
-const loginAsNew = async (page: Page) => {
-	await page.goto("/login");
-	await page.getByLabel("email").fill("new@pubpub.org");
-	await page.getByRole("textbox", { name: "password" }).fill("pubpub-new");
-	await page.getByRole("button", { name: "Sign in" }).click();
-	await page.waitForURL(/.*\/c\/\w+\/stages.*/);
-	await expect(page.getByRole("link", { name: "Workflows" })).toBeVisible();
-};
-
 test.describe("Auth with lucia", () => {
 	test("Login as a lucia user", async ({ page }) => {
-		await loginAsNew(page);
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.loginAndWaitForNavigation("new@pubpub.org", "pubpub-new");
 	});
 
 	test("Logout as a lucia user", async ({ page }) => {
-		await loginAsNew(page);
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.loginAndWaitForNavigation("new@pubpub.org", "pubpub-new");
 
 		const cookies = await page.context().cookies();
 		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();
@@ -83,7 +74,7 @@ test.describe("Auth with lucia", () => {
 		await page.getByRole("button", { name: "Sign in" }).click();
 
 		await page.waitForURL(/\/c\/\w+\/stages/);
-		await page.getByRole("link", { name: "Settings" }).click();
+		await page.getByRole("link", { name: "Settings" }).last().click();
 		await page.getByRole("button", { name: "Reset" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Password reset email sent" })

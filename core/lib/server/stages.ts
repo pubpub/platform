@@ -1,7 +1,6 @@
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { JsonValue } from "contracts";
 import type {
 	CommunitiesId,
 	NewMoveConstraint,
@@ -15,134 +14,6 @@ import type { AutoReturnType } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
-import { pubValuesByRef } from "./pub";
-
-// TODO: Finish making this output match the type of getCommunityStages in
-// core/app/c/[communitySlug]/stages/page.tsx (add pub children and other missing joins)
-export const getCommunityStagesFull = (communityId: CommunitiesId) =>
-	autoCache(
-		db
-			.selectFrom("stages")
-			.where("communityId", "=", communityId)
-			.select((eb) => [
-				jsonArrayFrom(
-					eb
-						.selectFrom("move_constraint")
-						.whereRef("move_constraint.stageId", "=", "stages.id")
-						.selectAll("move_constraint")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("stages")
-									.whereRef("stages.id", "=", "move_constraint.destinationId")
-									.selectAll("stages")
-							)
-								.$notNull()
-								.as("destination"),
-						])
-				).as("moveConstraints"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("move_constraint")
-						.whereRef("move_constraint.destinationId", "=", "stages.id")
-						.selectAll("move_constraint")
-				).as("moveConstraintSources"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("PubsInStages")
-						.select("pubId")
-						.whereRef("stageId", "=", "stages.id")
-						.select(pubValuesByRef("pubId"))
-				).as("pubs"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("permissions")
-						.innerJoin("_PermissionToStage", "permissions.id", "_PermissionToStage.A")
-						.whereRef("stages.id", "=", "stages.id")
-						.selectAll("permissions")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("members")
-									.whereRef("members.id", "=", "permissions.memberId")
-									.selectAll("members")
-									.select((eb) => [
-										jsonObjectFrom(
-											eb
-												.selectFrom("users")
-												.select([
-													"users.id",
-													"users.firstName",
-													"users.lastName",
-													"users.avatar",
-													"users.email",
-												])
-												.whereRef("members.userId", "=", "users.id")
-										)
-											.$notNull()
-											.as("user"),
-									])
-							).as("member"),
-							jsonObjectFrom(
-								eb
-									.selectFrom("member_groups")
-									.selectAll("member_groups")
-									.whereRef("member_groups.id", "=", "permissions.memberGroupId")
-									.select((eb) => [
-										jsonArrayFrom(
-											eb
-												.selectFrom("users")
-												.innerJoin(
-													"_MemberGroupToUser",
-													"member_groups.id",
-													"_MemberGroupToUser.B"
-												)
-												.whereRef("users.id", "=", "_MemberGroupToUser.A")
-												.select([
-													"users.id",
-													"users.firstName",
-													"users.lastName",
-													"users.avatar",
-													"users.email",
-												])
-										).as("users"),
-									])
-							).as("memberGroup"),
-						])
-				).as("permissions"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("integration_instances")
-						.whereRef("integration_instances.stageId", "=", "stages.id")
-						.selectAll()
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("integrations")
-									.selectAll("integrations")
-									.whereRef(
-										"integrations.id",
-										"=",
-										"integration_instances.integrationId"
-									)
-									.$narrowType<{ actions: JsonValue }>()
-							)
-								.$notNull()
-								.as("integration"),
-						])
-						.$narrowType<{ config: JsonValue }>()
-				).as("integrationInstances"),
-				jsonArrayFrom(
-					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.stageId", "=", "stages.id")
-						.selectAll()
-						.$narrowType<{ config: JsonValue }>()
-				).as("actionInstances"),
-			])
-			.selectAll("stages")
-			.orderBy("order asc")
-	);
 
 export const createStage = (props: NewStages) =>
 	autoRevalidate(db.insertInto("stages").values(props));
@@ -177,33 +48,27 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-export const getCommunityStages = (communityId: CommunitiesId) =>
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId };
+export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 	autoCache(
 		db
 			.selectFrom("stages")
 			.where("communityId", "=", communityId)
+			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.stageId", "=", "stages.id")
-						.selectAll("move_constraint")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("stages")
-									.whereRef("stages.id", "=", "move_constraint.destinationId")
-									.selectAll("stages")
-							)
-								.$notNull()
-								.as("destination"),
-						])
+						.innerJoin("stages as s", "s.id", "move_constraint.destinationId")
+						.select(["s.id", "s.name"])
 				).as("moveConstraints"),
 				jsonArrayFrom(
 					eb
 						.selectFrom("move_constraint")
 						.whereRef("move_constraint.destinationId", "=", "stages.id")
-						.selectAll("move_constraint")
+						.innerJoin("stages as s", "s.id", "move_constraint.stageId")
+						.select(["s.id", "s.name"])
 				).as("moveConstraintSources"),
 				eb
 					.selectFrom("PubsInStages")
@@ -216,13 +81,11 @@ export const getCommunityStages = (communityId: CommunitiesId) =>
 					.as("pubsCount"),
 				// TODO: needs to be fancier and include member groups
 				eb
-					.selectFrom("permissions")
-					.innerJoin("_PermissionToStage", "permissions.id", "_PermissionToStage.A")
-					.innerJoin("members", "_PermissionToStage.B", "members.id")
+					.selectFrom("stage_memberships")
 					.select((eb) =>
 						eb.fn
-							.count("_PermissionToStage.A")
-							.filterWhereRef("_PermissionToStage.B", "=", "stages.id")
+							.count("stage_memberships.userId")
+							.filterWhereRef("stage_memberships.stageId", "=", "stages.id")
 							.as("memberCount")
 					)
 					.as("memberCount"),
@@ -239,7 +102,7 @@ export const getCommunityStages = (communityId: CommunitiesId) =>
 			.orderBy("order asc")
 	);
 
-export type CommunityStage = AutoReturnType<typeof getCommunityStages>["executeTakeFirstOrThrow"];
+export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
 
 export const getIntegrationInstanceBase = (trx = db) =>
 	trx

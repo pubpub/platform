@@ -1,7 +1,5 @@
 "use client";
 
-import assert from "assert";
-
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
@@ -22,7 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/too
 import { cn, expect } from "utils";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { addMember } from "~/app/c/[communitySlug]/members/[[...add]]/actions";
+import { addMember } from "~/app/c/[communitySlug]/members/actions";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
 import { UserAvatar } from "../UserAvatar";
@@ -94,7 +92,7 @@ export function MemberSelectClient({
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 
-	const onInputValueChange = useDebouncedCallback((value: string) => {
+	const updateSearchParams = useDebouncedCallback((value: string) => {
 		const newParams = new URLSearchParams(params);
 		const oldParams = newParams.toString();
 		newParams.set(queryParamName, value);
@@ -103,8 +101,12 @@ export function MemberSelectClient({
 		if (oldParams !== newParams.toString()) {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		}
-		setInputValue(value);
 	}, 400);
+
+	const onInputValueChange = (value: string) => {
+		setInputValue(value);
+		updateSearchParams(value);
+	};
 
 	return (
 		<FormField
@@ -147,7 +149,7 @@ export function MemberSelectClient({
 									field.onChange(user.member.id);
 								} else {
 									const result = await runAddMember({
-										user,
+										userId: user.id,
 										role: MemberRole.contributor,
 									});
 									if (didSucceed(result)) {

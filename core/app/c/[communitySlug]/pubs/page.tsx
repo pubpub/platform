@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
 
-import type { CommunitiesId, UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
+import type { CommunitiesId } from "db/public";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { createToken } from "~/lib/server/token";
 import PubHeader from "./PubHeader";
-import PubList from "./PubList";
+import { PaginatedPubList } from "./PubList";
 
 export const metadata: Metadata = {
 	title: "Pubs",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = {
+	params: { communitySlug: string };
+	searchParams: Record<string, unknown> & { page?: string };
+};
 
 export default async function Page({ params, searchParams }: Props) {
 	const { user } = await getPageLoginData();
@@ -24,15 +25,20 @@ export default async function Page({ params, searchParams }: Props) {
 		return null;
 	}
 
-	const tokenPromise = createToken({
-		userId: user.id as UsersId,
-		type: AuthTokenType.generic,
-	});
+	const page = searchParams.page ? parseInt(searchParams.page) : 1;
+
+	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
 		<>
-			<PubHeader communityId={community.id as CommunitiesId} searchParams={searchParams} />
-			<PubList communityId={community.id} token={tokenPromise} searchParams={searchParams} />
+			<PubHeader communityId={community.id as CommunitiesId} />
+			<PaginatedPubList
+				communityId={community.id}
+				searchParams={searchParams}
+				page={page}
+				basePath={basePath}
+				userId={user.id}
+			/>
 		</>
 	);
 }

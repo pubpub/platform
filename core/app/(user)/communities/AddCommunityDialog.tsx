@@ -3,7 +3,7 @@
 import React from "react";
 
 import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { ListPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
@@ -25,6 +25,7 @@ export const AddCommunity = () => {
 			</Tooltip>
 
 			<DialogContent>
+				<DialogTitle>Create Community</DialogTitle>
 				<AddCommunityForm setOpen={setOpen} />
 			</DialogContent>
 		</Dialog>

@@ -7,7 +7,7 @@ import { Loader2 } from "ui/icon";
 import { toast } from "ui/use-toast";
 
 import type { UserLoginData } from "~/lib/types";
-import { sendForgotPasswordMail } from "~/lib/auth/actions";
+import { sendForgotPasswordMail } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
 export const ResetPasswordButton = ({ user }: { user: UserLoginData }) => {

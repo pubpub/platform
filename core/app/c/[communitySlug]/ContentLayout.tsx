@@ -2,38 +2,44 @@ import type { ReactNode } from "react";
 
 import { SidebarTrigger } from "ui/sidebar";
 
-import { HEADER_HEIGHT } from "~/lib/ui";
-import { COLLAPSIBLE_TYPE } from "./layout";
+import { COLLAPSIBLE_TYPE } from "./SideNav";
 
-const Heading = ({ title, action }: { title: ReactNode; action: ReactNode }) => {
+const Heading = ({
+	title,
+	left,
+	right,
+}: {
+	title: ReactNode;
+	left?: ReactNode;
+	right?: ReactNode;
+}) => {
 	return (
-		<header
-			className={`flex h-[${HEADER_HEIGHT}px] items-center justify-between border-b bg-gray-50 p-4 shadow-[0_0_10px_rgba(0,0,0,0.1)]`}
-		>
-			<div className="flex items-center">
-				{COLLAPSIBLE_TYPE === "icon" ? null : <SidebarTrigger />}
-				<h1 className="text-lg font-semibold">
-					<div className="flex flex-row items-center">{title}</div>
-				</h1>
-			</div>
-			{action}
+		<header className="z-40 flex h-[72px] items-center justify-between border-b bg-gray-50 p-4 shadow-md">
+			{COLLAPSIBLE_TYPE === "icon" ? null : <SidebarTrigger />}
+			{left}
+			<h1 className="text-lg font-semibold">
+				<div className="flex flex-row items-center">{title}</div>
+			</h1>
+			{right}
 		</header>
 	);
 };
 
 export const ContentLayout = ({
 	title,
-	headingAction,
+	left,
+	right,
 	children,
 }: {
 	title: ReactNode;
-	headingAction?: ReactNode;
+	left?: ReactNode;
+	right?: ReactNode;
 	children: ReactNode;
 }) => {
 	return (
 		<div className="absolute inset-0 w-full">
 			<div className="flex h-full flex-col">
-				<Heading title={title} action={headingAction} />
+				<Heading title={title} left={left} right={right} />
 				<div className="h-full flex-1 overflow-auto">{children}</div>
 			</div>
 		</div>

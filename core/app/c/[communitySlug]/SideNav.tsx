@@ -1,3 +1,6 @@
+import { MemberRole } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import {
 	Activity,
 	Form,
@@ -24,10 +27,10 @@ import {
 	SidebarSeparator,
 } from "ui/sidebar";
 
-import type { AvailableCommunitiesData, CommunityData } from "~/lib/server/community";
+import type { CommunityData } from "~/lib/server/community";
 import type { DefinitelyHas } from "~/lib/types";
-import { getLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
@@ -35,15 +38,14 @@ import { NavLinkSubMenu } from "./NavLinkSubMenu";
 
 type Props = {
 	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<AvailableCommunitiesData>;
-	collapsible?: Parameters<typeof Sidebar>[0]["collapsible"];
+	availableCommunities: NonNullable<CommunityData>[];
 };
 
 export type LinkDefinition = {
 	href: string;
 	text: string;
 	icon: React.ReactNode;
-	minimumAccessRole: "superadmin" | "admin" | null;
+	minimumAccessRole: MemberRole | null;
 	pattern?: string;
 	children?: LinkDefinition[];
 };
@@ -62,7 +64,7 @@ const viewLinks: LinkDefinition[] = [
 		href: "/activity/actions",
 		text: "Action Log",
 		icon: <Activity className="h-4 w-4" />,
-		minimumAccessRole: "admin",
+		minimumAccessRole: MemberRole.editor,
 	},
 ];
 
@@ -78,7 +80,7 @@ const manageLinks: LinkDefinition[] = [
 				href: "/stages/manage",
 				text: "Stage editor",
 				icon: <RefreshCw size={16} />,
-				minimumAccessRole: "admin",
+				minimumAccessRole: MemberRole.editor,
 				pattern: "/stages/manage",
 			},
 		],
@@ -87,64 +89,60 @@ const manageLinks: LinkDefinition[] = [
 		href: "/types",
 		text: "Types",
 		icon: <ToyBrick size={16} />,
-		minimumAccessRole: "admin",
+		minimumAccessRole: MemberRole.editor,
 	},
 	{
 		href: "/fields",
 		text: "Fields",
 		icon: <FormInput size={16} />,
-		minimumAccessRole: "admin",
+		minimumAccessRole: MemberRole.editor,
 	},
 	{
 		href: "/forms",
 		text: "Forms",
 		icon: <Form size={16} />,
-		minimumAccessRole: "admin",
+		minimumAccessRole: MemberRole.editor,
 	},
 	{
 		href: "/integrations",
 		text: "Integrations",
 		icon: <Integration size={16} />,
-		minimumAccessRole: "admin",
+		minimumAccessRole: MemberRole.editor,
 	},
 	{
 		href: "/members",
 		text: "Members",
 		icon: <UsersRound size={16} />,
-		minimumAccessRole: "admin",
+		minimumAccessRole: MemberRole.editor,
 	},
 	{
 		href: "/settings",
 		text: "Settings",
 		icon: <Settings className="h-4 w-4" />,
-		minimumAccessRole: "superadmin",
+		minimumAccessRole: MemberRole.editor,
 		pattern: "/settings$",
 		children: [
 			{
 				href: "/settings/tokens",
 				text: "API Tokens",
 				icon: <Settings className="h-4 w-4" />,
-				minimumAccessRole: "superadmin",
+				minimumAccessRole: MemberRole.editor,
 			},
 		],
 	},
 ];
 
+export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
+
 const Links = ({
-	prefix,
-	isAdmin,
-	isSuperAdmin,
+	communityPrefix,
+	minimumCommunityRole,
 	links,
 }: {
 	/* The community prefix, e.g. "/c/community-slug"
 	 */
-	prefix: string;
-	/* Whether the user is an admin */
-	isAdmin?: boolean;
-	/**
-	 * Whether the user is a super admin
-	 */
-	isSuperAdmin?: boolean;
+	communityPrefix: string;
+	minimumCommunityRole: MemberRole;
 	links: LinkDefinition[];
 }) => {
 	return (
@@ -155,12 +153,15 @@ const Links = ({
 						return true;
 					}
 
-					if (link.minimumAccessRole === "admin") {
-						return isSuperAdmin || isAdmin;
+					if (link.minimumAccessRole === MemberRole.editor) {
+						return (
+							minimumCommunityRole === MemberRole.editor ||
+							minimumCommunityRole === MemberRole.admin
+						);
 					}
 
-					if (link.minimumAccessRole === "superadmin") {
-						return isSuperAdmin;
+					if (link.minimumAccessRole === MemberRole.admin) {
+						return minimumCommunityRole === MemberRole.admin;
 					}
 
 					return false;
@@ -170,7 +171,7 @@ const Links = ({
 						return (
 							<NavLink
 								key={link.href}
-								href={`${prefix}${link.href}`}
+								href={`${communityPrefix}${link.href}`}
 								text={link.text}
 								icon={link.icon}
 								pattern={link.pattern}
@@ -181,7 +182,7 @@ const Links = ({
 					return (
 						<NavLinkSubMenu
 							link={link as DefinitelyHas<LinkDefinition, "children">}
-							prefix={prefix}
+							communityPrefix={communityPrefix}
 							key={link.href}
 						/>
 					);
@@ -190,17 +191,23 @@ const Links = ({
 	);
 };
 
-const SideNav: React.FC<Props> = async function ({ community, availableCommunities, collapsible }) {
+const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
 	const prefix = `/c/${community.slug}`;
 
 	const { user } = await getLoginData();
 
-	const isAdmin = isCommunityAdmin(user, community);
+	if (!user) {
+		return null;
+	}
 
-	const isSuperAdmin = user?.isSuperAdmin;
+	const userCanEditCommunity = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		user.id
+	);
 
 	return (
-		<Sidebar collapsible={collapsible}>
+		<Sidebar collapsible={COLLAPSIBLE_TYPE}>
 			<SidebarHeader>
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
@@ -218,7 +225,15 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 						<SidebarGroup>
 							<SidebarGroupContent>
 								<SidebarMenu>
-									<Links prefix={prefix} isAdmin={isAdmin} links={defaultLinks} />
+									<Links
+										communityPrefix={prefix}
+										minimumCommunityRole={
+											userCanEditCommunity
+												? MemberRole.admin
+												: MemberRole.editor
+										}
+										links={defaultLinks}
+									/>
 								</SidebarMenu>
 							</SidebarGroupContent>
 						</SidebarGroup>
@@ -227,7 +242,15 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 							<SidebarGroupLabel>Views</SidebarGroupLabel>
 							<SidebarGroupContent>
 								<SidebarMenu>
-									<Links prefix={prefix} isAdmin={isAdmin} links={viewLinks} />
+									<Links
+										communityPrefix={prefix}
+										minimumCommunityRole={
+											userCanEditCommunity
+												? MemberRole.admin
+												: MemberRole.editor
+										}
+										links={viewLinks}
+									/>
 								</SidebarMenu>
 							</SidebarGroupContent>
 						</SidebarGroup>
@@ -237,9 +260,12 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 							<SidebarGroupContent>
 								<SidebarMenu>
 									<Links
-										prefix={prefix}
-										isAdmin={isAdmin}
-										isSuperAdmin={isSuperAdmin}
+										communityPrefix={prefix}
+										minimumCommunityRole={
+											userCanEditCommunity
+												? MemberRole.admin
+												: MemberRole.editor
+										}
 										links={manageLinks}
 									/>
 								</SidebarMenu>

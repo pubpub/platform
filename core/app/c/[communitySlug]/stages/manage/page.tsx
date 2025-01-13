@@ -2,13 +2,18 @@ import "reactflow/dist/style.css";
 
 import type { Metadata } from "next";
 
+import { redirect } from "next/navigation";
+
 import type { StagesId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { LocalStorageProvider } from "ui/hooks";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getCommunityStages } from "~/lib/server/stages";
+import { getStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
 import { StagePanel } from "./components/panel/StagePanel";
@@ -44,14 +49,24 @@ export async function generateMetadata({
 }
 
 export default async function Page({ params, searchParams }: Props) {
-	await getPageLoginData();
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return null;
 	}
 
-	const stages = await getCommunityStages(community.id).execute();
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ communityId: community.id, type: MembershipType.community },
+			user.id
+		))
+	) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
+
+	const stages = await getStages({ communityId: community.id }).execute();
 
 	const pageContext = {
 		params,
@@ -69,6 +84,7 @@ export default async function Page({ params, searchParams }: Props) {
 								<StagePanel
 									stageId={searchParams.editingStageId as StagesId}
 									pageContext={pageContext}
+									user={user}
 								/>
 							)}
 						</div>

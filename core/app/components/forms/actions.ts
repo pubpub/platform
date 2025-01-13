@@ -4,7 +4,8 @@ import type { CommunitiesId, FormsId, PubsId } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "~/lib/types";
-import { generateSignedAssetUploadUrl } from "~/lib/server";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { ApiError, generateSignedAssetUploadUrl } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import * as Email from "~/lib/server/email";
@@ -12,6 +13,12 @@ import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/se
 import { TokenFailureReason, validateTokenSafe } from "~/lib/server/token";
 
 export const upload = defineServerAction(async function upload(pubId: string, fileName: string) {
+	const loginData = await getLoginData();
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+	// TODO: authorization check?
+
 	return await generateSignedAssetUploadUrl(pubId as PubsId, fileName);
 });
 
@@ -45,6 +52,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 	const canAccessForm = await userHasPermissionToForm({
 		userId: result.user.id,
 		formId: form.id,
+		pubId,
 	});
 
 	if (!canAccessForm) {

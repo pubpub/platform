@@ -1,4 +1,5 @@
-import type { CommunitiesId, MembersId, PubsId, UsersId } from "db/public";
+import type { JsonValue } from "contracts";
+import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
 
@@ -10,17 +11,27 @@ export type RenderWithPubRel = "parent" | "self";
 
 export type RenderWithPubPub = {
 	id: string;
-	values: Record<string, any>;
+	values: {
+		fieldName: string;
+		fieldSlug: string;
+		value: unknown;
+		schemaName: CoreSchemaType;
+	}[];
+	createdAt: Date;
 	assignee?: {
 		firstName: string;
 		lastName: string | null;
 		email: string;
 	} | null;
+	title: string | null;
+	pubType: {
+		name: string;
+	};
 };
 
 export type RenderWithPubContext = {
 	recipient: {
-		id: MembersId;
+		id: CommunityMembershipsId;
 		user: {
 			id: UsersId;
 			firstName: string;
@@ -60,19 +71,23 @@ const getAssignee = (context: RenderWithPubContext, rel?: string) => {
 
 const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: string) => {
 	const pub = getPub(context, rel);
-	const pubValue = pub.values[fieldSlug];
+	const pubValue = pub.values.find((value) => value.fieldSlug === fieldSlug);
 	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
 };
 
-export const renderFormInviteLink = async (
-	formSlug: string,
-	memberId: MembersId,
-	userId: UsersId,
-	communityId: CommunitiesId,
-	pubId?: string
-) => {
-	await addMemberToForm({ memberId, communityId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, communityId, pubId: pubId as PubsId });
+export const renderFormInviteLink = async ({
+	formSlug,
+	userId,
+	communityId,
+	pubId,
+}: {
+	formSlug: string;
+	userId: UsersId;
+	communityId: CommunitiesId;
+	pubId: PubsId;
+}) => {
+	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
+	return createFormInviteLink({ userId, formSlug, communityId, pubId });
 };
 
 export const renderMemberFields = async ({
@@ -84,7 +99,7 @@ export const renderMemberFields = async ({
 	fieldSlug: string;
 	communitySlug: string;
 	attributes: string[];
-	memberId: MembersId;
+	memberId: CommunityMembershipsId;
 }) => {
 	// Make sure this field is a member type
 	const fieldIsMemberTypeQuery = autoCache(
@@ -98,10 +113,10 @@ export const renderMemberFields = async ({
 
 	const userQuery = autoCache(
 		db
-			.selectFrom("members")
-			.innerJoin("users", "users.id", "members.userId")
+			.selectFrom("community_memberships")
+			.innerJoin("users", "users.id", "community_memberships.userId")
 			.select(ALLOWED_MEMBER_ATTRIBUTES)
-			.where("members.id", "=", memberId)
+			.where("community_memberships.id", "=", memberId)
 	);
 
 	const [, user] = await Promise.all([
@@ -177,7 +192,7 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	} else if (isLinkUrlOptions(options)) {
 		href = options.url;
 	} else if (isLinkFieldOptions(options)) {
-		href = getPubValue(context, options.field, options.rel);
+		href = getPubValue(context, options.field, options.rel).value as string;
 	} else {
 		throw new Error("Unexpected link variant");
 	}

@@ -5,7 +5,11 @@ import { expect, test } from "@playwright/test";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
-import { createCommunity, login } from "./helpers";
+import { LoginPage } from "./fixtures/login-page";
+import { PubDetailsPage } from "./fixtures/pub-details-page";
+import { PubTypesPage } from "./fixtures/pub-types-page";
+import { PubsPage } from "./fixtures/pubs-page";
+import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
@@ -17,14 +21,16 @@ let page: Page;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
-	await login({ page });
+
+	const loginPage = new LoginPage(page);
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation();
+
 	await createCommunity({
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
 	});
 
-	// this seems necessary
-	await page.waitForTimeout(1000);
 	/**
 	 * Fill out everything required to make an external form:
 	 * 1. Fields
@@ -46,11 +52,13 @@ test.beforeAll(async ({ browser }) => {
 	await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:email`);
 	await formEditPage.saveForm();
 
-	// Now we also need a pub! We'll use the one that automatically gets created in a community
-	await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
-	await page.getByRole("link", { name: "The Activity of Slugs I. The" }).click();
-	await page.waitForURL(/.*\/c\/.+\/pubs\/.+/);
-	const pubId = page.url().match(/.*\/c\/.+\/pubs\/(?<pubId>.+)/)?.groups?.pubId;
+	// Now we also need a pub!
+	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+	await pubsPage.goTo();
+	const pubId = await pubsPage.createPub({
+		pubType: "Submission",
+		values: { title: "The Activity of Slugs" },
+	});
 
 	// Finally, we can go to the external form page
 	await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${FORM_SLUG}/fill?pubId=${pubId}`);
@@ -67,5 +75,37 @@ test.describe("Rendering the external form", () => {
 		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(1);
 		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
 		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(0);
+	});
+
+	test("Can save a subset of a pub's values", async () => {
+		// Create a pub with Title and Content
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		const values = { title: "I have a title and content", content: "My content" };
+		const pubId = await pubsPage.createPub({
+			pubType: "Submission",
+			values,
+		});
+
+		// Add a pub type that only has Title. This will create a default form title-default-form
+		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
+		await pubTypePage.goto();
+		await pubTypePage.addType("Title", "title only", ["title"]);
+		const formSlug = "title-default-editor";
+		await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${formSlug}/fill?pubId=${pubId}`);
+
+		// Update the title
+		const newTitle = "New title";
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(newTitle);
+		// There should not be a Content field
+		await expect(page.getByTestId(`${COMMUNITY_SLUG}:content`)).toHaveCount(0);
+		await page.getByRole("button", { name: "Submit" }).click();
+		await expect(page.getByTestId("completed")).toHaveCount(1);
+
+		// Visit the pub's page
+		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
+		await pubPage.goTo();
+		await expect(page.getByTestId(`Content-value`)).toHaveText(values.content);
+		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1);
 	});
 });

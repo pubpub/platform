@@ -177,4 +177,5 @@ export const FileUpload = Type.Array(
 
 export const Null = Type.Null({ description: "An empty value" });
 
-export const RichText = Type.String({ description: "A string of rich text" });
+// Rich text is validated via prosemirror on submit, so we allow Any here
+export const RichText = Type.Any({ description: "A rich text document" });

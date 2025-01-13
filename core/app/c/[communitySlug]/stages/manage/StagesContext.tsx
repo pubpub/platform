@@ -22,11 +22,8 @@ export type StagesContext = {
 	stages: CommunityStage[];
 	deleteStages: (stageIds: StagesId[]) => void;
 	createMoveConstraint: (sourceStageId: StagesId, destinationStageId: StagesId) => void;
-	deleteMoveConstraints: (moveConstraintIds: [StagesId, StagesId][]) => void;
-	deleteStagesAndMoveConstraints: (
-		stageIds: StagesId[],
-		moveConstraintIds: [StagesId, StagesId][]
-	) => void;
+	deleteMoveConstraints: (moveConstraintIds: StagesId[]) => void;
+	deleteStagesAndMoveConstraints: (stageIds: StagesId[], moveConstraintIds: StagesId[]) => void;
 	createStage: () => void;
 	updateStageName: (stageId: StagesId, name: string) => void;
 	fetchStages: () => void;
@@ -54,7 +51,7 @@ type Action =
 	| { type: "stage_created"; newId: StagesId }
 	| { type: "stages_deleted"; stageIds: StagesId[] }
 	| { type: "move_constraint_created"; sourceStageId: StagesId; destinationStageId: StagesId }
-	| { type: "move_constraints_deleted"; moveConstraintIds: [StagesId, StagesId][] }
+	| { type: "move_constraints_deleted"; moveConstraintIds: StagesId[] }
 	| { type: "stage_name_updated"; stageId: StagesId; name: string };
 
 const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): CommunityStage => ({
@@ -69,14 +66,6 @@ const makeOptimisticStage = (communityId: CommunitiesId, newId: StagesId): Commu
 	pubsCount: 0,
 	memberCount: 0,
 	actionInstancesCount: 0,
-});
-
-const makeOptimisticMoveConstraint = (source: CommunityStage, destination: CommunityStage) => ({
-	stageId: source.id,
-	destination,
-	destinationId: destination.id,
-	createdAt: new Date(),
-	updatedAt: new Date(),
 });
 
 const makeOptimisitcStagesReducer =
@@ -95,10 +84,11 @@ const makeOptimisitcStagesReducer =
 							...stage,
 							moveConstraints: [
 								...stage.moveConstraints,
-								makeOptimisticMoveConstraint(
-									stage,
-									state.find((s) => s.id === action.destinationStageId)!
-								),
+								{
+									id: action.destinationStageId,
+									name: state.find((s) => s.id === action.destinationStageId)!
+										.name,
+								},
 							],
 						};
 					}
@@ -107,10 +97,10 @@ const makeOptimisitcStagesReducer =
 							...stage,
 							moveConstraintSources: [
 								...stage.moveConstraintSources,
-								makeOptimisticMoveConstraint(
-									state.find((s) => s.id === action.sourceStageId)!,
-									stage
-								),
+								{
+									id: action.sourceStageId,
+									name: state.find((s) => s.id === action.sourceStageId)!.name,
+								},
 							],
 						};
 					}
@@ -124,14 +114,14 @@ const makeOptimisitcStagesReducer =
 							(mc) =>
 								!action.moveConstraintIds.some(
 									([source, destination]) =>
-										mc.stageId === source && mc.destinationId === destination
+										stage.id === source && mc.id === destination
 								)
 						),
 						moveConstraintSources: stage.moveConstraintSources.filter(
 							(mc) =>
 								!action.moveConstraintIds.some(
 									([source, destination]) =>
-										mc.stageId === source && mc.destinationId === destination
+										mc.id === source && stage.id === destination
 								)
 						),
 					};
@@ -151,7 +141,7 @@ const makeOptimisitcStagesReducer =
 
 type DeleteBatch = {
 	stageIds: StagesId[];
-	moveConstraintIds: [StagesId, StagesId][];
+	moveConstraintIds: StagesId[];
 };
 
 export const StagesProvider = (props: StagesProviderProps) => {
@@ -199,7 +189,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	);
 
 	const deleteStagesAndMoveConstraints = useCallback(
-		(stageIds: StagesId[], moveConstraintIds: [StagesId, StagesId][]) => {
+		(stageIds: StagesId[], moveConstraintIds: StagesId[]) => {
 			if (stageIds.length > 0) {
 				startTransition(() => {
 					dispatch({
@@ -236,7 +226,7 @@ export const StagesProvider = (props: StagesProviderProps) => {
 	);
 
 	const deleteMoveConstraints = useCallback(
-		async (moveConstraintIds: [StagesId, StagesId][]) => {
+		async (moveConstraintIds: StagesId[]) => {
 			startTransition(() => {
 				dispatch({
 					type: "move_constraints_deleted",

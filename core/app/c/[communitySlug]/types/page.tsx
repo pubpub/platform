@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { PubFieldProvider } from "ui/pubFields";
 
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
@@ -31,16 +34,30 @@ export default async function Page({
 		return notFound();
 	}
 
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
+	}
+
 	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
 
 	const [types, { fields }] = await Promise.all([
 		getAllPubTypesForCommunity(communitySlug).execute(),
-		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
+		getPubFields({
+			communityId: community.id,
+			includeRelations: true,
+		}).executeTakeFirstOrThrow(),
 	]);
 
 	if (!types || !fields) {
 		return null;
 	}
+
 	return (
 		<PubFieldProvider pubFields={fields}>
 			<div className="mb-16 flex items-center justify-between">

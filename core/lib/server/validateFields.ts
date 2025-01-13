@@ -1,25 +1,12 @@
 import { Value } from "@sinclair/typebox/value";
-import Ajv from "ajv";
-import { Schema } from "prosemirror-model";
+import { baseSchema } from "context-editor/schemas";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
-import { logger } from "logger";
-
-import type { BasePubField } from "../../actions/corePubFields";
-
-/** Temporary stub schema while we have not imported the context editor yet */
-const STUB_SCHEMA = new Schema({
-	nodes: {
-		doc: { content: "paragraph+" },
-		paragraph: { content: "text*" },
-		text: { inline: true },
-	},
-});
 
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
-		const node = STUB_SCHEMA.nodeFromJSON(value);
+		const node = baseSchema.nodeFromJSON(value);
 		node.check();
 		return true;
 	} catch {
@@ -27,10 +14,43 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 	}
 };
 
+const createValidationError = (slug: string, schemaName: CoreSchemaType, value: unknown) => {
+	return {
+		slug,
+		error: `Field "${slug}" of type "${schemaName}" failed schema validation. Field "${slug}" of type "${schemaName}" cannot be assigned to value: ${value} of type ${typeof value}.`,
+	};
+};
+
+export const validatePubValuesBySchemaName = (
+	values: { slug: string; value: unknown; schemaName: CoreSchemaType }[]
+) => {
+	const errors: { slug: string; error: string }[] = [];
+	for (let { slug, value, schemaName } of values) {
+		if (schemaName === CoreSchemaType.RichText) {
+			const result = validateAgainstContextEditorSchema(value);
+
+			if (!result) {
+				errors.push(createValidationError(slug, schemaName, value));
+			}
+			continue;
+		}
+
+		const jsonSchema = getJsonSchemaByCoreSchemaType(schemaName);
+		const result = Value.Check(jsonSchema, value);
+
+		if (!result) {
+			errors.push(createValidationError(slug, schemaName, value));
+		}
+	}
+
+	return errors;
+};
+
 /**
  * Validate all `values` against their corresponding field's `schemaName`.
+ * @deprecated Use `validatePubValuesBySchemaName` instead.
  */
-export const validatePubValuesBySchemaName = ({
+export const _deprecated_validatePubValuesBySchemaName = ({
 	fields,
 	values,
 }: {
@@ -64,39 +84,4 @@ export const validatePubValuesBySchemaName = ({
 		}
 	}
 	return errors;
-};
-
-/**
- * TODO: Replace this with a more robust validation implementation
- *
- * This currently does not allow for mapping of field values to a schema
- */
-export const validatePubValues = ({
-	fields,
-	values,
-}: {
-	fields: BasePubField[];
-	values: Record<string, unknown>;
-}) => {
-	const validator = new Ajv();
-
-	for (const field of fields) {
-		const value = values[field.slug];
-
-		if (value === undefined) {
-			return { error: `Field ${field.slug} not found in pub values` };
-		}
-
-		try {
-			const val = validator.validate(field.schema.schema, value);
-			if (val !== true) {
-				return {
-					error: `Field ${field.slug} failed schema validation. Field "${field.name}" of type "${field.slug}" cannot be assigned to value: ${value} of type ${typeof value}`,
-				};
-			}
-		} catch (e) {
-			logger.error(e);
-			return { error: `Field ${field.slug} failed schema validation` };
-		}
-	}
 };

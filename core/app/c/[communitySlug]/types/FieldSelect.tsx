@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { PubFieldsId } from "db/public";
+import type { CoreSchemaType, PubFieldsId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -18,7 +18,13 @@ import { usePubFieldContext } from "ui/pubFields";
 
 export type FieldSelectProps = {
 	excludedFields: PubFieldsId[];
-	onFieldSelect: (fieldId: PubFieldsId, name: string, slug: string) => void;
+	onFieldSelect: (
+		fieldId: PubFieldsId,
+		name: string,
+		slug: string,
+		schemaName: CoreSchemaType | null,
+		isRelation?: boolean | null
+	) => void;
 	modal?: boolean;
 };
 
@@ -31,7 +37,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 	);
 	const onSelect = (fieldId: PubFieldsId) => {
 		const field = fields[fieldId];
-		onFieldSelect(fieldId, field.name, field.slug);
+		onFieldSelect(fieldId, field.name, field.slug, field.schemaName, field.isRelation);
 		setOpen(false);
 	};
 
@@ -44,6 +50,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 					role="combobox"
 					aria-expanded={open}
 					className="w-[150px] justify-between"
+					aria-label="Search fields"
 				>
 					Search fields
 					<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -53,7 +60,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 				<Command>
 					<CommandInput className="my-2 h-8" placeholder="Search fields..." />
 					<CommandEmpty>No matching field found.</CommandEmpty>
-					<CommandList>
+					<CommandList label="Available fields">
 						<CommandGroup>
 							{availableFields.map((field) => {
 								const keywords = [field.name, field.slug];
@@ -63,6 +70,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 										value={field.id}
 										keywords={keywords}
 										onSelect={onSelect as (value: string) => void}
+										data-testid={`option-${field.slug}`}
 									>
 										{field.name} ({field.slug})
 									</CommandItem>

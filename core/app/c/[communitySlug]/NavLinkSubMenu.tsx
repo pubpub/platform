@@ -13,10 +13,10 @@ import NavLink from "./NavLink";
 
 export const NavLinkSubMenu = ({
 	link,
-	prefix,
+	communityPrefix,
 }: {
 	link: DefinitelyHas<LinkDefinition, "children">;
-	prefix: string;
+	communityPrefix: string;
 }) => {
 	const [open, persistOpen] = useLocalStorage<boolean>(`nav-link-sub-menu-open-${link.href}`);
 	const [actuallyOpen, setActuallyOpen] = useState(false);
@@ -29,7 +29,7 @@ export const NavLinkSubMenu = ({
 	return (
 		<SidebarMenuItem>
 			<NavLink
-				href={`${prefix}${link.href}`}
+				href={`${communityPrefix}${link.href}`}
 				text={link.text}
 				icon={link.icon}
 				pattern={link.pattern}
@@ -57,7 +57,7 @@ export const NavLinkSubMenu = ({
 						{link.children.map((child) => (
 							<SidebarMenuSubItem key={child.href}>
 								<NavLink
-									href={`${prefix}${child.href}`}
+									href={`${communityPrefix}${child.href}`}
 									text={child.text}
 									icon={child.icon}
 									pattern={child.pattern}

@@ -109,6 +109,18 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 		return handleDatabaseErrors(error, req);
 	}
 
+	if (error instanceof NotFoundError) {
+		return TsRestResponse.fromJson(
+			{
+				status: 404,
+				body: { message: error.message },
+			},
+			{
+				status: 404,
+			}
+		);
+	}
+
 	if (error instanceof TsRestHttpError) {
 		return TsRestResponse.fromJson(
 			{
@@ -136,4 +148,11 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 			statusText: "Internal Server Error",
 		}
 	);
+};
+
+export const ApiError = {
+	UNAUTHORIZED: { title: "Unauthorized", error: "You are not authorized to perform this action" },
+	NOT_LOGGED_IN: { error: "Not logged in" },
+	COMMUNITY_NOT_FOUND: { error: "Community not found" },
+	PUB_NOT_FOUND: { error: "Pub not found" },
 };

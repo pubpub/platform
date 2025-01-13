@@ -61,7 +61,9 @@ const formElementSchema = formElementsInitializerSchema
 	.omit({ formId: true })
 	.extend(baseElementSchema.shape)
 	.strict();
+
 export type FormElementData = z.input<typeof formElementSchema>;
+
 export const isFieldInput = (element: FormElementData): element is InputElement =>
 	element.type === ElementType.pubfield;
 export const isStructuralElement = (element: FormElementData): element is StructuralElement =>

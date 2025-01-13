@@ -6,6 +6,7 @@ import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { memoize } from "./memoize";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
+import { getTablesWithLinkedTables } from "./specialTables";
 
 const executeWithCache = <
 	Q extends SQB<any>,
@@ -22,6 +23,8 @@ const executeWithCache = <
 
 		const tables = await cachedFindTables(compiledQuery, "select");
 
+		const allTables = getTablesWithLinkedTables(tables);
+
 		const cachedExecute = memoize(
 			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
 				method: M
@@ -35,7 +38,7 @@ const executeWithCache = <
 			{
 				...options,
 				revalidateTags: [
-					...createCommunityCacheTags(tables, communitySlug),
+					...createCommunityCacheTags(allTables, communitySlug),
 					createCacheTag(`community-all_${communitySlug}`),
 					...(options?.additionalRevalidateTags ?? []),
 				],
@@ -104,9 +107,9 @@ const executeWithCache = <
  * 		"lastName",
  * 		"avatar",
  * 		jsonObjectAgg(
- * 			eb.selectFrom("members").selectAll().whereRef("members.user_id", "=", "users.id")
+ * 			eb.selectFrom("community_memberships").selectAll("community_memberships").whereRef("community_memberships.user_id", "=", "users.id")
  * 		)
- * 			.where("community_id", "=", communityId)
+ * 			.where("community_memberships.communityId", "=", communityId)
  * 			.as("memberships"),
  * 	])
  * );
@@ -145,7 +148,7 @@ const executeWithCache = <
  * 		"lastName",
  * 		"avatar",
  * 		jsonObjectAgg(
- * 			eb.selectFrom("members").selectAll().whereRef("members.user_id", "=", "users.id")
+ * 			eb.selectFrom("community_memberships").selectAll("community_memberships").whereRef("community_memberships.user_id", "=", "users.id")
  * 		)
  * 			.where("community_id", "=", "s")
  * 			.as("memberships"),

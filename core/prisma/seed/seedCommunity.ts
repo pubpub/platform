@@ -8,15 +8,17 @@ import type {
 import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
+import type { ProcessedPub } from "contracts";
 import type {
 	ActionInstancesId,
+	ApiAccessTokensId,
 	Communities,
 	CommunitiesId,
 	FormAccessType,
 	FormElements,
 	Forms,
 	FormsId,
-	NewMembers,
+	NewCommunityMemberships,
 	PubFields,
 	PubsId,
 	PubTypes,
@@ -38,8 +40,11 @@ import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
 import { db } from "~/kysely/database";
-import { createPasswordHash } from "~/lib/auth/password";
+import { createPasswordHash } from "~/lib/authentication/password";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { createPubRecursiveNew } from "~/lib/server";
+import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
+import { insertForm } from "~/lib/server/form";
 import { slugifyString } from "~/lib/string";
 
 export type PubFieldsInitializer = Record<
@@ -52,7 +57,7 @@ export type PubFieldsInitializer = Record<
 
 type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
-	Partial<Record<keyof PF, true>>
+	Partial<Record<keyof PF, { isTitle: boolean }>>
 >;
 
 /**
@@ -96,7 +101,9 @@ type StagesInitializer<U extends UsersInitializer> = Record<
 	string,
 	{
 		id?: StagesId;
-		members?: (keyof U)[];
+		members?: {
+			[M in keyof U]?: MemberRole;
+		};
 		actions?: ActionInstanceInitializer[];
 	}
 >;
@@ -156,7 +163,7 @@ type PubInitializer<
 									 * Note: this PubId reference a pub at least one level higher than the current pub, or it must be created before this pub.
 									 */
 									relatedPubId: PubsId;
-							  }
+							  }[]
 					: never
 				: never;
 		};
@@ -168,7 +175,9 @@ type PubInitializer<
 		 * The members of the pub.
 		 * Users are referenced by their keys in the users object.
 		 */
-		members?: (keyof U)[];
+		members?: {
+			[M in keyof U]?: MemberRole;
+		};
 		children?: PubInitializer<PF, PT, U, S>[];
 		/**
 		 * Relations can be specified inline
@@ -335,6 +344,12 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 			])
 		);
 
+		const members = Object.fromEntries(
+			Object.entries(pub.members ?? {}).map(
+				([slug, role]) => [findBySlug(users, slug)?.id!, role!] as const
+			)
+		) as Record<UsersId, MemberRole>;
+
 		const rootPubId = pub.id ?? (crypto.randomUUID() as PubsId);
 
 		const relatedPubs = pub.relatedPubs
@@ -370,7 +385,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 		const input = {
 			communityId: community.id,
-			// @ts-expect-error Cant assign a different trx to a trx, technically
 			trx,
 			body: {
 				id: rootPubId,
@@ -379,6 +393,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				stageId: stageId,
 				values,
 				parentId: pub.parentId,
+				members,
 				children:
 					pub.children &&
 					makePubInitializerMatchCreatePubRecursiveInput({
@@ -392,6 +407,7 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 
 				relatedPubs: relatedPubs,
 			},
+			lastModifiedBy: createLastModifiedBy("system"),
 		} satisfies CreatePubRecursiveInput;
 
 		return input as CreatePubRecursiveInput;
@@ -412,7 +428,9 @@ type CommunitySeedInput = {
 
 // ========
 // These are helper types to make the output of the seeding functions match the input more closely.
-type PubFieldsByName<PF> = { [K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } };
+type PubFieldsByName<PF> = {
+	[K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean };
+};
 
 type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
@@ -449,6 +467,7 @@ export async function seedCommunity<
 	const SC extends StageConnectionsInitializer<S>,
 	const PI extends PubInitializer<PF, PT, U, S>[],
 	const F extends FormInitializer<PF, PT, U, S>,
+	WithApiToken extends boolean | `${string}.${string}` | undefined = undefined,
 >(
 	props: {
 		/**
@@ -497,7 +516,7 @@ export async function seedCommunity<
 		 * 	},
 		 * 	pubTypes: {
 		 * 		Article: {
-		 * 			Title: "A Great Article",
+		 * 			Title: { isTitle: true },
 		 * 		}
 		 * }
 		 * ```
@@ -665,10 +684,23 @@ export async function seedCommunity<
 	},
 	options?: {
 		/**
+		 * Whether or not to create an API token for the community.
+		 * If a string is provided, it will be used as the id part of the token.
+		 * @default false
+		 */
+		withApiToken?: WithApiToken;
+		/**
 		 * Whether or not to add a random number to the end of slugs, helps prevent errors during testing.
 		 * @default true
 		 */
 		randomSlug?: boolean;
+		/**
+		 * Whether or not to create pubs in parallel.
+		 * It's set to `false` by default as it allows you to reference related pubs, so only use this if you aren't creating interlinked references between pubs.
+		 *
+		 * @default false
+		 */
+		parallelPubs?: boolean;
 	},
 	trx = db
 ) {
@@ -687,7 +719,6 @@ export async function seedCommunity<
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
-	logger.info(`Successfully created community ${community.name}`);
 
 	const { id: communityId, slug: communitySlug } = createdCommunity;
 
@@ -739,7 +770,8 @@ export async function seedCommunity<
 					.insertInto("_PubFieldToPubType")
 					.values(
 						pubTypesList.flatMap(([pubTypeName, fields], idx) =>
-							Object.keys(fields).flatMap((field) => {
+							Object.entries(fields).flatMap(([field, meta]) => {
+								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
 								)?.id;
@@ -754,6 +786,7 @@ export async function seedCommunity<
 									{
 										A: fieldId,
 										B: pubTypeId,
+										isTitle,
 									},
 								];
 							})
@@ -762,6 +795,19 @@ export async function seedCommunity<
 					.returningAll()
 					.execute()
 			: [];
+
+	await Promise.all(
+		createdPubTypes.map((type) =>
+			insertForm(
+				type.id,
+				`${type.name} Editor (Default)`,
+				`${slugifyString(type.name)}-default-editor`,
+				communityId,
+				true,
+				trx
+			).execute()
+		)
+	);
 
 	const pubTypesWithPubFieldsByName = Object.fromEntries(
 		createdPubTypes.map((pubType) => [
@@ -776,7 +822,10 @@ export async function seedCommunity<
 								(pubField) => pubField.id === pubFieldToPubType.A
 							)!;
 
-							return [pubField.name, pubField] as const;
+							return [
+								pubField.name,
+								{ ...pubField, isTitle: pubFieldToPubType.isTitle },
+							] as const;
 						})
 				),
 			},
@@ -819,12 +868,16 @@ export async function seedCommunity<
 					userId: createdUser.id,
 					communityId,
 					role: userWithRole.role!,
-				} satisfies NewMembers,
+				} satisfies NewCommunityMemberships,
 			];
 		});
 
 	const createdMembers = possibleMembers?.length
-		? await trx.insertInto("members").values(possibleMembers).returningAll().execute()
+		? await trx
+				.insertInto("community_memberships")
+				.values(possibleMembers)
+				.returningAll()
+				.execute()
 		: [];
 
 	const usersWithMemberShips = createdUsers.map((user) => ({
@@ -855,53 +908,31 @@ export async function seedCommunity<
 	}));
 
 	const stageMembers = consolidatedStages
-		.flatMap(
-			(stage, idx) =>
-				stage.members?.map((member) => ({
-					stage,
-					user: findBySlug(usersWithMemberShips, member as string)!,
-				})) ?? []
-		)
-		.filter((stageMember) => stageMember.user.member != undefined);
+		.flatMap((stage, idx) => {
+			if (!stage.members) return [];
 
-	const stagePermissions =
+			return Object.entries(stage.members)?.map(([member, role]) => ({
+				stage,
+				user: findBySlug(usersWithMemberShips, member as string)!,
+				role,
+			}));
+		})
+		.filter(
+			(stageMember) => stageMember.user.member != undefined && stageMember.role != undefined
+		);
+
+	const stageMemberships =
 		stageMembers.length > 0
 			? await trx
-					.with("new_permissions", (db) =>
-						db
-							.insertInto("permissions")
-							.values((eb) =>
-								stageMembers.map(({ user }) => ({
-									memberId: user.member!.id,
-								}))
-							)
-							.returningAll()
+					.insertInto("stage_memberships")
+					.values((eb) =>
+						stageMembers.map((stageMember) => ({
+							role: stageMember.role!,
+							stageId: stageMember.stage.id,
+							userId: stageMember.user.id,
+						}))
 					)
-					.with("new_permissions_to_stage", (db) =>
-						db
-							.insertInto("_PermissionToStage")
-							.values((eb) =>
-								stageMembers.map(({ user: member, stage }, idx) => ({
-									A: eb
-										.selectFrom("new_permissions")
-										.select("new_permissions.id")
-										.limit(1)
-										.offset(idx)
-										.where("new_permissions.memberId", "=", member.member!.id),
-									B: stage.id,
-								}))
-							)
-							.returningAll()
-					)
-					.selectFrom("new_permissions")
-					.selectAll("new_permissions")
-					.select((eb) =>
-						eb
-							.selectFrom("new_permissions_to_stage")
-							.select("B")
-							.whereRef("new_permissions_to_stage.A", "=", "new_permissions.id")
-							.as("stageId")
-					)
+					.returningAll()
 					.execute()
 			: [];
 
@@ -910,12 +941,12 @@ export async function seedCommunity<
 			stage.name,
 			{
 				...stage,
-				permissions: stagePermissions.filter(
+				permissions: stageMemberships.filter(
 					(permission) => permission.stageId === stage.id
 				),
 			},
 		])
-	) as StagesWithPermissionsByName<S, typeof stagePermissions>;
+	) as StagesWithPermissionsByName<S, typeof stageMemberships>;
 
 	const stageConnectionsList = props.stageConnections
 		? await db
@@ -971,12 +1002,31 @@ export async function seedCommunity<
 			})
 		: [];
 
-	const createdPubs: Awaited<ReturnType<typeof createPubRecursiveNew>>[] = [];
-	// we do this one at a time because we allow pubs to be able to reference each other in the relatedPubs field
-	for (const input of createPubRecursiveInput) {
-		const pub = await createPubRecursiveNew(input);
-		createdPubs.push(pub);
+	// TODO: this can be simplified a lot by first creating the pubs and children
+	// and then creating their related pubs
+
+	let createdPubs: ProcessedPub[] = [];
+
+	logger.info(
+		`${createdCommunity.name}: ${options?.parallelPubs ? "Parallelly" : "Sequentially"} - Creating ${createPubRecursiveInput.length} pubs`
+	);
+	if (options?.parallelPubs) {
+		const input = createPubRecursiveInput.map((input) => createPubRecursiveNew({ ...input }));
+
+		setInterval(() => {
+			logger.info(`${createdCommunity.name}: Creating Pubs...`);
+		}, 1000);
+
+		createdPubs = await Promise.all(input);
+	} else {
+		// we do this one at a time because we allow pubs to be able to reference each other in the relatedPubs field
+		for (const input of createPubRecursiveInput) {
+			const pub = await createPubRecursiveNew(input);
+			createdPubs.push(pub);
+		}
 	}
+
+	logger.info(`${createdCommunity.name}: Successfully created pubs`);
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
 	const createdForms =
@@ -1060,6 +1110,47 @@ export async function seedCommunity<
 		? await trx.insertInto("action_instances").values(possibleActions).returningAll().execute()
 		: [];
 
+	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
+
+	let apiToken: string | undefined = undefined;
+
+	if (options?.withApiToken) {
+		const [tokenId, tokenString] =
+			typeof options.withApiToken === "string"
+				? options.withApiToken.split(".")
+				: [crypto.randomUUID(), undefined];
+
+		const issuedById = createdMembers.find(
+			(member) => member.role === MemberRole.admin
+		)?.userId;
+
+		if (!issuedById) {
+			throw new Error(
+				"Attempting to create an API token without an admin member. You should create an admin member in the seed if you intend to be able to use the API."
+			);
+		}
+
+		const { token } = await createApiAccessToken({
+			token: {
+				name: "seed token",
+				communityId,
+				expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12),
+				description: "Default seed token. Should not be used in production.",
+				issuedAt: new Date(),
+				id: tokenId as ApiAccessTokensId,
+				issuedById,
+				// @ts-expect-error - this is a predefined token
+				token: tokenString,
+			},
+			permissions: allPermissions,
+		}).executeTakeFirstOrThrow();
+
+		apiToken = token;
+
+		logger.info(`${createdCommunity.name}: Successfully created API token`);
+	}
+	logger.info(`${createdCommunity.name}: Successfully seeded community`);
+
 	return {
 		community: createdCommunity,
 		pubFields: pubFieldsByName,
@@ -1071,6 +1162,11 @@ export async function seedCommunity<
 		pubs: createdPubs,
 		actions: createdActions,
 		forms: formsByName,
+		apiToken: apiToken as WithApiToken extends string
+			? `${string}.${WithApiToken}`
+			: WithApiToken extends boolean
+				? string
+				: undefined,
 	};
 }
 
@@ -1092,11 +1188,13 @@ export const createSeed = <
 		slug: string;
 		avatar?: string;
 	};
-	pubFields: PF;
-	pubTypes: PT;
-	users: U;
-	stages: S;
-	stageConnections: SC;
-	pubs: PI;
-	forms: F;
+	pubFields?: PF;
+	pubTypes?: PT;
+	users?: U;
+	stages?: S;
+	stageConnections?: SC;
+	pubs?: PI;
+	forms?: F;
 }) => props;
+
+export type Seed = Parameters<typeof createSeed>[0];

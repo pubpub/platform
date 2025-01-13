@@ -1,38 +1,46 @@
 import type { Metadata } from "next";
 
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import type { PubsId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
+import { Button } from "ui/button";
+import { Pencil } from "ui/icon";
 
-import type { PubValueWithFieldAndSchema } from "./components/jsonSchemaHelpers";
-import type { CommunityStage } from "~/lib/server/stages";
-import type { MemberWithUser, PubWithValues } from "~/lib/types";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import IntegrationActions from "~/app/components/IntegrationActions";
+import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { PubTitle } from "~/app/components/PubTitle";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { getCommunityBySlug, getStage, getStageActions } from "~/lib/db/queries";
-import { getPubUsers } from "~/lib/permissions";
-import { pubValuesByVal } from "~/lib/server";
-import { pubInclude } from "~/lib/server/_legacy-integration-queries";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
+import { getStageActions } from "~/lib/db/queries";
+import { getPubTitle } from "~/lib/pubs";
+import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { createToken } from "~/lib/server/token";
-import prisma from "~/prisma/db";
-import { renderField } from "./components/jsonSchemaHelpers";
+import { findCommunityBySlug } from "~/lib/server/community";
+import { selectCommunityMembers } from "~/lib/server/member";
+import { getStages } from "~/lib/server/stages";
+import {
+	addPubMember,
+	addUserWithPubMembership,
+	removePubMember,
+	setPubMemberRole,
+} from "./actions";
 import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
+import { PubValues } from "./components/PubValues";
+import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
 export async function generateMetadata({
 	params: { pubId },
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { pubId: PubsId; communitySlug: string };
 }): Promise<Metadata> {
 	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
 
@@ -40,8 +48,8 @@ export async function generateMetadata({
 		db
 			.selectFrom("pubs")
 			.selectAll("pubs")
-			.select(pubValuesByVal(pubId as PubsId))
-			.where("id", "=", pubId as PubsId)
+			.select(pubValuesByVal(pubId))
+			.where("id", "=", pubId)
 	).executeTakeFirst();
 
 	if (!pub) {
@@ -61,120 +69,121 @@ export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { pubId: PubsId; communitySlug: string };
 	searchParams: Record<string, string>;
 }) {
+	const { pubId, communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
-	const token = await createToken({
-		userId: user.id as UsersId,
-		type: AuthTokenType.generic,
-	});
-
-	if (!params.pubId || !params.communitySlug) {
+	if (!pubId || !communitySlug) {
 		return null;
 	}
-	// TODO: use unstable_cache without chidren not rendereing
-	const getPub = (pubId: string) =>
-		prisma.pub.findUnique({
-			where: { id: pubId },
-			include: {
-				...pubInclude,
-			},
-		});
 
-	const pub = await getPub(params.pubId);
-	if (!pub) {
-		return null;
-	}
-	const users = getPubUsers(pub.permissions);
-	const community = await getCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(communitySlug);
 
-	if (community === null) {
+	if (!community) {
 		notFound();
 	}
 
-	const [actionsPromise, stagePromise] =
-		pub.stages.length > 0
-			? [
-					getStageActions(pub.stages[0].stageId as StagesId).execute(),
-					getStage(pub.stages[0].stageId as StagesId).executeTakeFirst(),
-				]
-			: [null, null];
+	const canView = await userCan(
+		Capabilities.viewPub,
+		{ type: MembershipType.pub, pubId },
+		user.id
+	);
 
-	const [actions, stage] = await Promise.all([actionsPromise, stagePromise]);
+	if (!canView) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
 
-	const { stages, children, ...slimPub } = pub;
+	const canAddMember = await userCan(
+		Capabilities.addPubMember,
+		{
+			type: MembershipType.pub,
+			pubId,
+		},
+		user.id
+	);
+	const canRemoveMember = await userCan(
+		Capabilities.removePubMember,
+		{
+			type: MembershipType.pub,
+			pubId,
+		},
+		user.id
+	);
+
+	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({ communityId: community.id }).execute();
+
+	// We don't pass the userId here because we want to include related pubs regardless of authorization
+	// This is safe because we've already explicitly checked authorization for the root pub
+	const pub = await getPubsWithRelatedValuesAndChildren(
+		{ pubId: params.pubId, communityId: community.id },
+		{
+			withPubType: true,
+			withChildren: true,
+			withRelatedPubs: true,
+			withStage: true,
+			withMembers: true,
+			depth: 3,
+		}
+	);
+
+	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+
+	const [actions, communityMembers, communityStages] = await Promise.all([
+		actionsPromise,
+		communityMembersPromise,
+		communityStagesPromise,
+	]);
+	if (!pub) {
+		return null;
+	}
+
+	const { stage, children, ...slimPub } = pub;
 	return (
 		<div className="flex flex-col space-y-4">
-			<div className="mb-8">
-				<h3 className="mb-2 text-xl font-bold">{pub.pubType.name}</h3>
-				<PubTitle pub={pub} />
+			<div className="mb-8 flex items-center justify-between">
+				<div>
+					<div className="text-lg font-semibold text-muted-foreground">
+						{pub.pubType.name}
+					</div>
+					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
+				</div>
+				<Button variant="outline" asChild className="flex items-center gap-1">
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+						<Pencil size="14" />
+						Update
+					</Link>
+				</Button>
 			</div>
+
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
-					{pub.values
-						.filter((value) => {
-							return value.field.name !== "Title";
-						})
-						.map((value) => {
-							return (
-								<div className="mb-4" key={value.id}>
-									<div>
-										{renderField(
-											value as unknown as PubValueWithFieldAndSchema
-										)}
-									</div>
-								</div>
-							);
-						})}
+					<PubValues pub={pub} />
 				</div>
-				<div className="flex w-64 flex-col gap-4 rounded-lg bg-gray-50 p-4 font-semibold shadow-inner">
-					<div>
-						<div className="mb-1 text-lg font-bold">Current Stage</div>
-						<div className="ml-4 flex items-center gap-2 font-medium">
-							<div>
-								{pub.stages.map(({ stage }) => {
-									return (
-										<div key={stage.id} data-testid="current-stage">
-											{stage.name}
-										</div>
-									);
-								})}
-							</div>
-							{pub.stages[0] ? (
-								<Move
-									pubId={pub.id as PubsId}
-									stageId={pub.stages[0].stageId as StagesId}
-									communityStages={
-										community.stages as unknown as CommunityStage[]
-									}
-								/>
-							) : null}
-						</div>
-					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Integrations</div>
+				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
+					{pub.stage ? (
 						<div>
-							<Suspense>
-								{pub.stages[0]?.stageId && (
-									<IntegrationActions
-										pubId={pub.id as PubsId}
-										token={token}
-										stageId={pub.stages[0].stageId as StagesId}
-										type="pub"
-									/>
-								)}
-							</Suspense>
+							<div className="mb-1 text-lg font-bold">Current Stage</div>
+							<div className="ml-4 flex items-center gap-2 font-medium">
+								<div data-testid="current-stage">{pub.stage.name}</div>
+								<Move
+									pubId={pub.id}
+									stageId={pub.stage.id}
+									communityStages={communityStages}
+								/>
+							</div>
 						</div>
-					</div>
+					) : null}
 					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (
 							<div className="ml-4">
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
-									pubId={pub.id as PubsId}
+									pubId={pubId}
 									stage={stage!}
 									pageContext={{
 										params: params,
@@ -190,30 +199,30 @@ export default async function Page({
 						)}
 					</div>
 
-					<div>
-						<div className="mb-1 text-lg font-bold">Members</div>
-						<div className="flex flex-row flex-wrap">
-							{users.map((user) => {
-								return (
-									<div key={user.id}>
-										<Avatar className="mr-2 h-8 w-8">
-											<AvatarImage src={user.avatar || undefined} />
-											<AvatarFallback>{user.firstName[0]}</AvatarFallback>
-										</Avatar>
-									</div>
-								);
-							})}
+					<div className="flex flex-col gap-y-4">
+						<div className="mb-2 flex justify-between">
+							<span className="text-lg font-bold">Members</span>
+							{canAddMember && (
+								<AddMemberDialog
+									addMember={addPubMember.bind(null, pubId)}
+									addUserMember={addUserWithPubMembership.bind(null, pubId)}
+									existingMembers={pub.members.map((member) => member.id)}
+									isSuperAdmin={user.isSuperAdmin}
+								/>
+							)}
 						</div>
+						<MembersList
+							members={pub.members}
+							setRole={setPubMemberRole}
+							removeMember={removePubMember}
+							targetId={pubId}
+							readOnly={!canRemoveMember}
+						/>
 					</div>
 					<div>
 						<div className="mb-1 text-lg font-bold">Assignee</div>
 						<div className="ml-4">
-							<Assign
-								// TODO: Remove this cast
-								members={community.members as unknown as MemberWithUser[]}
-								// TODO: Remove this cast
-								pub={slimPub as unknown as PubWithValues}
-							/>
+							<Assign members={communityMembers} pub={slimPub} />
 						</div>
 					</div>
 				</div>
@@ -226,20 +235,19 @@ export default async function Page({
 				</p>
 			</div>
 			<div className="mb-2">
-				<CreatePubButton
-					text="Add New Pub"
-					communityId={community.id as CommunitiesId}
-					parentId={pub.id as PubsId}
-					searchParams={searchParams}
-				/>
+				<CreatePubButton text="Add New Pub" communityId={community.id} parentId={pub.id} />
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper
 					communitySlug={params.communitySlug}
 					pageContext={{ params, searchParams }}
-					parentPubId={pub.id as PubsId}
+					parentPubId={pub.id}
 				/>
 			</Suspense>
+			<div>
+				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+				<RelatedPubsTable pub={pub} />
+			</div>
 		</div>
 	);
 }

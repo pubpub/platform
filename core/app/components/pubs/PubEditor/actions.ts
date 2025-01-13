@@ -1,35 +1,63 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { PubsId, StagesId, UsersId } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { logger } from "logger";
 
 import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
-import { createPubRecursiveNew } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { isCommunityAdmin } from "~/lib/authentication/roles";
+import { userCan } from "~/lib/authorization/capabilities";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
+import { ApiError, createPubRecursiveNew } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { addMemberToForm, userHasPermissionToForm } from "~/lib/server/form";
+import { updatePub as _updatePub, deletePub } from "~/lib/server/pub";
+
+type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
-	...[props]: Parameters<typeof createPubRecursiveNew>
+	props: CreatePubRecursiveProps & { formSlug?: string; addUserToForm?: boolean }
 ) {
-	const { user } = await getLoginData();
-	if (!user) {
-		throw new Error("Not logged in");
+	const { formSlug, addUserToForm, ...createPubProps } = props;
+	const loginData = await getLoginData();
+
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
+	}
+	const { user } = loginData;
+
+	const canCreatePub = await userCan(
+		Capabilities.createPub,
+		{ type: MembershipType.community, communityId: props.communityId },
+		user.id
+	);
+	const canCreateFromForm = formSlug
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
+		: false;
+
+	if (!canCreatePub && !canCreateFromForm) {
+		return ApiError.UNAUTHORIZED;
 	}
 
-	if (!isCommunityAdmin(user, { id: props.communityId })) {
-		return {
-			error: "You need to be an admin",
-		};
-	}
+	const lastModifiedBy = createLastModifiedBy({
+		userId: user.id as UsersId,
+	});
+
 	try {
-		await createPubRecursiveNew(props);
+		const createdPub = await createPubRecursiveNew({ ...createPubProps, lastModifiedBy });
+
+		if (addUserToForm && formSlug) {
+			await addMemberToForm({
+				communityId: props.communityId,
+				userId: user.id,
+				slug: formSlug,
+				pubId: createdPub.id,
+			});
+		}
 		return {
 			success: true,
 			report: `Successfully created a new Pub`,
@@ -43,150 +71,56 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 });
 
-export const _updatePub = async ({
-	pubId,
-	pubValues,
-	stageId,
-	pubTypeId,
-	continueOnValidationError,
-}: {
-	pubId: PubsId;
-	pubValues: PubValues;
-	stageId?: StagesId;
-	pubTypeId?: PubTypesId;
-	continueOnValidationError: boolean;
-}) => {
-	const result = await db.transaction().execute(async (trx) => {
-		// Update the stage if a target stage was provided.
-		if (stageId !== undefined) {
-			await autoRevalidate(
-				trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId)
-			).execute();
-			await autoRevalidate(
-				trx.insertInto("PubsInStages").values({ pubId, stageId })
-			).execute();
-		}
-
-		// Update the pub type if a pub type was provided.
-		if (pubId !== undefined) {
-			await autoRevalidate(
-				trx.updateTable("pubs").set({ pubTypeId }).where("id", "=", pubId)
-			).execute();
-		}
-
-		// First query for existing values so we know whether to insert or update.
-		// Also get the schemaName for validation. We want the fields that may not be in the pub, too.
-		const toBeUpdatedPubFieldSlugs = Object.keys(pubValues);
-
-		if (!toBeUpdatedPubFieldSlugs.length) {
-			return {
-				success: true,
-				report: "Pub updated successfully",
-			};
-		}
-
-		const existingPubFieldValues = await autoCache(
-			trx
-				.selectFrom("pub_fields")
-				.leftJoin("pub_values", (join) =>
-					join
-						.onRef("pub_values.fieldId", "=", "pub_fields.id")
-						.on("pub_values.pubId", "=", pubId)
-				)
-				.where("pub_fields.slug", "in", toBeUpdatedPubFieldSlugs)
-				.where("pub_fields.isRelation", "=", false)
-				.select([
-					"pub_values.id as pubValueId",
-					"pub_fields.slug",
-					"pub_fields.name",
-					"pub_fields.schemaName",
-				])
-		).execute();
-
-		const validationErrors = validatePubValuesBySchemaName({
-			fields: existingPubFieldValues,
-			values: pubValues,
-		});
-
-		const invalidValueSlugs = Object.keys(validationErrors);
-		if (invalidValueSlugs.length) {
-			if (continueOnValidationError) {
-				for (const slug of invalidValueSlugs) {
-					delete pubValues[slug];
-				}
-			} else {
-				throw new Error(Object.values(validationErrors).join(" "));
-			}
-		}
-
-		try {
-			// Insert, update on conflict
-			await autoRevalidate(
-				trx
-					.insertInto("pub_values")
-					.values((eb) =>
-						Object.entries(pubValues).map(([pubFieldSlug, pubValue]) => ({
-							id:
-								existingPubFieldValues.find(
-									(pubFieldValue) => pubFieldValue.slug === pubFieldSlug
-								)?.pubValueId ?? undefined,
-							pubId,
-							value: JSON.stringify(pubValue),
-							fieldId: eb
-								.selectFrom("pub_fields")
-								.where("pub_fields.slug", "=", pubFieldSlug)
-								.select("pub_fields.id"),
-						}))
-					)
-					.onConflict((oc) =>
-						oc.column("id").doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-						}))
-					)
-			).execute();
-		} catch (error) {
-			return {
-				title: "Failed to update pub",
-				error: `${error.reason}`,
-				cause: error,
-			};
-		}
-
-		return {
-			success: true,
-			report: "Pub updated successfully",
-		};
-	});
-
-	return result;
-};
-
 export const updatePub = defineServerAction(async function updatePub({
 	pubId,
-	pubTypeId,
 	pubValues,
 	stageId,
+	formSlug,
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
-	pubTypeId?: PubTypesId;
 	pubValues: PubValues;
 	stageId?: StagesId;
+	formSlug?: string;
 	continueOnValidationError: boolean;
 }) {
 	const loginData = await getLoginData();
 
-	if (!loginData) {
-		throw new Error("Not logged in");
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
 	}
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const canUpdateFromForm = formSlug
+		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id, pubId })
+		: false;
+	const canUpdatePubValues = await userCan(
+		Capabilities.updatePubValues,
+		{ type: MembershipType.pub, pubId },
+		loginData.user.id
+	);
+
+	if (!canUpdatePubValues && !canUpdateFromForm) {
+		return ApiError.UNAUTHORIZED;
+	}
+
+	const lastModifiedBy = createLastModifiedBy({
+		userId: loginData.user.id as UsersId,
+	});
 
 	try {
 		const result = await _updatePub({
 			pubId,
-			pubTypeId,
+			communityId: community.id,
 			pubValues,
 			stageId,
 			continueOnValidationError,
+			lastModifiedBy,
 		});
 
 		return result;
@@ -199,18 +133,34 @@ export const updatePub = defineServerAction(async function updatePub({
 	}
 });
 
-export const removePub = defineServerAction(async function removePub({
-	pubId,
-	path,
-}: {
-	pubId: PubsId;
-	path?: string | null;
-}) {
-	const { user } = await getLoginData();
+export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
+	const loginData = await getLoginData();
 
-	if (!user) {
-		throw new Error("Not logged in");
+	if (!loginData || !loginData.user) {
+		return ApiError.NOT_LOGGED_IN;
 	}
+
+	const lastModifiedBy = createLastModifiedBy({
+		userId: loginData.user.id,
+	});
+	const { user } = loginData;
+
+	const community = await findCommunityBySlug();
+
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
+
+	const authorized = await userCan(
+		Capabilities.deletePub,
+		{ type: MembershipType.pub, pubId },
+		loginData.user.id
+	);
+
+	if (!authorized) {
+		return ApiError.UNAUTHORIZED;
+	}
+
 	const pub = await db
 		.selectFrom("pubs")
 		.selectAll()
@@ -218,9 +168,7 @@ export const removePub = defineServerAction(async function removePub({
 		.executeTakeFirst();
 
 	if (!pub) {
-		return {
-			error: "Pub not found",
-		};
+		return ApiError.PUB_NOT_FOUND;
 	}
 
 	if (!isCommunityAdmin(user, { id: pub.communityId })) {
@@ -230,11 +178,8 @@ export const removePub = defineServerAction(async function removePub({
 	}
 
 	try {
-		await autoRevalidate(db.deleteFrom("pubs").where("pubs.id", "=", pubId)).executeTakeFirst();
+		await deletePub({ pubId, lastModifiedBy });
 
-		if (path) {
-			revalidatePath(path);
-		}
 		return {
 			success: true,
 			report: `Successfully removed the pub`,

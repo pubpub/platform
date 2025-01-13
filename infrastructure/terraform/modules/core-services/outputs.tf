@@ -15,6 +15,9 @@ output "secrets" {
     supabase_service_role_key = aws_secretsmanager_secret.supabase_service_role_key.id
     supabase_webhooks_api_key = aws_secretsmanager_secret.supabase_webhooks_api_key.id
     mailgun_smtp_password     = aws_secretsmanager_secret.mailgun_smtp_password.id
+    gcloud_key_file           = aws_secretsmanager_secret.gcloud_key_file.id
+    datacite_repository_id    = aws_secretsmanager_secret.datacite_repository_id.id
+    datacite_password         = aws_secretsmanager_secret.datacite_password.id
   }
 }
 

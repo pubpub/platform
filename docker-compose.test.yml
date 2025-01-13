@@ -75,6 +75,7 @@ services:
             - MAILGUN_SMTP_PASSWORD=xxx
             - PORT=3000
             - CI=true
+            - GCLOUD_KEY_FILE=xxx
         depends_on:
             jobs:
                 # TODO: add a healthcheck for jobs

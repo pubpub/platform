@@ -13,6 +13,7 @@ import type { Equal, Expect } from "~/lib/types";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
 import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";
+import { getTablesWithLinkedTables } from "./specialTables";
 
 const mockedDb = new Kysely<Database>({
 	dialect: new PostgresDialect({
@@ -66,22 +67,28 @@ describe("cachedFindTables", () => {
 		const qb = mockedDb
 			.selectFrom("users")
 			.select(["id", "firstName"])
-			.where("id", "=", mockedDb.selectFrom("members").select("userId").limit(1));
+			.where(
+				"id",
+				"=",
+				mockedDb.selectFrom("community_memberships").select("userId").limit(1)
+			);
 
 		const tables = await compileAndFindTables(qb, "select");
 
-		expect(tables).toEqual(["users", "members"]);
+		expect(tables).toEqual(["users", "community_memberships"]);
 	});
 
 	it("should return the correct tables for a query with a subquery in an array", async () => {
 		const qb = mockedDb
 			.selectFrom("users")
 			.select(["id", "firstName"])
-			.where("id", "=", [mockedDb.selectFrom("members").select("userId").limit(1)]);
+			.where("id", "=", [
+				mockedDb.selectFrom("community_memberships").select("userId").limit(1),
+			]);
 
 		const tables = await compileAndFindTables(qb, "select");
 
-		expect(tables).toEqual(["users", "members"]);
+		expect(tables).toEqual(["users", "community_memberships"]);
 	});
 
 	it("should not return the tables used in select subqueries/CTEs for mutation queries", async () => {
@@ -93,15 +100,16 @@ describe("cachedFindTables", () => {
 			// as it will not change
 			.with("firstCommunity", (qb) => qb.selectFrom("communities").selectAll().limit(1))
 			// members SHOULD be included in the to be invalidated tags
-			.insertInto("members")
+			.insertInto("community_memberships")
 			.values((eb) => ({
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
+				role: MemberRole.editor,
 			}));
 
 		const tables = await compileAndFindTables(qb, "mutation");
 
-		expect(tables).toEqual(["members"]);
+		expect(tables).toEqual(["community_memberships"]);
 	});
 
 	it("should not filter out the tables used in select subqueries/CTEs for mutation queries if they are also mutated", async () => {
@@ -114,15 +122,16 @@ describe("cachedFindTables", () => {
 					.where("id", "=", qb.selectFrom("firstUser").select("firstUser.id"))
 			)
 			.with("firstCommunity", (qb) => qb.selectFrom("communities").selectAll().limit(1))
-			.insertInto("members")
+			.insertInto("community_memberships")
 			.values((eb) => ({
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
+				role: MemberRole.editor,
 			}));
 
 		const tables = await compileAndFindTables(qb, "mutation");
 
-		expect(tables).toEqual(["members", "users"]);
+		expect(tables).toEqual(["community_memberships", "users"]);
 	});
 
 	it("should return the correct tables for a rather complex query", async () => {
@@ -187,7 +196,7 @@ describe("cachedFindTables", () => {
 	});
 
 	it("should include joins in select queries", async () => {
-		const query = mockedDb.selectFrom("members");
+		const query = mockedDb.selectFrom("community_memberships");
 
 		const joins = [
 			"innerJoin",
@@ -202,27 +211,28 @@ describe("cachedFindTables", () => {
 			joins.map(async (joinType) => {
 				const tables = await compileAndFindTables(
 					// @ts-expect-error shh
-					query[joinType]("users", "users.id", "members.user_id"),
+					query[joinType]("users", "users.id", "community_memberships.user_id"),
 					"select"
 				);
-				return expect(tables).toEqual(["members", "users"]);
+				return expect(tables).toEqual(["community_memberships", "users"]);
 			})
 		);
 	});
 
 	it("should not include joins in mutation queries", async () => {
-		const query = mockedDb.insertInto("members").values((eb) => ({
+		const query = mockedDb.insertInto("community_memberships").values((eb) => ({
 			userId: eb
 				.selectFrom("users")
-				.innerJoin("members", "members.userId", "users.id")
-				.innerJoin("communities", "communities.id", "members.communityId")
+				.innerJoin("community_memberships", "community_memberships.userId", "users.id")
+				.innerJoin("communities", "communities.id", "community_memberships.communityId")
 				.select("users.id"),
 			communityId: eb.selectFrom("communities").select("communities.id"),
+			role: MemberRole.editor,
 		}));
 
 		const tables = await compileAndFindTables(query, "mutation");
 
-		expect(tables).toEqual(["members"]);
+		expect(tables).toEqual(["community_memberships"]);
 
 		// function here to make sure the query is not executed
 		() => {
@@ -489,5 +499,15 @@ describe("cachedFindTables", () => {
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
 			>;
 		};
+	});
+
+	it("should add extra tags for tables that are linked to other tables", async () => {
+		const tables = await compileAndFindTables(mockedDb.selectFrom("pubs"), "select");
+
+		expect(tables).toEqual(["pubs"]);
+
+		const extraTables = getTablesWithLinkedTables(tables);
+
+		expect(extraTables).toEqual(["pubs", "pub_values", "_PubFieldToPubType"]);
 	});
 });

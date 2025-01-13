@@ -1,6 +1,6 @@
 import { cache } from "react";
 
-import type { PubsId, UsersId } from "db/public";
+import type { PubsId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { createCacheTag } from "./cache/cacheTags";
@@ -44,15 +44,3 @@ export const findCommunityByPubId = memoize(
 );
 
 export type CommunityData = Awaited<ReturnType<typeof findCommunityByPubId>>;
-
-// TODO: cache this
-export const getAvailableCommunities = async (userId: UsersId) => {
-	return await db
-		.selectFrom("members")
-		.where("members.userId", "=", userId)
-		.innerJoin("communities", "communities.id", "members.communityId")
-		.selectAll("communities")
-		.execute();
-};
-
-export type AvailableCommunitiesData = Awaited<ReturnType<typeof getAvailableCommunities>>;

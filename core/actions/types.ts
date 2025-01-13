@@ -1,14 +1,16 @@
 import type { JTDDataType } from "ajv/dist/jtd";
 import type * as z from "zod";
 
+import type { ProcessedPub } from "contracts";
 import type {
 	Action as ActionName,
+	ActionRunsId,
 	CommunitiesId,
-	CoreSchemaType,
 	Event,
 	PubsId,
 	StagesId,
 } from "db/public";
+import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 
@@ -20,19 +22,29 @@ export type ActionPubType = CorePubField[];
 type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
 export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
-export type ActionPub<T extends ActionPubType> = {
-	id: string;
-	parentId?: PubsId | null;
-	values: {
-		[key in T[number]["slug"]]: JTDDataType<T[number]["schema"]["schema"]>;
-	};
-	assignee?: {
-		id: string;
-		firstName: string;
-		lastName: string | null;
-		email: string;
-	};
-};
+export type ActionPub = ProcessedPub<{
+	withAssignee: true;
+	withPubType: true;
+	withRelatedPubs: undefined;
+}>;
+
+// export type ActionPub<T extends ActionPubType> = {
+// 	id: PubsId;
+// 	parentId?: PubsId | null;
+
+// 	assignee?: {
+// 		id: string;
+// 		firstName: string;
+// 		lastName: string | null;
+// 		email: string;
+// 	};
+// 	communityId: CommunitiesId;
+// 	createdAt: Date;
+// 	title: string | null;
+// 	pubType: {
+// 		name: string;
+// 	};
+// };
 
 export type RunProps<T extends Action> =
 	T extends Action<
@@ -43,11 +55,18 @@ export type RunProps<T extends Action> =
 		? {
 				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
 				configFieldOverrides: Set<string>;
-				pub: ActionPub<P>;
+				pub: ActionPub;
 				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
 				argsFieldOverrides: Set<string>;
 				stageId: StagesId;
 				communityId: CommunitiesId;
+				/**
+				 * The lastModifiedBy field, to be used when you are
+				 * creating/modifying pubs
+				 * Will likely look like: `action-run:<action-run-id>
+				 */
+				lastModifiedBy: LastModifiedBy;
+				actionRunId: ActionRunsId;
 			}
 		: never;
 

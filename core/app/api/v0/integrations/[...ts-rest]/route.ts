@@ -4,9 +4,15 @@ import type { PubsId } from "db/public";
 import { api } from "contracts";
 import { logger } from "logger";
 
-import { compareAPIKeys, getBearerToken } from "~/lib/auth/api";
+import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
 import { env } from "~/lib/env/env.mjs";
-import { deletePub, generateSignedAssetUploadUrl, getPub, tsRestHandleErrors } from "~/lib/server";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
+import {
+	_deprecated_getPub,
+	deletePub,
+	generateSignedAssetUploadUrl,
+	tsRestHandleErrors,
+} from "~/lib/server";
 import { emailUser } from "~/lib/server/_legacy-integration-email";
 import {
 	_getPubType,
@@ -49,7 +55,7 @@ const handler = createNextHandler(
 		},
 		getPub: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			const pub = await getPub(params.pubId as PubsId);
+			const pub = await _deprecated_getPub(params.pubId as PubsId);
 			return { status: 200, body: pub };
 		},
 		getAllPubs: async ({ headers }) => {
@@ -63,7 +69,10 @@ const handler = createNextHandler(
 		},
 		deletePub: async ({ headers, params }) => {
 			checkAuthentication(headers.authorization);
-			await deletePub(params.pubId as PubsId);
+			await deletePub({
+				pubId: params.pubId as PubsId,
+				lastModifiedBy: createLastModifiedBy("system"),
+			});
 			return {
 				status: 200,
 				body: {

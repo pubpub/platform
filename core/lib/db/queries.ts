@@ -6,7 +6,7 @@ import type { StagesId } from "db/public";
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import prisma from "~/prisma/db";
-import { pubValuesByRef } from "../server";
+import { pubType, pubValuesByRef } from "../server";
 import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries";
 import { autoCache } from "../server/cache/autoCache";
 import { SAFE_USER_SELECT } from "../server/user";
@@ -41,6 +41,7 @@ export const getStagePubs = cache((stageId: StagesId) => {
 			.selectFrom("pubs")
 			.selectAll("pubs")
 			.select(pubValuesByRef("pubs.id"))
+			.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 			.innerJoin("PubsInStages", "PubsInStages.pubId", "pubs.id")
 			.where("PubsInStages.stageId", "=", stageId)
 	);
@@ -49,21 +50,11 @@ export const getStagePubs = cache((stageId: StagesId) => {
 export const getStageMembers = cache((stageId: StagesId) => {
 	return autoCache(
 		db
-			.selectFrom("members")
-			.innerJoin("permissions", "permissions.memberId", "members.id")
-			.innerJoin("_PermissionToStage", "_PermissionToStage.A", "permissions.id")
-			.where("_PermissionToStage.B", "=", stageId)
-			.selectAll("members")
-			.select((eb) =>
-				jsonObjectFrom(
-					eb
-						.selectFrom("users")
-						.select(SAFE_USER_SELECT)
-						.whereRef("users.id", "=", "members.userId")
-				)
-					.$notNull()
-					.as("user")
-			)
+			.selectFrom("stage_memberships")
+			.where("stage_memberships.stageId", "=", stageId)
+			.innerJoin("users", "users.id", "stage_memberships.userId")
+			.select(SAFE_USER_SELECT)
+			.select("stage_memberships.role")
 	);
 });
 

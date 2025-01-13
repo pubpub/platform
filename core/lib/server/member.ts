@@ -1,6 +1,13 @@
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { CommunitiesId, MembersId, MembersUpdate, NewMembers, UsersId } from "db/public";
+import type {
+	CommunitiesId,
+	CommunityMembershipsId,
+	NewCommunityMemberships,
+	NewPubMemberships,
+	NewStageMemberships,
+	UsersId,
+} from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -9,66 +16,71 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { SAFE_USER_SELECT } from "./user";
 
 /**
- * Either get a member by their id, or by userId and communityId
+ * Either get a member by their community membership id, or by userId and communityId
  */
-export const getMember = (
-	props: XOR<{ id: MembersId }, { userId: UsersId; communityId: CommunitiesId }>,
+export const selectCommunityMember = (
+	props: XOR<{ id: CommunityMembershipsId }, { userId: UsersId; communityId: CommunitiesId }>,
 	trx = db
 ) => {
 	return autoCache(
 		trx
-			.selectFrom("members")
+			.selectFrom("community_memberships")
 			.select((eb) => [
-				"members.id",
-				"members.userId",
-				"members.createdAt",
-				"members.updatedAt",
-				"members.role",
-				"members.communityId",
+				"community_memberships.id",
+				"community_memberships.userId",
+				"community_memberships.createdAt",
+				"community_memberships.updatedAt",
+				"community_memberships.role",
+				"community_memberships.communityId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
 						.select(SAFE_USER_SELECT)
-						.whereRef("users.id", "=", "members.userId")
+						.whereRef("users.id", "=", "community_memberships.userId")
 				)
 					.$notNull()
 					.as("user"),
 			])
-			.$if(Boolean(props.userId), (eb) => eb.where("members.userId", "=", props.userId!))
-			.$if(Boolean(props.communityId), (eb) =>
-				eb.where("members.communityId", "=", props.communityId!)
+			.$if(Boolean(props.userId), (eb) =>
+				eb.where("community_memberships.userId", "=", props.userId!)
 			)
-			.$if(Boolean(props.id), (eb) => eb.where("members.id", "=", props.id!))
+			.$if(Boolean(props.communityId), (eb) =>
+				eb.where("community_memberships.communityId", "=", props.communityId!)
+			)
+			.$if(Boolean(props.id), (eb) => eb.where("community_memberships.id", "=", props.id!))
 	);
 };
 
-export const getMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
+export const selectCommunityMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
 	autoCache(
 		trx
-			.selectFrom("members")
+			.selectFrom("community_memberships")
 			.select((eb) => [
-				"members.id",
-				"members.userId",
-				"members.createdAt",
-				"members.updatedAt",
-				"members.role",
-				"members.communityId",
+				"community_memberships.id",
+				"community_memberships.userId",
+				"community_memberships.createdAt",
+				"community_memberships.updatedAt",
+				"community_memberships.role",
+				"community_memberships.communityId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
 						.select(SAFE_USER_SELECT)
-						.whereRef("users.id", "=", "members.userId")
+						.whereRef("users.id", "=", "community_memberships.userId")
 				)
 					.$notNull()
 					.as("user"),
 			])
-			.where("members.communityId", "=", communityId)
+			.where("community_memberships.communityId", "=", communityId)
 	);
 
-export const inviteMember = (props: NewMembers, trx = db) =>
+export const insertCommunityMember = (
+	props: NewCommunityMemberships & { userId: UsersId },
+	trx = db
+) =>
 	autoRevalidate(
 		trx
-			.insertInto("members")
+			.insertInto("community_memberships")
 			.values({
 				userId: props.userId,
 				communityId: props.communityId,
@@ -77,8 +89,27 @@ export const inviteMember = (props: NewMembers, trx = db) =>
 			.returningAll()
 	);
 
-export const updateMember = (props: MembersUpdate & { id: MembersId }, trx = db) =>
-	autoRevalidate(trx.updateTable("members").set(props).where("id", "=", props.id).returningAll());
+export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
+	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
 
-export const removeMember = (props: MembersId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("members").where("id", "=", props).returningAll());
+export const insertStageMember = (
+	{
+		userId,
+		stageId,
+		role,
+	}: NewStageMemberships & {
+		userId: UsersId;
+	},
+	trx = db
+) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }));
+
+export const insertPubMember = (
+	{
+		userId,
+		pubId,
+		role,
+	}: NewPubMemberships & {
+		userId: UsersId;
+	},
+	trx = db
+) => autoRevalidate(trx.insertInto("pub_memberships").values({ userId, pubId, role }));

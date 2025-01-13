@@ -3,7 +3,7 @@
 import type { UsersId } from "db/public";
 
 import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
-import { getLoginData } from "~/lib/auth/loginData";
+import { getLoginData } from "~/lib/authentication/loginData";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { runActionInstance as runActionInstanceInner } from "../_lib/runActionInstance";
 

@@ -38,11 +38,11 @@ describe("seedCommunity", () => {
 			},
 			pubTypes: {
 				Submission: {
-					Title: true,
-					SubmissionAuthor: true,
+					Title: { isTitle: true },
+					SubmissionAuthor: { isTitle: false },
 				},
 				Author: {
-					Title: true,
+					Title: { isTitle: true },
 				},
 			},
 			users: {
@@ -59,7 +59,7 @@ describe("seedCommunity", () => {
 			},
 			stages: {
 				"Stage 1": {
-					members: ["test"],
+					members: { hih: MemberRole.contributor },
 					actions: [
 						{
 							action: Action.email,
@@ -86,7 +86,7 @@ describe("seedCommunity", () => {
 					pubType: "Submission",
 					values: {
 						Title: "HENK",
-						SubmissionAuthor: { value: 0, relatedPubId: authorPubId },
+						SubmissionAuthor: [{ value: 0, relatedPubId: authorPubId }],
 					},
 					stage: "Stage 1",
 					children: [
@@ -243,17 +243,12 @@ describe("seedCommunity", () => {
 						relatedPubId: authorPubId,
 						value: 0,
 					},
-				],
-				valuesBlob: null,
-				stageId: seededCommunity.stages["Stage 1"].id,
-				relatedPubs: [
 					{
 						value: 1,
 						relatedPub: {
 							pubTypeId: seededCommunity.pubTypes["Author"].id,
 						},
 					},
-
 					{
 						value: 2,
 						relatedPub: {
@@ -263,6 +258,8 @@ describe("seedCommunity", () => {
 						},
 					},
 				],
+				valuesBlob: null,
+				stageId: seededCommunity.stages["Stage 1"].id,
 			},
 			{ id: author2PubId },
 		]);
@@ -271,7 +268,7 @@ describe("seedCommunity", () => {
 
 		expect(seededCommunity.stages, "stages").toMatchObject({
 			"Stage 1": {
-				members: ["test"],
+				members: { hih: MemberRole.contributor },
 				name: "Stage 1",
 				order: "aa",
 			},

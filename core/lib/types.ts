@@ -1,6 +1,6 @@
 import type {
 	Communities,
-	Members,
+	CommunityMemberships,
 	PubFields,
 	PubFieldsId,
 	Pubs,
@@ -12,14 +12,16 @@ import type { PubValues } from "./server";
 import type { DirectAutoOutput } from "./server/cache/types";
 
 export type UserWithMemberships = Omit<Users, "passwordHash"> & {
-	memberships: Members[];
+	memberships: Omit<CommunityMemberships, "memberGroupId">[];
 };
 
 export type UserWithMember = Omit<Users, "passwordHash"> & {
-	member?: Members | null;
+	member?: Omit<CommunityMemberships, "memberGroupId"> | null;
 };
 
-export type MemberWithUser = Members & { user: Omit<Users, "passwordHash"> };
+export type MemberWithUser = Omit<CommunityMemberships, "memberGroupId"> & {
+	user: Omit<Users, "passwordHash">;
+};
 
 export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
 export type UserPutBody = Pick<Users, "firstName" | "lastName">;
@@ -65,7 +67,7 @@ export type Equal<a, b> =
 export type Expect<a extends true> = a;
 
 export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
-	fields: PubFieldsId[];
+	fields: { id: PubFieldsId; isTitle: boolean }[];
 };
 
 export type PubField = Pick<
@@ -114,3 +116,7 @@ export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> 
 		ReturnType<ReturnType<T>[K]>
 	>;
 };
+
+export type UnionOmit<T, K extends keyof T> = T extends T ? Omit<T, K> : never;
+
+export type UnionPick<T, K extends keyof T> = T extends T ? Pick<T, K> : never;

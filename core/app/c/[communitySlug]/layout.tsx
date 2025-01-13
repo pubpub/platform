@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 
 import { cookies } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { Sidebar, SidebarProvider, SidebarTrigger } from "ui/sidebar";
 import { cn } from "utils";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/auth/loginData";
-import { getCommunityRole } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
-import SideNav from "./SideNav";
+import SideNav, { COLLAPSIBLE_TYPE } from "./SideNav";
 
 type Props = { children: React.ReactNode; params: { communitySlug: string } };
 
@@ -29,14 +29,12 @@ export async function generateMetadata({
 	};
 }
 
-export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
-
 export default async function MainLayout({ children, params }: Props) {
-	const { user } = await getLoginData();
+	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
-		return null;
+		return notFound();
 	}
 
 	const cookieStore = cookies();
@@ -48,23 +46,19 @@ export default async function MainLayout({ children, params }: Props) {
 
 	const role = getCommunityRole(user, community);
 
-	if (role === "contributor") {
-		// TODO: figure something out for this
-		notFound();
+	if (role === "contributor" || !role) {
+		// TODO: allow contributors to view /c/* pages after we implement membership and
+		// role-based authorization checks
+		redirect("/settings");
 	}
 
-	// const availableCommunities = await getAvailableCommunities(user.id as UsersId);
 	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
 
 	return (
 		<CommunityProvider community={community}>
 			<div className="flex min-h-screen flex-col md:flex-row">
 				<SidebarProvider defaultOpen={defaultOpen}>
-					<SideNav
-						community={community}
-						availableCommunities={availableCommunities}
-						collapsible={COLLAPSIBLE_TYPE}
-					/>
+					<SideNav community={community} availableCommunities={availableCommunities} />
 
 					<div className="relative flex-auto px-4 py-4 md:px-12">
 						<SidebarTrigger

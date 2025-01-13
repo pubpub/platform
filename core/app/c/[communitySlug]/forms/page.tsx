@@ -1,15 +1,18 @@
 import type { Metadata } from "next";
 
-import React from "react";
+import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
 import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/auth/loginData";
-import { isCommunityAdmin } from "~/lib/auth/roles";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";
 import { FormTable } from "./FormTable";
@@ -28,8 +31,19 @@ export default async function Page({
 }) {
 	const { user } = await getPageLoginData();
 
-	if (!isCommunityAdmin(user, { slug: communitySlug })) {
-		return null;
+	const community = await findCommunityBySlug();
+	if (!community) {
+		notFound();
+	}
+
+	if (
+		!(await userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		))
+	) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	const forms = await autoCache(
@@ -38,13 +52,14 @@ export default async function Page({
 			.innerJoin("pub_types", "pub_types.id", "forms.pubTypeId")
 			.innerJoin("communities", "communities.id", "pub_types.communityId")
 			.select([
-				"forms.id as id",
-				"forms.slug as slug",
+				"forms.id",
+				"forms.slug",
 				"forms.name as formName",
 				"pub_types.name as pubType",
 				"pub_types.updatedAt", // TODO: this should be the form's updatedAt
 				"forms.isArchived",
 				"forms.slug",
+				"forms.isDefault",
 			])
 			.where("communities.slug", "=", communitySlug)
 	).execute();
@@ -53,7 +68,7 @@ export default async function Page({
 
 	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt, isArchived, slug } = form;
+			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault } = form;
 			return {
 				id,
 				slug,
@@ -61,6 +76,7 @@ export default async function Page({
 				pubType,
 				updated: new Date(updatedAt),
 				isArchived,
+				isDefault,
 			};
 		});
 
@@ -74,7 +90,7 @@ export default async function Page({
 					Forms
 				</>
 			}
-			headingAction={<NewFormButton pubTypes={pubTypes} />}
+			right={<NewFormButton pubTypes={pubTypes} />}
 		>
 			{forms.length === 0 ? (
 				<div className="flex h-full items-center justify-center">

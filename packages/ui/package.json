@@ -209,6 +209,10 @@
 			"module": "./multivalue-input/dist/ui-multivalue-input.esm.js",
 			"default": "./multivalue-input/dist/ui-multivalue-input.cjs.js"
 		},
+		"./auto-form/dependencyType": {
+			"module": "./auto-form/dependencyType/dist/ui-auto-form-dependencyType.esm.js",
+			"default": "./auto-form/dependencyType/dist/ui-auto-form-dependencyType.cjs.js"
+		},
 		"./customRenderers/confidence/confidence": {
 			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
 			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
@@ -351,7 +355,7 @@
 		"db": "workspace:*",
 		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
-		"react-day-picker": "^8.10.0",
+		"react-day-picker": "^9.4.2",
 		"schemas": "workspace:*",
 		"tailwind-merge": "catalog:",
 		"tailwindcss-animate": "^1.0.6",
@@ -403,6 +407,7 @@
 			"alert.tsx",
 			"alert-dialog.tsx",
 			"auto-form/index.tsx",
+			"auto-form/dependencyType.ts",
 			"autocomplete.tsx",
 			"avatar.tsx",
 			"badge.tsx",

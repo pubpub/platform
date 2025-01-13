@@ -2,7 +2,8 @@
 
 import React, { useCallback, useMemo } from "react";
 
-import type { Pubs } from "db/public";
+import type { ProcessedPub } from "contracts";
+import type { PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Command,
@@ -17,21 +18,26 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 import { cn, expect } from "utils";
 
-import type { MemberWithUser, PubWithValues } from "~/lib/types";
+import type { MemberWithUser } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
 import { useServerAction } from "~/lib/serverActions";
 import { assign } from "./lib/actions";
 
 type Props = {
 	members: MemberWithUser[];
-	pub: PubWithValues;
+	pub: ProcessedPub<{
+		withPubType: true;
+		withLegacyAssignee: true;
+		withRelatedValues: false;
+		withChildren: undefined;
+	}>;
 };
 
 export default function Assign(props: Props) {
 	const { toast } = useToast();
 	const [open, setOpen] = React.useState(false);
 	const [selectedUserId, setSelectedUserId] = React.useState<string | undefined>(
-		props.pub.assigneeId ?? undefined
+		props.pub.assignee?.id ?? undefined
 	);
 	const title = useMemo(() => getPubTitle(props.pub), [props.pub]);
 	const users = useMemo(() => props.members.map((member) => member.user), [props.members]);
@@ -43,7 +49,7 @@ export default function Assign(props: Props) {
 	const runAssign = useServerAction(assign);
 
 	const onAssign = useCallback(
-		async (pubId: string, userId?: string) => {
+		async (pubId: PubsId, userId?: UsersId) => {
 			const error = await runAssign(pubId, userId);
 			if (userId) {
 				const user = expect(users.find((user) => user.id === userId));
@@ -75,7 +81,7 @@ export default function Assign(props: Props) {
 		(value: string) => {
 			const userId = value === selectedUserId ? undefined : value;
 			setSelectedUserId(userId);
-			onAssign(props.pub.id, userId);
+			onAssign(props.pub.id, userId as UsersId);
 			setOpen(false);
 		},
 		[selectedUserId, props.pub.id, onAssign]
