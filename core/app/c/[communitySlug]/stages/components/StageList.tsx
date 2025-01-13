@@ -22,7 +22,6 @@ type Props = {
 	userId: UsersId;
 	communityId: CommunitiesId;
 	pageContext: PageContext;
-	userId: UsersId;
 };
 
 export async function StageList(props: Props) {
