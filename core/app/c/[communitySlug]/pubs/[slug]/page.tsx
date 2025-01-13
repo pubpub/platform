@@ -54,7 +54,6 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 			{ slug, communityId },
 			defaultOptions
 		);
-		console.log("incached", pub);
 		return pub;
 	}
 );
@@ -71,8 +70,6 @@ export async function generateMetadata({
 	}
 
 	const pub = await getPubsWithRelatedValuesAndChildrenCached(params.slug, community.id);
-
-	console.log(pub);
 
 	if (!pub) {
 		return { title: "Pub Not Found" };
@@ -156,8 +153,6 @@ export default async function Page({
 		communityMembersPromise,
 		communityStagesPromise,
 	]);
-
-	console.log(pub);
 
 	const { stage, children, ...slimPub } = pub;
 	return (
