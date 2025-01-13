@@ -14,11 +14,13 @@ import type {
 	Stages,
 	StagesId,
 	Users,
+	UsersId,
 } from "db/public";
 import {
 	communitiesIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
+	memberRoleSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
 	pubsSchema,
@@ -27,6 +29,7 @@ import {
 	pubValuesSchema,
 	stagesIdSchema,
 	stagesSchema,
+	usersIdSchema,
 	usersSchema,
 } from "db/public";
 
@@ -41,6 +44,7 @@ export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBo
 	stageId?: StagesId;
 	children?: CreatePubRequestBodyWithNulls[];
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
+	members?: Record<UsersId, MemberRole>;
 };
 
 export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
@@ -55,6 +59,9 @@ const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBa
 			})
 		)
 	),
+	members: (
+		z.record(usersIdSchema, memberRoleSchema) as z.ZodType<Record<UsersId, MemberRole>>
+	).optional(),
 });
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
