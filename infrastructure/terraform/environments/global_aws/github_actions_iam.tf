@@ -73,6 +73,26 @@ resource "aws_iam_policy" "ecs" {
   })
 }
 
+// read access to all the secrets that github actions needs
+resource "aws_iam_policy" "github_actions_secrets" {
+  name = "GithubActionsSecrets"
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
+      {
+        Effect : "Allow",
+        Action : [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource : [
+          # necessary to set during build in order to upload source maps to sentry
+          "arn:aws:secretsmanager:*:*:secret:sentry-auth-token-*"
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role" "github_actions_role" {
   name = "github_actions_role"
 
@@ -103,4 +123,9 @@ resource "aws_iam_role_policy_attachment" "gha_attach_ecr" {
 resource "aws_iam_role_policy_attachment" "gha_attach_ecs" {
   role       = aws_iam_role.github_actions_role.name
   policy_arn = aws_iam_policy.ecs.arn
+}
+
+resource "aws_iam_role_policy_attachment" "gha_attach_secrets" {
+  role       = aws_iam_role.github_actions_role.name
+  policy_arn = aws_iam_policy.github_actions_secrets.arn
 }
