@@ -74,7 +74,11 @@ RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && 
 
 ENV DOCKERBUILD=1
 
-RUN pnpm --filter $PACKAGE build 
+ARG CI
+ENV CI $CI
+
+RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
+  pnpm --filter $PACKAGE build 
 
 FROM withpackage as prepare-jobs
 

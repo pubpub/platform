@@ -22,7 +22,7 @@ import type {
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
-	MemberRole,
+	MembershipCapabilitiesRole,
 	PubFieldsId,
 	Pubs,
 	PubsId,
@@ -35,7 +35,9 @@ import type {
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
-import { CoreSchemaType, OperationType } from "db/public";
+import { CoreSchemaType, MemberRole, OperationType } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
@@ -513,6 +515,19 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			).executeTakeFirstOrThrow();
 
 			createdStageId = result.stageId;
+		}
+
+		if (body.members && Object.keys(body.members).length) {
+			await trx
+				.insertInto("pub_memberships")
+				.values(
+					Object.entries(body.members).map(([userId, role]) => ({
+						pubId: newPub.id,
+						userId: userId as UsersId,
+						role,
+					}))
+				)
+				.execute();
 		}
 
 		const pubValues = valuesWithFieldIds.length
@@ -1190,18 +1205,25 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 	trx?: typeof db;
 }
 
+// TODO: We allow calling getPubsWithRelatedValuesAndChildren with no userId so that event driven
+// actions can select a pub even when no user is present (and some other scenarios where the
+// filtering wouldn't make sense). We probably need to do that, but we should make it more explicit
+// than just leaving out the userId to avoid accidentally letting certain routes select pubs without
+// authorization checks
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
 			pubId: PubsId;
 			pubTypeId?: never;
 			stageId?: never;
 			communityId: CommunitiesId;
+			userId?: UsersId;
 	  }
 	| {
 			pubId?: never;
 			pubTypeId?: PubTypesId;
 			stageId?: StagesId;
 			communityId: CommunitiesId;
+			userId?: UsersId;
 	  };
 
 const DEFAULT_OPTIONS = {
@@ -1288,7 +1310,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					// we need to do this weird cast, because kysely does not support typing the selecting from a later CTE
 					// which is possible only in a with recursive query
 					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
-					// maybe move this to root_pubs to save a join?
+					// TODO: can we avoid doing this join again since it's already in root pubs?
 					.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
 					.$if(Boolean(withRelatedPubs), (qb) =>
 						qb
@@ -1347,6 +1369,68 @@ export async function getPubsWithRelatedValuesAndChildren<
 									)
 								)
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+								.where((eb) =>
+									eb.exists(
+										eb.selectFrom("capabilities" as any).where((ebb) => {
+											type Inner =
+												typeof ebb extends ExpressionBuilder<
+													infer Thing,
+													any
+												>
+													? Thing
+													: never;
+											const eb = ebb as ExpressionBuilder<
+												Inner & {
+													capabilities: {
+														membId: string;
+														type: MembershipType;
+														role: MembershipCapabilitiesRole;
+													};
+												},
+												any
+											>;
+
+											return eb.or([
+												eb.and([
+													eb(
+														"capabilities.type",
+														"=",
+														MembershipType.stage
+													),
+													eb(
+														"capabilities.membId",
+														"=",
+														eb.ref("PubsInStages.stageId")
+													),
+												]),
+												eb.and([
+													eb(
+														"capabilities.type",
+														"=",
+														MembershipType.pub
+													),
+													eb(
+														"capabilities.membId",
+														"=",
+														eb.ref("pubs.id")
+													),
+												]),
+												eb.and([
+													eb(
+														"capabilities.type",
+														"=",
+														MembershipType.community
+													),
+													eb(
+														"capabilities.membId",
+														"=",
+														props.communityId
+													),
+												]),
+											]);
+										})
+									)
+								)
 								.$if(Boolean(withRelatedPubs), (qb) =>
 									qb
 										.leftJoin("pub_values", (join) =>
@@ -1391,6 +1475,113 @@ export async function getPubsWithRelatedValuesAndChildren<
 						)
 					)
 			)
+			.with("stage_ms", (db) =>
+				db
+					.selectFrom("stage_memberships")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.where("stage_memberships.userId", "=", props.userId!)
+							.select([
+								"role",
+								"stageId as membId",
+								sql<MembershipType>`'stage'::"MembershipType"`.as("type"),
+							])
+					)
+					.$castTo<{
+						role: MembershipCapabilitiesRole;
+						membId: string;
+						type: MembershipType;
+					}>()
+			)
+			.with("pub_ms", (db) =>
+				db
+					.selectFrom("pub_memberships")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.where("pub_memberships.userId", "=", props.userId!)
+							.select([
+								"role",
+								"pubId as membId",
+								sql<MembershipType>`'pub'::"MembershipType"`.as("type"),
+							])
+					)
+					.$castTo<{
+						role: MembershipCapabilitiesRole;
+						membId: string;
+						type: MembershipType;
+					}>()
+			)
+			.with("community_ms", (db) =>
+				db
+					.selectFrom("community_memberships")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.where("community_memberships.userId", "=", props.userId!)
+							.where("community_memberships.communityId", "=", props.communityId)
+							.select([
+								"role",
+								"communityId as membId",
+								sql<MembershipType>`'community'::"MembershipType"`.as("type"),
+							])
+					)
+					// Add a fake community admin role when selecting without a userId
+					.$if(!Boolean(props.userId), (qb) =>
+						qb.select((eb) => [
+							sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as("role"),
+							eb.val(props.communityId).as("membId"),
+							sql<MembershipType>`'community'::"MembershipType"`.as("type"),
+						])
+					)
+
+					.$castTo<{
+						role: MembershipCapabilitiesRole;
+						membId: string;
+						type: MembershipType;
+					}>()
+			)
+			.with("memberships", (cte) =>
+				cte
+					.selectFrom("community_ms")
+					.selectAll("community_ms")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.union((qb) => qb.selectFrom("pub_ms").selectAll("pub_ms"))
+							.union((qb) => qb.selectFrom("stage_ms").selectAll("stage_ms"))
+							// Add fake community admin role when user is a superadmin
+							.union((qb) =>
+								qb
+									.selectFrom("users")
+									.where("users.id", "=", props.userId!)
+									.where("users.isSuperAdmin", "=", true)
+									.select((eb) => [
+										sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as(
+											"role"
+										),
+										eb.val(props.communityId).as("membId"),
+										sql<MembershipType>`'community'::"MembershipType"`.as(
+											"type"
+										),
+									])
+							)
+					)
+			)
+			.with("capabilities", (cte) =>
+				cte
+					.selectFrom("memberships")
+					.innerJoin("membership_capabilities", (join) =>
+						join.on((eb) =>
+							eb.and([
+								eb("membership_capabilities.role", "=", eb.ref("memberships.role")),
+								eb("membership_capabilities.type", "=", eb.ref("memberships.type")),
+							])
+						)
+					)
+					.where("membership_capabilities.capability", "in", [
+						Capabilities.viewPub,
+						Capabilities.viewStage,
+					])
+					.selectAll("memberships")
+			)
 			// this CTE finds the top level pubs and limits the result
 			// counter intuitively, this is CTE is referenced in the above `withRecursive` call, despite
 			// appearing after it. This is allowed in Postgres. See https://www.postgresql.org/docs/current/sql-select.html#SQL-WITH
@@ -1400,11 +1591,37 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.selectFrom("pubs")
 					.selectAll("pubs")
 					.where("pubs.communityId", "=", props.communityId)
+					.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+					.select("PubsInStages.stageId")
+					.where((eb) =>
+						eb.exists(
+							eb
+								.selectFrom("capabilities")
+								.where((eb) =>
+									eb.or([
+										eb.and([
+											eb("capabilities.type", "=", MembershipType.stage),
+											eb(
+												"capabilities.membId",
+												"=",
+												eb.ref("PubsInStages.stageId")
+											),
+										]),
+										eb.and([
+											eb("capabilities.type", "=", MembershipType.pub),
+											eb("capabilities.membId", "=", eb.ref("pubs.id")),
+										]),
+										eb.and([
+											eb("capabilities.type", "=", MembershipType.community),
+											eb("capabilities.membId", "=", props.communityId),
+										]),
+									])
+								)
+						)
+					)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
 					.$if(Boolean(props.stageId), (qb) =>
-						qb
-							.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-							.where("PubsInStages.stageId", "=", props.stageId!)
+						qb.where("PubsInStages.stageId", "=", props.stageId!)
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
@@ -1413,7 +1630,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))
 			)
 			.selectFrom("pub_tree as pt")
-			.select((eb) => [
+			.select([
 				"pt.pubId as id",
 				"pt.parentId",
 				"pt.pubTypeId",
@@ -1435,7 +1652,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 							.$if(Boolean(fieldSlugs), (qb) =>
 								qb.where("pub_fields.slug", "in", fieldSlugs!)
 							)
-							.select((eb) => [
+							.select([
 								"pv.id as id",
 								"pv.fieldId",
 								"pv.value",
