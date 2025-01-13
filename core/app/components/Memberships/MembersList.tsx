@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 
-import type { MembersListProps, TargetId } from "./types";
-import { RemoveMemberButton } from "./RemoveMemberButton";
-import { RoleSelect } from "./RoleSelect";
+import type { MembersListProps, TargetId } from "./types"
+import { RemoveMemberButton } from "./RemoveMemberButton"
+import { RoleSelect } from "./RoleSelect"
 
 export const MembersList = <T extends TargetId>({
 	members,
@@ -56,5 +56,5 @@ export const MembersList = <T extends TargetId>({
 				</div>
 			))}
 		</>
-	);
-};
+	)
+}

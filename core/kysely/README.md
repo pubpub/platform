@@ -52,11 +52,11 @@ config           Json? /// @type(RuleConfigs, '~/actions/types', true, false, tr
 will generate the following type:
 
 ```ts
-import type { RuleConfigs } from "~/actions/types";
+import type { RuleConfigs } from "~/actions/types"
 
 // ...
 
-config: RuleConfigs | null;
+config: RuleConfigs | null
 // ...
 ```
 
@@ -79,12 +79,12 @@ declare global {
 	namespace DBTypes {
 		type RuleConfig = {
 			// ...
-		};
+		}
 	}
 }
 
 // necessary to make `declare global` work with or without using `import`s
-export {};
+export {}
 ```
 
 ## Maintainability

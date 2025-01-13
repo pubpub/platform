@@ -1,30 +1,30 @@
-"use client";
+"use client"
 
-import type { UppyFile } from "@uppy/core";
+import type { UppyFile } from "@uppy/core"
 
-import React, { forwardRef, useEffect } from "react";
-import Uppy from "@uppy/core";
-import { Dashboard } from "@uppy/react";
+import React, { forwardRef, useEffect } from "react"
+import Uppy from "@uppy/core"
+import { Dashboard } from "@uppy/react"
 
 // import "./fileUpload.css";
 // TODO: impot on prod?
-import "@uppy/core/dist/style.min.css";
-import "@uppy/dashboard/dist/style.min.css";
+import "@uppy/core/dist/style.min.css"
+import "@uppy/dashboard/dist/style.min.css"
 
-import AwsS3 from "@uppy/aws-s3";
+import AwsS3 from "@uppy/aws-s3"
 
-const uppy = new Uppy().use(AwsS3);
+const uppy = new Uppy().use(AwsS3)
 
 type FileUploadProps = {
-	upload: Function;
-	onUpdateFiles: Function;
-	disabled?: boolean;
-};
+	upload: Function
+	onUpdateFiles: Function
+	disabled?: boolean
+}
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 	useEffect(() => {
 		uppy.on("complete", () => {
-			const uploadedFiles = uppy.getFiles();
+			const uploadedFiles = uppy.getFiles()
 			const formattedFiles = uploadedFiles.map((file) => {
 				return {
 					id: file.id,
@@ -35,27 +35,27 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 					fileMeta: file.meta,
 					fileUploadUrl: file.response?.uploadURL,
 					filePreview: file.preview,
-				};
-			});
-			props.onUpdateFiles(formattedFiles);
-		});
-	}, [props.onUpdateFiles]);
+				}
+			})
+			props.onUpdateFiles(formattedFiles)
+		})
+	}, [props.onUpdateFiles])
 	uppy.getPlugin("AwsS3")!.setOptions({
 		getUploadParameters: async (file: UppyFile) => {
 			if (!file || !file.type) {
-				throw new Error("Could not read file.");
+				throw new Error("Could not read file.")
 			}
-			const signedUrl = await props.upload(file.name);
+			const signedUrl = await props.upload(file.name)
 			return {
 				method: "PUT",
 				url: signedUrl,
 				headers: {
 					"content-type": file.type,
 				},
-			};
+			}
 		},
-	});
-	return <Dashboard uppy={uppy} disabled={props.disabled} />;
-});
+	})
+	return <Dashboard uppy={uppy} disabled={props.disabled} />
+})
 
-export { FileUpload };
+export { FileUpload }

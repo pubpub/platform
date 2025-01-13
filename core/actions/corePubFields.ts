@@ -1,20 +1,20 @@
-import type { JSONSchemaType } from "ajv";
+import type { JSONSchemaType } from "ajv"
 
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public"
 
 export type BasePubField<Namespace extends string = string> = {
-	id?: string;
-	name: string;
-	slug: string;
-	schemaName?: CoreSchemaType;
+	id?: string
+	name: string
+	slug: string
+	schemaName?: CoreSchemaType
 	schema: {
-		name: string;
-		namespace: Namespace;
-		schema: JSONSchemaType<any>;
-	};
-};
+		name: string
+		namespace: Namespace
+		schema: JSONSchemaType<any>
+	}
+}
 
-export type CorePubField = BasePubField<"pubpub">;
+export type CorePubField = BasePubField<"pubpub">
 
 export const title = {
 	name: "Title",
@@ -29,7 +29,7 @@ export const title = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} as const satisfies CorePubField;
+} as const satisfies CorePubField
 
 export const content = {
 	name: "Content",
@@ -44,7 +44,7 @@ export const content = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} as const satisfies CorePubField;
+} as const satisfies CorePubField
 
 export const v6PubId = {
 	name: "V6 Pub ID",
@@ -59,7 +59,7 @@ export const v6PubId = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} as const satisfies CorePubField;
+} as const satisfies CorePubField
 
 // these are just to play around with the pubfields in actions for now
 export const email = {
@@ -76,7 +76,7 @@ export const email = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} as const satisfies CorePubField;
+} as const satisfies CorePubField
 
 export const url = {
 	name: "URL",
@@ -92,7 +92,7 @@ export const url = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} as const satisfies CorePubField;
+} as const satisfies CorePubField
 
 export const userId = {
 	name: "User ID",
@@ -107,6 +107,6 @@ export const userId = {
 			type: "string",
 		} satisfies JSONSchemaType<string>,
 	},
-} as const satisfies CorePubField;
+} as const satisfies CorePubField
 
-export const corePubFields = [title, content, v6PubId, email, url, userId] as const;
+export const corePubFields = [title, content, v6PubId, email, url, userId] as const

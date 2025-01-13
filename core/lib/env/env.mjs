@@ -1,7 +1,7 @@
 // @ts-check
 
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
+import { createEnv } from "@t3-oss/env-nextjs"
+import { z } from "zod"
 
 export const env = createEnv({
 	shared: {
@@ -41,4 +41,4 @@ export const env = createEnv({
 	},
 	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
-});
+})

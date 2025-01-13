@@ -1,9 +1,9 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { FileText } from "ui/icon";
+import { Action } from "db/public"
+import { FileText } from "ui/icon"
 
-import { defineAction } from "../types";
+import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.pdf,
@@ -22,4 +22,4 @@ export const action = defineAction({
 	},
 	icon: FileText,
 	superAdminOnly: true,
-});
+})

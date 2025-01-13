@@ -1,25 +1,25 @@
-import crypto from "crypto";
+import crypto from "crypto"
 
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
 import type {
 	ApiAccessTokensId,
 	CommunitiesId,
 	NewApiAccessPermissions,
 	NewApiAccessTokens,
-} from "db/public";
-import { ApiAccessScope, ApiAccessType } from "db/public";
-import { logger } from "logger";
+} from "db/public"
+import { ApiAccessScope, ApiAccessType } from "db/public"
+import { logger } from "logger"
 
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { UnauthorizedError } from "./errors";
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { UnauthorizedError } from "./errors"
 
 const generateToken = () => {
-	const bytesLength = 16;
-	return crypto.randomBytes(bytesLength).toString("base64url");
-};
+	const bytesLength = 16
+	return crypto.randomBytes(bytesLength).toString("base64url")
+}
 
 const getTokenBase = db
 	.selectFrom("api_access_tokens")
@@ -42,59 +42,59 @@ const getTokenBase = db
 				.selectAll()
 				.whereRef("api_access_permissions.apiAccessTokenId", "=", "api_access_tokens.id")
 		).as("permissions"),
-	]);
+	])
 
 export const validateApiAccessToken = async (token: string, communityId: CommunitiesId) => {
 	// Parse the token's id and plaintext value from the input
 	// Format: "<token id>.<token plaintext>"
-	const [tokenId, tokenString] = token.split(".");
+	const [tokenId, tokenString] = token.split(".")
 
 	// Retrieve the token's hash, metadata, and associated user
 	const dbToken = await autoCache(
 		getApiAccessToken(tokenId as ApiAccessTokensId).qb.select("token")
-	).executeTakeFirstOrThrow(() => new UnauthorizedError("Token not found"));
+	).executeTakeFirstOrThrow(() => new UnauthorizedError("Token not found"))
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
 	if (dbToken.expiration < new Date()) {
-		throw new UnauthorizedError("Expired token");
+		throw new UnauthorizedError("Expired token")
 	}
 
 	if (dbToken.communityId !== communityId) {
-		throw new UnauthorizedError(`Access token ${dbToken.name} is not valid for this community`);
+		throw new UnauthorizedError(`Access token ${dbToken.name} is not valid for this community`)
 	}
 
 	// This comparison isn't actually constant time if the two items are of different lengths,
 	// because timingSafeEqual throws an error in that case, which could leak the length of the key.
 	// We aren't worried about that because we're hashing the values first (so they're constant
 	// length) and because our tokens are all the same length anyways, unlike a password.
-	let isEqual = false;
+	let isEqual = false
 	try {
-		isEqual = crypto.timingSafeEqual(Buffer.from(tokenString), Buffer.from(dbToken.token));
+		isEqual = crypto.timingSafeEqual(Buffer.from(tokenString), Buffer.from(dbToken.token))
 	} catch (e) {
 		// token is probably formatted incorrectly, the two strings are not equal in length
 		if (e.type === "RangeError") {
-			throw new UnauthorizedError("Invalid token");
+			throw new UnauthorizedError("Invalid token")
 		}
-		logger.error(e);
-		throw e;
+		logger.error(e)
+		throw e
 	}
 	if (!isEqual) {
-		throw new UnauthorizedError("Invalid token");
+		throw new UnauthorizedError("Invalid token")
 	}
 
-	return dbToken;
-};
+	return dbToken
+}
 
 export const getApiAccessToken = (token: ApiAccessTokensId) =>
-	autoCache(getTokenBase.where("api_access_tokens.id", "=", token));
+	autoCache(getTokenBase.where("api_access_tokens.id", "=", token))
 
 export const getApiAccessTokensByCommunity = (communityId: CommunitiesId) =>
-	autoCache(getTokenBase.where("api_access_tokens.communityId", "=", communityId));
+	autoCache(getTokenBase.where("api_access_tokens.communityId", "=", communityId))
 
 export type SafeApiAccessToken = Awaited<
 	ReturnType<ReturnType<typeof getApiAccessToken>["executeTakeFirstOrThrow"]>
->;
+>
 
 /**
  * Create a new API access token with the given permissions
@@ -103,10 +103,10 @@ export const createApiAccessToken = ({
 	token,
 	permissions,
 }: {
-	token: Omit<NewApiAccessTokens, "token">;
-	permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
+	token: Omit<NewApiAccessTokens, "token">
+	permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[]
 }) => {
-	const tokenString = generateToken();
+	const tokenString = generateToken()
 
 	return autoRevalidate(
 		db
@@ -137,8 +137,8 @@ export const createApiAccessToken = ({
 					])
 					.as("token"),
 			])
-	);
-};
+	)
+}
 
 export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }) =>
 	autoRevalidate(
@@ -149,7 +149,7 @@ export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }) =>
 			)
 			.deleteFrom("api_access_logs")
 			.where("accessTokenId", "=", id)
-	);
+	)
 
 /**
  * Simple flat list of all permissions
@@ -159,4 +159,4 @@ export const allPermissions = Object.values(ApiAccessScope).flatMap((scope) =>
 		scope,
 		accessType,
 	}))
-);
+)

@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
 import {
 	Form,
 	FormControl,
@@ -14,47 +14,47 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
-import { useToast } from "ui/use-toast";
-import { cn } from "utils";
+} from "ui/form"
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
+import { useToast } from "ui/use-toast"
+import { cn } from "utils"
 
-import { configure } from "./actions";
+import { configure } from "./actions"
 
 type Props = {
-	instanceId: string;
-	pubTypeId?: string;
-};
+	instanceId: string
+	pubTypeId?: string
+}
 
 const schema = z.object({
 	pubTypeId: z.string().length(36),
 	instanceId: z.string(),
-});
+})
 
 export function Configure(props: Props) {
-	const { toast } = useToast();
+	const { toast } = useToast()
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			pubTypeId: props.pubTypeId ?? "",
 			instanceId: props.instanceId,
 		},
-	});
+	})
 
 	async function onSubmit(values: z.infer<typeof schema>) {
-		const result = await configure(values.instanceId, values.pubTypeId);
+		const result = await configure(values.instanceId, values.pubTypeId)
 		if ("error" in result) {
 			toast({
 				title: "Error",
 				description: result.error,
 				variant: "destructive",
-			});
+			})
 		} else {
 			toast({
 				title: "Success",
 				description: "The instance was updated successfully.",
-			});
+			})
 		}
 	}
 
@@ -92,8 +92,8 @@ export function Configure(props: Props) {
 						<Button
 							variant="outline"
 							onClick={(e) => {
-								e.preventDefault();
-								window.history.back();
+								e.preventDefault()
+								window.history.back()
 							}}
 						>
 							Go Back
@@ -108,5 +108,5 @@ export function Configure(props: Props) {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

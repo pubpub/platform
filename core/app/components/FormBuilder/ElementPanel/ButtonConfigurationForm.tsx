@@ -1,19 +1,19 @@
-import { useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFormContext } from "react-hook-form";
-import { z } from "zod";
+import { useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm, useFormContext } from "react-hook-form"
+import { z } from "zod"
 
-import type { StagesId } from "db/public";
-import { ElementType } from "db/public";
-import { zodToHtmlInputProps } from "ui/auto-form";
-import { Button } from "ui/button";
+import type { StagesId } from "db/public"
+import { ElementType } from "db/public"
+import { zodToHtmlInputProps } from "ui/auto-form"
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MarkdownEditor } from "ui/editors";
+} from "ui/dropdown-menu"
+import { MarkdownEditor } from "ui/editors"
 import {
 	Form,
 	FormControl,
@@ -22,52 +22,52 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { ChevronDown } from "ui/icon";
-import { Input } from "ui/input";
-import { cn } from "utils";
+} from "ui/form"
+import { ChevronDown } from "ui/icon"
+import { Input } from "ui/input"
+import { cn } from "utils"
 
-import type { ButtonElement, FormBuilderSchema } from "../types";
-import { useCommunity } from "../../providers/CommunityProvider";
-import { useFormBuilder } from "../FormBuilderContext";
-import { ButtonOption } from "../SubmissionSettings";
-import { isButtonElement } from "../types";
+import type { ButtonElement, FormBuilderSchema } from "../types"
+import { useCommunity } from "../../providers/CommunityProvider"
+import { useFormBuilder } from "../FormBuilderContext"
+import { ButtonOption } from "../SubmissionSettings"
+import { isButtonElement } from "../types"
 
 const DEFAULT_BUTTON = {
 	label: "Submit",
 	content: "Thank you for your submission",
-};
+}
 
 export const ButtonConfigurationForm = ({
 	buttonIdentifier,
 }: {
 	// The id here is either the button's elementId or its label depending on what is available
-	buttonIdentifier: string | null;
+	buttonIdentifier: string | null
 }) => {
-	const { dispatch, update, stages } = useFormBuilder();
+	const { dispatch, update, stages } = useFormBuilder()
 	// This uses the parent's form context to get the most up to date version of 'elements'
-	const { getValues } = useFormContext<FormBuilderSchema>();
+	const { getValues } = useFormContext<FormBuilderSchema>()
 	// Derive some initial values based on the state of the parent form when this panel was opened
 	const { button, buttonIndex, otherButtons, numElements } = useMemo(() => {
-		const elements = getValues()["elements"];
+		const elements = getValues()["elements"]
 		// Because a button might not have an ID yet (if it wasn't saved to the db yet) fall back to its label as an identifier
 		const buttonIndex = buttonIdentifier
 			? elements.findIndex((e) => {
 					if (!isButtonElement(e)) {
-						return false;
+						return false
 					}
-					return e.elementId === buttonIdentifier || e.label === buttonIdentifier;
+					return e.elementId === buttonIdentifier || e.label === buttonIdentifier
 				})
-			: -1;
-		const button = buttonIndex === -1 ? undefined : elements[buttonIndex];
+			: -1
+		const button = buttonIndex === -1 ? undefined : elements[buttonIndex]
 		const otherButtons = elements.filter(
 			(e) =>
 				isButtonElement(e) &&
 				e.elementId !== buttonIdentifier &&
 				e.label !== buttonIdentifier
-		);
-		return { button, buttonIndex, otherButtons, numElements: elements.length };
-	}, []);
+		)
+		return { button, buttonIndex, otherButtons, numElements: elements.length }
+	}, [])
 
 	const schema = z.object({
 		label: z
@@ -78,9 +78,9 @@ export const ButtonConfigurationForm = ({
 			}),
 		content: z.string().min(1),
 		stageId: z.string().optional(),
-	});
+	})
 
-	const community = useCommunity();
+	const community = useCommunity()
 
 	const defaultValues = button
 		? {
@@ -92,15 +92,15 @@ export const ButtonConfigurationForm = ({
 				label: DEFAULT_BUTTON.label,
 				content: DEFAULT_BUTTON.content,
 				stageId: undefined,
-			};
+			}
 
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
 		defaultValues,
-	});
+	})
 
 	const onSubmit = (values: z.infer<typeof schema>) => {
-		const index = buttonIndex === -1 ? numElements : buttonIndex;
+		const index = buttonIndex === -1 ? numElements : buttonIndex
 		update(index, {
 			order: null,
 			type: ElementType.button,
@@ -110,17 +110,17 @@ export const ButtonConfigurationForm = ({
 			stageId: values.stageId as StagesId | undefined,
 			updated: true,
 			configured: true,
-		});
-		dispatch({ eventName: "save" });
-	};
-	const labelValue = form.watch("label");
+		})
+		dispatch({ eventName: "save" })
+	}
+	const labelValue = form.watch("label")
 
 	return (
 		<Form {...form}>
 			<form
 				onSubmit={(e) => {
-					e.stopPropagation(); //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e);
+					e.stopPropagation() //prevent submission from propagating to parent form
+					form.handleSubmit(onSubmit)(e)
 				}}
 				className="flex h-full flex-col justify-between gap-2 pt-2"
 			>
@@ -171,7 +171,7 @@ export const ButtonConfigurationForm = ({
 					render={({ field }) => {
 						const currentValue = field.value
 							? stages.find((s) => s.id === field.value)?.name
-							: undefined;
+							: undefined
 						return (
 							<FormItem
 								aria-label="Stage"
@@ -199,7 +199,7 @@ export const ButtonConfigurationForm = ({
 											<DropdownMenuItem
 												key={stage.id}
 												onClick={() => {
-													field.onChange(stage.id);
+													field.onChange(stage.id)
 												}}
 											>
 												{stage.name}
@@ -213,7 +213,7 @@ export const ButtonConfigurationForm = ({
 
 								<FormMessage />
 							</FormItem>
-						);
+						)
 					}}
 				/>
 				<div className="grid grid-cols-2 gap-2">
@@ -222,7 +222,7 @@ export const ButtonConfigurationForm = ({
 						className="border-slate-950"
 						variant="outline"
 						onClick={() => {
-							dispatch({ eventName: "cancel" });
+							dispatch({ eventName: "cancel" })
 						}}
 						data-testid="cancel-button-configuration-button"
 					>
@@ -238,5 +238,5 @@ export const ButtonConfigurationForm = ({
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

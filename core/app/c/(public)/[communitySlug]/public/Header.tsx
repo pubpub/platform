@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import dynamic from "next/dynamic";
+import dynamic from "next/dynamic"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 
-import Logo from "~/app/components/Logo";
-import { HEADER_HEIGHT } from "~/lib/ui";
+import Logo from "~/app/components/Logo"
+import { HEADER_HEIGHT } from "~/lib/ui"
 
 const CopyCurrentUrlButton = dynamic(
 	() =>
@@ -15,7 +15,7 @@ const CopyCurrentUrlButton = dynamic(
 	{
 		ssr: false,
 	}
-);
+)
 
 export const Header = ({ children }: { children: ReactNode }) => {
 	return (
@@ -35,5 +35,5 @@ export const Header = ({ children }: { children: ReactNode }) => {
 				</Button>
 			</div>
 		</div>
-	);
-};
+	)
+}

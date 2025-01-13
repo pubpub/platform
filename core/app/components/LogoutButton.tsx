@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
-import { LogOut } from "ui/icon";
+import { Button } from "ui/button"
+import { LogOut } from "ui/icon"
 
-import * as actions from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
+import * as actions from "~/lib/authentication/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 export default function LogoutButton() {
-	const runLogout = useServerAction(actions.logout);
+	const runLogout = useServerAction(actions.logout)
 	const handleSignout = async () => {
-		await runLogout();
-	};
+		await runLogout()
+	}
 
 	return (
 		<Button
@@ -22,5 +22,5 @@ export default function LogoutButton() {
 			<LogOut size="14" />
 			Logout
 		</Button>
-	);
+	)
 }

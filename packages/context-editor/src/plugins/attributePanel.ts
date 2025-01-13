@@ -1,8 +1,8 @@
-import { Plugin, PluginKey } from "prosemirror-state";
+import { Plugin, PluginKey } from "prosemirror-state"
 
-import type { PanelProps } from "../ContextEditor";
+import type { PanelProps } from "../ContextEditor"
 
-export const attributePanelKey = new PluginKey("panel");
+export const attributePanelKey = new PluginKey("panel")
 export default (
 	panelPosition: PanelProps,
 	setPanelPosition: React.Dispatch<React.SetStateAction<PanelProps>>
@@ -11,9 +11,9 @@ export default (
 		key: attributePanelKey,
 		state: {
 			init: () => {
-				return { panelPosition, setPanelPosition };
+				return { panelPosition, setPanelPosition }
 			},
 			apply: (tr, prev) => tr.getMeta(attributePanelKey) || prev,
 		},
-	});
-};
+	})
+}

@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 
-import { useIntegration } from "@pubpub/sdk/react";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { useIntegration } from "@pubpub/sdk/react"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
 import {
 	Form,
 	FormControl,
@@ -16,26 +16,26 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { useLocalStorage } from "ui/hooks";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
-import { Textarea } from "ui/textarea";
-import { useToast } from "ui/use-toast";
-import { cn, DOI_REGEX, isDoi, normalizeDoi, URL_REGEX } from "utils";
+} from "ui/form"
+import { useLocalStorage } from "ui/hooks"
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
+import { Textarea } from "ui/textarea"
+import { useToast } from "ui/use-toast"
+import { cn, DOI_REGEX, isDoi, normalizeDoi, URL_REGEX } from "utils"
 
-import { submit } from "./actions";
-import { FetchMetadataButton } from "./FetchMetadataButton";
+import { submit } from "./actions"
+import { FetchMetadataButton } from "./FetchMetadataButton"
 
 type Props = {
-	instanceId: string;
-};
+	instanceId: string
+}
 
 const optional = (schema: z.ZodType<any, any>) =>
 	z.preprocess((value) => {
-		if (!value || typeof value !== "string") return undefined;
-		return value === "" ? undefined : value;
-	}, schema.optional());
+		if (!value || typeof value !== "string") return undefined
+		return value === "" ? undefined : value
+	}, schema.optional())
 
 // TODO: generate fields using instance's configured PubType
 const schema = z.object({
@@ -44,10 +44,10 @@ const schema = z.object({
 	"legacy-unjournal:title": z.string().min(3, "Title is required"),
 	"legacy-unjournal:url": optional(z.string().regex(URL_REGEX, "Invalid URL")),
 	"legacy-unjournal:managers-notes": optional(z.string()),
-});
+})
 
 export function Submit(props: Props) {
-	const { toast } = useToast();
+	const { toast } = useToast()
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "onChange",
 		reValidateMode: "onChange",
@@ -60,47 +60,47 @@ export function Submit(props: Props) {
 			"legacy-unjournal:doi": "",
 			"legacy-unjournal:url": "",
 		},
-	});
-	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId);
+	})
+	const [persistedValues, persist] = useLocalStorage<z.infer<typeof schema>>(props.instanceId)
 
-	const { user } = useIntegration();
+	const { user } = useIntegration()
 	const onSubmit = async (pub: z.infer<typeof schema>) => {
 		// The DOI field may contain either a DOI or a URL that contains a DOI.
 		// If the value is a URL, we convert it into a valid DOI before sending
 		// it to core PubPub.
 		if (pub["legacy-unjournal:doi"]) {
-			pub["legacy-unjournal:doi"] = normalizeDoi(pub["legacy-unjournal:doi"]);
+			pub["legacy-unjournal:doi"] = normalizeDoi(pub["legacy-unjournal:doi"])
 		}
-		const result = await submit(props.instanceId, pub, user.id);
+		const result = await submit(props.instanceId, pub, user.id)
 		if ("error" in result && typeof result.error === "string") {
 			toast({
 				title: "Error",
 				description: result.error,
 				variant: "destructive",
-			});
+			})
 		} else {
 			toast({
 				title: "Success",
 				description: "The submission was created successfully!",
-			});
-			form.reset();
+			})
+			form.reset()
 		}
-	};
+	}
 
 	// Load the persisted values.
-	const { reset } = form;
+	const { reset } = form
 	useEffect(() => {
 		// `keepDefaultValues` is set to true to prevent the form from
 		// validating fields that were not filled during the previous session.
-		reset(persistedValues, { keepDefaultValues: true });
-	}, [reset]);
+		reset(persistedValues, { keepDefaultValues: true })
+	}, [reset])
 
 	// Persist form values to local storage. This operation is debounced by
 	// the timeout passed to <LocalStorageProvider>.
-	const values = form.watch();
+	const values = form.watch()
 	useEffect(() => {
-		persist(values);
-	}, [values]);
+		persist(values)
+	}, [values])
 
 	return (
 		<Form {...form}>
@@ -157,7 +157,7 @@ export function Submit(props: Props) {
 									const normalizedDoi =
 										field.value && isDoi(field.value)
 											? normalizeDoi(field.value)
-											: "";
+											: ""
 									return (
 										<FormItem className={cn("flex-1")}>
 											<FormLabel>DOI</FormLabel>
@@ -175,7 +175,7 @@ export function Submit(props: Props) {
 											</FormDescription>
 											<FormMessage />
 										</FormItem>
-									);
+									)
 								}}
 							/>
 							<FormField
@@ -221,8 +221,8 @@ export function Submit(props: Props) {
 						<Button
 							variant="outline"
 							onClick={(e) => {
-								e.preventDefault();
-								window.history.back();
+								e.preventDefault()
+								window.history.back()
 							}}
 						>
 							Go Back
@@ -237,5 +237,5 @@ export function Submit(props: Props) {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

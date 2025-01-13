@@ -1,34 +1,34 @@
-"use client";
+"use client"
 
-import React, { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useFieldArray, useForm } from "react-hook-form";
+import React, { useCallback } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useFieldArray, useForm } from "react-hook-form"
 
-import type { GetPubResponseBody, User } from "@pubpub/sdk";
-import { IntegrationAvatar } from "@pubpub/sdk/react";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormDescription, FormItem, FormLabel } from "ui/form";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
-import { Calendar, Loader2, Plus } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { useToast } from "ui/use-toast";
+import type { GetPubResponseBody, User } from "@pubpub/sdk"
+import { IntegrationAvatar } from "@pubpub/sdk/react"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { Form, FormDescription, FormItem, FormLabel } from "ui/form"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
+import { Calendar, Loader2, Plus } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+import { useToast } from "ui/use-toast"
 
-import type { EmailTemplate, InstanceConfig } from "~/lib/types";
-import { Evaluator, hasUser, isInvited, isSaved } from "~/lib/types";
-import * as actions from "./actions";
-import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton";
-import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton";
-import { EvaluatorInviteRow } from "./EvaluatorInviteRow";
-import { InviteFormEvaluator, InviteFormSchema } from "./types";
+import type { EmailTemplate, InstanceConfig } from "~/lib/types"
+import { Evaluator, hasUser, isInvited, isSaved } from "~/lib/types"
+import * as actions from "./actions"
+import { EvaluatorInviteFormInviteButton } from "./EvaluatorInviteFormInviteButton"
+import { EvaluatorInviteFormSaveButton } from "./EvaluatorInviteFormSaveButton"
+import { EvaluatorInviteRow } from "./EvaluatorInviteRow"
+import { InviteFormEvaluator, InviteFormSchema } from "./types"
 
 type Props = {
-	evaluators: Evaluator[];
-	instanceId: string;
-	instanceConfig: InstanceConfig;
-	pub: GetPubResponseBody;
-	user: User;
-};
+	evaluators: Evaluator[]
+	instanceId: string
+	instanceConfig: InstanceConfig
+	pub: GetPubResponseBody
+	user: User
+}
 
 const makeEvaluator = (template: EmailTemplate): InviteFormEvaluator => {
 	return {
@@ -38,11 +38,11 @@ const makeEvaluator = (template: EmailTemplate): InviteFormEvaluator => {
 		emailTemplate: { ...template },
 		selected: false,
 		status: "unsaved",
-	};
-};
+	}
+}
 
 export function EvaluatorInviteForm(props: Props) {
-	const { toast } = useToast();
+	const { toast } = useToast()
 	const form = useForm<InviteFormSchema>({
 		mode: "all",
 		reValidateMode: "onChange",
@@ -53,7 +53,7 @@ export function EvaluatorInviteForm(props: Props) {
 				selected: false,
 			})),
 		},
-	});
+	})
 	const {
 		fields: evaluators,
 		remove,
@@ -63,7 +63,7 @@ export function EvaluatorInviteForm(props: Props) {
 		control: form.control,
 		name: "evaluators",
 		keyName: "key",
-	});
+	})
 
 	const onSubmit = useCallback(
 		async (values: InviteFormSchema, send = false) => {
@@ -72,32 +72,32 @@ export function EvaluatorInviteForm(props: Props) {
 				props.pub.id,
 				values.evaluators,
 				send
-			);
+			)
 			if ("error" in result) {
 				toast({
 					title: "Error",
 					description: result.error,
 					variant: "destructive",
-				});
+				})
 			} else {
 				toast({
 					title: "Success",
 					description: send ? "Selected evaluators were invited." : "The form was saved.",
-				});
+				})
 			}
 		},
 		[toast, evaluators]
-	);
+	)
 
 	const onSuggest = useCallback(
 		async (index: number, evaluator: InviteFormEvaluator) => {
-			const result = await actions.suggest(props.instanceId, evaluator);
+			const result = await actions.suggest(props.instanceId, evaluator)
 			if ("error" in result && typeof result.error === "string") {
 				toast({
 					title: "Error",
 					description: result.error,
 					variant: "destructive",
-				});
+				})
 			} else if (Array.isArray(result)) {
 				if (result.length > 0) {
 					const [user] = result.filter(
@@ -105,76 +105,76 @@ export function EvaluatorInviteForm(props: Props) {
 							!evaluators.some(
 								(evaluator) => hasUser(evaluator) && evaluator.userId === user.id
 							)
-					);
+					)
 					if (user === undefined) {
 						toast({
 							title: "No unique matches",
 							description: "All suggested users exist in the form.",
-						});
+						})
 					} else {
-						const evaluator = evaluators[index];
+						const evaluator = evaluators[index]
 						update(index, {
 							...evaluator,
 							userId: user.id,
 							firstName: user.firstName,
 							lastName: user.lastName ?? undefined,
 							status: "unsaved-with-user",
-						});
-						form.trigger(`evaluators.${index}`);
+						})
+						form.trigger(`evaluators.${index}`)
 						toast({
 							title: "Success",
 							description: "A user was suggested.",
-						});
+						})
 					}
 				} else {
 					toast({
 						title: "No matches found",
 						description:
 							"A user was not found for the given email, first name, or last name.",
-					});
+					})
 				}
 			}
 		},
 		[evaluators, toast, update, form.trigger]
-	);
+	)
 
 	const onRemove = useCallback(
 		async (index: number) => {
 			try {
-				const evaluator = evaluators[index];
-				remove(index);
+				const evaluator = evaluators[index]
+				remove(index)
 				if (isSaved(evaluator)) {
-					await actions.remove(props.instanceId, props.pub.id, evaluator.userId);
+					await actions.remove(props.instanceId, props.pub.id, evaluator.userId)
 				}
 				toast({
 					title: "Success",
 					description: "The evaluator was removed",
-				});
+				})
 			} catch (e) {
 				toast({
 					title: "Error",
 					description: "The evaluator could not be removed",
 					variant: "destructive",
-				});
+				})
 			}
 		},
 		[evaluators, toast]
-	);
+	)
 
 	const onAppend = useCallback(
 		(event: React.MouseEvent) => {
-			event.preventDefault();
-			append(makeEvaluator(props.instanceConfig.emailTemplate));
+			event.preventDefault()
+			append(makeEvaluator(props.instanceConfig.emailTemplate))
 		},
 		[append, evaluators]
-	);
+	)
 
 	const onBack = useCallback((event: React.MouseEvent) => {
-		event.preventDefault();
-		window.history.back();
-	}, []);
+		event.preventDefault()
+		window.history.back()
+	}, [])
 
-	const evaluationManager = props.pub.assignee ?? props.user;
+	const evaluationManager = props.pub.assignee ?? props.user
 
 	return (
 		<Form {...form}>
@@ -301,5 +301,5 @@ export function EvaluatorInviteForm(props: Props) {
 				</CardFooter>
 			</Card>
 		</Form>
-	);
+	)
 }

@@ -1,8 +1,8 @@
-import type { QueryCreator } from "kysely";
+import type { QueryCreator } from "kysely"
 
-import { sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-import { componentsBySchema } from "schemas";
+import { sql } from "kysely"
+import { jsonArrayFrom } from "kysely/helpers/postgres"
+import { componentsBySchema } from "schemas"
 
 import type {
 	CommunitiesId,
@@ -13,18 +13,18 @@ import type {
 	PubsId,
 	PubTypesId,
 	UsersId,
-} from "db/public";
-import { AuthTokenType, ElementType, StructuralFormElement } from "db/public";
+} from "db/public"
+import { AuthTokenType, ElementType, StructuralFormElement } from "db/public"
 
-import type { XOR } from "../types";
-import type { FormElements } from "~/app/components/forms/types";
-import { db } from "~/kysely/database";
-import { createMagicLink } from "../authentication/createMagicLink";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { getCommunitySlug } from "./cache/getCommunitySlug";
-import { _getPubFields } from "./pubFields";
-import { getUser } from "./user";
+import type { XOR } from "../types"
+import type { FormElements } from "~/app/components/forms/types"
+import { db } from "~/kysely/database"
+import { createMagicLink } from "../authentication/createMagicLink"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { getCommunitySlug } from "./cache/getCommunitySlug"
+import { _getPubFields } from "./pubFields"
+import { getUser } from "./user"
 
 /**
  * Get a form by either slug, id, or pubtype ID. If given a pubtype ID, retrieves the
@@ -75,9 +75,9 @@ export const getForm = (
 						.orderBy("form_elements.order")
 				).as("elements")
 			)
-	);
+	)
 
-export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFirstOrThrow"]>>;
+export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFirstOrThrow"]>>
 
 export const userHasPermissionToForm = async (
 	props: XOR<{ formId: FormsId }, { formSlug: string }> &
@@ -110,10 +110,10 @@ export const userHasPermissionToForm = async (
 				eb.where("form_memberships.pubId", "=", props.pubId!)
 			)
 			.select(["form_memberships.id"])
-	).executeTakeFirst();
+	).executeTakeFirst()
 
-	return Boolean(formPermission);
-};
+	return Boolean(formPermission)
+}
 
 /**
  * Gives a community member permission to a form
@@ -125,8 +125,8 @@ export const addMemberToForm = async (
 	>
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
-	const { userId, pubId, ...getFormProps } = props;
-	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
+	const { userId, pubId, ...getFormProps } = props
+	const form = await getForm(getFormProps).executeTakeFirstOrThrow()
 
 	const existingPermission = await autoCache(
 		db
@@ -135,26 +135,26 @@ export const addMemberToForm = async (
 			.where("form_memberships.formId", "=", form.id)
 			.where("form_memberships.userId", "=", userId)
 			.where("form_memberships.pubId", "=", pubId)
-	).executeTakeFirst();
+	).executeTakeFirst()
 
 	if (existingPermission === undefined) {
 		await autoRevalidate(
 			db.insertInto("form_memberships").values({ formId: form.id, userId, pubId })
-		).execute();
+		).execute()
 	}
-};
+}
 
 export const createFormInvitePath = ({
 	formSlug,
 	communitySlug,
 	pubId,
 }: {
-	formSlug: string;
-	communitySlug: string;
-	pubId?: string;
+	formSlug: string
+	communitySlug: string
+	pubId?: string
 }) => {
-	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}` as const;
-};
+	return `/c/${communitySlug}/public/forms/${formSlug}/fill${pubId ? `?pubId=${pubId}` : ""}` as const
+}
 
 /**
  * @param days  - The number of days before the link expires
@@ -164,64 +164,64 @@ const createExpiresAtDate = (
 	 * @default 7
 	 */
 	days = 7
-) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+) => new Date(Date.now() + days * 24 * 60 * 60 * 1000)
 
 export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }> &
 	XOR<{ email: string }, { userId: UsersId }> & {
-		pubId?: PubsId;
-		expiresInDays?: number;
-		communityId: CommunitiesId;
-	};
+		pubId?: PubsId
+		expiresInDays?: number
+		communityId: CommunitiesId
+	}
 
 export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	const formPromise = getForm({
 		communityId: props.communityId,
 		...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
-	}).executeTakeFirstOrThrow();
+	}).executeTakeFirstOrThrow()
 
 	const userPromise = getUser(
 		props.userId !== undefined ? { id: props.userId } : { email: props.email }
-	).executeTakeFirstOrThrow();
+	).executeTakeFirstOrThrow()
 
-	const [formSettled, userSettled] = await Promise.allSettled([formPromise, userPromise]);
+	const [formSettled, userSettled] = await Promise.allSettled([formPromise, userPromise])
 
 	if (formSettled.status === "rejected") {
-		throw formSettled.reason;
+		throw formSettled.reason
 	}
 
 	if (userSettled.status === "rejected") {
-		throw userSettled.reason;
+		throw userSettled.reason
 	}
 
-	const form = formSettled.value;
-	const user = userSettled.value;
+	const form = formSettled.value
+	const user = userSettled.value
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = getCommunitySlug()
 
 	const formPath = createFormInvitePath({
 		formSlug: form.slug,
 		communitySlug: communitySlug,
 		pubId: props.pubId,
-	});
+	})
 
 	const magicLink = await createMagicLink({
 		userId: user.id,
 		path: formPath,
 		expiresAt: createExpiresAtDate(props.expiresInDays),
 		type: AuthTokenType.generic,
-	});
+	})
 
-	return magicLink;
-};
+	return magicLink
+}
 
 const componentsBySchemaTable = Object.entries(componentsBySchema)
 	.map(([schema, components]) => {
 		const component = components[0]
 			? `'${components[0]}'::"InputComponent"`
-			: `null::"InputComponent"`;
-		return `('${schema}'::"CoreSchemaType", ${component})`;
+			: `null::"InputComponent"`
+		return `('${schema}'::"CoreSchemaType", ${component})`
 	})
-	.join(", ");
+	.join(", ")
 
 export const insertForm = (
 	pubTypeId: PubTypesId,
@@ -241,8 +241,8 @@ export const insertForm = (
 			db
 				.selectFrom(
 					sql<{
-						schema: CoreSchemaType;
-						component: InputComponent;
+						schema: CoreSchemaType
+						component: InputComponent
 					}>`(values ${sql.raw(componentsBySchemaTable)})`.as<"c">(
 						sql`c(schema, component)`
 					)
@@ -306,7 +306,7 @@ export const insertForm = (
 						.whereRef("components.schema", "=", "fields.schemaName")
 						.as("component"),
 				])
-		);
-};
-export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
-export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
+		)
+}
+export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key"
+export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key"

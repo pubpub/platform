@@ -1,27 +1,27 @@
-import React, { useEffect, useReducer, useState } from "react";
-import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react";
+import React, { useEffect, useReducer, useState } from "react"
+import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react"
 
-import { Card, CardContent } from "ui/card";
+import { Card, CardContent } from "ui/card"
 
-import type { SuggestProps } from "../ContextEditor";
+import type { SuggestProps } from "../ContextEditor"
 
 export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: SuggestProps) {
-	const [position, setPosition] = useState([0, 0]);
+	const [position, setPosition] = useState([0, 0])
 	useEffect(() => {
-		const span = document.getElementsByClassName("autocomplete")[0];
+		const span = document.getElementsByClassName("autocomplete")[0]
 		if (span) {
-			const rect = span.getBoundingClientRect();
-			const container = document.getElementById("context-editor-container");
+			const rect = span.getBoundingClientRect()
+			const container = document.getElementById("context-editor-container")
 			if (container) {
-				const containerBound = container.getBoundingClientRect();
-				const topOffset = -1 * containerBound.top + container.scrollTop + 16;
-				const leftOffset = -1 * containerBound.left + 16;
-				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset]);
+				const containerBound = container.getBoundingClientRect()
+				const topOffset = -1 * containerBound.top + container.scrollTop + 16
+				const leftOffset = -1 * containerBound.left + 16
+				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset])
 			}
 		}
-	}, [isOpen, filter]);
+	}, [isOpen, filter])
 	if (!isOpen) {
-		return null;
+		return null
 	}
 	return (
 		<div
@@ -35,8 +35,8 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 			}}
 		>
 			{items.map((item, index) => {
-				const itemIsPub = item.pubTypeId;
-				const itemIsField = item.schemaName;
+				const itemIsPub = item.pubTypeId
+				const itemIsField = item.schemaName
 				return (
 					<div
 						key={item.id}
@@ -70,8 +70,8 @@ export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: S
 							</div>
 						)}
 					</div>
-				);
+				)
 			})}
 		</div>
-	);
+	)
 }

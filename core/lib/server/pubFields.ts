@@ -1,35 +1,35 @@
-import { sql } from "kysely";
-import { jsonBuildObject } from "kysely/helpers/postgres";
+import { sql } from "kysely"
+import { jsonBuildObject } from "kysely/helpers/postgres"
 
-import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public"
 
-import type { PubField } from "../types";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
+import type { PubField } from "../types"
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
 
 type GetPubFieldsInput =
 	| {
-			pubId?: never;
-			pubTypeId?: never;
-			communityId: CommunitiesId;
-			includeRelations?: boolean;
-			slugs?: string[];
+			pubId?: never
+			pubTypeId?: never
+			communityId: CommunitiesId
+			includeRelations?: boolean
+			slugs?: string[]
 	  }
 	| {
-			pubId: PubsId;
-			valuesOnly?: boolean;
-			pubTypeId?: never;
-			communityId: CommunitiesId;
-			includeRelations?: boolean;
-			slugs?: string[];
+			pubId: PubsId
+			valuesOnly?: boolean
+			pubTypeId?: never
+			communityId: CommunitiesId
+			includeRelations?: boolean
+			slugs?: string[]
 	  }
 	| {
-			pubId?: never;
-			pubTypeId: PubTypesId;
-			communityId: CommunitiesId;
-			includeRelations?: boolean;
-			slugs?: string[];
-	  };
+			pubId?: never
+			pubTypeId: PubTypesId
+			communityId: CommunitiesId
+			includeRelations?: boolean
+			slugs?: string[]
+	  }
 
 /**
  * Get pub fields
@@ -41,7 +41,7 @@ type GetPubFieldsInput =
  * @param props.communityId - When supplied, return all the pub fields associated with the community ID
  * @param props.slugs - Adds a `where('pub_fields.slug', 'in', props.slugs)` clause
  */
-export const getPubFields = (props: GetPubFieldsInput) => autoCache(_getPubFields(props));
+export const getPubFields = (props: GetPubFieldsInput) => autoCache(_getPubFields(props))
 
 export const _getPubFields = (props: GetPubFieldsInput) =>
 	db
@@ -104,4 +104,4 @@ export const _getPubFields = (props: GetPubFieldsInput) =>
 					sql`'{}'`
 				)
 				.as("fields"),
-		]);
+		])

@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "react"
 import {
 	Body,
 	Button,
@@ -13,18 +13,18 @@ import {
 	Section,
 	Tailwind,
 	Text,
-} from "@react-email/components";
+} from "@react-email/components"
 
-import type { Communities } from "db/public";
-import type { MembershipType } from "db/src/public/MembershipType";
-import { MemberRole } from "db/public";
+import type { Communities } from "db/public"
+import type { MembershipType } from "db/src/public/MembershipType"
+import { MemberRole } from "db/public"
 
 interface SignupInviteProps {
-	signupLink: string;
-	community: Pick<Communities, "name" | "avatar" | "slug">;
-	role: MemberRole;
-	previewText?: string;
-	membership: { type: MembershipType; name: string };
+	signupLink: string
+	community: Pick<Communities, "name" | "avatar" | "slug">
+	role: MemberRole
+	previewText?: string
+	membership: { type: MembershipType; name: string }
 }
 
 export const SignupInvite = ({
@@ -34,13 +34,13 @@ export const SignupInvite = ({
 	membership,
 	previewText = `Join ${comm?.name} on PubPub`,
 }: SignupInviteProps) => {
-	const baseUrl = process.env.PUBPUB_URL ?? "";
+	const baseUrl = process.env.PUBPUB_URL ?? ""
 
 	const community = comm ?? {
 		name: "CrocCroc",
 		avatar: `${baseUrl}/demo/croc.png`,
 		slug: "croccroc",
-	};
+	}
 
 	return (
 		<Html>
@@ -92,5 +92,5 @@ export const SignupInvite = ({
 				</Body>
 			</Tailwind>
 		</Html>
-	);
-};
+	)
+}

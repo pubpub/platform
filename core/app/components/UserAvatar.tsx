@@ -1,9 +1,9 @@
-import type { Users } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import type { Users } from "db/public"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 
 type Props = {
-	user: Pick<Users, "avatar" | "firstName" | "lastName">;
-};
+	user: Pick<Users, "avatar" | "firstName" | "lastName">
+}
 
 export const UserAvatar = ({ user }: Props) => {
 	return (
@@ -17,5 +17,5 @@ export const UserAvatar = ({ user }: Props) => {
 				{user.lastName?.[0] ?? ""}
 			</AvatarFallback>
 		</Avatar>
-	);
-};
+	)
+}

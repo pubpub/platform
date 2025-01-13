@@ -1,27 +1,27 @@
-import { Suspense } from "react";
+import { Suspense } from "react"
 
-import type { CommunitiesId, UsersId } from "db/public";
-import { cn } from "utils";
+import type { CommunitiesId, UsersId } from "db/public"
+import { cn } from "utils"
 
-import { BasicPagination } from "~/app/components/Pagination";
-import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
-import { getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { BasicPagination } from "~/app/components/Pagination"
+import PubRow, { PubRowSkeleton } from "~/app/components/PubRow"
+import { getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 10
 
 type PaginatedPubListProps = {
-	communityId: CommunitiesId;
-	page: number;
-	searchParams: Record<string, unknown>;
+	communityId: CommunitiesId
+	page: number
+	searchParams: Record<string, unknown>
 	/**
 	 * Needs to be provided for the pagination to work
 	 *
 	 * @default `/c/${communitySlug}/pubs`
 	 */
-	basePath?: string;
-	userId: UsersId;
-};
+	basePath?: string
+	userId: UsersId
+}
 
 const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	const [count, pubs] = await Promise.all([
@@ -39,12 +39,12 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				withLegacyAssignee: true,
 			}
 		),
-	]);
+	])
 
-	const totalPages = Math.ceil(count / PAGE_SIZE);
+	const totalPages = Math.ceil(count / PAGE_SIZE)
 
-	const communitySlug = getCommunitySlug();
-	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
+	const communitySlug = getCommunitySlug()
+	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`
 
 	return (
 		<div className={cn("flex flex-col gap-8")}>
@@ -56,7 +56,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 						pub={pub}
 						searchParams={props.searchParams}
 					/>
-				);
+				)
 			})}
 			<BasicPagination
 				basePath={basePath}
@@ -65,27 +65,27 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				totalPages={totalPages}
 			/>
 		</div>
-	);
-};
+	)
+}
 
 export const PubListSkeleton = ({
 	amount = 10,
 	className,
 }: {
-	amount?: number;
-	className?: string;
+	amount?: number
+	className?: string
 }) => (
 	<div className={cn(["flex flex-col gap-8", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
 			<PubRowSkeleton key={index} />
 		))}
 	</div>
-);
+)
 
 export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) => {
 	return (
 		<Suspense fallback={<PubListSkeleton />}>
 			<PaginatedPubListInner {...props} />
 		</Suspense>
-	);
-};
+	)
+}

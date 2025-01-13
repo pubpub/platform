@@ -1,22 +1,22 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
+import { useCallback } from "react"
 
-import type { GetPubResponseBody, User } from "@pubpub/sdk";
-import { Button } from "ui/button";
-import { toast } from "ui/use-toast";
+import type { GetPubResponseBody, User } from "@pubpub/sdk"
+import { Button } from "ui/button"
+import { toast } from "ui/use-toast"
 
-import type { InstanceConfig } from "~/lib/types";
-import { calculateDeadline } from "~/lib/emails";
-import { accept, decline } from "./actions";
+import type { InstanceConfig } from "~/lib/types"
+import { calculateDeadline } from "~/lib/emails"
+import { accept, decline } from "./actions"
 
 type Props = {
-	intent: "accept" | "decline" | "info";
-	instanceId: string;
-	instanceConfig: InstanceConfig;
-	pub: GetPubResponseBody;
-	evaluationManager: User;
-};
+	intent: "accept" | "decline" | "info"
+	instanceId: string
+	instanceConfig: InstanceConfig
+	pub: GetPubResponseBody
+	evaluationManager: User
+}
 
 const AboutUnjournal = () => {
 	return (
@@ -80,8 +80,8 @@ const AboutUnjournal = () => {
 				.
 			</p>
 		</>
-	);
-};
+	)
+}
 
 const EvaluationProcess = () => {
 	return (
@@ -149,41 +149,41 @@ const EvaluationProcess = () => {
 				.
 			</p>
 		</>
-	);
-};
+	)
+}
 
 export const Respond = (props: Props) => {
 	const onAccept = useCallback(async () => {
-		const result = await accept(props.instanceId, props.pub.id);
+		const result = await accept(props.instanceId, props.pub.id)
 		if (result?.error) {
 			toast({
 				title: "Error",
 				description: "There was an error accepting this submission.",
 				variant: "destructive",
-			});
+			})
 		}
-	}, []);
+	}, [])
 	const onDecline = useCallback(async () => {
-		const result = await decline(props.instanceId, props.pub.id);
+		const result = await decline(props.instanceId, props.pub.id)
 		if (result?.error) {
 			toast({
 				title: "Error",
 				description: "There was an error declining this submission.",
 				variant: "destructive",
-			});
+			})
 		}
-	}, []);
+	}, [])
 
-	const submissionUrl = props.pub.values["legacy-unjournal:url"] as string;
-	const submissionTitle = props.pub.values[props.instanceConfig.titleFieldSlug] as string;
-	const submissionAbstract = props.pub.values["legacy-unjournal:description"] as string;
+	const submissionUrl = props.pub.values["legacy-unjournal:url"] as string
+	const submissionTitle = props.pub.values[props.instanceConfig.titleFieldSlug] as string
+	const submissionAbstract = props.pub.values["legacy-unjournal:description"] as string
 	const deadline = calculateDeadline(
 		{
 			deadlineLength: props.instanceConfig.deadlineLength,
 			deadlineUnit: props.instanceConfig.deadlineUnit,
 		},
 		new Date(Date.now())
-	);
+	)
 
 	return (
 		<div className="prose max-w-none">
@@ -309,5 +309,5 @@ export const Respond = (props: Props) => {
 				</>
 			)}
 		</div>
-	);
-};
+	)
+}

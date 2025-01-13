@@ -1,12 +1,12 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import prisma from "~/prisma/db";
+import prisma from "~/prisma/db"
 
 export type Props = {
 	params: {
-		pubId: string;
-	};
-};
+		pubId: string
+	}
+}
 
 export default async function Page(props: Props) {
 	const pub = await prisma.pub.findUnique({
@@ -18,9 +18,9 @@ export default async function Page(props: Props) {
 				},
 			},
 		},
-	});
+	})
 	if (pub === null) {
-		notFound();
+		notFound()
 	}
-	redirect(`/c/${pub.community.slug}/pubs/${pub.id}`);
+	redirect(`/c/${pub.community.slug}/pubs/${pub.id}`)
 }

@@ -1,47 +1,47 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getCommunityRole } from "~/lib/authentication/roles";
-import { findCommunityBySlug } from "~/lib/server/community";
-import SideNav from "./SideNav";
+import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { getCommunityRole } from "~/lib/authentication/roles"
+import { findCommunityBySlug } from "~/lib/server/community"
+import SideNav from "./SideNav"
 
-type Props = { children: React.ReactNode; params: { communitySlug: string } };
+type Props = { children: React.ReactNode; params: { communitySlug: string } }
 
 export async function generateMetadata({
 	params,
 }: {
-	params: { communitySlug: string };
+	params: { communitySlug: string }
 }): Promise<Metadata> {
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 
 	return {
 		title: {
 			template: `%s | ${community?.name ?? "PubPub"}`,
 			default: community?.name ? `${community?.name} on PubPub` : "PubPub",
 		},
-	};
+	}
 }
 
 export default async function MainLayout({ children, params }: Props) {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 	if (!community) {
-		return notFound();
+		return notFound()
 	}
 
-	const role = getCommunityRole(user, community);
+	const role = getCommunityRole(user, community)
 
 	if (role === "contributor" || !role) {
 		// TODO: allow contributors to view /c/* pages after we implement membership and
 		// role-based authorization checks
-		redirect("/settings");
+		redirect("/settings")
 	}
 
-	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
+	const availableCommunities = user?.memberships.map((m) => m.community) ?? []
 
 	return (
 		<CommunityProvider community={community}>
@@ -52,5 +52,5 @@ export default async function MainLayout({ children, params }: Props) {
 				</div>
 			</div>
 		</CommunityProvider>
-	);
+	)
 }

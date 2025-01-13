@@ -1,4 +1,4 @@
-import type { CommunitiesId, UsersId } from "db/public";
+import type { CommunitiesId, UsersId } from "db/public"
 import {
 	Action,
 	CoreSchemaType,
@@ -6,13 +6,13 @@ import {
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
-} from "db/public";
+} from "db/public"
 
-import { env } from "~/lib/env/env.mjs";
-import { seedCommunity } from "../seed/seedCommunity";
+import { env } from "~/lib/env/env.mjs"
+import { seedCommunity } from "../seed/seedCommunity"
 
 export async function seedCroccroc(communityId?: CommunitiesId) {
-	const memberId = crypto.randomUUID() as UsersId;
+	const memberId = crypto.randomUUID() as UsersId
 
 	return seedCommunity(
 		{
@@ -186,5 +186,5 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			randomSlug: false,
 			withApiToken: "11111111-1111-1111-1111-111111111111.yyyyyyyyyyyyyyyy",
 		}
-	);
+	)
 }

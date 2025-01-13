@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
 	AlertDialog,
@@ -10,17 +10,17 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "ui/alert-dialog";
-import { Button } from "ui/button";
-import { Trash } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
+} from "ui/alert-dialog"
+import { Button } from "ui/button"
+import { Trash } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
 
-import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens"
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
 
 export const RevokeTokenButton = ({ token }: { token: SafeApiAccessToken }) => {
-	const revokeToken = useServerAction(actions.deleteToken);
+	const revokeToken = useServerAction(actions.deleteToken)
 
 	return (
 		<AlertDialog defaultOpen={false}>
@@ -60,5 +60,5 @@ export const RevokeTokenButton = ({ token }: { token: SafeApiAccessToken }) => {
 				</AlertDialogFooter>
 			</AlertDialogContent>
 		</AlertDialog>
-	);
-};
+	)
+}

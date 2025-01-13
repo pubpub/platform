@@ -1,11 +1,11 @@
-import * as React from "react";
+import * as React from "react"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 
 type Props = {
-	firstName: string;
-	url: string;
-};
+	firstName: string
+	url: string
+}
 
 export const IntegrationAvatar = (props: Props) => {
 	return (
@@ -13,5 +13,5 @@ export const IntegrationAvatar = (props: Props) => {
 			<AvatarImage src={props.url} />
 			<AvatarFallback>{props.firstName[0]}</AvatarFallback>
 		</Avatar>
-	);
-};
+	)
+}

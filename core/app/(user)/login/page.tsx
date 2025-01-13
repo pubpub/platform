@@ -1,25 +1,25 @@
-import { redirect } from "next/navigation";
+import { redirect } from "next/navigation"
 
-import { getLoginData } from "~/lib/authentication/loginData";
-import LoginForm from "./LoginForm";
+import { getLoginData } from "~/lib/authentication/loginData"
+import LoginForm from "./LoginForm"
 
 export default async function Login({
 	searchParams,
 }: {
 	searchParams: {
-		error?: string;
-	};
+		error?: string
+	}
 }) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
 	if (user?.id) {
-		const firstSlug = user.memberships[0]?.community?.slug;
+		const firstSlug = user.memberships[0]?.community?.slug
 
 		if (firstSlug) {
-			redirect(`/c/${firstSlug}/stages`);
+			redirect(`/c/${firstSlug}/stages`)
 		}
 
-		redirect("/settings");
+		redirect("/settings")
 	}
 
 	return (
@@ -35,5 +35,5 @@ export default async function Login({
 				</Link>
 			</div> */}
 		</div>
-	);
+	)
 }

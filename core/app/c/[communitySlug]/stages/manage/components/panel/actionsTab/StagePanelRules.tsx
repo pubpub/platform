@@ -1,25 +1,25 @@
-import { Suspense } from "react";
+import { Suspense } from "react"
 
-import type { CommunitiesId, StagesId } from "db/public";
-import { Card, CardContent } from "ui/card";
+import type { CommunitiesId, StagesId } from "db/public"
+import { Card, CardContent } from "ui/card"
 
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions, getStageRules } from "~/lib/db/queries";
-import { StagePanelRule } from "./StagePanelRule";
-import { StagePanelRuleCreator } from "./StagePanelRuleCreator";
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { getStage, getStageActions, getStageRules } from "~/lib/db/queries"
+import { StagePanelRule } from "./StagePanelRule"
+import { StagePanelRuleCreator } from "./StagePanelRuleCreator"
 
 type PropsInner = {
-	stageId: StagesId;
-};
+	stageId: StagesId
+}
 
 const StagePanelRulesInner = async (props: PropsInner) => {
 	const [stage, actionInstances, rules] = await Promise.all([
 		getStage(props.stageId).executeTakeFirst(),
 		getStageActions(props.stageId).execute(),
 		getStageRules(props.stageId).execute(),
-	]);
+	])
 	if (!stage) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
@@ -61,21 +61,21 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 				)}
 			</CardContent>
 		</Card>
-	);
-};
+	)
+}
 
 type Props = {
-	stageId?: StagesId;
-};
+	stageId?: StagesId
+}
 
 export const StagePanelRules = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
 			<StagePanelRulesInner stageId={props.stageId} />
 		</Suspense>
-	);
-};
+	)
+}

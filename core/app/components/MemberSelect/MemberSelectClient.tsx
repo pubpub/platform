@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useDebouncedCallback } from "use-debounce";
+import { useCallback, useMemo, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useDebouncedCallback } from "use-debounce"
 
-import type { Communities } from "db/public";
-import type { Option } from "ui/autocomplete";
-import { CoreSchemaType, MemberRole } from "db/public";
-import { AutoComplete } from "ui/autocomplete";
-import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { UserCheck } from "ui/icon";
+import type { Communities } from "db/public"
+import type { Option } from "ui/autocomplete"
+import { CoreSchemaType, MemberRole } from "db/public"
+import { AutoComplete } from "ui/autocomplete"
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { UserCheck } from "ui/icon"
 import {
 	PubFieldSelector,
 	PubFieldSelectorHider,
 	PubFieldSelectorProvider,
 	PubFieldSelectorToggleButton,
-} from "ui/pubFields";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { cn, expect } from "utils";
+} from "ui/pubFields"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+import { cn, expect } from "utils"
 
-import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { addMember } from "~/app/c/[communitySlug]/members/actions";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
-import { UserAvatar } from "../UserAvatar";
-import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton";
-import { isMemberSelectUserWithMembership } from "./types";
+import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types"
+import { addMember } from "~/app/c/[communitySlug]/members/actions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { useFormElementToggleContext } from "../forms/FormElementToggleContext"
+import { UserAvatar } from "../UserAvatar"
+import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton"
+import { isMemberSelectUserWithMembership } from "./types"
 
 const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 	value: user.id,
@@ -50,18 +50,18 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 			</div>
 		</TooltipProvider>
 	),
-});
+})
 
 type Props = {
-	community: Communities;
-	fieldLabel: string;
-	fieldName: string;
-	queryParamName: string;
-	helpText?: string;
-	member?: MemberSelectUserWithMembership;
-	users: MemberSelectUser[];
-	allowPubFieldSubstitution: boolean;
-};
+	community: Communities
+	fieldLabel: string
+	fieldName: string
+	queryParamName: string
+	helpText?: string
+	member?: MemberSelectUserWithMembership
+	users: MemberSelectUser[]
+	allowPubFieldSubstitution: boolean
+}
 
 export function MemberSelectClient({
 	community,
@@ -73,46 +73,46 @@ export function MemberSelectClient({
 	allowPubFieldSubstitution,
 	helpText,
 }: Props) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const params = useSearchParams();
-	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
-	const runAddMember = useServerAction(addMember);
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(fieldName);
+	const router = useRouter()
+	const pathname = usePathname()
+	const params = useSearchParams()
+	const options = useMemo(() => users.map(makeOptionFromUser), [users])
+	const runAddMember = useServerAction(addMember)
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(fieldName)
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
-	const [addUserButtonKey, setAddUserButtonKey] = useState(0);
+	const [addUserButtonKey, setAddUserButtonKey] = useState(0)
 	const resetAddUserButton = useCallback(() => {
-		setAddUserButtonKey((x) => x + 1);
-	}, []);
+		setAddUserButtonKey((x) => x + 1)
+	}, [])
 
-	const [selectedUser, setSelectedUser] = useState(member);
+	const [selectedUser, setSelectedUser] = useState(member)
 
-	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "")
 
 	const updateSearchParams = useDebouncedCallback((value: string) => {
-		const newParams = new URLSearchParams(params);
-		const oldParams = newParams.toString();
-		newParams.set(queryParamName, value);
+		const newParams = new URLSearchParams(params)
+		const oldParams = newParams.toString()
+		newParams.set(queryParamName, value)
 		// Only change params when they are different, otherwise can cause race conditions
 		// if another component is trying to change the query params as well
 		if (oldParams !== newParams.toString()) {
-			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false })
 		}
-	}, 400);
+	}, 400)
 
 	const onInputValueChange = (value: string) => {
-		setInputValue(value);
-		updateSearchParams(value);
-	};
+		setInputValue(value)
+		updateSearchParams(value)
+	}
 
 	return (
 		<FormField
 			name={fieldName}
 			render={({ field }) => {
-				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
+				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser)
 				const formItem = (
 					<FormItem className="flex flex-col gap-y-1">
 						<div className="flex items-center justify-between">
@@ -140,22 +140,22 @@ export function MemberSelectClient({
 							}
 							onInputValueChange={onInputValueChange}
 							onValueChange={async (option) => {
-								const user = users.find((user) => user.id === option.value);
+								const user = users.find((user) => user.id === option.value)
 								if (!user) {
-									return;
+									return
 								}
 								if (isMemberSelectUserWithMembership(user)) {
-									setSelectedUser(user);
-									field.onChange(user.member.id);
+									setSelectedUser(user)
+									field.onChange(user.member.id)
 								} else {
 									const result = await runAddMember({
 										userId: user.id,
 										role: MemberRole.contributor,
-									});
+									})
 									if (didSucceed(result)) {
-										const member = expect(result.member);
-										setSelectedUser({ ...user, member });
-										field.onChange(member.id);
+										const member = expect(result.member)
+										setSelectedUser({ ...user, member })
+										field.onChange(member.id)
 									}
 								}
 							}}
@@ -170,7 +170,7 @@ export function MemberSelectClient({
 							</PubFieldSelectorHider>
 						)}
 					</FormItem>
-				);
+				)
 				return allowPubFieldSubstitution ? (
 					<PubFieldSelectorProvider
 						field={field}
@@ -180,8 +180,8 @@ export function MemberSelectClient({
 					</PubFieldSelectorProvider>
 				) : (
 					formItem
-				);
+				)
 			}}
 		/>
-	);
+	)
 }

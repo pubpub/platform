@@ -1,6 +1,6 @@
-import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test"
 
-import type { PubsId } from "db/public";
+import type { PubsId } from "db/public"
 
 export class PubDetailsPage {
 	constructor(
@@ -10,6 +10,6 @@ export class PubDetailsPage {
 	) {}
 
 	async goTo() {
-		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`);
+		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`)
 	}
 }

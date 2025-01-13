@@ -1,8 +1,8 @@
 // @ts-check
 
-import jsxA11yPlugin from "eslint-plugin-jsx-a11y";
-import reactPlugin from "eslint-plugin-react";
-import validateJsxNestingPlugin from "eslint-plugin-validate-jsx-nesting";
+import jsxA11yPlugin from "eslint-plugin-jsx-a11y"
+import reactPlugin from "eslint-plugin-react"
+import validateJsxNestingPlugin from "eslint-plugin-validate-jsx-nesting"
 
 /** @type {Awaited<import('typescript-eslint').Config>} */
 export default [
@@ -22,4 +22,4 @@ export default [
 			},
 		},
 	},
-];
+]

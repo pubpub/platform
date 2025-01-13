@@ -2,9 +2,9 @@
  * Original DataTable component, you may want to use v2/DataTable.tsx instead which encapsulates updated designs
  */
 
-import type { ColumnDef, ColumnFiltersState, Row, SortingState } from "@tanstack/react-table";
+import type { ColumnDef, ColumnFiltersState, Row, SortingState } from "@tanstack/react-table"
 
-import * as React from "react";
+import * as React from "react"
 import {
 	flexRender,
 	getCoreRowModel,
@@ -12,27 +12,27 @@ import {
 	getPaginationRowModel,
 	getSortedRowModel,
 	useReactTable,
-} from "@tanstack/react-table";
+} from "@tanstack/react-table"
 
-import { DataTablePagination } from "ui/data-table";
-import { Search } from "ui/icon";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
-import { cn } from "utils";
+import { DataTablePagination } from "ui/data-table"
+import { Search } from "ui/icon"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table"
+import { cn } from "utils"
 
 export interface DataTableProps<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[];
-	data: TData[];
-	searchBy?: string;
-	hidePaginationWhenSinglePage?: boolean;
-	onRowClick?: (row: Row<TData>) => void;
-	className?: string;
-	striped?: boolean;
-	emptyState?: React.ReactNode;
+	columns: ColumnDef<TData, TValue>[]
+	data: TData[]
+	searchBy?: string
+	hidePaginationWhenSinglePage?: boolean
+	onRowClick?: (row: Row<TData>) => void
+	className?: string
+	striped?: boolean
+	emptyState?: React.ReactNode
 }
 
-const STRIPED_ROW_STYLING = "hover:bg-slate-100 data-[state=selected]:bg-sky-50";
+const STRIPED_ROW_STYLING = "hover:bg-slate-100 data-[state=selected]:bg-sky-50"
 
 export function DataTable<TData, TValue>({
 	columns,
@@ -44,9 +44,9 @@ export function DataTable<TData, TValue>({
 	striped,
 	emptyState,
 }: DataTableProps<TData, TValue>) {
-	const [sorting, setSorting] = React.useState<SortingState>([]);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [rowSelection, setRowSelection] = React.useState({});
+	const [sorting, setSorting] = React.useState<SortingState>([])
+	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+	const [rowSelection, setRowSelection] = React.useState({})
 
 	const table = useReactTable({
 		data,
@@ -63,9 +63,9 @@ export function DataTable<TData, TValue>({
 			columnFilters,
 			rowSelection,
 		},
-	});
+	})
 
-	const showPagination = hidePaginationWhenSinglePage ? table.getPageCount() > 1 : true;
+	const showPagination = hidePaginationWhenSinglePage ? table.getPageCount() > 1 : true
 
 	const handleRowClick = (
 		evt:
@@ -74,15 +74,15 @@ export function DataTable<TData, TValue>({
 		row: Row<TData>
 	) => {
 		if (!onRowClick) {
-			return;
+			return
 		}
 		// Do not activate the row click if the element already has a click handler
 		// Ex: a button inside a table cell should still be clickable
 		if (evt.type !== "keydown" && (evt.target as HTMLTableRowElement).onclick) {
-			return;
+			return
 		}
-		onRowClick(row);
-	};
+		onRowClick(row)
+	}
 
 	return (
 		<div>
@@ -117,7 +117,7 @@ export function DataTable<TData, TValue>({
 														header.getContext()
 													)}
 										</TableHead>
-									);
+									)
 								})}
 							</TableRow>
 						))}
@@ -133,11 +133,11 @@ export function DataTable<TData, TValue>({
 										aria-pressed={row.getIsSelected() ? "true" : "false"}
 										onKeyDown={(evt) => {
 											if (evt.code === "Enter" || evt.code === "Space") {
-												handleRowClick(evt, row);
+												handleRowClick(evt, row)
 											}
 										}}
 										onClick={(evt) => {
-											handleRowClick(evt, row);
+											handleRowClick(evt, row)
 										}}
 										className={cn({
 											"cursor-pointer": onRowClick,
@@ -173,5 +173,5 @@ export function DataTable<TData, TValue>({
 			</div>
 			{showPagination ? <DataTablePagination table={table} /> : null}
 		</div>
-	);
+	)
 }

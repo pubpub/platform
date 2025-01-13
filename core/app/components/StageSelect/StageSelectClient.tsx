@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import type { Stages } from "db/public";
-import { FormControl, FormField, FormItem, FormLabel } from "ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import type { Stages } from "db/public"
+import { FormControl, FormField, FormItem, FormLabel } from "ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
 type Props = {
-	fieldLabel: string;
-	fieldName: string;
-	stages: Pick<Stages, "id" | "name">[];
-};
+	fieldLabel: string
+	fieldName: string
+	stages: Pick<Stages, "id" | "name">[]
+}
 
 export function StageSelectClient(props: Props) {
 	return (
@@ -24,7 +24,7 @@ export function StageSelectClient(props: Props) {
 					<Select
 						{...field}
 						onValueChange={(value) => {
-							field.onChange(value);
+							field.onChange(value)
 						}}
 						defaultValue={field.value}
 					>
@@ -44,5 +44,5 @@ export function StageSelectClient(props: Props) {
 				</FormItem>
 			)}
 		/>
-	);
+	)
 }

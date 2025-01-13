@@ -1,9 +1,9 @@
-import { MinMaxChoices } from "schemas";
+import { MinMaxChoices } from "schemas"
 
-import { InputComponent } from "db/public";
-import { Checkbox } from "ui/checkbox";
-import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
+import { InputComponent } from "db/public"
+import { Checkbox } from "ui/checkbox"
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
 import {
 	Select,
 	SelectContent,
@@ -11,13 +11,13 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "ui/select";
+} from "ui/select"
 
-import type { ComponentConfigFormProps, FormType } from "./types";
-import MultivalueBase from "./MultivalueBase";
+import type { ComponentConfigFormProps, FormType } from "./types"
+import MultivalueBase from "./MultivalueBase"
 
 export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) => {
-	const { form, component, ...rest } = props;
+	const { form, component, ...rest } = props
 	return (
 		<MultivalueBase
 			{...rest}
@@ -68,7 +68,7 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 														<SelectItem key={c} value={c}>
 															{c}
 														</SelectItem>
-													);
+													)
 												})}
 											</SelectGroup>
 										</SelectContent>
@@ -91,7 +91,7 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 									{...field}
 									value={field.value === undefined ? 0 : field.value}
 									onChange={(e) => {
-										field.onChange(e.target.valueAsNumber);
+										field.onChange(e.target.valueAsNumber)
 									}}
 								/>
 							</FormControl>
@@ -101,5 +101,5 @@ export default (props: ComponentConfigFormProps<InputComponent.checkboxGroup>) =
 				/>
 			</div>
 		</MultivalueBase>
-	);
-};
+	)
+}

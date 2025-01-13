@@ -1,15 +1,15 @@
-import type { ButtonProps } from "ui/button";
-import { Trash } from "ui/icon";
+import type { ButtonProps } from "ui/button"
+import { Trash } from "ui/icon"
 
-import type { PubRemoveProps } from "./RemovePubForm";
-import { PathAwareDialog } from "../PathAwareDialog";
-import { PubRemove } from "./RemovePubForm";
+import type { PubRemoveProps } from "./RemovePubForm"
+import { PathAwareDialog } from "../PathAwareDialog"
+import { PubRemove } from "./RemovePubForm"
 
 export type Props = PubRemoveProps & {
-	variant?: ButtonProps["variant"];
-	size?: ButtonProps["size"];
-	className?: string;
-};
+	variant?: ButtonProps["variant"]
+	size?: ButtonProps["size"]
+	className?: string
+}
 
 export const RemovePubButton = (props: Props) => {
 	return (
@@ -24,5 +24,5 @@ export const RemovePubButton = (props: Props) => {
 		>
 			<PubRemove {...props} />
 		</PathAwareDialog>
-	);
-};
+	)
+}

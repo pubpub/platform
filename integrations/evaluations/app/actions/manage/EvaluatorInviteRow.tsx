@@ -1,37 +1,37 @@
-"use client";
+"use client"
 
-import type { Control } from "react-hook-form";
+import type { Control } from "react-hook-form"
 
-import { useWatch } from "react-hook-form";
+import { useWatch } from "react-hook-form"
 
-import type { SuggestedMembersQuery } from "@pubpub/sdk";
-import { Button } from "ui/button";
-import { FormControl, FormField, FormItem, FormMessage } from "ui/form";
-import { X } from "ui/icon";
-import { Input } from "ui/input";
-import { cn } from "utils";
+import type { SuggestedMembersQuery } from "@pubpub/sdk"
+import { Button } from "ui/button"
+import { FormControl, FormField, FormItem, FormMessage } from "ui/form"
+import { X } from "ui/icon"
+import { Input } from "ui/input"
+import { cn } from "utils"
 
-import { hasUser } from "~/lib/types";
-import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog";
-import { EvaluatorSuggestButton } from "./EvaluatorSuggestButton";
-import { EvaluatorInviteRowStatus } from "./EvalutorInviteRowStatus";
-import { InviteFormEvaluator, InviteFormSchema } from "./types";
+import { hasUser } from "~/lib/types"
+import { EvaluatorInviteRowEmailDialog } from "./EvaluatorInviteRowEmailDialog"
+import { EvaluatorSuggestButton } from "./EvaluatorSuggestButton"
+import { EvaluatorInviteRowStatus } from "./EvalutorInviteRowStatus"
+import { InviteFormEvaluator, InviteFormSchema } from "./types"
 
 type Props = {
-	control: Control<any>;
-	invitedAt: string | undefined;
-	index: number;
-	readOnly?: boolean;
-	onRemove: (index: number) => void;
-	onSuggest: (index: number, query: SuggestedMembersQuery) => void;
-};
+	control: Control<any>
+	invitedAt: string | undefined
+	index: number
+	readOnly?: boolean
+	onRemove: (index: number) => void
+	onSuggest: (index: number, query: SuggestedMembersQuery) => void
+}
 
 export const EvaluatorInviteRow = (props: Props) => {
 	const evaluator = useWatch<InviteFormSchema>({
 		control: props.control,
 		name: `evaluators.${props.index}`,
-	}) as InviteFormEvaluator;
-	const evaluatorHasUser = hasUser(evaluator);
+	}) as InviteFormEvaluator
+	const evaluatorHasUser = hasUser(evaluator)
 
 	return (
 		<div className="mb-4 flex flex-row gap-4">
@@ -50,7 +50,7 @@ export const EvaluatorInviteRow = (props: Props) => {
 							</FormControl>
 							<FormMessage />
 						</FormItem>
-					);
+					)
 				}}
 			/>
 			<FormField
@@ -127,5 +127,5 @@ export const EvaluatorInviteRow = (props: Props) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

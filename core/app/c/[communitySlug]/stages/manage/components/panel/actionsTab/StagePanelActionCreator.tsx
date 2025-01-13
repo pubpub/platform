@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useCallback, useState } from "react";
+import { useCallback, useState } from "react"
 
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -11,31 +11,31 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogTrigger,
-} from "ui/dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+} from "ui/dialog"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import type { Action } from "~/actions/types";
-import { actions } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
+import type { Action } from "~/actions/types"
+import { actions } from "~/actions/api"
+import { useServerAction } from "~/lib/serverActions"
 
 type ActionCellProps = {
-	action: Action;
-	onClick: (action: Action) => void;
-};
+	action: Action
+	onClick: (action: Action) => void
+}
 
 const ActionCell = (props: ActionCellProps) => {
 	const onClick = useCallback(() => {
-		props.onClick(props.action);
-	}, [props.onClick, props.action]);
+		props.onClick(props.action)
+	}, [props.onClick, props.action])
 
 	const onKeyDown = useCallback(
 		(event: React.KeyboardEvent<HTMLDivElement>) => {
 			if (event.key === "Enter" || event.key === " ") {
-				onClick();
+				onClick()
 			}
 		},
 		[onClick]
-	);
+	)
 
 	return (
 		<div
@@ -75,27 +75,27 @@ const ActionCell = (props: ActionCellProps) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
 type Props = {
-	onAdd: (actionName: Action["name"]) => Promise<unknown>;
-	isSuperAdmin?: boolean | null;
-};
+	onAdd: (actionName: Action["name"]) => Promise<unknown>
+	isSuperAdmin?: boolean | null
+}
 
 export const StagePanelActionCreator = (props: Props) => {
-	const runOnAdd = useServerAction(props.onAdd);
-	const [isOpen, setIsOpen] = useState(false);
+	const runOnAdd = useServerAction(props.onAdd)
+	const [isOpen, setIsOpen] = useState(false)
 	const onActionSelect = useCallback(
 		async (action: Action) => {
-			setIsOpen(false);
-			runOnAdd(action.name);
+			setIsOpen(false)
+			runOnAdd(action.name)
 		},
 		[props.onAdd, runOnAdd]
-	);
+	)
 	const onOpenChange = useCallback((open: boolean) => {
-		setIsOpen(open);
-	}, []);
+		setIsOpen(open)
+	}, [])
 
 	return (
 		<div className="space-y-2 py-2">
@@ -124,5 +124,5 @@ export const StagePanelActionCreator = (props: Props) => {
 				</DialogContent>
 			</Dialog>
 		</div>
-	);
-};
+	)
+}

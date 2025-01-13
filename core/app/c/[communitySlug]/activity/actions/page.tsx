@@ -1,36 +1,36 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { notFound, redirect } from "next/navigation"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import type { ActionRun } from "./getActionRunsTableColumns";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { pubType, pubValuesByRef } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { ActionRunsTable } from "./ActionRunsTable";
+import type { ActionRun } from "./getActionRunsTableColumns"
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { pubType, pubValuesByRef } from "~/lib/server"
+import { autoCache } from "~/lib/server/cache/autoCache"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { ActionRunsTable } from "./ActionRunsTable"
 
 export const metadata: Metadata = {
 	title: "Action Log",
-};
+}
 
 export default async function Page({
 	params: { communitySlug },
 }: {
 	params: {
-		communitySlug: string;
-	};
+		communitySlug: string
+	}
 }) {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (
@@ -40,7 +40,7 @@ export default async function Page({
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
 	const actionRuns = (await autoCache(
@@ -99,7 +99,7 @@ export default async function Page({
 				).as("user"),
 			])
 			.orderBy("action_runs.createdAt", "desc")
-	).execute()) as ActionRun[];
+	).execute()) as ActionRun[]
 
 	return (
 		<>
@@ -108,5 +108,5 @@ export default async function Page({
 			</div>
 			<ActionRunsTable actionRuns={actionRuns} />
 		</>
-	);
+	)
 }

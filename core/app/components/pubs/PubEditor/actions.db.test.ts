@@ -1,14 +1,13 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest"
 
-import type { UsersId } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import type { UsersId } from "db/public"
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
+import { mockServerCode } from "~/lib/__tests__/utils"
 
-const { createForEachMockedTransaction, getLoginData, findCommunityBySlug } =
-	await mockServerCode();
+const { createForEachMockedTransaction, getLoginData, findCommunityBySlug } = await mockServerCode()
 
-const { getTrx } = createForEachMockedTransaction();
+const { getTrx } = createForEachMockedTransaction()
 
 describe("createPubRecursive", () => {
 	test.each([
@@ -34,8 +33,8 @@ describe("createPubRecursive", () => {
 			},
 		},
 	])("$name", async ({ loginUser, userRole, expected }) => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const trx = getTrx()
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { community, pubTypes, users } = await seedCommunity({
 			community: {
 				name: "test",
@@ -71,12 +70,12 @@ describe("createPubRecursive", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 		getLoginData.mockImplementation(() => {
-			return { user: loginUser ? { id: users.john.id } : undefined };
-		});
+			return { user: loginUser ? { id: users.john.id } : undefined }
+		})
 
-		const { createPubRecursive } = await import("./actions");
+		const { createPubRecursive } = await import("./actions")
 
 		const result = await createPubRecursive({
 			communityId: community.id,
@@ -87,10 +86,10 @@ describe("createPubRecursive", () => {
 				},
 			},
 			trx,
-		});
-		expect(result).toMatchObject(expected);
-	});
-});
+		})
+		expect(result).toMatchObject(expected)
+	})
+})
 
 describe("updatePub", () => {
 	test.each([
@@ -117,7 +116,7 @@ describe("updatePub", () => {
 			],
 		},
 	])("$name", async ({ loginUser, userRole, expected }) => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity")
 		const { community, pubs, users } = await seedCommunity({
 			community: {
 				name: "test",
@@ -153,15 +152,15 @@ describe("updatePub", () => {
 					email: "john@example.com",
 				},
 			},
-		});
+		})
 		getLoginData.mockImplementation(() => {
-			return { user: loginUser ? { id: users.john.id } : undefined };
-		});
+			return { user: loginUser ? { id: users.john.id } : undefined }
+		})
 		findCommunityBySlug.mockImplementation(() => {
-			return community;
-		});
+			return community
+		})
 
-		const { updatePub } = await import("./actions");
+		const { updatePub } = await import("./actions")
 
 		const result = await updatePub({
 			pubId: pubs[0].id,
@@ -169,7 +168,7 @@ describe("updatePub", () => {
 				[`${community.slug}:title`]: "new title",
 			},
 			continueOnValidationError: false,
-		});
-		expect(result).toMatchObject(expected);
-	});
-});
+		})
+		expect(result).toMatchObject(expected)
+	})
+})

@@ -3,9 +3,9 @@
 	https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
 */
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client"
 
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env.mjs"
 
 const newClient = () =>
 	new PrismaClient({
@@ -14,14 +14,14 @@ const newClient = () =>
 				passwordHash: true,
 			},
 		},
-	});
+	})
 
 const globalForPrisma = globalThis as unknown as {
-	prisma: ReturnType<typeof newClient> | undefined;
-};
+	prisma: ReturnType<typeof newClient> | undefined
+}
 
-const prisma = globalForPrisma.prisma ?? newClient();
+const prisma = globalForPrisma.prisma ?? newClient()
 
-if (env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = prisma
 
-export default prisma;
+export default prisma

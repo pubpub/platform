@@ -1,6 +1,6 @@
-import { InputRule, inputRules } from "prosemirror-inputrules";
+import { InputRule, inputRules } from "prosemirror-inputrules"
 
-import initialDoc from "../stories/initialDoc.json";
+import initialDoc from "../stories/initialDoc.json"
 
 const abstract = {
 	type: "doc",
@@ -17,18 +17,18 @@ const abstract = {
 			],
 		},
 	],
-};
+}
 
 export default () => {
 	const rules = [
 		new InputRule(/^AI please!$/, (state, match, start, end) => {
-			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content;
-			return state.tr.replaceWith(start - 1, end, contentToInsert);
+			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content
+			return state.tr.replaceWith(start - 1, end, contentToInsert)
 		}),
 		new InputRule(/^Abstract please!$/, (state, match, start, end) => {
-			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
-			return state.tr.replaceWith(start - 1, end, contentToInsert);
+			const contentToInsert = state.schema.nodeFromJSON(abstract).content
+			return state.tr.replaceWith(start - 1, end, contentToInsert)
 		}),
-	];
-	return inputRules({ rules });
-};
+	]
+	return inputRules({ rules })
+}

@@ -1,15 +1,15 @@
-import type { ExpressionBuilder } from "kysely";
+import type { ExpressionBuilder } from "kysely"
 
-import { sql } from "kysely";
-import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
+import { sql } from "kysely"
+import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
+import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public"
 
-import type { Prettify, XOR } from "../types";
-import type { GetManyParams } from "./pub";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { GET_MANY_DEFAULT } from "./pub";
+import type { Prettify, XOR } from "../types"
+import type { GetManyParams } from "./pub"
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { GET_MANY_DEFAULT } from "./pub"
 
 export const getPubTypeBase = <DB extends Record<string, any>>(
 	trx: typeof db | ExpressionBuilder<DB, keyof DB> = db
@@ -50,18 +50,18 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 				])
 				.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 		).as("fields"),
-	]);
+	])
 
 export const getPubType = (pubTypeId: PubTypesId) =>
-	autoCache(getPubTypeBase().where("pub_types.id", "=", pubTypeId));
+	autoCache(getPubTypeBase().where("pub_types.id", "=", pubTypeId))
 
 export const getPubTypeForPubId = async (pubId: PubsId) => {
 	return autoCache(
 		getPubTypeBase()
 			.innerJoin("pubs", "pubs.pubTypeId", "pub_types.id")
 			.where("pubs.id", "=", pubId)
-	);
-};
+	)
+}
 
 export const getPubTypesForCommunity = async (
 	communityId: CommunitiesId,
@@ -78,9 +78,9 @@ export const getPubTypesForCommunity = async (
 			.orderBy(orderBy, orderDirection)
 			.limit(limit)
 			.offset(offset)
-	).execute();
+	).execute()
 
-export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>;
+export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>
 
 export const getAllPubTypesForCommunity = (communitySlug: string) => {
 	return autoCache(
@@ -113,8 +113,8 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
 			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean }[] }>()
-	);
-};
+	)
+}
 
 export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>) =>
 	autoCache(
@@ -136,4 +136,4 @@ export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>)
 						)
 						.as("fields"),
 			])
-	);
+	)

@@ -1,16 +1,16 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import type { PubsId, PubTypesId } from "db/public";
-import { buttonVariants } from "ui/button";
-import { Info } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { cn } from "utils";
+import type { PubsId, PubTypesId } from "db/public"
+import { buttonVariants } from "ui/button"
+import { Info } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+import { cn } from "utils"
 
-import type { ChildPubRow } from "./types";
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { PubChildrenTable } from "./PubChildrenTable";
-import { getPubChildrenTable } from "./queries";
+import type { ChildPubRow } from "./types"
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { PubChildrenTable } from "./PubChildrenTable"
+import { getPubChildrenTable } from "./queries"
 
 const NoActions = () => {
 	return (
@@ -27,11 +27,11 @@ const NoActions = () => {
 				</Tooltip>
 			</TooltipProvider>
 		</div>
-	);
-};
+	)
+}
 
 const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContext) => {
-	const stage = row.stages[0];
+	const stage = row.stages[0]
 	return stage && row.actionInstances.length > 0 ? (
 		<PubsRunActionDropDownMenu
 			actionInstances={row.actionInstances}
@@ -41,36 +41,36 @@ const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContex
 		/>
 	) : (
 		<NoActions />
-	);
-};
+	)
+}
 
 type Props = {
-	communitySlug: string;
-	parentPubId: PubsId;
-	pageContext: PageContext;
-};
+	communitySlug: string
+	parentPubId: PubsId
+	pageContext: PageContext
+}
 
 type PubTypeSwitcherProps = {
-	communitySlug: string;
-	pubId: string;
+	communitySlug: string
+	pubId: string
 	pubTypes: {
-		count: number;
-		name: string;
-		pubTypeId: PubTypesId;
-	}[];
-	searchParams: Record<string, unknown>;
-	selectedPubTypeId?: string;
-};
+		count: number
+		name: string
+		pubTypeId: PubTypesId
+	}[]
+	searchParams: Record<string, unknown>
+	selectedPubTypeId?: string
+}
 
 const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 	return (
 		<nav className="flex w-48 gap-1">
 			{props.pubTypes.map((pubType, pubTypeIndex) => {
-				const isSelected = props.selectedPubTypeId === pubType.pubTypeId;
+				const isSelected = props.selectedPubTypeId === pubType.pubTypeId
 				const linkSearchParams = new URLSearchParams(
 					props.searchParams as Record<string, string>
-				);
-				linkSearchParams.set("selectedPubType", pubType.pubTypeId);
+				)
+				linkSearchParams.set("selectedPubType", pubType.pubTypeId)
 				return (
 					<Link
 						prefetch
@@ -99,25 +99,25 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 							{pubType.count}
 						</span>
 					</Link>
-				);
+				)
 			})}
 		</nav>
-	);
-};
+	)
+}
 
 async function PubChildrenTableWrapper(props: Props) {
 	const pubChildren = await getPubChildrenTable(
 		props.parentPubId,
 		props.pageContext.searchParams.selectedPubType as PubTypesId
-	).executeTakeFirst();
+	).executeTakeFirst()
 
 	if (!pubChildren) {
-		return <PubChildrenTable childPubRows={[]} childPubRunActionDropdowns={[]} />;
+		return <PubChildrenTable childPubRows={[]} childPubRunActionDropdowns={[]} />
 	}
 
-	const selectedPubTypeId = pubChildren.active_pubtype?.id;
+	const selectedPubTypeId = pubChildren.active_pubtype?.id
 
-	const selectedPubType = pubChildren.active_pubtype;
+	const selectedPubType = pubChildren.active_pubtype
 	return (
 		<>
 			<PubTypeSwitcher
@@ -135,7 +135,7 @@ async function PubChildrenTableWrapper(props: Props) {
 				)}
 			/>
 		</>
-	);
+	)
 }
 
-export default PubChildrenTableWrapper;
+export default PubChildrenTableWrapper

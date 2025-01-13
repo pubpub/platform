@@ -1,26 +1,26 @@
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
 
-import { expect } from "utils";
+import { expect } from "utils"
 
-import { getInstanceConfig } from "~/lib/instance";
-import { client } from "~/lib/pubpub";
+import { getInstanceConfig } from "~/lib/instance"
+import { client } from "~/lib/pubpub"
 
 type Props = {
 	searchParams: {
-		instanceId: string;
-		pubId: string;
-	};
-};
+		instanceId: string
+		pubId: string
+	}
+}
 
 export default async function Page(props: Props) {
-	const { instanceId, pubId } = props.searchParams;
+	const { instanceId, pubId } = props.searchParams
 	if (!(instanceId && pubId)) {
-		notFound();
+		notFound()
 	}
-	const instanceConfig = expect(await getInstanceConfig(instanceId), "Instance not configured");
-	const pub = await client.getPub(instanceId, pubId);
-	const submissionUrl = pub.values["legacy-unjournal:url"] as string;
-	const submissionTitle = pub.values[instanceConfig.titleFieldSlug] as string;
+	const instanceConfig = expect(await getInstanceConfig(instanceId), "Instance not configured")
+	const pub = await client.getPub(instanceId, pubId)
+	const submissionUrl = pub.values["legacy-unjournal:url"] as string
+	const submissionTitle = pub.values[instanceConfig.titleFieldSlug] as string
 
 	// TODO: Get copy from Jeff/Gabe
 	return (
@@ -37,5 +37,5 @@ export default async function Page(props: Props) {
 				! We'll send you an email with instructions on how to submit your evaluation.
 			</p>
 		</div>
-	);
+	)
 }

@@ -1,5 +1,5 @@
 export type InstanceConfig = {
-	pubTypeId: string;
-};
+	pubTypeId: string
+}
 
-export type InstanceState = {};
+export type InstanceState = {}

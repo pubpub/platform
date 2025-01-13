@@ -1,6 +1,6 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest"
 
-import type { PubsId, UsersId } from "db/public";
+import type { PubsId, UsersId } from "db/public"
 import {
 	Action,
 	CoreSchemaType,
@@ -8,24 +8,24 @@ import {
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
-} from "db/public";
+} from "db/public"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
+import { mockServerCode } from "~/lib/__tests__/utils"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-const { getTrx, rollback, commit } = createForEachMockedTransaction();
+const { getTrx, rollback, commit } = createForEachMockedTransaction()
 
 describe("seedCommunity", () => {
 	test("Should be able to create some sort of community", async () => {
-		const trx = getTrx();
+		const trx = getTrx()
 
-		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity);
-		const testUserId = crypto.randomUUID() as UsersId;
+		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity)
+		const testUserId = crypto.randomUUID() as UsersId
 
-		const submissionPubId = crypto.randomUUID() as PubsId;
-		const authorPubId = crypto.randomUUID() as PubsId;
-		const author2PubId = crypto.randomUUID() as PubsId;
+		const submissionPubId = crypto.randomUUID() as PubsId
+		const authorPubId = crypto.randomUUID() as PubsId
+		const author2PubId = crypto.randomUUID() as PubsId
 
 		const seededCommunity = await seedCommunity({
 			community: {
@@ -160,13 +160,13 @@ describe("seedCommunity", () => {
 					],
 				},
 			},
-		});
+		})
 
-		expect(seededCommunity).toBeDefined();
+		expect(seededCommunity).toBeDefined()
 
 		expect(seededCommunity.community, "community").toMatchObject({
 			name: "test",
-		});
+		})
 
 		expect(seededCommunity.actions, "actions").toMatchObject([
 			{
@@ -177,12 +177,12 @@ describe("seedCommunity", () => {
 				},
 				name: "",
 			},
-		]);
+		])
 
 		expect(seededCommunity.users, "users").toMatchObject({
 			hih: {},
 			test: {},
-		});
+		})
 
 		expect(seededCommunity.members, "members").toMatchObject([
 			{
@@ -191,7 +191,7 @@ describe("seedCommunity", () => {
 			{
 				role: "contributor",
 			},
-		]);
+		])
 
 		expect(seededCommunity.pubFields, "pubFields").toMatchObject({
 			Title: {
@@ -204,7 +204,7 @@ describe("seedCommunity", () => {
 				name: "SubmissionAuthor",
 				schemaName: "Number",
 			},
-		});
+		})
 
 		expect(seededCommunity.pubTypes, "pubTypes").toMatchObject({
 			Submission: {
@@ -214,7 +214,7 @@ describe("seedCommunity", () => {
 			Author: {
 				name: "Author",
 			},
-		});
+		})
 
 		expect(seededCommunity.pubs, "pubs").toMatchObject([
 			{ id: authorPubId },
@@ -262,9 +262,9 @@ describe("seedCommunity", () => {
 				stageId: seededCommunity.stages["Stage 1"].id,
 			},
 			{ id: author2PubId },
-		]);
+		])
 
-		expect(seededCommunity.stageConnections, "stageConnections").toMatchObject([]);
+		expect(seededCommunity.stageConnections, "stageConnections").toMatchObject([])
 
 		expect(seededCommunity.stages, "stages").toMatchObject({
 			"Stage 1": {
@@ -276,7 +276,7 @@ describe("seedCommunity", () => {
 				name: "Stage 2",
 				order: "bb",
 			},
-		});
+		})
 
 		expect(seededCommunity.forms, "forms").toMatchObject({
 			"submission-form": {
@@ -324,8 +324,8 @@ describe("seedCommunity", () => {
 				name: "submission-form",
 				slug: "submission-form",
 			},
-		});
+		})
 
-		rollback();
-	});
-});
+		rollback()
+	})
+})

@@ -1,40 +1,40 @@
-"use client";
+"use client"
 
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import React from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { Button } from "ui/button";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
-import { toast } from "ui/use-toast";
+import { Button } from "ui/button"
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
+import { toast } from "ui/use-toast"
 
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { createCommunity } from "./actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { createCommunity } from "./actions"
 
 export const communityCreateFormSchema = z.object({
 	name: z.string().min(1),
 	slug: z.string().min(1),
 	avatar: z.string().url().optional().or(z.literal("")),
-});
+})
 
 type Props = {
-	setOpen: (open: false) => void;
-};
+	setOpen: (open: false) => void
+}
 
 export const AddCommunityForm = (props: Props) => {
-	const runCreateCommunity = useServerAction(createCommunity);
+	const runCreateCommunity = useServerAction(createCommunity)
 
 	async function onSubmit(data: z.infer<typeof communityCreateFormSchema>) {
-		const result = await runCreateCommunity({ ...data });
+		const result = await runCreateCommunity({ ...data })
 		if (didSucceed(result)) {
-			props.setOpen(false);
+			props.setOpen(false)
 			toast({
 				title: "Success",
 				description: "Community created",
-			});
+			})
 		}
 	}
 	const form = useForm<z.infer<typeof communityCreateFormSchema>>({
@@ -44,7 +44,7 @@ export const AddCommunityForm = (props: Props) => {
 			slug: "",
 			avatar: "",
 		},
-	});
+	})
 
 	return (
 		<>
@@ -102,5 +102,5 @@ export const AddCommunityForm = (props: Props) => {
 				</form>
 			</Form>
 		</>
-	);
-};
+	)
+}

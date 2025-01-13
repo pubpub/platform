@@ -1,53 +1,53 @@
-"use client";
+"use client"
 
-import { useTransition } from "react";
-import { useFormContext } from "react-hook-form";
+import { useTransition } from "react"
+import { useFormContext } from "react-hook-form"
 
-import { Button } from "ui/button";
-import { useFormField } from "ui/form";
-import { Loader2, Wand2 } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { useToast } from "ui/use-toast";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { useFormField } from "ui/form"
+import { Loader2, Wand2 } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+import { useToast } from "ui/use-toast"
+import { cn } from "utils"
 
-import { resolveMetadata } from "./actions";
+import { resolveMetadata } from "./actions"
 
 type FetchMetadataButtonProps = {
-	value?: string;
-};
+	value?: string
+}
 
 /**
  * A button used to load metadata using the current value of a submission form
  * field.
  */
 export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
-	const { toast } = useToast();
-	const form = useFormContext();
-	const { name: identifierName } = useFormField();
-	const state = form.getFieldState(identifierName);
-	const [pending, startTransition] = useTransition();
-	const identifierValue = props.value ?? form.getValues()[identifierName];
+	const { toast } = useToast()
+	const form = useFormContext()
+	const { name: identifierName } = useFormField()
+	const state = form.getFieldState(identifierName)
+	const [pending, startTransition] = useTransition()
+	const identifierValue = props.value ?? form.getValues()[identifierName]
 
 	const onFetchMetadata = async (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-		event.preventDefault();
-		const fill = await resolveMetadata(identifierName, identifierValue);
+		event.preventDefault()
+		const fill = await resolveMetadata(identifierName, identifierValue)
 		if ("error" in fill && typeof fill.error === "string") {
 			toast({
 				title: "Error",
 				description: fill.error,
 				variant: "destructive",
-			});
-			return;
+			})
+			return
 		}
-		const values = form.getValues();
-		const filled = Object.keys(fill);
+		const values = form.getValues()
+		const filled = Object.keys(fill)
 		if (filled.length === 0) {
 			toast({
 				title: "Error",
 				description: `We couldn't find any information about that ${identifierName}`,
 				variant: "destructive",
-			});
-			return;
+			})
+			return
 		}
 		for (const field in values) {
 			// Update the form with the new values and reset old values.
@@ -57,13 +57,13 @@ export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
 				shouldDirty: true,
 				// Do not trigger validation for fields that were not updated.
 				shouldValidate: field in fill,
-			});
+			})
 		}
 		toast({
 			title: "Success",
 			description: `Filled ${filled.join(", ")} using the ${identifierName}`,
-		});
-	};
+		})
+	}
 
 	return (
 		<TooltipProvider>
@@ -74,7 +74,7 @@ export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
 						className={cn("ml-2 px-0")}
 						onClick={(event) =>
 							startTransition(() => {
-								onFetchMetadata(event);
+								onFetchMetadata(event)
 							})
 						}
 						disabled={!state.isDirty || state.invalid}
@@ -91,5 +91,5 @@ export const FetchMetadataButton = (props: FetchMetadataButtonProps) => {
 				</TooltipContent>
 			</Tooltip>
 		</TooltipProvider>
-	);
-};
+	)
+}

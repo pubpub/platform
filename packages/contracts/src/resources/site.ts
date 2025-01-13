@@ -1,5 +1,5 @@
-import { initContract } from "@ts-rest/core";
-import { z } from "zod";
+import { initContract } from "@ts-rest/core"
+import { z } from "zod"
 
 import type {
 	CommunitiesId,
@@ -15,7 +15,7 @@ import type {
 	StagesId,
 	Users,
 	UsersId,
-} from "db/public";
+} from "db/public"
 import {
 	communitiesIdSchema,
 	communityMembershipsSchema,
@@ -31,23 +31,23 @@ import {
 	stagesSchema,
 	usersIdSchema,
 	usersSchema,
-} from "db/public";
+} from "db/public"
 
-import type { Json } from "./integrations";
+import type { Json } from "./integrations"
 import {
 	CreatePubRequestBodyWithNulls,
 	CreatePubRequestBodyWithNullsBase,
 	jsonSchema,
-} from "./integrations";
+} from "./integrations"
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
-	stageId?: StagesId;
-	children?: CreatePubRequestBodyWithNulls[];
-	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
-	members?: Record<UsersId, MemberRole>;
-};
+	stageId?: StagesId
+	children?: CreatePubRequestBodyWithNulls[]
+	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>
+	members?: Record<UsersId, MemberRole>
+}
 
-export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
+export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict()
 
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
 	stageId: stagesIdSchema.optional(),
@@ -62,7 +62,7 @@ const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBa
 	members: (
 		z.record(usersIdSchema, memberRoleSchema) as z.ZodType<Record<UsersId, MemberRole>>
 	).optional(),
-});
+})
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
 	CreatePubRequestBodyWithNullsWithStageId.extend({
@@ -74,19 +74,19 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 				)
 			)
 			.optional(),
-	});
+	})
 
-const contract = initContract();
+const contract = initContract()
 
 export type PubWithChildren = z.infer<typeof pubsSchema> & {
-	children?: PubWithChildren[];
-};
+	children?: PubWithChildren[]
+}
 
 const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
 	z.object({
 		children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
 	})
-);
+)
 
 const upsertPubRelationsSchema = z.record(
 	z.array(
@@ -98,7 +98,7 @@ const upsertPubRelationsSchema = z.record(
 			z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }),
 		])
 	)
-);
+)
 
 /**
  * Only add the `children` if the `withChildren` option has not been set to `false
@@ -107,7 +107,7 @@ type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"]
 	? { children?: never }
 	: Options["withChildren"] extends undefined
 		? { children?: ProcessedPub<Options>[] }
-		: { children: ProcessedPub<Options>[] };
+		: { children: ProcessedPub<Options>[] }
 
 /**
  * Only add the `stage` if the `withStage` option has not been set to `false
@@ -116,7 +116,7 @@ type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] exten
 	? { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
-		: { stage?: Stages | null };
+		: { stage?: Stages | null }
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
@@ -125,17 +125,17 @@ export type PubTypePubField = Pick<
 	PubFields,
 	"id" | "name" | "slug" | "schemaName" | "isRelation"
 > & {
-	isTitle: boolean;
-};
+	isTitle: boolean
+}
 type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] extends true
 	? {
 			pubType: PubTypes & {
-				fields: PubTypePubField[];
-			};
+				fields: PubTypePubField[]
+			}
 		}
 	: Options["withPubType"] extends false
 		? { pubType?: never }
-		: { pubType?: PubTypes & { fields: PubTypePubField[] } };
+		: { pubType?: PubTypes & { fields: PubTypePubField[] } }
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
@@ -144,18 +144,18 @@ type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] e
 	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
 	: Options["withMembers"] extends false
 		? { members?: never }
-		: { members?: (Omit<Users, "passwordHash"> & { role: MemberRole })[] };
+		: { members?: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
 
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }
-	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
+	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null }
 
 type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
 	Options["withLegacyAssignee"] extends true
 		? { assignee?: Users | null }
 		: Options["withLegacyAssignee"] extends false
 			? { assignee?: never }
-			: { assignee?: Users | null };
+			: { assignee?: Users | null }
 
 /**
  * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
@@ -170,69 +170,69 @@ export type MaybePubOptions = {
 	 * @default true
 	 *
 	 */
-	withChildren?: boolean;
+	withChildren?: boolean
 	/**
 	 * Whether to recursively fetch related pubs.
 	 *
 	 * @default true
 	 */
-	withRelatedPubs?: boolean;
+	withRelatedPubs?: boolean
 	/**
 	 * Whether to include the pub type.
 	 *
 	 * @default false
 	 */
-	withPubType?: boolean;
+	withPubType?: boolean
 	/**
 	 * Whether to include the stage.
 	 *
 	 * @default false
 	 */
-	withStage?: boolean;
+	withStage?: boolean
 	/**
 	 * Whether to include members of the pub.
 	 *
 	 * @default false
 	 */
-	withMembers?: boolean;
+	withMembers?: boolean
 	/**
 	 * Whether to include the legacy assignee.
 	 *
 	 * @default false
 	 */
-	withLegacyAssignee?: boolean;
+	withLegacyAssignee?: boolean
 	/**
 	 * Whether to include the values.
 	 *
 	 * @default boolean
 	 */
-	withValues?: boolean;
-};
+	withValues?: boolean
+}
 
 type ValueBase = {
-	id: PubValuesId;
-	fieldId: PubFieldsId;
-	value: unknown;
-	createdAt: Date;
-	updatedAt: Date;
+	id: PubValuesId
+	fieldId: PubFieldsId
+	value: unknown
+	createdAt: Date
+	updatedAt: Date
 	/**
 	 * Information about the field that the value belongs to.
 	 */
-	schemaName: CoreSchemaType;
-	fieldSlug: string;
-	fieldName: string;
-};
+	schemaName: CoreSchemaType
+	fieldSlug: string
+	fieldName: string
+}
 
 type ProcessedPubBase = {
-	id: PubsId;
-	stageId: StagesId | null;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
-	parentId: PubsId | null;
-	createdAt: Date;
-	title: string | null;
-	depth: number;
-	isCycle?: boolean;
+	id: PubsId
+	stageId: StagesId | null
+	communityId: CommunitiesId
+	pubTypeId: PubTypesId
+	parentId: PubsId | null
+	createdAt: Date
+	title: string | null
+	depth: number
+	isCycle?: boolean
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
@@ -240,28 +240,28 @@ type ProcessedPubBase = {
 	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
 	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
 	 */
-	updatedAt: Date;
-};
+	updatedAt: Date
+}
 
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
 	/**
 	 * Is an empty array if `withValues` is false
 	 */
-	values: (ValueBase & MaybePubRelatedPub<Options>)[];
+	values: (ValueBase & MaybePubRelatedPub<Options>)[]
 } & MaybePubChildren<Options> &
 	MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &
-	MaybePubLegacyAssignee<Options>;
+	MaybePubLegacyAssignee<Options>
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
-	stage?: Stages | null;
-	pubType?: PubTypes;
-	children?: NonGenericProcessedPub[];
+	stage?: Stages | null
+	pubType?: PubTypes
+	children?: NonGenericProcessedPub[]
 	values?: (ValueBase & {
-		relatedPub?: NonGenericProcessedPub | null;
-		relatedPubId: PubsId | null;
-	})[];
+		relatedPub?: NonGenericProcessedPub | null
+		relatedPubId: PubsId | null
+	})[]
 }
 
 const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
@@ -293,7 +293,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 		.optional(),
 	children: z.lazy(() => z.array(processedPubSchema)).optional(),
 	assignee: usersSchema.nullish(),
-});
+})
 
 const preferRepresentationHeaderSchema = z.object({
 	Prefer: z
@@ -303,7 +303,7 @@ const preferRepresentationHeaderSchema = z.object({
 		)
 		.optional()
 		.default("return=minimal"),
-});
+})
 
 const getPubQuerySchema = z
 	.object({
@@ -332,7 +332,7 @@ const getPubQuerySchema = z
 				"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
 			),
 	})
-	.passthrough();
+	.passthrough()
 
 export const siteApi = contract.router(
 	{
@@ -538,4 +538,4 @@ export const siteApi = contract.router(
 				.optional(),
 		}),
 	}
-);
+)

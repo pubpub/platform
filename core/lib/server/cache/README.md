@@ -108,7 +108,7 @@ const getPubs = async (communitySlug: string) => {
 				.selectFrom("pubs")
 				.selectAll()
 				.where("pubs.communitySlug", "=", communitySlug)
-				.execute();
+				.execute()
 		},
 		// cache keys
 		[communitySlug],
@@ -116,10 +116,10 @@ const getPubs = async (communitySlug: string) => {
 			// tags
 			tags: [`community-pubs_${communitySlug}`],
 		}
-	)();
-};
+	)()
+}
 
-const pubs = await getPubs("my-community");
+const pubs = await getPubs("my-community")
 ```
 
 Notice above how we need to do this annoying wrapping of `unstable_cache` in order to also use the `communitySlug` parameter in the tags, and have to manually pass the `communitySlug` as a key to the cache.
@@ -135,7 +135,7 @@ const getPubs = async (communitySlug: string) => {
 				.selectFrom("pubs")
 				.selectAll()
 				.where("pubs.communitySlug", "=", slug)
-				.execute();
+				.execute()
 		},
 		undefined,
 		{
@@ -143,10 +143,10 @@ const getPubs = async (communitySlug: string) => {
 			tags: [`community-pubs_${communitySlug}`],
 		}
 		// now we manually pass the communitySlug to the inner function
-	)(communitySlug);
-};
+	)(communitySlug)
+}
 
-const pubs = await getPubs("my-community");
+const pubs = await getPubs("my-community")
 ```
 
 This kind of sucks.
@@ -162,14 +162,14 @@ const getPubs = memoize(
 			.selectFrom("pubs")
 			.selectAll()
 			.where("pubs.communitySlug", "=", communitySlug)
-			.execute();
+			.execute()
 	},
 	{
 		additionalRevalidateTags: (communitySlug) => [`community-pubs_${communitySlug}`],
 	}
-);
+)
 
-const pubs = await getPubs("my-community");
+const pubs = await getPubs("my-community")
 ```
 
 Slightly nicer!
@@ -249,9 +249,9 @@ Example
 ```ts
 const getProfile = async (userId: number) => {
 	return await unstable_cache(async () => {
-		return await db.selectFrom("users").selectAll().where("users.id", "=", userId).execute();
-	})();
-};
+		return await db.selectFrom("users").selectAll().where("users.id", "=", userId).execute()
+	})()
+}
 ```
 
 The cache key here would literally be (hashed) `async () => { return await db.selectFrom('users').selectAll().where('users.id', '=', userId).execute() }`.
@@ -291,15 +291,15 @@ const getPubs = async (communitySlug: string) => {
 				.selectFrom("pubs")
 				.selectAll()
 				.where("pubs.communitySlug", "=", communitySlug)
-				.execute();
+				.execute()
 		},
 		// cache keys
 		[communitySlug],
 		{
 			tags: [`community-pubs_${communitySlug}`],
 		}
-	)();
-};
+	)()
+}
 
-const pubs = await getPubs("my-community");
+const pubs = await getPubs("my-community")
 ```

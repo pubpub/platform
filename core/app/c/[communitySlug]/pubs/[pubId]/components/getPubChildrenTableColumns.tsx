@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
-import type { Stages } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { Badge } from "ui/badge";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
+import type { Stages } from "db/public"
+import { CoreSchemaType } from "db/public"
+import { Badge } from "ui/badge"
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
 
-import type { ChildPubRow, ChildPubRowPubType } from "./types";
-import { UserCard } from "~/app/components/UserCard";
+import type { ChildPubRow, ChildPubRowPubType } from "./types"
+import { UserCard } from "~/app/components/UserCard"
 
 export const createdAtDateOptions = {
 	month: "short",
@@ -20,7 +20,7 @@ export const createdAtDateOptions = {
 	year: "numeric",
 	hour: "2-digit",
 	minute: "2-digit",
-} satisfies Intl.DateTimeFormatOptions;
+} satisfies Intl.DateTimeFormatOptions
 
 const createMemberColumns = (pubType: ChildPubRowPubType) =>
 	pubType.fields
@@ -36,23 +36,23 @@ const createMemberColumns = (pubType: ChildPubRowPubType) =>
 					accessorFn: (row) => {
 						const memberField = row.memberFields.find(
 							(memberField) => memberField.fieldId === field.id
-						);
+						)
 						return memberField
 							? memberField.user.firstName + " " + memberField.user.lastName
-							: "None";
+							: "None"
 					},
 					cell: ({ row }) => {
 						const memberField = row.original.memberFields.find(
 							(memberField) => memberField.fieldId === field.id
-						);
+						)
 						return memberField ? (
 							<UserCard user={memberField.user} />
 						) : (
 							<span className="text-muted-foreground">None</span>
-						);
+						)
 					},
 				}) as ColumnDef<ChildPubRow, unknown>
-		);
+		)
 
 export const getPubChildrenTableColumns = (
 	childPubRunActionDropdowns: JSX.Element[],
@@ -86,29 +86,29 @@ export const getPubChildrenTableColumns = (
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
 			cell: ({ row }) => {
-				const pathname = usePathname();
-				const path = pathname.split("/").slice(0, 4).join("/");
+				const pathname = usePathname()
+				const path = pathname.split("/").slice(0, 4).join("/")
 				const titleLikeValue = Object.entries(row.original.values).find(
 					([slug]) => slug.split(":")[1]?.indexOf("title") !== -1
-				)?.[1] as string | undefined;
-				const title = titleLikeValue || childPubType?.name || "Child";
+				)?.[1] as string | undefined
+				const title = titleLikeValue || childPubType?.name || "Child"
 				return (
 					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
 						{title}
 					</Link>
-				);
+				)
 			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stages",
 			cell: ({ getValue }) => {
-				const stageName = getValue<Stages[]>()[0]?.name;
+				const stageName = getValue<Stages[]>()[0]?.name
 				return stageName ? (
 					<Badge variant="outline">{stageName}</Badge>
 				) : (
 					<span className="text-muted-foreground">None</span>
-				);
+				)
 			},
 		},
 		...(childPubType ? createMemberColumns(childPubType) : []),
@@ -127,4 +127,4 @@ export const getPubChildrenTableColumns = (
 			accessorKey: "actionInstances",
 			cell: ({ row }) => childPubRunActionDropdowns[row.index],
 		},
-	] as const satisfies ColumnDef<ChildPubRow, unknown>[];
+	] as const satisfies ColumnDef<ChildPubRow, unknown>[]

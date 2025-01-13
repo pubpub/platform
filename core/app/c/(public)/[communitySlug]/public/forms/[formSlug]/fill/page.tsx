@@ -1,40 +1,40 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "crypto"
 
-import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import type { Metadata } from "next"
+import type { ReactNode } from "react"
 
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
 
-import type { Communities, PubsId } from "db/public";
-import { ElementType, MemberRole } from "db/public";
-import { expect } from "utils";
+import type { Communities, PubsId } from "db/public"
+import { ElementType, MemberRole } from "db/public"
+import { expect } from "utils"
 
-import type { Form } from "~/lib/server/form";
-import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
-import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
-import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext";
-import { FormElement } from "~/app/components/forms/FormElement";
-import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
+import type { Form } from "~/lib/server/form"
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils"
+import { Header } from "~/app/c/(public)/[communitySlug]/public/Header"
+import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext"
+import { FormElement } from "~/app/components/forms/FormElement"
+import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext"
 import {
 	hydrateMarkdownElements,
 	renderElementMarkdownContent,
-} from "~/app/components/forms/structural";
-import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
-import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getCommunityRole } from "~/lib/authentication/roles";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
-import { getPubTypesForCommunity } from "~/lib/server/pubtype";
-import { capitalize } from "~/lib/string";
-import { ExternalFormWrapper } from "./ExternalFormWrapper";
-import { RequestLink } from "./RequestLink";
-import { handleFormToken } from "./utils";
+} from "~/app/components/forms/structural"
+import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants"
+import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { getCommunityRole } from "~/lib/authentication/roles"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getForm, userHasPermissionToForm } from "~/lib/server/form"
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub"
+import { getPubTypesForCommunity } from "~/lib/server/pubtype"
+import { capitalize } from "~/lib/string"
+import { ExternalFormWrapper } from "./ExternalFormWrapper"
+import { RequestLink } from "./RequestLink"
+import { handleFormToken } from "./utils"
 
 const NotFound = ({ children }: { children: ReactNode }) => {
-	return <div className="w-full pt-8 text-center">{children}</div>;
-};
+	return <div className="w-full pt-8 text-center">{children}</div>
+}
 
 const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
 	return (
@@ -49,16 +49,16 @@ const Completed = ({ element }: { element: Form["elements"][number] | undefined 
 				<h2 className="text-lg font-semibold">Form Successfully Submitted</h2>
 			)}
 		</div>
-	);
-};
+	)
+}
 
-export type FormFillPageParams = { formSlug: string; communitySlug: string };
+export type FormFillPageParams = { formSlug: string; communitySlug: string }
 
 export type FormFillPageSearchParams = {
-	pubId?: PubsId;
-	submitId?: string;
-	saveStatus?: string;
-} & ({ token: string; reason: string } | { token?: never; reason?: never });
+	pubId?: PubsId
+	submitId?: string
+	saveStatus?: string
+} & ({ token: string; reason: string } | { token?: never; reason?: never })
 
 const ExpiredTokenPage = ({
 	params,
@@ -66,10 +66,10 @@ const ExpiredTokenPage = ({
 	form,
 	community,
 }: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams & { token: string };
-	community: Communities;
-	form: Form;
+	params: FormFillPageParams
+	searchParams: FormFillPageSearchParams & { token: string }
+	community: Communities
+	form: Form
 }) => {
 	return (
 		<div className="isolate min-h-screen">
@@ -95,49 +95,49 @@ const ExpiredTokenPage = ({
 				/>
 			</div>
 		</div>
-	);
-};
+	)
+}
 
 export async function generateMetadata({
 	params,
 	searchParams,
 }: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams;
+	params: FormFillPageParams
+	searchParams: FormFillPageSearchParams
 }): Promise<Metadata> {
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 
 	if (!community) {
-		return { title: "Community Not Found" };
+		return { title: "Community Not Found" }
 	}
 
 	const form = await getForm({
 		slug: params.formSlug,
 		communityId: community.id,
-	}).executeTakeFirst();
+	}).executeTakeFirst()
 
 	if (!form) {
-		return { title: "Form Not Found" };
+		return { title: "Form Not Found" }
 	}
 
 	return {
 		title: form.name,
-	};
+	}
 }
 
 export default async function FormPage({
 	params,
 	searchParams,
 }: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams;
+	params: FormFillPageParams
+	searchParams: FormFillPageSearchParams
 }) {
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 
 	if (!community) {
-		return notFound();
+		return notFound()
 	}
-	const { user, session } = await getLoginData();
+	const { user, session } = await getLoginData()
 
 	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
@@ -160,10 +160,10 @@ export default async function FormPage({
 			}
 		),
 		getPubTypesForCommunity(community.id),
-	]);
+	])
 
 	if (!form) {
-		return <NotFound>No form found</NotFound>;
+		return <NotFound>No form found</NotFound>
 	}
 
 	if (!user && !session) {
@@ -171,9 +171,9 @@ export default async function FormPage({
 			params,
 			searchParams,
 			onExpired: ({ params, searchParams, result }) => {
-				return;
+				return
 			},
-		});
+		})
 
 		return (
 			<ExpiredTokenPage
@@ -182,13 +182,13 @@ export default async function FormPage({
 				form={form}
 				community={community}
 			/>
-		);
+		)
 	}
 
-	const role = getCommunityRole(user, { slug: params.communitySlug });
+	const role = getCommunityRole(user, { slug: params.communitySlug })
 	if (!role) {
 		// TODO: show no access page
-		return notFound();
+		return notFound()
 	}
 
 	// all other roles always have access to the form
@@ -197,11 +197,11 @@ export default async function FormPage({
 			formSlug: params.formSlug,
 			userId: user.id,
 			pubId: pub?.id,
-		});
+		})
 
 		if (!memberHasAccessToForm) {
 			// TODO: show no access page
-			return notFound();
+			return notFound()
 		}
 	}
 
@@ -210,9 +210,9 @@ export default async function FormPage({
 				{ pubId: pub.parentId, communityId: community.id, userId: user?.id },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
-		: undefined;
+		: undefined
 
-	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
+	const member = expect(user.memberships.find((m) => m.communityId === community?.id))
 
 	const memberWithUser = {
 		...member,
@@ -221,12 +221,12 @@ export default async function FormPage({
 			...user,
 			id: user.id,
 		},
-	};
+	}
 
-	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
+	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM]
 	const submitElement = form.elements.find(
 		(e) => e.type === ElementType.button && e.id === submitId
-	);
+	)
 
 	const renderWithPubContext = {
 		communityId: community.id,
@@ -234,7 +234,7 @@ export default async function FormPage({
 		communitySlug: params.communitySlug,
 		pub,
 		parentPub,
-	};
+	}
 
 	if (submitId && submitElement) {
 		// The post-submission page will only render once we have a pub
@@ -242,18 +242,18 @@ export default async function FormPage({
 			submitElement.content = await renderElementMarkdownContent(
 				submitElement,
 				renderWithPubContext as RenderWithPubContext
-			);
+			)
 		}
 	} else {
 		await hydrateMarkdownElements({
 			elements: form.elements,
 			renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
-		});
+		})
 	}
 
-	const isUpdating = !!pub;
-	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const isUpdating = !!pub
+	const pubId = pub?.id ?? (randomUUID() as PubsId)
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId }
 
 	return (
 		<div className="isolate min-h-screen">
@@ -309,5 +309,5 @@ export default async function FormPage({
 				)}
 			</div>
 		</div>
-	);
+	)
 }

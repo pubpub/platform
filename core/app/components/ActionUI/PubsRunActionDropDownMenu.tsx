@@ -1,16 +1,16 @@
-import "server-only";
+import "server-only"
 
-import type { ActionInstances, PubsId, Stages } from "db/public";
-import { Button } from "ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
-import { ChevronDown, Play } from "ui/icon";
+import type { ActionInstances, PubsId, Stages } from "db/public"
+import { Button } from "ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu"
+import { ChevronDown, Play } from "ui/icon"
 
-import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
+import { ActionRunFormWrapper } from "./ActionRunFormWrapper"
 
 export type PageContext = {
-	params: Record<string, unknown>;
-	searchParams: Record<string, unknown>;
-};
+	params: Record<string, unknown>
+	searchParams: Record<string, unknown>
+}
 
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
@@ -18,13 +18,13 @@ export const PubsRunActionDropDownMenu = async ({
 	stage,
 	pageContext,
 }: {
-	actionInstances: ActionInstances[];
-	pubId: PubsId;
-	stage: Stages;
-	pageContext: PageContext;
+	actionInstances: ActionInstances[]
+	pubId: PubsId
+	stage: Stages
+	pageContext: PageContext
 }) => {
 	if (!actionInstances.length) {
-		return null;
+		return null
 	}
 
 	return (
@@ -48,5 +48,5 @@ export const PubsRunActionDropDownMenu = async ({
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

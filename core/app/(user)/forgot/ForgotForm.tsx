@@ -1,44 +1,44 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import React, { useState } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "ui/dialog"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
 
-import * as actions from "~/lib/authentication/actions";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
+import * as actions from "~/lib/authentication/actions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
 
 const forgotPasswordSchema = z.object({
 	email: z.string().email(),
-});
+})
 
 export default function ForgotForm() {
 	const form = useForm<z.infer<typeof forgotPasswordSchema>>({
 		resolver: zodResolver(forgotPasswordSchema),
-	});
+	})
 
-	const sendForgotPasswordMail = useServerAction(actions.sendForgotPasswordMail);
+	const sendForgotPasswordMail = useServerAction(actions.sendForgotPasswordMail)
 
-	const [sent, setSent] = useState(false);
+	const [sent, setSent] = useState(false)
 
 	const onSubmit = async ({ email }: z.infer<typeof forgotPasswordSchema>) => {
-		const result = await sendForgotPasswordMail({ email });
+		const result = await sendForgotPasswordMail({ email })
 
 		if (didSucceed(result)) {
-			setSent(true);
-			return;
+			setSent(true)
+			return
 		}
 
 		form.setError("email", {
 			message: result.error,
-		});
-	};
+		})
+	}
 
 	return (
 		<>
@@ -71,11 +71,11 @@ export default function ForgotForm() {
 				open={sent}
 				onOpenChange={(open) => {
 					if (open) {
-						return;
+						return
 					}
 
-					form.reset();
-					setSent(false);
+					form.reset()
+					setSent(false)
 				}}
 			>
 				<DialogContent>
@@ -86,5 +86,5 @@ export default function ForgotForm() {
 				</DialogContent>
 			</Dialog>
 		</>
-	);
+	)
 }

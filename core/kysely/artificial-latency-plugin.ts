@@ -5,9 +5,9 @@ import type {
 	QueryResult,
 	RootOperationNode,
 	UnknownRow,
-} from "kysely";
+} from "kysely"
 
-import { sleep } from "utils";
+import { sleep } from "utils"
 
 /**
  * Plugin which add artificial latency to all queries to more easily test Suspense etc
@@ -21,11 +21,11 @@ export class ArtificialLatencyPlugin implements KyselyPlugin {
 	) {}
 
 	transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
-		return args.node;
+		return args.node
 	}
 
 	async transformResult(args: PluginTransformResultArgs): Promise<QueryResult<UnknownRow>> {
-		await sleep(this.delay);
-		return args.result;
+		await sleep(this.delay)
+		return args.result
 	}
 }

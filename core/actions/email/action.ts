@@ -1,14 +1,14 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { Mail } from "ui/icon";
+import { Action } from "db/public"
+import { Mail } from "ui/icon"
 
 import {
 	RenderWithPubToken,
 	renderWithPubTokens,
-} from "~/lib/server/render/pub/renderWithPubTokens";
-import { markdown, stringWithTokens } from "../_lib/zodTypes";
-import { defineAction } from "../types";
+} from "~/lib/server/render/pub/renderWithPubTokens"
+import { markdown, stringWithTokens } from "../_lib/zodTypes"
+import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.email,
@@ -69,4 +69,4 @@ export const action = defineAction({
 		},
 		body: renderWithPubTokens,
 	},
-});
+})

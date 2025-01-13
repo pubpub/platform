@@ -1,53 +1,53 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useCallback, useMemo } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useForm } from "react-hook-form"
 
-import type { PubsId } from "db/public";
-import { Button } from "ui/button";
-import { Form } from "ui/form";
-import { Loader2, Trash } from "ui/icon";
-import { toast } from "ui/use-toast";
+import type { PubsId } from "db/public"
+import { Button } from "ui/button"
+import { Form } from "ui/form"
+import { Loader2, Trash } from "ui/icon"
+import { toast } from "ui/use-toast"
 
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./PubEditor/actions";
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "./PubEditor/actions"
 
 export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
-	});
+	})
 
-	const runRemovePub = useServerAction(actions.removePub);
+	const runRemovePub = useServerAction(actions.removePub)
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
+	const path = usePathname()
+	const searchParams = useSearchParams()
+	const router = useRouter()
 
 	const pathWithoutFormParam = useMemo(() => {
-		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-		urlSearchParams.delete("remove-pub-form");
-		return `${path}?${urlSearchParams.toString()}`;
-	}, [path, searchParams]);
+		const urlSearchParams = new URLSearchParams(searchParams ?? undefined)
+		urlSearchParams.delete("remove-pub-form")
+		return `${path}?${urlSearchParams.toString()}`
+	}, [path, searchParams])
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+		router.replace(pathWithoutFormParam)
+	}, [pathWithoutFormParam])
 
 	const onSubmit = async () => {
 		const result = await runRemovePub({
 			pubId,
-		});
+		})
 
 		if (result && "success" in result) {
 			toast({
 				title: "Success",
 				description: result.report,
-			});
-			closeForm();
+			})
+			closeForm()
 		}
-	};
+	}
 
 	return (
 		<Form {...form}>
@@ -75,5 +75,5 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

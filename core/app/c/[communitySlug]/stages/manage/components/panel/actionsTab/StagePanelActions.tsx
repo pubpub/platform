@@ -1,36 +1,36 @@
-import { Suspense } from "react";
+import { Suspense } from "react"
 
-import type { StagesId } from "db/public";
-import { Card, CardContent } from "ui/card";
+import type { StagesId } from "db/public"
+import { Card, CardContent } from "ui/card"
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getStage, getStageActions } from "~/lib/db/queries";
-import { addAction, deleteAction } from "../../../actions";
-import { StagePanelActionCreator } from "./StagePanelActionCreator";
-import { StagePanelActionEditor } from "./StagePanelActionEditor";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper"
+import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { getStage, getStageActions } from "~/lib/db/queries"
+import { addAction, deleteAction } from "../../../actions"
+import { StagePanelActionCreator } from "./StagePanelActionCreator"
+import { StagePanelActionEditor } from "./StagePanelActionEditor"
 
 type PropsInner = {
-	stageId: StagesId;
-	pageContext: PageContext;
-};
+	stageId: StagesId
+	pageContext: PageContext
+}
 
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const [stage, actionInstances] = await Promise.all([
 		getStage(props.stageId).executeTakeFirst(),
 		getStageActions(props.stageId).execute(),
-	]);
+	])
 
 	if (stage === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
-	const onAddAction = addAction.bind(null, stage.id);
-	const onDeleteAction = deleteAction;
+	const onAddAction = addAction.bind(null, stage.id)
+	const onDeleteAction = deleteAction
 
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 
 	return (
 		<Card>
@@ -68,22 +68,22 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 				<StagePanelActionCreator onAdd={onAddAction} isSuperAdmin={user?.isSuperAdmin} />
 			</CardContent>
 		</Card>
-	);
-};
+	)
+}
 
 type Props = {
-	stageId?: StagesId;
-	pageContext: PageContext;
-};
+	stageId?: StagesId
+	pageContext: PageContext
+}
 
 export const StagePanelActions = async (props: Props) => {
 	if (props.stageId === undefined) {
-		return <SkeletonCard />;
+		return <SkeletonCard />
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
 			<StagePanelActionsInner stageId={props.stageId} pageContext={props.pageContext} />
 		</Suspense>
-	);
-};
+	)
+}

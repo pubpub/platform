@@ -1,16 +1,16 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { Settings } from "ui/icon";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { Settings } from "ui/icon"
 
-import { getLoginData } from "~/lib/authentication/loginData";
-import LogoutButton from "../../components/LogoutButton";
+import { getLoginData } from "~/lib/authentication/loginData"
+import LogoutButton from "../../components/LogoutButton"
 
 export default async function LoginSwitcher() {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return null;
+		return null
 	}
 	return (
 		<div className="w-max-[100%] flex flex-col gap-y-2 rounded-lg border border-gray-100 bg-white p-2">
@@ -38,5 +38,5 @@ export default async function LoginSwitcher() {
 				</Button>
 			</div>
 		</div>
-	);
+	)
 }

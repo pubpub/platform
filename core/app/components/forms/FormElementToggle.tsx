@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react"
 
-import type { InputComponent } from "db/public";
-import { Toggle } from "ui/toggle";
+import type { InputComponent } from "db/public"
+import { Toggle } from "ui/toggle"
 
-import type { ElementProps } from "./types";
-import { useFormElementToggleContext } from "./FormElementToggleContext";
+import type { ElementProps } from "./types"
+import { useFormElementToggleContext } from "./FormElementToggleContext"
 
-type Props<I extends InputComponent> = PropsWithChildren<ElementProps<I>>;
+type Props<I extends InputComponent> = PropsWithChildren<ElementProps<I>>
 
 export const FormElementToggle = <I extends InputComponent>(props: Props<I>) => {
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(props.slug);
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(props.slug)
 	return (
 		<div className="flex gap-2">
 			<Toggle
@@ -26,5 +26,5 @@ export const FormElementToggle = <I extends InputComponent>(props: Props<I>) => 
 			/>
 			<div className="w-full">{props.children}</div>
 		</div>
-	);
-};
+	)
+}

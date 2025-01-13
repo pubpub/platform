@@ -1,12 +1,12 @@
-import { cache } from "react";
+import { cache } from "react"
 
-import type { autoRevalidate } from "./autoRevalidate";
-import type { AutoCacheOptions, AutoOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types";
-import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
-import { getCommunitySlug } from "./getCommunitySlug";
-import { memoize } from "./memoize";
-import { cachedFindTables, directAutoOutput } from "./sharedAuto";
-import { getTablesWithLinkedTables } from "./specialTables";
+import type { autoRevalidate } from "./autoRevalidate"
+import type { AutoCacheOptions, AutoOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types"
+import { createCacheTag, createCommunityCacheTags } from "./cacheTags"
+import { getCommunitySlug } from "./getCommunitySlug"
+import { memoize } from "./memoize"
+import { cachedFindTables, directAutoOutput } from "./sharedAuto"
+import { getTablesWithLinkedTables } from "./specialTables"
 
 const executeWithCache = <
 	Q extends SQB<any>,
@@ -17,13 +17,13 @@ const executeWithCache = <
 	options?: AutoCacheOptions
 ) => {
 	const executeFn = cache(async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? getCommunitySlug();
+		const communitySlug = options?.communitySlug ?? getCommunitySlug()
 
-		const compiledQuery = qb.compile();
+		const compiledQuery = qb.compile()
 
-		const tables = await cachedFindTables(compiledQuery, "select");
+		const tables = await cachedFindTables(compiledQuery, "select")
 
-		const allTables = getTablesWithLinkedTables(tables);
+		const allTables = getTablesWithLinkedTables(tables)
 
 		const cachedExecute = memoize(
 			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
@@ -33,7 +33,7 @@ const executeWithCache = <
 				// saves one compile cycle
 				// necessary assertion here due to
 				// https://github.com/microsoft/TypeScript/issues/241
-				return qb[method](...args) as ReturnType<Q[M]>;
+				return qb[method](...args) as ReturnType<Q[M]>
 			},
 			{
 				...options,
@@ -51,12 +51,12 @@ const executeWithCache = <
 					compiledQuery.sql,
 				],
 			}
-		);
+		)
 
-		const result = await cachedExecute(method);
+		const result = await cachedExecute(method)
 
-		return result;
-	});
+		return result
+	})
 
 	// we are reaching the limit of typescript's type inference here
 	// without this cast, the return type of the function
@@ -64,8 +64,8 @@ const executeWithCache = <
 	// possibly an instance of this 10(!) year old issue, as when
 	// i leave out the type in qb[method], you get ()=>any
 	// https://github.com/microsoft/TypeScript/issues/241
-	return executeFn as ExecuteFn<Q, M>;
-};
+	return executeFn as ExecuteFn<Q, M>
+}
 
 /**
  * **✨ autoCache**
@@ -180,5 +180,5 @@ export function autoCache<Q extends SQB<any>>(
 	qb: Q,
 	options?: AutoCacheOptions // this kind of short-circuits typescripts type inference, while it's kind of lying as it doesn't really have anything to do what happens in the function, it's a lot faster
 ): DirectAutoOutput<Q> {
-	return directAutoOutput(qb, executeWithCache, options);
+	return directAutoOutput(qb, executeWithCache, options)
 }

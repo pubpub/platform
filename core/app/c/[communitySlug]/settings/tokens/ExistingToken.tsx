@@ -1,8 +1,8 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
-import { Card } from "ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion"
+import { Card } from "ui/card"
 
-import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
-import { RevokeTokenButton } from "./RevokeTokenButton";
+import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens"
+import { RevokeTokenButton } from "./RevokeTokenButton"
 
 export const ExistingToken = ({ token }: { token: SafeApiAccessToken }) => {
 	return (
@@ -60,5 +60,5 @@ export const ExistingToken = ({ token }: { token: SafeApiAccessToken }) => {
 				</div>
 			</div>
 		</Card>
-	);
-};
+	)
+}

@@ -1,33 +1,33 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
 
-import type { CommunityMembershipsId, MemberRole } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
+import type { CommunityMembershipsId, MemberRole } from "db/public"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+} from "ui/dropdown-menu"
+import { MoreVertical } from "ui/icon"
 
-import { RemoveMemberButton } from "./RemoveMemberButton";
+import { RemoveMemberButton } from "./RemoveMemberButton"
 
 export type TableMember = {
-	id: CommunityMembershipsId;
-	avatar: string | null;
-	email: string;
-	firstName: string;
-	lastName: string | null;
-	role: MemberRole;
-	joined: string;
-};
+	id: CommunityMembershipsId
+	avatar: string | null
+	email: string
+	firstName: string
+	lastName: string | null
+	role: MemberRole
+	joined: string
+}
 
 export const getMemberTableColumns = () =>
 	[
@@ -58,8 +58,8 @@ export const getMemberTableColumns = () =>
 			header: "",
 			accessorKey: "avatar",
 			cell: ({ row, getValue }) => {
-				const firstName = row.getValue("firstName") as string;
-				const lastName = row.getValue("lastName") as string | null;
+				const firstName = row.getValue("firstName") as string
+				const lastName = row.getValue("lastName") as string | null
 
 				return (
 					<Avatar className="h-8 w-8">
@@ -72,7 +72,7 @@ export const getMemberTableColumns = () =>
 							{lastName?.[0] ?? ""}
 						</AvatarFallback>
 					</Avatar>
-				);
+				)
 			},
 		},
 		{
@@ -91,7 +91,7 @@ export const getMemberTableColumns = () =>
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Role" />,
 			accessorKey: "role",
 			cell: ({ getValue }) => {
-				const role = getValue() as MemberRole;
+				const role = getValue() as MemberRole
 				return role ? (
 					<Badge
 						variant={
@@ -106,14 +106,14 @@ export const getMemberTableColumns = () =>
 					</Badge>
 				) : (
 					"-"
-				);
+				)
 			},
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
 			accessorKey: "joined",
 			cell: ({ getValue }) => {
-				return new Date(getValue() as string).toLocaleDateString();
+				return new Date(getValue() as string).toLocaleDateString()
 			},
 		},
 		{
@@ -136,7 +136,7 @@ export const getMemberTableColumns = () =>
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>
-				);
+				)
 			},
 		},
-	] as const satisfies ColumnDef<TableMember, unknown>[];
+	] as const satisfies ColumnDef<TableMember, unknown>[]

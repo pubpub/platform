@@ -1,11 +1,11 @@
-import * as React from "react";
+import * as React from "react"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { FormControl, FormItem } from "../../form";
-import { Switch } from "../../switch";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+import type { AutoFormInputComponentProps } from "../types"
+import { FormControl, FormItem } from "../../form"
+import { Switch } from "../../switch"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 export default function AutoFormSwitch({
 	label,
@@ -32,5 +32,5 @@ export default function AutoFormSwitch({
 			</FormItem>
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 		</div>
-	);
+	)
 }

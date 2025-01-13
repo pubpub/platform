@@ -1,18 +1,18 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest"
 
-import { CoreSchemaType, MemberRole } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { CoreSchemaType, MemberRole } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import { mockServerCode } from "~/lib/__tests__/utils";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { pubCapabilities, stageCapabilities } from "./capabilities";
+import { mockServerCode } from "~/lib/__tests__/utils"
+import { seedCommunity } from "~/prisma/seed/seedCommunity"
+import { pubCapabilities, stageCapabilities } from "./capabilities"
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction } = await mockServerCode()
 
-createForEachMockedTransaction();
+createForEachMockedTransaction()
 
-const { userCan } = await import("./capabilities");
+const { userCan } = await import("./capabilities")
 
 const { pubs, users, stages } = await seedCommunity({
 	community: {
@@ -57,7 +57,7 @@ const { pubs, users, stages } = await seedCommunity({
 			role: MemberRole.contributor,
 		},
 	},
-});
+})
 
 describe("Community membership grants appropriate capabilities", async () => {
 	test("Community admin has all pub capabilities", async () => {
@@ -68,9 +68,9 @@ describe("Community membership grants appropriate capabilities", async () => {
 					{ type: MembershipType.pub, pubId: pubs[0].id },
 					users.communityAdmin.id
 				)
-			).toBe(true);
-		});
-	});
+			).toBe(true)
+		})
+	})
 	test("Community admin has all stage capabilities", async () => {
 		stageCapabilities.forEach(async (capability) => {
 			expect(
@@ -79,9 +79,9 @@ describe("Community membership grants appropriate capabilities", async () => {
 					{ type: MembershipType.stage, stageId: stages["Stage 1"].id },
 					users.communityAdmin.id
 				)
-			).toBe(true);
-		});
-	});
+			).toBe(true)
+		})
+	})
 	test("Community contributor has no pub capabilities", async () => {
 		pubCapabilities.forEach(async (capability) => {
 			expect(
@@ -90,9 +90,9 @@ describe("Community membership grants appropriate capabilities", async () => {
 					{ type: MembershipType.pub, pubId: pubs[0].id },
 					users.communityContributor.id
 				)
-			).toBe(false);
-		});
-	});
+			).toBe(false)
+		})
+	})
 	test("Community contributor has no stage capabilities", async () => {
 		stageCapabilities.forEach(async (capability) => {
 			expect(
@@ -101,9 +101,9 @@ describe("Community membership grants appropriate capabilities", async () => {
 					{ type: MembershipType.stage, stageId: stages["Stage 1"].id },
 					users.communityContributor.id
 				)
-			).toBe(false);
-		});
-	});
+			).toBe(false)
+		})
+	})
 
 	const editorPubCapabilities = [
 		Capabilities.movePub,
@@ -113,13 +113,13 @@ describe("Community membership grants appropriate capabilities", async () => {
 		Capabilities.createRelatedPub,
 		Capabilities.editPubWithForm,
 		Capabilities.runAction,
-	] as const;
+	] as const
 
 	const editorPubInabilities = pubCapabilities.filter(
 		(capability) =>
 			// The type of Array.prototype.includes is so strict as to make the function useless here, so we need to do this cast
 			!editorPubCapabilities.includes(capability as (typeof editorPubCapabilities)[number])
-	);
+	)
 
 	test.each([
 		...editorPubCapabilities.map((capability) => ["can", capability] as const),
@@ -134,8 +134,8 @@ describe("Community membership grants appropriate capabilities", async () => {
 				},
 				users.communityEditor.id
 			)
-		).toBe(expectation === "can");
-	});
+		).toBe(expectation === "can")
+	})
 
 	test.each([
 		["can", Capabilities.viewStage],
@@ -149,6 +149,6 @@ describe("Community membership grants appropriate capabilities", async () => {
 				{ type: MembershipType.stage, stageId: stages["Stage 1"].id },
 				users.communityEditor.id
 			)
-		).toBe(expectation === "can");
-	});
-});
+		).toBe(expectation === "can")
+	})
+})

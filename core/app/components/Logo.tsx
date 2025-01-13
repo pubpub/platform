@@ -1,6 +1,6 @@
-import type { SVGProps } from "react";
+import type { SVGProps } from "react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
 const Logo = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
 	return (
@@ -25,6 +25,6 @@ const Logo = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
 				</g>
 			</svg>
 		</svg>
-	);
-};
-export default Logo;
+	)
+}
+export default Logo

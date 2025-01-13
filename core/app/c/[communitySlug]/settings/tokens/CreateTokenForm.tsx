@@ -1,25 +1,25 @@
-"use client";
+"use client"
 
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import React from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type { CreateTokenFormContext } from "db/types";
-import { ApiAccessScope, apiAccessTokensInitializerSchema } from "db/public";
-import { permissionsSchema } from "db/types";
-import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
-import { CopyButton } from "ui/copy-button";
-import { DatePicker } from "ui/date-picker";
-import { Dialog, DialogContent, DialogTitle } from "ui/dialog";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { Separator } from "ui/separator";
+import type { CreateTokenFormContext } from "db/types"
+import { ApiAccessScope, apiAccessTokensInitializerSchema } from "db/public"
+import { permissionsSchema } from "db/types"
+import { Button } from "ui/button"
+import { Card, CardContent } from "ui/card"
+import { CopyButton } from "ui/copy-button"
+import { DatePicker } from "ui/date-picker"
+import { Dialog, DialogContent, DialogTitle } from "ui/dialog"
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { Separator } from "ui/separator"
 
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
-import { PermissionField } from "./PermissionField";
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
+import { PermissionField } from "./PermissionField"
 
 export const createTokenFormSchema = apiAccessTokensInitializerSchema
 	.omit({
@@ -44,36 +44,36 @@ export const createTokenFormSchema = apiAccessTokensInitializerSchema
 				.flatMap((scope) => Object.values(scope))
 				.filter((value) => value).length > 0
 		) {
-			return true;
+			return true
 		}
 		ctx.addIssue({
 			path: ["permissions"],
 			code: z.ZodIssueCode.custom,
 
 			message: "At least one permission must be selected",
-		});
-		return false;
-	});
+		})
+		return false
+	})
 
-export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
-export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
+export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>
+export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>
 
 export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
 	const form = useForm<CreateTokenFormSchema>({
 		resolver: zodResolver(createTokenFormSchema),
-	});
+	})
 
-	const createToken = useServerAction(actions.createToken);
+	const createToken = useServerAction(actions.createToken)
 
 	const onSubmit = async (data: CreateTokenFormSchema) => {
-		const result = await createToken(data);
+		const result = await createToken(data)
 
 		if ("success" in result) {
-			form.setValue("token" as const, result.data.token);
+			form.setValue("token" as const, result.data.token)
 		}
-	};
+	}
 	// this `as const` should not be necessary, not sure why it is
-	const token = form.watch("token" as const);
+	const token = form.watch("token" as const)
 
 	return (
 		<Form {...form}>
@@ -154,7 +154,7 @@ export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }
 											</div>
 										)}
 									</FormItem>
-								);
+								)
 							}}
 						/>
 
@@ -181,5 +181,5 @@ export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }
 				)}
 			</Dialog>
 		</Form>
-	);
-};
+	)
+}

@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import Link from "next/link";
+import Link from "next/link"
 
-import type { StagesId } from "db/public";
-import { Button } from "ui/button";
+import type { StagesId } from "db/public"
+import { Button } from "ui/button"
 
 type Props = {
-	onDelete(): void;
-	stageId: StagesId;
-	communitySlug: string;
-};
+	onDelete(): void
+	stageId: StagesId
+	communitySlug: string
+}
 
 export const StagePanelOverviewManagement = (props: Props) => {
 	const onDeleteClick = () => {
-		props.onDelete();
-	};
+		props.onDelete()
+	}
 
 	return (
 		<>
@@ -30,5 +30,5 @@ export const StagePanelOverviewManagement = (props: Props) => {
 				</Button>
 			</div>
 		</>
-	);
-};
+	)
+}

@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { ControllerRenderProps, FieldValues } from "react-hook-form"
 
-import * as React from "react";
-import { TooltipPortal } from "@radix-ui/react-tooltip";
-import { useFormContext } from "react-hook-form";
+import * as React from "react"
+import { TooltipPortal } from "@radix-ui/react-tooltip"
+import { useFormContext } from "react-hook-form"
 
-import type { PubField } from "../PubFieldContext";
-import type { AllowedSchemasOrZodItem } from "./determinePubFields";
-import { usePubFieldContext } from "..";
-import { Button } from "../../button";
-import { Info, Minus, Plus } from "../../icon";
-import { MultiSelect } from "../../multi-select";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
-import { determineAllowedPubFields } from "./determinePubFields";
+import type { PubField } from "../PubFieldContext"
+import type { AllowedSchemasOrZodItem } from "./determinePubFields"
+import { usePubFieldContext } from ".."
+import { Button } from "../../button"
+import { Info, Minus, Plus } from "../../icon"
+import { MultiSelect } from "../../multi-select"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip"
+import { determineAllowedPubFields } from "./determinePubFields"
 
 const PubFieldSelectContext = React.createContext<{
-	shouldReadFromPubField: boolean;
-	setShouldReadFromPubField: React.Dispatch<React.SetStateAction<boolean>>;
-	pubFields: string[];
-	setPubFields: (pubFields: string[]) => void;
-	parentField: ControllerRenderProps<FieldValues, any>;
-	allowedPubFields: PubField[];
+	shouldReadFromPubField: boolean
+	setShouldReadFromPubField: React.Dispatch<React.SetStateAction<boolean>>
+	pubFields: string[]
+	setPubFields: (pubFields: string[]) => void
+	parentField: ControllerRenderProps<FieldValues, any>
+	allowedPubFields: PubField[]
 }>({
 	shouldReadFromPubField: false,
 	setShouldReadFromPubField: () => {},
@@ -35,44 +35,44 @@ const PubFieldSelectContext = React.createContext<{
 		value: "",
 	},
 	allowedPubFields: [],
-});
+})
 
-const usePubFieldSelectContext = () => React.useContext(PubFieldSelectContext);
+const usePubFieldSelectContext = () => React.useContext(PubFieldSelectContext)
 
 export const PubFieldSelectProvider = ({
 	children,
 	field,
 	...allowedSchemasOrZodItem
 }: {
-	children: React.ReactNode;
-	field: ControllerRenderProps<FieldValues, any>;
+	children: React.ReactNode
+	field: ControllerRenderProps<FieldValues, any>
 } & AllowedSchemasOrZodItem) => {
-	const form = useFormContext();
-	const allPubFields = usePubFieldContext();
+	const form = useFormContext()
+	const allPubFields = usePubFieldContext()
 
-	const pubFields = form.watch("pubFields")?.[field.name];
+	const pubFields = form.watch("pubFields")?.[field.name]
 
-	const hasPubFields = pubFields !== undefined && pubFields.length > 0;
+	const hasPubFields = pubFields !== undefined && pubFields.length > 0
 
-	const [shouldReadFromPubField, setShouldReadFromPubField] = React.useState(hasPubFields);
+	const [shouldReadFromPubField, setShouldReadFromPubField] = React.useState(hasPubFields)
 
 	const allowedPubFields = determineAllowedPubFields({
 		allPubFields,
 		...allowedSchemasOrZodItem,
-	});
+	})
 
 	const setPubFields = React.useCallback(
 		(pubFields: string[]) => form.setValue(`pubFields.${field.name}`, pubFields),
 		[field.name]
-	);
+	)
 
 	// this makes sure that when you resave a form after you edit the pubfields to no longer
 	// match this field, the pubfields are reset to an empty array when you save it again
 	React.useEffect(() => {
 		if (!allowedPubFields.length) {
-			setPubFields([]);
+			setPubFields([])
 		}
-	}, []);
+	}, [])
 
 	return (
 		<PubFieldSelectContext.Provider
@@ -87,15 +87,15 @@ export const PubFieldSelectProvider = ({
 		>
 			{children}
 		</PubFieldSelectContext.Provider>
-	);
-};
+	)
+}
 
 export const PubFieldSelectToggleButton = () => {
 	const { shouldReadFromPubField, setShouldReadFromPubField, setPubFields, allowedPubFields } =
-		usePubFieldSelectContext();
+		usePubFieldSelectContext()
 
 	if (!allowedPubFields.length) {
-		return null;
+		return null
 	}
 
 	return (
@@ -109,11 +109,11 @@ export const PubFieldSelectToggleButton = () => {
 						setShouldReadFromPubField((prev) => {
 							// minus is pressed
 							if (prev) {
-								setPubFields([]);
-								return false;
+								setPubFields([])
+								return false
 							}
 
-							return !prev;
+							return !prev
 						})
 					}
 				>
@@ -130,14 +130,14 @@ export const PubFieldSelectToggleButton = () => {
 				</TooltipContent>
 			</TooltipPortal>
 		</Tooltip>
-	);
-};
+	)
+}
 
 export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode }) => {
-	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectContext();
+	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectContext()
 
 	if (!shouldReadFromPubField || allowedPubFields.length === 0) {
-		return null;
+		return null
 	}
 
 	return (
@@ -159,11 +159,11 @@ export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode 
 			</span>
 			{children}
 		</div>
-	);
-};
+	)
+}
 
 export const PubFieldSelect = () => {
-	const { setPubFields, pubFields, allowedPubFields } = usePubFieldSelectContext();
+	const { setPubFields, pubFields, allowedPubFields } = usePubFieldSelectContext()
 
 	return (
 		<MultiSelect
@@ -184,5 +184,5 @@ export const PubFieldSelect = () => {
 			badgeClassName="bg-blue-200 text-blue-400 rounded-sm font-mono font-normal border border-blue-400 whitespace-nowrap"
 			defaultValue={pubFields}
 		/>
-	);
-};
+	)
+}

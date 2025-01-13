@@ -1,49 +1,49 @@
-import dynamic from "next/dynamic";
-import { notFound, redirect } from "next/navigation";
+import dynamic from "next/dynamic"
+import { notFound, redirect } from "next/navigation"
 
-import type { CommunitiesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { ClipboardPenLine, Info } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import type { CommunitiesId } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { ClipboardPenLine, Info } from "ui/icon"
+import { PubFieldProvider } from "ui/pubFields"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
-import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
-import { getPubFields } from "~/lib/server/pubFields";
-import { ContentLayout } from "../../../ContentLayout";
-import { EditFormTitleButton } from "./EditFormTitleButton";
+import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder"
+import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton"
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getForm } from "~/lib/server/form"
+import { getPubFields } from "~/lib/server/pubFields"
+import { ContentLayout } from "../../../ContentLayout"
+import { EditFormTitleButton } from "./EditFormTitleButton"
 
 const FormCopyButton = dynamic(
 	() => import("./FormCopyButton").then((module) => module.FormCopyButton),
 	{ ssr: false }
-);
+)
 
 const getCommunityStages = (communityId: CommunitiesId) =>
-	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
+	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll()
 
 export default async function Page({
 	params: { formSlug, communitySlug },
 	searchParams: { unsavedChanges },
 }: {
 	params: {
-		formSlug: string;
-		communitySlug: string;
-	};
+		formSlug: string
+		communitySlug: string
+	}
 	searchParams: {
-		unsavedChanges: boolean;
-	};
+		unsavedChanges: boolean
+	}
 }) {
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug();
+	const { user } = await getPageLoginData()
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (
@@ -53,11 +53,11 @@ export default async function Page({
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const communityId = community.id as CommunitiesId;
-	const communityStages = await getCommunityStages(communityId).execute();
+	const communityId = community.id as CommunitiesId
+	const communityStages = await getCommunityStages(communityId).execute()
 
 	const [form, { fields }] = await Promise.all([
 		getForm({
@@ -65,9 +65,9 @@ export default async function Page({
 			communityId,
 		}).executeTakeFirstOrThrow(),
 		getPubFields({ communityId }).executeTakeFirstOrThrow(),
-	]);
+	])
 
-	const formBuilderId = "formbuilderform";
+	const formBuilderId = "formbuilderform"
 
 	return (
 		<ContentLayout
@@ -110,5 +110,5 @@ export default async function Page({
 				<FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} />
 			</PubFieldProvider>
 		</ContentLayout>
-	);
+	)
 }

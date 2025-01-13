@@ -1,49 +1,49 @@
-"use server";
+"use server"
 
-import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import { db } from "~/kysely/database";
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { defaultFormName, defaultFormSlug } from "~/lib/form";
-import { ApiError } from "~/lib/server";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
+import { db } from "~/kysely/database"
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { defaultFormName, defaultFormSlug } from "~/lib/form"
+import { ApiError } from "~/lib/server"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
 import {
 	FORM_NAME_UNIQUE_CONSTRAINT,
 	FORM_SLUG_UNIQUE_CONSTRAINT,
 	insertForm,
-} from "~/lib/server/form";
+} from "~/lib/server/form"
 
 export const addPubField = defineServerAction(async function addPubField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editPubType,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	await autoRevalidate(
@@ -51,81 +51,81 @@ export const addPubField = defineServerAction(async function addPubField(
 			A: pubFieldId,
 			B: pubTypeId,
 		})
-	).execute();
-});
+	).execute()
+})
 
 export const updateTitleField = defineServerAction(async function updateTitleField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editPubType,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	await db.transaction().execute(async (trx) => {
 		await autoRevalidate(
 			trx.updateTable("_PubFieldToPubType").set({ isTitle: false }).where("B", "=", pubTypeId)
-		).execute();
+		).execute()
 		await autoRevalidate(
 			trx
 				.updateTable("_PubFieldToPubType")
 				.set({ isTitle: true })
 				.where("A", "=", pubFieldId)
 				.where("B", "=", pubTypeId)
-		).execute();
-	});
-});
+		).execute()
+	})
+})
 
 export const removePubField = defineServerAction(async function removePubField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editPubType,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	await autoRevalidate(
 		db.deleteFrom("_PubFieldToPubType").where("A", "=", pubFieldId).where("B", "=", pubTypeId)
-	).execute();
-});
+	).execute()
+})
 
 export const createPubType = defineServerAction(async function createPubType(
 	name: string,
@@ -134,27 +134,27 @@ export const createPubType = defineServerAction(async function createPubType(
 	fields: PubFieldsId[],
 	titleField: PubFieldsId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.createPubType,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 	try {
 		await db.transaction().execute(async (trx) => {
@@ -179,7 +179,7 @@ export const createPubType = defineServerAction(async function createPubType(
 						}))
 					)
 					.returning("B as id")
-			).executeTakeFirstOrThrow();
+			).executeTakeFirstOrThrow()
 
 			await autoRevalidate(
 				insertForm(
@@ -190,24 +190,24 @@ export const createPubType = defineServerAction(async function createPubType(
 					true,
 					trx
 				)
-			).executeTakeFirstOrThrow();
-		});
+			).executeTakeFirstOrThrow()
+		})
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			if (error.table === "pub_types") {
-				return { error: "A pub type with this name already exists" };
+				return { error: "A pub type with this name already exists" }
 			}
 			if (error.constraint === FORM_NAME_UNIQUE_CONSTRAINT) {
 				return {
 					error: `Default form creation for pub type failed. There's already a form with the name ${defaultFormName}.`,
-				};
+				}
 			}
 			if (error.constraint === FORM_SLUG_UNIQUE_CONSTRAINT) {
 				return {
 					error: `Default form creation for pub type failed. There's already a form with the slug ${defaultFormSlug}.`,
-				};
+				}
 			}
 		}
-		return { error: "Pub type creation failed", cause: error };
+		return { error: "Pub type creation failed", cause: error }
 	}
-});
+})

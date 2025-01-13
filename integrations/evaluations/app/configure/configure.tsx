@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { useEffect, useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
 import {
 	Form,
 	FormControl,
@@ -15,32 +15,32 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { Textarea } from "ui/textarea";
-import { useToast } from "ui/use-toast";
-import { cn } from "utils";
+} from "ui/form"
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { Textarea } from "ui/textarea"
+import { useToast } from "ui/use-toast"
+import { cn } from "utils"
 
-import type { InstanceConfig } from "~/lib/types";
-import { configure } from "./actions";
+import type { InstanceConfig } from "~/lib/types"
+import { configure } from "./actions"
 
 type BaseProps = {
-	instanceId: string;
-	instanceConfig?: InstanceConfig;
+	instanceId: string
+	instanceConfig?: InstanceConfig
 	emailTemplate?: {
-		subject: string;
-		message: string;
-	};
-};
+		subject: string
+		message: string
+	}
+}
 
 type RedirectProps = BaseProps & {
-	action: string;
-	pubId: string;
-};
+	action: string
+	pubId: string
+}
 
-type Props = BaseProps | RedirectProps;
+type Props = BaseProps | RedirectProps
 
 const schema: z.ZodType<InstanceConfig> = z.object({
 	pubTypeId: z.string().length(36),
@@ -53,16 +53,16 @@ const schema: z.ZodType<InstanceConfig> = z.object({
 	// coerce is used here to assert this field is a number, otherwise a vlaidation error will be thrown saying this is a string
 	deadlineLength: z.coerce.number().min(0),
 	deadlineUnit: z.enum(["days", "months"]),
-});
+})
 
 const isActionRedirect = (props: Props): props is RedirectProps => {
-	return "action" in props;
-};
+	return "action" in props
+}
 
 const defaultEmailTemplate = {
 	subject: "You've been invited to review a submission on PubPub",
 	message: "Please reach out if you have any questions.",
-};
+}
 
 const defaultFormValues: InstanceConfig = {
 	pubTypeId: "",
@@ -71,43 +71,43 @@ const defaultFormValues: InstanceConfig = {
 	emailTemplate: defaultEmailTemplate,
 	deadlineLength: 35,
 	deadlineUnit: "days",
-};
+}
 
 export function Configure(props: Props) {
-	const { toast } = useToast();
+	const { toast } = useToast()
 	const defaultValues = useMemo(
 		() => Object.assign({}, defaultFormValues, props.instanceConfig),
 		[]
-	);
+	)
 	const form = useForm<z.infer<typeof schema>>({
 		mode: "all",
 		resolver: zodResolver(schema),
 		defaultValues,
-	});
+	})
 	const onSubmit = async (values: z.infer<typeof schema>) => {
-		const result = await configure(props.instanceId, values);
+		const result = await configure(props.instanceId, values)
 		if ("error" in result) {
 			toast({
 				title: "Error",
 				description: result.error,
 				variant: "destructive",
-			});
+			})
 		} else {
 			toast({
 				title: "Success",
 				description: "The instance was updated successfully.",
-			});
+			})
 		}
-	};
+	}
 
 	useEffect(() => {
 		if (isActionRedirect(props)) {
 			toast({
 				title: "Configure Instance",
 				description: "Please configure the instance before managing evaluations.",
-			});
+			})
 		}
-	}, []);
+	}, [])
 
 	return (
 		<Form {...form}>
@@ -262,11 +262,11 @@ export function Configure(props: Props) {
 						<Button
 							variant="outline"
 							onClick={(e) => {
-								e.preventDefault();
+								e.preventDefault()
 								if (isActionRedirect(props)) {
-									window.location.href = `/${props.action}?instanceId=${props.instanceId}&pubId=${props.pubId}`;
+									window.location.href = `/${props.action}?instanceId=${props.instanceId}&pubId=${props.pubId}`
 								} else {
-									window.history.back();
+									window.history.back()
 								}
 							}}
 						>
@@ -282,5 +282,5 @@ export function Configure(props: Props) {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

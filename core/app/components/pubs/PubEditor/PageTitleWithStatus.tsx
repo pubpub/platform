@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useSaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
+import { useSaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus"
 
 export const PageTitleWithStatus = ({ title }: { title: string }) => {
-	const status = useSaveStatus({ defaultMessage: "Form will save when you click save" });
+	const status = useSaveStatus({ defaultMessage: "Form will save when you click save" })
 	return (
 		<div className="flex flex-col items-center">
 			{title}
@@ -11,5 +11,5 @@ export const PageTitleWithStatus = ({ title }: { title: string }) => {
 				{status}
 			</span>
 		</div>
-	);
-};
+	)
+}

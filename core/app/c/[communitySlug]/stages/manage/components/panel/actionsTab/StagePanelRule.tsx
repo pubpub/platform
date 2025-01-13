@@ -1,40 +1,40 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
+import { useCallback } from "react"
 
-import type { Action, CommunitiesId, Event, RulesId, StagesId } from "db/public";
-import { Button } from "ui/button";
-import { Trash } from "ui/icon";
+import type { Action, CommunitiesId, Event, RulesId, StagesId } from "db/public"
+import { Button } from "ui/button"
+import { Trash } from "ui/icon"
 
-import type { RuleForEvent } from "~/actions/_lib/rules";
-import type { RuleConfig } from "~/actions/types";
-import { getActionByName, humanReadableEvent } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
-import { deleteRule } from "../../../actions";
+import type { RuleForEvent } from "~/actions/_lib/rules"
+import type { RuleConfig } from "~/actions/types"
+import { getActionByName, humanReadableEvent } from "~/actions/api"
+import { useServerAction } from "~/lib/serverActions"
+import { deleteRule } from "../../../actions"
 
 type Props = {
-	stageId: StagesId;
-	communityId: CommunitiesId;
+	stageId: StagesId
+	communityId: CommunitiesId
 	rule: {
-		id: RulesId;
-		event: Event;
-		instanceName: string;
-		action: Action;
-		config?: RuleConfig<RuleForEvent<Event>> | null;
-	};
-};
+		id: RulesId
+		event: Event
+		instanceName: string
+		action: Action
+		config?: RuleConfig<RuleForEvent<Event>> | null
+	}
+}
 
 const actionIcon = (actionName: Action) => {
-	const action = getActionByName(actionName);
-	return <action.icon className="inline text-sm" />;
-};
+	const action = getActionByName(actionName)
+	return <action.icon className="inline text-sm" />
+}
 
 export const StagePanelRule = (props: Props) => {
-	const { rule } = props;
-	const runDeleteRule = useServerAction(deleteRule);
+	const { rule } = props
+	const runDeleteRule = useServerAction(deleteRule)
 	const onDeleteClick = useCallback(async () => {
-		runDeleteRule(rule.id, props.stageId);
-	}, [rule.id, props.communityId]);
+		runDeleteRule(rule.id, props.stageId)
+	}, [rule.id, props.communityId])
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
@@ -63,5 +63,5 @@ export const StagePanelRule = (props: Props) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

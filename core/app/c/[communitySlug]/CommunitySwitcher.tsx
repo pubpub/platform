@@ -1,23 +1,23 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
+} from "ui/dropdown-menu"
 
-import type { CommunityData } from "~/lib/server/community";
+import type { CommunityData } from "~/lib/server/community"
 
 type Props = {
-	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<CommunityData>[];
-};
+	community: NonNullable<CommunityData>
+	availableCommunities: NonNullable<CommunityData>[]
+}
 
 const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommunities }) {
-	const avatarClasses = "rounded w-9 h-9 mr-2";
-	const textClasses = "flex-auto text-base font-bold w-44 text-left";
+	const avatarClasses = "rounded w-9 h-9 mr-2"
+	const textClasses = "flex-auto text-base font-bold w-44 text-left"
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -33,7 +33,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 			<DropdownMenuContent className="w-56 bg-white">
 				{availableCommunities
 					.filter((option) => {
-						return option?.slug !== community.slug;
+						return option?.slug !== community.slug
 					})
 					.map((option) => {
 						return (
@@ -51,11 +51,11 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 									</div>
 								</Link>
 							</DropdownMenuItem>
-						);
+						)
 					})}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}
 
-export default CommunitySwitcher;
+export default CommunitySwitcher

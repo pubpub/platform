@@ -6,69 +6,69 @@ import type {
 	Pubs,
 	PubTypes,
 	Users,
-} from "db/public";
+} from "db/public"
 
-import type { PubValues } from "./server";
-import type { DirectAutoOutput } from "./server/cache/types";
+import type { PubValues } from "./server"
+import type { DirectAutoOutput } from "./server/cache/types"
 
 export type UserWithMemberships = Omit<Users, "passwordHash"> & {
-	memberships: Omit<CommunityMemberships, "memberGroupId">[];
-};
+	memberships: Omit<CommunityMemberships, "memberGroupId">[]
+}
 
 export type UserWithMember = Omit<Users, "passwordHash"> & {
-	member?: Omit<CommunityMemberships, "memberGroupId"> | null;
-};
+	member?: Omit<CommunityMemberships, "memberGroupId"> | null
+}
 
 export type MemberWithUser = Omit<CommunityMemberships, "memberGroupId"> & {
-	user: Omit<Users, "passwordHash">;
-};
+	user: Omit<Users, "passwordHash">
+}
 
-export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
-export type UserPutBody = Pick<Users, "firstName" | "lastName">;
-export type UserLoginData = Omit<Users, "passwordHash">;
+export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">
+export type UserPutBody = Pick<Users, "firstName" | "lastName">
+export type UserLoginData = Omit<Users, "passwordHash">
 export type UserSetting = Pick<Users, "firstName" | "lastName" | "email" | "slug"> & {
-	communities: Communities[];
-};
+	communities: Communities[]
+}
 
-export type PubWithValues = Omit<Pubs, "valuesBlob"> & { values: PubValues };
+export type PubWithValues = Omit<Pubs, "valuesBlob"> & { values: PubValues }
 
 /**
  * https://www.totaltypescript.com/concepts/the-prettify-helper
  */
 export type Prettify<T> = {
-	[P in keyof T]: T[P];
-} & {};
+	[P in keyof T]: T[P]
+} & {}
 
 export type DeepPartial<T> = T extends object
 	? {
-			[P in keyof T]?: DeepPartial<T[P]>;
+			[P in keyof T]?: DeepPartial<T[P]>
 		}
-	: T;
+	: T
 
 export type MaybeHas<T extends Record<string, unknown>, K extends keyof T> = T extends T
 	? Prettify<
 			Omit<T, K> & {
-				[P in K]?: T[P];
+				[P in K]?: T[P]
 			}
 		>
-	: never;
+	: never
 
 export type DefinitelyHas<T, K extends keyof T> = T extends T
 	? Prettify<
 			Omit<T, K> & {
-				[P in K]: NonNullable<T[P]>;
+				[P in K]: NonNullable<T[P]>
 			}
 		>
-	: never;
+	: never
 
 export type Equal<a, b> =
-	(<T>() => T extends a ? 1 : 2) extends <T>() => T extends b ? 1 : 2 ? true : false;
+	(<T>() => T extends a ? 1 : 2) extends <T>() => T extends b ? 1 : 2 ? true : false
 
-export type Expect<a extends true> = a;
+export type Expect<a extends true> = a
 
 export type PubTypeWithFieldIds = Pick<PubTypes, "id" | "name" | "description"> & {
-	fields: { id: PubFieldsId; isTitle: boolean }[];
-};
+	fields: { id: PubFieldsId; isTitle: boolean }[]
+}
 
 export type PubField = Pick<
 	PubFields,
@@ -80,7 +80,7 @@ export type PubField = Pick<
 	| "pubFieldSchemaId"
 	| "isArchived"
 	| "isRelation"
->;
+>
 
 /**
  * Slightly nicer way to do `{ a: string } | { b: number }`
@@ -103,20 +103,20 @@ export type PubField = Pick<
 export type XOR<T extends Record<string, unknown>, P extends Record<string, unknown>> = Prettify<
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]?: never })
 	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })
->;
+>
 
 export type OR<T extends Record<string, unknown>, P extends Record<string, unknown>> = Prettify<
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]?: never })
 	| ({ [K in keyof P]: P[K] } & { [K in keyof T]?: never })
 	| ({ [K in keyof T]: T[K] } & { [K in keyof P]: P[K] })
->;
+>
 
 export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> = {
 	[K in "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow"]: Awaited<
 		ReturnType<ReturnType<T>[K]>
-	>;
-};
+	>
+}
 
-export type UnionOmit<T, K extends keyof T> = T extends T ? Omit<T, K> : never;
+export type UnionOmit<T, K extends keyof T> = T extends T ? Omit<T, K> : never
 
-export type UnionPick<T, K extends keyof T> = T extends T ? Pick<T, K> : never;
+export type UnionPick<T, K extends keyof T> = T extends T ? Pick<T, K> : never

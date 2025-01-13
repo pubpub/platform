@@ -1,25 +1,25 @@
-"use client";
+"use client"
 
-import type { UsersId } from "db/public";
-import { MemberRole } from "db/public";
-import { Button } from "ui/button";
+import type { UsersId } from "db/public"
+import { MemberRole } from "db/public"
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { toast } from "ui/use-toast";
+} from "ui/dropdown-menu"
+import { toast } from "ui/use-toast"
 
-import type { MembersListProps, TargetId } from "./types";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
+import type { MembersListProps, TargetId } from "./types"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
 
 type RoleSelectProps<T extends TargetId> = {
-	userId: UsersId;
-	targetId: T;
-	setRole: MembersListProps<T>["setRole"];
-	role: MemberRole;
-};
+	userId: UsersId
+	targetId: T
+	setRole: MembersListProps<T>["setRole"]
+	role: MemberRole
+}
 
 export const RoleSelect = <T extends TargetId>({
 	targetId,
@@ -50,13 +50,13 @@ export const RoleSelect = <T extends TargetId>({
 									userId={userId}
 									setRole={setRole}
 								/>
-							);
+							)
 						})}
 				</div>
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}
 
 const MenuButton = <T extends TargetId>({
 	targetId,
@@ -64,17 +64,17 @@ const MenuButton = <T extends TargetId>({
 	userId,
 	setRole,
 }: RoleSelectProps<T>) => {
-	const runSetRole = useServerAction(setRole);
+	const runSetRole = useServerAction(setRole)
 
 	const handleClick = async () => {
-		const result = await runSetRole(targetId, role, userId);
+		const result = await runSetRole(targetId, role, userId)
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
 				description: "User role updated",
-			});
+			})
 		}
-	};
+	}
 
 	return (
 		<DropdownMenuItem onClick={handleClick} className="bg-white">
@@ -82,5 +82,5 @@ const MenuButton = <T extends TargetId>({
 				{role}
 			</Button>
 		</DropdownMenuItem>
-	);
-};
+	)
+}

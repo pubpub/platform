@@ -1,6 +1,6 @@
-"use server";
+"use server"
 
-import { captureException } from "@sentry/nextjs";
+import { captureException } from "@sentry/nextjs"
 
 import type {
 	Action,
@@ -10,61 +10,61 @@ import type {
 	RulesId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import { Event, stagesIdSchema } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { logger } from "logger";
+} from "db/public"
+import { Event, stagesIdSchema } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { logger } from "logger"
 
-import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
-import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
-import { humanReadableEvent } from "~/actions/api";
-import { db } from "~/kysely/database";
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { ApiError } from "~/lib/server";
+import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator"
+import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance"
+import { humanReadableEvent } from "~/actions/api"
+import { db } from "~/kysely/database"
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { ApiError } from "~/lib/server"
 import {
 	createActionInstance,
 	getActionInstance,
 	removeActionInstance,
 	updateActionInstance,
-} from "~/lib/server/actions";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { insertStageMember } from "~/lib/server/member";
-import { createRule, removeRule } from "~/lib/server/rules";
+} from "~/lib/server/actions"
+import { autoRevalidate } from "~/lib/server/cache/autoRevalidate"
+import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { insertStageMember } from "~/lib/server/member"
+import { createRule, removeRule } from "~/lib/server/rules"
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
 	getPubIdsInStage,
 	removeStages,
 	updateStage,
-} from "~/lib/server/stages";
-import { createUserWithMembership } from "~/lib/server/user";
+} from "~/lib/server/stages"
+import { createUserWithMembership } from "~/lib/server/user"
 
 async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	await autoRevalidate(
@@ -72,31 +72,31 @@ async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
 			.deleteFrom("move_constraint")
 			.where("move_constraint.destinationId", "in", moveConstraintIds)
 			.returningAll()
-	).execute();
+	).execute()
 }
 
 export const createStage = defineServerAction(async function createStage(
 	communityId: CommunitiesId,
 	id: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.createStage,
 		{ type: MembershipType.community, communityId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
-	const validatedId = stagesIdSchema.parse(id);
+	const validatedId = stagesIdSchema.parse(id)
 
 	try {
 		await createStageDb({
@@ -104,291 +104,291 @@ export const createStage = defineServerAction(async function createStage(
 			name: "Untitled Stage",
 			order: "aa",
 			communityId,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to create stage",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const deleteStage = defineServerAction(async function deleteStage(stageId: StagesId) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.deleteStage,
 		{ type: MembershipType.stage, stageId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
-		await removeStages([stageId]).executeTakeFirstOrThrow();
+		await removeStages([stageId]).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to delete stage",
 			cause: error,
-		};
+		}
 	} finally {
-		revalidateTagsForCommunity(["stages", "PubsInStages"]);
+		revalidateTagsForCommunity(["stages", "PubsInStages"])
 	}
-});
+})
 
 export const createMoveConstraint = defineServerAction(async function createMoveConstraint(
 	sourceStageId: StagesId,
 	destinationStageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND
 	}
 
 	const authorized = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
 		await createMoveConstraintDb({
 			stageId: sourceStageId,
 			destinationId: destinationStageId,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to connect stages",
 			cause: error,
-		};
+		}
 	} finally {
-		revalidateTagsForCommunity(["move_constraint"]);
+		revalidateTagsForCommunity(["move_constraint"])
 	}
-});
+})
 
 export const deleteStagesAndMoveConstraints = defineServerAction(
 	async function deleteStagesAndMoveConstraints(
 		stageIds: StagesId[],
 		moveConstraintIds: StagesId[]
 	) {
-		const loginData = await getLoginData();
+		const loginData = await getLoginData()
 		if (!loginData || !loginData.user) {
-			return ApiError.NOT_LOGGED_IN;
+			return ApiError.NOT_LOGGED_IN
 		}
-		const community = await findCommunityBySlug();
+		const community = await findCommunityBySlug()
 
 		if (!community) {
-			return ApiError.COMMUNITY_NOT_FOUND;
+			return ApiError.COMMUNITY_NOT_FOUND
 		}
 
 		const authorized = await userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
 			loginData.user.id
-		);
+		)
 
 		if (!authorized) {
-			return ApiError.UNAUTHORIZED;
+			return ApiError.UNAUTHORIZED
 		}
 
 		try {
 			// Delete move constraints prior to deleting stages to prevent foreign
 			// key constraint violations.
 			if (moveConstraintIds.length > 0) {
-				await deleteMoveConstraints(moveConstraintIds);
+				await deleteMoveConstraints(moveConstraintIds)
 			}
 			if (stageIds.length > 0) {
-				await removeStages(stageIds).executeTakeFirstOrThrow();
+				await removeStages(stageIds).executeTakeFirstOrThrow()
 			}
 		} catch (error) {
 			return {
 				error: "Failed to delete stages and/or connections",
 				cause: error,
-			};
+			}
 		} finally {
-			revalidateTagsForCommunity(["move_constraint"]);
+			revalidateTagsForCommunity(["move_constraint"])
 		}
 	}
-);
+)
 
 export const updateStageName = defineServerAction(async function updateStageName(
 	stageId: StagesId,
 	name: string
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 	try {
 		await updateStage(stageId, {
 			name,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to update stage name",
 			cause: error,
-		};
+		}
 	} finally {
-		revalidateTagsForCommunity(["stages"]);
+		revalidateTagsForCommunity(["stages"])
 	}
-});
+})
 
 export const revalidateStages = defineServerAction(async function revalidateStages() {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	revalidateTagsForCommunity(["stages", "PubsInStages"]);
-});
+	revalidateTagsForCommunity(["stages", "PubsInStages"])
+})
 
 export const addAction = defineServerAction(async function addAction(
 	stageId: StagesId,
 	actionName: Action
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
-	const { user } = loginData;
+	const { user } = loginData
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 	try {
 		await createActionInstance({
 			name: actionName,
 			action: actionName,
 			stageId,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to add action",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 export const updateAction = defineServerAction(async function updateAction(
 	actionInstanceId: ActionInstancesId,
 	stageId: StagesId,
 	props:
 		| {
-				config: Record<string, any>;
-				name?: undefined;
+				config: Record<string, any>
+				name?: undefined
 		  }
 		| { name: string; config?: undefined }
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
-	const result = await updateActionInstance(actionInstanceId, props).executeTakeFirstOrThrow();
+	const result = await updateActionInstance(actionInstanceId, props).executeTakeFirstOrThrow()
 
 	return {
 		success: true,
 		report: "Action updated",
-	};
-});
+	}
+})
 
 export const deleteAction = defineServerAction(async function deleteAction(
 	actionId: ActionInstancesId,
 	stageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
-		await removeActionInstance(actionId).executeTakeFirstOrThrow();
+		await removeActionInstance(actionId).executeTakeFirstOrThrow()
 	} catch (error) {
 		return {
 			error: "Failed to delete action",
 			cause: error,
-		};
+		}
 	} finally {
-		revalidateTagsForCommunity(["action_instances"]);
+		revalidateTagsForCommunity(["action_instances"])
 	}
-});
+})
 
 export const addRule = defineServerAction(async function addRule({
 	stageId,
 	data,
 }: {
-	stageId: StagesId;
-	data: CreateRuleSchema;
+	stageId: StagesId
+	data: CreateRuleSchema
 }) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
@@ -396,9 +396,9 @@ export const addRule = defineServerAction(async function addRule({
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
 			config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
-		}).executeTakeFirstOrThrow();
+		}).executeTakeFirstOrThrow()
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		if (error.message?.includes("unique constraint")) {
 			return {
 				title: "Rule already exists",
@@ -406,55 +406,55 @@ export const addRule = defineServerAction(async function addRule({
 						of the same type to this stage in order to have the same action trigger
 						multiple times for '${humanReadableEvent(data.event)}'.`,
 				cause: error,
-			};
+			}
 		}
 
 		return {
 			error: "Failed to add rule",
 			cause: error,
-		};
+		}
 	} finally {
 	}
-});
+})
 
 export const deleteRule = defineServerAction(async function deleteRule(
 	ruleId: RulesId,
 	stageId: StagesId
 ) {
-	const loginData = await getLoginData();
+	const loginData = await getLoginData()
 	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 
 	const authorized = await userCan(
 		Capabilities.manageStage,
 		{ type: MembershipType.stage, stageId },
 		loginData.user.id
-	);
+	)
 
 	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
+		return ApiError.UNAUTHORIZED
 	}
 
 	try {
 		const deletedRule = await autoRevalidate(
 			removeRule(ruleId).qb.returningAll()
-		).executeTakeFirstOrThrow();
+		).executeTakeFirstOrThrow()
 
 		if (!deletedRule) {
 			return {
 				error: "Failed to delete rule",
 				cause: `Rule with id ${ruleId} not found`,
-			};
+			}
 		}
 
 		if (deletedRule.event !== Event.pubInStageForDuration) {
-			return;
+			return
 		}
 
 		const actionInstance = await getActionInstance(
 			deletedRule.actionInstanceId
-		).executeTakeFirst();
+		).executeTakeFirst()
 
 		if (!actionInstance) {
 			// something is wrong here
@@ -462,17 +462,17 @@ export const deleteRule = defineServerAction(async function deleteRule(
 				new Error(
 					`Action instance not found for rule ${ruleId} while trying to unschedule jobs`
 				)
-			);
-			return;
+			)
+			return
 		}
 
-		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
+		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst()
 		if (!pubsInStage) {
 			// we don't need to unschedule any jobs, as there are no pubs this rule could have been applied to
-			return;
+			return
 		}
 
-		logger.debug(`Unscheduling jobs for rule ${ruleId}`);
+		logger.debug(`Unscheduling jobs for rule ${ruleId}`)
 		await Promise.all(
 			pubsInStage.pubIds.map(async (pubInStageId) =>
 				unscheduleAction({
@@ -481,26 +481,26 @@ export const deleteRule = defineServerAction(async function deleteRule(
 					stageId: actionInstance.stageId,
 				})
 			)
-		);
+		)
 	} catch (error) {
-		logger.error(error);
+		logger.error(error)
 		return {
 			error: "Failed to delete rule",
 			cause: error,
-		};
+		}
 	} finally {
 		// 		revalidateTag(`community-stages_${communityId}`);
 		// 		revalidateTag(`community-action-runs_${communityId}`);
 	}
-});
+})
 
 export const removeStageMember = defineServerAction(async function removeStageMember(
 	userId: UsersId,
 	stageId: StagesId
 ) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 	if (
 		!(await userCan(
@@ -512,15 +512,15 @@ export const removeStageMember = defineServerAction(async function removeStageMe
 		return {
 			title: "Unauthorized",
 			error: "You are not authorized to remove a stage member",
-		};
+		}
 	}
 	await autoRevalidate(
 		db
 			.deleteFrom("stage_memberships")
 			.where("stage_memberships.stageId", "=", stageId)
 			.where("stage_memberships.userId", "=", userId)
-	).execute();
-});
+	).execute()
+})
 
 export const addStageMember = defineServerAction(async function addStageMember(
 	stageId: StagesId,
@@ -528,14 +528,14 @@ export const addStageMember = defineServerAction(async function addStageMember(
 		userId,
 		role,
 	}: {
-		userId: UsersId;
-		role: MemberRole;
+		userId: UsersId
+		role: MemberRole
 	}
 ) {
 	try {
-		const { user } = await getLoginData();
+		const { user } = await getLoginData()
 		if (!user) {
-			return ApiError.NOT_LOGGED_IN;
+			return ApiError.NOT_LOGGED_IN
 		}
 		if (
 			!(await userCan(
@@ -547,29 +547,29 @@ export const addStageMember = defineServerAction(async function addStageMember(
 			return {
 				title: "Unauthorized",
 				error: "You are not authorized to add a stage member",
-			};
+			}
 		}
 
-		await insertStageMember({ userId, stageId, role }).execute();
+		await insertStageMember({ userId, stageId, role }).execute()
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
 				title: "Failed to add member",
 				error: "User is already a member of this stage",
-			};
+			}
 		}
 	}
-});
+})
 
 export const addUserWithStageMembership = defineServerAction(
 	async function addUserWithStageMembership(
 		stageId: StagesId,
 		data: {
-			firstName: string;
-			lastName?: string | null;
-			email: string;
-			role: MemberRole;
-			isSuperAdmin?: boolean;
+			firstName: string
+			lastName?: string | null
+			email: string
+			role: MemberRole
+			isSuperAdmin?: boolean
 		}
 	) {
 		await createUserWithMembership({
@@ -579,18 +579,18 @@ export const addUserWithStageMembership = defineServerAction(
 				role: data.role,
 				type: MembershipType.stage,
 			},
-		});
+		})
 	}
-);
+)
 
 export const setStageMemberRole = defineServerAction(async function setStageMemberRole(
 	stageId: StagesId,
 	role: MemberRole,
 	userId: UsersId
 ) {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return ApiError.NOT_LOGGED_IN;
+		return ApiError.NOT_LOGGED_IN
 	}
 	if (
 		!(await userCan(
@@ -602,7 +602,7 @@ export const setStageMemberRole = defineServerAction(async function setStageMemb
 		return {
 			title: "Unauthorized",
 			error: "You are not authorized to set a stage member's role",
-		};
+		}
 	}
 	await autoRevalidate(
 		db
@@ -610,5 +610,5 @@ export const setStageMemberRole = defineServerAction(async function setStageMemb
 			.where("stageId", "=", stageId)
 			.where("userId", "=", userId)
 			.set({ role })
-	).execute();
-});
+	).execute()
+})

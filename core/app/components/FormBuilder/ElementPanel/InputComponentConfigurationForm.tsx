@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import type { TSchema } from "@sinclair/typebox";
+import type { TSchema } from "@sinclair/typebox"
 
-import { useMemo } from "react";
-import dynamic from "next/dynamic";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import { Value } from "@sinclair/typebox/value";
-import { useForm } from "react-hook-form";
-import { componentConfigSchemas, componentsBySchema } from "schemas";
+import { useMemo } from "react"
+import dynamic from "next/dynamic"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import { Value } from "@sinclair/typebox/value"
+import { useForm } from "react-hook-form"
+import { componentConfigSchemas, componentsBySchema } from "schemas"
 
-import type { PubsId, PubTypesId } from "db/public";
-import { CoreSchemaType, InputComponent } from "db/public";
-import { Button } from "ui/button";
-import { Checkbox } from "ui/checkbox";
-import { Confidence } from "ui/customRenderers/confidence/confidence";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { useUnsavedChangesWarning } from "ui/hooks";
-import { ImagePlus } from "ui/icon";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { MultiValueInput } from "ui/multivalue-input";
-import { RadioGroup, RadioGroupItem } from "ui/radio-group";
+import type { PubsId, PubTypesId } from "db/public"
+import { CoreSchemaType, InputComponent } from "db/public"
+import { Button } from "ui/button"
+import { Checkbox } from "ui/checkbox"
+import { Confidence } from "ui/customRenderers/confidence/confidence"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { useUnsavedChangesWarning } from "ui/hooks"
+import { ImagePlus } from "ui/icon"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { MultiValueInput } from "ui/multivalue-input"
+import { RadioGroup, RadioGroupItem } from "ui/radio-group"
 import {
 	Select,
 	SelectContent,
@@ -29,29 +29,29 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "ui/select";
-import { Skeleton } from "ui/skeleton";
-import { Switch } from "ui/switch";
-import { Textarea } from "ui/textarea";
+} from "ui/select"
+import { Skeleton } from "ui/skeleton"
+import { Switch } from "ui/switch"
+import { Textarea } from "ui/textarea"
 
-import type { InputElement } from "../types";
-import type { ConfigFormData } from "./ComponentConfig/types";
-import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
-import { useFormBuilder } from "../FormBuilderContext";
-import { FieldInputElement } from "../FormElement";
-import { isFieldInput } from "../types";
-import { ComponentConfig } from "./ComponentConfig";
+import type { InputElement } from "../types"
+import type { ConfigFormData } from "./ComponentConfig/types"
+import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient"
+import { useFormBuilder } from "../FormBuilderContext"
+import { FieldInputElement } from "../FormElement"
+import { isFieldInput } from "../types"
+import { ComponentConfig } from "./ComponentConfig"
 
 type SchemaComponentData = {
-	name?: string;
-	placeholder?: string;
-	demoComponent?: (props: { element: InputElement }) => JSX.Element;
-};
+	name?: string
+	placeholder?: string
+	demoComponent?: (props: { element: InputElement }) => JSX.Element
+}
 
 const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.DatePicker), {
 	ssr: false,
 	loading: () => <Skeleton className="h-9 w-full" />,
-});
+})
 
 const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textArea]: {
@@ -174,10 +174,10 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 						className="-ml-6 -mt-4 h-full w-full overflow-scroll"
 					/>
 				</div>
-			);
+			)
 		},
 	},
-} as const;
+} as const
 
 const ComponentSelect = ({
 	components,
@@ -185,16 +185,16 @@ const ComponentSelect = ({
 	value,
 	element,
 }: {
-	components: InputComponent[];
-	value: InputComponent;
-	onChange: (component: InputComponent) => void;
-	element: InputElement;
+	components: InputComponent[]
+	value: InputComponent
+	onChange: (component: InputComponent) => void
+	element: InputElement
 }) => {
 	return (
 		<div className="grid grid-cols-2 gap-3">
 			{components.map((c) => {
-				const { name, demoComponent: Component } = componentInfo[c];
-				const selected = value === c;
+				const { name, demoComponent: Component } = componentInfo[c]
+				const selected = value === c
 				return (
 					<div key={c}>
 						{/* We use regular input instead of a RadioGroup here because the RadioGroup
@@ -207,7 +207,7 @@ const ComponentSelect = ({
 							className="peer sr-only"
 							defaultChecked={selected}
 							onChange={() => {
-								onChange(c);
+								onChange(c)
 							}}
 						/>
 						<div className="flex h-32 w-full flex-col justify-between rounded-lg border bg-card text-card-foreground shadow-sm peer-checked:border-2 peer-checked:border-ring peer-checked:outline-none">
@@ -231,25 +231,25 @@ const ComponentSelect = ({
 							</label>
 						</div>
 					</div>
-				);
+				)
 			})}
 		</div>
-	);
-};
+	)
+}
 
-const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()]);
+const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null()])
 
 type Props = {
-	index: number;
-};
+	index: number
+}
 
 export const InputComponentConfigurationForm = ({ index }: Props) => {
-	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
+	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder()
 	if (!selectedElement || !isFieldInput(selectedElement)) {
-		return null;
+		return null
 	}
-	const { schemaName } = selectedElement;
-	const allowedComponents = componentsBySchema[schemaName];
+	const { schemaName } = selectedElement
+	const allowedComponents = componentsBySchema[schemaName]
 
 	const form = useForm<ConfigFormData<(typeof allowedComponents)[number]>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
@@ -258,39 +258,39 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 				required: Nullable(Type.Boolean({ default: true })),
 				component: Type.Enum(InputComponent),
 				config: componentConfigSchemas[values.component],
-			});
-			const createResolver = typeboxResolver(schema);
-			return createResolver(values, context, options);
+			})
+			const createResolver = typeboxResolver(schema)
+			return createResolver(values, context, options)
 		},
 		defaultValues: selectedElement,
-	});
+	})
 
-	useUnsavedChangesWarning(form.formState.isDirty);
+	useUnsavedChangesWarning(form.formState.isDirty)
 
-	const component = form.watch("component");
+	const component = form.watch("component")
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
 		// Some `config` schemas have extra values which persist if we don't Clean first
-		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config);
+		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config)
 		update(index, {
 			...selectedElement,
 			...values,
 			config: cleanedConfig,
 			updated: true,
 			configured: true,
-		});
-		dispatch({ eventName: "save" });
-	};
+		})
+		dispatch({ eventName: "save" })
+	}
 	const configForm = useMemo(
 		() => <ComponentConfig schemaName={schemaName} form={form} component={component} />,
 		[component, schemaName]
-	);
+	)
 	return (
 		<Form {...form}>
 			<form
 				onSubmit={(e) => {
-					e.stopPropagation(); //prevent submission from propagating to parent form
-					form.handleSubmit(onSubmit)(e);
+					e.stopPropagation() //prevent submission from propagating to parent form
+					form.handleSubmit(onSubmit)(e)
 				}}
 				className="flex h-full flex-col gap-2"
 			>
@@ -338,8 +338,8 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 						className="border-slate-950"
 						variant="outline"
 						onClick={() => {
-							removeIfUnconfigured();
-							dispatch({ eventName: "cancel" });
+							removeIfUnconfigured()
+							dispatch({ eventName: "cancel" })
 						}}
 					>
 						Cancel
@@ -355,5 +355,5 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

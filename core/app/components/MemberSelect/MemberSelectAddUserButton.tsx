@@ -1,23 +1,23 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState } from "react"
 
-import type { Communities } from "db/public";
-import { Button } from "ui/button";
-import { cn } from "utils";
+import type { Communities } from "db/public"
+import { Button } from "ui/button"
+import { cn } from "utils"
 
-import { MemberSelectAddUserForm } from "./MemberSelectAddUserForm";
+import { MemberSelectAddUserForm } from "./MemberSelectAddUserForm"
 
 type Props = {
-	community: Communities;
-	email: string;
-};
+	community: Communities
+	email: string
+}
 
 export const MemberSelectAddUserButton = (props: Props) => {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false)
 
 	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-		e.preventDefault();
-		setOpen(true);
-	}, []);
+		e.preventDefault()
+		setOpen(true)
+	}, [])
 
 	return (
 		<>
@@ -31,5 +31,5 @@ export const MemberSelectAddUserButton = (props: Props) => {
 			</Button>
 			{open && <MemberSelectAddUserForm email={props.email} community={props.community} />}
 		</>
-	);
-};
+	)
+}

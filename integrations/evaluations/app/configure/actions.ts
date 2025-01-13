@@ -1,10 +1,10 @@
-"use server";
+"use server"
 
-import { headers } from "next/headers";
-import { captureException, withServerActionInstrumentation } from "@sentry/nextjs";
+import { headers } from "next/headers"
+import { captureException, withServerActionInstrumentation } from "@sentry/nextjs"
 
-import type { InstanceConfig } from "~/lib/types";
-import { setInstanceConfig } from "~/lib/instance";
+import type { InstanceConfig } from "~/lib/types"
+import { setInstanceConfig } from "~/lib/instance"
 
 export const configure = (instanceId: string, instanceConfig: InstanceConfig) => {
 	return withServerActionInstrumentation(
@@ -14,11 +14,11 @@ export const configure = (instanceId: string, instanceConfig: InstanceConfig) =>
 		},
 		async () => {
 			try {
-				return setInstanceConfig(instanceId, instanceConfig);
+				return setInstanceConfig(instanceId, instanceConfig)
 			} catch (error) {
-				captureException(error);
-				return { error: error.message };
+				captureException(error)
+				return { error: error.message }
 			}
 		}
-	);
-};
+	)
+}

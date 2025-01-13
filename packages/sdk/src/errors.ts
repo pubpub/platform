@@ -3,6 +3,6 @@ export class IntegrationApiError extends Error {
 		return {
 			message: this.message,
 			cause: this.cause,
-		};
+		}
 	}
 }

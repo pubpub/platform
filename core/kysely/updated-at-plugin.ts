@@ -6,7 +6,7 @@ import type {
 	RootOperationNode,
 	UnknownRow,
 	UpdateQueryNode,
-} from "kysely";
+} from "kysely"
 
 import {
 	ColumnNode,
@@ -15,29 +15,29 @@ import {
 	OperationNodeTransformer,
 	RawNode,
 	TableNode,
-} from "kysely";
+} from "kysely"
 
 class UpdatedAtTransformer extends OperationNodeTransformer {
-	#tablesWithUpdatedAt: string[];
+	#tablesWithUpdatedAt: string[]
 
 	constructor(tablesWithUpdatedAt?: string[]) {
-		super();
-		this.#tablesWithUpdatedAt = tablesWithUpdatedAt ?? [];
+		super()
+		this.#tablesWithUpdatedAt = tablesWithUpdatedAt ?? []
 	}
 
 	transformUpdateQuery(node: UpdateQueryNode): UpdateQueryNode {
-		node = super.transformUpdateQuery(node);
+		node = super.transformUpdateQuery(node)
 
-		const tableNode = node.table;
+		const tableNode = node.table
 		if (
 			tableNode &&
 			TableNode.is(tableNode) &&
 			!this.#tablesWithUpdatedAt.includes(tableNode.table.identifier.name)
 		) {
-			return node;
+			return node
 		}
 
-		return this.addUpdatedAtColumn(node);
+		return this.addUpdatedAtColumn(node)
 	}
 
 	private addUpdatedAtColumn(node: UpdateQueryNode): UpdateQueryNode {
@@ -45,19 +45,19 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 		// this is fine, as we shouldn't be manually updating the updatedAt column
 		const nonUpdatedAtColumns = (node.updates ?? []).filter((update) => {
 			if (!ColumnNode.is(update.column)) {
-				return true;
+				return true
 			}
 
 			if (!IdentifierNode.is(update.column.column)) {
-				return true;
+				return true
 			}
 
 			if (update.column.column.name !== "updatedAt") {
-				return true;
+				return true
 			}
 
-			return false;
-		});
+			return false
+		})
 
 		return {
 			...node,
@@ -68,7 +68,7 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 					RawNode.createWithSql("current_timestamp")
 				),
 			],
-		};
+		}
 	}
 }
 
@@ -76,17 +76,17 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
  * Plugin which adds sets `updatedAt` column on update for all tables which need it
  */
 export class UpdatedAtPlugin implements KyselyPlugin {
-	#updatedAtTransformer: UpdatedAtTransformer;
+	#updatedAtTransformer: UpdatedAtTransformer
 
 	constructor(tablesWithUpdatedAt: string[]) {
-		this.#updatedAtTransformer = new UpdatedAtTransformer(tablesWithUpdatedAt);
+		this.#updatedAtTransformer = new UpdatedAtTransformer(tablesWithUpdatedAt)
 	}
 
 	transformQuery(args: PluginTransformQueryArgs): RootOperationNode {
-		return this.#updatedAtTransformer.transformNode(args.node);
+		return this.#updatedAtTransformer.transformNode(args.node)
 	}
 
 	async transformResult(args: PluginTransformResultArgs): Promise<QueryResult<UnknownRow>> {
-		return args.result;
+		return args.result
 	}
 }

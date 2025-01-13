@@ -33,7 +33,7 @@ pnpm --filter db migrate-dev
 If you have added a new table, make sure to add
 
 ```ts
-export * from "./tableName";
+export * from "./tableName"
 ```
 
 to `src/public.ts`, otherwise you will not be able to import it.

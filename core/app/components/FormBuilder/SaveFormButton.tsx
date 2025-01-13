@@ -1,13 +1,13 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { cn } from "utils"
 
 type Props = {
-	form: string;
-	className?: string;
-	disabled?: boolean;
-};
+	form: string
+	className?: string
+	disabled?: boolean
+}
 
 export const SaveFormButton = ({ form, className, disabled }: Props) => {
 	return (
@@ -22,5 +22,5 @@ export const SaveFormButton = ({ form, className, disabled }: Props) => {
 		>
 			Save
 		</Button>
-	);
-};
+	)
+}

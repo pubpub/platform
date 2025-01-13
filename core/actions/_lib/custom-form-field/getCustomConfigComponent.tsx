@@ -1,5 +1,5 @@
-import type { actions } from "../../api";
-import type { ActionConfigServerComponent } from "./defineConfigServerComponent";
+import type { actions } from "../../api"
+import type { ActionConfigServerComponent } from "./defineConfigServerComponent"
 
 export const getCustomConfigComponentByActionName = async <
 	A extends keyof typeof actions,
@@ -11,9 +11,9 @@ export const getCustomConfigComponentByActionName = async <
 	fieldName: C
 ) => {
 	try {
-		const action = await import(`../../${actionName}/${type}/${fieldName}.field.tsx`);
-		return action.default as ActionConfigServerComponent<(typeof actions)[A], T>;
+		const action = await import(`../../${actionName}/${type}/${fieldName}.field.tsx`)
+		return action.default as ActionConfigServerComponent<(typeof actions)[A], T>
 	} catch (error) {
-		return null;
+		return null
 	}
-};
+}

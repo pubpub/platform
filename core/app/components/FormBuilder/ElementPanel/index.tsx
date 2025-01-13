@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
-import { FormLabel } from "ui/form";
-import { PlusCircle, X } from "ui/icon";
-import { Input } from "ui/input";
+import { Button } from "ui/button"
+import { FormLabel } from "ui/form"
+import { PlusCircle, X } from "ui/icon"
+import { Input } from "ui/input"
 
-import type { PanelState } from "../types";
-import { useFormBuilder } from "../FormBuilderContext";
-import { SubmissionSettings } from "../SubmissionSettings";
-import { isFieldInput } from "../types";
-import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
-import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm";
-import { SelectAccess } from "./SelectAccess";
-import { SelectElement } from "./SelectElement";
-import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm";
+import type { PanelState } from "../types"
+import { useFormBuilder } from "../FormBuilderContext"
+import { SubmissionSettings } from "../SubmissionSettings"
+import { isFieldInput } from "../types"
+import { ButtonConfigurationForm } from "./ButtonConfigurationForm"
+import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm"
+import { SelectAccess } from "./SelectAccess"
+import { SelectElement } from "./SelectElement"
+import { StructuralElementConfigurationForm } from "./StructuralElementConfigurationForm"
 
 type ElementPanelProps = {
-	panelState: PanelState;
-};
+	panelState: PanelState
+}
 
 export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 	const { elementsCount, removeIfUnconfigured, dispatch, slug, selectedElement } =
-		useFormBuilder();
+		useFormBuilder()
 
 	switch (panelState.state) {
 		case "initial":
@@ -44,14 +44,14 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 					<SelectAccess />
 					<SubmissionSettings />
 				</div>
-			);
+			)
 		case "selecting":
-			return <SelectElement panelState={panelState} />;
+			return <SelectElement panelState={panelState} />
 		case "editing":
 			const ConfigForm =
 				selectedElement && isFieldInput(selectedElement)
 					? InputComponentConfigurationForm
-					: StructuralElementConfigurationForm;
+					: StructuralElementConfigurationForm
 
 			return (
 				<>
@@ -62,12 +62,12 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 						<ConfigForm index={panelState.selectedElementIndex} />
 					)}
 				</>
-			);
+			)
 		case "editingButton":
 			return (
 				<>
 					<ButtonConfigurationForm buttonIdentifier={panelState.buttonId} />
 				</>
-			);
+			)
 	}
-};
+}

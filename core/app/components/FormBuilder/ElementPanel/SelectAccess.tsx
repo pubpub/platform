@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
 
-import { FormAccessType } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Contact, Lock, Users } from "ui/icon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { FormAccessType } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Contact, Lock, Users } from "ui/icon"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
 const iconsAndCopy = {
 	[FormAccessType.inviteOnly]: {
@@ -26,10 +26,10 @@ const iconsAndCopy = {
 		name: "Public",
 		help: "Anyone with the link can submit",
 	},
-};
+}
 
 export const SelectAccess = () => {
-	const { control } = useFormContext();
+	const { control } = useFormContext()
 	return (
 		<FormField
 			control={control}
@@ -46,7 +46,7 @@ export const SelectAccess = () => {
 						</FormControl>
 						<SelectContent>
 							{Object.values(FormAccessType).map((t) => {
-								const { Icon, description, name } = iconsAndCopy[t];
+								const { Icon, description, name } = iconsAndCopy[t]
 								return (
 									<SelectItem key={t} value={t.toString()}>
 										<div className="flex h-auto flex-1 flex-shrink-0 items-center gap-2">
@@ -59,7 +59,7 @@ export const SelectAccess = () => {
 											</div>
 										</div>
 									</SelectItem>
-								);
+								)
 							})}
 						</SelectContent>
 					</Select>
@@ -70,5 +70,5 @@ export const SelectAccess = () => {
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}

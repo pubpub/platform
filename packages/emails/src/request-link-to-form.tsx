@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from "react"
 import {
 	Body,
 	Button,
@@ -14,17 +14,17 @@ import {
 	Section,
 	Tailwind,
 	Text,
-} from "@react-email/components";
+} from "@react-email/components"
 
-import type { Communities } from "db/public";
+import type { Communities } from "db/public"
 
 interface RequestAccessToForm {
-	formInviteLink: string;
-	community: Pick<Communities, "name" | "avatar" | "slug">;
+	formInviteLink: string
+	community: Pick<Communities, "name" | "avatar" | "slug">
 	form: {
-		name: string;
-	};
-	previewText?: string;
+		name: string
+	}
+	previewText?: string
 }
 
 /**
@@ -36,7 +36,7 @@ export const RequestLinkToForm = ({
 	form,
 	previewText = `Requesting access to ${form.name}`,
 }: RequestAccessToForm) => {
-	const baseUrl = process.env.PUBPUB_URL ?? "";
+	const baseUrl = process.env.PUBPUB_URL ?? ""
 
 	return (
 		<Html>
@@ -84,5 +84,5 @@ export const RequestLinkToForm = ({
 				</Body>
 			</Tailwind>
 		</Html>
-	);
-};
+	)
+}

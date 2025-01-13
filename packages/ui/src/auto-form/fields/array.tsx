@@ -1,24 +1,24 @@
-import type { useForm } from "react-hook-form";
-import type * as z from "zod";
+import type { useForm } from "react-hook-form"
+import type * as z from "zod"
 
-import * as React from "react";
-import { Plus, Trash } from "lucide-react";
-import { useFieldArray } from "react-hook-form";
+import * as React from "react"
+import { Plus, Trash } from "lucide-react"
+import { useFieldArray } from "react-hook-form"
 
-import { AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
-import { Button } from "../../button";
-import { Separator } from "../../separator";
-import { beautifyObjectName } from "../utils";
-import AutoFormObject from "./object";
+import { AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion"
+import { Button } from "../../button"
+import { Separator } from "../../separator"
+import { beautifyObjectName } from "../utils"
+import AutoFormObject from "./object"
 
 function isZodArray(item: z.ZodArray<any> | z.ZodDefault<any>): item is z.ZodArray<any> {
-	return item._def.typeName === "ZodArray";
+	return item._def.typeName === "ZodArray"
 }
 
 function isZodDefaultOrOptional<Z extends z.ZodArray<any> | z.ZodDefault<any> | z.ZodOptional<any>>(
 	item: Z
 ): item is Exclude<Z, z.ZodArray<any>> {
-	return item._def.typeName === "ZodDefault" || item._def.typeName === "ZodOptional";
+	return item._def.typeName === "ZodDefault" || item._def.typeName === "ZodOptional"
 }
 
 export default function AutoFormArray({
@@ -28,32 +28,32 @@ export default function AutoFormArray({
 	path = [],
 	fieldConfig,
 }: {
-	name: string;
-	item: z.ZodArray<any> | z.ZodDefault<any>;
-	form: ReturnType<typeof useForm>;
-	path?: string[];
-	fieldConfig?: any;
+	name: string
+	item: z.ZodArray<any> | z.ZodDefault<any>
+	form: ReturnType<typeof useForm>
+	path?: string[]
+	fieldConfig?: any
 }) {
 	const { fields, append, remove } = useFieldArray({
 		control: form.control,
 		name,
-	});
-	const itemName = item._def.description ?? beautifyObjectName(name);
+	})
+	const itemName = item._def.description ?? beautifyObjectName(name)
 
-	const [title, description, additionalType] = itemName.split("|");
+	const [title, description, additionalType] = itemName.split("|")
 
 	const itemDefType = isZodArray(item)
 		? item._def.type
 		: isZodDefaultOrOptional(item)
 			? item._def.innerType._def.type
-			: null;
+			: null
 
 	return (
 		<AccordionItem value={name} className="border-none">
 			<AccordionTrigger>{title}</AccordionTrigger>
 			<AccordionContent className="flex flex-col gap-y-4">
 				{fields.map((_field, index) => {
-					const key = _field.id;
+					const key = _field.id
 					return (
 						<div className="flex flex-col gap-y-2" key={`${key}`}>
 							<AutoFormObject
@@ -76,7 +76,7 @@ export default function AutoFormArray({
 
 							<Separator />
 						</div>
-					);
+					)
 				})}
 				<Button
 					type="button"
@@ -89,5 +89,5 @@ export default function AutoFormArray({
 				</Button>
 			</AccordionContent>
 		</AccordionItem>
-	);
+	)
 }

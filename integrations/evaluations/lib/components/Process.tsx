@@ -1,9 +1,9 @@
-import { EvaluatorWhoAccepted } from "../types";
+import { EvaluatorWhoAccepted } from "../types"
 
 type Props = {
-	deadline: Date;
-	managersNotes: string;
-};
+	deadline: Date
+	managersNotes: string
+}
 
 export const Process = (props: Props) => {
 	return (
@@ -84,5 +84,5 @@ export const Process = (props: Props) => {
 				remain anonymous or to be identified as the author.
 			</p>
 		</>
-	);
-};
+	)
+}

@@ -1,19 +1,19 @@
-import { expect, test } from "vitest";
+import { expect, test } from "vitest"
 
-import type { ProcessedPub } from "contracts";
-import type { PubsId, PubTypesId } from "db/public";
+import type { ProcessedPub } from "contracts"
+import type { PubsId, PubTypesId } from "db/public"
 
-import type { DeepPartial } from "../types";
-import { getPubTitle } from "../pubs";
+import type { DeepPartial } from "../types"
+import { getPubTitle } from "../pubs"
 
 const mockPub = (
 	overrides?: DeepPartial<
 		ProcessedPub<{
-			withPubType: true;
-			withChildren: false;
-			withRelatedPubs: false;
-			withMembers: false;
-			withStage: false;
+			withPubType: true
+			withChildren: false
+			withRelatedPubs: false
+			withMembers: false
+			withStage: false
 		}>
 	>
 ) => {
@@ -28,14 +28,14 @@ const mockPub = (
 			},
 		],
 		title: null,
-	} satisfies typeof overrides;
+	} satisfies typeof overrides
 
 	return (overrides ? { ...base, ...overrides } : base) as ProcessedPub<{
-		withPubType: true;
-		withChildren: false;
-		withRelatedPubs: false;
-	}>;
-};
+		withPubType: true
+		withChildren: false
+		withRelatedPubs: false
+	}>
+}
 
 test.each([
 	{
@@ -79,6 +79,6 @@ test.each([
 		expectedTitle: "Untitled Submission - Wed Jul 03 2024",
 	},
 ])("getPubTitle returns valid fallback title when $name", async ({ pub, expectedTitle }) => {
-	const title = getPubTitle(pub);
-	expect(title).to.eql(expectedTitle);
-});
+	const title = getPubTitle(pub)
+	expect(title).to.eql(expectedTitle)
+})

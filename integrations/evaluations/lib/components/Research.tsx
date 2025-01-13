@@ -1,11 +1,11 @@
-import { Card, CardContent } from "ui/card";
+import { Card, CardContent } from "ui/card"
 
 export type Props = {
-	title: string;
-	abstract: string;
-	evaluating?: boolean;
-	url: string;
-};
+	title: string
+	abstract: string
+	evaluating?: boolean
+	url: string
+}
 
 export const Research = (props: Props) => {
 	return (
@@ -51,5 +51,5 @@ export const Research = (props: Props) => {
 				</CardContent>
 			</Card>
 		</>
-	);
-};
+	)
+}

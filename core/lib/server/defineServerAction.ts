@@ -1,12 +1,12 @@
-import { getURLFromRedirectError } from "next/dist/client/components/redirect";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { withServerActionInstrumentation } from "@sentry/nextjs";
+import { getURLFromRedirectError } from "next/dist/client/components/redirect"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+import { withServerActionInstrumentation } from "@sentry/nextjs"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
-import type { ClientExceptionOptions } from "../serverActions";
-import { isClientExceptionOptions, makeClientException } from "../serverActions";
+import type { ClientExceptionOptions } from "../serverActions"
+import { isClientExceptionOptions, makeClientException } from "../serverActions"
 
 /**
  * Wraps a Next.js server action function with Sentry instrumentation. Additionally
@@ -31,22 +31,22 @@ export const defineServerAction = <
 			},
 			async () => {
 				try {
-					const serverActionResult = (await serverActionFn(...args)) as R;
+					const serverActionResult = (await serverActionFn(...args)) as R
 					// The server action result might be client exception options, in which case
 					// we should return it as a client exception. Otherwise, we should return the
 					// server action result as-is.
 					return isClientExceptionOptions(serverActionResult)
 						? // Create a client exception and send its cause (if any) to Sentry.
 							makeClientException(serverActionResult)
-						: serverActionResult;
+						: serverActionResult
 				} catch (error) {
-					const redirectUrl = getURLFromRedirectError(error);
+					const redirectUrl = getURLFromRedirectError(error)
 					if (redirectUrl) {
 						// manually re-redirect users, as redirect() throws an error
-						redirect(redirectUrl);
+						redirect(redirectUrl)
 					}
 
-					logger.debug(error);
+					logger.debug(error)
 					// https://github.com/vercel/next.js/discussions/49426#discussioncomment-8176059
 					// Because you can't simply wrap a server action call on the client in try/catch
 					// we should provide some sort of error response to the client in the case of an
@@ -55,9 +55,9 @@ export const defineServerAction = <
 					return makeClientException({
 						error: "An unexpected error occurred",
 						cause: error,
-					});
+					})
 				}
 			}
-		);
-	};
-};
+		)
+	}
+}

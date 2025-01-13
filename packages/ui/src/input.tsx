@@ -1,14 +1,14 @@
-import * as React from "react";
+import * as React from "react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "value"> {
-	value?: React.InputHTMLAttributes<HTMLInputElement>["value"] | null;
+	value?: React.InputHTMLAttributes<HTMLInputElement>["value"] | null
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
 	({ className, type, ...props }, ref) => {
-		const newProps = { ...props, value: props.value ?? undefined };
+		const newProps = { ...props, value: props.value ?? undefined }
 		return (
 			<input
 				type={type}
@@ -19,9 +19,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 				ref={ref}
 				{...newProps}
 			/>
-		);
+		)
 	}
-);
-Input.displayName = "Input";
+)
+Input.displayName = "Input"
 
-export { Input };
+export { Input }

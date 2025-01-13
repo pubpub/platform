@@ -1,39 +1,39 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
-import partition from "lodash.partition";
+import { notFound, redirect } from "next/navigation"
+import partition from "lodash.partition"
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { ClipboardPenLine } from "ui/icon";
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { ClipboardPenLine } from "ui/icon"
 
-import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getAllPubTypesForCommunity } from "~/lib/server/pubtype";
-import { ContentLayout } from "../ContentLayout";
-import { FormTable } from "./FormTable";
-import { NewFormButton } from "./NewFormButton";
+import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs"
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { autoCache } from "~/lib/server/cache/autoCache"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getAllPubTypesForCommunity } from "~/lib/server/pubtype"
+import { ContentLayout } from "../ContentLayout"
+import { FormTable } from "./FormTable"
+import { NewFormButton } from "./NewFormButton"
 
 export const metadata: Metadata = {
 	title: "Forms",
-};
+}
 
 export default async function Page({
 	params: { communitySlug },
 }: {
 	params: {
-		communitySlug: string;
-	};
+		communitySlug: string
+	}
 }) {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
-	const community = await findCommunityBySlug();
+	const community = await findCommunityBySlug()
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (
@@ -43,7 +43,7 @@ export default async function Page({
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
 	const forms = await autoCache(
@@ -62,13 +62,13 @@ export default async function Page({
 				"forms.isDefault",
 			])
 			.where("communities.slug", "=", communitySlug)
-	).execute();
+	).execute()
 
-	const [active, archived] = partition(forms, (form) => !form.isArchived);
+	const [active, archived] = partition(forms, (form) => !form.isArchived)
 
 	const tableForms = (formList: typeof forms) =>
 		formList.map((form) => {
-			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault } = form;
+			const { id, formName, pubType, updatedAt, isArchived, slug, isDefault } = form
 			return {
 				id,
 				slug,
@@ -77,10 +77,10 @@ export default async function Page({
 				updated: new Date(updatedAt),
 				isArchived,
 				isDefault,
-			};
-		});
+			}
+		})
 
-	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
+	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute()
 
 	return (
 		<ContentLayout
@@ -117,5 +117,5 @@ export default async function Page({
 				</div>
 			)}
 		</ContentLayout>
-	);
+	)
 }

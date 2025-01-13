@@ -8,26 +8,26 @@ function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, instantiatedConfi
 		Object.entries(outputAcc).map(([name, output]) => {
 			output.declarations = output.declarations.flatMap((declaration) => {
 				if (declaration.declarationType !== "enum") {
-					return declaration;
+					return declaration
 				}
 
-				const comment = declaration.comment;
+				const comment = declaration.comment
 
 				if (!comment) {
-					return declaration;
+					return declaration
 				}
 
-				const cleanedComment = comment.flatMap((line) => line.split(/\n/));
+				const cleanedComment = comment.flatMap((line) => line.split(/\n/))
 
 				return {
 					...declaration,
 					comment: cleanedComment,
-				};
-			});
+				}
+			})
 
-			return [name, output];
+			return [name, output]
 		})
-	);
+	)
 }
 
-module.exports = { cleanupEnumComments: kanelDatabaseDefaultExportFixPreRenderHook };
+module.exports = { cleanupEnumComments: kanelDatabaseDefaultExportFixPreRenderHook }

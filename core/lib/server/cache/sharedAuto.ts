@@ -1,11 +1,11 @@
-import type { CompiledQuery, OperationNode, Simplify } from "kysely";
+import type { CompiledQuery, OperationNode, Simplify } from "kysely"
 
-import { QueryNode, SelectQueryNode, TableNode } from "kysely";
+import { QueryNode, SelectQueryNode, TableNode } from "kysely"
 
-import type { Database } from "db/Database";
-import { databaseTableNames } from "db/table-names";
+import type { Database } from "db/Database"
+import { databaseTableNames } from "db/table-names"
 
-import type { AutoOptions, DirectAutoOutput, ExecuteCreatorFn, QB } from "./types";
+import type { AutoOptions, DirectAutoOutput, ExecuteCreatorFn, QB } from "./types"
 
 export function findTables<T extends OperationNode>(
 	node: T | T[],
@@ -15,17 +15,17 @@ export function findTables<T extends OperationNode>(
 ): { tables: Set<string>; operations: Set<QueryNode["kind"]> } {
 	if (Array.isArray(node)) {
 		for (const item of node) {
-			findTables(item, type, tables, operations);
+			findTables(item, type, tables, operations)
 		}
-		return { tables, operations };
+		return { tables, operations }
 	}
 
 	if (typeof node !== "object" || node === null || node === undefined) {
-		return { tables, operations };
+		return { tables, operations }
 	}
 
 	if (QueryNode.is(node)) {
-		operations.add(node.kind);
+		operations.add(node.kind)
 	}
 
 	// we do not want to invalidate the cache for select queries made
@@ -38,48 +38,48 @@ export function findTables<T extends OperationNode>(
 		// db.with('cte', db => db.insertInto('x')
 		// .returningAll()...).selectFrom('cte').selectAll()
 		if (node.with) {
-			findTables(node.with, type, tables, operations);
+			findTables(node.with, type, tables, operations)
 		}
 
-		return { tables, operations };
+		return { tables, operations }
 	}
 
 	if (TableNode.is(node)) {
-		tables.add(node.table.identifier.name);
-		return { tables, operations };
+		tables.add(node.table.identifier.name)
+		return { tables, operations }
 	}
 
 	for (const [key, value] of Object.entries(node)) {
 		if (typeof value !== "object" || value === null || value === undefined) {
-			continue;
+			continue
 		}
 
 		if (TableNode.is(value)) {
 			// TODO: do a runtime check to see if the table exists
-			tables.add(value.table.identifier.name);
-			continue;
+			tables.add(value.table.identifier.name)
+			continue
 		}
 
-		findTables(value, type, tables, operations);
+		findTables(value, type, tables, operations)
 	}
 
-	return { tables, operations };
+	return { tables, operations }
 }
 
 export class AutoRevalidateWithoutMutationError extends Error {
 	message =
-		"Invalid use of `autoRevalidate`: it is not possible to use `autoRevalidate` without using either an `insertInto`, `deleteFrom`, or `updateTable` query. Did you mean to use `autoCache`?";
+		"Invalid use of `autoRevalidate`: it is not possible to use `autoRevalidate` without using either an `insertInto`, `deleteFrom`, or `updateTable` query. Did you mean to use `autoCache`?"
 }
 
 export class AutoCacheWithMutationError extends Error {
 	constructor(queries: Set<QueryNode["kind"]>) {
-		super();
+		super()
 		const offendingQueries = Array.from(queries)
 			.filter((query) => query !== "SelectQueryNode")
 			.map((query) => query.replace("QueryNode", ""))
-			.join(", ");
+			.join(", ")
 
-		this.message = `Invalid usage of '${offendingQueries}' within \`autoCache\`: it is not possible to use \`autoCache\` with a query that contains \`insertInto\`, \`deleteFrom\`, or \`updateTable\`. Either split up the query, or use \`autoRevalidate\` instead.`;
+		this.message = `Invalid usage of '${offendingQueries}' within \`autoCache\`: it is not possible to use \`autoCache\` with a query that contains \`insertInto\`, \`deleteFrom\`, or \`updateTable\`. Either split up the query, or use \`autoRevalidate\` instead.`
 	}
 }
 
@@ -87,7 +87,7 @@ export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
 	query: T,
 	type: "select" | "mutation"
 ): Promise<(keyof Database)[]> => {
-	const getTables = async () => findTables(query.query, type);
+	const getTables = async () => findTables(query.query, type)
 	// TODO: benchmark whether memoization is worth it
 
 	// const getTables = memoize(() => findTables(query.query, type), {
@@ -97,7 +97,7 @@ export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
 	// 	duration: ONE_DAY,
 	// });
 
-	const { tables, operations } = await getTables();
+	const { tables, operations } = await getTables()
 
 	/**
 	 * basically, you should not be able to `autoRevalidate` select queries
@@ -123,22 +123,22 @@ export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
 	 * Typescript will allow either of these, so we catch them at runtime instead. I also added tests to make sure these kinds of usages do throw
 	 */
 	if (type === "mutation" && operations.has("SelectQueryNode") && operations.size === 1) {
-		throw new AutoRevalidateWithoutMutationError();
+		throw new AutoRevalidateWithoutMutationError()
 	}
 
 	if (type === "select" && operations.size > 1) {
-		throw new AutoCacheWithMutationError(operations);
+		throw new AutoCacheWithMutationError(operations)
 	}
 
-	const tableArray = Array.from(tables ?? []);
+	const tableArray = Array.from(tables ?? [])
 
 	const filteredTables = tableArray.filter(
 		(table): table is (typeof databaseTableNames)[number] =>
 			databaseTableNames.some((dbTable) => dbTable === table)
-	);
+	)
 
-	return filteredTables;
-};
+	return filteredTables
+}
 
 export const directAutoOutput = <Q extends QB<any>>(
 	qb: Q,
@@ -153,5 +153,5 @@ export const directAutoOutput = <Q extends QB<any>>(
 		execute: executeCreatorFn(qb, "execute", options),
 		executeTakeFirst: executeCreatorFn(qb, "executeTakeFirst", options),
 		executeTakeFirstOrThrow: executeCreatorFn(qb, "executeTakeFirstOrThrow", options),
-	} satisfies DirectAutoOutput<Q>;
-};
+	} satisfies DirectAutoOutput<Q>
+}

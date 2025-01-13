@@ -1,22 +1,22 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { cache } from "react";
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { cache } from "react"
+import Link from "next/link"
+import { notFound, redirect } from "next/navigation"
 
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { Button } from "ui/button";
+import type { CommunitiesId, PubsId, UsersId } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { Button } from "ui/button"
 
-import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
-import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
-import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
+import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout"
+import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus"
+import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getPubTitle } from "~/lib/pubs"
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
 	async ({
@@ -24,9 +24,9 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 		pubId,
 		communityId,
 	}: {
-		userId?: UsersId;
-		pubId: PubsId;
-		communityId: CommunitiesId;
+		userId?: UsersId
+		pubId: PubsId
+		communityId: CommunitiesId
 	}) => {
 		return getPubsWithRelatedValuesAndChildren(
 			{
@@ -37,48 +37,48 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 			{
 				withPubType: true,
 			}
-		);
+		)
 	}
-);
+)
 
 export async function generateMetadata({
 	params: { pubId, communitySlug },
 }: {
-	params: { pubId: string; communitySlug: string };
+	params: { pubId: string; communitySlug: string }
 }): Promise<Metadata> {
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 	if (!community) {
-		return { title: "Community Not Found" };
+		return { title: "Community Not Found" }
 	}
 
 	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: pubId as PubsId,
 		communityId: community.id as CommunitiesId,
-	});
+	})
 
 	if (!pub) {
-		return { title: "Pub Not Found" };
+		return { title: "Pub Not Found" }
 	}
 
-	const title = getPubTitle(pub);
+	const title = getPubTitle(pub)
 
 	if (!title) {
-		return { title: `Edit Pub ${pub.id}` };
+		return { title: `Edit Pub ${pub.id}` }
 	}
 
-	return { title: title as string };
+	return { title: title as string }
 }
 
 export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { pubId: PubsId; communitySlug: string };
-	searchParams: Record<string, string>;
+	params: { pubId: PubsId; communitySlug: string }
+	searchParams: Record<string, string>
 }) {
-	const { pubId, communitySlug } = params;
+	const { pubId, communitySlug } = params
 
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
 	const canUpdatePub = await userCan(
 		Capabilities.updatePubValues,
@@ -87,33 +87,33 @@ export default async function Page({
 			pubId,
 		},
 		user.id
-	);
+	)
 
 	if (!pubId || !communitySlug) {
-		return null;
+		return null
 	}
 
 	if (!canUpdatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id,
 		userId: user.id,
-	});
+	})
 
 	if (!pub) {
-		return null;
+		return null
 	}
 
-	const formId = `edit-pub-${pub.id}`;
+	const formId = `edit-pub-${pub.id}`
 
 	return (
 		<ContentLayout
@@ -140,5 +140,5 @@ export default async function Page({
 				</div>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

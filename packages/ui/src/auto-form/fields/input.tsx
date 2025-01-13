@@ -1,21 +1,21 @@
-import * as React from "react";
-import { useFormContext } from "react-hook-form";
+import * as React from "react"
+import { useFormContext } from "react-hook-form"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { Button } from "../../button";
-import { FormControl, FormItem, FormMessage } from "../../form";
-import { Info, Minus, Plus } from "../../icon";
-import { Input } from "../../input";
+import type { AutoFormInputComponentProps } from "../types"
+import { Button } from "../../button"
+import { FormControl, FormItem, FormMessage } from "../../form"
+import { Info, Minus, Plus } from "../../icon"
+import { Input } from "../../input"
 import {
 	PubFieldSelect,
 	PubFieldSelectProvider,
 	PubFieldSelectToggleButton,
 	PubFieldSelectWrapper,
-} from "../../pubFields/pubFieldSelect";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+} from "../../pubFields/pubFieldSelect"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 // TODO: All inputs should have pubField and labels work the same way, makes it easier to standardize
 export default function AutoFormInput({
@@ -27,9 +27,9 @@ export default function AutoFormInput({
 	description,
 	zodItem,
 }: AutoFormInputComponentProps) {
-	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
-	const showLabel = _showLabel === undefined ? true : _showLabel;
-	const type = fieldProps.type || "text";
+	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps
+	const showLabel = _showLabel === undefined ? true : _showLabel
+	const type = fieldProps.type || "text"
 
 	return (
 		<PubFieldSelectProvider
@@ -59,5 +59,5 @@ export default function AutoFormInput({
 				</FormItem>
 			</div>
 		</PubFieldSelectProvider>
-	);
+	)
 }

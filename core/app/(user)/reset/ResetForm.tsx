@@ -1,48 +1,48 @@
-"use client";
+"use client"
 
-import React from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import React from "react"
+import { useRouter } from "next/navigation"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import { Button } from "ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "ui/dialog";
-import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
+import { Button } from "ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "ui/dialog"
+import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
 
-import { resetPassword } from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
+import { resetPassword } from "~/lib/authentication/actions"
+import { useServerAction } from "~/lib/serverActions"
 
 const resetPasswordSchema = z.object({
 	password: z.string().min(8),
-});
+})
 
 export default function ResetForm() {
-	const router = useRouter();
+	const router = useRouter()
 	const form = useForm<z.infer<typeof resetPasswordSchema>>({
 		resolver: zodResolver(resetPasswordSchema),
-	});
-	const runResetPassword = useServerAction(resetPassword);
+	})
+	const runResetPassword = useServerAction(resetPassword)
 
 	const redirectUser = async () => {
-		router.push("/login");
-	};
+		router.push("/login")
+	}
 
 	const onSubmit = async ({ password }: z.infer<typeof resetPasswordSchema>) => {
-		const result = await runResetPassword({ password });
+		const result = await runResetPassword({ password })
 
 		if (result && "error" in result) {
-			const formattedError = result.error;
+			const formattedError = result.error
 			form.setError("password", {
 				message: formattedError,
-			});
-			return;
+			})
+			return
 		}
 
-		redirectUser();
-	};
+		redirectUser()
+	}
 
 	return (
 		<>
@@ -75,10 +75,10 @@ export default function ResetForm() {
 				open={form.formState.isSubmitSuccessful}
 				onOpenChange={(open) => {
 					if (open) {
-						return;
+						return
 					}
 
-					form.reset();
+					form.reset()
 				}}
 			>
 				<DialogContent>
@@ -94,5 +94,5 @@ export default function ResetForm() {
 				</DialogContent>
 			</Dialog>
 		</>
-	);
+	)
 }

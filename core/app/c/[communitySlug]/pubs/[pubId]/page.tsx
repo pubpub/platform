@@ -1,46 +1,46 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { Suspense } from "react";
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react"
+import Link from "next/link"
+import { notFound, redirect } from "next/navigation"
 
-import type { PubsId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
-import { Button } from "ui/button";
-import { Pencil } from "ui/icon";
+import type { PubsId } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
+import { Button } from "ui/button"
+import { Pencil } from "ui/icon"
 
-import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { MembersList } from "~/app/components//Memberships/MembersList";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { getStageActions } from "~/lib/db/queries";
-import { getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/server";
-import { autoCache } from "~/lib/server/cache/autoCache";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { selectCommunityMembers } from "~/lib/server/member";
-import { getStages } from "~/lib/server/stages";
+import Assign from "~/app/c/[communitySlug]/stages/components/Assign"
+import Move from "~/app/c/[communitySlug]/stages/components/Move"
+import { MembersList } from "~/app/components//Memberships/MembersList"
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog"
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import SkeletonTable from "~/app/components/skeletons/SkeletonTable"
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { getStageActions } from "~/lib/db/queries"
+import { getPubTitle } from "~/lib/pubs"
+import { getPubsWithRelatedValuesAndChildren, pubValuesByVal } from "~/lib/server"
+import { autoCache } from "~/lib/server/cache/autoCache"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { selectCommunityMembers } from "~/lib/server/member"
+import { getStages } from "~/lib/server/stages"
 import {
 	addPubMember,
 	addUserWithPubMembership,
 	removePubMember,
 	setPubMemberRole,
-} from "./actions";
-import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
-import { PubValues } from "./components/PubValues";
-import { RelatedPubsTable } from "./components/RelatedPubsTable";
+} from "./actions"
+import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper"
+import { PubValues } from "./components/PubValues"
+import { RelatedPubsTable } from "./components/RelatedPubsTable"
 
 export async function generateMetadata({
 	params: { pubId },
 }: {
-	params: { pubId: PubsId; communitySlug: string };
+	params: { pubId: PubsId; communitySlug: string }
 }): Promise<Metadata> {
 	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
 
@@ -50,50 +50,50 @@ export async function generateMetadata({
 			.selectAll("pubs")
 			.select(pubValuesByVal(pubId))
 			.where("id", "=", pubId)
-	).executeTakeFirst();
+	).executeTakeFirst()
 
 	if (!pub) {
-		return { title: "Pub Not Found" };
+		return { title: "Pub Not Found" }
 	}
 
-	const title = Object.entries(pub.values).find(([key]) => /title/.test(key))?.[1];
+	const title = Object.entries(pub.values).find(([key]) => /title/.test(key))?.[1]
 
 	if (!title) {
-		return { title: `Pub ${pub.id}` };
+		return { title: `Pub ${pub.id}` }
 	}
 
-	return { title: title as string };
+	return { title: title as string }
 }
 
 export default async function Page({
 	params,
 	searchParams,
 }: {
-	params: { pubId: PubsId; communitySlug: string };
-	searchParams: Record<string, string>;
+	params: { pubId: PubsId; communitySlug: string }
+	searchParams: Record<string, string>
 }) {
-	const { pubId, communitySlug } = params;
+	const { pubId, communitySlug } = params
 
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
 	if (!pubId || !communitySlug) {
-		return null;
+		return null
 	}
 
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	const canView = await userCan(
 		Capabilities.viewPub,
 		{ type: MembershipType.pub, pubId },
 		user.id
-	);
+	)
 
 	if (!canView) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
+		redirect(`/c/${params.communitySlug}/unauthorized`)
 	}
 
 	const canAddMember = await userCan(
@@ -103,7 +103,7 @@ export default async function Page({
 			pubId,
 		},
 		user.id
-	);
+	)
 	const canRemoveMember = await userCan(
 		Capabilities.removePubMember,
 		{
@@ -111,10 +111,10 @@ export default async function Page({
 			pubId,
 		},
 		user.id
-	);
+	)
 
-	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
-	const communityStagesPromise = getStages({ communityId: community.id }).execute();
+	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute()
+	const communityStagesPromise = getStages({ communityId: community.id }).execute()
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
@@ -128,20 +128,20 @@ export default async function Page({
 			withMembers: true,
 			depth: 3,
 		}
-	);
+	)
 
-	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null
 
 	const [actions, communityMembers, communityStages] = await Promise.all([
 		actionsPromise,
 		communityMembersPromise,
 		communityStagesPromise,
-	]);
+	])
 	if (!pub) {
-		return null;
+		return null
 	}
 
-	const { stage, children, ...slimPub } = pub;
+	const { stage, children, ...slimPub } = pub
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
@@ -249,5 +249,5 @@ export default async function Page({
 				<RelatedPubsTable pub={pub} />
 			</div>
 		</div>
-	);
+	)
 }

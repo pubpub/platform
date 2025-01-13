@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import type { FieldValues } from "react-hook-form";
+import type { FieldValues } from "react-hook-form"
 
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import { useForm } from "react-hook-form";
+import { useCallback, useMemo } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import { useForm } from "react-hook-form"
 
-import type { PubsId, PubTypes, StagesId } from "db/public";
-import { Button } from "ui/button";
+import type { PubsId, PubTypes, StagesId } from "db/public"
+import { Button } from "ui/button"
 import {
 	Form,
 	FormControl,
@@ -18,56 +18,56 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Loader2 } from "ui/icon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+} from "ui/form"
+import { Loader2 } from "ui/icon"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
-import { useCommunity } from "../providers/CommunityProvider";
+import { useCommunity } from "../providers/CommunityProvider"
 
 export interface PubEditorSpecifiers {
-	parentId?: PubsId;
-	stageId?: StagesId;
+	parentId?: PubsId
+	stageId?: StagesId
 }
 
 export const PubTypeFormClient = ({
 	pubTypes,
 	editorSpecifiers,
 }: {
-	pubTypes: Pick<PubTypes, "id" | "name">[];
-	editorSpecifiers: PubEditorSpecifiers;
+	pubTypes: Pick<PubTypes, "id" | "name">[]
+	editorSpecifiers: PubEditorSpecifiers
 }) => {
 	const schema = Type.Object({
 		pubTypeId: Type.String(),
-	});
+	})
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		resolver: typeboxResolver(schema),
-	});
+	})
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
-	const community = useCommunity();
+	const path = usePathname()
+	const searchParams = useSearchParams()
+	const router = useRouter()
+	const community = useCommunity()
 
 	const pathWithoutFormParam = useMemo(() => {
-		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-		urlSearchParams.delete("create-pub-form");
-		return `${path}?${urlSearchParams.toString()}`;
-	}, [path, searchParams]);
+		const urlSearchParams = new URLSearchParams(searchParams ?? undefined)
+		urlSearchParams.delete("create-pub-form")
+		return `${path}?${urlSearchParams.toString()}`
+	}, [path, searchParams])
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+		router.replace(pathWithoutFormParam)
+	}, [pathWithoutFormParam])
 
 	const onSubmit = async (values: FieldValues) => {
 		const pubParams = new URLSearchParams({
 			pubTypeId: values.pubTypeId,
 			...editorSpecifiers,
-		});
-		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
-		router.push(createPubPath);
-	};
+		})
+		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`
+		router.push(createPubPath)
+	}
 
 	return (
 		<Form {...form}>
@@ -84,7 +84,7 @@ export const PubTypeFormClient = ({
 							<Select
 								{...field}
 								onValueChange={(value) => {
-									field.onChange(value);
+									field.onChange(value)
 								}}
 								defaultValue={field.value}
 							>
@@ -124,5 +124,5 @@ export const PubTypeFormClient = ({
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

@@ -1,63 +1,63 @@
-"use client";
+"use client"
 
-import { useState, useTransition } from "react";
+import { useState, useTransition } from "react"
 
-import type { PubsId, StagesId } from "db/public";
-import { Button } from "ui/button";
-import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { useToast } from "ui/use-toast";
+import type { PubsId, StagesId } from "db/public"
+import { Button } from "ui/button"
+import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { useToast } from "ui/use-toast"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import type { XOR } from "~/lib/types";
-import { isClientException, useServerAction } from "~/lib/serverActions";
-import { makeStagesById } from "~/lib/stages";
-import { move } from "./lib/actions";
+import type { CommunityStage } from "~/lib/server/stages"
+import type { XOR } from "~/lib/types"
+import { isClientException, useServerAction } from "~/lib/serverActions"
+import { makeStagesById } from "~/lib/stages"
+import { move } from "./lib/actions"
 
 type Props = {
-	pubId: PubsId;
-	stageId: StagesId;
+	pubId: PubsId
+	stageId: StagesId
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
-		moveFrom: CommunityStage["moveConstraintSources"];
-		moveTo: CommunityStage["moveConstraints"];
+		moveFrom: CommunityStage["moveConstraintSources"]
+		moveTo: CommunityStage["moveConstraints"]
 	}
->;
+>
 
 const makeSourcesAndDestinations = (props: Props) => {
 	if (!props.communityStages) {
 		return {
 			sources: props.moveFrom,
 			destinations: props.moveTo,
-		};
+		}
 	}
 
-	const stagesById = makeStagesById(props.communityStages);
-	const sources = stagesById[props.stageId].moveConstraintSources.map((mc) => stagesById[mc.id]);
-	const destinations = stagesById[props.stageId].moveConstraints.map((mc) => stagesById[mc.id]);
+	const stagesById = makeStagesById(props.communityStages)
+	const sources = stagesById[props.stageId].moveConstraintSources.map((mc) => stagesById[mc.id])
+	const destinations = stagesById[props.stageId].moveConstraints.map((mc) => stagesById[mc.id])
 
 	return {
 		sources,
 		destinations,
-	};
-};
+	}
+}
 
 export default function Move(props: Props) {
-	const { sources, destinations } = makeSourcesAndDestinations(props);
+	const { sources, destinations } = makeSourcesAndDestinations(props)
 
-	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
-	const { toast } = useToast();
+	const [popoverIsOpen, setPopoverIsOpen] = useState(false)
+	const { toast } = useToast()
 
-	const [isMoving, startTransition] = useTransition();
-	const runMove = useServerAction(move);
+	const [isMoving, startTransition] = useTransition()
+	const runMove = useServerAction(move)
 
 	const onMove = async (pubId: PubsId, sourceStageId: StagesId, destStageId: StagesId) => {
-		const err = await runMove(pubId, sourceStageId, destStageId);
+		const err = await runMove(pubId, sourceStageId, destStageId)
 
 		if (isClientException(err)) {
-			setPopoverIsOpen(false);
-			return;
+			setPopoverIsOpen(false)
+			return
 		}
 
 		toast({
@@ -67,27 +67,27 @@ export default function Move(props: Props) {
 			action: (
 				<Button
 					onClick={async () => {
-						const result = await runMove(pubId, destStageId, sourceStageId);
+						const result = await runMove(pubId, destStageId, sourceStageId)
 
 						if (isClientException(result)) {
-							return;
+							return
 						}
 						toast({
 							variant: "default",
 							title: "Success",
 							description: "Pub was successfully moved back",
-						});
+						})
 					}}
 				>
 					Undo
 				</Button>
 			),
-		});
-		setPopoverIsOpen(false);
-	};
+		})
+		setPopoverIsOpen(false)
+	}
 
 	if (destinations.length === 0 && sources.length === 0) {
-		return null;
+		return null
 	}
 
 	return (
@@ -112,7 +112,7 @@ export default function Move(props: Props) {
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
-												await onMove(props.pubId, props.stageId, stage.id);
+												await onMove(props.pubId, props.stageId, stage.id)
 											})
 										}
 										className="flex justify-start gap-x-1"
@@ -122,7 +122,7 @@ export default function Move(props: Props) {
 											{stage.name}
 										</span>
 									</Button>
-								);
+								)
 							})}
 						</div>
 					)}
@@ -140,7 +140,7 @@ export default function Move(props: Props) {
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
-												await onMove(props.pubId, props.stageId, stage.id);
+												await onMove(props.pubId, props.stageId, stage.id)
 											})
 										}
 										className="flex justify-start gap-x-1"
@@ -150,12 +150,12 @@ export default function Move(props: Props) {
 										</span>
 										<ArrowRight className="h-4 w-4 shrink-0 opacity-50" />
 									</Button>
-								);
+								)
 							})}
 						</div>
 					)}
 				</div>
 			</PopoverContent>
 		</Popover>
-	);
+	)
 }

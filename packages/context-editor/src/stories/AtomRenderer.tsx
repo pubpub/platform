@@ -1,46 +1,46 @@
-import type { Node } from "prosemirror-model";
+import type { Node } from "prosemirror-model"
 
-import React, { Suspense, useEffect, useState } from "react";
-import { useNodeViewContext } from "@prosemirror-adapter/react";
-import { CsvToHtmlTable } from "react-csv-to-table";
+import React, { Suspense, useEffect, useState } from "react"
+import { useNodeViewContext } from "@prosemirror-adapter/react"
+import { CsvToHtmlTable } from "react-csv-to-table"
 
 export default function ContextAtom({ nodeProp }: { nodeProp: Node }) {
-	const { contentRef, node, selected } = useNodeViewContext();
-	const [activeData, setActiveData] = useState("");
-	const activeNode = nodeProp || node;
+	const { contentRef, node, selected } = useNodeViewContext()
+	const [activeData, setActiveData] = useState("")
+	const activeNode = nodeProp || node
 	if (!activeNode) {
-		return null;
+		return null
 	}
 
 	const isImageUrl = (url: string) => {
 		// Regular expression to match common image file extensions
-		const imagePattern = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i;
+		const imagePattern = /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i
 
 		// Test the string against the pattern
-		return imagePattern.test(url);
-	};
+		return imagePattern.test(url)
+	}
 	const isVideoUrl = (url: string) => {
 		// Regular expression to match common video file extensions
-		const videoPattern = /\.(mp4|avi|mkv|webm|mov|flv|wmv|m4v)$/i;
+		const videoPattern = /\.(mp4|avi|mkv|webm|mov|flv|wmv|m4v)$/i
 
 		// Test the string against the pattern
-		return videoPattern.test(url);
-	};
+		return videoPattern.test(url)
+	}
 	function isAudioUrl(url: string) {
 		// Regular expression to match common audio file extensions
-		const audioPattern = /\.(mp3|wav|ogg|m4a|flac|aac|aiff)$/i;
+		const audioPattern = /\.(mp3|wav|ogg|m4a|flac|aac|aiff)$/i
 
 		// Test the string against the pattern
-		return audioPattern.test(url);
+		return audioPattern.test(url)
 	}
 	function isDataUrl(url: string) {
 		// Regular expression to match common audio file extensions
-		const audioPattern = /\.(csv)$/i;
+		const audioPattern = /\.(csv)$/i
 
 		// Test the string against the pattern
-		return audioPattern.test(url);
+		return audioPattern.test(url)
 	}
-	const isDataset = activeNode.attrs.pubTypeId === "6db3e01b-5391-413b-97e2-155e00e396c9";
+	const isDataset = activeNode.attrs.pubTypeId === "6db3e01b-5391-413b-97e2-155e00e396c9"
 
 	useEffect(() => {
 		if (isDataset && isDataUrl(activeNode.attrs.data["rd:source"])) {
@@ -48,10 +48,10 @@ export default function ContextAtom({ nodeProp }: { nodeProp: Node }) {
 			fetch(activeNode.attrs.data["rd:source"])
 				.then((r) => r.text())
 				.then((text) => {
-					setActiveData(text);
-				});
+					setActiveData(text)
+				})
 		}
-	}, [node]);
+	}, [node])
 
 	// console.log(activeNode, activeNode.attrs.data["rd:source"]);
 	return (
@@ -107,5 +107,5 @@ export default function ContextAtom({ nodeProp }: { nodeProp: Node }) {
 
 			{/* {JSON.stringify(activeNode, null, 2)} */}
 		</section>
-	);
+	)
 }

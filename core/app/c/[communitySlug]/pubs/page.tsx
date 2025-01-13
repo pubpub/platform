@@ -1,33 +1,33 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import type { CommunitiesId } from "db/public";
+import type { CommunitiesId } from "db/public"
 
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { findCommunityBySlug } from "~/lib/server/community";
-import PubHeader from "./PubHeader";
-import { PaginatedPubList } from "./PubList";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { findCommunityBySlug } from "~/lib/server/community"
+import PubHeader from "./PubHeader"
+import { PaginatedPubList } from "./PubList"
 
 export const metadata: Metadata = {
 	title: "Pubs",
-};
+}
 
 type Props = {
-	params: { communitySlug: string };
-	searchParams: Record<string, unknown> & { page?: string };
-};
+	params: { communitySlug: string }
+	searchParams: Record<string, unknown> & { page?: string }
+}
 
 export default async function Page({ params, searchParams }: Props) {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug(params.communitySlug)
 
 	if (!community) {
-		return null;
+		return null
 	}
 
-	const page = searchParams.page ? parseInt(searchParams.page) : 1;
+	const page = searchParams.page ? parseInt(searchParams.page) : 1
 
-	const basePath = `/c/${community.slug}/pubs`;
+	const basePath = `/c/${community.slug}/pubs`
 
 	return (
 		<>
@@ -40,5 +40,5 @@ export default async function Page({ params, searchParams }: Props) {
 				userId={user.id}
 			/>
 		</>
-	);
+	)
 }

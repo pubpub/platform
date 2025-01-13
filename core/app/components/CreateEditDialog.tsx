@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 import {
 	Dialog,
 	DialogContent,
@@ -8,7 +8,7 @@ import {
 	DialogHeader,
 	DialogOverlay,
 	DialogTitle,
-} from "ui/dialog";
+} from "ui/dialog"
 
 export const Footer = ({ onCancel, submitText }: { onCancel: () => void; submitText: string }) => {
 	return (
@@ -20,8 +20,8 @@ export const Footer = ({ onCancel, submitText }: { onCancel: () => void; submitT
 				{submitText}
 			</Button>
 		</DialogFooter>
-	);
-};
+	)
+}
 
 export const CreateEditDialog = ({
 	title,
@@ -30,11 +30,11 @@ export const CreateEditDialog = ({
 	children,
 	trigger,
 }: {
-	title: string;
-	children: React.ReactNode;
-	onOpenChange: (open: boolean) => void;
-	open: boolean;
-	trigger?: React.ReactNode;
+	title: string
+	children: React.ReactNode
+	onOpenChange: (open: boolean) => void
+	open: boolean
+	trigger?: React.ReactNode
 }) => {
 	return (
 		<Dialog onOpenChange={onOpenChange} defaultOpen={false} open={open} modal={true}>
@@ -47,5 +47,5 @@ export const CreateEditDialog = ({
 				{children}
 			</DialogContent>
 		</Dialog>
-	);
-};
+	)
+}

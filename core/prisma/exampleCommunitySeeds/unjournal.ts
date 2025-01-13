@@ -1,17 +1,17 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client"
 
-import { faker } from "@faker-js/faker";
-import { v4 as uuidv4 } from "uuid";
+import { faker } from "@faker-js/faker"
+import { v4 as uuidv4 } from "uuid"
 
-import type { CommunitiesId, PubFieldsId, PubTypesId, StagesId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import type { CommunitiesId, PubFieldsId, PubTypesId, StagesId } from "db/public"
+import { CoreSchemaType } from "db/public"
 
-import { db } from "~/kysely/database";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { env } from "../../lib/env/env.mjs";
-import { FileUpload } from "../../lib/fields/fileUpload";
+import { db } from "~/kysely/database"
+import { createLastModifiedBy } from "~/lib/lastModifiedBy"
+import { env } from "../../lib/env/env.mjs"
+import { FileUpload } from "../../lib/fields/fileUpload"
 
-export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
+export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b"
 
 export default async function main(prisma: PrismaClient, communityUUID: string) {
 	await prisma.community.create({
@@ -21,7 +21,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			slug: "unjournal",
 			avatar: env.PUBPUB_URL + "/demo/unjournal.png",
 		},
-	});
+	})
 
 	const confidenceCommentsObject = {
 		confidence2: {
@@ -29,7 +29,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			type: "string",
 			minLength: 0,
 		},
-	};
+	}
 
 	const HundredConfidenceDef = {
 		$id: "unjournal:100confidence",
@@ -41,7 +41,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		minItems: 3,
 		default: [20, 30, 40],
 		items: { type: "integer", minimum: 0, maximum: 100 },
-	};
+	}
 
 	const FiveConfidenceDef = {
 		$id: "unjournal:5confidence",
@@ -53,7 +53,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		minItems: 3,
 		default: [2, 3, 4],
 		items: { type: "number", minimum: 0, maximum: 5 },
-	};
+	}
 
 	const metricsSchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -128,7 +128,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	const evaluator = await prisma.pubFieldSchema.create({
 		data: {
@@ -142,7 +142,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				maxLength: 36,
 			},
 		},
-	});
+	})
 
 	const predictionsSchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -177,7 +177,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	const confidentialCommentsSchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -191,7 +191,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				type: "string",
 			},
 		},
-	});
+	})
 
 	const surveySchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -214,7 +214,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	const feedbackSchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -246,7 +246,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	const anonymitySchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -261,7 +261,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				default: false,
 			},
 		},
-	});
+	})
 
 	const fileUploadSchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -269,7 +269,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			namespace: "unjournal",
 			schema: FileUpload,
 		},
-	});
+	})
 
 	const evaluationSchema = await prisma.pubFieldSchema.create({
 		data: {
@@ -283,9 +283,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				type: "string",
 			},
 		},
-	});
+	})
 
-	const fieldIds = [...Array(17)].map(() => uuidv4());
+	const fieldIds = [...Array(17)].map(() => uuidv4())
 
 	await prisma.pubField.createMany({
 		data: [
@@ -418,16 +418,16 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				schemaName: CoreSchemaType.URL,
 			},
 		],
-	});
+	})
 
-	const submissionTypeId = "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225";
+	const submissionTypeId = "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225"
 	await prisma.pubType.create({
 		data: {
 			id: submissionTypeId,
 			name: "Submission",
 			communityId: communityUUID,
 		},
-	});
+	})
 	await db
 		.insertInto("_PubFieldToPubType")
 		.values([
@@ -439,19 +439,19 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					A: fieldId as PubFieldsId,
 					B: submissionTypeId as PubTypesId,
 					isTitle: false,
-				};
+				}
 			}),
 		])
-		.execute();
+		.execute()
 
-	const evaluationSummaryTypeId = "2981e8ca-dabe-416f-bce0-fcc418036529";
+	const evaluationSummaryTypeId = "2981e8ca-dabe-416f-bce0-fcc418036529"
 	await prisma.pubType.create({
 		data: {
 			id: evaluationSummaryTypeId,
 			name: "Evaluation Summary",
 			communityId: communityUUID,
 		},
-	});
+	})
 	await db
 		.insertInto("_PubFieldToPubType")
 		.values([
@@ -467,19 +467,19 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					A: fieldId as PubFieldsId,
 					B: evaluationSummaryTypeId as PubTypesId,
 					isTitle: false,
-				};
+				}
 			}),
 		])
-		.execute();
+		.execute()
 
-	const authorResponseTypeId = "d2ad1f23-f310-4974-8d45-3c55a3dc0638";
+	const authorResponseTypeId = "d2ad1f23-f310-4974-8d45-3c55a3dc0638"
 	await prisma.pubType.create({
 		data: {
 			id: authorResponseTypeId,
 			name: "Author Response",
 			communityId: communityUUID,
 		},
-	});
+	})
 	await db
 		.insertInto("_PubFieldToPubType")
 		.values([
@@ -492,16 +492,16 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				isTitle: false,
 			},
 		])
-		.execute();
+		.execute()
 
-	const evaluationTypeId = "81d18691-3ac4-42c1-b55b-d3b2c065b9ad";
+	const evaluationTypeId = "81d18691-3ac4-42c1-b55b-d3b2c065b9ad"
 	await prisma.pubType.create({
 		data: {
 			id: evaluationTypeId,
 			name: "Evaluation",
 			communityId: communityUUID,
 		},
-	});
+	})
 	await db
 		.insertInto("_PubFieldToPubType")
 		.values([
@@ -524,10 +524,10 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					A: fieldId as PubFieldsId,
 					B: evaluationTypeId as PubTypesId,
 					isTitle: false,
-				};
+				}
 			}),
 		])
-		.execute();
+		.execute()
 
 	const user1 = await prisma.user.create({
 		data: {
@@ -537,7 +537,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			lastName: faker.person.lastName(),
 			avatar: faker.image.avatar(),
 		},
-	});
+	})
 
 	const user2 = await prisma.user.create({
 		data: {
@@ -547,7 +547,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			lastName: faker.person.lastName(),
 			avatar: faker.image.avatar(),
 		},
-	});
+	})
 
 	const member = await prisma.communityMembership.create({
 		data: {
@@ -555,7 +555,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			communityId: communityUUID,
 			role: "admin",
 		},
-	});
+	})
 
 	const memberGroup = await prisma.memberGroup.create({
 		data: {
@@ -564,9 +564,9 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				connect: [{ id: user2.id }],
 			},
 		},
-	});
+	})
 
-	const stageIds = [...Array(8)].map((x) => uuidv4());
+	const stageIds = [...Array(8)].map((x) => uuidv4())
 	await prisma.stage.createMany({
 		data: [
 			{
@@ -612,7 +612,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				order: "hh",
 			},
 		],
-	});
+	})
 
 	//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved
 	await prisma.stage.update({
@@ -624,7 +624,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	// Consent --> To Evaluate, Under Evaluation, Shelved
 	await prisma.stage.update({
@@ -636,7 +636,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	// To Evaluate --> Under Evaluation, Shelved
 	await prisma.stage.update({
@@ -648,7 +648,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	// Under Evaluation --> In Production, Shelved
 	await prisma.stage.update({
@@ -660,7 +660,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	// Production --> Published, Shelved
 	await prisma.stage.update({
@@ -672,7 +672,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				},
 			},
 		},
-	});
+	})
 
 	await db
 		.with("new_pubs", (db) =>
@@ -707,7 +707,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				lastModifiedBy: createLastModifiedBy("system"),
 			},
 		])
-		.execute();
+		.execute()
 	// await prisma.pub.update({
 	// 	where: { id: submission.id },
 	// 	data: {
@@ -757,7 +757,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 	const submissionsIntegrationUrl =
 		env.NODE_ENV === "production"
 			? "https://integration-submissions.onrender.com"
-			: "http://localhost:3002";
+			: "http://localhost:3002"
 	const submissionsIntegration = await prisma.integration.create({
 		data: {
 			name: "Submission Manager",
@@ -771,12 +771,12 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			],
 			settingsUrl: `${submissionsIntegrationUrl}/configure`,
 		},
-	});
+	})
 
 	const evaluationsIntegrationUrl =
 		env.NODE_ENV === "production"
 			? "https://integration-evaluations.onrender.com"
-			: "http://localhost:3001";
+			: "http://localhost:3001"
 	const evaluationsIntegration = await prisma.integration.create({
 		data: {
 			name: "Evaluation Manager",
@@ -797,13 +797,13 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			],
 			settingsUrl: `${evaluationsIntegrationUrl}/configure`,
 		},
-	});
+	})
 
 	const evaluationManagerName =
-		"{{pubs.submission.assignee?.firstName??users.invitor.firstName}} {{pubs.submission.assignee?.lastName??users.invitor.lastName}}";
-	const evaluationManagerEmail = "{{pubs.submission.assignee?.email??users.invitor.email}}";
+		"{{pubs.submission.assignee?.firstName??users.invitor.firstName}} {{pubs.submission.assignee?.lastName??users.invitor.lastName}}"
+	const evaluationManagerEmail = "{{pubs.submission.assignee?.email??users.invitor.email}}"
 
-	const defaultEvaluationEmailSubject = `${evaluationManagerName} invited you to evaluate {{pubs.submission.values["unjournal:title"]}} for The Unjournal`;
+	const defaultEvaluationEmailSubject = `${evaluationManagerName} invited you to evaluate {{pubs.submission.values["unjournal:title"]}} for The Unjournal`
 
 	const defaultEvaluationEmailBody = `<p>{{extra.disclaimer}}</p><hr/>
 <p>Hi {{user.firstName}} {{user.lastName}},</p>
@@ -815,7 +815,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 <p>${evaluationManagerName}</p>
 <p><a href="https://unjournal.org">Unjournal.org</a></p>	
 <p><a href="{{pubs.submission.values["unjournal:url"]}}">"{{pubs.submission.values["unjournal:title"]}}"</a></p>
-<p>{{pubs.submission.values["unjournal:description"]??""}}</p>`;
+<p>{{pubs.submission.values["unjournal:description"]??""}}</p>`
 
 	const integrationInstances = [
 		{
@@ -844,7 +844,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				deadlineUnit: "days",
 			},
 		},
-	];
+	]
 
 	Promise.all(
 		integrationInstances.map((instance) => {
@@ -853,7 +853,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 					communityId: communityUUID,
 					...instance,
 				},
-			});
+			})
 		})
-	);
+	)
 }

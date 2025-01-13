@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cache } from "react"
 
 import type {
 	IntegrationInstances,
@@ -6,84 +6,84 @@ import type {
 	Integrations,
 	PubsId,
 	StagesId,
-} from "db/public";
-import { Button } from "ui/button";
+} from "db/public"
+import { Button } from "ui/button"
 
-import { getIntegrationInstancesForStage } from "~/lib/server/stages";
+import { getIntegrationInstancesForStage } from "~/lib/server/stages"
 
 type Props = {
-	token: string;
+	token: string
 } & (
 	| {
-			type: "pub";
-			integrationInstances: IntegrationInstance[];
-			pubId: PubsId;
-			stageId?: never;
+			type: "pub"
+			integrationInstances: IntegrationInstance[]
+			pubId: PubsId
+			stageId?: never
 	  }
 	| {
-			type: "pub";
-			integrationInstances?: never;
-			pubId: PubsId;
-			stageId: StagesId;
+			type: "pub"
+			integrationInstances?: never
+			pubId: PubsId
+			stageId: StagesId
 	  }
 	| {
-			type: "stage";
-			integrationInstances?: IntegrationInstance[];
-			stageId: StagesId;
-			pubId?: never;
+			type: "stage"
+			integrationInstances?: IntegrationInstance[]
+			stageId: StagesId
+			pubId?: never
 	  }
-);
+)
 
-type IntegrationAction = { text: string; href: string; kind?: "stage" };
-type IntegrationInstance = IntegrationInstances & { integration: Integrations };
+type IntegrationAction = { text: string; href: string; kind?: "stage" }
+type IntegrationInstance = IntegrationInstances & { integration: Integrations }
 
 const appendQueryParams = (
 	props:
 		| {
-				type: "stage";
-				instanceId: IntegrationInstancesId;
-				token: string;
+				type: "stage"
+				instanceId: IntegrationInstancesId
+				token: string
 		  }
 		| {
-				type: "pub";
-				instanceId: IntegrationInstancesId;
-				pubId: PubsId;
-				token: string;
+				type: "pub"
+				instanceId: IntegrationInstancesId
+				pubId: PubsId
+				token: string
 		  }
 ) => {
 	return (action: IntegrationAction) => {
-		const url = new URL(action.href);
-		url.searchParams.set("instanceId", props.instanceId);
-		url.searchParams.set("token", props.token);
+		const url = new URL(action.href)
+		url.searchParams.set("instanceId", props.instanceId)
+		url.searchParams.set("token", props.token)
 
 		if (props.type === "pub") {
-			url.searchParams.set("pubId", props.pubId);
+			url.searchParams.set("pubId", props.pubId)
 		}
 
 		return {
 			...action,
 			href: url.toString(),
-		};
-	};
-};
+		}
+	}
+}
 
 const getButtons = ({
 	instances,
 	token,
 	...rest
 }: {
-	instances: IntegrationInstance[];
-	token: Props["token"];
+	instances: IntegrationInstance[]
+	token: Props["token"]
 } & (
 	| {
-			type: "stage";
-			pubId?: never;
+			type: "stage"
+			pubId?: never
 	  }
 	| { type: "pub"; pubId: PubsId }
 )) => {
 	const buttons = instances
 		.map((instance) => {
-			const integration = instance.integration;
+			const integration = instance.integration
 			const actions: IntegrationAction[] = (
 				Array.isArray(integration.actions) ? integration.actions : []
 			)
@@ -96,33 +96,33 @@ const getButtons = ({
 						token,
 						...rest,
 					})
-				);
-			return { actions };
+				)
+			return { actions }
 		})
-		.filter((instance) => instance && instance.actions.length);
+		.filter((instance) => instance && instance.actions.length)
 
-	return buttons;
-};
+	return buttons
+}
 
 const cachedGetIntegrationActionsForStage = cache((stageId: StagesId) =>
 	getIntegrationInstancesForStage(stageId).execute()
-);
+)
 
 const IntegrationActions = async (props: Props) => {
 	const integrationInstances =
-		props.integrationInstances ?? (await cachedGetIntegrationActionsForStage(props.stageId));
+		props.integrationInstances ?? (await cachedGetIntegrationActionsForStage(props.stageId))
 
 	if (!integrationInstances.length) {
-		return null;
+		return null
 	}
 
 	const buttons = getButtons({
 		...props,
 		instances: integrationInstances,
-	});
+	})
 
 	if (!buttons.length) {
-		return null;
+		return null
 	}
 
 	return (
@@ -130,7 +130,7 @@ const IntegrationActions = async (props: Props) => {
 			{buttons.map((button) => {
 				return button.actions.map((action: IntegrationAction) => {
 					if (!(action.text && action.href)) {
-						return null;
+						return null
 					}
 
 					return (
@@ -140,11 +140,11 @@ const IntegrationActions = async (props: Props) => {
 								<a href={action.href}>{action.text}</a>
 							</Button>
 						</li>
-					);
-				});
+					)
+				})
 			})}
 		</ul>
-	);
-};
+	)
+}
 
-export default IntegrationActions;
+export default IntegrationActions

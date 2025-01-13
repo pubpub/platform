@@ -1,6 +1,6 @@
-import nodemailer from "nodemailer";
+import nodemailer from "nodemailer"
 
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env.mjs"
 
 export const smtpclient = nodemailer.createTransport({
 	pool: true,
@@ -11,4 +11,4 @@ export const smtpclient = nodemailer.createTransport({
 		user: env.MAILGUN_SMTP_USERNAME,
 		pass: env.MAILGUN_SMTP_PASSWORD,
 	},
-});
+})

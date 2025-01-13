@@ -1,9 +1,9 @@
-import type { SelectExpression, Transaction } from "kysely";
+import type { SelectExpression, Transaction } from "kysely"
 
-import { cache } from "react";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { cache } from "react"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { Database } from "db/Database";
+import type { Database } from "db/Database"
 import type {
 	CommunitiesId,
 	NewUsers,
@@ -12,26 +12,26 @@ import type {
 	Users,
 	UsersId,
 	UsersUpdate,
-} from "db/public";
-import { MemberRole } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+} from "db/public"
+import { MemberRole } from "db/public"
+import { Capabilities } from "db/src/public/Capabilities"
+import { MembershipType } from "db/src/public/MembershipType"
 
-import type { CapabilityTarget } from "../authorization/capabilities";
-import type { XOR } from "../types";
-import { db } from "~/kysely/database";
-import { getLoginData } from "../authentication/loginData";
-import { createPasswordHash } from "../authentication/password";
-import { userCan } from "../authorization/capabilities";
-import { generateHash, slugifyString } from "../string";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { findCommunityBySlug } from "./community";
-import { signupInvite } from "./email";
-import { insertCommunityMember, insertPubMember, insertStageMember } from "./member";
-import { getPubTitle } from "./pub";
+import type { CapabilityTarget } from "../authorization/capabilities"
+import type { XOR } from "../types"
+import { db } from "~/kysely/database"
+import { getLoginData } from "../authentication/loginData"
+import { createPasswordHash } from "../authentication/password"
+import { userCan } from "../authorization/capabilities"
+import { generateHash, slugifyString } from "../string"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { findCommunityBySlug } from "./community"
+import { signupInvite } from "./email"
+import { insertCommunityMember, insertPubMember, insertStageMember } from "./member"
+import { getPubTitle } from "./pub"
 
-export type SafeUser = Omit<Users, "passwordHash">;
+export type SafeUser = Omit<Users, "passwordHash">
 export const SAFE_USER_SELECT = [
 	"users.id",
 	"users.email",
@@ -43,7 +43,7 @@ export const SAFE_USER_SELECT = [
 	"users.isSuperAdmin",
 	"users.avatar",
 	"users.orcid",
-] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
+] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>
 
 export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {
 	// do not use autocache here until we have a good way to globally invalidate users
@@ -86,32 +86,32 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 		.$if(Boolean(userIdOrEmail.email), (eb) =>
 			eb.where("users.email", "=", userIdOrEmail.email!)
 		)
-		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
-});
+		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!))
+})
 
 export const getSuggestedUsers = ({
 	communityId,
 	query,
 	limit = 10,
 }: {
-	communityId?: CommunitiesId;
+	communityId?: CommunitiesId
 	query:
 		| {
-				email: string;
-				firstName?: string;
-				lastName?: string;
+				email: string
+				firstName?: string
+				lastName?: string
 		  }
 		| {
-				firstName: string;
-				lastName?: string;
-				email?: string;
+				firstName: string
+				lastName?: string
+				email?: string
 		  }
 		| {
-				lastName: string;
-				firstName?: string;
-				email?: string;
-		  };
-	limit?: number;
+				lastName: string
+				firstName?: string
+				email?: string
+		  }
+	limit?: number
 }) =>
 	// We don't cache this because users change frequently and outside of any community, so we can't
 	// efficiently cache them anyways
@@ -138,24 +138,24 @@ export const getSuggestedUsers = ({
 				...(query.lastName ? [eb("lastName", "ilike", `${query.lastName}%`)] : []),
 			])
 		)
-		.limit(limit);
+		.limit(limit)
 
 export const setUserPassword = cache(
 	async (props: { userId: UsersId; password: string }, trx = db) => {
-		const passwordHash = await createPasswordHash(props.password);
+		const passwordHash = await createPasswordHash(props.password)
 		await trx
 			.updateTable("users")
 			.set({ passwordHash })
 			.where("id", "=", props.userId)
-			.execute();
+			.execute()
 	}
-);
+)
 
 export const updateUser = async (
 	props: Omit<UsersUpdate, "passwordHash"> & { id: UsersId },
 	trx = db
 ) => {
-	const { id, ...data } = props;
+	const { id, ...data } = props
 
 	// since a user is one of the few entities that exist cross-community,
 	// we need to manually invalidate all the communities they are a part of
@@ -169,7 +169,7 @@ export const updateUser = async (
 		.where("userId", "=", id)
 		.innerJoin("communities", "community_memberships.communityId", "communities.id")
 		.select(["communities.slug"])
-		.execute();
+		.execute()
 
 	const newUser = await autoRevalidate(
 		trx
@@ -181,74 +181,74 @@ export const updateUser = async (
 			communitySlug: communitySlugs.map((slug) => slug.slug),
 			additionalRevalidateTags: ["all-users"],
 		}
-	).executeTakeFirstOrThrow((err) => new Error(`Unable to update user ${id}`));
+	).executeTakeFirstOrThrow((err) => new Error(`Unable to update user ${id}`))
 
-	return newUser;
-};
+	return newUser
+}
 
 export const addUser = (props: NewUsers, trx = db) =>
 	autoRevalidate(trx.insertInto("users").values(props).returning(SAFE_USER_SELECT), {
 		additionalRevalidateTags: ["all-users"],
-	});
+	})
 
 export const createUserWithMembership = async (data: {
-	firstName: string;
-	lastName?: string | null;
-	email: string;
-	isSuperAdmin?: boolean;
+	firstName: string
+	lastName?: string | null
+	email: string
+	isSuperAdmin?: boolean
 	membership:
 		| {
-				type: MembershipType.community;
-				role: MemberRole;
+				type: MembershipType.community
+				role: MemberRole
 		  }
 		| { type: MembershipType.stage; role: MemberRole; stageId: StagesId }
-		| { type: MembershipType.pub; role: MemberRole; pubId: PubsId };
+		| { type: MembershipType.pub; role: MemberRole; pubId: PubsId }
 }) => {
-	const { firstName, lastName, email, membership, isSuperAdmin } = data;
+	const { firstName, lastName, email, membership, isSuperAdmin } = data
 
 	try {
-		const { user } = await getLoginData();
-		const community = await findCommunityBySlug();
+		const { user } = await getLoginData()
+		const community = await findCommunityBySlug()
 
 		if (!user) {
 			return {
 				error: "You must be logged in to add a member",
-			};
+			}
 		}
 
 		if (!community) {
 			return {
 				error: "Community not found",
-			};
+			}
 		}
 
 		if (!user?.isSuperAdmin && isSuperAdmin) {
 			return {
 				title: "Failed to add member",
 				error: "You cannot add members as super admins",
-			};
+			}
 		}
 
-		let nameQuery: (trx: Transaction<Database>) => Promise<string>;
-		let membershipQuery: (trx: Transaction<Database>, userId: UsersId) => Promise<unknown>;
-		let target: CapabilityTarget;
-		let capability: Capabilities;
+		let nameQuery: (trx: Transaction<Database>) => Promise<string>
+		let membershipQuery: (trx: Transaction<Database>, userId: UsersId) => Promise<unknown>
+		let target: CapabilityTarget
+		let capability: Capabilities
 		switch (membership.type) {
 			case MembershipType.stage:
-				capability = Capabilities.addStageMember;
-				target = { stageId: membership.stageId, type: membership.type };
+				capability = Capabilities.addStageMember
+				target = { stageId: membership.stageId, type: membership.type }
 				nameQuery = async (trx = db) => {
 					const { name } = await autoCache(
 						trx.selectFrom("stages").select("name").where("id", "=", membership.stageId)
-					).executeTakeFirstOrThrow();
-					return name;
-				};
+					).executeTakeFirstOrThrow()
+					return name
+				}
 				membershipQuery = (trx, userId) =>
-					insertStageMember({ ...membership, userId }, trx).execute();
-				break;
+					insertStageMember({ ...membership, userId }, trx).execute()
+				break
 			case MembershipType.community:
-				capability = Capabilities.addCommunityMember;
-				target = { communityId: community.id, type: membership.type };
+				capability = Capabilities.addCommunityMember
+				target = { communityId: community.id, type: membership.type }
 				membershipQuery = (trx, userId) =>
 					insertCommunityMember(
 						{
@@ -257,17 +257,17 @@ export const createUserWithMembership = async (data: {
 							userId,
 						},
 						trx
-					).execute();
-				break;
+					).execute()
+				break
 			case MembershipType.pub:
-				capability = Capabilities.addPubMember;
-				target = { pubId: membership.pubId, type: membership.type };
+				capability = Capabilities.addPubMember
+				target = { pubId: membership.pubId, type: membership.type }
 				nameQuery = async (trx = db) => {
 					const { title } = await autoCache(
 						getPubTitle(membership.pubId, trx)
-					).executeTakeFirstOrThrow();
-					return title;
-				};
+					).executeTakeFirstOrThrow()
+					return title
+				}
 				membershipQuery = async (trx, userId) =>
 					insertPubMember(
 						{
@@ -275,18 +275,18 @@ export const createUserWithMembership = async (data: {
 							userId,
 						},
 						trx
-					).execute();
-				break;
+					).execute()
+				break
 		}
 
 		if (!(await userCan(capability, target, user.id))) {
 			return {
 				title: "Failed to add member",
 				error: `You do not have permission to add members to this ${membership.type}`,
-			};
+			}
 		}
 
-		const trx = db.transaction();
+		const trx = db.transaction()
 
 		const inviteUserResult = await trx.execute(async (trx) => {
 			const [name, newUser] = await Promise.all([
@@ -303,9 +303,9 @@ export const createUserWithMembership = async (data: {
 					},
 					trx
 				).executeTakeFirstOrThrow(),
-			]);
+			])
 			if (membership.type === MembershipType.community) {
-				await membershipQuery(trx, newUser.id);
+				await membershipQuery(trx, newUser.id)
 			} else {
 				// Add a community contributor membership for any new stage or pub member
 				await Promise.all([
@@ -318,7 +318,7 @@ export const createUserWithMembership = async (data: {
 						trx
 					).execute(),
 					membershipQuery(trx, newUser.id),
-				]);
+				])
 			}
 			const result = await signupInvite(
 				{
@@ -328,17 +328,17 @@ export const createUserWithMembership = async (data: {
 					membership: { type: membership.type, name },
 				},
 				trx
-			).send();
+			).send()
 
-			return result;
-		});
+			return result
+		})
 
-		return inviteUserResult;
+		return inviteUserResult
 	} catch (error) {
 		return {
 			title: "Failed to add member",
 			error: "An unexpected error occurred",
 			cause: error,
-		};
+		}
 	}
-};
+}

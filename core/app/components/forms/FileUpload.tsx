@@ -1,7 +1,7 @@
-import { Button } from "ui/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
+import { Button } from "ui/button"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card"
 
-import type { FileUpload } from "~/lib/fields/fileUpload";
+import type { FileUpload } from "~/lib/fields/fileUpload"
 
 export function FileUploadPreview({ files }: { files: FileUpload }) {
 	return (
@@ -29,8 +29,8 @@ export function FileUploadPreview({ files }: { files: FileUpload }) {
 							</HoverCardContent>
 						</HoverCard>
 					</li>
-				);
+				)
 			})}
 		</ul>
-	);
+	)
 }

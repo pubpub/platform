@@ -1,30 +1,30 @@
-import type { User } from "lucia";
+import type { User } from "lucia"
 
-import type { StagesId } from "db/public";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import type { StagesId } from "db/public"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { getStage } from "~/lib/db/queries";
-import { StagePanelActions } from "./actionsTab/StagePanelActions";
-import { StagePanelRules } from "./actionsTab/StagePanelRules";
-import { StagePanelMembers } from "./StagePanelMembers";
-import { StagePanelOverview } from "./StagePanelOverview";
-import { StagePanelPubs } from "./StagePanelPubs";
-import { StagePanelSheet } from "./StagePanelSheet";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { getStage } from "~/lib/db/queries"
+import { StagePanelActions } from "./actionsTab/StagePanelActions"
+import { StagePanelRules } from "./actionsTab/StagePanelRules"
+import { StagePanelMembers } from "./StagePanelMembers"
+import { StagePanelOverview } from "./StagePanelOverview"
+import { StagePanelPubs } from "./StagePanelPubs"
+import { StagePanelSheet } from "./StagePanelSheet"
 
 type Props = {
-	stageId: StagesId | undefined;
-	pageContext: PageContext;
-	user: User;
-};
+	stageId: StagesId | undefined
+	pageContext: PageContext
+	user: User
+}
 
 export const StagePanel = async (props: Props) => {
-	let open = Boolean(props.stageId);
+	let open = Boolean(props.stageId)
 
 	if (props.stageId) {
-		const stage = await getStage(props.stageId).executeTakeFirst();
+		const stage = await getStage(props.stageId).executeTakeFirst()
 		if (stage === null) {
-			open = false;
+			open = false
 		}
 	}
 
@@ -55,5 +55,5 @@ export const StagePanel = async (props: Props) => {
 				</TabsContent>
 			</Tabs>
 		</StagePanelSheet>
-	);
-};
+	)
+}

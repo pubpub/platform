@@ -1,31 +1,31 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
+import { useCallback } from "react"
 
-import type { PubFieldsId, PubTypesId } from "db/public";
-import { Button } from "ui/button";
-import { X } from "ui/icon";
-import { ToastAction } from "ui/toast";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { toast } from "ui/use-toast";
+import type { PubFieldsId, PubTypesId } from "db/public"
+import { Button } from "ui/button"
+import { X } from "ui/icon"
+import { ToastAction } from "ui/toast"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { toast } from "ui/use-toast"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { defaultFormSlug } from "~/lib/form";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { removePubField } from "./actions";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { defaultFormSlug } from "~/lib/form"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { removePubField } from "./actions"
 
 type Props = {
-	pubTypeId: string;
-	pubTypeName: string;
-	pubFieldId: string;
-	disabled?: boolean;
-};
+	pubTypeId: string
+	pubTypeName: string
+	pubFieldId: string
+	disabled?: boolean
+}
 
 export const RemoveFieldButton = ({ pubFieldId, pubTypeId, disabled, pubTypeName }: Props) => {
-	const community = useCommunity();
-	const runRemoveField = useServerAction(removePubField);
+	const community = useCommunity()
+	const runRemoveField = useServerAction(removePubField)
 	const handleRemove = useCallback(async () => {
-		const result = await runRemoveField(pubTypeId as PubTypesId, pubFieldId as PubFieldsId);
+		const result = await runRemoveField(pubTypeId as PubTypesId, pubFieldId as PubFieldsId)
 		if (didSucceed(result)) {
 			toast({
 				title: "Field removed successfully",
@@ -44,9 +44,9 @@ export const RemoveFieldButton = ({ pubFieldId, pubTypeId, disabled, pubTypeName
 						</a>
 					</ToastAction>
 				),
-			});
+			})
 		}
-	}, [pubTypeId, pubFieldId]);
+	}, [pubTypeId, pubFieldId])
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
@@ -65,5 +65,5 @@ export const RemoveFieldButton = ({ pubFieldId, pubTypeId, disabled, pubTypeName
 				<p>Remove field</p>
 			</TooltipContent>
 		</Tooltip>
-	);
-};
+	)
+}

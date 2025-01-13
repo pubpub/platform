@@ -1,16 +1,16 @@
-import { HoneycombSDK } from "@honeycombio/opentelemetry-node";
-import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
-import * as Sentry from "@sentry/nextjs";
+import { HoneycombSDK } from "@honeycombio/opentelemetry-node"
+import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node"
+import * as Sentry from "@sentry/nextjs"
 
-import { logger } from "logger";
+import { logger } from "logger"
 
-import { env } from "./lib/env/env.mjs";
+import { env } from "./lib/env/env.mjs"
 
 // function hook() {
-logger.info("Running instrumentation hook for nodejs...");
+logger.info("Running instrumentation hook for nodejs...")
 
 if (env.NODE_ENV === "production") {
-	logger.info("Instrumenting Sentry...");
+	logger.info("Instrumenting Sentry...")
 	Sentry.init({
 		dsn: "https://5012643b47ea6b2c8917f14442066f23@o31718.ingest.sentry.io/4505959187480576",
 
@@ -20,11 +20,11 @@ if (env.NODE_ENV === "production") {
 		// Setting this option to true will print useful information to the console while you're setting up Sentry.
 		debug: false,
 		integrations: [Sentry.prismaIntegration()],
-	});
-	logger.info("✅ Successfully instrumented Sentry");
+	})
+	logger.info("✅ Successfully instrumented Sentry")
 }
 
-logger.info("Instrumenting Honeycomb...");
+logger.info("Instrumenting Honeycomb...")
 const sdk = new HoneycombSDK({
 	instrumentations: [
 		getNodeAutoInstrumentations({
@@ -35,12 +35,12 @@ const sdk = new HoneycombSDK({
 			},
 		}),
 	],
-});
+})
 
-sdk.start();
-logger.info("✅ Successfully instrumented Honeycomb");
+sdk.start()
+logger.info("✅ Successfully instrumented Honeycomb")
 
-logger.info("instrumentation hooked in for nodejs.");
+logger.info("instrumentation hooked in for nodejs.")
 // }
 
 // hook();

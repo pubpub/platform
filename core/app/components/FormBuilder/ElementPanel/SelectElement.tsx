@@ -1,26 +1,26 @@
-import { useFormContext } from "react-hook-form";
-import { defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { useFormContext } from "react-hook-form"
+import { defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas"
 
-import { ElementType, StructuralFormElement } from "db/public";
-import { Button } from "ui/button";
-import { Type } from "ui/icon";
-import { Input } from "ui/input";
-import { usePubFieldContext } from "ui/pubFields";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { ElementType, StructuralFormElement } from "db/public"
+import { Button } from "ui/button"
+import { Type } from "ui/icon"
+import { Input } from "ui/input"
+import { usePubFieldContext } from "ui/pubFields"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs"
 
-import type { FormElementData, PanelState } from "../types";
-import { useFormBuilder } from "../FormBuilderContext";
-import { structuralElements } from "../StructuralElements";
+import type { FormElementData, PanelState } from "../types"
+import { useFormBuilder } from "../FormBuilderContext"
+import { structuralElements } from "../StructuralElements"
 
 export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
-	const fields = usePubFieldContext();
+	const fields = usePubFieldContext()
 
-	const { elementsCount, dispatch, addElement } = useFormBuilder();
+	const { elementsCount, dispatch, addElement } = useFormBuilder()
 
 	const fieldButtons = Object.values(fields).map((field) => {
-		const { getValues } = useFormContext();
-		const elements: FormElementData[] = getValues()["elements"];
-		const usedFields = elements.map((e) => e.fieldId);
+		const { getValues } = useFormContext()
+		const elements: FormElementData[] = getValues()["elements"]
+		const usedFields = elements.map((e) => e.fieldId)
 		if (
 			usedFields.includes(field.id) ||
 			field.isArchived ||
@@ -29,15 +29,15 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					panelState.fieldsFilter
 				))
 		) {
-			return null;
+			return null
 		}
-		const Icon = (field.schemaName && SCHEMA_TYPES_WITH_ICONS[field.schemaName]?.icon) || Type;
+		const Icon = (field.schemaName && SCHEMA_TYPES_WITH_ICONS[field.schemaName]?.icon) || Type
 
-		const schemaName = field.schemaName;
+		const schemaName = field.schemaName
 		if (schemaName === null) {
-			return null;
+			return null
 		}
-		const component = defaultComponent(schemaName);
+		const component = defaultComponent(schemaName)
 		return (
 			<Button
 				type="button"
@@ -54,11 +54,11 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						label: field.name,
 						component,
 						schemaName,
-					});
+					})
 					dispatch({
 						eventName: "edit",
 						selectedElementIndex: elementsCount,
-					});
+					})
 				}}
 				data-testid={`field-button-${field.slug}`}
 			>
@@ -68,8 +68,8 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					<div className="text-left font-semibold">{field.name}</div>
 				</div>
 			</Button>
-		);
-	});
+		)
+	})
 	return (
 		<Tabs defaultValue="field" className="flex flex-grow flex-col">
 			<TabsList>
@@ -92,7 +92,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						dispatch({
 							eventName: "filterFields",
 							fieldsFilter: event.target.value,
-						});
+						})
 					}}
 					value={panelState.fieldsFilter ?? ""}
 					className="mb-2"
@@ -106,7 +106,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					variant="outline"
 					className="w-full border-slate-950"
 					onClick={() => {
-						dispatch({ eventName: "cancel" });
+						dispatch({ eventName: "cancel" })
 					}}
 				>
 					Cancel
@@ -115,9 +115,9 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 			<TabsContent value="structure" className="flex flex-grow flex-col">
 				<div className="mb-auto flex flex-col justify-start gap-2 overflow-y-auto">
 					{Object.values(StructuralFormElement).map((elementType) => {
-						const { Icon, enabled, name } = structuralElements[elementType];
+						const { Icon, enabled, name } = structuralElements[elementType]
 						if (!enabled) {
-							return null;
+							return null
 						}
 						return (
 							<Button
@@ -131,17 +131,17 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 										type: ElementType.structural,
 										order: elementsCount,
 										configured: false,
-									});
+									})
 									dispatch({
 										eventName: "edit",
 										selectedElementIndex: elementsCount,
-									});
+									})
 								}}
 							>
 								<Icon size={20} className="my-auto text-emerald-500" />
 								<div>{name}</div>
 							</Button>
-						);
+						)
 					})}
 				</div>
 				<Button
@@ -154,5 +154,5 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				</Button>
 			</TabsContent>
 		</Tabs>
-	);
-};
+	)
+}

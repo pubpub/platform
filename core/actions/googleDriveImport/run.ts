@@ -1,25 +1,25 @@
-import { ReplicationStatus } from "@aws-sdk/client-s3";
-import { ValuesNode } from "kysely";
+import { ReplicationStatus } from "@aws-sdk/client-s3"
+import { ValuesNode } from "kysely"
 
-import type { StagesId } from "db/public";
-import { logger } from "logger";
+import type { StagesId } from "db/public"
+import { logger } from "logger"
 
-import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { defineRun } from "../types";
-import { action } from "./action";
-import { formatDriveData } from "./formatDriveData";
-import { getContentFromFolder } from "./getGDriveFiles";
+import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { defineRun } from "../types"
+import { action } from "./action"
+import { formatDriveData } from "./formatDriveData"
+import { getContentFromFolder } from "./getGDriveFiles"
 
 export const run = defineRun<typeof action>(
 	async ({ pub, config, args, communityId, lastModifiedBy }) => {
 		const input = {
 			...config,
 			...args,
-		};
+		}
 
 		try {
-			const communitySlug = getCommunitySlug();
+			const communitySlug = getCommunitySlug()
 			/*
 				- Get folder Id from inputGCLOUD_KEY_FILE
 				- Pull html content and metadata content from folder
@@ -28,22 +28,22 @@ export const run = defineRun<typeof action>(
 			*/
 
 			/* Sample URL: https://drive.google.com/drive/folders/1xUHrOjKhqfXrRclJ1cehDSa24alqEgrK */
-			const folderId: string = input.docUrl.split("/").pop() || "";
-			const dataFromDrive = await getContentFromFolder(folderId);
+			const folderId: string = input.docUrl.split("/").pop() || ""
+			const dataFromDrive = await getContentFromFolder(folderId)
 			if (dataFromDrive === null) {
-				throw new Error("Failed to retrieve data from Google Drive");
+				throw new Error("Failed to retrieve data from Google Drive")
 			}
-			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
+			const formattedData = await formatDriveData(dataFromDrive, communitySlug)
 
 			/* MIGRATION */
 			// TODO: Check and make sure the relations exist, not just the pubs.
 
 			// Check for legacy discussion IDs on platform
-			const legacyDiscussionIds = formattedData.discussions.map((pub) => pub.id);
-			const existingDiscussionPubIds: any[] = [];
+			const legacyDiscussionIds = formattedData.discussions.map((pub) => pub.id)
+			const existingDiscussionPubIds: any[] = []
 			if (legacyDiscussionIds.length > 0) {
-				const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId);
-				existingPubs.forEach((pub) => existingDiscussionPubIds.push(pub.id));
+				const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId)
+				existingPubs.forEach((pub) => existingDiscussionPubIds.push(pub.id))
 			}
 
 			// Versions don't have IDs so we compare timestamps
@@ -57,16 +57,16 @@ export const run = defineRun<typeof action>(
 				.map((values) => {
 					const publicationDateField = values.relatedPub!.values.filter(
 						(value) => value.fieldSlug === `${communitySlug}:publication-date`
-					)[0];
+					)[0]
 					const publicationDate: Date = publicationDateField
 						? (publicationDateField.value as Date)
-						: new Date(values.relatedPub!.createdAt);
-					return publicationDate.toISOString();
-				});
+						: new Date(values.relatedPub!.createdAt)
+					return publicationDate.toISOString()
+				})
 
-			const pubTypes = await getPubTypesForCommunity(communityId);
-			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
-			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
+			const pubTypes = await getPubTypesForCommunity(communityId)
+			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion")
+			const VersionType = pubTypes.find((pubType) => pubType.name === "Version")
 
 			const relations = [
 				...formattedData.discussions
@@ -79,7 +79,7 @@ export const run = defineRun<typeof action>(
 								pubTypeId: DiscussionType?.id || "",
 								...discussion,
 							},
-						};
+						}
 					}),
 				...formattedData.versions
 					.filter(
@@ -98,9 +98,9 @@ export const run = defineRun<typeof action>(
 									...version,
 								},
 							},
-						};
+						}
 					}),
-			];
+			]
 
 			/* NON-MIGRATION */
 			/* If the main doc is updated, make a new version */
@@ -115,24 +115,24 @@ export const run = defineRun<typeof action>(
 				.sort((foo: any, bar: any) => {
 					const fooDateField = foo.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
-					)[0];
+					)[0]
 					const barDateField = foo.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
-					)[0];
+					)[0]
 
 					const fooDate: Date = fooDateField
 						? fooDateField.value
-						: foo.relatedPub!.createdAt;
+						: foo.relatedPub!.createdAt
 					const barDate: Date = barDateField
 						? barDateField.value
-						: foo.relatedPub!.createdAt;
-					return barDate.getTime() - fooDate.getTime();
-				});
+						: foo.relatedPub!.createdAt
+					return barDate.getTime() - fooDate.getTime()
+				})
 
 			if (orderedVersions[0]) {
 				const latestVersionContent = orderedVersions[0].relatedPub!.values.filter(
 					(value) => value.fieldSlug === `${communitySlug}:content`
-				)[0].value;
+				)[0].value
 
 				if (latestVersionContent !== formattedData.pubHtml) {
 					relations.push({
@@ -146,7 +146,7 @@ export const run = defineRun<typeof action>(
 								[`${communitySlug}:content`]: formattedData.pubHtml,
 							},
 						},
-					});
+					})
 				}
 			}
 
@@ -156,21 +156,21 @@ export const run = defineRun<typeof action>(
 					communityId,
 					lastModifiedBy,
 					relations,
-				});
+				})
 			}
 
 			return {
 				success: true,
 				report: "Successfully imported",
 				data: {},
-			};
+			}
 		} catch (err) {
-			logger.error(err);
+			logger.error(err)
 
 			return {
 				title: "Error",
 				error: err.title,
-			};
+			}
 		}
 
 		// set the output field to the result
@@ -185,4 +185,4 @@ export const run = defineRun<typeof action>(
 		// 	lastModifiedBy,
 		// });
 	}
-);
+)

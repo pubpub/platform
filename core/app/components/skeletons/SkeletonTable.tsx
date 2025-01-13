@@ -1,6 +1,6 @@
-import { Table } from "ui/icon";
-import { Skeleton } from "ui/skeleton";
-import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
+import { Table } from "ui/icon"
+import { Skeleton } from "ui/skeleton"
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table"
 
 function SkeletonTable() {
 	return (
@@ -37,7 +37,7 @@ function SkeletonTable() {
 				</TableBody>
 			</Table>
 		</div>
-	);
+	)
 }
 
-export default SkeletonTable;
+export default SkeletonTable

@@ -1,19 +1,19 @@
-import { describe } from "node:test";
+import { describe } from "node:test"
 
-import { Kysely, PostgresDialect } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-import { expect, it, vitest } from "vitest";
+import { Kysely, PostgresDialect } from "kysely"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
+import { expect, it, vitest } from "vitest"
 
-import type { Database } from "db/Database";
-import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
-import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event, MemberRole } from "db/public";
+import type { Database } from "db/Database"
+import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public"
+import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event, MemberRole } from "db/public"
 
-import type { QB } from "./types";
-import type { Equal, Expect } from "~/lib/types";
-import { autoCache } from "./autoCache";
-import { autoRevalidate } from "./autoRevalidate";
-import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";
-import { getTablesWithLinkedTables } from "./specialTables";
+import type { QB } from "./types"
+import type { Equal, Expect } from "~/lib/types"
+import { autoCache } from "./autoCache"
+import { autoRevalidate } from "./autoRevalidate"
+import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto"
+import { getTablesWithLinkedTables } from "./specialTables"
 
 const mockedDb = new Kysely<Database>({
 	dialect: new PostgresDialect({
@@ -22,46 +22,46 @@ const mockedDb = new Kysely<Database>({
 			end: vitest.fn(),
 		},
 	}),
-});
+})
 
 vitest.mock("./memoize", () => ({
 	memoize: vitest.fn((fn) => fn),
-}));
+}))
 
 vitest.mock("react", () => ({
 	cache: vitest.fn((fn) => fn),
-}));
+}))
 
 const compileAndFindTables = (qb: QB<any>, type: "select" | "mutation") => {
-	return cachedFindTables(qb.compile(), type);
-};
+	return cachedFindTables(qb.compile(), type)
+}
 
-const qb = mockedDb.selectFrom("users").select(["id", "firstName"]);
+const qb = mockedDb.selectFrom("users").select(["id", "firstName"])
 
 describe("cachedFindTables", () => {
 	it("should return the correct tables for a very simple select query", async () => {
-		const tables = await compileAndFindTables(qb, "select");
-		expect(tables).toEqual(["users"]);
-	});
+		const tables = await compileAndFindTables(qb, "select")
+		expect(tables).toEqual(["users"])
+	})
 
 	it("should return the correct tables for a very simple mutation query", async () => {
 		const qb = mockedDb
 			.insertInto("users")
-			.values({ firstName: "Croc", email: "croc@croc.com", slug: "croccroc" });
+			.values({ firstName: "Croc", email: "croc@croc.com", slug: "croccroc" })
 
-		const tables = await compileAndFindTables(qb, "mutation");
-		expect(tables).toEqual(["users"]);
-	});
+		const tables = await compileAndFindTables(qb, "mutation")
+		expect(tables).toEqual(["users"])
+	})
 
 	it("should not return the temporary table names in a CTE", async () => {
 		const qb = mockedDb
 			.with("temp", (qb) => qb.selectFrom("users").selectAll())
 			.selectFrom("temp")
-			.selectAll();
+			.selectAll()
 
-		const tables = await compileAndFindTables(qb, "select");
-		expect(tables).toEqual(["users"]);
-	});
+		const tables = await compileAndFindTables(qb, "select")
+		expect(tables).toEqual(["users"])
+	})
 
 	it("should return the correct tables for a query with a subquery", async () => {
 		const qb = mockedDb
@@ -71,12 +71,12 @@ describe("cachedFindTables", () => {
 				"id",
 				"=",
 				mockedDb.selectFrom("community_memberships").select("userId").limit(1)
-			);
+			)
 
-		const tables = await compileAndFindTables(qb, "select");
+		const tables = await compileAndFindTables(qb, "select")
 
-		expect(tables).toEqual(["users", "community_memberships"]);
-	});
+		expect(tables).toEqual(["users", "community_memberships"])
+	})
 
 	it("should return the correct tables for a query with a subquery in an array", async () => {
 		const qb = mockedDb
@@ -84,12 +84,12 @@ describe("cachedFindTables", () => {
 			.select(["id", "firstName"])
 			.where("id", "=", [
 				mockedDb.selectFrom("community_memberships").select("userId").limit(1),
-			]);
+			])
 
-		const tables = await compileAndFindTables(qb, "select");
+		const tables = await compileAndFindTables(qb, "select")
 
-		expect(tables).toEqual(["users", "community_memberships"]);
-	});
+		expect(tables).toEqual(["users", "community_memberships"])
+	})
 
 	it("should not return the tables used in select subqueries/CTEs for mutation queries", async () => {
 		const qb = mockedDb
@@ -105,12 +105,12 @@ describe("cachedFindTables", () => {
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
 				role: MemberRole.editor,
-			}));
+			}))
 
-		const tables = await compileAndFindTables(qb, "mutation");
+		const tables = await compileAndFindTables(qb, "mutation")
 
-		expect(tables).toEqual(["community_memberships"]);
-	});
+		expect(tables).toEqual(["community_memberships"])
+	})
 
 	it("should not filter out the tables used in select subqueries/CTEs for mutation queries if they are also mutated", async () => {
 		const qb = mockedDb
@@ -127,12 +127,12 @@ describe("cachedFindTables", () => {
 				userId: eb.selectFrom("firstUser").select("firstUser.id"),
 				communityId: eb.selectFrom("firstCommunity").select("firstCommunity.id"),
 				role: MemberRole.editor,
-			}));
+			}))
 
-		const tables = await compileAndFindTables(qb, "mutation");
+		const tables = await compileAndFindTables(qb, "mutation")
 
-		expect(tables).toEqual(["community_memberships", "users"]);
-	});
+		expect(tables).toEqual(["community_memberships", "users"])
+	})
 
 	it("should return the correct tables for a rather complex query", async () => {
 		const query = mockedDb.selectFrom("communities").select((eb) => [
@@ -181,9 +181,9 @@ describe("cachedFindTables", () => {
 					.select(["stages.id", "stages.name", "stages.order"])
 					.orderBy("stages.order desc")
 			).as("stages"),
-		]);
+		])
 
-		const tables = await compileAndFindTables(query, "select");
+		const tables = await compileAndFindTables(query, "select")
 
 		expect(tables).toEqual([
 			"communities",
@@ -192,11 +192,11 @@ describe("cachedFindTables", () => {
 			"_PubFieldToPubType",
 			"PubFieldSchema",
 			"stages",
-		]);
-	});
+		])
+	})
 
 	it("should include joins in select queries", async () => {
-		const query = mockedDb.selectFrom("community_memberships");
+		const query = mockedDb.selectFrom("community_memberships")
 
 		const joins = [
 			"innerJoin",
@@ -205,7 +205,7 @@ describe("cachedFindTables", () => {
 			"leftJoinLateral",
 			"rightJoin",
 			"fullJoin",
-		] as const;
+		] as const
 
 		await Promise.all(
 			joins.map(async (joinType) => {
@@ -213,11 +213,11 @@ describe("cachedFindTables", () => {
 					// @ts-expect-error shh
 					query[joinType]("users", "users.id", "community_memberships.user_id"),
 					"select"
-				);
-				return expect(tables).toEqual(["community_memberships", "users"]);
+				)
+				return expect(tables).toEqual(["community_memberships", "users"])
 			})
-		);
-	});
+		)
+	})
 
 	it("should not include joins in mutation queries", async () => {
 		const query = mockedDb.insertInto("community_memberships").values((eb) => ({
@@ -228,51 +228,50 @@ describe("cachedFindTables", () => {
 				.select("users.id"),
 			communityId: eb.selectFrom("communities").select("communities.id"),
 			role: MemberRole.editor,
-		}));
+		}))
 
-		const tables = await compileAndFindTables(query, "mutation");
+		const tables = await compileAndFindTables(query, "mutation")
 
-		expect(tables).toEqual(["community_memberships"]);
+		expect(tables).toEqual(["community_memberships"])
 
 		// function here to make sure the query is not executed
-		() => {
-			const revalidatedQuery = autoRevalidate(query);
+		;() => {
+			const revalidatedQuery = autoRevalidate(query)
 
-			type CorrectQuery = Expect<Equal<(typeof revalidatedQuery)["qb"], typeof query>>;
+			type CorrectQuery = Expect<Equal<(typeof revalidatedQuery)["qb"], typeof query>>
 			type CorrectExecuteResult = Expect<
 				Equal<
 					ReturnType<(typeof revalidatedQuery)["execute"]>,
 					ReturnType<(typeof query)["execute"]>
 				>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should find the tables for a delete query", async () => {
-		const query = mockedDb.deleteFrom("users").where("users.id", "=", "x" as UsersId);
+		const query = mockedDb.deleteFrom("users").where("users.id", "=", "x" as UsersId)
 
-		const tables = await compileAndFindTables(query, "mutation");
+		const tables = await compileAndFindTables(query, "mutation")
 
-		expect(tables).toEqual(["users"]);
-
-		() => {
-			const revalidateQuery = autoRevalidate(query);
+		expect(tables).toEqual(["users"])
+		;() => {
+			const revalidateQuery = autoRevalidate(query)
 
 			type CorrectQuery = Expect<
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
-			>;
+			>
 
-			const queryWithReturning = query.returning("id");
-			const revalidateQueryWithReturning = autoRevalidate(queryWithReturning);
+			const queryWithReturning = query.returning("id")
+			const revalidateQueryWithReturning = autoRevalidate(queryWithReturning)
 
 			type CorrectReturningQuery = Expect<
 				Equal<
 					(typeof revalidateQueryWithReturning)["execute"],
 					(typeof queryWithReturning)["execute"]
 				>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should be able to handle null inserts", async () => {
 		const query = mockedDb.insertInto("users").values({
@@ -280,10 +279,10 @@ describe("cachedFindTables", () => {
 			email: "croc@crocy.com",
 			slug: "croc",
 			avatar: null,
-		});
-		const tables = await compileAndFindTables(query, "mutation");
-		expect(tables).toEqual(["users"]);
-	});
+		})
+		const tables = await compileAndFindTables(query, "mutation")
+		expect(tables).toEqual(["users"])
+	})
 
 	it("should be able to handle conflicts", async () => {
 		const query = mockedDb
@@ -322,20 +321,19 @@ describe("cachedFindTables", () => {
 					event: Event.pubInStageForDuration,
 					status: ActionRunStatus.failure,
 				})
-			);
+			)
 
-		const tables = await compileAndFindTables(query, "mutation");
+		const tables = await compileAndFindTables(query, "mutation")
 
-		expect(tables).toEqual(["action_runs"]);
-
-		() => {
-			const revalidateQuery = autoRevalidate(query);
+		expect(tables).toEqual(["action_runs"])
+		;() => {
+			const revalidateQuery = autoRevalidate(query)
 
 			type CorrectQuery = Expect<
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should handle complex unions", async () => {
 		const query = mockedDb
@@ -380,9 +378,9 @@ describe("cachedFindTables", () => {
 				"combined_results.pubFieldSchemaId",
 				"combined_results.slug",
 			])
-			.distinct();
+			.distinct()
 
-		const tables = await compileAndFindTables(query, "select");
+		const tables = await compileAndFindTables(query, "select")
 
 		expect(tables).toEqual([
 			"pub_fields",
@@ -391,16 +389,15 @@ describe("cachedFindTables", () => {
 			"_PubFieldToPubType",
 			"pub_types",
 			"communities",
-		]);
-
-		() => {
-			const cachedQuery = autoCache(query);
+		])
+		;() => {
+			const cachedQuery = autoCache(query)
 
 			type CorrectQuery = Expect<
 				Equal<(typeof cachedQuery)["execute"], (typeof query)["execute"]>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should handle autorevalide with a mutation CTE with a select query at the end", async () => {
 		const query = mockedDb
@@ -434,20 +431,19 @@ describe("cachedFindTables", () => {
 						.select("new_token.id")
 						.whereRef("new_token.id", "=", "api_access_logs.accessTokenId")
 				)
-			);
+			)
 
-		const tables = await compileAndFindTables(query, "mutation");
+		const tables = await compileAndFindTables(query, "mutation")
 
-		expect(tables).toEqual(["api_access_tokens", "api_access_permissions"]);
-
-		() => {
-			const revalidateQuery = autoRevalidate(query);
+		expect(tables).toEqual(["api_access_tokens", "api_access_permissions"])
+		;() => {
+			const revalidateQuery = autoRevalidate(query)
 
 			type CorrectQuery = Expect<
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should throw an error when using autoCache with a mutation", async () => {
 		// imagine this wrapped with `autoCache` for some reason
@@ -464,50 +460,48 @@ describe("cachedFindTables", () => {
 					.returningAll()
 			)
 			.selectFrom("new_pub")
-			.selectAll();
+			.selectAll()
 
-		await expect(() => compileAndFindTables(query, "select")).rejects.toThrowError(/Insert/);
+		await expect(() => compileAndFindTables(query, "select")).rejects.toThrowError(/Insert/)
 
-		await expect(compileAndFindTables(query, "mutation")).resolves.not.toThrow();
-
-		() => {
-			const cachedQuery = autoCache(query);
+		await expect(compileAndFindTables(query, "mutation")).resolves.not.toThrow()
+		;() => {
+			const cachedQuery = autoCache(query)
 
 			type CorrectQuery = Expect<
 				Equal<(typeof cachedQuery)["execute"], (typeof query)["execute"]>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should throw an error when using autoRevalidate without a mutation", async () => {
 		// imagine this wrapped with `autoRevalidate` for some reason.
 		// this is valid type-wise, as we need to account for the CTE case
 		// but you should not do this
 
-		const query = mockedDb.selectFrom("pubs").selectAll();
+		const query = mockedDb.selectFrom("pubs").selectAll()
 
-		await expect(compileAndFindTables(query, "select")).resolves.not.toThrow();
+		await expect(compileAndFindTables(query, "select")).resolves.not.toThrow()
 
 		await expect(() => compileAndFindTables(query, "mutation")).rejects.toThrowError(
 			/Invalid use of `autoRevalidate`/
-		);
-
-		() => {
-			const revalidateQuery = autoRevalidate(query);
+		)
+		;() => {
+			const revalidateQuery = autoRevalidate(query)
 
 			type CorrectQuery = Expect<
 				Equal<(typeof revalidateQuery)["execute"], (typeof query)["execute"]>
-			>;
-		};
-	});
+			>
+		}
+	})
 
 	it("should add extra tags for tables that are linked to other tables", async () => {
-		const tables = await compileAndFindTables(mockedDb.selectFrom("pubs"), "select");
+		const tables = await compileAndFindTables(mockedDb.selectFrom("pubs"), "select")
 
-		expect(tables).toEqual(["pubs"]);
+		expect(tables).toEqual(["pubs"])
 
-		const extraTables = getTablesWithLinkedTables(tables);
+		const extraTables = getTablesWithLinkedTables(tables)
 
-		expect(extraTables).toEqual(["pubs", "pub_values", "_PubFieldToPubType"]);
-	});
-});
+		expect(extraTables).toEqual(["pubs", "pub_values", "_PubFieldToPubType"])
+	})
+})

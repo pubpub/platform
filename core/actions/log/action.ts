@@ -1,9 +1,9 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { Terminal } from "ui/icon";
+import { Action } from "db/public"
+import { Terminal } from "ui/icon"
 
-import { defineAction } from "../types";
+import { defineAction } from "../types"
 
 export const action = defineAction({
 	name: Action.log,
@@ -26,4 +26,4 @@ export const action = defineAction({
 	},
 	icon: Terminal,
 	superAdminOnly: true,
-});
+})

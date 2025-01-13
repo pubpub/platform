@@ -1,10 +1,10 @@
 // @ts-check
 
 /** @type {import('next').NextConfig} */
-import withPreconstruct from "@preconstruct/next";
-import { withSentryConfig } from "@sentry/nextjs";
+import withPreconstruct from "@preconstruct/next"
+import { withSentryConfig } from "@sentry/nextjs"
 
-import "./lib/env.mjs";
+import "./lib/env.mjs"
 
 /**
  * @type {import('next').NextConfig}
@@ -18,7 +18,7 @@ const nextConfig = {
 	experimental: {
 		instrumentationHook: true,
 	},
-};
+}
 
 export default withPreconstruct(
 	withSentryConfig(nextConfig, {
@@ -44,4 +44,4 @@ export default withPreconstruct(
 		// Automatically tree-shake Sentry logger statements to reduce bundle size
 		disableLogger: true,
 	})
-);
+)

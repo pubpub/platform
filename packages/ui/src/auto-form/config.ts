@@ -1,13 +1,13 @@
-import { InputWithTokens, MarkdownEditor } from "../editors";
-import AutoFormCheckbox from "./fields/checkbox";
-import AutoFormDate from "./fields/date";
-import AutoFormEnum from "./fields/enum";
-import AutoFormFile from "./fields/file";
-import AutoFormInput from "./fields/input";
-import AutoFormNumber from "./fields/number";
-import AutoFormRadioGroup from "./fields/radio-group";
-import AutoFormSwitch from "./fields/switch";
-import AutoFormTextarea from "./fields/textarea";
+import { InputWithTokens, MarkdownEditor } from "../editors"
+import AutoFormCheckbox from "./fields/checkbox"
+import AutoFormDate from "./fields/date"
+import AutoFormEnum from "./fields/enum"
+import AutoFormFile from "./fields/file"
+import AutoFormInput from "./fields/input"
+import AutoFormNumber from "./fields/number"
+import AutoFormRadioGroup from "./fields/radio-group"
+import AutoFormSwitch from "./fields/switch"
+import AutoFormTextarea from "./fields/textarea"
 
 export const INPUT_COMPONENTS = {
 	checkbox: AutoFormCheckbox,
@@ -21,14 +21,14 @@ export const INPUT_COMPONENTS = {
 	fallback: AutoFormInput,
 	markdown: MarkdownEditor,
 	stringWithTokens: InputWithTokens,
-};
+}
 
 /**
  * Define handlers for specific Zod types.
  * You can expand this object to support more types.
  */
 export const DEFAULT_ZOD_HANDLERS: {
-	[key: string]: keyof typeof INPUT_COMPONENTS;
+	[key: string]: keyof typeof INPUT_COMPONENTS
 } = {
 	ZodBoolean: "checkbox",
 	ZodDate: "date",
@@ -37,4 +37,4 @@ export const DEFAULT_ZOD_HANDLERS: {
 	ZodNumber: "number",
 	Markdown: "markdown",
 	StringWithTokens: "stringWithTokens",
-};
+}

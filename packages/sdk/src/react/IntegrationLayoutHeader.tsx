@@ -1,13 +1,13 @@
-import * as React from "react";
+import * as React from "react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { IntegrationAvatar } from "./IntegrationAvatar";
-import { useIntegration } from "./IntegrationProvider";
-import { PubpubLogo } from "./PubPubLogo";
+import { IntegrationAvatar } from "./IntegrationAvatar"
+import { useIntegration } from "./IntegrationProvider"
+import { PubpubLogo } from "./PubPubLogo"
 
 export const IntegrationLayoutHeader = () => {
-	const { name, user } = useIntegration();
+	const { name, user } = useIntegration()
 	return (
 		<header className={cn("mb-8")}>
 			<div className={cn("mb-4 flex flex-row")}>
@@ -16,5 +16,5 @@ export const IntegrationLayoutHeader = () => {
 			</div>
 			<h1 className={cn("font-mono")}>{name}</h1>
 		</header>
-	);
-};
+	)
+}

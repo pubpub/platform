@@ -1,29 +1,29 @@
-import { Suspense } from "react";
+import { Suspense } from "react"
 
-import type { ProcessedPub } from "contracts";
-import type { ActionInstances } from "db/public";
+import type { ProcessedPub } from "contracts"
+import type { ActionInstances } from "db/public"
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { CommunityStage } from "~/lib/server/stages";
-import type { MemberWithUser } from "~/lib/types";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
-import { AssignWrapper } from "./AssignWrapper";
-import Move from "./Move";
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import type { CommunityStage } from "~/lib/server/stages"
+import type { MemberWithUser } from "~/lib/types"
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu"
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton"
+import { AssignWrapper } from "./AssignWrapper"
+import Move from "./Move"
 
 type Props = {
-	members?: MemberWithUser[];
+	members?: MemberWithUser[]
 	pub: ProcessedPub<{
-		withStage: true;
-		withPubType: true;
-		withRelatedValues: false;
-		withLegacyAssignee: true;
-		withChildren: undefined;
-	}>;
-	stage: CommunityStage;
-	actionInstances: ActionInstances[];
-	pageContext: PageContext;
-};
+		withStage: true
+		withPubType: true
+		withRelatedValues: false
+		withLegacyAssignee: true
+		withChildren: undefined
+	}>
+	stage: CommunityStage
+	actionInstances: ActionInstances[]
+	pageContext: PageContext
+}
 
 export const StagePubActions = async (props: Props) => {
 	return (
@@ -44,5 +44,5 @@ export const StagePubActions = async (props: Props) => {
 				/>
 			</Suspense>
 		</div>
-	);
-};
+	)
+}

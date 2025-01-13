@@ -1,9 +1,9 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 
-import type { CoreSchemaType, PubFieldsId } from "db/public";
-import { Button } from "ui/button";
+import type { CoreSchemaType, PubFieldsId } from "db/public"
+import { Button } from "ui/button"
 import {
 	Command,
 	CommandEmpty,
@@ -11,35 +11,35 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
-} from "ui/command";
-import { ChevronsUpDown } from "ui/icon";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { usePubFieldContext } from "ui/pubFields";
+} from "ui/command"
+import { ChevronsUpDown } from "ui/icon"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { usePubFieldContext } from "ui/pubFields"
 
 export type FieldSelectProps = {
-	excludedFields: PubFieldsId[];
+	excludedFields: PubFieldsId[]
 	onFieldSelect: (
 		fieldId: PubFieldsId,
 		name: string,
 		slug: string,
 		schemaName: CoreSchemaType | null,
 		isRelation?: boolean | null
-	) => void;
-	modal?: boolean;
-};
+	) => void
+	modal?: boolean
+}
 
 export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: FieldSelectProps) {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false)
 
-	const fields = usePubFieldContext();
+	const fields = usePubFieldContext()
 	const availableFields = Object.values(fields).filter(
 		(field) => !excludedFields.includes(field.id)
-	);
+	)
 	const onSelect = (fieldId: PubFieldsId) => {
-		const field = fields[fieldId];
-		onFieldSelect(fieldId, field.name, field.slug, field.schemaName, field.isRelation);
-		setOpen(false);
-	};
+		const field = fields[fieldId]
+		onFieldSelect(fieldId, field.name, field.slug, field.schemaName, field.isRelation)
+		setOpen(false)
+	}
 
 	return (
 		<Popover open={open} onOpenChange={setOpen} modal={modal}>
@@ -63,7 +63,7 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 					<CommandList label="Available fields">
 						<CommandGroup>
 							{availableFields.map((field) => {
-								const keywords = [field.name, field.slug];
+								const keywords = [field.name, field.slug]
 								return (
 									<CommandItem
 										key={field.id}
@@ -74,12 +74,12 @@ export function FieldSelect({ excludedFields, onFieldSelect, modal = false }: Fi
 									>
 										{field.name} ({field.slug})
 									</CommandItem>
-								);
+								)
 							})}
 						</CommandGroup>
 					</CommandList>
 				</Command>
 			</PopoverContent>
 		</Popover>
-	);
+	)
 }
