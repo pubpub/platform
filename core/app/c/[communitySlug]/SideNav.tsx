@@ -104,12 +104,6 @@ const manageLinks: LinkDefinition[] = [
 		minimumAccessRole: MemberRole.editor,
 	},
 	{
-		href: "/integrations",
-		text: "Integrations",
-		icon: <Integration size={16} />,
-		minimumAccessRole: MemberRole.editor,
-	},
-	{
 		href: "/members",
 		text: "Members",
 		icon: <UsersRound size={16} />,
@@ -119,14 +113,14 @@ const manageLinks: LinkDefinition[] = [
 		href: "/settings",
 		text: "Settings",
 		icon: <Settings className="h-4 w-4" />,
-		minimumAccessRole: MemberRole.editor,
+		minimumAccessRole: MemberRole.admin,
 		pattern: "/settings$",
 		children: [
 			{
 				href: "/settings/tokens",
 				text: "API Tokens",
 				icon: <Settings className="h-4 w-4" />,
-				minimumAccessRole: MemberRole.editor,
+				minimumAccessRole: MemberRole.admin,
 			},
 		],
 	},

@@ -56,21 +56,20 @@ export default async function MainLayout({ children, params }: Props) {
 
 	return (
 		<CommunityProvider community={community}>
-			<div className="flex min-h-screen flex-col md:flex-row">
-				<SidebarProvider defaultOpen={defaultOpen}>
+			<SidebarProvider defaultOpen={defaultOpen}>
+				<div className="max-w-screen flex min-h-screen flex-col md:flex-row">
 					<SideNav community={community} availableCommunities={availableCommunities} />
 
-					<div className="relative flex-auto px-4 py-4 md:px-12">
-						<SidebarTrigger
-							className={cn(
-								"absolute md:left-2",
-								COLLAPSIBLE_TYPE === "icon" && "hidden"
-							)}
-						/>
-						{children}
-					</div>
-				</SidebarProvider>
-			</div>
+					<div className="relative flex-auto px-4 py-4 md:px-12">{children}</div>
+
+					<SidebarTrigger
+						className={cn(
+							"fixed bottom-2 left-2",
+							COLLAPSIBLE_TYPE === "icon" && "md:hidden"
+						)}
+					/>
+				</div>
+			</SidebarProvider>
 		</CommunityProvider>
 	);
 }
