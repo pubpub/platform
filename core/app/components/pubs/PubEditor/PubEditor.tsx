@@ -26,6 +26,7 @@ import { getCommunityById, getStage } from "./queries";
 export type PubEditorProps = {
 	searchParams: Record<string, unknown>;
 	formId?: string;
+	withSlug?: boolean;
 } & (
 	| {
 			pubId?: never;
@@ -216,6 +217,7 @@ export async function PubEditor(props: PubEditorProps) {
 					withButtonElements={false}
 					htmlFormId={props.formId}
 					stageId={currentStageId}
+					withSlug={props.withSlug}
 				>
 					<>
 						<StageSelectClient

@@ -495,6 +495,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				.insertInto("pubs")
 				.values({
 					id: body.id as PubsId | undefined,
+					slug: body.slug,
 					communityId: communityId,
 					pubTypeId: body.pubTypeId as PubTypesId,
 					assigneeId: body.assigneeId as UsersId,
@@ -1747,7 +1748,13 @@ export async function getPubsWithRelatedValuesAndChildren<
 		return result;
 	}
 
+	console.log("result", result);
+
 	if (props.pubId || props.slug) {
+		if (result.length === 0) {
+			throw PubNotFoundError;
+		}
+
 		return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
 			rootPubId: result[0]?.id,
 			...opts,

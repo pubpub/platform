@@ -90,6 +90,7 @@ export default async function Page({
 						searchParams={searchParams}
 						formId={formId}
 						{...pubEditorSpecifiers}
+						withSlug={true}
 					/>
 				</div>
 			</div>

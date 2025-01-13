@@ -1,5 +1,7 @@
 "use client";
 
+import type { FieldValues } from "react-hook-form";
+
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { toast } from "ui/use-toast";
@@ -19,7 +21,12 @@ export const PubEditorWrapper = ({
 	const params = useSearchParams();
 	const community = useCommunity();
 
-	const onSuccess = () => {
+	const onSuccess = (args: {
+		values: FieldValues;
+		submitButtonId?: string;
+		isAutoSave: boolean;
+		slug?: string;
+	}) => {
 		toast({
 			title: "Success",
 			description: props.isUpdating ? "Pub successfully updated" : "New pub created",
@@ -32,7 +39,7 @@ export const PubEditorWrapper = ({
 		if (props.isUpdating) {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		} else {
-			const editPath = pubPath(community.slug, props.pub.slug);
+			const editPath = pubPath(community.slug, args.slug ?? props.pub.slug);
 			router.push(`${editPath}?${newParams.toString()}`);
 		}
 	};

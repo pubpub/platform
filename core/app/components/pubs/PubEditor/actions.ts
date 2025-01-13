@@ -7,6 +7,7 @@ import { logger } from "logger";
 
 import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
@@ -64,6 +65,16 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		};
 	} catch (error) {
 		logger.error(error);
+
+		if (isUniqueConstraintError(error)) {
+			if (error.constraint === "pubs_communityId_slug_key") {
+				return {
+					error: `Pub slug must be unique: slug ${props.body.slug} already exists`,
+					cause: error,
+				};
+			}
+		}
+
 		return {
 			error: "Failed to create pub",
 			cause: error,

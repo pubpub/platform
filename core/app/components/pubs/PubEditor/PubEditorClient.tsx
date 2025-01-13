@@ -15,8 +15,17 @@ import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId, StagesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
-import { Form } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
+import { Input } from "ui/input";
 import { cn } from "utils";
 
 import type { BasicFormElements, FormElements } from "../../forms/types";
@@ -68,8 +77,17 @@ const preparePayload = ({
  * Set all default values
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
+const buildDefaultValues = (
+	elements: BasicFormElements[],
+	pubValues: ProcessedPub["values"],
+	defaultSlug: string
+) => {
 	const defaultValues: FieldValues = { ...pubValues };
+
+	if (defaultSlug) {
+		defaultValues.slug = defaultSlug;
+	}
+
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
@@ -84,42 +102,51 @@ const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedP
 	return defaultValues;
 };
 
+const slugSchema = Type.String({
+	minLength: 8,
+	maxLength: 255,
+	pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+	error: "Slug must be lowercase alphanumeric with dashes",
+});
+
 const createSchemaFromElements = (
 	elements: BasicFormElements[],
 	toggleContext: FormElementToggleContext
 ) => {
-	return Type.Object(
-		Object.fromEntries(
-			elements
-				// only add enabled pubfields to the schema
-				.filter(
-					(e) =>
-						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
-				)
-				.map(({ slug, schemaName, config }) => {
-					if (!schemaName) {
-						return [slug, undefined];
-					}
+	const elementsSchemas = Object.fromEntries(
+		elements
+			// only add enabled pubfields to the schema
+			.filter(
+				(e) => e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
+			)
+			.map(({ slug, schemaName, config }) => {
+				if (!schemaName) {
+					return [slug, undefined];
+				}
 
-					const schema = getJsonSchemaByCoreSchemaType(schemaName, config);
-					if (!schema) {
-						return [slug, undefined];
-					}
+				const schema = getJsonSchemaByCoreSchemaType(schemaName, config);
+				if (!schema) {
+					return [slug, undefined];
+				}
 
-					if (schema.type !== "string") {
-						return [slug, Type.Optional(schema)];
-					}
+				if (schema.type !== "string") {
+					return [slug, Type.Optional(schema)];
+				}
 
-					// this allows for empty strings, which happens when you enter something
-					// in an input field and then delete it
-					// TODO: reevaluate whether this should be "" or undefined
-					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
-						error: schema.error ?? "Invalid value",
-					});
-					return [slug, schemaWithAllowedEmpty];
-				})
-		)
+				// this allows for empty strings, which happens when you enter something
+				// in an input field and then delete it
+				// TODO: reevaluate whether this should be "" or undefined
+				const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
+					error: schema.error ?? "Invalid value",
+				});
+				return [slug, schemaWithAllowedEmpty];
+			})
 	);
+
+	return Type.Object({
+		slug: slugSchema,
+		...elementsSchemas,
+	});
 };
 
 const isSubmitEvent = (
@@ -153,10 +180,12 @@ export interface PubEditorClientProps {
 	children: ReactNode;
 	isUpdating: boolean;
 	pub: Pick<ProcessedPub, "id" | "values" | "pubTypeId" | "slug">;
+	withSlug?: boolean;
 	onSuccess: (args: {
 		values: FieldValues;
 		submitButtonId?: string;
 		isAutoSave: boolean;
+		slug?: string;
 	}) => void;
 	stageId?: StagesId;
 	/** Slug of the Form this editor is using */
@@ -182,6 +211,7 @@ export const PubEditorClient = ({
 	formSlug,
 	withAutoSave,
 	withButtonElements,
+	withSlug,
 	isExternalForm,
 	onSuccess,
 }: PubEditorClientProps) => {
@@ -201,13 +231,13 @@ export const PubEditorClient = ({
 	const toggleContext = useFormElementToggleContext();
 
 	const defaultValues = useMemo(() => {
-		const defaultPubValues = buildDefaultValues(formElements, pub.values);
+		const defaultPubValues = buildDefaultValues(formElements, pub.values, pub.slug);
 		return { ...defaultPubValues, stageId };
 	}, [formElements, pub]);
 
 	const resolver = useMemo(
 		() => typeboxResolver(createSchemaFromElements(formElements, toggleContext)),
-		[formElements, toggleContext]
+		[formElements, toggleContext, withSlug]
 	);
 
 	const formInstance = useForm<Static<ReturnType<typeof createSchemaFromElements>>>({
@@ -252,6 +282,7 @@ export const PubEditorClient = ({
 					formSlug,
 					body: {
 						id: pubId,
+						slug: formValues.slug,
 						pubTypeId: pub.pubTypeId as PubTypesId,
 						values: pubValues as Record<string, any>,
 						stageId: stageId,
@@ -271,7 +302,12 @@ export const PubEditorClient = ({
 						keepValues: true,
 					}
 				);
-				onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
+				onSuccess({
+					isAutoSave: autoSave,
+					submitButtonId,
+					values: pubValues,
+					slug: formValues.slug,
+				});
 			}
 		},
 		[
@@ -335,6 +371,22 @@ export const PubEditorClient = ({
 				className={cn("relative isolate flex flex-col gap-6", className)}
 				id={htmlFormId}
 			>
+				<FormField
+					control={formInstance.control}
+					name="slug"
+					render={({ field }) => (
+						<FormItem className={cn(withSlug ? "" : "hidden")}>
+							<FormLabel>Slug</FormLabel>
+							<FormDescription>
+								The unique identifier for this pub. It is used to generate the URL
+							</FormDescription>
+							<FormControl>
+								<Input {...field} />
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
 				{children}
 				{withButtonElements ? (
 					<>
