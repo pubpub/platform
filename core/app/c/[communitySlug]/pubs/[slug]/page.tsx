@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { cache, Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId } from "db/public";
 import { Capabilities } from "db/src/public/Capabilities";
@@ -10,6 +10,7 @@ import { MembershipType } from "db/src/public/MembershipType";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 
+import type { GetPubsWithRelatedValuesAndChildrenOptions } from "~/lib/server";
 import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
@@ -38,18 +39,20 @@ import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 import { PubValues } from "./components/PubValues";
 import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
+const defaultOptions = {
+	withPubType: true,
+	withChildren: true,
+	withRelatedPubs: true,
+	withStage: true,
+	withMembers: true,
+	depth: 3,
+} as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
+
 const getPubsWithRelatedValuesAndChildrenCached = cache(
 	async (slug: string, communityId: CommunitiesId) => {
 		const pub = await getPubsWithRelatedValuesAndChildren(
 			{ slug, communityId },
-			{
-				withPubType: true,
-				withChildren: true,
-				withRelatedPubs: true,
-				withStage: true,
-				withMembers: true,
-				depth: 3,
-			}
+			defaultOptions
 		);
 		return pub;
 	}
@@ -102,10 +105,22 @@ export default async function Page({
 		notFound();
 	}
 
+	// We don't pass the userId here because we want to include related pubs regardless of authorization
+	// This is safe because we've already explicitly checked authorization for the root pub
 	const pub = await getPubsWithRelatedValuesAndChildrenCached(slug, community.id);
 
 	if (!pub) {
 		return notFound();
+	}
+
+	const canView = await userCan(
+		Capabilities.viewPub,
+		{ type: MembershipType.pub, pubId: pub.id },
+		user.id
+	);
+
+	if (!canView) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
 	const canAddMember = await userCan(
@@ -173,7 +188,6 @@ export default async function Page({
 							</div>
 						</div>
 					) : null}
-
 					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
 						{actions && actions.length > 0 && stage ? (

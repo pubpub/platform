@@ -2,7 +2,7 @@ import React, { Fragment, Suspense } from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, PubsId } from "db/public";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { Skeleton } from "ui/skeleton";
@@ -22,6 +22,7 @@ type PubRowPub = ProcessedPub<{ withPubType: true; withRelatedPubs: false; withS
 type Props = {
 	actions?: React.ReactNode;
 	searchParams: Record<string, unknown>;
+	userId: UsersId;
 } & XOR<
 	{ pub: PubRowPub },
 	({ pubId: PubsId; slug?: never } | { pubId?: never; slug: string }) & {
@@ -94,7 +95,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 	if (!pub) {
 		return null;
 	}
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = getCommunitySlug();
 
 	return (
 		<>

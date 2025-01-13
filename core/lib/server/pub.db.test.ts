@@ -6,17 +6,26 @@ import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { createLastModifiedBy } from "../lastModifiedBy";
+
+const { createSeed, seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
 
-const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
+const seed = createSeed({
 	community: {
 		name: "test",
 		slug: "test-server-pub",
+	},
+	users: {
+		admin: {
+			role: MemberRole.admin,
+		},
+		stageEditor: {
+			role: MemberRole.contributor,
+		},
 	},
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
@@ -33,7 +42,11 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 		},
 	},
 	stages: {
-		"Stage 1": {},
+		"Stage 1": {
+			members: {
+				stageEditor: MemberRole.editor,
+			},
+		},
 	},
 	pubs: [
 		{
@@ -70,8 +83,9 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 			},
 		},
 	],
-	users: {},
 });
+
+const { community, pubFields, pubTypes, stages, pubs, users } = await seedCommunity(seed);
 
 describe("createPubRecursive", () => {
 	it("should be able to create a simple pub", async () => {
@@ -404,7 +418,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const rootPubId = pub.id;
 		const pubValues = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: rootPubId, communityId: community.id },
+			{ pubId: rootPubId, communityId: community.id, userId: users.admin.id },
 			{ depth: 10 }
 		);
 
@@ -951,7 +965,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const pubId = pubs[0].id as PubsId;
 
 		// Add a user and make it a member of this pub
-		const users = [
+		const newUsers = [
 			{
 				email: "test@email.com",
 				slug: "test-user",
@@ -965,7 +979,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				lastName: "user2",
 			},
 		];
-		const userIds = await trx.insertInto("users").values(users).returning(["id"]).execute();
+		const userIds = await trx.insertInto("users").values(newUsers).returning(["id"]).execute();
 		await trx
 			.insertInto("pub_memberships")
 			.values(userIds.map(({ id }) => ({ userId: id, pubId, role: MemberRole.admin })))
@@ -974,12 +988,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const pub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId, communityId: community.id },
+			{ pubId, communityId: community.id, userId: users.admin.id },
 			{ withMembers: true }
 		);
 
 		expect(pub).toMatchObject({
-			members: users.map((u) => ({ ...u, role: MemberRole.admin })),
+			members: newUsers.map((u) => ({ ...u, role: MemberRole.admin })),
 		});
 	});
 
