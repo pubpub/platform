@@ -33,14 +33,6 @@ export default async function MainLayout({ children, params }: Props) {
 		return notFound();
 	}
 
-	const role = getCommunityRole(user, community);
-
-	if (role === "contributor" || !role) {
-		// TODO: allow contributors to view /c/* pages after we implement membership and
-		// role-based authorization checks
-		redirect("/settings");
-	}
-
 	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
 
 	return (
