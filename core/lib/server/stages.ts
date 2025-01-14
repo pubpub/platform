@@ -1,4 +1,4 @@
-import { Kysely, QueryCreator, sql } from "kysely";
+import { QueryCreator, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
