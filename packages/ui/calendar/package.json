@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-calendar.cjs.js",
-	"module": "dist/ui-calendar.esm.js"
-}

@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-pagination.cjs.js",
-	"module": "dist/ui-pagination.esm.js"
-}
