@@ -1,13 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import type { PubPayload } from "~/lib/server/_legacy-integration-queries";
 import { PubTitle } from "../PubTitle";
 
 test("PubTitle component includes the pub title", async () => {
 	const currentDate = new Date();
 
-	const pub: PubPayload = {
+	const pub = {
 		id: "b5702ef8-29b9-43ad-866c-4c337f598d88",
 		assigneeId: null,
 		valuesBlob: null,
@@ -16,7 +15,7 @@ test("PubTitle component includes the pub title", async () => {
 		createdAt: currentDate,
 		updatedAt: currentDate,
 		parentId: "6234d4ed-e87e-41ab-9b5b-68bf9fb9a61c",
-		title: null,
+		title: null as string | null,
 		pubType: {
 			id: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225",
 			name: "Submission",
