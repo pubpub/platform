@@ -529,6 +529,7 @@ Enum InputComponent {
   richText
   selectDropdown
   multivalueInput
+  relationBlock
 }
 
 Enum ApiAccessType {

@@ -108,6 +108,13 @@ export const richTextInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
+export const relationBlockConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	pubType: Type.Optional(Type.String()),
+	valueComponent: Type.Enum(InputComponent),
+	valueConfig: Type.Any(), // TODO: list out all schemas here?
+});
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -122,6 +129,7 @@ export const componentConfigSchemas = {
 	[InputComponent.richText]: richTextInputConfigSchema,
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
 	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
+	[InputComponent.relationBlock]: relationBlockConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;
 
 export type InputComponentConfigSchema<T extends InputComponent> = Static<

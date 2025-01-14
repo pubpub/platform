@@ -54,6 +54,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						label: field.name,
 						component,
 						schemaName,
+						isRelation: field.isRelation,
 					});
 					dispatch({
 						eventName: "edit",

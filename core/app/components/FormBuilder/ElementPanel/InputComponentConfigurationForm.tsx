@@ -177,6 +177,12 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			);
 		},
 	},
+	[InputComponent.relationBlock]: {
+		name: "Relation Block",
+		demoComponent: () => {
+			return <div>TODO</div>;
+		},
+	},
 } as const;
 
 const ComponentSelect = ({
@@ -246,10 +252,10 @@ type Props = {
 export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Props) => {
 	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
 
-	const { schemaName } = fieldInputElement;
+	const { schemaName, isRelation } = fieldInputElement;
 	const allowedComponents = componentsBySchema[schemaName];
 
-	const form = useForm<ConfigFormData<(typeof allowedComponents)[number]>>({
+	const form = useForm<ConfigFormData<InputComponent>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
 		resolver: (values, context, options) => {
 			const schema = Type.Object({
@@ -283,6 +289,18 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 		() => <ComponentConfig schemaName={schemaName} form={form} component={component} />,
 		[component, schemaName]
 	);
+
+	// The configuration for the "outer" relationship field
+	const relationFieldForm = isRelation ? (
+		<>
+			<ComponentConfig
+				schemaName={schemaName}
+				form={form}
+				component={InputComponent.relationBlock}
+			/>
+		</>
+	) : null;
+
 	return (
 		<Form {...form}>
 			<form
@@ -305,10 +323,35 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 							onChange={field.onChange}
 							value={field.value}
 							element={fieldInputElement}
-							components={allowedComponents}
+							components={
+								isRelation ? [InputComponent.relationBlock] : allowedComponents
+							}
 						/>
 					)}
 				/>
+				{relationFieldForm}
+				{isRelation ? (
+					<>
+						<div className="text-sm uppercase text-muted-foreground">
+							Relation value
+						</div>
+						<hr />
+						<div className="text-sm uppercase text-muted-foreground">Appearance</div>
+						<hr />
+						<FormField
+							control={form.control}
+							name="config.valueComponent"
+							render={({ field }) => (
+								<ComponentSelect
+									onChange={field.onChange}
+									value={field.value}
+									element={fieldInputElement}
+									components={allowedComponents}
+								/>
+							)}
+						/>
+					</>
+				) : null}
 				{configForm}
 				<hr className="mt-4" />
 				{component !== InputComponent.checkbox && (
