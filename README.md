@@ -25,7 +25,6 @@ This repo is built as a monorepo that holds first-party components of PubPub. Th
 root
 ├── core/
 ├── infrastructure/
-├── integrations/ (deprecated)
 ├── jobs/
 ├── packages/
 └── ...
@@ -33,7 +32,6 @@ root
 
 -   `core` holds the primary web application.
 -   `infrastructure` holds the deployment infrastructure for the centrally hosted version of PubPub Platform run by the Knowledge Futures team.
--   `integrations` (deprecated) holds the integrations developed by the PubPub team. This will be removed in the near future.
 -   `jobs` holds the job queueing and scheduling service used by `core`.
 -   `packages` holds libraries and npm packages that are shared by `core`, `jobs`, and `infrastructure`.
 
