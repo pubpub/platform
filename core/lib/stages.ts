@@ -22,8 +22,6 @@ function createStageList<T extends CommunityStage>(
 	stages: StagesById,
 	visited: Array<T> = []
 ): Array<T> {
-	// If stage is undefined, return the current visited list
-	// This would happen if the move constraint isn't in the stage list (because of user permissions)
 	if (!stage) {
 		return visited;
 	}
@@ -39,6 +37,11 @@ function createStageList<T extends CommunityStage>(
 	// Recursively process the stages reachable from this stage
 	return stage.moveConstraints.reduce((acc, constraint) => {
 		const nextStage = stages[constraint.id];
+		// If the next stage is undefined, just return the accumulator
+		// This would happen if the move constraint isn't in the stage list (because of user permissions)
+		if (!stage) {
+			return acc;
+		}
 		return createStageList<T>(nextStage as T, stages, acc);
 	}, newVisited);
 }
