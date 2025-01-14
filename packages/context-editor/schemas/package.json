@@ -1,4 +1,0 @@
-{
-	"main": "dist/context-editor-schemas.cjs.js",
-	"module": "dist/context-editor-schemas.esm.js"
-}
