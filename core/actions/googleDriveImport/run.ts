@@ -151,7 +151,7 @@ export const run = defineRun<typeof action>(
 			}
 
 			if (relations.length > 0) {
-				upsertPubRelations({
+				await upsertPubRelations({
 					pubId: pub.id,
 					communityId,
 					lastModifiedBy,

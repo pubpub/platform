@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
 import type { PubsId, StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
@@ -10,6 +11,7 @@ import { PubDropDown } from "~/app/components/pubs/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
 type PropsInner = {
 	stageId: StagesId;
@@ -23,6 +25,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		getStageActions(props.stageId).execute(),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 	]);
+	const communitySlug = getCommunitySlug();
 
 	if (!stage) {
 		throw new Error("Stage not found");
@@ -39,7 +42,12 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				</div>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
-						<PubTitle pub={pub} />
+						<Link
+							href={`/c/${communitySlug}/pubs/${pub.id}`}
+							className="hover:underline"
+						>
+							<PubTitle pub={pub} />
+						</Link>
 						<div className="flex items-center gap-x-2">
 							<PubsRunActionDropDownMenu
 								actionInstances={stageActionInstances}
