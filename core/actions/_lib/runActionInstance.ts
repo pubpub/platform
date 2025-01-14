@@ -1,5 +1,3 @@
-"use server";
-
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -18,8 +16,9 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
+import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getPubCached } from "~/lib/server";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientException } from "~/lib/serverActions";
 import { getActionByName } from "../api";
@@ -30,6 +29,7 @@ export type ActionInstanceRunResult = ClientException | ClientExceptionOptions |
 
 export type RunActionInstanceArgs = {
 	pubId: PubsId;
+	communityId: CommunitiesId;
 	actionInstanceId: ActionInstancesId;
 	actionInstanceArgs?: Record<string, unknown>;
 } & ({ event: Event } | { userId: UsersId });
@@ -38,7 +38,19 @@ const _runActionInstance = async (
 	args: RunActionInstanceArgs & { actionRunId: ActionRunsId },
 	trx = db
 ): Promise<ActionInstanceRunResult> => {
-	const pubPromise = getPubCached(args.pubId);
+	const isActionUserInitiated = "userId" in args;
+
+	const pubPromise = getPubsWithRelatedValuesAndChildren(
+		{
+			pubId: args.pubId,
+			communityId: args.communityId,
+			userId: isActionUserInitiated ? args.userId : undefined,
+		},
+		{
+			withPubType: true,
+			withStage: true,
+		}
+	);
 
 	const actionInstancePromise = trx
 		.selectFrom("action_instances")
@@ -167,6 +179,8 @@ const _runActionInstance = async (
 		configFieldOverrides
 	);
 
+	const hydratedPubValues = hydratePubValues(pub.values);
+
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
 	});
@@ -177,15 +191,8 @@ const _runActionInstance = async (
 			config: configWithPubfields as any,
 			configFieldOverrides,
 			pub: {
-				id: pub.id,
-				// FIXME: get rid of any
-				values: pub.values as any,
-				assignee: pub.assignee ?? undefined,
-				parentId: pub.parentId,
-				communityId: pub.communityId,
-				createdAt: pub.createdAt,
-				title: pub.title,
-				pubType: pub.pubType,
+				...pub,
+				values: hydratedPubValues,
 			},
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,
@@ -306,6 +313,7 @@ export const runInstancesForEvent = async (
 	pubId: PubsId,
 	stageId: StagesId,
 	event: Event,
+	communityId: CommunitiesId,
 	trx = db
 ) => {
 	const instances = await trx
@@ -324,6 +332,7 @@ export const runInstancesForEvent = async (
 				result: await runActionInstance(
 					{
 						pubId,
+						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
 					},

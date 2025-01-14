@@ -14,11 +14,13 @@ import type {
 	Stages,
 	StagesId,
 	Users,
+	UsersId,
 } from "db/public";
 import {
 	communitiesIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
+	memberRoleSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
 	pubsSchema,
@@ -27,6 +29,7 @@ import {
 	pubValuesSchema,
 	stagesIdSchema,
 	stagesSchema,
+	usersIdSchema,
 	usersSchema,
 } from "db/public";
 
@@ -41,6 +44,7 @@ export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBo
 	stageId?: StagesId;
 	children?: CreatePubRequestBodyWithNulls[];
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
+	members?: Record<UsersId, MemberRole>;
 };
 
 export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
@@ -55,6 +59,9 @@ const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBa
 			})
 		)
 	),
+	members: (
+		z.record(usersIdSchema, memberRoleSchema) as z.ZodType<Record<UsersId, MemberRole>>
+	).optional(),
 });
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
@@ -98,14 +105,18 @@ const upsertPubRelationsSchema = z.record(
  */
 type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"] extends false
 	? { children?: never }
-	: { children: ProcessedPub<Options>[] };
+	: Options["withChildren"] extends undefined
+		? { children?: ProcessedPub<Options>[] }
+		: { children: ProcessedPub<Options>[] };
 
 /**
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
 	? { stage: Stages | null }
-	: { stage?: never };
+	: Options["withStage"] extends false
+		? { stage?: never }
+		: { stage?: Stages | null };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
@@ -122,18 +133,29 @@ type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] e
 				fields: PubTypePubField[];
 			};
 		}
-	: { pubType?: never };
+	: Options["withPubType"] extends false
+		? { pubType?: never }
+		: { pubType?: PubTypes & { fields: PubTypePubField[] } };
 
 /**
  * Only add the `pubType` if the `withPubType` option has not been set to `false
  */
 type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] extends true
 	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
-	: { members?: never[] };
+	: Options["withMembers"] extends false
+		? { members?: never }
+		: { members?: (Omit<Users, "passwordHash"> & { role: MemberRole })[] };
 
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }
 	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
+
+type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
+	Options["withLegacyAssignee"] extends true
+		? { assignee?: Users | null }
+		: Options["withLegacyAssignee"] extends false
+			? { assignee?: never }
+			: { assignee?: Users | null };
 
 /**
  * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
@@ -141,11 +163,12 @@ type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedP
  * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
  *
  **/
-type MaybePubOptions = {
+export type MaybePubOptions = {
 	/**
 	 * Whether to recursively fetch children up to depth `depth`.
 	 *
 	 * @default true
+	 *
 	 */
 	withChildren?: boolean;
 	/**
@@ -172,6 +195,18 @@ type MaybePubOptions = {
 	 * @default false
 	 */
 	withMembers?: boolean;
+	/**
+	 * Whether to include the legacy assignee.
+	 *
+	 * @default false
+	 */
+	withLegacyAssignee?: boolean;
+	/**
+	 * Whether to include the values.
+	 *
+	 * @default boolean
+	 */
+	withValues?: boolean;
 };
 
 type ValueBase = {
@@ -196,6 +231,8 @@ type ProcessedPubBase = {
 	parentId: PubsId | null;
 	createdAt: Date;
 	title: string | null;
+	depth: number;
+	isCycle?: boolean;
 	/**
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
@@ -207,17 +244,21 @@ type ProcessedPubBase = {
 };
 
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
+	/**
+	 * Is an empty array if `withValues` is false
+	 */
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
 } & MaybePubChildren<Options> &
 	MaybePubStage<Options> &
 	MaybePubPubType<Options> &
-	MaybePubMembers<Options>;
+	MaybePubMembers<Options> &
+	MaybePubLegacyAssignee<Options>;
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
-	stage?: Stages;
+	stage?: Stages | null;
 	pubType?: PubTypes;
 	children?: NonGenericProcessedPub[];
-	values: (ValueBase & {
+	values?: (ValueBase & {
 		relatedPub?: NonGenericProcessedPub | null;
 		relatedPubId: PubsId | null;
 	})[];
@@ -229,6 +270,8 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	communityId: communitiesIdSchema,
 	pubTypeId: pubTypesIdSchema,
 	parentId: pubsIdSchema.nullable(),
+	isCycle: z.boolean().optional(),
+	depth: z.number(),
 	title: z.string().nullable(),
 	values: z.array(
 		pubValuesSchema.extend({
@@ -242,13 +285,14 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	stage: stagesSchema.optional(),
+	stage: stagesSchema.nullish(),
 	pubType: pubTypesSchema
 		.extend({
 			fields: z.array(pubFieldsSchema),
 		})
 		.optional(),
 	children: z.lazy(() => z.array(processedPubSchema)).optional(),
+	assignee: usersSchema.nullish(),
 });
 
 const preferRepresentationHeaderSchema = z.object({

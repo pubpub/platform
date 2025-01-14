@@ -1,4 +1,6 @@
-import type { CoreSchemaType } from "db/src/public/CoreSchemaType";
+import { CoreSchemaType } from "db/src/public/CoreSchemaType";
+
+import { BadRequestError } from "../server/errors";
 
 /**
  * Merges an array of slugs and values with an array of fields by matching on slug.
@@ -32,4 +34,53 @@ export const mergeSlugsWithFields = <
 			};
 		})
 		.filter((s) => s !== null);
+};
+
+/**
+ * This should maybe go somewhere else
+ */
+export const hydratePubValues = <
+	T extends {
+		value: unknown;
+		schemaName: CoreSchemaType;
+		relatedPub?: { values: T[] } | null;
+	} & (
+		| {
+				fieldSlug: string;
+				slug?: never;
+		  }
+		| {
+				slug: string;
+				fieldSlug?: never;
+		  }
+	),
+>(
+	pubValues: T[]
+): T[] => {
+	return pubValues.map(({ value, schemaName, relatedPub, ...rest }) => {
+		const slug = rest.slug ?? rest.fieldSlug;
+
+		if (schemaName === CoreSchemaType.DateTime) {
+			try {
+				value = new Date(value as string);
+			} catch {
+				throw new BadRequestError(`Invalid date value for field ${slug}`);
+			}
+		}
+
+		const hydratedRelatedPub = relatedPub
+			? {
+					...relatedPub,
+					values: hydratePubValues(relatedPub.values),
+				}
+			: null;
+
+		return {
+			slug,
+			schemaName,
+			value,
+			relatedPub: hydratedRelatedPub,
+			...rest,
+		};
+	}) as T[];
 };

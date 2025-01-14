@@ -15,13 +15,14 @@ import type {
 	GetPubResponseBody,
 	Json,
 	JsonValue,
+	MaybePubOptions,
 	ProcessedPub,
 	PubTypePubField,
 } from "contracts";
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
-	MemberRole,
+	MembershipCapabilitiesRole,
 	PubFieldsId,
 	Pubs,
 	PubsId,
@@ -34,14 +35,16 @@ import type {
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
-import { CoreSchemaType, OperationType } from "db/public";
+import { CoreSchemaType, MemberRole, OperationType } from "db/public";
+import { Capabilities } from "db/src/public/Capabilities";
+import { MembershipType } from "db/src/public/MembershipType";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
-import { mergeSlugsWithFields } from "../fields/utils";
+import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -287,7 +290,7 @@ export const getPubBase = (
 		.$if(!props.pubId, (eb) => eb.select(pubValuesByRef("pubs.id")))
 		.$narrowType<{ values: PubValues }>();
 
-export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
+export const _deprecated_getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	const pub = await getPubBase({ pubId }).where("pubs.id", "=", pubId).executeTakeFirst();
 
 	if (!pub) {
@@ -297,7 +300,7 @@ export const getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
 	return nestChildren(pub);
 };
 
-export const getPubCached = async (pubId: PubsId) => {
+export const _deprecated_getPubCached = async (pubId: PubsId) => {
 	const pub = await autoCache(
 		getPubBase({ pubId }).where("pubs.id", "=", pubId)
 	).executeTakeFirst();
@@ -309,12 +312,18 @@ export const getPubCached = async (pubId: PubsId) => {
 	return nestChildren(pub);
 };
 
-export type GetPubResult = Prettify<Awaited<ReturnType<typeof getPubCached>>>;
+export type GetPubResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubCached>>>;
 
 export type GetManyParams = {
 	limit?: number;
 	offset?: number;
+	/**
+	 * @default "createdAt"
+	 */
 	orderBy?: "createdAt" | "updatedAt";
+	/**
+	 * @default "desc"
+	 */
 	orderDirection?: "asc" | "desc";
 	/**
 	 * Only fetch "Top level" pubs and their children,
@@ -343,7 +352,7 @@ const GET_PUBS_DEFAULT = {
  *
  * Either per community, or per stage
  */
-export const getPubs = async (
+export const _deprecated_getPubs = async (
 	props: XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>,
 	params: GetManyParams = GET_PUBS_DEFAULT
 ) => {
@@ -368,7 +377,7 @@ export const getPubs = async (
 	return pubs.map(nestChildren);
 };
 
-export type GetPubsResult = Prettify<Awaited<ReturnType<typeof getPubs>>>;
+export type GetPubsResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubs>>>;
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 
@@ -427,27 +436,30 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 /**
  * @throws
  */
-export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>({
-	body,
-	communityId,
-	parent,
-	lastModifiedBy,
-	...options
-}:
-	| {
-			body: Body;
-			trx?: Kysely<Database>;
-			communityId: CommunitiesId;
-			parent?: never;
-			lastModifiedBy: LastModifiedBy;
-	  }
-	| {
-			body: MaybeHas<Body, "stageId">;
-			trx?: Kysely<Database>;
-			communityId: CommunitiesId;
-			parent: { id: PubsId };
-			lastModifiedBy: LastModifiedBy;
-	  }): Promise<ProcessedPub> => {
+export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>(
+	{
+		body,
+		communityId,
+		parent,
+		lastModifiedBy,
+		...options
+	}:
+		| {
+				body: Body;
+				trx?: Kysely<Database>;
+				communityId: CommunitiesId;
+				parent?: never;
+				lastModifiedBy: LastModifiedBy;
+		  }
+		| {
+				body: MaybeHas<Body, "stageId">;
+				trx?: Kysely<Database>;
+				communityId: CommunitiesId;
+				parent: { id: PubsId };
+				lastModifiedBy: LastModifiedBy;
+		  },
+	depth = 0
+): Promise<ProcessedPub> => {
 	const trx = options?.trx ?? db;
 
 	const parentId = parent?.id ?? body.parentId;
@@ -505,6 +517,19 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			createdStageId = result.stageId;
 		}
 
+		if (body.members && Object.keys(body.members).length) {
+			await trx
+				.insertInto("pub_memberships")
+				.values(
+					Object.entries(body.members).map(([userId, role]) => ({
+						pubId: newPub.id,
+						userId: userId as UsersId,
+						role,
+					}))
+				)
+				.execute();
+		}
+
 		const pubValues = valuesWithFieldIds.length
 			? await autoRevalidate(
 					trx
@@ -542,21 +567,25 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: [],
+				depth,
 			} satisfies ProcessedPub;
 		}
 
 		// TODO: could be parallelized with relatedPubs if we want to
 		const children = await Promise.all(
 			body.children?.map(async (child) => {
-				const childPub = await createPubRecursiveNew({
-					body: child,
-					communityId,
-					parent: {
-						id: newPub.id,
+				const childPub = await createPubRecursiveNew(
+					{
+						body: child,
+						communityId,
+						parent: {
+							id: newPub.id,
+						},
+						trx,
+						lastModifiedBy,
 					},
-					trx,
-					lastModifiedBy,
-				});
+					depth + 1
+				);
 				return childPub;
 			}) ?? []
 		);
@@ -567,29 +596,35 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: children.length ? children : [],
+				depth,
 			} satisfies ProcessedPub;
 		}
 
 		// this fn itself calls createPubRecursiveNew, be mindful of infinite loops
-		const relatedPubs = await upsertPubRelations({
-			pubId: newPub.id,
-			relations: Object.entries(body.relatedPubs).flatMap(([fieldSlug, relatedPubBodies]) =>
-				relatedPubBodies.map(({ pub, value }) => ({
-					slug: fieldSlug,
-					value,
-					relatedPub: pub,
-				}))
-			),
-			communityId,
-			lastModifiedBy,
-			trx,
-		});
+		const relatedPubs = await upsertPubRelations(
+			{
+				pubId: newPub.id,
+				relations: Object.entries(body.relatedPubs).flatMap(
+					([fieldSlug, relatedPubBodies]) =>
+						relatedPubBodies.map(({ pub, value }) => ({
+							slug: fieldSlug,
+							value,
+							relatedPub: pub,
+						}))
+				),
+				communityId,
+				lastModifiedBy,
+				trx,
+			},
+			depth
+		);
 
 		return {
 			...pub,
 			stageId: createdStageId,
 			values: [...pubValues, ...relatedPubs],
 			children,
+			depth,
 		} as ProcessedPub;
 	});
 
@@ -690,30 +725,6 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
-/**
- * This should maybe go somewhere else
- */
-const hydratePubValues = <T extends { slug: string; value: unknown; schemaName: CoreSchemaType }>(
-	pubValues: T[]
-) => {
-	return pubValues.map(({ value, schemaName, slug, ...rest }) => {
-		if (schemaName === CoreSchemaType.DateTime) {
-			try {
-				value = new Date(value as string);
-			} catch {
-				throw new BadRequestError(`Invalid date value for field ${slug}`);
-			}
-		}
-
-		return {
-			slug,
-			schemaName,
-			value,
-			...rest,
-		};
-	});
-};
-
 const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
@@ -776,19 +787,22 @@ export const normalizeRelationValues = (
  * Note: it is the responsibility of the caller to ensure that the pub exists
  *
  */
-export const upsertPubRelations = async ({
-	pubId,
-	relations,
-	communityId,
-	lastModifiedBy,
-	trx = db,
-}: {
-	pubId: PubsId;
-	relations: AddPubRelationsInput[];
-	communityId: CommunitiesId;
-	lastModifiedBy: LastModifiedBy;
-	trx?: typeof db;
-}): Promise<ProcessedPub["values"]> => {
+export const upsertPubRelations = async (
+	{
+		pubId,
+		relations,
+		communityId,
+		lastModifiedBy,
+		trx = db,
+	}: {
+		pubId: PubsId;
+		relations: AddPubRelationsInput[];
+		communityId: CommunitiesId;
+		lastModifiedBy: LastModifiedBy;
+		trx?: typeof db;
+	},
+	depth = 0
+): Promise<ProcessedPub["values"]> => {
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
 	const validatedRelationValues = await validatePubValues({
@@ -825,12 +839,15 @@ export const upsertPubRelations = async ({
 	const pubRelations = await maybeWithTrx(trx, async (trx) => {
 		const newlyCreatedPubs = await Promise.all(
 			newPubs.map((pub) =>
-				createPubRecursiveNew({
-					trx,
-					communityId,
-					body: pub.relatedPub,
-					lastModifiedBy: lastModifiedBy,
-				})
+				createPubRecursiveNew(
+					{
+						trx,
+						communityId,
+						body: pub.relatedPub,
+						lastModifiedBy: lastModifiedBy,
+					},
+					depth + 1
+				)
 			)
 		);
 
@@ -1000,6 +1017,10 @@ export const addDeletePubValueHistoryEntries = async ({
 }) => {
 	const parsedLastModifiedBy = parseLastModifiedBy(lastModifiedBy);
 
+	if (!pubValues.length) {
+		return;
+	}
+
 	await autoRevalidate(
 		trx.insertInto("pub_values_history").values(
 			pubValues.map((pubValue) => ({
@@ -1126,18 +1147,21 @@ export const updatePub = async ({
 	return result;
 };
 export type UnprocessedPub = {
-	pubId: PubsId;
+	id: PubsId;
 	depth: number;
 	parentId: PubsId | null;
 	stageId: StagesId | null;
+	stage?: Stages;
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
 	pubType?: PubTypes & { fields: PubTypePubField[] };
 	members?: SafeUser & { role: MemberRole };
 	createdAt: Date;
+	updatedAt: Date;
 	isCycle?: boolean;
-	stage?: Stages;
 	title: string | null;
+	assignee?: SafeUser | null;
+	path: PubsId[];
 	values: {
 		id: PubValuesId;
 		fieldId: PubFieldsId;
@@ -1152,7 +1176,7 @@ export type UnprocessedPub = {
 	children?: { id: PubsId }[];
 };
 
-type GetPubsWithRelatedValuesAndChildrenOptions = {
+interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, MaybePubOptions {
 	/**
 	 * The maximum depth to recurse to.
 	 * Does not do anything if `includeChildren` and `includeRelatedPubs` is `false`.
@@ -1160,36 +1184,6 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 * @default 2
 	 */
 	depth?: number;
-	/**
-	 * Whether to recursively fetch children up to depth `depth`.
-	 *
-	 * @default true
-	 */
-	withChildren?: boolean;
-	/**
-	 * Whether to recursively fetch related pubs.
-	 *
-	 * @default true
-	 */
-	withRelatedPubs?: boolean;
-	/**
-	 * Whether to include the pub type.
-	 *
-	 * @default false
-	 */
-	withPubType?: boolean;
-	/**
-	 * Whether to include the stage.
-	 *
-	 * @default false
-	 */
-	withStage?: boolean;
-	/**
-	 * Whether to include members of the pub.
-	 *
-	 * @default false
-	 */
-	withMembers?: boolean;
 	search?: string;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
@@ -1207,21 +1201,29 @@ type GetPubsWithRelatedValuesAndChildrenOptions = {
 	 */
 	_debugDontNest?: boolean;
 	fieldSlugs?: string[];
+	onlyTitles?: boolean;
 	trx?: typeof db;
-} & GetManyParams;
+}
 
+// TODO: We allow calling getPubsWithRelatedValuesAndChildren with no userId so that event driven
+// actions can select a pub even when no user is present (and some other scenarios where the
+// filtering wouldn't make sense). We probably need to do that, but we should make it more explicit
+// than just leaving out the userId to avoid accidentally letting certain routes select pubs without
+// authorization checks
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
 			pubId: PubsId;
 			pubTypeId?: never;
 			stageId?: never;
 			communityId: CommunitiesId;
+			userId?: UsersId;
 	  }
 	| {
 			pubId?: never;
 			pubTypeId?: PubTypesId;
 			stageId?: StagesId;
 			communityId: CommunitiesId;
+			userId?: UsersId;
 	  };
 
 const DEFAULT_OPTIONS = {
@@ -1232,6 +1234,7 @@ const DEFAULT_OPTIONS = {
 	withStage: false,
 	withMembers: false,
 	cycle: "include",
+	withValues: true,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
 
@@ -1267,6 +1270,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		depth,
 		withChildren,
 		withRelatedPubs,
+		withValues,
 		cycle,
 		fieldSlugs,
 		orderBy,
@@ -1278,6 +1282,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 		withStage,
 		withMembers,
 		trx,
+		withLegacyAssignee,
 	} = opts;
 
 	if (depth < 1) {
@@ -1305,35 +1310,35 @@ export async function getPubsWithRelatedValuesAndChildren<
 					// we need to do this weird cast, because kysely does not support typing the selecting from a later CTE
 					// which is possible only in a with recursive query
 					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
-					.leftJoin("pub_values as pv", "p.id", "pv.pubId")
-					.leftJoin("pub_fields", "pub_fields.id", "pv.fieldId")
-					.$if(Boolean(fieldSlugs), (qb) =>
-						qb.where("pub_fields.slug", "in", fieldSlugs!)
-					)
-					// maybe move this to root_pubs to save a join?
+					// TODO: can we avoid doing this join again since it's already in root pubs?
 					.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
+					.$if(Boolean(withRelatedPubs), (qb) =>
+						qb
+							.leftJoin("pub_values as pv", (join) =>
+								join.on((eb) =>
+									eb.and([
+										eb("pv.pubId", "=", eb.ref("p.id")),
+										eb("pv.relatedPubId", "is not", null),
+									])
+								)
+							)
+							.select("pv.relatedPubId")
+					)
 					.select([
 						"p.id as pubId",
-						"pub_fields.schemaName as schemaName",
-						"pub_fields.slug as slug",
-						"pub_fields.name as fieldName",
 						"p.pubTypeId",
 						"p.communityId",
 						"p.createdAt",
 						"p.updatedAt",
 						"p.title",
 						"PubsInStages.stageId",
-						"pv.id as valueId",
-						"pv.fieldId",
-						"pv.value",
-						"pv.relatedPubId",
-						"pv.createdAt as valueCreatedAt",
-						"pv.updatedAt as valueUpdatedAt",
 						"p.parentId",
 						sql<number>`1`.as("depth"),
 						sql<boolean>`false`.as("isCycle"),
 						sql<PubsId[]>`array[p.id]`.as("path"),
 					])
+
+					.$if(Boolean(withLegacyAssignee), (qb) => qb.select("p.assigneeId"))
 					// we don't even need to recurse if we don't want children or related pubs
 					.$if(withChildren || withRelatedPubs, (qb) =>
 						qb.union((qb) =>
@@ -1363,26 +1368,89 @@ export async function getPubsWithRelatedValuesAndChildren<
 										])
 									)
 								)
-								.leftJoin("pub_values", "pubs.id", "pub_values.pubId")
-								.leftJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+								.where((eb) =>
+									eb.exists(
+										eb.selectFrom("capabilities" as any).where((ebb) => {
+											type Inner =
+												typeof ebb extends ExpressionBuilder<
+													infer Thing,
+													any
+												>
+													? Thing
+													: never;
+											const eb = ebb as ExpressionBuilder<
+												Inner & {
+													capabilities: {
+														membId: string;
+														type: MembershipType;
+														role: MembershipCapabilitiesRole;
+													};
+												},
+												any
+											>;
+
+											return eb.or([
+												eb.and([
+													eb(
+														"capabilities.type",
+														"=",
+														MembershipType.stage
+													),
+													eb(
+														"capabilities.membId",
+														"=",
+														eb.ref("PubsInStages.stageId")
+													),
+												]),
+												eb.and([
+													eb(
+														"capabilities.type",
+														"=",
+														MembershipType.pub
+													),
+													eb(
+														"capabilities.membId",
+														"=",
+														eb.ref("pubs.id")
+													),
+												]),
+												eb.and([
+													eb(
+														"capabilities.type",
+														"=",
+														MembershipType.community
+													),
+													eb(
+														"capabilities.membId",
+														"=",
+														props.communityId
+													),
+												]),
+											]);
+										})
+									)
+								)
+								.$if(Boolean(withRelatedPubs), (qb) =>
+									qb
+										.leftJoin("pub_values", (join) =>
+											join.on((eb) =>
+												eb.and([
+													eb("pub_values.pubId", "=", eb.ref("pubs.id")),
+													eb("pub_values.relatedPubId", "is not", null),
+												])
+											)
+										)
+										.select("pub_values.relatedPubId")
+								)
 								.select([
 									"pubs.id as pubId",
-									"pub_fields.schemaName as schemaName",
-									"pub_fields.slug as slug",
-									"pub_fields.name as fieldName",
 									"pubs.pubTypeId",
 									"pubs.communityId",
 									"pubs.createdAt",
 									"pubs.updatedAt",
 									"pubs.title",
 									"PubsInStages.stageId",
-									"pub_values.id as valueId",
-									"pub_values.fieldId",
-									"pub_values.value",
-									"pub_values.relatedPubId",
-									"pub_values.createdAt as valueCreatedAt",
-									"pub_values.updatedAt as valueUpdatedAt",
 									"pubs.parentId",
 									// increment the depth
 									sql<number>`pub_tree.depth + 1`.as("depth"),
@@ -1395,6 +1463,9 @@ export async function getPubsWithRelatedValuesAndChildren<
 										"path"
 									),
 								])
+								.$if(Boolean(withLegacyAssignee), (qb) =>
+									qb.select("pubs.assigneeId")
+								)
 								.where("pub_tree.depth", "<", depth)
 								.where("pub_tree.isCycle", "=", false)
 								.$if(cycle === "exclude", (qb) =>
@@ -1403,6 +1474,113 @@ export async function getPubsWithRelatedValuesAndChildren<
 								)
 						)
 					)
+			)
+			.with("stage_ms", (db) =>
+				db
+					.selectFrom("stage_memberships")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.where("stage_memberships.userId", "=", props.userId!)
+							.select([
+								"role",
+								"stageId as membId",
+								sql<MembershipType>`'stage'::"MembershipType"`.as("type"),
+							])
+					)
+					.$castTo<{
+						role: MembershipCapabilitiesRole;
+						membId: string;
+						type: MembershipType;
+					}>()
+			)
+			.with("pub_ms", (db) =>
+				db
+					.selectFrom("pub_memberships")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.where("pub_memberships.userId", "=", props.userId!)
+							.select([
+								"role",
+								"pubId as membId",
+								sql<MembershipType>`'pub'::"MembershipType"`.as("type"),
+							])
+					)
+					.$castTo<{
+						role: MembershipCapabilitiesRole;
+						membId: string;
+						type: MembershipType;
+					}>()
+			)
+			.with("community_ms", (db) =>
+				db
+					.selectFrom("community_memberships")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.where("community_memberships.userId", "=", props.userId!)
+							.where("community_memberships.communityId", "=", props.communityId)
+							.select([
+								"role",
+								"communityId as membId",
+								sql<MembershipType>`'community'::"MembershipType"`.as("type"),
+							])
+					)
+					// Add a fake community admin role when selecting without a userId
+					.$if(!Boolean(props.userId), (qb) =>
+						qb.select((eb) => [
+							sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as("role"),
+							eb.val(props.communityId).as("membId"),
+							sql<MembershipType>`'community'::"MembershipType"`.as("type"),
+						])
+					)
+
+					.$castTo<{
+						role: MembershipCapabilitiesRole;
+						membId: string;
+						type: MembershipType;
+					}>()
+			)
+			.with("memberships", (cte) =>
+				cte
+					.selectFrom("community_ms")
+					.selectAll("community_ms")
+					.$if(Boolean(props.userId), (qb) =>
+						qb
+							.union((qb) => qb.selectFrom("pub_ms").selectAll("pub_ms"))
+							.union((qb) => qb.selectFrom("stage_ms").selectAll("stage_ms"))
+							// Add fake community admin role when user is a superadmin
+							.union((qb) =>
+								qb
+									.selectFrom("users")
+									.where("users.id", "=", props.userId!)
+									.where("users.isSuperAdmin", "=", true)
+									.select((eb) => [
+										sql<MemberRole>`${MemberRole.admin}::"MemberRole"`.as(
+											"role"
+										),
+										eb.val(props.communityId).as("membId"),
+										sql<MembershipType>`'community'::"MembershipType"`.as(
+											"type"
+										),
+									])
+							)
+					)
+			)
+			.with("capabilities", (cte) =>
+				cte
+					.selectFrom("memberships")
+					.innerJoin("membership_capabilities", (join) =>
+						join.on((eb) =>
+							eb.and([
+								eb("membership_capabilities.role", "=", eb.ref("memberships.role")),
+								eb("membership_capabilities.type", "=", eb.ref("memberships.type")),
+							])
+						)
+					)
+					.where("membership_capabilities.capability", "in", [
+						Capabilities.viewPub,
+						Capabilities.viewStage,
+					])
+					.selectAll("memberships")
 			)
 			// this CTE finds the top level pubs and limits the result
 			// counter intuitively, this is CTE is referenced in the above `withRecursive` call, despite
@@ -1413,11 +1591,37 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.selectFrom("pubs")
 					.selectAll("pubs")
 					.where("pubs.communityId", "=", props.communityId)
+					.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+					.select("PubsInStages.stageId")
+					.where((eb) =>
+						eb.exists(
+							eb
+								.selectFrom("capabilities")
+								.where((eb) =>
+									eb.or([
+										eb.and([
+											eb("capabilities.type", "=", MembershipType.stage),
+											eb(
+												"capabilities.membId",
+												"=",
+												eb.ref("PubsInStages.stageId")
+											),
+										]),
+										eb.and([
+											eb("capabilities.type", "=", MembershipType.pub),
+											eb("capabilities.membId", "=", eb.ref("pubs.id")),
+										]),
+										eb.and([
+											eb("capabilities.type", "=", MembershipType.community),
+											eb("capabilities.membId", "=", props.communityId),
+										]),
+									])
+								)
+						)
+					)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
 					.$if(Boolean(props.stageId), (qb) =>
-						qb
-							.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-							.where("PubsInStages.stageId", "=", props.stageId!)
+						qb.where("PubsInStages.stageId", "=", props.stageId!)
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
@@ -1425,40 +1629,55 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))
 			)
-			.selectFrom("pub_tree")
-			.select((eb) => [
-				"pub_tree.pubId",
-				"pub_tree.parentId",
-				"pub_tree.pubTypeId",
-				"pub_tree.depth",
-				"pub_tree.stageId",
-				"pub_tree.communityId",
-				"pub_tree.isCycle",
-				"pub_tree.path",
-				"pub_tree.createdAt",
-				"pub_tree.updatedAt",
-				"pub_tree.title",
-				jsonArrayFrom(
-					eb
-						.selectFrom("pub_tree as inner")
-						.select((eb) => [
-							"inner.valueId as id",
-							"inner.fieldId",
-							"inner.value",
-							"inner.relatedPubId",
-							"inner.valueCreatedAt as createdAt",
-							"inner.valueUpdatedAt as updatedAt",
-							"inner.schemaName",
-							"inner.slug as fieldSlug",
-							"inner.fieldName",
-						])
-						.whereRef("inner.pubId", "=", "pub_tree.pubId")
-						// this prevents us from double fetching values if we have detected a cycle
-						.whereRef("inner.depth", "=", "pub_tree.depth")
-						.where("inner.valueId", "is not", null)
-						.orderBy("inner.valueCreatedAt desc")
-				).as("values"),
+			.selectFrom("pub_tree as pt")
+			.select([
+				"pt.pubId as id",
+				"pt.parentId",
+				"pt.pubTypeId",
+				"pt.depth",
+				"pt.stageId",
+				"pt.communityId",
+				"pt.isCycle",
+				"pt.path",
+				"pt.createdAt",
+				"pt.updatedAt",
+				"pt.title",
 			])
+			.$if(Boolean(withValues), (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_values as pv")
+							.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+							.$if(Boolean(fieldSlugs), (qb) =>
+								qb.where("pub_fields.slug", "in", fieldSlugs!)
+							)
+							.select([
+								"pv.id as id",
+								"pv.fieldId",
+								"pv.value",
+								"pv.relatedPubId",
+								"pv.createdAt as createdAt",
+								"pv.updatedAt as updatedAt",
+								"pub_fields.schemaName",
+								"pub_fields.slug as fieldSlug",
+								"pub_fields.name as fieldName",
+							])
+							.whereRef("pv.pubId", "=", "pt.pubId")
+							.orderBy("pv.createdAt desc")
+					).as("values")
+				)
+			)
+			.$if(Boolean(withLegacyAssignee), (qb) =>
+				qb.select((eb) =>
+					jsonObjectFrom(
+						eb
+							.selectFrom("users")
+							.select(SAFE_USER_SELECT)
+							.whereRef("users.id", "=", "pt.assigneeId")
+					).as("assignee")
+				)
+			)
 			.$if(Boolean(withChildren), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
@@ -1466,7 +1685,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 							.selectFrom("pub_tree as children")
 							.select(["children.pubId as id"])
 							.distinctOn(["children.pubId"])
-							.whereRef("children.parentId", "=", "pub_tree.pubId")
+							.whereRef("children.parentId", "=", "pt.pubId")
 					).as("children")
 				)
 			)
@@ -1477,42 +1696,43 @@ export async function getPubsWithRelatedValuesAndChildren<
 						eb
 							.selectFrom("stages")
 							.selectAll("stages")
-							.where("pub_tree.stageId", "is not", null)
-							.whereRef("stages.id", "=", "pub_tree.stageId")
+							.where("pt.stageId", "is not", null)
+							.whereRef("stages.id", "=", "pt.stageId")
 							.limit(1)
 					).as("stage")
 				)
 			)
 			.$if(Boolean(withPubType), (qb) =>
-				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pub_tree.pubTypeId" }))
+				qb.select((eb) => pubType({ eb, pubTypeIdRef: "pt.pubTypeId" }))
 			)
 			.$if(Boolean(withMembers), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
 						eb
 							.selectFrom("pub_memberships")
-							.whereRef("pub_memberships.pubId", "=", "pub_tree.pubId")
+							.whereRef("pub_memberships.pubId", "=", "pt.pubId")
 							.innerJoin("users", "users.id", "pub_memberships.userId")
 							.select(["pub_memberships.role", ...SAFE_USER_SELECT])
 					).as("members")
 				)
 			)
-			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "asc"))
+			.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 			.orderBy("depth asc")
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
-				"pubId",
-				"parentId",
-				"depth",
-				"pubTypeId",
-				"updatedAt",
-				"createdAt",
-				"title",
-				"stageId",
-				"communityId",
-				"isCycle",
-				"path",
+				"pt.pubId",
+				"pt.parentId",
+				"pt.depth",
+				"pt.pubTypeId",
+				"pt.updatedAt",
+				"pt.createdAt",
+				"pt.title",
+				"pt.stageId",
+				"pt.communityId",
+				"pt.isCycle",
+				"pt.path",
 			])
+			.$if(Boolean(withLegacyAssignee), (qb) => qb.groupBy("assigneeId"))
 	).execute();
 
 	if (options?._debugDontNest) {
@@ -1546,14 +1766,14 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 	const depth = opts.depth ?? DEFAULT_OPTIONS.depth;
 
 	// create a map of all pubs by their ID for easy lookup
-	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.pubId, pub]));
+	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.id, pub]));
 
 	const processedPubsById = new Map<PubsId, ProcessedPub<Options>>();
 
 	function processPub(pubId: PubsId, depth: number): ProcessedPub<Options> | undefined {
-		// if (depth < 0) {
-		// 	return processedPubsById.get(pubId);
-		// }
+		if (depth < 0) {
+			return processedPubsById.get(pubId);
+		}
 
 		const alreadyProcessedPub = processedPubsById.get(pubId);
 		if (alreadyProcessedPub) {
@@ -1565,7 +1785,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			return undefined;
 		}
 
-		const processedValues = unprocessedPub.values.map((value) => {
+		const processedValues = unprocessedPub.values?.map((value) => {
 			const relatedPub = value.relatedPubId
 				? processPub(value.relatedPubId, depth - 1)
 				: null;
@@ -1580,26 +1800,18 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			?.map((child) => processPub(child.id, depth - 1))
 			?.filter((child) => !!child);
 
-		const processedPub = {
-			...unprocessedPub,
-			id: unprocessedPub.pubId,
-			stageId: unprocessedPub.stageId,
-			communityId: unprocessedPub.communityId,
-			parentId: unprocessedPub.parentId,
-			createdAt: unprocessedPub.createdAt,
-			updatedAt: unprocessedPub.values.reduce(
-				(max, value) => (value.updatedAt > max ? value.updatedAt : max),
-				unprocessedPub.createdAt
-			),
-			pubTypeId: unprocessedPub.pubTypeId,
-			pubType: unprocessedPub.pubType ?? undefined,
-			values: processedValues,
-			children: processedChildren,
-			members: unprocessedPub.members ?? [],
-		} as ProcessedPub<Options>;
+		const { values, path, ...usefulProcessedPubColumns } = unprocessedPub;
 
-		processedPubsById.set(unprocessedPub.pubId, processedPub);
-		return processedPub;
+		const processedPub = {
+			...usefulProcessedPubColumns,
+			values: processedValues ?? [],
+			children: processedChildren ?? undefined,
+		} as ProcessedPub;
+
+		const forceCast = processedPub as unknown as ProcessedPub<Options>;
+
+		processedPubsById.set(unprocessedPub.id, forceCast);
+		return forceCast;
 	}
 
 	if (opts.rootPubId) {
@@ -1615,7 +1827,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 	const topLevelPubs = pubs.filter((pub) => pub.depth === 1);
 
 	return topLevelPubs
-		.map((pub) => processPub(pub.pubId, depth - 1))
+		.map((pub) => processPub(pub.id, depth - 1))
 		.filter((processedPub) => !!processedPub);
 }
 
@@ -1652,3 +1864,10 @@ export const getPubsCount = async (props: {
 
 	return pubs.count;
 };
+export type FullProcessedPub = ProcessedPub<{
+	withRelatedPubs: true;
+	withChildren: true;
+	withMembers: true;
+	withPubType: true;
+	withStage: true;
+}>;

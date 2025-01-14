@@ -4,20 +4,21 @@
 
 Docker-compose provides a means to run all the code components as containers. It has these advantages:
 
-- more realistically emulating the setting where this code is run in production.
-- less contamination of environment, so spurious failures (or successes) can be avoided.
-- easy to boot from nothing without system dependencies except Docker
+-   more realistically emulating the setting where this code is run in production.
+-   less contamination of environment, so spurious failures (or successes) can be avoided.
+-   easy to boot from nothing without system dependencies except Docker
 
 With disadvantages:
 
-- doesn't support hot-reloading
-- slightly slower iteration due to `docker build` between runs
+-   doesn't support hot-reloading
+-   slightly slower iteration due to `docker build` between runs
 
 With these properties, this is useful for end-to-end tests and locally verifying that the code works when removed from some of the fast-iteration features of `next.js`, such as
 JIT compilation. Because a `docker build` is needed to build the containers to run, hot-reloading is not available in this environment; so faster iteration
 with `pnpm dev` is recommended until you are ready to run battery of tests or need to verify behavior in an isolated environment.
 
 A slightly modified version of `.env.local` is required, where we remove the DATABASE_URL (this is built out of parts in docker envs):
+
 ```
 grep -v DATABASE_URL \
     <./core/.env.local \
@@ -27,12 +28,12 @@ grep -v DATABASE_URL \
 This cluster will address the local supabase and postgres just like when you are running with `pnpm dev`, so no need to take extra steps for migrations (though the same ones are needed).
 
 To run the full cluster as local docker-compose, first initialize supabase as you would for development; then do:
+
 ```
 docker compose -f docker-compose.dev.yml up
 ```
 
 you can now address on `localhost:3000` as before. note that `pnpm dev` uses the same ports and cannot be running at the same time.
-
 
 ## Prettier
 
@@ -58,7 +59,6 @@ We currently have a race condition where dev will sometimes fail because we can'
 
 `core` depends on `ui` which depends on `utils`. `utils` often takes longer to build than it does for `ui` to start building, which causes an error to be thrown because `utils` d.ts file has been cleared out during its build and hasn't been replaced yet. This generates an error, but is quick to resolve, so doesn't break actual dev work from beginning. It does make the console output messier though.
 
-
 ## Building and deploying for AWS environments
 
 All change management to Knowledge Futures' production environment is done through github actions.
@@ -69,6 +69,7 @@ including all details for a container. We don't want to tie code releases to ter
 but the service "declaration" relies on this Task Definition to exist.
 
 Therefore based on community patterns we have seen, the flow is roughly this:
+
 1. The infrastructure code in terraform declares a "template" Task Definition.
 2. Terraform is told not to change the "service" based on changes to the Task Definition.
 3. Any changes to the template will be picked up by the next deploy, which is done outside of Terraform.
@@ -116,10 +117,11 @@ act \
 
 **AWS CLI access in `act`:**
 When you setup `act` locally for the first time, you can choose whether to do a Small, Medium, or Large install.
-The Large install is *very large*, but the medium install does not include the AWS CLI.
+The Large install is _very large_, but the medium install does not include the AWS CLI.
 
 If you choose to work with the medium install, you will need to customize afterward by editing your `~/.actrc` file
 to use an image that includes the AWS CLI, for example your .actrc might look like:
+
 ```
 -P ubuntu-latest=eveships/act-plusplus:latest
 -P ubuntu-22.04=catthehacker/ubuntu:full-22.04
@@ -140,4 +142,5 @@ AWS_SECRET_ACCESS_KEY...
 Images tagged with a SHA alone should be idempotently built, but `-dirty` can be changed/overwritten.
 
 **TODO:**
-- [ ] allow deploying without a rebuild, so that a rollback is convenient
+
+-   [ ] allow deploying without a rebuild, so that a rollback is convenient

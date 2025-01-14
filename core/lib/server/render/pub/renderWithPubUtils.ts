@@ -1,3 +1,4 @@
+import type { JsonValue } from "contracts";
 import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
@@ -10,7 +11,12 @@ export type RenderWithPubRel = "parent" | "self";
 
 export type RenderWithPubPub = {
 	id: string;
-	values: Record<string, any>;
+	values: {
+		fieldName: string;
+		fieldSlug: string;
+		value: unknown;
+		schemaName: CoreSchemaType;
+	}[];
 	createdAt: Date;
 	assignee?: {
 		firstName: string;
@@ -65,19 +71,23 @@ const getAssignee = (context: RenderWithPubContext, rel?: string) => {
 
 const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: string) => {
 	const pub = getPub(context, rel);
-	const pubValue = pub.values[fieldSlug];
+	const pubValue = pub.values.find((value) => value.fieldSlug === fieldSlug);
 	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
 };
 
-export const renderFormInviteLink = async (
-	formSlug: string,
-	memberId: CommunityMembershipsId,
-	userId: UsersId,
-	communityId: CommunitiesId,
-	pubId?: string
-) => {
-	await addMemberToForm({ userId, communityId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, communityId, pubId: pubId as PubsId });
+export const renderFormInviteLink = async ({
+	formSlug,
+	userId,
+	communityId,
+	pubId,
+}: {
+	formSlug: string;
+	userId: UsersId;
+	communityId: CommunitiesId;
+	pubId: PubsId;
+}) => {
+	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
+	return createFormInviteLink({ userId, formSlug, communityId, pubId });
 };
 
 export const renderMemberFields = async ({
@@ -182,7 +192,7 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	} else if (isLinkUrlOptions(options)) {
 		href = options.url;
 	} else if (isLinkFieldOptions(options)) {
-		href = getPubValue(context, options.field, options.rel);
+		href = getPubValue(context, options.field, options.rel).value as string;
 	} else {
 		throw new Error("Unexpected link variant");
 	}

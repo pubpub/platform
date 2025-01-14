@@ -6,14 +6,13 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { MemberRole, StructuralFormElement } from "db/public";
+import { ElementType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext";
-import { isButtonElement } from "~/app/components/FormBuilder/types";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import {
@@ -24,13 +23,10 @@ import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
-import { getPub, getPubCached, getPubs, getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import {
-	renderMarkdownAsHtml,
-	renderMarkdownWithPub,
-} from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
+import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { capitalize } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
@@ -141,22 +137,34 @@ export default async function FormPage({
 	if (!community) {
 		return notFound();
 	}
+	const { user, session } = await getLoginData();
 
 	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
 		}).executeTakeFirst(),
-		searchParams.pubId ? await getPubCached(searchParams.pubId) : undefined,
-		getPubs({ communityId: community.id }),
+		searchParams.pubId
+			? await getPubsWithRelatedValuesAndChildren(
+					{ pubId: searchParams.pubId, communityId: community.id },
+					{ withStage: true, withLegacyAssignee: true, withPubType: true }
+				)
+			: undefined,
+		getPubsWithRelatedValuesAndChildren(
+			{ communityId: community.id, userId: user?.id },
+			{
+				limit: 30,
+				withStage: true,
+				withLegacyAssignee: true,
+				withPubType: true,
+			}
+		),
 		getPubTypesForCommunity(community.id),
 	]);
 
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
-
-	const { user, session } = await getLoginData();
 
 	if (!user && !session) {
 		const result = await handleFormToken({
@@ -188,6 +196,7 @@ export default async function FormPage({
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
+			pubId: pub?.id,
 		});
 
 		if (!memberHasAccessToForm) {
@@ -196,7 +205,12 @@ export default async function FormPage({
 		}
 	}
 
-	const parentPub = pub?.parentId ? await getPubCached(pub.parentId) : undefined;
+	const parentPub = pub?.parentId
+		? await getPubsWithRelatedValuesAndChildren(
+				{ pubId: pub.parentId, communityId: community.id, userId: user?.id },
+				{ withStage: true, withLegacyAssignee: true, withPubType: true }
+			)
+		: undefined;
 
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
@@ -210,7 +224,9 @@ export default async function FormPage({
 	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
-	const submitElement = form.elements.find((e) => isButtonElement(e) && e.elementId === submitId);
+	const submitElement = form.elements.find(
+		(e) => e.type === ElementType.button && e.id === submitId
+	);
 
 	const renderWithPubContext = {
 		communityId: community.id,
@@ -237,7 +253,7 @@ export default async function FormPage({
 
 	const isUpdating = !!pub;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: {}, pubTypeId: form.pubTypeId };
+	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
 	return (
 		<div className="isolate min-h-screen">
@@ -273,16 +289,17 @@ export default async function FormPage({
 									isUpdating={isUpdating}
 									withAutoSave={isUpdating}
 									withButtonElements
+									isExternalForm
 									className="col-span-2 col-start-2"
 								>
 									{form.elements.map((e) => (
 										<FormElement
-											key={e.elementId}
+											key={e.id}
 											pubId={pubId}
 											element={e}
 											searchParams={searchParams}
 											communitySlug={params.communitySlug}
-											values={pub ? pub.values : {}}
+											values={pub ? pub.values : []}
 										/>
 									))}
 								</ExternalFormWrapper>

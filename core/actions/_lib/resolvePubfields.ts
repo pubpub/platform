@@ -1,8 +1,6 @@
 import { z } from "zod";
 
-import type { JsonValue } from "contracts";
-
-import type { getPubCached } from "~/lib/server";
+import type { JsonValue, ProcessedPub } from "contracts";
 
 const pubFieldsSchema = z
 	.object({
@@ -15,7 +13,7 @@ const pubFieldsSchema = z
  */
 export const resolveWithPubfields = <T extends Record<string, any>>(
 	argsOrConfig: T,
-	pubValues: Awaited<ReturnType<typeof getPubCached>>["values"],
+	pubValues: ProcessedPub["values"],
 	overrides: Set<string>
 ) => {
 	const parsedConfig = pubFieldsSchema.safeParse(argsOrConfig);
@@ -38,7 +36,7 @@ export const resolveWithPubfields = <T extends Record<string, any>>(
 			let value: JsonValue | undefined = undefined;
 
 			for (const slug of pubFieldSlugs) {
-				value = pubValues[slug];
+				value = pubValues.find((v) => v.fieldSlug === slug)?.value as JsonValue;
 
 				// FIXME: this treats empty strings as valid values
 				// we should investigate whether this is the right behaviour
@@ -60,5 +58,6 @@ export const resolveWithPubfields = <T extends Record<string, any>>(
 	return {
 		...rest,
 		...pv,
+		pubFields,
 	};
 };

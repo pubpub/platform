@@ -6,17 +6,26 @@ import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { createLastModifiedBy } from "../lastModifiedBy";
+
+const { createSeed, seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
 
-const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
+const seed = createSeed({
 	community: {
 		name: "test",
 		slug: "test-server-pub",
+	},
+	users: {
+		admin: {
+			role: MemberRole.admin,
+		},
+		stageEditor: {
+			role: MemberRole.contributor,
+		},
 	},
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
@@ -33,7 +42,11 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 		},
 	},
 	stages: {
-		"Stage 1": {},
+		"Stage 1": {
+			members: {
+				stageEditor: MemberRole.editor,
+			},
+		},
 	},
 	pubs: [
 		{
@@ -70,8 +83,9 @@ const { community, pubFields, pubTypes, stages, pubs } = await seedCommunity({
 			},
 		},
 	],
-	users: {},
 });
+
+const { community, pubFields, pubTypes, stages, pubs, users } = await seedCommunity(seed);
 
 describe("createPubRecursive", () => {
 	it("should be able to create a simple pub", async () => {
@@ -404,26 +418,94 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const rootPubId = pub.id;
 		const pubValues = await getPubsWithRelatedValuesAndChildren(
-			{ pubId: rootPubId, communityId: community.id },
+			{ pubId: rootPubId, communityId: community.id, userId: users.admin.id },
 			{ depth: 10 }
 		);
 
-		expect(pubValues).toMatchObject({
-			values: [
-				{ value: "Some title" },
-				{
-					value: "test relation value",
-					relatedPub: {
-						values: [{ value: "test relation title" }],
-					},
+		pubValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug));
+		expect(pubValues.values).toMatchObject([
+			{
+				value: "test relation value",
+				relatedPub: {
+					values: [{ value: "test relation title" }],
 				},
-			],
-		});
+			},
+			{ value: "Some title" },
+		]);
 
 		// check that children are defined because `withChildren` is not `false`
 		expectTypeOf(pubValues.children).not.toEqualTypeOf<undefined>();
 		// check that relatedPub is defined because `withRelatedPubs` is not `false`
 		expectTypeOf(pubValues.values[0].relatedPub).not.toEqualTypeOf<undefined>();
+	});
+
+	// to make sure we aren't accidentally returning temporary columns used for the query as the final result
+	it("should return all the correct columns", async () => {
+		const trx = getTrx();
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				stageId: stages["Stage 1"].id,
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "Some title",
+				},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: createdPub.id, communityId: community.id },
+			{
+				depth: 10,
+				withPubType: true,
+				withStage: true,
+				withMembers: true,
+				withLegacyAssignee: true,
+			}
+		);
+
+		expect(pub).toMatchObject({
+			id: createdPub.id,
+		});
+
+		expect(pub.pubType).toMatchObject({
+			id: pubTypes["Basic Pub"].id,
+			fields: Object.values(pubTypes["Basic Pub"].pubFields).map((f) => ({
+				id: f.id,
+				slug: f.slug,
+			})),
+		});
+		expect(pub.stage).toMatchObject({
+			id: stages["Stage 1"].id,
+			name: "Stage 1",
+			order: stages["Stage 1"].order,
+		});
+		expect(pub.members).toEqual([]);
+		expect(pub.assignee).toEqual(null);
+		expect(Object.keys(pub).sort()).toEqual(
+			[
+				"id",
+				"pubType",
+				"stage",
+				"members",
+				"assignee",
+				"values",
+				"children",
+				"stageId",
+				"pubTypeId",
+				"createdAt",
+				"updatedAt",
+				"parentId",
+				"title",
+				"communityId",
+				"depth",
+				"isCycle",
+			].sort()
+		);
 	});
 
 	it("should be able to fetch pubvalues with children", async () => {
@@ -529,9 +611,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			PubTypes & { fields: PubTypePubField[] }
 		>();
 
+		pubWithRelatedValuesAndChildren.values.sort((a, b) =>
+			a.fieldSlug.localeCompare(b.fieldSlug)
+		);
+		pubWithRelatedValuesAndChildren.children[0].values.sort((a, b) =>
+			a.fieldSlug.localeCompare(b.fieldSlug)
+		);
 		expect(pubWithRelatedValuesAndChildren).toMatchObject({
 			values: [
-				{ value: "Some title" },
 				{
 					value: "test relation value",
 					relatedPub: {
@@ -539,11 +626,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 						children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
 					},
 				},
+				{ value: "Some title" },
 			],
 			children: [
 				{
 					values: [
-						{ value: "Child of Root Pub" },
+						{
+							value: "Nested Relation 2",
+						},
 						{
 							value: "Nested Relation",
 							relatedPub: {
@@ -560,9 +650,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 								],
 							},
 						},
-						{
-							value: "Nested Relation 2",
-						},
+						{ value: "Child of Root Pub" },
 					],
 					children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
 				},
@@ -571,9 +659,6 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 	});
 
 	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
-		const trx = getTrx();
-		const { createPubRecursiveNew } = await import("./pub");
-
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const allPubs = await getPubsWithRelatedValuesAndChildren(
@@ -879,7 +964,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const pubId = pubs[0].id as PubsId;
 
 		// Add a user and make it a member of this pub
-		const users = [
+		const newUsers = [
 			{
 				email: "test@email.com",
 				slug: "test-user",
@@ -893,7 +978,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				lastName: "user2",
 			},
 		];
-		const userIds = await trx.insertInto("users").values(users).returning(["id"]).execute();
+		const userIds = await trx.insertInto("users").values(newUsers).returning(["id"]).execute();
 		await trx
 			.insertInto("pub_memberships")
 			.values(userIds.map(({ id }) => ({ userId: id, pubId, role: MemberRole.admin })))
@@ -902,12 +987,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const pub = await getPubsWithRelatedValuesAndChildren(
-			{ pubId, communityId: community.id },
+			{ pubId, communityId: community.id, userId: users.admin.id },
 			{ withMembers: true }
 		);
 
 		expect(pub).toMatchObject({
-			members: users.map((u) => ({ ...u, role: MemberRole.admin })),
+			members: newUsers.map((u) => ({ ...u, role: MemberRole.admin })),
 		});
 	});
 
@@ -940,6 +1025,37 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			id: emptyPub.id,
 			values: [],
 		});
+	});
+
+	it("should not fetch values if withValues is false", async () => {
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const createdPub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				children: [
+					{
+						pubTypeId: pubTypes["Basic Pub"].id,
+						values: { [pubFields.Title.slug]: "test child title" },
+					},
+				],
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+
+		const pub = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: createdPub.id, communityId: community.id },
+			{ withValues: false }
+		);
+
+		expect(pub.values.length).toBe(0);
+		expect(pub.children?.[0].values.length).toBe(0);
 	});
 });
 
@@ -1464,6 +1580,31 @@ describe("removePubRelations", () => {
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"
 		);
+	});
+
+	it("should not throw an error when there are no relations to remove", async () => {
+		const trx = getTrx();
+		const { removeAllPubRelationsBySlugs, createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		expect(pub.values).toHaveLength(0);
+
+		await expect(
+			removeAllPubRelationsBySlugs({
+				pubId: pub.id,
+				communityId: community.id,
+				slugs: [pubFields["Some relation"].slug],
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+		).resolves.toEqual([]);
 	});
 });
 

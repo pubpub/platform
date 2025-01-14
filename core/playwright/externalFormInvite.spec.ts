@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type { Page } from "@playwright/test";
 
 import { faker } from "@faker-js/faker";
@@ -26,6 +25,7 @@ test.describe.configure({ mode: "serial" });
 
 let page: Page;
 let pubId: PubsId;
+let pubId2: PubsId;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
@@ -53,6 +53,11 @@ test.beforeAll(async ({ browser }) => {
 	pubId = await pubsPage.createPub({
 		stage: "Evaluating",
 		values: { title: "The Activity of Snails" },
+	});
+	await pubsPage.goTo();
+	pubId2 = await pubsPage.createPub({
+		stage: "Evaluating",
+		values: { title: "Do not let anyone edit me" },
 	});
 });
 
@@ -132,7 +137,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.goto(decodedUrl);
 		await newPage.getByText("Progress will be automatically saved").waitFor();
 
-		await newPage.getByLabel(`${COMMUNITY_SLUG}:content`).fill("LGTM");
+		await newPage.getByLabel("Content").fill("LGTM");
 
 		// Make sure it autosaves
 		// It should happen after 5s, but it seems to take ~6 usually
@@ -154,5 +159,18 @@ test.describe("Inviting a new user to fill out a form", () => {
 		const unauthorizedPubsPage = new PubsPage(newPage, "croccroc");
 		await unauthorizedPubsPage.goTo();
 		expect(await newPage.url()).toMatch(/\/settings$/);
+
+		// Creating a pub without a pubId should work
+		const createPage = decodedUrl.replace(`pubId%3D${pubId}`, "");
+		await newPage.goto(createPage);
+		await newPage.getByLabel("Title").fill("new pub");
+		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
+		await newPage.getByText("Form Successfully Submitted").waitFor();
+
+		// Try to sneakily swap out the pubId in our decoded url for a different pubId
+		const swappedPubIdUrl = decodedUrl.replace(pubId, pubId2);
+		await newPage.goto(swappedPubIdUrl);
+		// Expect 404 page
+		await expect(newPage.getByText("This page could not be found.")).toHaveCount(1);
 	});
 });

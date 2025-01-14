@@ -1,35 +1,30 @@
 import React, { Fragment, Suspense } from "react";
 import Link from "next/link";
 
-import type { PubsId } from "db/public";
+import type { ProcessedPub } from "contracts";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
-import type { GetPubResult, PubValues } from "~/lib/server";
 import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
-import { getPubCached } from "~/lib/server";
+import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { PubDropDown } from "./pubs/PubDropDown";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowFooter, RowHeader } from "./Row";
 
+type PubRowPub = ProcessedPub<{ withPubType: true; withRelatedPubs: false; withStage: true }>;
+
 type Props = {
 	actions?: React.ReactNode;
 	searchParams: Record<string, unknown>;
-} & XOR<{ pub: GetPubResult }, { pubId: PubsId }>;
+	userId: UsersId;
+} & XOR<{ pub: PubRowPub }, { pubId: PubsId; communityId: CommunitiesId }>;
 
-type MinimalRecursivePubChildren = {
-	id: PubsId;
-	pubType: GetPubResult["pubType"];
-	values: PubValues;
-	createdAt: Date;
-	children: MinimalRecursivePubChildren[];
-	title: string | null;
-};
-const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
+const groupPubChildrenByPubType = (pubs: PubRowPub[]) => {
 	const pubTypes = pubs.reduce(
 		(prev, curr) => {
 			const pubType = curr.pubType;
@@ -44,21 +39,15 @@ const groupPubChildrenByPubType = (pubs: MinimalRecursivePubChildren[]) => {
 		},
 		{} as {
 			[key: string]: {
-				pubType: GetPubResult["pubType"];
-				pubs: MinimalRecursivePubChildren[];
+				pubType: PubRowPub["pubType"];
+				pubs: PubRowPub[];
 			};
 		}
 	);
 	return Object.values(pubTypes);
 };
 
-const ChildHierarchy = ({
-	pub,
-	communitySlug,
-}: {
-	pub: MinimalRecursivePubChildren;
-	communitySlug: string;
-}) => {
+const ChildHierarchy = ({ pub, communitySlug }: { pub: PubRowPub; communitySlug: string }) => {
 	return (
 		<ul className={cn("ml-4 text-sm")}>
 			{groupPubChildrenByPubType(pub.children).map((group) => (
@@ -88,7 +77,16 @@ const ChildHierarchy = ({
 };
 
 const PubRow: React.FC<Props> = async (props: Props) => {
-	const pub = (props.pubId ? await getPubCached(props.pubId) : props.pub) as GetPubResult;
+	const pub = props.pubId
+		? await getPubsWithRelatedValuesAndChildren(
+				{ pubId: props.pubId, communityId: props.communityId, userId: props.userId },
+				{
+					withPubType: true,
+					withRelatedPubs: false,
+					withStage: true,
+				}
+			)
+		: props.pub;
 	if (!pub) {
 		return null;
 	}

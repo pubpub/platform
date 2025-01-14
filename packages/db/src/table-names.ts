@@ -950,6 +950,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: true,
 			},
+			{
+				name: "pubId",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{

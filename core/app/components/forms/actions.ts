@@ -52,6 +52,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 	const canAccessForm = await userHasPermissionToForm({
 		userId: result.user.id,
 		formId: form.id,
+		pubId,
 	});
 
 	if (!canAccessForm) {

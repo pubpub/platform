@@ -183,7 +183,7 @@ test.describe("Creating a pub", () => {
 		// Add it as a pub type
 		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
 		await pubTypePage.goto();
-		await pubTypePage.addType("Editor", "editor", ["title", "rich-text"]);
+		await pubTypePage.addType("Editor", "editor", ["title", "rich-text"], "title");
 
 		// Now create a pub of this type
 		const actualTitle = "new title";

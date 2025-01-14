@@ -345,7 +345,7 @@
 		"db": "workspace:*",
 		"lexical": "^0.15.0",
 		"lucide-react": "^0.357.0",
-		"react-day-picker": "^8.10.0",
+		"react-day-picker": "^9.4.2",
 		"schemas": "workspace:*",
 		"tailwind-merge": "catalog:",
 		"tailwindcss-animate": "^1.0.6",

@@ -135,6 +135,7 @@ model Pub {
   actionRuns               ActionRun[]
   relatedValues            PubValue[]                 @relation("related_pub")
   members                  PubMembership[]
+  formMemberships          FormMembership[]
 
   @@map(name: "pubs")
 }
@@ -379,13 +380,15 @@ model FormMembership {
   userId        String?
   memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
   memberGroupId String?
+  pub           Pub?         @relation(fields: [pubId], references: [id], onDelete: Cascade)
+  pubId         String?
   // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
   // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @default(now()) @updatedAt
 
-  @@unique([formId, userId])
-  @@unique([formId, memberGroupId])
+  @@unique([formId, userId, pubId])
+  @@unique([formId, memberGroupId, pubId])
   @@map(name: "form_memberships")
 }
 
@@ -455,6 +458,7 @@ enum Action {
   http
   move
   googleDriveImport
+  datacite
 }
 
 model ActionRun {
