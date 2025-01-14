@@ -22,6 +22,12 @@ function createStageList<T extends CommunityStage>(
 	stages: StagesById,
 	visited: Array<T> = []
 ): Array<T> {
+	// If stage is undefined, return the current visited list
+	// This would happen if the move constraint isn't in the stage list (because of user permissions)
+	if (!stage) {
+		return visited;
+	}
+
 	// If the stage has already been visited, return the current visited list
 	if (visited.includes(stage)) {
 		return visited;
@@ -53,22 +59,9 @@ export const makeStagesById = <T extends { id: StagesId }>(stages: T[]): { [key:
  */
 export function getStageWorkflows<T extends CommunityStage>(stages: T[]): Array<Array<T>> {
 	const stagesById = makeStagesById(stages);
-	// Filter move constraints that don't exist in the list of stages out
-	const stagesWithFilteredMoveConstraints = stages.map((stage) => {
-		const filteredConstraints = stage.moveConstraints.filter(
-			(constraint) => stagesById[constraint.id]
-		);
-		const filteredSources = stage.moveConstraintSources.filter(
-			(constraint) => stagesById[constraint.id]
-		);
-		return {
-			...stage,
-			moveConstraintSources: filteredSources,
-			moveConstraints: filteredConstraints,
-		};
-	});
 	// find all stages with edges that only point to them
-	const stageRoots = stagesWithFilteredMoveConstraints.filter((stage) => {
+	// also make sure to filter to only move constraints that there are stages for (permission restrictions may return more move constraint stages than a user can see)
+	const stageRoots = stages.filter((stage) => {
 		if (stage.moveConstraintSources.length === 0) {
 			return true;
 		}
