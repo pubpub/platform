@@ -63,7 +63,7 @@ export default async function Page(props: {
 			slug: formSlug,
 			communityId,
 		}).executeTakeFirstOrThrow(),
-		getPubFields({ communityId }).executeTakeFirstOrThrow(),
+		getPubFields({ communityId, includeRelations: true }).executeTakeFirstOrThrow(),
 	]);
 
 	const formBuilderId = "formbuilderform";
