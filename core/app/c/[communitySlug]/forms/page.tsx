@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";

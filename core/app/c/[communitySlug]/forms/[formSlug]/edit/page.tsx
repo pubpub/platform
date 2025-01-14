@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { ClipboardPenLine, Info } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";

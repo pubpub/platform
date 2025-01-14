@@ -3,8 +3,7 @@ import type { SendMailOptions } from "nodemailer";
 import { render } from "@react-email/render";
 import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
 
-import type { Communities, MemberRole, Users } from "db/public";
-import type { MembershipType } from "db/src/public/MembershipType";
+import type { Communities, MemberRole, MembershipType, Users } from "db/public";
 import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 

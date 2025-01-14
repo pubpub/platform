@@ -1,9 +1,9 @@
 {
 	"name": "@pubpub/eslint-config",
+	"type": "module",
 	"version": "0.1.0",
 	"private": true,
 	"license": "MIT",
-	"type": "module",
 	"files": [
 		"./base.js",
 		"./next.js",

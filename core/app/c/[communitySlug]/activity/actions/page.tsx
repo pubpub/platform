@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";

@@ -1,10 +1,14 @@
 {
 	"name": "@pubpub/sdk",
+	"type": "module",
 	"private": true,
 	"version": "0.0.6",
 	"description": "",
-	"main": "dist/pubpub-sdk.cjs.js",
-	"module": "dist/pubpub-sdk.esm.js",
+	"exports": {
+		".": "./dist/pubpub-sdk.js",
+		"./react": "./dist/pubpub-sdk-react.js",
+		"./package.json": "./package.json"
+	},
 	"files": [
 		"dist",
 		"react"
@@ -48,7 +52,13 @@
 		"entrypoints": [
 			"index.ts",
 			"react/index.tsx"
-		]
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config"
 }
