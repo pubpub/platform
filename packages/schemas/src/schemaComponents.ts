@@ -109,11 +109,14 @@ export const richTextInputConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 });
 export const relationBlockConfigSchema = Type.Object({
-	label: Type.Optional(Type.String()),
-	help: Type.Optional(Type.String()),
-	pubType: Type.Optional(Type.String()),
-	valueComponent: Type.Enum(InputComponent),
-	valueConfig: Type.Any(), // TODO: list out all schemas here?
+	// "Outer" is the config 'around' the related values
+	// Related values can be of any of the above ConfigSchema types
+	outer: Type.Object({
+		label: Type.Optional(Type.String()),
+		help: Type.Optional(Type.String()),
+		pubType: Type.Optional(Type.String()),
+		component: Type.Enum(InputComponent),
+	}),
 });
 
 export const componentConfigSchemas = {

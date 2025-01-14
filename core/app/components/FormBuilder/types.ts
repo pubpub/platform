@@ -36,6 +36,7 @@ export type InputElement = baseElement & {
 	content: never;
 	schemaName: CoreSchemaType;
 	component: InputComponent;
+	config?: unknown;
 };
 
 export type StructuralElement = baseElement & {

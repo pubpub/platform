@@ -8,7 +8,7 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { useForm } from "react-hook-form";
-import { componentConfigSchemas, componentsBySchema } from "schemas";
+import { componentConfigSchemas, componentsBySchema, relationBlockConfigSchema } from "schemas";
 
 import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
@@ -195,6 +195,7 @@ const ComponentSelect = ({
 	value: InputComponent;
 	onChange: (component: InputComponent) => void;
 	element: InputElement;
+	name: string;
 }) => {
 	return (
 		<div className="grid grid-cols-2 gap-3">
@@ -208,7 +209,7 @@ const ComponentSelect = ({
 						need to render buttons. */}
 						<input
 							id={`component-${c}`}
-							name="component"
+							name={name}
 							type="radio"
 							className="peer sr-only"
 							defaultChecked={selected}
@@ -255,6 +256,8 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 	const { schemaName, isRelation } = fieldInputElement;
 	const allowedComponents = componentsBySchema[schemaName];
 
+	const defaultConfig = isRelation ? { outer: { component: InputComponent.relationBlock } } : {};
+
 	const form = useForm<ConfigFormData<InputComponent>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
 		resolver: (values, context, options) => {
@@ -266,7 +269,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
 		},
-		defaultValues: fieldInputElement,
+		defaultValues: { ...fieldInputElement, config: fieldInputElement.config ?? defaultConfig },
 	});
 
 	useUnsavedChangesWarning(form.formState.isDirty);
@@ -274,8 +277,19 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 	const component = form.watch("component");
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
+		const config = Value.Clone(values.config);
 		// Some `config` schemas have extra values which persist if we don't Clean first
-		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config);
+		let cleanedConfig = Value.Clean(
+			componentConfigSchemas[values.component],
+			values.config
+		) as ConfigFormData<typeof component>;
+		if (isRelation) {
+			const cleanedRelated = Value.Clean(
+				relationBlockConfigSchema,
+				config
+			) as ConfigFormData<InputComponent.relationBlock>;
+			cleanedConfig = { ...cleanedConfig, ...cleanedRelated };
+		}
 		update(index, {
 			...fieldInputElement,
 			...values,
@@ -300,6 +314,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 			/>
 		</>
 	) : null;
+	const componentSelector = isRelation ? "config.outer.component" : "component";
 
 	return (
 		<Form {...form}>
@@ -317,9 +332,10 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				<hr />
 				<FormField
 					control={form.control}
-					name="component"
+					name={componentSelector}
 					render={({ field }) => (
 						<ComponentSelect
+							name={componentSelector}
 							onChange={field.onChange}
 							value={field.value}
 							element={fieldInputElement}
@@ -340,9 +356,10 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						<hr />
 						<FormField
 							control={form.control}
-							name="config.valueComponent"
+							name="component"
 							render={({ field }) => (
 								<ComponentSelect
+									name="component"
 									onChange={field.onChange}
 									value={field.value}
 									element={fieldInputElement}

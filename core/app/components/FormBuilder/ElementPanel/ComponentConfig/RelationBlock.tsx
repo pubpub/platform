@@ -9,7 +9,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 		<>
 			<FormField
 				control={form.control}
-				name="config.label"
+				name="config.outer.label"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Label</FormLabel>
@@ -22,7 +22,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 			/>
 			<FormField
 				control={form.control}
-				name="config.help"
+				name="config.outer.help"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Help Text</FormLabel>
@@ -36,18 +36,13 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 			/>
 			<FormField
 				control={form.control}
-				name="config.pubType"
+				name="config.outer.pubType"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Pub Type</FormLabel>
 						<FormControl>
 							{/* TODO: make proper dropdown */}
-							<Input
-								{...field}
-								onChange={(e) => {
-									field.onChange(Number(e.target.value));
-								}}
-							/>
+							<Input {...field} />
 						</FormControl>
 						<FormMessage />
 					</FormItem>
