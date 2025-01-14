@@ -157,4 +157,3 @@ COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/
 COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./integrations/evaluations/.env
 
 CMD node integrations/evaluations/server.js
-
