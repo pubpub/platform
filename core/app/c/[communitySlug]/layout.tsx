@@ -33,6 +33,12 @@ export default async function MainLayout({ children, params }: Props) {
 		return notFound();
 	}
 
+	const role = getCommunityRole(user, community);
+
+	if (!role) {
+		redirect("/settings");
+	}
+
 	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
 
 	return (

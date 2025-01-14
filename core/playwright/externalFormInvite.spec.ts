@@ -150,10 +150,8 @@ test.describe("Inviting a new user to fill out a form", () => {
 		// Test authorization for new contributor
 		const pubsPage = new PubsPage(newPage, COMMUNITY_SLUG);
 		await pubsPage.goTo();
-		// User should be redirected to user settings page when viewing the pubs page in the
-		// community they are a contributor of
-		// This should fail/change we implement pub visibility checks
-		expect(await newPage.url()).toMatch(/\/settings$/);
+		// User should see the pubs page in the community they are a contributor of
+		expect(newPage.url()).toMatch(/\/pubs$/);
 
 		// Make sure they can't view the pubs page in other communities
 		const unauthorizedPubsPage = new PubsPage(newPage, "croccroc");
