@@ -1,13 +1,10 @@
 import { cache } from "react";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { StagesId } from "db/public";
 
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
-import prisma from "~/prisma/db";
 import { pubType, pubValuesByRef } from "../server";
-import { communityMemberInclude, stageInclude } from "../server/_legacy-integration-queries";
 import { autoCache } from "../server/cache/autoCache";
 import { SAFE_USER_SELECT } from "../server/user";
 
@@ -75,17 +72,3 @@ export const getStageRules = cache((stageId: string) => {
 			.$narrowType<{ config: RuleConfig | null }>()
 	);
 });
-
-export const getCommunityBySlug = async (communitySlug: string) => {
-	return await prisma.community.findUnique({
-		where: { slug: communitySlug },
-		include: {
-			stages: {
-				include: stageInclude,
-			},
-			members: {
-				include: communityMemberInclude,
-			},
-		},
-	});
-};
