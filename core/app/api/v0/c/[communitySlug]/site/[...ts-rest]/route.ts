@@ -12,9 +12,7 @@ import type {
 	LastModifiedBy,
 } from "db/types";
 import { siteApi } from "contracts";
-import { ApiAccessScope, ApiAccessType } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";

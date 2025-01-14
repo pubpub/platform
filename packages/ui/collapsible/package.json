@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-collapsible.cjs.js",
-	"module": "dist/ui-collapsible.esm.js"
-}

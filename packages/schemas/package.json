@@ -1,8 +1,14 @@
 {
 	"name": "schemas",
+	"type": "module",
 	"version": "0.0.1",
 	"main": "dist/schemas.cjs.js",
 	"module": "dist/schemas.esm.js",
+	"exports": {
+		".": "./dist/schemas.js",
+		"./schemas": "./dist/schemas-schemas.js",
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
@@ -21,6 +27,18 @@
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "^1.3.1"
+	},
+	"preconstruct": {
+		"entrypoints": [
+			"index.ts",
+			"schemas.ts"
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config"
 }

@@ -1,4 +1,0 @@
-{
-	"main": "dist/context-editor-utils.cjs.js",
-	"module": "dist/context-editor-utils.esm.js"
-}

@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-dropdown-menu.cjs.js",
-	"module": "dist/ui-dropdown-menu.esm.js"
-}

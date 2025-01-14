@@ -1,6 +1,6 @@
 const path = require("path");
-const sharedConfig = require("ui/tailwind.config.js");
-const editorConfig = require("context-editor/tailwind.config.js");
+const sharedConfig = require("ui/tailwind.config.cjs");
+const editorConfig = require("context-editor/tailwind.config.cjs");
 const packagePath = (id) => path.dirname(require.resolve(`${id}/package.json`));
 const packageSource = (id) => path.join(packagePath(id), "src", "**/*.{ts,tsx}");
 

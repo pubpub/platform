@@ -1,8 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { CoreSchemaType, MemberRole } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, CoreSchemaType, MemberRole, MembershipType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
