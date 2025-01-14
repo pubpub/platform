@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-toggle.cjs.js",
-	"module": "dist/ui-toggle.esm.js"
-}
