@@ -9,6 +9,7 @@ import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { FormElementData, PanelState } from "../types";
+import { FieldIcon } from "../FieldIcon";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
 
@@ -31,7 +32,6 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 		) {
 			return null;
 		}
-		const Icon = (field.schemaName && SCHEMA_TYPES_WITH_ICONS[field.schemaName]?.icon) || Type;
 
 		const schemaName = field.schemaName;
 		if (schemaName === null) {
@@ -62,7 +62,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				}}
 				data-testid={`field-button-${field.slug}`}
 			>
-				<Icon size={20} className="my-auto text-emerald-500" />
+				<FieldIcon field={field} className="my-auto text-emerald-500" />
 				<div className="flex flex-col items-start text-left">
 					<div className="text-muted-foreground">{field.slug}</div>
 					<div className="text-left font-semibold">{field.name}</div>
