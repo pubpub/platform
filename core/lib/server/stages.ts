@@ -11,8 +11,7 @@ import type {
 	StagesUpdate,
 	UsersId,
 } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 
 import type { AutoReturnType } from "../types";
 import { db } from "~/kysely/database";
