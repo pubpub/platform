@@ -95,7 +95,7 @@
 		"graphile-worker": "^0.16.5",
 		"hast": "^1.0.0",
 		"hastscript": "^9.0.0",
-		"jsonpath-plus": "^9.0.0",
+		"jsonpath-plus": "^10.2.0",
 		"jsonwebtoken": "^9.0.0",
 		"katex": "^0.16.18",
 		"kysely": "^0.27.3",
