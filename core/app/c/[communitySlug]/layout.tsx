@@ -35,9 +35,7 @@ export default async function MainLayout({ children, params }: Props) {
 
 	const role = getCommunityRole(user, community);
 
-	if (role === "contributor" || !role) {
-		// TODO: allow contributors to view /c/* pages after we implement membership and
-		// role-based authorization checks
+	if (!role) {
 		redirect("/settings");
 	}
 
