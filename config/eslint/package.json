@@ -37,6 +37,7 @@
 		"@types/eslint-plugin-jsx-a11y": "^6.10.0",
 		"@types/node": "catalog:",
 		"eslint": "catalog:",
+		"eslint-plugin-react-compiler": "19.0.0-beta-63e3235-20250105",
 		"eslint-config-turbo": "^2.3.3",
 		"eslint-plugin-validate-jsx-nesting": "^0.1.1",
 		"prettier": "catalog:",
