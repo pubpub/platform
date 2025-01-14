@@ -5,8 +5,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import type { StagesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";

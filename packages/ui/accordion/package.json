@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-accordion.cjs.js",
-	"module": "dist/ui-accordion.esm.js"
-}

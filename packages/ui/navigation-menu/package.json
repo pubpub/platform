@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-navigation-menu.cjs.js",
-	"module": "dist/ui-navigation-menu.esm.js"
-}

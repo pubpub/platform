@@ -3,9 +3,7 @@
 import type { QueryCreator } from "kysely";
 
 import type { FormElementsId, FormsId, NewFormElements, PublicSchema } from "db/public";
-import { formElementsInitializerSchema } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, formElementsInitializerSchema, MembershipType } from "db/public";
 import { logger } from "logger";
 
 import type { FormBuilderSchema } from "./types";
