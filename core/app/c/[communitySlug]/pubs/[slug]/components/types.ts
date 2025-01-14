@@ -32,6 +32,8 @@ export type ChildPubRowMemberField = {
 
 export type ChildPubRow = {
 	id: PubsId;
+	title: string;
+	slug: string;
 	createdAt: Date;
 	stages: Stages[];
 	memberFields: ChildPubRowMemberField[];

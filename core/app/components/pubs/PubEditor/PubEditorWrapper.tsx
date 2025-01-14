@@ -2,13 +2,13 @@
 
 import type { FieldValues } from "react-hook-form";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { toast } from "ui/use-toast";
 
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
-import { pubEditPath, pubPath } from "~/lib/paths";
+import { pubEditPath } from "~/lib/paths";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { SAVE_STATUS_QUERY_PARAM } from "./constants";
 
@@ -40,8 +40,8 @@ export const PubEditorWrapper = ({
 
 			router.replace(`${editPath}?${newParams.toString()}`, { scroll: false });
 		} else {
-			const createPubPath = pubPath(community.slug, args.slug ?? props.pub.slug);
-			router.push(`${createPubPath}?${newParams.toString()}`);
+			const editPath = pubEditPath(community.slug, args.slug ?? props.pub.slug);
+			router.push(`${editPath}?${newParams.toString()}`);
 		}
 	};
 

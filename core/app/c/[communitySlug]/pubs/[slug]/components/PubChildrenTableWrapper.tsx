@@ -47,6 +47,7 @@ const getChildPubRunActionDropdowns = (row: ChildPubRow, pageContext: PageContex
 
 type Props = {
 	communitySlug: string;
+	parentPubId: PubsId;
 	parentPubSlug: string;
 	pageContext: PageContext;
 };
@@ -76,7 +77,7 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 					<Link
 						prefetch
 						key={pubType.pubTypeId}
-						href={pubPath(props.communitySlug, props.pubSlug)}
+						href={`${pubPath(props.communitySlug, props.pubSlug)}?${linkSearchParams.toString()}`}
 						className={cn(
 							buttonVariants({
 								variant: isSelected ? "default" : "ghost",
@@ -108,7 +109,7 @@ const PubTypeSwitcher = (props: PubTypeSwitcherProps) => {
 
 async function PubChildrenTableWrapper(props: Props) {
 	const pubChildren = await getPubChildrenTable(
-		{ parentPubSlug: props.parentPubSlug },
+		props.parentPubId,
 		props.pageContext.searchParams.selectedPubType as PubTypesId
 	).executeTakeFirst();
 

@@ -12,7 +12,10 @@ import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
 import type { ChildPubRow, ChildPubRowPubType } from "./types";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { UserCard } from "~/app/components/UserCard";
+import { pubPath } from "~/lib/paths";
+import { getPubTitle } from "~/lib/pubs";
 
 export const createdAtDateOptions = {
 	month: "short",
@@ -86,14 +89,19 @@ export const getPubChildrenTableColumns = (
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
 			cell: ({ row }) => {
-				const pathname = usePathname();
-				const path = pathname.split("/").slice(0, 4).join("/");
-				const titleLikeValue = Object.entries(row.original.values).find(
-					([slug]) => slug.split(":")[1]?.indexOf("title") !== -1
-				)?.[1] as string | undefined;
-				const title = titleLikeValue || childPubType?.name || "Child";
+				const { slug } = useCommunity();
+				const title = getPubTitle({
+					...row.original,
+					pubType: {
+						name: childPubType?.name ?? "Child",
+					},
+				});
+
 				return (
-					<Link className="block truncate underline" href={`${path}/${row.original.id}`}>
+					<Link
+						className="block truncate hover:underline"
+						href={pubPath(slug, row.original.slug)}
+					>
 						{title}
 					</Link>
 				);

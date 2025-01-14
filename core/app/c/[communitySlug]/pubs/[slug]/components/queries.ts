@@ -60,22 +60,14 @@ const memberFields = (pubId: Expression<string>) =>
 const pubType = (pubTypeId: Expression<string>) =>
 	jsonObjectFrom(getPubTypeBase().whereRef("pub_types.id", "=", pubTypeId));
 
-export const getPubChildrenTable = (
-	input: XOR<{ parentPubId: PubsId }, { parentPubSlug: string }>,
-	selectedPubTypeId?: PubTypesId
-) => {
+export const getPubChildrenTable = (parentPubId: PubsId, selectedPubTypeId?: PubTypesId) => {
 	return autoCache(
 		db
 			.with("all_children", (eb) =>
 				eb
 					.selectFrom("pubs")
-					.$if(Boolean(input.parentPubId), (eb) =>
-						eb.where("id", "=", input.parentPubId!)
-					)
-					.$if(Boolean(input.parentPubSlug), (eb) =>
-						eb.where("slug", "=", input.parentPubSlug!)
-					)
-					.select((eb) => ["id", "pubTypeId", "createdAt"])
+					.where("parentId", "=", parentPubId)
+					.select((eb) => ["id", "pubTypeId", "createdAt", "title", "slug"])
 					.orderBy("createdAt", "desc")
 			)
 			.with("children_with_specific_pubtype", (eb) =>
@@ -130,6 +122,8 @@ export const getPubChildrenTable = (
 						.selectFrom("children_with_specific_pubtype")
 						.select([
 							"children_with_specific_pubtype.id",
+							"children_with_specific_pubtype.title",
+							"children_with_specific_pubtype.slug",
 							"children_with_specific_pubtype.createdAt",
 							"children_with_specific_pubtype.stages",
 							"children_with_specific_pubtype.memberFields",

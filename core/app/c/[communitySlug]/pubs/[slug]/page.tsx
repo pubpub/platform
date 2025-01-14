@@ -254,6 +254,7 @@ export default async function Page({
 				<PubChildrenTableWrapper
 					communitySlug={params.communitySlug}
 					pageContext={{ params, searchParams }}
+					parentPubId={pub.id}
 					parentPubSlug={pub.slug}
 				/>
 			</Suspense>
