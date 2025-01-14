@@ -133,27 +133,3 @@ COPY --from=withpackage --chown=node:node /usr/src/app/core/public ./core/public
 COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./core/.env
 
 CMD node core/server.js
-
-### Integration Submissions
-
-FROM prod-setup AS next-app-integration-submissions
-WORKDIR /usr/src/app
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/standalone .
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/.next/static ./integrations/submissions/.next/static
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/submissions/public ./integrations/submissions/public
-# needed to set the database url correctly based on PGHOST variables
-COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./integrations/submissions/.env
-
-CMD node integrations/submissions/server.js
-
-### Integration Evaluations
-
-FROM prod-setup AS next-app-integration-evaluations
-WORKDIR /usr/src/app
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/standalone ./
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/.next/static ./integrations/evaluations/.next/static
-COPY --from=withpackage --chown=node:node /usr/src/app/integrations/evaluations/public ./integrations/evaluations/public
-# needed to set the database url correctly based on PGHOST variables
-COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./integrations/evaluations/.env
-
-CMD node integrations/evaluations/server.js
