@@ -50,7 +50,7 @@ export type LinkDefinition =
 	| {
 			href: string;
 			text: string;
-			icon: React.ReactNode;
+			icon?: React.ReactNode;
 			minimumAccessRole: MemberRole | null;
 			pattern?: string;
 			children?: LinkDefinition[];
@@ -59,7 +59,7 @@ export type LinkDefinition =
 			href?: string;
 			text: string;
 			icon: React.ReactNode;
-			minimumAccessRole?: null;
+			minimumAccessRole: MemberRole | null;
 			pattern?: string;
 			children: Omit<LinkDefinition, "icon">[];
 	  };
