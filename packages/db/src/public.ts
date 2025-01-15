@@ -20,7 +20,6 @@ export * from "./public/FormElements";
 export * from "./public/FormMemberships";
 export * from "./public/Forms";
 export * from "./public/InputComponent";
-export * from "./public/Integrations";
 export * from "./public/MemberGroups";
 export * from "./public/MemberGroupToUser";
 export * from "./public/MemberRole";
