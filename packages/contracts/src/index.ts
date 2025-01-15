@@ -11,7 +11,7 @@ const contract = initContract();
 
 export const api = contract.router({
 	/**
-	 * integrations API
+	 * internal API for triggering actions etc
 	 */
 	internal: internalApi,
 	/**

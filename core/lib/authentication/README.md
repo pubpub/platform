@@ -8,9 +8,8 @@ We use `lucia` for authentication, a very lightweight authentication library tha
 
 Auth tokens are used to authenticate users.
 
-They are used in two places:
+They are used in one place:
 
--   The integrations, for legacy reasons.
 -   /magic-link
 
 Ideally, we do not need to think about auth tokens much as we are writing pages. The tokens get exchanged for sessions, which have a certain type (see below).

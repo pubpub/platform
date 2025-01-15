@@ -165,22 +165,3 @@ export const getStages = ({ communityId, stageId, userId }: CommunityStageProps)
 };
 
 export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
-
-export const getIntegrationInstanceBase = (trx = db) =>
-	trx
-		.selectFrom("integration_instances")
-		.selectAll("integration_instances")
-		.select((eb) =>
-			jsonObjectFrom(
-				eb
-					.selectFrom("integrations")
-					.selectAll("integrations")
-					.whereRef("integrations.id", "=", "integration_instances.integrationId")
-			)
-				.$notNull()
-				.as("integration")
-		);
-
-export const getIntegrationInstancesForStage = (stageId: StagesId) => {
-	return autoCache(getIntegrationInstanceBase().where("stageId", "=", stageId));
-};
