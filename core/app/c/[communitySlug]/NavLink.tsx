@@ -9,7 +9,7 @@ import { SidebarMenuButton, SidebarMenuSubButton } from "ui/sidebar";
 type Props = {
 	href: string;
 	text: string;
-	icon: React.ReactNode;
+	icon?: React.ReactNode;
 	count?: number;
 	isChild?: boolean;
 	// optional pattern to match the pathname against for showing the active state
@@ -30,7 +30,7 @@ export default function NavLink({ href, text, icon, count, isChild, hasChildren,
 
 	const content = (
 		<Link href={href} className="relative">
-			{icon}
+			{icon ? icon : null}
 			<div className="flex-auto text-sm">{text}</div>
 			{count && <div className="rounded-md border border-gray-200 px-2 text-sm">{count}</div>}
 		</Link>

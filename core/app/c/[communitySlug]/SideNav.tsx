@@ -3,12 +3,19 @@ import { Capabilities } from "db/src/public/Capabilities";
 import { MembershipType } from "db/src/public/MembershipType";
 import {
 	Activity,
+	Bookmark,
+	BookOpen,
+	BookOpenText,
+	CurlyBraces,
+	FlagTriangleRightIcon,
 	Form,
 	FormInput,
 	Integration,
+	Layers3,
 	Pub,
 	RefreshCw,
 	Settings,
+	Settings2,
 	Stages,
 	ToyBrick,
 	UsersRound,
@@ -41,90 +48,124 @@ type Props = {
 	availableCommunities: NonNullable<CommunityData>[];
 };
 
-export type LinkDefinition = {
-	href: string;
-	text: string;
-	icon: React.ReactNode;
-	minimumAccessRole: MemberRole | null;
-	pattern?: string;
-	children?: LinkDefinition[];
+export type LinkDefinition =
+	| {
+			href: string;
+			text: string;
+			icon: React.ReactNode;
+			minimumAccessRole: MemberRole | null;
+			pattern?: string;
+			children?: LinkDefinition[];
+	  }
+	| {
+			href?: string;
+			text: string;
+			icon: React.ReactNode;
+			minimumAccessRole?: null;
+			pattern?: string;
+			children: Omit<LinkDefinition, "icon">[];
+	  };
+
+type LinkGroupDefinition = {
+	name: string;
+	minimumAccessRole: MemberRole;
+	links: LinkDefinition[];
 };
 
-const defaultLinks: LinkDefinition[] = [
-	{
-		href: "/pubs",
-		text: "All Pubs",
-		icon: <Pub size={16} />,
-		minimumAccessRole: null,
-	},
-];
+const viewLinks: LinkGroupDefinition = {
+	name: "Views",
+	minimumAccessRole: MemberRole.editor,
+	links: [
+		{
+			href: "/pubs",
+			text: "All Pubs",
+			icon: <BookOpen size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+		{
+			href: "/stages",
+			pattern: "/stages$",
+			text: "All Workflows",
+			icon: <FlagTriangleRightIcon size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+		{
+			href: "/activity/actions",
+			text: "Action Log",
+			icon: <Activity size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+	],
+};
 
-const viewLinks: LinkDefinition[] = [
-	{
-		href: "/activity/actions",
-		text: "Action Log",
-		icon: <Activity className="h-4 w-4" />,
-		minimumAccessRole: MemberRole.editor,
-	},
-];
+const manageLinks: LinkGroupDefinition = {
+	name: "Manage",
+	minimumAccessRole: MemberRole.editor,
+	links: [
+		{
+			href: "/stages/manage",
+			text: "Workflows",
+			icon: <Layers3 size={16} />,
+			minimumAccessRole: MemberRole.editor,
+			pattern: "/stages/manage",
+		},
+		{
+			href: "/forms",
+			text: "Forms",
+			icon: <Form size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+		{
+			href: "/types",
+			text: "Types",
+			icon: <ToyBrick size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+		{
+			href: "/fields",
+			text: "Fields",
+			icon: <CurlyBraces size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+		{
+			href: "/members",
+			text: "Members",
+			icon: <UsersRound size={16} />,
+			minimumAccessRole: MemberRole.editor,
+		},
+	],
+};
 
-const manageLinks: LinkDefinition[] = [
-	{
-		href: "/stages",
-		text: "Workflows",
-		icon: <Stages size={16} />,
-		minimumAccessRole: null,
-		pattern: "/stages$",
-		children: [
-			{
-				href: "/stages/manage",
-				text: "Stage editor",
-				icon: <RefreshCw size={16} />,
-				minimumAccessRole: MemberRole.editor,
-				pattern: "/stages/manage",
-			},
-		],
-	},
-	{
-		href: "/types",
-		text: "Types",
-		icon: <ToyBrick size={16} />,
-		minimumAccessRole: MemberRole.editor,
-	},
-	{
-		href: "/fields",
-		text: "Fields",
-		icon: <FormInput size={16} />,
-		minimumAccessRole: MemberRole.editor,
-	},
-	{
-		href: "/forms",
-		text: "Forms",
-		icon: <Form size={16} />,
-		minimumAccessRole: MemberRole.editor,
-	},
-	{
-		href: "/members",
-		text: "Members",
-		icon: <UsersRound size={16} />,
-		minimumAccessRole: MemberRole.editor,
-	},
-	{
-		href: "/settings",
-		text: "Settings",
-		icon: <Settings className="h-4 w-4" />,
-		minimumAccessRole: MemberRole.admin,
-		pattern: "/settings$",
-		children: [
-			{
-				href: "/settings/tokens",
-				text: "API Tokens",
-				icon: <Settings className="h-4 w-4" />,
-				minimumAccessRole: MemberRole.admin,
-			},
-		],
-	},
-];
+const adminLinks: LinkGroupDefinition = {
+	name: "Admin",
+	minimumAccessRole: MemberRole.admin,
+	links: [
+		{
+			text: "Settings",
+			icon: <Settings2 size={16} />,
+			minimumAccessRole: MemberRole.admin,
+			children: [
+				{
+					href: "/settings/tokens",
+					text: "API Tokens",
+					minimumAccessRole: MemberRole.admin,
+				},
+			],
+		},
+		{
+			text: "Docs",
+			icon: <BookOpenText size={16} />,
+			minimumAccessRole: MemberRole.admin,
+			children: [
+				{
+					href: "/developers/docs",
+					text: "API",
+					minimumAccessRole: MemberRole.admin,
+				},
+			],
+		},
+	],
+};
 
 export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
 
@@ -185,6 +226,31 @@ const Links = ({
 	);
 };
 
+const LinkGroup = ({
+	communityPrefix,
+	minimumCommunityRole,
+	group,
+}: {
+	communityPrefix: string;
+	minimumCommunityRole: MemberRole;
+	group: LinkGroupDefinition;
+}) => {
+	return (
+		<SidebarGroup>
+			<SidebarGroupLabel className="font-semibold uppercase text-slate-500">
+				{group.name}
+			</SidebarGroupLabel>
+			<SidebarGroupContent className="group-data-[state=expanded]:px-2">
+				<Links
+					communityPrefix={communityPrefix}
+					minimumCommunityRole={minimumCommunityRole}
+					links={group.links}
+				/>
+			</SidebarGroupContent>
+		</SidebarGroup>
+	);
+};
+
 const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
 	const prefix = `/c/${community.slug}`;
 
@@ -216,55 +282,27 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 				<SidebarSeparator />
 				<div className="flex h-full max-h-screen flex-col gap-2">
 					<div className="flex-1">
-						<SidebarGroup>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									<Links
-										communityPrefix={prefix}
-										minimumCommunityRole={
-											userCanEditCommunity
-												? MemberRole.admin
-												: MemberRole.editor
-										}
-										links={defaultLinks}
-									/>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</SidebarGroup>
-						<SidebarSeparator />
-						<SidebarGroup>
-							<SidebarGroupLabel>Views</SidebarGroupLabel>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									<Links
-										communityPrefix={prefix}
-										minimumCommunityRole={
-											userCanEditCommunity
-												? MemberRole.admin
-												: MemberRole.editor
-										}
-										links={viewLinks}
-									/>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</SidebarGroup>
-						<SidebarSeparator />
-						<SidebarGroup>
-							<SidebarGroupLabel>Manage</SidebarGroupLabel>
-							<SidebarGroupContent>
-								<SidebarMenu>
-									<Links
-										communityPrefix={prefix}
-										minimumCommunityRole={
-											userCanEditCommunity
-												? MemberRole.admin
-												: MemberRole.editor
-										}
-										links={manageLinks}
-									/>
-								</SidebarMenu>
-							</SidebarGroupContent>
-						</SidebarGroup>
+						<LinkGroup
+							communityPrefix={prefix}
+							minimumCommunityRole={
+								userCanEditCommunity ? MemberRole.admin : MemberRole.editor
+							}
+							group={viewLinks}
+						/>
+						<LinkGroup
+							communityPrefix={prefix}
+							minimumCommunityRole={
+								userCanEditCommunity ? MemberRole.admin : MemberRole.editor
+							}
+							group={manageLinks}
+						/>
+						<LinkGroup
+							communityPrefix={prefix}
+							minimumCommunityRole={
+								userCanEditCommunity ? MemberRole.admin : MemberRole.editor
+							}
+							group={adminLinks}
+						/>
 					</div>
 				</div>
 			</SidebarContent>

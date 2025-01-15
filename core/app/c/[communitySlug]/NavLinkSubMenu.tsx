@@ -5,7 +5,14 @@ import { useEffect, useState } from "react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { useLocalStorage } from "ui/hooks";
 import { ChevronDown } from "ui/icon";
-import { SidebarMenuAction, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubItem } from "ui/sidebar";
+import {
+	SidebarMenu,
+	SidebarMenuAction,
+	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarMenuSub,
+	SidebarMenuSubItem,
+} from "ui/sidebar";
 
 import type { LinkDefinition } from "./SideNav";
 import type { DefinitelyHas } from "~/lib/types";
@@ -27,16 +34,7 @@ export const NavLinkSubMenu = ({
 	}, [open]);
 
 	return (
-		<SidebarMenuItem>
-			<NavLink
-				href={`${communityPrefix}${link.href}`}
-				text={link.text}
-				icon={link.icon}
-				pattern={link.pattern}
-				hasChildren
-				isChild={false}
-			/>
-
+		<SidebarMenu>
 			<Collapsible
 				key={link.href}
 				onOpenChange={(open) => {
@@ -47,11 +45,29 @@ export const NavLinkSubMenu = ({
 				open={actuallyOpen}
 				className="group/collapsible"
 			>
-				<CollapsibleTrigger className="" asChild>
-					<SidebarMenuAction>
-						<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
-					</SidebarMenuAction>
-				</CollapsibleTrigger>
+				<SidebarMenuItem className="list-none">
+					<CollapsibleTrigger asChild>
+						{link.href ? (
+							<NavLink
+								href={`${communityPrefix}${link.href}`}
+								text={link.text}
+								icon={link.icon}
+								pattern={link.pattern}
+								hasChildren
+								isChild={false}
+							/>
+						) : (
+							<SidebarMenuButton className="relative">
+								{link.icon}
+								<span className="flex-auto text-sm">{link.text}</span>
+								<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
+							</SidebarMenuButton>
+						)}
+
+						{/* <SidebarMenuAction> */}
+						{/* </SidebarMenuAction> */}
+					</CollapsibleTrigger>
+				</SidebarMenuItem>
 				<CollapsibleContent>
 					<SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
 						{link.children.map((child) => (
@@ -59,7 +75,6 @@ export const NavLinkSubMenu = ({
 								<NavLink
 									href={`${communityPrefix}${child.href}`}
 									text={child.text}
-									icon={child.icon}
 									pattern={child.pattern}
 									isChild
 								/>
@@ -68,6 +83,6 @@ export const NavLinkSubMenu = ({
 					</SidebarMenuSub>
 				</CollapsibleContent>
 			</Collapsible>
-		</SidebarMenuItem>
+		</SidebarMenu>
 	);
 };
