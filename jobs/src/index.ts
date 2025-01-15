@@ -4,10 +4,8 @@ import { logger } from "logger";
 
 import { clients } from "./clients";
 import { emitEvent } from "./jobs/emitEvent";
-import { sendEmail } from "./jobs/sendEmail";
 
 const makeTaskList = (client: typeof clients): GraphileWorker.Tasks => ({
-	sendEmail: sendEmail(client.integrationClient),
 	emitEvent: emitEvent(client.internalClient),
 });
 

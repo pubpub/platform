@@ -102,8 +102,7 @@ CMD pnpm start
 # where the necessary files are copied from the build stage.
 # this is separated by package to make it slightly more clear what happens
 # and because you cannot conditionally copy from a different folder
-# based on the argument (because e.g. `integration-submissions` does not match `integrations/submissions`, so we can't just use PACKAGE as the arg)
-# we do the condiiton instead by doing a conditional $FROM
+# based on the argument 
 FROM base as prod-setup
 ARG PORT
 
