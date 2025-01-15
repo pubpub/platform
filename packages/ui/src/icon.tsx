@@ -2,7 +2,7 @@ import type { LucideIcon, LucideProps } from "lucide-react";
 
 import React from "react";
 
-import { cn } from "utils/src/classnames";
+import { cn } from "utils";
 
 export {
 	Activity,

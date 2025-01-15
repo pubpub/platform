@@ -265,8 +265,8 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 	);
 
 	return (
-		<Sidebar collapsible={COLLAPSIBLE_TYPE}>
-			<SidebarHeader>
+		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="group-data-[state=expanded]:py-3">
+			<SidebarHeader className="group-data-[state=expanded]:p-2">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
 						<CommunitySwitcher
@@ -275,9 +275,9 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 						/>
 					</SidebarMenuItem>
 				</SidebarMenu>
+				<SidebarSeparator className="mx-3" />
 			</SidebarHeader>
-			<SidebarContent>
-				<SidebarSeparator />
+			<SidebarContent className="group-data-[state=expanded]:px-1">
 				<div className="flex h-full max-h-screen flex-col gap-2">
 					<div className="flex-1">
 						<LinkGroup
