@@ -13,16 +13,16 @@ export const metadata: Metadata = {
 	title: "API Access Tokens",
 };
 
-export default async function Page(props: { params: Promise<{ communitySlug: string }> }) {
+export default async function Page(props: { params: { communitySlug: string } }) {
 	const params = await props.params;
-	await getPageLoginData();
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
 		return notFound();
 	}
 
 	const [stages, existingTokens] = await Promise.all([
-		getStages({ communityId: community.id }).execute(),
+		getStages({ communityId: community.id, userId: user.id }).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 

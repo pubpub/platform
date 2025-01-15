@@ -22,6 +22,10 @@ function createStageList<T extends CommunityStage>(
 	stages: StagesById,
 	visited: Array<T> = []
 ): Array<T> {
+	if (!stage) {
+		return visited;
+	}
+
 	// If the stage has already been visited, return the current visited list
 	if (visited.includes(stage)) {
 		return visited;
@@ -33,6 +37,11 @@ function createStageList<T extends CommunityStage>(
 	// Recursively process the stages reachable from this stage
 	return stage.moveConstraints.reduce((acc, constraint) => {
 		const nextStage = stages[constraint.id];
+		// If the next stage is undefined, just return the accumulator
+		// This would happen if the move constraint isn't in the stage list (because of user permissions)
+		if (!stage) {
+			return acc;
+		}
 		return createStageList<T>(nextStage as T, stages, acc);
 	}, newVisited);
 }
@@ -54,7 +63,13 @@ export const makeStagesById = <T extends { id: StagesId }>(stages: T[]): { [key:
 export function getStageWorkflows<T extends CommunityStage>(stages: T[]): Array<Array<T>> {
 	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
-	const stageRoots = stages.filter((stage) => stage.moveConstraintSources.length === 0);
+	// also make sure to filter to only move constraints that there are stages for (permission restrictions may return more move constraint stages than a user can see)
+	const stageRoots = stages.filter((stage) => {
+		if (stage.moveConstraintSources.length === 0) {
+			return true;
+		}
+		return !stage.moveConstraintSources.every((constraint) => stagesById[constraint.id]);
+	});
 	// for each stage, create a list of stages that can be reached from it
 	const stageWorkflows = stageRoots.map((stage) => {
 		return createStageList(stage, stagesById);

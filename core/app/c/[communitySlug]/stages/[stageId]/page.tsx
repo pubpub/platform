@@ -4,7 +4,7 @@ import { cache, Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import type { CommunitiesId, StagesId } from "db/public";
+import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
@@ -16,9 +16,11 @@ import { getStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubs } from "../components/StageList";
 
-const getStageCached = cache(async (stageId: StagesId, communityId: CommunitiesId) => {
-	return getStages({ stageId, communityId }).executeTakeFirst();
-});
+const getStageCached = cache(
+	async (stageId: StagesId, communityId: CommunitiesId, userId: UsersId) => {
+		return getStages({ stageId, communityId, userId }).executeTakeFirst();
+	}
+);
 
 export async function generateMetadata(props: {
 	params: Promise<{ stageId: StagesId; communitySlug: string }>;
@@ -27,11 +29,12 @@ export async function generateMetadata(props: {
 
 	const { stageId, communitySlug } = params;
 
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		notFound();
 	}
-	const stage = await getStageCached(stageId, community.id);
+	const stage = await getStageCached(stageId, community.id, user.id);
 	if (!stage) {
 		notFound();
 	}
@@ -58,7 +61,7 @@ export default async function Page(props: {
 
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const stagePromise = getStageCached(stageId, community.id);
+	const stagePromise = getStageCached(stageId, community.id, user.id);
 	const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },

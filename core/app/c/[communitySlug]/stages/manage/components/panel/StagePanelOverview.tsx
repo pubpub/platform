@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { StagesId } from "db/public";
+import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 import { Separator } from "ui/separator";
 
@@ -13,12 +13,13 @@ import { StagePanelOverviewManagement } from "./StagePanelOverviewManagement";
 
 type PropsInner = {
 	stageId: StagesId;
+	userId: UsersId;
 };
 
 const StagePanelOverviewInner = async (props: PropsInner) => {
 	const [stage, communitySlug] = await Promise.all([
-		getStage(props.stageId).executeTakeFirst(),
-		await getCommunitySlug(),
+		getStage(props.stageId, props.userId).executeTakeFirst(),
+		getCommunitySlug(),
 	]);
 
 	if (stage === undefined) {
@@ -47,6 +48,7 @@ const StagePanelOverviewInner = async (props: PropsInner) => {
 
 type Props = {
 	stageId: string | undefined;
+	userId: UsersId;
 };
 
 export const StagePanelOverview = async (props: Props) => {
@@ -56,7 +58,7 @@ export const StagePanelOverview = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelOverviewInner stageId={props.stageId as StagesId} />
+			<StagePanelOverviewInner stageId={props.stageId as StagesId} userId={props.userId} />
 		</Suspense>
 	);
 };
