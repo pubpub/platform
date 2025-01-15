@@ -17,18 +17,20 @@ export const metadata: Metadata = {
 	title: "Members",
 };
 
-export default async function Page({
-	params: { communitySlug },
-	searchParams,
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		communitySlug: string;
-	};
-	searchParams: {
+	}>;
+	searchParams: Promise<{
 		page?: string;
 		email?: string;
-	};
+	}>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {

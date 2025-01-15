@@ -26,7 +26,7 @@ export const defineServerAction = <
 		return withServerActionInstrumentation(
 			serverActionFn.name,
 			{
-				headers: headers(),
+				headers: await headers(),
 				recordResponse: true,
 			},
 			async () => {

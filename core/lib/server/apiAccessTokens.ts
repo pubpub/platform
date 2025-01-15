@@ -70,7 +70,10 @@ export const validateApiAccessToken = async (token: string, communityId: Communi
 	// length) and because our tokens are all the same length anyways, unlike a password.
 	let isEqual = false;
 	try {
-		isEqual = crypto.timingSafeEqual(Buffer.from(tokenString), Buffer.from(dbToken.token));
+		isEqual = crypto.timingSafeEqual(
+			new Uint8Array(Buffer.from(tokenString)),
+			new Uint8Array(Buffer.from(dbToken.token))
+		);
 	} catch (e) {
 		// token is probably formatted incorrectly, the two strings are not equal in length
 		if (e.type === "RangeError") {

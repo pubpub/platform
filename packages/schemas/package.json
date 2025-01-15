@@ -18,12 +18,12 @@
 	"dependencies": {
 		"@sinclair/typebox": "catalog:",
 		"db": "workspace:*",
-		"lucide-react": "^0.357.0",
+		"lucide-react": "^0.469.0",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "^1.3.1"

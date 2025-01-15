@@ -14,36 +14,35 @@ import { useUnsavedChangesWarning } from "ui/hooks";
 
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
-import { isStructuralElement } from "../types";
+import { type StructuralElement } from "../types";
 
 type Props = {
 	index: number;
+	structuralElement: StructuralElement;
 };
 
-export const StructuralElementConfigurationForm = ({ index }: Props) => {
-	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
-	if (!selectedElement) {
-		return null;
-	}
-	if (!isStructuralElement(selectedElement)) {
-		return null;
-	}
+export const StructuralElementConfigurationForm = ({ index, structuralElement }: Props) => {
+	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
 
-	const schema = structuralElements[selectedElement.element].schema;
+	const schema = structuralElements[structuralElement.element].schema;
+
 	if (!schema) {
-		return null;
+		throw new Error(
+			`No schema found for structural element ${structuralElement.element}. This should never happen.`
+		);
 	}
 
 	const resolver = useMemo(() => zodResolver(schema), [schema]);
+
 	const form = useForm<z.infer<typeof schema>>({
 		resolver,
-		defaultValues: schema.parse(selectedElement),
+		defaultValues: schema.parse(structuralElement),
 	});
 
 	useUnsavedChangesWarning(form.formState.isDirty);
 
 	const onSubmit = (values: z.infer<typeof schema>) => {
-		update(index, { ...selectedElement, ...values, updated: true, configured: true });
+		update(index, { ...structuralElement, ...values, updated: true, configured: true });
 		dispatch({ eventName: "save" });
 	};
 

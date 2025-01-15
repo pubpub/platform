@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 	title: "API Access Tokens",
 };
 
-export default async function Page({ params }: { params: { communitySlug: string } }) {
+export default async function Page(props: { params: { communitySlug: string } }) {
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {

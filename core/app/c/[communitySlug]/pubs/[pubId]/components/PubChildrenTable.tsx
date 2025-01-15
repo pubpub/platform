@@ -8,7 +8,7 @@ import { getPubChildrenTableColumns } from "./getPubChildrenTableColumns";
 
 type Props = {
 	childPubRows: ChildPubRow[];
-	childPubRunActionDropdowns: JSX.Element[];
+	childPubRunActionDropdowns: React.ReactNode[];
 	childPubType?: ChildPubRowPubType;
 };
 

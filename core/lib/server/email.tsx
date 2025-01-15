@@ -1,6 +1,6 @@
 import type { SendMailOptions } from "nodemailer";
 
-import { renderAsync } from "@react-email/render";
+import { render } from "@react-email/render";
 import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
 
 import type { Communities, MemberRole, MembershipType, Users } from "db/public";
@@ -92,12 +92,12 @@ export function passwordReset(
 			trx
 		);
 
-		const email = await renderAsync(
-			PasswordReset({
-				firstName: user.firstName,
-				lastName: user.lastName ?? undefined,
-				resetPasswordLink: magicLink,
-			})
+		const email = await render(
+			<PasswordReset
+				firstName={user.firstName}
+				lastName={user.lastName ?? undefined}
+				resetPasswordLink={magicLink}
+			/>
 		);
 
 		return {
@@ -136,13 +136,13 @@ export function signupInvite(
 			trx
 		);
 
-		const email = await renderAsync(
-			SignupInvite({
-				community: props.community,
-				signupLink: magicLink,
-				role: props.role,
-				membership: props.membership,
-			})
+		const email = await render(
+			<SignupInvite
+				community={props.community}
+				signupLink={magicLink}
+				role={props.role}
+				membership={props.membership}
+			/>
 		);
 
 		return {
@@ -165,12 +165,12 @@ export function requestAccessToForm(
 		const inviteLink =
 			"formInviteLink" in props ? props.formInviteLink : await createFormInviteLink(props);
 
-		const email = await renderAsync(
-			RequestLinkToForm({
-				community: props.community,
-				formInviteLink: inviteLink,
-				form: props.form,
-			})
+		const email = await render(
+			<RequestLinkToForm
+				community={props.community}
+				formInviteLink={inviteLink}
+				form={props.form}
+			/>
 		);
 
 		return {

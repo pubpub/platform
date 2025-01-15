@@ -196,7 +196,7 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	const form = formSettled.value;
 	const user = userSettled.value;
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 
 	const formPath = createFormInvitePath({
 		formSlug: form.slug,

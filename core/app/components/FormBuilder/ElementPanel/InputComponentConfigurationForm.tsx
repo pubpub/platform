@@ -45,7 +45,7 @@ import { ComponentConfig } from "./ComponentConfig";
 type SchemaComponentData = {
 	name?: string;
 	placeholder?: string;
-	demoComponent?: (props: { element: InputElement }) => JSX.Element;
+	demoComponent?: (props: { element: InputElement }) => React.ReactNode;
 };
 
 const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.DatePicker), {
@@ -218,8 +218,7 @@ const ComponentSelect = ({
 							>
 								<div
 									// 'inert' allows demo components to not be interactive unless they are selected
-									// @ts-ignore inert isn't typed properly in React 18, but will be in 19
-									inert={selected ? undefined : ""}
+									inert={selected ? undefined : true}
 									className="flex h-24 w-full items-center justify-center p-3"
 								>
 									{Component && <Component element={element} />}
@@ -241,14 +240,13 @@ const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null
 
 type Props = {
 	index: number;
+	fieldInputElement: InputElement;
 };
 
-export const InputComponentConfigurationForm = ({ index }: Props) => {
-	const { selectedElement, update, dispatch, removeIfUnconfigured } = useFormBuilder();
-	if (!selectedElement || !isFieldInput(selectedElement)) {
-		return null;
-	}
-	const { schemaName } = selectedElement;
+export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Props) => {
+	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
+
+	const { schemaName } = fieldInputElement;
 	const allowedComponents = componentsBySchema[schemaName];
 
 	const form = useForm<ConfigFormData<(typeof allowedComponents)[number]>>({
@@ -262,7 +260,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
 		},
-		defaultValues: selectedElement,
+		defaultValues: fieldInputElement,
 	});
 
 	useUnsavedChangesWarning(form.formState.isDirty);
@@ -273,7 +271,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 		// Some `config` schemas have extra values which persist if we don't Clean first
 		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config);
 		update(index, {
-			...selectedElement,
+			...fieldInputElement,
 			...values,
 			config: cleanedConfig,
 			updated: true,
@@ -295,7 +293,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 				className="flex h-full flex-col gap-2"
 			>
 				<div className="flex flex-nowrap rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4">
-					<FieldInputElement element={selectedElement} isEditing={false} />
+					<FieldInputElement element={fieldInputElement} isEditing={false} />
 				</div>
 				<div className="text-sm uppercase text-muted-foreground">Appearance</div>
 				<hr />
@@ -306,7 +304,7 @@ export const InputComponentConfigurationForm = ({ index }: Props) => {
 						<ComponentSelect
 							onChange={field.onChange}
 							value={field.value}
-							element={selectedElement}
+							element={fieldInputElement}
 							components={allowedComponents}
 						/>
 					)}

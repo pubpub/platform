@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 export const GET = async function (
 	request: NextRequest,
-	{ params }: { params: { communitySlug: string } }
+	props: { params: Promise<{ communitySlug: string }> }
 ) {
+	const params = await props.params;
 	return NextResponse.json(createOpenApiDocument(params.communitySlug));
 };

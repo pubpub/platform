@@ -17,7 +17,7 @@ const executeWithCache = <
 	options?: AutoCacheOptions
 ) => {
 	const executeFn = cache(async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? getCommunitySlug();
+		const communitySlug = options?.communitySlug ?? (await getCommunitySlug());
 
 		const compiledQuery = qb.compile();
 

@@ -1,10 +1,12 @@
 "use client";
 
+import dynamic from "next/dynamic";
+
 import { CopyButton } from "ui/copy-button";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 
-export const FormCopyButton = ({ formSlug }: { formSlug: string }) => {
+const FormCopyButtonBase = ({ formSlug }: { formSlug: string }) => {
 	const community = useCommunity();
 	const link = `${window.location.origin}/c/${community.slug}/public/forms/${formSlug}/fill`;
 	return (
@@ -13,3 +15,6 @@ export const FormCopyButton = ({ formSlug }: { formSlug: string }) => {
 		</CopyButton>
 	);
 };
+
+// necessary in order to disable SSR, as window is not available on the server
+export const FormCopyButton = dynamic(() => Promise.resolve(FormCopyButtonBase), { ssr: false });

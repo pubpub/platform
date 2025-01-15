@@ -22,11 +22,13 @@ const getStageCached = cache(
 	}
 );
 
-export async function generateMetadata({
-	params: { stageId, communitySlug },
-}: {
-	params: { stageId: StagesId; communitySlug: string };
+export async function generateMetadata(props: {
+	params: Promise<{ stageId: StagesId; communitySlug: string }>;
 }): Promise<Metadata> {
+	const params = await props.params;
+
+	const { stageId, communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
@@ -40,14 +42,13 @@ export async function generateMetadata({
 	return { title: `${stage.name} Stage` };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	searchParams: Record<string, string> & { page?: string };
+export default async function Page(props: {
+	searchParams: Promise<Record<string, string> & { page?: string }>;
 
-	params: { communitySlug: string; stageId: StagesId };
+	params: Promise<{ communitySlug: string; stageId: StagesId }>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { communitySlug, stageId } = params;
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),

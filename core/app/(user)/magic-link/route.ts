@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
 
 	const validatedTokenPromise = validateToken(token);
 
-	const currentSessionCookie = cookies().get(lucia.sessionCookieName)?.value;
+	const currentSessionCookie = (await cookies()).get(lucia.sessionCookieName)?.value;
 
 	const currentSessionPromise = currentSessionCookie
 		? lucia.validateSession(currentSessionCookie)
@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
 		logger.debug("Invalidating old session");
 		await lucia.invalidateSession(currentSession.session.id);
 		// not sure if this is necessary
-		cookies().delete(lucia.sessionCookieName);
+		(await cookies()).delete(lucia.sessionCookieName);
 	}
 
 	const { user: tokenUser, authTokenType } = tokenSettled.value;
@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
 
 	const newSessionCookie = lucia.createSessionCookie(session.id);
 
-	cookies().set(newSessionCookie.name, newSessionCookie.value, {
+	(await cookies()).set(newSessionCookie.name, newSessionCookie.value, {
 		...newSessionCookie.attributes,
 	});
 
