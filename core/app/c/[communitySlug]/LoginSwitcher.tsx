@@ -1,11 +1,30 @@
+import type { User } from "lucia";
+
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
-import { Settings } from "ui/icon";
+import { ChevronsUpDown, UserRoundCog } from "ui/icon";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { Separator } from "ui/separator";
+import { SidebarMenuButton } from "ui/sidebar";
 
 import { getLoginData } from "~/lib/authentication/loginData";
 import LogoutButton from "../../components/LogoutButton";
+
+const AvatarThing = ({ user }: { user: User }) => (
+	<div className="flex w-full items-center gap-x-2">
+		<Avatar className="h-9 w-9 group-data-[collapsible=icon]:-ml-2 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+			<AvatarImage src={user.avatar || undefined} />
+			<AvatarFallback>{(user.firstName || user.email)[0].toUpperCase()}</AvatarFallback>
+		</Avatar>
+
+		<div className="flex min-w-0 flex-grow flex-col justify-start text-start group-data-[collapsible=icon]:hidden">
+			<p className="truncate text-sm">{user.firstName}</p>
+			<p className="truncate text-xs text-slate-500">{user.email}</p>
+		</div>
+	</div>
+);
 
 export default async function LoginSwitcher() {
 	const { user } = await getLoginData();
@@ -13,30 +32,45 @@ export default async function LoginSwitcher() {
 		return null;
 	}
 	return (
-		<div className="w-max-[100%] flex flex-col gap-y-2 rounded-lg border border-gray-100 bg-white p-2 group-data-[collapsible=icon]:border-none group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0">
-			<div className="flex items-center">
-				<Avatar className="mr-2 h-9 w-9 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
-					<Link className="w-full" href="/settings">
-						<AvatarImage src={user.avatar || undefined} />
-						<AvatarFallback>
-							{(user.firstName || user.email)[0].toUpperCase()}
-						</AvatarFallback>
-					</Link>
-				</Avatar>
-				<div className="group-data-[collapsible=icon]:hidden">
-					<div className="text-xs">{user.firstName}</div>
-					<div className="text-xs text-gray-400">{user.email}</div>
-				</div>
-			</div>
-			<div className="mt-1 flex flex-row items-center group-data-[collapsible=icon]:hidden">
-				<LogoutButton />
-				<Button variant="outline" size="sm" asChild>
-					<Link className="ml-2 flex items-center gap-1" href="/settings">
-						<Settings size="14" />
-						Settings
-					</Link>
-				</Button>
-			</div>
+		<div className="w-max-[100%] borderp-2 flex flex-col gap-y-2 rounded-lg">
+			<Popover>
+				<PopoverTrigger asChild>
+					<SidebarMenuButton className="flex h-fit items-center gap-x-2 p-0">
+						<AvatarThing user={user} />
+						<ChevronsUpDown
+							size="16"
+							className="group-data-[collapsible=icon]:hidden"
+						/>
+					</SidebarMenuButton>
+				</PopoverTrigger>
+				<PopoverContent side="right" className="p-0">
+					<div className="flex flex-col items-start">
+						<div className="">
+							<AvatarThing user={user} />
+						</div>
+						<Separator className="mx-1" />
+						<Button
+							variant="ghost"
+							size="sm"
+							asChild
+							className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full justify-start gap-2 rounded-none"
+						>
+							<Link
+								className="flex w-full items-center justify-start gap-2"
+								href="/settings"
+							>
+								<UserRoundCog size="14" strokeWidth={1.5} />
+								Settings
+							</Link>
+						</Button>
+						<Separator className="mx-1" />
+						<LogoutButton
+							variant="ghost"
+							className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full justify-start rounded-none"
+						/>
+					</div>
+				</PopoverContent>
+			</Popover>
 		</div>
 	);
 }

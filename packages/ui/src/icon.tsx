@@ -80,6 +80,7 @@ export {
 	UserCheck,
 	UserCircle2,
 	UserPlus,
+	UserRoundCog,
 	Users,
 	UsersRound,
 	Wand2,

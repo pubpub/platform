@@ -216,7 +216,7 @@ const Links = ({
 						<NavLinkSubMenu
 							link={link as DefinitelyHas<LinkDefinition, "children">}
 							communityPrefix={communityPrefix}
-							key={link.href}
+							key={link.text}
 						/>
 					);
 				})}
@@ -304,8 +304,12 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 					</div>
 				</div>
 			</SidebarContent>
-			<SidebarFooter>
-				<LoginSwitcher />
+			<SidebarFooter className="px-2">
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<LoginSwitcher />
+					</SidebarMenuItem>
+				</SidebarMenu>
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
