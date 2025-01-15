@@ -65,7 +65,7 @@ export default async function MainLayout(props: Props) {
 
 					<SidebarTrigger
 						className={cn(
-							"fixed bottom-2 left-2",
+							"fixed bottom-2 right-2 z-50",
 							COLLAPSIBLE_TYPE === "icon" && "md:hidden"
 						)}
 					/>
