@@ -69,7 +69,6 @@
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@prisma/client": "^5.2.0",
 		"@prosemirror-adapter/react": "^0.2.6",
-		"@pubpub/sdk": "workspace:*",
 		"@react-email/render": "^1.0.1",
 		"@sentry/nextjs": "catalog:",
 		"@sinclair/typebox": "catalog:",

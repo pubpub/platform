@@ -2,7 +2,6 @@ import type { Job } from "graphile-worker";
 
 import { makeWorkerUtils } from "graphile-worker";
 
-import type { JobOptions, SendEmailRequestBody } from "contracts";
 import { logger } from "logger";
 
 import type { ClientException, ClientExceptionOptions } from "../serverActions";
@@ -27,11 +26,6 @@ export const getScheduledActionJobKey = ({
 }) => `scheduled-action-${stageId}-${actionInstanceId}-${pubId}`;
 
 export type JobsClient = {
-	scheduleEmail(
-		instanceId: string,
-		email: SendEmailRequestBody,
-		jobOptions: JobOptions
-	): Promise<Job>;
 	unscheduleJob(jobKey: string): Promise<void>;
 	scheduleAction(options: {
 		actionInstanceId: ActionInstancesId;
@@ -51,25 +45,6 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 	});
 	await workerUtils.migrate();
 	return {
-		async scheduleEmail(
-			instanceId: string,
-			body: SendEmailRequestBody,
-			jobOptions: JobOptions
-		) {
-			logger.info({
-				msg: `Scheduling email with key: ${jobOptions.jobKey}`,
-				instanceId,
-				job: { key: jobOptions.jobKey },
-			});
-			const job = await workerUtils.addJob("sendEmail", { instanceId, body }, jobOptions);
-
-			logger.info({
-				msg: `Successfully scheduled email with key: ${jobOptions.jobKey}`,
-				instanceId,
-				job,
-			});
-			return job;
-		},
 		async unscheduleJob(jobKey: string) {
 			logger.info({ msg: `Unscheduling job with key: ${jobKey}`, job: { key: jobKey } });
 			await workerUtils.withPgClient(async (pg) => {

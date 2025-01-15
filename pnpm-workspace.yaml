@@ -2,7 +2,6 @@ packages:
     - "core"
     - "jobs"
     - "config/*"
-    - "integrations/*"
     - "packages/*"
     - "storybook"
 
