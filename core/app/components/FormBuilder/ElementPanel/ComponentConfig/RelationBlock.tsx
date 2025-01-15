@@ -9,7 +9,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 		<>
 			<FormField
 				control={form.control}
-				name="config.outer.label"
+				name="config.relationshipConfig.label"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Label</FormLabel>
@@ -22,7 +22,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 			/>
 			<FormField
 				control={form.control}
-				name="config.outer.help"
+				name="config.relationshipConfig.help"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Help Text</FormLabel>
@@ -36,7 +36,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 			/>
 			<FormField
 				control={form.control}
-				name="config.outer.pubType"
+				name="config.relationshipConfig.pubType"
 				render={({ field }) => (
 					<FormItem>
 						<FormLabel>Pub Type</FormLabel>

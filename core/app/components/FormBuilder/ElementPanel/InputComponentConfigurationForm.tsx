@@ -256,7 +256,9 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 	const { schemaName, isRelation } = fieldInputElement;
 	const allowedComponents = componentsBySchema[schemaName];
 
-	const defaultConfig = isRelation ? { outer: { component: InputComponent.relationBlock } } : {};
+	const defaultConfig = isRelation
+		? { relationshipConfig: { component: InputComponent.relationBlock } }
+		: {};
 
 	const form = useForm<ConfigFormData<InputComponent>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
@@ -277,19 +279,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 	const component = form.watch("component");
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
-		const config = Value.Clone(values.config);
+		const schema = isRelation
+			? Type.Composite([relationBlockConfigSchema, componentConfigSchemas[values.component]])
+			: componentConfigSchemas[values.component];
 		// Some `config` schemas have extra values which persist if we don't Clean first
-		let cleanedConfig = Value.Clean(
-			componentConfigSchemas[values.component],
-			values.config
-		) as ConfigFormData<typeof component>;
-		if (isRelation) {
-			const cleanedRelated = Value.Clean(
-				relationBlockConfigSchema,
-				config
-			) as ConfigFormData<InputComponent.relationBlock>;
-			cleanedConfig = { ...cleanedConfig, ...cleanedRelated };
-		}
+		const cleanedConfig = Value.Clean(schema, values.config);
 		update(index, {
 			...fieldInputElement,
 			...values,
@@ -304,17 +298,9 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 		[component, schemaName]
 	);
 
-	// The configuration for the "outer" relationship field
-	const relationFieldForm = isRelation ? (
-		<>
-			<ComponentConfig
-				schemaName={schemaName}
-				form={form}
-				component={InputComponent.relationBlock}
-			/>
-		</>
-	) : null;
-	const componentSelector = isRelation ? "config.outer.component" : "component";
+	// If this is a relationship field, he first component selector on the page will be for the relationship,
+	// not the value itself.
+	const componentSelector = isRelation ? "config.relationshipConfig.component" : "component";
 
 	return (
 		<Form {...form}>
@@ -345,15 +331,21 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						/>
 					)}
 				/>
-				{relationFieldForm}
+
 				{isRelation ? (
 					<>
+						<ComponentConfig
+							schemaName={schemaName}
+							form={form}
+							component={InputComponent.relationBlock}
+						/>
 						<div className="text-sm uppercase text-muted-foreground">
 							Relation value
 						</div>
 						<hr />
 						<div className="text-sm uppercase text-muted-foreground">Appearance</div>
 						<hr />
+						{/* Component selector for the relationship value itself */}
 						<FormField
 							control={form.control}
 							name="component"

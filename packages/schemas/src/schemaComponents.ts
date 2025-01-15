@@ -108,16 +108,19 @@ export const richTextInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
-export const relationBlockConfigSchema = Type.Object({
-	// "Outer" is the config 'around' the related values
-	// Related values can be of any of the above ConfigSchema types
-	outer: Type.Object({
-		label: Type.Optional(Type.String()),
-		help: Type.Optional(Type.String()),
-		pubType: Type.Optional(Type.String()),
-		component: Type.Enum(InputComponent),
-	}),
-});
+export const relationBlockConfigSchema = Type.Object(
+	{
+		// "relationshipConfig" is the config 'around' the related values
+		relationshipConfig: Type.Object({
+			label: Type.Optional(Type.String()),
+			help: Type.Optional(Type.String()),
+			pubType: Type.Optional(Type.String()),
+			component: Type.Enum(InputComponent),
+		}),
+	},
+	// For the "related values", which can be of any of the above ConfigSchema types
+	{ additionalProperties: true }
+);
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
