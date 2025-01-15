@@ -40,7 +40,7 @@ export default async function MainLayout(props: Props) {
 		return notFound();
 	}
 
-	const cookieStore = cookies();
+	const cookieStore = await cookies();
 	// need to manually write the name of the cookie here
 	// bc we can't import SIDEBAR_COOKIE_NAME here because it's in a "use client" file
 	const defaultOpenCookie = cookieStore.get("sidebar:state");
