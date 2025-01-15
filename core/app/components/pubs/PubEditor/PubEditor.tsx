@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import { InputComponent } from "db/public";
 import { expect } from "utils";
 
 import type { FormElements } from "../../forms/types";

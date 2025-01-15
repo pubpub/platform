@@ -39,7 +39,6 @@ import type { ConfigFormData } from "./ComponentConfig/types";
 import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
-import { isFieldInput } from "../types";
 import { ComponentConfig } from "./ComponentConfig";
 
 type SchemaComponentData = {
@@ -190,12 +189,13 @@ const ComponentSelect = ({
 	onChange,
 	value,
 	element,
+	radioName = "component",
 }: {
 	components: InputComponent[];
 	value: InputComponent;
 	onChange: (component: InputComponent) => void;
 	element: InputElement;
-	name: string;
+	radioName?: string;
 }) => {
 	return (
 		<div className="grid grid-cols-2 gap-3">
@@ -209,7 +209,7 @@ const ComponentSelect = ({
 						need to render buttons. */}
 						<input
 							id={`component-${c}`}
-							name={name}
+							name={radioName}
 							type="radio"
 							className="peer sr-only"
 							defaultChecked={selected}
@@ -321,13 +321,13 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 					name={componentSelector}
 					render={({ field }) => (
 						<ComponentSelect
-							name={componentSelector}
 							onChange={field.onChange}
 							value={field.value}
 							element={fieldInputElement}
 							components={
 								isRelation ? [InputComponent.relationBlock] : allowedComponents
 							}
+							radioName={componentSelector}
 						/>
 					)}
 				/>
@@ -351,11 +351,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 							name="component"
 							render={({ field }) => (
 								<ComponentSelect
-									name="component"
 									onChange={field.onChange}
 									value={field.value}
 									element={fieldInputElement}
 									components={allowedComponents}
+									radioName="component"
 								/>
 							)}
 						/>
