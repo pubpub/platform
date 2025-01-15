@@ -29,7 +29,6 @@
     "@babel/preset-env": "^7.22.15",
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.22.15",
-    "@changesets/cli": "^2.26.2",
     "@preconstruct/cli": "^2.8.10",
     "@pubpub/prettier-config": "workspace:*",
     "@turbo/gen": "^2.1.1",
