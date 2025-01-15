@@ -35,7 +35,7 @@ export default async function LoginSwitcher() {
 		<div className="w-max-[100%] borderp-2 flex flex-col gap-y-2 rounded-lg">
 			<Popover>
 				<PopoverTrigger asChild>
-					<SidebarMenuButton className="flex h-fit items-center gap-x-2 p-0">
+					<SidebarMenuButton className="flex h-fit items-center gap-x-2 p-2 py-1">
 						<AvatarThing user={user} />
 						<ChevronsUpDown
 							size="16"
@@ -45,7 +45,7 @@ export default async function LoginSwitcher() {
 				</PopoverTrigger>
 				<PopoverContent side="right" className="p-0">
 					<div className="flex flex-col items-start">
-						<div className="">
+						<div className="p-2">
 							<AvatarThing user={user} />
 						</div>
 						<Separator className="mx-1" />
