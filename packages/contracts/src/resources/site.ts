@@ -1,5 +1,7 @@
+import type { AppRouteResponse, ContractOtherResponse, Opaque } from "@ts-rest/core";
+
 import { initContract } from "@ts-rest/core";
-import { z } from "zod";
+import { z, ZodNull } from "zod";
 
 import type {
 	CommunitiesId,
@@ -378,7 +380,11 @@ export const siteApi = contract.router(
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
 					201: processedPubSchema,
-					204: z.never().optional(),
+					// 204: z.never().optional(),
+					204: contract.otherResponse({
+						contentType: "text/plain",
+						body: z.null(),
+					}),
 				},
 			},
 			update: {
@@ -530,6 +536,7 @@ export const siteApi = contract.router(
 		},
 	},
 	{
+		strictStatusCodes: true,
 		pathPrefix: "/api/v0/c/:communitySlug/site",
 		baseHeaders: z.object({
 			authorization: z

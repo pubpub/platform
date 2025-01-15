@@ -25,6 +25,7 @@
 		"utils": "workspace:*"
 	},
 	"peerDependencies": {
+		"@types/node": "catalog:",
 		"@ts-rest/core": "catalog:",
 		"zod": "catalog:"
 	},
