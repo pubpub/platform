@@ -12,6 +12,7 @@ import {
 	SidebarMenuItem,
 	SidebarMenuSub,
 	SidebarMenuSubItem,
+	useSidebar,
 } from "ui/sidebar";
 
 import type { LinkDefinition } from "./SideNav";
@@ -27,6 +28,7 @@ export const NavLinkSubMenu = ({
 }) => {
 	const [open, persistOpen] = useLocalStorage<boolean>(`nav-link-sub-menu-open-${link.href}`);
 	const [actuallyOpen, setActuallyOpen] = useState(false);
+	const { setOpen: setSidebarOpen, state: sidebarState, open: sidebarOpen } = useSidebar();
 
 	useEffect(() => {
 		// necessary bc otherwise we get annoying hydration errors
@@ -57,7 +59,17 @@ export const NavLinkSubMenu = ({
 								isChild={false}
 							/>
 						) : (
-							<SidebarMenuButton className="relative">
+							<SidebarMenuButton
+								className="relative"
+								onClick={() => {
+									// if we are in "icon" mode, we expand the sidebar if you click on a submenu
+									if (sidebarState === "collapsed") {
+										setSidebarOpen(true);
+										setActuallyOpen(true);
+										persistOpen(true);
+									}
+								}}
+							>
 								{link.icon}
 								<span className="flex-auto text-sm">{link.text}</span>
 								<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
