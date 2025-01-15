@@ -20,6 +20,7 @@ import { useUnsavedChangesWarning } from "ui/hooks";
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
+import { MultiBlock } from "ui/multiblock";
 import { MultiValueInput } from "ui/multivalue-input";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import {
@@ -179,7 +180,12 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.relationBlock]: {
 		name: "Relation Block",
 		demoComponent: () => {
-			return <div>TODO</div>;
+			return (
+				<div className="flex w-full flex-col gap-1 text-left text-sm">
+					<div className="text-gray-500">Label</div>
+					<MultiBlock title="Pub Relation" disabled />
+				</div>
+			);
 		},
 	},
 } as const;
