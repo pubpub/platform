@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-tokens.cjs.js",
-	"module": "dist/ui-tokens.esm.js"
-}

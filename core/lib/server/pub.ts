@@ -35,9 +35,7 @@ import type {
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
-import { CoreSchemaType, MemberRole, OperationType } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";

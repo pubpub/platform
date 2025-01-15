@@ -5,8 +5,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import type { PubsId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 
@@ -114,7 +113,10 @@ export default async function Page({
 	);
 
 	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
-	const communityStagesPromise = getStages({ communityId: community.id }).execute();
+	const communityStagesPromise = getStages({
+		communityId: community.id,
+		userId: user.id,
+	}).execute();
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub

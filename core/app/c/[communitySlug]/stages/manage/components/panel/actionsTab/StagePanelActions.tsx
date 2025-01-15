@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import type { StagesId } from "db/public";
+import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -15,11 +15,12 @@ import { StagePanelActionEditor } from "./StagePanelActionEditor";
 type PropsInner = {
 	stageId: StagesId;
 	pageContext: PageContext;
+	userId: UsersId;
 };
 
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const [stage, actionInstances] = await Promise.all([
-		getStage(props.stageId).executeTakeFirst(),
+		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageActions(props.stageId).execute(),
 	]);
 
@@ -74,6 +75,7 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 type Props = {
 	stageId?: StagesId;
 	pageContext: PageContext;
+	userId: UsersId;
 };
 
 export const StagePanelActions = async (props: Props) => {
@@ -83,7 +85,11 @@ export const StagePanelActions = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelActionsInner stageId={props.stageId} pageContext={props.pageContext} />
+			<StagePanelActionsInner
+				stageId={props.stageId}
+				pageContext={props.pageContext}
+				userId={props.userId}
+			/>
 		</Suspense>
 	);
 };

@@ -17,7 +17,7 @@ generator dbml {
 }
 
 generator comments {
-  provider = "pnpm exec tsx prisma/scripts/comment-generator.ts"
+  provider = "pnpm exec tsx prisma/scripts/comment-generator.mts"
 }
 
 model User {
@@ -96,7 +96,6 @@ model Community {
 
   pubTypes             PubType[]
   pubs                 Pub[]
-  integrationInstances IntegrationInstance[]
   memberGroups         MemberGroup[]
   stages               Stage[]
   APIAccessToken       ApiAccessToken[]
@@ -130,8 +129,6 @@ model Pub {
 
   values                   PubValue[]                 @relation("original_pub")
   stages                   PubsInStages[]
-  integrationInstances     IntegrationInstance[]
-  IntegrationInstanceState IntegrationInstanceState[]
   actionRuns               ActionRun[]
   relatedValues            PubValue[]                 @relation("related_pub")
   members                  PubMembership[]
@@ -144,8 +141,6 @@ model PubField {
   id               String          @id @default(dbgenerated("gen_random_uuid()"))
   name             String
   slug             String          @unique
-  integration      Integration?    @relation(fields: [integrationId], references: [id])
-  integrationId    String?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @default(now()) @updatedAt
   schema           PubFieldSchema? @relation(fields: [pubFieldSchemaId], references: [id])
@@ -260,7 +255,6 @@ model Stage {
   pubs                  PubsInStages[]
   moveConstraints       MoveConstraint[]      @relation("move_constraint")
   moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
-  integrationInstances  IntegrationInstance[]
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
@@ -390,49 +384,6 @@ model FormMembership {
   @@unique([formId, userId, pubId])
   @@unique([formId, memberGroupId, pubId])
   @@map(name: "form_memberships")
-}
-
-model Integration {
-  id          String   @id @default(dbgenerated("gen_random_uuid()"))
-  name        String
-  actions     Json
-  settingsUrl String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-
-  instances IntegrationInstance[]
-  pubFields PubField[]
-
-  @@map(name: "integrations")
-}
-
-model IntegrationInstance {
-  id            String      @id @default(dbgenerated("gen_random_uuid()"))
-  name          String
-  integration   Integration @relation(fields: [integrationId], references: [id])
-  integrationId String
-  community     Community   @relation(fields: [communityId], references: [id])
-  communityId   String
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @default(now()) @updatedAt
-  stage         Stage?      @relation(fields: [stageId], references: [id])
-  stageId       String?
-  config        Json?
-
-  pubs                     Pub[]
-  IntegrationInstanceState IntegrationInstanceState[]
-
-  @@map(name: "integration_instances")
-}
-
-model IntegrationInstanceState {
-  pub        Pub                 @relation(fields: [pubId], references: [id])
-  pubId      String
-  instance   IntegrationInstance @relation(fields: [instanceId], references: [id])
-  instanceId String
-  state      Json
-
-  @@unique([pubId, instanceId], name: "pub_instance")
 }
 
 model ActionInstance {

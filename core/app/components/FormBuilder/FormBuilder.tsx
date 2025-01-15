@@ -147,8 +147,9 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		values: {
 			elements: pubForm.elements.map((e) => {
 				// Do not include slug here
-				const { slug, ...rest } = e;
-				return rest;
+				const { slug, id, ...rest } = e;
+				// Rename id to avoid conflict with rhf generated id
+				return { ...rest, elementId: id };
 			}),
 			access: pubForm.access,
 			formId: pubForm.id,

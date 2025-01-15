@@ -5,8 +5,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import type { StagesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
@@ -39,7 +38,9 @@ export async function generateMetadata({
 		return { title: "Workflow Editor" };
 	}
 
-	const stage = await getStage(editingStageId as StagesId).executeTakeFirst();
+	const { user } = await getPageLoginData();
+
+	const stage = await getStage(editingStageId as StagesId, user.id).executeTakeFirst();
 
 	if (!stage) {
 		return { title: "Stage" };
@@ -66,7 +67,7 @@ export default async function Page({ params, searchParams }: Props) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	const stages = await getStages({ communityId: community.id }).execute();
+	const stages = await getStages({ communityId: community.id, userId: user.id }).execute();
 
 	const pageContext = {
 		params,

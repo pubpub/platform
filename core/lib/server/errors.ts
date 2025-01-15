@@ -3,7 +3,7 @@ import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
-import { DatabaseError } from "pg";
+import pg from "pg";
 
 import { logger } from "logger";
 
@@ -55,7 +55,7 @@ export const handleErrors = async (routeHandler: () => Promise<NextResponse>) =>
 	}
 };
 
-export const handleDatabaseErrors = (error: DatabaseError, req: TsRestRequest) => {
+export const handleDatabaseErrors = (error: pg.DatabaseError, req: TsRestRequest) => {
 	// foreign key violation
 	if (error.code === "23503") {
 		return TsRestResponse.fromJson(
@@ -105,7 +105,7 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 		);
 	}
 
-	if (error instanceof DatabaseError) {
+	if (error instanceof pg.DatabaseError) {
 		return handleDatabaseErrors(error, req);
 	}
 

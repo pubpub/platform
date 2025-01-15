@@ -2,7 +2,7 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
-		"dev": "pnpm p:dev && turbo dev --filter=!integration-* --filter=!emails --ui tui",
+		"dev": "pnpm p:dev && turbo dev --filter=!emails --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
@@ -30,7 +30,7 @@
 		"@babel/preset-react": "^7.22.15",
 		"@babel/preset-typescript": "^7.22.15",
 		"@changesets/cli": "^2.26.2",
-		"@preconstruct/cli": "^2.8.4",
+		"@preconstruct/cli": "^2.8.10",
 		"@pubpub/prettier-config": "workspace:*",
 		"@turbo/gen": "^2.1.1",
 		"concurrently": "^9.0.1",
@@ -51,7 +51,13 @@
 	"preconstruct": {
 		"packages": [
 			"packages/*"
-		]
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config",
 	"packageManager": "pnpm@9.10.0",

@@ -3,8 +3,7 @@ import type { User } from "lucia";
 import { Suspense } from "react";
 
 import type { StagesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { Card, CardContent } from "ui/card";
 import { cn } from "utils";
 

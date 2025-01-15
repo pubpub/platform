@@ -12,9 +12,7 @@ import type {
 	LastModifiedBy,
 } from "db/types";
 import { siteApi } from "contracts";
-import { ApiAccessScope, ApiAccessType } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
@@ -602,7 +600,7 @@ const handler = createNextHandler(
 		},
 		stages: {
 			get: async (req) => {
-				const { community } = await checkAuthorization({
+				const { user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewStage,
@@ -612,7 +610,10 @@ const handler = createNextHandler(
 						},
 					},
 				});
-				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
+				const stage = await getStage(
+					req.params.stageId as StagesId,
+					user.id
+				).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
 				}
@@ -623,12 +624,15 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async (req, res) => {
-				const { community } = await checkAuthorization({
+				const { community, user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: false,
 				});
 
-				const stages = await getStages({ communityId: community.id }).execute();
+				const stages = await getStages({
+					communityId: community.id,
+					userId: user.id,
+				}).execute();
 				return {
 					status: 200,
 					body: stages,

@@ -1,14 +1,17 @@
-import { sql } from "kysely";
+import { QueryCreator, sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
 	NewMoveConstraint,
 	NewStages,
+	PublicSchema,
 	PubsId,
 	StagesId,
 	StagesUpdate,
+	UsersId,
 } from "db/public";
+import { Capabilities, MembershipType } from "db/public";
 
 import type { AutoReturnType } from "../types";
 import { db } from "~/kysely/database";
@@ -48,11 +51,69 @@ export const getPubIdsInStage = (stageId: StagesId) =>
 			.where("stageId", "=", stageId)
 	);
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId };
-export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
-	autoCache(
+/** To conveniently get a CTE of view stage capabilities. Join this to your query on stageId, i.e.
+ *
+ * db
+ *	.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
+ *	.selectFrom("stages")
+ *	.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
+ */
+export const viewableStagesCte = ({
+	db,
+	userId,
+	communityId,
+}: {
+	db: QueryCreator<PublicSchema>;
+	userId: UsersId;
+	communityId?: CommunitiesId;
+}) => {
+	const stageMemberships = db
+		.selectFrom("stage_memberships")
+		.innerJoin("membership_capabilities", (join) =>
+			join
+				.onRef("stage_memberships.role", "=", "membership_capabilities.role")
+				.on("membership_capabilities.type", "=", MembershipType.stage)
+		)
+		.select("stage_memberships.stageId")
+		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
+		.where("stage_memberships.userId", "=", userId);
+
+	const communityMemberships = db
+		.selectFrom("community_memberships")
+		.innerJoin("membership_capabilities", (join) =>
+			join
+				.onRef("membership_capabilities.role", "=", "community_memberships.role")
+				.on("membership_capabilities.type", "=", MembershipType.community)
+		)
+		.innerJoin("stages", "stages.communityId", "community_memberships.communityId")
+		.where("community_memberships.userId", "=", userId)
+		.$if(Boolean(communityId), (qb) =>
+			qb.where("community_memberships.communityId", "=", communityId!)
+		)
+		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
+		.select(["stages.id as stageId"]);
+
+	return db
+		.selectFrom(
+			db
+				.selectFrom(stageMemberships.union(communityMemberships).as("all_access"))
+				.select("stageId")
+				.as("stageId")
+		)
+		.distinct()
+		.select("stageId");
+};
+
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+/**
+ * Get all stages the given user has access to
+ */
+export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
+	return autoCache(
 		db
+			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
 			.selectFrom("stages")
+			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
 			.where("communityId", "=", communityId)
 			.$if(Boolean(stageId), (qb) => qb.where("stages.id", "=", stageId!))
 			.select((eb) => [
@@ -101,24 +162,6 @@ export const getStages = ({ communityId, stageId }: CommunityStageProps) =>
 			.selectAll("stages")
 			.orderBy("order asc")
 	);
+};
 
 export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
-
-export const getIntegrationInstanceBase = (trx = db) =>
-	trx
-		.selectFrom("integration_instances")
-		.selectAll("integration_instances")
-		.select((eb) =>
-			jsonObjectFrom(
-				eb
-					.selectFrom("integrations")
-					.selectAll("integrations")
-					.whereRef("integrations.id", "=", "integration_instances.integrationId")
-			)
-				.$notNull()
-				.as("integration")
-		);
-
-export const getIntegrationInstancesForStage = (stageId: StagesId) => {
-	return autoCache(getIntegrationInstanceBase().where("stageId", "=", stageId));
-};

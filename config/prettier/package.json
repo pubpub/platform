@@ -1,8 +1,8 @@
 {
 	"name": "@pubpub/prettier-config",
+	"type": "module",
 	"private": true,
 	"version": "0.1.0",
-	"type": "module",
 	"exports": {
 		".": "./index.js"
 	},

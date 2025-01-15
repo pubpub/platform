@@ -1,5 +1,6 @@
 {
 	"name": "core",
+	"type": "module",
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
@@ -48,7 +49,8 @@
 		"public"
 	],
 	"prisma": {
-		"seed": "tsx --require ./prisma/seed/register-stub.js prisma/seed.ts"
+		"__comment": "The cts is to trick `tsx` into using CommonJS modules, even though we are using type: module",
+		"seed": "tsx --require ./prisma/seed/register-stub.cjs prisma/seed/seed-wrapper.cts"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.445.0",
@@ -67,7 +69,6 @@
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@prisma/client": "^5.2.0",
 		"@prosemirror-adapter/react": "^0.2.6",
-		"@pubpub/sdk": "workspace:*",
 		"@react-email/render": "^1.0.1",
 		"@sentry/nextjs": "catalog:",
 		"@sinclair/typebox": "catalog:",
