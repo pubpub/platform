@@ -19,21 +19,26 @@ import { StagePanel } from "./components/panel/StagePanel";
 import { StagesProvider } from "./StagesContext";
 
 type Props = {
-	params: { communitySlug: string };
-	searchParams: {
+	params: Promise<{ communitySlug: string }>;
+	searchParams: Promise<{
 		editingStageId: string | undefined;
-	};
+	}>;
 };
 
-export async function generateMetadata({
-	params: { communitySlug },
-	searchParams: { editingStageId },
-}: {
-	params: { communitySlug: string };
-	searchParams: {
+export async function generateMetadata(props: {
+	params: Promise<{ communitySlug: string }>;
+	searchParams: Promise<{
 		editingStageId: string | undefined;
-	};
+	}>;
 }): Promise<Metadata> {
+	const searchParams = await props.searchParams;
+
+	const { editingStageId } = searchParams;
+
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	if (!editingStageId) {
 		return { title: "Workflow Editor" };
 	}
@@ -49,7 +54,9 @@ export async function generateMetadata({
 	return { title: stage.name };
 }
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page(props: Props) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug();
 

@@ -30,7 +30,7 @@ export const defineActionFormFieldServerComponent = <
 		pageContext,
 	}: ActionFormFieldBaseProps<T, Type> & {
 		action: T;
-	}) => Promise<React.AwaitedReactNode>
+	}) => Promise<React.ReactNode>
 ) => {
 	const serverComponent = async (props: ActionFormFieldBaseProps<T, Type>) => {
 		const F = await FormField({

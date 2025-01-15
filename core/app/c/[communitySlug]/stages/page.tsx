@@ -11,9 +11,11 @@ export const metadata: Metadata = {
 	title: "Workflows",
 };
 
-type Props = { params: { communitySlug: string }; searchParams: Record<string, unknown> };
+type Props = { params: Promise<{ communitySlug: string }>; searchParams: Record<string, unknown> };
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page(props: Props) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(params.communitySlug),

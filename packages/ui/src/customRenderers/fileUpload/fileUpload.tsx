@@ -1,6 +1,6 @@
 "use client";
 
-import type { UppyFile } from "@uppy/core";
+import type { Body, Meta, UppyFile } from "@uppy/core";
 
 import React, { forwardRef, useEffect } from "react";
 import Uppy from "@uppy/core";
@@ -11,9 +11,12 @@ import { Dashboard } from "@uppy/react";
 import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
 
-import AwsS3 from "@uppy/aws-s3";
+import type { AwsBody } from "@uppy/aws-s3";
 
-const uppy = new Uppy().use(AwsS3);
+import AwsS3Multipart from "@uppy/aws-s3";
+
+const pluginName = "AwsS3Multipart" as const;
+const uppy = new Uppy<Meta, AwsBody>().use(AwsS3Multipart);
 
 type FileUploadProps = {
 	upload: Function;
@@ -40,8 +43,9 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 			props.onUpdateFiles(formattedFiles);
 		});
 	}, [props.onUpdateFiles]);
-	uppy.getPlugin("AwsS3")!.setOptions({
-		getUploadParameters: async (file: UppyFile) => {
+	uppy.getPlugin<AwsS3Multipart<Meta, AwsBody>>(pluginName)!.setOptions({
+		// TODO: maybe use more specific types for Meta and Body
+		getUploadParameters: async (file) => {
 			if (!file || !file.type) {
 				throw new Error("Could not read file.");
 			}

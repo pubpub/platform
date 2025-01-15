@@ -80,7 +80,7 @@ export const validateToken = async (token: string, type?: AuthTokenType, trx = d
 	// because timingSafeEqual throws an error in that case, which could leak the length of the key.
 	// We aren't worried about that because we're hashing the values first (so they're constant
 	// length) and because our tokens are all the same length anyways, unlike a password.
-	if (!crypto.timingSafeEqual(dbHash, inputHash)) {
+	if (!crypto.timingSafeEqual(new Uint8Array(dbHash), new Uint8Array(inputHash))) {
 		throw new InvalidTokenError("Invalid token", TokenFailureReason.invalid, authTokenType);
 	}
 

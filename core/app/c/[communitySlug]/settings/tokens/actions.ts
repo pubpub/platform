@@ -24,7 +24,7 @@ export const createToken = defineServerAction(async function createToken(
 		throw new Error("You must be a super admin to create tokens");
 	}
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
@@ -70,7 +70,7 @@ export const deleteToken = defineServerAction(async function deleteToken({
 		throw new Error("You must be a super admin to delete tokens");
 	}
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {

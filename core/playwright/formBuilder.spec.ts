@@ -46,7 +46,7 @@ test.describe("Creating a form", () => {
 	test("Cannot create a form with the same slug", async () => {
 		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
 		await formsPage.goto();
-		await formsPage.addForm("another form", FORM_SLUG);
+		await formsPage.addForm("another form", FORM_SLUG, false);
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
 	test("Can archive and restore a form", async () => {

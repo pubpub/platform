@@ -1,7 +1,7 @@
 type Props = {
-	params: {
+	params: Promise<{
 		communitySlug: string;
-	};
+	}>;
 };
 
 export default async function Page(props: Props) {

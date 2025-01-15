@@ -36,11 +36,13 @@ import PubChildrenTableWrapper from "./components/PubChildrenTableWrapper";
 import { PubValues } from "./components/PubValues";
 import { RelatedPubsTable } from "./components/RelatedPubsTable";
 
-export async function generateMetadata({
-	params: { pubId },
-}: {
-	params: { pubId: PubsId; communitySlug: string };
+export async function generateMetadata(props: {
+	params: Promise<{ pubId: PubsId; communitySlug: string }>;
 }): Promise<Metadata> {
+	const params = await props.params;
+
+	const { pubId } = params;
+
 	// TODO: replace this with the same function as the one which is used in the page to take advantage of request deduplication using `React.cache`
 
 	const pub = await autoCache(
@@ -64,13 +66,12 @@ export async function generateMetadata({
 	return { title: title as string };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	params: { pubId: PubsId; communitySlug: string };
-	searchParams: Record<string, string>;
+export default async function Page(props: {
+	params: Promise<{ pubId: PubsId; communitySlug: string }>;
+	searchParams: Promise<Record<string, string>>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
 	const { user } = await getPageLoginData();

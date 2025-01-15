@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 	title: "Community Settings",
 };
 
-export default async function Page({ params }: { params: { communitySlug: string } }) {
+export default async function Page(props: { params: Promise<{ communitySlug: string }> }) {
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 	const { communitySlug } = params;
 

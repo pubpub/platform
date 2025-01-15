@@ -30,8 +30,8 @@ export const useLocalStorage = <T,>(key: string): [T | undefined, (value: T) => 
 		}
 		return undefined;
 	}, []);
-	const tail = React.useRef<T>();
-	const tailTimer = React.useRef<ReturnType<typeof setTimeout>>();
+	const tail = React.useRef<T | null>(null);
+	const tailTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setValue = React.useCallback(
 		(value: T) => {
 			const now = performance.now();
@@ -45,7 +45,7 @@ export const useLocalStorage = <T,>(key: string): [T | undefined, (value: T) => 
 				tail.current = value;
 				tailTimer.current = setTimeout(() => {
 					timestamp.current = now;
-					tailTimer.current = undefined;
+					tailTimer.current = null;
 					localStorage.setItem(key, JSON.stringify(value));
 				}, timeout);
 			}

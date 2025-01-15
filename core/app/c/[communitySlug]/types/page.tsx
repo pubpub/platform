@@ -18,13 +18,15 @@ export const metadata: Metadata = {
 	title: "Pub Types",
 };
 
-export default async function Page({
-	params: { communitySlug },
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		communitySlug: string;
-	};
+	}>;
 }) {
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug();

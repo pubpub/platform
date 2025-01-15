@@ -55,7 +55,7 @@ const createMemberColumns = (pubType: ChildPubRowPubType) =>
 		);
 
 export const getPubChildrenTableColumns = (
-	childPubRunActionDropdowns: JSX.Element[],
+	childPubRunActionDropdowns: React.ReactNode[],
 	childPubType?: ChildPubRowPubType
 ) =>
 	[

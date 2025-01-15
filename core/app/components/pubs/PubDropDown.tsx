@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 
 import type { PubsId } from "db/public";
@@ -19,8 +18,8 @@ type Props = {
 	searchParams: Record<string, unknown>;
 };
 
-export const PubDropDown = (props: Props) => {
-	const communitySlug = getCommunitySlug();
+export const PubDropDown = async (props: Props) => {
+	const communitySlug = await getCommunitySlug();
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>

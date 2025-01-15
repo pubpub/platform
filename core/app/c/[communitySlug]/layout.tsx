@@ -12,13 +12,12 @@ import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import SideNav, { COLLAPSIBLE_TYPE } from "./SideNav";
 
-type Props = { children: React.ReactNode; params: { communitySlug: string } };
+type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> };
 
-export async function generateMetadata({
-	params,
-}: {
-	params: { communitySlug: string };
+export async function generateMetadata(props: {
+	params: Promise<{ communitySlug: string }>;
 }): Promise<Metadata> {
+	const params = await props.params;
 	const community = await findCommunityBySlug(params.communitySlug);
 
 	return {
@@ -29,7 +28,11 @@ export async function generateMetadata({
 	};
 }
 
-export default async function MainLayout({ children, params }: Props) {
+export default async function MainLayout(props: Props) {
+	const params = await props.params;
+
+	const { children } = props;
+
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
