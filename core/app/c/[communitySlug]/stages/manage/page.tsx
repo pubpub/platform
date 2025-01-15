@@ -38,7 +38,9 @@ export async function generateMetadata({
 		return { title: "Workflow Editor" };
 	}
 
-	const stage = await getStage(editingStageId as StagesId).executeTakeFirst();
+	const { user } = await getPageLoginData();
+
+	const stage = await getStage(editingStageId as StagesId, user.id).executeTakeFirst();
 
 	if (!stage) {
 		return { title: "Stage" };
@@ -65,7 +67,7 @@ export default async function Page({ params, searchParams }: Props) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	const stages = await getStages({ communityId: community.id }).execute();
+	const stages = await getStages({ communityId: community.id, userId: user.id }).execute();
 
 	const pageContext = {
 		params,
