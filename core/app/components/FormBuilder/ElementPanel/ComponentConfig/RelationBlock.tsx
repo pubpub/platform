@@ -17,7 +17,11 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 					<FormItem>
 						<FormLabel>Label</FormLabel>
 						<FormControl>
-							<Input placeholder="Description of the selection" {...field} />
+							<Input
+								placeholder="Description of the selection"
+								{...field}
+								value={field.value ?? ""}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -30,7 +34,11 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 					<FormItem>
 						<FormLabel>Help Text</FormLabel>
 						<FormControl>
-							<Input placeholder="Optional additional guidance" {...field} />
+							<Input
+								placeholder="Optional additional guidance"
+								{...field}
+								value={field.value ?? ""}
+							/>
 						</FormControl>
 						<FormDescription>Appears below the field</FormDescription>
 						<FormMessage />
