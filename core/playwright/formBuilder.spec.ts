@@ -203,7 +203,7 @@ test.describe("relationship fields", () => {
 		// Add a field that is a relationship
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
-		await fieldsPage.addField("author", CoreSchemaType.Null, true);
+		await fieldsPage.addField("author null", CoreSchemaType.Null, true);
 
 		const formSlug = "relationship-form-with-null";
 		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
@@ -213,7 +213,7 @@ test.describe("relationship fields", () => {
 
 		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
 		await formEditPage.openAddForm();
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:author`);
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:author-null`);
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
@@ -225,7 +225,9 @@ test.describe("relationship fields", () => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
-				const authorElement = elements.find((e: PubFieldElement) => e.label === "author");
+				const authorElement = elements.find(
+					(e: PubFieldElement) => e.label === "author null"
+				);
 				expect(authorElement.component).toBeNull();
 				expect(authorElement.config).toMatchObject({
 					relationshipConfig: {
