@@ -204,7 +204,7 @@ export default async function FormPage(props: {
 
 	const parentPub = pub?.parentId
 		? await getPubsWithRelatedValuesAndChildren(
-				{ pubId: pub.parentId, communityId: community.id, userId: user?.id },
+				{ pubId: pub.parentId, communityId: community.id },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
 		: undefined;
