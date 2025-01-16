@@ -1,6 +1,5 @@
 "use client";
 
-import type { Event } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Badge } from "ui/badge";
