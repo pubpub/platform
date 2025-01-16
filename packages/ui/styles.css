@@ -21,12 +21,21 @@
 		--ring: 240 5.9% 10%;
 		--radius: 0.5rem;
 
-		--sidebar-background: 210, 40%, 98%;
-		/* --sidebar-background: 210, 20%, 98%; */
+		/* slate-50 */
+		/* --sidebar-background: 210, 40%, 98%; */
+		/* gray-100 */
+		--sidebar-background: 210, 20%, 98%;
 		--sidebar-foreground: 240 5.3% 26.1%;
 		--sidebar-primary: 240 5.9% 10%;
 		--sidebar-primary-foreground: 0 0% 98%;
-		--sidebar-accent: 210 40% 95.1%;
+		/* slate-150ish */
+		/* --sidebar-accent: 210 40% 95.1%; */
+		/* slate-100 */
+		/* --sidebar-accent: 210, 40%, 96%; */
+		/* gray-100 */
+		/* --sidebar-accent: 220, 14%, 96%; */
+		/* gray-200 */
+		--sidebar-accent: 220, 13%, 91%;
 		--sidebar-accent-foreground: 240 5.9% 10%;
 		--sidebar-border: 220 13% 91%;
 		--sidebar-ring: 217.2 91.2% 59.8%;
