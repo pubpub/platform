@@ -145,7 +145,7 @@ test.describe("Submission buttons", () => {
 });
 
 test.describe("relationship fields", () => {
-	test("Create a new form for the first time", async () => {
+	test("Create a form with a relationship field", async () => {
 		// Add a field that is a relationship
 		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
 		await fieldsPage.goto();
@@ -192,6 +192,50 @@ test.describe("relationship fields", () => {
 				expect(authorElement.config.relationshipConfig.pubType).toMatch(
 					/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
 				);
+			}
+		});
+
+		await formEditPage.saveFormElementConfiguration();
+		await formEditPage.saveForm();
+	});
+
+	test("Create a form with a null relationship field", async () => {
+		// Add a field that is a relationship
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("author", CoreSchemaType.Null, true);
+
+		const formSlug = "relationship-form-with-null";
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+		await formsPage.addForm("relationship form with null", formSlug);
+		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
+
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:author`);
+		// Fill out relationship config first
+		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
+		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
+		await page.getByRole("combobox").click();
+		await page.getByRole("option", { name: "Submission" }).click();
+
+		// Validate the config that is saved
+		page.on("request", (request) => {
+			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
+				const data = request.postDataJSON();
+				const { elements } = data[0];
+				const authorElement = elements.find((e: PubFieldElement) => e.label === "author");
+				expect(authorElement.component).toBeNull();
+				expect(authorElement.config).toMatchObject({
+					relationshipConfig: {
+						component: InputComponent.relationBlock,
+						label: "Authors",
+						help: "Authors associated with this pub",
+					},
+				});
+				// Should only have the relationshipConfig
+				expect(Object.keys(authorElement.config)).toEqual(["relationshipConfig"]);
 			}
 		});
 
