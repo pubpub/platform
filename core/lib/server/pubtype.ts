@@ -3,7 +3,7 @@ import type { ExpressionBuilder } from "kysely";
 import { sql } from "kysely";
 import { jsonArrayFrom, jsonBuildObject } from "kysely/helpers/postgres";
 
-import type { PubTypeWithFields } from "contracts/src/resources/site";
+import type { PubTypeWithFields } from "contracts";
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
 
 import type { AutoReturnType, Equal, Expect, Prettify, XOR } from "../types";
