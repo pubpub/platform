@@ -12,31 +12,53 @@ export const MultiBlock = ({
 	title,
 	children,
 	disabled,
+	compact,
 }: {
 	title: string;
 	children?: ReactNode;
 	disabled?: boolean;
+	compact?: boolean;
 }) => {
 	return (
 		<div
-			className={cn("w-full rounded border border-dashed border-gray-300 p-1", {
-				"bg-gray-50": disabled,
-			})}
+			className={cn(
+				"flex w-full flex-col gap-4 rounded border border-dashed border-gray-300 p-1",
+				{
+					"bg-gray-50": disabled,
+					"p-3": !compact,
+				}
+			)}
 		>
 			<div
 				className={cn("flex items-center justify-between", {
 					"text-muted-foreground": disabled,
 				})}
 			>
-				<div className="flex items-center gap-1">
-					<BookDashed size={12} />
-					<div className="text-xs">{title}</div>
+				<div className={cn("flex items-center gap-1", { "gap-2": !compact })}>
+					<BookDashed
+						size={compact ? 12 : 20}
+						className={cn({ "text-emerald-500": !disabled })}
+					/>
+					<div className={cn("text-xs", { "text-sm": !compact })}>{title}</div>
 				</div>
-				<Button size="sm" variant="outline" disabled={disabled} className="h-6 w-6 p-0">
-					<Plus size={10} />
+				<Button
+					size={compact ? "sm" : "default"}
+					variant="outline"
+					disabled={disabled}
+					className={cn({ "h-6 w-6 p-0": compact })}
+				>
+					<span className="flex items-center gap-1">
+						{!compact && <span>Add</span>}
+						<Plus size={compact ? 10 : 16} />
+					</span>
 				</Button>
 			</div>
-			{children}
+			{children ? (
+				<>
+					<hr />
+					{children}
+				</>
+			) : null}
 		</div>
 	);
 };

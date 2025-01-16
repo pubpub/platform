@@ -6,7 +6,6 @@ import type {
 	FormElementsId,
 	InputComponent,
 	PubFieldsId,
-	StagesId,
 	StructuralFormElement,
 } from "db/public";
 
@@ -33,6 +32,7 @@ type BasePubFieldElement = {
 	element: null;
 	order: number | null;
 	slug: string;
+	isRelation: boolean;
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {

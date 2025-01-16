@@ -16,6 +16,7 @@ import { FileUploadElement } from "./elements/FileUploadElement";
 import { MemberSelectElement } from "./elements/MemberSelectElement";
 import { MultivalueInputElement } from "./elements/MultivalueInputElement";
 import { RadioGroupElement } from "./elements/RadioGroupElement";
+import { RelatedPubsElement } from "./elements/RelatedPubsElement";
 import { SelectDropdownElement } from "./elements/SelectDropdownElement";
 import { TextAreaElement } from "./elements/TextAreaElement";
 import { TextInputElement } from "./elements/TextInputElement";
@@ -171,6 +172,18 @@ export const FormElement = ({
 				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
+			/>
+		);
+	}
+
+	if (element.isRelation) {
+		const valueComponent = input;
+		input = (
+			<RelatedPubsElement
+				{...basicProps}
+				config={element.config}
+				schemaName={element.schemaName}
+				valueComponent={valueComponent}
 			/>
 		);
 	}
