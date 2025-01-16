@@ -35,13 +35,24 @@ export const componentsBySchema = {
 
 export type ComponentsBySchemaType = typeof componentsBySchema;
 
+/**
+ * Map of InputComponent to CoreSchemaType
+ *
+ * Note: For InputComponents with no CoreSchemaType defined in {@link componentsBySchema}, eg
+ * relationBlock, CoreSchemaType is returned, representing the fact that they can be used with any
+ * schema.
+ */
 export type SchemaTypeByInputComponent = {
 	[K in InputComponent]: {
 		[SchemaType in CoreSchemaType as K extends ComponentsBySchemaType[SchemaType][number]
 			? SchemaType
 			: never]: SchemaType;
 	} extends infer T
-		? T[keyof T]
+		? keyof T extends never
+			? // for non-schematype specific InputComponents, like relationBlock
+				CoreSchemaType
+			: // for schematype specific InputComponents, like checkbox
+				T[keyof T]
 		: never;
 };
 
