@@ -96,32 +96,6 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editingButton: "Edit Submission Button",
 };
 
-<<<<<<< HEAD
-const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
-	const { dispatch } = useFormBuilder();
-	return (
-		<>
-			<div className="flex items-center justify-between">
-				<div className="text-sm uppercase text-gray-500">{elementPanelTitles[state]}</div>
-				{state !== "initial" && (
-					<Button
-						aria-label="Cancel"
-						variant="ghost"
-						size="sm"
-						className=""
-						onClick={() => dispatch({ eventName: "cancel" })}
-					>
-						<X size={16} className="text-muted-foreground" />
-					</Button>
-				)}
-			</div>
-			<hr />
-		</>
-	);
-};
-
-=======
->>>>>>> 3846a8a5 (Add side panel)
 type Props = {
 	pubForm: PubForm;
 	id: string;
@@ -351,14 +325,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 						<TabsContent value="preview">Preview your form here</TabsContent>
 					</div>
 				</Tabs>
-<<<<<<< HEAD
-				<div
-					ref={sidebarRef}
-					className="fixed right-0 top-[72px] z-10 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
-				></div>
-=======
 				<SidePanel ref={sidebarRef} />
->>>>>>> 3846a8a5 (Add side panel)
 			</FormBuilderProvider>
 		</TokenProvider>
 	);
