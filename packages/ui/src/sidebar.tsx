@@ -4,6 +4,7 @@ import type { VariantProps } from "class-variance-authority";
 
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { cva } from "class-variance-authority";
 import { Menu } from "lucide-react";
 
@@ -14,7 +15,7 @@ import { Button } from "./button";
 import { Input } from "./input";
 import { KeyboardShortcut } from "./kbd";
 import { Separator } from "./separator";
-import { Sheet, SheetContent } from "./sheet";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "./sheet";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
@@ -190,6 +191,14 @@ const Sidebar = React.forwardRef<
 		if (isMobile) {
 			return (
 				<Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
+					<VisuallyHidden>
+						{/**
+						 * Slight deviation from the base component, required to prevent triggering error on mobile
+						 * https://github.com/shadcn-ui/ui/issues/5746
+						 */}
+						<SheetTitle>Sidebar</SheetTitle>
+						<SheetDescription>Sidebar</SheetDescription>
+					</VisuallyHidden>
 					<SheetContent
 						data-sidebar="sidebar"
 						data-mobile="true"

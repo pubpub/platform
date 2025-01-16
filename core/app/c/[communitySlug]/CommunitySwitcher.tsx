@@ -36,7 +36,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 				</SidebarMenuButton>
 				{/* </div> */}
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="w-[--radix-popper-anchor-width] min-w-52">
+			<DropdownMenuContent className="w-[--radix-popper-anchor-width] min-w-52" side="right">
 				{availableCommunities
 					.filter((option) => {
 						return option?.slug !== community.slug;
