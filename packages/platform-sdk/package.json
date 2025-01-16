@@ -3,8 +3,11 @@
 	"private": true,
 	"version": "0.0.1",
 	"description": "SDK for the PubPub platform",
-	"main": "dist/pubpub-platform-sdk.cjs.js",
-	"module": "dist/pubpub-platform-sdk.esm.js",
+	"exports": {
+		".": "./dist/pubpub-platform-sdk.js",
+		"./package.json": "./package.json"
+	},
+	"type": "module",
 	"files": [
 		"dist"
 	],
@@ -40,6 +43,12 @@
 		"vitest": "^2.1.8"
 	},
 	"preconstruct": {
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		},
 		"entrypoints": [
 			"index.ts"
 		]
