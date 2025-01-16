@@ -1,5 +1,5 @@
-import { CoreSchemaType } from "@prisma/client";
 
+import { CoreSchemaType } from "db/public";
 import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-field/defineConfigServerComponent";
 import { action } from "../action";
 import OutputField from "../OutputField";
