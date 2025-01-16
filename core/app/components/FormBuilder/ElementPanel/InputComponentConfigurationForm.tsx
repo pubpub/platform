@@ -307,7 +307,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 		[component, schemaName]
 	);
 
-	// If this is a relationship field, he first component selector on the page will be for the relationship,
+	// If this is a relationship field, the first component selector on the page will be for the relationship,
 	// not the value itself.
 	const componentSelector = isRelation ? "config.relationshipConfig.component" : "component";
 

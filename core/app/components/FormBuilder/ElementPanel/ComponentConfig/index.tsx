@@ -42,6 +42,7 @@ export const ComponentConfig = <I extends InputComponent>(props: ComponentConfig
 		ComponentConfigFormProps<I>
 	>;
 
+	// This is the CoreSchemaType.Null case
 	if (!ConfigComponent) {
 		return null;
 	}
