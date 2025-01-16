@@ -1,20 +1,21 @@
+import { link } from "fs";
+
+import type { User } from "lucia";
+
+import { cache, Suspense } from "react";
+
+import type { Communities, CommunitiesId, UsersId } from "db/public";
 import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { logger } from "logger";
 import {
 	Activity,
-	Bookmark,
 	BookOpen,
 	BookOpenText,
 	CurlyBraces,
 	FlagTriangleRightIcon,
 	Form,
-	FormInput,
-	Integration,
 	Layers3,
-	Pub,
-	RefreshCw,
-	Settings,
 	Settings2,
-	Stages,
 	ToyBrick,
 	UsersRound,
 } from "ui/icon";
@@ -28,12 +29,14 @@ import {
 	SidebarHeader,
 	SidebarMenu,
 	SidebarMenuItem,
+	SidebarMenuSkeleton,
+	SidebarMenuSubItem,
 	SidebarRail,
 	SidebarSeparator,
 } from "ui/sidebar";
 
 import type { CommunityData } from "~/lib/server/community";
-import type { DefinitelyHas } from "~/lib/types";
+import type { MaybeHas } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";
@@ -46,119 +49,137 @@ type Props = {
 	availableCommunities: NonNullable<CommunityData>[];
 };
 
+type BaseLinkDefinition = {
+	href: string;
+	text: string;
+	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>);
+	pattern?: string;
+};
+
+type SubMenuLinkDefinition = MaybeHas<BaseLinkDefinition, "href"> & {
+	children: SubLevelLinkDefinition[] | SubMenuLinkDefinition[];
+	icon: React.ReactNode;
+};
+
+type TopLevelLinkDefinition = BaseLinkDefinition & {
+	icon: React.ReactNode;
+};
+
+type SubLevelLinkDefinition = BaseLinkDefinition & {
+	icon?: React.ReactNode;
+};
+
 export type LinkDefinition =
-	| {
-			href: string;
-			text: string;
-			icon?: React.ReactNode;
-			minimumAccessRole: MemberRole | null;
-			pattern?: string;
-			children?: LinkDefinition[];
-	  }
-	| {
-			href?: string;
-			text: string;
-			icon: React.ReactNode;
-			minimumAccessRole: MemberRole | null;
-			pattern?: string;
-			children: Omit<LinkDefinition, "icon">[];
-	  };
+	| TopLevelLinkDefinition
+	| SubMenuLinkDefinition
+	| SubLevelLinkDefinition;
 
 type LinkGroupDefinition = {
 	name: string;
-	minimumAccessRole: MemberRole;
+	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>);
 	links: LinkDefinition[];
 };
 
+const userCanEditCommunityCached = cache(async (userId: UsersId, communityId: CommunitiesId) => {
+	return await userCan(
+		Capabilities.editCommunity,
+		{
+			type: MembershipType.community,
+			communityId,
+		},
+		userId
+	);
+});
+
 const viewLinks: LinkGroupDefinition = {
 	name: "Views",
-	minimumAccessRole: MemberRole.editor,
+	authorization: null,
 	links: [
 		{
 			href: "/pubs",
 			text: "All Pubs",
 			icon: <BookOpen size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: null,
 		},
 		{
 			href: "/stages",
 			pattern: "/stages$",
 			text: "All Workflows",
 			icon: <FlagTriangleRightIcon size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: null,
 		},
 		{
 			href: "/activity/actions",
 			text: "Action Log",
 			icon: <Activity size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: userCanEditCommunityCached,
 		},
 	],
 };
 
 const manageLinks: LinkGroupDefinition = {
 	name: "Manage",
-	minimumAccessRole: MemberRole.editor,
+	authorization: userCanEditCommunityCached,
 	links: [
 		{
 			href: "/stages/manage",
 			text: "Workflows",
 			icon: <Layers3 size={16} />,
-			minimumAccessRole: MemberRole.editor,
 			pattern: "/stages/manage",
+			authorization: userCanEditCommunityCached,
 		},
 		{
 			href: "/forms",
 			text: "Forms",
 			icon: <Form size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: userCanEditCommunityCached,
 		},
 		{
 			href: "/types",
 			text: "Types",
 			icon: <ToyBrick size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: userCanEditCommunityCached,
 		},
 		{
 			href: "/fields",
 			text: "Fields",
 			icon: <CurlyBraces size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: userCanEditCommunityCached,
 		},
 		{
 			href: "/members",
 			text: "Members",
 			icon: <UsersRound size={16} />,
-			minimumAccessRole: MemberRole.editor,
+			authorization: userCanEditCommunityCached,
 		},
 	],
 };
 
 const adminLinks: LinkGroupDefinition = {
 	name: "Admin",
-	minimumAccessRole: MemberRole.admin,
+	authorization: userCanEditCommunityCached,
 	links: [
 		{
 			text: "Settings",
 			icon: <Settings2 size={16} />,
-			minimumAccessRole: MemberRole.admin,
+			authorization: userCanEditCommunityCached,
 			children: [
 				{
 					href: "/settings/tokens",
 					text: "API Tokens",
-					minimumAccessRole: MemberRole.admin,
+					authorization: userCanEditCommunityCached,
 				},
 			],
 		},
 		{
 			text: "Docs",
 			icon: <BookOpenText size={16} />,
-			minimumAccessRole: MemberRole.admin,
+			authorization: userCanEditCommunityCached,
 			children: [
 				{
 					href: "/developers/docs",
 					text: "API",
-					minimumAccessRole: MemberRole.admin,
+					authorization: userCanEditCommunityCached,
 				},
 			],
 		},
@@ -168,101 +189,140 @@ const adminLinks: LinkGroupDefinition = {
 export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
 
 const Links = ({
-	communityPrefix,
-	minimumCommunityRole,
+	user,
+	community,
 	links,
 }: {
-	/* The community prefix, e.g. "/c/community-slug"
-	 */
-	communityPrefix: string;
-	minimumCommunityRole: MemberRole;
+	user: User;
+	community: Communities;
 	links: LinkDefinition[];
 }) => {
 	return (
 		<>
-			{links
-				.filter((link) => {
-					if (link.minimumAccessRole === null) {
-						return true;
-					}
-
-					if (link.minimumAccessRole === MemberRole.editor) {
-						return (
-							minimumCommunityRole === MemberRole.editor ||
-							minimumCommunityRole === MemberRole.admin
-						);
-					}
-
-					if (link.minimumAccessRole === MemberRole.admin) {
-						return minimumCommunityRole === MemberRole.admin;
-					}
-
-					return false;
-				})
-				.map((link) => {
-					if (!link.children || link.children.length === 0) {
-						return (
-							<NavLink
-								key={link.href}
-								href={`${communityPrefix}${link.href}`}
-								text={link.text}
-								icon={link.icon}
-								pattern={link.pattern}
-							/>
-						);
-					}
-
+			{links.map((link) => {
+				if (!("children" in link)) {
 					return (
-						<NavLinkSubMenu
-							link={link as DefinitelyHas<LinkDefinition, "children">}
-							communityPrefix={communityPrefix}
-							key={link.text}
-						/>
+						<Suspense fallback={<SidebarMenuSkeleton />} key={link.href || link.text}>
+							<Link user={user} community={community} link={link} />
+						</Suspense>
 					);
-				})}
+				}
+
+				return (
+					<SubMenuLinks user={user} community={community} link={link} key={link.text} />
+				);
+			})}
 		</>
 	);
 };
 
-const LinkGroup = ({
-	communityPrefix,
-	minimumCommunityRole,
+const Link = async ({
+	user,
+	community,
+	link,
+}: {
+	user: User;
+	community: Communities;
+	link: TopLevelLinkDefinition | SubLevelLinkDefinition;
+}) => {
+	if (link.authorization) {
+		const userCan = await link.authorization(user.id, community.id);
+
+		if (!userCan) {
+			return null;
+		}
+	}
+
+	return (
+		<NavLink
+			href={`/c/${community.slug}${link.href}`}
+			text={link.text}
+			icon={link.icon}
+			pattern={link.pattern}
+			hasChildren
+			isChild={false}
+		/>
+	);
+};
+
+const SubMenuLinks = async ({
+	user,
+	community,
+	link,
+}: {
+	user: User;
+	community: Communities;
+	link: SubMenuLinkDefinition;
+}) => {
+	if (link.authorization) {
+		const userCan = await link.authorization(user.id, community.id);
+
+		if (!userCan) {
+			return null;
+		}
+	}
+
+	return (
+		<NavLinkSubMenu
+			icon={link.icon}
+			text={link.text}
+			parentLink={
+				link.href ? (
+					<NavLink
+						href={`/c/${community.slug}${link.href}`}
+						text={link.text}
+						icon={link.icon}
+						pattern={link.pattern}
+						hasChildren
+						isChild={false}
+					/>
+				) : null
+			}
+		>
+			{link.children.map((child) => (
+				<SidebarMenuSubItem key={child.href}>
+					<Links user={user} community={community} links={link.children} />
+				</SidebarMenuSubItem>
+			))}
+		</NavLinkSubMenu>
+	);
+};
+
+const LinkGroup = async ({
+	user,
+	community,
 	group,
 }: {
-	communityPrefix: string;
-	minimumCommunityRole: MemberRole;
+	user: User;
+	community: Communities;
 	group: LinkGroupDefinition;
 }) => {
+	if (group.authorization) {
+		const userCan = await group.authorization(user.id, community.id);
+
+		if (!userCan) {
+			return null;
+		}
+	}
+
 	return (
 		<SidebarGroup>
 			<SidebarGroupLabel className="font-semibold uppercase text-gray-500">
 				{group.name}
 			</SidebarGroupLabel>
 			<SidebarGroupContent className="group-data-[state=expanded]:px-2">
-				<Links
-					communityPrefix={communityPrefix}
-					minimumCommunityRole={minimumCommunityRole}
-					links={group.links}
-				/>
+				<Links user={user} community={community} links={group.links} />
 			</SidebarGroupContent>
 		</SidebarGroup>
 	);
 };
 
 const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
-	const prefix = `/c/${community.slug}`;
-
 	const { user } = await getLoginData();
 
 	if (!user) {
 		return null;
 	}
-
-	const userCanEditCommunity = await userCan(
-		Capabilities.editCommunity,
-		{ type: MembershipType.community, communityId: community.id },
-		user.id
-	);
 
 	return (
 		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="group-data-[state=expanded]:py-3">
@@ -280,27 +340,9 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 			<SidebarContent className="group-data-[state=expanded]:px-1">
 				<div className="flex h-full max-h-screen flex-col gap-2">
 					<div className="flex-1">
-						<LinkGroup
-							communityPrefix={prefix}
-							minimumCommunityRole={
-								userCanEditCommunity ? MemberRole.admin : MemberRole.editor
-							}
-							group={viewLinks}
-						/>
-						<LinkGroup
-							communityPrefix={prefix}
-							minimumCommunityRole={
-								userCanEditCommunity ? MemberRole.admin : MemberRole.editor
-							}
-							group={manageLinks}
-						/>
-						<LinkGroup
-							communityPrefix={prefix}
-							minimumCommunityRole={
-								userCanEditCommunity ? MemberRole.admin : MemberRole.editor
-							}
-							group={adminLinks}
-						/>
+						<LinkGroup user={user} community={community} group={viewLinks} />
+						<LinkGroup user={user} community={community} group={manageLinks} />
+						<LinkGroup user={user} community={community} group={adminLinks} />
 					</div>
 				</div>
 			</SidebarContent>

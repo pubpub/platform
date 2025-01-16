@@ -20,28 +20,44 @@ import type { DefinitelyHas } from "~/lib/types";
 import NavLink from "./NavLink";
 
 export const NavLinkSubMenu = ({
-	link,
-	communityPrefix,
+	icon,
+	text,
+	parentLink,
+	children,
 }: {
-	link: DefinitelyHas<LinkDefinition, "children">;
-	communityPrefix: string;
+	icon: React.ReactNode;
+	text: string;
+	parentLink?: React.ReactNode;
+	children: React.ReactNode;
 }) => {
-	const [open, persistOpen] = useLocalStorage<boolean>(`nav-link-sub-menu-open-${link.href}`);
+	const [open, persistOpen] = useLocalStorage<boolean>(`nav-link-sub-menu-open-${text}`);
 	const [actuallyOpen, setActuallyOpen] = useState(false);
-	const { setOpen: setSidebarOpen, state: sidebarState, open: sidebarOpen } = useSidebar();
+	const { setOpen: setSidebarOpen, state: sidebarState } = useSidebar();
 
 	useEffect(() => {
-		// necessary bc otherwise we get annoying hydration errors
-		setActuallyOpen(open ?? false);
+		let mounted = true;
+		if (mounted) {
+			setActuallyOpen(open ?? false);
+		}
+		return () => {
+			mounted = false;
+		};
 	}, [open]);
+
+	if (!icon || !text) {
+		console.warn("NavLinkSubMenu: Missing required props", { icon, text });
+		return null;
+	}
+	// console.log("open", open);
+	// console.log("actuallyOpen", actuallyOpen);
+	// console.log("SubMenuLink", icon, text, parentLink);
 
 	return (
 		<SidebarMenu>
 			<Collapsible
-				key={link.href}
-				onOpenChange={(open) => {
-					persistOpen(open);
-					setActuallyOpen(open);
+				onOpenChange={(newOpen) => {
+					persistOpen(newOpen);
+					setActuallyOpen(newOpen);
 				}}
 				defaultOpen={false}
 				open={actuallyOpen}
@@ -49,16 +65,7 @@ export const NavLinkSubMenu = ({
 			>
 				<SidebarMenuItem className="list-none">
 					<CollapsibleTrigger asChild>
-						{link.href ? (
-							<NavLink
-								href={`${communityPrefix}${link.href}`}
-								text={link.text}
-								icon={link.icon}
-								pattern={link.pattern}
-								hasChildren
-								isChild={false}
-							/>
-						) : (
+						{parentLink ?? (
 							<SidebarMenuButton
 								className="relative"
 								onClick={() => {
@@ -70,8 +77,8 @@ export const NavLinkSubMenu = ({
 									}
 								}}
 							>
-								{link.icon}
-								<span className="flex-auto text-sm">{link.text}</span>
+								{icon}
+								<span className="flex-auto text-sm">{text}</span>
 								<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
 							</SidebarMenuButton>
 						)}
@@ -82,16 +89,7 @@ export const NavLinkSubMenu = ({
 				</SidebarMenuItem>
 				<CollapsibleContent>
 					<SidebarMenuSub className="group-data-[collapsible=icon]:hidden">
-						{link.children.map((child) => (
-							<SidebarMenuSubItem key={child.href}>
-								<NavLink
-									href={`${communityPrefix}${child.href}`}
-									text={child.text}
-									pattern={child.pattern}
-									isChild
-								/>
-							</SidebarMenuSubItem>
-						))}
+						{children}
 					</SidebarMenuSub>
 				</CollapsibleContent>
 			</Collapsible>
