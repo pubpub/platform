@@ -1,235 +1,66 @@
 {
 	"name": "ui",
+	"type": "module",
 	"private": true,
 	"version": "0.1.0",
-	"main": "dist/ui.cjs.js",
-	"module": "dist/ui.esm.js",
 	"exports": {
-		"./card": {
-			"module": "./card/dist/ui-card.esm.js",
-			"default": "./card/dist/ui-card.cjs.js"
-		},
-		"./form": {
-			"module": "./form/dist/ui-form.esm.js",
-			"default": "./form/dist/ui-form.cjs.js"
-		},
-		"./icon": {
-			"module": "./icon/dist/ui-icon.esm.js",
-			"default": "./icon/dist/ui-icon.cjs.js"
-		},
-		"./tabs": {
-			"module": "./tabs/dist/ui-tabs.esm.js",
-			"default": "./tabs/dist/ui-tabs.cjs.js"
-		},
-		"./alert": {
-			"module": "./alert/dist/ui-alert.esm.js",
-			"default": "./alert/dist/ui-alert.cjs.js"
-		},
-		"./badge": {
-			"module": "./badge/dist/ui-badge.esm.js",
-			"default": "./badge/dist/ui-badge.cjs.js"
-		},
-		"./input": {
-			"module": "./input/dist/ui-input.esm.js",
-			"default": "./input/dist/ui-input.cjs.js"
-		},
-		"./label": {
-			"module": "./label/dist/ui-label.esm.js",
-			"default": "./label/dist/ui-label.cjs.js"
-		},
-		"./sheet": {
-			"module": "./sheet/dist/ui-sheet.esm.js",
-			"default": "./sheet/dist/ui-sheet.cjs.js"
-		},
-		"./table": {
-			"module": "./table/dist/ui-table.esm.js",
-			"default": "./table/dist/ui-table.cjs.js"
-		},
-		"./toast": {
-			"module": "./toast/dist/ui-toast.esm.js",
-			"default": "./toast/dist/ui-toast.cjs.js"
-		},
-		"./avatar": {
-			"module": "./avatar/dist/ui-avatar.esm.js",
-			"default": "./avatar/dist/ui-avatar.cjs.js"
-		},
-		"./button": {
-			"module": "./button/dist/ui-button.esm.js",
-			"default": "./button/dist/ui-button.cjs.js"
-		},
-		"./dialog": {
-			"module": "./dialog/dist/ui-dialog.esm.js",
-			"default": "./dialog/dist/ui-dialog.cjs.js"
-		},
-		"./select": {
-			"module": "./select/dist/ui-select.esm.js",
-			"default": "./select/dist/ui-select.cjs.js"
-		},
-		"./switch": {
-			"module": "./switch/dist/ui-switch.esm.js",
-			"default": "./switch/dist/ui-switch.cjs.js"
-		},
-		"./toggle": {
-			"module": "./toggle/dist/ui-toggle.esm.js",
-			"default": "./toggle/dist/ui-toggle.cjs.js"
-		},
-		"./command": {
-			"module": "./command/dist/ui-command.esm.js",
-			"default": "./command/dist/ui-command.cjs.js"
-		},
-		"./menubar": {
-			"module": "./menubar/dist/ui-menubar.esm.js",
-			"default": "./menubar/dist/ui-menubar.cjs.js"
-		},
-		"./popover": {
-			"module": "./popover/dist/ui-popover.esm.js",
-			"default": "./popover/dist/ui-popover.cjs.js"
-		},
-		"./toaster": {
-			"module": "./toaster/dist/ui-toaster.esm.js",
-			"default": "./toaster/dist/ui-toaster.cjs.js"
-		},
-		"./tooltip": {
-			"module": "./tooltip/dist/ui-tooltip.esm.js",
-			"default": "./tooltip/dist/ui-tooltip.cjs.js"
-		},
-		"./calendar": {
-			"module": "./calendar/dist/ui-calendar.esm.js",
-			"default": "./calendar/dist/ui-calendar.cjs.js"
-		},
-		"./checkbox": {
-			"module": "./checkbox/dist/ui-checkbox.esm.js",
-			"default": "./checkbox/dist/ui-checkbox.cjs.js"
-		},
-		"./combobox": {
-			"module": "./combobox/dist/ui-combobox.esm.js",
-			"default": "./combobox/dist/ui-combobox.cjs.js"
-		},
-		"./skeleton": {
-			"module": "./skeleton/dist/ui-skeleton.esm.js",
-			"default": "./skeleton/dist/ui-skeleton.cjs.js"
-		},
-		"./textarea": {
-			"module": "./textarea/dist/ui-textarea.esm.js",
-			"default": "./textarea/dist/ui-textarea.cjs.js"
-		},
-		"./accordion": {
-			"module": "./accordion/dist/ui-accordion.esm.js",
-			"default": "./accordion/dist/ui-accordion.cjs.js"
-		},
-		"./separator": {
-			"module": "./separator/dist/ui-separator.esm.js",
-			"default": "./separator/dist/ui-separator.cjs.js"
-		},
-		"./use-toast": {
-			"module": "./use-toast/dist/ui-use-toast.esm.js",
-			"default": "./use-toast/dist/ui-use-toast.cjs.js"
-		},
-		"./data-table": {
-			"module": "./data-table/dist/ui-data-table.esm.js",
-			"default": "./data-table/dist/ui-data-table.cjs.js"
-		},
-		"./hooks": {
-			"module": "./hooks/dist/ui-hooks.esm.js",
-			"default": "./hooks/dist/ui-hooks.cjs.js"
-		},
-		"./hover-card": {
-			"module": "./hover-card/dist/ui-hover-card.esm.js",
-			"default": "./hover-card/dist/ui-hover-card.cjs.js"
-		},
-		"./pagination": {
-			"module": "./pagination/dist/ui-pagination.esm.js",
-			"default": "./pagination/dist/ui-pagination.cjs.js"
-		},
-		"./collapsible": {
-			"module": "./collapsible/dist/ui-collapsible.esm.js",
-			"default": "./collapsible/dist/ui-collapsible.cjs.js"
-		},
-		"./copy-button": {
-			"module": "./copy-button/dist/ui-copy-button.esm.js",
-			"default": "./copy-button/dist/ui-copy-button.cjs.js"
-		},
-		"./date-picker": {
-			"module": "./date-picker/dist/ui-date-picker.esm.js",
-			"default": "./date-picker/dist/ui-date-picker.cjs.js"
-		},
-		"./radio-group": {
-			"module": "./radio-group/dist/ui-radio-group.esm.js",
-			"default": "./radio-group/dist/ui-radio-group.cjs.js"
-		},
-		"./alert-dialog": {
-			"module": "./alert-dialog/dist/ui-alert-dialog.esm.js",
-			"default": "./alert-dialog/dist/ui-alert-dialog.cjs.js"
-		},
-		"./autocomplete": {
-			"module": "./autocomplete/dist/ui-autocomplete.esm.js",
-			"default": "./autocomplete/dist/ui-autocomplete.cjs.js"
-		},
-		"./context-menu": {
-			"module": "./context-menu/dist/ui-context-menu.esm.js",
-			"default": "./context-menu/dist/ui-context-menu.cjs.js"
-		},
-		"./multi-select": {
-			"module": "./multi-select/dist/ui-multi-select.esm.js",
-			"default": "./multi-select/dist/ui-multi-select.cjs.js"
-		},
-		"./tokens": {
-			"module": "./tokens/dist/ui-tokens.esm.js",
-			"default": "./tokens/dist/ui-tokens.cjs.js"
-		},
-		"./dropdown-menu": {
-			"module": "./dropdown-menu/dist/ui-dropdown-menu.esm.js",
-			"default": "./dropdown-menu/dist/ui-dropdown-menu.cjs.js"
-		},
-		"./editors": {
-			"module": "./editors/dist/ui-editors.esm.js",
-			"default": "./editors/dist/ui-editors.cjs.js"
-		},
-		"./auto-form": {
-			"module": "./auto-form/dist/ui-auto-form.esm.js",
-			"default": "./auto-form/dist/ui-auto-form.cjs.js"
-		},
-		"./navigation-menu": {
-			"module": "./navigation-menu/dist/ui-navigation-menu.esm.js",
-			"default": "./navigation-menu/dist/ui-navigation-menu.cjs.js"
-		},
-		"./pubFields": {
-			"module": "./pubFields/dist/ui-pubFields.esm.js",
-			"default": "./pubFields/dist/ui-pubFields.cjs.js"
-		},
-		"./multivalue-input": {
-			"module": "./multivalue-input/dist/ui-multivalue-input.esm.js",
-			"default": "./multivalue-input/dist/ui-multivalue-input.cjs.js"
-		},
-		"./auto-form/dependencyType": {
-			"module": "./auto-form/dependencyType/dist/ui-auto-form-dependencyType.esm.js",
-			"default": "./auto-form/dependencyType/dist/ui-auto-form-dependencyType.cjs.js"
-		},
-		"./customRenderers/confidence/confidence": {
-			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
-			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
-		},
-		"./customRenderers/fileUpload/fileUpload": {
-			"module": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.esm.js",
-			"default": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.cjs.js"
-		},
+		"./card": "./dist/ui-card.js",
+		"./form": "./dist/ui-form.js",
+		"./icon": "./dist/ui-icon.js",
+		"./tabs": "./dist/ui-tabs.js",
+		"./alert": "./dist/ui-alert.js",
+		"./badge": "./dist/ui-badge.js",
+		"./input": "./dist/ui-input.js",
+		"./label": "./dist/ui-label.js",
+		"./sheet": "./dist/ui-sheet.js",
+		"./table": "./dist/ui-table.js",
+		"./toast": "./dist/ui-toast.js",
+		"./avatar": "./dist/ui-avatar.js",
+		"./button": "./dist/ui-button.js",
+		"./dialog": "./dist/ui-dialog.js",
+		"./select": "./dist/ui-select.js",
+		"./switch": "./dist/ui-switch.js",
+		"./toggle": "./dist/ui-toggle.js",
+		"./command": "./dist/ui-command.js",
+		"./menubar": "./dist/ui-menubar.js",
+		"./popover": "./dist/ui-popover.js",
+		"./toaster": "./dist/ui-toaster.js",
+		"./tooltip": "./dist/ui-tooltip.js",
+		"./calendar": "./dist/ui-calendar.js",
+		"./checkbox": "./dist/ui-checkbox.js",
+		"./combobox": "./dist/ui-combobox.js",
+		"./skeleton": "./dist/ui-skeleton.js",
+		"./textarea": "./dist/ui-textarea.js",
+		"./accordion": "./dist/ui-accordion.js",
+		"./separator": "./dist/ui-separator.js",
+		"./use-toast": "./dist/ui-use-toast.js",
+		"./data-table": "./dist/ui-data-table.js",
+		"./hooks": "./dist/ui-hooks.js",
+		"./hover-card": "./dist/ui-hover-card.js",
+		"./pagination": "./dist/ui-pagination.js",
+		"./collapsible": "./dist/ui-collapsible.js",
+		"./copy-button": "./dist/ui-copy-button.js",
+		"./date-picker": "./dist/ui-date-picker.js",
+		"./radio-group": "./dist/ui-radio-group.js",
+		"./alert-dialog": "./dist/ui-alert-dialog.js",
+		"./autocomplete": "./dist/ui-autocomplete.js",
+		"./context-menu": "./dist/ui-context-menu.js",
+		"./multi-select": "./dist/ui-multi-select.js",
+		"./tokens": "./dist/ui-tokens.js",
+		"./dropdown-menu": "./dist/ui-dropdown-menu.js",
+		"./editors": "./dist/ui-editors.js",
+		"./auto-form": "./dist/ui-auto-form.js",
+		"./navigation-menu": "./dist/ui-navigation-menu.js",
+		"./pubFields": "./dist/ui-pubFields.js",
+		"./multivalue-input": "./dist/ui-multivalue-input.js",
+		"./auto-form/dependencyType": "./dist/ui-auto-form-dependencyType.js",
+		"./customRenderers/confidence/confidence": "./dist/ui-customRenderers-confidence-confidence.js",
+		"./customRenderers/fileUpload/fileUpload": "./dist/ui-customRenderers-fileUpload-fileUpload.js",
 		"./package.json": "./package.json",
-		"./customRenderers/confidence": {
-			"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
-			"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
-		},
-		"./customRenderers/fileUpload": {
-			"module": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.esm.js",
-			"default": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.cjs.js"
-		},
-		"./tailwind.config.js": {
-			"module": "./tailwind.config.js",
-			"default": "./tailwind.config.js"
-		},
-		"./styles.css": {
-			"module": "./styles.css",
-			"default": "./styles.css"
-		}
+		"./customRenderers/confidence": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.js",
+		"./customRenderers/fileUpload": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.js",
+		"./tailwind.config.cjs": "./tailwind.config.cjs",
+		"./styles.css": "./styles.css"
 	},
 	"files": [
 		"dist",
@@ -294,58 +125,58 @@
 		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
-		"@dnd-kit/core": "^6.1.0",
-		"@dnd-kit/sortable": "^8.0.0",
-		"@hookform/resolvers": "^3.3.1",
-		"@lexical/code": "^0.15.0",
-		"@lexical/link": "^0.15.0",
-		"@lexical/list": "^0.15.0",
-		"@lexical/markdown": "^0.15.0",
-		"@lexical/react": "^0.15.0",
-		"@lexical/rich-text": "^0.15.0",
-		"@lexical/utils": "^0.15.0",
-		"@radix-ui/react-accordion": "^1.1.2",
-		"@radix-ui/react-alert-dialog": "^1.0.5",
-		"@radix-ui/react-avatar": "^1.0.3",
-		"@radix-ui/react-checkbox": "^1.0.4",
-		"@radix-ui/react-collapsible": "^1.0.3",
-		"@radix-ui/react-context": "^1.1.0",
-		"@radix-ui/react-context-menu": "^2.1.5",
-		"@radix-ui/react-dialog": "^1.0.4",
-		"@radix-ui/react-dropdown-menu": "^2.0.5",
-		"@radix-ui/react-hover-card": "^1.0.7",
-		"@radix-ui/react-icons": "^1.3.0",
-		"@radix-ui/react-label": "^2.0.2",
-		"@radix-ui/react-menubar": "^1.0.4",
-		"@radix-ui/react-navigation-menu": "^1.1.4",
-		"@radix-ui/react-popover": "^1.0.6",
-		"@radix-ui/react-radio-group": "^1.1.3",
-		"@radix-ui/react-select": "^2.0.0",
-		"@radix-ui/react-separator": "^1.0.3",
-		"@radix-ui/react-slider": "^1.1.2",
-		"@radix-ui/react-slot": "^1.0.2",
-		"@radix-ui/react-switch": "^1.0.3",
-		"@radix-ui/react-tabs": "^1.0.4",
-		"@radix-ui/react-toast": "^1.1.4",
-		"@radix-ui/react-toggle": "^1.1.0",
-		"@radix-ui/react-tooltip": "^1.0.6",
+		"@dnd-kit/core": "^6.3.1",
+		"@dnd-kit/sortable": "^10.0.0",
+		"@hookform/resolvers": "catalog:",
+		"@lexical/code": "^0.23.0",
+		"@lexical/link": "^0.23.0",
+		"@lexical/list": "^0.23.0",
+		"@lexical/markdown": "^0.23.0",
+		"@lexical/react": "^0.23.0",
+		"@lexical/rich-text": "^0.23.0",
+		"@lexical/utils": "^0.23.0",
+		"@radix-ui/react-accordion": "^1.2.2",
+		"@radix-ui/react-alert-dialog": "^1.1.4",
+		"@radix-ui/react-avatar": "^1.1.2",
+		"@radix-ui/react-checkbox": "^1.1.3",
+		"@radix-ui/react-collapsible": "^1.1.2",
+		"@radix-ui/react-context": "^1.1.1",
+		"@radix-ui/react-context-menu": "^2.2.4",
+		"@radix-ui/react-dialog": "^1.1.4",
+		"@radix-ui/react-dropdown-menu": "^2.1.4",
+		"@radix-ui/react-hover-card": "^1.1.4",
+		"@radix-ui/react-icons": "^1.3.2",
+		"@radix-ui/react-label": "^2.1.1",
+		"@radix-ui/react-menubar": "^1.1.4",
+		"@radix-ui/react-navigation-menu": "^1.2.3",
+		"@radix-ui/react-popover": "^1.1.4",
+		"@radix-ui/react-radio-group": "^1.2.2",
+		"@radix-ui/react-select": "^2.1.4",
+		"@radix-ui/react-separator": "^1.1.1",
+		"@radix-ui/react-slider": "^1.2.2",
+		"@radix-ui/react-slot": "^1.1.1",
+		"@radix-ui/react-switch": "^1.1.2",
+		"@radix-ui/react-tabs": "^1.1.2",
+		"@radix-ui/react-toast": "^1.2.4",
+		"@radix-ui/react-toggle": "^1.1.1",
+		"@radix-ui/react-tooltip": "^1.1.6",
 		"@tailwindcss/typography": "^0.5.10",
-		"@tanstack/react-table": "^8.13.2",
-		"@uppy/aws-s3": "^3.4.0",
-		"@uppy/core": "^3.6.1",
-		"@uppy/dashboard": "^3.6.0",
-		"@uppy/drag-drop": "^3.0.3",
-		"@uppy/file-input": "^3.0.4",
-		"@uppy/progress-bar": "^3.0.4",
-		"@uppy/react": "^3.1.4",
+		"@tanstack/react-table": "^8.20.6",
+		"@uppy/aws-s3": "^4.1.3",
+		"@uppy/core": "^4.3.2",
+		"@uppy/dashboard": "^4.2.0",
+		"@uppy/drag-drop": "^4.0.5",
+		"@uppy/file-input": "^4.0.4",
+		"@uppy/progress-bar": "^4.1.0",
+		"@uppy/react": "^4.1.0",
 		"class-variance-authority": "^0.7.0",
 		"clsx": "catalog:",
-		"cmdk": "^1.0.0",
+		"cmdk": "^1.0.4",
 		"date-fns": "catalog:",
 		"db": "workspace:*",
-		"lexical": "^0.15.0",
-		"lucide-react": "^0.357.0",
-		"react-day-picker": "^9.4.2",
+		"lexical": "^0.23.0",
+		"lucide-react": "^0.469.0",
+		"react-day-picker": "^9.5.0",
 		"schemas": "workspace:*",
 		"tailwind-merge": "catalog:",
 		"tailwindcss-animate": "^1.0.6",
@@ -353,43 +184,35 @@
 	},
 	"peerDependencies": {
 		"next": "catalog:",
-		"react": "catalog:react18",
-		"react-hook-form": "^7.46.1",
+		"react": "catalog:react19",
+		"react-hook-form": "catalog:",
 		"tailwindcss": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
-		"@types/react": "catalog:react18",
+		"@types/react": "catalog:react19",
 		"eslint": "catalog:",
 		"postcss": "catalog:",
-		"react": "catalog:react18",
-		"react-hook-form": "^7.46.1",
+		"react": "catalog:react19",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"zod": "catalog:"
 	},
 	"preconstruct": {
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		},
 		"exports": {
 			"extra": {
-				"./customRenderers/confidence": {
-					"module": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.esm.js",
-					"default": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.cjs.js"
-				},
-				"./customRenderers/fileUpload": {
-					"module": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.esm.js",
-					"default": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.cjs.js"
-				},
-				"./tailwind.config.js": {
-					"module": "./tailwind.config.js",
-					"default": "./tailwind.config.js"
-				},
-				"./styles.css": {
-					"module": "./styles.css",
-					"default": "./styles.css"
-				}
+				"./customRenderers/confidence": "./customRenderers/confidence/confidence/dist/ui-customRenderers-confidence-confidence.js",
+				"./customRenderers/fileUpload": "./customRenderers/fileUpload/fileUpload/dist/ui-customRenderers-fileUpload-fileUpload.js",
+				"./tailwind.config.cjs": "./tailwind.config.cjs",
+				"./styles.css": "./styles.css"
 			}
 		},
 		"entrypoints": [

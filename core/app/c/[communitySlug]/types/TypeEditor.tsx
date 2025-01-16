@@ -76,9 +76,6 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 	};
 
 	const community = useCommunity();
-	if (!community) {
-		return notFound();
-	}
 	const runCreatePubType = useServerAction(createPubType);
 	const onSubmit = async ({
 		name,
@@ -172,7 +169,7 @@ export const TypeEditor = ({ onTypeCreation }: Props) => {
 														</td>
 														<td>
 															<FormItem
-																data-testId={`${pubField.slug}-titleField`}
+																data-testid={`${pubField.slug}-titleField`}
 																className="flex justify-center"
 															>
 																{pubFieldCanBeTitle(pubField) ? (

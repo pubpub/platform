@@ -1,9 +1,7 @@
-import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { ClipboardPenLine, Info } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
@@ -18,27 +16,28 @@ import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
 import { EditFormTitleButton } from "./EditFormTitleButton";
-
-const FormCopyButton = dynamic(
-	() => import("./FormCopyButton").then((module) => module.FormCopyButton),
-	{ ssr: false }
-);
+import { FormCopyButton } from "./FormCopyButton";
 
 const getCommunityStages = (communityId: CommunitiesId) =>
 	db.selectFrom("stages").where("stages.communityId", "=", communityId).selectAll();
 
-export default async function Page({
-	params: { formSlug, communitySlug },
-	searchParams: { unsavedChanges },
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		formSlug: string;
 		communitySlug: string;
-	};
-	searchParams: {
+	}>;
+	searchParams: Promise<{
 		unsavedChanges: boolean;
-	};
+	}>;
 }) {
+	const searchParams = await props.searchParams;
+
+	const { unsavedChanges } = searchParams;
+
+	const params = await props.params;
+
+	const { formSlug, communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug();
 

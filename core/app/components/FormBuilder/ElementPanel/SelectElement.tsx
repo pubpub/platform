@@ -16,9 +16,9 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();
 
 	const { elementsCount, dispatch, addElement } = useFormBuilder();
+	const { getValues } = useFormContext();
 
 	const fieldButtons = Object.values(fields).map((field) => {
-		const { getValues } = useFormContext();
 		const elements: FormElementData[] = getValues()["elements"];
 		const usedFields = elements.map((e) => e.fieldId);
 		if (

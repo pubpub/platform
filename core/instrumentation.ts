@@ -1,4 +1,6 @@
 /* eslint-disable no-restricted-properties */
+import type { InstrumentationOnRequestError } from "next/dist/server/instrumentation/types";
+
 import { logger } from "logger";
 
 export async function register() {
@@ -26,3 +28,10 @@ export async function register() {
 		logger.info("NEXT_RUNTIME is not `nodejs`; skipping OTEL registration.");
 	}
 }
+
+export const onRequestError: InstrumentationOnRequestError = async (...args) => {
+	// necessary in order to avoid OOM errors on build due to Sentry making it
+	// hard for webpack to optimize
+	const onRequestError = await import("./instrumentation.onRequestError.ts");
+	return onRequestError.onRequestError(...args);
+};

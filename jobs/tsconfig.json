@@ -3,7 +3,8 @@
 	"compilerOptions": {
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
 		"lib": ["ESNext"],
-		"types": ["node"]
+		"types": ["node"],
+		"moduleResolution": "bundler"
 	},
 	"include": ["./**/*.ts"],
 	"exclude": ["dist", "build", "node_modules", ".turbo"]

@@ -83,7 +83,7 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 	// lucia authentication
 	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
 	const sessionCookie = lucia.createSessionCookie(session.id);
-	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+	(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
 	if (props.redirectTo && /^\/\w+/.test(props.redirectTo)) {
 		redirect(props.redirectTo);
@@ -104,7 +104,7 @@ export const logout = defineServerAction(async function logout() {
 	await lucia.invalidateSession(session.id);
 
 	const sessionCookie = lucia.createBlankSessionCookie();
-	cookies().set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+	(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
 	redirect("/login");
 });
@@ -274,7 +274,11 @@ export const signup = defineServerAction(async function signup(props: {
 	// lucia authentication
 	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
-	cookies().set(newSessionCookie.name, newSessionCookie.value, newSessionCookie.attributes);
+	(await cookies()).set(
+		newSessionCookie.name,
+		newSessionCookie.value,
+		newSessionCookie.attributes
+	);
 
 	if (props.redirect) {
 		redirect(props.redirect);

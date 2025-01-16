@@ -4,8 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
 import type { CommunitiesId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { FormInput } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 import { cn } from "utils";
@@ -19,7 +18,7 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";
 import { NewFieldButton } from "./NewFieldButton";
 
-type Props = { params: { communitySlug: string } };
+type Props = { params: Promise<{ communitySlug: string }> };
 
 export const metadata: Metadata = {
 	title: "Fields",
@@ -39,7 +38,8 @@ const EmptyState = ({ className }: { className?: string }) => {
 	);
 };
 
-export default async function Page({ params }: Props) {
+export default async function Page(props: Props) {
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);

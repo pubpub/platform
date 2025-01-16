@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-context-menu.cjs.js",
-	"module": "dist/ui-context-menu.esm.js"
-}

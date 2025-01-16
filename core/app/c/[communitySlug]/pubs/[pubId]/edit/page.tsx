@@ -4,9 +4,8 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId, PubsId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
@@ -19,11 +18,20 @@ import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
-	async ({ pubId, communityId }: { pubId: PubsId; communityId: CommunitiesId }) => {
+	async ({
+		userId,
+		pubId,
+		communityId,
+	}: {
+		userId?: UsersId;
+		pubId: PubsId;
+		communityId: CommunitiesId;
+	}) => {
 		return getPubsWithRelatedValuesAndChildren(
 			{
 				pubId,
 				communityId,
+				userId,
 			},
 			{
 				withPubType: true,
@@ -32,11 +40,13 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 	}
 );
 
-export async function generateMetadata({
-	params: { pubId, communitySlug },
-}: {
-	params: { pubId: string; communitySlug: string };
+export async function generateMetadata(props: {
+	params: Promise<{ pubId: string; communitySlug: string }>;
 }): Promise<Metadata> {
+	const params = await props.params;
+
+	const { pubId, communitySlug } = params;
+
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return { title: "Community Not Found" };
@@ -60,13 +70,12 @@ export async function generateMetadata({
 	return { title: title as string };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	params: { pubId: PubsId; communitySlug: string };
-	searchParams: Record<string, string>;
+export default async function Page(props: {
+	params: Promise<{ pubId: PubsId; communitySlug: string }>;
+	searchParams: Promise<Record<string, string>>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
 	const { user } = await getPageLoginData();
@@ -97,6 +106,7 @@ export default async function Page({
 	const pub = await getPubsWithRelatedValuesAndChildrenCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id,
+		userId: user.id,
 	});
 
 	if (!pub) {

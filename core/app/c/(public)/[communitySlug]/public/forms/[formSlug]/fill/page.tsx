@@ -98,13 +98,11 @@ const ExpiredTokenPage = ({
 	);
 };
 
-export async function generateMetadata({
-	params,
-	searchParams,
-}: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams;
+export async function generateMetadata(props: {
+	params: Promise<FormFillPageParams>;
+	searchParams: Promise<FormFillPageSearchParams>;
 }): Promise<Metadata> {
+	const params = await props.params;
 	const community = await findCommunityBySlug(params.communitySlug);
 
 	if (!community) {
@@ -125,18 +123,18 @@ export async function generateMetadata({
 	};
 }
 
-export default async function FormPage({
-	params,
-	searchParams,
-}: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams;
+export default async function FormPage(props: {
+	params: Promise<FormFillPageParams>;
+	searchParams: Promise<FormFillPageSearchParams>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const community = await findCommunityBySlug(params.communitySlug);
 
 	if (!community) {
 		return notFound();
 	}
+	const { user, session } = await getLoginData();
 
 	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
@@ -150,7 +148,7 @@ export default async function FormPage({
 				)
 			: undefined,
 		getPubsWithRelatedValuesAndChildren(
-			{ communityId: community.id },
+			{ communityId: community.id, userId: user?.id },
 			{
 				limit: 30,
 				withStage: true,
@@ -164,8 +162,6 @@ export default async function FormPage({
 	if (!form) {
 		return <NotFound>No form found</NotFound>;
 	}
-
-	const { user, session } = await getLoginData();
 
 	if (!user && !session) {
 		const result = await handleFormToken({

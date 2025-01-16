@@ -22,7 +22,7 @@ export const StagePanel = async (props: Props) => {
 	let open = Boolean(props.stageId);
 
 	if (props.stageId) {
-		const stage = await getStage(props.stageId).executeTakeFirst();
+		const stage = await getStage(props.stageId, props.user.id).executeTakeFirst();
 		if (stage === null) {
 			open = false;
 		}
@@ -38,17 +38,22 @@ export const StagePanel = async (props: Props) => {
 					<TabsTrigger value="members">Members</TabsTrigger>
 				</TabsList>
 				<TabsContent value="overview">
-					<StagePanelOverview stageId={props.stageId} />
+					<StagePanelOverview stageId={props.stageId} userId={props.user.id} />
 				</TabsContent>
 				<TabsContent value="pubs">
 					<StagePanelPubs
 						stageId={props.stageId as StagesId}
 						pageContext={props.pageContext}
+						userId={props.user.id}
 					/>
 				</TabsContent>
 				<TabsContent value="actions" className="space-y-2">
-					<StagePanelActions stageId={props.stageId} pageContext={props.pageContext} />
-					<StagePanelRules stageId={props.stageId} />
+					<StagePanelActions
+						stageId={props.stageId}
+						pageContext={props.pageContext}
+						userId={props.user.id}
+					/>
+					<StagePanelRules stageId={props.stageId} userId={props.user.id} />
 				</TabsContent>
 				<TabsContent value="members">
 					<StagePanelMembers stageId={props.stageId} user={props.user} />

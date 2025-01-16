@@ -1,7 +1,13 @@
 {
 	"name": "emails",
+	"type": "module",
 	"version": "1.0.0",
 	"main": "dist/emails.cjs.js",
+	"module": "dist/emails.esm.js",
+	"exports": {
+		".": "./dist/emails.js",
+		"./package.json": "./package.json"
+	},
 	"private": true,
 	"scripts": {
 		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
@@ -16,25 +22,31 @@
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
-		"@types/react": "catalog:react18",
+		"@types/react": "catalog:react19",
 		"dotenv-cli": "^7.2.1",
-		"tsconfig": "workspace:*",
-		"react": "catalog:react18"
+		"react": "catalog:react19",
+		"tsconfig": "workspace:*"
 	},
 	"dependencies": {
-		"@react-email/components": "0.0.25",
-		"typescript": "catalog:",
+		"@react-email/components": "0.0.31",
 		"browserslist": "^4.22.2",
 		"db": "workspace:*",
 		"eslint": "catalog:",
-		"react": "catalog:react18",
-		"react-email": "3.0.1",
-		"tsconfig": "workspace:*"
+		"react": "catalog:react19",
+		"react-email": "3.0.4",
+		"tsconfig": "workspace:*",
+		"typescript": "catalog:"
 	},
 	"preconstruct": {
 		"entrypoints": [
 			"index.tsx"
-		]
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"files": [
 		"dist"

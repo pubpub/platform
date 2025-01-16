@@ -4,11 +4,9 @@ import { z } from "zod";
 
 import type { CommunitiesId } from "./Communities";
 import type { CoreSchemaType } from "./CoreSchemaType";
-import type { IntegrationsId } from "./Integrations";
 import type { PubFieldSchemaId } from "./PubFieldSchema";
 import { communitiesIdSchema } from "./Communities";
 import { coreSchemaTypeSchema } from "./CoreSchemaType";
-import { integrationsIdSchema } from "./Integrations";
 import { pubFieldSchemaIdSchema } from "./PubFieldSchema";
 
 // @generated
@@ -26,8 +24,6 @@ export interface PubFieldsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
-
-	integrationId: ColumnType<IntegrationsId | null, IntegrationsId | null, IntegrationsId | null>;
 
 	pubFieldSchemaId: ColumnType<
 		PubFieldSchemaId | null,
@@ -59,7 +55,6 @@ export const pubFieldsSchema = z.object({
 	name: z.string(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	integrationId: integrationsIdSchema.nullable(),
 	pubFieldSchemaId: pubFieldSchemaIdSchema.nullable(),
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.nullable(),
@@ -73,7 +68,6 @@ export const pubFieldsInitializerSchema = z.object({
 	name: z.string(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	integrationId: integrationsIdSchema.optional().nullable(),
 	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),
@@ -87,7 +81,6 @@ export const pubFieldsMutatorSchema = z.object({
 	name: z.string().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	integrationId: integrationsIdSchema.optional().nullable(),
 	pubFieldSchemaId: pubFieldSchemaIdSchema.optional().nullable(),
 	slug: z.string().optional(),
 	schemaName: coreSchemaTypeSchema.optional().nullable(),

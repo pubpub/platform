@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
@@ -19,13 +18,15 @@ export const metadata: Metadata = {
 	title: "Pub Types",
 };
 
-export default async function Page({
-	params: { communitySlug },
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		communitySlug: string;
-	};
+	}>;
 }) {
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug();

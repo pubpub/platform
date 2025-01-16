@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
@@ -14,7 +13,8 @@ export const metadata: Metadata = {
 	title: "Community Settings",
 };
 
-export default async function Page({ params }: { params: { communitySlug: string } }) {
+export default async function Page(props: { params: Promise<{ communitySlug: string }> }) {
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 	const { communitySlug } = params;
 

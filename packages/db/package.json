@@ -1,8 +1,16 @@
 {
 	"name": "db",
+	"type": "module",
 	"private": true,
 	"version": "0.0.0",
 	"description": "",
+	"exports": {
+		"./public": "./dist/db-public.js",
+		"./Database": "./dist/db-Database.js",
+		"./table-names": "./dist/db-table-names.js",
+		"./types": "./dist/db-types.js",
+		"./package.json": "./package.json"
+	},
 	"files": [
 		"dist",
 		"Database",
@@ -47,6 +55,12 @@
 	},
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		},
 		"entrypoints": [
 			"./Database.ts",
 			"./public.ts",

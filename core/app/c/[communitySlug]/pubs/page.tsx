@@ -12,11 +12,13 @@ export const metadata: Metadata = {
 };
 
 type Props = {
-	params: { communitySlug: string };
+	params: Promise<{ communitySlug: string }>;
 	searchParams: Record<string, unknown> & { page?: string };
 };
 
-export default async function Page({ params, searchParams }: Props) {
+export default async function Page(props: Props) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);
@@ -37,6 +39,7 @@ export default async function Page({ params, searchParams }: Props) {
 				searchParams={searchParams}
 				page={page}
 				basePath={basePath}
+				userId={user.id}
 			/>
 		</>
 	);

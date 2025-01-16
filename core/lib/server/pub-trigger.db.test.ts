@@ -8,8 +8,7 @@ import type {
 	PubValuesHistoryId,
 	UsersId,
 } from "db/public";
-import { Action, ActionRunStatus, CoreSchemaType, MemberRole } from "db/public";
-import { OperationType } from "db/src/public/OperationType";
+import { Action, ActionRunStatus, CoreSchemaType, MemberRole, OperationType } from "db/public";
 
 import {
 	isCheckContraintError,

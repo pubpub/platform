@@ -13,7 +13,7 @@ import {
 	radioGroupConfigSchema,
 	selectDropdownConfigSchema,
 } from "schemas";
-import { NumericArray, StringArray } from "schemas/src/schemas";
+import { NumericArray, StringArray } from "schemas/schemas";
 import { expect, it, vi } from "vitest";
 
 import { CoreSchemaType } from "db/public";

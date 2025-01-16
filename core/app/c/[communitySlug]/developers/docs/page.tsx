@@ -18,11 +18,11 @@ export const metadata: Metadata = {
 
 // we load the web component through a script tag here to prevent react incompatibility issues,
 // as stoplight uses react 16 still
-export default async function IndexPage({
-	params: { communitySlug },
-}: {
-	params: { communitySlug: string };
-}) {
+export default async function IndexPage(props: { params: Promise<{ communitySlug: string }> }) {
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
 	// TODO: add capability for this

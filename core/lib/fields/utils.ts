@@ -1,4 +1,4 @@
-import { CoreSchemaType } from "db/src/public/CoreSchemaType";
+import { CoreSchemaType } from "db/public";
 
 import { BadRequestError } from "../server/errors";
 
