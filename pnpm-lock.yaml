@@ -271,9 +271,6 @@ importers:
       '@opentelemetry/auto-instrumentations-node':
         specifier: 'catalog:'
         version: 0.53.0(@opentelemetry/api@1.9.0)
-      '@prisma/client':
-        specifier: ^5.2.0
-        version: 5.19.1(prisma@5.19.1)
       '@prosemirror-adapter/react':
         specifier: ^0.2.6
         version: 0.2.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -4299,15 +4296,6 @@ packages:
 
   '@preconstruct/next@4.0.0':
     resolution: {integrity: sha512-vSrc8wFQgBErU7dKTKSQtr/DLWPHcN9jMoiWOAQodB1+B4Kpqqry6QhGYoRm0DQU5gNL+Rcp+Xb350O1E/gjsg==}
-
-  '@prisma/client@5.19.1':
-    resolution: {integrity: sha512-x30GFguInsgt+4z5I4WbkZP2CGpotJMUXy+Gl/aaUjHn2o1DnLYNTA+q9XdYmAQZM8fIIkvUiA2NpgosM3fneg==}
-    engines: {node: '>=16.13'}
-    peerDependencies:
-      prisma: '*'
-    peerDependenciesMeta:
-      prisma:
-        optional: true
 
   '@prisma/debug@5.0.0':
     resolution: {integrity: sha512-3q/M/KqlQ01/HJXifU/zCNOHkoTWu24kGelMF/IBrRxm7njPqTTbwfnT1dh4JK+nuWM5/Dg1Lv00u2c0l7AHxg==}
@@ -16072,10 +16060,6 @@ snapshots:
       - supports-color
 
   '@preconstruct/next@4.0.0': {}
-
-  '@prisma/client@5.19.1(prisma@5.19.1)':
-    optionalDependencies:
-      prisma: 5.19.1
 
   '@prisma/debug@5.0.0':
     dependencies:
