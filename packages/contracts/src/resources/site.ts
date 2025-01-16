@@ -102,27 +102,21 @@ const upsertPubRelationsSchema = z.record(
 	)
 );
 
-/**
- * Only add the `children` if the `withChildren` option has not been set to `false
- */
+/** Only add the `children` if the `withChildren` option has not been set to `false */
 type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"] extends false
 	? { children?: never }
 	: Options["withChildren"] extends undefined
 		? { children?: ProcessedPub<Options>[] }
 		: { children: ProcessedPub<Options>[] };
 
-/**
- * Only add the `stage` if the `withStage` option has not been set to `false
- */
+/** Only add the `stage` if the `withStage` option has not been set to `false */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
 	? { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
 		: { stage?: Stages | null };
 
-/**
- * Only add the `pubType` if the `withPubType` option has not been set to `false
- */
+/** Only add the `pubType` if the `withPubType` option has not been set to `false */
 export type PubTypePubField = Pick<
 	PubFields,
 	"id" | "name" | "slug" | "schemaName" | "isRelation"
@@ -139,9 +133,7 @@ type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] e
 		? { pubType?: never }
 		: { pubType?: PubTypes & { fields: PubTypePubField[] } };
 
-/**
- * Only add the `pubType` if the `withPubType` option has not been set to `false
- */
+/** Only add the `pubType` if the `withPubType` option has not been set to `false */
 type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] extends true
 	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
 	: Options["withMembers"] extends false
@@ -160,17 +152,17 @@ type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
 			: { assignee?: Users | null };
 
 /**
- * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
+ * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of
+ * `ProcessedPub`
  *
- * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
- *
- **/
+ * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of
+ * a function
+ */
 export type MaybePubOptions = {
 	/**
 	 * Whether to recursively fetch children up to depth `depth`.
 	 *
 	 * @default true
-	 *
 	 */
 	withChildren?: boolean;
 	/**
@@ -217,9 +209,7 @@ type ValueBase = {
 	value: unknown;
 	createdAt: Date;
 	updatedAt: Date;
-	/**
-	 * Information about the field that the value belongs to.
-	 */
+	/** Information about the field that the value belongs to. */
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
 	fieldName: string;
@@ -236,19 +226,18 @@ type ProcessedPubBase = {
 	depth: number;
 	isCycle?: boolean;
 	/**
-	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
+	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt`
+	 * or if there are no values
 	 *
-	 * We do this because the Pub itself is rarely if ever changed over time.
-	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
-	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
+	 * We do this because the Pub itself is rarely if ever changed over time. TODO: Possibly add the
+	 * `updatedAt` of `PubsInStages` here as well? At time of writing (2024/11/04) I don't think
+	 * that table has an `updatedAt`.
 	 */
 	updatedAt: Date;
 };
 
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
-	/**
-	 * Is an empty array if `withValues` is false
-	 */
+	/** Is an empty array if `withValues` is false */
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
 } & MaybePubChildren<Options> &
 	MaybePubStage<Options> &
@@ -284,7 +273,6 @@ const pubTypeReturnSchema = pubTypesSchema.extend({
 				updatedAt: true,
 				communityId: true,
 				isArchived: true,
-				integrationId: true,
 				pubFieldSchemaId: true,
 			})
 			.extend({
