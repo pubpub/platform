@@ -183,7 +183,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			return (
 				<div className="flex w-full flex-col gap-1 text-left text-sm">
 					<div className="text-gray-500">Label</div>
-					<MultiBlock title="Pub Relation" disabled compact />
+					<MultiBlock title="Pub Relation" disabled compact onAdd={() => {}} />
 				</div>
 			);
 		},

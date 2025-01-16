@@ -7,17 +7,18 @@ import { cn } from "utils";
 
 import { Button } from "./button";
 
-// TODO (#791): support a form array field
 export const MultiBlock = ({
 	title,
 	children,
 	disabled,
 	compact,
+	onAdd,
 }: {
 	title: string;
 	children?: ReactNode;
 	disabled?: boolean;
 	compact?: boolean;
+	onAdd: () => void;
 }) => {
 	return (
 		<div
@@ -46,6 +47,7 @@ export const MultiBlock = ({
 					variant="outline"
 					disabled={disabled}
 					className={cn({ "h-6 w-6 p-0": compact })}
+					onClick={onAdd}
 				>
 					<span className="flex items-center gap-1">
 						{!compact && <span>Add</span>}

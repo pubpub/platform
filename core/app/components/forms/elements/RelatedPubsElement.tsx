@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 
+import { useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
@@ -11,6 +12,7 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { MultiBlock } from "ui/multiblock";
 
 import type { ElementProps } from "../types";
+import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const RelatedPubsElement = ({
@@ -18,6 +20,7 @@ export const RelatedPubsElement = ({
 	label,
 	config,
 }: ElementProps<InputComponent.relationBlock> & { valueComponent: ReactNode }) => {
+	const [showPanel, setShowPanel] = useState(false);
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
@@ -28,26 +31,32 @@ export const RelatedPubsElement = ({
 	}
 
 	return (
-		<FormField
-			control={control}
-			name={slug}
-			render={({ field }) => {
-				return (
-					<FormItem>
-						<FormLabel className="flex">{label}</FormLabel>
-						<div className="flex items-end gap-x-2">
-							<FormControl>
-								<MultiBlock
-									title="Pub Relations"
-									disabled={!isEnabled}
-								></MultiBlock>
-							</FormControl>
-						</div>
-						<FormDescription>{config.relationshipConfig.help}</FormDescription>
-						<FormMessage />
-					</FormItem>
-				);
-			}}
-		/>
+		<>
+			<FormField
+				control={control}
+				name={slug}
+				render={({ field }) => {
+					return (
+						<FormItem>
+							<FormLabel className="flex">{label}</FormLabel>
+							<div className="flex items-end gap-x-2">
+								<FormControl>
+									<MultiBlock
+										title="Pub Relations"
+										disabled={!isEnabled}
+										onAdd={() => setShowPanel(true)}
+									></MultiBlock>
+								</FormControl>
+							</div>
+							<FormDescription>{config.relationshipConfig.help}</FormDescription>
+							<FormMessage />
+						</FormItem>
+					);
+				}}
+			/>
+			{showPanel && (
+				<AddRelatedPubsPanel title={`Add ${label}`} onCancel={() => setShowPanel(false)} />
+			)}
+		</>
 	);
 };
