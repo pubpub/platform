@@ -33,9 +33,9 @@
 		/* slate-100 */
 		/* --sidebar-accent: 210, 40%, 96%; */
 		/* gray-100 */
-		/* --sidebar-accent: 220, 14%, 96%; */
+		--sidebar-accent: 220, 14%, 96%;
 		/* gray-200 */
-		--sidebar-accent: 220, 13%, 91%;
+		--sidebar-active: 220, 13%, 91%;
 		--sidebar-accent-foreground: 240 5.9% 10%;
 		--sidebar-border: 220 13% 91%;
 		--sidebar-ring: 217.2 91.2% 59.8%;

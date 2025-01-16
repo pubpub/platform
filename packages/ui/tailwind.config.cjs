@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+/** @type {import("tailwindcss").Config} */
 
 /* We likely want to export a tailwind plugin, rather than
 using `preset` in consuming apps. Explanation here: 
@@ -46,6 +46,7 @@ module.exports = {
 					"accent-foreground": "hsl(var(--sidebar-accent-foreground))",
 					border: "hsl(var(--sidebar-border))",
 					ring: "hsl(var(--sidebar-ring))",
+					active: "hsl(var(--sidebar-active))",
 				},
 			},
 			keyframes: {
