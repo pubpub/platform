@@ -99,7 +99,7 @@ export const scheduleActionInstances = async ({
 				stageId: stageId,
 				pubId,
 				community: {
-					slug: getCommunitySlug(),
+					slug: await getCommunitySlug(),
 				},
 			});
 

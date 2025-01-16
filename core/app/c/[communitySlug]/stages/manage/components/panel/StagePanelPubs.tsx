@@ -1,6 +1,7 @@
 import { Suspense } from "react";
+import Link from "next/link";
 
-import type { PubsId, StagesId } from "db/public";
+import type { PubsId, StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -10,18 +11,21 @@ import { PubDropDown } from "~/app/components/pubs/PubDropDown";
 import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
 type PropsInner = {
 	stageId: StagesId;
 	pageContext: PageContext;
+	userId: UsersId;
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
 	const [stagePubs, stageActionInstances, stage] = await Promise.all([
 		getStagePubs(props.stageId).execute(),
 		getStageActions(props.stageId).execute(),
-		getStage(props.stageId).executeTakeFirst(),
+		getStage(props.stageId, props.userId).executeTakeFirst(),
 	]);
+	const communitySlug = getCommunitySlug();
 
 	if (!stage) {
 		throw new Error("Stage not found");
@@ -38,7 +42,12 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				</div>
 				{stagePubs.map((pub) => (
 					<div key={pub.id} className="flex items-center justify-between">
-						<PubTitle pub={pub} />
+						<Link
+							href={`/c/${communitySlug}/pubs/${pub.id}`}
+							className="hover:underline"
+						>
+							<PubTitle pub={pub} />
+						</Link>
 						<div className="flex items-center gap-x-2">
 							<PubsRunActionDropDownMenu
 								actionInstances={stageActionInstances}
@@ -61,6 +70,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 type Props = {
 	stageId?: StagesId;
 	pageContext: PageContext;
+	userId: UsersId;
 };
 
 export const StagePanelPubs = async (props: Props) => {
@@ -70,7 +80,11 @@ export const StagePanelPubs = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelPubsInner stageId={props.stageId} pageContext={props.pageContext} />
+			<StagePanelPubsInner
+				stageId={props.stageId}
+				pageContext={props.pageContext}
+				userId={props.userId}
+			/>
 		</Suspense>
 	);
 };

@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import partition from "lodash.partition";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { ClipboardPenLine } from "ui/icon";
 
 import { ActiveArchiveTabs } from "~/app/components/ActiveArchiveTabs";
@@ -22,13 +21,15 @@ export const metadata: Metadata = {
 	title: "Forms",
 };
 
-export default async function Page({
-	params: { communitySlug },
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		communitySlug: string;
-	};
+	}>;
 }) {
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug();

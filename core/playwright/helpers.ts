@@ -43,3 +43,14 @@ export const createCommunity = async ({
 const INBUCKET_TESTING_URL = process.env.INBUCKET_URL ?? "http://localhost:54324";
 
 export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL);
+
+export const retryAction = async (action: () => Promise<void>, maxAttempts = 3) => {
+	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+		try {
+			await action();
+			return;
+		} catch (error) {
+			if (attempt === maxAttempts) throw error;
+		}
+	}
+};

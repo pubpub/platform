@@ -15,7 +15,7 @@ const PubRemoveForm = dynamic(
 			default: mod.PubRemoveForm,
 		}));
 	},
-	{ ssr: false, loading: () => <SkeletonCard /> }
+	{ loading: () => <SkeletonCard /> }
 );
 
 export async function PubRemove({ pubId }: PubRemoveProps) {

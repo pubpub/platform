@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
@@ -19,13 +18,15 @@ export const metadata: Metadata = {
 	title: "Action Log",
 };
 
-export default async function Page({
-	params: { communitySlug },
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		communitySlug: string;
-	};
+	}>;
 }) {
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(communitySlug);

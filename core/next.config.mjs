@@ -43,15 +43,14 @@ const nextConfig = {
 			},
 		],
 	},
+	serverExternalPackages: [
+		"@aws-sdk",
+		// without this here, next will sort of implode and no longer compile and serve pages properly
+		// if graphile-worker is used in server actions
+		"graphile-worker",
+		"@node-rs/argon2",
+	],
 	experimental: {
-		instrumentationHook: true,
-		serverComponentsExternalPackages: [
-			"@aws-sdk",
-			// without this here, next will sort of implode and no longer compile and serve pages properly
-			// if graphile-worker is used in server actions
-			"graphile-worker",
-			"@node-rs/argon2",
-		],
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
 	},
 	// open telemetry cries a lot during build, don't think it's serious

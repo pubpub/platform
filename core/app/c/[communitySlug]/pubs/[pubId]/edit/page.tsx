@@ -5,8 +5,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
@@ -41,11 +40,13 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 	}
 );
 
-export async function generateMetadata({
-	params: { pubId, communitySlug },
-}: {
-	params: { pubId: string; communitySlug: string };
+export async function generateMetadata(props: {
+	params: Promise<{ pubId: string; communitySlug: string }>;
 }): Promise<Metadata> {
+	const params = await props.params;
+
+	const { pubId, communitySlug } = params;
+
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		return { title: "Community Not Found" };
@@ -69,13 +70,12 @@ export async function generateMetadata({
 	return { title: title as string };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	params: { pubId: PubsId; communitySlug: string };
-	searchParams: Record<string, string>;
+export default async function Page(props: {
+	params: Promise<{ pubId: PubsId; communitySlug: string }>;
+	searchParams: Promise<Record<string, string>>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
 	const { user } = await getPageLoginData();

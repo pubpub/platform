@@ -12,10 +12,6 @@ import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
 import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
-import type { IntegrationInstancesTable } from "./IntegrationInstances";
-import type { IntegrationInstanceStateTable } from "./IntegrationInstanceState";
-import type { IntegrationInstanceToPubTable } from "./IntegrationInstanceToPub";
-import type { IntegrationsTable } from "./Integrations";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
 import type { MembershipCapabilitiesTable } from "./MembershipCapabilities";
@@ -37,6 +33,16 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
+	action_instances: ActionInstancesTable;
+
+	PubsInStages: PubsInStagesTable;
+
+	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
+
+	forms: FormsTable;
+
 	api_access_tokens: ApiAccessTokensTable;
 
 	api_access_logs: ApiAccessLogsTable;
@@ -71,8 +77,6 @@ export interface PublicSchema {
 
 	member_groups: MemberGroupsTable;
 
-	integrations: IntegrationsTable;
-
 	communities: CommunitiesTable;
 
 	move_constraint: MoveConstraintTable;
@@ -83,25 +87,9 @@ export interface PublicSchema {
 
 	_PubFieldToPubType: PubFieldToPubTypeTable;
 
-	integration_instances: IntegrationInstancesTable;
-
-	_IntegrationInstanceToPub: IntegrationInstanceToPubTable;
-
 	_MemberGroupToUser: MemberGroupToUserTable;
 
 	auth_tokens: AuthTokensTable;
 
 	PubFieldSchema: PubFieldSchemaTable;
-
-	IntegrationInstanceState: IntegrationInstanceStateTable;
-
-	action_instances: ActionInstancesTable;
-
-	PubsInStages: PubsInStagesTable;
-
-	rules: RulesTable;
-
-	action_runs: ActionRunsTable;
-
-	forms: FormsTable;
 }

@@ -12,9 +12,7 @@ import type {
 	LastModifiedBy,
 } from "db/types";
 import { siteApi } from "contracts";
-import { ApiAccessScope, ApiAccessType } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
@@ -63,7 +61,7 @@ const bearerSchema = z
 	.transform((string) => string.replace(bearerRegex, "$1"));
 
 const getAuthorization = async () => {
-	const authorizationTokenWithBearer = headers().get("Authorization");
+	const authorizationTokenWithBearer = (await headers()).get("Authorization");
 
 	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
 	if (!apiKeyParse.success) {
@@ -71,7 +69,7 @@ const getAuthorization = async () => {
 	}
 	const apiKey = apiKeyParse.data;
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
@@ -148,7 +146,7 @@ const checkAuthorization = async <
 		  }
 		| boolean;
 }): Promise<AuthorizationOutput<S, AT>> => {
-	const authorizationTokenWithBearer = headers().get("Authorization");
+	const authorizationTokenWithBearer = (await headers()).get("Authorization");
 
 	if (authorizationTokenWithBearer) {
 		const { user, authorization, community, apiAccessTokenId } = await getAuthorization();
@@ -174,7 +172,7 @@ const checkAuthorization = async <
 		throw new UnauthorizedError("This resource is only accessible using an API key");
 	}
 
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const [{ user }, community] = await Promise.all([
 		getLoginData(),
 		findCommunityBySlug(communitySlug),
@@ -210,8 +208,8 @@ const checkAuthorization = async <
 	return { user, authorization: true as const, community, lastModifiedBy };
 };
 
-const shouldReturnRepresentation = () => {
-	const prefer = headers().get("Prefer");
+const shouldReturnRepresentation = async () => {
+	const prefer = (await headers()).get("Prefer");
 
 	if (prefer === "return=representation") {
 		return true;
@@ -602,7 +600,7 @@ const handler = createNextHandler(
 		},
 		stages: {
 			get: async (req) => {
-				const { community } = await checkAuthorization({
+				const { user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewStage,
@@ -612,7 +610,10 @@ const handler = createNextHandler(
 						},
 					},
 				});
-				const stage = await getStage(req.params.stageId as StagesId).executeTakeFirst();
+				const stage = await getStage(
+					req.params.stageId as StagesId,
+					user.id
+				).executeTakeFirst();
 				if (!stage) {
 					throw new NotFoundError("No stage found");
 				}
@@ -623,12 +624,15 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async (req, res) => {
-				const { community } = await checkAuthorization({
+				const { community, user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: false,
 				});
 
-				const stages = await getStages({ communityId: community.id }).execute();
+				const stages = await getStages({
+					communityId: community.id,
+					userId: user.id,
+				}).execute();
 				return {
 					status: 200,
 					body: stages,
