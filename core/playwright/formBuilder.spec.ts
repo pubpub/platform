@@ -6,6 +6,11 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
+import { CoreSchemaType, InputComponent } from "db/public";
+
+import type { PubFieldElement } from "~/app/components/forms/types";
+import { FieldsPage } from "./fixtures/fields-page";
+import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
 import { createCommunity } from "./helpers";
@@ -136,5 +141,61 @@ test.describe("Submission buttons", () => {
 		await expect(
 			page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
 		).toHaveCount(1);
+	});
+});
+
+test.describe("relationship fields", () => {
+	test("Create a new form for the first time", async () => {
+		// Add a field that is a relationship
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("author", CoreSchemaType.String, true);
+
+		const formSlug = "relationship-form";
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+		await formsPage.addForm("relationship form", formSlug);
+		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
+
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:author`);
+		// Fill out relationship config first
+		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
+		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
+		await page.getByRole("combobox").click();
+		await page.getByRole("option", { name: "Submission" }).click();
+
+		// Then value config
+		await page.getByTestId("component-textArea").click();
+		await page.getByRole("textbox", { name: "Label" }).nth(1).fill("Role");
+		await page.getByLabel("Help Text").nth(1).fill("Author roles");
+		await page.getByLabel("Minimum Length").fill("1");
+
+		// Validate the config that is saved
+		page.on("request", (request) => {
+			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
+				const data = request.postDataJSON();
+				const { elements } = data[0];
+				const authorElement = elements.find((e: PubFieldElement) => e.label === "author");
+				expect(authorElement.component).toEqual(InputComponent.textArea);
+				expect(authorElement.config).toMatchObject({
+					relationshipConfig: {
+						component: InputComponent.relationBlock,
+						label: "Authors",
+						help: "Authors associated with this pub",
+					},
+					label: "Role",
+					help: "Author roles",
+					minLength: 1,
+				});
+				expect(authorElement.config.relationshipConfig.pubType).toMatch(
+					/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
+				);
+			}
+		});
+
+		await formEditPage.saveFormElementConfiguration();
+		await formEditPage.saveForm();
 	});
 });

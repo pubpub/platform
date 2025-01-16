@@ -32,7 +32,7 @@ export const MultiBlock = ({
 					<BookDashed size={12} />
 					<div className="text-xs">{title}</div>
 				</div>
-				<Button size="sm" variant="outline" disabled={disabled} className="h-6 px-2">
+				<Button size="sm" variant="outline" disabled={disabled} className="h-6 w-6 p-0">
 					<Plus size={10} />
 				</Button>
 			</div>
