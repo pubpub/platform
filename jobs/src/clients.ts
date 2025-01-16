@@ -1,10 +1,6 @@
 import { initClient } from "@ts-rest/core";
 
-import { makeClient } from "@pubpub/sdk";
 import { api } from "contracts";
-
-export const integrationClient = makeClient({});
-export type IntegrationClient = typeof integrationClient;
 
 export const internalClient = initClient(api.internal, {
 	baseUrl: `${process.env.PUBPUB_URL}`,
@@ -15,7 +11,6 @@ export const internalClient = initClient(api.internal, {
 export type InternalClient = typeof internalClient;
 
 export const clients = {
-	integrationClient,
 	internalClient,
 } as const;
 

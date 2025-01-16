@@ -31,14 +31,17 @@ export type FormElementProps = {
 
 export const FormElement = ({
 	pubId,
-	element,
+	element: propElement,
 	searchParams,
 	communitySlug,
 	values,
 }: FormElementProps) => {
-	element.component =
-		element.component ??
-		((element.schemaName && defaultComponent(element.schemaName)) as typeof element.component);
+	const element = {
+		...propElement,
+		component:
+			propElement.component ??
+			(propElement.schemaName ? defaultComponent(propElement.schemaName) : null),
+	} as typeof propElement;
 
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
@@ -62,7 +65,7 @@ export const FormElement = ({
 		slug: element.slug,
 	};
 
-	let input: JSX.Element | undefined;
+	let input: React.ReactNode | undefined;
 
 	if (element.component === InputComponent.textInput) {
 		input = (

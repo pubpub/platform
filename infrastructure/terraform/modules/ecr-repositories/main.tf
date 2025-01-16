@@ -30,24 +30,6 @@ resource "aws_ecr_repository" "pubpub_v7_core" {
   }
 }
 
-resource "aws_ecr_repository" "pubpub_v7_intg_submissions" {
-  name                 = "pubpub-v7-integration-submissions"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = false # can set this to true if we want
-  }
-}
-
-resource "aws_ecr_repository" "pubpub_v7_intg_evaluations" {
-  name                 = "pubpub-v7-integration-evaluations"
-  image_tag_mutability = "MUTABLE"
-
-  image_scanning_configuration {
-    scan_on_push = false # can set this to true if we want
-  }
-}
-
 resource "aws_ecr_repository" "pubpub_v7_jobs" {
   name                 = "pubpub-v7-jobs"
   image_tag_mutability = "MUTABLE"

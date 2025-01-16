@@ -19,7 +19,7 @@ export const run = defineRun<typeof action>(
 		};
 
 		try {
-			const communitySlug = getCommunitySlug();
+			const communitySlug = await getCommunitySlug();
 			/*
 				- Get folder Id from inputGCLOUD_KEY_FILE
 				- Pull html content and metadata content from folder
@@ -151,7 +151,7 @@ export const run = defineRun<typeof action>(
 			}
 
 			if (relations.length > 0) {
-				upsertPubRelations({
+				await upsertPubRelations({
 					pubId: pub.id,
 					communityId,
 					lastModifiedBy,

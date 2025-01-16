@@ -18,7 +18,7 @@ const executeWithRevalidate = <
 	options?: AutoRevalidateOptions
 ) => {
 	const executeFn = async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? getCommunitySlug();
+		const communitySlug = options?.communitySlug ?? (await getCommunitySlug());
 
 		const communitySlugs = Array.isArray(communitySlug) ? communitySlug : [communitySlug];
 
@@ -30,7 +30,7 @@ const executeWithRevalidate = <
 		// https://github.com/microsoft/TypeScript/issues/241
 		const result = await (qb[method](...args) as ReturnType<Q[M]>);
 
-		revalidateTagsForCommunity(tables, communitySlugs);
+		await revalidateTagsForCommunity(tables, communitySlugs);
 
 		// const tableTags = createCommunityCacheTags(tables, communitySlug);
 

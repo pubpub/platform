@@ -18,7 +18,7 @@ import { getPubFields } from "~/lib/server/pubFields";
 import { FieldsTable } from "./FieldsTable";
 import { NewFieldButton } from "./NewFieldButton";
 
-type Props = { params: { communitySlug: string } };
+type Props = { params: Promise<{ communitySlug: string }> };
 
 export const metadata: Metadata = {
 	title: "Fields",
@@ -38,7 +38,8 @@ const EmptyState = ({ className }: { className?: string }) => {
 	);
 };
 
-export default async function Page({ params }: Props) {
+export default async function Page(props: Props) {
+	const params = await props.params;
 	const { user } = await getPageLoginData();
 
 	const community = await findCommunityBySlug(params.communitySlug);

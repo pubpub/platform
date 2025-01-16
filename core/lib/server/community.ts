@@ -8,8 +8,8 @@ import { ONE_DAY } from "./cache/constants";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { memoize } from "./cache/memoize";
 
-export const findCommunityBySlug = cache((communitySlug?: string) => {
-	const slug = communitySlug ?? getCommunitySlug();
+export const findCommunityBySlug = cache(async (communitySlug?: string) => {
+	const slug = communitySlug ?? (await getCommunitySlug());
 	return memoize(
 		() => db.selectFrom("communities").selectAll().where("slug", "=", slug).executeTakeFirst(),
 		{

@@ -1,3 +1,5 @@
+import type { UnsafeUnwrappedHeaders } from "next/headers";
+
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { getParams } from "@nimpl/getters/get-params";
@@ -31,8 +33,8 @@ export class NotInCommunityError extends Error {
  * when called from a route that is scoped under a community,
  * i.e. `/c/[communitySlug]` or `/api/v0/c/[communitySlug]`.
  */
-export const getCommunitySlug = cache(() => {
-	const header = headers();
+export const getCommunitySlug = cache(async () => {
+	const header = await headers();
 	const communitySlugHeader = header.get(PUBPUB_COMMUNITY_SLUG_HEADER_NAME);
 	if (!communitySlugHeader) {
 		throw new NotInCommunityError();

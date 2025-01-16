@@ -4,7 +4,7 @@ import { cache, Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import type { CommunitiesId, StagesId } from "db/public";
+import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
@@ -16,20 +16,25 @@ import { getStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubs } from "../components/StageList";
 
-const getStageCached = cache(async (stageId: StagesId, communityId: CommunitiesId) => {
-	return getStages({ stageId, communityId }).executeTakeFirst();
-});
+const getStageCached = cache(
+	async (stageId: StagesId, communityId: CommunitiesId, userId: UsersId) => {
+		return getStages({ stageId, communityId, userId }).executeTakeFirst();
+	}
+);
 
-export async function generateMetadata({
-	params: { stageId, communitySlug },
-}: {
-	params: { stageId: StagesId; communitySlug: string };
+export async function generateMetadata(props: {
+	params: Promise<{ stageId: StagesId; communitySlug: string }>;
 }): Promise<Metadata> {
+	const params = await props.params;
+
+	const { stageId, communitySlug } = params;
+
+	const { user } = await getPageLoginData();
 	const community = await findCommunityBySlug(communitySlug);
 	if (!community) {
 		notFound();
 	}
-	const stage = await getStageCached(stageId, community.id);
+	const stage = await getStageCached(stageId, community.id, user.id);
 	if (!stage) {
 		notFound();
 	}
@@ -37,14 +42,13 @@ export async function generateMetadata({
 	return { title: `${stage.name} Stage` };
 }
 
-export default async function Page({
-	params,
-	searchParams,
-}: {
-	searchParams: Record<string, string> & { page?: string };
+export default async function Page(props: {
+	searchParams: Promise<Record<string, string> & { page?: string }>;
 
-	params: { communitySlug: string; stageId: StagesId };
+	params: Promise<{ communitySlug: string; stageId: StagesId }>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const { communitySlug, stageId } = params;
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
@@ -57,7 +61,7 @@ export default async function Page({
 
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
-	const stagePromise = getStageCached(stageId, community.id);
+	const stagePromise = getStageCached(stageId, community.id, user.id);
 	const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },

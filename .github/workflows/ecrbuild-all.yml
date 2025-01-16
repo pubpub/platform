@@ -43,16 +43,6 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
-    build-intg-submissions:
-        uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
-        with:
-            package: integration-submissions
-        secrets:
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
     build-jobs:
         uses: ./.github/workflows/ecrbuild-template.yml
         # needs:
@@ -60,16 +50,6 @@ jobs:
         with:
             package: jobs
             target: jobs
-        secrets:
-            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-
-    build-intg-evaluations:
-        uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
-        with:
-            package: integration-evaluations
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

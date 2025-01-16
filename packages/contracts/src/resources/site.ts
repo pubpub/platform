@@ -35,12 +35,12 @@ import {
 	usersSchema,
 } from "db/public";
 
-import type { Json } from "./integrations";
+import type { Json } from "./types";
 import {
 	CreatePubRequestBodyWithNulls,
 	CreatePubRequestBodyWithNullsBase,
 	jsonSchema,
-} from "./integrations";
+} from "./types";
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
 	stageId?: StagesId;

@@ -124,7 +124,7 @@ type ScopesWithOnlyNormalConstraints<
 type CustomConstraintFormElement<Value> = (props: {
 	value: boolean | Value;
 	onChange: (...args: any[]) => void;
-}) => JSX.Element;
+}) => React.ReactNode;
 
 const CreateTokenFormContextContext = createContext<CreateTokenFormContext>({ stages: [] });
 

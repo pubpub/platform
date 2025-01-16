@@ -24,7 +24,7 @@ const Confidence = dynamic(
 // Workaround for forwarding refs to dynamic components
 // https://github.com/vercel/next.js/issues/4957#issuecomment-413841689
 const ForwardedRefConfidence = forwardRef<
-	React.ElementRef<typeof Confidence>,
+	React.ElementRef<typeof import("ui/customRenderers/confidence/confidence").Confidence>,
 	React.ComponentPropsWithoutRef<typeof Confidence>
 >((props, ref) => <Confidence {...props} forwardedRef={ref} />);
 

@@ -98,13 +98,11 @@ const ExpiredTokenPage = ({
 	);
 };
 
-export async function generateMetadata({
-	params,
-	searchParams,
-}: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams;
+export async function generateMetadata(props: {
+	params: Promise<FormFillPageParams>;
+	searchParams: Promise<FormFillPageSearchParams>;
 }): Promise<Metadata> {
+	const params = await props.params;
 	const community = await findCommunityBySlug(params.communitySlug);
 
 	if (!community) {
@@ -125,13 +123,12 @@ export async function generateMetadata({
 	};
 }
 
-export default async function FormPage({
-	params,
-	searchParams,
-}: {
-	params: FormFillPageParams;
-	searchParams: FormFillPageSearchParams;
+export default async function FormPage(props: {
+	params: Promise<FormFillPageParams>;
+	searchParams: Promise<FormFillPageSearchParams>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
 	const community = await findCommunityBySlug(params.communitySlug);
 
 	if (!community) {
@@ -207,7 +204,7 @@ export default async function FormPage({
 
 	const parentPub = pub?.parentId
 		? await getPubsWithRelatedValuesAndChildren(
-				{ pubId: pub.parentId, communityId: community.id, userId: user?.id },
+				{ pubId: pub.parentId, communityId: community.id },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
 		: undefined;

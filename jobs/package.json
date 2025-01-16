@@ -15,10 +15,9 @@
 	],
 	"dependencies": {
 		"zod": "catalog:",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
-		"@pubpub/sdk": "workspace:*",
 		"@ts-rest/core": "catalog:",
 		"contracts": "workspace:*",
 		"graphile-worker": "^0.16.5",
