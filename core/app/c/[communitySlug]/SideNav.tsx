@@ -235,7 +235,7 @@ const LinkGroup = ({
 }) => {
 	return (
 		<SidebarGroup>
-			<SidebarGroupLabel className="font-semibold uppercase text-slate-500">
+			<SidebarGroupLabel className="font-semibold uppercase text-gray-500">
 				{group.name}
 			</SidebarGroupLabel>
 			<SidebarGroupContent className="group-data-[state=expanded]:px-2">

@@ -21,7 +21,7 @@ const AvatarThing = ({ user }: { user: User }) => (
 
 		<div className="flex min-w-0 flex-grow flex-col justify-start text-start group-data-[collapsible=icon]:hidden">
 			<p className="truncate text-sm">{user.firstName}</p>
-			<p className="truncate text-xs text-slate-500">{user.email}</p>
+			<p className="truncate text-xs text-gray-500">{user.email}</p>
 		</div>
 	</div>
 );

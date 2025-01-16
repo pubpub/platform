@@ -104,7 +104,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				<Button
 					type="button"
 					variant="outline"
-					className="w-full border-slate-950"
+					className="w-full border-gray-950"
 					onClick={() => {
 						dispatch({ eventName: "cancel" });
 					}}
@@ -147,7 +147,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				<Button
 					type="button"
 					variant="outline"
-					className="mb-3 w-full border-slate-950"
+					className="mb-3 w-full border-gray-950"
 					onClick={() => dispatch({ eventName: "cancel" })}
 				>
 					Cancel

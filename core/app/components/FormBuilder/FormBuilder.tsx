@@ -100,7 +100,7 @@ const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
 	return (
 		<>
 			<div className="flex items-center justify-between">
-				<div className="text-sm uppercase text-slate-500">{elementPanelTitles[state]}</div>
+				<div className="text-sm uppercase text-gray-500">{elementPanelTitles[state]}</div>
 				{state !== "initial" && (
 					<Button
 						aria-label="Cancel"

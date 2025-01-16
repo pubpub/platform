@@ -76,7 +76,7 @@ export default async function Page(props: {
 						<ClipboardPenLine
 							size={24}
 							strokeWidth={1}
-							className="mr-2 text-slate-500"
+							className="mr-2 text-gray-500"
 						/>{" "}
 						{form.name}
 						<EditFormTitleButton formId={form.id} name={form.name} />
@@ -100,7 +100,7 @@ export default async function Page(props: {
 			right={
 				<div className="flex items-center gap-2">
 					<FormCopyButton formSlug={formSlug} />
-					{/* <ArchiveFormButton id={form.id} className="border border-slate-950 px-4" />{" "} */}
+					{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
 					<SaveFormButton form={formBuilderId} disabled={!unsavedChanges} />
 				</div>
 			}

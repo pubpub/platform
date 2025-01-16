@@ -33,7 +33,7 @@ export const MembersList = <T extends TargetId>({
 					</div>
 					<div className="flex items-center gap-2">
 						{readOnly ? (
-							<span className="rounded-full bg-blue-500 px-3 py-2 text-sm font-medium capitalize text-slate-50">
+							<span className="rounded-full bg-blue-500 px-3 py-2 text-sm font-medium capitalize text-gray-50">
 								{user.role}
 							</span>
 						) : (
