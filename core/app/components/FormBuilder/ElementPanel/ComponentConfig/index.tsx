@@ -42,5 +42,9 @@ export const ComponentConfig = <I extends InputComponent>(props: ComponentConfig
 		ComponentConfigFormProps<I>
 	>;
 
+	if (!ConfigComponent) {
+		return null;
+	}
+
 	return <ConfigComponent {...props} />;
 };

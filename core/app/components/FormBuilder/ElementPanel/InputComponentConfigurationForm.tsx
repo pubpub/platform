@@ -271,8 +271,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 		resolver: (values, context, options) => {
 			const schema = Type.Object({
 				required: Nullable(Type.Boolean({ default: true })),
-				component: Type.Enum(InputComponent),
-				config: componentConfigSchemas[values.component],
+				component: Nullable(Type.Enum(InputComponent)),
+				// If there is no `component`, it is Null, and so will only have the relationBlockConfigSchema
+				config: values.component
+					? componentConfigSchemas[values.component]
+					: relationBlockConfigSchema,
 			});
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
@@ -345,26 +348,32 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 							form={form}
 							component={InputComponent.relationBlock}
 						/>
-						<div className="text-sm uppercase text-muted-foreground">
-							Relation value
-						</div>
-						<hr />
-						<div className="text-sm uppercase text-muted-foreground">Appearance</div>
-						<hr />
-						{/* Component selector for the relationship value itself */}
-						<FormField
-							control={form.control}
-							name="component"
-							render={({ field }) => (
-								<ComponentSelect
-									onChange={field.onChange}
-									value={field.value}
-									element={fieldInputElement}
-									components={allowedComponents}
-									radioName="component"
+						{schemaName !== CoreSchemaType.Null && (
+							<>
+								<div className="text-sm uppercase text-muted-foreground">
+									Relation value
+								</div>
+								<hr />
+								<div className="text-sm uppercase text-muted-foreground">
+									Appearance
+								</div>
+								<hr />
+								{/* Component selector for the relationship value itself */}
+								<FormField
+									control={form.control}
+									name="component"
+									render={({ field }) => (
+										<ComponentSelect
+											onChange={field.onChange}
+											value={field.value}
+											element={fieldInputElement}
+											components={allowedComponents}
+											radioName="component"
+										/>
+									)}
 								/>
-							)}
-						/>
+							</>
+						)}
 					</>
 				) : null}
 				{configForm}

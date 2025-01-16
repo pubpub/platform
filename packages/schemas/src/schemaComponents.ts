@@ -5,7 +5,7 @@ import { Type } from "@sinclair/typebox";
 import { CoreSchemaType, InputComponent } from "db/public";
 
 export const defaultComponent = <T extends CoreSchemaType>(schemaName: T) =>
-	componentsBySchema[schemaName][0];
+	componentsBySchema[schemaName][0] ?? null;
 
 export const componentsBySchema = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
@@ -29,7 +29,7 @@ export const componentsBySchema = {
 	[CoreSchemaType.URL]: [InputComponent.textInput],
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
-	[CoreSchemaType.Null]: [InputComponent.textInput],
+	[CoreSchemaType.Null]: [],
 	[CoreSchemaType.RichText]: [InputComponent.richText],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
 
