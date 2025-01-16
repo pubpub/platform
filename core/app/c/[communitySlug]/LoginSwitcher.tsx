@@ -35,7 +35,12 @@ export default async function LoginSwitcher() {
 		<div className="w-max-[100%] borderp-2 flex flex-col gap-y-2 rounded-lg">
 			<Popover>
 				<PopoverTrigger asChild>
-					<SidebarMenuButton className="flex h-fit items-center gap-x-2 p-2 py-1">
+					<SidebarMenuButton
+						className="flex h-fit items-center gap-x-2 p-2 py-1"
+						aria-label="User menu"
+						data-testid="user-menu-button"
+						aria-haspopup="true"
+					>
 						<AvatarThing user={user} />
 						<ChevronsUpDown
 							size="16"
