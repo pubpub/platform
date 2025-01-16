@@ -38,6 +38,8 @@ pnpm run dev
 
 ## Prisma
 
+We currently only use Prisma for managing migrations.
+
 The Prisma [Quickstart guide](https://www.prisma.io/docs/getting-started/quickstart) is how our prisma folder was initially created. That set of instructions has useful pointers for doing things like db migrations.
 
 The `~/prisma/seed.ts` file will initiate the database with a set of data. This seed is run using `pnpm reset`. You will have to run this each time you stop and start supabase since doing so clears the database.
