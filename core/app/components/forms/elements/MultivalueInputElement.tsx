@@ -1,11 +1,11 @@
 "use client";
 
-import { CoreSchemaType } from "@prisma/client";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { multivalueInputConfigSchema } from "schemas";
 
 import type { InputComponent } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { MultiValueInput } from "ui/multivalue-input";
 

@@ -69,9 +69,6 @@ jobs:
               env:
                   DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
-            - name: generate prisma
-              run: pnpm --filter core prisma generate
-
             - name: Run prettier
               run: pnpm format
 
