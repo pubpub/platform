@@ -52,7 +52,7 @@ pnpm install
 pnpm build
 ```
 
-**Running build when getting started with this repo is important to make sure the any prebuild scripts run (e.g. Prisma generate).**
+**Running build when getting started with this repo is important to make sure the any prebuild scripts run**
 
 Depending on which app or package you are doing work on, you may need to create a .env.local file. See each package's individual README.md file for further details.
 

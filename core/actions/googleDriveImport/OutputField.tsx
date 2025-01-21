@@ -1,8 +1,7 @@
 "use client";
 
-import type { CoreSchemaType } from "@prisma/client";
-
 import type { PubFieldSchemaId, PubFieldsId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Info } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
