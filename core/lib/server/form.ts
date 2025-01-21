@@ -70,6 +70,7 @@ export const getForm = (
 							"form_elements.stageId",
 							"pub_fields.schemaName",
 							"pub_fields.slug",
+							"pub_fields.isRelation",
 						])
 						.$narrowType<FormElements>()
 						.orderBy("form_elements.order")

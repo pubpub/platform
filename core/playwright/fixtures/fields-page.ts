@@ -47,7 +47,10 @@ export class FieldsPage {
 			await this.page.getByTestId("isRelation-checkbox").click();
 		}
 
-		await this.selectFormat(format);
+		// Null is automatically populated if no select is chosen
+		if (format !== CoreSchemaType.Null) {
+			await this.selectFormat(format);
+		}
 
 		await this.page.getByRole("button", { name: "Create" }).click();
 
