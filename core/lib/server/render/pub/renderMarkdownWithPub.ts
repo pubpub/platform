@@ -290,7 +290,10 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 					if ("form" in attrs) {
 						props.href = await utils.renderFormInviteLink({
 							formSlug: expect(attrs.form),
-							userId: context.recipient.user.id,
+							userId: expect(
+								context.recipient,
+								"Used a form invitation token without specifying a recipient member"
+							).user.id,
 							communityId: context.communityId,
 							pubId: context.pub.id as PubsId,
 						});
