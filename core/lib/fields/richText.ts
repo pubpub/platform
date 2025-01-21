@@ -46,12 +46,12 @@ interface PubCreate {
  * TODO: what to do about multiple rich text fields?
  * TODO: we can't fill out the Submission pub type without ContextAtom rendering first
  */
-export const parseRichTextForPubFieldsAndRelatedPubs = ({
+export const parseRichTextForPubFieldsAndRelatedPubs = <T extends JsonValue>({
 	pubId,
 	values,
 }: {
 	pubId: PubsId;
-	values: Record<string, JsonValue>;
+	values: Record<string, T>;
 }) => {
 	const newValues = structuredClone(values);
 	const pubs: PubCreate[] = [];

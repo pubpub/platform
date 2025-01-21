@@ -432,6 +432,32 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
 
 /**
+ * Transform pub values which can either be
+ * {
+ *   field: 'example',
+ *   authors: [
+ *     { value: 'admin', relatedPubId: X },
+ *     { value: 'editor', relatedPubId: Y },
+ *   ]
+ * }
+ * to a more standardized
+ * [ { slug, value, relatedPubId } ]
+ */
+const normalizePubValues = (
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>
+) => {
+	return Object.entries(pubValues).flatMap(([slug, value]) =>
+		isRelatedPubInit(value)
+			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
+			: ([{ slug, value, relatedPubId: undefined }] as {
+					slug: string;
+					value: unknown;
+					relatedPubId: PubsId | undefined;
+				}[])
+	);
+};
+
+/**
  * @throws
  */
 export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>(
@@ -471,15 +497,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		});
 		values = processedVals;
 	}
-	const normalizedValues = Object.entries(values).flatMap(([slug, value]) =>
-		isRelatedPubInit(value)
-			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
-			: ([{ slug, value, relatedPubId: undefined }] as {
-					slug: string;
-					value: unknown;
-					relatedPubId: PubsId | undefined;
-				}[])
-	);
+	const normalizedValues = normalizePubValues(values);
 
 	const valuesWithFieldIds = await validatePubValues({
 		pubValues: normalizedValues,
@@ -1072,7 +1090,7 @@ export const updatePub = async ({
 	lastModifiedBy,
 }: {
 	pubId: PubsId;
-	pubValues: Record<string, Json>;
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>;
 	communityId: CommunitiesId;
 	lastModifiedBy: LastModifiedBy;
 	stageId?: StagesId;
@@ -1095,13 +1113,10 @@ export const updatePub = async ({
 			values: pubValues,
 		});
 
-		const vals = Object.entries(processedVals).flatMap(([slug, value]) => ({
-			slug,
-			value,
-		}));
+		const normalizedValues = normalizePubValues(processedVals);
 
 		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
-			pubValues: vals,
+			pubValues: normalizedValues,
 			communityId,
 			continueOnValidationError,
 			// do not update relations, and error if a relation slug is included

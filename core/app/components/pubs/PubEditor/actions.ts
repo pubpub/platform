@@ -1,5 +1,6 @@
 "use server";
 
+import type { Json } from "contracts";
 import type { PubsId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { logger } from "logger";
@@ -78,7 +79,7 @@ export const updatePub = defineServerAction(async function updatePub({
 	continueOnValidationError,
 }: {
 	pubId: PubsId;
-	pubValues: PubValues;
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>;
 	stageId?: StagesId;
 	formSlug?: string;
 	continueOnValidationError: boolean;
