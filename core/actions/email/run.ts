@@ -89,7 +89,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		);
 
 		await Email.generic({
-			to: expect(recipient?.user.id ?? recipientEmail),
+			to: expect(recipient?.user.email ?? recipientEmail),
 			subject,
 			html,
 		}).send();
