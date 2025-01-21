@@ -34,11 +34,6 @@ export const RelatedPubsElement = ({
 	}
 
 	const linkablePubs = pubs
-		.filter((p) =>
-			config.relationshipConfig.pubType
-				? p.pubTypeId === config.relationshipConfig.pubType
-				: true
-		)
 		// do not allow linking to itself. TODO: do not show already linked pubs
 		.filter((p) => p.id !== pubId);
 
