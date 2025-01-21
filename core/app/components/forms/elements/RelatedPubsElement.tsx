@@ -7,9 +7,13 @@ import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
-import type { InputComponent } from "db/public";
+import type { JsonValue } from "contracts";
+import type { InputComponent, PubsId } from "db/public";
+import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Plus, Trash } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { ElementProps } from "../types";
 import type { GetPubsResult } from "~/lib/server";
@@ -17,10 +21,57 @@ import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel"
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
+const RelatedPubBlock = ({
+	pub,
+	onRemove,
+	valueComponent,
+}: {
+	pub: Pick<GetPubsResult[number], "title" | "id">;
+	onRemove: (pubId: PubsId) => void;
+	valueComponent: ReactNode;
+}) => {
+	const { title, id } = pub;
+	return (
+		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
+			<div className="flex flex-col gap-1 text-sm">
+				<span>{title || id}</span>
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button
+							variant="link"
+							size="sm"
+							className="flex h-4 gap-1 p-0 text-blue-500"
+						>
+							{/* TODO: the type of 'add', i.e. 'Add Role' */}
+							Add <Plus size={12} />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent side="bottom">{valueComponent}</PopoverContent>
+				</Popover>
+			</div>
+			<div>
+				<Button
+					variant="ghost"
+					className="p-2 text-neutral-400 hover:bg-white hover:text-red-500"
+					aria-label="Delete related pub"
+					onClick={() => {
+						onRemove(id);
+					}}
+				>
+					<Trash size={24} />
+				</Button>
+			</div>
+		</div>
+	);
+};
+
+type FieldValue = { value: JsonValue; relatedPubId: PubsId };
+
 export const RelatedPubsElement = ({
 	slug,
 	label,
 	config,
+	valueComponent,
 }: ElementProps<InputComponent.relationBlock> & { valueComponent: ReactNode }) => {
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
@@ -33,13 +84,13 @@ export const RelatedPubsElement = ({
 		return null;
 	}
 
-	const pubTitlesById = useMemo(() => {
+	const pubsById = useMemo(() => {
 		return pubs.reduce(
-			(acc, { id, title }) => {
-				acc[id] = title;
+			(acc, pub) => {
+				acc[pub.id] = pub;
 				return acc;
 			},
-			{} as Record<string, string | null>
+			{} as Record<string, GetPubsResult[number]>
 		);
 	}, [pubs]);
 
@@ -50,7 +101,7 @@ export const RelatedPubsElement = ({
 				name={slug}
 				render={({ field }) => {
 					const linkedPubs = Array.isArray(field.value)
-						? field.value.map((v) => v.relatedPubId)
+						? field.value.map((v: FieldValue) => v.relatedPubId)
 						: [];
 					const linkablePubs = pubs
 						// do not allow linking to itself or any pubs it is already linked to
@@ -64,6 +115,13 @@ export const RelatedPubsElement = ({
 						} else {
 							field.onChange(value);
 						}
+					};
+
+					const handleRemovePub = (pubToRemove: PubsId) => {
+						const newValues = field.value.filter(
+							(v: FieldValue) => v.relatedPubId !== pubToRemove
+						);
+						field.onChange(newValues);
 					};
 					return (
 						<FormItem>
@@ -83,15 +141,20 @@ export const RelatedPubsElement = ({
 										disabled={!isEnabled}
 										onAdd={() => setShowPanel(true)}
 									>
-										{Array.isArray(field.value)
-											? field.value.map((pub: any) => {
+										{Array.isArray(field.value) ? (
+											<div className="flex flex-col gap-2">
+												{field.value.map((pub: FieldValue) => {
 													return (
-														<div key={pub.relatedPubId}>
-															{pubTitlesById[pub.relatedPubId]}
-														</div>
+														<RelatedPubBlock
+															key={pub.relatedPubId}
+															pub={pubsById[pub.relatedPubId]}
+															onRemove={handleRemovePub}
+															valueComponent={valueComponent}
+														/>
 													);
-												})
-											: null}
+												})}
+											</div>
+										) : null}
 									</MultiBlock>
 								</FormControl>
 							</div>
