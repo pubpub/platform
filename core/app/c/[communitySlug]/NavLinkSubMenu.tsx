@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { logger } from "logger";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { useLocalStorage } from "ui/hooks";
 import { ChevronDown } from "ui/icon";
@@ -14,10 +15,6 @@ import {
 	SidebarMenuSubItem,
 	useSidebar,
 } from "ui/sidebar";
-
-import type { LinkDefinition } from "./SideNav";
-import type { DefinitelyHas } from "~/lib/types";
-import NavLink from "./NavLink";
 
 export const NavLinkSubMenu = ({
 	icon,
@@ -45,12 +42,9 @@ export const NavLinkSubMenu = ({
 	}, [open]);
 
 	if (!icon || !text) {
-		console.warn("NavLinkSubMenu: Missing required props", { icon, text });
+		logger.error({ msg: `NavLinkSubMenu: Missing required props`, icon, text });
 		return null;
 	}
-	// console.log("open", open);
-	// console.log("actuallyOpen", actuallyOpen);
-	// console.log("SubMenuLink", icon, text, parentLink);
 
 	return (
 		<SidebarMenu>
@@ -82,9 +76,6 @@ export const NavLinkSubMenu = ({
 								<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
 							</SidebarMenuButton>
 						)}
-
-						{/* <SidebarMenuAction> */}
-						{/* </SidebarMenuAction> */}
 					</CollapsibleTrigger>
 				</SidebarMenuItem>
 				<CollapsibleContent>
