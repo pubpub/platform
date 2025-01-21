@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-dialog.cjs.js",
-	"module": "dist/ui-dialog.esm.js"
-}

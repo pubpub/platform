@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-pubFields.cjs.js",
-	"module": "dist/ui-pubFields.esm.js"
-}

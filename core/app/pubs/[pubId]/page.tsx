@@ -1,26 +1,25 @@
 import { notFound, redirect } from "next/navigation";
 
-import prisma from "~/prisma/db";
+import type { PubsId } from "db/public";
+
+import { getPlainPub } from "~/lib/server";
+import { findCommunityByPubId } from "~/lib/server/community";
 
 export type Props = {
-	params: {
-		pubId: string;
-	};
+	params: Promise<{
+		pubId: PubsId;
+	}>;
 };
 
 export default async function Page(props: Props) {
-	const pub = await prisma.pub.findUnique({
-		where: { id: props.params.pubId },
-		include: {
-			community: {
-				select: {
-					slug: true,
-				},
-			},
-		},
-	});
-	if (pub === null) {
+	const [pub, community] = await Promise.all([
+		getPlainPub((await props.params).pubId).executeTakeFirstOrThrow(),
+		findCommunityByPubId((await props.params).pubId),
+	]);
+
+	if (!pub || !community) {
 		notFound();
 	}
-	redirect(`/c/${pub.community.slug}/pubs/${pub.id}`);
+
+	redirect(`/c/${community.slug}/pubs/${pub.id}`);
 }

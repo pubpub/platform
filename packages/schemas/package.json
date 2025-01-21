@@ -1,8 +1,14 @@
 {
 	"name": "schemas",
+	"type": "module",
 	"version": "0.0.1",
 	"main": "dist/schemas.cjs.js",
 	"module": "dist/schemas.esm.js",
+	"exports": {
+		".": "./dist/schemas.js",
+		"./schemas": "./dist/schemas-schemas.js",
+		"./package.json": "./package.json"
+	},
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
@@ -12,15 +18,27 @@
 	"dependencies": {
 		"@sinclair/typebox": "catalog:",
 		"db": "workspace:*",
-		"lucide-react": "^0.357.0",
+		"lucide-react": "^0.469.0",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"react": "catalog:react18",
+		"react": "catalog:react19",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "^1.3.1"
+	},
+	"preconstruct": {
+		"entrypoints": [
+			"index.ts",
+			"schemas.ts"
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
 	},
 	"prettier": "@pubpub/prettier-config"
 }

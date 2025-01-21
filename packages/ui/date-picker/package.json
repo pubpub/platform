@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-date-picker.cjs.js",
-	"module": "dist/ui-date-picker.esm.js"
-}

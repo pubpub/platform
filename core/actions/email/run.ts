@@ -20,7 +20,7 @@ import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
-		const communitySlug = getCommunitySlug();
+		const communitySlug = await getCommunitySlug();
 
 		const { parentId } = pub;
 		let parentPub: RenderWithPubPub | undefined;

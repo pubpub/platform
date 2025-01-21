@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
@@ -18,18 +17,20 @@ export const metadata: Metadata = {
 	title: "Members",
 };
 
-export default async function Page({
-	params: { communitySlug },
-	searchParams,
-}: {
-	params: {
+export default async function Page(props: {
+	params: Promise<{
 		communitySlug: string;
-	};
-	searchParams: {
+	}>;
+	searchParams: Promise<{
 		page?: string;
 		email?: string;
-	};
+	}>;
 }) {
+	const searchParams = await props.searchParams;
+	const params = await props.params;
+
+	const { communitySlug } = params;
+
 	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {

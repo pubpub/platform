@@ -6,6 +6,7 @@
 		"lib": ["DOM", "ESNext"],
 		"module": "ESNext",
 		"target": "ES6",
-		"jsx": "react-jsx"
+		"jsx": "react-jsx",
+		"moduleResolution": "bundler"
 	}
 }

@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-customRenderers-confidence-confidence.cjs.js",
-	"module": "dist/ui-customRenderers-confidence-confidence.esm.js"
-}

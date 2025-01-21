@@ -15,7 +15,7 @@ const findNestedStructure = (json: unknown, path: string) => {
 		// TODO: handle this
 		return;
 	}
-	const result = JSONPath({ path, json });
+	const result = JSONPath({ path, json, wrap: false });
 	return result;
 };
 

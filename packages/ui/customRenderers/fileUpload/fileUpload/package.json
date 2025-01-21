@@ -1,4 +1,0 @@
-{
-	"main": "dist/ui-customRenderers-fileUpload-fileUpload.cjs.js",
-	"module": "dist/ui-customRenderers-fileUpload-fileUpload.esm.js"
-}

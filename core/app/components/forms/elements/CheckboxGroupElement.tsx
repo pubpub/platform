@@ -3,13 +3,13 @@
 import type { ChangeEvent } from "react";
 
 import { useMemo, useState } from "react";
-import { CoreSchemaType } from "@prisma/client";
 import { Value } from "@sinclair/typebox/value";
 import partition from "lodash.partition";
 import { useFormContext } from "react-hook-form";
 import { checkboxGroupConfigSchema } from "schemas";
 
 import type { InputComponent } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";

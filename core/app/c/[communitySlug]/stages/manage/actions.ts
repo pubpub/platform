@@ -11,9 +11,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Event, stagesIdSchema } from "db/public";
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, Event, MembershipType, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
@@ -139,7 +137,7 @@ export const deleteStage = defineServerAction(async function deleteStage(stageId
 			cause: error,
 		};
 	} finally {
-		revalidateTagsForCommunity(["stages", "PubsInStages"]);
+		await revalidateTagsForCommunity(["stages", "PubsInStages"]);
 	}
 });
 
@@ -179,7 +177,7 @@ export const createMoveConstraint = defineServerAction(async function createMove
 			cause: error,
 		};
 	} finally {
-		revalidateTagsForCommunity(["move_constraint"]);
+		await revalidateTagsForCommunity(["move_constraint"]);
 	}
 });
 
@@ -223,7 +221,7 @@ export const deleteStagesAndMoveConstraints = defineServerAction(
 				cause: error,
 			};
 		} finally {
-			revalidateTagsForCommunity(["move_constraint"]);
+			await revalidateTagsForCommunity(["move_constraint"]);
 		}
 	}
 );
@@ -258,7 +256,7 @@ export const updateStageName = defineServerAction(async function updateStageName
 			cause: error,
 		};
 	} finally {
-		revalidateTagsForCommunity(["stages"]);
+		await revalidateTagsForCommunity(["stages"]);
 	}
 });
 
@@ -268,7 +266,7 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 		return ApiError.NOT_LOGGED_IN;
 	}
 
-	revalidateTagsForCommunity(["stages", "PubsInStages"]);
+	await revalidateTagsForCommunity(["stages", "PubsInStages"]);
 });
 
 export const addAction = defineServerAction(async function addAction(
@@ -365,7 +363,7 @@ export const deleteAction = defineServerAction(async function deleteAction(
 			cause: error,
 		};
 	} finally {
-		revalidateTagsForCommunity(["action_instances"]);
+		await revalidateTagsForCommunity(["action_instances"]);
 	}
 });
 

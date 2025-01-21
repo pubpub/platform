@@ -24,7 +24,7 @@ type Props = {
 
 export const CreatePubButton = async (props: Props) => {
 	const id = "stageId" in props ? props.stageId : props.communityId;
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
 	return (
 		<PathAwareDialog

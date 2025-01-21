@@ -1,5 +1,4 @@
-import { Capabilities } from "db/src/public/Capabilities";
-import { MembershipType } from "db/src/public/MembershipType";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
 import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
