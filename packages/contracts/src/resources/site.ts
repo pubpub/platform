@@ -559,6 +559,8 @@ export const siteApi = contract.router(
 		commonResponses: {
 			// this makes sure that 400 is always a valid response code
 			400: zodErrorSchema,
+			403: z.string(),
+			404: z.string(),
 		},
 	}
 );
