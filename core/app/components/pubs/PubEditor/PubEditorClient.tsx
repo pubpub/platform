@@ -11,6 +11,7 @@ import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
+import { RelatedPub } from "schemas/schemas";
 
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId, StagesId } from "db/public";
@@ -96,7 +97,7 @@ const createSchemaFromElements = (
 					(e) =>
 						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
 				)
-				.map(({ slug, schemaName, config }) => {
+				.map(({ slug, schemaName, config, isRelation }) => {
 					if (!schemaName) {
 						return [slug, undefined];
 					}
@@ -116,6 +117,22 @@ const createSchemaFromElements = (
 					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
 						error: schema.error ?? "Invalid value",
 					});
+
+					if (isRelation) {
+						return [
+							slug,
+							Type.Array(
+								Type.Object(
+									{
+										relatedPubId: Type.String(),
+										value: schemaWithAllowedEmpty,
+									},
+									{ additionalProperties: true }
+								)
+							),
+						];
+					}
+
 					return [slug, schemaWithAllowedEmpty];
 				})
 		)
@@ -231,48 +248,53 @@ export const PubEditorClient = ({
 				formState: formInstance.formState,
 				toggleContext,
 			});
-			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
-				evt,
-				withButtonElements,
-				buttonElements,
-			});
+			// TODO: for related fields, we need to make something like
+			// {fieldSlug, relatedPubId, value}
+			// and unnest it for each array, but the update funcs will need to take an array
+			// since the slugs will be duplicated so a dict won't work
+			console.log({ pubValues });
+			// const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
+			// 	evt,
+			// 	withButtonElements,
+			// 	buttonElements,
+			// });
 
-			const stageId = stageIdFromForm ?? stageIdFromButtonConfig;
-			let result;
-			if (isUpdating) {
-				result = await runUpdatePub({
-					pubId: pubId,
-					pubValues,
-					stageId,
-					formSlug,
-					continueOnValidationError: autoSave,
-				});
-			} else {
-				result = await runCreatePub({
-					formSlug,
-					body: {
-						id: pubId,
-						pubTypeId: pub.pubTypeId as PubTypesId,
-						values: pubValues as Record<string, any>,
-						stageId: stageId,
-					},
-					communityId: community.id,
-					parent: parentId ? { id: parentId } : undefined,
-					addUserToForm: isExternalForm,
-				});
-			}
-			if (didSucceed(result)) {
-				// Reset dirty state to prevent the unsaved changes warning from
-				// blocking navigation.
-				// See https://stackoverflow.com/questions/63953501/react-hook-form-resetting-isdirty-without-clearing-form
-				formInstance.reset(
-					{},
-					{
-						keepValues: true,
-					}
-				);
-				onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
-			}
+			// const stageId = stageIdFromForm ?? stageIdFromButtonConfig;
+			// let result;
+			// if (isUpdating) {
+			// 	result = await runUpdatePub({
+			// 		pubId: pubId,
+			// 		pubValues,
+			// 		stageId,
+			// 		formSlug,
+			// 		continueOnValidationError: autoSave,
+			// 	});
+			// } else {
+			// 	result = await runCreatePub({
+			// 		formSlug,
+			// 		body: {
+			// 			id: pubId,
+			// 			pubTypeId: pub.pubTypeId as PubTypesId,
+			// 			values: pubValues as Record<string, any>,
+			// 			stageId: stageId,
+			// 		},
+			// 		communityId: community.id,
+			// 		parent: parentId ? { id: parentId } : undefined,
+			// 		addUserToForm: isExternalForm,
+			// 	});
+			// }
+			// if (didSucceed(result)) {
+			// 	// Reset dirty state to prevent the unsaved changes warning from
+			// 	// blocking navigation.
+			// 	// See https://stackoverflow.com/questions/63953501/react-hook-form-resetting-isdirty-without-clearing-form
+			// 	formInstance.reset(
+			// 		{},
+			// 		{
+			// 			keepValues: true,
+			// 		}
+			// 	);
+			// 	onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
+			// }
 		},
 		[
 			formElements,

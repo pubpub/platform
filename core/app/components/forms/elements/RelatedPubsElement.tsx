@@ -42,18 +42,27 @@ export const RelatedPubsElement = ({
 		// do not allow linking to itself. TODO: do not show already linked pubs
 		.filter((p) => p.id !== pubId);
 
-	const handleAddPubs = (newPubs: GetPubsResult) => {
-		console.log({ newPubs });
-	};
-
 	return (
 		<>
 			<FormField
 				control={control}
 				name={slug}
 				render={({ field }) => {
+					const handleAddPubs = (newPubs: GetPubsResult) => {
+						// todo: make value an actual thing
+						const value = newPubs.map((p) => ({ relatedPubId: p.id, value: "" }));
+						field.onChange(value);
+					};
 					return (
 						<FormItem>
+							{showPanel && (
+								<AddRelatedPubsPanel
+									title={`Add ${label}`}
+									onCancel={() => setShowPanel(false)}
+									pubs={linkablePubs}
+									onAdd={handleAddPubs}
+								/>
+							)}
 							<FormLabel className="flex">{label}</FormLabel>
 							<div className="flex items-end gap-x-2">
 								<FormControl>
@@ -61,7 +70,18 @@ export const RelatedPubsElement = ({
 										title="Pub Relations"
 										disabled={!isEnabled}
 										onAdd={() => setShowPanel(true)}
-									></MultiBlock>
+									>
+										{Array.isArray(field.value)
+											? field.value.map((pub: any) => {
+													return (
+														<div key={pub.relatedPubId}>
+															{/* TODO: use pub title */}
+															{pub.relatedPubId}
+														</div>
+													);
+												})
+											: null}
+									</MultiBlock>
 								</FormControl>
 							</div>
 							<FormDescription>{config.relationshipConfig.help}</FormDescription>
@@ -70,14 +90,6 @@ export const RelatedPubsElement = ({
 					);
 				}}
 			/>
-			{showPanel && (
-				<AddRelatedPubsPanel
-					title={`Add ${label}`}
-					onCancel={() => setShowPanel(false)}
-					pubs={linkablePubs}
-					onAdd={handleAddPubs}
-				/>
-			)}
 		</>
 	);
 };
