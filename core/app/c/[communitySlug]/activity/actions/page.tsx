@@ -12,6 +12,7 @@ import { userCan } from "~/lib/authorization/capabilities";
 import { pubType, pubValuesByRef } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { userCanViewPage } from "../../unauthorized/pageAuthorizationChecks";
 import { ActionRunsTable } from "./ActionRunsTable";
 
 export const metadata: Metadata = {
@@ -34,15 +35,7 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	if (
-		!(await userCan(
-			Capabilities.editCommunity,
-			{ type: MembershipType.community, communityId: community.id },
-			user.id
-		))
-	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
+	await userCanViewPage("actionLog", user.id, community.id);
 
 	const actionRuns = (await autoCache(
 		db
