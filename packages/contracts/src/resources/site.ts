@@ -380,11 +380,7 @@ export const siteApi = contract.router(
 				body: CreatePubRequestBodyWithNullsNew,
 				responses: {
 					201: processedPubSchema,
-					// 204: z.never().optional(),
-					204: contract.otherResponse({
-						contentType: "text/plain",
-						body: z.null(),
-					}),
+					204: z.never().optional(),
 				},
 			},
 			update: {
