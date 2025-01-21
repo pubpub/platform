@@ -125,7 +125,6 @@ export const relationBlockConfigSchema = Type.Object(
 		relationshipConfig: Type.Object({
 			label: Type.Optional(Type.String()),
 			help: Type.Optional(Type.String()),
-			pubType: Type.Optional(Type.String()),
 			component: Type.Enum(InputComponent),
 		}),
 	},

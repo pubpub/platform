@@ -163,8 +163,6 @@ test.describe("relationship fields", () => {
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
-		await page.getByRole("combobox").click();
-		await page.getByRole("option", { name: "Submission" }).click();
 
 		// Then value config
 		await page.getByTestId("component-textArea").click();
@@ -189,9 +187,6 @@ test.describe("relationship fields", () => {
 					help: "Author roles",
 					minLength: 1,
 				});
-				expect(authorElement.config.relationshipConfig.pubType).toMatch(
-					/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/
-				);
 			}
 		});
 
@@ -217,8 +212,6 @@ test.describe("relationship fields", () => {
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
-		await page.getByRole("combobox").click();
-		await page.getByRole("option", { name: "Submission" }).click();
 
 		// Validate the config that is saved
 		page.on("request", (request) => {
