@@ -251,7 +251,7 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
-				const { pubTypeId, stageId, ...rest } = query;
+				const { pubTypeId, stageId, ...rest } = query ?? {};
 
 				const pubs = await getPubsWithRelatedValuesAndChildren(
 					{

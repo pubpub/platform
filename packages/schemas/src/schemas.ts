@@ -167,6 +167,12 @@ export const FileUpload = Type.Array(
 				format: "uri",
 				description: "The URL to upload the file to.",
 			}),
+			filePreview: Type.Optional(
+				Type.String({
+					format: "uri",
+					description: "The URL to the preview image of the file.",
+				})
+			),
 		},
 		{
 			description:

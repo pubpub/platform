@@ -1,11 +1,12 @@
 import type { ExpressionBuilder } from "kysely";
 
 import { sql } from "kysely";
-import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonBuildObject } from "kysely/helpers/postgres";
 
+import type { PubTypeWithFields } from "contracts";
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
 
-import type { Prettify, XOR } from "../types";
+import type { AutoReturnType, Equal, Expect, Prettify, XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
@@ -32,21 +33,6 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 					"pub_fields.schemaName",
 					"pub_fields.isRelation",
 					"_PubFieldToPubType.isTitle",
-					jsonObjectFrom(
-						eb
-							.selectFrom("PubFieldSchema")
-							.select([
-								"PubFieldSchema.id",
-								"PubFieldSchema.namespace",
-								"PubFieldSchema.name",
-								"PubFieldSchema.schema",
-							])
-							.whereRef(
-								"PubFieldSchema.id",
-								"=",
-								eb.ref("pub_fields.pubFieldSchemaId")
-							)
-					).as("schema"),
 				])
 				.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
 		).as("fields"),
@@ -54,6 +40,11 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 
 export const getPubType = (pubTypeId: PubTypesId) =>
 	autoCache(getPubTypeBase().where("pub_types.id", "=", pubTypeId));
+
+// can't really assert an autoCache return type, so we'll just do this
+type _TestPubType = Expect<
+	Equal<AutoReturnType<typeof getPubType>["executeTakeFirstOrThrow"], PubTypeWithFields>
+>;
 
 export const getPubTypeForPubId = async (pubId: PubsId) => {
 	return autoCache(

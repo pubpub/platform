@@ -1,0 +1,11 @@
+{
+	"extends": "tsconfig/base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+	},
+	"include": ["./src/**/*.ts"],
+	"exclude": ["dist", "build", "node_modules"]
+}
