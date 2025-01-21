@@ -5,7 +5,7 @@ import { Type } from "@sinclair/typebox";
 import { CoreSchemaType, InputComponent } from "db/public";
 
 export const defaultComponent = <T extends CoreSchemaType>(schemaName: T) =>
-	componentsBySchema[schemaName][0];
+	componentsBySchema[schemaName][0] ?? null;
 
 export const componentsBySchema = {
 	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
@@ -29,19 +29,30 @@ export const componentsBySchema = {
 	[CoreSchemaType.URL]: [InputComponent.textInput],
 	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
-	[CoreSchemaType.Null]: [InputComponent.textInput],
+	[CoreSchemaType.Null]: [],
 	[CoreSchemaType.RichText]: [InputComponent.richText],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
 
 export type ComponentsBySchemaType = typeof componentsBySchema;
 
+/**
+ * Map of InputComponent to CoreSchemaType
+ *
+ * Note: For InputComponents with no CoreSchemaType defined in {@link componentsBySchema}, eg
+ * relationBlock, CoreSchemaType is returned, representing the fact that they can be used with any
+ * schema.
+ */
 export type SchemaTypeByInputComponent = {
 	[K in InputComponent]: {
 		[SchemaType in CoreSchemaType as K extends ComponentsBySchemaType[SchemaType][number]
 			? SchemaType
 			: never]: SchemaType;
 	} extends infer T
-		? T[keyof T]
+		? keyof T extends never
+			? // for non-schematype specific InputComponents, like relationBlock
+				CoreSchemaType
+			: // for schematype specific InputComponents, like checkbox
+				T[keyof T]
 		: never;
 };
 
@@ -108,6 +119,18 @@ export const richTextInputConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
 });
+export const relationBlockConfigSchema = Type.Object(
+	{
+		// "relationshipConfig" is the config 'around' the related values
+		relationshipConfig: Type.Object({
+			label: Type.Optional(Type.String()),
+			help: Type.Optional(Type.String()),
+			component: Type.Enum(InputComponent),
+		}),
+	},
+	// For the "related values", which can be of any of the above ConfigSchema types
+	{ additionalProperties: true }
+);
 
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
@@ -122,6 +145,7 @@ export const componentConfigSchemas = {
 	[InputComponent.richText]: richTextInputConfigSchema,
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
 	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
+	[InputComponent.relationBlock]: relationBlockConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;
 
 export type InputComponentConfigSchema<T extends InputComponent> = Static<

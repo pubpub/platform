@@ -60,8 +60,13 @@ export const FormElement = ({
 		return null;
 	}
 
+	const configLabel =
+		"relationshipConfig" in element.config
+			? element.config.relationshipConfig.label
+			: element.config.label;
+
 	const basicProps = {
-		label: element.config.label || element.label || element.slug,
+		label: configLabel || element.label || element.slug,
 		slug: element.slug,
 	};
 
