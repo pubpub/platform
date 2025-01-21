@@ -296,7 +296,6 @@ const handler = createNextHandler(
 				if (!returnRepresentation) {
 					return {
 						status: 204,
-						body: null,
 					};
 				}
 

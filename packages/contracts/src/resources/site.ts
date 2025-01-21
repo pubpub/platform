@@ -336,6 +336,19 @@ const getPubQuerySchema = z
 	})
 	.passthrough();
 
+export const zodErrorSchema = z.object({
+	name: z.string(),
+	issues: z.array(
+		z.object({
+			code: z.string(),
+			expected: z.string(),
+			received: z.string(),
+			path: z.array(z.string()),
+			message: z.string(),
+		})
+	),
+});
+
 export const siteApi = contract.router(
 	{
 		pubs: {
@@ -418,6 +431,7 @@ export const siteApi = contract.router(
 					responses: {
 						200: processedPubSchema,
 						204: z.never().optional(),
+						400: zodErrorSchema.or(z.string()),
 					},
 				},
 				replace: {
@@ -431,6 +445,7 @@ export const siteApi = contract.router(
 					responses: {
 						200: processedPubSchema,
 						204: z.never().optional(),
+						400: zodErrorSchema.or(z.string()),
 					},
 				},
 				remove: {
@@ -444,6 +459,7 @@ export const siteApi = contract.router(
 					responses: {
 						200: processedPubSchema,
 						204: z.never().optional(),
+						400: zodErrorSchema.or(z.string()),
 					},
 				},
 			},
@@ -540,5 +556,9 @@ export const siteApi = contract.router(
 				.regex(/^Bearer /)
 				.optional(),
 		}),
+		commonResponses: {
+			// this makes sure that 400 is always a valid response code
+			400: zodErrorSchema,
+		},
 	}
 );
