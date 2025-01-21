@@ -57,22 +57,28 @@ type CapabilitiesArg = {
 
 export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
 
-type PubTarget = {
+export type CapabilitiesTargetForCapability<T extends Capabilities> = {
+	[K in keyof CapabilitiesArg]: T extends CapabilitiesArg[K][number] ? K : never;
+}[keyof CapabilitiesArg] extends infer K
+	? Extract<CapabilityTarget, { type: K }>
+	: never;
+
+export type PubTarget = {
 	type: MembershipType.pub;
 	pubId: PubsId;
 };
 
-type StageTarget = {
+export type StageTarget = {
 	type: MembershipType.stage;
 	stageId: StagesId;
 };
 
-type CommunityTarget = {
+export type CommunityTarget = {
 	type: MembershipType.community;
 	communityId: CommunitiesId;
 };
 
-type FormTarget = {
+export type FormTarget = {
 	type: MembershipType.form;
 	formId: FormsId;
 };
