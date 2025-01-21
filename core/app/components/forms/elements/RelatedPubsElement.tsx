@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
@@ -33,9 +33,15 @@ export const RelatedPubsElement = ({
 		return null;
 	}
 
-	const linkablePubs = pubs
-		// do not allow linking to itself. TODO: do not show already linked pubs
-		.filter((p) => p.id !== pubId);
+	const pubTitlesById = useMemo(() => {
+		return pubs.reduce(
+			(acc, { id, title }) => {
+				acc[id] = title;
+				return acc;
+			},
+			{} as Record<string, string | null>
+		);
+	}, [pubs]);
 
 	return (
 		<>
@@ -43,10 +49,21 @@ export const RelatedPubsElement = ({
 				control={control}
 				name={slug}
 				render={({ field }) => {
+					const linkedPubs = Array.isArray(field.value)
+						? field.value.map((v) => v.relatedPubId)
+						: [];
+					const linkablePubs = pubs
+						// do not allow linking to itself or any pubs it is already linked to
+						.filter((p) => p.id !== pubId && !linkedPubs.includes(p.id));
+
 					const handleAddPubs = (newPubs: GetPubsResult) => {
 						// todo: make value an actual thing
 						const value = newPubs.map((p) => ({ relatedPubId: p.id, value: "" }));
-						field.onChange(value);
+						if (Array.isArray(field.value)) {
+							field.onChange([...field.value, ...value]);
+						} else {
+							field.onChange(value);
+						}
 					};
 					return (
 						<FormItem>
@@ -70,8 +87,7 @@ export const RelatedPubsElement = ({
 											? field.value.map((pub: any) => {
 													return (
 														<div key={pub.relatedPubId}>
-															{/* TODO: use pub title */}
-															{pub.relatedPubId}
+															{pubTitlesById[pub.relatedPubId]}
 														</div>
 													);
 												})
