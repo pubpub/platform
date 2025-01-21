@@ -1,4 +1,3 @@
-import type { JsonValue } from "contracts";
 import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { assert, expect } from "utils";
@@ -30,7 +29,7 @@ export type RenderWithPubPub = {
 };
 
 export type RenderWithPubContext = {
-	recipient: {
+	recipient?: {
 		id: CommunityMembershipsId;
 		user: {
 			id: UsersId;
@@ -200,11 +199,15 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 };
 
 export const renderRecipientFirstName = (context: RenderWithPubContext) => {
-	return context.recipient.user.firstName;
+	return expect(context.recipient, "Used a recipient token without specifying a recipient").user
+		.firstName;
 };
 
 export const renderRecipientLastName = (context: RenderWithPubContext) => {
-	return context.recipient.user.lastName ?? "";
+	return (
+		expect(context.recipient, "Used a recipient token without specifying a recipient").user
+			.lastName ?? ""
+	);
 };
 
 export const renderRecipientFullName = (context: RenderWithPubContext) => {

@@ -14,12 +14,13 @@ export const action = defineAction({
 	name: Action.email,
 	config: {
 		schema: z.object({
-			recipient: z.string().uuid().describe("Recipient"),
+			recipientEmail: z.string().email().describe("Recipient email address").optional(),
+			recipientMember: z.string().uuid().describe("Recipient member").optional(),
 			subject: stringWithTokens().max(500).describe("Email subject"),
 			body: markdown().min(0).describe("Email body"),
 		}),
 		fieldConfig: {
-			recipient: {
+			recipientMember: {
 				fieldType: "custom",
 			},
 		},
@@ -28,11 +29,12 @@ export const action = defineAction({
 	params: {
 		schema: z
 			.object({
-				recipient: z
+				recipientEmail: z.string().email().describe("Recipient email address").optional(),
+				recipientMember: z
 					.string()
 					.uuid()
 					.describe(
-						"Recipient|Overrides the recipient user specified in the action config."
+						"Recipient Member|Overrides the recipient community member specified in the action config."
 					)
 					.optional(),
 				subject: stringWithTokens()
@@ -46,7 +48,7 @@ export const action = defineAction({
 			})
 			.optional(),
 		fieldConfig: {
-			recipient: {
+			recipientMember: {
 				fieldType: "custom",
 			},
 		},

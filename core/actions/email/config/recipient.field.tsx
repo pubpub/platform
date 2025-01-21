@@ -19,10 +19,10 @@ const component = defineActionFormFieldServerComponent(
 
 		return (
 			<MemberSelectServer
-				fieldName="recipient"
-				fieldLabel="Recipient email address"
+				fieldName="recipientMember"
+				fieldLabel="Recipient member"
 				community={community}
-				value={actionInstance.config?.recipient as CommunityMembershipsId | undefined}
+				value={actionInstance.config?.recipientMember as CommunityMembershipsId | undefined}
 				query={query}
 				queryParamName={queryParamName}
 			/>
