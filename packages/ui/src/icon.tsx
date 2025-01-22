@@ -12,6 +12,7 @@ export {
 	ArrowLeft,
 	ArrowRight,
 	BadgeCheck,
+	BookDashed,
 	Bookmark,
 	BookOpen,
 	BookOpenText,

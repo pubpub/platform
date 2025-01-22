@@ -17,6 +17,7 @@ export enum InputComponent {
 	selectDropdown = "selectDropdown",
 	multivalueInput = "multivalueInput",
 	richText = "richText",
+	relationBlock = "relationBlock",
 }
 
 /** Zod schema for InputComponent */
