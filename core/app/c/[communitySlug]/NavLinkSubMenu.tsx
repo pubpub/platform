@@ -8,11 +8,9 @@ import { useLocalStorage } from "ui/hooks";
 import { ChevronDown } from "ui/icon";
 import {
 	SidebarMenu,
-	SidebarMenuAction,
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSub,
-	SidebarMenuSubItem,
 	useSidebar,
 } from "ui/sidebar";
 
@@ -32,13 +30,7 @@ export const NavLinkSubMenu = ({
 	const { setOpen: setSidebarOpen, state: sidebarState } = useSidebar();
 
 	useEffect(() => {
-		let mounted = true;
-		if (mounted) {
-			setActuallyOpen(open ?? false);
-		}
-		return () => {
-			mounted = false;
-		};
+		setActuallyOpen(open ?? false);
 	}, [open]);
 
 	if (!icon || !text) {
