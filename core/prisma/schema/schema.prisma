@@ -508,6 +508,7 @@ enum InputComponent {
   richText
   selectDropdown
   multivalueInput
+  relationBlock
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input

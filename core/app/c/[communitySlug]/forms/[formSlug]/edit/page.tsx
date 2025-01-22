@@ -4,6 +4,7 @@ import type { CommunitiesId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { ClipboardPenLine, Info } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
+import { PubTypeProvider } from "ui/pubTypes";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { FormBuilder } from "~/app/components/FormBuilder/FormBuilder";
@@ -11,6 +12,7 @@ import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { getPubTypesForCommunity } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -58,12 +60,13 @@ export default async function Page(props: {
 	const communityId = community.id as CommunitiesId;
 	const communityStages = await getCommunityStages(communityId).execute();
 
-	const [form, { fields }] = await Promise.all([
+	const [form, { fields }, pubTypes] = await Promise.all([
 		getForm({
 			slug: formSlug,
 			communityId,
 		}).executeTakeFirstOrThrow(),
-		getPubFields({ communityId }).executeTakeFirstOrThrow(),
+		getPubFields({ communityId, includeRelations: true }).executeTakeFirstOrThrow(),
+		getPubTypesForCommunity(community.id),
 	]);
 
 	const formBuilderId = "formbuilderform";
@@ -106,7 +109,10 @@ export default async function Page(props: {
 			}
 		>
 			<PubFieldProvider pubFields={fields}>
-				<FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} />
+				{/* For the future PubType selector in RelationBlocks, implementation deferred */}
+				<PubTypeProvider pubTypes={pubTypes}>
+					<FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} />
+				</PubTypeProvider>
 			</PubFieldProvider>
 		</ContentLayout>
 	);

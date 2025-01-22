@@ -19,6 +19,7 @@ const baseElementSchema = z.object({
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
 	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),
+	isRelation: z.boolean().nullable().default(false),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -35,6 +36,7 @@ export type InputElement = baseElement & {
 	content: never;
 	schemaName: CoreSchemaType;
 	component: InputComponent;
+	config?: unknown;
 };
 
 export type StructuralElement = baseElement & {

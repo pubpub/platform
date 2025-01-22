@@ -61,6 +61,10 @@ export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
 export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
 	const form = useForm<CreateTokenFormSchema>({
 		resolver: zodResolver(createTokenFormSchema),
+		defaultValues: {
+			// default to 1 day from now, mostly to make testing easier
+			expiration: new Date(Date.now() + 1000 * 60 * 60 * 24),
+		},
 	});
 
 	const createToken = useServerAction(actions.createToken);
@@ -158,7 +162,12 @@ export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }
 							}}
 						/>
 
-						<Button type="submit" className="justify-self-end">
+						<Button
+							type="submit"
+							className="justify-self-end"
+							disabled={!form.formState.isValid}
+							data-testid="create-token-button"
+						>
 							Create Token
 						</Button>
 					</CardContent>
@@ -170,7 +179,9 @@ export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }
 						<DialogTitle>Token created!</DialogTitle>
 						<div className="flex flex-col gap-2">
 							<div className="flex items-center gap-x-4">
-								<span className="text-lg font-semibold">{token}</span>
+								<span className="text-lg font-semibold" data-testid="token-value">
+									{token}
+								</span>
 								<CopyButton value={token} />
 							</div>
 							<p>

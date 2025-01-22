@@ -3,16 +3,15 @@ import type { FieldArrayWithId } from "react-hook-form";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Markdown from "react-markdown";
-import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import type { PubFieldsId } from "db/public";
-import type { LucideIcon } from "ui/icon";
 import { Button } from "ui/button";
-import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon";
+import { ArchiveRestore, GripVertical, Pencil, Trash } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
 
 import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
+import { FieldIcon } from "./FieldIcon";
 import { useFormBuilder } from "./FormBuilderContext";
 import { structuralElements } from "./StructuralElements";
 import { isFieldInput, isStructuralElement } from "./types";
@@ -125,17 +124,11 @@ type FieldInputElementProps = {
 export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
-	let Icon: LucideIcon;
-	if (!field.schemaName) {
-		Icon = Type;
-	} else {
-		Icon = SCHEMA_TYPES_WITH_ICONS[field.schemaName].icon;
-	}
 
 	return (
 		<>
-			<Icon
-				size={20}
+			<FieldIcon
+				field={field}
 				className={cn(
 					"mr-4 mt-3 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",

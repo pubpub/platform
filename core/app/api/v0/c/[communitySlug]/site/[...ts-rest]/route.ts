@@ -371,7 +371,7 @@ const handler = createNextHandler(
 				}
 
 				return {
-					status: 200,
+					status: 204,
 				};
 			},
 			relations: {

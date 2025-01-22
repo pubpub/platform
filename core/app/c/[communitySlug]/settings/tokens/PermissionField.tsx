@@ -168,6 +168,7 @@ const permissionContraintMap: PermissionContraintMap = {
 							);
 						}}
 						animation={0}
+						data-testid={`pub-${ApiAccessType.write}-stages-select`}
 					/>
 				</div>
 			);
@@ -199,6 +200,7 @@ const permissionContraintMap: PermissionContraintMap = {
 							onChange(value.length > 0 ? value : true);
 						}}
 						animation={0}
+						data-testid={`stage-${ApiAccessType.read}-stages-select`}
 					/>
 				</div>
 			);
@@ -247,19 +249,21 @@ export const PermissionField = ({
 function FormItemWrapper({
 	children,
 	checked,
-
 	onChange,
 	type,
+	dataTestId,
 }: {
 	children?: React.ReactNode;
 	checked: boolean;
 	onChange: (change: boolean) => void;
 	type: ApiAccessType;
+	dataTestId: string;
 }) {
 	return (
 		<FormItem className="flex items-center gap-x-2 space-y-0">
 			<FormControl>
 				<Checkbox
+					data-testid={dataTestId}
 					checked={checked}
 					onCheckedChange={(change) => {
 						if (typeof change === "boolean") {
@@ -312,15 +316,30 @@ export const ConstraintFormFieldRender = ({
 
 	if (!ExtraContrainstsFormItem) {
 		return (
-			<FormItemWrapper checked={Boolean(field.value)} onChange={field.onChange} type={type} />
+			<FormItemWrapper
+				dataTestId={`${scope}-${type}-checkbox`}
+				checked={Boolean(field.value)}
+				onChange={field.onChange}
+				type={type}
+			/>
 		);
 	}
 
 	return (
-		<FormItemWrapper checked={Boolean(field.value)} onChange={field.onChange} type={type}>
+		<FormItemWrapper
+			dataTestId={`${scope}-${type}-checkbox`}
+			checked={Boolean(field.value)}
+			onChange={field.onChange}
+			type={type}
+		>
 			<Popover>
 				<PopoverTrigger asChild>
-					<Button variant="secondary" type="button" size="sm">
+					<Button
+						variant="secondary"
+						type="button"
+						size="sm"
+						data-testid={`${scope}-${type}-options`}
+					>
 						Options
 					</Button>
 				</PopoverTrigger>
