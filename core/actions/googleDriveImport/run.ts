@@ -34,7 +34,6 @@ export const run = defineRun<typeof action>(
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
 			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
-			console.log(formattedData.pubDescription)
 			/* MIGRATION */
 			// TODO: Check and make sure the relations exist, not just the pubs.
 
