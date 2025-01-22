@@ -353,7 +353,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 				</Tabs>
 				<div
 					ref={sidebarRef}
-					className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
+					className="fixed right-0 top-[72px] z-10 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
 				></div>
 			</FormBuilderProvider>
 		</TokenProvider>

@@ -14,7 +14,7 @@ const Heading = ({
 	right?: ReactNode;
 }) => {
 	return (
-		<header className="z-40 flex h-[72px] items-center justify-between border-b bg-gray-50 p-4 shadow-md">
+		<header className="z-20 flex h-[72px] items-center justify-between border-b bg-gray-50 p-4 shadow-md">
 			{COLLAPSIBLE_TYPE === "icon" ? null : <SidebarTrigger />}
 			{left}
 			<h1 className="text-lg font-semibold">

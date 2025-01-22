@@ -306,7 +306,7 @@ const LinkGroup = async ({
 	}
 
 	return (
-		<SidebarGroup>
+		<SidebarGroup className="group-data-[collapsible=icon]:py-0">
 			<SidebarGroupLabel className="font-semibold uppercase text-gray-500">
 				{group.name}
 			</SidebarGroupLabel>
@@ -325,8 +325,8 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 	}
 
 	return (
-		<Sidebar collapsible={COLLAPSIBLE_TYPE} className="group-data-[state=expanded]:py-3">
-			<SidebarHeader className="group-data-[state=expanded]:p-2">
+		<Sidebar collapsible={COLLAPSIBLE_TYPE}>
+			<SidebarHeader className="py-4 group-data-[state=expanded]:p-2 group-data-[collapsible=icon]:pt-5">
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
 						<CommunitySwitcher
@@ -335,10 +335,10 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 						/>
 					</SidebarMenuItem>
 				</SidebarMenu>
-				<SidebarSeparator className="mx-3" />
+				<SidebarSeparator className="group-data-[state=expanded]:mx-3 group-data-[collapsible=icon]:mt-3" />
 			</SidebarHeader>
-			<SidebarContent className="group-data-[state=expanded]:px-1">
-				<div className="flex h-full max-h-screen flex-col gap-2">
+			<SidebarContent className="group-data-[state=expanded]:px-1 group-data-[state=expanded]:py-3">
+				<div className="flex h-full max-h-screen flex-col group-data-[state=expanded]:gap-2">
 					<div className="flex-1">
 						<LinkGroup user={user} community={community} group={viewLinks} />
 						<LinkGroup user={user} community={community} group={manageLinks} />
@@ -346,7 +346,7 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 					</div>
 				</div>
 			</SidebarContent>
-			<SidebarFooter className="px-2">
+			<SidebarFooter className="px-2 pb-4">
 				<SidebarMenu>
 					<SidebarMenuItem>
 						<LoginSwitcher />
