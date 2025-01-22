@@ -1,4 +1,5 @@
 import path from "path";
+import { text } from "stream/consumers";
 
 import type { Element, Node, Root } from "hast";
 
@@ -74,7 +75,8 @@ export const tableToObjectArray = (node: any) => {
 		const tableType = getTextContent(cells[typeIndex]).trim().toLowerCase().replace(/\s+/g, "");
 		cells.forEach((cell: any, index: number) => {
 			if (
-				(!["math", "reference"].includes(tableType) && headers[index] === "value") ||
+				(!["math", "reference", "description"].includes(tableType) &&
+					headers[index] === "value") ||
 				headers[index] === "caption"
 			) {
 				obj[headers[index]] = cell.children;
@@ -87,6 +89,26 @@ export const tableToObjectArray = (node: any) => {
 	});
 
 	return data;
+};
+
+export const getDescription = (htmlString: string): string => {
+	let description = "";
+	rehype()
+		.use(() => (tree: Root) => {
+			visit(tree, "element", (node: any) => {
+				if (node.tagName === "table") {
+					const tableData: any = tableToObjectArray(node);
+					const tableType = tableData[0].type;
+					if (tableType === "description") {
+						description = tableData[0].value;
+						return false;
+					}
+				}
+			});
+		})
+		.processSync(htmlString);
+
+	return description;
 };
 
 export const insertVariables = (tree: Root, varName: string, node: any) => {
@@ -213,7 +235,7 @@ export const structureImages = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id },
+					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
 					children: [
 						{
 							type: "element",
@@ -247,7 +269,7 @@ export const structureVideos = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id },
+					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
 					children: [
 						{
 							type: "element",
@@ -298,7 +320,7 @@ export const structureAudio = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id },
+					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
 					children: [
 						{
 							type: "element",
@@ -392,7 +414,7 @@ export const structureIframes = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id },
+					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
 					children: [
 						{
 							type: "element",
@@ -401,6 +423,7 @@ export const structureIframes = () => (tree: Root) => {
 								src: data.source,
 								frameborder: "0",
 								"data-fallback-image": data.staticimage,
+								height: data.height,
 							},
 						},
 						{
@@ -677,4 +700,114 @@ export const processLocalLinks = () => (tree: Root) => {
 			node.properties.href = href.split("local.pubpub/")[1].split("&")[0];
 		}
 	});
+};
+
+export const removeEmptyFigCaption = () => (tree: Root) => {
+	const nextTree = filter(tree, (node: any) => {
+		if (node.type === "element" && node.tagName === "figcaption") {
+			const textContent = getTextContent(node);
+			return textContent.trim().length > 0;
+		}
+		return true;
+	});
+	return nextTree;
+};
+
+export const formatLists = () => (tree: Root) => {
+	const groupItems = (items: any[]): any[] => {
+		const result: any[] = [];
+		const stack: any[] = [];
+
+		items.forEach((item) => {
+			while (stack.length && stack[stack.length - 1].level >= item.level) {
+				stack.pop();
+			}
+
+			if (stack.length) {
+				const parent = stack[stack.length - 1];
+				if (!parent.childItems) {
+					parent.childItems = [];
+				}
+				parent.childItems.push(item);
+			} else {
+				result.push(item);
+			}
+
+			stack.push(item);
+		});
+
+		return result;
+	};
+
+	const createNestedList = (items: any[], listType: string) => {
+		const nestedList: Element = {
+			type: "element",
+			tagName: items[0].parentListType,
+			properties: {},
+			children: items.map((item: any) => {
+				const listItem: Element = {
+					type: "element",
+					tagName: "li",
+					properties: item.properties,
+					children: item.children,
+				};
+
+				if (item.childItems) {
+					listItem.children.push(createNestedList(item.childItems, listType));
+				}
+
+				return listItem;
+			}),
+		};
+
+		return nestedList;
+	};
+	visit(tree, "element", (node: any, index: any, parent: any) => {
+		if (node.tagName === "ul" || node.tagName === "ol") {
+			const listType = node.tagName;
+			const siblings = [];
+			let currentIndex = index;
+			while (
+				parent.children[currentIndex] &&
+				["ol", "ul"].includes(parent.children[currentIndex].tagName)
+			) {
+				siblings.push(parent.children[currentIndex]);
+				currentIndex++;
+			}
+			const items = siblings
+				.flatMap((sibling: any) =>
+					sibling.children.map((x: any) => ({ ...x, parentListType: sibling.tagName }))
+				)
+				.filter((child) => {
+					return child.tagName === "li";
+				})
+				.map((item) => {
+					return {
+						...item,
+						level: parseInt(
+							item.properties?.style?.match(/margin-left:\s*(\d+)p(t|x)/)?.[1] || "0",
+							10
+						),
+					};
+				});
+			const groupedItems = groupItems(items);
+			const nestedList = createNestedList(groupedItems, listType);
+
+			parent.children.splice(index, siblings.length, nestedList);
+		}
+	});
+};
+
+export const removeDescription = () => (tree: Root) => {
+	const nextTree = filter(tree, (node: any) => {
+		if (node.tagName === "table") {
+			const tableData: any = tableToObjectArray(node);
+			const tableType = tableData[0].type;
+			if (tableType === "description") {
+				return false;
+			}
+		}
+		return true;
+	});
+	return nextTree;
 };

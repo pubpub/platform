@@ -7,7 +7,11 @@ import type { PubsId } from "db/public";
 
 import type { DriveData } from "./getGDriveFiles";
 import {
+	formatLists,
+	getDescription,
 	processLocalLinks,
+	removeDescription,
+	removeEmptyFigCaption,
 	removeGoogleLinkForwards,
 	removeVerboseFormatting,
 	structureAnchors,
@@ -27,6 +31,7 @@ import {
 } from "./gdocPlugins";
 
 export type FormattedDriveData = {
+	pubDescription: string;
 	pubHtml: string;
 	versions: {
 		[description: `${string}:description`]: string;
@@ -39,6 +44,7 @@ export type FormattedDriveData = {
 const processHtml = async (html: string): Promise<string> => {
 	const result = await rehype()
 		.use(structureFormatting)
+		.use(formatLists)
 		.use(removeVerboseFormatting)
 		.use(removeGoogleLinkForwards)
 		.use(processLocalLinks)
@@ -55,6 +61,8 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(structureAnchors)
 		.use(structureReferences)
 		.use(structureFootnotes)
+		.use(removeEmptyFigCaption)
+		.use(removeDescription)
 		.use(rehypeFormat)
 		.process(html);
 	return String(result);
@@ -66,8 +74,15 @@ export const formatDriveData = async (
 ): Promise<FormattedDriveData> => {
 	const formattedPubHtml = await processHtml(dataFromDrive.pubHtml);
 
+	/* Check for a description in the most recent version */
+	const latestRawVersion = dataFromDrive.versions.reduce((latest, version) => {
+		return new Date(version.timestamp) > new Date(latest.timestamp) ? version : latest;
+	}, dataFromDrive.versions[0]);
+	const latestPubDescription = latestRawVersion && getDescription(latestRawVersion.html);
+
+	/* Align versions to releases in legacy data and process HTML */
 	const releases: any = dataFromDrive.legacyData?.releases || [];
-	const findDescription = (timestamp: string) => {
+	const findVersionDescription = (timestamp: string) => {
 		const matchingRelease = releases.find((release: any) => {
 			return release.createdAt === timestamp;
 		});
@@ -82,7 +97,7 @@ export const formatDriveData = async (
 	const versions = dataFromDrive.versions.map((version) => {
 		const { timestamp, html } = version;
 		const outputVersion: any = {
-			[`${communitySlug}:description`]: findDescription(timestamp),
+			[`${communitySlug}:description`]: findVersionDescription(timestamp),
 			[`${communitySlug}:publication-date`]: timestamp,
 			[`${communitySlug}:content`]: html,
 		};
@@ -161,6 +176,7 @@ export const formatDriveData = async (
 	const comments = discussions ? flattenComments(discussions) : [];
 
 	const output = {
+		pubDescription: latestPubDescription,
 		pubHtml: String(formattedPubHtml),
 		versions,
 		discussions: comments,
