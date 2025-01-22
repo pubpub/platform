@@ -31,8 +31,12 @@ export default function NavLink({ href, text, icon, count, isChild, hasChildren,
 	const content = (
 		<Link href={href} className="relative">
 			{icon ? icon : null}
-			<div className="flex-auto text-sm">{text}</div>
-			{count && <div className="rounded-md border border-gray-200 px-2 text-sm">{count}</div>}
+			<span className="flex-auto whitespace-nowrap text-sm transition-opacity group-data-[collapsible=icon]:opacity-0">
+				{text}
+			</span>
+			{count && (
+				<span className="rounded-md border border-gray-200 px-2 text-sm">{count}</span>
+			)}
 		</Link>
 	);
 
