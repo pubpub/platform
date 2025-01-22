@@ -1119,8 +1119,6 @@ export const updatePub = async ({
 			pubValues: normalizedValues,
 			communityId,
 			continueOnValidationError,
-			// do not update relations, and error if a relation slug is included
-			includeRelations: false,
 		});
 
 		if (!pubValuesWithSchemaNameAndFieldId.length) {
@@ -1129,6 +1127,9 @@ export const updatePub = async ({
 				report: "Pub not updated, no pub values to update",
 			};
 		}
+
+		// separate out relation fields
+		// call replacePubRelationsBySlug
 
 		const result = await autoRevalidate(
 			trx

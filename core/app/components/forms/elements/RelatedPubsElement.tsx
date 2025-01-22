@@ -15,40 +15,51 @@ import { Plus, Trash } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
+import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import type { ElementProps } from "../types";
 import type { GetPubsResult } from "~/lib/server";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
-import { TextInputElement } from "./TextInputElement";
+import { PubFieldFormElement } from "../PubFieldFormElement";
 
 const RelatedPubBlock = ({
 	pub,
 	onRemove,
 	valueComponent,
+	slug,
 }: {
 	pub: Pick<GetPubsResult[number], "title" | "id">;
 	onRemove: () => void;
 	valueComponent: ReactNode;
+	slug: string;
 }) => {
 	const { title, id } = pub;
+	const { watch } = useFormContext();
+	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
+	const value = watch(slug);
+	const showValue = value != null && value !== "" && !isPopoverOpen;
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
 			<div className="flex flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{title || id}</span>
-				<Popover>
-					<PopoverTrigger asChild>
-						<Button
-							variant="link"
-							size="sm"
-							className="flex h-4 gap-1 p-0 text-blue-500"
-						>
-							{/* TODO: the type of 'add', i.e. 'Add Role' */}
-							Add <Plus size={12} />
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent side="bottom">{valueComponent}</PopoverContent>
-				</Popover>
+				{showValue ? (
+					value.toString()
+				) : (
+					<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
+						<PopoverTrigger asChild>
+							<Button
+								variant="link"
+								size="sm"
+								className="flex h-4 gap-1 p-0 text-blue-500"
+							>
+								{/* TODO: the type of 'add', i.e. 'Add Role' */}
+								Add <Plus size={12} />
+							</Button>
+						</PopoverTrigger>
+						<PopoverContent side="bottom">{valueComponent}</PopoverContent>
+					</Popover>
+				)}
 			</div>
 			<div>
 				<Button
@@ -69,12 +80,24 @@ type FormValue = {
 	[slug: string]: FieldValue[];
 };
 
+export const InnerValue = ({
+	slug,
+	element,
+	...props
+}: PubFieldFormElementProps & { slug: string }) => {
+	const label = element.config.label || element.label || slug;
+
+	return <PubFieldFormElement {...props} element={element} slug={slug} label={label} />;
+};
+
 export const RelatedPubsElement = ({
 	slug,
 	label,
 	config,
-	valueComponent,
-}: ElementProps<InputComponent.relationBlock> & { valueComponent: ReactNode }) => {
+	valueComponentProps,
+}: ElementProps<InputComponent.relationBlock> & {
+	valueComponentProps: PubFieldFormElementProps;
+}) => {
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
 	const { control } = useFormContext<FormValue>();
@@ -142,16 +165,17 @@ export const RelatedPubsElement = ({
 													const handleRemovePub = () => {
 														remove(index);
 													};
+													const innerSlug = `${slug}.${index}.value`;
 													return (
 														<RelatedPubBlock
 															key={item.id}
 															pub={pubsById[item.relatedPubId]}
 															onRemove={handleRemovePub}
+															slug={innerSlug}
 															valueComponent={
-																<TextInputElement
-																	label={config.label}
-																	slug={`${slug}.${index}.value`}
-																	config={config}
+																<InnerValue
+																	{...valueComponentProps}
+																	slug={innerSlug}
 																/>
 															}
 														/>
