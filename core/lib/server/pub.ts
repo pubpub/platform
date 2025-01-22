@@ -1157,7 +1157,7 @@ export const updatePub = async ({
 				trx
 					.insertInto("pub_values")
 					.values(
-						pubValuesWithRelations.map(({ value, fieldId }) => ({
+						pubValuesWithoutRelations.map(({ value, fieldId }) => ({
 							pubId,
 							fieldId,
 							value: JSON.stringify(value),
