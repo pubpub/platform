@@ -21,7 +21,11 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<div className="flex cursor-pointer items-center rounded p-1 hover:bg-gray-200 md:p-2">
+				<div
+					className="flex cursor-pointer items-center rounded p-1 hover:bg-gray-200 md:p-2"
+					role="button"
+					aria-label="Select a community"
+				>
 					<Avatar className={avatarClasses}>
 						<AvatarImage src={community.avatar || undefined} />
 						<AvatarFallback>{community.name[0]}</AvatarFallback>

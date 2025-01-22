@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 
 import { LoginPage } from "./fixtures/login-page";
 import { inbucketClient } from "./helpers";
-import * as loginFlows from "./login.flows";
 
 test.describe("general auth", () => {
 	test("Login with invalid credentials", async ({ page }) => {
@@ -104,4 +103,26 @@ test.describe("Auth with lucia", () => {
 
 		await page.waitForURL(/\/c\/\w+\/stages/);
 	});
+});
+
+test("Last visited community is remembered", async ({ page }) => {
+	const unjournalRegex = new RegExp("/c/unjournal/");
+	const croccrocRegex = new RegExp("/c/croccroc/");
+	const loginPage = new LoginPage(page);
+
+	// Login and visit default community
+	await loginPage.goto();
+	await loginPage.loginAndWaitForNavigation("all@pubpub.org", "pubpub-all");
+	await expect(page).toHaveURL(unjournalRegex);
+
+	// Switch communities and logout
+	await page.getByRole("button", { name: "Select a community" }).click();
+	await page.getByRole("menuitem", { name: "CrocCroc" }).click();
+	await page.waitForURL(croccrocRegex);
+	await page.getByRole("button", { name: "Logout" }).click();
+
+	// Log back in and switched community should be remembered
+	await page.waitForURL("/login");
+	await loginPage.loginAndWaitForNavigation("all@pubpub.org", "pubpub-all");
+	await expect(page).toHaveURL(croccrocRegex);
 });
