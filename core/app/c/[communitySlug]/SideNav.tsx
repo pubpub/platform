@@ -192,10 +192,12 @@ const Links = ({
 	user,
 	community,
 	links,
+	groupName,
 }: {
 	user: User;
 	community: Communities;
 	links: LinkDefinition[];
+	groupName?: string;
 }) => {
 	return (
 		<>
@@ -203,7 +205,12 @@ const Links = ({
 				if (!("children" in link)) {
 					return (
 						<Suspense fallback={<SidebarMenuSkeleton />} key={link.href || link.text}>
-							<Link user={user} community={community} link={link} />
+							<Link
+								user={user}
+								community={community}
+								link={link}
+								groupName={groupName}
+							/>
 						</Suspense>
 					);
 				}
@@ -220,10 +227,12 @@ const Link = async ({
 	user,
 	community,
 	link,
+	groupName,
 }: {
 	user: User;
 	community: Communities;
 	link: TopLevelLinkDefinition | SubLevelLinkDefinition;
+	groupName?: string;
 }) => {
 	if (link.authorization) {
 		const userCan = await link.authorization(user.id, community.id);
@@ -239,6 +248,7 @@ const Link = async ({
 			text={link.text}
 			icon={link.icon}
 			pattern={link.pattern}
+			groupName={groupName}
 			hasChildren
 			isChild={false}
 		/>
@@ -311,7 +321,12 @@ const LinkGroup = async ({
 				{group.name}
 			</SidebarGroupLabel>
 			<SidebarGroupContent className="group-data-[state=expanded]:px-2">
-				<Links user={user} community={community} links={group.links} />
+				<Links
+					user={user}
+					community={community}
+					links={group.links}
+					groupName={group.name}
+				/>
 			</SidebarGroupContent>
 		</SidebarGroup>
 	);

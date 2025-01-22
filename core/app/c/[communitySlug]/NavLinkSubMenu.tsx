@@ -13,6 +13,7 @@ import {
 	SidebarMenuSub,
 	useSidebar,
 } from "ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 export const NavLinkSubMenu = ({
 	icon,
@@ -27,7 +28,7 @@ export const NavLinkSubMenu = ({
 }) => {
 	const [open, persistOpen] = useLocalStorage<boolean>(`nav-link-sub-menu-open-${text}`);
 	const [actuallyOpen, setActuallyOpen] = useState(false);
-	const { setOpen: setSidebarOpen, state: sidebarState } = useSidebar();
+	const { setOpen: setSidebarOpen, state: sidebarState, state: sideBarState } = useSidebar();
 
 	useEffect(() => {
 		setActuallyOpen(open ?? false);
@@ -50,25 +51,35 @@ export const NavLinkSubMenu = ({
 				className="group/collapsible"
 			>
 				<SidebarMenuItem className="list-none">
-					<CollapsibleTrigger asChild>
-						{parentLink ?? (
-							<SidebarMenuButton
-								className="relative"
-								onClick={() => {
-									// if we are in "icon" mode, we expand the sidebar if you click on a submenu
-									if (sidebarState === "collapsed") {
-										setSidebarOpen(true);
-										setActuallyOpen(true);
-										persistOpen(true);
-									}
-								}}
-							>
-								{icon}
-								<span className="flex-auto text-sm">{text}</span>
-								<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
-							</SidebarMenuButton>
-						)}
-					</CollapsibleTrigger>
+					<Tooltip
+						delayDuration={300}
+						open={sideBarState === "expanded" ? false : undefined}
+					>
+						<TooltipTrigger asChild>
+							<CollapsibleTrigger asChild>
+								{parentLink ?? (
+									<SidebarMenuButton
+										className="relative"
+										onClick={() => {
+											// if we are in "icon" mode, we expand the sidebar if you click on a submenu
+											if (sidebarState === "collapsed") {
+												setSidebarOpen(true);
+												setActuallyOpen(true);
+												persistOpen(true);
+											}
+										}}
+									>
+										{icon}
+										<span className="flex-auto text-sm">{text}</span>
+										<ChevronDown className="h-4 w-4 transition-transform group-data-[collapsible=icon]:hidden group-data-[state=closed]/collapsible:-rotate-90" />
+									</SidebarMenuButton>
+								)}
+							</CollapsibleTrigger>
+						</TooltipTrigger>
+						<TooltipContent side="right">
+							<span className="text-xs">Open {text} menu</span>
+						</TooltipContent>
+					</Tooltip>
 				</SidebarMenuItem>
 				<CollapsibleContent>
 					<SidebarMenuSub className="group-data-[collapsible=icon]:hidden">

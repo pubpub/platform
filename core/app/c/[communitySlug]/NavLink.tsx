@@ -4,7 +4,9 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { SidebarMenuButton, SidebarMenuSubButton } from "ui/sidebar";
+import { SidebarMenuButton, SidebarMenuSubButton, useSidebar } from "ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { cn } from "utils";
 
 type Props = {
 	href: string;
@@ -16,11 +18,21 @@ type Props = {
 	// by default it's `c\\/.*?${href}`
 	pattern?: string;
 	hasChildren?: boolean;
+	groupName?: string;
 };
 
-export default function NavLink({ href, text, icon, count, isChild, hasChildren, pattern }: Props) {
+export default function NavLink({
+	href,
+	groupName,
+	text,
+	icon,
+	count,
+	isChild,
+	hasChildren,
+	pattern,
+}: Props) {
 	const pathname = usePathname();
-
+	const { state: sideBarState } = useSidebar();
 	const regex = React.useMemo(
 		() => (pattern ? new RegExp(`c\\/.*?${pattern}`) : new RegExp(href)),
 		[pattern, href]
@@ -31,7 +43,7 @@ export default function NavLink({ href, text, icon, count, isChild, hasChildren,
 	const content = (
 		<Link href={href} className="relative">
 			{icon ? icon : null}
-			<span className="flex-auto whitespace-nowrap text-sm transition-opacity group-data-[collapsible=icon]:opacity-0">
+			<span className="flex-auto text-sm transition-opacity group-data-[collapsible=icon]:opacity-0">
 				{text}
 			</span>
 			{count && (
@@ -40,13 +52,23 @@ export default function NavLink({ href, text, icon, count, isChild, hasChildren,
 		</Link>
 	);
 
-	return isChild ? (
-		<SidebarMenuSubButton isActive={isActive} asChild>
-			{content}
-		</SidebarMenuSubButton>
-	) : (
-		<SidebarMenuButton isActive={isActive} asChild>
-			{content}
-		</SidebarMenuButton>
+	return (
+		<Tooltip delayDuration={300} open={sideBarState === "expanded" ? false : undefined}>
+			<TooltipTrigger asChild>
+				{isChild ? (
+					<SidebarMenuSubButton isActive={isActive} asChild>
+						{content}
+					</SidebarMenuSubButton>
+				) : (
+					<SidebarMenuButton isActive={isActive} asChild>
+						{content}
+					</SidebarMenuButton>
+				)}
+			</TooltipTrigger>
+
+			<TooltipContent side="right">
+				<p className="text-xs">{groupName ? `${groupName} - ${text}` : text}</p>
+			</TooltipContent>
+		</Tooltip>
 	);
 }
