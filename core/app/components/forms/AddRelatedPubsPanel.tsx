@@ -72,6 +72,7 @@ export const AddRelatedPubsPanel = ({
 			.map((selection) => selection[0] as PubsId);
 		const selectedPubs = pubs.filter((p) => selectedPubIds.includes(p.id));
 		onAdd(selectedPubs);
+		onCancel();
 	};
 
 	return (

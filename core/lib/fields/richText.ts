@@ -53,7 +53,7 @@ export const parseRichTextForPubFieldsAndRelatedPubs = <T extends JsonValue>({
 	pubId: PubsId;
 	values: Record<string, T>;
 }) => {
-	const newValues = structuredClone(values);
+	const newValues: Record<string, T | string> = structuredClone(values);
 	const pubs: PubCreate[] = [];
 
 	// Find a rich text value if one exists

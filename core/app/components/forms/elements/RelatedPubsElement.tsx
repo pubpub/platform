@@ -85,7 +85,8 @@ export const InnerValue = ({
 	element,
 	...props
 }: PubFieldFormElementProps & { slug: string }) => {
-	const label = element.config.label || element.label || slug;
+	const configLabel = "label" in element.config ? element.config.label : undefined;
+	const label = configLabel || element.label || slug;
 
 	return <PubFieldFormElement {...props} element={element} slug={slug} label={label} />;
 };
@@ -121,26 +122,23 @@ export const RelatedPubsElement = ({
 		);
 	}, [pubs]);
 
+	const linkedPubs = fields.map((f) => f.relatedPubId);
+	const linkablePubs = pubs
+		// do not allow linking to itself or any pubs it is already linked to
+		.filter((p) => p.id !== pubId && !linkedPubs.includes(p.id));
+
 	return (
 		<>
 			<FormField
 				control={control}
 				name={slug}
 				render={({ field }) => {
-					const linkedPubs = Array.isArray(field.value)
-						? field.value.map((v: FieldValue) => v.relatedPubId)
-						: [];
-					const linkablePubs = pubs
-						// do not allow linking to itself or any pubs it is already linked to
-						.filter((p) => p.id !== pubId && !linkedPubs.includes(p.id));
-
 					const handleAddPubs = (newPubs: GetPubsResult) => {
 						const values = newPubs.map((p) => ({ relatedPubId: p.id, value: null }));
 						for (const value of values) {
 							append(value);
 						}
 					};
-
 					return (
 						<FormItem>
 							{showPanel && (
@@ -159,7 +157,7 @@ export const RelatedPubsElement = ({
 										disabled={!isEnabled}
 										onAdd={() => setShowPanel(true)}
 									>
-										{Array.isArray(field.value) ? (
+										{fields.length ? (
 											<div className="flex flex-col gap-2">
 												{fields.map((item, index) => {
 													const handleRemovePub = () => {
