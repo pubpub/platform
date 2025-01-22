@@ -9,6 +9,7 @@ import type {
 
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import partition from "lodash.partition";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
@@ -1128,34 +1129,56 @@ export const updatePub = async ({
 			};
 		}
 
-		// separate out relation fields
-		// call replacePubRelationsBySlug
+		// Separate into fields with relationships and those without
+		const [pubValuesWithRelations, pubValuesWithoutRelations] = partition(
+			pubValuesWithSchemaNameAndFieldId,
+			(pv) => pv.relatedPubId
+		);
 
-		const result = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
-						pubId,
-						fieldId,
-						value: JSON.stringify(value),
-						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						// we have a unique index on pubId and fieldId where relatedPubId is null
-						.columns(["pubId", "fieldId"])
-						.where("relatedPubId", "is", null)
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+		if (pubValuesWithRelations.length) {
+			await replacePubRelationsBySlug({
+				pubId,
+				relations: pubValuesWithRelations.map(
+					(pv) =>
+						({
+							value: pv.value,
+							slug: pv.slug,
+							relatedPubId: pv.relatedPubId,
+						}) as AddPubRelationsInput
+				),
+				communityId,
+				lastModifiedBy,
+				trx,
+			});
+		}
+
+		if (pubValuesWithoutRelations.length) {
+			const result = await autoRevalidate(
+				trx
+					.insertInto("pub_values")
+					.values(
+						pubValuesWithRelations.map(({ value, fieldId }) => ({
+							pubId,
+							fieldId,
+							value: JSON.stringify(value),
+							lastModifiedBy,
 						}))
-				)
-				.returningAll()
-		).execute();
+					)
+					.onConflict((oc) =>
+						oc
+							// we have a unique index on pubId and fieldId where relatedPubId is null
+							.columns(["pubId", "fieldId"])
+							.where("relatedPubId", "is", null)
+							.doUpdateSet((eb) => ({
+								value: eb.ref("excluded.value"),
+								lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+							}))
+					)
+					.returningAll()
+			).execute();
 
-		return result;
+			return result;
+		}
 	});
 
 	return result;
