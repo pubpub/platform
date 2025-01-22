@@ -1,5 +1,4 @@
 import path from "path";
-import { text } from "stream/consumers";
 
 import type { Element, Node, Root } from "hast";
 
