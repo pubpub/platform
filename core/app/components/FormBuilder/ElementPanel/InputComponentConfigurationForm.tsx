@@ -8,7 +8,7 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
 import { useForm } from "react-hook-form";
-import { componentConfigSchemas, componentsBySchema } from "schemas";
+import { componentConfigSchemas, componentsBySchema, relationBlockConfigSchema } from "schemas";
 
 import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
@@ -20,6 +20,7 @@ import { useUnsavedChangesWarning } from "ui/hooks";
 import { ImagePlus } from "ui/icon";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
+import { MultiBlock } from "ui/multiblock";
 import { MultiValueInput } from "ui/multivalue-input";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import {
@@ -39,7 +40,6 @@ import type { ConfigFormData } from "./ComponentConfig/types";
 import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
-import { isFieldInput } from "../types";
 import { ComponentConfig } from "./ComponentConfig";
 
 type SchemaComponentData = {
@@ -177,6 +177,17 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			);
 		},
 	},
+	[InputComponent.relationBlock]: {
+		name: "Relation Block",
+		demoComponent: () => {
+			return (
+				<div className="flex w-full flex-col gap-1 text-left text-sm">
+					<div className="text-gray-500">Label</div>
+					<MultiBlock title="Pub Relation" disabled />
+				</div>
+			);
+		},
+	},
 } as const;
 
 const ComponentSelect = ({
@@ -184,11 +195,13 @@ const ComponentSelect = ({
 	onChange,
 	value,
 	element,
+	radioName = "component",
 }: {
 	components: InputComponent[];
 	value: InputComponent;
 	onChange: (component: InputComponent) => void;
 	element: InputElement;
+	radioName?: string;
 }) => {
 	return (
 		<div className="grid grid-cols-2 gap-3">
@@ -202,7 +215,7 @@ const ComponentSelect = ({
 						need to render buttons. */}
 						<input
 							id={`component-${c}`}
-							name="component"
+							name={radioName}
 							type="radio"
 							className="peer sr-only"
 							defaultChecked={selected}
@@ -246,21 +259,28 @@ type Props = {
 export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Props) => {
 	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
 
-	const { schemaName } = fieldInputElement;
+	const { schemaName, isRelation } = fieldInputElement;
 	const allowedComponents = componentsBySchema[schemaName];
 
-	const form = useForm<ConfigFormData<(typeof allowedComponents)[number]>>({
+	const defaultConfig = isRelation
+		? { relationshipConfig: { component: InputComponent.relationBlock } }
+		: {};
+
+	const form = useForm<ConfigFormData<InputComponent>>({
 		// Dynamically set the resolver so that the schema can update based on the selected component
 		resolver: (values, context, options) => {
 			const schema = Type.Object({
 				required: Nullable(Type.Boolean({ default: true })),
-				component: Type.Enum(InputComponent),
-				config: componentConfigSchemas[values.component],
+				component: Nullable(Type.Enum(InputComponent)),
+				// If there is no `component`, it is Null, and so will only have the relationBlockConfigSchema
+				config: values.component
+					? componentConfigSchemas[values.component]
+					: relationBlockConfigSchema,
 			});
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
 		},
-		defaultValues: fieldInputElement,
+		defaultValues: { ...fieldInputElement, config: fieldInputElement.config ?? defaultConfig },
 	});
 
 	useUnsavedChangesWarning(form.formState.isDirty);
@@ -268,8 +288,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 	const component = form.watch("component");
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
+		const schema = isRelation
+			? Type.Composite([relationBlockConfigSchema, componentConfigSchemas[values.component]])
+			: componentConfigSchemas[values.component];
 		// Some `config` schemas have extra values which persist if we don't Clean first
-		const cleanedConfig = Value.Clean(componentConfigSchemas[values.component], values.config);
+		const cleanedConfig = Value.Clean(schema, values.config);
 		update(index, {
 			...fieldInputElement,
 			...values,
@@ -283,6 +306,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 		() => <ComponentConfig schemaName={schemaName} form={form} component={component} />,
 		[component, schemaName]
 	);
+
+	// If this is a relationship field, the first component selector on the page will be for the relationship,
+	// not the value itself.
+	const componentSelector = isRelation ? "config.relationshipConfig.component" : "component";
+
 	return (
 		<Form {...form}>
 			<form
@@ -299,16 +327,55 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				<hr />
 				<FormField
 					control={form.control}
-					name="component"
+					name={componentSelector}
 					render={({ field }) => (
 						<ComponentSelect
 							onChange={field.onChange}
 							value={field.value}
 							element={fieldInputElement}
-							components={allowedComponents}
+							components={
+								isRelation ? [InputComponent.relationBlock] : allowedComponents
+							}
+							radioName={componentSelector}
 						/>
 					)}
 				/>
+
+				{isRelation ? (
+					<>
+						<ComponentConfig
+							schemaName={schemaName}
+							form={form}
+							component={InputComponent.relationBlock}
+						/>
+						{schemaName !== CoreSchemaType.Null && (
+							<>
+								<div className="text-sm uppercase text-muted-foreground">
+									Relation value
+								</div>
+								<hr />
+								<div className="text-sm uppercase text-muted-foreground">
+									Appearance
+								</div>
+								<hr />
+								{/* Component selector for the relationship value itself */}
+								<FormField
+									control={form.control}
+									name="component"
+									render={({ field }) => (
+										<ComponentSelect
+											onChange={field.onChange}
+											value={field.value}
+											element={fieldInputElement}
+											components={allowedComponents}
+											radioName="component"
+										/>
+									)}
+								/>
+							</>
+						)}
+					</>
+				) : null}
 				{configForm}
 				<hr className="mt-4" />
 				{component !== InputComponent.checkbox && (

@@ -18,7 +18,7 @@ const toDynamic = (path: string) =>
 		loading: () => <Skeleton className="h-full w-full" />,
 	});
 
-const InputCompomentMap = {
+const InputComponentMap = {
 	[InputComponent.checkbox]: toDynamic("Checkbox"),
 	[InputComponent.checkboxGroup]: toDynamic("CheckboxGroup"),
 	[InputComponent.confidenceInterval]: toDynamic("ConfidenceInterval"),
@@ -31,15 +31,21 @@ const InputCompomentMap = {
 	[InputComponent.textArea]: toDynamic("TextArea"),
 	[InputComponent.textInput]: toDynamic("TextInput"),
 	[InputComponent.richText]: toDynamic("RichText"),
+	[InputComponent.relationBlock]: toDynamic("RelationBlock"),
 };
 
 export const ComponentConfig = <I extends InputComponent>(props: ComponentConfigFormProps<I>) => {
 	// ideally the compenent would be selected through some (generic) function, but for `dynamic`
 	// to work properly the components need to be defined already outside of the react tree,
 	// hence the map and the type cast
-	const ConfigComponent = InputCompomentMap[props.component] as React.FC<
+	const ConfigComponent = InputComponentMap[props.component] as React.FC<
 		ComponentConfigFormProps<I>
 	>;
+
+	// This is the CoreSchemaType.Null case
+	if (!ConfigComponent) {
+		return null;
+	}
 
 	return <ConfigComponent {...props} />;
 };

@@ -6,6 +6,7 @@ export {
 	ArrowLeft,
 	ArrowRight,
 	BadgeCheck,
+	BookDashed,
 	Bookmark,
 	BoxSelect,
 	Calendar,
