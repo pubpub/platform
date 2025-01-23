@@ -37,7 +37,7 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 						<PlusCircle /> Add New
 					</Button>
 					<div className="mt-8">
-						<FormLabel className="text-slate-500">Slug</FormLabel>
+						<FormLabel className="text-gray-500">Slug</FormLabel>
 						<hr className="my-2" />
 						<Input disabled value={slug} />
 					</div>
