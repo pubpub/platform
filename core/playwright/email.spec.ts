@@ -81,10 +81,8 @@ test.describe("Sending an email to an email address", () => {
 		// Invite a new user to fill out the form
 		await runActionDialog.getByLabel("Recipient email address").fill(email);
 
-		await runActionDialog
-			.getByLabel("Email subject")
-			.fill("Test invitation for :RecipientFirstName");
-		await runActionDialog.getByLabel("Email body").fill("hello");
+		await runActionDialog.getByLabel("Email subject").fill("Hello");
+		await runActionDialog.getByLabel("Email body").fill("Greetings");
 
 		await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
 		await page.getByRole("status").filter({ hasText: "Action ran successfully!" }).waitFor();
