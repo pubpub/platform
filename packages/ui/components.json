@@ -3,10 +3,11 @@
 	"style": "new-york",
 	"rsc": true,
 	"tsx": true,
+	"iconLibrary": "lucide",
 	"tailwind": {
 		"config": "tailwind.config.cjs",
-		"css": "../../core/app/globals.css",
-		"baseColor": "slate",
+		"css": "./styles.css",
+		"baseColor": "gray",
 		"cssVariables": false
 	},
 	"aliases": {

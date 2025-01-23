@@ -23,6 +23,10 @@ export default function ResetForm() {
 	const router = useRouter();
 	const form = useForm<z.infer<typeof resetPasswordSchema>>({
 		resolver: zodResolver(resetPasswordSchema),
+		defaultValues: {
+			// in order to prevent "Form changed from uncontrolled to controlled" React errors
+			password: "",
+		},
 	});
 	const runResetPassword = useServerAction(resetPassword);
 
@@ -84,11 +88,9 @@ export default function ResetForm() {
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Success</DialogTitle>
-						<DialogDescription>
-							<p className="flex flex-col gap-2">
-								<span className="text-green-700">Success - password reset!</span>
-								Redirecting in 5 seconds...
-							</p>
+						<DialogDescription className="flex flex-col gap-2">
+							<span className="text-green-700">Success - password reset!</span>
+							Redirecting in 5 seconds...
 						</DialogDescription>
 					</DialogHeader>
 				</DialogContent>

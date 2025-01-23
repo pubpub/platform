@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 import { LoginPage } from "./fixtures/login-page";
-import { inbucketClient } from "./helpers";
+import { inbucketClient, retryAction } from "./helpers";
 import * as loginFlows from "./login.flows";
 
 test.describe("general auth", () => {
@@ -17,13 +17,13 @@ test.describe("Auth with lucia", () => {
 	test("Login as a lucia user", async ({ page }) => {
 		const loginPage = new LoginPage(page);
 		await loginPage.goto();
-		await loginPage.loginAndWaitForNavigation("new@pubpub.org", "pubpub-new");
+		await loginPage.loginAndWaitForNavigation("all@pubpub.org", "pubpub-all");
 	});
 
 	test("Logout as a lucia user", async ({ page }) => {
 		const loginPage = new LoginPage(page);
 		await loginPage.goto();
-		await loginPage.loginAndWaitForNavigation("new@pubpub.org", "pubpub-new");
+		await loginPage.loginAndWaitForNavigation("all@pubpub.org", "pubpub-all");
 
 		const cookies = await page.context().cookies();
 		expect(cookies.find((cookie) => cookie.name === "auth_session")).toBeTruthy();
@@ -33,6 +33,9 @@ test.describe("Auth with lucia", () => {
 			)
 		).toBeFalsy();
 
+		await page.getByTestId("user-menu-button").waitFor();
+
+		await page.getByTestId("user-menu-button").click();
 		await page.getByRole("button", { name: "Logout" }).click();
 		await page.waitForURL("/login");
 
@@ -44,11 +47,11 @@ test.describe("Auth with lucia", () => {
 		// through forgot form
 		await page.goto("/forgot");
 		await page.getByRole("textbox").click();
-		await page.getByRole("textbox").fill("new@pubpub.org");
+		await page.getByRole("textbox").fill("some@pubpub.org");
 		await page.getByRole("button", { name: "Send reset email" }).click();
 		await page.getByRole("button", { name: "Close" }).click();
 
-		const message = await (await inbucketClient.getMailbox("new")).getLatestMessage();
+		const message = await (await inbucketClient.getMailbox("some")).getLatestMessage();
 
 		const url = message.message.body.text?.match(/(http:\/\/.*?reset)\s/)?.[1];
 		await message.delete();
@@ -61,26 +64,28 @@ test.describe("Auth with lucia", () => {
 
 		await page.waitForURL("/reset");
 		await page.getByRole("textbox").click();
-		await page.getByRole("textbox").fill("new-pubpub");
+		await page.getByRole("textbox").fill("some-pubpub");
 		await page.getByRole("button", { name: "Set new password" }).click();
 
 		await page.waitForURL("/login");
 
 		// through settings
-		await page.getByPlaceholder("m@example.com").click();
-		await page.getByPlaceholder("m@example.com").fill("new@pubpub.org");
-		await page.getByPlaceholder("m@example.com").press("Tab");
-		await page.getByLabel("Password").fill("new-pubpub");
+		await page.getByPlaceholder("name@example.com").click();
+		await page.getByPlaceholder("name@example.com").fill("some@pubpub.org");
+		await page.getByPlaceholder("name@example.com").press("Tab");
+		await page.getByLabel("Password").fill("some-pubpub");
 		await page.getByRole("button", { name: "Sign in" }).click();
 
 		await page.waitForURL(/\/c\/\w+\/stages/);
+		await page.getByTestId("user-menu-button").click();
 		await page.getByRole("link", { name: "Settings" }).last().click();
+		await page.waitForURL("/settings");
 		await page.getByRole("button", { name: "Reset" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Password reset email sent" })
 		).toHaveCount(1);
 
-		const message2 = await (await inbucketClient.getMailbox("new")).getLatestMessage();
+		const message2 = await (await inbucketClient.getMailbox("some")).getLatestMessage();
 
 		const url2 = message2.message.body.text?.match(/http:\/\/.*reset/)?.[0];
 		await message2.delete();
@@ -94,12 +99,12 @@ test.describe("Auth with lucia", () => {
 		await page.waitForURL("/reset");
 		// if it timesout here, the token is wrong
 		await page.getByRole("textbox").click({ timeout: 1000 });
-		await page.getByRole("textbox").fill("pubpub-new");
+		await page.getByRole("textbox").fill("pubpub-some");
 		await page.getByRole("button", { name: "Set new password" }).click();
-		await page.getByPlaceholder("m@example.com").click();
-		await page.getByPlaceholder("m@example.com").fill("new@pubpub.org");
-		await page.getByPlaceholder("m@example.com").press("Tab");
-		await page.getByLabel("Password").fill("pubpub-new");
+		await page.getByPlaceholder("name@example.com").click();
+		await page.getByPlaceholder("name@example.com").fill("some@pubpub.org");
+		await page.getByPlaceholder("name@example.com").press("Tab");
+		await page.getByLabel("Password").fill("pubpub-some");
 		await page.getByRole("button", { name: "Sign in" }).click();
 
 		await page.waitForURL(/\/c\/\w+\/stages/);
