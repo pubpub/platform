@@ -46,7 +46,7 @@ const RelatedPubBlock = ({
 				<Button
 					variant="ghost"
 					className="p-2 text-neutral-400 hover:bg-white hover:text-red-500"
-					aria-label="Delete related pub"
+					aria-label="Delete link to related pub"
 					onClick={onRemove}
 				>
 					<Trash size={24} />
@@ -84,7 +84,12 @@ export const ConfigureRelatedValue = ({
 	) : (
 		<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
-				<Button variant="link" size="sm" className="flex h-4 gap-1 p-0 text-blue-500">
+				<Button
+					data-testid="add-related-value"
+					variant="link"
+					size="sm"
+					className="flex h-4 gap-1 p-0 text-blue-500"
+				>
 					Add {label} <Plus size={12} />
 				</Button>
 			</PopoverTrigger>
@@ -144,7 +149,7 @@ export const RelatedPubsElement = ({
 						}
 					};
 					return (
-						<FormItem>
+						<FormItem data-testid={`related-pubs-${label}`}>
 							{showPanel && (
 								<AddRelatedPubsPanel
 									title={`Add ${label}`}

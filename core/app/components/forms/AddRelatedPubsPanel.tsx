@@ -45,7 +45,7 @@ const getColumns = () =>
 			cell: ({ row }) => {
 				return (
 					<div className="flex items-center gap-2">
-						<span>{row.original.title}</span>
+						<span>{row.original.title || row.original.id}</span>
 					</div>
 				);
 			},
@@ -91,7 +91,11 @@ export const AddRelatedPubsPanel = ({
 				<Button variant="outline" className="flex-1" onClick={onCancel}>
 					Cancel
 				</Button>
-				<Button onClick={handleAdd} className="flex-1 bg-blue-500 hover:bg-blue-600">
+				<Button
+					data-testid="add-related-pub-button"
+					onClick={handleAdd}
+					className="flex-1 bg-blue-500 hover:bg-blue-600"
+				>
 					Add
 				</Button>
 			</div>

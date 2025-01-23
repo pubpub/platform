@@ -8,6 +8,7 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
+import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
@@ -228,5 +229,114 @@ test.describe("Rich text editor", () => {
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
 		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+	});
+});
+
+test.describe("Related pubs", () => {
+	test("Can add related pubs", async () => {
+		// Create a related pub we can link to
+		const relatedPubTitle = "related pub";
+		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		await pubsPage.goTo();
+		await pubsPage.createPub({
+			values: { title: relatedPubTitle, content: "my content" },
+		});
+
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		// Add a string, string array, and null related field
+		const relatedFields = [
+			{ name: "string", schemaName: CoreSchemaType.String },
+			{ name: "array", schemaName: CoreSchemaType.StringArray },
+			{ name: "null", schemaName: CoreSchemaType.Null },
+		];
+		for (const relatedField of relatedFields) {
+			await fieldsPage.addField(relatedField.name, relatedField.schemaName, true);
+		}
+		// Add these to a new form
+		const formSlug = "relationship-form";
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+		await formsPage.addForm("relationship form", formSlug);
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		await formEditPage.goto();
+
+		// Configure these 3 fields
+		for (const relatedField of relatedFields) {
+			await formEditPage.openAddForm();
+			await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:${relatedField.name}`);
+			await page.getByRole("textbox", { name: "Label" }).first().fill(relatedField.name);
+			await formEditPage.saveFormElementConfiguration();
+		}
+
+		// Save the form builder and go to external form
+		await formEditPage.saveForm();
+		await formEditPage.goToExternalForm();
+		for (const element of relatedFields) {
+			await expect(page.getByText(element.name)).toHaveCount(1);
+		}
+
+		// Fill out the form
+		const title = "pub with related fields";
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		// string related field
+		const stringRelated = page.getByTestId("related-pubs-string");
+		await stringRelated.getByRole("button", { name: "Add" }).click();
+		await page
+			.getByRole("button", { name: `Select row ${relatedPubTitle}` })
+			.getByLabel("Select row")
+			.click();
+		await page.getByTestId("add-related-pub-button").click();
+		await expect(stringRelated.getByText(relatedPubTitle)).toHaveCount(1);
+		await stringRelated.getByRole("button", { name: "Add string" }).click();
+		await page.getByTestId(`${COMMUNITY_SLUG}:string.0.value`).fill("admin");
+		// Click the button again to 'exit' the popover
+		await stringRelated.getByRole("button", { name: "Add string" }).click();
+		await expect(stringRelated.getByText("admin")).toHaveCount(1);
+
+		// array related field
+		const arrayRelated = page.getByTestId("related-pubs-array");
+		await arrayRelated.getByRole("button", { name: "Add" }).click();
+		await page
+			.getByRole("button", { name: `Select row ${relatedPubTitle}` })
+			.getByLabel("Select row")
+			.click();
+		await page.getByTestId("add-related-pub-button").click();
+		await expect(arrayRelated.getByText(relatedPubTitle)).toHaveCount(1);
+		await arrayRelated.getByRole("button", { name: "Add array" }).click();
+		const locator = page.getByTestId(`multivalue-input`);
+		/**
+		 * Use 'press' to trigger the ',' keyboard event, which "adds" the value
+		 * Could also use 'Enter', but this seems to trigger submitting the form when run thru playwright
+		 */
+		await locator.fill("one");
+		await locator.press(",");
+		await locator.fill("two");
+		await locator.press(",");
+		// Click the button again to 'exit' the popover
+		await arrayRelated.getByRole("button", { name: "Add array" }).click();
+		await expect(arrayRelated.getByText("one,two")).toHaveCount(1);
+
+		// null related field
+		const nullRelated = page.getByTestId("related-pubs-null");
+		await nullRelated.getByRole("button", { name: "Add" }).click();
+		await page
+			.getByRole("button", { name: `Select row ${relatedPubTitle}` })
+			.getByLabel("Select row")
+			.click();
+		await page.getByTestId("add-related-pub-button").click();
+		await expect(nullRelated.getByText(relatedPubTitle)).toHaveCount(1);
+		// Can't add a value to a null related field
+		await expect(nullRelated.getByTestId("add-related-value")).toHaveCount(0);
+		await page.getByRole("button", { name: "Submit" }).click();
+
+		// Check the pub page to make sure the values we expect are there
+		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+		await page.getByRole("link", { name: title }).click();
+		// Make sure pub details page has loaded before making assertions
+		await page.getByText("Assignee").waitFor();
+		await expect(page.getByText("admin:related pub")).toHaveCount(1);
+		await expect(page.getByText("nullrelated pub")).toHaveCount(1);
 	});
 });
