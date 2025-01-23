@@ -43,6 +43,7 @@ export const MultiBlock = ({
 					<div className={cn("text-xs", { "text-sm": !compact })}>{title}</div>
 				</div>
 				<Button
+					type="button"
 					size={compact ? "sm" : "default"}
 					variant="outline"
 					disabled={disabled}

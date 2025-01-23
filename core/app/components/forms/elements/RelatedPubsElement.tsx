@@ -44,6 +44,7 @@ const RelatedPubBlock = ({
 			</div>
 			<div>
 				<Button
+					type="button"
 					variant="ghost"
 					className="p-2 text-neutral-400 hover:bg-white hover:text-red-500"
 					aria-label="Delete link to related pub"
@@ -85,6 +86,7 @@ export const ConfigureRelatedValue = ({
 		<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
 				<Button
+					type="button"
 					data-testid="add-related-value"
 					variant="link"
 					size="sm"

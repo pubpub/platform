@@ -88,10 +88,11 @@ export const AddRelatedPubsPanel = ({
 				/>
 			</div>
 			<div className="flex w-full justify-between gap-2">
-				<Button variant="outline" className="flex-1" onClick={onCancel}>
+				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
 					Cancel
 				</Button>
 				<Button
+					type="button"
 					data-testid="add-related-pub-button"
 					onClick={handleAdd}
 					className="flex-1 bg-blue-500 hover:bg-blue-600"
