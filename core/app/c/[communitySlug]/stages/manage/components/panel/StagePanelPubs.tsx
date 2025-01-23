@@ -25,7 +25,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		getStageActions(props.stageId).execute(),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 	]);
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 
 	if (!stage) {
 		throw new Error("Stage not found");
