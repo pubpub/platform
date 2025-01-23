@@ -124,6 +124,7 @@ test("Last visited community is remembered", async ({ page }) => {
 	await page.getByRole("button", { name: "Select a community" }).click();
 	await page.getByRole("menuitem", { name: "CrocCroc" }).click();
 	await page.waitForURL(croccrocRegex);
+	await page.getByRole("button", { name: "User menu" }).click();
 	await page.getByRole("button", { name: "Logout" }).click();
 
 	// Log back in and switched community should be remembered
