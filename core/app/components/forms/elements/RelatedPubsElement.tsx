@@ -26,40 +26,21 @@ import { PubFieldFormElement } from "../PubFieldFormElement";
 const RelatedPubBlock = ({
 	pub,
 	onRemove,
-	valueComponent,
+	valueComponentProps,
 	slug,
 }: {
 	pub: Pick<GetPubsResult[number], "title" | "id">;
 	onRemove: () => void;
-	valueComponent: ReactNode;
+	valueComponentProps: PubFieldFormElementProps;
 	slug: string;
 }) => {
 	const { title, id } = pub;
-	const { watch } = useFormContext();
-	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
-	const value = watch(slug);
-	const showValue = value != null && value !== "" && !isPopoverOpen;
+
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
 			<div className="flex flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{title || id}</span>
-				{showValue ? (
-					value.toString()
-				) : (
-					<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
-						<PopoverTrigger asChild>
-							<Button
-								variant="link"
-								size="sm"
-								className="flex h-4 gap-1 p-0 text-blue-500"
-							>
-								{/* TODO: the type of 'add', i.e. 'Add Role' */}
-								Add <Plus size={12} />
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent side="bottom">{valueComponent}</PopoverContent>
-					</Popover>
-				)}
+				<ConfigureRelatedValue {...valueComponentProps} slug={slug} />
 			</div>
 			<div>
 				<Button
@@ -80,7 +61,7 @@ type FormValue = {
 	[slug: string]: FieldValue[];
 };
 
-export const InnerValue = ({
+export const ConfigureRelatedValue = ({
 	slug,
 	element,
 	...props
@@ -88,7 +69,30 @@ export const InnerValue = ({
 	const configLabel = "label" in element.config ? element.config.label : undefined;
 	const label = configLabel || element.label || slug;
 
-	return <PubFieldFormElement {...props} element={element} slug={slug} label={label} />;
+	const { watch } = useFormContext();
+	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
+	const value = watch(slug);
+	const showValue = value != null && value !== "" && !isPopoverOpen;
+
+	if (element.component === null) {
+		return null;
+	}
+
+	return showValue ? (
+		// TODO: this should be more sophisticated for the more complex fields
+		value.toString()
+	) : (
+		<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
+			<PopoverTrigger asChild>
+				<Button variant="link" size="sm" className="flex h-4 gap-1 p-0 text-blue-500">
+					Add {label} <Plus size={12} />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent side="bottom">
+				<PubFieldFormElement {...props} element={element} slug={slug} label={label} />
+			</PopoverContent>
+		</Popover>
+	);
 };
 
 export const RelatedPubsElement = ({
@@ -170,11 +174,8 @@ export const RelatedPubsElement = ({
 															pub={pubsById[item.relatedPubId]}
 															onRemove={handleRemovePub}
 															slug={innerSlug}
-															valueComponent={
-																<InnerValue
-																	{...valueComponentProps}
-																	slug={innerSlug}
-																/>
+															valueComponentProps={
+																valueComponentProps
 															}
 														/>
 													);

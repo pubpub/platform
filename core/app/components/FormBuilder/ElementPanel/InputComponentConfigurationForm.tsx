@@ -61,14 +61,17 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textInput]: {
 		name: "Input",
 		placeholder: "For short text",
-		demoComponent: ({ element }) => (
-			<Input
-				placeholder={
-					element.schemaName === CoreSchemaType.String ? "For short text" : "For numbers"
-				}
-				type={element.schemaName === CoreSchemaType.String ? "text" : "number"}
-			/>
-		),
+		demoComponent: ({ element }) => {
+			const isText =
+				element.schemaName === CoreSchemaType.String ||
+				element.schemaName === CoreSchemaType.Email;
+			return (
+				<Input
+					placeholder={isText ? "For short text" : "For numbers"}
+					type={isText ? "text" : "number"}
+				/>
+			);
+		},
 	},
 	[InputComponent.checkbox]: { name: "Checkbox", demoComponent: () => <Checkbox checked /> },
 	[InputComponent.datePicker]: {

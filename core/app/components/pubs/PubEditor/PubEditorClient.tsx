@@ -114,16 +114,15 @@ const createSchemaFromElements = (
 						return [slug, undefined];
 					}
 
-					if (schema.type !== "string") {
-						return [slug, Type.Optional(schema)];
-					}
-
-					// this allows for empty strings, which happens when you enter something
-					// in an input field and then delete it
+					// Allow fields to be empty or optional. Special case for empty strings,
+					// which happens when you enter something in an input field and then delete it
 					// TODO: reevaluate whether this should be "" or undefined
-					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
-						error: schema.error ?? "Invalid value",
-					});
+					const schemaAllowEmpty =
+						schema.type === "string"
+							? Type.Union([schema, Type.Literal("")], {
+									error: schema.error ?? "Invalid value",
+								})
+							: Type.Optional(schema);
 
 					if (isRelation) {
 						return [
@@ -132,15 +131,16 @@ const createSchemaFromElements = (
 								Type.Object(
 									{
 										relatedPubId: Type.String(),
-										value: schemaWithAllowedEmpty,
+										value: schemaAllowEmpty,
 									},
-									{ additionalProperties: true }
-								)
+									{ additionalProperties: true, error: "object error" }
+								),
+								{ error: "array error" }
 							),
 						];
 					}
 
-					return [slug, schemaWithAllowedEmpty];
+					return [slug, schemaAllowEmpty];
 				})
 		)
 	);

@@ -32,7 +32,7 @@ export const FormElement = ({
 		return null;
 	}
 
-	if (!element.schemaName || !element.component) {
+	if (!element.schemaName) {
 		return null;
 	}
 
