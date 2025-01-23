@@ -1,7 +1,8 @@
 import { Toaster } from "ui/toaster";
 
 import "ui/styles.css";
-import "./globals.css";
+
+// import "./globals.css";
 
 import { TooltipProvider } from "ui/tooltip";
 

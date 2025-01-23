@@ -89,7 +89,7 @@ export const StructuralElementConfigurationForm = ({ index, structuralElement }:
 				<div className="grid grid-cols-2 gap-2">
 					<Button
 						type="button"
-						className="border-slate-950"
+						className="border-gray-950"
 						variant="outline"
 						onClick={() => {
 							removeIfUnconfigured();

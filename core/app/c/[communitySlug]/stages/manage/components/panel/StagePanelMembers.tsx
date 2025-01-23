@@ -38,7 +38,7 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 				<div
 					className={cn(
 						"flex items-center justify-between",
-						members.length && "border-b-2 border-b-slate-200 pb-4"
+						members.length && "border-b-2 border-b-gray-200 pb-4"
 					)}
 				>
 					<h4 className="mb-2 inline text-base font-semibold">Members</h4>

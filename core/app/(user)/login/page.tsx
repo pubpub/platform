@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getLoginData } from "~/lib/authentication/loginData";
 import LoginForm from "./LoginForm";
 
@@ -14,9 +16,12 @@ export default async function Login({
 
 	if (user?.id) {
 		const firstSlug = user.memberships[0]?.community?.slug;
+		const cookieStore = await cookies();
+		const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
+		const communitySlug = lastVisited?.value ?? firstSlug;
 
 		if (firstSlug) {
-			redirect(`/c/${firstSlug}/stages`);
+			redirect(`/c/${communitySlug}/stages`);
 		}
 
 		redirect("/settings");
