@@ -2,15 +2,12 @@
 
 import { useEffect } from "react";
 
-import { setLastVisited } from "~/app/components/LastVisitedCommunity/lastVisited";
-import { useServerAction } from "~/lib/serverActions";
+import { LAST_VISITED_COOKIE, LAST_VISITED_COOKIE_MAX_AGE } from "./constants";
 
 export default function SetLastVisited({ communitySlug }: { communitySlug: string }) {
-	const runSetLastVisited = useServerAction(setLastVisited);
-
 	useEffect(() => {
-		runSetLastVisited(communitySlug);
-	}, [communitySlug, runSetLastVisited]);
+		document.cookie = `${LAST_VISITED_COOKIE}=${communitySlug}; path=/; max-age=${LAST_VISITED_COOKIE_MAX_AGE}`;
+	}, [communitySlug]);
 
 	return <></>;
 }
