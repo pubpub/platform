@@ -62,13 +62,11 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 		name: "Input",
 		placeholder: "For short text",
 		demoComponent: ({ element }) => {
-			const isText =
-				element.schemaName === CoreSchemaType.String ||
-				element.schemaName === CoreSchemaType.Email;
+			const isNumber = element.schemaName === CoreSchemaType.Number;
 			return (
 				<Input
-					placeholder={isText ? "For short text" : "For numbers"}
-					type={isText ? "text" : "number"}
+					placeholder={isNumber ? "For numbers" : "For short text"}
+					type={isNumber ? "number" : "text"}
 				/>
 			);
 		},
