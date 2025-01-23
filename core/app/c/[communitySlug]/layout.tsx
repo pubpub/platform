@@ -3,9 +3,11 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 
-import { Sidebar, SidebarProvider, SidebarTrigger } from "ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "ui/sidebar";
 import { cn } from "utils";
 
+import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
+import SetLastVisited from "~/app/components/LastVisitedCommunity/SetLastVisited";
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
@@ -55,8 +57,13 @@ export default async function MainLayout(props: Props) {
 
 	const availableCommunities = user?.memberships.map((m) => m.community) ?? [];
 
+	const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
+
 	return (
 		<CommunityProvider community={community}>
+			{params.communitySlug !== lastVisited?.value && (
+				<SetLastVisited communitySlug={params.communitySlug} />
+			)}
 			<div className="flex min-h-screen flex-col md:flex-row">
 				<SidebarProvider defaultOpen={defaultOpen}>
 					<SideNav community={community} availableCommunities={availableCommunities} />
