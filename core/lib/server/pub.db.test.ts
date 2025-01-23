@@ -1,18 +1,151 @@
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { describe, expect, expectTypeOf, it, vitest } from "vitest";
+import { array } from "zod";
 
-import type { PubTypePubField } from "contracts";
+import type { ProcessedPub, PubTypePubField } from "contracts";
 import type { PubsId, PubTypes, Stages } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import type { UnprocessedPub } from "./pub";
+import type { MaybeHas } from "../types";
+import type { UnprocessedPub, UpsertPubInput } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
+import { getPlainPub, updatePub } from "./pub";
 
 const { createSeed, seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
+
+// Helper function to create the matcher object
+//   const expectPub = (pubOrId: ProcessedPub | PubsId) => {
+// 	const matchers = {
+// 	  async toExist(this: vitest.MatcherContext) {
+// 		if (typeof pubOrId !== 'string') {
+// 		  throw new Error('toExist() can only be called with a PubsId');
+// 		}
+
+// 		const pub = await getPlainPub(pubOrId).executeTakeFirst();
+// 		const pass = Boolean(pub && pub.id === pubOrId);
+
+// 		return {
+// 		  pass,
+// 		  message: () =>
+// 			pass
+// 			  ? `Expected pub with ID ${pubOrId} not to exist, but it does`
+// 			  : `Expected pub with ID ${pubOrId} to exist, but it does not`,
+// 		};
+// 	  },
+
+// 	  toHaveValues(this: jest.MatcherContext, expected: Partial<ProcessedPub["values"][number]>[]) {
+// 		if (typeof pubOrId === 'string') {
+// 		  throw new Error('toHaveValues() can only be called with a ProcessedPub');
+// 		}
+
+// 		const pub = pubOrId;
+// 		const sortedPubValues = [...pub.values].sort((a, b) =>
+// 		  (a.value as string).localeCompare(b.value as string)
+// 		);
+
+// 		const pass =
+// 		  sortedPubValues.length === expected.length &&
+// 		  expected.every(expectedValue =>
+// 			sortedPubValues.some(actualValue =>
+// 			  Object.entries(expectedValue).every(([key, value]) =>
+// 				actualValue[key as keyof typeof actualValue] === value
+// 			  )
+// 			)
+// 		  );
+
+// 		return {
+// 		  pass,
+// 		  message: () =>
+// 			pass
+// 			  ? `Expected pub not to have values ${JSON.stringify(expected)}, but it does`
+// 			  : `Expected pub to have values ${JSON.stringify(expected)}, but it has ${JSON.stringify(sortedPubValues)}`,
+// 		};
+// 	  },
+// 	};
+
+// 	return {
+// 	  ...matchers,
+// 	  not: {
+// 		...matchers,
+// 		toHaveValues: function (expected: Partial<ProcessedPub["values"][number]>[]) {
+// 		  const result = matchers.toHaveValues.call(this, expected);
+// 		  return { ...result, pass: !result.pass };
+// 		},
+// 		toExist: async function () {
+// 		  const result = await matchers.toExist.call(this);
+// 		  return { ...result, pass: !result.pass };
+// 		},
+// 	  },
+// 	};
+//   };
+
+// Add the custom matcher
+expect.extend({
+	async toExist(received: PubsId | ProcessedPub) {
+		if (typeof received !== "string") {
+			throw new Error("toExist() can only be called with a PubsId");
+		}
+		const { getPlainPub } = await import("./pub");
+
+		const pub = await getPlainPub(received).executeTakeFirst();
+		const pass = Boolean(pub && pub.id === received);
+		const { isNot } = this;
+
+		return {
+			pass,
+			message: () =>
+				pass
+					? `Expected pub with ID ${received} ${isNot ? "not" : ""} to exist, and it does ${isNot ? "not" : ""}`
+					: `Expected pub with ID ${received} ${isNot ? "not to" : "to"} exist, but it does not`,
+		};
+	},
+
+	toHaveValues(
+		received: PubsId | ProcessedPub,
+		expected: Partial<ProcessedPub["values"][number]>[]
+	) {
+		if (typeof received === "string") {
+			throw new Error("toHaveValues() can only be called with a ProcessedPub");
+		}
+
+		const pub = received;
+		const sortedPubValues = [...pub.values].sort((a, b) =>
+			(a.value as string).localeCompare(b.value as string)
+		);
+
+		const expectedLength = expected.length;
+		const receivedLength = sortedPubValues.length;
+
+		const isNot = this.isNot;
+		if (!isNot && !this.equals(expectedLength, receivedLength)) {
+			return {
+				pass: false,
+				message: () =>
+					`Expected pub to have ${expectedLength} values, but it has ${receivedLength}`,
+			};
+		}
+
+		const pass = expected.every((expectedValue) =>
+			sortedPubValues.some((actualValue) =>
+				Object.entries(expectedValue).every(
+					([key, value]) => actualValue[key as keyof typeof actualValue] === value
+				)
+			)
+		);
+
+		return {
+			pass,
+			message: () =>
+				pass
+					? `Expected pub ${isNot ? "not" : ""} to have values ${JSON.stringify(expected)}, and it does ${isNot ? "not" : ""}`
+					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(sortedPubValues, expected)}`,
+		};
+	},
+});
 
 const seed = createSeed({
 	community: {
@@ -31,11 +164,13 @@ const seed = createSeed({
 		Title: { schemaName: CoreSchemaType.String },
 		Description: { schemaName: CoreSchemaType.String },
 		"Some relation": { schemaName: CoreSchemaType.String, relation: true },
+		"Another relation": { schemaName: CoreSchemaType.String, relation: true },
 	},
 	pubTypes: {
 		"Basic Pub": {
 			Title: { isTitle: true },
 			"Some relation": { isTitle: false },
+			"Another relation": { isTitle: false },
 		},
 		"Minimal Pub": {
 			Title: { isTitle: true },
@@ -1786,5 +1921,621 @@ describe("replacePubRelationsBySlug", () => {
 		).rejects.toThrow(
 			"Pub values contain fields that do not exist in the community: non-existent-field"
 		);
+	});
+});
+
+describe("upsertPub", () => {
+	const createCommonUpsert = () => ({
+		communityId: community.id,
+		pubTypeId: pubTypes["Basic Pub"].id,
+		lastModifiedBy: createLastModifiedBy("system"),
+	});
+
+	// Common setup helper
+	const upsertPubHelper = async (
+		options?: MaybeHas<UpsertPubInput, "communityId" | "pubTypeId" | "lastModifiedBy">
+	) => {
+		const { upsertPub, getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const upsertedPub = await upsertPub({
+			...createCommonUpsert(),
+			id: options?.id,
+			values: {
+				replace: {
+					[pubFields.Title.slug]: "Basic pub",
+				},
+			},
+			...options,
+		});
+
+		const pubWithRelatedValues = await getPubsWithRelatedValuesAndChildren(
+			{ pubId: upsertedPub.id, communityId: community.id },
+			{ depth: 10 }
+		);
+
+		pubWithRelatedValues.values.sort((a, b) =>
+			(a.value as string).localeCompare(b.value as string)
+		);
+
+		return { upsertPubResult: upsertedPub, pub: pubWithRelatedValues };
+	};
+
+	describe("basic pub operations", () => {
+		it("creates a pub with a specific id", async () => {
+			const specificId = crypto.randomUUID() as PubsId;
+			const { pub } = await upsertPubHelper({ id: specificId });
+			expect(pub.id).toBe(specificId);
+		});
+
+		it("merges values with existing pub while preserving other fields", async () => {
+			// Create initial pub with title and description
+
+			const pub1Id = crypto.randomUUID() as PubsId;
+			const { pub } = await upsertPubHelper({
+				id: pub1Id,
+				values: {
+					merge: {
+						[pubFields.Title.slug]: "Original title",
+						[pubFields.Description.slug]: "Original description",
+					},
+				},
+			});
+
+			// Update only the title
+			const { pub: updatedPub } = await upsertPubHelper({
+				id: pub1Id,
+				values: {
+					merge: {
+						[pubFields.Title.slug]: "Updated title",
+					},
+				},
+			});
+
+			expect(updatedPub).toHaveValues([
+				{ value: "Original description", fieldSlug: pubFields.Description.slug },
+				{ value: "Updated title", fieldSlug: pubFields.Title.slug },
+			]);
+
+			// Verify both fields exist with correct values
+		});
+
+		it("replaces values with existing pub if replace is passed", async () => {
+			const { pub } = await upsertPubHelper({
+				values: {
+					replace: {
+						[pubFields.Title.slug]: "Basic pub",
+						[pubFields.Description.slug]: "Basic description",
+					},
+				},
+			});
+
+			expect(pub).toHaveValues([
+				{ value: "Basic description", fieldSlug: pubFields.Description.slug },
+				{ value: "Basic pub", fieldSlug: pubFields.Title.slug },
+			]);
+
+			const { pub: pub2 } = await upsertPubHelper({
+				values: {
+					replace: {
+						[pubFields.Description.slug]: "Basic pub 2 Description",
+					},
+				},
+			});
+
+			expect(pub2).toHaveValues([
+				{ value: "Basic pub 2 Description", fieldSlug: pubFields.Description.slug },
+			]);
+
+			// title should have been removed
+			expect(pub2.title).toBe(null);
+		});
+	});
+
+	describe("pub relations", () => {
+		describe("basic relation operations", () => {
+			it("creates a relation between two existing pubs", async () => {
+				const { pub: pub1 } = await upsertPubHelper();
+
+				// Create second pub with relation to first
+				const { pub: pub2 } = await upsertPubHelper({
+					values: {
+						replace: {
+							[pubFields.Title.slug]: "Second pub",
+						},
+					},
+					relations: {
+						replace: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: { id: pub1.id },
+										value: "Related pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub2).toHaveValues([
+					{ value: "Related pub note", relatedPubId: pub1.id },
+					{ value: "Second pub", fieldSlug: pubFields.Title.slug },
+				]);
+			});
+		});
+
+		describe("relations.merge behavior", () => {
+			it("updates existing relations when using stable IDs", async () => {
+				const pub1Id = crypto.randomUUID() as PubsId;
+				const pub2Id = crypto.randomUUID() as PubsId;
+
+				// Initial creation with relation
+				const { pub: pub1 } = await upsertPubHelper({
+					id: pub1Id,
+					relations: {
+						merge: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										value: "Related pub note",
+										pub: {
+											id: pub2Id,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub merge",
+												},
+											},
+										},
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1).toHaveValues([
+					{ value: "Basic pub", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note", relatedPubId: pub2Id },
+				]);
+
+				const { pub: pub1Merged } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub merge" },
+					},
+					relations: {
+						merge: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											id: pub2Id,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub merge",
+												},
+											},
+										},
+										value: "Related pub note merge",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1Merged).toHaveValues([
+					{ value: "First pub merge", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note merge", relatedPubId: pub2Id },
+				]);
+			});
+
+			it("creates new relations when merging without stable IDs", async () => {
+				// Similar structure but testing merge without IDs for the related pub
+				const pub1Id = crypto.randomUUID() as PubsId;
+
+				// we redo the same upsert but with different values,
+				// the relations should be added, not updated, because we did not supply stable ids for the related pub
+				const { pub: pub1 } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub merge" },
+					},
+					relations: {
+						merge: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub",
+												},
+											},
+										},
+										value: "Related pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1).toHaveValues([
+					{ value: "First pub merge", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note" },
+				]);
+
+				const newRelatedPubId = crypto.randomUUID() as PubsId;
+				const { pub: pub1Merged } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub merge" },
+					},
+					relations: {
+						merge: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											id: newRelatedPubId,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]:
+														"Newly created related pub",
+												},
+											},
+										},
+										value: "Newly created related pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1Merged).toHaveValues([
+					{ value: "First pub merge", fieldSlug: pubFields.Title.slug },
+					{ value: "Newly created related pub note", relatedPubId: newRelatedPubId },
+					{ value: "Related pub note", relatedPubId: pub1.values[1].relatedPubId },
+				]);
+			});
+		});
+
+		describe("relations.replace behavior", () => {
+			it("replaces all relations when using replace mode", async () => {
+				const pub1Id = crypto.randomUUID() as PubsId;
+				const initialRelationPubId = crypto.randomUUID() as PubsId;
+
+				const { pub: pub1 } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub" },
+					},
+					relations: {
+						replace: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											id: initialRelationPubId,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub",
+												},
+											},
+										},
+										value: "Related pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1).toHaveValues([
+					{ value: "First pub", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note", relatedPubId: initialRelationPubId },
+				]);
+				expect(initialRelationPubId).toBeTruthy();
+
+				// we redo the same upsert but with different values,
+				// the relations should be added, not updated, because we did not supply stable ids for the related pub
+				const { pub: pub1Redo } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub replace" },
+					},
+					relations: {
+						replace: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub replace",
+												},
+											},
+										},
+										value: "Related pub note replace",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1Redo).toHaveValues([
+					{ value: "First pub replace", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note replace" },
+				]);
+
+				await expect(initialRelationPubId).toExist();
+
+				const replacedRelationPubId = pub1Redo.values[1].relatedPub!.id;
+				expect(replacedRelationPubId).toBeTruthy();
+
+				await expect(replacedRelationPubId).toExist();
+			});
+
+			it("deletes orphaned pubs when deleteOrphans is true", async () => {
+				// Test orphan deletion
+				const pub1Id = crypto.randomUUID() as PubsId;
+				const initialRelationPubId = crypto.randomUUID() as PubsId;
+
+				const { pub: pub1 } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub" },
+					},
+					relations: {
+						replace: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											id: initialRelationPubId,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub",
+												},
+											},
+										},
+										value: "Related pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1).toHaveValues([
+					{ value: "First pub", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note", relatedPubId: initialRelationPubId },
+				]);
+
+				await expect(initialRelationPubId).toExist();
+
+				const { pub: pub1RedoPrune } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub replace prune" },
+					},
+					relations: {
+						replace: {
+							deleteOrphans: true,
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]:
+														"Related pub replace prune",
+												},
+											},
+										},
+										value: "Related pub note replace prune",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1RedoPrune).toHaveValues([
+					{ value: "First pub replace prune", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note replace prune" },
+				]);
+
+				await expect(initialRelationPubId).not.toExist();
+				await expect(pub1RedoPrune.values[1].relatedPubId).toExist();
+
+				await expect(pub1Id).toExist();
+			});
+
+			it("updates relations while preserving specified relations", async () => {
+				const pub1Id = crypto.randomUUID() as PubsId;
+				const initialSomeRelationPub1Id = crypto.randomUUID() as PubsId;
+				const initialSomeRelationPub2Id = crypto.randomUUID() as PubsId;
+				const initialAnotherRelationPubId = crypto.randomUUID() as PubsId;
+
+				const { pub: pub1 } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub" },
+					},
+					relations: {
+						merge: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											id: initialSomeRelationPub1Id,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub 1",
+												},
+											},
+										},
+										value: "Related pub note 1",
+									},
+									{
+										pub: {
+											id: initialSomeRelationPub2Id,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub 2",
+												},
+											},
+										},
+										value: "Related pub note 2",
+									},
+								],
+								[pubFields["Another relation"].slug]: [
+									{
+										pub: {
+											id: initialAnotherRelationPubId,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Another relation pub",
+												},
+											},
+										},
+										value: "Another relation pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1).toHaveValues([
+					{
+						value: "Another relation pub note",
+						relatedPubId: initialAnotherRelationPubId,
+					},
+					{ value: "First pub", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note 1", relatedPubId: initialSomeRelationPub1Id },
+					{ value: "Related pub note 2", relatedPubId: initialSomeRelationPub2Id },
+				]);
+				await expect(initialSomeRelationPub1Id).toExist();
+				await expect(initialSomeRelationPub2Id).toExist();
+				await expect(initialAnotherRelationPubId).toExist();
+
+				// Update while preserving one relation
+				const { pub: pub1Redo } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub replace" },
+					},
+					relations: {
+						replace: {
+							deleteOrphans: true,
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: { id: initialSomeRelationPub1Id },
+										value: "Related pub note replace",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				expect(pub1Redo).toHaveValues([
+					{ value: "First pub replace", fieldSlug: pubFields.Title.slug },
+					{ value: "Related pub note replace" },
+				]);
+
+				await expect(initialSomeRelationPub1Id).toExist();
+				await expect(initialSomeRelationPub2Id).not.toExist();
+				await expect(initialAnotherRelationPubId).not.toExist();
+			});
+
+			it("removes all relations when given empty relations object", async () => {
+				const pub1Id = crypto.randomUUID() as PubsId;
+				const initialSomeRelationPubId = crypto.randomUUID() as PubsId;
+				const initialAnotherRelationPubId = crypto.randomUUID() as PubsId;
+
+				// Create initial pub with relations
+				const { pub: pub1 } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub" },
+					},
+					relations: {
+						merge: {
+							relations: {
+								[pubFields["Some relation"].slug]: [
+									{
+										pub: {
+											id: initialSomeRelationPubId,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Related pub",
+												},
+											},
+										},
+										value: "Related pub note",
+									},
+								],
+								[pubFields["Another relation"].slug]: [
+									{
+										pub: {
+											id: initialAnotherRelationPubId,
+											pubTypeId: pubTypes["Basic Pub"].id,
+											values: {
+												replace: {
+													[pubFields.Title.slug]: "Another relation pub",
+												},
+											},
+										},
+										value: "Another relation pub note",
+									},
+								],
+							},
+						},
+					},
+				});
+
+				await expect(initialSomeRelationPubId).toExist();
+				await expect(initialAnotherRelationPubId).toExist();
+
+				// Remove all relations by passing empty relations object
+				const { pub: pub1Final } = await upsertPubHelper({
+					id: pub1Id,
+					values: {
+						replace: { [pubFields.Title.slug]: "First pub replace" },
+					},
+					relations: {
+						replace: {
+							deleteOrphans: true,
+							relations: {},
+						},
+					},
+				});
+
+				expect(pub1Final).toHaveValues([
+					{ value: "First pub replace", fieldSlug: pubFields.Title.slug },
+				]);
+
+				await expect(initialSomeRelationPubId).not.toExist();
+				await expect(initialAnotherRelationPubId).not.toExist();
+			});
+		});
 	});
 });
