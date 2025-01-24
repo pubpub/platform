@@ -9,6 +9,44 @@ export type StagesById<T extends CommunityStage = CommunityStage> = {
 };
 
 /**
+ * Takes a stage, a map of stages to their IDs, and an optional list of stages
+ * that have been visited so far. Returns a list of stages that can be reached
+ * from the stage provided without mutating the visited stages.
+ * @param stage - The current stage
+ * @param stages - A map of stage IDs to stage objects
+ * @param visited - (Optional) An array of visited stages, defaults to an empty array
+ * @returns A new array of stages that have been visited
+ */
+function createStageList<T extends CommunityStage>(
+	stage: T,
+	stages: StagesById,
+	visited: Array<T> = []
+): Array<T> {
+	if (!stage) {
+		return visited;
+	}
+
+	// If the stage has already been visited, return the current visited list
+	if (visited.includes(stage)) {
+		return visited;
+	}
+
+	// Add the current stage to the visited list (non-mutating)
+	const newVisited = [...visited, stage];
+
+	// Recursively process the stages reachable from this stage
+	return stage.moveConstraints.reduce((acc, constraint) => {
+		const nextStage = stages[constraint.id];
+		// If the next stage is undefined, just return the accumulator
+		// This would happen if the move constraint isn't in the stage list (because of user permissions)
+		if (!stage) {
+			return acc;
+		}
+		return createStageList<T>(nextStage as T, stages, acc);
+	}, newVisited);
+}
+
+/**
  *
  * @param stages
  * @returns  a map of stages at the index provided in the ID
@@ -18,12 +56,11 @@ export const makeStagesById = <T extends { id: StagesId }>(stages: T[]): { [key:
 };
 
 /**
- * This function takes a list of stages and returns them in the order of a breadth-first flattening
- * of their graph. When the stages form multiple independent graphs
+ * this function takes a list of stages and recursively builds a topological sort of the stages
  * @param stages
  * @returns
  */
-export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T> {
+export function getStageWorkflows<T extends CommunityStage>(stages: T[]): Array<Array<T>> {
 	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	// also make sure to filter to only move constraints that there are stages for (permission restrictions may return more move constraint stages than a user can see)
@@ -33,30 +70,11 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 		}
 		return !stage.moveConstraintSources.every((constraint) => stagesById[constraint.id]);
 	});
-
-	const orderedStages = new Set<T>();
-	const stagesQueue: T[] = stageRoots;
-	// Breadth-first traversal of the graph(s)
-	while (stagesQueue.length > 0) {
-		const stage = stagesQueue.shift();
-		if (!stage) {
-			// This should be unreachable because of the condition in the while, but Typescript
-			// doesn't know that
-			break;
-		}
-		orderedStages.add(stage);
-		stage.moveConstraints.forEach((destinationStage) =>
-			stagesQueue.push(stagesById[destinationStage.id])
-		);
-	}
-
-	// Because the algorithm above starts with "root" stages only, it will totally exclude graphs
-	// where every stage is part of a cycle (biconnected graphs). Since we don't know where those
-	// graphs should begin, we skip sorting them but make sure their stages are included in the
-	// output
-	stages.forEach((stage) => orderedStages.add(stage));
-
-	return [...orderedStages];
+	// for each stage, create a list of stages that can be reached from it
+	const stageWorkflows = stageRoots.map((stage) => {
+		return createStageList(stage, stagesById);
+	});
+	return stageWorkflows as T[][];
 }
 
 // this function takes a stage and a map of stages and their IDs and returns a list of stages that can be reached from the stage provided
