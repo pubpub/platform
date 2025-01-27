@@ -34,7 +34,9 @@ export const FileUploadElement = ({
 	const signedUploadUrl = (fileName: string) => {
 		return upload(pubId, fileName);
 	};
-	const { control, getValues } = useFormContext();
+	const { control, getValues, formState } = useFormContext();
+	console.log(formState.errors, getValues(slug));
+
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
 	const files = getValues()[slug];
@@ -58,7 +60,7 @@ export const FileUploadElement = ({
 									{...field}
 									disabled={!isEnabled}
 									upload={signedUploadUrl}
-									onUpdateFiles={(event: any[]) => {
+									onUpdateFiles={(event) => {
 										field.onChange(event);
 									}}
 								/>

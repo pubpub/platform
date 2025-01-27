@@ -58,6 +58,38 @@ services:
         networks:
             - app-network
 
+    # for local file uploads
+    minio:
+        extends:
+            file: docker-compose.base.yml
+            service: minio
+        env_file:
+            - path: "./.env.docker-compose"
+              required: false
+        networks:
+            - app-network
+        volumes:
+            - ${CURRENT_WORKING_DIR}/.local_data/files:/data
+        ports:
+            - "9000:9000"
+
+    minio-init:
+        image: minio/mc:latest
+        depends_on:
+            minio:
+                condition: service_healthy
+        networks:
+            - app-network
+        entrypoint: >
+            /bin/sh -c "
+            /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin};
+            /usr/bin/mc mb --ignore-existing myminio/${ASSETS_BUCKET_NAME:-assets.v7.pubpub.org};
+            /usr/bin/mc anonymous set download myminio/${ASSETS_BUCKET_NAME:-assets.v7.pubpub.org};
+            /usr/bin/mc admin user add myminio ${ASSETS_UPLOAD_KEY:-pubpubuser} ${ASSETS_UPLOAD_SECRET_KEY:-pubpubpass};
+            /usr/bin/mc admin policy attach myminio readwrite --user ${ASSETS_UPLOAD_KEY:-pubpubuser};
+            exit 0;
+            "
+
     # jobs-nginx:
     # No Nginx for jobs, because it does not take requests
 
@@ -65,6 +97,8 @@ services:
         extends:
             file: docker-compose.base.yml
             service: db
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
 
     inbucket:
         extends:
@@ -73,3 +107,7 @@ services:
 
 networks:
     app-network:
+
+volumes:
+    postgres-data:
+        driver: local

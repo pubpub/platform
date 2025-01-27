@@ -42,6 +42,18 @@ services:
             timeout: 5s
             retries: 5
 
+    minio:
+        extends:
+            file: ./docker-compose.base.yml
+            service: minio
+        volumes:
+            - minio_data:/data
+        networks:
+            - app-network
+        profiles:
+            - test
+            - integration
+
     inbucket:
         extends:
             file: ./docker-compose.base.yml
@@ -99,6 +111,7 @@ services:
             - app-network
 
 volumes:
+    minio_data:
     postgres_test_data:
         driver: local
 
