@@ -2,10 +2,10 @@
 
 import type { ControllerRenderProps } from "react-hook-form";
 
-import { createContext, useContext, useMemo } from "react";
+import { useContext, useMemo } from "react";
 
-import type { ApiAccessScope } from "db/public";
-import type { ApiAccessPermissionConstraintsInput, CreateTokenFormContext } from "db/types";
+import type { ApiAccessScope, PubTypesId, StagesId } from "db/public";
+import type { ApiAccessPermissionConstraintsInput } from "db/types";
 import { ApiAccessType } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
@@ -14,6 +14,7 @@ import { MultiSelect } from "ui/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { CreateTokenForm, CreateTokenFormSchema } from "./CreateTokenForm";
+import { CreateTokenFormContext } from "./CreateTokenFormContext";
 
 /**
  * This is a type for a configuration object for form fields. It allows you to specify
@@ -123,10 +124,8 @@ type ScopesWithOnlyNormalConstraints<
 
 type CustomConstraintFormElement<Value> = (props: {
 	value: boolean | Value;
-	onChange: (...args: any[]) => void;
+	onChange: (value: boolean | Value) => void;
 }) => React.ReactNode;
-
-const CreateTokenFormContextContext = createContext<CreateTokenFormContext>({ stages: [] });
 
 /**
  * Here you configure the specific form elements for each permission type
@@ -134,8 +133,87 @@ const CreateTokenFormContextContext = createContext<CreateTokenFormContext>({ st
 const permissionContraintMap: PermissionContraintMap = {
 	community: null,
 	pub: {
+		[ApiAccessType.read]: ({ value, onChange }) => {
+			const context = useContext(CreateTokenFormContext);
+			return (
+				<div className="flex flex-col gap-2">
+					<h3 className="font-semibold">Stages</h3>
+					<span className="text-xs text-muted-foreground">
+						Select the stages this token can read Pubs from
+					</span>
+					<MultiSelect
+						variant="inverted"
+						options={context.stages.map((stage) => ({
+							label: stage.name,
+							value: stage.id,
+						}))}
+						/**
+						 * This just means: if it is set to `true`, allow it to act on all stages.
+						 * If it is set to `false`, allow it to act on no stages.
+						 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
+						 */
+						defaultValue={
+							value === true
+								? context.stages.map((stage) => stage.id)
+								: !value
+									? []
+									: (value.stages ?? [])
+						}
+						onValueChange={(val) => {
+							onChange(
+								val.length > 0 && val.length !== context.stages.length
+									? {
+											stages: val as StagesId[],
+											pubTypes:
+												typeof value == "object" ? value.pubTypes : [],
+										}
+									: true
+							);
+						}}
+						animation={0}
+						data-testid={`pub-${ApiAccessType.write}-stages-select`}
+					/>
+
+					<h3 className="font-semibold">Types</h3>
+					<span className="text-xs text-muted-foreground">
+						Select the types of Pubs this token can read
+					</span>
+					<MultiSelect
+						variant="inverted"
+						options={context.pubTypes.map((pubType) => ({
+							label: pubType.name,
+							value: pubType.id,
+						}))}
+						/**
+						 * This just means: if it is set to `true`, allow it to act on all stages.
+						 * If it is set to `false`, allow it to act on no stages.
+						 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
+						 */
+						defaultValue={
+							value === true
+								? context.pubTypes.map((stage) => stage.id)
+								: !value
+									? []
+									: (value.pubTypes ?? [])
+						}
+						onValueChange={(val) => {
+							onChange(
+								val.length > 0 && val.length !== context.pubTypes.length
+									? {
+											pubTypes: val as PubTypesId[],
+											stages: typeof value == "object" ? value.stages : [],
+										}
+									: true
+							);
+						}}
+						animation={0}
+						data-testid={`pub-${ApiAccessType.write}-pub-types-select`}
+					/>
+				</div>
+			);
+		},
 		[ApiAccessType.write]: ({ value, onChange }) => {
-			const context = useContext(CreateTokenFormContextContext);
+			const context = useContext(CreateTokenFormContext);
 			return (
 				<div className="flex flex-col gap-2">
 					<h3 className="text-lg font-semibold">Stages</h3>
@@ -176,7 +254,7 @@ const permissionContraintMap: PermissionContraintMap = {
 	},
 	stage: {
 		[ApiAccessType.read]: ({ value, onChange }) => {
-			const context = useContext(CreateTokenFormContextContext);
+			const context = useContext(CreateTokenFormContext);
 			return (
 				<div className="flex flex-col gap-2">
 					<h3 className="text-lg font-semibold">Stages</h3>
@@ -214,35 +292,31 @@ export const PermissionField = ({
 	form,
 	name,
 	prettyName,
-	context,
 }: {
 	form: CreateTokenForm;
 	name: ApiAccessScope;
 	prettyName: string;
-	context: CreateTokenFormContext;
 }) => {
 	return (
-		<CreateTokenFormContextContext.Provider value={context}>
-			<FormField
-				control={form.control}
-				name={`permissions.${name}`}
-				render={({ field }) => (
-					<div className="">
-						<h3 className="text-sm">{prettyName}</h3>
-						<div className="grid h-10 grid-cols-3 gap-2">
-							{Object.values(ApiAccessType).map((type) => (
-								<FormField
-									key={type}
-									control={form.control}
-									name={`permissions.${name}.${type}`}
-									render={ConstraintFormFieldRender}
-								/>
-							))}
-						</div>
+		<FormField
+			control={form.control}
+			name={`permissions.${name}`}
+			render={({ field }) => (
+				<div className="">
+					<h3 className="text-sm">{prettyName}</h3>
+					<div className="grid h-10 grid-cols-3 gap-2">
+						{Object.values(ApiAccessType).map((type) => (
+							<FormField
+								key={type}
+								control={form.control}
+								name={`permissions.${name}.${type}`}
+								render={ConstraintFormFieldRender}
+							/>
+						))}
 					</div>
-				)}
-			/>
-		</CreateTokenFormContextContext.Provider>
+				</div>
+			)}
+		/>
 	);
 };
 

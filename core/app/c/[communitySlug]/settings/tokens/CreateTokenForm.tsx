@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { CreateTokenFormContext } from "db/types";
+import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
 import { ApiAccessScope, apiAccessTokensInitializerSchema } from "db/public";
 import { permissionsSchema } from "db/types";
 import { Button } from "ui/button";
@@ -19,6 +19,7 @@ import { Separator } from "ui/separator";
 
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
+import { CreateTokenFormContext } from "./CreateTokenFormContext";
 import { PermissionField } from "./PermissionField";
 
 export const createTokenFormSchema = apiAccessTokensInitializerSchema
@@ -58,7 +59,7 @@ export const createTokenFormSchema = apiAccessTokensInitializerSchema
 export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
 export type CreateTokenForm = ReturnType<typeof useForm<CreateTokenFormSchema>>;
 
-export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }) => {
+export const CreateTokenForm = () => {
 	const form = useForm<CreateTokenFormSchema>({
 		resolver: zodResolver(createTokenFormSchema),
 		defaultValues: {
@@ -140,7 +141,6 @@ export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }
 														key={scope}
 														name={scope}
 														form={form}
-														context={context}
 														prettyName={`${scope[0].toUpperCase()}${scope.slice(1)}`}
 													/>
 												</React.Fragment>
@@ -192,5 +192,27 @@ export const CreateTokenForm = ({ context }: { context: CreateTokenFormContext }
 				)}
 			</Dialog>
 		</Form>
+	);
+};
+
+/**
+ * Exported here instead of just importing CreateTokenFormContext.tsx
+ * in page.tsx, because doing so triggers the following strange error
+ *
+ * React.jsx: type is invalid -- expected a string (for built-in components)
+ * or a class/function (for composite components) but got: undefined.
+ * You likely forgot to export your component from the file it's defined in,
+ * or you might have mixed up default and named imports
+ */
+export const CreateTokenFormWithContext = ({ stages, pubTypes }: CreateTokenFormContextType) => {
+	return (
+		<CreateTokenFormContext.Provider
+			value={{
+				stages,
+				pubTypes,
+			}}
+		>
+			<CreateTokenForm />
+		</CreateTokenFormContext.Provider>
 	);
 };

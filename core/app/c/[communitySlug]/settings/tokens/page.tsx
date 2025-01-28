@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { getPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
-import { CreateTokenForm } from "./CreateTokenForm";
+import { CreateTokenFormWithContext } from "./CreateTokenForm";
 import { ExistingToken } from "./ExistingToken";
 
 export const metadata: Metadata = {
@@ -21,8 +22,9 @@ export default async function Page(props: { params: { communitySlug: string } })
 		return notFound();
 	}
 
-	const [stages, existingTokens] = await Promise.all([
+	const [stages, pubTypes, existingTokens] = await Promise.all([
 		getStages({ communityId: community.id, userId: user.id }).execute(),
+		getPubTypesForCommunity(community.id),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 
@@ -47,11 +49,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 							</div>
 						</div>
 					)}
-					<CreateTokenForm
-						context={{
-							stages,
-						}}
-					/>
+					<CreateTokenFormWithContext stages={stages} pubTypes={pubTypes} />
 				</div>
 			</div>
 		</div>

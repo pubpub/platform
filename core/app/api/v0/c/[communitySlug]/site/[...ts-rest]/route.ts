@@ -107,12 +107,12 @@ const getAuthorization = async () => {
 		user,
 		authorization: rules.reduce((acc, curr) => {
 			const { scope, constraints, accessType } = curr;
-			if (!constraints) {
-				acc[scope][accessType] = true;
+			if (!curr.constraints) {
+				acc[curr.scope][curr.accessType] = true;
 				return acc;
 			}
 
-			acc[scope][accessType] = constraints ?? true;
+			acc[curr.scope][curr.accessType] = curr.constraints ?? true;
 			return acc;
 		}, baseAuthorizationObject),
 		apiAccessTokenId: validatedAccessToken.id,

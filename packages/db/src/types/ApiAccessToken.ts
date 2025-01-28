@@ -6,8 +6,10 @@ import { z } from "zod";
 
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "../public/ApiAccessPermissions";
 import type { ApiAccessType } from "../public/ApiAccessType";
+import type { PubTypes } from "../public/PubTypes";
 import type { Stages } from "../public/Stages";
 import { ApiAccessScope } from "../public/ApiAccessScope";
+import { pubTypesIdSchema } from "../public/PubTypes";
 import { stagesIdSchema } from "../public/Stages";
 
 /**
@@ -55,7 +57,14 @@ export const permissionsSchema = z.object({
 		archive: z.boolean().optional(),
 	}),
 	[ApiAccessScope.pub]: z.object({
-		read: z.boolean().optional(),
+		read: z
+			.object({
+				stages: z.array(stagesIdSchema),
+				pubTypes: z.array(pubTypesIdSchema),
+			})
+			.partial()
+			.or(z.boolean())
+			.optional(),
 		write: z
 			.object({
 				stages: z.array(stagesIdSchema),
@@ -78,6 +87,7 @@ export const permissionsSchema = z.object({
 
 export type CreateTokenFormContext = {
 	stages: Stages[];
+	pubTypes: PubTypes[];
 };
 
 export type ApiAccessPermissionConstraintsInput = z.infer<typeof permissionsSchema>;
