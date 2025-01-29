@@ -41,7 +41,6 @@ import { assert, expect } from "utils";
 
 import type { DefinitelyHas, MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
-import { RelatedPubsTable } from "~/app/c/[communitySlug]/pubs/[pubId]/components/RelatedPubsTable";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
@@ -591,30 +590,58 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			} satisfies ProcessedPub;
 		}
 
-		const mappedPubRelations = Object.fromEntries(
-			Object.entries(body.relatedPubs).map(([slug, pubs]) => [
-				slug,
-				pubs.map(({ value, pub }) => ({
-					value,
-					pub: {
-						...pub,
-						...(pub.values ? { values: { replace: pub.values } } : {}),
-						...(pub.relatedPubs ? { relations: { replace: pub.relatedPubs } } : {}),
-					},
-				})),
-			])
-		);
+		const mapOldInputToNewInput = (
+			pub: DefinitelyHas<CreatePubRequestBodyWithNullsNew, "relatedPubs">
+		): Record<string, RelInput[]> => {
+			return Object.fromEntries(
+				Object.entries(pub.relatedPubs!).map(([slug, pubs]) => [
+					slug,
+					pubs.map(({ value, pub }) => ({
+						value,
+						pub: {
+							...pub,
+							id: pub.id as PubsId | undefined,
+							assigneeId: pub.assigneeId as UsersId | undefined,
+							pubTypeId: pub.pubTypeId as PubTypesId,
+							stageId: pub.stageId as StagesId | undefined,
+							parentId: pub.parentId as PubsId | undefined,
+							values: { replace: pub.values },
+							...(pub.relatedPubs
+								? {
+										relations: {
+											replace: { relations: mapOldInputToNewInput(pub) },
+										},
+									}
+								: {}),
+						},
+					})),
+				])
+			);
+		};
+
+		// const mappedPubRelations = Object.fromEntries(
+		// 	Object.entries(body.relatedPubs).map(([slug, pubs]) => [
+		// 		slug,
+		// 		pubs.map(({ value, pub }) => ({
+		// 			value,
+		// 			pub: {
+		// 				...pub,
+		// 				...(pub.values ? { values: { replace: pub.values } } : {}),
+		// 				...(pub.relatedPubs ? { relations: { replace: pub.relatedPubs } } : {}),
+		// 			},
+		// 		})),
+		// 	])
+		// );
+		const mappedPubRelations = mapOldInputToNewInput(body);
 		// this fn itself calls createPubRecursiveNew, be mindful of infinite loops
 		const relatedPubs = await upsertPubRelations(
 			{
 				pubId: newPub.id,
-				relations: mappedPubRelations
-					? {
-							merge: {
-								relations: mappedPubRelations,
-							},
-						}
-					: undefined,
+				relations: {
+					merge: {
+						relations: mappedPubRelations,
+					},
+				},
 				communityId,
 				lastModifiedBy,
 				trx,
@@ -775,6 +802,8 @@ type RemovePubRelationsInput = { value?: never; slug: string; relatedPubId: Pubs
 export const normalizeRelationValues = (
 	relations: UpsertPubRelationInput // AddPubRelationsInput[] | UpdatePubRelationsInput[]
 ) => {
+	console.log("================");
+	console.dir(relations, { depth: null });
 	const relationList = relations.replace?.relations ?? relations.merge?.relations;
 
 	if (!relationList) {

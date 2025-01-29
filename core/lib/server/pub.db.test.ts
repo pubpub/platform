@@ -645,7 +645,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 	it("should be able to fetch pubvalues with children", async () => {
 		const trx = getTrx();
-		const { createPubRecursiveNew } = await import("./pub");
+		const { createPubRecursiveNew, getPubsWithRelatedValuesAndChildren } = await import(
+			"./pub"
+		);
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -663,15 +665,16 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 								values: {
 									[pubFields.Title.slug]: "Nested Related Pub",
 								},
-								children: [
-									{
-										pubTypeId: pubTypes["Basic Pub"].id,
-										values: {
-											[pubFields.Title.slug]:
-												"Nested Child of Nested Related Pub",
-										},
-									},
-								],
+								// we don't do children anymore
+								// children: [
+								// 	{
+								// 		pubTypeId: pubTypes["Basic Pub"].id,
+								// 		values: {
+								// 			[pubFields.Title.slug]:
+								// 				"Nested Child of Nested Related Pub",
+								// 		},
+								// 	},
+								// ],
 							},
 						},
 					],
@@ -736,10 +739,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 
 		const rootPubId = pub.id;
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
 			{ pubId: rootPubId, communityId: community.id },
-			{ depth: 10, withPubType: true }
+			{ depth: 10, withPubType: true, trx }
 		);
 
 		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<
@@ -758,7 +760,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					value: "test relation value",
 					relatedPub: {
 						values: [{ value: "Nested Related Pub" }],
-						children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
+						// children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
 					},
 				},
 				{ value: "Some title" },
@@ -1197,9 +1199,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 describe("upsertPubRelations", () => {
 	it("should be able to add relations to existing pubs", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1213,16 +1213,21 @@ describe("upsertPubRelations", () => {
 			trx,
 		});
 
-		await addPubRelations({
+		await upsertPubRelations({
 			pubId: pub.id,
 			communityId: community.id,
-			relations: [
-				{
-					slug: pubFields["Some relation"].slug,
-					value: "test relation value",
-					relatedPubId: pubs[0].id,
+			relations: {
+				merge: {
+					relations: {
+						[pubFields["Some relation"].slug]: [
+							{
+								value: "test relation value",
+								pub: { id: pubs[0].id },
+							},
+						],
+					},
 				},
-			],
+			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
@@ -1247,9 +1252,7 @@ describe("upsertPubRelations", () => {
 
 	it("should be able to create new pubs as relations", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1263,21 +1266,28 @@ describe("upsertPubRelations", () => {
 			trx,
 		});
 
-		await addPubRelations({
+		await upsertPubRelations({
 			pubId: pub.id,
 			communityId: community.id,
-			relations: [
-				{
-					slug: pubFields["Some relation"].slug,
-					value: "test relation value",
-					relatedPub: {
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: {
-							[pubFields.Title.slug]: "new related pub",
-						},
+			relations: {
+				merge: {
+					relations: {
+						[pubFields["Some relation"].slug]: [
+							{
+								value: "test relation value",
+								pub: {
+									pubTypeId: pubTypes["Basic Pub"].id,
+									values: {
+										replace: {
+											[pubFields.Title.slug]: "new related pub",
+										},
+									},
+								},
+							},
+						],
 					},
 				},
-			],
+			},
 			trx,
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
@@ -1301,9 +1311,7 @@ describe("upsertPubRelations", () => {
 
 	it("should validate relation values against schema", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1319,16 +1327,21 @@ describe("upsertPubRelations", () => {
 
 		// Should throw error for invalid value type
 		await expect(
-			addPubRelations({
+			upsertPubRelations({
 				pubId: pub.id,
 				communityId: community.id,
-				relations: [
-					{
-						slug: pubFields["Some relation"].slug,
-						value: 123, // Number instead of string
-						relatedPubId: pubs[0].id,
+				relations: {
+					merge: {
+						relations: {
+							[pubFields["Some relation"].slug]: [
+								{
+									value: 123, // Number instead of string
+									pub: { id: pubs[0].id },
+								},
+							],
+						},
 					},
-				],
+				},
 				trx,
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
@@ -1337,9 +1350,7 @@ describe("upsertPubRelations", () => {
 
 	it("should throw error for fields that do not exist in the community", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1354,16 +1365,21 @@ describe("upsertPubRelations", () => {
 		});
 
 		await expect(
-			addPubRelations({
+			upsertPubRelations({
 				pubId: pub.id,
 				communityId: community.id,
-				relations: [
-					{
-						slug: "non-existent-field",
-						value: "test value",
-						relatedPubId: pubs[0].id,
+				relations: {
+					merge: {
+						relations: {
+							["non-existent-field"]: [
+								{
+									value: "test value",
+									pub: { id: pubs[0].id },
+								},
+							],
+						},
 					},
-				],
+				},
 				trx,
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
@@ -1374,9 +1390,7 @@ describe("upsertPubRelations", () => {
 
 	it("should throw error for non-existent related pub id", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1393,16 +1407,21 @@ describe("upsertPubRelations", () => {
 		const nonExistentPubId = crypto.randomUUID() as PubsId;
 
 		await expect(
-			addPubRelations({
+			upsertPubRelations({
 				pubId: pub.id,
 				communityId: community.id,
-				relations: [
-					{
-						slug: pubFields["Some relation"].slug,
-						value: "test value",
-						relatedPubId: nonExistentPubId,
+				relations: {
+					merge: {
+						relations: {
+							[pubFields["Some relation"].slug]: [
+								{
+									value: "test value",
+									pub: { id: nonExistentPubId },
+								},
+							],
+						},
 					},
-				],
+				},
 				trx,
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
@@ -1411,9 +1430,7 @@ describe("upsertPubRelations", () => {
 
 	it("should be able to add multiple relations at once", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		const pub = await createPubRecursiveNew({
 			communityId: community.id,
@@ -1427,26 +1444,32 @@ describe("upsertPubRelations", () => {
 			trx,
 		});
 
-		await addPubRelations({
+		await upsertPubRelations({
 			pubId: pub.id,
 			communityId: community.id,
-			relations: [
-				{
-					slug: pubFields["Some relation"].slug,
-					value: "relation 1",
-					relatedPubId: pubs[0].id,
-				},
-				{
-					slug: pubFields["Some relation"].slug,
-					value: "relation 2",
-					relatedPub: {
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: {
-							[pubFields.Title.slug]: "new related pub",
-						},
+			relations: {
+				merge: {
+					relations: {
+						[pubFields["Some relation"].slug]: [
+							{
+								value: "relation 1",
+								pub: { id: pubs[0].id },
+							},
+							{
+								value: "relation 2",
+								pub: {
+									pubTypeId: pubTypes["Basic Pub"].id,
+									values: {
+										replace: {
+											[pubFields.Title.slug]: "new related pub",
+										},
+									},
+								},
+							},
+						],
 					},
 				},
-			],
+			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
@@ -1463,9 +1486,7 @@ describe("upsertPubRelations", () => {
 
 	it("should be able to upsert relations - overwriting existing and creating new ones", async () => {
 		const trx = getTrx();
-		const { upsertPubRelations: addPubRelations, createPubRecursiveNew } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, createPubRecursiveNew } = await import("./pub");
 
 		// Create initial pub with a relation
 		const pub = await createPubRecursiveNew({
@@ -1481,43 +1502,54 @@ describe("upsertPubRelations", () => {
 		});
 
 		// Add initial relation
-		await addPubRelations({
+		await upsertPubRelations({
 			pubId: pub.id,
 			communityId: community.id,
-			relations: [
-				{
-					slug: pubFields["Some relation"].slug,
-					value: "original value",
-					relatedPubId: pubs[0].id,
+			relations: {
+				merge: {
+					relations: {
+						[pubFields["Some relation"].slug]: [
+							{
+								value: "original value",
+								pub: { id: pubs[0].id },
+							},
+						],
+					},
 				},
-			],
+			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
 		// Upsert relations - overwrite existing and add new
-		await addPubRelations({
+		await upsertPubRelations({
 			pubId: pub.id,
 			communityId: community.id,
-			relations: [
-				{
-					// Overwrite existing relation
-					slug: pubFields["Some relation"].slug,
-					value: "updated value",
-					relatedPubId: pubs[0].id,
-				},
-				{
-					// Add new relation
-					slug: pubFields["Some relation"].slug,
-					value: "new relation",
-					relatedPub: {
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: {
-							[pubFields.Title.slug]: "new related pub",
-						},
+			relations: {
+				merge: {
+					relations: {
+						[pubFields["Some relation"].slug]: [
+							{
+								// Overwrite existing relation
+								value: "updated value",
+								pub: { id: pubs[0].id },
+							},
+							{
+								// Add new relation
+								value: "new relation",
+								pub: {
+									pubTypeId: pubTypes["Basic Pub"].id,
+									values: {
+										replace: {
+											[pubFields.Title.slug]: "new related pub",
+										},
+									},
+								},
+							},
+						],
 					},
 				},
-			],
+			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
@@ -1614,7 +1646,8 @@ describe("removePubRelations", () => {
 			trx,
 		});
 
-		expect(removedRelatedPubIds).toEqual([pubs[0].id]);
+		expect(removedRelatedPubIds.length).toBe(1);
+		expect(removedRelatedPubIds[0].relatedPubId).toEqual(pubs[0].id);
 
 		const updatedPub = await getPubsWithRelatedValuesAndChildren(
 			{ pubId: pub.id, communityId: community.id },
