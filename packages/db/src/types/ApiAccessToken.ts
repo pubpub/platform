@@ -6,8 +6,8 @@ import { z } from "zod";
 
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "../public/ApiAccessPermissions";
 import type { ApiAccessType } from "../public/ApiAccessType";
-import type { PubTypes } from "../public/PubTypes";
-import type { Stages } from "../public/Stages";
+import type { PubTypes, PubTypesId } from "../public/PubTypes";
+import type { Stages, StagesId } from "../public/Stages";
 import { ApiAccessScope } from "../public/ApiAccessScope";
 import { pubTypesIdSchema } from "../public/PubTypes";
 import { stagesIdSchema } from "../public/Stages";
@@ -40,6 +40,15 @@ export type ApiAccessPermissionContraintsObjectShape = {
 	[key in ApiAccessScope]: ApiAccessPermissionConstraintsShape;
 };
 
+export const NO_STAGE_OPTION = {
+	label: "[Pubs with no stage]",
+	value: "no-stage",
+} as const;
+
+export const stageConstraintSchema = z.union([z.literal(NO_STAGE_OPTION.value), stagesIdSchema]);
+
+export type StageConstraint = z.infer<typeof stageConstraintSchema>;
+
 export const permissionsSchema = z.object({
 	[ApiAccessScope.community]: z.object({
 		read: z.boolean().optional(),
@@ -49,7 +58,7 @@ export const permissionsSchema = z.object({
 	[ApiAccessScope.stage]: z.object({
 		read: z
 			.object({
-				stages: z.array(stagesIdSchema),
+				stages: z.array(stageConstraintSchema),
 			})
 			.or(z.boolean())
 			.optional(),
@@ -59,7 +68,7 @@ export const permissionsSchema = z.object({
 	[ApiAccessScope.pub]: z.object({
 		read: z
 			.object({
-				stages: z.array(stagesIdSchema),
+				stages: z.array(stageConstraintSchema),
 				pubTypes: z.array(pubTypesIdSchema),
 			})
 			.partial()
@@ -67,7 +76,7 @@ export const permissionsSchema = z.object({
 			.optional(),
 		write: z
 			.object({
-				stages: z.array(stagesIdSchema),
+				stages: z.array(stageConstraintSchema),
 			})
 			.or(z.boolean())
 			.optional(),
@@ -86,8 +95,16 @@ export const permissionsSchema = z.object({
 }) satisfies z.Schema<ApiAccessPermissionContraintsObjectShape>;
 
 export type CreateTokenFormContext = {
-	stages: Stages[];
-	pubTypes: PubTypes[];
+	stages: {
+		stages: Stages[];
+		allOptions: [typeof NO_STAGE_OPTION, ...{ label: string; value: StagesId }[]];
+		allValues: [typeof NO_STAGE_OPTION.value, ...StagesId[]];
+	};
+	pubTypes: {
+		pubTypes: PubTypes[];
+		allOptions: { label: string; value: PubTypesId }[];
+		allValues: PubTypesId[];
+	};
 };
 
 export type ApiAccessPermissionConstraintsInput = z.infer<typeof permissionsSchema>;

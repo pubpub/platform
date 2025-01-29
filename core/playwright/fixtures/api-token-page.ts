@@ -6,6 +6,34 @@ import { expect } from "@playwright/test";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import type { createTokenFormSchema } from "~/app/c/[communitySlug]/settings/tokens/CreateTokenForm";
+import type { Prettify } from "~/lib/types";
+
+type Permissions = z.infer<typeof createTokenFormSchema>["permissions"];
+
+// this is so we can specify the stage name rather than the stage id
+// type PermissionsButWithStringsInsteadOfIds = {
+// 	[Scope in keyof Permissions]?: {
+// 		[Permission in keyof Permissions[Scope]]: Permissions[Scope][Permission] extends
+// 			| boolean
+// 			| undefined
+// 			? Permissions[Scope][Permission]
+// 			: Exclude<
+// 						Permissions[Scope][Permission],
+// 						boolean | undefined
+// 				  > extends infer Restrictions
+// 				?
+// 						| {
+// 								[Restriction in keyof Restrictions]: any[] extends Restrictions[Restriction]
+// 									? string[]
+// 									: Restrictions[Restriction];
+// 						  }
+// 						| boolean
+// 						| undefined
+// 				: never;
+// 	};
+// };
+
+// declare const x: PermissionsButWithStringsInsteadOfIds;
 
 export class ApiTokenPage {
 	private readonly newTokenNameBox: Locator;
@@ -38,7 +66,7 @@ export class ApiTokenPage {
 			z.infer<typeof createTokenFormSchema>,
 			"permissions" | "issuedById" | "expiration"
 		> & {
-			permissions: Partial<z.infer<typeof createTokenFormSchema>["permissions"]> | true;
+			permissions: Partial<Permissions> | true;
 		}
 	) {
 		await this.newTokenNameBox.fill(input.name);
@@ -57,18 +85,30 @@ export class ApiTokenPage {
 					continue;
 				}
 
-				if (value && "stage" in value) {
+				if (typeof value === "object") {
 					await this.page.getByTestId(`${scope}-${type}-options`).click();
-					await this.page.getByTestId(`${scope}-${type}-stages-select`).click();
-					for (const stage of value.stages) {
-						await this.page.getByLabel("Suggestions").getByText(stage).click();
+					for (const [key, values] of Object.entries(value)) {
+						await this.page.getByTestId(`${scope}-${type}-${key}-select`).click({
+							timeout: 2_000,
+						});
+						for (const val of values) {
+							await this.page
+								.getByLabel("Suggestions")
+								.getByTestId(`multi-select-option-${val}`)
+								.click({
+									timeout: 2_000,
+								});
+						}
+						await this.page.getByTestId(`multi-select-close`).click();
+						continue;
 					}
-					continue;
 				}
 			}
 		}
 
-		await this.newTokenCreateButton.click();
+		await this.newTokenCreateButton.click({
+			timeout: 1_000,
+		});
 
 		const token = await this.page.getByTestId("token-value").textContent();
 

@@ -1,5 +1,9 @@
 import type { Page } from "@playwright/test";
 
+import { expect } from "@playwright/test";
+
+import type { PubTypesId } from "db/public";
+
 export class PubTypesPage {
 	private readonly communitySlug: string;
 
@@ -67,5 +71,14 @@ export class PubTypesPage {
 
 		// check whether the new type is created
 		await this.page.getByRole("heading", { name: name }).waitFor();
+
+		const pubTypeId = await this.page.getByTestId(`pubtype-${name}-id`).textContent();
+
+		expect(pubTypeId).toBeTruthy();
+
+		return {
+			name,
+			id: pubTypeId! as PubTypesId,
+		};
 	}
 }

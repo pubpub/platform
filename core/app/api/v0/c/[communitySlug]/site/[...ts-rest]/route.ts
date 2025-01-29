@@ -222,7 +222,7 @@ const handler = createNextHandler(
 	{
 		pubs: {
 			get: async ({ params, query }) => {
-				const { user, community } = await checkAuthorization({
+				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewPub,
@@ -239,25 +239,65 @@ const handler = createNextHandler(
 					query
 				);
 
+				if (typeof authorization === "object") {
+					const allowedStages = authorization.stages;
+					if (allowedStages && allowedStages.length > 0) {
+						throw new ForbiddenError(
+							`You are not authorized to view this pub in stage ${pub.stageId}`
+						);
+					}
+				}
+
 				return {
 					status: 200,
 					body: pub,
 				};
 			},
 			getMany: async ({ query }) => {
-				const { user, community } = await checkAuthorization({
+				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					// TODO: figure out capability here
 					cookies: false,
 				});
 
-				const { pubTypeId, stageId, ...rest } = query;
+				const allowedPubTypes =
+					typeof authorization === "object" ? authorization.pubTypes : undefined;
+				const allowedStages =
+					typeof authorization === "object" ? authorization.stages : undefined;
+
+				let { pubTypeId, stageId, pubIds, ...rest } = query;
+
+				const requestedPubTypes = pubTypeId
+					? Array.isArray(pubTypeId)
+						? pubTypeId
+						: [pubTypeId]
+					: undefined;
+				const requestedStages = stageId
+					? Array.isArray(stageId)
+						? stageId
+						: [stageId]
+					: undefined;
+				const requestedPubIds = pubIds
+					? Array.isArray(pubIds)
+						? pubIds
+						: [pubIds]
+					: undefined;
+
+				const pubTypes = requestedPubTypes
+					? requestedPubTypes.filter((pubType) => allowedPubTypes?.includes(pubType))
+					: allowedPubTypes;
+				const stages = requestedStages
+					? requestedStages.filter((stage) => allowedStages?.includes(stage))
+					: allowedStages;
+
+				console.log(pubTypes, stages);
 
 				const pubs = await getPubsWithRelatedValuesAndChildren(
 					{
 						communityId: community.id,
-						pubTypeId,
-						stageId,
+						pubTypeId: pubTypes,
+						stageId: stages,
+						pubIds: requestedPubIds,
 						userId: user.id,
 					},
 					rest

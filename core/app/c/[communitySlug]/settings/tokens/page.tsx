@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
+import { NO_STAGE_OPTION } from "db/types";
+
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
@@ -49,7 +51,24 @@ export default async function Page(props: { params: { communitySlug: string } })
 							</div>
 						</div>
 					)}
-					<CreateTokenFormWithContext stages={stages} pubTypes={pubTypes} />
+					<CreateTokenFormWithContext
+						stages={{
+							stages,
+							allOptions: [
+								NO_STAGE_OPTION,
+								...stages.map((stage) => ({ label: stage.name, value: stage.id })),
+							],
+							allValues: [NO_STAGE_OPTION.value, ...stages.map((stage) => stage.id)],
+						}}
+						pubTypes={{
+							pubTypes,
+							allOptions: pubTypes.map((pubType) => ({
+								label: pubType.name,
+								value: pubType.id,
+							})),
+							allValues: pubTypes.map((pubType) => pubType.id),
+						}}
+					/>
 				</div>
 			</div>
 		</div>

@@ -135,6 +135,7 @@ const permissionContraintMap: PermissionContraintMap = {
 	pub: {
 		[ApiAccessType.read]: ({ value, onChange }) => {
 			const context = useContext(CreateTokenFormContext);
+
 			return (
 				<div className="flex flex-col gap-2">
 					<h3 className="font-semibold">Stages</h3>
@@ -143,35 +144,34 @@ const permissionContraintMap: PermissionContraintMap = {
 					</span>
 					<MultiSelect
 						variant="inverted"
-						options={context.stages.map((stage) => ({
-							label: stage.name,
-							value: stage.id,
-						}))}
-						/**
-						 * This just means: if it is set to `true`, allow it to act on all stages.
-						 * If it is set to `false`, allow it to act on no stages.
-						 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
-						 */
+						options={context.stages.allOptions}
 						defaultValue={
 							value === true
-								? context.stages.map((stage) => stage.id)
+								? context.stages.allValues
 								: !value
 									? []
 									: (value.stages ?? [])
 						}
 						onValueChange={(val) => {
-							onChange(
-								val.length > 0 && val.length !== context.stages.length
-									? {
-											stages: val as StagesId[],
-											pubTypes:
-												typeof value == "object" ? value.pubTypes : [],
-										}
-									: true
-							);
+							const allStagesSelected =
+								val.length === context.stages.allValues.length;
+
+							const allPubTypesSelected =
+								typeof value === "object" &&
+								value.pubTypes?.length === context.pubTypes.allValues.length;
+
+							if (allStagesSelected && allPubTypesSelected) {
+								onChange(true);
+								return;
+							}
+
+							onChange({
+								stages: val as StagesId[],
+								pubTypes: typeof value === "object" ? value.pubTypes : [],
+							});
 						}}
 						animation={0}
-						data-testid={`pub-${ApiAccessType.write}-stages-select`}
+						data-testid={`pub-${ApiAccessType.read}-stages-select`}
 					/>
 
 					<h3 className="font-semibold">Types</h3>
@@ -180,34 +180,34 @@ const permissionContraintMap: PermissionContraintMap = {
 					</span>
 					<MultiSelect
 						variant="inverted"
-						options={context.pubTypes.map((pubType) => ({
-							label: pubType.name,
-							value: pubType.id,
-						}))}
-						/**
-						 * This just means: if it is set to `true`, allow it to act on all stages.
-						 * If it is set to `false`, allow it to act on no stages.
-						 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
-						 */
+						options={context.pubTypes.allOptions}
 						defaultValue={
 							value === true
-								? context.pubTypes.map((stage) => stage.id)
+								? context.pubTypes.allValues
 								: !value
 									? []
 									: (value.pubTypes ?? [])
 						}
 						onValueChange={(val) => {
-							onChange(
-								val.length > 0 && val.length !== context.pubTypes.length
-									? {
-											pubTypes: val as PubTypesId[],
-											stages: typeof value == "object" ? value.stages : [],
-										}
-									: true
-							);
+							const allPubTypesSelected =
+								val.length === context.pubTypes.allValues.length;
+
+							const allStagesSelected =
+								typeof value === "object" &&
+								value.stages?.length === context.stages.allValues.length;
+
+							if (allPubTypesSelected && allStagesSelected) {
+								onChange(true);
+								return;
+							}
+
+							onChange({
+								pubTypes: val as PubTypesId[],
+								stages: typeof value == "object" ? value.stages : [],
+							});
 						}}
 						animation={0}
-						data-testid={`pub-${ApiAccessType.write}-pub-types-select`}
+						data-testid={`pub-${ApiAccessType.read}-pubTypes-select`}
 					/>
 				</div>
 			);
@@ -241,7 +241,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						onValueChange={(value) => {
 							onChange(
 								value.length > 0 && value.length !== context.stages.length
-									? { stages: value }
+									? { stages: value as StagesId[] }
 									: true
 							);
 						}}
@@ -275,7 +275,7 @@ const permissionContraintMap: PermissionContraintMap = {
 									: value.stages
 						}
 						onValueChange={(value) => {
-							onChange(value.length > 0 ? value : true);
+							onChange(value.length > 0 ? { stages: value as StagesId[] } : true);
 						}}
 						animation={0}
 						data-testid={`stage-${ApiAccessType.read}-stages-select`}

@@ -1,7 +1,5 @@
-import type { AppRouteResponse, ContractOtherResponse, Opaque } from "@ts-rest/core";
-
 import { initContract } from "@ts-rest/core";
-import { z, ZodNull } from "zod";
+import { z } from "zod";
 
 import type {
 	CommunitiesId,
@@ -34,6 +32,7 @@ import {
 	usersIdSchema,
 	usersSchema,
 } from "db/public";
+import { stageConstraintSchema } from "db/types";
 
 import type { Json } from "./types";
 import {
@@ -373,8 +372,18 @@ export const siteApi = contract.router(
 				description:
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
 				query: getPubQuerySchema.extend({
-					pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
-					stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
+					pubIds: pubsIdSchema
+						.or(z.array(pubsIdSchema))
+						.optional()
+						.describe("Filter by pub ID."),
+					pubTypeId: pubTypesIdSchema
+						.or(z.array(pubTypesIdSchema))
+						.optional()
+						.describe("Filter by pub type ID."),
+					stageId: stageConstraintSchema
+						.or(z.array(stageConstraintSchema))
+						.optional()
+						.describe("Filter by stage ID."),
 					limit: z.number().default(10),
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),

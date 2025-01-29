@@ -658,7 +658,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 	});
 
-	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
+	it("should be able to filter by pubtype or stage or no stage and pubtype and stage", async () => {
 		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		const allPubs = await getPubsWithRelatedValuesAndChildren(
@@ -668,21 +668,27 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		expect(allPubs.length).toBe(5);
 
-		const [minimalPubs, pubsInStage1, basicPubsInStage1] = await Promise.all([
+		const [minimalPubs, pubsInStage1, basicPubsInStage1, pubsInNoStage] = await Promise.all([
 			getPubsWithRelatedValuesAndChildren(
-				{ pubTypeId: pubTypes["Minimal Pub"].id, communityId: community.id },
+				{ pubTypeId: [pubTypes["Minimal Pub"].id], communityId: community.id },
 				{ withPubType: true, depth: 10 }
 			),
 			getPubsWithRelatedValuesAndChildren(
-				{ stageId: stages["Stage 1"].id, communityId: community.id },
+				{ stageId: [stages["Stage 1"].id], communityId: community.id },
 				{ withStage: true, depth: 10 }
 			),
 			getPubsWithRelatedValuesAndChildren(
 				{
-					pubTypeId: pubTypes["Basic Pub"].id,
-					stageId: stages["Stage 1"].id,
+					pubTypeId: [pubTypes["Basic Pub"].id],
+					stageId: [stages["Stage 1"].id],
 					communityId: community.id,
 				},
+				{ withPubType: true, withStage: true, depth: 10 }
+			),
+			getPubsWithRelatedValuesAndChildren(
+				// passing ['no-stage'] is different from passing null,
+				// as null will just not filter by stage at all
+				{ communityId: community.id, stageId: ["no-stage"] },
 				{ withPubType: true, withStage: true, depth: 10 }
 			),
 		]);
@@ -695,6 +701,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(basicPubsInStage1.length).toBe(1);
 		expect(basicPubsInStage1[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
 		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id);
+
+		const allPubsWithoutStage = allPubs.filter((p) => p.stageId === null);
+		expect(pubsInNoStage.length).toBe(allPubsWithoutStage.length);
+		pubsInNoStage.forEach((p) => {
+			expect(p.stageId).toBeNull();
+		});
 	});
 
 	it("should be able to limit the amount of top-level pubs retrieved while still fetching children and related pubs", async () => {
