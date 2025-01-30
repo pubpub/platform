@@ -802,8 +802,6 @@ type RemovePubRelationsInput = { value?: never; slug: string; relatedPubId: Pubs
 export const normalizeRelationValues = (
 	relations: UpsertPubRelationInput // AddPubRelationsInput[] | UpdatePubRelationsInput[]
 ) => {
-	console.log("================");
-	console.dir(relations, { depth: null });
 	const relationList = relations.replace?.relations ?? relations.merge?.relations;
 
 	if (!relationList) {
