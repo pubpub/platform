@@ -1776,7 +1776,7 @@ describe("removePubRelations", () => {
 	});
 });
 
-describe("replacePubRelationsBySlug", () => {
+describe("upsertPubRelations: replace", () => {
 	it("should replace all relations for given field slugs with new relations", async () => {
 		const { createPubRecursiveNew } = await import("./pub");
 
@@ -1850,25 +1850,31 @@ describe("replacePubRelationsBySlug", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
 		// Replace relations
-		await replacePubRelationsBySlug({
+		await upsertPubRelations({
 			pubId: pub.id,
-			relations: [
-				{
-					slug: pubFields["Some relation"].slug,
-					relatedPubId: newRelatedPub1.id,
-					value: "new relation value 1",
+			relations: {
+				replace: {
+					relations: {
+						[pubFields["Some relation"].slug]: [
+							{
+								pub: {
+									id: newRelatedPub1.id,
+								},
+								value: "new relation value 1",
+							},
+							{
+								pub: {
+									id: newRelatedPub2.id,
+								},
+								value: "new relation value 2",
+							},
+						],
+					},
 				},
-				{
-					slug: pubFields["Some relation"].slug,
-					relatedPubId: newRelatedPub2.id,
-					value: "new relation value 2",
-				},
-			],
+			},
 			communityId: community.id,
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
@@ -1877,16 +1883,12 @@ describe("replacePubRelationsBySlug", () => {
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
+		console.log(updatedPub);
 
-		const relationValues = updatedPub.values.filter((v) => v.relatedPub);
-
-		expect(relationValues).toHaveLength(2);
-		expect(relationValues.map((v) => v.relatedPub?.id).sort()).toEqual(
-			[newRelatedPub1.id, newRelatedPub2.id].sort()
-		);
-		expect(relationValues.map((v) => v.value).sort()).toEqual(
-			["new relation value 1", "new relation value 2"].sort()
-		);
+		expect(updatedPub).toHaveValues([
+			{ value: "new relation value 1", relatedPubId: newRelatedPub1.id },
+			{ value: "new relation value 2", relatedPubId: newRelatedPub2.id },
+		]);
 	});
 
 	it("should handle empty relations object", async () => {
@@ -1903,13 +1905,13 @@ describe("replacePubRelationsBySlug", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
-			"./pub"
-		);
+		const { upsertPubRelations, getPubsWithRelatedValuesAndChildren } = await import("./pub");
 
-		await replacePubRelationsBySlug({
+		await upsertPubRelations({
 			pubId: pub.id,
-			relations: [],
+			relations: {
+				replace: { relations: {} },
+			},
 			communityId: community.id,
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
@@ -1919,7 +1921,7 @@ describe("replacePubRelationsBySlug", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(0);
+		expect(updatedPub).toHaveValues([]);
 	});
 
 	it("should throw error when field slug does not exist", async () => {

@@ -869,7 +869,7 @@ export const upsertPubRelations = async (
 			const fieldId = validatedRelationValues.find(({ slug }) => slug === rel.slug)?.fieldId;
 			assert(fieldId, `No pub field found for slug '${rel.slug}'`);
 
-			if (Object.keys(rel.pub).length > 0) {
+			if (Object.keys(rel.pub).length > 1) {
 				acc.newPubs.push({ ...rel, fieldId });
 			} else {
 				acc.existingPubs.push({ value: rel.value, fieldId, relatedPubId: rel.pub.id });
@@ -1199,64 +1199,62 @@ export const addDeletePubValueHistoryEntries = async ({
 	).execute();
 };
 
-/**
- * Replaces all relations for given field slugs with new relations.
- * First removes all existing relations for the provided slugs, then adds the new relations.
- *
- * If the `relations` object is empty, this function does nothing.
- */
-export const replacePubRelationsBySlug = async ({
-	pubId,
-	relations,
-	communityId,
-	lastModifiedBy,
-	trx = db,
-}: {
-	pubId: PubsId;
-	relations: AddPubRelationsInput[];
-	communityId: CommunitiesId;
-	lastModifiedBy: LastModifiedBy;
-	trx?: typeof db;
-}) => {
-	if (!Object.keys(relations).length) {
-		return;
-	}
+// /**
+//  * Replaces all relations for given field slugs with new relations.
+//  * First removes all existing relations for the provided slugs, then adds the new relations.
+//  *
+//  * If the `relations` object is empty, this function does nothing.
+//  */
+// export const replacePubRelationsBySlug = async ({
+// 	pubId,
+// 	relations,
+// 	communityId,
+// 	lastModifiedBy,
+// 	trx = db,
+// }: {
+// 	pubId: PubsId;
+// 	relations: AddPubRelationsInput[];
+// 	communityId: CommunitiesId;
+// 	lastModifiedBy: LastModifiedBy;
+// 	trx?: typeof db;
+// }) => {
+// 	if (!Object.keys(relations).length) {
+// 		return;
+// 	}
 
-	await maybeWithTrx(trx, async (trx) => {
-		const slugs = relations.map(({ slug }) => slug);
+// 	await maybeWithTrx(trx, async (trx) => {
+// 		const mappedRelations = relations.reduce(
+// 			(acc, { slug, value, relatedPub, relatedPubId }) => {
+// 				if (!acc[slug]) {
+// 					acc[slug] = [];
+// 				}
+// 				if (!relatedPubId && !relatedPub) {
+// 					throw new Error(`No related pub or pubId provided for slug: ${slug}`);
+// 				}
 
-		const mappedRelations = relations.reduce(
-			(acc, { slug, value, relatedPub, relatedPubId }) => {
-				if (!acc[slug]) {
-					acc[slug] = [];
-				}
-				if (!relatedPubId && !relatedPub) {
-					throw new Error(`No related pub or pubId provided for slug: ${slug}`);
-				}
+// 				acc[slug].push({
+// 					value: value as JsonValue,
+// 					pub: relatedPubId ? { id: relatedPubId } : expect(relatedPub),
+// 				});
 
-				acc[slug].push({
-					value: value as JsonValue,
-					pub: relatedPubId ? { id: relatedPubId } : expect(relatedPub),
-				});
+// 				return acc;
+// 			},
+// 			{} as Record<string, RelInput[]>
+// 		);
 
-				return acc;
-			},
-			{} as Record<string, RelInput[]>
-		);
-
-		await upsertPubRelations({
-			pubId,
-			relations: {
-				replace: {
-					relations: mappedRelations,
-				},
-			},
-			communityId,
-			lastModifiedBy,
-			trx,
-		});
-	});
-};
+// 		await upsertPubRelations({
+// 			pubId,
+// 			relations: {
+// 				replace: {
+// 					relations: mappedRelations,
+// 				},
+// 			},
+// 			communityId,
+// 			lastModifiedBy,
+// 			trx,
+// 		});
+// 	});
+// };
 
 const upsertPubValues = async ({
 	pubId,
@@ -1380,12 +1378,6 @@ type RelInput =
 			pub: { id: PubsId };
 			/** Sets the value of the relation for the pub */
 			value: JsonValue;
-	  }
-	| {
-			/** Updates an existing pub */
-			pub: Omit<DefinitelyHas<UpsertPubInput, "id">, "communityId" | "lastModifiedBy">;
-			/** If provided, sets the value of the relation */
-			value?: JsonValue;
 	  };
 
 /**
@@ -1433,30 +1425,6 @@ type UpsertPubRelationInput =
 			};
 			// remove?: never;
 	  };
-// | {
-// 		merge?: never;
-// 		replace?: never;
-// 		/** Explicitly disconnect specific relations */
-// 		remove: {
-// 			relations: Record<
-// 				string,
-// 				Array<{
-// 					pub: { id: PubsId };
-// 					/**
-// 					 * If true, the pub is deleted after disconnecting
-// 					 * Overrides deletePubs setting
-// 					 * @default false
-// 					 */
-// 					deletePub?: boolean;
-// 				}>
-// 			>;
-// 			/**
-// 			 * If true, delete pubs as well
-// 			 * @default false
-// 			 */
-// 			deletePubs?: boolean;
-// 		};
-//   };
 
 type UpsertCreateBaseInput = {
 	id?: PubsId;
@@ -1708,19 +1676,21 @@ export const upsertPub = async (
 
 		let createdStageId: StagesId | undefined;
 
-		const stageId = await upsertHandleStage({
-			...body,
-			id: newOrUpdatedPub.id,
-			trx,
-			lastModifiedBy,
-		});
-
-		const values = await upsertHandlePubValues({
-			...body,
-			id: newOrUpdatedPub.id,
-			trx,
-			lastModifiedBy,
-		});
+		// do the updating
+		const [stageId, values] = await Promise.all([
+			upsertHandleStage({
+				...body,
+				id: newOrUpdatedPub.id,
+				trx,
+				lastModifiedBy,
+			}),
+			upsertHandlePubValues({
+				...body,
+				id: newOrUpdatedPub.id,
+				trx,
+				lastModifiedBy,
+			}),
+		]);
 
 		// if (body.members && Object.keys(body.members).length) {
 		// 	await trx
