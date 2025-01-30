@@ -1870,7 +1870,11 @@ export type FullProcessedPub = ProcessedPub<{
 	withStage: true;
 }>;
 
-export const fullTextSearch = async (query: string, communityId: CommunitiesId) => {
+export const fullTextSearch = async (
+	query: string,
+	communityId: CommunitiesId,
+	userId: UsersId
+) => {
 	const q = db
 		.selectFrom("pubs")
 		.select((eb) => [
@@ -1895,20 +1899,21 @@ export const fullTextSearch = async (query: string, communityId: CommunitiesId) 
 						"_PubFieldToPubType.isTitle",
 						sql<string>`ts_headline('english',
 						 pub_values.value#>>'{}',
-						 plainto_tsquery('english', ${query}),
+						 websearch_to_tsquery(${query}),
 						 'StartSel=<mark>, StopSel=</mark>'
 						)`.as("highlights"),
 					])
 					.whereRef("pub_values.pubId", "=", "pubs.id")
 					.where(
 						(eb) =>
-							sql`to_tsvector('english', value#>>'{}') @@ plainto_tsquery('english', ${query})`
+							sql`to_tsvector('english', value#>>'{}') @@ websearch_to_tsquery(${query})`
 					)
 			).as("matchingValues"),
 		])
 		.where("pubs.communityId", "=", communityId)
-		.where((eb) => sql`pubs."searchVector" @@ plainto_tsquery(${query})`)
-		.orderBy(sql`ts_rank(pubs."searchVector", plainto_tsquery('english', ${query})) desc`);
+		.where((eb) => sql`pubs."searchVector" @@ websearch_to_tsquery(${query})`)
+		.limit(10)
+		.orderBy(sql`ts_rank(pubs."searchVector", websearch_to_tsquery(${query})) desc`);
 
 	const explained = await q.explain("json", sql`analyze`);
 	console.log(explained[0]["QUERY PLAN"][0]);

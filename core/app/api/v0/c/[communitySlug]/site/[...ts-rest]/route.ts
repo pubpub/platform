@@ -25,6 +25,7 @@ import {
 	deletePub,
 	doesPubExist,
 	ForbiddenError,
+	fullTextSearch,
 	getPubsWithRelatedValuesAndChildren,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
@@ -221,6 +222,22 @@ const handler = createNextHandler(
 	siteApi,
 	{
 		pubs: {
+			search: async ({ query }) => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: true,
+				});
+
+				console.log("HEY");
+				const pubs = await fullTextSearch(query.query, community.id, user.id);
+
+				console.log(pubs);
+				return {
+					status: 200,
+					body: pubs,
+				};
+			},
+
 			get: async ({ params, query }) => {
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },

@@ -352,6 +352,18 @@ export const zodErrorSchema = z.object({
 export const siteApi = contract.router(
 	{
 		pubs: {
+			search: {
+				method: "GET",
+				path: "/pubs/search",
+				summary: "Search for pubs",
+				description: "Search for pubs by title or value.",
+				query: z.object({
+					query: z.string(),
+				}),
+				responses: {
+					200: z.any().array(),
+				},
+			},
 			get: {
 				method: "GET",
 				path: "/pubs/:pubId",

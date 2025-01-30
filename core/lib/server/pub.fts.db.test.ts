@@ -94,7 +94,7 @@ describe("fullTextSearch", () => {
 
 		const { fullTextSearch } = await import("./pub");
 
-		const pubs = await fullTextSearch("title", seeded.community.id);
+		const pubs = await fullTextSearch("title", seeded.community.id, seeded.users.admin.id);
 		console.dir(pubs, { depth: null });
 
 		const searchVector = await testDb
