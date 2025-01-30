@@ -94,14 +94,14 @@ model Community {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  pubTypes             PubType[]
-  pubs                 Pub[]
-  memberGroups         MemberGroup[]
-  stages               Stage[]
-  APIAccessToken       ApiAccessToken[]
-  Form                 Form[]
-  pubFields            PubField[]
-  members              CommunityMembership[]
+  pubTypes       PubType[]
+  pubs           Pub[]
+  memberGroups   MemberGroup[]
+  stages         Stage[]
+  APIAccessToken ApiAccessToken[]
+  Form           Form[]
+  pubFields      PubField[]
+  members        CommunityMembership[]
 
   @@map(name: "communities")
 }
@@ -127,13 +127,16 @@ model Pub {
   parentId String?
   children Pub[]   @relation("pub_parent")
 
-  values                   PubValue[]                 @relation("original_pub")
-  stages                   PubsInStages[]
-  actionRuns               ActionRun[]
-  relatedValues            PubValue[]                 @relation("related_pub")
-  members                  PubMembership[]
-  formMemberships          FormMembership[]
+  values          PubValue[]       @relation("original_pub")
+  stages          PubsInStages[]
+  actionRuns      ActionRun[]
+  relatedValues   PubValue[]       @relation("related_pub")
+  members         PubMembership[]
+  formMemberships FormMembership[]
 
+  searchVector Unsupported("tsvector")?
+
+  @@index([searchVector], type: Gin)
   @@map(name: "pubs")
 }
 
@@ -253,8 +256,8 @@ model Stage {
   updatedAt   DateTime  @default(now()) @updatedAt
 
   pubs                  PubsInStages[]
-  moveConstraints       MoveConstraint[]      @relation("move_constraint")
-  moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
+  moveConstraints       MoveConstraint[]  @relation("move_constraint")
+  moveConstraintSources MoveConstraint[]  @relation("move_constraint_destination")
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]

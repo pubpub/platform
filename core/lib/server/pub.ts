@@ -1869,3 +1869,49 @@ export type FullProcessedPub = ProcessedPub<{
 	withPubType: true;
 	withStage: true;
 }>;
+
+export const fullTextSearch = async (query: string, communityId: CommunitiesId) => {
+	const q = db
+		.selectFrom("pubs")
+		.select((eb) => [
+			"pubs.id",
+			"pubs.title",
+			"pubs.searchVector",
+			sql<string>`ts_headline('english', pubs.title, plainto_tsquery(${query}), 'StartSel=<mark>, StopSel=</mark>')`.as(
+				"titleHighlights"
+			),
+			pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+					.innerJoin("_PubFieldToPubType", (join) =>
+						join.onRef("A", "=", "pub_fields.id").onRef("B", "=", "pubs.pubTypeId")
+					)
+					.select([
+						"pub_values.value",
+						"pub_fields.name",
+						"pub_fields.slug",
+						"_PubFieldToPubType.isTitle",
+						sql<string>`ts_headline('english',
+						 pub_values.value#>>'{}',
+						 plainto_tsquery('english', ${query}),
+						 'StartSel=<mark>, StopSel=</mark>'
+						)`.as("highlights"),
+					])
+					.whereRef("pub_values.pubId", "=", "pubs.id")
+					.where(
+						(eb) =>
+							sql`to_tsvector('english', value#>>'{}') @@ plainto_tsquery('english', ${query})`
+					)
+			).as("matchingValues"),
+		])
+		.where("pubs.communityId", "=", communityId)
+		.where((eb) => sql`pubs."searchVector" @@ plainto_tsquery(${query})`)
+		.orderBy(sql`ts_rank(pubs."searchVector", plainto_tsquery('english', ${query})) desc`);
+
+	const explained = await q.explain("json", sql`analyze`);
+	console.log(explained[0]["QUERY PLAN"][0]);
+
+	return q.execute();
+};
