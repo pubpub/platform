@@ -864,25 +864,33 @@ export const upsertPubRelations = async (
 		continueOnValidationError: false,
 	});
 
-	const { newPubs, existingPubs } = normalizedRelationValues.relations.reduce(
+	const { upsertingPubs, linkingPubs } = normalizedRelationValues.relations.reduce(
 		(acc, rel) => {
 			const fieldId = validatedRelationValues.find(({ slug }) => slug === rel.slug)?.fieldId;
 			assert(fieldId, `No pub field found for slug '${rel.slug}'`);
 
-			if (Object.keys(rel.pub).length > 1) {
-				acc.newPubs.push({ ...rel, fieldId });
+			if (Object.keys(rel.pub).length === 1 && rel.pub.id) {
+				acc.linkingPubs.push({ value: rel.value, fieldId, relatedPubId: rel.pub.id });
 			} else {
-				acc.existingPubs.push({ value: rel.value, fieldId, relatedPubId: rel.pub.id });
+				acc.upsertingPubs.push({
+					...(rel as {
+						pub: Omit<UpsertCreateInput, "communityId" | "lastModifiedBy">;
+						value: unknown;
+						slug: string;
+					}),
+					fieldId,
+				});
 			}
 
 			return acc;
 		},
 		{
-			newPubs: [] as (RelInput & {
+			upsertingPubs: [] as {
+				value: unknown;
 				fieldId: PubFieldsId;
-				pub: Omit<UpsertPubInput, "communityId">;
-			})[],
-			existingPubs: [] as {
+				pub: Omit<UpsertCreateInput, "communityId" | "lastModifiedBy">;
+			}[],
+			linkingPubs: [] as {
 				value: unknown;
 				fieldId: PubFieldsId;
 				relatedPubId: PubsId;
@@ -892,7 +900,7 @@ export const upsertPubRelations = async (
 
 	const pubRelations = await maybeWithTrx(trx, async (trx) => {
 		const newlyCreatedPubs = await Promise.all(
-			newPubs.map((pub) =>
+			upsertingPubs.map((pub) =>
 				upsertPub(
 					{
 						trx,
@@ -907,12 +915,12 @@ export const upsertPubRelations = async (
 
 		// assumed they keep their order
 
-		const newPubsWithRelatedPubId = newPubs.map((pub, index) => ({
+		const newPubsWithRelatedPubId = upsertingPubs.map((pub, index) => ({
 			...pub,
 			relatedPubId: expect(newlyCreatedPubs[index].id),
 		}));
 
-		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs] as {
+		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...linkingPubs] as {
 			relatedPubId: PubsId;
 			value: unknown;
 			slug: string;
@@ -1188,63 +1196,6 @@ export const addDeletePubValueHistoryEntries = async ({
 	).execute();
 };
 
-// /**
-//  * Replaces all relations for given field slugs with new relations.
-//  * First removes all existing relations for the provided slugs, then adds the new relations.
-//  *
-//  * If the `relations` object is empty, this function does nothing.
-//  */
-// export const replacePubRelationsBySlug = async ({
-// 	pubId,
-// 	relations,
-// 	communityId,
-// 	lastModifiedBy,
-// 	trx = db,
-// }: {
-// 	pubId: PubsId;
-// 	relations: AddPubRelationsInput[];
-// 	communityId: CommunitiesId;
-// 	lastModifiedBy: LastModifiedBy;
-// 	trx?: typeof db;
-// }) => {
-// 	if (!Object.keys(relations).length) {
-// 		return;
-// 	}
-
-// 	await maybeWithTrx(trx, async (trx) => {
-// 		const mappedRelations = relations.reduce(
-// 			(acc, { slug, value, relatedPub, relatedPubId }) => {
-// 				if (!acc[slug]) {
-// 					acc[slug] = [];
-// 				}
-// 				if (!relatedPubId && !relatedPub) {
-// 					throw new Error(`No related pub or pubId provided for slug: ${slug}`);
-// 				}
-
-// 				acc[slug].push({
-// 					value: value as JsonValue,
-// 					pub: relatedPubId ? { id: relatedPubId } : expect(relatedPub),
-// 				});
-
-// 				return acc;
-// 			},
-// 			{} as Record<string, RelInput[]>
-// 		);
-
-// 		await upsertPubRelations({
-// 			pubId,
-// 			relations: {
-// 				replace: {
-// 					relations: mappedRelations,
-// 				},
-// 			},
-// 			communityId,
-// 			lastModifiedBy,
-// 			trx,
-// 		});
-// 	});
-// };
-
 const upsertPubValues = async ({
 	pubId,
 	pubValues,
@@ -1441,23 +1392,25 @@ type UpsertUpdateBaseInput = {
 	pubTypeId?: PubTypesId;
 	communityId: CommunitiesId;
 };
+type UpsertShared = {
+	/**
+	 * @deprecated
+	 */
+	assigneeId?: UsersId;
+	stageId?: StagesId;
+	parentId?: PubsId;
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
 
-type PubInputBase = UpsertCreateBaseInput | UpsertUpdateBaseInput;
-export type UpsertPubInput = Prettify<
-	PubInputBase & {
-		/**
-		 * @deprecated
-		 */
-		assigneeId?: UsersId;
-		stageId?: StagesId;
-		parentId?: PubsId;
-		lastModifiedBy: LastModifiedBy;
-		trx?: typeof db;
+	/** Relations operations - each field can have one operation type */
+	relations?: UpsertPubRelationInput;
+};
 
-		/** Relations operations - each field can have one operation type */
-		relations?: UpsertPubRelationInput;
-	}
->;
+type UpsertCreateInput = Prettify<UpsertCreateBaseInput & UpsertShared>;
+
+type UpsertUpdateInput = Prettify<UpsertUpdateBaseInput & UpsertShared>;
+
+export type UpsertPubInput = UpsertCreateInput | UpsertUpdateInput;
 
 const normalizePubValues = (
 	pubValues:
@@ -1691,19 +1644,6 @@ export const upsertPub = async (
 			}),
 		]);
 
-		// if (body.members && Object.keys(body.members).length) {
-		// 	await trx
-		// 		.insertInto("pub_memberships")
-		// 		.values(
-		// 			Object.entries(body.members).map(([userId, role]) => ({
-		// 				pubId: newOrUpdatedPub.id,
-		// 				userId: userId as UsersId,
-		// 				role,
-		// 			}))
-		// 		)
-		// 		.execute();
-		// }
-
 		const pub = await getPlainPub(newOrUpdatedPub.id, trx).executeTakeFirstOrThrow();
 
 		if (!body.relations) {
@@ -1715,35 +1655,6 @@ export const upsertPub = async (
 				depth,
 			} satisfies ProcessedPub;
 		}
-
-		// // TODO: could be parallelized with relatedPubs if we want to
-		// const children = await Promise.all(
-		// 	body.children?.map(async (child) => {
-		// 		const childPub = await createPubRecursiveNew(
-		// 			{
-		// 				body: child,
-		// 				communityId,
-		// 				parent: {
-		// 					id: newOrUpdatedPub.id,
-		// 				},
-		// 				trx,
-		// 				lastModifiedBy,
-		// 			},
-		// 			depth + 1
-		// 		);
-		// 		return childPub;
-		// 	}) ?? []
-		// );
-
-		// if (!body.relations) {
-		// 	return {
-		// 		...pub,
-		// 		stageId: createdStageId ?? null,
-		// 		values: hydratedValues,
-		// 		children: children.length ? children : [],
-		// 		depth,
-		// 	} satisfies ProcessedPub;
-		// }
 
 		const relatedPubs = await upsertPubRelations(
 			{

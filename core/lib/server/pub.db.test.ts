@@ -9,7 +9,6 @@ import type { MaybeHas } from "../types";
 import type { UnprocessedPub, UpsertPubInput } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
-import { getPlainPub, updatePub } from "./pub";
 
 const { createSeed, seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
@@ -17,73 +16,7 @@ const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
 
-// Helper function to create the matcher object
-//   const expectPub = (pubOrId: ProcessedPub | PubsId) => {
-// 	const matchers = {
-// 	  async toExist(this: vitest.MatcherContext) {
-// 		if (typeof pubOrId !== 'string') {
-// 		  throw new Error('toExist() can only be called with a PubsId');
-// 		}
-
-// 		const pub = await getPlainPub(pubOrId).executeTakeFirst();
-// 		const pass = Boolean(pub && pub.id === pubOrId);
-
-// 		return {
-// 		  pass,
-// 		  message: () =>
-// 			pass
-// 			  ? `Expected pub with ID ${pubOrId} not to exist, but it does`
-// 			  : `Expected pub with ID ${pubOrId} to exist, but it does not`,
-// 		};
-// 	  },
-
-// 	  toHaveValues(this: jest.MatcherContext, expected: Partial<ProcessedPub["values"][number]>[]) {
-// 		if (typeof pubOrId === 'string') {
-// 		  throw new Error('toHaveValues() can only be called with a ProcessedPub');
-// 		}
-
-// 		const pub = pubOrId;
-// 		const sortedPubValues = [...pub.values].sort((a, b) =>
-// 		  (a.value as string).localeCompare(b.value as string)
-// 		);
-
-// 		const pass =
-// 		  sortedPubValues.length === expected.length &&
-// 		  expected.every(expectedValue =>
-// 			sortedPubValues.some(actualValue =>
-// 			  Object.entries(expectedValue).every(([key, value]) =>
-// 				actualValue[key as keyof typeof actualValue] === value
-// 			  )
-// 			)
-// 		  );
-
-// 		return {
-// 		  pass,
-// 		  message: () =>
-// 			pass
-// 			  ? `Expected pub not to have values ${JSON.stringify(expected)}, but it does`
-// 			  : `Expected pub to have values ${JSON.stringify(expected)}, but it has ${JSON.stringify(sortedPubValues)}`,
-// 		};
-// 	  },
-// 	};
-
-// 	return {
-// 	  ...matchers,
-// 	  not: {
-// 		...matchers,
-// 		toHaveValues: function (expected: Partial<ProcessedPub["values"][number]>[]) {
-// 		  const result = matchers.toHaveValues.call(this, expected);
-// 		  return { ...result, pass: !result.pass };
-// 		},
-// 		toExist: async function () {
-// 		  const result = await matchers.toExist.call(this);
-// 		  return { ...result, pass: !result.pass };
-// 		},
-// 	  },
-// 	};
-//   };
-
-// Add the custom matcher
+// Custom helper matchers
 expect.extend({
 	async toExist(received: PubsId | ProcessedPub) {
 		if (typeof received !== "string") {
