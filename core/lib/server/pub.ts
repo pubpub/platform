@@ -36,11 +36,13 @@ import type {
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
+import { logger } from "logger";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
+import { env } from "../env/env.mjs";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
@@ -1915,8 +1917,15 @@ export const fullTextSearch = async (
 		.limit(10)
 		.orderBy(sql`ts_rank(pubs."searchVector", websearch_to_tsquery(${query})) desc`);
 
-	const explained = await q.explain("json", sql`analyze`);
-	console.log(explained[0]["QUERY PLAN"][0]);
+	if (env.LOG_LEVEL === "debug" || env.KYSELY_DEBUG) {
+		const explained = await q.explain("json", sql`analyze`);
+		logger.debug({
+			msg: `Full Text Search EXPLAIN: ${explained[0]["QUERY PLAN"][0]}`,
+			query,
+			communityId,
+			userId,
+		});
+	}
 
 	return q.execute();
 };
