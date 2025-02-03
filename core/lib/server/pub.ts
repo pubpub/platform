@@ -1262,8 +1262,8 @@ const upsertPubValues = async ({
 	}[];
 	lastModifiedBy: LastModifiedBy;
 	trx: typeof db;
-}) => {
-	return pubValues.length
+}): Promise<PubValuesType[]> => {
+	const result = pubValues.length
 		? autoRevalidate(
 				trx
 					.insertInto("pub_values")
@@ -1289,6 +1289,8 @@ const upsertPubValues = async ({
 					.returningAll()
 			).execute()
 		: [];
+
+	return result;
 };
 
 export const updatePub = async ({
@@ -1479,11 +1481,17 @@ const normalizePubValues = (
 	return vals;
 };
 
+type PubValuesWithFieldInfo = PubValuesType & {
+	fieldSlug: string;
+	fieldName: string;
+	schemaName: CoreSchemaType;
+};
+
 const upsertHandlePubValues = async ({
 	lastModifiedBy,
 	trx = db,
 	...body
-}: UpsertPubInput & { id: PubsId }) => {
+}: UpsertPubInput & { id: PubsId }): Promise<PubValuesWithFieldInfo[]> => {
 	const vals = {
 		mode: body.values ? (body.values.replace ? "replace" : "merge") : "none",
 		values: body.values ? (body.values.replace ?? body.values.merge) : null,
@@ -1538,16 +1546,24 @@ const upsertHandlePubValues = async ({
 	});
 
 	// we only need to get the other values if we're merging
-	const otherExistingPubValues = (
+	const otherExistingPubValues =
 		vals.mode === "merge"
 			? await db
 					.selectFrom("pub_values")
 					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 					.selectAll("pub_values")
-					.select("pub_fields.slug as slug")
-					.select("pub_fields.schemaName")
-					.select("pub_fields.name as fieldName")
-					.select("pub_fields.id as fieldId")
+					.select([
+						"pub_values.id",
+						"pub_values.value",
+						"pub_values.relatedPubId",
+						"pub_fields.slug as fieldSlug",
+						"pub_fields.schemaName",
+						"pub_fields.name as fieldName",
+						"pub_fields.schemaName as schemaName",
+						"pub_fields.id as fieldId",
+						"pub_values.createdAt",
+						"pub_values.updatedAt",
+					])
 					.where("pubId", "=", body.id)
 					.whereRef("pub_values.fieldId", "=", "pub_fields.id")
 					.where(
@@ -1555,18 +1571,12 @@ const upsertHandlePubValues = async ({
 						"not in",
 						pubValues.map(({ id }) => id)
 					)
+					// cause it's not null
+					.$narrowType<{ schemaName: CoreSchemaType }>()
 					.execute()
-			: []
-	) as Awaited<ReturnType<typeof validatePubValues>>;
+			: [];
 
-	const hydratedValues = [...otherExistingPubValues, ...pubValues].map((v) => {
-		if ("slug" in v) {
-			return {
-				...v,
-				fieldSlug: v.slug,
-			};
-		}
-
+	const hydratedValues = pubValues.map((v) => {
 		const correspondingValue = valuesWithFieldIds.find(({ fieldId }) => fieldId === v.fieldId)!;
 		return {
 			...v,
@@ -1576,7 +1586,7 @@ const upsertHandlePubValues = async ({
 		};
 	});
 
-	return hydratedValues;
+	return [...otherExistingPubValues, ...hydratedValues];
 };
 
 const upsertHandleStage = async (body: UpsertPubInput & { id: PubsId }) => {
