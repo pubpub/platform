@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import * as z from "zod";
 
 import type { StagesId } from "db/public";
@@ -36,25 +37,35 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 
 	const orderedStages = new Set<T>();
 	const stagesQueue: T[] = stageRoots;
-	// Breadth-first traversal of the graph(s)
-	while (stagesQueue.length > 0) {
-		const stage = stagesQueue.shift();
-		if (!stage) {
-			// This should be unreachable because of the condition in the while, but Typescript
-			// doesn't know that
-			break;
-		}
+	const startTime = Date.now();
+	try {
+		// Breadth-first traversal of the graph(s)
+		while (stagesQueue.length > 0) {
+			if (Date.now() - startTime > 500) {
+				throw new Error("Stage sorting timed out");
+			}
+			const stage = stagesQueue.shift();
+			if (!stage) {
+				// This should be unreachable because of the condition in the while, but Typescript
+				// doesn't know that
+				break;
+			}
 
-		// If we've already visited this stage we're in a cycle, and shouldn't add its destinations.
-		// But we don't break, because there may be other stages already in the queue that should
-		// still be visited
-		if (orderedStages.has(stage)) {
-			continue;
+			// If we've already visited this stage we're in a cycle, and shouldn't add its destinations.
+			// But we don't break, because there may be other stages already in the queue that should
+			// still be visited
+			if (orderedStages.has(stage)) {
+				continue;
+			}
+			orderedStages.add(stage);
+			stage.moveConstraints.forEach((destinationStage) =>
+				stagesQueue.push(stagesById[destinationStage.id])
+			);
 		}
-		orderedStages.add(stage);
-		stage.moveConstraints.forEach((destinationStage) =>
-			stagesQueue.push(stagesById[destinationStage.id])
-		);
+	} catch (err) {
+		Sentry.captureException(err);
+		// Sorting took too long, but we don't need to throw and can still dedupe the input stages
+		return [...new Set(stages)];
 	}
 
 	// Because the algorithm above starts with "root" stages only, it will totally exclude graphs
