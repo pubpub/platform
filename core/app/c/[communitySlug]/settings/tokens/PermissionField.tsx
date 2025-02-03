@@ -149,8 +149,8 @@ const permissionContraintMap: PermissionContraintMap = {
 							value === true
 								? context.stages.allValues
 								: !value
-									? []
-									: (value.stages ?? [])
+									? context.stages.allValues
+									: (value.stages ?? context.stages.allValues)
 						}
 						onValueChange={(val) => {
 							const allStagesSelected =
@@ -160,14 +160,20 @@ const permissionContraintMap: PermissionContraintMap = {
 								typeof value === "object" &&
 								value.pubTypes?.length === context.pubTypes.allValues.length;
 
-							if (allStagesSelected && allPubTypesSelected) {
+							if ((allStagesSelected || val.length === 0) && allPubTypesSelected) {
 								onChange(true);
 								return;
 							}
 
 							onChange({
-								stages: val as StagesId[],
-								pubTypes: typeof value === "object" ? value.pubTypes : [],
+								stages:
+									val.length === 0
+										? context.stages.allValues
+										: (val as StagesId[]),
+								pubTypes:
+									typeof value === "object"
+										? value.pubTypes
+										: context.pubTypes.allValues,
 							});
 						}}
 						animation={0}
@@ -185,8 +191,8 @@ const permissionContraintMap: PermissionContraintMap = {
 							value === true
 								? context.pubTypes.allValues
 								: !value
-									? []
-									: (value.pubTypes ?? [])
+									? context.pubTypes.allValues
+									: (value.pubTypes ?? context.pubTypes.allValues)
 						}
 						onValueChange={(val) => {
 							const allPubTypesSelected =
@@ -196,14 +202,20 @@ const permissionContraintMap: PermissionContraintMap = {
 								typeof value === "object" &&
 								value.stages?.length === context.stages.allValues.length;
 
-							if (allPubTypesSelected && allStagesSelected) {
+							if ((allStagesSelected || val.length === 0) && allPubTypesSelected) {
 								onChange(true);
 								return;
 							}
 
 							onChange({
-								pubTypes: val as PubTypesId[],
-								stages: typeof value == "object" ? value.stages : [],
+								pubTypes:
+									val.length === 0
+										? context.pubTypes.allValues
+										: (val as PubTypesId[]),
+								stages:
+									typeof value == "object"
+										? value.stages
+										: context.stages.allValues,
 							});
 						}}
 						animation={0}
@@ -222,25 +234,18 @@ const permissionContraintMap: PermissionContraintMap = {
 					</span>
 					<MultiSelect
 						variant="inverted"
-						options={context.stages.map((stage) => ({
-							label: stage.name,
-							value: stage.id,
-						}))}
+						options={context.stages.allOptions}
 						/**
 						 * This just means: if it is set to `true`, allow it to act on all stages.
 						 * If it is set to `false`, allow it to act on no stages.
 						 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
 						 */
 						defaultValue={
-							value === true
-								? context.stages.map((stage) => stage.id)
-								: !value
-									? []
-									: value.stages
+							value === true ? context.stages.allValues : !value ? [] : value.stages
 						}
 						onValueChange={(value) => {
 							onChange(
-								value.length > 0 && value.length !== context.stages.length
+								value.length > 0 && value.length !== context.stages.allValues.length
 									? { stages: value as StagesId[] }
 									: true
 							);
@@ -263,16 +268,9 @@ const permissionContraintMap: PermissionContraintMap = {
 					</span>
 					<MultiSelect
 						variant="inverted"
-						options={context.stages.map((stage) => ({
-							label: stage.name,
-							value: stage.id,
-						}))}
+						options={context.stages.allOptions}
 						defaultValue={
-							value === true
-								? context.stages.map((stage) => stage.id)
-								: !value
-									? []
-									: value.stages
+							value === true ? context.stages.allValues : !value ? [] : value.stages
 						}
 						onValueChange={(value) => {
 							onChange(value.length > 0 ? { stages: value as StagesId[] } : true);
@@ -328,7 +326,7 @@ function FormItemWrapper({
 	dataTestId,
 }: {
 	children?: React.ReactNode;
-	checked: boolean;
+	checked: boolean | "indeterminate";
 	onChange: (change: boolean) => void;
 	type: ApiAccessType;
 	dataTestId: string;
@@ -402,7 +400,7 @@ export const ConstraintFormFieldRender = ({
 	return (
 		<FormItemWrapper
 			dataTestId={`${scope}-${type}-checkbox`}
-			checked={Boolean(field.value)}
+			checked={typeof field.value === "object" ? "indeterminate" : Boolean(field.value)}
 			onChange={field.onChange}
 			type={type}
 		>

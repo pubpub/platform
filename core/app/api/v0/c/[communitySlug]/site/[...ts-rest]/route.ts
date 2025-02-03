@@ -283,14 +283,22 @@ const handler = createNextHandler(
 						: [pubIds]
 					: undefined;
 
-				const pubTypes = requestedPubTypes
-					? requestedPubTypes.filter((pubType) => allowedPubTypes?.includes(pubType))
-					: allowedPubTypes;
-				const stages = requestedStages
-					? requestedStages.filter((stage) => allowedStages?.includes(stage))
-					: allowedStages;
+				const pubTypes =
+					requestedPubTypes?.length && allowedPubTypes?.length
+						? requestedPubTypes.filter((pubType) => allowedPubTypes?.includes(pubType))
+						: allowedPubTypes?.length || requestedPubTypes;
 
-				console.log(pubTypes, stages);
+				const stages =
+					requestedStages?.length && allowedStages?.length
+						? requestedStages.filter((stage) => allowedStages?.includes(stage))
+						: (allowedStages ?? requestedStages);
+
+				console.log("requestedPubTypes", requestedPubTypes);
+				console.log("allowedPubTypes", allowedPubTypes);
+				console.log("pubTypes", pubTypes);
+				console.log("requestedStages", requestedStages);
+				console.log("allowedStages", allowedStages);
+				console.log("stages", stages);
 
 				const pubs = await getPubsWithRelatedValuesAndChildren(
 					{

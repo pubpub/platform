@@ -69,6 +69,7 @@ export class ApiTokenPage {
 			permissions: Partial<Permissions> | true;
 		}
 	) {
+		await this.newTokenNameBox.click();
 		await this.newTokenNameBox.fill(input.name);
 		await this.newTokenDescriptionBox.fill(input.description ?? "");
 		// await this.newTokenExpiryDatePicker.fill(input.expiration.toISOString());
@@ -105,6 +106,9 @@ export class ApiTokenPage {
 				}
 			}
 		}
+
+		// for some reason the name is not recognized properly sometimes
+		await this.newTokenNameBox.fill(input.name);
 
 		await this.newTokenCreateButton.click({
 			timeout: 1_000,

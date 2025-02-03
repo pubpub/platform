@@ -126,7 +126,7 @@ test.describe("Site API", () => {
 			const pubTypesPage = new PubTypesPage(page, COMMUNITY_SLUG);
 			await pubTypesPage.goto();
 			const pubType1 = await pubTypesPage.addType(
-				"test pub type",
+				"test pub type 1",
 				"test pub type description",
 				[`title`]
 			);
@@ -235,6 +235,7 @@ test.describe("Site API", () => {
 
 		test("if both pub type and stage are restricted, only pubs of that pub type and stage are returned", async () => {
 			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
+			tokenPage.goto();
 			const bothToken = await tokenPage.createToken({
 				name: "test token with pub type and stage restriction",
 				permissions: {
@@ -262,6 +263,21 @@ test.describe("Site API", () => {
 		});
 
 		test("if stage is restricted, we can still further filter by pub type", async () => {
+			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
+			tokenPage.goto();
+			const onlyStageToken = await tokenPage.createToken({
+				name: "tttest token with stage restriction",
+				description: "tttest token with stage restriction",
+				permissions: {
+					pub: {
+						read: {
+							stages: [testStage1],
+						},
+					},
+				},
+			});
+			clientOnlyStageClient = createClient(onlyStageToken!);
+
 			const pubResponseRestrictedToStage1FilteredByPubType1 =
 				await clientOnlyStageClient.pubs.getMany({
 					params: {
@@ -284,6 +300,7 @@ test.describe("Site API", () => {
 
 		test("if stages are restricted to pubs not in a stage ", async () => {
 			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
+			tokenPage.goto();
 			const noStageToken = await tokenPage.createToken({
 				name: "test token with no stage restriction",
 				permissions: {

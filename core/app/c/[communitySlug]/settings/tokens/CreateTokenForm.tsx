@@ -28,6 +28,7 @@ export const createTokenFormSchema = apiAccessTokensInitializerSchema
 		issuedById: true,
 	})
 	.extend({
+		name: z.string().min(1, "Name is required").max(255, "Name is too long"),
 		description: z.string().max(255).optional(),
 		token: apiAccessTokensInitializerSchema.shape.token.optional(),
 		expiration: z
@@ -63,6 +64,8 @@ export const CreateTokenForm = () => {
 	const form = useForm<CreateTokenFormSchema>({
 		resolver: zodResolver(createTokenFormSchema),
 		defaultValues: {
+			name: "",
+			description: "",
 			// default to 1 day from now, mostly to make testing easier
 			expiration: new Date(Date.now() + 1000 * 60 * 60 * 24),
 		},
@@ -79,6 +82,8 @@ export const CreateTokenForm = () => {
 	};
 	// this `as const` should not be necessary, not sure why it is
 	const token = form.watch("token" as const);
+
+	console.log(form.getValues());
 
 	return (
 		<Form {...form}>
@@ -165,7 +170,7 @@ export const CreateTokenForm = () => {
 						<Button
 							type="submit"
 							className="justify-self-end"
-							disabled={!form.formState.isValid}
+							// disabled={!form.formState.isValid}
 							data-testid="create-token-button"
 						>
 							Create Token

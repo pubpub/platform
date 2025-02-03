@@ -107,7 +107,7 @@ export async function StagePubs({
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
 		getPubsWithRelatedValuesAndChildren(
-			{ stageId: stage.id, communityId: stage.communityId },
+			{ stageId: [stage.id], communityId: stage.communityId },
 			{
 				// fetch one extra pub so we know whether or not to render a show more button
 				limit: pagination?.pubsPerPage || (totalPubLimit && totalPubLimit + 1),
