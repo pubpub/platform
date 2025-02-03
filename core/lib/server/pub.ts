@@ -432,6 +432,35 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 	Array.isArray(value) &&
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
 
+export const mapOldInputToNewInput = (
+	pub: DefinitelyHas<CreatePubRequestBodyWithNullsNew, "relatedPubs">
+): Record<string, RelInput[]> => {
+	return Object.fromEntries(
+		Object.entries(pub.relatedPubs!).map(([slug, pubs]) => [
+			slug,
+			pubs.map(({ value, pub }) => ({
+				value,
+				pub: {
+					...pub,
+					id: pub.id as PubsId | undefined,
+					assigneeId: pub.assigneeId as UsersId | undefined,
+					pubTypeId: pub.pubTypeId as PubTypesId,
+					stageId: pub.stageId as StagesId | undefined,
+					parentId: pub.parentId as PubsId | undefined,
+					values: { replace: pub.values },
+					...(pub.relatedPubs
+						? {
+								relations: {
+									replace: { relations: mapOldInputToNewInput(pub) },
+								},
+							}
+						: {}),
+				},
+			})),
+		])
+	);
+};
+
 /**
  * @throws
  * @deprecated use upsertPubRecursiveNew instead
@@ -589,35 +618,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				depth,
 			} satisfies ProcessedPub;
 		}
-
-		const mapOldInputToNewInput = (
-			pub: DefinitelyHas<CreatePubRequestBodyWithNullsNew, "relatedPubs">
-		): Record<string, RelInput[]> => {
-			return Object.fromEntries(
-				Object.entries(pub.relatedPubs!).map(([slug, pubs]) => [
-					slug,
-					pubs.map(({ value, pub }) => ({
-						value,
-						pub: {
-							...pub,
-							id: pub.id as PubsId | undefined,
-							assigneeId: pub.assigneeId as UsersId | undefined,
-							pubTypeId: pub.pubTypeId as PubTypesId,
-							stageId: pub.stageId as StagesId | undefined,
-							parentId: pub.parentId as PubsId | undefined,
-							values: { replace: pub.values },
-							...(pub.relatedPubs
-								? {
-										relations: {
-											replace: { relations: mapOldInputToNewInput(pub) },
-										},
-									}
-								: {}),
-						},
-					})),
-				])
-			);
-		};
 
 		// const mappedPubRelations = Object.fromEntries(
 		// 	Object.entries(body.relatedPubs).map(([slug, pubs]) => [
@@ -1309,7 +1309,7 @@ export const updatePub = async ({
 	return result;
 };
 
-type RelInput =
+export type RelInput =
 	| {
 			/** If id is provided, updates existing pub, otherwise creates new */
 			pub: Omit<UpsertPubInput, "communityId" | "lastModifiedBy">;
