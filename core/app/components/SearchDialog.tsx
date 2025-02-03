@@ -46,9 +46,13 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 				params: { communitySlug: community.slug },
 			}),
 		enabled: debouncedQuery.length > 0,
+		placeholderData: (prev, prevQuery) => {
+			if (prevQuery?.state.error || prevQuery?.state.data?.status !== 200) {
+				return prevQuery?.state.data;
+			}
+			return prev;
+		},
 	});
-
-	console.log(results);
 
 	// CMD+K handler
 	useEffect(() => {
@@ -64,11 +68,14 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 		return () => document.removeEventListener("keydown", down);
 	}, [onOpenChange]);
 
-	// console.log(results.body.map((pub) => pub.pubType.name));
-
 	const router = useRouter();
 	return (
-		<CommandDialog open={open} onOpenChange={setOpen}>
+		<CommandDialog
+			open={open}
+			onOpenChange={setOpen}
+			title="Search pubs"
+			description="Search pubs by title and content"
+		>
 			<Command shouldFilter={false}>
 				<CommandInput placeholder="Search pubs..." value={query} onValueChange={setQuery} />
 				<CommandList>
