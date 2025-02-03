@@ -1,6 +1,7 @@
 "use client";
 
 import type { Static } from "@sinclair/typebox";
+import type { Node } from "prosemirror-model";
 import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
@@ -48,17 +49,27 @@ const preparePayload = ({
 	toggleContext: FormElementToggleContext;
 }) => {
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug, schemaName } of formElements) {
+	for (const { slug, schemaName, isRelation } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
 			// Only send fields that were changed.
 			formState.dirtyFields[slug]
 		) {
-			payload[slug] =
-				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(formValues[slug])
-					: formValues[slug];
+			if (schemaName === CoreSchemaType.RichText) {
+				if (isRelation) {
+					payload[slug] = formValues[slug].map(
+						(fv: { relatedPubId: PubsId; value: Node }) => ({
+							...fv,
+							value: serializeProseMirrorDoc(fv.value),
+						})
+					);
+				} else {
+					payload[slug] = serializeProseMirrorDoc(formValues[slug]);
+				}
+			} else {
+				payload[slug] = formValues[slug];
+			}
 		}
 	}
 	return payload;
