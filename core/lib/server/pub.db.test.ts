@@ -1797,7 +1797,7 @@ describe("upsertPubRelations: replace", () => {
 									[pubFields.Title.slug]: "Related pub 1",
 								},
 							},
-							value: "relation value 1",
+							value: "old relation value 1",
 						},
 						{
 							pub: {
@@ -1806,13 +1806,19 @@ describe("upsertPubRelations: replace", () => {
 									[pubFields.Title.slug]: "Related pub 2",
 								},
 							},
-							value: "relation value 2",
+							value: "old relation value 2",
 						},
 					],
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
+
+		expect(pub).toHaveValues([
+			{ value: "old relation value 1" },
+			{ value: "old relation value 2" },
+			{ value: "Test pub" },
+		]);
 
 		// Create new pubs to relate
 		const newRelatedPub1 = await createPubRecursiveNew({
@@ -1883,9 +1889,9 @@ describe("upsertPubRelations: replace", () => {
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
-		console.log(updatedPub);
 
 		expect(updatedPub).toHaveValues([
+			{ value: "Test pub", fieldSlug: pubFields.Title.slug },
 			{ value: "new relation value 1", relatedPubId: newRelatedPub1.id },
 			{ value: "new relation value 2", relatedPubId: newRelatedPub2.id },
 		]);
@@ -1900,6 +1906,19 @@ describe("upsertPubRelations: replace", () => {
 				pubTypeId: pubTypes["Basic Pub"].id,
 				values: {
 					[pubFields.Title.slug]: "Test pub",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "relation value 1",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "relation value 1",
+								},
+							},
+						},
+					],
 				},
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
@@ -1921,7 +1940,7 @@ describe("upsertPubRelations: replace", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toHaveValues([]);
+		expect(updatedPub).toHaveValues([{ value: "Test pub", fieldSlug: pubFields.Title.slug }]);
 	});
 
 	it("should throw error when field slug does not exist", async () => {
@@ -1938,18 +1957,25 @@ describe("upsertPubRelations: replace", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { replacePubRelationsBySlug } = await import("./pub");
+		const { upsertPubRelations } = await import("./pub");
 
 		await expect(
-			replacePubRelationsBySlug({
+			upsertPubRelations({
 				pubId: pub.id,
-				relations: [
-					{
-						slug: "non-existent-field",
-						relatedPubId: "some-id" as PubsId,
-						value: "some value",
+				relations: {
+					replace: {
+						relations: {
+							[pubFields["Some relation"].slug]: [
+								{
+									pub: {
+										id: "some-id" as PubsId,
+									},
+									value: "some value",
+								},
+							],
+						},
 					},
-				],
+				},
 				communityId: community.id,
 				lastModifiedBy: createLastModifiedBy("system"),
 			})

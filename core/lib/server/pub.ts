@@ -964,17 +964,6 @@ export const upsertPubRelations = async (
 		});
 
 		if (normalizedRelationValues.mode === "replace") {
-			// throw new Error("Not implemented");
-
-			const groupedByFieldId = createdRelations.reduce(
-				(acc, rel) => {
-					acc[rel.fieldId] = acc[rel.fieldId] || [];
-					acc[rel.fieldId].push(rel);
-					return acc;
-				},
-				{} as Record<PubFieldsId, typeof createdRelations>
-			);
-
 			const allPubRelations = await trx
 				.selectFrom("pub_values")
 				.selectAll()
