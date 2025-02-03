@@ -5,7 +5,11 @@ import { logger } from "logger";
 
 import {
 	basic,
+	formatLists,
+	getDescription,
 	processLocalLinks,
+	removeDescription,
+	removeEmptyFigCaption,
 	removeGoogleLinkForwards,
 	removeVerboseFormatting,
 	structureAnchors,
@@ -137,6 +141,8 @@ test("Structure Images", async () => {
 							<td><p><span>Source</span></p></td>
 							<td><p><span>Caption</span></p></td>
 							<td><p><span>Alt Text</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
 						</tr>
 						<tr>
 							<td><p><span>Image</span></p></td>
@@ -144,6 +150,8 @@ test("Structure Images", async () => {
 							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
 							<td><p><span>With a caption. </span><b>Bold</b></p></td>
 							<td><p><b>123</b></p></td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
 						</tr>
 					</tbody>
 				</table>
@@ -154,7 +162,7 @@ test("Structure Images", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly">
+				<figure id="n8r4ihxcrly" data-align="full" data-size="50">
 					<img alt="123" src="https://resize-v3.pubpub.org/123">
 					<figcaption>
 						<p>
@@ -191,6 +199,8 @@ test("Structure Images", async () => {
 							<td><p><span>Source</span></p></td>
 							<td><p><span>Caption</span></p></td>
 							<td><p><span>Static Image</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
 						</tr>
 						<tr>
 							<td><p><span>Video</span></p></td>
@@ -198,6 +208,8 @@ test("Structure Images", async () => {
 							<td><p><span>https://resize-v3.pubpub.org/123.mp4</span></p></td>
 							<td><p><span>With a caption. </span><b>Bold</b></p></td>
 							<td>https://example.com</td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
 						</tr>
 					</tbody>
 				</table>
@@ -208,7 +220,7 @@ test("Structure Images", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly">
+				<figure id="n8r4ihxcrly" data-align="full" data-size="50">
 					<video controls poster="https://example.com">
 						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
 						<img src="https://example.com" alt="Video fallback image">
@@ -247,12 +259,16 @@ test("Structure Audio", async () => {
 							<td><p><span>Id</span></p></td>
 							<td><p><span>Source</span></p></td>
 							<td><p><span>Caption</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
 						</tr>
 						<tr>
 							<td><p><span>Audio</span></p></td>
 							<td><p><span>n8r4ihxcrly</span></p></td>
 							<td><p><span>https://resize-v3.pubpub.org/123.mp3</span></p></td>
 							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
 						</tr>
 					</tbody>
 				</table>
@@ -263,7 +279,7 @@ test("Structure Audio", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly">
+				<figure id="n8r4ihxcrly" data-align="full" data-size="50">
 					<audio controls>
 						<source src="https://resize-v3.pubpub.org/123.mp3" type="audio/mp3">
 					</audio>
@@ -359,6 +375,9 @@ test("Structure Iframes", async () => {
 							<td><p><span>Source</span></p></td>
 							<td><p><span>Caption</span></p></td>
 							<td><p><span>Static Image</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
+							<td><p><span>Height</span></p></td>
 						</tr>
 						<tr>
 							<td><p><span>Iframe</span></p></td>
@@ -366,6 +385,9 @@ test("Structure Iframes", async () => {
 							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
 							<td><p><span>With a caption. </span><b>Bold</b></p></td>
 							<td>https://example.com</td>
+							<td><p><span>full</span></p></td>
+							<td><p><span>75</span></p></td>
+							<td><p><span>450</span></p></td>
 						</tr>
 					</tbody>
 				</table>
@@ -376,8 +398,8 @@ test("Structure Iframes", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly">
-					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0" data-fallback-image="https://example.com"></iframe>
+				<figure id="n8r4ihxcrly" data-align="full" data-size="75">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0" data-fallback-image="https://example.com" height="450"></iframe>
 					<figcaption>
 						<p>
 							<span>With a caption. </span>
@@ -870,6 +892,169 @@ test("processLocalLinks", async () => {
 		.catch((error) => {
 			logger.error(error);
 		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("removeEmptyFigCaption", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<figure id="n8r4ihxcrly">
+					<img alt="123" src="https://resize-v3.pubpub.org/123">
+					<figcaption>
+						<p><span></span></p>
+					</figcaption>
+				</figure>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `<html>
+			<head></head>
+			<body>
+				<figure id="n8r4ihxcrly">
+					<img alt="123" src="https://resize-v3.pubpub.org/123">
+				</figure>
+			</body>
+		</html>`;
+
+	const result = await rehype()
+		.use(removeEmptyFigCaption)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("formatLists", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello</p>
+				<ul>
+					<li style="margin-left: 10pt;"><span>Bullet 1</span></li>
+				</ul><ul>
+					<li style="margin-left: 20pt;"><span>Bullet 1.1</span></li>
+				</ul>
+				<p>Hello again</p>
+				<ul>
+					<li style="margin-left: 10pt;"><span>Bullet 1</span></li>
+				</ul><ul>
+					<li style="margin-left: 20pt;"><span>Bullet 1.1</span></li>
+				</ul><ul>
+					<li style="margin-left: 30pt;"><span>Bullet 1.1.1</span></li>
+				</ul><ul>
+					<li style="margin-left: 10pt;"><span>Bullet 2</span></li>
+				</ul>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello</p>
+				<ul>
+					<li style="margin-left: 10pt;">
+						<span>Bullet 1</span>
+						<ul>
+							<li style="margin-left: 20pt;"><span>Bullet 1.1</span></li>
+						</ul>
+					</li>
+				</ul>
+				<p>Hello again</p>
+				<ul>
+					<li style="margin-left: 10pt;">
+						<span>Bullet 1</span>
+						<ul>
+							<li style="margin-left: 20pt;">
+								<span>Bullet 1.1</span>
+								<ul>
+									<li style="margin-left: 30pt;"><span>Bullet 1.1.1</span></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li style="margin-left: 10pt;"><span>Bullet 2</span></li>
+				</ul>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(formatLists)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("removeDescriptions", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body><table>
+					<tr>
+						<td>Type</td>
+						<td>Value</td>
+					</tr>
+					<tr>
+						<td>Description</td>
+						<td>Seeing how microbes are organized ...</td>
+					</tr>
+				</table><p>Hello</p>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `<html>
+			<head></head>
+			<body>
+				<p>Hello</p>
+			</body>
+		</html>`;
+
+	const result = await rehype()
+		.use(removeDescription)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("getDescription", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body><table>
+					<tr>
+						<td>Type</td>
+						<td>Value</td>
+					</tr>
+					<tr>
+						<td>Description</td>
+						<td>Seeing how microbes are organized ...</td>
+					</tr>
+				</table><p>Hello</p>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `Seeing how microbes are organized ...`;
+
+	const result = getDescription(inputHtml);
 
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });

@@ -3,16 +3,15 @@ import type { FieldArrayWithId } from "react-hook-form";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Markdown from "react-markdown";
-import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import type { PubFieldsId } from "db/public";
-import type { LucideIcon } from "ui/icon";
 import { Button } from "ui/button";
-import { ArchiveRestore, GripVertical, Pencil, Trash, Type } from "ui/icon";
+import { ArchiveRestore, GripVertical, Pencil, Trash } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
 
 import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
+import { FieldIcon } from "./FieldIcon";
 import { useFormBuilder } from "./FormBuilderContext";
 import { structuralElements } from "./StructuralElements";
 import { isFieldInput, isStructuralElement } from "./types";
@@ -39,7 +38,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 
 	const restoreRemoveButton = element.deleted ? (
 		<>
-			<div className="my-auto text-slate-500">Deleted on save</div>
+			<div className="my-auto text-gray-500">Deleted on save</div>
 			<Button
 				type="button"
 				disabled={isDisabled}
@@ -125,26 +124,20 @@ type FieldInputElementProps = {
 export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
-	let Icon: LucideIcon;
-	if (!field.schemaName) {
-		Icon = Type;
-	} else {
-		Icon = SCHEMA_TYPES_WITH_ICONS[field.schemaName].icon;
-	}
 
 	return (
 		<>
-			<Icon
-				size={20}
+			<FieldIcon
+				field={field}
 				className={cn(
 					"mr-4 mt-3 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",
-					element.deleted && "text-slate-500"
+					element.deleted && "text-gray-500"
 				)}
 			/>
 			<div>
-				<div className="text-slate-500">{field.slug}</div>
-				<div className={cn("font-semibold", element.deleted ? "text-slate-500" : "")}>
+				<div className="text-gray-500">{field.slug}</div>
+				<div className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}>
 					{element.label ?? field.name}
 				</div>
 			</div>
@@ -166,12 +159,12 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 				className={cn(
 					"mr-4 mt-3 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",
-					element.deleted && "text-slate-500"
+					element.deleted && "text-gray-500"
 				)}
 			/>
 			<div>
-				<div className="text-slate-500">{name}</div>
-				<div className={cn("prose prose-sm", element.deleted ? "text-slate-500" : "")}>
+				<div className="text-gray-500">{name}</div>
+				<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
 					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
 					<Markdown className="line-clamp-2">{element.content}</Markdown>
 				</div>
