@@ -6,7 +6,6 @@ import { expect, test } from "@playwright/test";
 import type { PubsId } from "db/public";
 import { Action } from "db/public";
 
-import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubsPage } from "./fixtures/pubs-page";
@@ -15,8 +14,7 @@ import { createCommunity, inbucketClient } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-const FORM_SLUG = `playwright-test-form-${now}`;
-const ACTION_NAME = "Invite evaluator";
+const ACTION_NAME = "Send email";
 const firstName = faker.person.firstName();
 const email = `${firstName}@example.com`;
 
@@ -36,10 +34,6 @@ test.beforeAll(async ({ browser }) => {
 		page,
 		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
 	});
-
-	const formsPage = new FormsPage(page, COMMUNITY_SLUG);
-	await formsPage.goto();
-	await formsPage.addForm("Evaluation", FORM_SLUG);
 
 	const stagesManagePage = new StagesManagePage(page, COMMUNITY_SLUG);
 	await stagesManagePage.goTo();
@@ -82,7 +76,6 @@ test.describe("Sending an email to an email address", () => {
 		await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
 		await runActionDialog.waitFor({ state: "hidden" });
 	});
-	// fails with large number of pubs in the db
 	test("Static email address recipient recieves the email", async () => {
 		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
 		expect(message.body.html?.trim()).toBe("<p>Greetings</p>");
