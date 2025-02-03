@@ -129,13 +129,11 @@ expect.extend({
 			};
 		}
 
-		const pass = expected.every((expectedValue) =>
-			sortedPubValues.some((actualValue) =>
-				Object.entries(expectedValue).every(
-					([key, value]) => actualValue[key as keyof typeof actualValue] === value
-				)
-			)
-		);
+		// equiv. to .toMatchObject
+		const pass = this.equals(sortedPubValues, expected, [
+			this.utils.iterableEquality,
+			this.utils.subsetEquality,
+		]);
 
 		return {
 			pass,
@@ -238,13 +236,11 @@ describe("createPubRecursive", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		expect(pub).toMatchObject({
-			values: [
-				{
-					value: "test title",
-				},
-			],
-		});
+		expect(pub).toHaveValues([
+			{
+				value: "test title",
+			},
+		]);
 	});
 
 	it("should be able to create a pub with children", async () => {
@@ -748,51 +744,47 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			PubTypes & { fields: PubTypePubField[] }
 		>();
 
-		pubWithRelatedValuesAndChildren.values.sort((a, b) =>
-			a.fieldSlug.localeCompare(b.fieldSlug)
-		);
+		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+			{ value: "Some title" },
+			{
+				value: "test relation value",
+				relatedPub: {
+					values: [{ value: "Nested Related Pub" }],
+				},
+			},
+		]);
+
 		pubWithRelatedValuesAndChildren.children[0].values.sort((a, b) =>
-			a.fieldSlug.localeCompare(b.fieldSlug)
+			(a.value as string).localeCompare(b.value as string)
 		);
-		expect(pubWithRelatedValuesAndChildren).toMatchObject({
-			values: [
-				{
-					value: "test relation value",
-					relatedPub: {
-						values: [{ value: "Nested Related Pub" }],
-						// children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
+
+		expect(pubWithRelatedValuesAndChildren.children).toMatchObject([
+			{
+				values: [
+					{ value: "Child of Root Pub" },
+					{
+						value: "Nested Relation",
+						relatedPub: {
+							values: [
+								{
+									value: "Nested Related Pub of Child of Root Pub",
+								},
+								{
+									value: "Double nested relation",
+									relatedPub: {
+										values: [{ value: "Double nested relation title" }],
+									},
+								},
+							],
+						},
 					},
-				},
-				{ value: "Some title" },
-			],
-			children: [
-				{
-					values: [
-						{
-							value: "Nested Relation 2",
-						},
-						{
-							value: "Nested Relation",
-							relatedPub: {
-								values: [
-									{
-										value: "Nested Related Pub of Child of Root Pub",
-									},
-									{
-										value: "Double nested relation",
-										relatedPub: {
-											values: [{ value: "Double nested relation title" }],
-										},
-									},
-								],
-							},
-						},
-						{ value: "Child of Root Pub" },
-					],
-					children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
-				},
-			],
-		});
+					{
+						value: "Nested Relation 2",
+					},
+				],
+				children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
+			},
+		]);
 	});
 
 	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
@@ -1005,21 +997,13 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
 		)) as unknown as UnprocessedPub[];
 
-		expect(pubWithRelatedValuesAndChildren).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: {
-						values: [
-							{
-								value: "test relation title",
-							},
-						],
-					},
-				},
-			],
-		});
+		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+			{
+				value: "test relation value",
+				relatedPub: { values: [{ value: "test relation title" }] },
+			},
+			{ value: "test title" },
+		]);
 	});
 
 	it("is able to exclude children and related pubs from being fetched", async () => {
@@ -1239,15 +1223,13 @@ describe("upsertPubRelations", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: { values: [{ value: "Some title" }] },
-				},
-			],
-		});
+		expect(updatedPub).toHaveValues([
+			{
+				value: "test relation value",
+				relatedPub: { values: [{ value: "Some title" }] },
+			},
+			{ value: "test title" },
+		]);
 	});
 
 	it("should be able to create new pubs as relations", async () => {
@@ -1298,15 +1280,13 @@ describe("upsertPubRelations", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: { values: [{ value: "new related pub" }] },
-				},
-			],
-		});
+		expect(updatedPub).toHaveValues([
+			{
+				value: "test relation value",
+				relatedPub: { values: [{ value: "new related pub" }] },
+			},
+			{ value: "test title" },
+		]);
 	});
 
 	it("should validate relation values against schema", async () => {
@@ -1480,8 +1460,18 @@ describe("upsertPubRelations", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub.values).toHaveLength(3); // title + 2 relations
 		expect(updatedPub.values.filter((v) => v.relatedPub)).toHaveLength(2);
+		expect(updatedPub).toHaveValues([
+			{
+				value: "relation 1",
+				relatedPub: { values: [{ value: "Some title" }] },
+			},
+			{
+				value: "relation 2",
+				relatedPub: { values: [{ value: "new related pub" }] },
+			},
+			{ value: "test title" },
+		]);
 	});
 
 	it("should be able to upsert relations - overwriting existing and creating new ones", async () => {
@@ -1891,9 +1881,9 @@ describe("upsertPubRelations: replace", () => {
 		);
 
 		expect(updatedPub).toHaveValues([
-			{ value: "Test pub", fieldSlug: pubFields.Title.slug },
 			{ value: "new relation value 1", relatedPubId: newRelatedPub1.id },
 			{ value: "new relation value 2", relatedPubId: newRelatedPub2.id },
+			{ value: "Test pub", fieldSlug: pubFields.Title.slug },
 		]);
 	});
 
@@ -1965,7 +1955,7 @@ describe("upsertPubRelations: replace", () => {
 				relations: {
 					replace: {
 						relations: {
-							[pubFields["Some relation"].slug]: [
+							["non-existent-field"]: [
 								{
 									pub: {
 										id: "some-id" as PubsId,
