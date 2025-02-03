@@ -24,7 +24,6 @@ test.describe.configure({ mode: "serial" });
 
 let page: Page;
 let pubId: PubsId;
-let pubId2: PubsId;
 
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
@@ -53,11 +52,6 @@ test.beforeAll(async ({ browser }) => {
 		stage: "Evaluating",
 		values: { title: "The Activity of Snails" },
 	});
-	await pubsPage.goTo();
-	pubId2 = await pubsPage.createPub({
-		stage: "Evaluating",
-		values: { title: "Do not let anyone edit me" },
-	});
 });
 
 test.afterAll(async () => {
@@ -80,7 +74,6 @@ test.describe("Sending an email to an email address", () => {
 
 		// Invite a new user to fill out the form
 		await runActionDialog.getByLabel("Recipient email address").fill(email);
-
 		await runActionDialog.getByLabel("Email subject").fill("Hello");
 		await runActionDialog.getByLabel("Email body").fill("Greetings");
 
@@ -90,8 +83,8 @@ test.describe("Sending an email to an email address", () => {
 		await runActionDialog.waitFor({ state: "hidden" });
 	});
 	// fails with large number of pubs in the db
-	test("Static email address recipient recieves the email", async ({ browser }) => {
+	test("Static email address recipient recieves the email", async () => {
 		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
-		expect(message.body.html).toBe("hello");
+		expect(message.body.html).toBe("<p>Greetings</p>");
 	});
 });
