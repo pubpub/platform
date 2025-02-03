@@ -109,13 +109,13 @@ module "assets_bucket" {
   object_ownership         = "ObjectWriter"
   acl                      = "public-read"
 
-  cors_rule = jsonencode({
+  cors_rule = [{
     allowed_headers = ["*"]
     allowed_methods = ["PUT", "GET", "HEAD", "POST"]
     allowed_origins = ["*"]
     expose_headers  = ["ETag", "Location"]
     max_age_seconds = 3000
-  })
+  }]
 }
 
 # TODO: replace this with a role-based system for ECS containers
