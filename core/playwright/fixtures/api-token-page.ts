@@ -88,19 +88,36 @@ export class ApiTokenPage {
 
 				if (typeof value === "object") {
 					await this.page.getByTestId(`${scope}-${type}-options`).click();
-					for (const [key, values] of Object.entries(value)) {
+
+					const constraints = Object.entries(value);
+					for (let i = 0; i < constraints.length; i++) {
+						const [key, values] = constraints[i];
 						await this.page.getByTestId(`${scope}-${type}-${key}-select`).click({
 							timeout: 2_000,
 						});
-						for (const val of values) {
-							await this.page
-								.getByLabel("Suggestions")
-								.getByTestId(`multi-select-option-${val}`)
-								.click({
+
+						const options = await this.page
+							.getByLabel("Suggestions")
+							.getByTestId(/^multi-select-option-/)
+							.all();
+
+						for (const option of options) {
+							const optionValue = await option.getAttribute("data-testid", {
+								timeout: 2_000,
+							});
+							const value = optionValue?.replace("multi-select-option-", "");
+							if (value && !values.some((v) => v === value)) {
+								await option.click({
 									timeout: 2_000,
 								});
+							}
 						}
 						await this.page.getByTestId(`multi-select-close`).click();
+
+						// wait for the popover to close if we have multiple constraints so the selectors do not overlap
+						if (constraints.length > 1 && i < constraints.length - 1) {
+							await this.page.waitForTimeout(1_000);
+						}
 						continue;
 					}
 				}

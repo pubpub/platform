@@ -146,11 +146,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						variant="inverted"
 						options={context.stages.allOptions}
 						defaultValue={
-							value === true
-								? context.stages.allValues
-								: !value
-									? context.stages.allValues
-									: (value.stages ?? context.stages.allValues)
+							value === true || !value ? context.stages.allValues : value.stages
 						}
 						onValueChange={(val) => {
 							const allStagesSelected =
@@ -188,11 +184,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						variant="inverted"
 						options={context.pubTypes.allOptions}
 						defaultValue={
-							value === true
-								? context.pubTypes.allValues
-								: !value
-									? context.pubTypes.allValues
-									: (value.pubTypes ?? context.pubTypes.allValues)
+							value === true || !value ? context.pubTypes.allValues : value.pubTypes
 						}
 						onValueChange={(val) => {
 							const allPubTypesSelected =
@@ -241,7 +233,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						 * Otherwise just reuse the value of the `stages` field. (this is a bit of a cop-out as this situation should never come to pass)
 						 */
 						defaultValue={
-							value === true ? context.stages.allValues : !value ? [] : value.stages
+							value === true || !value ? context.stages.allValues : value.stages
 						}
 						onValueChange={(value) => {
 							onChange(
@@ -270,7 +262,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						variant="inverted"
 						options={context.stages.allOptions}
 						defaultValue={
-							value === true ? context.stages.allValues : !value ? [] : value.stages
+							value === true || !value ? context.stages.allValues : value.stages
 						}
 						onValueChange={(value) => {
 							onChange(value.length > 0 ? { stages: value as StagesId[] } : true);

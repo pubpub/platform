@@ -182,6 +182,7 @@ test.describe("Site API", () => {
 				permissions: {
 					pub: {
 						read: {
+							stages: ["no-stage", testStage1, testStage2],
 							pubTypes: [testPubType1],
 						},
 						write: true,
@@ -213,6 +214,7 @@ test.describe("Site API", () => {
 					pub: {
 						read: {
 							stages: [testStage1],
+							pubTypes: [testPubType1, testPubType2],
 						},
 					},
 				},
@@ -266,12 +268,13 @@ test.describe("Site API", () => {
 			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
 			tokenPage.goto();
 			const onlyStageToken = await tokenPage.createToken({
-				name: "tttest token with stage restriction",
-				description: "tttest token with stage restriction",
+				name: "test token with stage restriction",
+				description: "test token with stage restriction",
 				permissions: {
 					pub: {
 						read: {
 							stages: [testStage1],
+							pubTypes: [testPubType1, testPubType2],
 						},
 					},
 				},
@@ -307,6 +310,7 @@ test.describe("Site API", () => {
 					pub: {
 						read: {
 							stages: ["no-stage"],
+							pubTypes: [testPubType1, testPubType2],
 						},
 					},
 				},

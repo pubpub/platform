@@ -106,7 +106,7 @@ const getAuthorization = async () => {
 	return {
 		user,
 		authorization: rules.reduce((acc, curr) => {
-			if (curr.constraints != null) {
+			if (!curr.constraints) {
 				acc[curr.scope][curr.accessType] = true;
 				return acc;
 			}
@@ -240,9 +240,25 @@ const handler = createNextHandler(
 
 				if (typeof authorization === "object") {
 					const allowedStages = authorization.stages;
-					if (allowedStages && allowedStages.length > 0) {
+					if (
+						pub.stageId &&
+						allowedStages &&
+						allowedStages.length > 0 &&
+						!allowedStages.includes(pub.stageId)
+					) {
 						throw new ForbiddenError(
 							`You are not authorized to view this pub in stage ${pub.stageId}`
+						);
+					}
+
+					const allowedPubTypes = authorization.pubTypes;
+					if (
+						allowedPubTypes &&
+						allowedPubTypes.length > 0 &&
+						!allowedPubTypes.includes(pub.pubTypeId)
+					) {
+						throw new ForbiddenError(
+							`You are not authorized to view this pub in pub type ${pub.pubTypeId}`
 						);
 					}
 				}
