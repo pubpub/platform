@@ -70,13 +70,13 @@ const getAuthorization = async () => {
 	}
 	const apiKey = apiKeyParse.data;
 
-	const communitySlug = await getCommunitySlug();
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug();
 
 	if (!community) {
-		throw new NotFoundError(`No community found for slug ${communitySlug}`);
+		throw new NotFoundError(`No community found`);
 	}
 
+	// this throws, and we should let it
 	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
 
 	const rules = await db
@@ -228,10 +228,8 @@ const handler = createNextHandler(
 					cookies: true,
 				});
 
-				console.log("HEY");
 				const pubs = await fullTextSearch(query.query, community.id, user.id);
 
-				console.log(pubs);
 				return {
 					status: 200,
 					body: pubs,
