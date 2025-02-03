@@ -83,7 +83,10 @@ const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedP
 			if (element.isRelation) {
 				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
 				defaultValues[element.slug] = relatedPubValues.map((pv) => ({
-					value: pv.value,
+					value:
+						pv.schemaName === CoreSchemaType.DateTime
+							? new Date(pv.value as string)
+							: pv.value,
 					relatedPubId: pv.relatedPubId,
 				}));
 			}
