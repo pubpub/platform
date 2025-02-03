@@ -44,6 +44,13 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 			// doesn't know that
 			break;
 		}
+
+		// If we've already visited this stage we're in a cycle, and shouldn't add its destinations.
+		// But we don't break, because there may be other stages already in the queue that should
+		// still be visited
+		if (orderedStages.has(stage)) {
+			continue;
+		}
 		orderedStages.add(stage);
 		stage.moveConstraints.forEach((destinationStage) =>
 			stagesQueue.push(stagesById[destinationStage.id])
