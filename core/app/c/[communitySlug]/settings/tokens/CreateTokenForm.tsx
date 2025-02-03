@@ -83,8 +83,6 @@ export const CreateTokenForm = () => {
 	// this `as const` should not be necessary, not sure why it is
 	const token = form.watch("token" as const);
 
-	console.log(form.getValues());
-
 	return (
 		<Form {...form}>
 			<form className="grid gap-2" onSubmit={form.handleSubmit(onSubmit)}>

@@ -106,8 +106,7 @@ const getAuthorization = async () => {
 	return {
 		user,
 		authorization: rules.reduce((acc, curr) => {
-			const { scope, constraints, accessType } = curr;
-			if (!curr.constraints) {
+			if (curr.constraints != null) {
 				acc[curr.scope][curr.accessType] = true;
 				return acc;
 			}
@@ -286,19 +285,14 @@ const handler = createNextHandler(
 				const pubTypes =
 					requestedPubTypes?.length && allowedPubTypes?.length
 						? requestedPubTypes.filter((pubType) => allowedPubTypes?.includes(pubType))
-						: allowedPubTypes?.length || requestedPubTypes;
+						: allowedPubTypes && allowedPubTypes.length > 0
+							? allowedPubTypes
+							: requestedPubTypes;
 
 				const stages =
 					requestedStages?.length && allowedStages?.length
 						? requestedStages.filter((stage) => allowedStages?.includes(stage))
 						: (allowedStages ?? requestedStages);
-
-				console.log("requestedPubTypes", requestedPubTypes);
-				console.log("allowedPubTypes", allowedPubTypes);
-				console.log("pubTypes", pubTypes);
-				console.log("requestedStages", requestedStages);
-				console.log("allowedStages", allowedStages);
-				console.log("stages", stages);
 
 				const pubs = await getPubsWithRelatedValuesAndChildren(
 					{

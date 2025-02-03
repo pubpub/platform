@@ -71,7 +71,6 @@ export const permissionsSchema = z.object({
 				stages: z.array(stageConstraintSchema),
 				pubTypes: z.array(pubTypesIdSchema),
 			})
-			.partial()
 			.or(z.boolean())
 			.optional(),
 		write: z
