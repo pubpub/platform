@@ -85,6 +85,6 @@ test.describe("Sending an email to an email address", () => {
 	// fails with large number of pubs in the db
 	test("Static email address recipient recieves the email", async () => {
 		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
-		expect(message.body.html).toBe("<p>Greetings</p>");
+		expect(message.body.html?.trim()).toBe("<p>Greetings</p>");
 	});
 });
