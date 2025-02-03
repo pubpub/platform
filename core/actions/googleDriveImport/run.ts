@@ -1,9 +1,14 @@
+import type { z } from "zod";
+
 import { ReplicationStatus } from "@aws-sdk/client-s3";
 import { ValuesNode } from "kysely";
 
+import type { upsertPubRelationsSchema } from "contracts";
 import type { StagesId } from "db/public";
 import { logger } from "logger";
 
+import type { RelInput } from "~/lib/server";
+import { oldPubRelationsInputToNew } from "~/app/api/v0/c/[communitySlug]/site/[...ts-rest]/route";
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
@@ -150,12 +155,26 @@ export const run = defineRun<typeof action>(
 				}
 			}
 
-			if (relations.length > 0) {
+			const relationsAsObject = relations.reduce(
+				(acc, curr) => {
+					acc[curr.slug] = acc[curr.slug]?.length ? [...acc[curr.slug], curr] : [curr];
+					return acc;
+				},
+				{} as z.infer<typeof upsertPubRelationsSchema>
+			);
+
+			const newRelations = oldPubRelationsInputToNew(relationsAsObject);
+
+			if (Object.keys(relationsAsObject).length > 0) {
 				await upsertPubRelations({
 					pubId: pub.id,
 					communityId,
 					lastModifiedBy,
-					relations,
+					relations: {
+						replace: {
+							relations: newRelations,
+						},
+					},
 				});
 			}
 
