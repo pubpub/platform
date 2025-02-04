@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { Action } from "db/public";
+import { DependencyType } from "ui/auto-form/dependencyType";
 import { Mail } from "ui/icon";
 
 import {
@@ -20,10 +21,21 @@ export const action = defineAction({
 			body: markdown().min(0).describe("Email body"),
 		}),
 		fieldConfig: {
+			recipientEmail: {
+				allowedSchemas: true,
+			},
 			recipientMember: {
 				fieldType: "custom",
 			},
 		},
+		dependencies: [
+			{
+				sourceField: "recipientMember",
+				targetField: "recipientEmail",
+				when: (recipientMember) => Boolean(recipientMember),
+				type: DependencyType.DISABLES,
+			},
+		],
 	},
 	description: "Send an email to one or more users",
 	params: {
@@ -48,10 +60,21 @@ export const action = defineAction({
 			})
 			.optional(),
 		fieldConfig: {
+			recipientEmail: {
+				allowedSchemas: true,
+			},
 			recipientMember: {
 				fieldType: "custom",
 			},
 		},
+		dependencies: [
+			{
+				sourceField: "recipientMember",
+				targetField: "recipientEmail",
+				when: (recipientMember) => Boolean(recipientMember),
+				type: DependencyType.DISABLES,
+			},
+		],
 	},
 	icon: Mail,
 	tokens: {

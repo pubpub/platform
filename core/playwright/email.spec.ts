@@ -56,28 +56,15 @@ test.describe("Sending an email to an email address", () => {
 	test("Admin can configure the email action to send to a static email address", async () => {
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId!);
 		await pubDetailsPage.goTo();
-
-		await page.getByRole("button", { name: "Run action", exact: true }).click();
-		await page
-			.getByRole("menu", { name: "Run action", exact: true })
-			.getByRole("button", { name: ACTION_NAME, exact: true })
-			.click();
-
-		const runActionDialog = page.getByRole("dialog", { name: ACTION_NAME, exact: true });
-		await runActionDialog.waitFor();
-
-		// Invite a new user to fill out the form
-		await runActionDialog.getByLabel("Recipient email address").fill(email);
-		await runActionDialog.getByLabel("Email subject").fill("Hello");
-		await runActionDialog.getByLabel("Email body").fill("Greetings");
-
-		await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
-		await page.getByRole("status").filter({ hasText: "Action ran successfully!" }).waitFor();
-		await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
-		await runActionDialog.waitFor({ state: "hidden" });
+		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+			await runActionDialog.getByLabel("Recipient email address").fill(email);
+			await runActionDialog.getByLabel("Email subject").fill("Hello");
+			await runActionDialog.getByLabel("Email body").fill("Greetings");
+		});
 	});
 	test("Static email address recipient recieves the email", async () => {
 		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
 		expect(message.body.html?.trim()).toBe("<p>Greetings</p>");
 	});
 });
+``;
