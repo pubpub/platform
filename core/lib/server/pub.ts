@@ -433,25 +433,29 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
 
 export const mapOldInputToNewInput = (
-	pub: DefinitelyHas<CreatePubRequestBodyWithNullsNew, "relatedPubs">
+	pub: CreatePubRequestBodyWithNullsNew
 ): Record<string, RelInput[]> => {
+	if (!pub.relatedPubs) {
+		return {};
+	}
+
 	return Object.fromEntries(
-		Object.entries(pub.relatedPubs!).map(([slug, pubs]) => [
+		Object.entries(pub.relatedPubs).map(([slug, relatedPubs]) => [
 			slug,
-			pubs.map(({ value, pub }) => ({
+			relatedPubs.map(({ value, pub: relatedPub }) => ({
 				value,
 				pub: {
-					...pub,
-					id: pub.id as PubsId | undefined,
-					assigneeId: pub.assigneeId as UsersId | undefined,
-					pubTypeId: pub.pubTypeId as PubTypesId,
-					stageId: pub.stageId as StagesId | undefined,
-					parentId: pub.parentId as PubsId | undefined,
-					values: { replace: pub.values },
-					...(pub.relatedPubs
+					...relatedPub,
+					id: relatedPub.id as PubsId | undefined,
+					assigneeId: relatedPub.assigneeId as UsersId | undefined,
+					pubTypeId: relatedPub.pubTypeId as PubTypesId,
+					stageId: relatedPub.stageId as StagesId | undefined,
+					parentId: relatedPub.parentId as PubsId | undefined,
+					values: { replace: relatedPub.values },
+					...(relatedPub.relatedPubs
 						? {
 								relations: {
-									replace: { relations: mapOldInputToNewInput(pub) },
+									replace: { relations: mapOldInputToNewInput(relatedPub) },
 								},
 							}
 						: {}),
