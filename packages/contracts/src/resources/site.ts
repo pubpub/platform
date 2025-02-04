@@ -20,6 +20,7 @@ import type {
 } from "db/public";
 import {
 	communitiesIdSchema,
+	communityMembershipsIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
 	memberRoleSchema,
@@ -535,9 +536,10 @@ export const siteApi = contract.router(
 					"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
 				query: z.object({
 					communityId: communitiesIdSchema,
-					email: z.string(),
+					email: z.string().optional(),
 					name: z.string().optional(),
 					limit: z.number().optional(),
+					memberId: communityMembershipsIdSchema.optional(),
 				}),
 				responses: {
 					200: safeUserSchema

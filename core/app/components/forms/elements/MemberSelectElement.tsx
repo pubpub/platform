@@ -8,6 +8,7 @@ import { InputComponent } from "db/public";
 
 import type { ElementProps } from "../types";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { MemberSelectClientFetch } from "../../MemberSelect/MemberSelectClientFetch";
 import { MemberSelectServer } from "../../MemberSelect/MemberSelectServer";
 
 export const MemberSelectElement = async ({
@@ -36,7 +37,7 @@ export const MemberSelectElement = async ({
 	}
 
 	return (
-		<MemberSelectServer
+		<MemberSelectClientFetch
 			community={community}
 			fieldLabel={label}
 			fieldName={slug}
@@ -46,5 +47,15 @@ export const MemberSelectElement = async ({
 			allowPubFieldSubstitution={false}
 			helpText={config.help}
 		/>
+		// <MemberSelectServer
+		// 	community={community}
+		// 	fieldLabel={label}
+		// 	fieldName={slug}
+		// 	query={query}
+		// 	queryParamName={queryParamName}
+		// 	value={value}
+		// 	allowPubFieldSubstitution={false}
+		// 	helpText={config.help}
+		// />
 	);
 };

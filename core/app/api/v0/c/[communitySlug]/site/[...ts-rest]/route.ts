@@ -641,6 +641,7 @@ const handler = createNextHandler(
 		},
 		users: {
 			search: async (req) => {
+				console.log("reqquery", req.query);
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
 					cookies: true,
@@ -652,6 +653,7 @@ const handler = createNextHandler(
 						email: req.query.email,
 						firstName: req.query.name,
 						lastName: req.query.name,
+						memberId: req.query.memberId,
 					},
 					limit: req.query.limit,
 				}).execute();

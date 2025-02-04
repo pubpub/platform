@@ -6,6 +6,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
+	CommunityMembershipsId,
 	NewUsers,
 	PubsId,
 	StagesId,
@@ -98,22 +99,50 @@ export const getSuggestedUsers = ({
 				email: string;
 				firstName?: string;
 				lastName?: string;
+				memberId?: CommunityMembershipsId;
 		  }
 		| {
 				firstName: string;
 				lastName?: string;
 				email?: string;
+				memberId?: CommunityMembershipsId;
 		  }
 		| {
 				lastName: string;
 				firstName?: string;
 				email?: string;
+				memberId?: CommunityMembershipsId;
+		  }
+		| {
+				memberId: CommunityMembershipsId;
+				email?: string;
+				firstName?: string;
+				lastName?: string;
 		  };
 	limit?: number;
-}) =>
+}) => {
 	// We don't cache this because users change frequently and outside of any community, so we can't
 	// efficiently cache them anyways
-	db
+
+	// First check if we
+	if (query.memberId && communityId) {
+		return db
+			.selectFrom("users")
+			.select((eb) => [
+				...SAFE_USER_SELECT,
+				jsonObjectFrom(
+					eb
+						.selectFrom("community_memberships")
+						.selectAll("community_memberships")
+						.whereRef("community_memberships.userId", "=", "users.id")
+						.where("community_memberships.communityId", "=", communityId!)
+				).as("member"),
+			])
+			.innerJoin("community_memberships", "users.id", "community_memberships.userId")
+			.where("community_memberships.id", "=", query.memberId)
+			.limit(limit);
+	}
+	return db
 		.selectFrom("users")
 		.select([...SAFE_USER_SELECT])
 		.$if(Boolean(communityId), (eb) =>
@@ -137,6 +166,7 @@ export const getSuggestedUsers = ({
 			])
 		)
 		.limit(limit);
+};
 
 export const setUserPassword = cache(
 	async (props: { userId: UsersId; password: string }, trx = db) => {
