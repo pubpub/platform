@@ -86,7 +86,7 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 						)
 					)
 					.leftJoin("PubsInStages", "PubsInStages.pubId", "all_children.id")
-					.selectAll()
+					.selectAll(["all_children"])
 					.select((eb) => [
 						pubValuesByRef(
 							"all_children.id" as "pubs.id"
