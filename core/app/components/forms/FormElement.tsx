@@ -29,13 +29,7 @@ export type FormElementProps = {
 	values: ProcessedPub["values"];
 };
 
-export const FormElement = ({
-	pubId,
-	element: propElement,
-	searchParams,
-	communitySlug,
-	values,
-}: FormElementProps) => {
+export const FormElement = ({ pubId, element: propElement, values }: FormElementProps) => {
 	const element = {
 		...propElement,
 		component:
@@ -127,8 +121,6 @@ export const FormElement = ({
 				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
-				id={element.id}
-				searchParams={searchParams}
 				value={userId}
 			/>
 		);

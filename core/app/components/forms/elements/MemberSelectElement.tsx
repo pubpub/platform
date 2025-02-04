@@ -13,21 +13,16 @@ import { useCommunity } from "../../providers/CommunityProvider";
 export const MemberSelectElement = ({
 	slug,
 	label,
-	id = crypto.randomUUID(),
 	value,
-	searchParams,
 	config,
 }: {
 	id?: string;
 	value?: CommunityMembershipsId;
-	searchParams: Record<string, unknown>;
 } & ElementProps<InputComponent.memberSelect>) => {
 	const community = useCommunity();
 	if (!community) {
 		return null;
 	}
-	const queryParamName = `user-${id.split("-").pop()}`;
-	const query = searchParams?.[queryParamName] as string | undefined;
 
 	if (!Value.Check(memberSelectConfigSchema, config)) {
 		return null;
@@ -38,8 +33,6 @@ export const MemberSelectElement = ({
 			community={community}
 			fieldLabel={label}
 			fieldName={slug}
-			query={query}
-			queryParamName={queryParamName}
 			value={value}
 			allowPubFieldSubstitution={false}
 			helpText={config.help}

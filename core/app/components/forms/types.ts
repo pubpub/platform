@@ -6,7 +6,6 @@ import type {
 	FormElementsId,
 	InputComponent,
 	PubFieldsId,
-	StagesId,
 	StructuralFormElement,
 } from "db/public";
 
