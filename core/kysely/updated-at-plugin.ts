@@ -1,4 +1,5 @@
 import type {
+	InsertQueryNode,
 	KyselyPlugin,
 	OnConflictNode,
 	PluginTransformQueryArgs,
@@ -26,10 +27,28 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 		this.#tablesWithUpdatedAt = tablesWithUpdatedAt ?? [];
 	}
 
-	transformOnConflict(node: OnConflictNode): OnConflictNode {
-		node = super.transformOnConflict(node);
+	transformInsertQuery(node: InsertQueryNode): InsertQueryNode {
+		node = super.transformInsertQuery(node);
 
-		return this.addUpdatedAtColumn(node);
+		if (!node.onConflict) {
+			return node;
+		}
+
+		const tableNode = node.into;
+
+		if (
+			tableNode &&
+			TableNode.is(tableNode) &&
+			!this.#tablesWithUpdatedAt.includes(tableNode.table.identifier.name)
+		) {
+			return node;
+		}
+
+		const onConflictNode = this.addUpdatedAtColumn(node.onConflict);
+		return {
+			...node,
+			onConflict: onConflictNode,
+		};
 	}
 
 	transformUpdateQuery(node: UpdateQueryNode): UpdateQueryNode {

@@ -100,6 +100,52 @@ describe("UpdatedAtPlugin", () => {
 		expect(onConflict?.updates?.[0].kind).toBe("ColumnUpdateNode");
 	});
 
+	it("should not add updatedAt column to onConflict doNothing", () => {
+		const simpleUpdate = mockedDb
+			.insertInto("pubs")
+			.values({
+				title: "test",
+				communityId: "X" as CommunitiesId,
+				pubTypeId: "X" as PubTypesId,
+			})
+			.onConflict((b) => b.doNothing());
+
+		const transformed = simpleUpdate.compile().query;
+
+		assertNodeKind(transformed, "InsertQueryNode");
+		expect(transformed.onConflict?.updates).toBeUndefined();
+
+		const plugin = new UpdatedAtPlugin(["pubs"]);
+
+		const transformedWithPlugin = simpleUpdate.withPlugin(plugin).compile().query;
+
+		assertNodeKind(transformedWithPlugin, "InsertQueryNode");
+		expect(transformedWithPlugin.onConflict?.updates?.length).toBe(1);
+	});
+
+	it("should not add updatedAt column to onConflictUpdate if table is not in list", () => {
+		const simpleUpdate = mockedDb
+			.insertInto("pubs")
+			.values({
+				title: "test",
+				communityId: "X" as CommunitiesId,
+				pubTypeId: "X" as PubTypesId,
+			})
+			.onConflict((b) => b.doUpdateSet((eb) => ({ title: eb.ref("excluded.title") })));
+
+		const transformed = simpleUpdate.compile().query;
+
+		assertNodeKind(transformed, "InsertQueryNode");
+		expect(transformed.onConflict?.updates?.length).toBe(1);
+
+		const plugin = new UpdatedAtPlugin(["users"]);
+
+		const transformedWithPlugin = simpleUpdate.withPlugin(plugin).compile().query;
+
+		assertNodeKind(transformedWithPlugin, "InsertQueryNode");
+		expect(transformedWithPlugin.onConflict?.updates?.length).toBe(1);
+	});
+
 	it("should not add updateAt column to any other kind of query", () => {
 		const simpleInsert = mockedDb.insertInto("pubs").values({
 			title: "test",
