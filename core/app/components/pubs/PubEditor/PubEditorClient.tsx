@@ -54,6 +54,8 @@ const preparePayload = ({
 			slug &&
 			toggleContext.isEnabled(slug) &&
 			// Only send fields that were changed.
+			// TODO: this check doesn't quite work for related pub field arrays.
+			// perhaps they are initialized differently so always show up as dirty?
 			formState.dirtyFields[slug]
 		) {
 			if (schemaName === CoreSchemaType.RichText) {
