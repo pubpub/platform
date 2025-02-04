@@ -1,4 +1,4 @@
-"use server";
+"use client";
 
 import { Value } from "@sinclair/typebox/value";
 import { memberSelectConfigSchema } from "schemas";
@@ -7,11 +7,10 @@ import type { CommunityMembershipsId } from "db/public";
 import { InputComponent } from "db/public";
 
 import type { ElementProps } from "../types";
-import { findCommunityBySlug } from "~/lib/server/community";
 import { MemberSelectClientFetch } from "../../MemberSelect/MemberSelectClientFetch";
-import { MemberSelectServer } from "../../MemberSelect/MemberSelectServer";
+import { useCommunity } from "../../providers/CommunityProvider";
 
-export const MemberSelectElement = async ({
+export const MemberSelectElement = ({
 	slug,
 	label,
 	id = crypto.randomUUID(),
@@ -25,7 +24,7 @@ export const MemberSelectElement = async ({
 	searchParams: Record<string, unknown>;
 	communitySlug: string;
 } & ElementProps<InputComponent.memberSelect>) => {
-	const community = await findCommunityBySlug(communitySlug);
+	const community = useCommunity();
 	if (!community) {
 		return null;
 	}
@@ -47,15 +46,5 @@ export const MemberSelectElement = async ({
 			allowPubFieldSubstitution={false}
 			helpText={config.help}
 		/>
-		// <MemberSelectServer
-		// 	community={community}
-		// 	fieldLabel={label}
-		// 	fieldName={slug}
-		// 	query={query}
-		// 	queryParamName={queryParamName}
-		// 	value={value}
-		// 	allowPubFieldSubstitution={false}
-		// 	helpText={config.help}
-		// />
 	);
 };
