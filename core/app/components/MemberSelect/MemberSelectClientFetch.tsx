@@ -6,10 +6,8 @@ import { skipToken } from "@tanstack/react-query";
 import type { Communities, CommunityMembershipsId } from "db/public";
 import { Skeleton } from "ui/skeleton";
 
-import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
+import type { MemberSelectUserWithMembership } from "./types";
 import { client } from "~/lib/api";
-import { selectCommunityMember } from "~/lib/server/member";
-import { getSuggestedUsers } from "~/lib/server/user";
 import { MemberSelectClient } from "./MemberSelectClient";
 
 type Props = {
@@ -29,6 +27,10 @@ type Props = {
 	helpText?: string;
 };
 
+/**
+ * The same as MemberSelectServer, but on the client, where we use our API to search
+ * for users instead of direct db queries
+ */
 export function MemberSelectClientFetch({
 	community,
 	fieldLabel,
@@ -40,12 +42,17 @@ export function MemberSelectClientFetch({
 	allowPubFieldSubstitution = true,
 }: Props) {
 	const baseQuery = { limit: 1, communityId: community.id };
-	const individualUserQuery = value ? { ...baseQuery, memberId: value } : baseQuery;
-	const emailQuery = query ? { ...baseQuery, email: query } : baseQuery;
+	const shouldQueryForIndividualUser = !!value && value !== "";
+	const shouldQueryForUsers = !!query && query !== "";
+
+	const individualUserQuery = shouldQueryForIndividualUser
+		? { ...baseQuery, memberId: value }
+		: baseQuery;
+	const emailQuery = shouldQueryForUsers ? { ...baseQuery, email: query } : baseQuery;
 
 	const { data: userQuery, isPending: userPending } = client.users.search.useQuery({
 		queryKey: ["searchUsersById", individualUserQuery, community.slug],
-		queryData: value
+		queryData: shouldQueryForIndividualUser
 			? {
 					query: individualUserQuery,
 					params: { communitySlug: community.slug },
@@ -55,18 +62,20 @@ export function MemberSelectClientFetch({
 	const { data: userSuggestionsQuery, isPending: userSuggestionsPending } =
 		client.users.search.useQuery({
 			queryKey: ["searchUsersByEmail", emailQuery, community.slug],
-			queryData:
-				query && query !== ""
-					? {
-							query: { limit: 1, communityId: community.id, email: query },
-							params: { communitySlug: community.slug },
-						}
-					: skipToken,
+			queryData: shouldQueryForUsers
+				? {
+						query: { limit: 1, communityId: community.id, email: query },
+						params: { communitySlug: community.slug },
+					}
+				: skipToken,
 		});
 	const user = userQuery?.body?.[0];
 
 	const [initialized, setInitialized] = useState(false);
 
+	// Use effect so that we do not load the component until all data is ready
+	// MemberSelectClient and Autocomplete both set state based on initial data,
+	// so we need to make sure our initial data is already queried for and not undefined
 	useEffect(() => {
 		const isLoading =
 			(value ? userPending : false) ||
