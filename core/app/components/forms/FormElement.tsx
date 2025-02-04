@@ -130,7 +130,6 @@ export const FormElement = ({
 				id={element.id}
 				searchParams={searchParams}
 				value={userId}
-				communitySlug={communitySlug}
 			/>
 		);
 	} else if (element.component === InputComponent.radioGroup) {

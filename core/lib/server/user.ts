@@ -90,42 +90,35 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 
 export const getSuggestedUsers = ({
 	communityId,
+	memberId,
 	query,
 	limit = 10,
 }: {
 	communityId?: CommunitiesId;
+	memberId?: CommunityMembershipsId;
 	query:
 		| {
 				email: string;
 				firstName?: string;
 				lastName?: string;
-				memberId?: CommunityMembershipsId;
 		  }
 		| {
 				firstName: string;
 				lastName?: string;
 				email?: string;
-				memberId?: CommunityMembershipsId;
 		  }
 		| {
 				lastName: string;
 				firstName?: string;
 				email?: string;
-				memberId?: CommunityMembershipsId;
-		  }
-		| {
-				memberId: CommunityMembershipsId;
-				email?: string;
-				firstName?: string;
-				lastName?: string;
 		  };
 	limit?: number;
 }) => {
 	// We don't cache this because users change frequently and outside of any community, so we can't
 	// efficiently cache them anyways
 
-	// First check if we
-	if (query.memberId && communityId) {
+	// First check if a member id was passed in
+	if (memberId && communityId) {
 		return db
 			.selectFrom("users")
 			.select((eb) => [
@@ -135,11 +128,11 @@ export const getSuggestedUsers = ({
 						.selectFrom("community_memberships")
 						.selectAll("community_memberships")
 						.whereRef("community_memberships.userId", "=", "users.id")
-						.where("community_memberships.communityId", "=", communityId!)
+						.where("community_memberships.communityId", "=", communityId)
 				).as("member"),
 			])
 			.innerJoin("community_memberships", "users.id", "community_memberships.userId")
-			.where("community_memberships.id", "=", query.memberId)
+			.where("community_memberships.id", "=", memberId)
 			.limit(limit);
 	}
 	return db

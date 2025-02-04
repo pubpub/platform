@@ -16,13 +16,11 @@ export const MemberSelectElement = ({
 	id = crypto.randomUUID(),
 	value,
 	searchParams,
-	communitySlug,
 	config,
 }: {
 	id?: string;
 	value?: CommunityMembershipsId;
 	searchParams: Record<string, unknown>;
-	communitySlug: string;
 } & ElementProps<InputComponent.memberSelect>) => {
 	const community = useCommunity();
 	if (!community) {
