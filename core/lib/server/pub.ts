@@ -12,6 +12,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
+	FTSReturn,
 	GetPubResponseBody,
 	Json,
 	JsonValue,
@@ -1872,7 +1873,7 @@ export type FullProcessedPub = ProcessedPub<{
 	withStage: true;
 }>;
 
-interface SearchConfig {
+export interface SearchConfig {
 	language?: string;
 	weights?: {
 		/**
@@ -1958,7 +1959,7 @@ export const fullTextSearch = async (
 	communityId: CommunitiesId,
 	userId: UsersId,
 	opts?: SearchConfig
-) => {
+): Promise<FTSReturn[]> => {
 	const options = {
 		...DEFAULT_FULLTEXT_SEARCH_OPTS,
 		...opts,
@@ -1985,7 +1986,7 @@ export const fullTextSearch = async (
 								${tsQuery}, 
 								'${sql.raw(options.headlineConfig)}'
 							)`.as("titleHighlights"),
-			pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
+
 			jsonArrayFrom(
 				eb
 					.selectFrom("pub_values")
@@ -2005,11 +2006,31 @@ export const fullTextSearch = async (
 							'${sql.raw(options.headlineConfig)}'
 						)`.as("highlights"),
 					])
+					.$narrowType<{
+						value: Json;
+					}>()
 					.whereRef("pub_values.pubId", "=", "pubs.id")
 					.where(
 						(eb) => sql`to_tsvector(${options.language}, value#>>'{}') @@ ${tsQuery}`
 					)
 			).as("matchingValues"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_types")
+					.selectAll("pub_types")
+					.whereRef("pubs.pubTypeId", "=", "pub_types.id")
+			)
+				// there will always be a pub type
+				.$notNull()
+				.as("pubType"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("stages")
+					.leftJoin("PubsInStages", "stages.id", "PubsInStages.stageId")
+					.select(["stages.id", "stages.name"])
+					.whereRef("PubsInStages.pubId", "=", "pubs.id")
+					.limit(1)
+			).as("stage"),
 		])
 		.where("pubs.communityId", "=", communityId)
 		.where((eb) => sql`pubs."searchVector" @@ ${tsQuery}`)

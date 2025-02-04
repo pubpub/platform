@@ -96,19 +96,21 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 								(pub: Awaited<ReturnType<typeof fullTextSearch>>[number]) => (
 									<CommandItem
 										key={pub.id}
-										// onSelect={() => onPubSelect?.(pub)}
 										onSelect={() => {
 											router.push(`/c/${community.slug}/pubs/${pub.id}`);
 											setOpen(false);
 										}}
 										className="flex flex-col items-start gap-1 py-3"
-										// dangerouslySetInnerHTML={{
-										// 	__html: pub.titleHighlights || getPubTitle(pub),
-										// }}
 									>
-										<span className="text-xs font-medium text-gray-700">
-											{pub.pubType.name}
-										</span>
+										<div className="flex gap-2 text-xs font-medium text-gray-700">
+											<span>{pub.pubType.name}</span>
+											{pub.stage && (
+												<>
+													<span>•</span>
+													<span>{pub.stage.name}</span>
+												</>
+											)}
+										</div>
 										<div
 											className="text-sm font-medium"
 											dangerouslySetInnerHTML={{
