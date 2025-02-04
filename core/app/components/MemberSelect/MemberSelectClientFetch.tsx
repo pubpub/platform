@@ -76,10 +76,6 @@ type Props = {
 	helpText?: string;
 };
 
-/**
- * The same as MemberSelectServer, but on the client, where we use our API to search
- * for users instead of direct db queries
- */
 export function MemberSelectClientFetch({
 	community,
 	fieldLabel,
