@@ -96,22 +96,11 @@ export const getSuggestedUsers = ({
 }: {
 	communityId?: CommunitiesId;
 	memberId?: CommunityMembershipsId;
-	query:
-		| {
-				email: string;
-				firstName?: string;
-				lastName?: string;
-		  }
-		| {
-				firstName: string;
-				lastName?: string;
-				email?: string;
-		  }
-		| {
-				lastName: string;
-				firstName?: string;
-				email?: string;
-		  };
+	query: {
+		email?: string;
+		firstName?: string;
+		lastName?: string;
+	};
 	limit?: number;
 }) => {
 	// We don't cache this because users change frequently and outside of any community, so we can't
