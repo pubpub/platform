@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 
+import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
 import { CoreSchemaType } from "db/public";
@@ -8,6 +9,7 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
+import { MembersPage } from "./fixtures/member-page";
 import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
@@ -228,5 +230,70 @@ test.describe("Rich text editor", () => {
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
 		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+	});
+});
+
+test.describe("Member select", async () => {
+	test("Can select a member", async () => {
+		// Add a member (all@pubpub.org is the only member by default)
+		const member1 = "all@pubpub.org";
+		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
+		await membersPage.goto();
+		const { email: member2 } = await membersPage.addNewUser(faker.internet.email());
+
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField("member", CoreSchemaType.MemberId);
+
+		// Add these to a new form
+		const formSlug = "member-form";
+		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		await formsPage.goto();
+		await formsPage.addForm("member form", formSlug);
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		await formEditPage.goto();
+
+		// Add the member field
+		await formEditPage.openAddForm();
+		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:member`);
+		await page.getByRole("textbox", { name: "Label" }).first().fill("Member");
+		await formEditPage.saveFormElementConfiguration();
+
+		// Save the form builder and go to external form
+		await formEditPage.saveForm();
+		await formEditPage.goToExternalForm();
+		const memberInput = page.getByTestId(`autocomplete-${COMMUNITY_SLUG}:member`);
+		await expect(memberInput).toHaveCount(1);
+
+		// Filling out an email should make the user show up in the dropdown
+		const title = "member test";
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		await memberInput.fill(member1);
+		await page.getByLabel(member1).click();
+		await expect(memberInput).toHaveValue(member1);
+
+		// Switch to a different user
+		await memberInput.clear();
+		await memberInput.pressSequentially(member2);
+		await page.getByLabel(member2).click();
+		await expect(memberInput).toHaveValue(member2);
+
+		// Add a new user
+		const newUser = faker.internet.email();
+		await memberInput.clear();
+		await memberInput.pressSequentially(newUser);
+		await page.getByTestId("member-select-add-button").click();
+		await page.getByLabel("First name").fill(faker.person.firstName());
+		await page.getByLabel("Last Name").fill(faker.person.lastName());
+		await page.getByLabel("Suggestions").getByRole("button", { name: "Submit" }).click();
+		await page.getByText("User successfully invited", { exact: true }).waitFor();
+		await expect(memberInput).toHaveValue(newUser);
+		// Click somewhere else to close the popover
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).click();
+
+		// Save
+		await page.getByRole("button", { name: "Submit" }).click();
+		await page.getByText("Form Successfully Submitted", { exact: true }).waitFor();
 	});
 });

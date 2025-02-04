@@ -132,6 +132,7 @@ export const AutoComplete = ({
 				placeholder={placeholder}
 				disabled={disabled}
 				icon={icon}
+				data-testid={`autocomplete-${name}`}
 			/>
 			<div className="relative mt-1">
 				<div

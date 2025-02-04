@@ -25,6 +25,7 @@ export const MemberSelectAddUserButton = (props: Props) => {
 				variant="ghost"
 				onClick={onClick}
 				className={cn(open && "hidden", "h-12 w-full flex-col items-start")}
+				data-testid="member-select-add-button"
 			>
 				<span>Member not found</span>
 				<p className="text-xs font-normal">Click to add a user to your community</p>
