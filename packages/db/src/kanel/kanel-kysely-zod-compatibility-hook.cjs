@@ -110,10 +110,6 @@ function kanelKyselyZodCompatibilityPreRenderHook(outputAcc, instantiatedConfig)
 						 */
 						const imports = declaration.typeImports?.map(renameImportToUseSchemaSuffix);
 
-						if (declaration.name === "pubs") {
-							console.log(declaration);
-						}
-
 						const declValue = Array.isArray(declaration.value)
 							? declaration.value.map(replaceSchemaCast) // these are all the id schemas.
 							: appendSchemaToIdentifiers(makeUuid(declaration.value));
