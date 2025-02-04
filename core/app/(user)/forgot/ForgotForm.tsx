@@ -21,6 +21,10 @@ const forgotPasswordSchema = z.object({
 export default function ForgotForm() {
 	const form = useForm<z.infer<typeof forgotPasswordSchema>>({
 		resolver: zodResolver(forgotPasswordSchema),
+		defaultValues: {
+			// in order to prevent "Form changed from uncontrolled to controlled" React errors
+			email: "",
+		},
 	});
 
 	const sendForgotPasswordMail = useServerAction(actions.sendForgotPasswordMail);

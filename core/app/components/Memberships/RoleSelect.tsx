@@ -32,7 +32,7 @@ export const RoleSelect = <T extends TargetId>({
 			<DropdownMenuTrigger asChild>
 				<Button
 					size="sm"
-					className="rounded-full bg-blue-500 capitalize text-slate-50 hover:bg-blue-600"
+					className="rounded-full bg-blue-500 capitalize text-gray-50 hover:bg-blue-600"
 				>
 					{currentRole}
 				</Button>
@@ -78,7 +78,7 @@ const MenuButton = <T extends TargetId>({
 
 	return (
 		<DropdownMenuItem onClick={handleClick} className="bg-white">
-			<Button className="w-full rounded-full bg-blue-500 capitalize text-slate-50 hover:bg-blue-600">
+			<Button className="w-full rounded-full bg-blue-500 capitalize text-gray-50 hover:bg-blue-600">
 				{role}
 			</Button>
 		</DropdownMenuItem>

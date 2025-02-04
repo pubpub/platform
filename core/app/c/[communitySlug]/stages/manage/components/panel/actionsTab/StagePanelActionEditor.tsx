@@ -41,7 +41,7 @@ export const StagePanelActionEditor = (props: Props) => {
 			className="w-full"
 			data-testid={`action-instance-${props.actionInstance.name}`}
 		>
-			<div className="flex w-full items-center justify-between space-x-4 border-b bg-slate-100 px-3 py-2 text-sm">
+			<div className="flex w-full items-center justify-between space-x-4 border-b bg-gray-100 px-3 py-2 text-sm">
 				<div className="flex items-center gap-2 overflow-auto">
 					<action.icon size="14" className="flex-shrink-0" />
 					{isOpen ? (
@@ -73,7 +73,7 @@ export const StagePanelActionEditor = (props: Props) => {
 					</CollapsibleTrigger>
 				</div>
 			</div>
-			<CollapsibleContent className="space-y-4 bg-slate-50 px-3 py-2 text-sm">
+			<CollapsibleContent className="space-y-4 bg-gray-50 px-3 py-2 text-sm">
 				<p>{action.description}</p>
 				<div className="flex flex-col gap-2 py-2">
 					{props.children}

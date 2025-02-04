@@ -1,201 +1,375 @@
-import { Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
-import { Activity, FormInput, Menu, RefreshCw, Settings, ToyBrick } from "ui/icon";
-import { Sheet, SheetContent, SheetTrigger } from "ui/sheet";
+import { link } from "fs";
+
+import type { User } from "lucia";
+
+import { cache, Suspense } from "react";
+
+import type { Communities, CommunitiesId, UsersId } from "db/public";
+import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { logger } from "logger";
+import {
+	Activity,
+	BookOpen,
+	BookOpenText,
+	CurlyBraces,
+	FlagTriangleRightIcon,
+	Form,
+	Layers3,
+	Settings2,
+	ToyBrick,
+	UsersRound,
+} from "ui/icon";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupContent,
+	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuItem,
+	SidebarMenuSkeleton,
+	SidebarMenuSubItem,
+	SidebarRail,
+	SidebarSeparator,
+} from "ui/sidebar";
 
 import type { CommunityData } from "~/lib/server/community";
+import type { MaybeHas } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
+import { NavLinkSubMenu } from "./NavLinkSubMenu";
 
 type Props = {
 	community: NonNullable<CommunityData>;
 	availableCommunities: NonNullable<CommunityData>[];
 };
 
+type BaseLinkDefinition = {
+	href: string;
+	text: string;
+	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>);
+	pattern?: string;
+};
+
+type SubMenuLinkDefinition = MaybeHas<BaseLinkDefinition, "href"> & {
+	children: SubLevelLinkDefinition[] | SubMenuLinkDefinition[];
+	icon: React.ReactNode;
+};
+
+type TopLevelLinkDefinition = BaseLinkDefinition & {
+	icon: React.ReactNode;
+};
+
+type SubLevelLinkDefinition = BaseLinkDefinition & {
+	icon?: React.ReactNode;
+};
+
+export type LinkDefinition =
+	| TopLevelLinkDefinition
+	| SubMenuLinkDefinition
+	| SubLevelLinkDefinition;
+
+type LinkGroupDefinition = {
+	name: string;
+	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>);
+	links: LinkDefinition[];
+};
+
+const userCanEditCommunityCached = cache(async (userId: UsersId, communityId: CommunitiesId) => {
+	return await userCan(
+		Capabilities.editCommunity,
+		{
+			type: MembershipType.community,
+			communityId,
+		},
+		userId
+	);
+});
+
+const viewLinks: LinkGroupDefinition = {
+	name: "Views",
+	authorization: null,
+	links: [
+		{
+			href: "/pubs",
+			text: "All Pubs",
+			icon: <BookOpen size={16} />,
+			authorization: null,
+		},
+		{
+			href: "/stages",
+			pattern: "/stages$",
+			text: "All Workflows",
+			icon: <FlagTriangleRightIcon size={16} />,
+			authorization: null,
+		},
+		{
+			href: "/activity/actions",
+			text: "Action Log",
+			icon: <Activity size={16} />,
+			authorization: userCanEditCommunityCached,
+		},
+	],
+};
+
+const manageLinks: LinkGroupDefinition = {
+	name: "Manage",
+	authorization: userCanEditCommunityCached,
+	links: [
+		{
+			href: "/stages/manage",
+			text: "Workflows",
+			icon: <Layers3 size={16} />,
+			pattern: "/stages/manage",
+			authorization: userCanEditCommunityCached,
+		},
+		{
+			href: "/forms",
+			text: "Forms",
+			icon: <Form size={16} />,
+			authorization: userCanEditCommunityCached,
+		},
+		{
+			href: "/types",
+			text: "Types",
+			icon: <ToyBrick size={16} />,
+			authorization: userCanEditCommunityCached,
+		},
+		{
+			href: "/fields",
+			text: "Fields",
+			icon: <CurlyBraces size={16} />,
+			authorization: userCanEditCommunityCached,
+		},
+		{
+			href: "/members",
+			text: "Members",
+			icon: <UsersRound size={16} />,
+			authorization: userCanEditCommunityCached,
+		},
+	],
+};
+
+const adminLinks: LinkGroupDefinition = {
+	name: "Admin",
+	authorization: userCanEditCommunityCached,
+	links: [
+		{
+			text: "Settings",
+			icon: <Settings2 size={16} />,
+			authorization: userCanEditCommunityCached,
+			children: [
+				{
+					href: "/settings/tokens",
+					text: "API Tokens",
+					authorization: userCanEditCommunityCached,
+				},
+			],
+		},
+		{
+			text: "Docs",
+			icon: <BookOpenText size={16} />,
+			authorization: userCanEditCommunityCached,
+			children: [
+				{
+					href: "/developers/docs",
+					text: "API",
+					authorization: userCanEditCommunityCached,
+				},
+			],
+		},
+	],
+};
+
+export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
+
 const Links = ({
-	communityPrefix,
+	user,
+	community,
+	links,
+	groupName,
 }: {
-	/* The community prefix, e.g. "/c/community-slug"
-	 */
-	communityPrefix: string;
+	user: User;
+	community: Communities;
+	links: LinkDefinition[];
+	groupName?: string;
 }) => {
 	return (
 		<>
-			<NavLink
-				href={`${communityPrefix}/pubs`}
-				text={"All Pubs"}
-				icon={<img src="/icons/pub.svg" alt="" />}
-			/>
+			{links.map((link) => {
+				if (!("children" in link)) {
+					return (
+						<Suspense fallback={<SidebarMenuSkeleton />} key={link.href || link.text}>
+							<Link
+								user={user}
+								community={community}
+								link={link}
+								groupName={groupName}
+							/>
+						</Suspense>
+					);
+				}
+
+				return (
+					<SubMenuLinks user={user} community={community} link={link} key={link.text} />
+				);
+			})}
 		</>
 	);
 };
 
-const ViewLinks = ({
-	prefix,
-	isAdmin,
+const Link = async ({
+	user,
+	community,
+	link,
+	groupName,
 }: {
-	/* The community prefix, e.g. "/c/community-slug"
-	 */
-	prefix: string;
-	/* Whether the user is an admin */
-	isAdmin?: boolean;
+	user: User;
+	community: Communities;
+	link: TopLevelLinkDefinition | SubLevelLinkDefinition;
+	groupName?: string;
 }) => {
+	if (link.authorization) {
+		const userCan = await link.authorization(user.id, community.id);
+
+		if (!userCan) {
+			return null;
+		}
+	}
+
 	return (
-		<>
-			{isAdmin && (
-				<NavLink
-					href={`${prefix}/activity/actions`}
-					text="Action Log"
-					icon={<Activity className="h-4 w-4" />}
-				/>
-			)}
-		</>
+		<NavLink
+			href={`/c/${community.slug}${link.href}`}
+			text={link.text}
+			icon={link.icon}
+			pattern={link.pattern}
+			groupName={groupName}
+			hasChildren
+			isChild={false}
+		/>
 	);
 };
 
-const ManageLinks = ({
-	communityPrefix,
-	showCommunityEditorLinks,
+const SubMenuLinks = async ({
+	user,
+	community,
+	link,
 }: {
-	/* The community prefix, e.g. "/c/community-slug"
-	 */
-	communityPrefix: string;
-	/* Whether the user is an admin */
-	showCommunityEditorLinks?: boolean;
+	user: User;
+	community: Communities;
+	link: SubMenuLinkDefinition;
 }) => {
+	if (link.authorization) {
+		const userCan = await link.authorization(user.id, community.id);
+
+		if (!userCan) {
+			return null;
+		}
+	}
+
 	return (
-		<>
-			<NavLink
-				href={`${communityPrefix}/stages`}
-				text={"Workflows"}
-				icon={<img src="/icons/stages.svg" alt="" />}
-			/>
-			{showCommunityEditorLinks && (
-				<NavLink
-					href={`${communityPrefix}/stages/manage`}
-					text="Stage editor"
-					icon={<RefreshCw size={16} />}
+		<NavLinkSubMenu
+			icon={link.icon}
+			text={link.text}
+			parentLink={
+				link.href ? (
+					<NavLink
+						href={`/c/${community.slug}${link.href}`}
+						text={link.text}
+						icon={link.icon}
+						pattern={link.pattern}
+						hasChildren
+						isChild={false}
+					/>
+				) : null
+			}
+		>
+			{link.children.map((child) => (
+				<SidebarMenuSubItem key={child.href}>
+					<Links user={user} community={community} links={link.children} />
+				</SidebarMenuSubItem>
+			))}
+		</NavLinkSubMenu>
+	);
+};
+
+const LinkGroup = async ({
+	user,
+	community,
+	group,
+}: {
+	user: User;
+	community: Communities;
+	group: LinkGroupDefinition;
+}) => {
+	if (group.authorization) {
+		const userCan = await group.authorization(user.id, community.id);
+
+		if (!userCan) {
+			return null;
+		}
+	}
+
+	return (
+		<SidebarGroup className="group-data-[collapsible=icon]:py-0">
+			<SidebarGroupLabel className="font-semibold uppercase text-gray-500 group-data-[collapsible=icon]:hidden">
+				{group.name}
+			</SidebarGroupLabel>
+			<SidebarGroupContent className="group-data-[state=expanded]:px-2">
+				<Links
+					user={user}
+					community={community}
+					links={group.links}
+					groupName={group.name}
 				/>
-			)}
-			{showCommunityEditorLinks && (
-				<NavLink
-					href={`${communityPrefix}/types`}
-					text="Types"
-					icon={<ToyBrick size={16} />}
-				/>
-			)}
-			{showCommunityEditorLinks && (
-				<NavLink
-					href={`${communityPrefix}/fields`}
-					text="Fields"
-					icon={<FormInput size={16} />}
-				/>
-			)}
-			{showCommunityEditorLinks && (
-				<NavLink
-					href={`${communityPrefix}/forms`}
-					text="Forms"
-					icon={<img src="/icons/form.svg" alt="" />}
-				/>
-			)}
-			{showCommunityEditorLinks && (
-				<NavLink
-					href={`${communityPrefix}/members`}
-					text="Members"
-					icon={<img src="/icons/members.svg" alt="" />}
-				/>
-			)}
-			{showCommunityEditorLinks && (
-				<NavLink
-					href={`${communityPrefix}/settings`}
-					text="Settings"
-					icon={<Settings className="h-4 w-4" />}
-				/>
-			)}
-		</>
+			</SidebarGroupContent>
+		</SidebarGroup>
 	);
 };
 
 const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
-	const prefix = `/c/${community.slug}`;
-	const divider = <div className="my-4 h-[1px] bg-gray-200" />;
-
 	const { user } = await getLoginData();
 
 	if (!user) {
 		return null;
 	}
 
-	const userCanEditCommunity = await userCan(
-		Capabilities.editCommunity,
-		{ type: MembershipType.community, communityId: community.id },
-		user.id
-	);
-
 	return (
-		<>
-			<header className="flex h-14 w-full items-center justify-between gap-4 border-b px-4 md:hidden lg:h-[60px] lg:px-6">
-				<Sheet>
-					<SheetTrigger asChild>
-						<Button variant="outline" size="icon" className="shrink-0">
-							<Menu className="h-5 w-5" />
-							<span className="sr-only">Toggle navigation menu</span>
-						</Button>
-					</SheetTrigger>
-					<SheetContent
-						side="left"
-						className="mr-4 flex flex-col justify-between bg-gray-50 pb-8"
-					>
-						<nav className="grid gap-2 pr-6 text-lg font-medium">
-							<Links communityPrefix={prefix} />
-						</nav>
-						<div>
-							<LoginSwitcher />
-						</div>
-					</SheetContent>
-				</Sheet>
-				<CommunitySwitcher
-					community={community}
-					availableCommunities={availableCommunities}
-				/>
-			</header>
-			<div
-				className={
-					"fixed hidden h-screen w-[250px] flex-col bg-gray-50 p-4 shadow-inner md:flex"
-				}
-			>
-				<div className="flex-auto">
-					<CommunitySwitcher
-						community={community}
-						availableCommunities={availableCommunities}
-					/>
-					{divider}
-					<div className="flex h-full max-h-screen flex-col gap-2">
-						<div className="flex-1">
-							<nav className="grid items-start pr-2 pt-2 text-sm font-medium">
-								<Links communityPrefix={prefix} />
-								{divider}
-								<span className="font-semibold text-gray-500">VIEWS</span>
-								<ViewLinks prefix={prefix} isAdmin={userCanEditCommunity} />
-							</nav>
-							<nav className="grid items-start pr-2 pt-4 text-sm font-medium">
-								<span className="font-semibold text-gray-500">MANAGE</span>
-								<ManageLinks
-									communityPrefix={prefix}
-									showCommunityEditorLinks={userCanEditCommunity}
-								/>
-							</nav>
-						</div>
+		<Sidebar collapsible={COLLAPSIBLE_TYPE}>
+			<SidebarHeader className="py-4 group-data-[state=expanded]:p-2 group-data-[collapsible=icon]:pt-5">
+				<SidebarMenu>
+					<SidebarMenuItem className={`h-full`}>
+						<CommunitySwitcher
+							community={community}
+							availableCommunities={availableCommunities}
+						/>
+					</SidebarMenuItem>
+				</SidebarMenu>
+				<SidebarSeparator className="group-data-[state=expanded]:mx-3 group-data-[collapsible=icon]:mt-3" />
+			</SidebarHeader>
+			<SidebarContent className="group-data-[state=expanded]:px-1 group-data-[state=expanded]:py-3">
+				<div className="flex h-full max-h-screen flex-col group-data-[state=expanded]:gap-2">
+					<div className="flex-1">
+						<LinkGroup user={user} community={community} group={viewLinks} />
+						<LinkGroup user={user} community={community} group={manageLinks} />
+						<LinkGroup user={user} community={community} group={adminLinks} />
 					</div>
 				</div>
-				<div>
-					<LoginSwitcher />
-				</div>
-			</div>
-		</>
+			</SidebarContent>
+			<SidebarFooter className="px-2 pb-4">
+				<SidebarMenu>
+					<SidebarMenuItem>
+						<LoginSwitcher />
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarFooter>
+			<SidebarRail />
+		</Sidebar>
 	);
 };
 

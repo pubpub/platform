@@ -14,6 +14,7 @@ import { lucia, validateRequest } from "~/lib/authentication/lucia";
 import { validatePassword } from "~/lib/authentication/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getUser, setUserPassword, updateUser } from "~/lib/server/user";
+import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/constants";
 import * as Email from "../server/email";
 import { invalidateTokensForUser } from "../server/token";
 import { getLoginData } from "./loginData";
@@ -32,16 +33,19 @@ type LoginUser = Prettify<
 const getUserWithPasswordHash = async (props: Parameters<typeof getUser>[0]) =>
 	getUser(props).select("users.passwordHash").executeTakeFirst();
 
-function redirectUser(
+async function redirectUser(
 	memberships?: (Omit<CommunityMemberships, "memberGroupId"> & {
 		community: Communities | null;
 	})[]
-): never {
+): Promise<never> {
 	if (!memberships?.length) {
 		redirect("/settings");
 	}
+	const cookieStore = await cookies();
+	const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
+	const communitySlug = lastVisited?.value ?? memberships[0].community?.slug;
 
-	redirect(`/c/${memberships[0].community?.slug}/stages`);
+	redirect(`/c/${communitySlug}/stages`);
 }
 
 export const loginWithPassword = defineServerAction(async function loginWithPassword(props: {
@@ -89,7 +93,7 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 		redirect(props.redirectTo);
 	}
 
-	redirectUser(user.memberships);
+	await redirectUser(user.memberships);
 });
 
 export const logout = defineServerAction(async function logout() {
@@ -283,5 +287,5 @@ export const signup = defineServerAction(async function signup(props: {
 	if (props.redirect) {
 		redirect(props.redirect);
 	}
-	redirectUser();
+	await redirectUser();
 });

@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+/** @type {import("tailwindcss").Config} */
 
 /* We likely want to export a tailwind plugin, rather than
 using `preset` in consuming apps. Explanation here: 
@@ -10,7 +10,7 @@ module.exports = {
 	content: ["./src/*.{js,jsx,ts,tsx}"],
 	theme: {
 		container: {
-			center: true,
+			center: "true",
 			padding: "2rem",
 			screens: {
 				"2xl": "1400px",
@@ -37,15 +37,34 @@ module.exports = {
 				input: "hsl(var(--input))",
 				border: "hsl(var(--border))",
 				ring: "hsl(var(--ring))",
+				sidebar: {
+					DEFAULT: "hsl(var(--sidebar-background))",
+					foreground: "hsl(var(--sidebar-foreground))",
+					primary: "hsl(var(--sidebar-primary))",
+					"primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+					accent: "hsl(var(--sidebar-accent))",
+					"accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+					border: "hsl(var(--sidebar-border))",
+					ring: "hsl(var(--sidebar-ring))",
+					active: "hsl(var(--sidebar-active))",
+				},
 			},
 			keyframes: {
 				"accordion-down": {
-					from: { height: 0 },
-					to: { height: "var(--radix-accordion-content-height)" },
+					from: {
+						height: "0",
+					},
+					to: {
+						height: "var(--radix-accordion-content-height)",
+					},
 				},
 				"accordion-up": {
-					from: { height: "var(--radix-accordion-content-height)" },
-					to: { height: 0 },
+					from: {
+						height: "var(--radix-accordion-content-height)",
+					},
+					to: {
+						height: "0",
+					},
 				},
 			},
 			animation: {
