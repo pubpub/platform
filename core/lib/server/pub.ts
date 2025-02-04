@@ -2042,7 +2042,7 @@ export const fullTextSearch = async (
 		);
 
 	// for debugging, shows how long the query took
-	if (env.LOG_LEVEL === "debug") {
+	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true") {
 		const explained = await q.explain("json", sql`analyze`);
 		logger.debug({
 			msg: `Full Text Search EXPLAIN`,
