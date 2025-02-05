@@ -57,6 +57,7 @@ Table auth_tokens {
   id String [pk]
   hash String [not null]
   createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
   expiresAt DateTime [not null]
   isUsed Boolean [not null, default: false]
   user users [not null]
@@ -171,6 +172,8 @@ Table _PubFieldToPubType {
   A String [not null]
   B String [not null]
   isTitle Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
   pubField pub_fields [not null]
   pubType pub_types [not null]
 
@@ -200,6 +203,8 @@ Table PubsInStages {
   pubId String [not null]
   stage stages [not null]
   stageId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 
   indexes {
     (pubId, stageId) [pk]
@@ -342,6 +347,8 @@ Table rules {
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
   config Json
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 
   indexes {
     (actionInstanceId, event) [unique]
@@ -360,6 +367,8 @@ Table forms {
   isArchived Boolean [not null, default: false]
   access FormAccessType [not null, default: 'private']
   isDefault Boolean [not null, default: false]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
 
   indexes {
@@ -384,6 +393,8 @@ Table form_elements {
   form forms [not null]
   stage stages
   stageId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 
   indexes {
     (type, label, formId) [unique]
@@ -402,6 +413,7 @@ Table api_access_tokens {
   issuedBy users
   issuedById String
   issuedAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
   accessRules api_access_permissions [not null]
   logs api_access_logs [not null]
   PubValueHistory pub_values_history [not null]
@@ -422,6 +434,8 @@ Table api_access_permissions {
   scope ApiAccessScope [not null]
   accessType ApiAccessType [not null]
   constraints Json [note: '@type(ApiAccessPermissionConstraints, \'../types\', true, false, true)']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 }
 
 Table membership_capabilities {

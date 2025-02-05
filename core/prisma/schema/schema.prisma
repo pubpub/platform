@@ -63,9 +63,11 @@ model Session {
 }
 
 model AuthToken {
-  id        String        @id @default(dbgenerated("gen_random_uuid()"))
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   hash      String
-  createdAt DateTime      @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   expiresAt DateTime // Tokens expire within 1 week...
   isUsed    Boolean       @default(false) // ...or after one use
   user      User          @relation(fields: [userId], references: [id])
@@ -232,11 +234,13 @@ model PubType {
 }
 
 model PubFieldToPubType {
-  A       String
-  B       String
+  A         String
+  B         String
   // when this changes, a trigger is run to update the title of all pubs in that pubType
   // see migrations/20241210172906_trigger_for_changing_is_title/migration.sql
-  isTitle Boolean @default(false)
+  isTitle   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   pubField PubField @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
   pubType  PubType  @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
@@ -266,10 +270,12 @@ model Stage {
 }
 
 model PubsInStages {
-  pub     Pub    @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId   String
-  stage   Stage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId String
+  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
+  pubId     String
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@id([pubId, stageId])
 }
@@ -447,6 +453,8 @@ model Rule {
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String
   config           Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")
@@ -476,6 +484,8 @@ model Form {
   isArchived  Boolean        @default(false)
   access      FormAccessType @default(private)
   isDefault   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
 
   members FormMembership[]
 
@@ -532,6 +542,8 @@ model FormElement {
   form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
   stage     Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId   String?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @default(now()) @updatedAt
 
   @@unique([type, label, formId])
   @@unique([fieldId, formId])
@@ -549,6 +561,7 @@ model ApiAccessToken {
   issuedBy        User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
   issuedById      String?
   issuedAt        DateTime              @default(now())
+  updatedAt       DateTime              @default(now()) @updatedAt
   accessRules     ApiAccessPermission[]
   logs            ApiAccessLog[]
   PubValueHistory PubValueHistory[]
@@ -582,6 +595,8 @@ model ApiAccessPermission {
   scope            ApiAccessScope
   accessType       ApiAccessType
   constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
 
   // this ensures that only one permission per token and scope and access type exists
   @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")
