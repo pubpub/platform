@@ -5,7 +5,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
 	plugins: [react(), tsconfigPaths()],
 	test: {
-		globalSetup: ["./globalSetup.ts"],
+		globalSetup: ["./lib/__tests__/globalSetup.ts"],
+		setupFiles: ["./lib/__tests__/matchers.ts"],
 		environment: "jsdom",
 		environmentMatchGlobs: [
 			["**/(!db).test.ts", "jsdom"],

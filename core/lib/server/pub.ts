@@ -417,7 +417,7 @@ export const doesPubExist = async (
 /**
  * For recursive transactions
  */
-const maybeWithTrx = async <T>(
+export const maybeWithTrx = async <T>(
 	trx: Transaction<Database> | Kysely<Database>,
 	fn: (trx: Transaction<Database>) => Promise<T>
 ): Promise<T> => {
@@ -711,10 +711,12 @@ const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	includeRelations = true,
+	trx = db,
 }: {
 	slugs: string[];
 	communityId: CommunitiesId;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
@@ -726,6 +728,7 @@ const getFieldInfoForSlugs = async ({
 		communityId,
 		slugs: toBeUpdatedPubFieldSlugs,
 		includeRelations,
+		trx,
 	}).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
@@ -759,21 +762,24 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
-const validatePubValues = async <T extends { slug: string; value: unknown }>({
+export const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
 	continueOnValidationError = false,
 	includeRelations = true,
+	trx = db,
 }: {
 	pubValues: T[];
 	communityId: CommunitiesId;
 	continueOnValidationError?: boolean;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const relevantPubFields = await getFieldInfoForSlugs({
 		slugs: pubValues.map(({ slug }) => slug),
 		communityId,
 		includeRelations,
+		trx,
 	});
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
@@ -933,32 +939,12 @@ export const upsertPubRelations = async (
 
 		const pubRelations =
 			allRelationsToCreate.length > 0
-				? await autoRevalidate(
-						trx
-							.insertInto("pub_values")
-							.values(
-								allRelationsToCreate.map(
-									({ relatedPubId, value, slug, fieldId }) => ({
-										pubId,
-										relatedPubId,
-										value: JSON.stringify(value),
-										fieldId,
-										lastModifiedBy,
-									})
-								)
-							)
-							.onConflict((oc) =>
-								oc
-									.columns(["pubId", "fieldId", "relatedPubId"])
-									.where("relatedPubId", "is not", null)
-									// upsert
-									.doUpdateSet((eb) => ({
-										value: eb.ref("excluded.value"),
-										lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-									}))
-							)
-							.returningAll()
-					).execute()
+				? await upsertPubRelationValues({
+						pubId,
+						allRelationsToCreate,
+						lastModifiedBy,
+						trx,
+					})
 				: [];
 
 		const createdRelations = pubRelations.map((relation) => {
@@ -1200,7 +1186,7 @@ export const addDeletePubValueHistoryEntries = async ({
 	).execute();
 };
 
-const upsertPubValues = async ({
+export const upsertPubValues = async ({
 	pubId,
 	pubValues,
 	lastModifiedBy,
@@ -1208,44 +1194,91 @@ const upsertPubValues = async ({
 }: {
 	pubId: PubsId;
 	pubValues: {
+		/**
+		 * specify this if you do not want to use the pubId provided in the input
+		 */
+		pubId?: PubsId;
 		fieldId: PubFieldsId;
-		schemaName: CoreSchemaType;
 		relatedPubId?: PubsId;
-		fieldName: string;
-		slug: string;
 		value: unknown;
 	}[];
 	lastModifiedBy: LastModifiedBy;
 	trx: typeof db;
 }): Promise<PubValuesType[]> => {
-	const result = pubValues.length
-		? autoRevalidate(
-				trx
-					.insertInto("pub_values")
-					.values(
-						pubValues.map(({ value, fieldId, relatedPubId }) => ({
-							pubId,
-							fieldId,
-							value: JSON.stringify(value),
-							lastModifiedBy,
-							relatedPubId,
-						}))
-					)
-					.onConflict((oc) =>
-						oc
-							// we have a unique index on pubId and fieldId where relatedPubId is null
-							.columns(["pubId", "fieldId"])
-							.where("relatedPubId", "is", null)
-							.doUpdateSet((eb) => ({
-								value: eb.ref("excluded.value"),
-								lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-							}))
-					)
-					.returningAll()
-			).execute()
-		: [];
+	if (!pubValues.length) {
+		return [];
+	}
 
-	return result;
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				pubValues.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					fieldId: value.fieldId,
+					value: JSON.stringify(value.value),
+					lastModifiedBy,
+					relatedPubId: value.relatedPubId,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					// we have a unique index on pubId and fieldId where relatedPubId is null
+					.columns(["pubId", "fieldId"])
+					.where("relatedPubId", "is", null)
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
+};
+
+export const upsertPubRelationValues = async ({
+	pubId,
+	allRelationsToCreate,
+	lastModifiedBy,
+	trx,
+}: {
+	pubId: PubsId;
+	allRelationsToCreate: {
+		pubId?: PubsId;
+		relatedPubId: PubsId;
+		value: unknown;
+		fieldId: PubFieldsId;
+	}[];
+	lastModifiedBy: LastModifiedBy;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!allRelationsToCreate.length) {
+		return [];
+	}
+
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				allRelationsToCreate.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					relatedPubId: value.relatedPubId,
+					value: JSON.stringify(value.value),
+					fieldId: value.fieldId,
+					lastModifiedBy,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					.columns(["pubId", "fieldId", "relatedPubId"])
+					.where("relatedPubId", "is not", null)
+					// upsert
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
 };
 
 export const updatePub = async ({
