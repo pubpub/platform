@@ -7,6 +7,7 @@ import type {
 	StringReference,
 } from "kysely";
 
+import { id } from "date-fns/locale";
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
@@ -38,7 +39,7 @@ import type { LastModifiedBy } from "db/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
 import { assert, expect } from "utils";
 
-import type { MaybeHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
@@ -416,7 +417,7 @@ export const doesPubExist = async (
 /**
  * For recursive transactions
  */
-const maybeWithTrx = async <T>(
+export const maybeWithTrx = async <T>(
 	trx: Transaction<Database> | Kysely<Database>,
 	fn: (trx: Transaction<Database>) => Promise<T>
 ): Promise<T> => {
@@ -431,8 +432,42 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 	Array.isArray(value) &&
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
 
+export const mapOldInputToNewInput = (
+	pub: CreatePubRequestBodyWithNullsNew
+): Record<string, RelInput[]> => {
+	if (!pub.relatedPubs) {
+		return {};
+	}
+
+	return Object.fromEntries(
+		Object.entries(pub.relatedPubs).map(([slug, relatedPubs]) => [
+			slug,
+			relatedPubs.map(({ value, pub: relatedPub }) => ({
+				value,
+				pub: {
+					...relatedPub,
+					id: relatedPub.id as PubsId | undefined,
+					assigneeId: relatedPub.assigneeId as UsersId | undefined,
+					pubTypeId: relatedPub.pubTypeId as PubTypesId,
+					stageId: relatedPub.stageId as StagesId | undefined,
+					parentId: relatedPub.parentId as PubsId | undefined,
+					values: { replace: relatedPub.values },
+					...(relatedPub.relatedPubs
+						? {
+								relations: {
+									replace: { relations: mapOldInputToNewInput(relatedPub) },
+								},
+							}
+						: {}),
+				},
+			})),
+		])
+	);
+};
+
 /**
  * @throws
+ * @deprecated use upsertPubRecursiveNew instead
  */
 export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>(
 	{
@@ -528,22 +563,12 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				.execute();
 		}
 
-		const pubValues = valuesWithFieldIds.length
-			? await autoRevalidate(
-					trx
-						.insertInto("pub_values")
-						.values(
-							valuesWithFieldIds.map(({ fieldId, value, relatedPubId }, index) => ({
-								fieldId,
-								pubId: newPub.id,
-								value: JSON.stringify(value),
-								relatedPubId,
-								lastModifiedBy,
-							}))
-						)
-						.returningAll()
-				).execute()
-			: [];
+		const pubValues = await upsertPubValues({
+			pubId: newPub.id,
+			pubValues: valuesWithFieldIds,
+			lastModifiedBy,
+			trx,
+		});
 
 		const pub = await getPlainPub(newPub.id, trx).executeTakeFirstOrThrow();
 
@@ -598,18 +623,29 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			} satisfies ProcessedPub;
 		}
 
+		// const mappedPubRelations = Object.fromEntries(
+		// 	Object.entries(body.relatedPubs).map(([slug, pubs]) => [
+		// 		slug,
+		// 		pubs.map(({ value, pub }) => ({
+		// 			value,
+		// 			pub: {
+		// 				...pub,
+		// 				...(pub.values ? { values: { replace: pub.values } } : {}),
+		// 				...(pub.relatedPubs ? { relations: { replace: pub.relatedPubs } } : {}),
+		// 			},
+		// 		})),
+		// 	])
+		// );
+		const mappedPubRelations = mapOldInputToNewInput(body);
 		// this fn itself calls createPubRecursiveNew, be mindful of infinite loops
 		const relatedPubs = await upsertPubRelations(
 			{
 				pubId: newPub.id,
-				relations: Object.entries(body.relatedPubs).flatMap(
-					([fieldSlug, relatedPubBodies]) =>
-						relatedPubBodies.map(({ pub, value }) => ({
-							slug: fieldSlug,
-							value,
-							relatedPub: pub,
-						}))
-				),
+				relations: {
+					merge: {
+						relations: mappedPubRelations,
+					},
+				},
 				communityId,
 				lastModifiedBy,
 				trx,
@@ -675,10 +711,12 @@ const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	includeRelations = true,
+	trx = db,
 }: {
 	slugs: string[];
 	communityId: CommunitiesId;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
@@ -690,6 +728,7 @@ const getFieldInfoForSlugs = async ({
 		communityId,
 		slugs: toBeUpdatedPubFieldSlugs,
 		includeRelations,
+		trx,
 	}).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
@@ -723,21 +762,24 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
-const validatePubValues = async <T extends { slug: string; value: unknown }>({
+export const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
 	continueOnValidationError = false,
 	includeRelations = true,
+	trx = db,
 }: {
 	pubValues: T[];
 	communityId: CommunitiesId;
 	continueOnValidationError?: boolean;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const relevantPubFields = await getFieldInfoForSlugs({
 		slugs: pubValues.map(({ slug }) => slug),
 		communityId,
 		includeRelations,
+		trx,
 	});
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
@@ -768,11 +810,34 @@ type UpdatePubRelationsInput = { value: unknown; slug: string; relatedPubId: Pub
 type RemovePubRelationsInput = { value?: never; slug: string; relatedPubId: PubsId };
 
 export const normalizeRelationValues = (
-	relations: AddPubRelationsInput[] | UpdatePubRelationsInput[]
+	relations: UpsertPubRelationInput // AddPubRelationsInput[] | UpdatePubRelationsInput[]
 ) => {
-	return relations
-		.filter((relation) => relation.value !== undefined)
-		.map((relation) => ({ slug: relation.slug, value: relation.value }));
+	const relationList = relations.replace?.relations ?? relations.merge?.relations;
+
+	if (!relationList) {
+		throw new BadRequestError("No relations found");
+	}
+
+	const normalizedRelationList = Object.entries(relationList).flatMap(([slug, relations]) =>
+		relations.map((relation) => ({ slug, ...relation }))
+	);
+
+	if (relations.replace) {
+		return {
+			relations: normalizedRelationList,
+			options: {
+				deleteOrphans: relations.replace.deleteOrphans,
+				override: relations.replace.override,
+			},
+			mode: "replace",
+		} as const;
+	}
+
+	return {
+		relations: normalizedRelationList,
+		options: {},
+		mode: "merge",
+	} as const;
 };
 
 /**
@@ -794,7 +859,7 @@ export const upsertPubRelations = async (
 		trx = db,
 	}: {
 		pubId: PubsId;
-		relations: AddPubRelationsInput[];
+		relations: UpsertPubRelationInput;
 		communityId: CommunitiesId;
 		lastModifiedBy: LastModifiedBy;
 		trx?: typeof db;
@@ -804,45 +869,54 @@ export const upsertPubRelations = async (
 	const normalizedRelationValues = normalizeRelationValues(relations);
 
 	const validatedRelationValues = await validatePubValues({
-		pubValues: normalizedRelationValues,
+		pubValues: normalizedRelationValues.relations,
 		communityId,
 		continueOnValidationError: false,
 	});
 
-	const { newPubs, existingPubs } = relations.reduce(
+	const { upsertingPubs, linkingPubs } = normalizedRelationValues.relations.reduce(
 		(acc, rel) => {
 			const fieldId = validatedRelationValues.find(({ slug }) => slug === rel.slug)?.fieldId;
 			assert(fieldId, `No pub field found for slug '${rel.slug}'`);
 
-			if (rel.relatedPub) {
-				acc.newPubs.push({ ...rel, fieldId });
+			if (Object.keys(rel.pub).length === 1 && rel.pub.id) {
+				acc.linkingPubs.push({ value: rel.value, fieldId, relatedPubId: rel.pub.id });
 			} else {
-				acc.existingPubs.push({ ...rel, fieldId });
+				acc.upsertingPubs.push({
+					...(rel as {
+						pub: Omit<UpsertCreateInput, "communityId" | "lastModifiedBy">;
+						value: unknown;
+						slug: string;
+					}),
+					fieldId,
+				});
 			}
 
 			return acc;
 		},
 		{
-			newPubs: [] as (AddPubRelationsInput & {
-				relatedPubId?: never;
+			upsertingPubs: [] as {
+				value: unknown;
 				fieldId: PubFieldsId;
-			})[],
-			existingPubs: [] as (AddPubRelationsInput & {
-				relatedPub?: never;
+				pub: Omit<UpsertCreateInput, "communityId" | "lastModifiedBy">;
+			}[],
+			linkingPubs: [] as {
+				value: unknown;
 				fieldId: PubFieldsId;
-			})[],
+				relatedPubId: PubsId;
+			}[],
 		}
 	);
 
 	const pubRelations = await maybeWithTrx(trx, async (trx) => {
 		const newlyCreatedPubs = await Promise.all(
-			newPubs.map((pub) =>
-				createPubRecursiveNew(
+			upsertingPubs.map((pub) =>
+				upsertPub(
 					{
 						trx,
 						communityId,
-						body: pub.relatedPub,
-						lastModifiedBy: lastModifiedBy,
+						...pub.pub,
+						lastModifiedBy,
 					},
 					depth + 1
 				)
@@ -851,42 +925,27 @@ export const upsertPubRelations = async (
 
 		// assumed they keep their order
 
-		const newPubsWithRelatedPubId = newPubs.map((pub, index) => ({
+		const newPubsWithRelatedPubId = upsertingPubs.map((pub, index) => ({
 			...pub,
 			relatedPubId: expect(newlyCreatedPubs[index].id),
 		}));
 
-		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs] as {
+		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...linkingPubs] as {
 			relatedPubId: PubsId;
 			value: unknown;
 			slug: string;
 			fieldId: PubFieldsId;
 		}[];
 
-		const pubRelations = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					allRelationsToCreate.map(({ relatedPubId, value, slug, fieldId }) => ({
+		const pubRelations =
+			allRelationsToCreate.length > 0
+				? await upsertPubRelationValues({
 						pubId,
-						relatedPubId,
-						value: JSON.stringify(value),
-						fieldId,
+						allRelationsToCreate,
 						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						.columns(["pubId", "fieldId", "relatedPubId"])
-						.where("relatedPubId", "is not", null)
-						// upsert
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-						}))
-				)
-				.returningAll()
-		).execute();
+						trx,
+					})
+				: [];
 
 		const createdRelations = pubRelations.map((relation) => {
 			const correspondingValue = validatedRelationValues.find(
@@ -902,10 +961,119 @@ export const upsertPubRelations = async (
 			};
 		});
 
+		if (normalizedRelationValues.mode === "replace") {
+			const allPubRelations = await trx
+				.selectFrom("pub_values")
+				.selectAll()
+				.where("pubId", "=", pubId)
+				.where("relatedPubId", "is not", null)
+				.execute();
+
+			const toBeRemovedPubRelations = allPubRelations
+				.filter(
+					(rel): rel is DefinitelyHas<typeof rel, "relatedPubId"> =>
+						rel.relatedPubId != null
+				)
+				.filter(
+					(allRel) =>
+						!createdRelations.find(
+							(createdRel) =>
+								createdRel.relatedPubId === allRel.relatedPubId &&
+								createdRel.fieldId === allRel.fieldId
+						)
+				);
+
+			// we need to remove the values that are not being updated
+			const removedRelations = await deletePubRelations({
+				pubId,
+				relations: toBeRemovedPubRelations,
+				lastModifiedBy,
+				trx,
+			});
+
+			if (normalizedRelationValues.options.deleteOrphans && removedRelations.length > 0) {
+				await Promise.all(
+					removedRelations.map(
+						async ({ relatedPubId }) =>
+							await deletePub({ pubId: expect(relatedPubId), lastModifiedBy, trx })
+					)
+				);
+			}
+		}
+
 		return createdRelations;
 	});
 
 	return pubRelations;
+};
+
+const deletePubValues = async ({
+	pubId,
+	fieldIds,
+	lastModifiedBy,
+	negative = false,
+	trx = db,
+}: {
+	pubId: PubsId;
+	fieldIds: PubFieldsId[];
+	lastModifiedBy: LastModifiedBy;
+	/**
+	 * If true, removes the values that are not in the supplied pubValues
+	 * (does not remove relations)
+	 */
+	negative?: boolean;
+	trx?: typeof db;
+}) => {
+	const removed = await autoRevalidate(
+		trx
+			.deleteFrom("pub_values")
+			.where("pubId", "=", pubId)
+			.where("pub_values.fieldId", negative ? "not in" : "in", fieldIds)
+			.where("pub_values.relatedPubId", "is", null)
+			.returningAll()
+	).execute();
+
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
+
+	return removed;
+};
+
+const deletePubRelations = async ({
+	pubId,
+	relations,
+	lastModifiedBy,
+	trx = db,
+}: {
+	pubId: PubsId;
+	relations: { fieldId: PubFieldsId; relatedPubId: PubsId }[];
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
+}) => {
+	const removed = await autoRevalidate(
+		trx
+			.deleteFrom("pub_values")
+			.where("pubId", "=", pubId)
+			.where((eb) =>
+				eb.or(
+					relations.map(({ fieldId, relatedPubId }) =>
+						eb.and([eb("fieldId", "=", fieldId), eb("relatedPubId", "=", relatedPubId)])
+					)
+				)
+			)
+			.returningAll()
+	).execute();
+
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
+
+	return removed;
 };
 
 /**
@@ -935,27 +1103,14 @@ export const removePubRelations = async ({
 
 	const mergedRelations = mergeSlugsWithFields(relations, consolidatedRelations);
 
-	const removed = await autoRevalidate(
-		trx
-			.deleteFrom("pub_values")
-			.where("pubId", "=", pubId)
-			.where((eb) =>
-				eb.or(
-					mergedRelations.map(({ fieldId, relatedPubId }) =>
-						eb.and([eb("fieldId", "=", fieldId), eb("relatedPubId", "=", relatedPubId)])
-					)
-				)
-			)
-			.returningAll()
-	).execute();
-
-	await addDeletePubValueHistoryEntries({
+	const removed = await deletePubRelations({
+		pubId,
+		relations: mergedRelations,
 		lastModifiedBy,
-		pubValues: removed,
 		trx,
 	});
 
-	return removed.map(({ relatedPubId }) => relatedPubId);
+	return removed;
 };
 
 /**
@@ -1031,36 +1186,99 @@ export const addDeletePubValueHistoryEntries = async ({
 	).execute();
 };
 
-/**
- * Replaces all relations for given field slugs with new relations.
- * First removes all existing relations for the provided slugs, then adds the new relations.
- *
- * If the `relations` object is empty, this function does nothing.
- */
-export const replacePubRelationsBySlug = async ({
+export const upsertPubValues = async ({
 	pubId,
-	relations,
-	communityId,
+	pubValues,
 	lastModifiedBy,
-	trx = db,
+	trx,
 }: {
 	pubId: PubsId;
-	relations: AddPubRelationsInput[];
-	communityId: CommunitiesId;
+	pubValues: {
+		/**
+		 * specify this if you do not want to use the pubId provided in the input
+		 */
+		pubId?: PubsId;
+		fieldId: PubFieldsId;
+		relatedPubId?: PubsId;
+		value: unknown;
+	}[];
 	lastModifiedBy: LastModifiedBy;
-	trx?: typeof db;
-}) => {
-	if (!Object.keys(relations).length) {
-		return;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!pubValues.length) {
+		return [];
 	}
 
-	await maybeWithTrx(trx, async (trx) => {
-		const slugs = relations.map(({ slug }) => slug);
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				pubValues.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					fieldId: value.fieldId,
+					value: JSON.stringify(value.value),
+					lastModifiedBy,
+					relatedPubId: value.relatedPubId,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					// we have a unique index on pubId and fieldId where relatedPubId is null
+					.columns(["pubId", "fieldId"])
+					.where("relatedPubId", "is", null)
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
+};
 
-		await removeAllPubRelationsBySlugs({ pubId, slugs, communityId, lastModifiedBy, trx });
+export const upsertPubRelationValues = async ({
+	pubId,
+	allRelationsToCreate,
+	lastModifiedBy,
+	trx,
+}: {
+	pubId: PubsId;
+	allRelationsToCreate: {
+		pubId?: PubsId;
+		relatedPubId: PubsId;
+		value: unknown;
+		fieldId: PubFieldsId;
+	}[];
+	lastModifiedBy: LastModifiedBy;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!allRelationsToCreate.length) {
+		return [];
+	}
 
-		await upsertPubRelations({ pubId, relations, communityId, lastModifiedBy, trx });
-	});
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				allRelationsToCreate.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					relatedPubId: value.relatedPubId,
+					value: JSON.stringify(value.value),
+					fieldId: value.fieldId,
+					lastModifiedBy,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					.columns(["pubId", "fieldId", "relatedPubId"])
+					.where("relatedPubId", "is not", null)
+					// upsert
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
 };
 
 export const updatePub = async ({
@@ -1115,35 +1333,389 @@ export const updatePub = async ({
 			};
 		}
 
-		const result = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
-						pubId,
-						fieldId,
-						value: JSON.stringify(value),
-						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						// we have a unique index on pubId and fieldId where relatedPubId is null
-						.columns(["pubId", "fieldId"])
-						.where("relatedPubId", "is", null)
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-						}))
-				)
-				.returningAll()
-		).execute();
+		const result = await upsertPubValues({
+			pubId,
+			pubValues: pubValuesWithSchemaNameAndFieldId,
+			lastModifiedBy,
+			trx,
+		});
 
 		return result;
 	});
 
 	return result;
 };
+
+export type RelInput =
+	| {
+			/** If id is provided, updates existing pub, otherwise creates new */
+			pub: Omit<UpsertPubInput, "communityId" | "lastModifiedBy">;
+			value: JsonValue;
+	  }
+	| {
+			/** Connects an existing pub */
+			pub: { id: PubsId };
+			/** Sets the value of the relation for the pub */
+			value: JsonValue;
+	  };
+
+/**
+ * Values operations, either merge or replace
+ * Choosing either merge or replace is only relevant if the pub already exists
+ * If the pub does not exist, it will be created with the values provided
+ */
+type UpsertPubValueInput = XOR<
+	{
+		/** Merge + update existing values */
+		merge: Record<string, JsonValue | { value: JsonValue; relatedPubId: PubsId }[]>;
+	},
+	{
+		/** Replace all values, removing any that are not provided */
+		replace: Record<string, JsonValue | { value: JsonValue; relatedPubId: PubsId }[]>;
+	}
+>;
+
+type UpsertPubRelationInput =
+	| {
+			/** Merge relations - creates or updates as needed */
+			merge: {
+				relations: Record<string, Array<RelInput>>;
+			};
+			replace?: never;
+			// remove?: never;
+	  }
+	| {
+			merge?: never;
+			/** Replace all relations for this field */
+			replace: {
+				relations: Record<string, Array<RelInput>>;
+				/**
+				 * If true, delete orphaned pubs
+				 * @default false
+				 */
+				deleteOrphans?: boolean;
+				/**
+				 * If false (default), if pubs are found with the same id, they are updated.
+				 * If true, they are removed, and new ones are created.
+				 * You probably don't want this.
+				 * @default false
+				 */
+				override?: boolean;
+			};
+			// remove?: never;
+	  };
+
+type UpsertCreateBaseInput = {
+	id?: PubsId;
+	values: UpsertPubValueInput;
+	/**
+	 * Necessary for new pubs
+	 */
+	pubTypeId: PubTypesId;
+
+	communityId: CommunitiesId;
+	// Optional fields
+};
+
+type UpsertUpdateBaseInput = {
+	/**
+	 * The pub to update
+	 */
+	id: PubsId;
+	values?: UpsertPubValueInput;
+	/**
+	 * Not necessary for existing pubs, will be ignored
+	 */
+	pubTypeId?: PubTypesId;
+	communityId: CommunitiesId;
+};
+type UpsertShared = {
+	/**
+	 * @deprecated
+	 */
+	assigneeId?: UsersId;
+	stageId?: StagesId;
+	parentId?: PubsId;
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
+
+	/** Relations operations - each field can have one operation type */
+	relations?: UpsertPubRelationInput;
+};
+
+type UpsertCreateInput = Prettify<UpsertCreateBaseInput & UpsertShared>;
+
+type UpsertUpdateInput = Prettify<UpsertUpdateBaseInput & UpsertShared>;
+
+export type UpsertPubInput = UpsertCreateInput | UpsertUpdateInput;
+
+const normalizePubValues = (
+	pubValues:
+		| { slug: string; value: JsonValue | unknown; relatedPubId: PubsId | undefined }[]
+		| Record<string, JsonValue | { value: JsonValue | unknown; relatedPubId: PubsId }[]>
+) => {
+	if (Array.isArray(pubValues)) {
+		return pubValues;
+	}
+
+	const vals = Object.entries(pubValues).flatMap(([slug, value]) =>
+		isRelatedPubInit(value)
+			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
+			: ([{ slug, value, relatedPubId: undefined }] as {
+					slug: string;
+					value: unknown;
+					relatedPubId: PubsId | undefined;
+				}[])
+	);
+
+	return vals;
+};
+
+type PubValuesWithFieldInfo = PubValuesType & {
+	fieldSlug: string;
+	fieldName: string;
+	schemaName: CoreSchemaType;
+};
+
+const upsertHandlePubValues = async ({
+	lastModifiedBy,
+	trx = db,
+	...body
+}: UpsertPubInput & { id: PubsId }): Promise<PubValuesWithFieldInfo[]> => {
+	const vals = {
+		mode: body.values ? (body.values.replace ? "replace" : "merge") : "none",
+		values: body.values ? (body.values.replace ?? body.values.merge) : null,
+	} as
+		| {
+				mode: "replace" | "merge";
+				values: NonNullable<UpsertPubValueInput["replace"] | UpsertPubValueInput["merge"]>;
+		  }
+		| {
+				mode: "none";
+				values: null;
+		  };
+
+	if (vals.mode === "none") {
+		return [];
+	}
+
+	if (body.id) {
+		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
+			pubId: body.id as PubsId,
+			values: vals.values,
+		});
+		vals.values = processedVals;
+	}
+
+	const normalizedValues = normalizePubValues(vals.values);
+
+	const valuesWithFieldIds = await validatePubValues({
+		pubValues: normalizedValues,
+		communityId: body.communityId,
+	});
+
+	// only diff between merge and replace is that replace removes values that are not in the new values
+	if (vals.mode === "replace") {
+		// remove the values that are not in the new values
+		const fieldIds = valuesWithFieldIds.map(({ fieldId }) => fieldId);
+
+		await deletePubValues({
+			pubId: body.id,
+			fieldIds,
+			lastModifiedBy,
+			negative: true,
+			trx,
+		});
+	}
+
+	const pubValues = await upsertPubValues({
+		pubId: body.id,
+		pubValues: valuesWithFieldIds,
+		lastModifiedBy,
+		trx,
+	});
+
+	// we only need to get the other values if we're merging
+	const otherExistingPubValues =
+		vals.mode === "merge"
+			? await db
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+					.selectAll("pub_values")
+					.select([
+						"pub_values.id",
+						"pub_values.value",
+						"pub_values.relatedPubId",
+						"pub_fields.slug as fieldSlug",
+						"pub_fields.schemaName",
+						"pub_fields.name as fieldName",
+						"pub_fields.schemaName as schemaName",
+						"pub_fields.id as fieldId",
+						"pub_values.createdAt",
+						"pub_values.updatedAt",
+					])
+					.where("pubId", "=", body.id)
+					.whereRef("pub_values.fieldId", "=", "pub_fields.id")
+					.where(
+						"pub_values.id",
+						"not in",
+						pubValues.map(({ id }) => id)
+					)
+					// cause it's not null
+					.$narrowType<{ schemaName: CoreSchemaType }>()
+					.execute()
+			: [];
+
+	const hydratedValues = pubValues.map((v) => {
+		const correspondingValue = valuesWithFieldIds.find(({ fieldId }) => fieldId === v.fieldId)!;
+		return {
+			...v,
+			schemaName: correspondingValue?.schemaName,
+			fieldSlug: correspondingValue?.slug,
+			fieldName: correspondingValue?.fieldName,
+		};
+	});
+
+	return [...otherExistingPubValues, ...hydratedValues];
+};
+
+const upsertHandleStage = async (body: UpsertPubInput & { id: PubsId }) => {
+	const stageId = body.stageId;
+	const trx = body.trx ?? db;
+	if (!stageId) {
+		return null;
+	}
+
+	const result = await autoRevalidate(
+		trx
+			.with("existingPubsInStages", (qb) =>
+				qb.selectFrom("PubsInStages").selectAll("PubsInStages").where("pubId", "=", body.id)
+			)
+			.with("deletedPubsInStages", (qb) =>
+				qb.deleteFrom("PubsInStages").where((eb) =>
+					eb.and([
+						eb("pubId", "=", body.id),
+						eb("stageId", "=", stageId),
+						// do not delete the pubsInStages if the stageId is the same, eg the pub should not be moved to the same stage, as that will trigger stage rules
+						eb(
+							"PubsInStages.stageId",
+							"!=",
+							eb
+								.selectFrom("existingPubsInStages")
+								.select("stageId")
+								.whereRef(
+									"existingPubsInStages.pubId",
+									"=",
+									eb.ref("PubsInStages.pubId")
+								)
+						),
+					])
+				)
+			)
+			.insertInto("PubsInStages")
+			.values((eb) => ({
+				pubId: body.id,
+				stageId: stageId,
+			}))
+			.onConflict((eb) =>
+				// if the pub already exists in the stage, do nothing
+				eb.columns(["pubId", "stageId"]).doNothing()
+			)
+			.returningAll()
+	).executeTakeFirstOrThrow();
+
+	return result.stageId;
+};
+
+export const upsertPub = async (
+	{ lastModifiedBy, trx, ...body }: UpsertPubInput,
+	depth = 0
+): Promise<ProcessedPub> => {
+	trx = trx ?? db;
+
+	const result = await maybeWithTrx(trx, async (trx) => {
+		const newOrUpdatedPub = await autoRevalidate(
+			trx
+				.with("existingPub", (qb) =>
+					qb.selectFrom("pubs").selectAll("pubs").where("id", "=", body.id!)
+				)
+				.insertInto("pubs")
+				.values((eb) => ({
+					id: body.id as PubsId | undefined,
+					communityId: body.communityId,
+					// you don't need to specify a pubTypeId if the pub already exists
+					pubTypeId: eb.fn.coalesce(
+						eb.selectFrom("existingPub").select("pubTypeId").where("id", "=", body.id!),
+						sql<string>`${body.pubTypeId}` as any
+					),
+					assigneeId: body.assigneeId as UsersId,
+					parentId: body.parentId as PubsId,
+				}))
+				// if the pub already exists, only update the assigneeId and parentId
+				// the communityId and pubTypeId are not able to be updated
+				// at time of writing (2025-01-22)
+				.onConflict((eb) =>
+					eb.columns(["id"]).doUpdateSet((eb) => ({
+						assigneeId: eb.ref("excluded.assigneeId"),
+						parentId: eb.ref("excluded.parentId"),
+					}))
+				)
+				.returningAll()
+		).executeTakeFirstOrThrow();
+
+		let createdStageId: StagesId | undefined;
+
+		// do the updating
+		const [stageId, values] = await Promise.all([
+			upsertHandleStage({
+				...body,
+				id: newOrUpdatedPub.id,
+				trx,
+				lastModifiedBy,
+			}),
+			upsertHandlePubValues({
+				...body,
+				id: newOrUpdatedPub.id,
+				trx,
+				lastModifiedBy,
+			}),
+		]);
+
+		const pub = await getPlainPub(newOrUpdatedPub.id, trx).executeTakeFirstOrThrow();
+
+		if (!body.relations) {
+			return {
+				...pub,
+				stageId: createdStageId ?? null,
+				values,
+				children: [],
+				depth,
+			} satisfies ProcessedPub;
+		}
+
+		const relatedPubs = await upsertPubRelations(
+			{
+				pubId: newOrUpdatedPub.id,
+				relations: body.relations,
+				communityId: body.communityId,
+				lastModifiedBy,
+				trx,
+			},
+			depth
+		);
+
+		return {
+			...pub,
+			stageId: createdStageId,
+			values: [...values, ...relatedPubs],
+			children: [],
+			depth,
+		} as ProcessedPub;
+	});
+
+	return result;
+};
+
 export type UnprocessedPub = {
 	id: PubsId;
 	depth: number;

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { pubsIdSchema } from "db/public";
+import { pubsIdSchema, usersIdSchema } from "db/public";
 
 // Auth types
 
@@ -94,11 +94,11 @@ export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
 
 // TODO: there has to be a better way to allow the API requests to include nulls in json fields
 export const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
-	id: z.string().optional(),
+	id: pubsIdSchema.optional(),
 	values: z.record(
 		z.union([jsonSchema, z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }).array()])
 	),
-	assigneeId: z.string().optional(),
+	assigneeId: usersIdSchema.optional(),
 });
 
 export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {

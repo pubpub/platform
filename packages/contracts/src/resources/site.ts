@@ -45,7 +45,7 @@ import {
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
 	stageId?: StagesId;
 	children?: CreatePubRequestBodyWithNulls[];
-	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
+	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNullsNew }[]>;
 	members?: Record<UsersId, MemberRole>;
 };
 
@@ -90,7 +90,7 @@ const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
 	})
 );
 
-const upsertPubRelationsSchema = z.record(
+export const upsertPubRelationsSchema = z.record(
 	z.array(
 		z.union([
 			z.object({

@@ -5,7 +5,13 @@
 	"main": "dist/utils.cjs.js",
 	"module": "dist/utils.esm.js",
 	"exports": {
+		"./doi": "./dist/utils-doi.js",
+		"./url": "./dist/utils-url.js",
+		"./uuid": "./dist/utils-uuid.js",
 		".": "./dist/utils.js",
+		"./sleep": "./dist/utils-sleep.js",
+		"./assert": "./dist/utils-assert.js",
+		"./classnames": "./dist/utils-classnames.js",
 		"./package.json": "./package.json"
 	},
 	"scripts": {
@@ -24,6 +30,15 @@
 	},
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
+		"entrypoints": [
+			"index.ts",
+			"assert.ts",
+			"classnames.ts",
+			"url.ts",
+			"doi.ts",
+			"sleep.ts",
+			"uuid.ts"
+		],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,

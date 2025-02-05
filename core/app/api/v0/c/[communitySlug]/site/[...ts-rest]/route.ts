@@ -11,10 +11,11 @@ import type {
 	ApiAccessPermissionConstraintsInput,
 	LastModifiedBy,
 } from "db/types";
-import { siteApi } from "contracts";
+import { siteApi, upsertPubRelationsSchema } from "contracts";
 import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
+import type { RelInput, UpsertPubInput } from "~/lib/server";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
@@ -26,10 +27,10 @@ import {
 	doesPubExist,
 	ForbiddenError,
 	getPubsWithRelatedValuesAndChildren,
+	mapOldInputToNewInput,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
 	removePubRelations,
-	replacePubRelationsBySlug,
 	tsRestHandleErrors,
 	UnauthorizedError,
 	updatePub,
@@ -216,6 +217,30 @@ const shouldReturnRepresentation = async () => {
 	}
 	return false;
 };
+
+export const oldPubRelationsInputToNew = (
+	body: z.infer<typeof upsertPubRelationsSchema>
+): Record<string, RelInput[]> =>
+	Object.fromEntries(
+		Object.entries(body).map(([slug, data]) => [
+			slug,
+			data.map((idOrPubInitPayload) => {
+				if ("relatedPubId" in idOrPubInitPayload) {
+					return {
+						value: idOrPubInitPayload,
+						pub: {
+							id: idOrPubInitPayload.relatedPubId,
+						},
+					};
+				}
+
+				return {
+					value: idOrPubInitPayload,
+					pub: mapOldInputToNewInput(idOrPubInitPayload.relatedPub),
+				} as RelInput;
+			}),
+		])
+	);
 
 const handler = createNextHandler(
 	siteApi,
@@ -481,13 +506,13 @@ const handler = createNextHandler(
 						throw new NotFoundError(`Pub ${params.pubId} not found`);
 					}
 
-					const relations = Object.entries(body).flatMap(([slug, data]) =>
-						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
-					);
+					const newRelations = oldPubRelationsInputToNew(body);
 
 					await upsertPubRelations({
 						pubId: params.pubId as PubsId,
-						relations,
+						relations: {
+							merge: { relations: newRelations },
+						},
 						communityId: community.id,
 						lastModifiedBy,
 					});
@@ -528,13 +553,16 @@ const handler = createNextHandler(
 					if (!exists) {
 						throw new NotFoundError(`Pub ${params.pubId} not found`);
 					}
-					const relations = Object.entries(body).flatMap(([slug, data]) =>
-						data.map((idOrPubInitPayload) => ({ slug, ...idOrPubInitPayload }))
-					);
 
-					await replacePubRelationsBySlug({
+					const newRelations = oldPubRelationsInputToNew(body);
+
+					await upsertPubRelations({
 						pubId: params.pubId as PubsId,
-						relations,
+						relations: {
+							replace: {
+								relations: newRelations,
+							},
+						},
 						communityId: community.id,
 						lastModifiedBy,
 					});
