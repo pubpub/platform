@@ -23,6 +23,17 @@ export const FormElementToggleProvider = (props: Props) => {
 
 	const isEnabled = useCallback(
 		(fieldSlug: string) => {
+			/**
+			 * Array fields in forms will have inner values like 'croccroc:author.0.value'
+			 * In this case, we'd want to see if the parent, 'croccroc:author' is enabled, not the exact inner value slug
+			 */
+			const arrayFieldRegex = /^(.+)\.\d+\./;
+			const arrayMatch = fieldSlug.match(arrayFieldRegex);
+			if (arrayMatch) {
+				const arrayFieldSlug = arrayMatch[1];
+				return enabledFields.has(arrayFieldSlug);
+			}
+
 			return enabledFields.has(fieldSlug);
 		},
 		[enabledFields]

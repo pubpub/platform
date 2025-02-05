@@ -73,14 +73,25 @@ const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedP
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
+
 			defaultValues[element.slug] =
 				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
 				defaultValues[element.slug] = new Date(pubValue as string);
 			}
+			// There can be multiple relations for a single slug
+			if (element.isRelation) {
+				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
+				defaultValues[element.slug] = relatedPubValues.map((pv) => ({
+					value:
+						pv.schemaName === CoreSchemaType.DateTime
+							? new Date(pv.value as string)
+							: pv.value,
+					relatedPubId: pv.relatedPubId,
+				}));
+			}
 		}
 	}
-
 	return defaultValues;
 };
 
@@ -96,7 +107,7 @@ const createSchemaFromElements = (
 					(e) =>
 						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
 				)
-				.map(({ slug, schemaName, config }) => {
+				.map(({ slug, schemaName, config, isRelation }) => {
 					if (!schemaName) {
 						return [slug, undefined];
 					}
@@ -106,17 +117,33 @@ const createSchemaFromElements = (
 						return [slug, undefined];
 					}
 
-					if (schema.type !== "string") {
-						return [slug, Type.Optional(schema)];
+					// Allow fields to be empty or optional. Special case for empty strings,
+					// which happens when you enter something in an input field and then delete it
+					// TODO: reevaluate whether this should be "" or undefined
+					const schemaAllowEmpty =
+						schema.type === "string"
+							? Type.Union([schema, Type.Literal("")], {
+									error: schema.error ?? "Invalid value",
+								})
+							: Type.Optional(schema);
+
+					if (isRelation) {
+						return [
+							slug,
+							Type.Array(
+								Type.Object(
+									{
+										relatedPubId: Type.String(),
+										value: schemaAllowEmpty,
+									},
+									{ additionalProperties: true, error: "object error" }
+								),
+								{ error: "array error" }
+							),
+						];
 					}
 
-					// this allows for empty strings, which happens when you enter something
-					// in an input field and then delete it
-					// TODO: reevaluate whether this should be "" or undefined
-					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
-						error: schema.error ?? "Invalid value",
-					});
-					return [slug, schemaWithAllowedEmpty];
+					return [slug, schemaAllowEmpty];
 				})
 		)
 	);
@@ -231,6 +258,7 @@ export const PubEditorClient = ({
 				formState: formInstance.formState,
 				toggleContext,
 			});
+
 			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
 				evt,
 				withButtonElements,

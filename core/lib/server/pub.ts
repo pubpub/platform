@@ -9,6 +9,7 @@ import type {
 
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import partition from "lodash.partition";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
@@ -432,6 +433,32 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
 
 /**
+ * Transform pub values which can either be
+ * {
+ *   field: 'example',
+ *   authors: [
+ *     { value: 'admin', relatedPubId: X },
+ *     { value: 'editor', relatedPubId: Y },
+ *   ]
+ * }
+ * to a more standardized
+ * [ { slug, value, relatedPubId } ]
+ */
+const normalizePubValues = (
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>
+) => {
+	return Object.entries(pubValues).flatMap(([slug, value]) =>
+		isRelatedPubInit(value)
+			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
+			: ([{ slug, value, relatedPubId: undefined }] as {
+					slug: string;
+					value: unknown;
+					relatedPubId: PubsId | undefined;
+				}[])
+	);
+};
+
+/**
  * @throws
  */
 export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>(
@@ -471,15 +498,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		});
 		values = processedVals;
 	}
-	const normalizedValues = Object.entries(values).flatMap(([slug, value]) =>
-		isRelatedPubInit(value)
-			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
-			: ([{ slug, value, relatedPubId: undefined }] as {
-					slug: string;
-					value: unknown;
-					relatedPubId: PubsId | undefined;
-				}[])
-	);
+	const normalizedValues = normalizePubValues(values);
 
 	const valuesWithFieldIds = await validatePubValues({
 		pubValues: normalizedValues,
@@ -1072,7 +1091,7 @@ export const updatePub = async ({
 	lastModifiedBy,
 }: {
 	pubId: PubsId;
-	pubValues: Record<string, Json>;
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>;
 	communityId: CommunitiesId;
 	lastModifiedBy: LastModifiedBy;
 	stageId?: StagesId;
@@ -1095,17 +1114,12 @@ export const updatePub = async ({
 			values: pubValues,
 		});
 
-		const vals = Object.entries(processedVals).flatMap(([slug, value]) => ({
-			slug,
-			value,
-		}));
+		const normalizedValues = normalizePubValues(processedVals);
 
 		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
-			pubValues: vals,
+			pubValues: normalizedValues,
 			communityId,
 			continueOnValidationError,
-			// do not update relations, and error if a relation slug is included
-			includeRelations: false,
 		});
 
 		if (!pubValuesWithSchemaNameAndFieldId.length) {
@@ -1115,31 +1129,56 @@ export const updatePub = async ({
 			};
 		}
 
-		const result = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
-						pubId,
-						fieldId,
-						value: JSON.stringify(value),
-						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						// we have a unique index on pubId and fieldId where relatedPubId is null
-						.columns(["pubId", "fieldId"])
-						.where("relatedPubId", "is", null)
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-						}))
-				)
-				.returningAll()
-		).execute();
+		// Separate into fields with relationships and those without
+		const [pubValuesWithRelations, pubValuesWithoutRelations] = partition(
+			pubValuesWithSchemaNameAndFieldId,
+			(pv) => pv.relatedPubId
+		);
 
-		return result;
+		if (pubValuesWithRelations.length) {
+			await replacePubRelationsBySlug({
+				pubId,
+				relations: pubValuesWithRelations.map(
+					(pv) =>
+						({
+							value: pv.value,
+							slug: pv.slug,
+							relatedPubId: pv.relatedPubId,
+						}) as AddPubRelationsInput
+				),
+				communityId,
+				lastModifiedBy,
+				trx,
+			});
+		}
+
+		if (pubValuesWithoutRelations.length) {
+			const result = await autoRevalidate(
+				trx
+					.insertInto("pub_values")
+					.values(
+						pubValuesWithoutRelations.map(({ value, fieldId }) => ({
+							pubId,
+							fieldId,
+							value: JSON.stringify(value),
+							lastModifiedBy,
+						}))
+					)
+					.onConflict((oc) =>
+						oc
+							// we have a unique index on pubId and fieldId where relatedPubId is null
+							.columns(["pubId", "fieldId"])
+							.where("relatedPubId", "is", null)
+							.doUpdateSet((eb) => ({
+								value: eb.ref("excluded.value"),
+								lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+							}))
+					)
+					.returningAll()
+			).execute();
+
+			return result;
+		}
 	});
 
 	return result;
