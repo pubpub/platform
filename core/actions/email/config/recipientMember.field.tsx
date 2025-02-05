@@ -8,18 +8,18 @@ import { action } from "../action";
 
 const component = defineActionFormFieldServerComponent(
 	action,
-	"params",
-	async ({ pageContext, communityId, actionInstance }) => {
+	"config",
+	async ({ pageContext, actionInstance, communityId }) => {
 		const community = await autoCache(
 			db.selectFrom("communities").selectAll().where("id", "=", communityId)
 		).executeTakeFirstOrThrow();
 
 		return (
 			<MemberSelectClientFetch
-				fieldName="recipient"
-				fieldLabel="Recipient email address"
+				fieldName="recipientMember"
+				fieldLabel="Recipient member"
 				community={community}
-				value={actionInstance.config?.recipient as CommunityMembershipsId | undefined}
+				value={actionInstance.config?.recipientMember as CommunityMembershipsId | undefined}
 			/>
 		);
 	}

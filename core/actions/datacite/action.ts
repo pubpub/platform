@@ -9,9 +9,9 @@ export const action = defineAction({
 	name: Action.datacite,
 	config: {
 		schema: z.object({
-			doi: z.string(),
+			doi: z.string().optional(),
 			doiPrefix: z.string().optional(),
-			doiSuffix: z.string(),
+			doiSuffix: z.string().optional(),
 			title: z.string(),
 			url: z.string(),
 			publisher: z.string(),
@@ -48,9 +48,9 @@ export const action = defineAction({
 	},
 	params: {
 		schema: z.object({
-			doi: z.string(),
+			doi: z.string().optional(),
 			doiPrefix: z.string().optional(),
-			doiSuffix: z.string(),
+			doiSuffix: z.string().optional(),
 			title: z.string(),
 			url: z.string(),
 			publisher: z.string(),
