@@ -12,6 +12,7 @@ import { DataTableColumnHeader } from "ui/data-table";
 
 import type { GetPubsResult } from "~/lib/server";
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
+import { getPubTitle } from "~/lib/pubs";
 import { DataTable } from "../DataTable/v2/DataTable";
 
 const getColumns = () =>
@@ -45,7 +46,7 @@ const getColumns = () =>
 			cell: ({ row }) => {
 				return (
 					<div className="flex items-center gap-2">
-						<span>{row.original.title || row.original.id}</span>
+						<span>{getPubTitle(row.original)}</span>
 					</div>
 				);
 			},

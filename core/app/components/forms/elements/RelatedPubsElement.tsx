@@ -19,6 +19,7 @@ import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import type { ElementProps } from "../types";
 import type { GetPubsResult } from "~/lib/server";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
+import { getPubTitle } from "~/lib/pubs";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
@@ -29,7 +30,7 @@ const RelatedPubBlock = ({
 	valueComponentProps,
 	slug,
 }: {
-	pub: Pick<GetPubsResult[number], "title" | "id">;
+	pub: GetPubsResult[number];
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: string;
@@ -39,7 +40,7 @@ const RelatedPubBlock = ({
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
 			<div className="flex flex-col items-start gap-1 text-sm">
-				<span className="font-semibold">{title || id}</span>
+				<span className="font-semibold">{getPubTitle(pub)}</span>
 				<ConfigureRelatedValue {...valueComponentProps} slug={slug} />
 			</div>
 			<div>
