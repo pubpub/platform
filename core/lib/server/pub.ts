@@ -421,7 +421,7 @@ export const doesPubExist = async (
 /**
  * For recursive transactions
  */
-const maybeWithTrx = async <T>(
+export const maybeWithTrx = async <T>(
 	trx: Transaction<Database> | Kysely<Database>,
 	fn: (trx: Transaction<Database>) => Promise<T>
 ): Promise<T> => {
@@ -698,10 +698,12 @@ const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	includeRelations = true,
+	trx = db,
 }: {
 	slugs: string[];
 	communityId: CommunitiesId;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
@@ -713,6 +715,7 @@ const getFieldInfoForSlugs = async ({
 		communityId,
 		slugs: toBeUpdatedPubFieldSlugs,
 		includeRelations,
+		trx,
 	}).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
@@ -746,21 +749,24 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
-const validatePubValues = async <T extends { slug: string; value: unknown }>({
+export const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
 	continueOnValidationError = false,
 	includeRelations = true,
+	trx = db,
 }: {
 	pubValues: T[];
 	communityId: CommunitiesId;
 	continueOnValidationError?: boolean;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const relevantPubFields = await getFieldInfoForSlugs({
 		slugs: pubValues.map(({ slug }) => slug),
 		communityId,
 		includeRelations,
+		trx,
 	});
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
