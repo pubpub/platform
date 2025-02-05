@@ -1,5 +1,7 @@
 import type {
+	InsertQueryNode,
 	KyselyPlugin,
+	OnConflictNode,
 	PluginTransformQueryArgs,
 	PluginTransformResultArgs,
 	QueryResult,
@@ -25,6 +27,30 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 		this.#tablesWithUpdatedAt = tablesWithUpdatedAt ?? [];
 	}
 
+	transformInsertQuery(node: InsertQueryNode): InsertQueryNode {
+		node = super.transformInsertQuery(node);
+
+		if (!node.onConflict) {
+			return node;
+		}
+
+		const tableNode = node.into;
+
+		if (
+			tableNode &&
+			TableNode.is(tableNode) &&
+			!this.#tablesWithUpdatedAt.includes(tableNode.table.identifier.name)
+		) {
+			return node;
+		}
+
+		const onConflictNode = this.addUpdatedAtColumn(node.onConflict);
+		return {
+			...node,
+			onConflict: onConflictNode,
+		};
+	}
+
 	transformUpdateQuery(node: UpdateQueryNode): UpdateQueryNode {
 		node = super.transformUpdateQuery(node);
 
@@ -40,7 +66,7 @@ class UpdatedAtTransformer extends OperationNodeTransformer {
 		return this.addUpdatedAtColumn(node);
 	}
 
-	private addUpdatedAtColumn(node: UpdateQueryNode): UpdateQueryNode {
+	private addUpdatedAtColumn<T extends UpdateQueryNode | OnConflictNode>(node: T): T {
 		// we don't want to update the updatedAt twice, so we filter it out here.
 		// this is fine, as we shouldn't be manually updating the updatedAt column
 		const nonUpdatedAtColumns = (node.updates ?? []).filter((update) => {

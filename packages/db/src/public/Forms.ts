@@ -32,6 +32,10 @@ export interface FormsTable {
 	access: ColumnType<FormAccessType, FormAccessType | undefined, FormAccessType>;
 
 	isDefault: ColumnType<boolean, boolean | undefined, boolean>;
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type Forms = Selectable<FormsTable>;
@@ -51,6 +55,8 @@ export const formsSchema = z.object({
 	slug: z.string(),
 	access: formAccessTypeSchema,
 	isDefault: z.boolean(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
 });
 
 export const formsInitializerSchema = z.object({
@@ -62,6 +68,8 @@ export const formsInitializerSchema = z.object({
 	slug: z.string(),
 	access: formAccessTypeSchema.optional(),
 	isDefault: z.boolean().optional(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });
 
 export const formsMutatorSchema = z.object({
@@ -73,4 +81,6 @@ export const formsMutatorSchema = z.object({
 	slug: z.string().optional(),
 	access: formAccessTypeSchema.optional(),
 	isDefault: z.boolean().optional(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });

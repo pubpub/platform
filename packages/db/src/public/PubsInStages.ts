@@ -15,6 +15,10 @@ export interface PubsInStagesTable {
 	pubId: ColumnType<PubsId, PubsId, PubsId>;
 
 	stageId: ColumnType<StagesId, StagesId, StagesId>;
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type PubsInStages = Selectable<PubsInStagesTable>;
@@ -26,14 +30,20 @@ export type PubsInStagesUpdate = Updateable<PubsInStagesTable>;
 export const pubsInStagesSchema = z.object({
 	pubId: pubsIdSchema,
 	stageId: stagesIdSchema,
+	createdAt: z.date(),
+	updatedAt: z.date(),
 });
 
 export const pubsInStagesInitializerSchema = z.object({
 	pubId: pubsIdSchema,
 	stageId: stagesIdSchema,
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });
 
 export const pubsInStagesMutatorSchema = z.object({
 	pubId: pubsIdSchema.optional(),
 	stageId: stagesIdSchema.optional(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });

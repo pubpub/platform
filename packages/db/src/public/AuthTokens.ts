@@ -28,6 +28,8 @@ export interface AuthTokensTable {
 	userId: ColumnType<UsersId, UsersId, UsersId>;
 
 	type: ColumnType<AuthTokenType, AuthTokenType | undefined, AuthTokenType>;
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type AuthTokens = Selectable<AuthTokensTable>;
@@ -46,6 +48,7 @@ export const authTokensSchema = z.object({
 	isUsed: z.boolean(),
 	userId: usersIdSchema,
 	type: authTokenTypeSchema,
+	updatedAt: z.date(),
 });
 
 export const authTokensInitializerSchema = z.object({
@@ -56,6 +59,7 @@ export const authTokensInitializerSchema = z.object({
 	isUsed: z.boolean().optional(),
 	userId: usersIdSchema,
 	type: authTokenTypeSchema.optional(),
+	updatedAt: z.date().optional(),
 });
 
 export const authTokensMutatorSchema = z.object({
@@ -66,4 +70,5 @@ export const authTokensMutatorSchema = z.object({
 	isUsed: z.boolean().optional(),
 	userId: usersIdSchema.optional(),
 	type: authTokenTypeSchema.optional(),
+	updatedAt: z.date().optional(),
 });
