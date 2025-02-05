@@ -38,16 +38,19 @@ const useMemberSelectData = ({
 				}
 			: skipToken,
 	});
-	const { data: userSuggestionsResult, isPending: userSuggestionsPending } =
-		client.users.search.useQuery({
-			queryKey: ["searchUsersByEmail", usersQuery, community.slug],
-			queryData: shouldQueryForUsers
-				? {
-						query: usersQuery,
-						params: { communitySlug: community.slug },
-					}
-				: skipToken,
-		});
+	const {
+		data: userSuggestionsResult,
+		isPending: userSuggestionsPending,
+		refetch,
+	} = client.users.search.useQuery({
+		queryKey: ["searchUsersByEmail", usersQuery, community.slug],
+		queryData: shouldQueryForUsers
+			? {
+					query: usersQuery,
+					params: { communitySlug: community.slug },
+				}
+			: skipToken,
+	});
 	const user = userResult?.body?.[0];
 
 	const [initialized, setInitialized] = useState(false);
@@ -64,7 +67,7 @@ const useMemberSelectData = ({
 		}
 	}, [userPending, userSuggestionsPending]);
 
-	return { initialized, user, users: userSuggestionsResult?.body ?? [] };
+	return { initialized, user, users: userSuggestionsResult?.body ?? [], refetchUsers: refetch };
 };
 
 type Props = {
@@ -85,7 +88,7 @@ export function MemberSelectClientFetch({
 	allowPubFieldSubstitution = true,
 }: Props) {
 	const [search, setSearch] = useState("");
-	const { initialized, user, users } = useMemberSelectData({
+	const { initialized, user, users, refetchUsers } = useMemberSelectData({
 		community,
 		memberId: value,
 		email: search,
@@ -105,6 +108,7 @@ export function MemberSelectClientFetch({
 			users={users}
 			allowPubFieldSubstitution={allowPubFieldSubstitution}
 			onChange={setSearch}
+			onUserAdded={refetchUsers}
 		/>
 	);
 }

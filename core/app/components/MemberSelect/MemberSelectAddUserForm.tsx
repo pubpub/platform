@@ -20,6 +20,7 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 type Props = {
 	email: string;
 	community: Communities;
+	onSubmitSuccess: () => void;
 };
 
 const addUserFormSchema = z.object({
@@ -28,7 +29,7 @@ const addUserFormSchema = z.object({
 	lastName: z.string().optional(),
 });
 
-export const MemberSelectAddUserForm = ({ email, community }: Props) => {
+export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: Props) => {
 	const [isPending, startTransition] = useTransition();
 	const runCreateUserWithMembership = useServerAction(createUserWithCommunityMembership);
 
@@ -50,8 +51,6 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 	// a11y practices.
 	const onSubmitClick = useCallback(
 		(e: SyntheticEvent) => {
-			e.preventDefault();
-
 			startTransition(() => {
 				return form.handleSubmit(
 					async ({ email, firstName, lastName }) => {
@@ -67,6 +66,7 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 								title: "Success",
 								description: "User successfully invited",
 							});
+							onSubmitSuccess();
 						}
 					},
 					(errors) => {
@@ -123,7 +123,12 @@ export const MemberSelectAddUserForm = ({ email, community }: Props) => {
 					</div>
 				</CardContent>
 				<CardFooter className="flex items-stretch justify-stretch p-3">
-					<Button variant="outline" onClick={onSubmitClick} className="w-full">
+					<Button
+						type="button"
+						variant="outline"
+						onClick={onSubmitClick}
+						className="w-full"
+					>
 						Submit
 					</Button>
 				</CardFooter>

@@ -647,7 +647,7 @@ const handler = createNextHandler(
 				});
 
 				const users = await getSuggestedUsers({
-					communityId: community.id,
+					communityId: req.query.communityId,
 					memberId: req.query.memberId,
 					query: {
 						email: req.query.email,

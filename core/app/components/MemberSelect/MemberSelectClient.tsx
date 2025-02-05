@@ -60,6 +60,7 @@ type Props = {
 	users: MemberSelectUser[];
 	allowPubFieldSubstitution: boolean;
 	onChange: (search: string) => void;
+	onUserAdded: () => void;
 };
 
 export function MemberSelectClient({
@@ -71,6 +72,7 @@ export function MemberSelectClient({
 	allowPubFieldSubstitution,
 	helpText,
 	onChange,
+	onUserAdded,
 }: Props) {
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
@@ -125,6 +127,7 @@ export function MemberSelectClient({
 									key={addUserButtonKey}
 									community={community}
 									email={inputValue}
+									onUserAdded={onUserAdded}
 								/>
 							}
 							onInputValueChange={onInputValueChange}
