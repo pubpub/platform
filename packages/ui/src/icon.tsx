@@ -75,6 +75,7 @@ export {
 	Terminal,
 	ToyBrick,
 	Trash,
+	TriangleAlert,
 	Type,
 	Undo2,
 	User,

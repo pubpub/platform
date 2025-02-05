@@ -1,7 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
-
 import { useMemo, useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { useFieldArray, useFormContext } from "react-hook-form";
@@ -11,9 +9,10 @@ import type { JsonValue } from "contracts";
 import type { InputComponent, PubsId } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Plus, Trash } from "ui/icon";
+import { Plus, Trash, TriangleAlert } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { cn } from "utils";
 
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import type { ElementProps } from "../types";
@@ -24,6 +23,8 @@ import { useContextEditorContext } from "../../ContextEditor/ContextEditorContex
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
+type RelatedPubValueSlug = `${string}.${number}.value`;
+
 const RelatedPubBlock = ({
 	pub,
 	onRemove,
@@ -33,10 +34,8 @@ const RelatedPubBlock = ({
 	pub: GetPubsResult[number];
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
-	slug: string;
+	slug: RelatedPubValueSlug;
 }) => {
-	const { title, id } = pub;
-
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
 			<div className="flex flex-col items-start gap-1 text-sm">
@@ -67,14 +66,17 @@ export const ConfigureRelatedValue = ({
 	slug,
 	element,
 	...props
-}: PubFieldFormElementProps & { slug: string }) => {
+}: PubFieldFormElementProps & { slug: RelatedPubValueSlug }) => {
 	const configLabel = "label" in element.config ? element.config.label : undefined;
 	const label = configLabel || element.label || slug;
 
-	const { watch } = useFormContext();
+	const { watch, formState } = useFormContext<FormValue>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
 	const showValue = value != null && value !== "" && !isPopoverOpen;
+
+	const [baseSlug, index] = slug.split(".");
+	const valueError = formState.errors[baseSlug]?.[parseInt(index)]?.value;
 
 	if (element.component === null) {
 		return null;
@@ -91,8 +93,11 @@ export const ConfigureRelatedValue = ({
 					data-testid="add-related-value"
 					variant="link"
 					size="sm"
-					className="flex h-4 gap-1 p-0 text-blue-500"
+					className={cn("flex h-4 gap-1 p-0 text-blue-500", {
+						"text-red-500": valueError,
+					})}
 				>
+					{valueError && <TriangleAlert />}
 					Add {label} <Plus size={12} />
 				</Button>
 			</PopoverTrigger>
@@ -175,7 +180,8 @@ export const RelatedPubsElement = ({
 													const handleRemovePub = () => {
 														remove(index);
 													};
-													const innerSlug = `${slug}.${index}.value`;
+													const innerSlug =
+														`${slug}.${index}.value` as const;
 													return (
 														<RelatedPubBlock
 															key={item.id}
