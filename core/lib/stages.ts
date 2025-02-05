@@ -28,15 +28,18 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 	const stagesById = makeStagesById(stages);
 	// find all stages with edges that only point to them
 	// also make sure to filter to only move constraints that there are stages for (permission restrictions may return more move constraint stages than a user can see)
-	const stageRoots = stages.filter((stage) => {
-		if (stage.moveConstraintSources.length === 0) {
-			return true;
-		}
-		return !stage.moveConstraintSources.every((constraint) => stagesById[constraint.id]);
-	});
+	const { leafRoots, roots } = Object.groupBy(
+		stages.filter((stage) => {
+			if (stage.moveConstraintSources.length === 0) {
+				return true;
+			}
+			return !stage.moveConstraintSources.every((constraint) => stagesById[constraint.id]);
+		}),
+		(stage) => (stage.moveConstraints.length === 0 ? "leafRoots" : "roots")
+	);
 
 	const orderedStages = new Set<T>();
-	const stagesQueue: T[] = stageRoots;
+	const stagesQueue = roots ?? [];
 	const startTime = Date.now();
 	try {
 		// Breadth-first traversal of the graph(s)
@@ -67,6 +70,9 @@ export function getOrderedStages<T extends CommunityStage>(stages: T[]): Array<T
 		// Sorting took too long, but we don't need to throw and can still dedupe the input stages
 		return [...new Set(stages)];
 	}
+
+	// Append all the stages with no sources or destinations to the very end
+	leafRoots?.forEach((stage) => orderedStages.add(stage));
 
 	// Because the algorithm above starts with "root" stages only, it will totally exclude graphs
 	// where every stage is part of a cycle (biconnected graphs). Since we don't know where those
