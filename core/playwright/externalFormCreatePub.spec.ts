@@ -288,9 +288,8 @@ test.describe("Member select", async () => {
 		await page.getByLabel("Last Name").fill(faker.person.lastName());
 		await page.getByLabel("Suggestions").getByRole("button", { name: "Submit" }).click();
 		await page.getByText("User successfully invited", { exact: true }).waitFor();
+		await page.getByLabel(newUser).click();
 		await expect(memberInput).toHaveValue(newUser);
-		// Click somewhere else to close the popover
-		await page.getByTestId(`${COMMUNITY_SLUG}:content`).click();
 
 		// Save
 		await page.getByRole("button", { name: "Submit" }).click();
