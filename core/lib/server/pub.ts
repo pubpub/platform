@@ -1082,7 +1082,7 @@ export const updatePub = async ({
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
-			await movePub(pubId, stageId).execute();
+			await movePub(pubId, stageId, trx).execute();
 		}
 
 		// Allow rich text fields to overwrite other fields
