@@ -49,6 +49,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
+import { movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";
 import { validatePubValuesBySchemaName } from "./validateFields";
 
@@ -1081,12 +1082,7 @@ export const updatePub = async ({
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
-			await autoRevalidate(
-				trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId)
-			).execute();
-			await autoRevalidate(
-				trx.insertInto("PubsInStages").values({ pubId, stageId })
-			).execute();
+			await movePub(pubId, stageId).execute();
 		}
 
 		// Allow rich text fields to overwrite other fields
