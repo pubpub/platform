@@ -8,11 +8,9 @@ import { CoreSchemaType } from "db/public";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
 
-const { createSeed, seedCommunity } = await import("~/prisma/seed/seedCommunity");
+const { createSeed } = await import("~/prisma/seed/seedCommunity");
 
-const { createForEachMockedTransaction } = await mockServerCode();
-
-const { getTrx, rollback } = createForEachMockedTransaction();
+const { testDb } = await mockServerCode();
 
 const seed = createSeed({
 	community: {
@@ -29,9 +27,6 @@ const seed = createSeed({
 			Title: { isTitle: true },
 			"Some relation": { isTitle: false },
 		},
-		"Minimal Pub": {
-			Title: { isTitle: true },
-		},
 	},
 	stages: {
 		"Stage 1": {},
@@ -42,44 +37,8 @@ const seed = createSeed({
 			to: ["Stage 2"],
 		},
 	},
-	pubs: [
-		{
-			pubType: "Basic Pub",
-			values: {
-				Title: "Some title",
-			},
-			stage: "Stage 1",
-		},
-		{
-			pubType: "Basic Pub",
-			values: {
-				Title: "Another title",
-			},
-			relatedPubs: {
-				"Some relation": [
-					{
-						value: "test relation value",
-						pub: {
-							pubType: "Basic Pub",
-							values: {
-								Title: "A pub related to another Pub",
-							},
-						},
-					},
-				],
-			},
-		},
-		{
-			stage: "Stage 1",
-			pubType: "Minimal Pub",
-			values: {
-				Title: "Minimal pub",
-			},
-		},
-	],
+	pubs: [],
 });
-
-const { community, pubFields, pubTypes, stages, users } = await seedCommunity(seed);
 
 describe("getPubsWithRelatedValuesAndChildren", () => {
 	it("should sort pubs by updatedAt", async () => {
@@ -89,6 +48,13 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			getPubsWithRelatedValuesAndChildren,
 			upsertPubRelations: addPubRelations,
 		} = await import("./pub");
+
+		const trx = testDb;
+
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+
+		const { pubs, community, pubFields, pubTypes, stages } = await seedCommunity(seed);
+
 		const { movePub } = await import("./stages");
 
 		// Create a bunch of pubs with relations to each other, since those can impact query results
@@ -119,6 +85,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					stageId: stages[`Stage ${((i % 2) + 1) as 1 | 2}`].id,
 				},
 				lastModifiedBy: createLastModifiedBy("system"),
+				trx,
 			});
 		}
 
@@ -141,9 +108,10 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				},
 			],
 			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
 		});
 
-		await movePub(pubIds[4], stages["Stage 2"].id).execute();
+		await movePub(pubIds[4], stages["Stage 2"].id, trx).execute();
 
 		// Fetch pubs with and without limits, and with/without values
 		const [stage1pubs, stage2pubs, allPubs] = await Promise.all([
@@ -153,11 +121,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					stageId: stages["Stage 1"].id,
 				},
 				{
-					limit: 50,
+					limit: 5,
 					orderBy: "updatedAt",
 					withRelatedPubs: false,
 					withValues: false,
 					withStage: true,
+					trx,
 				}
 			),
 			getPubsWithRelatedValuesAndChildren(
@@ -166,11 +135,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					stageId: stages["Stage 2"].id,
 				},
 				{
-					limit: 50,
+					limit: 5,
 					orderBy: "updatedAt",
 					withRelatedPubs: false,
 					withValues: false,
 					withStage: true,
+					trx,
 				}
 			),
 			getPubsWithRelatedValuesAndChildren(
@@ -181,6 +151,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					orderBy: "updatedAt",
 					withRelatedPubs: true,
 					withStage: true,
+					trx,
 				}
 			),
 		]);
