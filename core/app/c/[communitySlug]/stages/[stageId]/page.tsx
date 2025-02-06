@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { cache, Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
@@ -14,6 +14,7 @@ import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
+import { userCanViewPage } from "../../unauthorized/pageAuthorizationChecks";
 import { StagePubs } from "../components/StageList";
 
 const getStageCached = cache(
@@ -62,15 +63,24 @@ export default async function Page(props: {
 	const page = searchParams.page ? parseInt(searchParams.page) : 1;
 
 	const stagePromise = getStageCached(stageId, community.id, user.id);
-	const capabilityPromise = userCan(
+	const canViewPromise = userCanViewPage("stage", user.id, stageId);
+	const canEditPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
 	);
-	const [stage, showEditButton] = await Promise.all([stagePromise, capabilityPromise]);
+	const [stage, canView, canEdit] = await Promise.all([
+		stagePromise,
+		canViewPromise,
+		canEditPromise,
+	]);
 
 	if (!stage) {
 		notFound();
+	}
+
+	if (!canView) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
 	return (
@@ -78,7 +88,7 @@ export default async function Page(props: {
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">{stage.name}</h1>
 				<div className="flex gap-2">
-					{showEditButton && (
+					{canEdit && (
 						<Button variant="outline" size="sm" asChild>
 							<Link href={`./manage?editingStageId=${stageId}`}>
 								Edit Stage Settings
