@@ -163,6 +163,7 @@ describe("PubOp", () => {
 		});
 
 		const pub = await pubOp.execute();
+
 		await expect(pub.id).toExist(trx);
 
 		const pub2 = await PubOp.upsert(crypto.randomUUID() as PubsId, {
@@ -171,7 +172,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		})
-			.relate(pubFields["Some relation"].slug, "test relations value", pubOp)
+			.connect(pubFields["Some relation"].slug, pub.id, "test relations value")
 			.execute();
 
 		await expect(pub2.id).toExist(trx);
@@ -193,25 +194,25 @@ describe("PubOp", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Main Pub")
-			.relate(
+			.connect(
 				pubFields["Some relation"].slug,
-				"the first related pub",
 				PubOp.create({
 					communityId: community.id,
 					pubTypeId: pubTypes["Basic Pub"].id,
 					lastModifiedBy: createLastModifiedBy("system"),
 					trx,
-				}).set(pubFields["Title"].slug, "Related Pub 1")
+				}).set(pubFields["Title"].slug, "Related Pub 1"),
+				"the first related pub"
 			)
-			.relate(
+			.connect(
 				pubFields["Another relation"].slug,
-				"the second related pub",
 				PubOp.create({
 					communityId: community.id,
 					pubTypeId: pubTypes["Basic Pub"].id,
 					lastModifiedBy: createLastModifiedBy("system"),
 					trx,
-				}).set(pubFields["Title"].slug, "Related Pub 2")
+				}).set(pubFields["Title"].slug, "Related Pub 2"),
+				"the second related pub"
 			);
 
 		const result = await mainPub.execute();
@@ -240,15 +241,15 @@ describe("PubOp", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Level 1")
-			.relate(
+			.connect(
 				pubFields["Another relation"].slug,
-				"the second related pub",
 				PubOp.create({
 					communityId: community.id,
 					pubTypeId: pubTypes["Basic Pub"].id,
 					lastModifiedBy: createLastModifiedBy("system"),
 					trx,
-				}).set(pubFields["Title"].slug, "Level 2")
+				}).set(pubFields["Title"].slug, "Level 2"),
+				"the second related pub"
 			);
 
 		const mainPub = PubOp.create({
@@ -258,7 +259,7 @@ describe("PubOp", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Root")
-			.relate(pubFields["Some relation"].slug, "the first related pub", relatedPub);
+			.connect(pubFields["Some relation"].slug, relatedPub, "the first related pub");
 
 		const result = await mainPub.execute();
 
@@ -305,16 +306,16 @@ describe("PubOp", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Main Pub")
-			.relate(pubFields["Some relation"].slug, "the first related pub", existingPub.id)
-			.relate(
+			.connect(pubFields["Some relation"].slug, existingPub.id, "the first related pub")
+			.connect(
 				pubFields["Another relation"].slug,
-				"the second related pub",
 				PubOp.create({
 					communityId: community.id,
 					pubTypeId: pubTypes["Basic Pub"].id,
 					lastModifiedBy: createLastModifiedBy("system"),
 					trx,
-				}).set(pubFields["Title"].slug, "New Related Pub")
+				}).set(pubFields["Title"].slug, "New Related Pub"),
+				"the second related pub"
 			);
 
 		const result = await mainPub.execute();
@@ -358,9 +359,9 @@ describe("PubOp", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Pub 2")
-			.relate(pubFields["Some relation"].slug, "the first related pub", pub1);
+			.connect(pubFields["Some relation"].slug, pub1, "the first related pub");
 
-		pub1.relate(pubFields["Another relation"].slug, "the second related pub", pub2);
+		pub1.connect(pubFields["Another relation"].slug, pub2, "the second related pub");
 
 		const result = await pub1.execute();
 
@@ -416,7 +417,7 @@ describe("PubOp", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Pub 2")
-			.relate(pubFields["Some relation"].slug, "initial value", pub1.id)
+			.connect(pubFields["Some relation"].slug, pub1.id, "initial value")
 			.execute();
 
 		const updatedPub = await PubOp.upsert(pub2.id, {
@@ -425,7 +426,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		})
-			.relate(pubFields["Some relation"].slug, "updated value", pub1.id)
+			.connect(pubFields["Some relation"].slug, pub1.id, "updated value")
 			.execute();
 
 		expect(updatedPub).toHaveValues([
@@ -460,11 +461,11 @@ describe("relation management", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Pub 2")
-			.relate(pubFields["Some relation"].slug, "initial value", pub1.id)
+			.connect(pubFields["Some relation"].slug, pub1.id, "initial value")
 			.execute();
 
 		// Disconnect the relation
-		const updatedPub = await PubOp.upsert(pub2.id, {
+		const updatedPub = await PubOp.update(pub2.id, {
 			communityId: community.id,
 			pubTypeId: pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
@@ -497,11 +498,11 @@ describe("relation management", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Main pub")
-			.relate(pubFields["Some relation"].slug, "only relation", orphanedPub.id)
+			.connect(pubFields["Some relation"].slug, orphanedPub.id, "only relation")
 			.execute();
 
 		// Disconnect with deleteOrphaned option
-		await PubOp.upsert(mainPub.id, {
+		await PubOp.update(mainPub.id, {
 			communityId: community.id,
 			pubTypeId: pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
@@ -539,18 +540,18 @@ describe("relation management", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Main pub")
-			.relate(pubFields["Some relation"].slug, "relation 1", related1)
-			.relate(pubFields["Some relation"].slug, "relation 2", related2)
+			.connect(pubFields["Some relation"].slug, related1, "relation 1")
+			.connect(pubFields["Some relation"].slug, related2, "relation 2")
 			.execute();
 
 		// Clear all relations for the field
-		const updatedPub = await PubOp.upsert(mainPub.id, {
+		const updatedPub = await PubOp.update(mainPub.id, {
 			communityId: community.id,
 			pubTypeId: pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		})
-			.clearRelations({ slug: pubFields["Some relation"].slug })
+			.clearRelationsForField(pubFields["Some relation"].slug)
 			.execute();
 
 		expect(updatedPub).toHaveValues([
@@ -562,14 +563,14 @@ describe("relation management", () => {
 		const trx = getTrx();
 
 		// Create initial related pubs
-		const related1 = await PubOp.create({
+		const related1 = PubOp.create({
 			communityId: community.id,
 			pubTypeId: pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		}).set(pubFields["Title"].slug, "Related 1");
 
-		const related2 = await PubOp.create({
+		const related2 = PubOp.create({
 			communityId: community.id,
 			pubTypeId: pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
@@ -584,8 +585,8 @@ describe("relation management", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Main pub")
-			.relate(pubFields["Some relation"].slug, "relation 1", related1)
-			.relate(pubFields["Some relation"].slug, "relation 2", related2)
+			.connect(pubFields["Some relation"].slug, related1, "relation 1")
+			.connect(pubFields["Some relation"].slug, related2, "relation 2")
 			.execute();
 
 		const related3 = await PubOp.create({
@@ -604,7 +605,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		})
-			.relate(pubFields["Some relation"].slug, "new relation", related3.id, {
+			.connect(pubFields["Some relation"].slug, related3.id, "new relation", {
 				override: true,
 			})
 			.execute();
@@ -649,8 +650,8 @@ describe("relation management", () => {
 			trx,
 		})
 			.set(pubFields["Title"].slug, "Main pub")
-			.relate(pubFields["Some relation"].slug, "relation 1", related1.id, { override: true })
-			.relate(pubFields["Some relation"].slug, "relation 2", related2.id, { override: true })
+			.connect(pubFields["Some relation"].slug, related1.id, "relation 1", { override: true })
+			.connect(pubFields["Some relation"].slug, related2.id, "relation 2", { override: true })
 			.execute();
 
 		// Should have both relations since they were part of the same override operation

@@ -668,33 +668,43 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 export const deletePub = async ({
 	pubId,
 	lastModifiedBy,
+	communityId,
 	trx = db,
 }: {
-	pubId: PubsId;
+	pubId: PubsId | PubsId[];
 	lastModifiedBy: LastModifiedBy;
+	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	// first get the values before they are deleted
-	const pubValues = await trx
-		.selectFrom("pub_values")
-		.where("pubId", "=", pubId)
-		.selectAll()
-		.execute();
+	const result = await maybeWithTrx(trx, async (trx) => {
+		// first get the values before they are deleted
+		// that way we can add them to the history table
+		const pubValues = await trx
+			.selectFrom("pub_values")
+			.where("pubId", "in", Array.isArray(pubId) ? pubId : [pubId])
+			.selectAll()
+			.execute();
 
-	const deleteResult = await autoRevalidate(
-		trx.deleteFrom("pubs").where("id", "=", pubId)
-	).executeTakeFirstOrThrow();
+		const deleteResult = await autoRevalidate(
+			trx
+				.deleteFrom("pubs")
+				.where("id", "in", Array.isArray(pubId) ? pubId : [pubId])
+				.where("communityId", "=", communityId)
+		).executeTakeFirstOrThrow();
 
-	// this might not be necessary if we rarely delete pubs and
-	// give users ample warning that deletion is irreversible
-	// in that case we should probably also delete the relevant rows in the pub_values_history table
-	await addDeletePubValueHistoryEntries({
-		lastModifiedBy,
-		pubValues,
-		trx,
+		// this might not be necessary if we rarely delete pubs and
+		// give users ample warning that deletion is irreversible
+		// in that case we should probably also delete the relevant rows in the pub_values_history table
+		await addDeletePubValueHistoryEntries({
+			lastModifiedBy,
+			pubValues,
+			trx,
+		});
+
+		return deleteResult;
 	});
 
-	return deleteResult;
+	return result;
 };
 
 export const getPubStage = (pubId: PubsId, trx = db) =>
@@ -984,7 +994,7 @@ export const upsertPubRelations = async (
 				);
 
 			// we need to remove the values that are not being updated
-			const removedRelations = await deletePubRelations({
+			const removedRelations = await deletePubRelationsByFieldId({
 				pubId,
 				relations: toBeRemovedPubRelations,
 				lastModifiedBy,
@@ -995,7 +1005,12 @@ export const upsertPubRelations = async (
 				await Promise.all(
 					removedRelations.map(
 						async ({ relatedPubId }) =>
-							await deletePub({ pubId: expect(relatedPubId), lastModifiedBy, trx })
+							await deletePub({
+								pubId: expect(relatedPubId),
+								lastModifiedBy,
+								communityId,
+								trx,
+							})
 					)
 				);
 			}
@@ -1007,7 +1022,39 @@ export const upsertPubRelations = async (
 	return pubRelations;
 };
 
-const deletePubValues = async ({
+export const deletePubValuesByValueId = async ({
+	pubId,
+	valueIds,
+	lastModifiedBy,
+	trx = db,
+}: {
+	pubId?: PubsId;
+	valueIds: PubValuesId[];
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
+}) => {
+	if (valueIds.length === 0) {
+		return [];
+	}
+
+	const removed = await autoRevalidate(
+		trx
+			.deleteFrom("pub_values")
+			.$if(pubId != null, (eb) => eb.where("pubId", "=", pubId!))
+			.where("id", "in", valueIds)
+			.returningAll()
+	).execute();
+
+	await addDeletePubValueHistoryEntries({
+		lastModifiedBy,
+		pubValues: removed,
+		trx,
+	});
+
+	return removed;
+};
+
+const deletePubValuesByFieldId = async ({
 	pubId,
 	fieldIds,
 	lastModifiedBy,
@@ -1042,7 +1089,7 @@ const deletePubValues = async ({
 	return removed;
 };
 
-const deletePubRelations = async ({
+const deletePubRelationsByFieldId = async ({
 	pubId,
 	relations,
 	lastModifiedBy,
@@ -1103,7 +1150,7 @@ export const removePubRelations = async ({
 
 	const mergedRelations = mergeSlugsWithFields(relations, consolidatedRelations);
 
-	const removed = await deletePubRelations({
+	const removed = await deletePubRelationsByFieldId({
 		pubId,
 		relations: mergedRelations,
 		lastModifiedBy,
@@ -1519,7 +1566,7 @@ const upsertHandlePubValues = async ({
 		// remove the values that are not in the new values
 		const fieldIds = valuesWithFieldIds.map(({ fieldId }) => fieldId);
 
-		await deletePubValues({
+		await deletePubValuesByFieldId({
 			pubId: body.id,
 			fieldIds,
 			lastModifiedBy,
