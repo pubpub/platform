@@ -4,16 +4,15 @@ import { DataTable as DataTableV1 } from "../DataTable";
 /**
  * Wrapper around DataTable so that some fields can use updated designs
  */
-export function DataTable<TData, TValue>({
-	columns,
-	data,
-	onRowClick,
-}: Pick<DataTableProps<TData, TValue>, "columns" | "data" | "onRowClick">) {
+export function DataTable<TData, TValue>(
+	props: Pick<
+		DataTableProps<TData, TValue>,
+		"columns" | "data" | "onRowClick" | "selectedRows" | "setSelectedRows" | "getRowId"
+	>
+) {
 	return (
 		<DataTableV1
-			columns={columns}
-			data={data}
-			onRowClick={onRowClick}
+			{...props}
 			// Render nothing on empty instead of the default
 			emptyState={<></>}
 			hidePaginationWhenSinglePage

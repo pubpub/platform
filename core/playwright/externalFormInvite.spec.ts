@@ -69,55 +69,42 @@ test.describe("Inviting a new user to fill out a form", () => {
 	test("Admin can invite a new user and send them a form link with an email action", async () => {
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId!);
 		await pubDetailsPage.goTo();
+		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+			// Invite a new user to fill out the form
+			await runActionDialog.getByRole("combobox").fill(email);
 
-		await page.getByRole("button", { name: "Run action", exact: true }).click();
-		await page
-			.getByRole("menu", { name: "Run action", exact: true })
-			.getByRole("button", { name: ACTION_NAME, exact: true })
-			.click();
+			const memberDialog = runActionDialog.getByRole("listbox", {
+				name: "Suggestions",
+				exact: true,
+			});
+			await memberDialog
+				.getByRole("button", {
+					name: "Member not found Click to add a user to your community",
+					exact: true,
+				})
+				.click();
 
-		const runActionDialog = page.getByRole("dialog", { name: ACTION_NAME, exact: true });
-		await runActionDialog.waitFor();
+			await memberDialog.getByLabel("First Name").fill(firstName);
+			await memberDialog.getByLabel("Last Name").fill(lastName);
+			// TODO: figure out how to remove this timeout without making the test flaky
+			await page.waitForTimeout(2000);
+			await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
+			await memberDialog
+				.getByRole("option", {
+					name: email,
+					exact: true,
+				})
+				.click();
 
-		// Invite a new user to fill out the form
-		await runActionDialog.getByRole("combobox").fill(email);
+			await memberDialog.waitFor({ state: "hidden" });
 
-		const memberDialog = runActionDialog.getByRole("listbox", {
-			name: "Suggestions",
-			exact: true,
+			await runActionDialog
+				.getByLabel("Email subject")
+				.fill("Test invitation for :RecipientFirstName");
+			await runActionDialog
+				.getByLabel("Email body")
+				.fill(`Please fill out :link[this form]{form=${FORM_SLUG}}`);
 		});
-		await memberDialog
-			.getByRole("button", {
-				name: "Member not found Click to add a user to your community",
-				exact: true,
-			})
-			.click();
-
-		await memberDialog.getByLabel("First Name").fill(firstName);
-		await memberDialog.getByLabel("Last Name").fill(lastName);
-		// TODO: figure out how to remove this timeout without making the test flaky
-		await page.waitForTimeout(2000);
-		await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
-		await memberDialog
-			.getByRole("option", {
-				name: email,
-				exact: true,
-			})
-			.click();
-
-		await memberDialog.waitFor({ state: "hidden" });
-
-		await runActionDialog
-			.getByLabel("Email subject")
-			.fill("Test invitation for :RecipientFirstName");
-		await runActionDialog
-			.getByLabel("Email body")
-			.fill(`Please fill out :link[this form]{form=${FORM_SLUG}}`);
-
-		await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
-		await page.getByRole("status").filter({ hasText: "Action ran successfully!" }).waitFor();
-		await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
-		await runActionDialog.waitFor({ state: "hidden" });
 	});
 	// fails with large number of pubs in the db
 	test("New user can fill out the form from the email link", async ({ browser }) => {

@@ -3,7 +3,13 @@
  * updated designs
  */
 
-import type { ColumnDef, ColumnFiltersState, Row, SortingState } from "@tanstack/react-table";
+import type {
+	ColumnDef,
+	ColumnFiltersState,
+	Row,
+	RowSelectionState,
+	SortingState,
+} from "@tanstack/react-table";
 
 import * as React from "react";
 import {
@@ -31,6 +37,10 @@ export interface DataTableProps<TData, TValue> {
 	className?: string;
 	striped?: boolean;
 	emptyState?: React.ReactNode;
+	/** Control row selection */
+	selectedRows?: RowSelectionState;
+	setSelectedRows?: React.Dispatch<React.SetStateAction<{}>>;
+	getRowId?: (data: TData) => string;
 }
 
 const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50";
@@ -44,6 +54,9 @@ export function DataTable<TData, TValue>({
 	className,
 	striped,
 	emptyState,
+	selectedRows,
+	setSelectedRows,
+	getRowId,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -58,11 +71,12 @@ export function DataTable<TData, TValue>({
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		onColumnFiltersChange: setColumnFilters,
-		onRowSelectionChange: setRowSelection,
+		onRowSelectionChange: setSelectedRows ?? setRowSelection,
+		getRowId: getRowId,
 		state: {
 			sorting,
 			columnFilters,
-			rowSelection,
+			rowSelection: selectedRows ?? rowSelection,
 		},
 	});
 

@@ -6,7 +6,7 @@ import type { ProcessedPub } from "contracts";
 import type { PubsId } from "db/public";
 import { assert, AssertionError, expect } from "utils";
 
-import type { ActionPub, ActionPubType } from "../types";
+import type { ActionPub } from "../types";
 import type { action } from "./action";
 import type { components } from "./types";
 import { env } from "~/lib/env/env.mjs";

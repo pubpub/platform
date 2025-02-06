@@ -146,7 +146,9 @@ const FormMessage = React.forwardRef<
 			body = String(error.message);
 		}
 		if (Array.isArray(error)) {
-			body = error[0]?.message;
+			const firstErrorIndex = error.findIndex((e) => !!e);
+			const firstError = error[firstErrorIndex];
+			body = firstError?.message ?? `Error with value at index ${firstErrorIndex}`;
 		}
 	}
 

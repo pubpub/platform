@@ -1,6 +1,7 @@
 import * as z from "zod";
 
 import { Action } from "db/public";
+import { DependencyType } from "ui/auto-form/dependencyType";
 import { Mail } from "ui/icon";
 
 import {
@@ -14,25 +15,38 @@ export const action = defineAction({
 	name: Action.email,
 	config: {
 		schema: z.object({
-			recipient: z.string().uuid().describe("Recipient"),
+			recipientEmail: z.string().email().describe("Recipient email address").optional(),
+			recipientMember: z.string().uuid().describe("Recipient member").optional(),
 			subject: stringWithTokens().max(500).describe("Email subject"),
 			body: markdown().min(0).describe("Email body"),
 		}),
 		fieldConfig: {
-			recipient: {
+			recipientEmail: {
+				allowedSchemas: true,
+			},
+			recipientMember: {
 				fieldType: "custom",
 			},
 		},
+		dependencies: [
+			{
+				sourceField: "recipientMember",
+				targetField: "recipientEmail",
+				when: (recipientMember) => Boolean(recipientMember),
+				type: DependencyType.DISABLES,
+			},
+		],
 	},
 	description: "Send an email to one or more users",
 	params: {
 		schema: z
 			.object({
-				recipient: z
+				recipientEmail: z.string().email().describe("Recipient email address").optional(),
+				recipientMember: z
 					.string()
 					.uuid()
 					.describe(
-						"Recipient|Overrides the recipient user specified in the action config."
+						"Recipient Member|Overrides the recipient community member specified in the action config."
 					)
 					.optional(),
 				subject: stringWithTokens()
@@ -46,10 +60,21 @@ export const action = defineAction({
 			})
 			.optional(),
 		fieldConfig: {
-			recipient: {
+			recipientEmail: {
+				allowedSchemas: true,
+			},
+			recipientMember: {
 				fieldType: "custom",
 			},
 		},
+		dependencies: [
+			{
+				sourceField: "recipientMember",
+				targetField: "recipientEmail",
+				when: (recipientMember) => Boolean(recipientMember),
+				type: DependencyType.DISABLES,
+			},
+		],
 	},
 	icon: Mail,
 	tokens: {
