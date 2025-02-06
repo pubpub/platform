@@ -169,6 +169,9 @@ export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstO
 export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 	return autoRevalidate(
 		trx
+			.with("update_pub", (db) =>
+				db.updateTable("pubs").where("pubs.id", "=", pubId).set("stageId", stageId)
+			)
 			.with("leave_stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
 			.insertInto("PubsInStages")
 			.values([{ pubId, stageId }])
