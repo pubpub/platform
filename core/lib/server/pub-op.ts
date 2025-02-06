@@ -1,17 +1,8 @@
 import type { Transaction } from "kysely";
 
-import { sql } from "kysely";
-
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
-import type {
-	CommunitiesId,
-	CoreSchemaType,
-	PubFieldsId,
-	PubsId,
-	PubTypesId,
-	PubValuesId,
-} from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, PubValuesId } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import { assert, expect } from "utils";
 import { isUuid } from "utils/uuid";
@@ -37,10 +28,26 @@ type PubOpOptions = {
 	trx?: Transaction<Database>;
 };
 
-type RelationOptions = {
-	override?: boolean;
-	deleteOrphaned?: boolean;
-};
+type RelationOptions =
+	| {
+			/**
+			 * If true, existing relations on the same field will be removed
+			 */
+			override?: false;
+			deleteOrphaned?: never;
+	  }
+	| {
+			/**
+			 * If true, existing relations on the same field will be removed
+			 */
+			override: true;
+			/**
+			 * If true, pubs that have been disconnected,
+			 * either manually or because they were orphaned because of `override: true`,
+			 * will be deleted.
+			 */
+			deleteOrphaned?: boolean;
+	  };
 
 // Base commands that will be used internally
 type SetCommand = { type: "set"; slug: string; value: PubValue | undefined };
@@ -73,6 +80,30 @@ type PubOpCommand =
 	| DisconnectCommand
 	| ClearRelationsCommand
 	| UnsetCommand;
+
+type ClearRelationOperation = {
+	type: "clear";
+	slug: string;
+	deleteOrphaned?: boolean;
+};
+
+type RemoveRelationOperation = {
+	type: "remove";
+	slug: string;
+	target: PubsId;
+	deleteOrphaned?: boolean;
+};
+
+type OverrideRelationOperation = {
+	type: "override";
+	slug: string;
+	deleteOrphaned?: boolean;
+};
+
+type RelationOperation =
+	| ClearRelationOperation
+	| RemoveRelationOperation
+	| OverrideRelationOperation;
 
 // Types for operation collection
 type OperationMode = "create" | "upsert" | "update";
@@ -115,15 +146,6 @@ function isPubId(val: string | PubsId): val is PubsId {
 type PubOpMode = "create" | "upsert" | "update";
 
 type PubIdMap = Map<PubsId | symbol, PubsId>;
-type RelationModification = {
-	slug: string;
-	relatedPubId: PubsId | null;
-};
-type RelationModifications = {
-	overrides: Map<string, RelationModification[]>;
-	clears: Map<string, RelationModification[]>;
-	removes: Map<string, RelationModification[]>;
-};
 
 // Common operations available to all PubOp types
 abstract class BasePubOp {
@@ -158,18 +180,6 @@ abstract class BasePubOp {
 				}))
 			);
 		}
-		return this;
-	}
-
-	/**
-	 * Unset a value for a specific field
-	 */
-	unset(slug: string): this {
-		this.commands.push({
-			type: "set",
-			slug,
-			value: undefined,
-		});
 		return this;
 	}
 
@@ -342,6 +352,29 @@ abstract class BasePubOp {
 		return this.resolvePubId(this.getOperationKey(), idMap);
 	}
 
+	/**
+	 * this is a bit of a hack to fill in the holes in the array of created pubs
+	 * because onConflict().doNothing() does not return anything on conflict
+	 * so we have to manually fill in the holes in the array of created pubs
+	 * in order to make looping over the operations and upserting values/relations work
+	 */
+	private fillCreateResultHoles(
+		pubsToCreate: Array<{ id?: PubsId }>,
+		pubCreateResult: Array<{ id: PubsId }>
+	) {
+		let index = 0;
+		return pubsToCreate.map((pubToCreate) => {
+			const correspondingResult = pubCreateResult[index];
+
+			if (pubToCreate.id && pubToCreate.id !== correspondingResult?.id) {
+				return null;
+			}
+
+			index++;
+			return correspondingResult || null;
+		});
+	}
+
 	private async createAllPubs(
 		trx: Transaction<Database>,
 		operations: OperationsMap
@@ -353,7 +386,6 @@ abstract class BasePubOp {
 			pubTypeId: this.options.pubTypeId,
 		}));
 
-		// Create pubs and handle conflicts
 		const createdPubs = await autoRevalidate(
 			trx
 				.insertInto("pubs")
@@ -362,29 +394,44 @@ abstract class BasePubOp {
 				.returningAll()
 		).execute();
 
-		// Map IDs, handling both new and existing pubs
-		let createdIndex = 0;
-		let operationIndex = 0;
-		for (const [key, op] of operations) {
-			const createdPub = createdPubs[createdIndex];
-			const pubToCreate = pubsToCreate[operationIndex];
+		// fill any gaps in the array of created pubs
+		const filledCreatedPubs = this.fillCreateResultHoles(pubsToCreate, createdPubs);
 
+		let index = 0;
+		// map each operation to its final pub id
+		for (const [key, op] of operations) {
+			const createdPub = filledCreatedPubs[index];
+			const pubToCreate = pubsToCreate[index];
+
+			// if we successfully created a new pub, use its id
 			if (createdPub) {
 				idMap.set(key, createdPub.id);
-				createdIndex++;
-			} else if (pubToCreate.id) {
+				index++;
+				continue;
+			}
+
+			// if we had an existing id..., ie it was provided for an upsert or create
+			if (pubToCreate.id) {
+				// ...but were trying to create a new pub, that's an error, because there's no pub that was created
+				// that means we were trying to create a pub with an id that already exists
 				if (op.mode === "create") {
 					throw new Error(
 						`Cannot create a pub with an id that already exists: ${pubToCreate.id}`
 					);
 				}
 				idMap.set(key, pubToCreate.id);
-			} else if (typeof key === "symbol") {
-				throw new Error("Pub not created");
-			} else {
-				idMap.set(key, key);
+				index++;
+				continue;
 			}
-			operationIndex++;
+
+			// we have symbol key (no id provided) but no pub was created. that's not good
+			if (typeof key === "symbol") {
+				throw new Error("Pub not created");
+			}
+
+			// fallback - use the key as the id i guess?
+			idMap.set(key, key);
+			index++;
 		}
 
 		return idMap;
@@ -395,50 +442,179 @@ abstract class BasePubOp {
 		operations: OperationsMap,
 		idMap: PubIdMap
 	): Promise<void> {
+		// First collect ALL relation operations, including nested ones
+		// const allRelationOps = new Map<
+		// 	PubsId,
+		// 	{
+		// 		override: {
+		// 			slug: string;
+		// 			deleteOrphaned?: boolean;
+		// 		}[];
+		// 		clear: {
+		// 			slug: string;
+		// 			deleteOrphaned?: boolean;
+		// 		}[];
+		// 		remove: {
+		// 			slug: string;
+		// 			target: PubsId;
+		// 			deleteOrphaned?: boolean;
+		// 		}[];
+		// 	}
+		// >();
+
+		// Collect relation operations from all pubs (including nested ones)
+		// for (const [key, op] of operations) {
+		// 	const pubId = this.resolvePubId(key, idMap);
+		// 	const relationOps = {
+		// 		override: op.relationsToAdd
+		// 			.filter((r) => r.override)
+		// 			.map((r) => ({
+		// 				slug: r.slug,
+		// 				deleteOrphaned: r.deleteOrphaned,
+		// 			})),
+		// 		clear: op.relationsToClear.map((r) => ({
+		// 			slug: r.slug,
+		// 			deleteOrphaned: r.deleteOrphaned,
+		// 		})),
+		// 		remove: op.relationsToRemove.map((r) => ({
+		// 			slug: r.slug,
+		// 			target: r.target,
+		// 			deleteOrphaned: r.deleteOrphaned,
+		// 		})),
+		// 	};
+
+		// 	if (
+		// 		relationOps.override.length > 0 ||
+		// 		relationOps.clear.length > 0 ||
+		// 		relationOps.remove.length > 0
+		// 	) {
+		// 		allRelationOps.set(pubId, relationOps);
+		// 	}
+		// }
+
+		// Process all relation operations
 		for (const [key, op] of operations) {
 			const pubId = this.resolvePubId(key, idMap);
 
-			// Skip if no relation changes
-			const modifications = {
-				overrides: this.groupBySlug(op.relationsToAdd.filter((cmd) => cmd.override)),
-				clears: this.groupBySlug(op.relationsToClear),
-				removes: this.groupBySlug(op.relationsToRemove),
-			};
+			const allOps = [
+				...op.relationsToAdd
+					.filter((r) => r.override)
+					.map((r) => ({ type: "override", ...r })),
+				...op.relationsToClear.map((r) => ({ type: "clear", ...r })),
+				...op.relationsToRemove.map((r) => ({ type: "remove", ...r })),
+			] as RelationOperation[];
 
-			if (!this.hasModifications(modifications)) {
+			if (allOps.length === 0) {
 				continue;
 			}
 
-			// Find and remove existing relations
+			// Find all existing relations that might be affected
 			const existingRelations = await trx
 				.selectFrom("pub_values")
 				.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
 				.select(["pub_values.id", "relatedPubId", "pub_fields.slug"])
 				.where("pubId", "=", pubId)
 				.where("relatedPubId", "is not", null)
-				.where("slug", "in", [
-					...modifications.overrides.keys(),
-					...modifications.clears.keys(),
-					...modifications.removes.keys(),
-				])
+				.where(
+					"slug",
+					"in",
+					allOps.map((op) => op.slug)
+				)
+				.$narrowType<{ relatedPubId: PubsId }>()
 				.execute();
 
-			const relationsToRemove = existingRelations.filter(
-				(r) => !modifications.overrides.has(r.id)
-			);
+			// Determine which relations to delete
+			const relationsToDelete = existingRelations.filter((relation) => {
+				return allOps.some((relationOp) => {
+					if (relationOp.slug !== relation.slug) {
+						return false;
+					}
 
-			if (relationsToRemove.length === 0) {
-				return;
+					switch (relationOp.type) {
+						case "clear":
+							return true;
+						case "remove":
+							return relationOp.target === relation.relatedPubId;
+						case "override":
+							return true;
+					}
+				});
+			});
+
+			if (relationsToDelete.length === 0) {
+				continue;
 			}
+			// delete the relation values only
 			await deletePubValuesByValueId({
 				pubId,
-				valueIds: relationsToRemove.map((r) => r.id),
+				valueIds: relationsToDelete.map((r) => r.id),
 				lastModifiedBy: this.options.lastModifiedBy,
 				trx,
 			});
 
-			// Handle orphaned pubs if needed
-			await this.cleanupOrphanedPubs(trx, relationsToRemove, modifications);
+			// check which relations should also be removed due to being orphaned
+			const relationsToCheckForOrphans = relationsToDelete.filter((relation) => {
+				return allOps.some((relationOp) => {
+					if (relationOp.slug !== relation.slug) {
+						return false;
+					}
+
+					if (!relationOp.deleteOrphaned) {
+						return false;
+					}
+
+					switch (relationOp.type) {
+						case "clear":
+							return true;
+						case "remove":
+							return relationOp.target === relation.relatedPubId;
+						case "override":
+							return true;
+					}
+				});
+			});
+
+			if (!relationsToCheckForOrphans.length) {
+				continue;
+			}
+
+			await this.cleanupOrphanedPubs(trx, relationsToCheckForOrphans);
+		}
+	}
+
+	/**
+	 * remove pubs that have been disconnected/their value removed,
+	 * has `deleteOrphaned` set to true for their relevant relation operation,
+	 * AND have no other relations
+	 *
+	 * curently it's not possible to forcibly remove pubs if they are related to other pubs
+	 * perhaps this could be yet another setting
+	 */
+	private async cleanupOrphanedPubs(
+		trx: Transaction<Database>,
+		removedRelations: Array<{ relatedPubId: PubsId }>
+	): Promise<void> {
+		const orphanedIds = removedRelations.map((r) => r.relatedPubId);
+		if (orphanedIds.length === 0) {
+			return;
+		}
+
+		const trulyOrphaned = await trx
+			.selectFrom("pubs as p")
+			.select("p.id")
+			.leftJoin("pub_values as pv", "pv.relatedPubId", "p.id")
+			.where("p.id", "in", orphanedIds)
+			.groupBy("p.id")
+			.having((eb) => eb.fn.count("pv.id"), "=", 0)
+			.execute();
+
+		if (trulyOrphaned.length > 0) {
+			await deletePub({
+				pubId: trulyOrphaned.map((p) => p.id),
+				communityId: this.options.communityId,
+				lastModifiedBy: this.options.lastModifiedBy,
+				trx,
+			});
 		}
 	}
 
@@ -502,12 +678,6 @@ abstract class BasePubOp {
 
 	// --- Helper methods ---
 
-	private hasModifications(mods: {
-		[K in "overrides" | "clears" | "removes"]: ReturnType<typeof this.groupBySlug>;
-	}): boolean {
-		return mods.overrides.size > 0 || mods.clears.size > 0 || mods.removes.size > 0;
-	}
-
 	private groupBySlug<T extends { slug: string }>(items: T[]): Map<string, T[]> {
 		return items.reduce((map, item) => {
 			const existing = map.get(item.slug) ?? [];
@@ -515,43 +685,6 @@ abstract class BasePubOp {
 			map.set(item.slug, existing);
 			return map;
 		}, new Map<string, T[]>());
-	}
-
-	private async cleanupOrphanedPubs(
-		trx: Transaction<Database>,
-		removedRelations: Array<{ relatedPubId: PubsId | null }>,
-		modifications: Record<string, Map<string, Array<{ deleteOrphaned?: boolean }>>>
-	): Promise<void> {
-		const shouldDelete = Object.values(modifications)
-			.flatMap((m) => Array.from(m.values()))
-			.flat()
-			.some((m) => m.deleteOrphaned);
-
-		if (!shouldDelete) return;
-
-		const orphanedIds = removedRelations
-			.map((r) => r.relatedPubId)
-			.filter((id): id is PubsId => id !== null);
-
-		if (orphanedIds.length === 0) return;
-
-		const trulyOrphaned = await trx
-			.selectFrom("pubs as p")
-			.select("p.id")
-			.leftJoin("pub_values as pv", "pv.relatedPubId", "p.id")
-			.where("p.id", "in", orphanedIds)
-			.groupBy("p.id")
-			.having((eb) => eb.fn.count("pv.id"), "=", 0)
-			.execute();
-
-		if (trulyOrphaned.length > 0) {
-			await deletePub({
-				pubId: trulyOrphaned.map((p) => p.id),
-				communityId: this.options.communityId,
-				lastModifiedBy: this.options.lastModifiedBy,
-				trx,
-			});
-		}
 	}
 
 	private partitionValidatedValues(validated: Array<any>) {
