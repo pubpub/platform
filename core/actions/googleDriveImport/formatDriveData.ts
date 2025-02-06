@@ -78,7 +78,10 @@ export const formatDriveData = async (
 	const latestRawVersion = dataFromDrive.versions.reduce((latest, version) => {
 		return new Date(version.timestamp) > new Date(latest.timestamp) ? version : latest;
 	}, dataFromDrive.versions[0]);
-	const latestPubDescription = latestRawVersion && getDescription(latestRawVersion.html);
+
+	const latestPubDescription = latestRawVersion
+		? getDescription(latestRawVersion.html)
+		: getDescription(dataFromDrive.pubHtml);
 
 	/* Align versions to releases in legacy data and process HTML */
 	const releases: any = dataFromDrive.legacyData?.releases || [];
