@@ -259,7 +259,7 @@ export default async function FormPage(props: {
 					<h1 className="text-xl font-bold">
 						{capitalize(form.name)} for {community?.name}
 					</h1>
-					<SaveStatus />
+					<SaveStatus autosave={isUpdating} />
 				</div>
 			</Header>
 			<div className="container mx-auto">
