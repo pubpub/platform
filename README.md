@@ -35,11 +35,11 @@ root
 -   `jobs` holds the job queueing and scheduling service used by `core`.
 -   `packages` holds libraries and npm packages that are shared by `core`, `jobs`, and `infrastructure`.
 
-To avoid inconsistencies and difficult-to-track errors, we specify a particular version of node in `/.nvmrc` (currently `v20.17.0`). We recommend using [nvm](https://github.com/nvm-sh/nvm) to ensure you're using the same version.
+To avoid inconsistencies and difficult-to-track errors, we specify a particular version of node in `/.nvmrc` (currently `v22.13.1`). We recommend using [nvm](https://github.com/nvm-sh/nvm) to ensure you're using the same version.
 
 ## Local Installation
 
-This package runs the version of node specified in `.nvmrc` (currently `v20.17.0`) and uses pnpm for package management. All following commands are run from the root of this package.
+This package runs the version of node specified in `.nvmrc` (currently `v22.13.1`) and uses pnpm for package management. All following commands are run from the root of this package.
 
 To get started, clone the repository and install the version of node specified in `.nvmrc` (we recommend using [nvm](https://github.com/nvm-sh/nvm).
 

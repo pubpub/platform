@@ -36,9 +36,9 @@ The first approach would let us choose something like Chakra, Mantine, or Bluepr
 
 I feel strongly that integrations shouldn't _have_ to use the same stack as us (i.e. React), so spent time focusing on approach (2). Down that path, Tailwind offers a lot that writing our own classes from scratch does not. Writing raw CSS everywhere feels too difficult to maintain for a large project and I think we’d frankly wind up essentially re-implementing tailwind, but with less familiarity for integration developers and worse documentation. Further,
 
--   It’s got great documentation with best practices and a huge community
--   It has tons of community Figma boards
--   It lets us offer a simple configuration plugin (i.e. `plugins: [require("pubpub/styles")]`) that defines colors, borders, fonts, etc that could allow integrations to easily get good-enough similarity with little other work.
+- It’s got great documentation with best practices and a huge community
+- It has tons of community Figma boards
+- It lets us offer a simple configuration plugin (i.e. `plugins: [require("pubpub/styles")]`) that defines colors, borders, fonts, etc that could allow integrations to easily get good-enough similarity with little other work.
 
 So, if we run with the assumption that we'll use Tailwind and integrations have to drop in Tailwind to achieve similar styling, the next question is: Do we build components ourselves or take off the shelf ones? The question feels trivial: we shouldn't try to rebuild complex UI components from scratch. Accessibility is hard. Cross-browser support for edge case interactions is hard.
 
@@ -56,21 +56,21 @@ This also gives us a lot of flexibility in building components. We can mix and m
 
 On top of Tailwind, there is a lot of good community work to draw from:
 
--   Radix and shadcn/ui
--   AriaKit components
--   HeadlessUI and open source TailwindUI components built on top of it
--   Countless Tailwind component libraries
--   Countless Tailwind Figma boards
+- Radix and shadcn/ui
+- AriaKit components
+- HeadlessUI and open source TailwindUI components built on top of it
+- Countless Tailwind component libraries
+- Countless Tailwind Figma boards
 
 The other perk of this approach is that all component styling is kept in pubpub-core, as opposed to deep in some node module. This makes it a bit easier for someone who's trying to port a component into Vue or Svelte and want it to look like PubPub components — the core HTML and tailwind classes are easily found.
 
 In the end, this approach resonates with me because:
 
--   It feels as close to vanilla CSS as we can get without forcing ourselves to write all our classes and components from scratch.
--   It's performant since it's just CSS at the end of the day (especially compared to monolithic component libraries like Blueprint).
--   It offers integration developers a simple approach to add our tailwind config as a plugin.
--   It allows our components to use headless UI libraries focused on accessibility.
--   We maintain complete control of top-level components and styling.
+- It feels as close to vanilla CSS as we can get without forcing ourselves to write all our classes and components from scratch.
+- It's performant since it's just CSS at the end of the day (especially compared to monolithic component libraries like Blueprint).
+- It offers integration developers a simple approach to add our tailwind config as a plugin.
+- It allows our components to use headless UI libraries focused on accessibility.
+- We maintain complete control of top-level components and styling.
 
 The primary tradeoff to all of this is a little more up front work compared to using something like Chakra, but there is so much community offering that I don't feel concerned about our ability to build quickly.
 
@@ -78,14 +78,14 @@ The primary tradeoff to all of this is a little more up front work compared to u
 
 A list of resources I found helpful in my spike:
 
--   [CSS Solution Analysis for Polaris Foundations](https://docs.google.com/spreadsheets/d/1rxrRTlbNWiLVu-Q5IK7xh5O1FmWcjyAS2XN7jiPrhYM/edit#gid=0)
-    -   An in depth analysis of different CSS approaches. A few years old, and notably, current Tailwind has addressed nearly all its issues (multiple themes and build-time performance).
--   [Tailwind](https://tailwindcss.com/)
--   [shadcn/ui](https://ui.shadcn.com/)
--   [Radix](https://www.radix-ui.com/)
--   [Chakra](https://chakra-ui.com/)
--   [Mantine](https://mantine.dev/)
--   [HeadlessUI](https://headlessui.com/)
--   [AriaKit](https://ariakit.org/)
--   [Flowbite](https://flowbite.com/)
--   [Flowbite-React](https://www.flowbite-react.com/)
+- [CSS Solution Analysis for Polaris Foundations](https://docs.google.com/spreadsheets/d/1rxrRTlbNWiLVu-Q5IK7xh5O1FmWcjyAS2XN7jiPrhYM/edit#gid=0)
+    - An in depth analysis of different CSS approaches. A few years old, and notably, current Tailwind has addressed nearly all its issues (multiple themes and build-time performance).
+- [Tailwind](https://tailwindcss.com/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Radix](https://www.radix-ui.com/)
+- [Chakra](https://chakra-ui.com/)
+- [Mantine](https://mantine.dev/)
+- [HeadlessUI](https://headlessui.com/)
+- [AriaKit](https://ariakit.org/)
+- [Flowbite](https://flowbite.com/)
+- [Flowbite-React](https://www.flowbite-react.com/)
