@@ -32,6 +32,7 @@ type BasePubFieldElement = {
 	element: null;
 	order: number | null;
 	slug: string;
+	isRelation: boolean;
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {
@@ -62,6 +63,7 @@ export type ButtonElement = {
 	component: null;
 	schemaName: null;
 	slug: null;
+	isRelation: false;
 };
 
 export type StructuralElement = {
@@ -78,6 +80,7 @@ export type StructuralElement = {
 	component: null;
 	schemaName: null;
 	slug: null;
+	isRelation: false;
 };
 
 export type FormElements = PubFieldElement | StructuralElement | ButtonElement;

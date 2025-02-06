@@ -16,7 +16,6 @@ export const MemberSelectElement = ({
 	value,
 	config,
 }: {
-	id?: string;
 	value?: CommunityMembershipsId;
 } & ElementProps<InputComponent.memberSelect>) => {
 	const community = useCommunity();

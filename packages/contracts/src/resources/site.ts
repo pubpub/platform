@@ -8,6 +8,7 @@ import type {
 	CoreSchemaType,
 	MemberRole,
 	PubFields,
+	PubFieldSchemaId,
 	PubFieldsId,
 	PubsId,
 	PubTypes,
@@ -267,6 +268,10 @@ export interface NonGenericProcessedPub extends ProcessedPubBase {
 	})[];
 }
 
+const pubTypeWithFieldsSchema = pubTypesSchema.extend({
+	fields: z.array(pubFieldsSchema.extend({ isTitle: z.boolean() })),
+});
+
 const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	id: pubsIdSchema,
 	stageId: stagesIdSchema.nullable(),
@@ -289,11 +294,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	stage: stagesSchema.nullish(),
-	pubType: pubTypesSchema
-		.extend({
-			fields: z.array(pubFieldsSchema),
-		})
-		.optional(),
+	pubType: pubTypeWithFieldsSchema.optional(),
 	children: z.lazy(() => z.array(processedPubSchema)).optional(),
 	assignee: usersSchema.nullish(),
 });
@@ -337,6 +338,65 @@ const getPubQuerySchema = z
 	})
 	.passthrough();
 
+export type FTSReturn = {
+	id: PubsId;
+	createdAt: Date;
+	updatedAt: Date;
+	communityId: CommunitiesId;
+	parentId: PubsId | null;
+	assigneeId: UsersId | null;
+	title: string | null;
+	searchVector: string | null;
+	stage: {
+		id: StagesId;
+		name: string;
+	} | null;
+	pubType: {
+		id: PubTypesId;
+		createdAt: Date;
+		updatedAt: Date;
+		communityId: CommunitiesId;
+		name: string;
+		description: string | null;
+	};
+	titleHighlights: string;
+	matchingValues: {
+		slug: string;
+		name: string;
+		value: Json;
+		isTitle: boolean;
+		highlights: string;
+	}[];
+};
+
+export const ftsReturnSchema = z.object({
+	id: pubsIdSchema,
+	createdAt: z.date(),
+	updatedAt: z.date(),
+	communityId: communitiesIdSchema,
+	parentId: pubsIdSchema.nullable(),
+	assigneeId: usersIdSchema.nullable(),
+	title: z.string().nullable(),
+	searchVector: z.string().nullable(),
+	stage: z
+		.object({
+			id: stagesIdSchema,
+			name: z.string(),
+		})
+		.nullable(),
+	pubType: pubTypesSchema,
+	titleHighlights: z.string(),
+	matchingValues: z.array(
+		z.object({
+			slug: z.string(),
+			name: z.string(),
+			value: jsonSchema,
+			isTitle: z.boolean(),
+			highlights: z.string(),
+		})
+	),
+}) satisfies z.ZodType<FTSReturn>;
+
 export const zodErrorSchema = z.object({
 	name: z.string(),
 	issues: z.array(
@@ -353,6 +413,18 @@ export const zodErrorSchema = z.object({
 export const siteApi = contract.router(
 	{
 		pubs: {
+			search: {
+				method: "GET",
+				path: "/pubs/search",
+				summary: "Search for pubs",
+				description: "Search for pubs by title or value.",
+				query: z.object({
+					query: z.string(),
+				}),
+				responses: {
+					200: ftsReturnSchema.array(),
+				},
+			},
 			get: {
 				method: "GET",
 				path: "/pubs/:pubId",

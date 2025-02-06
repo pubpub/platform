@@ -10,11 +10,9 @@ function kanelHistoryTableGeneric(outputAcc, instantiatedConfig) {
 		Object.entries(outputAcc).map(([name, output]) => {
 			const parentTable = name.match(/(\w+)History$/)?.[1];
 
-			console.log(name, parentTable);
 			if (!parentTable) {
 				return [name, output];
 			}
-			console.log(name, parentTable);
 
 			output.declarations = output.declarations.map((declaration) => {
 				if (declaration.declarationType !== "interface") {
