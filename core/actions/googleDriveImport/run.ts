@@ -1,7 +1,3 @@
-import { ReplicationStatus } from "@aws-sdk/client-s3";
-import { ValuesNode } from "kysely";
-
-import type { StagesId } from "db/public";
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
@@ -177,7 +173,8 @@ export const run = defineRun<typeof action>(
 
 			return {
 				title: "Error",
-				error: err.title,
+				error: "An error occurred while importing the pub from Google Drive.",
+				cause: err,
 			};
 		}
 
