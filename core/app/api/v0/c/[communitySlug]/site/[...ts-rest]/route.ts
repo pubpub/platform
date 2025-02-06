@@ -5,7 +5,15 @@ import { createNextHandler } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import { z } from "zod";
 
-import type { Communities, CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type {
+	Communities,
+	CommunitiesId,
+	CommunityMembershipsId,
+	PubsId,
+	PubTypesId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import type {
 	ApiAccessPermission,
 	ApiAccessPermissionConstraintsInput,
@@ -41,7 +49,7 @@ import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
-import { getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
+import { getMember, getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -663,7 +671,6 @@ const handler = createNextHandler(
 
 				const users = await getSuggestedUsers({
 					communityId: req.query.communityId,
-					memberId: req.query.memberId,
 					query: {
 						email: req.query.email,
 						firstName: req.query.name,
@@ -674,6 +681,24 @@ const handler = createNextHandler(
 				return {
 					status: 200,
 					body: users,
+				};
+			},
+		},
+		members: {
+			get: async (req) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+					cookies: true,
+				});
+				const memberId = req.params.memberId as CommunityMembershipsId;
+				const user = await getMember(memberId).executeTakeFirst();
+				if (!user) {
+					throw new NotFoundError("No member found");
+				}
+
+				return {
+					status: 200,
+					body: user,
 				};
 			},
 		},

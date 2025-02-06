@@ -88,43 +88,49 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 		.$if(Boolean(userIdOrEmail.id), (eb) => eb.where("users.id", "=", userIdOrEmail.id!));
 });
 
+export const getMember = (memberId: CommunityMembershipsId) => {
+	return db
+		.selectFrom("users")
+		.select((eb) => [
+			...SAFE_USER_SELECT,
+			jsonObjectFrom(
+				eb
+					.selectFrom("community_memberships")
+					.selectAll("community_memberships")
+					.where("community_memberships.id", "=", memberId)
+			).as("member"),
+		])
+		.innerJoin("community_memberships", "users.id", "community_memberships.userId")
+		.where("community_memberships.id", "=", memberId);
+};
+
 export const getSuggestedUsers = ({
 	communityId,
-	memberId,
 	query,
 	limit = 10,
 }: {
 	communityId?: CommunitiesId;
-	memberId?: CommunityMembershipsId;
-	query: {
-		email?: string;
-		firstName?: string;
-		lastName?: string;
-	};
+	query:
+		| {
+				email: string;
+				firstName?: string;
+				lastName?: string;
+		  }
+		| {
+				firstName: string;
+				lastName?: string;
+				email?: string;
+		  }
+		| {
+				lastName: string;
+				firstName?: string;
+				email?: string;
+		  };
 	limit?: number;
-}) => {
+}) =>
 	// We don't cache this because users change frequently and outside of any community, so we can't
 	// efficiently cache them anyways
-
-	// First check if a member id was passed in
-	if (memberId && communityId) {
-		return db
-			.selectFrom("users")
-			.select((eb) => [
-				...SAFE_USER_SELECT,
-				jsonObjectFrom(
-					eb
-						.selectFrom("community_memberships")
-						.selectAll("community_memberships")
-						.whereRef("community_memberships.userId", "=", "users.id")
-						.where("community_memberships.communityId", "=", communityId)
-				).as("member"),
-			])
-			.innerJoin("community_memberships", "users.id", "community_memberships.userId")
-			.where("community_memberships.id", "=", memberId)
-			.limit(limit);
-	}
-	return db
+	db
 		.selectFrom("users")
 		.select([...SAFE_USER_SELECT])
 		.$if(Boolean(communityId), (eb) =>
@@ -148,7 +154,6 @@ export const getSuggestedUsers = ({
 			])
 		)
 		.limit(limit);
-};
 
 export const setUserPassword = cache(
 	async (props: { userId: UsersId; password: string }, trx = db) => {

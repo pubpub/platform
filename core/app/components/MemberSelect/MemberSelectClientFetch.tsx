@@ -20,24 +20,21 @@ const useMemberSelectData = ({
 	memberId?: CommunityMembershipsId;
 	email?: string;
 }) => {
-	const baseQuery = { limit: 1, communityId: community.id };
+	// Individual member query
 	const shouldQueryForIndividualUser = !!memberId && memberId !== "";
-	const shouldQueryForUsers = !!email && email !== "";
-
-	const individualUserQuery = shouldQueryForIndividualUser
-		? { ...baseQuery, memberId }
-		: baseQuery;
-	const usersQuery = shouldQueryForUsers ? { ...baseQuery, email } : baseQuery;
-
-	const { data: userResult, isPending: userPending } = client.users.search.useQuery({
-		queryKey: ["searchUsersById", individualUserQuery, community.slug],
+	const { data: userResult, isPending: userPending } = client.members.get.useQuery({
+		queryKey: ["getMember", memberId, community.slug],
 		queryData: shouldQueryForIndividualUser
 			? {
-					query: individualUserQuery,
-					params: { communitySlug: community.slug },
+					params: { communitySlug: community.slug, memberId },
 				}
 			: skipToken,
 	});
+	const user = userResult?.body;
+
+	// User suggestions query
+	const shouldQueryForUsers = !!email && email !== "";
+	const usersQuery = { limit: 1, communityId: community.id, email: email ?? "" };
 	const {
 		data: userSuggestionsResult,
 		isPending: userSuggestionsPending,
@@ -51,7 +48,6 @@ const useMemberSelectData = ({
 				}
 			: skipToken,
 	});
-	const user = userResult?.body?.[0];
 
 	const [initialized, setInitialized] = useState(false);
 

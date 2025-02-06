@@ -608,15 +608,29 @@ export const siteApi = contract.router(
 					"Get a list of users matching the provided query. Used for rendering suggestions in an autocomplete input for selecting users.",
 				query: z.object({
 					communityId: communitiesIdSchema,
-					email: z.string().optional(),
+					email: z.string(),
 					name: z.string().optional(),
 					limit: z.number().optional(),
-					memberId: communityMembershipsIdSchema.optional(),
 				}),
 				responses: {
 					200: safeUserSchema
 						.extend({ member: communityMembershipsSchema.nullable().optional() })
 						.array(),
+				},
+			},
+		},
+		members: {
+			get: {
+				path: "/members/:memberId",
+				method: "GET",
+				summary: "Gets a member",
+				description:
+					"Get a member by its community membership ID. This endpoint is used by the MemberSelect component, though we may not want to keep this since community membership IDs can change and would prefer to use user ID.",
+				pathParams: z.object({
+					memberId: z.string().uuid(),
+				}),
+				responses: {
+					200: safeUserSchema.extend({ member: communityMembershipsSchema.nullable() }),
 				},
 			},
 		},
