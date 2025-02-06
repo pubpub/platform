@@ -1,7 +1,7 @@
 import type { CommunityMembershipsId } from "db/public";
 
 import { defineActionFormFieldServerComponent } from "~/actions/_lib/custom-form-field/defineConfigServerComponent";
-import { MemberSelectServer } from "~/app/components/MemberSelect/MemberSelectServer";
+import { MemberSelectClientFetch } from "~/app/components/MemberSelect/MemberSelectClientFetch";
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { action } from "../action";
@@ -14,17 +14,12 @@ const component = defineActionFormFieldServerComponent(
 			db.selectFrom("communities").selectAll().where("id", "=", communityId)
 		).executeTakeFirstOrThrow();
 
-		const queryParamName = `recipient-${actionInstance.id?.split("-").pop()}`;
-		const query = pageContext.searchParams?.[queryParamName] as string | undefined;
-
 		return (
-			<MemberSelectServer
+			<MemberSelectClientFetch
 				fieldName="recipientMember"
 				fieldLabel="Recipient member"
 				community={community}
 				value={actionInstance.config?.recipientMember as CommunityMembershipsId | undefined}
-				query={query}
-				queryParamName={queryParamName}
 			/>
 		);
 	}

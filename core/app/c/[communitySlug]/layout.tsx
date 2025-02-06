@@ -9,6 +9,7 @@ import { cn } from "utils";
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import SetLastVisited from "~/app/components/LastVisitedCommunity/SetLastVisited";
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
+import { SearchDialog } from "~/app/components/SearchDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -76,6 +77,7 @@ export default async function MainLayout(props: Props) {
 							COLLAPSIBLE_TYPE === "icon" && "md:hidden"
 						)}
 					/>
+					<SearchDialog />
 				</SidebarProvider>
 			</div>
 		</CommunityProvider>
