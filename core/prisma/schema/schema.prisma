@@ -136,6 +136,9 @@ model Pub {
   members         PubMembership[]
   formMemberships FormMembership[]
 
+  searchVector Unsupported("tsvector")?
+
+  @@index([searchVector], type: Gin)
   @@map(name: "pubs")
 }
 
