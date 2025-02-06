@@ -998,6 +998,10 @@ export const removeAllPubRelationsBySlugs = async ({
 	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
+	if (slugs.length === 0) {
+		return [];
+	}
+
 	const fields = await getFieldInfoForSlugs({
 		slugs: slugs,
 		communityId,
