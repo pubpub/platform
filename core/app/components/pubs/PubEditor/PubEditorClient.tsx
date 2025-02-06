@@ -49,7 +49,7 @@ const preparePayload = ({
 	toggleContext: FormElementToggleContext;
 }) => {
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug, schemaName, isRelation } of formElements) {
+	for (const { slug } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
@@ -58,20 +58,7 @@ const preparePayload = ({
 			// perhaps they are initialized differently so always show up as dirty?
 			formState.dirtyFields[slug]
 		) {
-			if (schemaName === CoreSchemaType.RichText) {
-				if (isRelation) {
-					payload[slug] = formValues[slug].map(
-						(fv: { relatedPubId: PubsId; value: Node }) => ({
-							...fv,
-							value: serializeProseMirrorDoc(fv.value),
-						})
-					);
-				} else {
-					payload[slug] = serializeProseMirrorDoc(formValues[slug]);
-				}
-			} else {
-				payload[slug] = formValues[slug];
-			}
+			payload[slug] = formValues[slug];
 		}
 	}
 	return payload;
