@@ -9,6 +9,7 @@ import { userCan } from "~/lib/authorization/capabilities";
 import { ApiError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+import { movePub } from "~/lib/server/stages";
 
 export const move = defineServerAction(async function move(
 	pubId: PubsId,
@@ -33,17 +34,7 @@ export const move = defineServerAction(async function move(
 	}
 
 	try {
-		await autoRevalidate(
-			db
-				.with("removed_pubsInStages", (db) =>
-					db
-						.deleteFrom("PubsInStages")
-						.where("pubId", "=", pubId)
-						.where("stageId", "=", sourceStageId)
-				)
-				.insertInto("PubsInStages")
-				.values([{ pubId: pubId, stageId: destinationStageId }])
-		).executeTakeFirstOrThrow();
+		await movePub(pubId, destinationStageId).executeTakeFirstOrThrow();
 	} catch {
 		return { error: "The Pub was not successully moved" };
 	}
