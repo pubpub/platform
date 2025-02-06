@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
 import type { Communities } from "db/public";
@@ -56,26 +55,25 @@ type Props = {
 	community: Communities;
 	fieldLabel: string;
 	fieldName: string;
-	queryParamName: string;
 	helpText?: string;
 	member?: MemberSelectUserWithMembership;
 	users: MemberSelectUser[];
 	allowPubFieldSubstitution: boolean;
+	onChange: (search: string) => void;
+	onUserAdded: () => void;
 };
 
 export function MemberSelectClient({
 	community,
 	fieldLabel,
 	fieldName,
-	queryParamName,
 	member,
 	users,
 	allowPubFieldSubstitution,
 	helpText,
+	onChange,
+	onUserAdded,
 }: Props) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const params = useSearchParams();
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
 	const formElementToggle = useFormElementToggleContext();
@@ -92,20 +90,13 @@ export function MemberSelectClient({
 
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 
-	const updateSearchParams = useDebouncedCallback((value: string) => {
-		const newParams = new URLSearchParams(params);
-		const oldParams = newParams.toString();
-		newParams.set(queryParamName, value);
-		// Only change params when they are different, otherwise can cause race conditions
-		// if another component is trying to change the query params as well
-		if (oldParams !== newParams.toString()) {
-			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
-		}
+	const updateSearch = useDebouncedCallback((value: string) => {
+		onChange(value);
 	}, 400);
 
 	const onInputValueChange = (value: string) => {
 		setInputValue(value);
-		updateSearchParams(value);
+		updateSearch(value);
 	};
 
 	return (
@@ -136,6 +127,7 @@ export function MemberSelectClient({
 									key={addUserButtonKey}
 									community={community}
 									email={inputValue}
+									onUserAdded={onUserAdded}
 								/>
 							}
 							onInputValueChange={onInputValueChange}

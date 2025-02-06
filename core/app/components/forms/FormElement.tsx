@@ -12,13 +12,7 @@ export type FormElementProps = Omit<PubFieldFormElementProps, "element"> & {
 	element: FormElements;
 };
 
-export const FormElement = ({
-	pubId,
-	element,
-	searchParams,
-	communitySlug,
-	values,
-}: FormElementProps) => {
+export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
 			return (
@@ -47,14 +41,7 @@ export const FormElement = ({
 	};
 
 	let input = (
-		<PubFieldFormElement
-			pubId={pubId}
-			element={element}
-			searchParams={searchParams}
-			communitySlug={communitySlug}
-			values={values}
-			{...basicProps}
-		/>
+		<PubFieldFormElement pubId={pubId} element={element} values={values} {...basicProps} />
 	);
 
 	if (element.isRelation && "relationshipConfig" in element.config) {
@@ -66,8 +53,6 @@ export const FormElement = ({
 				valueComponentProps={{
 					pubId,
 					element,
-					searchParams,
-					communitySlug,
 					values,
 				}}
 			/>
