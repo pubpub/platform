@@ -13,6 +13,7 @@ import partition from "lodash.partition";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
+	FTSReturn,
 	GetPubResponseBody,
 	Json,
 	JsonValue,
@@ -37,11 +38,13 @@ import type {
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
+import { logger } from "logger";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
+import { env } from "../env/env.mjs";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
@@ -1905,3 +1908,186 @@ export type FullProcessedPub = ProcessedPub<{
 	withPubType: true;
 	withStage: true;
 }>;
+
+export interface SearchConfig {
+	language?: string;
+	weights?: {
+		/**
+		 * how much the title field should be weighted when matching the query
+		 * @default 1.0
+		 */
+		A?: number; // Title weight
+		/**
+		 * how much the other fields should be weighted when matching the query
+		 * @default 0.5
+		 */
+		B?: number; // Content weight
+	};
+	/**
+	 * whether to also match "database" when you search for "data", or only match on full words
+	 * @default true
+	 */
+	prefixSearch?: boolean;
+	/**
+	 * minimum length of a word to be included in the search
+	 * @default 2
+	 */
+	minLength?: number;
+	/**
+	 * how highlights should be formatted
+	 * @default "StartSel=<mark>, StopSel=</mark>, MaxFragments=2"
+	 */
+	headlineConfig?: string;
+	/**
+	 * how many results to return
+	 * @default 10
+	 */
+	limit?: number;
+}
+
+const DEFAULT_FULLTEXT_SEARCH_OPTS = {
+	language: "english",
+	weights: {
+		A: 1.0,
+		B: 0.5,
+	},
+	prefixSearch: true,
+	minLength: 2,
+	limit: 10,
+	headlineConfig: "StartSel=<mark>, StopSel=</mark>, MaxFragments=2",
+} satisfies SearchConfig;
+
+export const createTsQuery = (query: string, config: SearchConfig = {}) => {
+	const { prefixSearch = true, minLength = 2 } = config;
+
+	const cleanQuery = query.trim();
+	if (cleanQuery.length < minLength) {
+		return null;
+	}
+
+	const terms = cleanQuery.split(/\s+/).filter((word) => word.length >= minLength);
+
+	if (terms.length === 0) {
+		return null;
+	}
+
+	// this is the most specific match, ie match "quick brown fox" when you search for "quick brown fox"
+	const phraseQuery = sql`to_tsquery(${config.language}, ${terms.join(" <-> ")})`;
+
+	// all words match but in any order. could perhaps be removed in favor of prefix search
+	const exactTerms = terms.join(" & ");
+	const exactQuery = sql`to_tsquery(${config.language}, ${exactTerms})`;
+
+	// prefix matches, ie match "quick" when you search for "qu"
+	// this significantly slows down the query, but makes it much more useful
+	const prefixTerms = prefixSearch ? terms.map((term) => `${term}:*`).join(" & ") : null;
+	const prefixQuery = prefixTerms ? sql`to_tsquery(${config.language}, ${prefixTerms})` : null;
+
+	// combine queries
+	return sql`(
+	  ${phraseQuery} || 
+	  ${exactQuery} ${prefixQuery ? sql` || ${prefixQuery}` : sql``}
+	)`;
+};
+
+export const fullTextSearch = async (
+	query: string,
+	communityId: CommunitiesId,
+	userId: UsersId,
+	opts?: SearchConfig
+): Promise<FTSReturn[]> => {
+	const options = {
+		...DEFAULT_FULLTEXT_SEARCH_OPTS,
+		...opts,
+	};
+
+	const tsQuery = createTsQuery(query, options);
+
+	const q = db
+		.selectFrom("pubs")
+		.select((eb) => [
+			"pubs.id",
+			"pubs.title",
+			"pubs.parentId",
+			"pubs.assigneeId",
+			"pubs.communityId",
+			"pubs.createdAt",
+			"pubs.updatedAt",
+			"pubs.searchVector",
+			// this is the highlighted title
+			// possibly non efficient to do this like so
+			sql<string>`ts_headline(
+								'${sql.raw(options.language)}',
+								pubs.title, 
+								${tsQuery}, 
+								'${sql.raw(options.headlineConfig)}'
+							)`.as("titleHighlights"),
+
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+					.innerJoin("_PubFieldToPubType", (join) =>
+						join.onRef("A", "=", "pub_fields.id").onRef("B", "=", "pubs.pubTypeId")
+					)
+					.select([
+						"pub_values.value",
+						"pub_fields.name",
+						"pub_fields.slug",
+						"_PubFieldToPubType.isTitle",
+						sql<string>`ts_headline(
+							'${sql.raw(options.language)}',
+							pub_values.value#>>'{}',
+							${tsQuery},
+							'${sql.raw(options.headlineConfig)}'
+						)`.as("highlights"),
+					])
+					.$narrowType<{
+						value: Json;
+					}>()
+					.whereRef("pub_values.pubId", "=", "pubs.id")
+					.where(
+						(eb) => sql`to_tsvector(${options.language}, value#>>'{}') @@ ${tsQuery}`
+					)
+			).as("matchingValues"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_types")
+					.selectAll("pub_types")
+					.whereRef("pubs.pubTypeId", "=", "pub_types.id")
+			)
+				// there will always be a pub type
+				.$notNull()
+				.as("pubType"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("stages")
+					.leftJoin("PubsInStages", "stages.id", "PubsInStages.stageId")
+					.select(["stages.id", "stages.name"])
+					.whereRef("PubsInStages.pubId", "=", "pubs.id")
+					.limit(1)
+			).as("stage"),
+		])
+		.where("pubs.communityId", "=", communityId)
+		.where((eb) => sql`pubs."searchVector" @@ ${tsQuery}`)
+		.limit(options.limit)
+		.orderBy(
+			sql`ts_rank_cd(
+		  pubs."searchVector",
+		  ${tsQuery}) desc`
+		);
+
+	// for debugging, shows how long the query took
+	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true") {
+		const explained = await q.explain("json", sql`analyze`);
+		logger.debug({
+			msg: `Full Text Search EXPLAIN`,
+			queryPlan: explained[0]["QUERY PLAN"][0],
+			query,
+			communityId,
+			userId,
+		});
+	}
+
+	return q.execute();
+};
