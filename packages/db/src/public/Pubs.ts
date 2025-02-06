@@ -4,9 +4,11 @@ import { z } from "zod";
 
 import type { CommunitiesId } from "./Communities";
 import type { PubTypesId } from "./PubTypes";
+import type { StagesId } from "./Stages";
 import type { UsersId } from "./Users";
 import { communitiesIdSchema } from "./Communities";
 import { pubTypesIdSchema } from "./PubTypes";
+import { stagesIdSchema } from "./Stages";
 import { usersIdSchema } from "./Users";
 
 // @generated
@@ -36,6 +38,8 @@ export interface PubsTable {
 	title: ColumnType<string | null, string | null, string | null>;
 
 	searchVector: ColumnType<string | null, string | null, string | null>;
+
+	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 }
 
 export type Pubs = Selectable<PubsTable>;
@@ -57,6 +61,7 @@ export const pubsSchema = z.object({
 	assigneeId: usersIdSchema.nullable(),
 	title: z.string().nullable(),
 	searchVector: z.string().nullable(),
+	stageId: stagesIdSchema.nullable(),
 });
 
 export const pubsInitializerSchema = z.object({
@@ -70,6 +75,7 @@ export const pubsInitializerSchema = z.object({
 	assigneeId: usersIdSchema.optional().nullable(),
 	title: z.string().optional().nullable(),
 	searchVector: z.string().optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
 });
 
 export const pubsMutatorSchema = z.object({
@@ -83,4 +89,5 @@ export const pubsMutatorSchema = z.object({
 	assigneeId: usersIdSchema.optional().nullable(),
 	title: z.string().optional().nullable(),
 	searchVector: z.string().optional().nullable(),
+	stageId: stagesIdSchema.optional().nullable(),
 });
