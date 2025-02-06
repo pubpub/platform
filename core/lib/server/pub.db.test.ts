@@ -353,7 +353,7 @@ describe("updatePub", () => {
 		expect(updatedPub[0].value as string).toBe("Updated title");
 	});
 
-	it("should error if trying to update relationship values with updatePub", async () => {
+	it("should be able to update multiple relationship values", async () => {
 		const trx = getTrx();
 		const { createPubRecursiveNew, updatePub } = await import("./pub");
 
@@ -369,19 +369,30 @@ describe("updatePub", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		await expect(
-			updatePub({
-				pubId: pub.id,
-				pubValues: {
-					[pubFields["Some relation"].slug]: "test relation value",
-				},
-				communityId: community.id,
-				continueOnValidationError: false,
-				lastModifiedBy: createLastModifiedBy("system"),
-			})
-		).rejects.toThrow(
-			/Pub values contain fields that do not exist in the community: .*?:some-relation/
-		);
+		await updatePub({
+			pubId: pub.id,
+			pubValues: {
+				[pubFields["Some relation"].slug]: [
+					{ value: "new value", relatedPubId: pubs[0].id },
+					{ value: "another new value", relatedPubId: pubs[1].id },
+				],
+			},
+			communityId: community.id,
+			continueOnValidationError: false,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const updatedPub = await trx
+			.selectFrom("pub_values")
+			.select(["value", "relatedPubId"])
+			.where("pubId", "=", pub.id)
+			.execute();
+
+		expect(updatedPub[1].value as string).toBe("new value");
+		expect(updatedPub[1].relatedPubId).toBe(pubs[0].id);
+
+		expect(updatedPub[2].value as string).toBe("another new value");
+		expect(updatedPub[2].relatedPubId).toBe(pubs[1].id);
 	});
 });
 
