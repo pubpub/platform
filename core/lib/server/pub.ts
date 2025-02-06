@@ -655,33 +655,43 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 export const deletePub = async ({
 	pubId,
 	lastModifiedBy,
+	communityId,
 	trx = db,
 }: {
-	pubId: PubsId;
+	pubId: PubsId | PubsId[];
 	lastModifiedBy: LastModifiedBy;
+	communityId: CommunitiesId;
 	trx?: typeof db;
 }) => {
-	// first get the values before they are deleted
-	const pubValues = await trx
-		.selectFrom("pub_values")
-		.where("pubId", "=", pubId)
-		.selectAll()
-		.execute();
+	const result = await maybeWithTrx(trx, async (trx) => {
+		// first get the values before they are deleted
+		// that way we can add them to the history table
+		const pubValues = await trx
+			.selectFrom("pub_values")
+			.where("pubId", "in", Array.isArray(pubId) ? pubId : [pubId])
+			.selectAll()
+			.execute();
 
-	const deleteResult = await autoRevalidate(
-		trx.deleteFrom("pubs").where("id", "=", pubId)
-	).executeTakeFirstOrThrow();
+		const deleteResult = await autoRevalidate(
+			trx
+				.deleteFrom("pubs")
+				.where("id", "in", Array.isArray(pubId) ? pubId : [pubId])
+				.where("communityId", "=", communityId)
+		).executeTakeFirstOrThrow();
 
-	// this might not be necessary if we rarely delete pubs and
-	// give users ample warning that deletion is irreversible
-	// in that case we should probably also delete the relevant rows in the pub_values_history table
-	await addDeletePubValueHistoryEntries({
-		lastModifiedBy,
-		pubValues,
-		trx,
+		// this might not be necessary if we rarely delete pubs and
+		// give users ample warning that deletion is irreversible
+		// in that case we should probably also delete the relevant rows in the pub_values_history table
+		await addDeletePubValueHistoryEntries({
+			lastModifiedBy,
+			pubValues,
+			trx,
+		});
+
+		return deleteResult;
 	});
 
-	return deleteResult;
+	return result;
 };
 
 export const getPubStage = (pubId: PubsId, trx = db) =>
