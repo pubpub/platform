@@ -1,7 +1,6 @@
 "use client";
 
 import type { Static } from "@sinclair/typebox";
-import type { Node } from "prosemirror-model";
 import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
@@ -27,15 +26,9 @@ import { useFormElementToggleContext } from "~/app/components/forms/FormElementT
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const SAVE_WAIT_MS = 5000;
-
-const isUserSelectField = (slug: string, elements: BasicFormElements[]) => {
-	const element = elements.find((e) => e.slug === slug);
-	return element?.schemaName === CoreSchemaType.MemberId;
-};
 
 const preparePayload = ({
 	formElements,
@@ -325,12 +318,6 @@ export const PubEditorClient = ({
 
 	const handleAutoSave = useCallback(
 		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
-			// Don't auto save while editing the user ID field. the query params
-			// will clash and it will be a bad time :(
-			const target = evt?.target as HTMLInputElement;
-			if (target?.name && isUserSelectField(target.name, formElements)) {
-				return;
-			}
 			if (saveTimer) {
 				clearTimeout(saveTimer);
 			}
