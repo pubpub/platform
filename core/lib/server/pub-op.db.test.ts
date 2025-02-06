@@ -397,4 +397,275 @@ describe("PubOp", () => {
 			/Cannot create a pub with an id that already exists/
 		);
 	});
+
+	it("should update the value of a relationship", async () => {
+		const trx = getTrx();
+		const pub1 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Pub 1")
+			.execute();
+
+		const pub2 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Pub 2")
+			.relate(pubFields["Some relation"].slug, "initial value", pub1.id)
+			.execute();
+
+		const updatedPub = await PubOp.upsert(pub2.id, {
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.relate(pubFields["Some relation"].slug, "updated value", pub1.id)
+			.execute();
+
+		expect(updatedPub).toHaveValues([
+			{ fieldSlug: pubFields["Title"].slug, value: "Pub 2" },
+			{
+				fieldSlug: pubFields["Some relation"].slug,
+				value: "updated value",
+				relatedPubId: pub1.id,
+			},
+		]);
+	});
+});
+
+describe("relation management", () => {
+	it("should disconnect a specific relation", async () => {
+		const trx = getTrx();
+
+		// Create two pubs to relate
+		const pub1 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Pub 1")
+			.execute();
+
+		const pub2 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Pub 2")
+			.relate(pubFields["Some relation"].slug, "initial value", pub1.id)
+			.execute();
+
+		// Disconnect the relation
+		const updatedPub = await PubOp.upsert(pub2.id, {
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.disconnect(pubFields["Some relation"].slug, pub1.id)
+			.execute();
+
+		expect(updatedPub).toHaveValues([{ fieldSlug: pubFields["Title"].slug, value: "Pub 2" }]);
+	});
+
+	it("should delete orphaned pubs when disconnecting relations", async () => {
+		const trx = getTrx();
+
+		// Create a pub that will become orphaned
+		const orphanedPub = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Soon to be orphaned")
+			.execute();
+
+		// Create a pub that relates to it
+		const mainPub = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Main pub")
+			.relate(pubFields["Some relation"].slug, "only relation", orphanedPub.id)
+			.execute();
+
+		// Disconnect with deleteOrphaned option
+		await PubOp.upsert(mainPub.id, {
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.disconnect(pubFields["Some relation"].slug, orphanedPub.id, { deleteOrphaned: true })
+			.execute();
+
+		await expect(orphanedPub.id).not.toExist();
+	});
+
+	it("should clear all relations for a specific field", async () => {
+		const trx = getTrx();
+
+		// Create multiple related pubs
+		const related1 = PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		}).set(pubFields["Title"].slug, "Related 1");
+
+		const related2 = PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		}).set(pubFields["Title"].slug, "Related 2");
+
+		// Create main pub with multiple relations
+		const mainPub = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Main pub")
+			.relate(pubFields["Some relation"].slug, "relation 1", related1)
+			.relate(pubFields["Some relation"].slug, "relation 2", related2)
+			.execute();
+
+		// Clear all relations for the field
+		const updatedPub = await PubOp.upsert(mainPub.id, {
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.clearRelations({ slug: pubFields["Some relation"].slug })
+			.execute();
+
+		expect(updatedPub).toHaveValues([
+			{ fieldSlug: pubFields["Title"].slug, value: "Main pub" },
+		]);
+	});
+
+	it("should override existing relations when using override option", async () => {
+		const trx = getTrx();
+
+		// Create initial related pubs
+		const related1 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		}).set(pubFields["Title"].slug, "Related 1");
+
+		const related2 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		}).set(pubFields["Title"].slug, "Related 2");
+
+		// Create main pub with initial relations
+		const mainPub = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Main pub")
+			.relate(pubFields["Some relation"].slug, "relation 1", related1)
+			.relate(pubFields["Some relation"].slug, "relation 2", related2)
+			.execute();
+
+		const related3 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Related 3")
+			.execute();
+
+		// Update with override - only related3 should remain
+		const updatedPub = await PubOp.upsert(mainPub.id, {
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.relate(pubFields["Some relation"].slug, "new relation", related3.id, {
+				override: true,
+			})
+			.execute();
+
+		expect(updatedPub).toHaveValues([
+			{ fieldSlug: pubFields["Title"].slug, value: "Main pub" },
+			{
+				fieldSlug: pubFields["Some relation"].slug,
+				value: "new relation",
+				relatedPubId: related3.id,
+			},
+		]);
+	});
+
+	it("should handle multiple override relations for the same field", async () => {
+		const trx = getTrx();
+
+		// Create related pubs
+		const related1 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Related 1")
+			.execute();
+
+		const related2 = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Related 2")
+			.execute();
+
+		// Create main pub and set multiple relations with override
+		const mainPub = await PubOp.create({
+			communityId: community.id,
+			pubTypeId: pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(pubFields["Title"].slug, "Main pub")
+			.relate(pubFields["Some relation"].slug, "relation 1", related1.id, { override: true })
+			.relate(pubFields["Some relation"].slug, "relation 2", related2.id, { override: true })
+			.execute();
+
+		// Should have both relations since they were part of the same override operation
+		expect(mainPub).toHaveValues([
+			{ fieldSlug: pubFields["Title"].slug, value: "Main pub" },
+			{
+				fieldSlug: pubFields["Some relation"].slug,
+				value: "relation 1",
+				relatedPubId: related1.id,
+			},
+			{
+				fieldSlug: pubFields["Some relation"].slug,
+				value: "relation 2",
+				relatedPubId: related2.id,
+			},
+		]);
+	});
 });

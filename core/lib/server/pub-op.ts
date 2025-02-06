@@ -21,9 +21,29 @@ import {
 
 type PubValue = string | number | boolean | JsonValue;
 type SetCommand = { type: "set"; slug: string; value: PubValue };
-type RelateCommand = { type: "relate"; slug: string; value: PubValue; target: PubOp | PubsId };
+type RelateCommand = {
+	type: "relate";
+	slug: string;
+	value: PubValue;
+	target: PubOp | PubsId;
+	override?: boolean;
+	deleteOrphaned?: boolean;
+};
 
-type PubOpCommand = SetCommand | RelateCommand;
+type DisconnectCommand = {
+	type: "disconnect";
+	slug: string;
+	target: PubsId;
+	deleteOrphaned?: boolean;
+};
+
+type ClearRelationsCommand = {
+	type: "clearRelations";
+	slug?: string;
+	deleteOrphaned?: boolean;
+};
+
+type PubOpCommand = SetCommand | RelateCommand | DisconnectCommand | ClearRelationsCommand;
 
 type PubOpOptions = {
 	communityId: CommunitiesId;
@@ -38,7 +58,9 @@ type OperationsMap = Map<
 		id?: PubsId;
 		mode: "create" | "upsert";
 		values: Omit<SetCommand, "type">[];
-		relations: (Omit<RelateCommand, "type" | "target"> & { target: PubsId | symbol })[];
+		relationsToAdd: (Omit<RelateCommand, "type" | "target"> & { target: PubsId | symbol })[];
+		relationsToRemove: (Omit<DisconnectCommand, "type"> & { target: PubsId })[];
+		relationsToClear: (Omit<ClearRelationsCommand, "type"> & { slug: string })[];
 	}
 >;
 
@@ -124,15 +146,54 @@ export class PubOp {
 	}
 
 	/**
-	 * Relate this pub to another pub which you'll create/upsert in the same operation
+	 * Relate this pub to another pub
+	 * @param slug The field slug
+	 * @param value The value for this relation
+	 * @param target The pub to relate to
+	 * @param options Additional options for this relation
 	 */
-	relate(slug: string, value: PubValue, target: PubOp): this;
+	relate(
+		slug: string,
+		value: PubValue,
+		target: PubOp | PubsId,
+		options?: {
+			override?: boolean;
+			deleteOrphaned?: boolean;
+		}
+	): this {
+		this.#commands.push({
+			type: "relate",
+			slug,
+			value,
+			target,
+			override: options?.override,
+			deleteOrphaned: options?.deleteOrphaned,
+		});
+		return this;
+	}
+
 	/**
-	 * Relate this pub to another pub with a known id
+	 * Remove a specific relation from this pub
 	 */
-	relate(slug: string, value: PubValue, target: PubsId): this;
-	relate(slug: string, value: PubValue, target: PubOp | PubsId): this {
-		this.#commands.push({ type: "relate", slug, value, target });
+	disconnect(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this {
+		this.#commands.push({
+			type: "disconnect",
+			slug,
+			target,
+			deleteOrphaned: options?.deleteOrphaned,
+		});
+		return this;
+	}
+
+	/**
+	 * Clear all relations for specified field(s)
+	 */
+	clearRelations(options?: { slug?: string; deleteOrphaned?: boolean }): this {
+		this.#commands.push({
+			type: "clearRelations",
+			slug: options?.slug,
+			deleteOrphaned: options?.deleteOrphaned,
+		});
 		return this;
 	}
 
@@ -162,38 +223,54 @@ export class PubOp {
 						value: cmd.value,
 					})),
 			],
-			relations: [],
+			relationsToAdd: [],
+			relationsToRemove: [],
+			relationsToClear: [],
 		});
 
 		for (const cmd of this.#commands) {
-			if (cmd.type !== "relate") {
+			if (cmd.type === "set") {
 				continue;
 			}
 
 			const rootOp = operations.get(this.#initialId || this.#thisSymbol);
 			assert(rootOp, "Root operation not found");
 
-			if (!(cmd.target instanceof PubOp)) {
-				rootOp.relations.push({
+			if (cmd.type === "clearRelations") {
+				rootOp.relationsToClear.push({
+					slug: cmd.slug || "*",
+					deleteOrphaned: cmd.deleteOrphaned,
+				});
+			} else if (cmd.type === "disconnect") {
+				rootOp.relationsToRemove.push({
+					slug: cmd.slug,
+					target: cmd.target,
+					deleteOrphaned: cmd.deleteOrphaned,
+				});
+			} else if (!(cmd.target instanceof PubOp)) {
+				rootOp.relationsToAdd.push({
 					slug: cmd.slug,
 					value: cmd.value,
 					target: cmd.target,
+					override: cmd.override,
+					deleteOrphaned: cmd.deleteOrphaned,
 				});
-				continue;
-			}
+			} else {
+				rootOp.relationsToAdd.push({
+					slug: cmd.slug,
+					value: cmd.value,
+					target: cmd.target.#initialId || cmd.target.#thisSymbol,
+					override: cmd.override,
+					deleteOrphaned: cmd.deleteOrphaned,
+				});
 
-			rootOp.relations.push({
-				slug: cmd.slug,
-				value: cmd.value,
-				target: cmd.target.#initialId || cmd.target.#thisSymbol,
-			});
-
-			// Only collect target operations if we haven't processed it yet
-			// to prevent infinite loops
-			if (!processed.has(cmd.target.#thisSymbol)) {
-				const targetOps = cmd.target.collectAllOperations(processed);
-				for (const [key, value] of targetOps) {
-					operations.set(key, value);
+				// Only collect target operations if we haven't processed it yet
+				// to prevent infinite loops
+				if (!processed.has(cmd.target.#thisSymbol)) {
+					const targetOps = cmd.target.collectAllOperations(processed);
+					for (const [key, value] of targetOps) {
+						operations.set(key, value);
+					}
 				}
 			}
 		}
@@ -287,6 +364,136 @@ export class PubOp {
 		const rootId = this.#initialId || idMap.get(this.#thisSymbol)!;
 		assert(rootId, "Root ID should exist");
 
+		// First handle relation clearing/disconnections
+		for (const [key, op] of operations) {
+			const pubId = typeof key === "symbol" ? idMap.get(key) : idMap.get(key);
+			assert(pubId, "Pub ID is required");
+
+			// Process relate commands with override
+			const overrideRelateCommands = op.relationsToAdd?.filter((cmd) => !!cmd.override) ?? [];
+
+			// Group by slug for override operations
+			const overridesBySlug = new Map<
+				string,
+				(Omit<RelateCommand, "type" | "target"> & { target: PubsId | symbol })[]
+			>();
+
+			for (const cmd of overrideRelateCommands) {
+				const cmds = overridesBySlug.get(cmd.slug) ?? [];
+				cmds.push(cmd);
+				overridesBySlug.set(cmd.slug, cmds);
+			}
+
+			// Handle all disconnections
+			if (
+				op.relationsToClear.length > 0 ||
+				op.relationsToRemove.length > 0 ||
+				overridesBySlug.size > 0
+			) {
+				// Build query to find relations to remove
+				const query = trx
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+					.select(["pub_values.id", "relatedPubId", "pub_fields.slug"])
+					.where("pubId", "=", pubId)
+					.where("relatedPubId", "is not", null);
+
+				// Add slug conditions
+				const slugConditions = [
+					...op.relationsToClear.map((cmd) => cmd.slug).filter(Boolean),
+					...op.relationsToRemove.map((cmd) => cmd.slug),
+					...overridesBySlug.keys(),
+				];
+
+				if (slugConditions.length > 0) {
+					query.where("slug", "in", slugConditions);
+				}
+
+				const existingRelations = await query.execute();
+
+				// Determine which relations to remove
+				const relationsToRemove = existingRelations.filter((rel) => {
+					// Remove if explicitly disconnected
+					if (
+						op.relationsToRemove.some(
+							(cmd) => cmd.slug === rel.slug && cmd.target === rel.relatedPubId
+						)
+					) {
+						return true;
+					}
+
+					// Remove if field is being cleared
+					if (op.relationsToClear.some((cmd) => !cmd.slug || cmd.slug === rel.slug)) {
+						return true;
+					}
+
+					// Remove if not in override set
+					const overrides = overridesBySlug.get(rel.slug);
+					if (
+						overrides &&
+						!overrides.some(
+							(cmd) =>
+								(typeof cmd.target === "string"
+									? cmd.target
+									: idMap.get(cmd.target)) === rel.relatedPubId
+						)
+					) {
+						return true;
+					}
+
+					return false;
+				});
+
+				// Remove the relations
+				if (relationsToRemove.length > 0) {
+					await trx
+						.deleteFrom("pub_values")
+						.where(
+							"pub_values.id",
+							"in",
+							relationsToRemove.map((r) => r.id)
+						)
+						.execute();
+
+					// Handle orphaned pubs if requested
+					const shouldCheckOrphaned = [
+						...op.relationsToClear,
+						...op.relationsToRemove,
+						...overrideRelateCommands,
+					].some((cmd) => cmd.deleteOrphaned);
+
+					if (shouldCheckOrphaned) {
+						const orphanedPubIds = relationsToRemove
+							.map((r) => r.relatedPubId!)
+							.filter(Boolean);
+
+						if (orphanedPubIds.length > 0) {
+							// Find and delete truly orphaned pubs
+							const orphanedPubs = await trx
+								.selectFrom("pubs as p")
+								.select("p.id")
+								.leftJoin("pub_values as pv", "pv.relatedPubId", "p.id")
+								.where("p.id", "in", orphanedPubIds)
+								.groupBy("p.id")
+								.having((eb) => eb.fn.count("pv.id"), "=", 0)
+								.execute();
+
+							if (orphanedPubs.length > 0) {
+								await trx
+									.deleteFrom("pubs")
+									.where(
+										"id",
+										"in",
+										orphanedPubs.map((p) => p.id)
+									)
+									.execute();
+							}
+						}
+					}
+				}
+			}
+		}
+
 		const valuesToUpsert = [] as {
 			pubId: PubsId;
 			slug: string;
@@ -315,9 +522,9 @@ export class PubOp {
 				);
 			}
 
-			if (op.relations.length > 0) {
+			if (op.relationsToAdd.length > 0) {
 				relationValuesToUpsert.push(
-					...op.relations.map((r) => ({
+					...op.relationsToAdd.map((r) => ({
 						pubId,
 						slug: r.slug,
 						value: r.value,
