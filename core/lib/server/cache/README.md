@@ -217,9 +217,9 @@ Using this strategy, we can ensure that all data is fresh when it needs to be, b
 
 We fetch all data associated with a specific `pub` quite often. All the data of a `pub` is dependend on
 
--   the state of `pub_values` and `pub_fields` table for the values associated with a `pub`.
--   the state of the `pubs` table for the data of the `pub` itself, as well as its children.
--   possibly the `pubsinstages` table for the stage the `pub` is in.
+- the state of `pub_values` and `pub_fields` table for the values associated with a `pub`.
+- the state of the `pubs` table for the data of the `pub` itself, as well as its children.
+- possibly the `pubsinstages` table for the stage the `pub` is in.
 
 When caching this data, we want to have the maximum balance between freshness and having a long cache time, while ideally not having to manually remember every single way we cache things. We can do this by invalidating the cache for a query for a specific `pub` when any of the tables are modified, as then we are assured that the data is fresh when needed.
 

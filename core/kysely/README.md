@@ -4,12 +4,12 @@
 
 As we start replacing Prisma with Kysely, here are some resources that may help:
 
--   Kysely's high-level docs are very useful for writing simple queries, including joining/querying related tables and returning the results as nested json (like an ORM)
-    -   Make sure to look at the [Examples](https://kysely.dev/docs/category/examples) and [Recipes](https://kysely.dev/docs/category/recipes)
--   When it comes to more complicated queries, or for extracting helper functions, those docs can be a little bit lacking
-    -   Kysely's API reference docs have a fair amount of documentation contained within them (also available via intellisense). See especially the [SelectQueryBuilder](https://kysely-org.github.io/kysely-apidoc/interfaces/SelectQueryBuilder.html), [ExpressionBuilder](https://kysely-org.github.io/kysely-apidoc/interfaces/ExpressionBuilder.html), and [QueryCreator](https://kysely-org.github.io/kysely-apidoc/classes/QueryCreator.html) interfaces.
-    -   Beyond that, their [Discord](https://discord.gg/xyBJ3GwvAm) is active and has a searchable Q/A history with many practical examples. Searching the [Kysely github](https://github.com/kysely-org/kysely) will also often turn up examples for how to use particular methods.
--   It will be at least as important to understand PostgreSQL to use Kysely effectively. The [postgres docs](https://www.postgresql.org/docs/15/index.html) are useful for reviewing SQL basics and as reference documentation for the many functions we'll use.
+- Kysely's high-level docs are very useful for writing simple queries, including joining/querying related tables and returning the results as nested json (like an ORM)
+    - Make sure to look at the [Examples](https://kysely.dev/docs/category/examples) and [Recipes](https://kysely.dev/docs/category/recipes)
+- When it comes to more complicated queries, or for extracting helper functions, those docs can be a little bit lacking
+    - Kysely's API reference docs have a fair amount of documentation contained within them (also available via intellisense). See especially the [SelectQueryBuilder](https://kysely-org.github.io/kysely-apidoc/interfaces/SelectQueryBuilder.html), [ExpressionBuilder](https://kysely-org.github.io/kysely-apidoc/interfaces/ExpressionBuilder.html), and [QueryCreator](https://kysely-org.github.io/kysely-apidoc/classes/QueryCreator.html) interfaces.
+    - Beyond that, their [Discord](https://discord.gg/xyBJ3GwvAm) is active and has a searchable Q/A history with many practical examples. Searching the [Kysely github](https://github.com/kysely-org/kysely) will also often turn up examples for how to use particular methods.
+- It will be at least as important to understand PostgreSQL to use Kysely effectively. The [postgres docs](https://www.postgresql.org/docs/15/index.html) are useful for reviewing SQL basics and as reference documentation for the many functions we'll use.
 
 ## Type Generation
 

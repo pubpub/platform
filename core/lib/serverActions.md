@@ -51,10 +51,10 @@ Although `useServerAction` will display an error popup, the result of the server
 
 Below is a complete example which
 
--   defines a server action
--   returns a client exception in the case of an error
--   invokes the server action on the client using `useServerAction`
--   handles the server action response appropriately
+- defines a server action
+- returns a client exception in the case of an error
+- invokes the server action on the client using `useServerAction`
+- handles the server action response appropriately
 
 ```ts
 // actions.ts
