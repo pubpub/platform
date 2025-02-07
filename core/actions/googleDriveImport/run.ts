@@ -134,7 +134,6 @@ export const run = defineRun<typeof action>(
 				)[0].value;
 
 				if (latestVersionContent !== formattedData.pubHtml) {
-					console.log("no match");
 					relations.push({
 						slug: `${communitySlug}:versions`,
 						value: null,
