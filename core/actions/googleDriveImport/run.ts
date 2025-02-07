@@ -134,6 +134,7 @@ export const run = defineRun<typeof action>(
 				)[0].value;
 
 				if (latestVersionContent !== formattedData.pubHtml) {
+					console.log("no match");
 					relations.push({
 						slug: `${communitySlug}:versions`,
 						value: null,
@@ -142,6 +143,21 @@ export const run = defineRun<typeof action>(
 							values: {
 								[`${communitySlug}:description`]: "",
 								//[`${communitySlug}:publication-date`]: new Date().toISOString(),
+								[`${communitySlug}:content`]: formattedData.pubHtml,
+							},
+						},
+					});
+				}
+				// If there's html but no version yet exists, create one
+			} else {
+				if (formattedData.pubHtml) {
+					relations.push({
+						slug: `${communitySlug}:versions`,
+						value: null,
+						relatedPub: {
+							pubTypeId: VersionType?.id || "",
+							values: {
+								[`${communitySlug}:description`]: "",
 								[`${communitySlug}:content`]: formattedData.pubHtml,
 							},
 						},
