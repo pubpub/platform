@@ -2,6 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
+import Link from "next/link";
+
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
@@ -36,7 +38,7 @@ export type ActionRun = {
 	  }
 );
 
-export const getActionRunsTableColumns = () =>
+export const getActionRunsTableColumns = (communitySlug: string) =>
 	[
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Action" />,
@@ -77,7 +79,13 @@ export const getActionRunsTableColumns = () =>
 			accessorKey: "pub",
 			cell: ({ getValue }) => {
 				const pub = getValue<ActionRun["pub"]>();
-				return pub ? <PubTitle pub={pub} /> : "Unknown";
+				return pub ? (
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>
+						<PubTitle pub={pub} />
+					</Link>
+				) : (
+					"Unknown"
+				);
 			},
 		},
 		{
