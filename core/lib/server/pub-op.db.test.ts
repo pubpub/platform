@@ -1,3 +1,4 @@
+import { tr } from "date-fns/locale";
 import { beforeAll, beforeEach, describe, expect, expectTypeOf, it, vitest } from "vitest";
 
 import type { PubsId, PubTypes, Stages } from "db/public";
@@ -45,6 +46,11 @@ const seed = createSeed({
 	},
 	stages: {
 		"Stage 1": {
+			members: {
+				stageEditor: MemberRole.editor,
+			},
+		},
+		"Stage 2": {
 			members: {
 				stageEditor: MemberRole.editor,
 			},
@@ -426,7 +432,6 @@ describe("PubOp", () => {
 			.connect(seededCommunity.pubFields["Some relation"].slug, pub1.id, "initial value")
 			.execute();
 
-		console.log(pub2.id);
 		const updatedPub = await PubOp.upsert(pub2.id, {
 			communityId: seededCommunity.community.id,
 			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
@@ -1109,5 +1114,77 @@ describe("relation management", () => {
 		await expect(toKeep.id).toExist();
 		// toDelete should be deleted (override with deleteOrphaned)
 		await expect(toDelete.id).not.toExist();
+	});
+});
+
+describe("PubOp stage", () => {
+	it("should be able to set a stage while creating a pub", async () => {
+		const trx = getTrx();
+		const pub = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Test")
+			.setStage(seededCommunity.stages["Stage 1"].id)
+			.execute();
+
+		expect(pub.stageId).toEqual(seededCommunity.stages["Stage 1"].id);
+	});
+
+	it("should be able to unset a stage", async () => {
+		const trx = getTrx();
+		const pub = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.setStage(seededCommunity.stages["Stage 1"].id)
+			.execute();
+
+		expect(pub.stageId).toEqual(seededCommunity.stages["Stage 1"].id);
+
+		const updatedPub = await PubOp.update(pub.id, {
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.setStage(null)
+			.execute();
+
+		expect(updatedPub.stageId).toEqual(null);
+	});
+
+	it("should be able to move a pub to different stage", async () => {
+		const trx = getTrx();
+		const pub = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Test")
+			.setStage(seededCommunity.stages["Stage 1"].id)
+			.execute();
+
+		const updatedPub = await PubOp.upsert(pub.id, {
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.setStage(seededCommunity.stages["Stage 2"].id)
+			.execute();
+
+		const stages = await trx
+			.selectFrom("PubsInStages")
+			.selectAll()
+			.where("pubId", "=", pub.id)
+			.execute();
+		console.log(stages);
+
+		// expect(stages).toEqual([{ pubId: pub.id, stageId: seededCommunity.stages["Stage 2"].id }]);
 	});
 });

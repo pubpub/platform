@@ -6,7 +6,14 @@ import { sql } from "kysely";
 
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
-import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, PubValuesId } from "db/public";
+import type {
+	CommunitiesId,
+	PubFieldsId,
+	PubsId,
+	PubTypesId,
+	PubValuesId,
+	StagesId,
+} from "db/public";
 import type { LastModifiedBy } from "db/types";
 import { assert, expect } from "utils";
 import { isUuid } from "utils/uuid";
@@ -25,12 +32,21 @@ import {
 
 type PubValue = string | number | boolean | JsonValue;
 
-type PubOpOptions = {
+type PubOpOptionsBase = {
 	communityId: CommunitiesId;
-	pubTypeId?: PubTypesId;
 	lastModifiedBy: LastModifiedBy;
 	trx?: Transaction<Database>;
 };
+
+type PubOpOptionsCreateUpsert = PubOpOptionsBase & {
+	pubTypeId: PubTypesId;
+};
+
+type PubOpOptionsUpdate = PubOpOptionsBase & {
+	pubTypeId?: never;
+};
+
+type PubOpOptions = PubOpOptionsCreateUpsert | PubOpOptionsUpdate;
 
 type RelationOptions =
 	| {
@@ -78,12 +94,18 @@ type UnsetCommand = {
 	slug: string;
 };
 
+type SetStageCommand = {
+	type: "setStage";
+	stage: StagesId | null;
+};
+
 type PubOpCommand =
 	| SetCommand
 	| RelateCommand
 	| DisconnectCommand
 	| ClearRelationsCommand
-	| UnsetCommand;
+	| UnsetCommand
+	| SetStageCommand;
 
 type ClearRelationOperation = {
 	type: "clear";
@@ -131,6 +153,10 @@ interface CollectedOperationBase {
 		slug: string | "*";
 		deleteOrphaned?: boolean;
 	}>;
+	/**
+	 * null meaning no stage
+	 */
+	stage?: StagesId | null;
 }
 
 type CreateOrUpsertOperation = CollectedOperationBase & {
@@ -256,6 +282,19 @@ abstract class BasePubOp {
 		return this.connect(slug, relations, { override: false });
 	}
 
+	/**
+	 * Set the stage of the pub
+	 *
+	 * `null` meaning no stage
+	 */
+	setStage(stage: StagesId | null): this {
+		this.commands.push({
+			type: "setStage",
+			stage,
+		});
+		return this;
+	}
+
 	async execute(): Promise<ProcessedPub> {
 		const { trx = db } = this.options;
 		const pubId = await maybeWithTrx(trx, (trx) => this.executeWithTrx(trx));
@@ -302,6 +341,8 @@ abstract class BasePubOp {
 					target: cmd.target,
 					deleteOrphaned: cmd.deleteOrphaned,
 				});
+			} else if (cmd.type === "setStage") {
+				rootOp.stage = cmd.stage;
 			} else if (cmd.type === "connect") {
 				// Process each relation in the command
 				cmd.relations.forEach((relation) => {
@@ -353,6 +394,7 @@ abstract class BasePubOp {
 		const operations = this.collectOperations();
 
 		await this.createAllPubs(trx, operations);
+		await this.processStages(trx, operations);
 		await this.processRelations(trx, operations);
 		await this.processValues(trx, operations);
 
@@ -725,6 +767,58 @@ abstract class BasePubOp {
 				})),
 		};
 	}
+
+	private async processStages(
+		trx: Transaction<Database>,
+		operations: OperationsMap
+	): Promise<void> {
+		const stagesToUpdate = Array.from(operations.entries())
+			.filter(([_, op]) => op.stage !== undefined)
+			.map(([pubId, op]) => ({
+				pubId,
+				stageId: op.stage!,
+			}));
+
+		if (stagesToUpdate.length === 0) {
+			return;
+		}
+
+		const nullStages = stagesToUpdate.filter(({ stageId }) => stageId === null);
+
+		if (nullStages.length > 0) {
+			await autoRevalidate(
+				trx.deleteFrom("PubsInStages").where(
+					"pubId",
+					"in",
+					nullStages.map(({ pubId }) => pubId)
+				)
+			).execute();
+		}
+
+		const nonNullStages = stagesToUpdate.filter(({ stageId }) => stageId !== null);
+
+		if (nonNullStages.length > 0) {
+			await autoRevalidate(
+				trx
+					.with("deletedStages", (db) =>
+						db
+							.deleteFrom("PubsInStages")
+							.where((eb) =>
+								eb.or(
+									nonNullStages.map((stageOp) => eb("pubId", "=", stageOp.pubId))
+								)
+							)
+					)
+					.insertInto("PubsInStages")
+					.values(
+						nonNullStages.map((stageOp) => ({
+							pubId: stageOp.pubId,
+							stageId: stageOp.stageId,
+						}))
+					)
+			).execute();
+		}
+	}
 }
 
 interface UpdateOnlyOps {
@@ -761,7 +855,7 @@ class UpsertPubOp extends BasePubOp {
 	private readonly initialValue?: PubValue;
 
 	constructor(
-		options: PubOpOptions,
+		options: PubOpOptionsCreateUpsert,
 		initialId?: PubsId,
 		initialSlug?: string,
 		initialValue?: PubValue
@@ -787,7 +881,7 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 	private readonly initialValue?: PubValue;
 
 	constructor(
-		options: Omit<PubOpOptions, "pubTypeId">,
+		options: PubOpOptionsUpdate,
 		id: PubsId | undefined,
 		initialSlug?: string,
 		initialValue?: PubValue
@@ -867,7 +961,7 @@ export class PubOp {
 	/**
 	 * Update an existing pub
 	 */
-	static update(id: PubsId, options: Omit<PubOpOptions, "pubTypeId">): UpdatePubOp {
+	static update(id: PubsId, options: PubOpOptionsUpdate): UpdatePubOp {
 		return new UpdatePubOp(options, id);
 	}
 
@@ -887,7 +981,7 @@ export class PubOp {
 	 *
 	 * Either create a new pub, or override an existing pub
 	 */
-	static upsert(id: PubsId, options: PubOpOptions): UpsertPubOp {
+	static upsert(id: PubsId, options: PubOpOptionsCreateUpsert): UpsertPubOp {
 		return new UpsertPubOp(options, id);
 	}
 
@@ -899,7 +993,11 @@ export class PubOp {
 	 * PubOp.upsertByValue("community-slug:googleDriveId", googleDriveId, options)
 	 * ```
 	 */
-	static upsertByValue(slug: string, value: PubValue, options: PubOpOptions): UpsertPubOp {
+	static upsertByValue(
+		slug: string,
+		value: PubValue,
+		options: PubOpOptionsCreateUpsert
+	): UpsertPubOp {
 		return new UpsertPubOp(options, undefined, slug, value);
 	}
 }
