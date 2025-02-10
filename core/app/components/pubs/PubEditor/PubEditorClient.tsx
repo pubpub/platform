@@ -62,7 +62,7 @@ const preparePayload = ({
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
 const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
-	const defaultValues: FieldValues = { ...pubValues };
+	const defaultValues: FieldValues = {};
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
