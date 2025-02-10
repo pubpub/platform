@@ -6,9 +6,8 @@ import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { UnprocessedPub } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
+import { createSeed } from "~/prisma/seed/createSeed";
 import { createLastModifiedBy } from "../lastModifiedBy";
-
-const { createSeed } = await import("~/prisma/seed/seedCommunity");
 
 const { createForEachMockedTransaction } = await mockServerCode();
 

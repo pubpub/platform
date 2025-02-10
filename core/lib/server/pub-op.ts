@@ -1,5 +1,8 @@
 import type { Transaction } from "kysely";
 
+import { sql } from "kysely";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
+
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
 import type { CommunitiesId, PubsId, PubTypesId, PubValuesId } from "db/public";
@@ -303,7 +306,7 @@ abstract class BasePubOp {
 						rootOp.relationsToAdd.push({
 							slug: cmd.slug,
 							value: relation.value,
-							target: relation.target.thisSymbol,
+							target: relation.target.getOperationKey(),
 							override: cmd.options.override,
 							deleteOrphaned: cmd.options.deleteOrphaned,
 						});
@@ -442,57 +445,8 @@ abstract class BasePubOp {
 		operations: OperationsMap,
 		idMap: PubIdMap
 	): Promise<void> {
-		// First collect ALL relation operations, including nested ones
-		// const allRelationOps = new Map<
-		// 	PubsId,
-		// 	{
-		// 		override: {
-		// 			slug: string;
-		// 			deleteOrphaned?: boolean;
-		// 		}[];
-		// 		clear: {
-		// 			slug: string;
-		// 			deleteOrphaned?: boolean;
-		// 		}[];
-		// 		remove: {
-		// 			slug: string;
-		// 			target: PubsId;
-		// 			deleteOrphaned?: boolean;
-		// 		}[];
-		// 	}
-		// >();
+		const relationsToCheckForOrphans = new Set<PubsId>();
 
-		// Collect relation operations from all pubs (including nested ones)
-		// for (const [key, op] of operations) {
-		// 	const pubId = this.resolvePubId(key, idMap);
-		// 	const relationOps = {
-		// 		override: op.relationsToAdd
-		// 			.filter((r) => r.override)
-		// 			.map((r) => ({
-		// 				slug: r.slug,
-		// 				deleteOrphaned: r.deleteOrphaned,
-		// 			})),
-		// 		clear: op.relationsToClear.map((r) => ({
-		// 			slug: r.slug,
-		// 			deleteOrphaned: r.deleteOrphaned,
-		// 		})),
-		// 		remove: op.relationsToRemove.map((r) => ({
-		// 			slug: r.slug,
-		// 			target: r.target,
-		// 			deleteOrphaned: r.deleteOrphaned,
-		// 		})),
-		// 	};
-
-		// 	if (
-		// 		relationOps.override.length > 0 ||
-		// 		relationOps.clear.length > 0 ||
-		// 		relationOps.remove.length > 0
-		// 	) {
-		// 		allRelationOps.set(pubId, relationOps);
-		// 	}
-		// }
-
-		// Process all relation operations
 		for (const [key, op] of operations) {
 			const pubId = this.resolvePubId(key, idMap);
 
@@ -553,7 +507,7 @@ abstract class BasePubOp {
 			});
 
 			// check which relations should also be removed due to being orphaned
-			const relationsToCheckForOrphans = relationsToDelete.filter((relation) => {
+			const possiblyOrphanedRelations = relationsToDelete.filter((relation) => {
 				return allOps.some((relationOp) => {
 					if (relationOp.slug !== relation.slug) {
 						return false;
@@ -574,12 +528,16 @@ abstract class BasePubOp {
 				});
 			});
 
-			if (!relationsToCheckForOrphans.length) {
+			if (!possiblyOrphanedRelations.length) {
 				continue;
 			}
 
-			await this.cleanupOrphanedPubs(trx, relationsToCheckForOrphans);
+			possiblyOrphanedRelations.forEach((r) => {
+				relationsToCheckForOrphans.add(r.relatedPubId);
+			});
 		}
+
+		await this.cleanupOrphanedPubs(trx, Array.from(relationsToCheckForOrphans));
 	}
 
 	/**
@@ -592,25 +550,76 @@ abstract class BasePubOp {
 	 */
 	private async cleanupOrphanedPubs(
 		trx: Transaction<Database>,
-		removedRelations: Array<{ relatedPubId: PubsId }>
+		orphanedPubIds: PubsId[]
 	): Promise<void> {
-		const orphanedIds = removedRelations.map((r) => r.relatedPubId);
-		if (orphanedIds.length === 0) {
+		if (orphanedPubIds.length === 0) {
 			return;
 		}
 
-		const trulyOrphaned = await trx
-			.selectFrom("pubs as p")
-			.select("p.id")
-			.leftJoin("pub_values as pv", "pv.relatedPubId", "p.id")
-			.where("p.id", "in", orphanedIds)
-			.groupBy("p.id")
-			.having((eb) => eb.fn.count("pv.id"), "=", 0)
+		const pubsToDelete = await trx
+			.withRecursive("affected_pubs", (db) => {
+				// Base case: direct connections from the to-be-removed-pubs down
+				const initial = db
+					.selectFrom("pub_values")
+					.select(["pubId as id", sql<string[]>`array["pubId"]`.as("path")])
+					.where("pubId", "in", orphanedPubIds);
+
+				// Recursive case: keep traversing outward
+				const recursive = db
+					.selectFrom("pub_values")
+					.select([
+						"relatedPubId as id",
+						sql<string[]>`affected_pubs.path || array["relatedPubId"]`.as("path"),
+					])
+					.innerJoin("affected_pubs", "pub_values.pubId", "affected_pubs.id")
+					.where((eb) => eb.not(eb("relatedPubId", "=", eb.fn.any("affected_pubs.path")))) // Prevent cycles
+					.$narrowType<{ id: PubsId }>();
+
+				return initial.union(recursive);
+			})
+			// pubs in the affected_pubs table but which should not be deleted because they are still related to other pubs
+			.with("safe_pubs", (db) => {
+				return (
+					db
+						.selectFrom("pub_values")
+						.select(["relatedPubId as id"])
+						.distinct()
+						// crucial part:
+						// find all the pub_values which
+						// - point to a node in the affected_pubs
+						// - but are not themselves affected
+						// these are the "safe" nodes
+						.innerJoin("affected_pubs", "pub_values.relatedPubId", "affected_pubs.id")
+						.where((eb) =>
+							eb.not(
+								eb.exists((eb) =>
+									eb
+										.selectFrom("affected_pubs")
+										.select("id")
+										.whereRef("id", "=", "pub_values.pubId")
+								)
+							)
+						)
+				);
+			})
+			.selectFrom("affected_pubs")
+			.select(["id", "path"])
+			.distinctOn("id")
+			.where((eb) =>
+				eb.not(
+					eb.exists((eb) =>
+						eb
+							.selectFrom("safe_pubs")
+							.select("id")
+							.where(sql<boolean>`safe_pubs.id = any(affected_pubs.path)`)
+					)
+				)
+			)
 			.execute();
 
-		if (trulyOrphaned.length > 0) {
+		if (pubsToDelete.length > 0) {
 			await deletePub({
-				pubId: trulyOrphaned.map((p) => p.id),
+				pubId: pubsToDelete.map((p) => p.id),
 				communityId: this.options.communityId,
 				lastModifiedBy: this.options.lastModifiedBy,
 				trx,
@@ -623,17 +632,16 @@ abstract class BasePubOp {
 		operations: OperationsMap,
 		idMap: PubIdMap
 	): Promise<void> {
-		// Collect all values and relations to upsert
 		const toUpsert = Array.from(operations.entries()).flatMap(([key, op]) => {
 			const pubId = this.resolvePubId(key, idMap);
 			return [
-				// Regular values
+				// regular values
 				...op.values.map((v) => ({
 					pubId,
 					slug: v.slug,
 					value: v.value,
 				})),
-				// Relations
+				// relations
 				...op.relationsToAdd.map((r) => ({
 					pubId,
 					slug: r.slug,
@@ -647,7 +655,6 @@ abstract class BasePubOp {
 			return;
 		}
 
-		// Validate and upsert
 		const validated = await validatePubValues({
 			pubValues: toUpsert,
 			communityId: this.options.communityId,
@@ -657,7 +664,6 @@ abstract class BasePubOp {
 
 		const { values, relations } = this.partitionValidatedValues(validated);
 
-		// Perform upserts in parallel
 		await Promise.all([
 			values.length > 0 &&
 				upsertPubValues({
