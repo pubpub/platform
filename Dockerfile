@@ -5,6 +5,7 @@
 # https://docs.docker.com/go/dockerfile-reference/
 
 ARG NODE_VERSION=22.13.1
+ARG ALPINE_VERSION=3.20
 
 ARG PACKAGE
 ARG PORT=3000
@@ -14,7 +15,7 @@ ARG PNPM_VERSION=9.10.0
 
 ################################################################################
 # Use node image for base image for all stages.
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} as base
 
 # these are necessary to be able to use them inside of `base`
 ARG BASE_IMAGE
