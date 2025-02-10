@@ -4,7 +4,7 @@
 # If you need more help, visit the Dockerfile reference guide at
 # https://docs.docker.com/go/dockerfile-reference/
 
-ARG NODE_VERSION=20.17.0
+ARG NODE_VERSION=22.13.1
 
 ARG PACKAGE
 ARG PORT=3000
