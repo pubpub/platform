@@ -21,6 +21,7 @@ import type {
 } from "db/public";
 import {
 	communitiesIdSchema,
+	communityMembershipsIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
 	memberRoleSchema,
@@ -615,6 +616,21 @@ export const siteApi = contract.router(
 					200: safeUserSchema
 						.extend({ member: communityMembershipsSchema.nullable().optional() })
 						.array(),
+				},
+			},
+		},
+		members: {
+			get: {
+				path: "/members/:memberId",
+				method: "GET",
+				summary: "Gets a member",
+				description:
+					"Get a member by its community membership ID. This endpoint is used by the MemberSelect component, though we may not want to keep this since community membership IDs can change and would prefer to use user ID.",
+				pathParams: z.object({
+					memberId: z.string().uuid(),
+				}),
+				responses: {
+					200: safeUserSchema.extend({ member: communityMembershipsSchema.nullable() }),
 				},
 			},
 		},

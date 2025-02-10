@@ -22,16 +22,12 @@ import { TextInputElement } from "./elements/TextInputElement";
 export type PubFieldFormElementProps = {
 	pubId: PubsId;
 	element: PubFieldElement;
-	searchParams: Record<string, unknown>;
-	communitySlug: string;
 	values: ProcessedPub["values"];
 };
 
 export const PubFieldFormElement = ({
 	pubId,
 	element: propElement,
-	searchParams,
-	communitySlug,
 	values,
 	label,
 	slug,
@@ -109,10 +105,7 @@ export const PubFieldFormElement = ({
 				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
-				id={element.id}
-				searchParams={searchParams}
 				value={userId}
-				communitySlug={communitySlug}
 			/>
 		);
 	}

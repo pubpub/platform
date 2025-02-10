@@ -294,8 +294,6 @@ export default async function FormPage(props: {
 											key={e.id}
 											pubId={pubId}
 											element={e}
-											searchParams={searchParams}
-											communitySlug={params.communitySlug}
 											values={pub ? pub.values : []}
 										/>
 									))}
