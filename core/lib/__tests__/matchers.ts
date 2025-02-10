@@ -19,9 +19,9 @@ expect.extend({
 		return {
 			pass,
 			message: () =>
-				pass
-					? `Expected pub with ID ${received} ${isNot ? "not" : ""} to exist, and it does ${isNot ? "not" : ""}`
-					: `Expected pub with ID ${received} ${isNot ? "not to" : "to"} exist, but it does not`,
+				isNot
+					? `Expected pub with ID ${received} not to exist, but it ${pass ? "does" : "does not"}`
+					: `Expected pub with ID ${received} to exist, but it ${pass ? "does" : "does not"}`,
 		};
 	},
 

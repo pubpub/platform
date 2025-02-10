@@ -8,9 +8,10 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import type { MaybeHas } from "../types";
 import type { UnprocessedPub, UpsertPubInput } from "./pub";
 import { mockServerCode } from "~/lib/__tests__/utils";
+import { createSeed } from "~/prisma/seed/createSeed";
 import { createLastModifiedBy } from "../lastModifiedBy";
 
-const { createSeed, seedCommunity } = await import("~/prisma/seed/seedCommunity");
+const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
