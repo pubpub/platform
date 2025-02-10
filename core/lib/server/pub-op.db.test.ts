@@ -1178,13 +1178,6 @@ describe("PubOp stage", () => {
 			.setStage(seededCommunity.stages["Stage 2"].id)
 			.execute();
 
-		const stages = await trx
-			.selectFrom("PubsInStages")
-			.selectAll()
-			.where("pubId", "=", pub.id)
-			.execute();
-		console.log(stages);
-
-		// expect(stages).toEqual([{ pubId: pub.id, stageId: seededCommunity.stages["Stage 2"].id }]);
+		expect(updatedPub.stageId).toEqual(seededCommunity.stages["Stage 2"].id);
 	});
 });
