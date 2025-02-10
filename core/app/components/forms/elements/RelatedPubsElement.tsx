@@ -30,17 +30,19 @@ const RelatedPubBlock = ({
 	onRemove,
 	valueComponentProps,
 	slug,
+	onBlur,
 }: {
 	pub: GetPubsResult[number];
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: RelatedPubValueSlug;
+	onBlur?: () => void;
 }) => {
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
 			<div className="flex flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{getPubTitle(pub)}</span>
-				<ConfigureRelatedValue {...valueComponentProps} slug={slug} />
+				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
 			</div>
 			<div>
 				<Button
@@ -65,8 +67,9 @@ type FormValue = {
 export const ConfigureRelatedValue = ({
 	slug,
 	element,
+	onBlur,
 	...props
-}: PubFieldFormElementProps & { slug: RelatedPubValueSlug }) => {
+}: PubFieldFormElementProps & { slug: RelatedPubValueSlug; onBlur?: () => void }) => {
 	const configLabel = "label" in element.config ? element.config.label : undefined;
 	const label = configLabel || element.label || slug;
 
@@ -86,7 +89,16 @@ export const ConfigureRelatedValue = ({
 		// TODO: this should be more sophisticated for the more complex fields
 		value.toString()
 	) : (
-		<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
+		<Popover
+			open={isPopoverOpen}
+			onOpenChange={(open) => {
+				if (!open && onBlur) {
+					// In order to retrigger validation
+					onBlur();
+				}
+				setPopoverIsOpen(open);
+			}}
+		>
 			<PopoverTrigger asChild>
 				<Button
 					type="button"
@@ -191,6 +203,7 @@ export const RelatedPubsElement = ({
 															valueComponentProps={
 																valueComponentProps
 															}
+															onBlur={field.onBlur}
 														/>
 													);
 												})}
