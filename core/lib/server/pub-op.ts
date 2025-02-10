@@ -844,20 +844,36 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 	}
 }
 
-// The factory class - this is the only exported class
+/**
+ * A PubOp is a builder for a pub.
+ *
+ * It can be used to create, update or upsert a pub.
+ */
 export class PubOp {
+	/**
+	 * Create a new pub
+	 */
 	static create(options: PubOpOptions): CreatePubOp {
 		return new CreatePubOp(options);
 	}
 
+	/**
+	 * Create a new pub with a specific id
+	 */
 	static createWithId(id: PubsId, options: PubOpOptions): CreatePubOp {
 		return new CreatePubOp(options, id);
 	}
 
+	/**
+	 * Update an existing pub
+	 */
 	static update(id: PubsId, options: Omit<PubOpOptions, "pubTypeId">): UpdatePubOp {
 		return new UpdatePubOp(options, id);
 	}
 
+	/**
+	 * Update an existing pub by a specific value
+	 */
 	static updateByValue(
 		slug: string,
 		value: PubValue,
@@ -866,10 +882,23 @@ export class PubOp {
 		return new UpdatePubOp(options, undefined, slug, value);
 	}
 
+	/**
+	 * Upsert a pub
+	 *
+	 * Either create a new pub, or override an existing pub
+	 */
 	static upsert(id: PubsId, options: PubOpOptions): UpsertPubOp {
 		return new UpsertPubOp(options, id);
 	}
 
+	/**
+	 * Upsert a pub by a specific, presumed to be unique, value
+	 *
+	 * Eg you want to upsert a pub by a google drive id, you would do
+	 * ```ts
+	 * PubOp.upsertByValue("community-slug:googleDriveId", googleDriveId, options)
+	 * ```
+	 */
 	static upsertByValue(slug: string, value: PubValue, options: PubOpOptions): UpsertPubOp {
 		return new UpsertPubOp(options, undefined, slug, value);
 	}
