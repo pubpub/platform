@@ -646,45 +646,44 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		pubWithRelatedValuesAndChildren.children[0].values.sort((a, b) =>
 			a.fieldSlug.localeCompare(b.fieldSlug)
 		);
-		expect(pubWithRelatedValuesAndChildren).toMatchObject({
-			values: [
-				{
-					value: "test relation value",
-					relatedPub: {
-						values: [{ value: "Nested Related Pub" }],
-						children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
-					},
+		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+			{ value: "Some title" },
+			{
+				value: "test relation value",
+				relatedPub: {
+					values: [{ value: "Nested Related Pub" }],
+					children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
 				},
-				{ value: "Some title" },
-			],
-			children: [
-				{
+			},
+		]);
+
+		expect(pubWithRelatedValuesAndChildren.children).toHaveLength(1);
+		expect(pubWithRelatedValuesAndChildren.children[0]).toHaveValues([
+			{ value: "Child of Root Pub" },
+			{
+				value: "Nested Relation",
+				relatedPub: {
 					values: [
 						{
-							value: "Nested Relation 2",
-						},
-						{
-							value: "Nested Relation",
+							value: "Double nested relation",
 							relatedPub: {
-								values: [
-									{
-										value: "Nested Related Pub of Child of Root Pub",
-									},
-									{
-										value: "Double nested relation",
-										relatedPub: {
-											values: [{ value: "Double nested relation title" }],
-										},
-									},
-								],
+								values: [{ value: "Double nested relation title" }],
 							},
 						},
-						{ value: "Child of Root Pub" },
+						{
+							value: "Nested Related Pub of Child of Root Pub",
+						},
 					],
-					children: [{ values: [{ value: "Grandchild of Root Pub" }] }],
 				},
-			],
-		});
+			},
+			{
+				value: "Nested Relation 2",
+			},
+		]);
+		expect(pubWithRelatedValuesAndChildren.children[0].children).toHaveLength(1);
+		expect(pubWithRelatedValuesAndChildren.children[0].children[0]).toHaveValues([
+			{ value: "Grandchild of Root Pub" },
+		]);
 	});
 
 	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
@@ -903,21 +902,19 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
 		)) as unknown as UnprocessedPub[];
 
-		expect(pubWithRelatedValuesAndChildren).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: {
-						values: [
-							{
-								value: "test relation title",
-							},
-						],
-					},
+		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+			{
+				value: "test relation value",
+				relatedPub: {
+					values: [
+						{
+							value: "test relation title",
+						},
+					],
 				},
-			],
-		});
+			},
+			{ value: "test title" },
+		]);
 	});
 
 	it("is able to exclude children and related pubs from being fetched", async () => {
@@ -964,14 +961,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expectTypeOf(pubWithRelatedValuesAndChildren.children).toEqualTypeOf<undefined>();
 
 		expect(pubWithRelatedValuesAndChildren.children).toEqual(undefined);
-		expect(pubWithRelatedValuesAndChildren).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-				},
-			],
-		});
+		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+			{
+				value: "test relation value",
+			},
+			{ value: "test title" },
+		]);
 
 		expect(pubWithRelatedValuesAndChildren.values[1].relatedPub).toBeUndefined();
 		// check that the relatedPub is `undefined` in type as well as value due to `{withRelatedPubs: false}`
@@ -1031,6 +1026,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ withMembers: true }
 		);
 
+		pub.members.sort((a, b) => a.slug.localeCompare(b.slug));
 		expect(pub).toMatchObject({
 			members: newUsers.map((u) => ({ ...u, role: MemberRole.admin })),
 		});

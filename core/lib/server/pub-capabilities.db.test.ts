@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import type { Seed } from "~/prisma/seed/seedCommunity";
+import { createSeed } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "../__tests__/utils";
 
 await mockServerCode();
 
-const seed = {
+const seed = createSeed({
 	community: {
 		name: "test-pub-capabilities",
 		slug: "test-pub-capabilities",
@@ -97,7 +97,7 @@ const seed = {
 			},
 		},
 	],
-} as Seed;
+});
 
 describe("getPubsWithRelatedValuesAndChildren capabilities", () => {
 	it("should restrict pubs by visibility", async () => {

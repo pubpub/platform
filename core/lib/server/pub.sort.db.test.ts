@@ -6,9 +6,8 @@ import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
+import { createSeed } from "~/prisma/seed/createSeed";
 import { createLastModifiedBy } from "../lastModifiedBy";
-
-const { createSeed } = await import("~/prisma/seed/seedCommunity");
 
 const { testDb } = await mockServerCode();
 

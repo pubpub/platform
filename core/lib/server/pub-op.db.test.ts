@@ -873,7 +873,7 @@ describe("relation management", () => {
 				{ trx, depth: 10 }
 			);
 
-			expect(initialState.values).toMatchObject([
+			expect(initialState).toHaveValues([
 				{ value: "A" },
 				{
 					value: "to B",
@@ -916,13 +916,6 @@ describe("relation management", () => {
 						values: [
 							{ value: "C" },
 							{
-								value: "to I",
-								relatedPubId: pubI,
-								relatedPub: {
-									values: [{ value: "I" }],
-								},
-							},
-							{
 								value: "to D",
 								relatedPubId: pubD,
 								relatedPub: {
@@ -962,6 +955,13 @@ describe("relation management", () => {
 							{
 								value: "to E",
 								relatedPubId: pubE,
+							},
+							{
+								value: "to I",
+								relatedPubId: pubI,
+								relatedPub: {
+									values: [{ value: "I" }],
+								},
 							},
 						],
 					},
