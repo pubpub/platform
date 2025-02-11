@@ -40,7 +40,8 @@ const RelatedPubBlock = ({
 }) => {
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
-			<div className="flex max-w-[90%] flex-1 flex-col items-start gap-1 text-sm">
+			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
+			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{getPubTitle(pub)}</span>
 				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
 			</div>
