@@ -5,6 +5,17 @@ import type { PubsId } from "db/public";
 
 import type { db } from "~/kysely/database";
 
+const deepSortValues = (pub: ProcessedPub): ProcessedPub => {
+	pub.values
+		.sort((a, b) => (a.value as string).localeCompare(b.value as string))
+		.map((item) => ({
+			...item,
+			relatedPub: item.relatedPub?.values ? deepSortValues(item.relatedPub) : item.relatedPub,
+		}));
+
+	return pub;
+};
+
 expect.extend({
 	async toExist(received: PubsId | ProcessedPub, expected?: typeof db) {
 		if (typeof received !== "string") {
@@ -34,12 +45,10 @@ expect.extend({
 		}
 
 		const pub = received;
-		const sortedPubValues = [...pub.values].sort((a, b) =>
-			(a.value as string).localeCompare(b.value as string)
-		);
+		const sortedPubValues = deepSortValues(pub);
 
 		const expectedLength = expected.length;
-		const receivedLength = sortedPubValues.length;
+		const receivedLength = sortedPubValues.values.length;
 
 		const isNot = this.isNot;
 		if (!isNot && !this.equals(expectedLength, receivedLength)) {
@@ -51,7 +60,7 @@ expect.extend({
 		}
 
 		// equiv. to .toMatchObject
-		const pass = this.equals(sortedPubValues, expected, [
+		const pass = this.equals(sortedPubValues.values, expected, [
 			this.utils.iterableEquality,
 			this.utils.subsetEquality,
 		]);
@@ -61,7 +70,7 @@ expect.extend({
 			message: () =>
 				pass
 					? `Expected pub ${isNot ? "not" : ""} to have values ${JSON.stringify(expected)}, and it does ${isNot ? "not" : ""}`
-					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(sortedPubValues, expected)}`,
+					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(sortedPubValues.values, expected)}`,
 		};
 	},
 });
