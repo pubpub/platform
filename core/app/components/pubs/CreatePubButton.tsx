@@ -4,6 +4,8 @@ import { Plus } from "ui/icon";
 
 import { getAllPubTypesForCommunity } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { findCommunityBySlug } from "~/lib/server/community";
+import { getPubFields } from "~/lib/server/pubFields";
 import { PathAwareDialog } from "../PathAwareDialog";
 import { InitialCreatePubForm } from "./InitialCreatePubForm";
 
@@ -24,8 +26,27 @@ type Props = {
 
 export const CreatePubButton = async (props: Props) => {
 	const id = "stageId" in props ? props.stageId : props.communityId;
+
 	const communitySlug = await getCommunitySlug();
+	const community = await findCommunityBySlug(communitySlug);
+
+	if (!community) {
+		return null;
+	}
+
 	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
+	const relatedPubFields = props.relatedPubId
+		? Object.values(
+				(
+					await getPubFields({
+						pubId: props.relatedPubId,
+						communityId: community.id,
+						isRelated: true,
+					}).executeTakeFirstOrThrow()
+				).fields
+			)
+		: [];
+
 	return (
 		<PathAwareDialog
 			buttonSize={props.size}
@@ -39,6 +60,7 @@ export const CreatePubButton = async (props: Props) => {
 		>
 			<InitialCreatePubForm
 				pubTypes={pubTypes}
+				relatedPubFields={relatedPubFields}
 				editorSpecifiers={{
 					stageId: "stageId" in props ? props.stageId : undefined,
 					relatedPubId: props.relatedPubId,

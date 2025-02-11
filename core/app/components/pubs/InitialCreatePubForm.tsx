@@ -6,7 +6,8 @@ import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
-import { useForm } from "react-hook-form";
+import { useForm, useFormContext } from "react-hook-form";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { PubsId, PubTypes, StagesId } from "db/public";
 import { Button } from "ui/button";
@@ -22,8 +23,11 @@ import {
 import { Loader2 } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
+import type { PubFieldElement } from "../forms/types";
 import type { PubField } from "~/lib/types";
+import { ConfigureRelatedValue } from "../forms/elements/RelatedPubsElement";
 import { useCommunity } from "../providers/CommunityProvider";
+import { makeFormElementDefFromPubFields } from "./PubEditor/helpers";
 
 const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">[] }) => {
 	return (
@@ -64,77 +68,121 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">
 	);
 };
 
-const RelatedPubFieldSelector = ({
-	pubFields,
-}: {
-	pubFields: Pick<PubField, "slug" | "name">[];
-}) => {
+const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFields"] }) => {
+	const { watch } = useFormContext<typeof schemaWithRelatedPub>();
+	const relatedPubSlug = watch("relatedPub.slug");
+	const selectedPubField = relatedPubSlug
+		? pubFields.find((pf) => pf.slug === relatedPubSlug)
+		: undefined;
+
+	console.log({ selectedPubField });
+
 	return (
-		<FormField
-			name="relatedPub.slug"
-			render={({ field }) => (
-				<FormItem className="flex flex-col gap-y-1">
-					<div className="flex items-center justify-between">
-						<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-							Pub type
-						</FormLabel>
-					</div>
-					<Select
-						{...field}
-						onValueChange={(value) => {
-							field.onChange(value);
-						}}
-						defaultValue={field.value}
-					>
-						<FormControl>
-							<SelectTrigger>
-								<SelectValue placeholder="Select a pub type" />
-							</SelectTrigger>
-						</FormControl>
-						<SelectContent>
-							{pubFields.map((pubField) => (
-								<SelectItem key={pubField.slug} value={pubField.slug}>
-									{pubField.name}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-					<FormDescription>Choose the relationship type</FormDescription>
-					<FormMessage />
-				</FormItem>
-			)}
+		<>
+			<FormField
+				name="relatedPub.slug"
+				render={({ field }) => (
+					<FormItem className="flex flex-col gap-y-1">
+						<div className="flex items-center justify-between">
+							<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+								Relationship
+							</FormLabel>
+						</div>
+						<Select
+							{...field}
+							onValueChange={(value) => {
+								field.onChange(value);
+							}}
+							defaultValue={field.value}
+						>
+							<FormControl>
+								<SelectTrigger>
+									<SelectValue placeholder="Select a relationship type" />
+								</SelectTrigger>
+							</FormControl>
+							<SelectContent>
+								{pubFields.map((pubField) => (
+									<SelectItem key={pubField.slug} value={pubField.slug}>
+										{pubField.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						<FormDescription>Choose the relationship type</FormDescription>
+						<FormMessage />
+					</FormItem>
+				)}
+			/>
+			<RelatedPubValueSelector pubField={selectedPubField} />
+		</>
+	);
+};
+
+const RelatedPubValueSelector = ({
+	pubField,
+}: {
+	pubField: Props["relatedPubFields"][number] | undefined;
+}) => {
+	if (!pubField) {
+		return null;
+	}
+	const element = makeFormElementDefFromPubFields([pubField])[0] as PubFieldElement;
+	return (
+		<ConfigureRelatedValue
+			element={element}
+			pubId={"todo" as PubsId}
+			slug="relatedPub.value"
+			values={[]}
 		/>
 	);
 };
+
+const baseSchema = Type.Object({
+	pubTypeId: Type.String(),
+});
+const schemaWithRelatedPub = Type.Object({
+	pubTypeId: Type.String(),
+	relatedPub: Type.Object({
+		id: Type.String(),
+		slug: Type.String(),
+		// TODO: getJsonSchemaByCoreSchemaType() ?
+		value: Type.Any(),
+	}),
+});
 
 export interface PubEditorSpecifiers {
 	relatedPubId?: PubsId;
 	stageId?: StagesId;
 }
-/** The first step in creating a pub—choosing a pub type, and possibly a related pub */
-export const InitialCreatePubForm = ({
-	pubTypes,
-	editorSpecifiers,
-}: {
-	pubTypes: Pick<PubTypes, "id" | "name">[];
-	editorSpecifiers: PubEditorSpecifiers;
-}) => {
-	const hasRelatedPub = !!editorSpecifiers.relatedPubId;
-	const schema = Type.Object({
-		pubTypeId: Type.String(),
-		relatedPub: Type.Optional(
-			Type.Object({
-				id: Type.String(),
-				slug: Type.String(),
-				// TODO
-				value: Type.Any(),
-			})
-		),
-	});
 
-	const form = useForm({
+interface Props {
+	pubTypes: Pick<PubTypes, "id" | "name">[];
+	relatedPubFields: Pick<PubField, "id" | "slug" | "name" | "schemaName">[];
+	editorSpecifiers: PubEditorSpecifiers;
+}
+/** The first step in creating a pub—choosing a pub type, and possibly a related pub */
+export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifiers }: Props) => {
+	const hasRelatedPub = !!editorSpecifiers.relatedPubId;
+	const { schema, defaultValues } = useMemo(() => {
+		const defaultValues = { pubTypeId: undefined };
+		if (editorSpecifiers.relatedPubId) {
+			return {
+				schema: schemaWithRelatedPub,
+				defaultValues: {
+					...defaultValues,
+					relatedPub: {
+						id: editorSpecifiers.relatedPubId,
+					},
+				},
+			};
+		}
+		return { schema: baseSchema, defaultValues };
+	}, [editorSpecifiers.relatedPubId]);
+
+	const form = useForm<typeof schema>({
 		mode: "onChange",
 		reValidateMode: "onChange",
+		defaultValues,
 		resolver: typeboxResolver(schema),
 	});
 
@@ -154,25 +202,31 @@ export const InitialCreatePubForm = ({
 	}, [pathWithoutFormParam]);
 
 	const onSubmit = async (values: FieldValues) => {
-		const pubParams = new URLSearchParams({
-			pubTypeId: values.pubTypeId,
-			...editorSpecifiers,
-		});
-		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
-		router.push(createPubPath);
+		console.log({ values });
+		// const pubParams = new URLSearchParams({
+		// 	pubTypeId: values.pubTypeId,
+		// 	...editorSpecifiers,
+		// });
+		// const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
+		// router.push(createPubPath);
 	};
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
+			<form
+				onSubmit={form.handleSubmit(onSubmit, (e) => console.log({ e }))}
+				className="flex flex-col gap-y-4"
+			>
 				<PubTypeSelector pubTypes={pubTypes} />
+				{hasRelatedPub ? <RelatedPubFieldSelector pubFields={relatedPubFields} /> : null}
+
 				<div className="flex w-full items-center justify-end gap-x-4">
 					<Button type="button" onClick={closeForm} variant="outline">
 						Cancel
 					</Button>
 					<Button
 						type="submit"
-						disabled={form.formState.isSubmitting || !form.formState.isValid}
+						// disabled={form.formState.isSubmitting || !form.formState.isValid}
 						className="flex items-center gap-x-2"
 					>
 						{form.formState.isSubmitting ? (
