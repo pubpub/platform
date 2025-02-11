@@ -171,6 +171,59 @@ export type SingleRelationInput = {
 	deleteOrphaned?: boolean;
 };
 
+type PubOpErrorCode =
+	| "RELATION_CYCLE"
+	| "ORPHAN_CONFLICT"
+	| "VALIDATION_ERROR"
+	| "INVALID_TARGET"
+	| "CREATE_EXISTING"
+	| "UNKNOWN";
+
+class PubOpError extends Error {
+	readonly code: PubOpErrorCode;
+	constructor(code: PubOpErrorCode, message: string) {
+		super(message);
+		this.name = "PubOpError";
+		this.code = code;
+	}
+}
+
+/**
+ * Could be useful if we want to disallow the creation of cycles
+ */
+class PubOpRelationCycleError extends PubOpError {
+	constructor(message: string) {
+		super("RELATION_CYCLE", `Relation cycle detected: ${message}`);
+	}
+}
+
+class PubOpValidationError extends PubOpError {
+	constructor(message: string) {
+		super("VALIDATION_ERROR", `Validation error: ${message}`);
+	}
+}
+
+class PubOpInvalidTargetError extends PubOpError {
+	constructor(relation: string, target: string, message?: string) {
+		super(
+			"INVALID_TARGET",
+			`Invalid target for relation \`${relation}\`: \`${target}\` ${message ?? ""}`
+		);
+	}
+}
+
+class PubOpCreateExistingError extends PubOpError {
+	constructor(pubId: PubsId) {
+		super("CREATE_EXISTING", `Cannot create a pub with an id that already exists: ${pubId}`);
+	}
+}
+
+class PubOpUnknownError extends PubOpError {
+	constructor(message: string) {
+		super("UNKNOWN", message);
+	}
+}
+
 function isPubId(val: string | PubsId): val is PubsId {
 	return isUuid(val);
 }
@@ -355,9 +408,7 @@ abstract class BasePubOp {
 		const resolvedTarget = typeof target === "function" ? target(nestedBuilder) : target;
 
 		if (typeof resolvedTarget === "string" && !isPubId(resolvedTarget)) {
-			throw new Error(
-				`Invalid target: should either be an existing pub id or a PubOp instance, but got \`${resolvedTarget}\``
-			);
+			throw new PubOpInvalidTargetError(slug, resolvedTarget);
 		}
 
 		this.commands.push({
@@ -586,20 +637,12 @@ abstract class BasePubOp {
 				// ...but were trying to create a new pub, that's an error, because there's no pub that was created
 				// that means we were trying to create a pub with an id that already exists
 				if (op.mode === "create") {
-					throw new Error(
-						`Cannot create a pub with an id that already exists: ${pubToCreate.id}`
-					);
+					throw new PubOpCreateExistingError(pubToCreate.id);
 				}
 				index++;
 				continue;
 			}
 
-			// // we have symbol key (no id provided) but no pub was created. that's not good
-			// if (typeof key === "symbol") {
-			// 	throw new Error("Pub not created");
-			// }
-
-			// fallback - use the key as the id i guess?
 			index++;
 		}
 
