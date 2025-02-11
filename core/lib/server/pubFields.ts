@@ -12,21 +12,21 @@ type GetPubFieldsInput =
 			pubId?: never;
 			pubTypeId?: never;
 			communityId: CommunitiesId;
-			includeRelations?: boolean;
+			isRelated?: boolean;
 			slugs?: string[];
 	  }
 	| {
 			pubId: PubsId;
 			pubTypeId?: never;
 			communityId: CommunitiesId;
-			includeRelations?: boolean;
+			isRelated?: boolean;
 			slugs?: string[];
 	  }
 	| {
 			pubId?: never;
 			pubTypeId: PubTypesId;
 			communityId: CommunitiesId;
-			includeRelations?: boolean;
+			isRelated?: boolean;
 			slugs?: string[];
 	  };
 
@@ -77,7 +77,9 @@ export const _getPubFields = (props: GetPubFieldsInput) =>
 						isRelation: eb.ref("pub_fields.isRelation"),
 					}).as("json"),
 				])
-				.$if(!props.includeRelations, (qb) => qb.where("pub_fields.isRelation", "=", false))
+				.$if(props.isRelated !== undefined, (qb) =>
+					qb.where("pub_fields.isRelation", "=", props.isRelated!)
+				)
 				.where("pub_fields.id", "in", eb.selectFrom("ids").select("id"))
 		)
 		.selectFrom("f")

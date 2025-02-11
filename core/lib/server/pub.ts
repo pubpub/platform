@@ -697,11 +697,9 @@ export const getPlainPub = (pubId: PubsId, trx = db) =>
 const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
-	includeRelations = true,
 }: {
 	slugs: string[];
 	communityId: CommunitiesId;
-	includeRelations?: boolean;
 }) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
@@ -712,7 +710,6 @@ const getFieldInfoForSlugs = async ({
 	const { fields } = await getPubFields({
 		communityId,
 		slugs: toBeUpdatedPubFieldSlugs,
-		includeRelations,
 	}).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
@@ -750,17 +747,14 @@ const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
 	continueOnValidationError = false,
-	includeRelations = true,
 }: {
 	pubValues: T[];
 	communityId: CommunitiesId;
 	continueOnValidationError?: boolean;
-	includeRelations?: boolean;
 }) => {
 	const relevantPubFields = await getFieldInfoForSlugs({
 		slugs: pubValues.map(({ slug }) => slug),
 		communityId,
-		includeRelations,
 	});
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
@@ -953,7 +947,6 @@ export const removePubRelations = async ({
 	const consolidatedRelations = await getFieldInfoForSlugs({
 		slugs: relations.map(({ slug }) => slug),
 		communityId,
-		includeRelations: true,
 	});
 
 	const mergedRelations = mergeSlugsWithFields(relations, consolidatedRelations);
@@ -1006,7 +999,6 @@ export const removeAllPubRelationsBySlugs = async ({
 	const fields = await getFieldInfoForSlugs({
 		slugs: slugs,
 		communityId,
-		includeRelations: true,
 	});
 	const fieldIds = fields.map(({ fieldId }) => fieldId);
 	if (!fieldIds.length) {

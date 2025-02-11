@@ -65,7 +65,7 @@ export default async function Page(props: {
 			slug: formSlug,
 			communityId,
 		}).executeTakeFirstOrThrow(),
-		getPubFields({ communityId, includeRelations: true }).executeTakeFirstOrThrow(),
+		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 		getPubTypesForCommunity(community.id),
 	]);
 
