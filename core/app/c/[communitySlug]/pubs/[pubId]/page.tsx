@@ -232,13 +232,6 @@ export default async function Page(props: {
 			</div>
 			<div>
 				<h2 className="text-xl font-bold">Pub Contents</h2>
-				<p className="text-muted-foreground">
-					Use the "Add New Pub" button below to create a new pub and add it to this pub's
-					contents.
-				</p>
-			</div>
-			<div className="mb-2">
-				<CreatePubButton text="Add New Pub" communityId={community.id} parentId={pub.id} />
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper
@@ -247,8 +240,14 @@ export default async function Page(props: {
 					parentPubId={pub.id}
 				/>
 			</Suspense>
-			<div>
+			<div className="flex flex-col gap-2">
 				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+				<CreatePubButton
+					text="Add Related Pub"
+					communityId={community.id}
+					relatedPubId={pub.id}
+					className="w-fit"
+				/>
 				<RelatedPubsTable pub={pub} />
 			</div>
 		</div>

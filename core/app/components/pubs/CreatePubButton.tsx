@@ -5,15 +5,15 @@ import { Plus } from "ui/icon";
 import { getAllPubTypesForCommunity } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { PathAwareDialog } from "../PathAwareDialog";
-import { PubTypeFormClient } from "./PubTypeFormClient";
+import { InitialCreatePubForm } from "./InitialCreatePubForm";
 
 type Props = {
 	variant?: ButtonProps["variant"];
 	size?: ButtonProps["size"];
 	className?: string;
 	text?: string;
-	/** If specified, pubs created via this button will have this parentId */
-	parentId?: PubsId;
+	/** If specified, pubs created via this button will have this related pub id */
+	relatedPubId?: PubsId;
 } & (
 	| {
 			/** If specified, the pub editor will default to this stage */
@@ -37,11 +37,11 @@ export const CreatePubButton = async (props: Props) => {
 			param="create-pub-form"
 			title="Create Pub"
 		>
-			<PubTypeFormClient
+			<InitialCreatePubForm
 				pubTypes={pubTypes}
 				editorSpecifiers={{
 					stageId: "stageId" in props ? props.stageId : undefined,
-					parentId: props.parentId,
+					relatedPubId: props.relatedPubId,
 				}}
 			/>
 		</PathAwareDialog>
