@@ -652,29 +652,6 @@ abstract class BasePubOp {
 			}));
 	}
 
-	/**
-	 * this is a bit of a hack to fill in the holes in the array of created pubs
-	 * because onConflict().doNothing() does not return anything on conflict
-	 * so we have to manually fill in the holes in the array of created pubs
-	 * in order to make looping over the operations and upserting values/relations work
-	 */
-	private fillCreateResultHoles(
-		pubsToCreate: Array<{ id?: PubsId }>,
-		pubCreateResult: Array<{ id: PubsId }>
-	) {
-		let index = 0;
-		return pubsToCreate.map((pubToCreate) => {
-			const correspondingResult = pubCreateResult[index];
-
-			if (pubToCreate.id && pubToCreate.id !== correspondingResult?.id) {
-				return null;
-			}
-
-			index++;
-			return correspondingResult || null;
-		});
-	}
-
 	private async createAllPubs(
 		trx: Transaction<Database>,
 		operations: OperationsMap
@@ -701,34 +678,20 @@ abstract class BasePubOp {
 				.returningAll()
 		).execute();
 
-		// fill any gaps in the array of created pubs
-		const filledCreatedPubs = this.fillCreateResultHoles(pubsToCreate, createdPubs);
-
-		let index = 0;
-		// map each operation to its final pub id
-		for (const [key, op] of createOrUpsertOperations) {
-			const createdPub = filledCreatedPubs[index];
+		/**
+		 * this is a bit of a hack to fill in the holes in the array of created pubs
+		 * because onConflict().doNothing() does not return anything on conflict
+		 * so we have to manually fill in the holes in the array of created pubs
+		 * in order to make looping over the operations and upserting values/relations work
+		 */
+		createOrUpsertOperations.forEach(([key, op], index) => {
+			const createdPub = createdPubs[index];
 			const pubToCreate = pubsToCreate[index];
 
-			// if we successfully created a new pub, use its id
-			if (createdPub) {
-				index++;
-				continue;
+			if (pubToCreate.id && pubToCreate.id !== createdPub?.id && op.mode === "create") {
+				throw new PubOpCreateExistingError(pubToCreate.id);
 			}
-
-			// if we had an existing id..., ie it was provided for an upsert or create
-			if (pubToCreate.id) {
-				// ...but were trying to create a new pub, that's an error, because there's no pub that was created
-				// that means we were trying to create a pub with an id that already exists
-				if (op.mode === "create") {
-					throw new PubOpCreateExistingError(pubToCreate.id);
-				}
-				index++;
-				continue;
-			}
-
-			index++;
-		}
+		});
 
 		return;
 	}
