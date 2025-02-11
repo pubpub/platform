@@ -1,19 +1,10 @@
-import { randomUUID } from "crypto";
-
 import type { Transaction } from "kysely";
 
 import { sql } from "kysely";
 
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
-import type {
-	CommunitiesId,
-	PubFieldsId,
-	PubsId,
-	PubTypesId,
-	PubValuesId,
-	StagesId,
-} from "db/public";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import { assert, expect } from "utils";
 import { isUuid } from "utils/uuid";

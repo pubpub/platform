@@ -1,11 +1,9 @@
-import { tr } from "date-fns/locale";
-import { beforeAll, beforeEach, describe, expect, expectTypeOf, it, vitest } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-import type { PubsId, PubTypes, Stages } from "db/public";
+import type { PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import type { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
 import { PubOp } from "./pub-op";
@@ -1052,9 +1050,9 @@ describe("relation management", () => {
 			//   |         /  \
 			//   v        v    v
 			//   G -->  E      D
-			//               /  \
-			//              v    v
-			//             F     H
+			//          |      \
+			//          v       v
+			//          F       H
 			//                 /  \
 			//                v    v
 			//                K --> L
