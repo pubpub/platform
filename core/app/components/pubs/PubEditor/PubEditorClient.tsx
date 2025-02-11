@@ -152,8 +152,8 @@ const useRelatedPub = ({ pubId }: { pubId: PubsId }) => {
 	const searchParams = useSearchParams();
 	const relatedPubId = searchParams.get("relatedPubId") as PubsId;
 	const slug = searchParams.get("slug");
-	// TODO: rehydrate value?
-	const value = searchParams.get("value");
+	const rawValue = searchParams.get("value");
+	const value = rawValue ? JSON.parse(rawValue) : null;
 	if (!relatedPubId || !slug) {
 		return undefined;
 	}
@@ -195,7 +195,6 @@ export interface PubEditorClientProps {
 	formSlug: string;
 	/** ID for the HTML form */
 	htmlFormId?: string;
-	parentId?: PubsId;
 	className?: string;
 	withAutoSave?: boolean;
 	withButtonElements?: boolean;
@@ -210,7 +209,6 @@ export const PubEditorClient = ({
 	pub,
 	stageId,
 	htmlFormId,
-	parentId,
 	formSlug,
 	withAutoSave,
 	withButtonElements,

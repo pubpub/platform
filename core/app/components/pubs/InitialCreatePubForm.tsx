@@ -68,7 +68,13 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">
 	);
 };
 
-const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFields"] }) => {
+const RelatedPubFieldSelector = ({
+	pubFields,
+	sourcePubId,
+}: {
+	pubFields: Props["relatedPubFields"];
+	sourcePubId: PubsId;
+}) => {
 	const { watch } = useFormContext<typeof schemaWithRelatedPub>();
 	const relatedPubSlug = watch("relatedPub.slug");
 	const selectedPubField = relatedPubSlug
@@ -111,14 +117,17 @@ const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFi
 					</FormItem>
 				)}
 			/>
-			<RelatedPubValueSelector pubField={selectedPubField} />
+			<RelatedPubValueSelector pubField={selectedPubField} sourcePubId={sourcePubId} />
 		</>
 	);
 };
 
 const RelatedPubValueSelector = ({
+	sourcePubId,
 	pubField,
 }: {
+	// Only used for FileUpload, which we want to upload to the source pub
+	sourcePubId: PubsId;
 	pubField: Props["relatedPubFields"][number] | undefined;
 }) => {
 	if (!pubField) {
@@ -128,9 +137,10 @@ const RelatedPubValueSelector = ({
 	return (
 		<ConfigureRelatedValue
 			element={element}
-			pubId={"todo" as PubsId}
+			pubId={sourcePubId}
 			slug="relatedPub.value"
 			values={[]}
+			className="w-fit"
 		/>
 	);
 };
@@ -160,7 +170,6 @@ interface Props {
 }
 /** The first step in creating a pub—choosing a pub type, and possibly a related pub */
 export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifiers }: Props) => {
-	const hasRelatedPub = !!editorSpecifiers.relatedPubId;
 	const { schema, defaultValues } = useMemo(() => {
 		const defaultValues = { pubTypeId: undefined };
 		if (editorSpecifiers.relatedPubId) {
@@ -200,10 +209,13 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 	}, [pathWithoutFormParam]);
 
 	const onSubmit = async (values: FieldValues) => {
+		const related = values.relatedPub
+			? { ...values.relatedPub, value: JSON.stringify(values.relatedPub.value) }
+			: {};
 		const pubParams = new URLSearchParams({
 			pubTypeId: values.pubTypeId,
 			...editorSpecifiers,
-			...(values.relatedPub || {}),
+			...related,
 		});
 		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
 		router.push(createPubPath);
@@ -213,8 +225,12 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<PubTypeSelector pubTypes={pubTypes} />
-				{hasRelatedPub ? <RelatedPubFieldSelector pubFields={relatedPubFields} /> : null}
-
+				{editorSpecifiers.relatedPubId ? (
+					<RelatedPubFieldSelector
+						sourcePubId={editorSpecifiers.relatedPubId}
+						pubFields={relatedPubFields}
+					/>
+				) : null}
 				<div className="flex w-full items-center justify-end gap-x-4">
 					<Button type="button" onClick={closeForm} variant="outline">
 						Cancel
