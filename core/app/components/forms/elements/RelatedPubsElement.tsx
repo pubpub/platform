@@ -9,7 +9,7 @@ import type { JsonValue } from "contracts";
 import type { InputComponent, PubsId } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Plus, Trash, TriangleAlert } from "ui/icon";
+import { Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
@@ -40,7 +40,7 @@ const RelatedPubBlock = ({
 }) => {
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
-			<div className="flex flex-col items-start gap-1 text-sm">
+			<div className="flex max-w-[90%] flex-1 flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{getPubTitle(pub)}</span>
 				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
 			</div>
@@ -76,7 +76,7 @@ export const ConfigureRelatedValue = ({
 	const { watch, formState } = useFormContext<FormValue>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
-	const showValue = value != null && value !== "" && !isPopoverOpen;
+	const showValue = value != null && value !== "";
 
 	const [baseSlug, index] = slug.split(".");
 	const valueError = formState.errors[baseSlug]?.[parseInt(index)]?.value;
@@ -85,10 +85,7 @@ export const ConfigureRelatedValue = ({
 		return null;
 	}
 
-	return showValue ? (
-		// TODO: this should be more sophisticated for the more complex fields
-		value.toString()
-	) : (
+	return (
 		<Popover
 			open={isPopoverOpen}
 			onOpenChange={(open) => {
@@ -105,12 +102,16 @@ export const ConfigureRelatedValue = ({
 					data-testid="add-related-value"
 					variant="link"
 					size="sm"
-					className={cn("flex h-4 gap-1 p-0 text-blue-500", {
+					className={cn("flex h-4 max-w-full gap-1 p-0 text-blue-500", {
 						"text-red-500": valueError,
 					})}
 				>
 					{valueError && <TriangleAlert />}
-					Add {label} <Plus size={12} />
+					<span className="truncate">
+						{/* TODO: value display should be more sophisticated for the more complex fields */}
+						{showValue ? value.toString() : `Add ${label}`}
+					</span>
+					{showValue ? <Pencil size={12} /> : <Plus size={12} />}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent side="bottom">
