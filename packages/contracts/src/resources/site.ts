@@ -1,14 +1,11 @@
-import type { AppRouteResponse, ContractOtherResponse, Opaque } from "@ts-rest/core";
-
 import { initContract } from "@ts-rest/core";
-import { z, ZodNull } from "zod";
+import { z } from "zod";
 
 import type {
 	CommunitiesId,
 	CoreSchemaType,
 	MemberRole,
 	PubFields,
-	PubFieldSchemaId,
 	PubFieldsId,
 	PubsId,
 	PubTypes,
@@ -21,7 +18,6 @@ import type {
 } from "db/public";
 import {
 	communitiesIdSchema,
-	communityMembershipsIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
 	memberRoleSchema,
@@ -241,8 +237,6 @@ type ProcessedPubBase = {
 	 * The `updatedAt` of the latest value, or of the pub if the pub itself has a higher `updatedAt` or if there are no values
 	 *
 	 * We do this because the Pub itself is rarely if ever changed over time.
-	 * TODO: Possibly add the `updatedAt` of `PubsInStages` here as well?
-	 * At time of writing (2024/11/04) I don't think that table has an `updatedAt`.
 	 */
 	updatedAt: Date;
 };

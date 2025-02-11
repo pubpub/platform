@@ -42,8 +42,7 @@ export const getStagePubs = cache((stageId: StagesId) => {
 			.selectAll("pubs")
 			.select(pubValuesByRef("pubs.id"))
 			.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
-			.innerJoin("PubsInStages", "PubsInStages.pubId", "pubs.id")
-			.where("PubsInStages.stageId", "=", stageId)
+			.where("pubs.stageId", "=", stageId)
 	);
 });
 

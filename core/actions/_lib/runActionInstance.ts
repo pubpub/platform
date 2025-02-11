@@ -66,9 +66,9 @@ const _runActionInstance = async (
 			// often happens when an action is scheduled but a pub is moved before the action runs
 			jsonObjectFrom(
 				eb
-					.selectFrom("PubsInStages")
-					.select(["pubId", "stageId"])
-					.where("pubId", "=", args.pubId)
+					.selectFrom("pubs")
+					.select(["pubs.id as pubId", "stageId"])
+					.where("pubs.id", "=", args.pubId)
 					.whereRef("stageId", "=", "action_instances.stageId")
 			).as("pubInStage"),
 		])

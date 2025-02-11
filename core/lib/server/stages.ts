@@ -25,17 +25,7 @@ export const updateStage = (stageId: StagesId, props: StagesUpdate) =>
 	autoRevalidate(db.updateTable("stages").set(props).where("id", "=", stageId));
 
 export const removeStages = (stageIds: StagesId[]) =>
-	autoRevalidate(
-		db
-			.with("deleted_stages", (db) =>
-				db
-					.deleteFrom("stages")
-					.where("id", "in", stageIds as StagesId[])
-					.returning("id")
-			)
-			.deleteFrom("PubsInStages")
-			.where("stageId", "in", (eb) => eb.selectFrom("deleted_stages").select("id"))
-	);
+	autoRevalidate(db.deleteFrom("stages").where("id", "in", stageIds));
 
 export const createMoveConstraint = (props: NewMoveConstraint) =>
 	autoRevalidate(db.insertInto("move_constraint").values(props));
@@ -46,8 +36,8 @@ export const createMoveConstraint = (props: NewMoveConstraint) =>
 export const getPubIdsInStage = (stageId: StagesId) =>
 	autoCache(
 		db
-			.selectFrom("PubsInStages")
-			.select(sql<PubsId[]>`array_agg("pubId")`.as("pubIds"))
+			.selectFrom("pubs")
+			.select(sql<PubsId[]>`array_agg("id")`.as("pubIds"))
 			.where("stageId", "=", stageId)
 	);
 
@@ -132,11 +122,11 @@ export const getStages = ({ communityId, stageId, userId }: CommunityStageProps)
 						.select(["s.id", "s.name"])
 				).as("moveConstraintSources"),
 				eb
-					.selectFrom("PubsInStages")
+					.selectFrom("pubs")
 					.select((eb) =>
 						eb.fn
-							.count<number>("PubsInStages.pubId")
-							.filterWhereRef("PubsInStages.stageId", "=", "stages.id")
+							.count<number>("pubs.id")
+							.filterWhereRef("pubs.stageId", "=", "stages.id")
 							.as("pubsCount")
 					)
 					.as("pubsCount"),
@@ -168,15 +158,6 @@ export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstO
 
 export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 	return autoRevalidate(
-		trx
-			.with("update_pub", (db) =>
-				db.updateTable("pubs").where("pubs.id", "=", pubId).set("stageId", stageId)
-			)
-			.with("leave_stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
-			.insertInto("PubsInStages")
-			.values([{ pubId, stageId }])
-			// Without this on conflict clause, the db errors if this function is called with the
-			// stageId the pub already belongs to
-			.onConflict((oc) => oc.doNothing())
+		trx.updateTable("pubs").where("pubs.id", "=", pubId).set("stageId", stageId)
 	);
 };

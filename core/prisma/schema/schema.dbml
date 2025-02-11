@@ -100,7 +100,6 @@ Table pubs {
   parentId String
   children pubs [not null]
   values pub_values [not null]
-  stages PubsInStages [not null]
   actionRuns action_runs [not null]
   relatedValues pub_values [not null]
   members pub_memberships [not null]
@@ -192,26 +191,12 @@ Table stages {
   communityId String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-  pubs PubsInStages [not null]
+  pubs pubs [not null]
   moveConstraints move_constraint [not null]
   moveConstraintSources move_constraint [not null]
   actionInstances action_instances [not null]
   formElements form_elements [not null]
   members stage_memberships [not null]
-  Pub pubs [not null]
-}
-
-Table PubsInStages {
-  pub pubs [not null]
-  pubId String [not null]
-  stage stages [not null]
-  stageId String [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [default: `now()`, not null]
-
-  indexes {
-    (pubId, stageId) [pk]
-  }
 }
 
 Table move_constraint {
@@ -645,10 +630,6 @@ Ref: _PubFieldToPubType.A > pub_fields.id [delete: Cascade]
 Ref: _PubFieldToPubType.B > pub_types.id [delete: Cascade]
 
 Ref: stages.communityId > communities.id
-
-Ref: PubsInStages.pubId > pubs.id [delete: Cascade]
-
-Ref: PubsInStages.stageId > stages.id [delete: Cascade]
 
 Ref: move_constraint.stageId > stages.id [delete: Cascade]
 
