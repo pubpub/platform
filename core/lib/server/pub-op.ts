@@ -74,7 +74,7 @@ type SetCommand = { type: "set"; slug: string; value: PubValue | undefined };
 type RelateCommand = {
 	type: "relate";
 	slug: string;
-	relations: Array<{ target: PubOp | PubsId; value: PubValue }>;
+	relations: Array<{ target: ActivePubOp | PubsId; value: PubValue }>;
 	options: RelationOptions;
 };
 type UnrelateCommand = {
@@ -245,7 +245,7 @@ class NestedPubOpBuilder {
 abstract class BasePubOp {
 	protected readonly options: PubOpOptions;
 	protected readonly commands: PubOpCommand[] = [];
-	protected readonly id: PubsId;
+	readonly id: PubsId;
 
 	constructor(options: PubOpOptions & { id?: PubsId }) {
 		this.options = options;
@@ -276,6 +276,26 @@ abstract class BasePubOp {
 		return this;
 	}
 
+	private isRelationBlockConfig(
+		valueOrRelations:
+			| PubValue
+			| Array<{
+					target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+					value: PubValue;
+			  }>
+	): valueOrRelations is Array<{
+		target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+		value: PubValue;
+	}> {
+		if (!Array.isArray(valueOrRelations)) {
+			return false;
+		}
+
+		return valueOrRelations.every(
+			(r) => typeof r === "object" && r !== null && "target" in r && "value" in r
+		);
+	}
+
 	/**
 	 * Relate to a single pub with a value
 	 */
@@ -291,7 +311,7 @@ abstract class BasePubOp {
 	relate(
 		slug: string,
 		relations: Array<{
-			target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+			target: PubsId | ActivePubOp | ((builder: NestedPubOpBuilder) => ActivePubOp);
 			value: PubValue;
 		}>,
 		options?: RelationOptions
@@ -301,7 +321,7 @@ abstract class BasePubOp {
 		valueOrRelations:
 			| PubValue
 			| Array<{
-					target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+					target: PubsId | ActivePubOp | ((builder: NestedPubOpBuilder) => ActivePubOp);
 					value: PubValue;
 			  }>,
 		targetOrOptions?:
@@ -313,43 +333,43 @@ abstract class BasePubOp {
 	): this {
 		const nestedBuilder = new NestedPubOpBuilder(this.options);
 
-		// Handle single relation case
-		if (!Array.isArray(valueOrRelations)) {
-			const target = targetOrOptions as
-				| ActivePubOp
-				| PubsId
-				| ((pubOp: NestedPubOpBuilder) => ActivePubOp);
-			const resolvedTarget = typeof target === "function" ? target(nestedBuilder) : target;
-
-			if (typeof resolvedTarget === "string" && !isPubId(resolvedTarget)) {
-				throw new Error(
-					`Invalid target: should either be an existing pub id or a PubOp instance, but got \`${resolvedTarget}\``
-				);
-			}
-
+		// multi relation case
+		if (this.isRelationBlockConfig(valueOrRelations)) {
 			this.commands.push({
 				type: "relate",
 				slug,
-				relations: [
-					{
-						target: resolvedTarget,
-						value: valueOrRelations,
-					},
-				],
-				options: options ?? {},
+				relations: valueOrRelations.map((r) => ({
+					target: typeof r.target === "function" ? r.target(nestedBuilder) : r.target,
+					value: r.value,
+				})),
+				options: (targetOrOptions as RelationOptions) ?? {},
 			});
 			return this;
 		}
 
-		// Handle multiple relations case
+		// single relation case
+		const target = targetOrOptions as
+			| ActivePubOp
+			| PubsId
+			| ((pubOp: NestedPubOpBuilder) => ActivePubOp);
+		const resolvedTarget = typeof target === "function" ? target(nestedBuilder) : target;
+
+		if (typeof resolvedTarget === "string" && !isPubId(resolvedTarget)) {
+			throw new Error(
+				`Invalid target: should either be an existing pub id or a PubOp instance, but got \`${resolvedTarget}\``
+			);
+		}
+
 		this.commands.push({
 			type: "relate",
 			slug,
-			relations: valueOrRelations.map((r) => ({
-				target: typeof r.target === "function" ? r.target(nestedBuilder) : r.target,
-				value: r.value,
-			})),
-			options: (targetOrOptions as RelationOptions) ?? {},
+			relations: [
+				{
+					target: resolvedTarget,
+					value: valueOrRelations,
+				},
+			],
+			options: options ?? {},
 		});
 		return this;
 	}
@@ -376,7 +396,7 @@ abstract class BasePubOp {
 		);
 	}
 
-	protected collectOperations(processed = new Set<PubsId>()): OperationsMap {
+	private collectOperations(processed = new Set<PubsId>()): OperationsMap {
 		// If we've already processed this PubOp, return empty map to avoid circular recursion
 		if (processed.has(this.id)) {
 			return new Map();
@@ -430,7 +450,8 @@ abstract class BasePubOp {
 				// Process each relation in the command
 				cmd.relations.forEach((relation) => {
 					// if the target is just a PubId, we can add the relation directly
-					if (typeof relation.target === "string") {
+
+					if (typeof relation.target === "string" && isPubId(relation.target)) {
 						rootOp.relationsToAdd.push({
 							slug: cmd.slug,
 							value: relation.value,
