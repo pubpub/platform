@@ -359,8 +359,8 @@ test.describe("Related pubs", () => {
 		await expect(stringRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		await stringRelated.getByRole("button", { name: "Add string" }).click();
 		await page.getByTestId(`${COMMUNITY_SLUG}:string.0.value`).fill("admin");
-		// Click the button again to 'exit' the popover
-		await stringRelated.getByRole("button", { name: "Add string" }).click();
+		// Click the button again (which now has the edited value) to 'exit' the popover
+		await stringRelated.getByRole("button", { name: "admin" }).click();
 		await expect(stringRelated.getByText("admin")).toHaveCount(1);
 
 		// array related field
@@ -383,7 +383,7 @@ test.describe("Related pubs", () => {
 		await locator.fill("two");
 		await locator.press(",");
 		// Click the button again to 'exit' the popover
-		await arrayRelated.getByRole("button", { name: "Add array" }).click();
+		await arrayRelated.getByRole("button", { name: "one,two" }).click();
 		await expect(arrayRelated.getByText("one,two")).toHaveCount(1);
 
 		// null related field
