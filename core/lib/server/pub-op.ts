@@ -72,20 +72,15 @@ type RelationOptions =
 // Base commands that will be used internally
 type SetCommand = { type: "set"; slug: string; value: PubValue | undefined };
 type RelateCommand = {
-	type: "connect";
+	type: "relate";
 	slug: string;
 	relations: Array<{ target: PubOp | PubsId; value: PubValue }>;
 	options: RelationOptions;
 };
-type DisconnectCommand = {
-	type: "disconnect";
-	slug: string;
-	target: PubsId;
-	deleteOrphaned?: boolean;
-};
-type ClearRelationsCommand = {
-	type: "clearRelations";
-	slug?: string;
+type UnrelateCommand = {
+	type: "unrelate";
+	slug: (string & {}) | "*";
+	target: PubsId | "*";
 	deleteOrphaned?: boolean;
 };
 
@@ -99,13 +94,7 @@ type SetStageCommand = {
 	stage: StagesId | null;
 };
 
-type PubOpCommand =
-	| SetCommand
-	| RelateCommand
-	| DisconnectCommand
-	| ClearRelationsCommand
-	| UnsetCommand
-	| SetStageCommand;
+type PubOpCommand = SetCommand | RelateCommand | UnrelateCommand | UnsetCommand | SetStageCommand;
 
 type ClearRelationOperation = {
 	type: "clear";
@@ -186,6 +175,70 @@ function isPubId(val: string | PubsId): val is PubsId {
 	return isUuid(val);
 }
 
+// Add this class to handle nested pub operations
+class NestedPubOpBuilder {
+	constructor(private readonly parentOptions: PubOpOptionsBase) {}
+
+	create(options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }): CreatePubOp {
+		return new CreatePubOp({
+			...this.parentOptions,
+			...options,
+		});
+	}
+
+	createWithId(
+		id: PubsId,
+		options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }
+	): CreatePubOp {
+		return new CreatePubOp(
+			{
+				...this.parentOptions,
+				...options,
+			},
+			id
+		);
+	}
+
+	update(id: PubsId, options: Partial<PubOpOptionsBase> = {}): UpdatePubOp {
+		return new UpdatePubOp(
+			{
+				...this.parentOptions,
+				...options,
+			},
+			id
+		);
+	}
+
+	upsert(
+		id: PubsId,
+		options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
+	): UpsertPubOp {
+		return new UpsertPubOp(
+			{
+				...this.parentOptions,
+				...options,
+			},
+			id
+		);
+	}
+
+	upsertByValue(
+		slug: string,
+		value: PubValue,
+		options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
+	): UpsertPubOp {
+		return new UpsertPubOp(
+			{
+				...this.parentOptions,
+				...options,
+			},
+			undefined,
+			slug,
+			value
+		);
+	}
+}
+
 /**
  * common operations available to all PubOp types
  */
@@ -224,62 +277,81 @@ abstract class BasePubOp {
 	}
 
 	/**
-	 * Connect to one or more pubs with the same value
+	 * Relate to a single pub with a value
 	 */
-	connect(slug: string, target: PubOp | PubsId, value: PubValue, options?: RelationOptions): this;
-	/**
-	 * Connect to one or more pubs with individual values
-	 */
-	connect(
+	relate(
 		slug: string,
-		relations: Array<{ target: PubOp | PubsId; value: PubValue }>,
+		value: PubValue,
+		target: ActivePubOp | PubsId | ((pubOp: NestedPubOpBuilder) => ActivePubOp),
 		options?: RelationOptions
 	): this;
-	connect(
+	/**
+	 * Relate to multiple pubs at once
+	 */
+	relate(
 		slug: string,
-		targetsOrRelations: PubOp | PubsId | Array<{ target: PubOp | PubsId; value: PubValue }>,
-		valueOrOptions?: PubValue | RelationOptions,
-		maybeOptions?: RelationOptions
+		relations: Array<{
+			target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+			value: PubValue;
+		}>,
+		options?: RelationOptions
+	): this;
+	relate(
+		slug: string,
+		valueOrRelations:
+			| PubValue
+			| Array<{
+					target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+					value: PubValue;
+			  }>,
+		targetOrOptions?:
+			| ActivePubOp
+			| PubsId
+			| ((pubOp: NestedPubOpBuilder) => ActivePubOp)
+			| RelationOptions,
+		options?: RelationOptions
 	): this {
-		if (typeof targetsOrRelations === "string" && !isPubId(targetsOrRelations)) {
-			throw new Error(
-				`Invalid target: should either be an existing pub id or a PubOp instance, but got \`${targetsOrRelations}\``
-			);
+		const nestedBuilder = new NestedPubOpBuilder(this.options);
+
+		// Handle single relation case
+		if (!Array.isArray(valueOrRelations)) {
+			const target = targetOrOptions as
+				| ActivePubOp
+				| PubsId
+				| ((pubOp: NestedPubOpBuilder) => ActivePubOp);
+			const resolvedTarget = typeof target === "function" ? target(nestedBuilder) : target;
+
+			if (typeof resolvedTarget === "string" && !isPubId(resolvedTarget)) {
+				throw new Error(
+					`Invalid target: should either be an existing pub id or a PubOp instance, but got \`${resolvedTarget}\``
+				);
+			}
+
+			this.commands.push({
+				type: "relate",
+				slug,
+				relations: [
+					{
+						target: resolvedTarget,
+						value: valueOrRelations,
+					},
+				],
+				options: options ?? {},
+			});
+			return this;
 		}
 
-		const options =
-			(Array.isArray(targetsOrRelations)
-				? (valueOrOptions as RelationOptions)
-				: maybeOptions) ?? {};
-		const relations = Array.isArray(targetsOrRelations)
-			? targetsOrRelations
-			: [
-					{
-						target: targetsOrRelations,
-						value: valueOrOptions as PubValue,
-					},
-				];
-
+		// Handle multiple relations case
 		this.commands.push({
-			type: "connect",
+			type: "relate",
 			slug,
-			relations,
-			options,
+			relations: valueOrRelations.map((r) => ({
+				target: typeof r.target === "function" ? r.target(nestedBuilder) : r.target,
+				value: r.value,
+			})),
+			options: (targetOrOptions as RelationOptions) ?? {},
 		});
 		return this;
-	}
-
-	/**
-	 * Set relation values for existing relations
-	 */
-	setRelation(slug: string, target: PubsId, value: PubValue): this {
-		return this.connect(slug, [{ target, value }], { override: false });
-	}
-	/**
-	 * Set multiple relation values for existing relations
-	 */
-	setRelations(slug: string, relations: Array<{ target: PubsId; value: PubValue }>): this {
-		return this.connect(slug, relations, { override: false });
 	}
 
 	/**
@@ -330,12 +402,23 @@ abstract class BasePubOp {
 
 			if (cmd.type === "set") continue; // Values already collected
 
-			if (cmd.type === "clearRelations") {
-				rootOp.relationsToClear.push({
-					slug: cmd.slug || "*",
-					deleteOrphaned: cmd.deleteOrphaned,
-				});
-			} else if (cmd.type === "disconnect") {
+			if (cmd.type === "unrelate") {
+				if (cmd.slug === "*") {
+					rootOp.relationsToClear.push({
+						slug: "*",
+						deleteOrphaned: cmd.deleteOrphaned,
+					});
+					continue;
+				}
+
+				if (cmd.target === "*") {
+					rootOp.relationsToClear.push({
+						slug: cmd.slug,
+						deleteOrphaned: cmd.deleteOrphaned,
+					});
+					continue;
+				}
+
 				rootOp.relationsToRemove.push({
 					slug: cmd.slug,
 					target: cmd.target,
@@ -343,11 +426,11 @@ abstract class BasePubOp {
 				});
 			} else if (cmd.type === "setStage") {
 				rootOp.stage = cmd.stage;
-			} else if (cmd.type === "connect") {
+			} else if (cmd.type === "relate") {
 				// Process each relation in the command
 				cmd.relations.forEach((relation) => {
 					// if the target is just a PubId, we can add the relation directly
-					if (!(relation.target instanceof BasePubOp)) {
+					if (typeof relation.target === "string") {
 						rootOp.relationsToAdd.push({
 							slug: cmd.slug,
 							value: relation.value,
@@ -823,9 +906,7 @@ abstract class BasePubOp {
 
 interface UpdateOnlyOps {
 	unset(slug: string): this;
-	disconnect(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this;
-	clearRelationsForField(slug: string, options?: { deleteOrphaned?: boolean }): this;
-	clearAllRelations(options?: { deleteOrphaned?: boolean }): this;
+	unrelate(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this;
 }
 
 // Implementation classes - these are not exported
@@ -899,6 +980,11 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 		return "update";
 	}
 
+	/**
+	 * Delete a value from the pub
+	 *
+	 * Will behave similarly to `unrelate('all')` if used for relations, except without the option to delete orphaned pubs
+	 */
 	unset(slug: string): this {
 		this.commands.push({
 			type: "unset",
@@ -907,32 +993,36 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 		return this;
 	}
 
-	disconnect(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this {
+	/**
+	 * Disconnect all relations by passing `*` as the slug
+	 *
+	 * `deleteOrphaned: true` will delete the pubs that are now orphaned as a result of the disconnect.
+	 */
+	unrelate(slug: "*", options?: { deleteOrphaned?: boolean }): this;
+	/**
+	 * Disconnect a specific relation
+	 *
+	 * If you pass `*` as the target, all relations for that field will be removed
+	 *
+	 * If you pass a pubId as the target, only that relation will be removed
+	 *
+	 * `deleteOrphaned: true` will delete the pubs that are now orphaned as a result of the disconnect.
+	 */
+	unrelate(slug: string, target: PubsId | "*", options?: { deleteOrphaned?: boolean }): this;
+	unrelate(
+		slug: string,
+		optionsOrTarget?: PubsId | "*" | { deleteOrphaned?: boolean },
+		options?: { deleteOrphaned?: boolean }
+	): this {
 		this.commands.push({
-			type: "disconnect",
+			type: "unrelate",
 			slug,
-			target,
+			target: typeof optionsOrTarget === "string" ? optionsOrTarget : "*",
 			deleteOrphaned: options?.deleteOrphaned,
 		});
 		return this;
 	}
 
-	clearRelationsForField(slug: string, options?: { deleteOrphaned?: boolean }): this {
-		this.commands.push({
-			type: "clearRelations",
-			slug,
-			deleteOrphaned: options?.deleteOrphaned,
-		});
-		return this;
-	}
-
-	clearAllRelations(options?: { deleteOrphaned?: boolean }): this {
-		this.commands.push({
-			type: "clearRelations",
-			deleteOrphaned: options?.deleteOrphaned,
-		});
-		return this;
-	}
 	protected getInitialId(): PubsId | undefined {
 		return this.pubId;
 	}
@@ -1001,3 +1091,5 @@ export class PubOp {
 		return new UpsertPubOp(options, undefined, slug, value);
 	}
 }
+
+type ActivePubOp = CreatePubOp | UpdatePubOp | UpsertPubOp;
