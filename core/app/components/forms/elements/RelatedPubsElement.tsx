@@ -9,7 +9,7 @@ import type { JsonValue } from "contracts";
 import type { InputComponent, PubsId } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Plus, Trash, TriangleAlert } from "ui/icon";
+import { Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
@@ -30,17 +30,20 @@ const RelatedPubBlock = ({
 	onRemove,
 	valueComponentProps,
 	slug,
+	onBlur,
 }: {
 	pub: GetPubsResult[number];
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: RelatedPubValueSlug;
+	onBlur?: () => void;
 }) => {
 	return (
 		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
-			<div className="flex flex-col items-start gap-1 text-sm">
+			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
+			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{getPubTitle(pub)}</span>
-				<ConfigureRelatedValue {...valueComponentProps} slug={slug} />
+				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
 			</div>
 			<div>
 				<Button
@@ -65,15 +68,16 @@ type FormValue = {
 export const ConfigureRelatedValue = ({
 	slug,
 	element,
+	onBlur,
 	...props
-}: PubFieldFormElementProps & { slug: RelatedPubValueSlug }) => {
+}: PubFieldFormElementProps & { slug: RelatedPubValueSlug; onBlur?: () => void }) => {
 	const configLabel = "label" in element.config ? element.config.label : undefined;
 	const label = configLabel || element.label || slug;
 
 	const { watch, formState } = useFormContext<FormValue>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
-	const showValue = value != null && value !== "" && !isPopoverOpen;
+	const showValue = value != null && value !== "";
 
 	const [baseSlug, index] = slug.split(".");
 	const valueError = formState.errors[baseSlug]?.[parseInt(index)]?.value;
@@ -82,23 +86,33 @@ export const ConfigureRelatedValue = ({
 		return null;
 	}
 
-	return showValue ? (
-		// TODO: this should be more sophisticated for the more complex fields
-		value.toString()
-	) : (
-		<Popover open={isPopoverOpen} onOpenChange={setPopoverIsOpen}>
+	return (
+		<Popover
+			open={isPopoverOpen}
+			onOpenChange={(open) => {
+				if (!open && onBlur) {
+					// In order to retrigger validation
+					onBlur();
+				}
+				setPopoverIsOpen(open);
+			}}
+		>
 			<PopoverTrigger asChild>
 				<Button
 					type="button"
 					data-testid="add-related-value"
 					variant="link"
 					size="sm"
-					className={cn("flex h-4 gap-1 p-0 text-blue-500", {
+					className={cn("flex h-4 max-w-full gap-1 p-0 text-blue-500", {
 						"text-red-500": valueError,
 					})}
 				>
 					{valueError && <TriangleAlert />}
-					Add {label} <Plus size={12} />
+					<span className="truncate">
+						{/* TODO: value display should be more sophisticated for the more complex fields */}
+						{showValue ? value.toString() : `Add ${label}`}
+					</span>
+					{showValue ? <Pencil size={12} /> : <Plus size={12} />}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent side="bottom">
@@ -191,6 +205,7 @@ export const RelatedPubsElement = ({
 															valueComponentProps={
 																valueComponentProps
 															}
+															onBlur={field.onBlur}
 														/>
 													);
 												})}
