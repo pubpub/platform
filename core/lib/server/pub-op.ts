@@ -837,6 +837,87 @@ abstract class BasePubOp {
 	 *
 	 * curently it's not possible to forcibly remove pubs if they are related to other pubs
 	 * perhaps this could be yet another setting
+	 *
+	 * ### Brief explanation
+	 *
+	 * Say we have the following graph of pubs,
+	 * where `A --> C` indicates the existence of a `pub_value`
+	 * ```ts
+	 * {
+	 * 	 pubId: "A",
+	 * 	 relatedPubId: "C",
+	 * }
+	 * ```
+	 *
+	 * ```
+	 *                A               J
+	 *             ┌──┴───┐           │
+	 *             ▼      ▼           ▼
+	 *             B      C ────────► I
+	 *             │    ┌─┴────┐
+	 *             ▼    ▼      ▼
+	 *             G ─► E      D
+	 *                  │      │
+	 *                  ▼      ▼
+	 *                  F      H
+	 *                       ┌─┴──┐
+	 *                       ▼    ▼
+	 *                       K ──► L
+	 * ```
+	 *
+	 * Say we now disconnect `C` from `A`, i.e. we remove the `pub_value` where `pubId = "A"` and `relatedPubId = "C"`
+	 *
+	 *
+	 * Now we disrelate C from A, which should
+	 *  orphan everything from D down,
+	 * but should not orphan I, bc J still points to it
+	 * and should not orphan G, bc B still points to it
+	 * it orphans L, even though K points to it, because K is itself an orphan
+	 * ```
+	 *                A               J
+	 *             ┌──┴               │
+	 *             ▼                  ▼
+	 *             B      C ────────► I
+	 *             │    ┌─┴────┐
+	 *             ▼    ▼      ▼
+	 *             G ─► E      D
+	 *                  │      │
+	 *                  ▼      ▼
+	 *                  F      H
+	 *                       ┌─┴──┐
+	 *                       ▼    ▼
+	 *                       K ──► L
+	 * ```
+	 *
+	 * Then by using the following rules, we can determine which pubs should be deleted:
+	 *
+	 * 1. All pubs down from the disconnected pub
+	 * 2. Which are not reachable from any other pub not in the tree
+	 *
+	 * Using these two rules, we can determine which pubs should be deleted:
+	 * 1. C, as C is disconnected is not the target of any other relation
+	 * 2. D, F, H, K, and L, as they are only reachable from C, which is being deleted
+	 *
+	 * Notably, E and I are not deleted, because
+	 * 1. E is the target of a relation from G, which, while still a relation itself, is not reachable from the C-tree
+	 * 2. I is the target of a relation from J, which, while still a relation itself, is not reachable from the C-tree
+	 *
+	 * So this should be the resulting graph:
+	 *
+	 * ```
+	 *                A               J
+	 *             ┌──┴               │
+	 *             ▼                  ▼
+	 *             B                  I
+	 *             │
+	 *             ▼
+	 *             G ─► E
+	 *                  │
+	 *                  ▼
+	 *                  F
+	 * ```
+	 *
+	 *
 	 */
 	private async cleanupOrphanedPubs(
 		trx: Transaction<Database>,
