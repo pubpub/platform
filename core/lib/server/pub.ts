@@ -652,6 +652,38 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result;
 };
 
+export const deletePubValuesByValueId = async ({
+	pubId,
+	valueIds,
+	lastModifiedBy,
+	trx = db,
+}: {
+	pubId: PubsId;
+	valueIds: PubValuesId[];
+	lastModifiedBy: LastModifiedBy;
+	trx?: typeof db;
+}) => {
+	const result = await maybeWithTrx(trx, async (trx) => {
+		const deletedPubValues = await autoRevalidate(
+			trx
+				.deleteFrom("pub_values")
+				.where("id", "in", valueIds)
+				.where("pubId", "=", pubId)
+				.returningAll()
+		).execute();
+
+		await addDeletePubValueHistoryEntries({
+			lastModifiedBy,
+			pubValues: deletedPubValues,
+			trx,
+		});
+
+		return deletedPubValues;
+	});
+
+	return result;
+};
+
 export const deletePub = async ({
 	pubId,
 	lastModifiedBy,
