@@ -934,30 +934,12 @@ export const upsertPubRelations = async (
 			fieldId: PubFieldsId;
 		}[];
 
-		const pubRelations = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					allRelationsToCreate.map(({ relatedPubId, value, slug, fieldId }) => ({
-						pubId,
-						relatedPubId,
-						value: JSON.stringify(value),
-						fieldId,
-						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						.columns(["pubId", "fieldId", "relatedPubId"])
-						.where("relatedPubId", "is not", null)
-						// upsert
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-						}))
-				)
-				.returningAll()
-		).execute();
+		const pubRelations = await upsertPubRelationValues({
+			pubId,
+			allRelationsToCreate,
+			lastModifiedBy,
+			trx,
+		});
 
 		const createdRelations = pubRelations.map((relation) => {
 			const correspondingValue = validatedRelationValues.find(
@@ -1204,29 +1186,12 @@ export const updatePub = async ({
 		}
 
 		if (pubValuesWithoutRelations.length) {
-			const result = await autoRevalidate(
-				trx
-					.insertInto("pub_values")
-					.values(
-						pubValuesWithoutRelations.map(({ value, fieldId }) => ({
-							pubId,
-							fieldId,
-							value: JSON.stringify(value),
-							lastModifiedBy,
-						}))
-					)
-					.onConflict((oc) =>
-						oc
-							// we have a unique index on pubId and fieldId where relatedPubId is null
-							.columns(["pubId", "fieldId"])
-							.where("relatedPubId", "is", null)
-							.doUpdateSet((eb) => ({
-								value: eb.ref("excluded.value"),
-								lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-							}))
-					)
-					.returningAll()
-			).execute();
+			const result = await upsertPubValues({
+				pubId,
+				pubValues: pubValuesWithoutRelations,
+				lastModifiedBy,
+				trx,
+			});
 
 			return result;
 		}
@@ -1234,6 +1199,102 @@ export const updatePub = async ({
 
 	return result;
 };
+
+export const upsertPubValues = async ({
+	pubId,
+	pubValues,
+	lastModifiedBy,
+	trx,
+}: {
+	pubId: PubsId;
+	pubValues: {
+		/**
+		 * specify this if you do not want to use the pubId provided in the input
+		 */
+		pubId?: PubsId;
+		fieldId: PubFieldsId;
+		relatedPubId?: PubsId;
+		value: unknown;
+	}[];
+	lastModifiedBy: LastModifiedBy;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!pubValues.length) {
+		return [];
+	}
+
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				pubValues.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					fieldId: value.fieldId,
+					value: JSON.stringify(value.value),
+					lastModifiedBy,
+					relatedPubId: value.relatedPubId,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					// we have a unique index on pubId and fieldId where relatedPubId is null
+					.columns(["pubId", "fieldId"])
+					.where("relatedPubId", "is", null)
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
+};
+
+export const upsertPubRelationValues = async ({
+	pubId,
+	allRelationsToCreate,
+	lastModifiedBy,
+	trx,
+}: {
+	pubId: PubsId;
+	allRelationsToCreate: {
+		pubId?: PubsId;
+		relatedPubId: PubsId;
+		value: unknown;
+		fieldId: PubFieldsId;
+	}[];
+	lastModifiedBy: LastModifiedBy;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!allRelationsToCreate.length) {
+		return [];
+	}
+
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				allRelationsToCreate.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					relatedPubId: value.relatedPubId,
+					value: JSON.stringify(value.value),
+					fieldId: value.fieldId,
+					lastModifiedBy,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					.columns(["pubId", "fieldId", "relatedPubId"])
+					.where("relatedPubId", "is not", null)
+					// upsert
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
+};
+
 export type UnprocessedPub = {
 	id: PubsId;
 	depth: number;
