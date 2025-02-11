@@ -132,7 +132,6 @@ model Pub {
   children Pub[]   @relation("pub_parent")
 
   values          PubValue[]       @relation("original_pub")
-  stages          PubsInStages[]
   actionRuns      ActionRun[]
   relatedValues   PubValue[]       @relation("related_pub")
   members         PubMembership[]
@@ -261,26 +260,14 @@ model Stage {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
-  pubs                  PubsInStages[]
+  pubs                  Pub[]
   moveConstraints       MoveConstraint[]  @relation("move_constraint")
   moveConstraintSources MoveConstraint[]  @relation("move_constraint_destination")
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
-  Pub                   Pub[]
 
   @@map(name: "stages")
-}
-
-model PubsInStages {
-  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId     String
-  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  @@id([pubId, stageId])
 }
 
 model MoveConstraint {
