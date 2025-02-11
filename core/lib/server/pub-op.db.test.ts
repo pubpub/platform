@@ -1145,6 +1145,52 @@ describe("relation management", () => {
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Test" },
 		]);
 	});
+
+	it("should be able to relate many pubs at once", async () => {
+		const pub = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.relate(seededCommunity.pubFields["Some relation"].slug, [
+				{
+					target: (pubOp) =>
+						pubOp
+							.create({ pubTypeId: seededCommunity.pubTypes["Minimal Pub"].id })
+							.set(seededCommunity.pubFields["Title"].slug, "Relation 1"),
+					value: "relation1",
+				},
+				{
+					target: (pubOp) =>
+						pubOp
+							.create({ pubTypeId: seededCommunity.pubTypes["Minimal Pub"].id })
+							.set(seededCommunity.pubFields["Title"].slug, "Relation 2"),
+					value: "relation2",
+				},
+			])
+			.execute();
+
+		expect(pub).toHaveValues([
+			{
+				fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+				value: "relation1",
+				relatedPub: {
+					values: [
+						{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Relation 1" },
+					],
+				},
+			},
+			{
+				fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+				value: "relation2",
+				relatedPub: {
+					values: [
+						{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Relation 2" },
+					],
+				},
+			},
+		]);
+	});
 });
 
 describe("PubOp stage", () => {
