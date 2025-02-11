@@ -2,6 +2,7 @@
 
 import type { FieldValues } from "react-hook-form";
 
+import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { BasicFormElements } from "~/app/components/forms/types";
@@ -30,6 +31,7 @@ export const ExternalFormWrapper = ({
 	const router = useRouter();
 	const pathname = usePathname();
 	const params = useSearchParams();
+	const [pubId] = useState(props.pub.id);
 
 	const onSuccess = ({
 		values,
@@ -43,7 +45,7 @@ export const ExternalFormWrapper = ({
 		const newParams = new URLSearchParams(params);
 		const currentTime = `${new Date().getTime()}`;
 		if (!props.isUpdating) {
-			newParams.set("pubId", props.pub.id);
+			newParams.set("pubId", pubId);
 		}
 
 		if (!isAutoSave && isComplete(props.elements, values)) {

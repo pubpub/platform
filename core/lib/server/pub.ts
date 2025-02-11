@@ -9,9 +9,11 @@ import type {
 
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import partition from "lodash.partition";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
+	FTSReturn,
 	GetPubResponseBody,
 	Json,
 	JsonValue,
@@ -36,11 +38,13 @@ import type {
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
+import { logger } from "logger";
 import { assert, expect } from "utils";
 
 import type { MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
+import { env } from "../env/env.mjs";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
@@ -49,6 +53,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
+import { movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";
 import { validatePubValuesBySchemaName } from "./validateFields";
 
@@ -432,6 +437,32 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
 	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
 
 /**
+ * Transform pub values which can either be
+ * {
+ *   field: 'example',
+ *   authors: [
+ *     { value: 'admin', relatedPubId: X },
+ *     { value: 'editor', relatedPubId: Y },
+ *   ]
+ * }
+ * to a more standardized
+ * [ { slug, value, relatedPubId } ]
+ */
+const normalizePubValues = (
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>
+) => {
+	return Object.entries(pubValues).flatMap(([slug, value]) =>
+		isRelatedPubInit(value)
+			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
+			: ([{ slug, value, relatedPubId: undefined }] as {
+					slug: string;
+					value: unknown;
+					relatedPubId: PubsId | undefined;
+				}[])
+	);
+};
+
+/**
  * @throws
  */
 export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWithNullsNew>(
@@ -471,15 +502,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		});
 		values = processedVals;
 	}
-	const normalizedValues = Object.entries(values).flatMap(([slug, value]) =>
-		isRelatedPubInit(value)
-			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
-			: ([{ slug, value, relatedPubId: undefined }] as {
-					slug: string;
-					value: unknown;
-					relatedPubId: PubsId | undefined;
-				}[])
-	);
+	const normalizedValues = normalizePubValues(values);
 
 	const valuesWithFieldIds = await validatePubValues({
 		pubValues: normalizedValues,
@@ -976,6 +999,10 @@ export const removeAllPubRelationsBySlugs = async ({
 	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
+	if (slugs.length === 0) {
+		return [];
+	}
+
 	const fields = await getFieldInfoForSlugs({
 		slugs: slugs,
 		communityId,
@@ -1072,7 +1099,7 @@ export const updatePub = async ({
 	lastModifiedBy,
 }: {
 	pubId: PubsId;
-	pubValues: Record<string, Json>;
+	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>;
 	communityId: CommunitiesId;
 	lastModifiedBy: LastModifiedBy;
 	stageId?: StagesId;
@@ -1081,12 +1108,7 @@ export const updatePub = async ({
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
-			await autoRevalidate(
-				trx.deleteFrom("PubsInStages").where("PubsInStages.pubId", "=", pubId)
-			).execute();
-			await autoRevalidate(
-				trx.insertInto("PubsInStages").values({ pubId, stageId })
-			).execute();
+			await movePub(pubId, stageId, trx).execute();
 		}
 
 		// Allow rich text fields to overwrite other fields
@@ -1095,17 +1117,12 @@ export const updatePub = async ({
 			values: pubValues,
 		});
 
-		const vals = Object.entries(processedVals).flatMap(([slug, value]) => ({
-			slug,
-			value,
-		}));
+		const normalizedValues = normalizePubValues(processedVals);
 
 		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
-			pubValues: vals,
+			pubValues: normalizedValues,
 			communityId,
 			continueOnValidationError,
-			// do not update relations, and error if a relation slug is included
-			includeRelations: false,
 		});
 
 		if (!pubValuesWithSchemaNameAndFieldId.length) {
@@ -1115,31 +1132,56 @@ export const updatePub = async ({
 			};
 		}
 
-		const result = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					pubValuesWithSchemaNameAndFieldId.map(({ value, fieldId }) => ({
-						pubId,
-						fieldId,
-						value: JSON.stringify(value),
-						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						// we have a unique index on pubId and fieldId where relatedPubId is null
-						.columns(["pubId", "fieldId"])
-						.where("relatedPubId", "is", null)
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-						}))
-				)
-				.returningAll()
-		).execute();
+		// Separate into fields with relationships and those without
+		const [pubValuesWithRelations, pubValuesWithoutRelations] = partition(
+			pubValuesWithSchemaNameAndFieldId,
+			(pv) => pv.relatedPubId
+		);
 
-		return result;
+		if (pubValuesWithRelations.length) {
+			await replacePubRelationsBySlug({
+				pubId,
+				relations: pubValuesWithRelations.map(
+					(pv) =>
+						({
+							value: pv.value,
+							slug: pv.slug,
+							relatedPubId: pv.relatedPubId,
+						}) as AddPubRelationsInput
+				),
+				communityId,
+				lastModifiedBy,
+				trx,
+			});
+		}
+
+		if (pubValuesWithoutRelations.length) {
+			const result = await autoRevalidate(
+				trx
+					.insertInto("pub_values")
+					.values(
+						pubValuesWithoutRelations.map(({ value, fieldId }) => ({
+							pubId,
+							fieldId,
+							value: JSON.stringify(value),
+							lastModifiedBy,
+						}))
+					)
+					.onConflict((oc) =>
+						oc
+							// we have a unique index on pubId and fieldId where relatedPubId is null
+							.columns(["pubId", "fieldId"])
+							.where("relatedPubId", "is", null)
+							.doUpdateSet((eb) => ({
+								value: eb.ref("excluded.value"),
+								lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+							}))
+					)
+					.returningAll()
+			).execute();
+
+			return result;
+		}
 	});
 
 	return result;
@@ -1624,6 +1666,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
 					)
+					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))
 			)
@@ -1869,3 +1912,186 @@ export type FullProcessedPub = ProcessedPub<{
 	withPubType: true;
 	withStage: true;
 }>;
+
+export interface SearchConfig {
+	language?: string;
+	weights?: {
+		/**
+		 * how much the title field should be weighted when matching the query
+		 * @default 1.0
+		 */
+		A?: number; // Title weight
+		/**
+		 * how much the other fields should be weighted when matching the query
+		 * @default 0.5
+		 */
+		B?: number; // Content weight
+	};
+	/**
+	 * whether to also match "database" when you search for "data", or only match on full words
+	 * @default true
+	 */
+	prefixSearch?: boolean;
+	/**
+	 * minimum length of a word to be included in the search
+	 * @default 2
+	 */
+	minLength?: number;
+	/**
+	 * how highlights should be formatted
+	 * @default "StartSel=<mark>, StopSel=</mark>, MaxFragments=2"
+	 */
+	headlineConfig?: string;
+	/**
+	 * how many results to return
+	 * @default 10
+	 */
+	limit?: number;
+}
+
+const DEFAULT_FULLTEXT_SEARCH_OPTS = {
+	language: "english",
+	weights: {
+		A: 1.0,
+		B: 0.5,
+	},
+	prefixSearch: true,
+	minLength: 2,
+	limit: 10,
+	headlineConfig: "StartSel=<mark>, StopSel=</mark>, MaxFragments=2",
+} satisfies SearchConfig;
+
+export const createTsQuery = (query: string, config: SearchConfig = {}) => {
+	const { prefixSearch = true, minLength = 2 } = config;
+
+	const cleanQuery = query.trim();
+	if (cleanQuery.length < minLength) {
+		return null;
+	}
+
+	const terms = cleanQuery.split(/\s+/).filter((word) => word.length >= minLength);
+
+	if (terms.length === 0) {
+		return null;
+	}
+
+	// this is the most specific match, ie match "quick brown fox" when you search for "quick brown fox"
+	const phraseQuery = sql`to_tsquery(${config.language}, ${terms.join(" <-> ")})`;
+
+	// all words match but in any order. could perhaps be removed in favor of prefix search
+	const exactTerms = terms.join(" & ");
+	const exactQuery = sql`to_tsquery(${config.language}, ${exactTerms})`;
+
+	// prefix matches, ie match "quick" when you search for "qu"
+	// this significantly slows down the query, but makes it much more useful
+	const prefixTerms = prefixSearch ? terms.map((term) => `${term}:*`).join(" & ") : null;
+	const prefixQuery = prefixTerms ? sql`to_tsquery(${config.language}, ${prefixTerms})` : null;
+
+	// combine queries
+	return sql`(
+	  ${phraseQuery} || 
+	  ${exactQuery} ${prefixQuery ? sql` || ${prefixQuery}` : sql``}
+	)`;
+};
+
+export const fullTextSearch = async (
+	query: string,
+	communityId: CommunitiesId,
+	userId: UsersId,
+	opts?: SearchConfig
+): Promise<FTSReturn[]> => {
+	const options = {
+		...DEFAULT_FULLTEXT_SEARCH_OPTS,
+		...opts,
+	};
+
+	const tsQuery = createTsQuery(query, options);
+
+	const q = db
+		.selectFrom("pubs")
+		.select((eb) => [
+			"pubs.id",
+			"pubs.title",
+			"pubs.parentId",
+			"pubs.assigneeId",
+			"pubs.communityId",
+			"pubs.createdAt",
+			"pubs.updatedAt",
+			"pubs.searchVector",
+			// this is the highlighted title
+			// possibly non efficient to do this like so
+			sql<string>`ts_headline(
+								'${sql.raw(options.language)}',
+								pubs.title, 
+								${tsQuery}, 
+								'${sql.raw(options.headlineConfig)}'
+							)`.as("titleHighlights"),
+
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+					.innerJoin("_PubFieldToPubType", (join) =>
+						join.onRef("A", "=", "pub_fields.id").onRef("B", "=", "pubs.pubTypeId")
+					)
+					.select([
+						"pub_values.value",
+						"pub_fields.name",
+						"pub_fields.slug",
+						"_PubFieldToPubType.isTitle",
+						sql<string>`ts_headline(
+							'${sql.raw(options.language)}',
+							pub_values.value#>>'{}',
+							${tsQuery},
+							'${sql.raw(options.headlineConfig)}'
+						)`.as("highlights"),
+					])
+					.$narrowType<{
+						value: Json;
+					}>()
+					.whereRef("pub_values.pubId", "=", "pubs.id")
+					.where(
+						(eb) => sql`to_tsvector(${options.language}, value#>>'{}') @@ ${tsQuery}`
+					)
+			).as("matchingValues"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("pub_types")
+					.selectAll("pub_types")
+					.whereRef("pubs.pubTypeId", "=", "pub_types.id")
+			)
+				// there will always be a pub type
+				.$notNull()
+				.as("pubType"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("stages")
+					.leftJoin("PubsInStages", "stages.id", "PubsInStages.stageId")
+					.select(["stages.id", "stages.name"])
+					.whereRef("PubsInStages.pubId", "=", "pubs.id")
+					.limit(1)
+			).as("stage"),
+		])
+		.where("pubs.communityId", "=", communityId)
+		.where((eb) => sql`pubs."searchVector" @@ ${tsQuery}`)
+		.limit(options.limit)
+		.orderBy(
+			sql`ts_rank_cd(
+		  pubs."searchVector",
+		  ${tsQuery}) desc`
+		);
+
+	// for debugging, shows how long the query took
+	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true") {
+		const explained = await q.explain("json", sql`analyze`);
+		logger.debug({
+			msg: `Full Text Search EXPLAIN`,
+			queryPlan: explained[0]["QUERY PLAN"][0],
+			query,
+			communityId,
+			userId,
+		});
+	}
+
+	return q.execute();
+};

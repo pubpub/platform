@@ -2,30 +2,73 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useSelectedLayoutSegment } from "next/navigation";
+import { usePathname } from "next/navigation";
 
+import { SidebarMenuButton, SidebarMenuSubButton, useSidebar } from "ui/sidebar";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
-type Props = { href: string; text: string; icon: React.ReactNode; count?: number };
+type Props = {
+	href: string;
+	text: string;
+	icon?: React.ReactNode;
+	count?: number;
+	isChild?: boolean;
+	// optional pattern to match the pathname against for showing the active state
+	// by default it's `c\\/.*?${href}`
+	pattern?: string;
+	hasChildren?: boolean;
+	groupName?: string;
+};
 
-export default function NavLink({ href, text, icon, count }: Props) {
-	const layoutSegment = useSelectedLayoutSegment();
-	const isActive = layoutSegment ? new RegExp(`c\\/.*?\\/${layoutSegment}$`).test(href) : false;
-	return (
-		<Link
-			className={cn(
-				"-mx-1 flex items-center rounded-md px-1 py-3 hover:bg-gray-100",
-				isActive && "text-bold bg-gray-200 hover:bg-gray-200"
-			)}
-			href={href}
-		>
-			<div className="ml-2 mr-3 w-4">{icon}</div>
-			<div className="flex-auto text-sm font-bold">{text}</div>
+export default function NavLink({
+	href,
+	groupName,
+	text,
+	icon,
+	count,
+	isChild,
+	hasChildren,
+	pattern,
+}: Props) {
+	const pathname = usePathname();
+	const { state: sideBarState } = useSidebar();
+	const regex = React.useMemo(
+		() => (pattern ? new RegExp(`c\\/.*?${pattern}`) : new RegExp(href)),
+		[pattern, href]
+	);
+
+	const isActive = regex.test(pathname);
+
+	const content = (
+		<Link href={href} className="relative">
+			{icon ? icon : null}
+			<span className="flex-auto text-sm transition-opacity group-data-[collapsible=icon]:opacity-0">
+				{text}
+			</span>
 			{count && (
-				<div className="rounded-md border border-gray-200 px-2 text-sm font-bold">
-					{count}
-				</div>
+				<span className="rounded-md border border-gray-200 px-2 text-sm">{count}</span>
 			)}
 		</Link>
+	);
+
+	return (
+		<Tooltip delayDuration={300} open={sideBarState === "expanded" ? false : undefined}>
+			<TooltipTrigger asChild>
+				{isChild ? (
+					<SidebarMenuSubButton isActive={isActive} asChild>
+						{content}
+					</SidebarMenuSubButton>
+				) : (
+					<SidebarMenuButton isActive={isActive} asChild>
+						{content}
+					</SidebarMenuButton>
+				)}
+			</TooltipTrigger>
+
+			<TooltipContent side="right">
+				<p className="text-xs">{groupName ? `${groupName} - ${text}` : text}</p>
+			</TooltipContent>
+		</Tooltip>
 	);
 }

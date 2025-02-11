@@ -50,6 +50,10 @@ export interface FormElementsTable {
 	component: ColumnType<InputComponent | null, InputComponent | null, InputComponent | null>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type FormElements = Selectable<FormElementsTable>;
@@ -73,6 +77,8 @@ export const formElementsSchema = z.object({
 	stageId: stagesIdSchema.nullable(),
 	component: inputComponentSchema.nullable(),
 	config: z.unknown().nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
 });
 
 export const formElementsInitializerSchema = z.object({
@@ -88,6 +94,8 @@ export const formElementsInitializerSchema = z.object({
 	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });
 
 export const formElementsMutatorSchema = z.object({
@@ -103,4 +111,6 @@ export const formElementsMutatorSchema = z.object({
 	stageId: stagesIdSchema.optional().nullable(),
 	component: inputComponentSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });

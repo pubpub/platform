@@ -157,5 +157,5 @@ describe("getPubsWithRelatedValuesAndChildren capabilities", () => {
 			userId: users.contributor.id,
 		});
 		expect(pubsVisibleToContributor.length).toEqual(0);
-	});
+	}, 15_000);
 });

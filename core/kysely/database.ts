@@ -26,8 +26,29 @@ const dialect = new PostgresDialect({
 
 const kyselyLogger =
 	env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true"
-		? ({ query: { sql, parameters }, ...event }: LogEvent) =>
-				logger.debug({ event }, "Kysely query:\n%s; --Parameters: %o", sql, parameters)
+		? ({ query: { sql, parameters }, ...event }: LogEvent) => {
+				const params = parameters.map((p) => {
+					if (p === null) {
+						return "null";
+					}
+					if (p instanceof Date) {
+						return `'${p.toISOString()}'`;
+					}
+					if (typeof p === "object") {
+						const stringified = `'${JSON.stringify(p)}'`;
+						if (Array.isArray(p)) {
+							return "ARRAY " + stringified;
+						}
+						return stringified;
+					}
+					return `'${p}'`;
+				});
+				logger.debug(
+					{ event },
+					"Kysely query:\n%s",
+					sql.replaceAll(/\$[0-9]+/g, () => params.shift()!)
+				);
+			}
 		: undefined;
 
 const tablesWithUpdateAt = databaseTables

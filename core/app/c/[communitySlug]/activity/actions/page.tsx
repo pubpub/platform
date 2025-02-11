@@ -9,7 +9,7 @@ import type { ActionRun } from "./getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { pubType, pubValuesByRef } from "~/lib/server";
+import { pubType } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { userCanViewPage } from "../../unauthorized/pageAuthorizationChecks";
@@ -100,7 +100,7 @@ export default async function Page(props: {
 			<div className="mb-16 flex items-center justify-between">
 				<h1 className="text-xl font-bold">Action Activity</h1>
 			</div>
-			<ActionRunsTable actionRuns={actionRuns} />
+			<ActionRunsTable actionRuns={actionRuns} communitySlug={community.slug} />
 		</>
 	);
 }

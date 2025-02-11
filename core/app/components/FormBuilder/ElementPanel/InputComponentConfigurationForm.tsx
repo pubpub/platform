@@ -61,14 +61,15 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textInput]: {
 		name: "Input",
 		placeholder: "For short text",
-		demoComponent: ({ element }) => (
-			<Input
-				placeholder={
-					element.schemaName === CoreSchemaType.String ? "For short text" : "For numbers"
-				}
-				type={element.schemaName === CoreSchemaType.String ? "text" : "number"}
-			/>
-		),
+		demoComponent: ({ element }) => {
+			const isNumber = element.schemaName === CoreSchemaType.Number;
+			return (
+				<Input
+					placeholder={isNumber ? "For numbers" : "For short text"}
+					type={isNumber ? "number" : "text"}
+				/>
+			);
+		},
 	},
 	[InputComponent.checkbox]: { name: "Checkbox", demoComponent: () => <Checkbox checked /> },
 	[InputComponent.datePicker]: {
@@ -183,7 +184,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			return (
 				<div className="flex w-full flex-col gap-1 text-left text-sm">
 					<div className="text-gray-500">Label</div>
-					<MultiBlock title="Pub Relation" disabled />
+					<MultiBlock title="Pub Relation" disabled compact onAdd={() => {}} />
 				</div>
 			);
 		},
@@ -400,7 +401,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				<div className="grid grid-cols-2 gap-2">
 					<Button
 						type="button"
-						className="border-slate-950"
+						className="border-gray-950"
 						variant="outline"
 						onClick={() => {
 							removeIfUnconfigured();

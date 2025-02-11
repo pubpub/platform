@@ -18,7 +18,7 @@ const config = {
 		//		"prettier-plugin-jsdoc",
 	],
 	// tailwindConfig: fileURLToPath(
-	//   new URL("../../tooling/tailwind/web.ts", import.meta.url),
+	// 	new URL("../../packages/ui/tailwind.config.cjs", import.meta.url)
 	// ),
 	tailwindFunctions: ["cn", "cva"],
 	importOrder: [

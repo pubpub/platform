@@ -24,6 +24,7 @@ import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from 
 import type { Form as PubForm } from "~/lib/server/form";
 import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider, useFormBuilder } from "./FormBuilderContext";
@@ -95,48 +96,11 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editingButton: "Edit Submission Button",
 };
 
-const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
-	const { dispatch } = useFormBuilder();
-	return (
-		<>
-			<div className="flex items-center justify-between">
-				<div className="text-sm uppercase text-slate-500">{elementPanelTitles[state]}</div>
-				{state !== "initial" && (
-					<Button
-						aria-label="Cancel"
-						variant="ghost"
-						size="sm"
-						className=""
-						onClick={() => dispatch({ eventName: "cancel" })}
-					>
-						<X size={16} className="text-muted-foreground" />
-					</Button>
-				)}
-			</div>
-			<hr />
-		</>
-	);
-};
-
 type Props = {
 	pubForm: PubForm;
 	id: string;
 	stages: Stages[];
 };
-
-// Render children in a portal so they can safely use <form> components
-function PanelWrapper({
-	children,
-	sidebar,
-}: {
-	children: React.ReactNode;
-	sidebar: Element | null;
-}) {
-	if (!sidebar) {
-		return null;
-	}
-	return createPortal(children, sidebar);
-}
 
 export function FormBuilder({ pubForm, id, stages }: Props) {
 	const router = useRouter();
@@ -336,7 +300,17 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 												</div>
 												<PanelWrapper sidebar={sidebarRef.current}>
 													<FormItem className="relative flex h-screen flex-col">
-														<PanelHeader state={panelState.state} />
+														<PanelHeader
+															title={
+																elementPanelTitles[panelState.state]
+															}
+															showCancel={
+																!(panelState.state === "initial")
+															}
+															onCancel={() =>
+																dispatch({ eventName: "cancel" })
+															}
+														/>
 														<FormControl>
 															<ElementPanel panelState={panelState} />
 														</FormControl>
@@ -351,10 +325,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 						<TabsContent value="preview">Preview your form here</TabsContent>
 					</div>
 				</Tabs>
-				<div
-					ref={sidebarRef}
-					className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
-				></div>
+				<SidePanel ref={sidebarRef} />
 			</FormBuilderProvider>
 		</TokenProvider>
 	);

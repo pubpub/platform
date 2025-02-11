@@ -1,7 +1,3 @@
-import { ReplicationStatus } from "@aws-sdk/client-s3";
-import { ValuesNode } from "kysely";
-
-import type { StagesId } from "db/public";
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
@@ -34,7 +30,6 @@ export const run = defineRun<typeof action>(
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
 			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
-
 			/* MIGRATION */
 			// TODO: Check and make sure the relations exist, not just the pubs.
 
@@ -148,6 +143,21 @@ export const run = defineRun<typeof action>(
 						},
 					});
 				}
+				// If there's html but no version yet exists, create one
+			} else {
+				if (formattedData.pubHtml) {
+					relations.push({
+						slug: `${communitySlug}:versions`,
+						value: null,
+						relatedPub: {
+							pubTypeId: VersionType?.id || "",
+							values: {
+								[`${communitySlug}:description`]: "",
+								[`${communitySlug}:content`]: formattedData.pubHtml,
+							},
+						},
+					});
+				}
 			}
 
 			if (relations.length > 0) {
@@ -158,6 +168,15 @@ export const run = defineRun<typeof action>(
 					relations,
 				});
 			}
+			await updatePub({
+				pubId: pub.id,
+				communityId,
+				lastModifiedBy,
+				continueOnValidationError: false,
+				pubValues: {
+					[`${communitySlug}:description`]: formattedData.pubDescription,
+				},
+			});
 
 			return {
 				success: true,
@@ -169,7 +188,8 @@ export const run = defineRun<typeof action>(
 
 			return {
 				title: "Error",
-				error: err.title,
+				error: "An error occurred while importing the pub from Google Drive.",
+				cause: err,
 			};
 		}
 

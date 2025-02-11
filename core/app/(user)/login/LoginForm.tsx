@@ -24,6 +24,11 @@ export default function LoginForm() {
 	const searchParams = useSearchParams();
 	const form = useForm<z.infer<typeof loginFormSchema>>({
 		resolver: zodResolver(loginFormSchema),
+		defaultValues: {
+			// in order to prevent "Form changed from uncontrolled to controlled" React errors
+			email: "",
+			password: "",
+		},
 	});
 
 	const runLoginWithPassword = useServerAction(actions.loginWithPassword);
@@ -55,7 +60,7 @@ export default function LoginForm() {
 									<FormItem>
 										<FormLabel>Email</FormLabel>
 										<FormControl>
-											<Input placeholder="m@example.com" {...field} />
+											<Input placeholder="name@example.com" {...field} />
 										</FormControl>
 									</FormItem>
 								</div>

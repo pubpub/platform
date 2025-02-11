@@ -128,7 +128,7 @@ const FormDescription = React.forwardRef<
 		<p
 			ref={ref}
 			id={formDescriptionId}
-			className={cn("text-[0.8rem] text-slate-500 dark:text-slate-400", className)}
+			className={cn("text-[0.8rem] text-gray-500 dark:text-gray-400", className)}
 			{...props}
 		/>
 	);
@@ -146,7 +146,9 @@ const FormMessage = React.forwardRef<
 			body = String(error.message);
 		}
 		if (Array.isArray(error)) {
-			body = error[0]?.message;
+			const firstErrorIndex = error.findIndex((e) => !!e);
+			const firstError = error[firstErrorIndex];
+			body = firstError?.message ?? `Error with value at index ${firstErrorIndex}`;
 		}
 	}
 
