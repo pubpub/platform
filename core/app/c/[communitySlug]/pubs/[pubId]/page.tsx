@@ -245,7 +245,7 @@ export default async function Page(props: {
 				<CreatePubButton
 					text="Add Related Pub"
 					communityId={community.id}
-					relatedPubId={pub.id}
+					relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
 					className="w-fit"
 				/>
 				<RelatedPubsTable pub={pub} />

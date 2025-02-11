@@ -75,8 +75,6 @@ const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFi
 		? pubFields.find((pf) => pf.slug === relatedPubSlug)
 		: undefined;
 
-	console.log({ selectedPubField });
-
 	return (
 		<>
 			<FormField
@@ -143,7 +141,7 @@ const baseSchema = Type.Object({
 const schemaWithRelatedPub = Type.Object({
 	pubTypeId: Type.String(),
 	relatedPub: Type.Object({
-		id: Type.String(),
+		relatedPubId: Type.String(),
 		slug: Type.String(),
 		// TODO: getJsonSchemaByCoreSchemaType() ?
 		value: Type.Any(),
@@ -171,7 +169,7 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 				defaultValues: {
 					...defaultValues,
 					relatedPub: {
-						id: editorSpecifiers.relatedPubId,
+						relatedPubId: editorSpecifiers.relatedPubId,
 					},
 				},
 			};
@@ -202,21 +200,18 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 	}, [pathWithoutFormParam]);
 
 	const onSubmit = async (values: FieldValues) => {
-		console.log({ values });
-		// const pubParams = new URLSearchParams({
-		// 	pubTypeId: values.pubTypeId,
-		// 	...editorSpecifiers,
-		// });
-		// const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
-		// router.push(createPubPath);
+		const pubParams = new URLSearchParams({
+			pubTypeId: values.pubTypeId,
+			...editorSpecifiers,
+			...(values.relatedPub || {}),
+		});
+		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
+		router.push(createPubPath);
 	};
 
 	return (
 		<Form {...form}>
-			<form
-				onSubmit={form.handleSubmit(onSubmit, (e) => console.log({ e }))}
-				className="flex flex-col gap-y-4"
-			>
+			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<PubTypeSelector pubTypes={pubTypes} />
 				{hasRelatedPub ? <RelatedPubFieldSelector pubFields={relatedPubFields} /> : null}
 

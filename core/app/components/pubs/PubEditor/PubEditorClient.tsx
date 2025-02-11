@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
@@ -148,6 +148,18 @@ const isSubmitEvent = (
 	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
 };
 
+const useRelatedPub = ({ pubId }: { pubId: PubsId }) => {
+	const searchParams = useSearchParams();
+	const relatedPubId = searchParams.get("relatedPubId") as PubsId;
+	const slug = searchParams.get("slug");
+	// TODO: rehydrate value?
+	const value = searchParams.get("value");
+	if (!relatedPubId || !slug) {
+		return undefined;
+	}
+	return { pubId: relatedPubId, values: { [slug]: [{ relatedPubId: pubId, value }] } };
+};
+
 const getButtonConfig = ({
 	evt,
 	withButtonElements,
@@ -213,6 +225,7 @@ export const PubEditorClient = ({
 	const runCreatePub = useServerAction(actions.createPubRecursive);
 	// Cache pubId
 	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
+	const relatedPub = useRelatedPub({ pubId });
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => e.type === ElementType.button),
@@ -278,9 +291,15 @@ export const PubEditorClient = ({
 						stageId: stageId,
 					},
 					communityId: community.id,
-					parent: parentId ? { id: parentId } : undefined,
 					addUserToForm: isExternalForm,
 				});
+				if (relatedPub) {
+					await runUpdatePub({
+						pubId: relatedPub.pubId,
+						pubValues: relatedPub.values,
+						continueOnValidationError: true,
+					});
+				}
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from

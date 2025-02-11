@@ -1,4 +1,4 @@
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Plus } from "ui/icon";
 
@@ -14,8 +14,14 @@ type Props = {
 	size?: ButtonProps["size"];
 	className?: string;
 	text?: string;
-	/** If specified, pubs created via this button will have this related pub id */
-	relatedPubId?: PubsId;
+	/**
+	 * If specified, pubs created via this button will be related to this relatedPub.pubId
+	 * The relatedPub.pubId will gain a pub value that relates it to the newly created pub
+	 */
+	relatedPub?: {
+		pubId: PubsId;
+		pubTypeId: PubTypesId;
+	};
 } & (
 	| {
 			/** If specified, the pub editor will default to this stage */
@@ -35,11 +41,11 @@ export const CreatePubButton = async (props: Props) => {
 	}
 
 	const pubTypes = await getAllPubTypesForCommunity(communitySlug).execute();
-	const relatedPubFields = props.relatedPubId
+	const relatedPubFields = props.relatedPub
 		? Object.values(
 				(
 					await getPubFields({
-						pubId: props.relatedPubId,
+						pubTypeId: props.relatedPub.pubTypeId,
 						communityId: community.id,
 						isRelated: true,
 					}).executeTakeFirstOrThrow()
@@ -63,7 +69,7 @@ export const CreatePubButton = async (props: Props) => {
 				relatedPubFields={relatedPubFields}
 				editorSpecifiers={{
 					stageId: "stageId" in props ? props.stageId : undefined,
-					relatedPubId: props.relatedPubId,
+					relatedPubId: props.relatedPub?.pubId,
 				}}
 			/>
 		</PathAwareDialog>
