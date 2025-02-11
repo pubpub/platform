@@ -477,6 +477,79 @@ describe("PubOp", () => {
 			},
 		]);
 	});
+
+	describe("upsert", () => {
+		// when upserting a pub, we should (by default) delete existing values that are not being updated,
+		// like a PUT
+		it("should delete existing values that are not being updated", async () => {
+			const pub1 = await PubOp.create({
+				communityId: seededCommunity.community.id,
+				pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+				.set(seededCommunity.pubFields["Title"].slug, "Pub 1")
+				.set(seededCommunity.pubFields["Description"].slug, "Description 1")
+				.relate(seededCommunity.pubFields["Some relation"].slug, "relation 1", (pubOp) =>
+					pubOp
+						.create({
+							pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+						})
+						.set(seededCommunity.pubFields["Title"].slug, "Pub 2")
+				)
+				.execute();
+
+			const upsertedPub = await PubOp.upsert(pub1.id, {
+				communityId: seededCommunity.community.id,
+				pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+				.set(seededCommunity.pubFields["Title"].slug, "Pub 1, updated")
+				.execute();
+
+			expect(upsertedPub).toHaveValues([
+				{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 1, updated" },
+				{
+					fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+					value: "relation 1",
+					relatedPubId: expect.any(String),
+					relatedPub: {
+						values: [
+							{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 2" },
+						],
+					},
+				},
+			]);
+		});
+
+		it("should not delete existing values if the `deleteExistingValues` option is false", async () => {
+			const pub1 = await PubOp.create({
+				communityId: seededCommunity.community.id,
+				pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+				.set(seededCommunity.pubFields["Title"].slug, "Pub 1")
+				.set(seededCommunity.pubFields["Description"].slug, "Description 1")
+				.execute();
+
+			const upsertedPub = await PubOp.upsert(pub1.id, {
+				communityId: seededCommunity.community.id,
+				pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			})
+				.set(seededCommunity.pubFields["Title"].slug, "Pub 1, updated", {
+					deleteExistingValues: false,
+				})
+				.execute();
+
+			expect(upsertedPub).toHaveValues([
+				{
+					fieldSlug: seededCommunity.pubFields["Description"].slug,
+					value: "Description 1",
+				},
+				{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 1, updated" },
+			]);
+		});
+	});
 });
 
 describe("relation management", () => {
@@ -634,9 +707,8 @@ describe("relation management", () => {
 			.execute();
 
 		// Update with override - only related3 should remain
-		const updatedPub = await PubOp.upsert(mainPub.id, {
+		const updatedPub = await PubOp.update(mainPub.id, {
 			communityId: seededCommunity.community.id,
-			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.relate(seededCommunity.pubFields["Some relation"].slug, "new relation", related3.id, {

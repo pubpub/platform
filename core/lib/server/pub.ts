@@ -663,6 +663,10 @@ export const deletePubValuesByValueId = async ({
 	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
+	if (valueIds.length === 0) {
+		return;
+	}
+
 	const result = await maybeWithTrx(trx, async (trx) => {
 		const deletedPubValues = await autoRevalidate(
 			trx

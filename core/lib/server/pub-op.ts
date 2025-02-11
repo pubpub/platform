@@ -48,29 +48,104 @@ type PubOpOptionsUpdate = PubOpOptionsBase & {
 
 type PubOpOptions = PubOpOptionsCreateUpsert | PubOpOptionsUpdate;
 
-type RelationOptions =
-	| {
-			/**
-			 * If true, existing relations on the same field will be removed
-			 */
-			replaceExisting?: false;
-			deleteOrphaned?: never;
-	  }
-	| {
-			/**
-			 * If true, existing relations on the same field will be removed
-			 */
-			replaceExisting: true;
-			/**
-			 * If true, pubs that have been disconnected,
-			 * either manually or because they were orphaned because of `override: true`,
-			 * will be deleted.
-			 */
-			deleteOrphaned?: boolean;
-	  };
+type SetOptions = {
+	/**
+	 * if this is not `false` for all `set` commands,
+	 * all non-updating non-relation values will be deleted.
+	 *
+	 * @default true for `upsert`
+	 * @default false for `update`.
+	 *
+	 * Does not have an effect for `create`.
+	 *
+	 * eg, here all non-updating non-relation values will be deleted, because at least one value has `deleteExistingValues: true`
+	 * ```ts
+	 * // before
+	 * // title: "old title"
+	 * // description: "old description"
+	 * // publishedAt: "2024-01-01"
+	 *
+	 * PubOp.update(id, { } )
+	 * 		.set("title", "new title", { deleteExistingValues: true })
+	 * 		.set("description", "new description")
+	 * 		.execute();
+	 *
+	 * // after
+	 * // title: "new title"
+	 * // description: "new description"
+	 * // -- no publishedAt value, because it was deleted
+	 * ```
+	 *
+	 * The converse holds true for for `upsert`: by default we act as if `deleteExistingValues: true` for all `set` commands.
+	 * ```ts
+	 * // before
+	 * // title: "old title"
+	 * // description: "old description"
+	 * // publishedAt: "2024-01-01"
+	 *
+	 * PubOp.upsert(id, { } )
+	 * 		.set("title", "new title")
+	 * 		.set("description", "new description")
+	 * 		.execute();
+	 *
+	 * // after
+	 * // title: "new title"
+	 * // description: "new description"
+	 * // -- no publishedAt value, because it was deleted
+	 * ```
+	 *
+	 * to opt out of this behavior on `upsert`, you need to explicitly set `{ deleteExistingValues: false }` for all `set` commands you pass
+	 * ```ts
+	 * // before
+	 * // title: "old title"
+	 * // description: "old description"
+	 * // publishedAt: "2024-01-01"
+	 *
+	 * PubOp.upsert(id, { } )
+	 * 		.set("title", "new title", { deleteExistingValues: false })
+	 * 		.set("description", "new description", { deleteExistingValues: false })
+	 * 		.execute();
+	 *
+	 * // OR
+	 * PubOp.upsert(id, { } )
+	 * 		.set({
+	 * 			title: "new title",
+	 * 			description: "new description",
+	 * 		}, { deleteExistingValues: false })
+	 * 		.execute();
+	 *
+	 * // after
+	 * // title: "new title"
+	 * // description: "new description"
+	 * // publishedAt: "2024-01-01" -- not deleted, because `deleteExistingValues` is false for all
+	 * ```
+	 */
+	deleteExistingValues?: boolean;
+};
+
+type RelationOptions = {
+	/**
+	 * If true, existing relations on the _same_ field will be removed
+	 *
+	 * Pubs these relations are pointing to will not be removed unless `deleteOrphaned` is also true
+	 *
+	 * @default true for `upsert`
+	 * @default false for `update` and `create`
+	 */
+	replaceExisting?: boolean;
+	/**
+	 * If true, pubs that have been disconnected and all their descendants that are not otherwise connected
+	 * will be deleted.
+	 *
+	 * Does not do anything unless `replaceExisting` is also true
+	 *
+	 * @default false
+	 */
+	deleteOrphaned?: boolean;
+};
 
 // Base commands that will be used internally
-type SetCommand = { type: "set"; slug: string; value: PubValue | undefined };
+type SetCommand = { type: "set"; slug: string; value: PubValue | undefined; options?: SetOptions };
 type RelateCommand = {
 	type: "relate";
 	slug: string;
@@ -81,7 +156,13 @@ type UnrelateCommand = {
 	type: "unrelate";
 	slug: (string & {}) | "*";
 	target: PubsId | "*";
-	deleteOrphaned?: boolean;
+	options?: {
+		/**
+		 * If true, pubs that have been disconnected and all their descendants that are not otherwise connected
+		 * will be deleted.
+		 */
+		deleteOrphaned?: boolean;
+	};
 };
 
 type UnsetCommand = {
@@ -99,20 +180,20 @@ type PubOpCommand = SetCommand | RelateCommand | UnrelateCommand | UnsetCommand 
 type ClearRelationOperation = {
 	type: "clear";
 	slug: string;
-	deleteOrphaned?: boolean;
+	options?: Omit<RelationOptions, "replaceExisting">;
 };
 
 type RemoveRelationOperation = {
 	type: "remove";
 	slug: string;
 	target: PubsId;
-	deleteOrphaned?: boolean;
+	options?: Omit<RelationOptions, "replaceExisting">;
 };
 
 type OverrideRelationOperation = {
 	type: "override";
 	slug: string;
-	deleteOrphaned?: boolean;
+	options?: RelationOptions;
 };
 
 type RelationOperation =
@@ -125,22 +206,21 @@ type OperationMode = "create" | "upsert" | "update";
 
 interface CollectedOperationBase {
 	id: PubsId | undefined;
-	values: Array<{ slug: string; value: PubValue }>;
+	values: Array<{ slug: string; value: PubValue; options?: SetOptions }>;
 	relationsToAdd: Array<{
 		slug: string;
 		value: PubValue;
 		target: PubsId;
-		override?: boolean;
-		deleteOrphaned?: boolean;
+		options: RelationOptions;
 	}>;
 	relationsToRemove: Array<{
 		slug: string;
 		target: PubsId;
-		deleteOrphaned?: boolean;
+		options?: Omit<RelationOptions, "replaceExisting">;
 	}>;
 	relationsToClear: Array<{
 		slug: string | "*";
-		deleteOrphaned?: boolean;
+		options?: Omit<RelationOptions, "replaceExisting">;
 	}>;
 	/**
 	 * null meaning no stage
@@ -163,13 +243,6 @@ type UpdateOperation = CollectedOperationBase & {
 type CollectedOperation = CreateOrUpsertOperation | UpdateOperation;
 
 type OperationsMap = Map<PubsId, CreateOrUpsertOperation | UpdateOperation>;
-
-export type SingleRelationInput = {
-	target: PubOp | PubsId;
-	value: PubValue;
-	override?: boolean;
-	deleteOrphaned?: boolean;
-};
 
 type PubOpErrorCode =
 	| "RELATION_CYCLE"
@@ -308,24 +381,33 @@ abstract class BasePubOp {
 	/**
 	 * Set a single value or multiple values
 	 */
-	set(slug: string, value: PubValue): this;
-	set(values: Record<string, PubValue>): this;
-	set(slugOrValues: string | Record<string, PubValue>, value?: PubValue): this {
+	set(slug: string, value: PubValue, options?: SetOptions): this;
+	set(values: Record<string, PubValue>, options?: SetOptions): this;
+	set(
+		slugOrValues: string | Record<string, PubValue>,
+		valueOrOptions?: PubValue | SetOptions,
+		options?: SetOptions
+	): this {
+		const defaultOptions = this.getMode() === "upsert" ? { deleteExistingValues: true } : {};
+
 		if (typeof slugOrValues === "string") {
 			this.commands.push({
 				type: "set",
 				slug: slugOrValues,
-				value: value!,
+				value: valueOrOptions,
+				options: options ?? defaultOptions,
 			});
-		} else {
-			this.commands.push(
-				...Object.entries(slugOrValues).map(([slug, value]) => ({
-					type: "set" as const,
-					slug,
-					value,
-				}))
-			);
+			return this;
 		}
+
+		this.commands.push(
+			...Object.entries(slugOrValues).map(([slug, value]) => ({
+				type: "set" as const,
+				slug,
+				value,
+				options: (valueOrOptions as SetOptions) ?? defaultOptions,
+			}))
+		);
 		return this;
 	}
 
@@ -386,6 +468,9 @@ abstract class BasePubOp {
 	): this {
 		const nestedBuilder = new NestedPubOpBuilder(this.options);
 
+		// for upsert we almost always want to replace existing relations
+		const defaultOptions = this.getMode() === "upsert" ? { replaceExisting: true } : {};
+
 		// multi relation case
 		if (this.isRelationBlockConfig(valueOrRelations)) {
 			this.commands.push({
@@ -395,7 +480,7 @@ abstract class BasePubOp {
 					target: typeof r.target === "function" ? r.target(nestedBuilder) : r.target,
 					value: r.value,
 				})),
-				options: (targetOrOptions as RelationOptions) ?? {},
+				options: (targetOrOptions as RelationOptions) ?? defaultOptions,
 			});
 			return this;
 		}
@@ -420,7 +505,7 @@ abstract class BasePubOp {
 					value: valueOrRelations,
 				},
 			],
-			options: options ?? {},
+			options: options ?? defaultOptions,
 		});
 		return this;
 	}
@@ -477,7 +562,7 @@ abstract class BasePubOp {
 				if (cmd.slug === "*") {
 					rootOp.relationsToClear.push({
 						slug: "*",
-						deleteOrphaned: cmd.deleteOrphaned,
+						options: cmd.options,
 					});
 					continue;
 				}
@@ -485,7 +570,7 @@ abstract class BasePubOp {
 				if (cmd.target === "*") {
 					rootOp.relationsToClear.push({
 						slug: cmd.slug,
-						deleteOrphaned: cmd.deleteOrphaned,
+						options: cmd.options,
 					});
 					continue;
 				}
@@ -493,7 +578,7 @@ abstract class BasePubOp {
 				rootOp.relationsToRemove.push({
 					slug: cmd.slug,
 					target: cmd.target,
-					deleteOrphaned: cmd.deleteOrphaned,
+					options: cmd.options,
 				});
 			} else if (cmd.type === "setStage") {
 				rootOp.stage = cmd.stage;
@@ -507,8 +592,7 @@ abstract class BasePubOp {
 							slug: cmd.slug,
 							value: relation.value,
 							target: relation.target as PubsId,
-							override: cmd.options.replaceExisting,
-							deleteOrphaned: cmd.options.deleteOrphaned,
+							options: cmd.options,
 						});
 
 						return;
@@ -518,8 +602,7 @@ abstract class BasePubOp {
 						slug: cmd.slug,
 						value: relation.value,
 						target: relation.target.id,
-						override: cmd.options.replaceExisting,
-						deleteOrphaned: cmd.options.deleteOrphaned,
+						options: cmd.options,
 					});
 
 					// if we have already processed this target, we can stop here
@@ -556,7 +639,7 @@ abstract class BasePubOp {
 		return this.id;
 	}
 
-	private collectValues(): Array<{ slug: string; value: PubValue }> {
+	private collectValues(): Array<{ slug: string; value: PubValue; options?: SetOptions }> {
 		return this.commands
 			.filter(
 				(cmd): cmd is Extract<PubOpCommand, { type: "set" }> =>
@@ -565,6 +648,7 @@ abstract class BasePubOp {
 			.map((cmd) => ({
 				slug: cmd.slug,
 				value: cmd.value!,
+				options: cmd.options,
 			}));
 	}
 
@@ -658,7 +742,7 @@ abstract class BasePubOp {
 		for (const [pubId, op] of operations) {
 			const allOps = [
 				...op.relationsToAdd
-					.filter((r) => r.override)
+					.filter((r) => r.options.replaceExisting)
 					.map((r) => ({ type: "override", ...r })),
 				...op.relationsToClear.map((r) => ({ type: "clear", ...r })),
 				...op.relationsToRemove.map((r) => ({ type: "remove", ...r })),
@@ -719,7 +803,7 @@ abstract class BasePubOp {
 						return false;
 					}
 
-					if (!relationOp.deleteOrphaned) {
+					if (!relationOp.options?.deleteOrphaned) {
 						return false;
 					}
 
@@ -844,6 +928,7 @@ abstract class BasePubOp {
 					pubId: key,
 					slug: v.slug,
 					value: v.value,
+					options: v.options,
 				})),
 				// relations
 				...op.relationsToAdd.map((r) => ({
@@ -868,6 +953,33 @@ abstract class BasePubOp {
 
 		const { values, relations } = this.partitionValidatedValues(validated);
 
+		// if some values have `deleteExistingValues` set to true,
+		// we need to delete all the existing values for this pub
+		const shouldDeleteExistingValues = values.some((v) => !!v.options?.deleteExistingValues);
+
+		if (values.length > 0 && shouldDeleteExistingValues) {
+			// get all the values that are not being updated
+
+			const nonUpdatingValues = await trx
+				.selectFrom("pub_values")
+				.where("pubId", "=", this.id)
+				.where("relatedPubId", "is", null)
+				.where(
+					"fieldId",
+					"not in",
+					values.map((v) => v.fieldId)
+				)
+				.select("id")
+				.execute();
+
+			await deletePubValuesByValueId({
+				pubId: this.id,
+				valueIds: nonUpdatingValues.map((v) => v.id),
+				lastModifiedBy: this.options.lastModifiedBy,
+				trx,
+			});
+		}
+
 		await Promise.all([
 			values.length > 0 &&
 				upsertPubValues({
@@ -889,7 +1001,12 @@ abstract class BasePubOp {
 	// --- Helper methods ---
 
 	private partitionValidatedValues<
-		T extends { pubId: PubsId; fieldId: PubFieldsId; value: PubValue },
+		T extends {
+			pubId: PubsId;
+			fieldId: PubFieldsId;
+			value: PubValue;
+			options?: SetOptions;
+		},
 	>(validated: Array<T & { relatedPubId?: PubsId }>) {
 		return {
 			values: validated
@@ -899,6 +1016,7 @@ abstract class BasePubOp {
 					fieldId: v.fieldId,
 					value: v.value,
 					lastModifiedBy: this.options.lastModifiedBy,
+					options: v.options,
 				})),
 			relations: validated
 				.filter(
@@ -911,6 +1029,7 @@ abstract class BasePubOp {
 					value: v.value,
 					relatedPubId: v.relatedPubId,
 					lastModifiedBy: this.options.lastModifiedBy,
+					options: v.options,
 				})),
 		};
 	}
@@ -1082,7 +1201,7 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 			type: "unrelate",
 			slug,
 			target: typeof optionsOrTarget === "string" ? optionsOrTarget : "*",
-			deleteOrphaned: options?.deleteOrphaned,
+			options: typeof optionsOrTarget === "string" ? options : optionsOrTarget,
 		});
 		return this;
 	}
