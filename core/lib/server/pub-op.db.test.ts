@@ -640,7 +640,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.relate(seededCommunity.pubFields["Some relation"].slug, "new relation", related3.id, {
-				override: true,
+				replaceExisting: true,
 			})
 			.execute();
 
@@ -682,7 +682,7 @@ describe("relation management", () => {
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Main pub")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 1", related1.id, {
-				override: true,
+				replaceExisting: true,
 			})
 			.execute();
 
@@ -691,7 +691,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 2", related2.id, {
-				override: true,
+				replaceExisting: true,
 			})
 			.relate(
 				seededCommunity.pubFields["Some relation"].slug,
@@ -701,7 +701,7 @@ describe("relation management", () => {
 					pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
 					lastModifiedBy: createLastModifiedBy("system"),
 				}),
-				{ override: true }
+				{ replaceExisting: true }
 			)
 			.execute();
 
@@ -1100,10 +1100,10 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.relate(seededCommunity.pubFields["Some relation"].slug, "new", newRelation, {
-				override: true,
+				replaceExisting: true,
 			})
 			.relate(seededCommunity.pubFields["Another relation"].slug, "also new", newRelation, {
-				override: true,
+				replaceExisting: true,
 				deleteOrphaned: true,
 			})
 			.execute();

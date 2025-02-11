@@ -53,14 +53,14 @@ type RelationOptions =
 			/**
 			 * If true, existing relations on the same field will be removed
 			 */
-			override?: false;
+			replaceExisting?: false;
 			deleteOrphaned?: never;
 	  }
 	| {
 			/**
 			 * If true, existing relations on the same field will be removed
 			 */
-			override: true;
+			replaceExisting: true;
 			/**
 			 * If true, pubs that have been disconnected,
 			 * either manually or because they were orphaned because of `override: true`,
@@ -435,7 +435,7 @@ abstract class BasePubOp {
 							slug: cmd.slug,
 							value: relation.value,
 							target: relation.target as PubsId,
-							override: cmd.options.override,
+							override: cmd.options.replaceExisting,
 							deleteOrphaned: cmd.options.deleteOrphaned,
 						});
 
@@ -446,7 +446,7 @@ abstract class BasePubOp {
 						slug: cmd.slug,
 						value: relation.value,
 						target: relation.target.id,
-						override: cmd.options.override,
+						override: cmd.options.replaceExisting,
 						deleteOrphaned: cmd.options.deleteOrphaned,
 					});
 
