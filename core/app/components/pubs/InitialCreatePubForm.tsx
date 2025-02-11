@@ -170,11 +170,10 @@ interface Props {
 }
 /** The first step in creating a pub—choosing a pub type, and possibly a related pub */
 export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifiers }: Props) => {
-	const { schema, defaultValues } = useMemo(() => {
+	const { defaultValues } = useMemo(() => {
 		const defaultValues = { pubTypeId: undefined };
 		if (editorSpecifiers.relatedPubId) {
 			return {
-				schema: schemaWithRelatedPub,
 				defaultValues: {
 					...defaultValues,
 					relatedPub: {
@@ -186,11 +185,29 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 		return { schema: baseSchema, defaultValues };
 	}, [editorSpecifiers.relatedPubId]);
 
-	const form = useForm<typeof schema>({
+	const form = useForm<typeof baseSchema | typeof schemaWithRelatedPub>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues,
-		resolver: typeboxResolver(schema),
+		resolver: (values, context, options) => {
+			let schema = baseSchema;
+			if (editorSpecifiers.relatedPubId) {
+				const slug = values.relatedPub.slug;
+				const pubField = relatedPubFields.find((pf) => pf.slug === slug);
+				schema = Type.Object({
+					pubTypeId: Type.String(),
+					relatedPub: Type.Object({
+						relatedPubId: Type.String(),
+						slug: Type.String(),
+						value: pubField?.schemaName
+							? getJsonSchemaByCoreSchemaType(pubField.schemaName)
+							: Type.Any(),
+					}),
+				});
+			}
+			const createResolver = typeboxResolver(schema);
+			return createResolver(values, context, options);
+		},
 	});
 
 	const path = usePathname();
@@ -237,7 +254,7 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 					</Button>
 					<Button
 						type="submit"
-						// disabled={form.formState.isSubmitting || !form.formState.isValid}
+						disabled={form.formState.isSubmitting || !form.formState.isValid}
 						className="flex items-center gap-x-2"
 					>
 						{form.formState.isSubmitting ? (

@@ -64,9 +64,6 @@ export default async function Page(props: {
 	if (searchParams["stageId"]) {
 		pubEditorSpecifiers.stageId = searchParams["stageId"];
 	}
-	if (searchParams["parentId"]) {
-		pubEditorSpecifiers.parentId = searchParams["parentId"];
-	}
 
 	return (
 		<ContentLayout
