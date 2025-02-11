@@ -26,15 +26,9 @@ import { useFormElementToggleContext } from "~/app/components/forms/FormElementT
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 const SAVE_WAIT_MS = 5000;
-
-const isUserSelectField = (slug: string, elements: BasicFormElements[]) => {
-	const element = elements.find((e) => e.slug === slug);
-	return element?.schemaName === CoreSchemaType.MemberId;
-};
 
 const preparePayload = ({
 	formElements,
@@ -48,17 +42,16 @@ const preparePayload = ({
 	toggleContext: FormElementToggleContext;
 }) => {
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug, schemaName } of formElements) {
+	for (const { slug } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
 			// Only send fields that were changed.
+			// TODO: this check doesn't quite work for related pub field arrays.
+			// perhaps they are initialized differently so always show up as dirty?
 			formState.dirtyFields[slug]
 		) {
-			payload[slug] =
-				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(formValues[slug])
-					: formValues[slug];
+			payload[slug] = formValues[slug];
 		}
 	}
 	return payload;
@@ -69,7 +62,7 @@ const preparePayload = ({
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
 const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
-	const defaultValues: FieldValues = { ...pubValues };
+	const defaultValues: FieldValues = {};
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
@@ -325,12 +318,6 @@ export const PubEditorClient = ({
 
 	const handleAutoSave = useCallback(
 		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
-			// Don't auto save while editing the user ID field. the query params
-			// will clash and it will be a bad time :(
-			const target = evt?.target as HTMLInputElement;
-			if (target?.name && isUserSelectField(target.name, formElements)) {
-				return;
-			}
 			if (saveTimer) {
 				clearTimeout(saveTimer);
 			}

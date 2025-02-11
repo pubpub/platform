@@ -143,6 +143,21 @@ export const run = defineRun<typeof action>(
 						},
 					});
 				}
+				// If there's html but no version yet exists, create one
+			} else {
+				if (formattedData.pubHtml) {
+					relations.push({
+						slug: `${communitySlug}:versions`,
+						value: null,
+						relatedPub: {
+							pubTypeId: VersionType?.id || "",
+							values: {
+								[`${communitySlug}:description`]: "",
+								[`${communitySlug}:content`]: formattedData.pubHtml,
+							},
+						},
+					});
+				}
 			}
 
 			if (relations.length > 0) {

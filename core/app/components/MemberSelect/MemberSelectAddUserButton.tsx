@@ -9,27 +9,33 @@ import { MemberSelectAddUserForm } from "./MemberSelectAddUserForm";
 type Props = {
 	community: Communities;
 	email: string;
+	onUserAdded: () => void;
 };
 
 export const MemberSelectAddUserButton = (props: Props) => {
 	const [open, setOpen] = useState(false);
 
-	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-		e.preventDefault();
-		setOpen(true);
-	}, []);
-
 	return (
 		<>
 			<Button
 				variant="ghost"
-				onClick={onClick}
+				onClick={() => setOpen(true)}
 				className={cn(open && "hidden", "h-12 w-full flex-col items-start")}
+				data-testid="member-select-add-button"
 			>
 				<span>Member not found</span>
 				<p className="text-xs font-normal">Click to add a user to your community</p>
 			</Button>
-			{open && <MemberSelectAddUserForm email={props.email} community={props.community} />}
+			{open && (
+				<MemberSelectAddUserForm
+					email={props.email}
+					community={props.community}
+					onSubmitSuccess={() => {
+						props.onUserAdded();
+						setOpen(false);
+					}}
+				/>
+			)}
 		</>
 	);
 };
