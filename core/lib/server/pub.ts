@@ -78,7 +78,7 @@ type FlatPub = PubNoChildren & {
 };
 
 // pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
-// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parentId or PubsInStages.pubId
+// pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parentId
 // It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
 export const pubValuesByRef = (pubIdRef: StringReference<Database, keyof Database>) => {
 	return (eb: ExpressionBuilder<Database, keyof Database>) => pubValues(eb, { pubIdRef });
@@ -200,11 +200,7 @@ const withPubChildren = ({
 			.$if(!!communityId, (qb) =>
 				qb.where("pubs.communityId", "=", communityId!).where("pubs.parentId", "is", null)
 			)
-			.$if(!!stageId, (qb) =>
-				qb
-					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-					.where("PubsInStages.stageId", "=", stageId!)
-			)
+			.$if(!!stageId, (qb) => qb.where("pubs.stageId", "=", stageId!))
 			.unionAll((eb) => {
 				return eb
 					.selectFrom("pubs")
@@ -248,6 +244,7 @@ const pubColumns = [
 	"assigneeId",
 	"parentId",
 	"title",
+	"stageId",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
 export const getPubBase = (
@@ -268,24 +265,8 @@ export const getPubBase = (
 			pubAssignee(eb),
 			jsonArrayFrom(
 				eb
-					.selectFrom("PubsInStages")
-					.select(["PubsInStages.stageId as id"])
-					.whereRef("PubsInStages.pubId", "=", "pubs.id")
-			).as("stages"),
-			jsonArrayFrom(
-				eb
 					.selectFrom("children")
-					.select((eb) => [
-						...pubColumns,
-						"children.values",
-						"children.pubType",
-						jsonArrayFrom(
-							eb
-								.selectFrom("PubsInStages")
-								.select(["PubsInStages.stageId as id"])
-								.whereRef("PubsInStages.pubId", "=", "children.id")
-						).as("stages"),
-					])
+					.select([...pubColumns, "children.values", "children.pubType"])
 					.$narrowType<{ values: PubValues }>()
 			).as("children"),
 		])
@@ -366,11 +347,7 @@ export const _deprecated_getPubs = async (
 			.$if(Boolean(props.communityId), (eb) =>
 				eb.where("pubs.communityId", "=", props.communityId!)
 			)
-			.$if(Boolean(props.stageId), (eb) =>
-				eb
-					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-					.where("PubsInStages.stageId", "=", props.stageId!)
-			)
+			.$if(Boolean(props.stageId), (eb) => eb.where("pubs.stageId", "=", props.stageId!))
 			.$if(Boolean(params.onlyParents), (eb) => eb.where("pubs.parentId", "is", null))
 			.limit(limit)
 			.offset(offset)
@@ -519,24 +496,10 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 					pubTypeId: body.pubTypeId as PubTypesId,
 					assigneeId: body.assigneeId as UsersId,
 					parentId: parentId as PubsId,
+					stageId,
 				})
 				.returningAll()
 		).executeTakeFirstOrThrow();
-
-		let createdStageId: StagesId | undefined;
-		if (stageId) {
-			const result = await autoRevalidate(
-				trx
-					.insertInto("PubsInStages")
-					.values((eb) => ({
-						pubId: newPub.id,
-						stageId: expect(stageId),
-					}))
-					.returningAll()
-			).executeTakeFirstOrThrow();
-
-			createdStageId = result.stageId;
-		}
 
 		if (body.members && Object.keys(body.members).length) {
 			await trx
@@ -585,7 +548,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		if (!body.children && !body.relatedPubs) {
 			return {
 				...pub,
-				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: [],
 				depth,
@@ -614,7 +576,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		if (!body.relatedPubs) {
 			return {
 				...pub,
-				stageId: createdStageId ?? null,
 				values: hydratedValues,
 				children: children.length ? children : [],
 				depth,
@@ -642,7 +603,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 
 		return {
 			...pub,
-			stageId: createdStageId,
 			values: [...pubValues, ...relatedPubs],
 			children,
 			depth,
@@ -685,7 +645,7 @@ export const deletePub = async ({
 };
 
 export const getPubStage = (pubId: PubsId, trx = db) =>
-	autoCache(trx.selectFrom("PubsInStages").select("stageId").where("pubId", "=", pubId));
+	autoCache(trx.selectFrom("pubs").select("stageId").where("id", "=", pubId));
 
 export const getPlainPub = (pubId: PubsId, trx = db) =>
 	autoCache(trx.selectFrom("pubs").selectAll().where("id", "=", pubId));
@@ -1350,8 +1310,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 					// we need to do this weird cast, because kysely does not support typing the selecting from a later CTE
 					// which is possible only in a with recursive query
 					.selectFrom("root_pubs_limited as p" as unknown as "pubs as p")
-					// TODO: can we avoid doing this join again since it's already in root pubs?
-					.leftJoin("PubsInStages", "p.id", "PubsInStages.pubId")
 					.$if(Boolean(withRelatedPubs), (qb) =>
 						qb
 							.leftJoin("pub_values as pv", (join) =>
@@ -1371,7 +1329,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 						"p.createdAt",
 						"p.updatedAt",
 						"p.title",
-						"PubsInStages.stageId",
+						"p.stageId",
 						"p.parentId",
 						sql<number>`1`.as("depth"),
 						sql<boolean>`false`.as("isCycle"),
@@ -1408,7 +1366,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 										])
 									)
 								)
-								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 								.where((eb) =>
 									eb.exists(
 										eb.selectFrom("capabilities" as any).where((ebb) => {
@@ -1440,7 +1397,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 													eb(
 														"capabilities.membId",
 														"=",
-														eb.ref("PubsInStages.stageId")
+														eb.ref("pubs.stageId")
 													),
 												]),
 												eb.and([
@@ -1490,7 +1447,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									"pubs.createdAt",
 									"pubs.updatedAt",
 									"pubs.title",
-									"PubsInStages.stageId",
+									"pubs.stageId",
 									"pubs.parentId",
 									// increment the depth
 									sql<number>`pub_tree.depth + 1`.as("depth"),
@@ -1631,8 +1588,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 					.selectFrom("pubs")
 					.selectAll("pubs")
 					.where("pubs.communityId", "=", props.communityId)
-					.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-					.select("PubsInStages.stageId")
 					.where((eb) =>
 						eb.exists(
 							eb
@@ -1641,11 +1596,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 									eb.or([
 										eb.and([
 											eb("capabilities.type", "=", MembershipType.stage),
-											eb(
-												"capabilities.membId",
-												"=",
-												eb.ref("PubsInStages.stageId")
-											),
+											eb("capabilities.membId", "=", eb.ref("pubs.stageId")),
 										]),
 										eb.and([
 											eb("capabilities.type", "=", MembershipType.pub),
@@ -1661,7 +1612,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 					)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
 					.$if(Boolean(props.stageId), (qb) =>
-						qb.where("PubsInStages.stageId", "=", props.stageId!)
+						qb.where("pubs.stageId", "=", props.stageId!)
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
@@ -1894,11 +1845,7 @@ export const getPubsCount = async (props: {
 	const pubs = await db
 		.selectFrom("pubs")
 		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props.stageId), (qb) =>
-			qb
-				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where("PubsInStages.stageId", "=", props.stageId!)
-		)
+		.$if(Boolean(props.stageId), (qb) => qb.where("pubs.stageId", "=", props.stageId!))
 		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "=", props.pubTypeId!))
 		.select((eb) => eb.fn.countAll<number>().as("count"))
 		.executeTakeFirstOrThrow();
@@ -2066,10 +2013,8 @@ export const fullTextSearch = async (
 			jsonObjectFrom(
 				eb
 					.selectFrom("stages")
-					.leftJoin("PubsInStages", "stages.id", "PubsInStages.stageId")
 					.select(["stages.id", "stages.name"])
-					.whereRef("PubsInStages.pubId", "=", "pubs.id")
-					.limit(1)
+					.whereRef("stages.id", "=", "pubs.stageId")
 			).as("stage"),
 		])
 		.where("pubs.communityId", "=", communityId)

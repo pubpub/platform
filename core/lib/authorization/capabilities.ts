@@ -84,14 +84,11 @@ export const userCan = async <T extends CapabilityTarget>(
 ) => {
 	if (target.type === MembershipType.pub) {
 		const capabilitiesQuery = db
-			.with("stage", (db) =>
+			.with("pub", (db) =>
 				db
-					.selectFrom("PubsInStages")
-					.where("PubsInStages.pubId", "=", target.pubId)
-					.select("PubsInStages.stageId")
-			)
-			.with("community", (db) =>
-				db.selectFrom("pubs").where("pubs.id", "=", target.pubId).select("pubs.communityId")
+					.selectFrom("pubs")
+					.where("pubs.id", "=", target.pubId)
+					.select(["pubs.communityId", "pubs.stageId"])
 			)
 			.with("stage_ms", (db) =>
 				db
@@ -104,7 +101,7 @@ export const userCan = async <T extends CapabilityTarget>(
 							// one stage. But we don't actually expect there to be multiple stageIds
 							// returned (for now)
 							"in",
-							eb.selectFrom("stage").select("stageId")
+							eb.selectFrom("pub").select("stageId")
 						)
 					)
 					.select("role")
@@ -120,7 +117,7 @@ export const userCan = async <T extends CapabilityTarget>(
 				db
 					.selectFrom("community_memberships")
 					.where("community_memberships.userId", "=", userId)
-					.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
+					.whereRef("communityId", "=", db.selectFrom("pub").select("communityId"))
 					.select("role")
 			)
 

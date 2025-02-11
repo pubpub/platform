@@ -98,9 +98,9 @@ export const availableStagesAndCurrentStage = ({
 		db
 			.with("currentStageId", (eb) =>
 				eb
-					.selectFrom("PubsInStages")
+					.selectFrom("pubs")
 					.select(["stageId as currentStageId"])
-					.where("PubsInStages.pubId", "=", pubId)
+					.where("pubs.id", "=", pubId)
 			)
 			.selectFrom("stages")
 			.select((eb) => [
@@ -119,7 +119,7 @@ export const availableStagesAndCurrentStage = ({
 						.selectFrom("stages")
 						.select(["id", "name", "order"])
 						.orderBy("order desc")
-						.where("stages.communityId", "=", communityId as CommunitiesId)
+						.where("stages.communityId", "=", communityId)
 				).as("availableStagesOfCurrentPub"),
 			])
 	);

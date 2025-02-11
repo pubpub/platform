@@ -137,7 +137,7 @@ export const deleteStage = defineServerAction(async function deleteStage(stageId
 			cause: error,
 		};
 	} finally {
-		await revalidateTagsForCommunity(["stages", "PubsInStages"]);
+		await revalidateTagsForCommunity(["stages", "pubs"]);
 	}
 });
 
@@ -266,7 +266,7 @@ export const revalidateStages = defineServerAction(async function revalidateStag
 		return ApiError.NOT_LOGGED_IN;
 	}
 
-	await revalidateTagsForCommunity(["stages", "PubsInStages"]);
+	await revalidateTagsForCommunity(["stages", "pubs"]);
 });
 
 export const addAction = defineServerAction(async function addAction(

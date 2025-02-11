@@ -671,16 +671,9 @@ export default async function main(communityUUID: CommunitiesId) {
 				.values({
 					communityId: communityUUID as CommunitiesId,
 					pubTypeId: submissionTypeId as PubTypesId,
+					stageId: stageIds[3] as StagesId,
 				})
 				.returning("id")
-		)
-		.with("pubs_in_stages", (db) =>
-			db.insertInto("PubsInStages").values((eb) => [
-				{
-					pubId: eb.selectFrom("new_pubs").select("id"),
-					stageId: stageIds[3] as StagesId,
-				},
-			])
 		)
 		.insertInto("pub_values")
 		.values((eb) => [

@@ -66,7 +66,7 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 				eb
 					.selectFrom("pubs")
 					.where("parentId", "=", parentId)
-					.select((eb) => ["id", "pubTypeId", "createdAt"])
+					.select(["id", "pubTypeId", "createdAt", "stageId"])
 					.orderBy("createdAt", "desc")
 			)
 			.with("children_with_specific_pubtype", (eb) =>
@@ -85,15 +85,14 @@ export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTyp
 								.limit(1)
 						)
 					)
-					.leftJoin("PubsInStages", "PubsInStages.pubId", "all_children.id")
-					.selectAll(["all_children"])
+					.selectAll("all_children")
 					.select((eb) => [
 						pubValuesByRef(
 							"all_children.id" as "pubs.id"
 						) as unknown as AliasedRawBuilder<PubValues, "values">,
 						memberFields(eb.ref("all_children.id")).as("memberFields"),
-						actionInstances(eb.ref("PubsInStages.stageId")).as("actionInstances"),
-						stages(eb.ref("PubsInStages.stageId")).as("stages"),
+						actionInstances(eb.ref("all_children.stageId")).as("actionInstances"),
+						stages(eb.ref("all_children.stageId")).as("stages"),
 					])
 			)
 			.with("counts_of_other_pub_types", (eb) =>
