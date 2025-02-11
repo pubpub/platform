@@ -12,6 +12,10 @@ on:
                 default: ubuntu-latest
             target:
                 type: string
+        outputs:
+            image-sha:
+                description: "Image SHA"
+                value: ${{ jobs.build.outputs.image-sha }}
         secrets:
             AWS_ACCESS_KEY_ID:
                 required: true
@@ -28,6 +32,8 @@ jobs:
     build:
         name: Build
         runs-on: ${{ inputs.runner }}
+        outputs:
+            image-sha: ${{ steps.label.outputs.label }}
 
         steps:
             - name: Checkout

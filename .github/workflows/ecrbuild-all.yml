@@ -9,6 +9,16 @@ on:
                 required: true
             AWS_SECRET_ACCESS_KEY:
                 required: true
+        outputs:
+            core-image:
+                description: "Core image SHA"
+                value: ${{ jobs.build-core.outputs.image-sha}}
+            base-image:
+                description: "Base image SHA"
+                value: ${{ jobs.build-base.outputs.image-sha }}
+            jobs-image:
+                description: "Jobs image SHA"
+                value: ${{ jobs.build-jobs.outputs.image-sha }}
 
 jobs:
     emit-sha-tag:
