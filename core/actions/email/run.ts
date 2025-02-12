@@ -16,6 +16,7 @@ import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { isClientException } from "~/lib/serverActions";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
@@ -94,9 +95,28 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			html,
 		}).send();
 
+		if (isClientException(result)) {
+			logger.error({
+				msg: "An error occurred while sending an email",
+				error: result.error,
+				pub,
+				config,
+				args,
+				renderMarkdownWithPubContext,
+			});
+		} else {
+			logger.info({
+				msg: "Successfully sent email",
+				pub,
+				config,
+				args,
+				renderMarkdownWithPubContext,
+			});
+		}
+
 		return result;
 	} catch (error) {
-		logger.error({ msg: "email", error });
+		logger.error({ msg: "Failed to send email", error });
 
 		return {
 			title: "Failed to Send Email",
@@ -104,12 +124,4 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			cause: error,
 		};
 	}
-
-	logger.info({ msg: "email", pub, config, args });
-
-	return {
-		success: true,
-		report: "Email sent",
-		data: {},
-	};
 });

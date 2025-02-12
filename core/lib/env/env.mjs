@@ -19,6 +19,7 @@ export const env = createEnv({
 		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
 	},
 	server: {
+		SELF_HOSTED: z.string().optional(),
 		API_KEY: z.string(),
 		ASSETS_BUCKET_NAME: z.string(),
 		ASSETS_REGION: z.string(),

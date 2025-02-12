@@ -34,7 +34,9 @@ function buildSend(emailPromise: () => Promise<RequiredOptions>) {
 			options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
 				name?: string;
 			}
-		) => Promise<{ success: true; report?: string } | { error: string }>,
+		) => Promise<
+			{ success: true; report?: string; data: Record<string, unknown> } | { error: string }
+		>,
 	};
 }
 
@@ -66,6 +68,8 @@ async function send(
 
 		return {
 			success: true,
+			report: "Email sent",
+			data: {},
 		};
 	} catch (error) {
 		logger.error({
