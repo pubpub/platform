@@ -11,8 +11,9 @@ import type { XOR } from "../types";
 import type { FormInviteLinkProps } from "./form";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/authentication/createMagicLink";
+import { env } from "../env/env.mjs";
 import { createFormInviteLink } from "./form";
-import { smtpclient } from "./mailgun";
+import { getSmtpClient } from "./mailgun";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
 
@@ -20,8 +21,8 @@ type RequiredOptions = Required<Pick<SendMailOptions, "to" | "subject">> &
 	XOR<{ html: string }, { text: string }>;
 
 export const DEFAULT_OPTIONS = {
-	from: `hello@pubpub.org`,
-	name: `PubPub Team`,
+	from: env.MAILGUN_SMTP_FROM ?? "hello@pubpub.org",
+	name: env.MAILGUN_SMTP_FROM_NAME ?? "PubPub Team",
 } as const;
 
 // export class Email {
@@ -33,7 +34,9 @@ function buildSend(emailPromise: () => Promise<RequiredOptions>) {
 			options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
 				name?: string;
 			}
-		) => Promise<{ success: true; report?: string } | { error: string }>,
+		) => Promise<
+			{ success: true; report?: string; data: Record<string, unknown> } | { error: string }
+		>,
 	};
 }
 
@@ -54,7 +57,7 @@ async function send(
 			},
 		});
 
-		const send = await smtpclient.sendMail({
+		await getSmtpClient().sendMail({
 			from: `${options?.name ?? DEFAULT_OPTIONS.name} <${options?.from ?? DEFAULT_OPTIONS.from}>`,
 			to: required.to,
 			subject: required.subject,
@@ -65,6 +68,8 @@ async function send(
 
 		return {
 			success: true,
+			report: "Email sent",
+			data: {},
 		};
 	} catch (error) {
 		logger.error({
