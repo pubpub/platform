@@ -17,10 +17,7 @@ const deepSortValues = (pub: ProcessedPub): ProcessedPub => {
 };
 
 expect.extend({
-	async toExist(received: PubsId | ProcessedPub, expected?: typeof db) {
-		if (typeof received !== "string") {
-			throw new Error("toExist() can only be called with a PubsId");
-		}
+	async toExist(received: PubsId, expected?: typeof db) {
 		const { getPlainPub } = await import("../server/pub");
 
 		const pub = await getPlainPub(received, expected).executeTakeFirst();
@@ -36,14 +33,7 @@ expect.extend({
 		};
 	},
 
-	toHaveValues(
-		received: PubsId | ProcessedPub,
-		expected: Partial<ProcessedPub["values"][number]>[]
-	) {
-		if (typeof received === "string") {
-			throw new Error("toHaveValues() can only be called with a ProcessedPub");
-		}
-
+	toHaveValues(received: ProcessedPub, expected: Partial<ProcessedPub["values"][number]>[]) {
 		const pub = received;
 		const sortedPubValues = deepSortValues(pub);
 
