@@ -7,7 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm, useFormContext } from "react-hook-form";
-import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { PubsId, PubTypes, StagesId } from "db/public";
 import { Button } from "ui/button";
@@ -136,8 +136,7 @@ const RelatedPubValueSelector = ({
 	useEffect(() => {
 		// Reset the value when schemas change
 		if (pubField?.schemaName) {
-			const defaultValue = getDefaultValueByCoreSchemaType(pubField?.schemaName);
-			setValue(slug, defaultValue, { shouldValidate: true });
+			setValue(slug, null, { shouldValidate: true });
 		}
 	}, [pubField?.schemaName]);
 

@@ -240,7 +240,7 @@ test.describe("Creating a pub", () => {
 		const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true });
 		await createDialog.waitFor();
 		await createDialog.getByLabel("Pub type").click();
-		await page.getByRole("option").first().click();
+		await page.getByRole("option", { name: "Submission" }).click();
 
 		// Specify relationship
 		await createDialog.getByLabel("Relationship").click();
@@ -255,7 +255,7 @@ test.describe("Creating a pub", () => {
 		await page.waitForURL(`/c/${COMMUNITY_SLUG}/pubs/create**`);
 
 		// Fill in title and content
-		const related = { title: "related", content: "I am a child" };
+		const related = { title: "related", content: "I am related" };
 		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(related.title);
 		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill(related.content);
 		await page.getByRole("button", { name: "Save" }).click();

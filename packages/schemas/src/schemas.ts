@@ -178,4 +178,7 @@ export const FileUpload = Type.Array(
 export const Null = Type.Null({ description: "An empty value" });
 
 // Rich text is validated via prosemirror on submit, so we allow Any here
-export const RichText = Type.Not(Type.Null(), { description: "A rich text document" });
+export const RichText = Type.Not(Type.Null(), {
+	description: "A rich text document",
+	error: "Value cannot be null",
+});
