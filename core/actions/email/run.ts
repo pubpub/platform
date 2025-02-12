@@ -88,11 +88,13 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			true
 		);
 
-		await Email.generic({
+		const result = await Email.generic({
 			to: expect(recipient?.user.email ?? recipientEmail),
 			subject,
 			html,
 		}).send();
+
+		return result;
 	} catch (error) {
 		logger.error({ msg: "email", error });
 
