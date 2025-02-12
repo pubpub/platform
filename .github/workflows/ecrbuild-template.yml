@@ -12,6 +12,12 @@ on:
                 default: ubuntu-latest
             target:
                 type: string
+            publish_to_ghcr:
+                type: boolean
+                default: false
+            ghcr_image_name:
+                type: string
+                required: false
         outputs:
             image-sha:
                 description: "Image SHA"
@@ -81,6 +87,16 @@ jobs:
                     echo "target=${TARGET:-next-app-${PACKAGE}}" >> $GITHUB_OUTPUT
                   fi
                   echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
+                  if [[ ${{ inputs.publish_to_ghcr }} == "true" && -n ${{ inputs.ghcr_image_name }} ]]
+                  then
+                    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+
+                    echo "ghcr_latest_label=ghcr.io/pubpub/${{ inputs.ghcr_image_name }}:latest" >> $GITHUB_OUTPUT
+
+                    echo "ghcr_sha_label=ghcr.io/pubpub/${{ inputs.ghcr_image_name }}:$sha_short" >> $GITHUB_OUTPUT
+
+                    echo "ghcr_timestamp_label=ghcr.io/pubpub/${{ inputs.ghcr_image_name }}:$TIMESTAMP" >> $GITHUB_OUTPUT
+                  fi
 
             - name: Check if SENTRY_AUTH_TOKEN is set
               run: |
@@ -109,6 +125,10 @@ jobs:
                   secrets: |
                       SENTRY_AUTH_TOKEN=${{ env.SENTRY_AUTH_TOKEN }}
                   target: ${{ steps.label.outputs.target }}
-                  tags: ${{ steps.label.outputs.label }}
+                  tags: |
+                      ${{ steps.label.outputs.label }}
+                      ${{ steps.label.outputs.ghcr_latest_label }}
+                      ${{ steps.label.outputs.ghcr_sha_label }}
+                      ${{ steps.label.outputs.ghcr_timestamp_label }}
                   platforms: linux/amd64
                   push: true
