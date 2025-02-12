@@ -5,7 +5,7 @@ import type { GetPubsResult } from "./server";
 export type PubTitleProps = {
 	title?: string | null;
 	createdAt: Date;
-	values:
+	values?:
 		| { field: { slug: string }; value: unknown }[]
 		| Record<string, unknown>
 		| { fieldSlug: string; value: unknown }[];
@@ -21,6 +21,10 @@ export const getPubTitle = (pub: PubTitleProps): string => {
 	}
 
 	const fallbackTitle = `Untitled ${pub.pubType.name} - ${new Date(pub.createdAt).toDateString()}`;
+
+	if (!pub.values) {
+		return fallbackTitle;
+	}
 
 	// backup logic for when title is not defined on the pubtype
 	if (!Array.isArray(pub.values)) {

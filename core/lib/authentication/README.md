@@ -10,7 +10,7 @@ Auth tokens are used to authenticate users.
 
 They are used in one place:
 
--   /magic-link
+- /magic-link
 
 Ideally, we do not need to think about auth tokens much as we are writing pages. The tokens get exchanged for sessions, which have a certain type (see below).
 

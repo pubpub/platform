@@ -2,7 +2,7 @@
 
 import type { Body, Meta, UppyFile } from "@uppy/core";
 
-import React, { forwardRef, useEffect } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import Uppy from "@uppy/core";
 import { Dashboard } from "@uppy/react";
 
@@ -16,7 +16,6 @@ import type { AwsBody } from "@uppy/aws-s3";
 import AwsS3Multipart from "@uppy/aws-s3";
 
 const pluginName = "AwsS3Multipart" as const;
-const uppy = new Uppy<Meta, AwsBody>().use(AwsS3Multipart);
 
 export type FormattedFile = {
 	id: string;
@@ -34,9 +33,11 @@ type FileUploadProps = {
 	onUpdateFiles: (files: FormattedFile[]) => void;
 	disabled?: boolean;
 	endpoint?: string;
+	id?: string;
 };
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
+	const [uppy] = useState(() => new Uppy<Meta, AwsBody>({ id: props.id }).use(AwsS3Multipart));
 	useEffect(() => {
 		uppy.on("complete", () => {
 			const uploadedFiles = uppy.getFiles();
@@ -85,7 +86,13 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 		});
 	}, [props.upload]);
 
-	return <Dashboard uppy={uppy} disabled={props.disabled} />;
+	return (
+		<Dashboard
+			uppy={uppy}
+			disabled={props.disabled}
+			id={props.id ? `dashboard-${props.id}` : undefined}
+		/>
+	);
 });
 
 export { FileUpload };

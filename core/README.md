@@ -48,13 +48,13 @@ Explore with `pnpm prisma-studio`.
 
 ## Folder structure
 
--   `/actions` Configuration/lib for the action framework.
--   `/app` The Next.JS [app directory](https://nextjs.org/docs/app/building-your-application/routing).
--   `/lib` Functions that are re-used in multiple locations throughout the codebase. Akin to a `/utils` folder.
--   `/prisma` Config and functions for using Prisma
--   `/kysely` Config and functions for using Kysely
--   `/public` Static files that will be publicly available at `https://[URL]/<filename>`.
--   `/playwright` End-to-end tests
+- `/actions` Configuration/lib for the action framework.
+- `/app` The Next.JS [app directory](https://nextjs.org/docs/app/building-your-application/routing).
+- `/lib` Functions that are re-used in multiple locations throughout the codebase. Akin to a `/utils` folder.
+- `/prisma` Config and functions for using Prisma
+- `/kysely` Config and functions for using Kysely
+- `/public` Static files that will be publicly available at `https://[URL]/<filename>`.
+- `/playwright` End-to-end tests
 
 ## Authentication
 

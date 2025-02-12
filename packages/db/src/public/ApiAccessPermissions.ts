@@ -35,6 +35,10 @@ export interface ApiAccessPermissionsTable {
 		ApiAccessPermissionConstraints | null,
 		ApiAccessPermissionConstraints | null
 	>;
+
+	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 }
 
 export type ApiAccessPermissions = Selectable<ApiAccessPermissionsTable>;
@@ -53,6 +57,8 @@ export const apiAccessPermissionsSchema = z.object({
 	scope: apiAccessScopeSchema,
 	accessType: apiAccessTypeSchema,
 	constraints: z.unknown().nullable(),
+	createdAt: z.date(),
+	updatedAt: z.date(),
 });
 
 export const apiAccessPermissionsInitializerSchema = z.object({
@@ -61,6 +67,8 @@ export const apiAccessPermissionsInitializerSchema = z.object({
 	scope: apiAccessScopeSchema,
 	accessType: apiAccessTypeSchema,
 	constraints: z.unknown().optional().nullable(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });
 
 export const apiAccessPermissionsMutatorSchema = z.object({
@@ -69,4 +77,6 @@ export const apiAccessPermissionsMutatorSchema = z.object({
 	scope: apiAccessScopeSchema.optional(),
 	accessType: apiAccessTypeSchema.optional(),
 	constraints: z.unknown().optional().nullable(),
+	createdAt: z.date().optional(),
+	updatedAt: z.date().optional(),
 });

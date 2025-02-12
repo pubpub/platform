@@ -46,7 +46,6 @@ export const ConfidenceElement = ({
 			<FormField
 				control={control}
 				name={slug}
-				defaultValue={[0, 50, 100]}
 				render={({ field }) => {
 					// Need to pass the field's onChange as onValueChange in Confidence
 					// and make sure it is not passed in as the default onChange
@@ -57,6 +56,9 @@ export const ConfidenceElement = ({
 							<FormControl>
 								<ForwardedRefConfidence
 									{...fieldProps}
+									// Make sure null becomes undefined so that defaultValue can kick in
+									value={field.value == null ? undefined : field.value}
+									defaultValue={[0, 50, 100]}
 									disabled={!isEnabled}
 									min={0}
 									max={100}

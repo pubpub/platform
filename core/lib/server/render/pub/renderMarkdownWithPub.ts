@@ -24,6 +24,8 @@ import { getPubTitle } from "~/lib/pubs";
 import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
 
+const ERR_FORM_MISSING_RECIPIENT = `You can't use :link{form="slug"} directive with an email address. You must set the "Recipient member" field.`;
+
 const isDirective = (node: Node): node is NodeMdast & Directive => {
 	return (
 		node.type === "containerDirective" ||
@@ -290,7 +292,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 					if ("form" in attrs) {
 						props.href = await utils.renderFormInviteLink({
 							formSlug: expect(attrs.form),
-							userId: context.recipient.user.id,
+							userId: expect(context.recipient, ERR_FORM_MISSING_RECIPIENT).user.id,
 							communityId: context.communityId,
 							pubId: context.pub.id as PubsId,
 						});

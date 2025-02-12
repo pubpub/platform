@@ -63,6 +63,7 @@ export const FileUploadElement = ({
 									onUpdateFiles={(event) => {
 										field.onChange(event);
 									}}
+									id={slug}
 								/>
 							</FormControl>
 							<FormDescription>{config.help}</FormDescription>

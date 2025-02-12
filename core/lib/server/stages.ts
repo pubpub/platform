@@ -1,5 +1,5 @@
 import { QueryCreator, sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
@@ -165,3 +165,15 @@ export const getStages = ({ communityId, stageId, userId }: CommunityStageProps)
 };
 
 export type CommunityStage = AutoReturnType<typeof getStages>["executeTakeFirstOrThrow"];
+
+export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
+	return autoRevalidate(
+		trx
+			.with("leave_stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
+			.insertInto("PubsInStages")
+			.values([{ pubId, stageId }])
+			// Without this on conflict clause, the db errors if this function is called with the
+			// stageId the pub already belongs to
+			.onConflict((oc) => oc.doNothing())
+	);
+};
