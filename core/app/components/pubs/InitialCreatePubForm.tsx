@@ -153,7 +153,6 @@ const schemaWithRelatedPub = Type.Object({
 	relatedPub: Type.Object({
 		relatedPubId: Type.String(),
 		slug: Type.String(),
-		// TODO: getJsonSchemaByCoreSchemaType() ?
 		value: Type.Any(),
 	}),
 });
@@ -194,6 +193,7 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 			if (editorSpecifiers.relatedPubId) {
 				const slug = values.relatedPub.slug;
 				const pubField = relatedPubFields.find((pf) => pf.slug === slug);
+				// The same as `schemaWithRelatedPub` but with the `value` schema dynamically generated based on the chosen field
 				schema = Type.Object({
 					pubTypeId: Type.String(),
 					relatedPub: Type.Object({
