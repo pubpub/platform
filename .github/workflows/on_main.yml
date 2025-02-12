@@ -14,6 +14,8 @@ jobs:
     build-all:
         needs: ci
         uses: ./.github/workflows/ecrbuild-all.yml
+        with:
+            publish_to_ghcr: true
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}

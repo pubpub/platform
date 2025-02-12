@@ -14,6 +14,7 @@ type GetPubFieldsInput =
 			communityId: CommunitiesId;
 			isRelated?: boolean;
 			slugs?: string[];
+			trx?: typeof db;
 	  }
 	| {
 			pubId: PubsId;
@@ -21,6 +22,7 @@ type GetPubFieldsInput =
 			communityId: CommunitiesId;
 			isRelated?: boolean;
 			slugs?: string[];
+			trx?: typeof db;
 	  }
 	| {
 			pubId?: never;
@@ -28,6 +30,7 @@ type GetPubFieldsInput =
 			communityId: CommunitiesId;
 			isRelated?: boolean;
 			slugs?: string[];
+			trx?: typeof db;
 	  };
 
 /**
@@ -42,7 +45,7 @@ type GetPubFieldsInput =
 export const getPubFields = (props: GetPubFieldsInput) => autoCache(_getPubFields(props));
 
 export const _getPubFields = (props: GetPubFieldsInput) =>
-	db
+	(props.trx ?? db)
 		.with("ids", (eb) =>
 			eb
 				.selectFrom("pub_fields")
