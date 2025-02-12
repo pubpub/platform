@@ -35,7 +35,6 @@ export const FileUploadElement = ({
 		return upload(pubId, fileName);
 	};
 	const { control, getValues, formState } = useFormContext();
-	console.log(formState.errors, getValues(slug));
 
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
