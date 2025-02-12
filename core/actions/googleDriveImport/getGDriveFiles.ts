@@ -1,3 +1,5 @@
+import type { Auth } from "googleapis";
+
 import { google } from "googleapis";
 
 import { logger } from "logger";
@@ -8,7 +10,21 @@ import { env } from "~/lib/env/env.mjs";
 // const keyFilePath = path.join(process.cwd(), 'src/utils/google/keyFile.json');
 // const keyFile = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
 // const keyFile = JSON.parse(env.GCLOUD_KEY_FILE);
-const keyFile = JSON.parse(Buffer.from(env.GCLOUD_KEY_FILE, "base64").toString());
+
+let keyFile: Auth.JWTInput;
+
+try {
+	if (!env.GCLOUD_KEY_FILE) {
+		throw new Error(
+			"GCLOUD_KEY_FILE is not set. You must set this to use the Google Drive import."
+		);
+	}
+
+	keyFile = JSON.parse(Buffer.from(env.GCLOUD_KEY_FILE, "base64").toString());
+} catch (e) {
+	logger.error("Error parsing Google Cloud key file");
+	throw e;
+}
 
 // Configure a JWT auth client
 const auth = new google.auth.JWT(keyFile.client_email, undefined, keyFile.private_key, [

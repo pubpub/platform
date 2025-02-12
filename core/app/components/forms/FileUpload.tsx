@@ -21,7 +21,7 @@ export function FileUploadPreview({ files }: { files: FileUpload }) {
 									The file is <strong>{file.fileSize}</strong> bytes in size. Its
 									MIME type is <strong>{file.fileType}</strong>.
 								</p>
-								<Button variant="secondary">
+								<Button variant="secondary" asChild>
 									<a target="_blank" href={file.fileUploadUrl}>
 										Open file in new tab
 									</a>

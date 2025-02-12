@@ -30,4 +30,6 @@ function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, instantiatedConfi
 	);
 }
 
-module.exports = { cleanupEnumComments: kanelDatabaseDefaultExportFixPreRenderHook };
+module.exports = {
+	cleanupEnumComments: kanelDatabaseDefaultExportFixPreRenderHook,
+};

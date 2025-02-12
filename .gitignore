@@ -70,3 +70,5 @@ core/supabase/.temp
 storybook-static
 
 ./playwright
+
+.local_data
