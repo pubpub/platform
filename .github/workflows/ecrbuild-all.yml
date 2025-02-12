@@ -9,6 +9,20 @@ on:
                 required: true
             AWS_SECRET_ACCESS_KEY:
                 required: true
+        inputs:
+            publish_to_ghcr:
+                type: boolean
+                default: false
+        outputs:
+            core-image:
+                description: "Core image SHA"
+                value: ${{ jobs.build-core.outputs.image-sha}}
+            base-image:
+                description: "Base image SHA"
+                value: ${{ jobs.build-base.outputs.image-sha }}
+            jobs-image:
+                description: "Jobs image SHA"
+                value: ${{ jobs.build-jobs.outputs.image-sha }}
 
 jobs:
     emit-sha-tag:
@@ -26,6 +40,9 @@ jobs:
 
     build-base:
         uses: ./.github/workflows/ecrbuild-template.yml
+        with:
+            publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
+            ghcr_image_name: platform-migrations
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -36,6 +53,8 @@ jobs:
         #   - build-base
         with:
             package: core
+            publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
+            ghcr_image_name: platform
             # we require a bigger lad
             # We are now public, default public runner is big enough
             # runner: ubuntu-latest-m
@@ -50,6 +69,8 @@ jobs:
         with:
             package: jobs
             target: jobs
+            publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
+            ghcr_image_name: platform-jobs
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
