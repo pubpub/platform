@@ -291,6 +291,7 @@ export const PubEditorClient = ({
 					communityId: community.id,
 					addUserToForm: isExternalForm,
 				});
+				// TODO: this currently overwrites existing pub values of the same field
 				if (relatedPub) {
 					await runUpdatePub({
 						pubId: relatedPub.pubId,

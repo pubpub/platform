@@ -2,12 +2,12 @@
 
 import type { FieldValues } from "react-hook-form";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm, useFormContext } from "react-hook-form";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { PubsId, PubTypes, StagesId } from "db/public";
 import { Button } from "ui/button";
@@ -130,6 +130,17 @@ const RelatedPubValueSelector = ({
 	sourcePubId: PubsId;
 	pubField: Props["relatedPubFields"][number] | undefined;
 }) => {
+	const { setValue } = useFormContext<typeof schemaWithRelatedPub>();
+	const slug = "relatedPub.value";
+
+	useEffect(() => {
+		// Reset the value when schemas change
+		if (pubField?.schemaName) {
+			const defaultValue = getDefaultValueByCoreSchemaType(pubField?.schemaName);
+			setValue(slug, defaultValue, { shouldValidate: true });
+		}
+	}, [pubField?.schemaName]);
+
 	if (!pubField) {
 		return null;
 	}
@@ -139,7 +150,7 @@ const RelatedPubValueSelector = ({
 			element={element}
 			pubId={sourcePubId}
 			// @ts-ignore TODO: how best to fix this?
-			slug="relatedPub.value"
+			slug={slug}
 			values={[]}
 			className="w-fit"
 		/>
@@ -154,7 +165,7 @@ const schemaWithRelatedPub = Type.Object({
 	relatedPub: Type.Object({
 		relatedPubId: Type.String(),
 		slug: Type.String(),
-		value: Type.Any(),
+		value: Type.Null(),
 	}),
 });
 
@@ -203,7 +214,7 @@ export const InitialCreatePubForm = ({
 						slug: Type.String(),
 						value: pubField?.schemaName
 							? getJsonSchemaByCoreSchemaType(pubField.schemaName)
-							: Type.Any(),
+							: Type.Null(),
 					}),
 				});
 			}
