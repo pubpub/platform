@@ -29,9 +29,9 @@ MAILGUN_SMTP_FROM="email@your-mailgun-domain.mailgun.org"
 MAILGUN_SMTP_FROM_NAME="Your Organization"
 ```
 
-#### GMail
+#### Gmail
 
-To use GMail to relay emails through PubPub, you will need to create an [app password](https://support.google.com/accounts/answer/185833?hl=en).
+To use Gmail to relay emails through PubPub, you will need to create an [app password](https://support.google.com/accounts/answer/185833?hl=en).
 
 You will be limited to 2000 emails per day by default this way.
 
