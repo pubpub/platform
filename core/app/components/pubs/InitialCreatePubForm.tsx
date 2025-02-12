@@ -138,6 +138,7 @@ const RelatedPubValueSelector = ({
 		<ConfigureRelatedValue
 			element={element}
 			pubId={sourcePubId}
+			// @ts-ignore TODO: how best to fix this?
 			slug="relatedPub.value"
 			values={[]}
 			className="w-fit"
@@ -157,32 +158,33 @@ const schemaWithRelatedPub = Type.Object({
 	}),
 });
 
-export interface PubEditorSpecifiers {
-	relatedPubId?: PubsId;
-	stageId?: StagesId;
-}
-
 interface Props {
 	pubTypes: Pick<PubTypes, "id" | "name">[];
 	relatedPubFields: Pick<PubField, "id" | "slug" | "name" | "schemaName">[];
-	editorSpecifiers: PubEditorSpecifiers;
+	stageId?: StagesId;
+	relatedPubId?: PubsId;
 }
 /** The first step in creating a pub—choosing a pub type, and possibly a related pub */
-export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifiers }: Props) => {
+export const InitialCreatePubForm = ({
+	pubTypes,
+	relatedPubFields,
+	stageId,
+	relatedPubId,
+}: Props) => {
 	const { defaultValues } = useMemo(() => {
 		const defaultValues = { pubTypeId: undefined };
-		if (editorSpecifiers.relatedPubId) {
+		if (relatedPubId) {
 			return {
 				defaultValues: {
 					...defaultValues,
 					relatedPub: {
-						relatedPubId: editorSpecifiers.relatedPubId,
+						relatedPubId,
 					},
 				},
 			};
 		}
 		return { schema: baseSchema, defaultValues };
-	}, [editorSpecifiers.relatedPubId]);
+	}, [relatedPubId]);
 
 	const form = useForm<typeof baseSchema | typeof schemaWithRelatedPub>({
 		mode: "onChange",
@@ -190,7 +192,7 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 		defaultValues,
 		resolver: (values, context, options) => {
 			let schema = baseSchema;
-			if (editorSpecifiers.relatedPubId) {
+			if (relatedPubId) {
 				const slug = values.relatedPub.slug;
 				const pubField = relatedPubFields.find((pf) => pf.slug === slug);
 				// The same as `schemaWithRelatedPub` but with the `value` schema dynamically generated based on the chosen field
@@ -231,7 +233,7 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 			: {};
 		const pubParams = new URLSearchParams({
 			pubTypeId: values.pubTypeId,
-			...editorSpecifiers,
+			...(stageId ? { stageId } : {}),
 			...related,
 		});
 		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
@@ -242,9 +244,9 @@ export const InitialCreatePubForm = ({ pubTypes, relatedPubFields, editorSpecifi
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<PubTypeSelector pubTypes={pubTypes} />
-				{editorSpecifiers.relatedPubId ? (
+				{relatedPubId ? (
 					<RelatedPubFieldSelector
-						sourcePubId={editorSpecifiers.relatedPubId}
+						sourcePubId={relatedPubId}
 						pubFields={relatedPubFields}
 					/>
 				) : null}

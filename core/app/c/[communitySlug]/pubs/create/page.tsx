@@ -59,12 +59,6 @@ export default async function Page(props: {
 
 	const formId = `create-pub`;
 
-	// Build the specifiers conditionally since PubEditor checks for the existence of the prop
-	const pubEditorSpecifiers: Record<string, string> = {};
-	if (searchParams["stageId"]) {
-		pubEditorSpecifiers.stageId = searchParams["stageId"];
-	}
-
 	return (
 		<ContentLayout
 			left={
@@ -81,7 +75,8 @@ export default async function Page(props: {
 						searchParams={searchParams}
 						communityId={community.id}
 						formId={formId}
-						{...pubEditorSpecifiers}
+						// PubEditor checks for the existence of the stageId prop
+						{...(searchParams["stageId"] ? { stageId: searchParams["stageId"] } : {})}
 					/>
 				</div>
 			</div>

@@ -62,10 +62,8 @@ const InitialCreatePubFormWithRelatedPub = async ({
 			<InitialCreatePubForm
 				pubTypes={pubTypes}
 				relatedPubFields={pubFields}
-				editorSpecifiers={{
-					stageId,
-					relatedPubId: relatedPub.pubId,
-				}}
+				stageId={stageId}
+				relatedPubId={relatedPub.pubId}
 			/>
 		</ContextEditorContextProvider>
 	);
@@ -121,13 +119,7 @@ export const CreatePubButton = async (props: Props) => {
 					stageId={stageId}
 				/>
 			) : (
-				<InitialCreatePubForm
-					pubTypes={pubTypes}
-					relatedPubFields={[]}
-					editorSpecifiers={{
-						stageId,
-					}}
-				/>
+				<InitialCreatePubForm pubTypes={pubTypes} relatedPubFields={[]} stageId={stageId} />
 			)}
 		</PathAwareDialog>
 	);
