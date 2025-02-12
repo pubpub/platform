@@ -18,6 +18,7 @@ export class PubTypesPage {
 		await this.page.getByTestId(`edit-pubtype-${pubTypeName}`).click();
 		await this.page.getByRole("combobox").click();
 		await this.page.getByRole("option", { name: fieldSlug }).click();
+		await this.page.getByText("Field added successfully", { exact: true }).waitFor();
 	}
 
 	async addType<T extends string>(

@@ -240,7 +240,7 @@ export default async function Page(props: {
 					parentPubId={pub.id}
 				/>
 			</Suspense>
-			<div className="flex flex-col gap-2">
+			<div className="flex flex-col gap-2" data-testid="related-pubs">
 				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
 				<CreatePubButton
 					text="Add Related Pub"
