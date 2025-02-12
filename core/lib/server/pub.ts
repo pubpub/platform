@@ -421,7 +421,7 @@ export const doesPubExist = async (
 /**
  * For recursive transactions
  */
-const maybeWithTrx = async <T>(
+export const maybeWithTrx = async <T>(
 	trx: Transaction<Database> | Kysely<Database>,
 	fn: (trx: Transaction<Database>) => Promise<T>
 ): Promise<T> => {
@@ -652,36 +652,82 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	return result;
 };
 
-export const deletePub = async ({
+export const deletePubValuesByValueId = async ({
 	pubId,
+	valueIds,
 	lastModifiedBy,
 	trx = db,
 }: {
 	pubId: PubsId;
+	valueIds: PubValuesId[];
 	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
-	// first get the values before they are deleted
-	const pubValues = await trx
-		.selectFrom("pub_values")
-		.where("pubId", "=", pubId)
-		.selectAll()
-		.execute();
+	if (valueIds.length === 0) {
+		return;
+	}
 
-	const deleteResult = await autoRevalidate(
-		trx.deleteFrom("pubs").where("id", "=", pubId)
-	).executeTakeFirstOrThrow();
+	const result = await maybeWithTrx(trx, async (trx) => {
+		const deletedPubValues = await autoRevalidate(
+			trx
+				.deleteFrom("pub_values")
+				.where("id", "in", valueIds)
+				.where("pubId", "=", pubId)
+				.returningAll()
+		).execute();
 
-	// this might not be necessary if we rarely delete pubs and
-	// give users ample warning that deletion is irreversible
-	// in that case we should probably also delete the relevant rows in the pub_values_history table
-	await addDeletePubValueHistoryEntries({
-		lastModifiedBy,
-		pubValues,
-		trx,
+		await addDeletePubValueHistoryEntries({
+			lastModifiedBy,
+			pubValues: deletedPubValues,
+			trx,
+		});
+
+		return deletedPubValues;
 	});
 
-	return deleteResult;
+	return result;
+};
+
+export const deletePub = async ({
+	pubId,
+	lastModifiedBy,
+	communityId,
+	trx = db,
+}: {
+	pubId: PubsId | PubsId[];
+	lastModifiedBy: LastModifiedBy;
+	communityId: CommunitiesId;
+	trx?: typeof db;
+}) => {
+	const result = await maybeWithTrx(trx, async (trx) => {
+		// first get the values before they are deleted
+		// that way we can add them to the history table
+		const pubValues = await trx
+			.selectFrom("pub_values")
+			.where("pubId", "in", Array.isArray(pubId) ? pubId : [pubId])
+			.selectAll()
+			.execute();
+
+		const deleteResult = await autoRevalidate(
+			trx
+				.deleteFrom("pubs")
+				.where("id", "in", Array.isArray(pubId) ? pubId : [pubId])
+				.where("communityId", "=", communityId)
+		).executeTakeFirstOrThrow();
+
+		// this might not be necessary if we rarely delete pubs and
+		// give users ample warning that deletion is irreversible
+		// in that case we should probably also delete the relevant rows in the pub_values_history table
+		await addDeletePubValueHistoryEntries({
+			lastModifiedBy,
+			pubValues,
+			trx,
+		});
+
+		return deleteResult;
+	});
+
+	return result;
 };
 
 export const getPubStage = (pubId: PubsId, trx = db) =>
@@ -698,10 +744,12 @@ const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	includeRelations = true,
+	trx = db,
 }: {
 	slugs: string[];
 	communityId: CommunitiesId;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
@@ -713,6 +761,7 @@ const getFieldInfoForSlugs = async ({
 		communityId,
 		slugs: toBeUpdatedPubFieldSlugs,
 		includeRelations,
+		trx,
 	}).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
@@ -746,21 +795,24 @@ const getFieldInfoForSlugs = async ({
 	}));
 };
 
-const validatePubValues = async <T extends { slug: string; value: unknown }>({
+export const validatePubValues = async <T extends { slug: string; value: unknown }>({
 	pubValues,
 	communityId,
 	continueOnValidationError = false,
 	includeRelations = true,
+	trx = db,
 }: {
 	pubValues: T[];
 	communityId: CommunitiesId;
 	continueOnValidationError?: boolean;
 	includeRelations?: boolean;
+	trx?: typeof db;
 }) => {
 	const relevantPubFields = await getFieldInfoForSlugs({
 		slugs: pubValues.map(({ slug }) => slug),
 		communityId,
 		includeRelations,
+		trx,
 	});
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
@@ -886,30 +938,12 @@ export const upsertPubRelations = async (
 			fieldId: PubFieldsId;
 		}[];
 
-		const pubRelations = await autoRevalidate(
-			trx
-				.insertInto("pub_values")
-				.values(
-					allRelationsToCreate.map(({ relatedPubId, value, slug, fieldId }) => ({
-						pubId,
-						relatedPubId,
-						value: JSON.stringify(value),
-						fieldId,
-						lastModifiedBy,
-					}))
-				)
-				.onConflict((oc) =>
-					oc
-						.columns(["pubId", "fieldId", "relatedPubId"])
-						.where("relatedPubId", "is not", null)
-						// upsert
-						.doUpdateSet((eb) => ({
-							value: eb.ref("excluded.value"),
-							lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-						}))
-				)
-				.returningAll()
-		).execute();
+		const pubRelations = await upsertPubRelationValues({
+			pubId,
+			allRelationsToCreate,
+			lastModifiedBy,
+			trx,
+		});
 
 		const createdRelations = pubRelations.map((relation) => {
 			const correspondingValue = validatedRelationValues.find(
@@ -1156,29 +1190,12 @@ export const updatePub = async ({
 		}
 
 		if (pubValuesWithoutRelations.length) {
-			const result = await autoRevalidate(
-				trx
-					.insertInto("pub_values")
-					.values(
-						pubValuesWithoutRelations.map(({ value, fieldId }) => ({
-							pubId,
-							fieldId,
-							value: JSON.stringify(value),
-							lastModifiedBy,
-						}))
-					)
-					.onConflict((oc) =>
-						oc
-							// we have a unique index on pubId and fieldId where relatedPubId is null
-							.columns(["pubId", "fieldId"])
-							.where("relatedPubId", "is", null)
-							.doUpdateSet((eb) => ({
-								value: eb.ref("excluded.value"),
-								lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
-							}))
-					)
-					.returningAll()
-			).execute();
+			const result = await upsertPubValues({
+				pubId,
+				pubValues: pubValuesWithoutRelations,
+				lastModifiedBy,
+				trx,
+			});
 
 			return result;
 		}
@@ -1186,6 +1203,102 @@ export const updatePub = async ({
 
 	return result;
 };
+
+export const upsertPubValues = async ({
+	pubId,
+	pubValues,
+	lastModifiedBy,
+	trx,
+}: {
+	pubId: PubsId;
+	pubValues: {
+		/**
+		 * specify this if you do not want to use the pubId provided in the input
+		 */
+		pubId?: PubsId;
+		fieldId: PubFieldsId;
+		relatedPubId?: PubsId;
+		value: unknown;
+	}[];
+	lastModifiedBy: LastModifiedBy;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!pubValues.length) {
+		return [];
+	}
+
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				pubValues.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					fieldId: value.fieldId,
+					value: JSON.stringify(value.value),
+					lastModifiedBy,
+					relatedPubId: value.relatedPubId,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					// we have a unique index on pubId and fieldId where relatedPubId is null
+					.columns(["pubId", "fieldId"])
+					.where("relatedPubId", "is", null)
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
+};
+
+export const upsertPubRelationValues = async ({
+	pubId,
+	allRelationsToCreate,
+	lastModifiedBy,
+	trx,
+}: {
+	pubId: PubsId;
+	allRelationsToCreate: {
+		pubId?: PubsId;
+		relatedPubId: PubsId;
+		value: unknown;
+		fieldId: PubFieldsId;
+	}[];
+	lastModifiedBy: LastModifiedBy;
+	trx: typeof db;
+}): Promise<PubValuesType[]> => {
+	if (!allRelationsToCreate.length) {
+		return [];
+	}
+
+	return autoRevalidate(
+		trx
+			.insertInto("pub_values")
+			.values(
+				allRelationsToCreate.map((value) => ({
+					pubId: value.pubId ?? pubId,
+					relatedPubId: value.relatedPubId,
+					value: JSON.stringify(value.value),
+					fieldId: value.fieldId,
+					lastModifiedBy,
+				}))
+			)
+			.onConflict((oc) =>
+				oc
+					.columns(["pubId", "fieldId", "relatedPubId"])
+					.where("relatedPubId", "is not", null)
+					// upsert
+					.doUpdateSet((eb) => ({
+						value: eb.ref("excluded.value"),
+						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+					}))
+			)
+			.returningAll()
+	).execute();
+};
+
 export type UnprocessedPub = {
 	id: PubsId;
 	depth: number;

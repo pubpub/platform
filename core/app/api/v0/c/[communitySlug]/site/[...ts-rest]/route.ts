@@ -373,7 +373,7 @@ const handler = createNextHandler(
 				};
 			},
 			archive: async ({ params }) => {
-				const { lastModifiedBy } = await checkAuthorization({
+				const { lastModifiedBy, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.deletePub,
@@ -383,6 +383,7 @@ const handler = createNextHandler(
 
 				const result = await deletePub({
 					pubId: params.pubId as PubsId,
+					communityId: community.id,
 					lastModifiedBy,
 				});
 

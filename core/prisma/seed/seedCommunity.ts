@@ -55,7 +55,7 @@ export type PubFieldsInitializer = Record<
 	}
 >;
 
-type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
+export type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
 	Partial<Record<keyof PF, { isTitle: boolean }>>
 >;
@@ -65,7 +65,7 @@ type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
  * except the `role`, which will be set to `MemberRole.editor` by default.
  * Set to `null` if you don't want to add the user as a member
  */
-type UsersInitializer = Record<
+export type UsersInitializer = Record<
 	string,
 	{
 		/**
@@ -82,7 +82,7 @@ type UsersInitializer = Record<
 	}
 >;
 
-type ActionInstanceInitializer = {
+export type ActionInstanceInitializer = {
 	[K in ActionName]: {
 		/**
 		 * @default randomUUID
@@ -97,7 +97,7 @@ type ActionInstanceInitializer = {
 /**
  * Map of stagename to list of permissions
  */
-type StagesInitializer<U extends UsersInitializer> = Record<
+export type StagesInitializer<U extends UsersInitializer> = Record<
 	string,
 	{
 		id?: StagesId;
@@ -108,7 +108,7 @@ type StagesInitializer<U extends UsersInitializer> = Record<
 	}
 >;
 
-type StageConnectionsInitializer<S extends StagesInitializer<any>> = Partial<
+export type StageConnectionsInitializer<S extends StagesInitializer<any>> = Partial<
 	Record<
 		keyof S,
 		{
@@ -118,7 +118,7 @@ type StageConnectionsInitializer<S extends StagesInitializer<any>> = Partial<
 	>
 >;
 
-type PubInitializer<
+export type PubInitializer<
 	PF extends PubFieldsInitializer,
 	PT extends PubTypeInitializer<PF>,
 	U extends UsersInitializer,
@@ -229,7 +229,7 @@ type PubInitializer<
 	};
 }[keyof PT & string];
 
-type FormElementInitializer<
+export type FormElementInitializer<
 	PF extends PubFieldsInitializer,
 	PT extends PubTypeInitializer<PF>,
 	PubType extends keyof PT,
@@ -251,7 +251,7 @@ type FormElementInitializer<
 		}[keyof PubFieldsForPubType]
 	: never;
 
-type FormInitializer<
+export type FormInitializer<
 	PF extends PubFieldsInitializer,
 	PT extends PubTypeInitializer<PF>,
 	U extends UsersInitializer,
@@ -1169,32 +1169,3 @@ export async function seedCommunity<
 				: undefined,
 	};
 }
-
-/**
- * Convenience method in case you want to define the input of `seedCommunity` before actually calling it
- */
-export const createSeed = <
-	const PF extends PubFieldsInitializer,
-	const PT extends PubTypeInitializer<PF>,
-	const U extends UsersInitializer,
-	const S extends StagesInitializer<U>,
-	const SC extends StageConnectionsInitializer<S>,
-	const PI extends PubInitializer<PF, PT, U, S>[],
-	const F extends FormInitializer<PF, PT, U, S>,
->(props: {
-	community: {
-		id?: CommunitiesId;
-		name: string;
-		slug: string;
-		avatar?: string;
-	};
-	pubFields?: PF;
-	pubTypes?: PT;
-	users?: U;
-	stages?: S;
-	stageConnections?: SC;
-	pubs?: PI;
-	forms?: F;
-}) => props;
-
-export type Seed = Parameters<typeof createSeed>[0];
