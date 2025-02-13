@@ -26,6 +26,7 @@ import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
+import { userCanViewPage } from "../../unauthorized/pageAuthorizationChecks";
 import {
 	addPubMember,
 	addUserWithPubMembership,
@@ -86,15 +87,13 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const canView = await userCan(
-		Capabilities.viewPub,
-		{ type: MembershipType.pub, pubId },
-		user.id
-	);
+	// const canView = await userCan(
+	// 	Capabilities.viewPub,
+	// 	{ type: MembershipType.pub, pubId },
+	// 	user.id
+	// );
 
-	if (!canView) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
-	}
+	await userCanViewPage("pub", user.id, pubId);
 
 	const canAddMember = await userCan(
 		Capabilities.addPubMember,
