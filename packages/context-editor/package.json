@@ -61,7 +61,6 @@
 		"prosemirror-history": "^1.4.1",
 		"prosemirror-inputrules": "^1.4.0",
 		"prosemirror-keymap": "^1.2.2",
-		"prosemirror-markdown": "^1.12.0",
 		"prosemirror-model": "^1.24.1",
 		"prosemirror-schema-basic": "^1.2.3",
 		"prosemirror-state": "^1.4.3",
