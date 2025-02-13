@@ -6,11 +6,9 @@ import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { FieldsPage } from "./fixtures/fields-page";
-import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { LoginPage } from "./fixtures/login-page";
-import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
-import { choosePubType, PubsPage } from "./fixtures/pubs-page";
+import { PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
 import { createCommunity } from "./helpers";
 

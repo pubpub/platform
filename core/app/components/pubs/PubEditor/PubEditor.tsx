@@ -29,7 +29,6 @@ export type PubEditorProps = {
 	| {
 			pubId: PubsId;
 			communityId: CommunitiesId;
-			parentId?: PubsId;
 	  }
 	| {
 			communityId: CommunitiesId;
@@ -196,7 +195,6 @@ export async function PubEditor(props: PubEditorProps) {
 			>
 				<PubEditorWrapper
 					elements={[...form.elements, ...pubOnlyElementDefinitions]}
-					parentId={"parentId" in props ? props.parentId : undefined}
 					pub={pubForForm}
 					formSlug={form.slug}
 					isUpdating={isUpdating}

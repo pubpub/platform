@@ -51,7 +51,6 @@ export default async function Page(props: {
 		getAllPubTypesForCommunity(communitySlug).execute(),
 		getPubFields({
 			communityId: community.id,
-			includeRelations: true,
 		}).executeTakeFirstOrThrow(),
 	]);
 

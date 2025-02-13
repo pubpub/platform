@@ -69,8 +69,13 @@ export const ConfigureRelatedValue = ({
 	slug,
 	element,
 	onBlur,
+	className,
 	...props
-}: PubFieldFormElementProps & { slug: RelatedPubValueSlug; onBlur?: () => void }) => {
+}: PubFieldFormElementProps & {
+	slug: RelatedPubValueSlug;
+	onBlur?: () => void;
+	className?: string;
+}) => {
 	const configLabel = "label" in element.config ? element.config.label : undefined;
 	const label = configLabel || element.label || slug;
 
@@ -103,9 +108,13 @@ export const ConfigureRelatedValue = ({
 					data-testid="add-related-value"
 					variant="link"
 					size="sm"
-					className={cn("flex h-4 max-w-full gap-1 p-0 text-blue-500", {
-						"text-red-500": valueError,
-					})}
+					className={cn(
+						"flex h-4 max-w-full gap-1 p-0 text-blue-500",
+						{
+							"text-red-500": valueError,
+						},
+						className
+					)}
 				>
 					{valueError && <TriangleAlert />}
 					<span className="truncate">
