@@ -1,6 +1,8 @@
 import { rehype } from "rehype";
 import { expect, test } from "vitest";
 
+import { logger } from "logger";
+
 import {
 	appendFigureAttributes,
 	basic,
@@ -28,7 +30,6 @@ import {
 	structureVideos,
 	tableToObjectArray,
 } from "./gdocPlugins";
-import { logger } from "logger";
 
 export const trimAll = (html: string | void): string => {
 	if (!html) {
