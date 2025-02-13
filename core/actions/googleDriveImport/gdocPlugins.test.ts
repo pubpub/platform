@@ -4,7 +4,9 @@ import { expect, test } from "vitest";
 import { logger } from "logger";
 
 import {
+	appendFigureAttributes,
 	basic,
+	formatFigureReferences,
 	formatLists,
 	getDescription,
 	processLocalLinks,
@@ -162,7 +164,7 @@ test("Structure Images", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly" data-align="full" data-size="50">
+				<figure data-figure-type="img" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<img alt="123" src="https://resize-v3.pubpub.org/123">
 					<figcaption>
 						<p>
@@ -220,7 +222,7 @@ test("Structure Images", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly" data-align="full" data-size="50">
+				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<video controls poster="https://example.com">
 						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
 						<img src="https://example.com" alt="Video fallback image">
@@ -279,7 +281,7 @@ test("Structure Audio", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly" data-align="full" data-size="50">
+				<figure data-figure-type="audio" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<audio controls>
 						<source src="https://resize-v3.pubpub.org/123.mp3" type="audio/mp3">
 					</audio>
@@ -335,7 +337,7 @@ test("Structure Files", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly">
+				<figure data-figure-type="file" id="n8r4ihxcrly">
 					<div class="file-card">
 						<span class="file-name">data.zip</span>
 						<a class="file-button" href="https://resize-v3.pubpub.org/123.zip" download="data.zip">Download</a>
@@ -398,7 +400,7 @@ test("Structure Iframes", async () => {
 		<html>
 			<head></head>
 			<body>
-				<figure id="n8r4ihxcrly" data-align="full" data-size="75">
+				<figure data-figure-type="iframe" id="n8r4ihxcrly" data-align="full" data-size="75">
 					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0" data-fallback-image="https://example.com" height="450"></iframe>
 					<figcaption>
 						<p>
@@ -449,7 +451,7 @@ test("Structure BlockMath", async () => {
 	const expectedOutputHtml = `<html>
 		<head></head>
 		<body>
-			<figure id="n8r4ihxcrly">
+			<figure data-figure-type="math" id="n8r4ihxcrly">
 				<div class="math-block"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>x</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">x=2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></span></div>
 				<figcaption><p><span>With a caption. </span><b>Bold</b></p></figcaption>
 			</figure>
@@ -709,6 +711,8 @@ test("Structure References", async () => {
 						</tr>
 					</tbody>
 				</table>
+				<p>I'd also like to add [10.12341] here.</p>
+				<p>And this should be the same number [10.12341] here. But this diff, [10.5123/123]. </p>
 			</body>
 		</html>
 	`;
@@ -719,13 +723,24 @@ test("Structure References", async () => {
 					<p>
 						Here is some text <a 
 							data-type="reference" data-value="https://doi.org/10.1038/s41586-020-2983-4" data-unstructured-value="">
-							[2]
+							[1]
 						</a>, <a
 							 data-type="reference" data-value="https://doi.org/10.57844/arcadia-0zvp-xz86" data-unstructured-value="">
-							[1]
+							[2]
 						</a>, {ref38}
 					</p>
 				</div>
+				<p>I'd also like to add <a
+							 data-type="reference" data-value="10.12341">
+							[3]
+						</a> here.</p>
+				<p>And this should be the same number <a
+							 data-type="reference" data-value="10.12341">
+							[3]
+						</a> here. But this diff, <a
+							 data-type="reference" data-value="10.5123/123">
+							[4]
+						</a>. </p>
 			</body>
 		</html>
 	`;
@@ -1055,6 +1070,220 @@ test("getDescription", async () => {
 	const expectedOutputHtml = `Seeing how microbes are organized ...`;
 
 	const result = getDescription(inputHtml);
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("formatFigureReferences", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Iframe</span></p></td>
+							<td><p><span>test1</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Hide Label</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Iframe</span></p></td>
+							<td><p><span>abra</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>True</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<p>As seen in @test1 we have more.</p>
+				<p>Also seen in @test2 we have an image.</p>
+				<p>Again, @test1 shows this.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Image</span></p></td>
+							<td><p><span>test2</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello.</p>
+				<figure data-figure-type="iframe" id="test1">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
+				</figure>
+				<figure data-figure-type="iframe" id="abra" data-hide-label="True">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
+				</figure>
+				<p>As seen in <a href="#test1" data-figure-total-count="1" data-figure-type-count="1"></a> we have more.</p>
+				<p>Also seen in <a href="#test2" data-figure-total-count="2" data-figure-type-count="1"></a> we have an image.</p>
+				<p>Again, <a href="#test1" data-figure-total-count="1" data-figure-type-count="1"></a> shows this.</p>
+				<figure data-figure-type="img" id="test2">
+					<img src="https://resize-v3.pubpub.org/123">
+				</figure>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(formatFigureReferences)
+		.use(structureIframes)
+		.use(structureImages)
+		.use(removeEmptyFigCaption)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("appendFigureAttributes", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Iframe</span></p></td>
+							<td><p><span>test1</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Hide Label</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Iframe</span></p></td>
+							<td><p><span>abra</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>True</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Image</span></p></td>
+							<td><p><span>test2</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>Static Image</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Video</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123.mp4</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td>https://example.com</td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
+						</tr>
+					</tbody>
+				</table>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello.</p>
+				
+				<figure data-figure-type="iframe" id="test1" data-figure-total-count="1" data-figure-type-count="1">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
+				</figure>
+				<figure data-figure-type="iframe" id="abra" data-hide-label="True">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
+				</figure>
+				<figure data-figure-type="img" id="test2" data-figure-total-count="2" data-figure-type-count="1">
+					<img src="https://resize-v3.pubpub.org/123">
+				</figure>
+				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50" data-figure-total-count="3" data-figure-type-count="1">
+					<video controls poster="https://example.com">
+						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
+						<img src="https://example.com" alt="Video fallback image">
+					</video>
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(structureVideos)
+		.use(structureIframes)
+		.use(structureImages)
+		.use(appendFigureAttributes)
+		.use(removeEmptyFigCaption)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
 
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });

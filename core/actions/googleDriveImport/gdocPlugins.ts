@@ -234,7 +234,13 @@ export const structureImages = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
+					properties: {
+						dataFigureType: "img",
+						id: data.id,
+						dataAlign: data.align,
+						dataSize: data.size,
+						dataHideLabel: data.hidelabel,
+					},
 					children: [
 						{
 							type: "element",
@@ -268,7 +274,13 @@ export const structureVideos = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
+					properties: {
+						dataFigureType: "video",
+						id: data.id,
+						dataAlign: data.align,
+						dataSize: data.size,
+						dataHideLabel: data.hidelabel,
+					},
 					children: [
 						{
 							type: "element",
@@ -319,7 +331,13 @@ export const structureAudio = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
+					properties: {
+						dataFigureType: "audio",
+						id: data.id,
+						dataAlign: data.align,
+						dataSize: data.size,
+						dataHideLabel: data.hidelabel,
+					},
 					children: [
 						{
 							type: "element",
@@ -361,7 +379,7 @@ export const structureFiles = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id },
+					properties: { dataFigureType: "file", id: data.id },
 					children: [
 						{
 							type: "element",
@@ -413,7 +431,13 @@ export const structureIframes = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id, dataAlign: data.align, dataSize: data.size },
+					properties: {
+						dataFigureType: "iframe",
+						id: data.id,
+						dataAlign: data.align,
+						dataSize: data.size,
+						dataHideLabel: data.hidelabel,
+					},
 					children: [
 						{
 							type: "element",
@@ -450,7 +474,7 @@ export const structureBlockMath = () => (tree: Root) => {
 				const elements: Element[] = tableData.map((data: any) => ({
 					type: "element",
 					tagName: "figure",
-					properties: { id: data.id },
+					properties: { dataFigureType: "math", id: data.id },
 					children: [
 						latexToRehypeNode(data.value, true),
 						{
@@ -614,36 +638,108 @@ export const structureAnchors = () => (tree: Root) => {
 	});
 };
 export const structureReferences = () => (tree: Root) => {
-	const allReferences: any[] = [];
-	visit(tree, "element", (node: any, index: any, parent: any) => {
+	const allReference: any[] = [];
+	const doiReferenceCounts: { [key: string]: number } = {};
+	visit(tree, (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
 			if (tableType === "reference") {
-				allReferences.push(...tableData);
+				allReference.push(...tableData);
 				if (parent && typeof index === "number") {
 					parent.children.splice(index, 1);
 				}
 			}
 		}
+		if (typeof node.value === "string") {
+			const regex = new RegExp(/\[(10\.\S+|https:\/\/doi\.org\/\S+)\]/g);
+			let match;
+			const elements: any[] = [];
+			let lastIndex = 0;
+
+			while ((match = regex.exec(node.value)) !== null) {
+				const [_fullMatch, referenceDoi] = match;
+				let currentRefId;
+				if (!doiReferenceCounts[referenceDoi]) {
+					doiReferenceCounts[referenceDoi] = Object.values(doiReferenceCounts).length + 1;
+					currentRefId = `doiRef${doiReferenceCounts[referenceDoi]}`;
+					allReference.push({
+						type: "Reference",
+						id: currentRefId,
+						value: referenceDoi,
+						unstructuredValue: "",
+					});
+				} else {
+					currentRefId = `doiRef${doiReferenceCounts[referenceDoi]}`;
+				}
+
+				const startIndex = match.index;
+				const endIndex = regex.lastIndex;
+
+				if (startIndex > lastIndex) {
+					elements.push({
+						type: "text",
+						value: node.value.slice(lastIndex, startIndex),
+					});
+				}
+				elements.push({ type: "text", value: `{${currentRefId}}` });
+
+				lastIndex = endIndex;
+			}
+
+			if (lastIndex < node.value.length) {
+				elements.push({
+					type: "text",
+					value: node.value.slice(lastIndex),
+				});
+			}
+
+			if (elements.length > 0 && parent && typeof index === "number") {
+				parent.children.splice(index, 1, ...elements);
+			}
+		}
 	});
 
-	allReferences.forEach((referenceData, index) => {
-		/* TODO: This just orders references by the order they are presented in tables. */
-		/* We'll likely want more sophisticated reference things at some point */
-		const newNode: Element = {
-			type: "element",
-			tagName: "a",
-			properties: {
-				"data-type": "reference",
-				"data-value": referenceData.value,
-				"data-unstructured-value": referenceData.unstructuredvalue,
-			},
-			children: [{ type: "text", value: `[${index + 1}]` }],
-		};
-		insertVariables(tree, referenceData.id, newNode);
+	const referenceIds = allReference.map((ref) => ref.id);
+	const referenceVarOrder: string[] = [];
+	visit(tree, "text", (textNode: any, index: any, parent: any) => {
+		if (typeof textNode.value === "string") {
+			const regex = new RegExp(/\{([^\s\]]+)\}/g);
+			let match;
+
+			while ((match = regex.exec(textNode.value)) !== null) {
+				const [_fullMatch, varName] = match;
+
+				if (referenceIds.includes(varName) && !referenceVarOrder.includes(varName)) {
+					referenceVarOrder.push(varName);
+				}
+			}
+		}
 	});
+	allReference
+		.filter((ref) => {
+			return referenceVarOrder.includes(ref.id);
+		})
+		.sort((foo, bar) => {
+			return referenceVarOrder.indexOf(foo.id) - referenceVarOrder.indexOf(bar.id);
+		})
+		.forEach((referenceData, index) => {
+			/* TODO: This just orders references by the order they are presented in tables. */
+			/* We'll likely want more sophisticated reference things at some point */
+			const newNode: Element = {
+				type: "element",
+				tagName: "a",
+				properties: {
+					"data-type": "reference",
+					"data-value": referenceData.value,
+					"data-unstructured-value": referenceData.unstructuredvalue,
+				},
+				children: [{ type: "text", value: `[${index + 1}]` }],
+			};
+			insertVariables(tree, referenceData.id, newNode);
+		});
 };
+
 export const structureFootnotes = () => (tree: Root) => {
 	const allFootnotes: any[] = [];
 	visit(tree, "element", (node: any, index: any, parent: any) => {
@@ -809,4 +905,107 @@ export const removeDescription = () => (tree: Root) => {
 		return true;
 	});
 	return nextTree;
+};
+
+export const formatFigureReferences = () => (tree: Root) => {
+	/*
+		- Go through and grab all tables with ids
+		- Turn into an object with the ids as keys, and the type as value as the text to use (which is using a counter to increment accurately)
+		- Go through and get each @mention and replace @mention with that value and a link to it
+
+	*/
+	const figureCount: { [key: string]: number } = {};
+	const figuresById: any = {};
+	visit(tree, "element", (node: any, index: any, parent: any) => {
+		if (node.tagName === "table") {
+			const tableData: any = tableToObjectArray(node);
+			const tableType = tableData[0].type;
+			const validFigureTypes = ["image", "video", "audio", "file", "iframe", "table", "math"];
+			if (validFigureTypes.includes(tableType)) {
+				tableData.forEach((data: any) => {
+					if (data.hidelabel?.toLowerCase() !== "true") {
+						figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+						figureCount.total = (figureCount.total || 0) + 1;
+						figuresById[data.id] = {
+							type: tableType,
+							typeCount: figureCount[tableType],
+							totalCount: figureCount.total,
+						};
+					}
+				});
+			}
+		}
+	});
+
+	visit(tree, "text", (textNode: any, index: any, parent: any) => {
+		if (typeof textNode.value === "string") {
+			const regex = new RegExp(/(?<=\s)@(\S+?)(?=[\s.,)])/g);
+			let match;
+			const elements: any[] = [];
+			let lastIndex = 0;
+
+			while ((match = regex.exec(textNode.value)) !== null) {
+				const [fullMatch, figureId] = match;
+				const startIndex = match.index;
+				const endIndex = regex.lastIndex;
+
+				if (startIndex > lastIndex) {
+					elements.push({
+						type: "text",
+						value: textNode.value.slice(lastIndex, startIndex),
+					});
+				}
+
+				if (figuresById[figureId]) {
+					elements.push({
+						type: "element",
+						tagName: "a",
+						properties: {
+							href: `#${figureId}`,
+							dataFigureTotalCount: figuresById[figureId].totalCount,
+							dataFigureTypeCount: figuresById[figureId].typeCount,
+						},
+						children: [],
+					});
+				} else {
+					elements.push({
+						type: "text",
+						value: fullMatch,
+					});
+				}
+				lastIndex = endIndex;
+			}
+
+			if (lastIndex < textNode.value.length) {
+				elements.push({
+					type: "text",
+					value: textNode.value.slice(lastIndex),
+				});
+			}
+
+			if (elements.length > 0 && parent && typeof index === "number") {
+				parent.children.splice(index, 1, ...elements);
+			}
+		}
+	});
+};
+
+export const appendFigureAttributes = () => (tree: Root) => {
+	/*
+	 */
+	const figureCount: { [key: string]: number } = {};
+	visit(tree, "element", (node: any, index: any, parent: any) => {
+		if (node.tagName === "figure") {
+			const tableType = node.properties.dataFigureType;
+			if (tableType && node.properties.dataHideLabel?.toLowerCase() !== "true") {
+				figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+				figureCount.total = (figureCount.total || 0) + 1;
+				node.properties = {
+					...node.properties,
+					dataFigureTotalCount: figureCount.total,
+					dataFigureTypeCount: figureCount[tableType],
+				};
+			}
+		}
+	});
 };
