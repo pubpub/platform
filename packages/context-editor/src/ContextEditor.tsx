@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ProsemirrorAdapterProvider, useNodeViewFactory } from "@prosemirror-adapter/react";
+import {
+	ProsemirrorAdapterProvider,
+	useNodeViewFactory,
+	usePluginViewFactory,
+} from "@prosemirror-adapter/react";
 import { Node } from "prosemirror-model";
-import { EditorState } from "prosemirror-state";
+import { EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
 import { AttributePanel } from "./components/AttributePanel";
+import { MenuBar } from "./components/MenuBar";
 import { basePlugins } from "./plugins";
 import { attributePanelKey } from "./plugins/attributePanel";
 import { reactPropsKey } from "./plugins/reactProps";
@@ -17,6 +22,7 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 
 import SuggestPanel from "./components/SuggestPanel";
 
+const MENU_BAR_ID = "context-editor-menu";
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string;
@@ -84,6 +90,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		};
 	}, [props.atomRenderingComponent]);
 	const nodeViewFactory = useNodeViewFactory();
+	const pluginViewFactory = usePluginViewFactory();
 	const viewHost = useRef<HTMLDivElement | null>(null);
 	const view = useRef<EditorView | null>(null);
 	const [panelPosition, setPanelPosition] = useState<PanelProps>(initPanelProps);
@@ -96,14 +103,24 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		const state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
-			plugins: basePlugins(
-				baseSchema,
-				props,
-				panelPosition,
-				setPanelPosition,
-				suggestData,
-				setSuggestData
-			),
+			plugins: [
+				...basePlugins(
+					baseSchema,
+					props,
+					panelPosition,
+					setPanelPosition,
+					suggestData,
+					setSuggestData
+				),
+				new Plugin({
+					view: pluginViewFactory({
+						component: () => <MenuBar />,
+						root: () => {
+							return document.getElementById(MENU_BAR_ID) as HTMLElement;
+						},
+					}),
+				}),
+			],
 		});
 		if (viewHost.current) {
 			view.current = new EditorView(viewHost.current, {
@@ -145,6 +162,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 			id="context-editor-container"
 			className={`relative max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
 		>
+			<div id={MENU_BAR_ID}></div>
 			<div ref={viewHost} className="font-serif" />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />
