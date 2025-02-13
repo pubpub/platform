@@ -22,7 +22,7 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 
 import SuggestPanel from "./components/SuggestPanel";
 
-const MENU_BAR_ID = "context-editor-menu";
+const MENU_BAR_ID = "context-editor-menu-container";
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string;
@@ -162,7 +162,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 			id="context-editor-container"
 			className={`relative max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
 		>
-			<div id={MENU_BAR_ID}></div>
+			<div id={MENU_BAR_ID} className="sticky top-0 z-10"></div>
 			<div ref={viewHost} className="font-serif" />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />

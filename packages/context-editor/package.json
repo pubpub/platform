@@ -44,7 +44,8 @@
 		"storybook": "^8.4.7",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"utils": "workspace:*"
 	},
 	"dependencies": {
 		"@nytimes/react-prosemirror": "^1.0.0",
