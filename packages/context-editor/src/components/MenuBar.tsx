@@ -1,5 +1,5 @@
-import type { MarkType, NodeType } from "prosemirror-model";
-import type { Command, EditorState, NodeSelection } from "prosemirror-state";
+import type { MarkType } from "prosemirror-model";
+import type { Command, EditorState } from "prosemirror-state";
 import type { ReactNode } from "react";
 
 import React from "react";
@@ -14,7 +14,7 @@ import { baseSchema } from "../schemas";
 interface MenuItem {
 	name: string;
 	icon: ReactNode;
-	type: MarkType;
+	type: MarkType; // eventually should also be NodeType
 	command: Command;
 }
 
@@ -44,7 +44,7 @@ const markIsActive = (markType: MarkType, editorState: EditorState) => {
 export const MenuBar = () => {
 	const { view } = usePluginViewContext();
 	return (
-		<div className="border">
+		<div className="rounded border bg-slate-50">
 			{menuItems.map((menuItem) => {
 				const { name, icon, command, type } = menuItem;
 				// Returns if given command can be applied at the cursor selection
