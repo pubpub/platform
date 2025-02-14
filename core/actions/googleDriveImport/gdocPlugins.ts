@@ -55,7 +55,6 @@ export const getTextContent = (node: any): string => {
 	return "";
 };
 export const tableToObjectArray = (node: any) => {
-	// console.log(JSON.stringify(node))
 	if (!node) return [{ type: "empty" }];
 
 	const tbody = node.children.find((child: any) => child.tagName === "tbody");
@@ -97,7 +96,6 @@ export const tableToObjectArray = (node: any) => {
 
 	const isHoriz = validTypes.includes(headersVert[1].toLowerCase());
 	const isVert = validTypes.includes(headersHoriz[1].toLowerCase());
-	// console.log('isHoriz', isHoriz, isVert);
 
 	let data;
 	if (isHoriz) {
@@ -149,7 +147,6 @@ export const tableToObjectArray = (node: any) => {
 	} else {
 		return [{ type: "empty" }];
 	}
-	// console.log(data)
 	return data;
 };
 
