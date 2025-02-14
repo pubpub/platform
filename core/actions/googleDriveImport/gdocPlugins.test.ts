@@ -79,6 +79,26 @@ test("Convert double table", async () => {
 	expect(result).toStrictEqual(expectedOutput);
 });
 
+test("Convert vert table", async () => {
+	const inputNode = JSON.parse(
+		'{"type":"element","tagName":"table","properties":{},"children":[{"type":"element","tagName":"tbody","properties":{},"children":[{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Image"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"n8r4ihxcrly"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"https://resize-v3.pubpub.org/123"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Alt Text"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"b","properties":{},"children":[{"type":"text","value":"123"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Align"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"text","value":"full"}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Size"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"text","value":"50"}]}]}]}]}]}'
+	);
+	const expectedOutput = [
+		{
+			type: "image",
+			id: "n8r4ihxcrly",
+			source: "https://resize-v3.pubpub.org/123",
+			alttext: "123",
+			align: "full",
+			size: "50",
+		},
+	];
+
+	const result = tableToObjectArray(inputNode);
+
+	expect(result).toStrictEqual(expectedOutput);
+});
+
 test("Do Nothing", async () => {
 	const inputHtml =
 		'<html><head><script src="blah.js"></script><style>.blah{}</style></head><body><div>Content</div></body></html>';
@@ -172,6 +192,151 @@ test("Structure Images", async () => {
 							<b>Bold</b>
 						</p>
 					</figcaption>
+				</figure>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(structureImages)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+test("Structure Images - Vert Table", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Image</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Alt Text</span></p></td>
+							<td><p><b>123</b></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Align</span></p></td>
+							<td><p>full</p></td>
+						</tr>
+						<tr>
+							<td><p><span>Size</span></p></td>
+							<td><p>50</p></td>
+						</tr>
+					</tbody>
+				</table>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<figure data-figure-type="img" id="n8r4ihxcrly" data-align="full" data-size="50">
+					<img alt="123" src="https://resize-v3.pubpub.org/123">
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(structureImages)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+test("Structure Images - DoubleVert Table", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Image</span></p></td>
+							<td><p><span>Image</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+							<td><p><span>abr4ihxcrly</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>https://resize-v4.pubpub.org/123</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td><p></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Alt Text</span></p></td>
+							<td><p><b>123</b></p></td>
+							<td><p>abc</p></td>
+						</tr>
+						<tr>
+							<td><p><span>Align</span></p></td>
+							<td><p>full</p></td>
+							<td><p>left</p></td>
+						</tr>
+						<tr>
+							<td><p><span>Size</span></p></td>
+							<td><p>50</p></td>
+							<td><p>75</p></td>
+						</tr>
+					</tbody>
+				</table>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<figure data-figure-type="img" id="n8r4ihxcrly" data-align="full" data-size="50">
+					<img alt="123" src="https://resize-v3.pubpub.org/123">
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+				<figure data-figure-type="img" id="abr4ihxcrly" data-align="left" data-size="75">
+					<img alt="abc" src="https://resize-v4.pubpub.org/123">
+					<figcaption><p></p></figcaption>
 				</figure>
 			</body>
 		</html>
@@ -1060,14 +1225,14 @@ test("getDescription", async () => {
 					</tr>
 					<tr>
 						<td>Description</td>
-						<td>Seeing how microbes are organized ...</td>
+						<td>Seeing how <i>microbes</i> are organized ...</td>
 					</tr>
 				</table><p>Hello</p>
 			</body>
 		</html>
 
 	`;
-	const expectedOutputHtml = `Seeing how microbes are organized ...`;
+	const expectedOutputHtml = `Seeing how <i>microbes</i> are organized ...`;
 
 	const result = getDescription(inputHtml);
 
