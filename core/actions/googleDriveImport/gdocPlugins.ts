@@ -60,33 +60,93 @@ export const tableToObjectArray = (node: any) => {
 	const tbody = node.children.find((child: any) => child.tagName === "tbody");
 	if (!tbody) return [{ type: "empty" }];
 
-	const rows: Element[] = tbody.children.filter((child: any) => child.tagName === "tr");
+	const rows: Element[] = tbody.children
+		.filter((child: any) => child.tagName === "tr")
+		.map((row: any) => {
+			return {
+				...row,
+				children: row.children.filter((child: any) => {
+					return child.tagName === "td";
+				}),
+			};
+		});
 	if (rows.length === 0) return [{ type: "empty" }];
 
-	const headers: string[] = rows[0].children
+	const headersHoriz: string[] = rows[0].children
 		.filter((child: any) => child.tagName === "td")
 		.map((header: any) => getTextContent(header).toLowerCase().replace(/\s+/g, ""));
 
-	const data = rows.slice(1).map((row: any) => {
-		const cells = row.children.filter((child: any) => child.tagName === "td");
-		const obj: { [key: string]: any } = {};
-		const typeIndex = headers.findIndex((header) => header === "type");
-		const tableType = getTextContent(cells[typeIndex]).trim().toLowerCase().replace(/\s+/g, "");
-		cells.forEach((cell: any, index: number) => {
-			if (
-				(!["math", "reference", "description"].includes(tableType) &&
-					headers[index] === "value") ||
-				headers[index] === "caption"
-			) {
-				obj[headers[index]] = cell.children;
-			} else {
-				obj[headers[index]] = getTextContent(cell).trim();
-			}
+	const headersVert: string[] = rows.map((row: any) =>
+		getTextContent(row.children[0]).toLowerCase().replace(/\s+/g, "")
+	);
+	const validTypes = [
+		"image",
+		"video",
+		"audio",
+		"file",
+		"iframe",
+		"blockquote",
+		"code",
+		"math",
+		"anchor",
+		"reference",
+		"footnote",
+		"description",
+	];
+
+	const isHoriz = validTypes.includes(headersVert[1].toLowerCase());
+	const isVert = validTypes.includes(headersHoriz[1].toLowerCase());
+
+	let data;
+	if (isHoriz) {
+		data = rows.slice(1).map((row: any) => {
+			const cells = row.children.filter((child: any) => child.tagName === "td");
+			const obj: { [key: string]: any } = {};
+			const typeIndex = headersHoriz.findIndex((header) => header === "type");
+			const tableType = getTextContent(cells[typeIndex])
+				.trim()
+				.toLowerCase()
+				.replace(/\s+/g, "");
+			cells.forEach((cell: any, index: number) => {
+				if (
+					(!["math", "reference"].includes(tableType) &&
+						headersHoriz[index] === "value") ||
+					headersHoriz[index] === "caption"
+				) {
+					obj[headersHoriz[index]] = cell.children;
+				} else {
+					obj[headersHoriz[index]] = getTextContent(cell).trim();
+				}
+			});
+
+			return { ...obj, type: tableType };
 		});
+	} else if (isVert) {
+		data = headersHoriz.slice(1).map((_header, colIndex) => {
+			const obj: { [key: string]: any } = {};
+			const typeIndex = headersVert.findIndex((header) => header === "type");
+			const tableType = getTextContent(rows[typeIndex].children[colIndex + 1])
+				.trim()
+				.toLowerCase()
+				.replace(/\s+/g, "");
 
-		return { ...obj, type: tableType };
-	});
-
+			rows.forEach((row: any, rowIndex: number) => {
+				const cell = row.children[colIndex + 1];
+				if (
+					(!["math", "reference"].includes(tableType) &&
+						headersVert[rowIndex] === "value") ||
+					headersVert[rowIndex] === "caption"
+				) {
+					obj[headersVert[rowIndex]] = cell.children;
+				} else {
+					obj[headersVert[rowIndex]] = getTextContent(cell).trim();
+				}
+			});
+			return { ...obj, type: tableType };
+		});
+	} else {
+		return [{ type: "empty" }];
+	}
 	return data;
 };
 
@@ -99,7 +159,15 @@ export const getDescription = (htmlString: string): string => {
 					const tableData: any = tableToObjectArray(node);
 					const tableType = tableData[0].type;
 					if (tableType === "description") {
-						description = tableData[0].value;
+						const valueFragment: Element = {
+							type: "element",
+							tagName: "span",
+							properties: {},
+							children: tableData[0].value,
+						};
+						description = rehypeFragmentToHtmlString(valueFragment)
+							.replace("<span>", "")
+							.replace("</span>", "");
 						return false;
 					}
 				}
