@@ -76,6 +76,15 @@ export const run = defineRun<typeof action>(
 							},
 						};
 					}),
+				...formattedData.discussions
+					.filter((discussion) => existingDiscussionPubIds.includes(discussion.id))
+					.map((discussion) => {
+						return {
+							slug: `${communitySlug}:discussions`,
+							value: null,
+							relatedPubId: discussion.id,
+						};
+					}),
 				...formattedData.versions
 					.filter(
 						(version) =>
