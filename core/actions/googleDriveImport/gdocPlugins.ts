@@ -153,6 +153,9 @@ export const tableToObjectArray = (node: any) => {
 export const getDescription = (htmlString: string): string => {
 	let description = "";
 	rehype()
+		.use(structureFormatting)
+		.use(removeVerboseFormatting)
+		.use(removeGoogleLinkForwards)
 		.use(() => (tree: Root) => {
 			visit(tree, "element", (node: any) => {
 				if (node.tagName === "table") {
@@ -165,9 +168,10 @@ export const getDescription = (htmlString: string): string => {
 							properties: {},
 							children: tableData[0].value,
 						};
-						description = rehypeFragmentToHtmlString(valueFragment)
-							.replace("<span>", "")
-							.replace("</span>", "");
+						description = rehypeFragmentToHtmlString(valueFragment).replace(
+							/<\/?(span|p)>/g,
+							""
+						);
 						return false;
 					}
 				}
@@ -707,6 +711,7 @@ export const structureAnchors = () => (tree: Root) => {
 };
 export const structureReferences = () => (tree: Root) => {
 	const allReference: any[] = [];
+
 	const doiReferenceCounts: { [key: string]: number } = {};
 	visit(tree, (node: any, index: any, parent: any) => {
 		if (node.tagName === "table") {
@@ -767,12 +772,12 @@ export const structureReferences = () => (tree: Root) => {
 			}
 		}
 	});
-
 	const referenceIds = allReference.map((ref) => ref.id);
 	const referenceVarOrder: string[] = [];
+
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/\{([^\s\]]+)\}/g);
+			const regex = new RegExp(/\{([^\{\}]+?)\}/g);
 			let match;
 
 			while ((match = regex.exec(textNode.value)) !== null) {
