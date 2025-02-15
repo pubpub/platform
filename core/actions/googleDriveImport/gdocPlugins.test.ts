@@ -1225,14 +1225,14 @@ test("getDescription", async () => {
 					</tr>
 					<tr>
 						<td>Description</td>
-						<td>Seeing how <i>microbes</i> are organized ...</td>
+						<td><p style="padding:0;margin:0;color:#000000;font-size:11pt;font-family:&#x22;Arial&#x22;;line-height:1.0;text-align:left"><span>We previously released a draft genome assembly for the lone star tick, <span style="font-style:italic">A. americanum. </span><span style="color:#000000;font-weight:400;text-decoration:none;vertical-align:baseline;font-size:11pt;font-family:&#x22;Arial&#x22;;font-style:normal">We've now predicted genes from this assembly to use for downstream functional characterization and comparative genomics efforts.</span></p></span></td>
 					</tr>
 				</table><p>Hello</p>
 			</body>
 		</html>
 
 	`;
-	const expectedOutputHtml = `Seeing how <i>microbes</i> are organized ...`;
+	const expectedOutputHtml = `We previously released a draft genome assembly for the lone star tick, <i>A. americanum. </i>We've now predicted genes from this assembly to use for downstream functional characterization and comparative genomics efforts.`;
 
 	const result = getDescription(inputHtml);
 

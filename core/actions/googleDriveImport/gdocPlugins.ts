@@ -153,6 +153,9 @@ export const tableToObjectArray = (node: any) => {
 export const getDescription = (htmlString: string): string => {
 	let description = "";
 	rehype()
+		.use(structureFormatting)
+		.use(removeVerboseFormatting)
+		.use(removeGoogleLinkForwards)
 		.use(() => (tree: Root) => {
 			visit(tree, "element", (node: any) => {
 				if (node.tagName === "table") {
@@ -165,9 +168,10 @@ export const getDescription = (htmlString: string): string => {
 							properties: {},
 							children: tableData[0].value,
 						};
-						description = rehypeFragmentToHtmlString(valueFragment)
-							.replace("<span>", "")
-							.replace("</span>", "");
+						description = rehypeFragmentToHtmlString(valueFragment).replace(
+							/<\/?(span|p)>/g,
+							""
+						);
 						return false;
 					}
 				}
