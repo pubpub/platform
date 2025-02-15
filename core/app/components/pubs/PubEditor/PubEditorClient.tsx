@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
@@ -148,6 +148,18 @@ const isSubmitEvent = (
 	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
 };
 
+const useRelatedPub = ({ pubId }: { pubId: PubsId }) => {
+	const searchParams = useSearchParams();
+	const relatedPubId = searchParams.get("relatedPubId") as PubsId;
+	const slug = searchParams.get("slug");
+	const rawValue = searchParams.get("value");
+	const value = rawValue ? JSON.parse(rawValue) : null;
+	if (!relatedPubId || !slug) {
+		return undefined;
+	}
+	return { pubId: relatedPubId, values: { [slug]: [{ relatedPubId: pubId, value }] } };
+};
+
 const getButtonConfig = ({
 	evt,
 	withButtonElements,
@@ -183,7 +195,6 @@ export interface PubEditorClientProps {
 	formSlug: string;
 	/** ID for the HTML form */
 	htmlFormId?: string;
-	parentId?: PubsId;
 	className?: string;
 	withAutoSave?: boolean;
 	withButtonElements?: boolean;
@@ -198,7 +209,6 @@ export const PubEditorClient = ({
 	pub,
 	stageId,
 	htmlFormId,
-	parentId,
 	formSlug,
 	withAutoSave,
 	withButtonElements,
@@ -213,6 +223,7 @@ export const PubEditorClient = ({
 	const runCreatePub = useServerAction(actions.createPubRecursive);
 	// Cache pubId
 	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
+	const relatedPub = useRelatedPub({ pubId });
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => e.type === ElementType.button),
@@ -278,9 +289,16 @@ export const PubEditorClient = ({
 						stageId: stageId,
 					},
 					communityId: community.id,
-					parent: parentId ? { id: parentId } : undefined,
 					addUserToForm: isExternalForm,
 				});
+				// TODO: this currently overwrites existing pub values of the same field
+				if (relatedPub) {
+					await runUpdatePub({
+						pubId: relatedPub.pubId,
+						pubValues: relatedPub.values,
+						continueOnValidationError: true,
+					});
+				}
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from

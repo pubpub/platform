@@ -59,7 +59,6 @@ export default async function Page(props: Props) {
 
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
-		includeRelations: true,
 	}).executeTakeFirst();
 
 	if (!pubFields || !pubFields.fields) {

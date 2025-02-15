@@ -29,7 +29,6 @@ export const ActionConfigFormWrapper = async ({
 
 	const fieldPromise = getPubFields({
 		communityId: stage.communityId,
-		includeRelations: true,
 	}).executeTakeFirstOrThrow();
 
 	const resolvedFieldConfigPromise = resolveFieldConfig(actionInstance.action, "config", {

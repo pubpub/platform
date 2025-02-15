@@ -37,7 +37,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				<div className="flex flex-wrap items-center justify-between">
 					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
 					<Suspense fallback={<SkeletonCard />}>
-						<CreatePubButton stageId={props.stageId as StagesId} />
+						<CreatePubButton stageId={props.stageId} />
 					</Suspense>
 				</div>
 				{stagePubs.map((pub) => (
