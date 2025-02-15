@@ -1,4 +1,8 @@
+import type { MarkType } from "prosemirror-model";
+import type { EditorState } from "prosemirror-state";
+
 import { InputRule, inputRules } from "prosemirror-inputrules";
+import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
 
@@ -19,7 +23,20 @@ const abstract = {
 	],
 };
 
-export default () => {
+const markdownItalicsRule = (markType: MarkType) =>
+	new InputRule(
+		/([_*])([^]+?)\1/,
+		(state: EditorState, match: RegExpMatchArray, start: number, end: number) => {
+			const [_, __, content] = match;
+			const fragment = Fragment.fromArray([
+				state.schema.text(content, [state.schema.mark(markType)]),
+				state.schema.text(" "),
+			]);
+			return state.tr.replaceWith(start, end, fragment);
+		}
+	);
+
+export default (schema: Schema) => {
 	const rules = [
 		new InputRule(/^AI please!$/, (state, match, start, end) => {
 			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content;
@@ -29,6 +46,7 @@ export default () => {
 			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
 			return state.tr.replaceWith(start - 1, end, contentToInsert);
 		}),
+		markdownItalicsRule(schema.marks.em),
 	];
 	return inputRules({ rules });
 };
