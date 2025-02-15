@@ -841,7 +841,7 @@ test("Structure References", async () => {
 		<html>
 			<head></head>
 			<body>
-				<div><p>Here is some text {ref2}, {ref1}, {ref38}</p></div>
+				<div><p>Here is some text {ref2}{ref1}, {ref38}</p></div>
 				<table>
 					<tbody>
 						<tr>
@@ -889,7 +889,7 @@ test("Structure References", async () => {
 						Here is some text <a 
 							data-type="reference" data-value="https://doi.org/10.1038/s41586-020-2983-4" data-unstructured-value="">
 							[1]
-						</a>, <a
+						</a><a
 							 data-type="reference" data-value="https://doi.org/10.57844/arcadia-0zvp-xz86" data-unstructured-value="">
 							[2]
 						</a>, {ref38}
@@ -1232,7 +1232,6 @@ test("getDescription", async () => {
 		</html>
 
 	`;
-
 	const expectedOutputHtml = `We previously released a draft genome assembly for the lone star tick, <i>A. americanum. </i>We've now predicted genes from this assembly to use for downstream functional characterization and comparative genomics efforts.`;
 
 	const result = getDescription(inputHtml);
