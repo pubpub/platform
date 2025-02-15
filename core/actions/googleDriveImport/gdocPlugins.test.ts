@@ -1232,6 +1232,7 @@ test("getDescription", async () => {
 		</html>
 
 	`;
+
 	const expectedOutputHtml = `We previously released a draft genome assembly for the lone star tick, <i>A. americanum. </i>We've now predicted genes from this assembly to use for downstream functional characterization and comparative genomics efforts.`;
 
 	const result = getDescription(inputHtml);
