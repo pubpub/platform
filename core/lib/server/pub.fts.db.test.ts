@@ -2,14 +2,15 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import type { Seed } from "~/prisma/seed/seedCommunity";
+import type { Seed } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
+import { createSeed } from "~/prisma/seed/createSeed";
 
 const { createForEachMockedTransaction, testDb } = await mockServerCode();
 
 const { getTrx } = createForEachMockedTransaction();
 
-const communitySeed = {
+const communitySeed = createSeed({
 	community: {
 		name: "test",
 		slug: "test-server-pub",
@@ -74,11 +75,15 @@ const communitySeed = {
 			},
 		},
 	],
-} as Seed;
+});
 
-const seed = async (trx = testDb, seed?: Seed) => {
+const seed = async <T extends Seed | undefined>(trx = testDb, seed?: T) => {
 	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-	const seeded = await seedCommunity(seed ?? { ...communitySeed }, undefined, trx);
+	if (!seed) {
+		return seedCommunity(communitySeed, undefined, trx);
+	}
+
+	const seeded = await seedCommunity(seed, undefined, trx);
 
 	return seeded;
 };
