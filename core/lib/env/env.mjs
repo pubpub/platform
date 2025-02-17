@@ -25,7 +25,7 @@ export const env = createEnv({
 		ASSETS_REGION: z.string(),
 		ASSETS_UPLOAD_KEY: z.string(),
 		ASSETS_UPLOAD_SECRET_KEY: z.string(),
-		ASSETS_STORAGE_ENDPOINT: z.string().url().optional(), 
+		ASSETS_STORAGE_ENDPOINT: z.string().url().optional(),
 		/**
 		 * Whether or not to verbosely log `memoize` cache hits and misses
 		 */
