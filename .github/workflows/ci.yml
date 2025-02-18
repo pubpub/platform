@@ -48,9 +48,6 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
-            - name: Setup env file
-              run: cat ${{ env.ENV_FILE }} >> $GITHUB_ENV
-
             - name: Cache turbo
               uses: actions/cache@v4
               with:
@@ -60,7 +57,7 @@ jobs:
                       ${{ runner.os }}-turbo-
 
             - name: Start test dependencies
-              run: docker compose -f docker-compose.test.yml --profile test up -d
+              run: pnpm test:setup
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
