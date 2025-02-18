@@ -64,7 +64,7 @@ jobs:
             - name: Get image tag based on SHA
               id: gettag
               # use shell substitution
-              run: echo "tag=$(git describe --always --abbrev=40 --dirty)" >> $GITHUB_OUTPUT
+              run: echo "tag=$(git describe --always --abbrev=40)" >> $GITHUB_OUTPUT
 
             - name: Login to Amazon ECR
               id: login-ecr
@@ -123,7 +123,7 @@ jobs:
                   INTEGRATION_TEST_HOST: localhost
 
             - name: Print container logs
-              if: failure()
+              if: ${{failure() || cancelled()}}
               run: docker compose -f docker-compose.test.yml --profile integration logs
 
             - name: Upload playwright snapshots artifact
