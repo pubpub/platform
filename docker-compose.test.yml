@@ -96,7 +96,7 @@ services:
                 # TODO: add a healthcheck for jobs
                 condition: service_started
             db:
-                condition: service_healthy
+                condition: service_started
             inbucket:
                 condition: service_started
         platform: linux/amd64

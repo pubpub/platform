@@ -83,11 +83,8 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
-            - name: Start up integration images
-              env:
-                  INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
-                  JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
-              run: pnpm integration:setup
+            - name: Start up db images
+              run: pnpm test:setup
 
             - name: p:build
               run: pnpm p:build
@@ -104,8 +101,8 @@ jobs:
 
             - run: pnpm --filter core exec playwright install chromium --with-deps
 
-            - name: Start up core
-              run: docker compose -f docker-compose.test.yml --profile integration up -d
+            - name: Start up core etc
+              run: pnpm integration:setup
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
