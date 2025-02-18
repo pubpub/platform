@@ -32,7 +32,6 @@ type FileUploadProps = {
 	upload: (fileName: string) => Promise<string | { error: string }>;
 	onUpdateFiles: (files: FormattedFile[]) => void;
 	disabled?: boolean;
-	endpoint?: string;
 	id?: string;
 };
 
