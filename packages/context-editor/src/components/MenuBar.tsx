@@ -10,6 +10,7 @@ import { Button } from "ui/button";
 import { cn } from "utils";
 
 import { baseSchema } from "../schemas";
+import { markIsActive } from "../utils/marks";
 
 interface MenuItem {
 	name: string;
@@ -32,14 +33,6 @@ const menuItems: MenuItem[] = [
 		command: toggleMark(baseSchema.marks.em),
 	},
 ];
-
-const markIsActive = (markType: MarkType, editorState: EditorState) => {
-	const { from, $from, to, empty } = editorState.selection;
-	if (empty) {
-		return !!markType.isInSet(editorState.storedMarks || $from.marks());
-	}
-	return editorState.doc.rangeHasMark(from, to, markType);
-};
 
 export const MenuBar = () => {
 	const { view } = usePluginViewContext();

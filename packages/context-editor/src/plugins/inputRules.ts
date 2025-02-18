@@ -23,11 +23,27 @@ const abstract = {
 	],
 };
 
-const markdownItalicsRule = (markType: MarkType) =>
+const italicsRegex = /([_*])([^]+?)\1\x20$/;
+const boldRegex = /(\*\*|__)([^]+?)\1\x20$/;
+
+export const markdownItalicsRule = (markType: MarkType) =>
 	new InputRule(
-		/([_*])([^]+?)\1/,
+		italicsRegex,
 		(state: EditorState, match: RegExpMatchArray, start: number, end: number) => {
-			const [_, __, content] = match;
+			const [whole, marks, content] = match;
+			const fragment = Fragment.fromArray([
+				state.schema.text(content, [state.schema.mark(markType)]),
+				state.schema.text(" "),
+			]);
+			return state.tr.replaceWith(start, end, fragment);
+		}
+	);
+
+export const markdownBoldRule = (markType: MarkType) =>
+	new InputRule(
+		boldRegex,
+		(state: EditorState, match: RegExpMatchArray, start: number, end: number) => {
+			const [whole, marks, content] = match;
 			const fragment = Fragment.fromArray([
 				state.schema.text(content, [state.schema.mark(markType)]),
 				state.schema.text(" "),
@@ -46,6 +62,8 @@ export default (schema: Schema) => {
 			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
 			return state.tr.replaceWith(start - 1, end, contentToInsert);
 		}),
+		// The order is significant here since bold uses a superset of italic (** vs * or __ vs _)
+		markdownBoldRule(schema.marks.strong),
 		markdownItalicsRule(schema.marks.em),
 	];
 	return inputRules({ rules });
