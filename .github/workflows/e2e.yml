@@ -53,25 +53,6 @@ jobs:
             - name: Setup env file
               run: cat ${{ env.ENV_FILE }} >> $GITHUB_ENV
 
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile --prefer-offline
-
-            - name: Start up integration images
-              run: pnpm integration:setup
-
-            - name: p:build
-              run: pnpm p:build
-
-            - name: Run migrations
-              run: pnpm --filter core prisma migrate deploy
-
-            - name: seed db
-              run: pnpm --filter core prisma db seed
-              env:
-                  # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
-                  MINIMAL_SEED: true
-                  SKIP_VALIDATION: true
-
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
@@ -98,6 +79,28 @@ jobs:
                   echo "core_label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-core}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "jobs_label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-jobs}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --prefer-offline
+
+            - name: Start up integration images
+              env:
+                  INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
+                  JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
+              run: pnpm integration:setup
+
+            - name: p:build
+              run: pnpm p:build
+
+            - name: Run migrations
+              run: pnpm --filter core prisma migrate deploy
+
+            - name: seed db
+              run: pnpm --filter core prisma db seed
+              env:
+                  # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
+                  MINIMAL_SEED: true
+                  SKIP_VALIDATION: true
 
             - run: pnpm --filter core exec playwright install chromium --with-deps
 

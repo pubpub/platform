@@ -39,7 +39,7 @@ services:
         environment:
             POSTGRES_USER: ${POSTGRES_USER}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-            POSTGRES_DB: ${POSTGERS_NAME}
+            POSTGRES_DB: ${POSTGRES_NAME}
 
     inbucket:
         image: inbucket/inbucket:latest
