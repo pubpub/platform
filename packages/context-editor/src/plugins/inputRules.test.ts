@@ -5,13 +5,13 @@ import { describe, expect, test } from "vitest";
 
 import { baseSchema } from "../schemas";
 import { markIsActive } from "../utils/marks";
-import { markdownBoldRule, markdownItalicsRule } from "./inputRules";
+import { applyMarkRule, boldRegex, italicsRegex } from "./inputRules";
 
 describe("inputRules", () => {
 	const rules = inputRules({
 		rules: [
-			markdownBoldRule(baseSchema.marks.strong),
-			markdownItalicsRule(baseSchema.marks.em),
+			applyMarkRule(baseSchema.marks.strong, boldRegex),
+			applyMarkRule(baseSchema.marks.em, italicsRegex),
 		],
 	});
 	const plugins = [rules];
@@ -68,6 +68,7 @@ describe("inputRules", () => {
 		expect(write(text)).toEqual(expected.text);
 		moveSelection(1);
 		expect(markIsActive(baseSchema.marks.em, view.state)).toEqual(expected.isItalicized);
+		expect(markIsActive(baseSchema.marks.strong, view.state)).toBeFalsy();
 	});
 
 	test.each([
@@ -75,6 +76,8 @@ describe("inputRules", () => {
 		{ text: "__hi__ ", expected: { text: "hi ", isBold: true, isItalicized: false } },
 		{ text: "__hi** ", expected: { text: "__hi** ", isBold: false, isItalicized: false } },
 		{ text: "__h_i__ ", expected: { text: "h_i ", isBold: true, isItalicized: false } },
+		{ text: "**h*i** ", expected: { text: "h*i ", isBold: true, isItalicized: false } },
+		{ text: "**h_i** ", expected: { text: "h_i ", isBold: true, isItalicized: false } },
 	])("bold $text", ({ text, expected }) => {
 		expect(write(text)).toEqual(expected.text);
 		moveSelection(1);
