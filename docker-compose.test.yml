@@ -88,7 +88,10 @@ services:
             - path: .env.docker-compose.test
               required: true
         environment:
-            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${POSTGRES_PORT}/${POSTGRES_DB}
+            # this needs to be db:5432 bc that's what it is in the app-network
+            # if you are running this from outside the docker network, you need to use
+            # @localhost:${POSTGRES_PORT} instead
+            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
             - PORT=3000
             - CI=true
         depends_on:

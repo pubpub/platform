@@ -89,13 +89,8 @@ jobs:
             - name: p:build
               run: pnpm p:build
 
-            - name: Run migrations
-              run: pnpm --filter core prisma migrate deploy
-              env:
-                  DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
-
-            - name: seed db
-              run: pnpm --filter core prisma db seed
+            - name: Run migrations and seed
+              run: pnpm --filter core exec prisma migrate reset --preview-feature --force
               env:
                   DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
                   # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
