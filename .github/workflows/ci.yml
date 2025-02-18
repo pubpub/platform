@@ -55,8 +55,8 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-turbo-
 
-            - name: Start up DB
-              run: docker compose --profile test up -d
+            - name: Start test dependencies
+              run: docker compose -f docker-compose.test.yml --profile test up -d
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline

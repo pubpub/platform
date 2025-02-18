@@ -51,8 +51,8 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
-            - name: Start up DB
-              run: docker compose -f docker-compose.test.yml --profile test up -d
+            - name: Start up integration images
+              run: pnpm integration:setup
 
             - name: p:build
               run: pnpm p:build

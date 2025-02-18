@@ -1,8 +1,5 @@
 services:
     minio:
-        env_file:
-            - path: "./.env.docker-compose"
-              required: false
         image: minio/minio:latest
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
@@ -10,54 +7,41 @@ services:
             timeout: 30s
             retries: 5
             start_period: 30s
-        container_name: pubpub-minio
         restart: unless-stopped
         command: server --console-address ":9001" /data
         environment:
-            - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
-            - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+            - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
+            - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
         ports:
             - "9000:9000" # API
             - "9001:9001" # Console
 
     minio-init:
-        env_file:
-            - path: "./.env.docker-compose"
-              required: false
         image: minio/mc:latest
-        depends_on:
-            minio:
-                condition: service_healthy
         networks:
             - app-network
         entrypoint: >
-            /bin/sh -c "
-            /usr/bin/mc config host add myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin};
-            /usr/bin/mc mb --ignore-existing myminio/${ASSETS_BUCKET_NAME:-assets.v7.pubpub.org};
-            /usr/bin/mc anonymous set download myminio/${ASSETS_BUCKET_NAME:-assets.v7.pubpub.org};
-            /usr/bin/mc admin user add myminio ${ASSETS_UPLOAD_KEY:-pubpubuser} ${ASSETS_UPLOAD_SECRET_KEY:-pubpubpass};
-            /usr/bin/mc admin policy attach myminio readwrite --user ${ASSETS_UPLOAD_KEY:-pubpubuser};
+            /bin/sh -c '
+            /usr/bin/mc config host add myminio http://minio:9000 "$${MINIO_ACCESS_KEY}" "$${MINIO_SECRET_KEY}";
+            /usr/bin/mc mb --ignore-existing myminio/"$${ASSETS_BUCKET_NAME}";
+            /usr/bin/mc anonymous set download myminio/"$${ASSETS_BUCKET_NAME}";
+            echo "$${ASSETS_BUCKET_NAME}";
+            echo "$${ASSETS_UPLOAD_KEY}";
+            echo "$${ASSETS_UPLOAD_SECRET_KEY}";
+            /usr/bin/mc admin user add myminio "$${ASSETS_UPLOAD_KEY}" "$${ASSETS_UPLOAD_SECRET_KEY}";
+            /usr/bin/mc admin policy attach myminio readwrite --user "$${ASSETS_UPLOAD_KEY}";
             exit 0;
-            "
+            '
 
     db:
-        env_file:
-            - path: "./.env.docker-compose"
-              required: false
         image: postgres:15
         restart: always
         environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: postgres
-            POSTGRES_PORT: 5432
-        ports:
-            - "54322:5432"
+            POSTGRES_USER: ${POSTGRES_USER}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+            POSTGRES_DB: ${POSTGERS_NAME}
 
     inbucket:
-        env_file:
-            - path: "./.env.docker-compose"
-              required: false
         image: inbucket/inbucket:latest
         restart: always
         ports:
