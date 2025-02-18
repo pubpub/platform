@@ -5,9 +5,7 @@ services:
         extends:
             file: ./docker-compose.base.yml
             service: db
-        env_file:
-            - path: .env.docker-compose.test
-              required: true
+        env_file: ./.env.docker-compose.test
         volumes:
             - postgres_test_data:/var/lib/postgresql/data
         networks:
@@ -22,9 +20,7 @@ services:
         extends:
             file: ./docker-compose.base.yml
             service: minio
-        env_file:
-            - path: .env.docker-compose.test
-              required: true
+        env_file: ./.env.docker-compose.test
         volumes:
             - minio_data:/data
         networks:
@@ -36,9 +32,7 @@ services:
         depends_on:
             minio:
                 condition: service_healthy
-        env_file:
-            - path: .env.docker-compose.test
-              required: true
+        env_file: ./.env.docker-compose.test
         extends:
             file: ./docker-compose.base.yml
             service: minio-init
@@ -51,9 +45,7 @@ services:
         extends:
             file: ./docker-compose.base.yml
             service: inbucket
-        env_file:
-            - path: .env.docker-compose.test
-              required: true
+        env_file: ./.env.docker-compose.test
         networks:
             - app-network
         profiles:
@@ -64,17 +56,9 @@ services:
         container_name: jobs
         image: ${JOBS_IMAGE}
         platform: linux/amd64
-        env_file:
-            - path: .env.docker-compose.test
-              required: true
+        env_file: .env.docker-compose.test
         environment:
             - OTEL_SERVICE_NAME=jobs.jobs
-            - PGDATABASE=${POSTGRES_DB}
-            - PGHOST=db
-            - PGPORT=${POSTGRES_PORT}
-            - PGUSER=${POSTGRES_USER}
-            - PGPASSWORD=${POSTGRES_PASSWORD}
-            - PUBPUB_URL=http://localhost:3000
         networks:
             - app-network
         depends_on:
@@ -84,14 +68,8 @@ services:
 
     integration-tests:
         image: ${INTEGRATION_TESTS_IMAGE}
-        env_file:
-            - path: .env.docker-compose.test
-              required: true
+        env_file: ./.env.docker-compose.test
         environment:
-            # this needs to be db:5432 bc that's what it is in the app-network
-            # if you are running this from outside the docker network, you need to use
-            # @localhost:${POSTGRES_PORT} instead
-            - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
             - PORT=3000
             - CI=true
         depends_on:

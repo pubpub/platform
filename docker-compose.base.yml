@@ -9,9 +9,6 @@ services:
             start_period: 30s
         restart: unless-stopped
         command: server --console-address ":9001" /data
-        environment:
-            - MINIO_ROOT_USER=${MINIO_ACCESS_KEY}
-            - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY}
         ports:
             - "9000:9000" # API
             - "9001:9001" # Console
@@ -36,10 +33,6 @@ services:
     db:
         image: postgres:15
         restart: always
-        environment:
-            POSTGRES_USER: ${POSTGRES_USER}
-            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-            POSTGRES_DB: ${POSTGRES_DB}
 
     inbucket:
         image: inbucket/inbucket:latest
