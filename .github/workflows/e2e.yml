@@ -51,7 +51,8 @@ jobs:
                       ${{ runner.os }}-pnpm-store-
 
             - name: Setup env file
-              run: cat ${{ env.ENV_FILE }} >> $GITHUB_ENV
+              id: setup-env-file
+              run: cat ${{ env.ENV_FILE }} >> $GITHUB_OUTPUT
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -92,7 +93,7 @@ jobs:
             - name: Run migrations and seed
               run: pnpm --filter core exec prisma migrate reset --preview-feature --force
               env:
-                  DATABASE_URL: postgresql://${{ env.POSTGRES_USER }}:${{ env.POSTGRES_PASSWORD }}@localhost:${{ env.POSTGRES_PORT }}/${{ env.POSTGRES_DB }}
+                  DATABASE_URL: postgresql://${{ steps.setup-env-file.outputs.POSTGRES_USER }}:${{ steps.setup-env-file.outputs.POSTGRES_PASSWORD }}@localhost:${{ steps.setup-env-file.outputs.POSTGRES_PORT }}/${{ steps.setup-env-file.outputs.POSTGRES_DB }}
                   # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
                   MINIMAL_SEED: true
                   SKIP_VALIDATION: true
