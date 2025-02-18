@@ -160,7 +160,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	return (
 		<div
 			id="context-editor-container"
-			className={`relative max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
+			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
 		>
 			<div id={MENU_BAR_ID} className="sticky top-0 z-10"></div>
 			<div ref={viewHost} className="font-serif" />
