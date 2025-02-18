@@ -44,8 +44,7 @@
 		"storybook": "^8.4.7",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "catalog:",
-		"utils": "workspace:*"
+		"typescript": "catalog:"
 	},
 	"dependencies": {
 		"@nytimes/react-prosemirror": "^1.0.0",
@@ -71,6 +70,7 @@
 		"react-csv-to-table": "^0.0.4",
 		"react-dom": "catalog:react19",
 		"ui": "workspace:*",
+		"utils": "workspace:*",
 		"uuid": "^11.0.4"
 	},
 	"preconstruct": {
