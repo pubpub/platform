@@ -20,6 +20,8 @@ jobs:
     integration-tests:
         name: Integration tests
         runs-on: ubuntu-latest
+        env:
+            ENV_FILE: .env.docker-compose.test
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -48,6 +50,9 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
+            - name: Setup env file
+              run: cat ${{ env.ENV_FILE }} >> $GITHUB_ENV
+
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
@@ -59,8 +64,6 @@ jobs:
 
             - name: Run migrations
               run: pnpm --filter core prisma migrate deploy
-              env:
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
             - name: seed db
               run: pnpm --filter core prisma db seed
@@ -68,7 +71,6 @@ jobs:
                   # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
                   MINIMAL_SEED: true
                   SKIP_VALIDATION: true
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4

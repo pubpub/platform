@@ -19,6 +19,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             COMPOSE_FILE: docker-compose.test.yml
+            ENV_FILE: .env.docker-compose.test
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -47,6 +48,9 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
+            - name: Setup env file
+              run: cat ${{ env.ENV_FILE }} >> $GITHUB_ENV
+
             - name: Cache turbo
               uses: actions/cache@v4
               with:
@@ -66,8 +70,6 @@ jobs:
 
             - name: Run migrations
               run: pnpm --filter core migrate-test
-              env:
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
             - name: Run prettier
               run: pnpm format
