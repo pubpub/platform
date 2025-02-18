@@ -23,10 +23,10 @@ const abstract = {
 	],
 };
 
-export const italicsRegex = /([_*])([^]+?)\1\x20$/;
-export const boldRegex = /(\*\*|__)([^]+?)\1\x20$/;
+const italicsRegex = /([_*])([^]+?)\1\x20$/;
+const boldRegex = /(\*\*|__)([^]+?)\1\x20$/;
 
-export const applyMarkRule = (markType: MarkType, regex: RegExp) => {
+const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 	return new InputRule(
 		regex,
 		(state: EditorState, match: RegExpMatchArray, start: number, end: number) => {

@@ -1,19 +1,13 @@
-import { inputRules } from "prosemirror-inputrules";
 import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { describe, expect, test } from "vitest";
 
 import { baseSchema } from "../schemas";
 import { markIsActive } from "../utils/marks";
-import { applyMarkRule, boldRegex, italicsRegex } from "./inputRules";
+import customRules from "./inputRules";
 
 describe("inputRules", () => {
-	const rules = inputRules({
-		rules: [
-			applyMarkRule(baseSchema.marks.strong, boldRegex),
-			applyMarkRule(baseSchema.marks.em, italicsRegex),
-		],
-	});
+	const rules = customRules(baseSchema);
 	const plugins = [rules];
 
 	const paragraphNode = baseSchema.node("paragraph", null, []);
