@@ -130,7 +130,7 @@ export default async function Page(props: {
 			}
 		>
 			<div className="flex justify-center py-10">
-				<div className="prose flex-1">
+				<div className="prose max-w-prose flex-1">
 					<PubEditor
 						searchParams={searchParams}
 						pubId={pub.id}
