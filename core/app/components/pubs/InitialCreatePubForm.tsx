@@ -148,7 +148,6 @@ const RelatedPubValueSelector = ({
 		<ConfigureRelatedValue
 			element={element}
 			pubId={sourcePubId}
-			// @ts-ignore TODO: how best to fix this?
 			slug={slug}
 			values={[]}
 			className="w-fit"

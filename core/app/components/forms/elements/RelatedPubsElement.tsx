@@ -1,5 +1,7 @@
 "use client";
 
+import type { FieldErrors } from "react-hook-form";
+
 import { useMemo, useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { useFieldArray, useFormContext } from "react-hook-form";
@@ -23,8 +25,6 @@ import { useContextEditorContext } from "../../ContextEditor/ContextEditorContex
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
-type RelatedPubValueSlug = `${string}.${number}.value`;
-
 const RelatedPubBlock = ({
 	pub,
 	onRemove,
@@ -35,7 +35,7 @@ const RelatedPubBlock = ({
 	pub: GetPubsResult[number];
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
-	slug: RelatedPubValueSlug;
+	slug: string;
 	onBlur?: () => void;
 }) => {
 	return (
@@ -64,6 +64,24 @@ type FieldValue = { value: JsonValue; relatedPubId: PubsId };
 type FormValue = {
 	[slug: string]: FieldValue[];
 };
+type FormValueSingle = {
+	[slug: string]: JsonValue;
+};
+
+const parseRelatedPubValuesSlugError = (
+	slug: string,
+	formStateErrors: FieldErrors<FormValueSingle> | FieldErrors<FormValue>
+) => {
+	const [baseSlug, index] = slug.split(".");
+	const indexNumber = index ? parseInt(index) : undefined;
+
+	if (!indexNumber || isNaN(indexNumber)) {
+		const baseError = (formStateErrors as FieldErrors<FormValueSingle>)[baseSlug];
+		return baseError;
+	}
+	const valueError = (formStateErrors as FieldErrors<FormValue>)[baseSlug]?.[indexNumber]?.value;
+	return valueError;
+};
 
 export const ConfigureRelatedValue = ({
 	slug,
@@ -72,20 +90,19 @@ export const ConfigureRelatedValue = ({
 	className,
 	...props
 }: PubFieldFormElementProps & {
-	slug: RelatedPubValueSlug;
+	slug: string;
 	onBlur?: () => void;
 	className?: string;
 }) => {
 	const configLabel = "label" in element.config ? element.config.label : undefined;
 	const label = configLabel || element.label || slug;
 
-	const { watch, formState } = useFormContext<FormValue>();
+	const { watch, formState } = useFormContext<FormValue | FormValueSingle>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
 	const showValue = value != null && value !== "";
 
-	const [baseSlug, index] = slug.split(".");
-	const valueError = formState.errors[baseSlug]?.[parseInt(index)]?.value;
+	const valueError = parseRelatedPubValuesSlugError(slug, formState.errors);
 
 	if (element.component === null) {
 		return null;
