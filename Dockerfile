@@ -20,6 +20,7 @@ FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} as base
 # these are necessary to be able to use them inside of `base`
 ARG BASE_IMAGE
 ARG PNPM_VERSION
+ARG PNPM_STORE_PATH
 
 
 # Instll dependencies we need at the end
@@ -47,8 +48,8 @@ COPY pnpm-lock.yaml ./
 
 # Could possibly be sped up using `turbo prune` 
 # https://turbo.build/repo/docs/guides/tools/docker
-RUN --mount=type=bind,source=~/.pnpm-store,target=/root/.pnpm-store \
-    pnpm fetch
+RUN --mount=type=bind,source=${PNPM_STORE_PATH},target=/root/.pnpm-store \
+  pnpm fetch
 
 
 # Install dependencies we only need to run pnpm install

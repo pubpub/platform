@@ -117,7 +117,7 @@ jobs:
             - name: Setup pnpm cache
               uses: actions/cache@v4
               with:
-                  path: ~/.pnpm-store
+                  path: ./.pnpm-store
                   key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
@@ -138,6 +138,7 @@ jobs:
                   build-args: |
                       PACKAGE=${{ inputs.package }}
                       CI=true
+                      PNPM_STORE_PATH=./.pnpm-store
                   secrets: |
                       SENTRY_AUTH_TOKEN=${{ env.SENTRY_AUTH_TOKEN }}
                   target: ${{ steps.label.outputs.target }}
