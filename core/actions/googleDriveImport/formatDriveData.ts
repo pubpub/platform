@@ -7,6 +7,8 @@ import type { PubsId } from "db/public";
 
 import type { DriveData } from "./getGDriveFiles";
 import {
+	appendFigureAttributes,
+	formatFigureReferences,
 	formatLists,
 	getDescription,
 	processLocalLinks,
@@ -48,6 +50,7 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(removeVerboseFormatting)
 		.use(removeGoogleLinkForwards)
 		.use(processLocalLinks)
+		.use(formatFigureReferences) /* Assumes figures are still tables */
 		.use(structureImages)
 		.use(structureVideos)
 		.use(structureAudio)
@@ -61,6 +64,7 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(structureAnchors)
 		.use(structureReferences)
 		.use(structureFootnotes)
+		.use(appendFigureAttributes) /* Assumes figures are <figure> elements */
 		.use(removeEmptyFigCaption)
 		.use(removeDescription)
 		.use(rehypeFormat)
