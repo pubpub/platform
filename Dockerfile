@@ -10,7 +10,7 @@ ARG ALPINE_VERSION=3.20
 ARG PACKAGE
 ARG PORT=3000
 
-ARG PNPM_VERSION=9.10.0
+ARG PNPM_VERSION=10.4.1
 
 
 ################################################################################
@@ -47,7 +47,9 @@ COPY pnpm-lock.yaml ./
 
 # Could possibly be sped up using `turbo prune` 
 # https://turbo.build/repo/docs/guides/tools/docker
-RUN pnpm fetch
+RUN --mount=type=bind,source=~/.pnpm-store,target=/root/.pnpm-store \
+    pnpm fetch
+
 
 # Install dependencies we only need to run pnpm install
 RUN apk add g++ make py3-pip 
@@ -59,7 +61,7 @@ FROM fetch-deps as monorepo
 # Copy over the rest of the files
 ADD . ./
 
-# Install from the fetched store
+# Mount the pnpm store from the host
 RUN pnpm install -r --prefer-offline
 
 RUN pnpm p:build

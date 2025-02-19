@@ -113,6 +113,15 @@ jobs:
                       exit 1
                   fi
 
+            # Cache the pnpm store
+            - name: Setup pnpm cache
+              uses: actions/cache@v4
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+
             - name: Build, tag, and push image to Amazon ECR
               uses: docker/build-push-action@v5
               id: build-image
