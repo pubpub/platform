@@ -10,8 +10,6 @@ import { Database } from "db/Database";
 import { isUniqueConstraintError } from "../kysely/errors";
 import { createPasswordHash } from "../lib/authentication/password";
 
-console.log(pg);
-
 const env = createEnv({
 	server: {
 		ADMIN_EMAIL: z.string().email(),
