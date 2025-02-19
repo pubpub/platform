@@ -3,17 +3,13 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import { FieldsPage } from "./fixtures/fields-page";
-import { FormsEditPage } from "./fixtures/forms-edit-page";
-import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
-import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity } from "./helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-const FORM_SLUG = `playwright-test-form-${now}`;
 
 test.describe.configure({ mode: "serial" });
 
@@ -66,18 +62,6 @@ test.describe("File upload", () => {
 		await page.setInputFiles("input[type='file']", [
 			new URL("fixtures/test-assets/test-diagram.png", import.meta.url).pathname,
 		]);
-		// const fileUploadElement = await page
-		// 	.getByRole("button", { name: "browse files", exact: true })
-		// 	.click({
-		// 		timeout: 2_000,
-		// 	});
-
-		// const fileChooser = await page.waitForEvent("filechooser", (fileChooser) => {
-		// 	return !!fileChooser;
-		// });
-		// await fileChooser.setFiles(
-		// 	new URL("fixtures/test-assets/test-diagram.png", import.meta.url).pathname
-		// );
 
 		await page.getByRole("button", { name: "Upload 1 file", exact: true }).click({
 			timeout: 2_000,
