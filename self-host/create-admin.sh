@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+source .env
+
 # Prompt for admin credentials
 read -p "Enter admin email: " ADMIN_EMAIL
 read -s -p "Enter admin password: " ADMIN_PASSWORD
@@ -16,5 +18,4 @@ docker compose run --rm \
     -e ADMIN_LASTNAME="$ADMIN_LASTNAME" \
     platform-migrations pnpm --filter core exec tsx prisma/create-admin-user.cts
 
-echo "✨ Done! You can now start the application with:"
-echo "docker compose up -d"
+echo "✨ Done! You can now login to Platform at $PUBPUB_URL"

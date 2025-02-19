@@ -139,6 +139,11 @@ ASSETS_REGION=us-east-1 # leave this unchanged, unless you are hosting files on 
 
 Then, after running `docker compose up -d`, you should be able to visit the MinIO console at `http://localhost:9001`.
 
+#### SSL/Caddy
+
+> [!NOTE]
+> Disabled by default, see later section for more information
+
 #### Email
 
 > [!NOTE]
@@ -215,3 +220,81 @@ You can technically leave the email provider blank, but this will disable the em
 #### Other
 
 ...
+
+### Disable services you don't want or need
+
+By default, a number of services are enabled in `docker-compose.yml` that you may not want or need.
+
+Here a short list of the built in services:
+
+#### Postgres Database
+
+By default, we will spin up a postgres database in a container.
+
+You may want to use your own postgres database instead, in which case you can disable this by removing the `db` service from the `docker-compose.yml` file, and removing the
+
+```yml
+db:
+    condition: service_started
+```
+
+from the `depends_on` section of the `platform` service.
+
+```yml
+platform:
+    depends_on:
+        db:
+            condition: service_started
+```
+
+#### MinIO
+
+By default, we will spin up a MinIO container to host files locally.
+
+You can choose to instead choose to use any other S3-compatible storage service, in which case you can disable this by removing the `minio` and `minio-init` services from the `docker-compose.yml` file.
+
+Be sure to follow the instructions above for configuring the environment variables for your S3-compatible storage service.
+
+### Start the services for the first time
+
+Now you should be ready to start the services for the first time!
+
+```sh
+docker compose up -d
+```
+
+Everything should start up without any issues.
+
+You should now be able to visit Platform at `http://localhost:3000`, and browse your files at `http://localhost:9001` (if you are using the built-in MinIO service).
+
+But, as you might have noticed: you cannot login yet!
+
+This is because you need to create an admin user.
+
+### Create an admin user
+
+First, make the script executable:
+
+```sh
+chmod +x ./create-admin.sh
+```
+
+Then, run the script:
+
+```sh
+./create-admin.sh
+```
+
+You will be prompted to enter an email, password, first name, and last name.
+
+Once you have done this, you should be able to login to Platform at `http://localhost:3000` (or the URL you have set up) with the email and password you just created.
+
+### Create a community
+
+Navigate to `http://localhost:3000/communities` and create a community.
+
+### Go to your new community
+
+Navigate to `http://localhost:3000/c/your-community-slug` and you should see the community dashboard!
+
+Congrats! You're ready to start using Platform!

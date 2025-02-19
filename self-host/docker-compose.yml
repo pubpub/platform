@@ -10,8 +10,6 @@ services:
                 condition: service_started
             platform-jobs:
                 condition: service_started
-            minio:
-                condition: service_healthy
             platform-migrations:
                 condition: service_completed_successfully
         platform: linux/amd64
@@ -80,27 +78,27 @@ services:
         ports:
             - "5432:5432" # you can choose another port if you want, just make sure the first one matches the POSTGRES_PORT in .env
 
-    # reverse proxy
+    # recommended reverse proxy solution
     # can be removed if you manually set up a reverse proxy like nginx instead
     # useful if you want your assets, platform, and site to be on the same domain
     # but with different paths
-    caddy:
-        image: caddy:latest
-        depends_on:
-            - platform
-            - platform-jobs
-            - minio
-        env_file:
-            - path: .env
-              required: true
-        ports:
-            - "443:443"
-        volumes:
-            - ./caddy:/etc/caddy
-            - caddy-data:/data
-            - caddy-config:/config
-        networks:
-            - app-network
+    # caddy:
+    #     image: caddy:latest
+    #     depends_on:
+    #         - platform
+    #         - platform-jobs
+    #         - minio
+    #     env_file:
+    #         - path: .env
+    #           required: true
+    #     ports:
+    #         - "443:443"
+    #     volumes:
+    #         - ./caddy:/etc/caddy
+    #         - caddy-data:/data
+    #         - caddy-config:/config
+    #     networks:
+    #         - app-network
 
     # assets storage
     # can be removed if you manually set up a storage service like s3 or minio instead
