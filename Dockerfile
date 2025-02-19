@@ -50,7 +50,11 @@ RUN ls -la
 RUN echo "PNPM_STORE_PATH: $(pnpm store path)"
 
 RUN mkdir -p /root/.local/share/pnpm/store/v10 && \
-    chmod -R 777 /root/.local/share/pnpm
+    chown -R node:node /root/.local/share/pnpm
+
+RUN --mount=type=bind,source=${PNPM_STORE_PATH},target=/root/.local/share/pnpm/store/v10 \
+  ls -la
+
 # Could possibly be sped up using `turbo prune` 
 # https://turbo.build/repo/docs/guides/tools/docker
 RUN --mount=type=bind,source=${PNPM_STORE_PATH},target=/root/.local/share/pnpm/store/v10 \
