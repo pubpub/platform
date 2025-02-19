@@ -63,7 +63,13 @@ FROM fetch-deps as monorepo
 ADD . ./
 
 # Mount the pnpm store from the host
-RUN pnpm install -r --prefer-offline
+# Add this to see where things are being installed
+RUN echo "Installing dependencies..." && \
+  pnpm install -r --prefer-offline && \
+  echo "Contents of current directory:" && \
+  ls -la && \
+  echo "Contents of node_modules:" && \
+  ls -la node_modules
 
 RUN pnpm p:build
 
