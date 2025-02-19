@@ -143,6 +143,8 @@ export default async function Page(props: {
 	if (!pub) {
 		return null;
 	}
+	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
+	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
 
 	const { stage, children, ...slimPub } = pub;
 	return (
@@ -240,16 +242,18 @@ export default async function Page(props: {
 					parentPubId={pub.id}
 				/>
 			</Suspense>
-			<div className="flex flex-col gap-2" data-testid="related-pubs">
-				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
-				<CreatePubButton
-					text="Add Related Pub"
-					communityId={community.id}
-					relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
-					className="w-fit"
-				/>
-				<RelatedPubsTable pub={pub} />
-			</div>
+			{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
+				<div className="flex flex-col gap-2" data-testid="related-pubs">
+					<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+					<CreatePubButton
+						text="Add Related Pub"
+						communityId={community.id}
+						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
+						className="w-fit"
+					/>
+					<RelatedPubsTable pub={pub} />
+				</div>
+			)}
 		</div>
 	);
 }
