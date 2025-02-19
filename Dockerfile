@@ -46,13 +46,15 @@ FROM base as fetch-deps
 # Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
 COPY pnpm-lock.yaml ./
 
+RUN ls -la
+RUN echo "PNPM_STORE_PATH: $(pnpm store path)"
+
+RUN mkdir -p $(pnpm store path)
 # Could possibly be sped up using `turbo prune` 
 # https://turbo.build/repo/docs/guides/tools/docker
 RUN --mount=type=bind,source=${PNPM_STORE_PATH},target=/root/.local/share/pnpm/store/v10 \
   pnpm fetch
 
-RUN ls -la
-RUN echo "PNPM_STORE_PATH: $(pnpm store path)"
 
 
 # Install dependencies we only need to run pnpm install
