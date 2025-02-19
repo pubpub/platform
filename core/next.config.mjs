@@ -52,7 +52,14 @@ const nextConfig = {
 	],
 	experimental: {
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
+		parallelServerBuildTraces: true,
+		parallelServerCompiles: true,
+		// needs to be true for parallelServerBuildTraces to work when using sentry
+		webpackBuildWorker: true,
+
+		// serverSourceMaps: true
 	},
+	// productionBrowserSourceMaps: true
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
 	// webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
@@ -63,36 +70,35 @@ const nextConfig = {
 	// },
 };
 
-const modifiedConfig = withPreconstruct(
-	withSentryConfig(nextConfig, {
-		// For all available options, see:
-		// https://github.com/getsentry/sentry-webpack-plugin#options
+const modifiedConfig = withSentryConfig(nextConfig, {
+	// For all available options, see:
+	// https://github.com/getsentry/sentry-webpack-plugin#options
 
-		// Suppresses source map uploading logs during build
-		silent: true,
-		org: "kfg",
-		project: "v7-core",
-		authToken: env.SENTRY_AUTH_TOKEN,
-		// For all available options, see:
-		// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+	// Suppresses source map uploading logs during build
+	silent: true,
+	org: "kfg",
+	project: "v7-core",
+	authToken: env.SENTRY_AUTH_TOKEN,
+	// For all available options, see:
+	// https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
-		// Upload a larger set of source maps for prettier stack traces (increases build time)
-		widenClientFileUpload: true,
+	// Upload a larger set of source maps for prettier stack traces (increases build time)
+	widenClientFileUpload: true,
 
-		// Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
-		// tunnelRoute: "/monitoring",
+	// Routes browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers (increases server load)
+	// tunnelRoute: "/monitoring",
 
-		// Hides source maps from generated client bundles
-		hideSourceMaps: true,
+	// Hides source maps from generated client bundles
+	hideSourceMaps: true,
 
-		// Automatically tree-shake Sentry logger statements to reduce bundle size
-		disableLogger: true,
-		sourcemaps: {
-			// necessary to prevent OOM errors
-			deleteSourcemapsAfterUpload: true,
-		},
-	})
-);
+	// Automatically tree-shake Sentry logger statements to reduce bundle size
+	disableLogger: true,
+	sourcemaps: {
+		// necessary to prevent OOM errors
+		deleteSourcemapsAfterUpload: true,
+	},
+});
+// const modifiedConfig = nextConfig;
 
 export default (phase, { defaultConfig }) => {
 	if (!env.SENTRY_AUTH_TOKEN) {
