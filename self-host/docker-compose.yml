@@ -67,16 +67,12 @@ services:
         env_file:
             - path: .env
               required: true
-        environment:
-            POSTGRES_USER: ${POSTGRES_USER}
-            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-            POSTGRES_DB: ${POSTGRES_DB}
         volumes:
             - postgres-data:/var/lib/postgresql/data
         networks:
             - app-network
         ports:
-            - "5432:5432" # you can choose another port if you want, just make sure the first one matches the POSTGRES_PORT in .env
+            - "${POSTGRES_PORT}:${POSTGRES_PORT}" # you can choose another port if you want, just make sure the first one matches the POSTGRES_PORT in .env
 
     # recommended reverse proxy solution
     # can be removed if you manually set up a reverse proxy like nginx instead
