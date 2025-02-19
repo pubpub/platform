@@ -113,11 +113,22 @@ jobs:
                       exit 1
                   fi
 
+            - uses: pnpm/action-setup@v4
+              name: Install pnpm
+              with:
+                  run_install: false
+
+            - name: Get pnpm store directory
+              id: get-store-path
+              shell: bash
+              run: |
+                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
             # Cache the pnpm store
             - name: Setup pnpm cache
               uses: actions/cache@v4
               with:
-                  path: ./.pnpm-store
+                  path: ${{ steps.get-store-path.outputs.STORE_PATH }}
                   key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
@@ -138,7 +149,7 @@ jobs:
                   build-args: |
                       PACKAGE=${{ inputs.package }}
                       CI=true
-                      PNPM_STORE_PATH=./.pnpm-store
+                      PNPM_STORE_PATH=${{ steps.get-store-path.outputs.STORE_PATH }}
                   secrets: |
                       SENTRY_AUTH_TOKEN=${{ env.SENTRY_AUTH_TOKEN }}
                   target: ${{ steps.label.outputs.target }}
