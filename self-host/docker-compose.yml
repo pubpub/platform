@@ -1,0 +1,149 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+
+# ^ this line provides nicer autocomplete in some editors
+
+services:
+    # the core platform service
+    platform:
+        depends_on:
+            db:
+                condition: service_started
+            platform-jobs:
+                condition: service_started
+            platform-migrations:
+                condition: service_completed_successfully
+        platform: linux/amd64
+        image: ghcr.io/pubpub/platform:latest
+        env_file:
+            - path: .env
+              required: true
+        environment:
+            DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+        ports:
+            - "3000:3000"
+        networks:
+            - app-network
+
+    # platfrom jobs service
+    # takes care of longer running tasks like scheduling actions
+    platform-jobs:
+        depends_on:
+            platform-migrations:
+                condition: service_completed_successfully
+        platform: linux/amd64
+        image: ghcr.io/pubpub/platform-jobs:latest
+        env_file:
+            - path: .env
+              required: true
+        environment:
+            DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+        networks:
+            - app-network
+
+    platform-migrations:
+        platform: linux/amd64
+        depends_on:
+            db:
+                condition: service_started
+        image: ghcr.io/pubpub/platform-migrations:latest
+        env_file:
+            - path: .env
+              required: true
+        environment:
+            DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+        # FIXME: remove this once it's merged into main
+        volumes:
+            - ../core/prisma/create-admin-user.cts:/usr/src/app/core/prisma/create-admin-user.cts
+        command: ["pnpm", "--filter", "core", "migrate-docker"]
+        networks:
+            - app-network
+
+    # database
+    # can be removed if you manually set the DATABASE_URL environment variable in .env
+    # to another postgres database you have access to
+    db:
+        image: postgres:15
+        restart: always
+        env_file:
+            - path: .env
+              required: true
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        networks:
+            - app-network
+        ports:
+            - "${POSTGRES_PORT}:${POSTGRES_PORT}" # you can choose another port if you want, just make sure the first one matches the POSTGRES_PORT in .env
+
+    # recommended reverse proxy solution
+    # can be removed if you manually set up a reverse proxy like nginx instead
+    # useful if you want your assets, platform, and site to be on the same domain
+    # but with different paths
+    # caddy:
+    #     image: caddy:latest
+    #     depends_on:
+    #         - platform
+    #         - platform-jobs
+    #         - minio
+    #     env_file:
+    #         - path: .env
+    #           required: true
+    #     ports:
+    #         - "443:443"
+    #     volumes:
+    #         - ./caddy:/etc/caddy
+    #         - caddy-data:/data
+    #         - caddy-config:/config
+    #     networks:
+    #         - app-network
+
+    # assets storage
+    # can be removed if you manually set up a storage service like s3 or minio instead
+    minio:
+        image: minio/minio:latest
+        env_file:
+            - path: .env
+              required: true
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+        restart: unless-stopped
+        command: server --console-address ":9001" /data
+        ports:
+            - "9000:9000" # API
+            - "9001:9001" # Console
+        volumes:
+            - ./minio:/data
+        networks:
+            - app-network
+
+    # initialize minio
+    minio-init:
+        depends_on:
+            minio:
+                condition: service_healthy
+        image: minio/mc:latest
+        env_file:
+            - path: .env
+              required: true
+        entrypoint: >
+            /bin/sh -c '
+            /usr/bin/mc config host add myminio http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+            /usr/bin/mc mb --ignore-existing myminio/"$${ASSETS_BUCKET_NAME}";
+            /usr/bin/mc anonymous set download myminio/"$${ASSETS_BUCKET_NAME}";
+            /usr/bin/mc admin user add myminio "$${ASSETS_UPLOAD_KEY}" "$${ASSETS_UPLOAD_SECRET_KEY}";
+            /usr/bin/mc admin policy attach myminio readwrite --user "$${ASSETS_UPLOAD_KEY}";
+            exit 0;
+            '
+        networks:
+            - app-network
+
+volumes:
+    caddy-data:
+    caddy-config:
+    postgres-data:
+
+networks:
+    app-network:
