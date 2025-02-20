@@ -17,6 +17,8 @@ export default defineConfig({
 	expect: {
 		timeout: process.env.CI ? 5_000 : 60_000,
 	},
+	// don't continue going after 3 tests have failed, that's too many
+	maxFailures: process.env.CI ? 3 : undefined,
 	// a
 	webServer: [
 		{

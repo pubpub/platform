@@ -1,22 +1,43 @@
 services:
+    minio:
+        image: minio/minio:latest
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
+        restart: unless-stopped
+        command: server --console-address ":9001" /data
+        ports:
+            - "9000:9000" # API
+            - "9001:9001" # Console
+
+    minio-init:
+        image: minio/mc:latest
+        networks:
+            - app-network
+        # basically what this does:
+        # - create the bucket
+        # - allow public downloads for said bucket
+        # - add a new user
+        # - allow said user to upload
+        # this sadly can't be done by just configuring some env vars for minio itself, very annoying, you need to use their mc client. I'm not sure this is the best way to go about doing this.
+        entrypoint: >
+            /bin/sh -c '
+            /usr/bin/mc config host add myminio http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+            /usr/bin/mc mb --ignore-existing myminio/"$${ASSETS_BUCKET_NAME}";
+            /usr/bin/mc anonymous set download myminio/"$${ASSETS_BUCKET_NAME}";
+            /usr/bin/mc admin user add myminio "$${ASSETS_UPLOAD_KEY}" "$${ASSETS_UPLOAD_SECRET_KEY}";
+            /usr/bin/mc admin policy attach myminio readwrite --user "$${ASSETS_UPLOAD_KEY}";
+            exit 0;
+            '
+
     db:
-        env_file:
-            - path: "./.env.docker-compose"
-              required: false
         image: postgres:15
         restart: always
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: postgres
-            POSTGRES_PORT: 5432
-        ports:
-            - "54322:5432"
 
     inbucket:
-        env_file:
-            - path: "./.env.docker-compose"
-              required: false
         image: inbucket/inbucket:latest
         restart: always
         ports:
