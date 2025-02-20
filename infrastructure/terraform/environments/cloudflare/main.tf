@@ -74,3 +74,22 @@ resource "cloudflare_record" "ns_pubpub" {
 
   value = aws_route53_zone.pubpub.name_servers[tonumber(each.key)]
 }
+
+# NS records for preview environments
+resource "cloudflare_record" "preview_ns" {
+  for_each = toset(["0", "1", "2", "3"])
+  type     = "NS"
+
+  zone_id = data.cloudflare_zone.duqduq.id
+  name    = "*.preview.${local.duqduq_domain}" # wildcard NS record for all preview subdomains
+
+  value = aws_route53_zone.preview.name_servers[tonumber(each.key)]
+}
+
+resource "aws_route53_zone" "preview" {
+  name = "preview.${local.duqduq_domain}"
+}
+
+output "preview_zone_id" {
+  value = aws_route53_zone.preview.zone_id
+}

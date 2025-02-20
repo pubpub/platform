@@ -1,0 +1,44 @@
+name: Destroy Preview Environment
+
+on:
+    pull_request:
+        types: [closed]
+
+jobs:
+    destroy-preview:
+        runs-on: ubuntu-latest
+        environment:
+            name: pr-${{ github.event.pull_request.number }}
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ vars.IAM_ROLE_TO_ASSUME }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: us-east-1
+
+            - name: Setup Terraform
+              uses: hashicorp/setup-terraform@v3
+
+            - name: Create backend config
+              working-directory: infrastructure/terraform/environments/preview
+              run: |
+                  cat > preview.tfbackend << EOF
+                  bucket = "pubpub-tfstates"
+                  key    = "preview-${{ github.event.pull_request.number }}.tfstate"
+                  region = "us-east-1"
+                  EOF
+
+            - name: Initialize Terraform
+              working-directory: infrastructure/terraform/environments/preview
+              run: terraform init -backend-config=preview.tfbackend
+
+            - name: Destroy Preview Environment
+              working-directory: infrastructure/terraform/environments/preview
+              run: |
+                  terraform destroy -auto-approve \
+                    -var="pr_number=${{ github.event.pull_request.number }}"
