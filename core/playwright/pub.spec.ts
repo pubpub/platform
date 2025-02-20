@@ -264,6 +264,7 @@ test.describe("Creating a pub", () => {
 
 		// The original pub should now have a related pub which is the newly created pub
 		await pubPage.goTo();
+		await expect(page.getByText("related value:related")).toHaveCount(1);
 		await expect(
 			page.getByTestId("related-pubs").getByRole("button", { name: stringField })
 		).toHaveCount(1);
