@@ -241,18 +241,17 @@ test.describe("Creating a pub", () => {
 		await createDialog.waitFor();
 		await createDialog.getByLabel("Pub type").click();
 		await page.getByRole("option", { name: "Submission" }).click();
+		await expect(page.getByRole("button", { name: "Create Pub" })).toBeDisabled();
 
 		// Specify relationship
 		await createDialog.getByLabel("Relationship").click();
 		await page.getByRole("option", { name: stringField, exact: true }).click();
-		await expect(page.getByRole("button", { name: "Create Pub" })).toBeDisabled();
 
-		await page.getByTestId("add-related-value").click();
-		await page.getByLabel(stringField).fill("related value");
-		// Click again to exit the popover
-		await page.getByTestId("add-related-value").click();
 		await page.getByRole("button", { name: "Create Pub" }).click();
 		await page.waitForURL(`/c/${COMMUNITY_SLUG}/pubs/create**`);
+
+		// Should now see a related field on the new page
+		await page.getByTestId("relatedPubValue").fill("related value");
 
 		// Fill in title and content
 		const related = { title: "related", content: "I am related" };
