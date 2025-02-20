@@ -17,6 +17,12 @@ services:
         image: minio/mc:latest
         networks:
             - app-network
+        # basically what this does:
+        # - create the bucket
+        # - allow public downloads for said bucket
+        # - add a new user
+        # - allow said user to upload
+        # this sadly can't be done by just configuring some env vars for minio itself, very annoying, you need to use their mc client. I'm not sure this is the best way to go about doing this.
         entrypoint: >
             /bin/sh -c '
             /usr/bin/mc config host add myminio http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
