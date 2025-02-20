@@ -207,7 +207,12 @@ test.describe("Creating a pub", () => {
 		// Now update
 		await page.getByTestId("pub-dropdown-button").first().click();
 		await page.getByRole("link", { name: "Update Pub" }).click();
-		await page.locator(".ProseMirror").click();
+		await page.locator(".ProseMirror").click({
+			position: {
+				x: 0,
+				y: 0,
+			},
+		});
 		await page.keyboard.type("prefix ");
 
 		await page.getByRole("button", { name: "Save" }).click();
