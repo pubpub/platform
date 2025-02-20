@@ -4,6 +4,41 @@ For the most part, self-hosting PubPub is a matter of deploying the app and the 
 
 However, there are a few key things you need to know about.
 
+## Files
+
+The hosted version of Platfrom uses AWS S3 to host files. When self-hosting, you have two options:
+
+1. Provide your own S3/S3-compatible storage service credentials
+2. Use the built-in MinIO service, which emulates S3 locally.
+
+### Using your own S3-compatible storage service
+
+If you want to use your own S3-compatible storage service, you will need to set the following environment variables:
+
+```sh
+ASSETS_BUCKET_NAME="your-bucket-name"
+ASSETS_UPLOAD_KEY="your-access-key"
+ASSETS_UPLOAD_SECRET_KEY="your-secret-key"
+ASSETS_REGION="your-region"
+ASSETS_STORAGE_ENDPOINT="your-storage-endpoint" # only necessary if you are using non-AWS S3-compatible storage service
+```
+
+You should also remove the `minio` and `minio-init` services from the `docker-compose.yml` file.
+
+### Using the built-in MinIO service
+
+If you want to use the built-in MinIO service, you will need to set the following environment variables:
+
+```sh
+ASSETS_BUCKET_NAME="your-bucket-name" # these values will be set once you start up the MinIO service, making it hard to change later!
+ASSETS_UPLOAD_KEY="your-access-key"
+ASSETS_UPLOAD_SECRET_KEY="your-secret-key"
+ASSETS_REGION="your-region"
+ASSETS_STORAGE_ENDPOINT="localhost:9000" # this is the default value but you ideally should set this up more nicely using our nginx service
+```
+
+Then, after running `docker compose up -d`, you should be able to visit the MinIO console at `http://localhost:9001`.
+
 ## Email
 
 To be able to send emails, you need to set some kind of email provider.
@@ -13,6 +48,7 @@ We recommend using [Mailgun](https://www.mailgun.com/).
 Other common options are [SendGrid](https://sendgrid.com/) and [Postmark](https://postmarkapp.com/).
 
 You can also use an existing GMail or Office365 account to relay emails through PubPub.
+Other providers may likely work as well, but are not tested.
 
 ### Setup
 
