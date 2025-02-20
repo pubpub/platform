@@ -2,12 +2,11 @@
 
 import type { FieldValues } from "react-hook-form";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
-import { useForm, useFormContext } from "react-hook-form";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { useForm } from "react-hook-form";
 
 import type { PubsId, PubTypes, StagesId } from "db/public";
 import { Button } from "ui/button";
@@ -23,11 +22,8 @@ import {
 import { Loader2 } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import type { PubFieldElement } from "../forms/types";
 import type { PubField } from "~/lib/types";
-import { ConfigureRelatedValue } from "../forms/elements/RelatedPubsElement";
 import { useCommunity } from "../providers/CommunityProvider";
-import { makeFormElementDefFromPubFields } from "./PubEditor/helpers";
 
 const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">[] }) => {
 	return (

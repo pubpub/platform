@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, PubFieldsId, PubsId, StagesId } from "db/public";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import { expect } from "utils";
 
 import type { FormElements, PubFieldElement } from "../../forms/types";
@@ -74,7 +74,7 @@ const makeRelatedPubElement = ({
 };
 
 export type PubEditorProps = {
-	searchParams: Record<string, unknown>;
+	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId };
 	formId?: string;
 } & (
 	| {
