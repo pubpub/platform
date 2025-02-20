@@ -79,7 +79,7 @@ export default async function Page(props: {
 			right={<div />}
 		>
 			<div className="flex justify-center py-10">
-				<div className="max-w-prose">
+				<div className="prose max-w-prose flex-1">
 					<PubEditor
 						searchParams={searchParams}
 						communityId={community.id}

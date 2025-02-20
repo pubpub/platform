@@ -12,11 +12,13 @@ export const generateSignedAssetUploadUrl = async (pubId: PubsId, fileName: stri
 	const bucket = env.ASSETS_BUCKET_NAME;
 
 	const client = new S3Client({
+		endpoint: env.ASSETS_STORAGE_ENDPOINT,
 		region: region,
 		credentials: {
 			accessKeyId: key,
 			secretAccessKey: secret,
 		},
+		forcePathStyle: !!env.ASSETS_STORAGE_ENDPOINT, // Required for MinIO
 	});
 	const command = new PutObjectCommand({
 		Bucket: bucket,
