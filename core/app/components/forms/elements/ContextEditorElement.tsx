@@ -56,7 +56,7 @@ const EditorFormElement = ({
 	return (
 		<FormItem>
 			<FormLabel className="flex">{label}</FormLabel>
-			<div className="w-full">
+			<div className="max-h-96 w-full overflow-scroll">
 				<FormControl>
 					<ContextEditorClient
 						pubId={pubId}
