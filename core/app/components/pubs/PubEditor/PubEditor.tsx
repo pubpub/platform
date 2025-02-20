@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import type { CommunitiesId, PubFieldsId, PubsId, StagesId } from "db/public";
 import { expect } from "utils";
 
-import type { FormElements } from "../../forms/types";
+import type { FormElements, PubFieldElement } from "../../forms/types";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
@@ -16,11 +16,62 @@ import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
+import { PubFieldFormElement } from "../../forms/PubFieldFormElement";
 import { hydrateMarkdownElements } from "../../forms/structural";
 import { StageSelectClient } from "../../StageSelect/StageSelectClient";
+import { RELATED_PUB_SLUG } from "./constants";
 import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
+
+const RelatedPubValueElement = ({
+	relatedPubId,
+	element,
+}: {
+	relatedPubId: PubsId;
+	element: PubFieldElement | null;
+}) => {
+	if (!element || !relatedPubId) {
+		return null;
+	}
+	const configLabel = "label" in element.config ? element.config.label : undefined;
+	const label = configLabel || element.label || element.slug;
+
+	return (
+		<div className="flex flex-col gap-4">
+			<div className="flex flex-col gap-4 rounded border p-2">
+				<h2>Related field value</h2>
+				<PubFieldFormElement
+					label={label}
+					element={element}
+					pubId={relatedPubId}
+					slug={RELATED_PUB_SLUG}
+					values={[]}
+				/>
+			</div>
+			<hr />
+		</div>
+	);
+};
+
+const makeRelatedPubElement = ({
+	relatedPubFieldResult,
+}: {
+	relatedPubFieldResult: {
+		fields: Record<PubFieldsId, PubField>;
+	} | null;
+}) => {
+	if (!relatedPubFieldResult) {
+		return null;
+	}
+	const relatedPubField = Object.values(relatedPubFieldResult.fields)[0];
+
+	// TODO: should really get this from the source pub's form, if it exists
+	const relatedPubElement = makeFormElementDefFromPubFields([
+		relatedPubField,
+	])[0] as PubFieldElement;
+	return { ...relatedPubElement, slug: RELATED_PUB_SLUG };
+};
 
 export type PubEditorProps = {
 	searchParams: Record<string, unknown>;
@@ -78,7 +129,9 @@ export async function PubEditor(props: PubEditorProps) {
 		).executeTakeFirstOrThrow();
 	}
 
-	const [pubs, pubTypes] = await Promise.all([
+	const { relatedPubId, slug: relatedFieldSlug } = props.searchParams;
+
+	const [pubs, pubTypes, relatedPubFieldResult] = await Promise.all([
 		getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
 			{
@@ -89,7 +142,19 @@ export async function PubEditor(props: PubEditorProps) {
 			}
 		),
 		getPubTypesForCommunity(community.id),
+		relatedPubId && relatedFieldSlug
+			? getPubFields({
+					communityId: community.id,
+					slugs: [relatedFieldSlug as string],
+				}).executeTakeFirstOrThrow(
+					() => new Error(`Could not find related field with slug ${relatedFieldSlug}`)
+				)
+			: Promise.resolve(null),
 	]);
+
+	const relatedPubElement = makeRelatedPubElement({
+		relatedPubFieldResult,
+	});
 
 	let pubType: AutoReturnType<
 		typeof getCommunityById
@@ -156,6 +221,7 @@ export async function PubEditor(props: PubEditorProps) {
 	const allSlugs = [
 		...form.elements.map((e) => e.slug),
 		...pubOnlyElementDefinitions.map((e) => e.slug),
+		relatedPubElement ? relatedPubElement.slug : undefined,
 	].filter((slug) => !!slug) as string[];
 
 	const member = expect(user?.memberships.find((m) => m.communityId === community?.id));
@@ -194,7 +260,11 @@ export async function PubEditor(props: PubEditorProps) {
 				pubTypes={pubTypes}
 			>
 				<PubEditorWrapper
-					elements={[...form.elements, ...pubOnlyElementDefinitions]}
+					elements={[
+						...form.elements,
+						...pubOnlyElementDefinitions,
+						...(relatedPubElement ? [relatedPubElement] : []),
+					]}
 					pub={pubForForm}
 					formSlug={form.slug}
 					isUpdating={isUpdating}
@@ -202,8 +272,20 @@ export async function PubEditor(props: PubEditorProps) {
 					withButtonElements={false}
 					htmlFormId={props.formId}
 					stageId={currentStageId}
+					relatedPub={
+						relatedPubId && relatedFieldSlug
+							? {
+									id: relatedPubId as PubsId,
+									slug: relatedFieldSlug as string,
+								}
+							: undefined
+					}
 				>
 					<>
+						<RelatedPubValueElement
+							relatedPubId={relatedPubId as PubsId}
+							element={relatedPubElement}
+						/>
 						<StageSelectClient
 							fieldLabel="Stage"
 							fieldName="stageId"

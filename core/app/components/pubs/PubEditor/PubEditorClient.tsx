@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import type { FieldValues, FormState, SubmitErrorHandler } from "react-hook-form";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import partition from "lodash.partition";
@@ -27,6 +27,7 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { RELATED_PUB_SLUG } from "./constants";
 
 const SAVE_WAIT_MS = 5000;
 
@@ -135,7 +136,6 @@ const createSchemaFromElements = (
 							),
 						];
 					}
-
 					return [slug, schemaAllowEmpty];
 				})
 		)
@@ -146,18 +146,6 @@ const isSubmitEvent = (
 	e?: React.BaseSyntheticEvent
 ): e is React.BaseSyntheticEvent<DefinitelyHas<SubmitEvent, "submitter">> => {
 	return !!e && "submitter" in e.nativeEvent && !!e.nativeEvent.submitter;
-};
-
-const useRelatedPub = ({ pubId }: { pubId: PubsId }) => {
-	const searchParams = useSearchParams();
-	const relatedPubId = searchParams.get("relatedPubId") as PubsId;
-	const slug = searchParams.get("slug");
-	const rawValue = searchParams.get("value");
-	const value = rawValue ? JSON.parse(rawValue) : null;
-	if (!relatedPubId || !slug) {
-		return undefined;
-	}
-	return { pubId: relatedPubId, values: { [slug]: [{ relatedPubId: pubId, value }] } };
 };
 
 const getButtonConfig = ({
@@ -199,6 +187,10 @@ export interface PubEditorClientProps {
 	withAutoSave?: boolean;
 	withButtonElements?: boolean;
 	isExternalForm?: boolean;
+	relatedPub?: {
+		id: PubsId;
+		slug: string;
+	};
 }
 
 export const PubEditorClient = ({
@@ -213,6 +205,7 @@ export const PubEditorClient = ({
 	withAutoSave,
 	withButtonElements,
 	isExternalForm,
+	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
 	const router = useRouter();
@@ -223,7 +216,6 @@ export const PubEditorClient = ({
 	const runCreatePub = useServerAction(actions.createPubRecursive);
 	// Cache pubId
 	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
-	const relatedPub = useRelatedPub({ pubId });
 
 	const [buttonElements, formElements] = useMemo(
 		() => partition(elements, (e) => e.type === ElementType.button),
@@ -254,7 +246,11 @@ export const PubEditorClient = ({
 			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
-			const { stageId: stageIdFromForm, ...newValues } = formValues;
+			const {
+				stageId: stageIdFromForm,
+				[RELATED_PUB_SLUG]: relatedPubValue,
+				...newValues
+			} = formValues;
 
 			const pubValues = preparePayload({
 				formElements,
@@ -294,8 +290,10 @@ export const PubEditorClient = ({
 				// TODO: this currently overwrites existing pub values of the same field
 				if (relatedPub) {
 					await runUpdatePub({
-						pubId: relatedPub.pubId,
-						pubValues: relatedPub.values,
+						pubId: relatedPub.id,
+						pubValues: {
+							[relatedPub.slug]: [{ value: relatedPubValue, relatedPubId: pubId }],
+						},
 						continueOnValidationError: true,
 					});
 				}

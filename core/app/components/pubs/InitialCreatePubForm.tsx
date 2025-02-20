@@ -68,19 +68,10 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">
 	);
 };
 
-const RelatedPubFieldSelector = ({
-	pubFields,
-	sourcePubId,
-}: {
-	pubFields: Props["relatedPubFields"];
-	sourcePubId: PubsId;
-}) => {
-	const { watch } = useFormContext<typeof schemaWithRelatedPub>();
-	const relatedPubSlug = watch("relatedPub.slug");
-	const selectedPubField = relatedPubSlug
-		? pubFields.find((pf) => pf.slug === relatedPubSlug)
-		: undefined;
-
+const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFields"] }) => {
+	if (pubFields.length === 0) {
+		return null;
+	}
 	return (
 		<>
 			<FormField
@@ -117,41 +108,7 @@ const RelatedPubFieldSelector = ({
 					</FormItem>
 				)}
 			/>
-			<RelatedPubValueSelector pubField={selectedPubField} sourcePubId={sourcePubId} />
 		</>
-	);
-};
-
-const RelatedPubValueSelector = ({
-	sourcePubId,
-	pubField,
-}: {
-	// Only used for FileUpload, which we want to upload to the source pub
-	sourcePubId: PubsId;
-	pubField: Props["relatedPubFields"][number] | undefined;
-}) => {
-	const { setValue } = useFormContext<typeof schemaWithRelatedPub>();
-	const slug = "relatedPub.value";
-
-	useEffect(() => {
-		// Reset the value when schemas change
-		if (pubField?.schemaName) {
-			setValue(slug, null, { shouldValidate: true });
-		}
-	}, [pubField?.schemaName]);
-
-	if (!pubField) {
-		return null;
-	}
-	const element = makeFormElementDefFromPubFields([pubField])[0] as PubFieldElement;
-	return (
-		<ConfigureRelatedValue
-			element={element}
-			pubId={sourcePubId}
-			slug={slug}
-			values={[]}
-			className="w-fit"
-		/>
 	);
 };
 
@@ -163,7 +120,6 @@ const schemaWithRelatedPub = Type.Object({
 	relatedPub: Type.Object({
 		relatedPubId: Type.String(),
 		slug: Type.String(),
-		value: Type.Null(),
 	}),
 });
 
@@ -199,26 +155,7 @@ export const InitialCreatePubForm = ({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues,
-		resolver: (values, context, options) => {
-			let schema = baseSchema;
-			if (relatedPubId) {
-				const slug = values.relatedPub.slug;
-				const pubField = relatedPubFields.find((pf) => pf.slug === slug);
-				// The same as `schemaWithRelatedPub` but with the `value` schema dynamically generated based on the chosen field
-				schema = Type.Object({
-					pubTypeId: Type.String(),
-					relatedPub: Type.Object({
-						relatedPubId: Type.String(),
-						slug: Type.String(),
-						value: pubField?.schemaName
-							? getJsonSchemaByCoreSchemaType(pubField.schemaName)
-							: Type.Null(),
-					}),
-				});
-			}
-			const createResolver = typeboxResolver(schema);
-			return createResolver(values, context, options);
-		},
+		resolver: typeboxResolver(relatedPubId ? schemaWithRelatedPub : baseSchema),
 	});
 
 	const path = usePathname();
@@ -237,13 +174,10 @@ export const InitialCreatePubForm = ({
 	}, [pathWithoutFormParam]);
 
 	const onSubmit = async (values: FieldValues) => {
-		const related = values.relatedPub
-			? { ...values.relatedPub, value: JSON.stringify(values.relatedPub.value) }
-			: {};
 		const pubParams = new URLSearchParams({
 			pubTypeId: values.pubTypeId,
 			...(stageId ? { stageId } : {}),
-			...related,
+			...(values.relatedPub ?? {}),
 		});
 		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
 		router.push(createPubPath);
@@ -253,12 +187,7 @@ export const InitialCreatePubForm = ({
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<PubTypeSelector pubTypes={pubTypes} />
-				{relatedPubId ? (
-					<RelatedPubFieldSelector
-						sourcePubId={relatedPubId}
-						pubFields={relatedPubFields}
-					/>
-				) : null}
+				<RelatedPubFieldSelector pubFields={relatedPubFields} />
 				<div className="flex w-full items-center justify-end gap-x-4">
 					<Button type="button" onClick={closeForm} variant="outline">
 						Cancel
