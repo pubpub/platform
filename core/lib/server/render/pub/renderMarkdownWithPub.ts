@@ -21,6 +21,7 @@ import { expect } from "utils";
 
 import { hydratePubValues } from "~/lib/fields/utils";
 import { getPubTitle } from "~/lib/pubs";
+import { getSingleRelatedPub } from "../../pub";
 import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
 
@@ -45,9 +46,13 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	let value: unknown;
 	let pub: utils.RenderWithPubPub;
 
-	if (attrs?.rel === "parent") {
-		const parentPub = expect(context.parentPub, "Missing parent pub");
-		pub = parentPub;
+	if (attrs.rel !== undefined) {
+		if (attrs.rel === "parent") {
+			const parentPub = expect(context.parentPub, "Missing parent pub");
+			pub = parentPub;
+		} else {
+			return;
+		}
 	} else {
 		pub = context.pub;
 	}
@@ -252,6 +257,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
 		const memberFieldNodes: NodeMdast[] = [];
+		const relationNodes: NodeMdast[] = [];
 
 		visit(tree, (node) => {
 			if (isDirective(node)) {
@@ -275,6 +281,13 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 					utils.ALLOWED_MEMBER_ATTRIBUTES.some((f) => f in (node.attributes ?? []));
 				if (isMemberFieldWithAttr) {
 					memberFieldNodes.push(node);
+				}
+
+				const isRelationNode =
+					node.attributes?.rel !== undefined && node.attributes?.rel !== "parent";
+
+				if (isRelationNode) {
+					relationNodes.push(node);
 				}
 
 				// Process the directive
@@ -321,6 +334,22 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							communitySlug: context.communitySlug,
 						}),
 					};
+				}
+			})
+		);
+
+		// Process related pub nodes
+		await Promise.all(
+			relationNodes.map(async (node) => {
+				if (isDirective(node)) {
+					const directiveName = node.name.toLowerCase() as RenderWithPubToken;
+					const directiveVisitor = directiveVisitors[directiveName];
+					const { rel, ...attrs } = expect(node.attributes);
+					const relatedPub = await getSingleRelatedPub(context.pub.id as PubsId, rel);
+					directiveVisitor(
+						{ ...node, attributes: attrs },
+						{ ...context, pub: relatedPub as utils.RenderWithPubPub }
+					);
 				}
 			})
 		);
