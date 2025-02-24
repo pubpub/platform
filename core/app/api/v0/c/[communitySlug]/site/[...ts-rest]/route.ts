@@ -29,6 +29,7 @@ import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import {
+	BadRequestError,
 	createPubRecursiveNew,
 	deletePub,
 	doesPubExist,
@@ -50,6 +51,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
+import { validateFilter } from "~/lib/server/validate-filters";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -274,7 +276,15 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
-				const { pubTypeId, stageId, ...rest } = query;
+				const { pubTypeId, stageId, filters, ...rest } = query;
+
+				if (filters) {
+					try {
+						await validateFilter(community.id, filters);
+					} catch (e) {
+						throw new BadRequestError(e.message);
+					}
+				}
 
 				const pubs = await getPubsWithRelatedValuesAndChildren(
 					{
@@ -283,8 +293,13 @@ const handler = createNextHandler(
 						stageId,
 						userId: user.id,
 					},
-					rest
+					{
+						...rest,
+						filters,
+					}
 				);
+
+				console.log(pubs);
 
 				return {
 					status: 200,

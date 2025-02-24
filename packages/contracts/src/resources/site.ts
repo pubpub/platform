@@ -393,6 +393,7 @@ const baseFilterSchema = z
 			),
 	})
 	.partial()
+	.passthrough()
 	.refine((data) => {
 		if (!Object.keys(data).length) {
 			return false;
@@ -458,14 +459,6 @@ const getPubQuerySchema = z
 			.optional()
 			.describe(
 				"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
-			),
-		filters: filterSchema
-			.optional()
-			.describe(
-				"Filter criteria using Strapi-like syntax. Examples:\n" +
-					"- Basic: filters[community-slug:fieldName][$eq]=value\n" +
-					"- Nested: filters[author][community-slug:name][$eq]=John\n" +
-					"- Complex: filters[$or][0][community-slug:date][$eq]=2020-01-01&filters[$or][1][community-slug:date][$eq]=2020-01-02"
 			),
 	})
 	.passthrough();
@@ -584,6 +577,14 @@ export const siteApi = contract.router(
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 					orderDirection: z.enum(["asc", "desc"]).optional(),
+					filters: filterSchema
+						.optional()
+						.describe(
+							"Filter criteria using Strapi-like syntax. Examples:\n" +
+								"- Basic: filters[community-slug:fieldName][$eq]=value\n" +
+								"- Nested: filters[author][community-slug:name][$eq]=John\n" +
+								"- Complex: filters[$or][0][community-slug:date][$eq]=2020-01-01&filters[$or][1][community-slug:date][$eq]=2020-01-02"
+						),
 				}),
 				responses: {
 					200: z.array(processedPubSchema),
