@@ -309,6 +309,123 @@ const preferRepresentationHeaderSchema = z.object({
 		.default("return=minimal"),
 });
 
+export const filterOperators = [
+	"$eq",
+	"$eqi",
+	"$ne",
+	"$nei",
+	"$lt",
+	"$lte",
+	"$gt",
+	"$gte",
+	"$contains",
+	"$notContains",
+	"$containsi",
+	"$notContainsi",
+	"$null",
+	"$notNull",
+	"$in",
+	"$notIn",
+	"$between",
+	"$startsWith",
+	"$startsWithi",
+	"$endsWith",
+	"$endsWithi",
+	"$jsonPath", // json path (maybe dangerous),
+] as const;
+
+export type FilterOperator = (typeof filterOperators)[number];
+
+export const logicalOperators = ["$and", "$or", "$not"] as const;
+
+export type LogicalOperator = (typeof logicalOperators)[number];
+
+export type BaseFilter = {
+	[slug: string]:
+		| {
+				[O in FilterOperator]?: unknown;
+		  }
+		| Filter;
+};
+
+export type LogicalFilter = {
+	$and?: Filter[];
+	$or?: Filter[];
+	$not?: Filter;
+};
+
+export type Filter = BaseFilter | LogicalFilter;
+
+const allSchema = z.string().or(z.number()).or(z.boolean()).or(z.coerce.date());
+
+const numberOrDateSchema = z.number().or(z.coerce.date());
+
+const baseFilterSchema = z
+	.object({
+		$eq: allSchema,
+		$eqi: z.string(),
+		$ne: allSchema,
+		$nei: z.string(),
+		$lt: numberOrDateSchema,
+		$lte: numberOrDateSchema,
+		$gt: numberOrDateSchema,
+		$gte: numberOrDateSchema,
+		$contains: z.string(),
+		$notContains: z.string(),
+		$containsi: z.string(),
+		$notContainsi: z.string(),
+		$null: z.never(),
+		$notNull: z.never(),
+		$in: z.array(allSchema),
+		$notIn: z.array(allSchema),
+		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]),
+		$startsWith: z.string(),
+		$startsWithi: z.string(),
+		$endsWith: z.string(),
+		$endsWithi: z.string(),
+		$size: z.number(),
+	})
+	.partial()
+	.refine((data) => {
+		if (!Object.keys(data).length) {
+			return false;
+		}
+		return true;
+	}, "Filter must have at least one operator") satisfies z.ZodType<{
+	[K in FilterOperator]?: any;
+}>;
+
+// this is a recursive type, so we need to use z.lazy()
+export const filterSchema: z.ZodType<Filter> = z.lazy(() =>
+	z.union([
+		// regular field filters
+		z.record(
+			z.union([
+				// operator-value pairs
+				baseFilterSchema,
+				// nested filters (for object types)
+				filterSchema,
+			])
+		),
+		// logical operators
+		z.object({
+			$and: z.array(filterSchema).optional(),
+			$or: z.array(filterSchema).optional(),
+			$not: filterSchema,
+		}),
+		z.object({
+			$and: z.array(filterSchema).optional(),
+			$or: z.array(filterSchema),
+			$not: filterSchema.optional(),
+		}),
+		z.object({
+			$and: z.array(filterSchema),
+			$or: z.array(filterSchema).optional(),
+			$not: filterSchema.optional(),
+		}),
+	])
+);
+
 const getPubQuerySchema = z
 	.object({
 		depth: z
@@ -334,6 +451,15 @@ const getPubQuerySchema = z
 			.optional()
 			.describe(
 				"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
+			),
+		filters: filterSchema
+			.optional()
+			.describe(
+				"Filter criteria using Strapi-like syntax. Examples:\n" +
+					"- Basic: filters[fieldName][$eq]=value\n" +
+					"- Array: filters[tags][$contains]=important\n" +
+					"- Nested: filters[author][name][$eq]=John\n" +
+					"- Complex: filters[$or][0][date][$eq]=2020-01-01&filters[$or][1][date][$eq]=2020-01-02"
 			),
 	})
 	.passthrough();

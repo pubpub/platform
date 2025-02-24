@@ -13,6 +13,7 @@ import partition from "lodash.partition";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
+	Filter,
 	FTSReturn,
 	GetPubResponseBody,
 	Json,
@@ -51,6 +52,7 @@ import { parseLastModifiedBy } from "../lastModifiedBy";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
+import { applyFilters } from "./pub-filters";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { movePub } from "./stages";
@@ -740,7 +742,7 @@ export const getPlainPub = (pubId: PubsId, trx = db) =>
  * Validates that all provided slugs exist in the community.
  * @throws Error if any slugs don't exist in the community
  */
-const getFieldInfoForSlugs = async ({
+export const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	includeRelations = true,
@@ -1356,6 +1358,7 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 	fieldSlugs?: string[];
 	onlyTitles?: boolean;
 	trx?: typeof db;
+	filters?: Filter;
 }
 
 // TODO: We allow calling getPubsWithRelatedValuesAndChildren with no userId so that event driven
@@ -1778,6 +1781,13 @@ export async function getPubsWithRelatedValuesAndChildren<
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
+					)
+					.$if(Boolean(options?.filters), (qb) =>
+						// TODO: maybe dedupe this
+						qb
+							.leftJoin("pub_values as pv", "pv.pubId", "pubs.id")
+							.innerJoin("pub_fields as pf", "pf.id", "pv.fieldId")
+							.where((eb) => applyFilters(eb, options!.filters!))
 					)
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
