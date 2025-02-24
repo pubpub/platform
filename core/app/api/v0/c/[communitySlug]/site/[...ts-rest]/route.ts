@@ -299,8 +299,6 @@ const handler = createNextHandler(
 					}
 				);
 
-				console.log(pubs);
-
 				return {
 					status: 200,
 					body: pubs,

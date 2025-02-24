@@ -50,6 +50,7 @@ test.beforeAll(async ({ browser }) => {
 test.describe("Site API", () => {
 	test.describe("pubs", () => {
 		let newPubId: PubsId;
+		let firstCreatedAt: Date;
 		test("should be able to create a pub", async () => {
 			const pubTypesResponse = await client.pubTypes.getMany({
 				params: {
@@ -76,6 +77,8 @@ test.describe("Site API", () => {
 					},
 				},
 			});
+
+			firstCreatedAt = new Date();
 
 			expectStatus(pubResponse, 201);
 
@@ -154,6 +157,60 @@ test.describe("Site API", () => {
 
 			expectStatus(response2, 200);
 			expect(response2.body).toHaveLength(0);
+		});
+
+		test("should be able to filter by createdAt", async () => {
+			const response = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {
+					filters: {
+						createdAt: {
+							$gte: firstCreatedAt,
+						},
+					},
+				},
+			});
+
+			expectStatus(response, 200);
+			expect(response.body).toHaveLength(1);
+			expect(response.body[0].id).not.toBe(newPubId);
+		});
+
+		test("should be able to filter by updatedAt", async () => {
+			const updatedAtDate = new Date();
+			const updatedPub = await client.pubs.update({
+				params: {
+					pubId: newPubId,
+					communitySlug: COMMUNITY_SLUG,
+				},
+				body: {
+					[`${COMMUNITY_SLUG}:title`]: "Updated title",
+				},
+			});
+
+			const response = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {
+					filters: {
+						updatedAt: {
+							$gte: updatedAtDate,
+						},
+					},
+				},
+			});
+			expectStatus(response, 200);
+			expect(response.body).toHaveLength(1);
+			expect(response.body[0].id).toBe(newPubId);
+			expect(response.body[0].values).toMatchObject([
+				expect.objectContaining({
+					fieldSlug: `${COMMUNITY_SLUG}:title`,
+					value: "Updated title",
+				}),
+			]);
 		});
 	});
 });
