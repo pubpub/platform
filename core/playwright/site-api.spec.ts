@@ -42,6 +42,8 @@ test.beforeAll(async ({ browser }) => {
 		baseHeaders: {
 			Authorization: `Bearer ${token}`,
 		},
+		// necessary else filters will not work
+		jsonQuery: true,
 	});
 });
 
@@ -86,6 +88,21 @@ test.describe("Site API", () => {
 				])
 			);
 
+			const pubResponse2 = await client.pubs.create({
+				headers: {
+					prefer: "return=representation",
+				},
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				body: {
+					pubTypeId: pubType.id,
+					values: {
+						[`${COMMUNITY_SLUG}:title`]: "Goodbye world",
+					},
+				},
+			});
+
 			newPubId = pubResponse.body.id;
 		});
 
@@ -102,6 +119,41 @@ test.describe("Site API", () => {
 
 			expectStatus(response, 200);
 			expect(response.body.id).toBe(newPubId);
+		});
+
+		test("should be able to filter pubs", async () => {
+			const response = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {
+					filters: {
+						[`${COMMUNITY_SLUG}:title`]: {
+							$containsi: "hello",
+						},
+					},
+				},
+			});
+
+			expectStatus(response, 200);
+			expect(response.body).toHaveLength(1);
+			expect(response.body[0].id).toBe(newPubId);
+
+			const response2 = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {
+					filters: {
+						[`${COMMUNITY_SLUG}:title`]: {
+							$containsi: "farewell",
+						},
+					},
+				},
+			});
+
+			expectStatus(response2, 200);
+			expect(response2.body).toHaveLength(0);
 		});
 	});
 });
