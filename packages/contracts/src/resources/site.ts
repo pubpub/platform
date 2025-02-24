@@ -362,28 +362,35 @@ const numberOrDateSchema = z.number().or(z.coerce.date());
 
 const baseFilterSchema = z
 	.object({
-		$eq: allSchema,
-		$eqi: z.string(),
-		$ne: allSchema,
-		$nei: z.string(),
-		$lt: numberOrDateSchema,
-		$lte: numberOrDateSchema,
-		$gt: numberOrDateSchema,
-		$gte: numberOrDateSchema,
-		$contains: z.string(),
-		$notContains: z.string(),
-		$containsi: z.string(),
-		$notContainsi: z.string(),
-		$null: z.never(),
-		$notNull: z.never(),
-		$in: z.array(allSchema),
-		$notIn: z.array(allSchema),
-		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]),
-		$startsWith: z.string(),
-		$startsWithi: z.string(),
-		$endsWith: z.string(),
-		$endsWithi: z.string(),
-		$size: z.number(),
+		$eq: allSchema.describe("Equal to"),
+		$eqi: z.string().describe("Equal to (case insensitive)"),
+		$ne: allSchema.describe("Not equal to"),
+		$nei: z.string().describe("Not equal to (case insensitive)"),
+		$lt: numberOrDateSchema.describe("Less than"),
+		$lte: numberOrDateSchema.describe("Less than or equal to"),
+		$gt: numberOrDateSchema.describe("Greater than"),
+		$gte: numberOrDateSchema.describe("Greater than or equal to"),
+		$contains: z.string().describe("Contains"),
+		$notContains: z.string().describe("Does not contain"),
+		$containsi: z.string().describe("Contains (case insensitive)"),
+		$notContainsi: z.string().describe("Does not contain (case insensitive)"),
+		$null: z.never().describe("Is null"),
+		$notNull: z.never().describe("Is not null"),
+		$in: z.array(allSchema).describe("In"),
+		$notIn: z.array(allSchema).describe("Not in"),
+		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]).describe("Between"),
+		$startsWith: z.string().describe("Starts with"),
+		$startsWithi: z.string().describe("Starts with (case insensitive)"),
+		$endsWith: z.string().describe("Ends with"),
+		$endsWithi: z.string().describe("Ends with (case insensitive)"),
+		$size: z.number().describe("Size"),
+		$jsonPath: z
+			.string()
+			.describe(
+				"You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail.\n" +
+					"Example: filters[community-slug:jsonField][$jsonPath]=$[2] > 90\n" +
+					"This will filter the third element in the array, and check if it's greater than 90."
+			),
 	})
 	.partial()
 	.refine((data) => {
@@ -456,10 +463,9 @@ const getPubQuerySchema = z
 			.optional()
 			.describe(
 				"Filter criteria using Strapi-like syntax. Examples:\n" +
-					"- Basic: filters[fieldName][$eq]=value\n" +
-					"- Array: filters[tags][$contains]=important\n" +
-					"- Nested: filters[author][name][$eq]=John\n" +
-					"- Complex: filters[$or][0][date][$eq]=2020-01-01&filters[$or][1][date][$eq]=2020-01-02"
+					"- Basic: filters[community-slug:fieldName][$eq]=value\n" +
+					"- Nested: filters[author][community-slug:name][$eq]=John\n" +
+					"- Complex: filters[$or][0][community-slug:date][$eq]=2020-01-01&filters[$or][1][community-slug:date][$eq]=2020-01-02"
 			),
 	})
 	.passthrough();
