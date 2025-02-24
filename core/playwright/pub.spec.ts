@@ -220,27 +220,61 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("link", { name: `prefix ${actualTitle}` })).toHaveCount(1);
 	});
 
-	test("Can create a child pub", async () => {
+	test("Can create a related pub", async () => {
+		// Add a related string field
+		const stringField = "related-string";
+		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		await fieldsPage.goto();
+		await fieldsPage.addField(stringField, CoreSchemaType.String, true);
+		const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
+		await pubTypePage.goto();
+		await pubTypePage.addFieldToPubType("Submission", `${COMMUNITY_SLUG}:${stringField}`);
+
+		// Now go to a pub page and add a related pub
 		const pubPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
 		await pubPage.goTo();
-		await expect(page.getByRole("table").first()).toContainText("No results.");
-		await page.getByRole("button", { name: "Add New Pub" }).click();
+		await expect(page.getByTestId("related-pubs").getByRole("table")).toContainText(
+			"No results."
+		);
+		await page.getByRole("button", { name: "Add Related Pub" }).click();
 
 		// Choose a pub type
-		await choosePubType({ page, communitySlug: COMMUNITY_SLUG });
+		const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true });
+		await createDialog.waitFor();
+		await createDialog.getByLabel("Pub type").click();
+		await page.getByRole("option", { name: "Submission" }).click();
+		await expect(page.getByRole("button", { name: "Create Pub" })).toBeDisabled();
+
+		// Specify relationship
+		await createDialog.getByLabel("Relationship").click();
+		await page.getByRole("option", { name: stringField, exact: true }).click();
+
+		await page.getByRole("button", { name: "Create Pub" }).click();
+		await page.waitForURL(`/c/${COMMUNITY_SLUG}/pubs/create**`);
+
+		// Should now see a related field on the new page
+		await page.getByTestId("relatedPubValue").fill("related value");
 
 		// Fill in title and content
-		const child = { title: "child", content: "I am a child" };
-		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(child.title);
-		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill(child.content);
+		const related = { title: "related", content: "I am related" };
+		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(related.title);
+		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill(related.content);
 		await page.getByRole("button", { name: "Save" }).click();
 		await expect(page.getByRole("status").filter({ hasText: "New pub created" })).toHaveCount(
 			1
 		);
 
+		// The original pub should now have a related pub which is the newly created pub
 		await pubPage.goTo();
+		await expect(page.getByText("related value:related")).toHaveCount(1);
 		await expect(
-			page.getByRole("table").first().getByRole("link", { name: child.title })
+			page.getByTestId("related-pubs").getByRole("button", { name: stringField })
+		).toHaveCount(1);
+		await expect(
+			page
+				.getByTestId("related-pubs")
+				.getByRole("table")
+				.getByRole("link", { name: related.title })
 		).toHaveCount(1);
 	});
 
