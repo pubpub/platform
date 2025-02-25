@@ -149,6 +149,7 @@ Table pub_values {
   updatedAt DateTime [default: `now()`, not null]
   relatedPub pubs
   relatedPubId String
+  rank String
 }
 
 Table pub_types {

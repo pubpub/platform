@@ -47,4 +47,5 @@ BEGIN;
     AND "form_elements"."id" = "buttons"."id";
 
   ALTER TABLE "form_elements" ALTER COLUMN "rank" SET NOT NULL;
+
 COMMIT;
