@@ -384,6 +384,7 @@ Table form_elements {
   field pub_fields
   formId String [not null]
   order Int
+  rank String [not null]
   label String
   element StructuralFormElement
   component InputComponent
