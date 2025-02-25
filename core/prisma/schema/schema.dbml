@@ -94,6 +94,8 @@ Table pubs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   title String
+  stage stages
+  stageId String
   parent pubs
   parentId String
   children pubs [not null]
@@ -196,6 +198,7 @@ Table stages {
   actionInstances action_instances [not null]
   formElements form_elements [not null]
   members stage_memberships [not null]
+  Pub pubs [not null]
 }
 
 Table PubsInStages {
@@ -620,6 +623,8 @@ Ref: pubs.pubTypeId > pub_types.id
 Ref: pubs.communityId > communities.id
 
 Ref: pubs.assigneeId > users.id
+
+Ref: pubs.stageId > stages.id [delete: Set Null]
 
 Ref: pubs.parentId - pubs.id [delete: Cascade]
 
