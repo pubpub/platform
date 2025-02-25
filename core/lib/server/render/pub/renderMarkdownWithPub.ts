@@ -343,9 +343,9 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 					const directiveName = node.name.toLowerCase() as RenderWithPubToken;
 					const directiveVisitor = directiveVisitors[directiveName];
 					const { rel, ...attrs } = expect(node.attributes);
-					const relatedPub = await getExclusivelyRelatedPub(
-						context.pub.id as PubsId,
-						rel
+					const relatedPub = expect(
+						await getExclusivelyRelatedPub(context.pub.id as PubsId, rel),
+						`The email template included a directive containing rel="${rel}", but the pub is not related to any other pubs through this field.`
 					);
 					node.attributes = attrs;
 					directiveVisitor(node, {
