@@ -88,6 +88,7 @@ export default async function Page(props: {
 										"pub_fields.slug as fieldSlug",
 									])
 									.whereRef("pub_values.pubId", "=", "pubs.id")
+									.orderBy(["pub_values.fieldId", "pub_values.rank"])
 							).as("values")
 						)
 						.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))

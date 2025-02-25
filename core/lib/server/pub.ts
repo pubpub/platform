@@ -10,6 +10,7 @@ import type {
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import partition from "lodash.partition";
+import mudder from "mudder";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
@@ -41,7 +42,7 @@ import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { MaybeHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { env } from "../env/env.mjs";
@@ -124,6 +125,7 @@ const pubValues = (
 						.as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
+			.orderBy(["pub_values.fieldId", "pub_values.rank"])
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pubId", "=", ref(pubIdRef!)))
 			.as(alias)
@@ -550,17 +552,23 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				)
 				.execute();
 		}
+		const rankedValues = await getRankedValues({
+			pubId: newPub.id,
+			pubValues: valuesWithFieldIds,
+			trx,
+		});
 
 		const pubValues = valuesWithFieldIds.length
 			? await autoRevalidate(
 					trx
 						.insertInto("pub_values")
 						.values(
-							valuesWithFieldIds.map(({ fieldId, value, relatedPubId }, index) => ({
+							rankedValues.map(({ fieldId, value, relatedPubId, rank }, index) => ({
 								fieldId,
 								pubId: newPub.id,
 								value: JSON.stringify(value),
 								relatedPubId,
+								rank,
 								lastModifiedBy,
 							}))
 						)
@@ -705,6 +713,7 @@ export const deletePub = async ({
 		const pubValues = await trx
 			.selectFrom("pub_values")
 			.where("pubId", "in", Array.isArray(pubId) ? pubId : [pubId])
+			.orderBy(["pub_values.fieldId", "pub_values.rank"])
 			.selectAll()
 			.execute();
 
@@ -1196,6 +1205,99 @@ export const updatePub = async ({
 	return result;
 };
 
+const getRankedValues = async ({
+	pubId,
+	pubValues,
+	trx,
+}: {
+	pubId: PubsId;
+	pubValues: {
+		/**
+		 * specify this if you do not want to use the pubId provided in the input
+		 */
+		pubId?: PubsId;
+		fieldId: PubFieldsId;
+		relatedPubId?: PubsId;
+		value: unknown;
+	}[];
+	trx: typeof db;
+}) => {
+	const { relatedValues, plainValues } = Object.groupBy(pubValues, (v) =>
+		v.relatedPubId === undefined ? "plainValues" : "relatedValues"
+	);
+	const groupedValues: Record<
+		PubsId,
+		Record<PubFieldsId, DefinitelyHas<(typeof pubValues)[number], "pubId">[]>
+	> = {};
+	let rankedValues;
+	if (relatedValues?.length) {
+		const firstVal = relatedValues.shift()!;
+
+		const valuesQuery = trx
+			.selectFrom("pub_values")
+			.select(["rank", "fieldId", "pubId"])
+			.where("pubId", "=", firstVal.pubId ?? pubId)
+			.where("fieldId", "=", firstVal.fieldId)
+			.where("rank", "is not", null)
+			.orderBy("rank desc")
+			.limit(1);
+
+		for (const value of relatedValues) {
+			const newValue = { ...value, pubId: value.pubId ?? pubId };
+			if (!groupedValues[newValue.pubId]) {
+				groupedValues[newValue.pubId] = { [value.fieldId]: [newValue] };
+			}
+			if (!groupedValues[newValue.pubId][value.fieldId]) {
+				groupedValues[newValue.pubId][value.fieldId] = [newValue];
+			}
+
+			// If we've already found the highest ranked value for this pubId + fieldId combination,
+			// continue without adding to the query
+			if (
+				groupedValues[newValue.pubId] &&
+				groupedValues[newValue.pubId][value.fieldId]?.length
+			) {
+				groupedValues[newValue.pubId][value.fieldId].push(newValue);
+				continue;
+			}
+
+			// Select the highest ranked value for the given pub + field, and append (UNION ALL)
+			// that single row to the output
+			valuesQuery.unionAll((eb) =>
+				eb
+					.selectFrom("pub_values")
+					.select(["rank", "fieldId", "pubId"])
+					.where("pubId", "=", newValue.pubId)
+					.where("fieldId", "=", value.fieldId)
+					.where("rank", "is not", null)
+					.orderBy("rank desc")
+					.limit(1)
+			);
+		}
+		const highestRanks = await valuesQuery.execute();
+
+		rankedValues = Object.values(groupedValues).flatMap((valuesForPub) =>
+			Object.values(valuesForPub).flatMap((valuesForField) => {
+				const highestRank =
+					highestRanks.find(
+						({ pubId, fieldId }) =>
+							valuesForField[0].pubId === pubId &&
+							valuesForField[0].fieldId === fieldId
+					)?.rank ?? "";
+				const ranks = mudder.base62.mudder(highestRank, "", valuesForField.length);
+				return valuesForField.map((value, i) => ({ ...value, rank: ranks[i] }));
+			})
+		);
+	}
+
+	const allValues: ((typeof pubValues)[number] & { rank?: string })[] = [
+		...(plainValues || []),
+		...(rankedValues || []),
+	];
+
+	return allValues;
+};
+
 export const upsertPubValues = async ({
 	pubId,
 	pubValues,
@@ -1218,17 +1320,19 @@ export const upsertPubValues = async ({
 	if (!pubValues.length) {
 		return [];
 	}
+	const rankedValues = await getRankedValues({ pubId, pubValues, trx });
 
 	return autoRevalidate(
 		trx
 			.insertInto("pub_values")
 			.values(
-				pubValues.map((value) => ({
+				rankedValues.map((value) => ({
 					pubId: value.pubId ?? pubId,
 					fieldId: value.fieldId,
 					value: JSON.stringify(value.value),
 					lastModifiedBy,
 					relatedPubId: value.relatedPubId,
+					rank: value.rank,
 				}))
 			)
 			.onConflict((oc) =>
@@ -1265,15 +1369,18 @@ export const upsertPubRelationValues = async ({
 		return [];
 	}
 
+	const rankedValues = await getRankedValues({ pubId, pubValues: allRelationsToCreate, trx });
+
 	return autoRevalidate(
 		trx
 			.insertInto("pub_values")
 			.values(
-				allRelationsToCreate.map((value) => ({
+				rankedValues.map((value) => ({
 					pubId: value.pubId ?? pubId,
 					relatedPubId: value.relatedPubId,
 					value: JSON.stringify(value.value),
 					fieldId: value.fieldId,
+					rank: value.rank,
 					lastModifiedBy,
 				}))
 			)
