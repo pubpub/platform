@@ -54,13 +54,12 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 			} else if (!element.elementId) {
 				// Newly created elements have no elementId
 				acc.upserts.push(formElementsInitializerSchema.parse({ formId, ...element }));
-			} else if (element.updated || element.order !== index + 1) {
+			} else if (element.updated) {
 				acc.upserts.push(
 					formElementsInitializerSchema.parse({
 						...element,
 						formId,
 						id: element.elementId,
-						order: index + 1,
 					})
 				); // TODO: only update changed columns
 			}
