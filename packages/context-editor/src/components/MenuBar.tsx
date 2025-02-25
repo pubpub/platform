@@ -78,9 +78,13 @@ const paragraphTypeItems: MenuItem[] = [
 
 const ParagraphDropdown = () => {
 	const { view } = usePluginViewContext();
+	const activeType = paragraphTypeItems.filter((item) => {
+		const { isActive } = item.command(view)(view.state);
+		return isActive;
+	})[0];
 	return (
 		<Select
-			defaultValue={paragraphTypeItems[0].name}
+			value={activeType?.name}
 			onValueChange={(value) => {
 				const item = paragraphTypeItems.find((i) => i.name === value);
 				if (!item) {
@@ -93,7 +97,7 @@ const ParagraphDropdown = () => {
 			}}
 		>
 			<SelectTrigger className="w-fit border-none">
-				<SelectValue placeholder="Theme" />
+				<SelectValue placeholder="Paragraph" />
 			</SelectTrigger>
 			<SelectContent className="bg-white">
 				{paragraphTypeItems.map(({ name, icon, command }) => {
