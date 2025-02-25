@@ -388,7 +388,7 @@ const baseFilterSchema = z
 			.string()
 			.describe(
 				"You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail.\n" +
-					"Example: filters[community-slug:jsonField][$jsonPath]=$[2] > 90\n" +
+					'Example: `filters[community-slug:jsonField][$jsonPath]="$[2] > 90"`\n' +
 					"This will filter the third element in the array, and check if it's greater than 90."
 			),
 	})
@@ -577,10 +577,38 @@ export const siteApi = contract.router(
 					filters: filterSchema
 						.optional()
 						.describe(
-							"Filter criteria using Strapi-like syntax. Examples:\n" +
-								"- Basic: filters[community-slug:fieldName][$eq]=value\n" +
-								"- Nested: filters[author][community-slug:name][$eq]=John\n" +
-								"- Complex: filters[$or][0][community-slug:date][$eq]=2020-01-01&filters[$or][1][community-slug:date][$eq]=2020-01-02"
+							[
+								"Filter pubs by their values or by `updatedAt` or `createdAt`.",
+								"",
+								"**Filters**",
+								"- `$eq`: Equal to. (strings, numbers, dates, booleans)",
+								"- `$eqi`: Equal to (case insensitive). (strings)",
+								"- `$ne`: Not equal to. (strings, numbers, dates, booleans)",
+								"- `$nei`: Not equal to (case insensitive). (strings)",
+								"- `$lt`: Less than. (numbers, dates)",
+								"- `$lte`: Less than or equal to. (numbers, dates)",
+								"- `$gt`: Greater than. (numbers, dates)",
+								"- `$gte`: Greater than or equal to. (numbers, dates)",
+								"- `$contains`: Contains. (strings)",
+								"- `$notContains`: Does not contain. (strings)",
+								"- `$containsi`: Contains (case insensitive). (strings)",
+								"- `$notContainsi`: Does not contain (case insensitive). (strings)",
+								"- `$null`: Is null. (strings, numbers, dates, booleans)",
+								"- `$notNull`: Is not null. (strings, numbers, dates, booleans)",
+								"- `$in`: In. (strings, numbers, dates, booleans)",
+								"- `$notIn`: Not in. (strings, numbers, dates, booleans)",
+								"- `$between`: Between. (numbers, dates)",
+								"- `$startsWith`: Starts with. (strings)",
+								"- `$startsWithi`: Starts with (case insensitive). (strings)",
+								"- `$endsWith`: Ends with. (strings)",
+								"- `$endsWithi`: Ends with (case insensitive). (strings)",
+								"- `$size`: Size. (numbers, dates)",
+								"- `$jsonPath`: JSON path. (strings, arrays, objects) You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail. Example: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'` This will return all pubs where the `community:json-field` value's third element in the array is greater than 90.",
+								"",
+								"**Examples**",
+								"- Basic: `filters[community-slug:fieldName][$eq]=value`",
+								"- Complex: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
+							].join("\n")
 						),
 				}),
 				responses: {
