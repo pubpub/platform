@@ -10,7 +10,7 @@ import { cn } from "utils";
 
 import type { XOR } from "~/lib/types";
 import { getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { PubDropDown } from "./pubs/PubDropDown";
 import { PubTitle } from "./PubTitle";
@@ -78,7 +78,7 @@ const ChildHierarchy = ({ pub, communitySlug }: { pub: PubRowPub; communitySlug:
 
 const PubRow: React.FC<Props> = async (props: Props) => {
 	const pub = props.pubId
-		? await getPubsWithRelatedValuesAndChildren(
+		? await getPubsWithRelatedValues(
 				{ pubId: props.pubId, communityId: props.communityId, userId: props.userId },
 				{
 					withPubType: true,

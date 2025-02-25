@@ -14,7 +14,7 @@ import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesAndChildrenCached = cache(
@@ -27,7 +27,7 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 		pubId: PubsId;
 		communityId: CommunitiesId;
 	}) => {
-		return getPubsWithRelatedValuesAndChildren(
+		return getPubsWithRelatedValues(
 			{
 				pubId,
 				communityId,
