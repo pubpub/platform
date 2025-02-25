@@ -62,7 +62,7 @@ test.describe("Moving a pub", () => {
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Submitted");
 		// For this initial stage, there are only destinations ,no sources
-		await page.getByRole("button", { name: "Move" }).click();
+		await page.getByRole("button", { name: "Move", exact: true }).click();
 		const sources = page.getByTestId("sources");
 		const destinations = page.getByTestId("destinations");
 		await expect(sources).toHaveCount(0);
@@ -70,7 +70,7 @@ test.describe("Moving a pub", () => {
 		await expect(page.getByTestId("current-stage")).toHaveText("Ask Author for Consent");
 
 		// Open the move modal again and expect to be able to move to sources and destinations
-		await page.getByRole("button", { name: "Move" }).click();
+		await page.getByRole("button", { name: "Move", exact: true }).click();
 		await expect(sources.getByRole("button", { name: "Submitted" })).toHaveCount(1);
 		await expect(destinations.getByRole("button", { name: "To Evaluate" })).toHaveCount(1);
 	});
@@ -91,7 +91,7 @@ test.describe("Moving a pub", () => {
 		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Shelved");
-		await expect(page.getByRole("button", { name: "Move" })).toHaveCount(0);
+		await expect(page.getByRole("button", { name: "Move", exact: true })).toHaveCount(0);
 	});
 });
 

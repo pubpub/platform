@@ -13,7 +13,12 @@ import { toast } from "ui/use-toast";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./PubEditor/actions";
 
-export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
+export type PubRemoveProps = {
+	pubId: PubsId;
+	redirectTo?: string;
+};
+
+export const PubRemoveForm = ({ pubId, redirectTo }: PubRemoveProps) => {
 	const form = useForm({
 		mode: "onChange",
 		reValidateMode: "onChange",
@@ -32,8 +37,12 @@ export const PubRemoveForm = ({ pubId }: { pubId: PubsId }) => {
 	}, [path, searchParams]);
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+		if (redirectTo) {
+			router.push(redirectTo);
+		} else {
+			router.replace(pathWithoutFormParam);
+		}
+	}, [pathWithoutFormParam, redirectTo, router]);
 
 	const onSubmit = async () => {
 		const result = await runRemovePub({
