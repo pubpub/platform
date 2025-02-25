@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 
-import React, { useState } from "react";
+import React from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
+import { Quote } from "lucide-react";
 
 import { Button } from "ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
@@ -9,6 +10,7 @@ import { cn } from "utils";
 
 import type { CommandSpec } from "../commands/types";
 import {
+	blockquoteToggle,
 	heading1Toggle,
 	heading2Toggle,
 	heading3Toggle,
@@ -36,6 +38,11 @@ const menuItems: MenuItem[] = [
 		key: "em",
 		icon: <span className="italic">I</span>,
 		command: emToggle,
+	},
+	{
+		key: "blockquote",
+		icon: <Quote />,
+		command: blockquoteToggle,
 	},
 ];
 
@@ -90,6 +97,7 @@ const ParagraphDropdown = () => {
 		const { isActive } = item.command(view)(view.state);
 		return isActive;
 	})[0];
+
 	return (
 		<Select
 			value={activeType?.key}

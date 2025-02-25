@@ -48,6 +48,14 @@ const toggleBlockType = (options: ToggleOptions<NodeType>) => {
 	return setBlockFunction(state, dispatch);
 };
 
+const toggleWrap = (options: ToggleOptions<NodeType>) => {
+	const { state, type, dispatch } = options;
+	if (blockTypeIsActive(options)) {
+		return lift(state, dispatch);
+	}
+	return wrapIn(type)(state, dispatch);
+};
+
 const createBlockTypeToggle = (options: {
 	typeName: string;
 	withAttrs?: Attrs;
@@ -73,3 +81,9 @@ export const heading3Toggle = createHeadingBlockTypeToggle(3);
 export const heading4Toggle = createHeadingBlockTypeToggle(4);
 export const heading5Toggle = createHeadingBlockTypeToggle(5);
 export const heading6Toggle = createHeadingBlockTypeToggle(6);
+export const blockquoteToggle = createBlockTypeToggle({
+	typeName: "blockquote",
+	commandFn: toggleWrap,
+});
+// TODO
+export const codeBlockToggle = createBlockTypeToggle({ typeName: "code_block" });

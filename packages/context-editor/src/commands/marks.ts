@@ -29,3 +29,4 @@ export const createMarkToggle = (typeName: string) => {
 
 export const strongToggle = createMarkToggle("strong");
 export const emToggle = createMarkToggle("em");
+export const codeToggle = createMarkToggle("code");
