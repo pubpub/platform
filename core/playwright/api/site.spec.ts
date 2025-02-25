@@ -68,7 +68,15 @@ test("should be able to create token with all permissions", async () => {
 
 	expect(token).not.toBeNull();
 
-	tokenPage.goto();
+	await test.step("should be able to revoke token", async () => {
+		const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
+		await tokenPage.goto();
+		await page.getByRole("button", { name: "Revoke token" }).first().click({ timeout: 1_000 });
+
+		await page.getByRole("button", { name: "Remove" }).click();
+
+		await expect(page.getByRole("button", { name: "Revoke token" })).toHaveCount(0);
+	});
 });
 
 test("should be able to create token with special permissions", async () => {
@@ -76,7 +84,7 @@ test("should be able to create token with special permissions", async () => {
 	await tokenPage.goto();
 	const token = await tokenPage.createToken({
 		// expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-		name: "test token",
+		name: "test token with special permissions",
 		permissions: {
 			pub: {
 				read: {
