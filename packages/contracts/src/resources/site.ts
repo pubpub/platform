@@ -309,34 +309,156 @@ const preferRepresentationHeaderSchema = z.object({
 		.default("return=minimal"),
 });
 
-const getPubQuerySchema = z
+export const filterOperators = [
+	"$eq",
+	"$eqi",
+	"$ne",
+	"$nei",
+	"$lt",
+	"$lte",
+	"$gt",
+	"$gte",
+	"$contains",
+	"$notContains",
+	"$containsi",
+	"$notContainsi",
+	"$null",
+	"$notNull",
+	"$in",
+	"$notIn",
+	"$between",
+	"$startsWith",
+	"$startsWithi",
+	"$endsWith",
+	"$endsWithi",
+	"$jsonPath", // json path (maybe dangerous),
+] as const;
+
+export type FilterOperator = (typeof filterOperators)[number];
+
+export const logicalOperators = ["$and", "$or", "$not"] as const;
+
+export type LogicalOperator = (typeof logicalOperators)[number];
+
+export type BaseFilter = {
+	[slug: string]:
+		| {
+				[O in FilterOperator]?: unknown;
+		  }
+		| Filter;
+};
+
+export type LogicalFilter = {
+	$and?: Filter[];
+	$or?: Filter[];
+	$not?: Filter;
+};
+
+export type Filter = BaseFilter | LogicalFilter;
+
+const allSchema = z.string().or(z.number()).or(z.boolean()).or(z.coerce.date());
+
+const numberOrDateSchema = z.number().or(z.coerce.date());
+
+const baseFilterSchema = z
 	.object({
-		depth: z
-			.number()
-			.int()
-			.positive()
-			.default(2)
+		$eq: allSchema.describe("Equal to"),
+		$eqi: z.string().describe("Equal to (case insensitive)"),
+		$ne: allSchema.describe("Not equal to"),
+		$nei: z.string().describe("Not equal to (case insensitive)"),
+		$lt: numberOrDateSchema.describe("Less than"),
+		$lte: numberOrDateSchema.describe("Less than or equal to"),
+		$gt: numberOrDateSchema.describe("Greater than"),
+		$gte: numberOrDateSchema.describe("Greater than or equal to"),
+		$contains: z.string().describe("Contains"),
+		$notContains: z.string().describe("Does not contain"),
+		$containsi: z.string().describe("Contains (case insensitive)"),
+		$notContainsi: z.string().describe("Does not contain (case insensitive)"),
+		$null: z.never().describe("Is null"),
+		$notNull: z.never().describe("Is not null"),
+		$in: z.array(allSchema).describe("In"),
+		$notIn: z.array(allSchema).describe("Not in"),
+		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]).describe("Between"),
+		$startsWith: z.string().describe("Starts with"),
+		$startsWithi: z.string().describe("Starts with (case insensitive)"),
+		$endsWith: z.string().describe("Ends with"),
+		$endsWithi: z.string().describe("Ends with (case insensitive)"),
+		$size: z.number().describe("Size"),
+		$jsonPath: z
+			.string()
 			.describe(
-				"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
-			),
-		withChildren: z.boolean().default(false).describe("Whether to fetch children."),
-		withRelatedPubs: z
-			.boolean()
-			.default(false)
-			.describe("Whether to include related pubs with the values"),
-		withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
-		withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
-		withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
-		fieldSlugs: z
-			.array(z.string())
-			// this is necessary bc the query parser doesn't handle single string values as arrays
-			.or(z.string().transform((slug) => [slug]))
-			.optional()
-			.describe(
-				"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
+				"You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail.\n" +
+					'Example: `filters[community-slug:jsonField][$jsonPath]="$[2] > 90"`\n' +
+					"This will filter the third element in the array, and check if it's greater than 90."
 			),
 	})
-	.passthrough();
+	.partial()
+	.refine((data) => {
+		if (!Object.keys(data).length) {
+			return false;
+		}
+		return true;
+	}, "Filter must have at least one operator") satisfies z.ZodType<{
+	[K in FilterOperator]?: any;
+}>;
+
+// this is a recursive type, so we need to use z.lazy()
+export const filterSchema: z.ZodType<Filter> = z.lazy(() =>
+	z.union([
+		// regular field filters
+		z.record(
+			z.union([
+				// operator-value pairs
+				baseFilterSchema,
+				// nested filters (for object types)
+				filterSchema,
+			])
+		),
+		// logical operators
+		z.object({
+			$and: z.array(filterSchema).optional(),
+			$or: z.array(filterSchema).optional(),
+			$not: filterSchema,
+		}),
+		z.object({
+			$and: z.array(filterSchema).optional(),
+			$or: z.array(filterSchema),
+			$not: filterSchema.optional(),
+		}),
+		z.object({
+			$and: z.array(filterSchema),
+			$or: z.array(filterSchema).optional(),
+			$not: filterSchema.optional(),
+		}),
+	])
+);
+
+const getPubQuerySchema = z.object({
+	depth: z
+		.number()
+		.int()
+		.positive()
+		.default(2)
+		.describe(
+			"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
+		),
+	withChildren: z.boolean().default(false).describe("Whether to fetch children."),
+	withRelatedPubs: z
+		.boolean()
+		.default(false)
+		.describe("Whether to include related pubs with the values"),
+	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
+	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+	withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
+	fieldSlugs: z
+		.array(z.string())
+		// this is necessary bc the query parser doesn't handle single string values as arrays
+		.or(z.string().transform((slug) => [slug]))
+		.optional()
+		.describe(
+			"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
+		),
+});
 
 export type FTSReturn = {
 	id: PubsId;
@@ -452,6 +574,42 @@ export const siteApi = contract.router(
 					offset: z.number().default(0).optional(),
 					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 					orderDirection: z.enum(["asc", "desc"]).optional(),
+					filters: filterSchema
+						.optional()
+						.describe(
+							[
+								"Filter pubs by their values or by `updatedAt` or `createdAt`.",
+								"",
+								"**Filters**",
+								"- `$eq`: Equal to. (strings, numbers, dates, booleans)",
+								"- `$eqi`: Equal to (case insensitive). (strings)",
+								"- `$ne`: Not equal to. (strings, numbers, dates, booleans)",
+								"- `$nei`: Not equal to (case insensitive). (strings)",
+								"- `$lt`: Less than. (numbers, dates)",
+								"- `$lte`: Less than or equal to. (numbers, dates)",
+								"- `$gt`: Greater than. (numbers, dates)",
+								"- `$gte`: Greater than or equal to. (numbers, dates)",
+								"- `$contains`: Contains. (strings)",
+								"- `$notContains`: Does not contain. (strings)",
+								"- `$containsi`: Contains (case insensitive). (strings)",
+								"- `$notContainsi`: Does not contain (case insensitive). (strings)",
+								"- `$null`: Is null. (strings, numbers, dates, booleans)",
+								"- `$notNull`: Is not null. (strings, numbers, dates, booleans)",
+								"- `$in`: In. (strings, numbers, dates, booleans)",
+								"- `$notIn`: Not in. (strings, numbers, dates, booleans)",
+								"- `$between`: Between. (numbers, dates)",
+								"- `$startsWith`: Starts with. (strings)",
+								"- `$startsWithi`: Starts with (case insensitive). (strings)",
+								"- `$endsWith`: Ends with. (strings)",
+								"- `$endsWithi`: Ends with (case insensitive). (strings)",
+								"- `$size`: Size. (numbers, dates)",
+								"- `$jsonPath`: JSON path. (strings, arrays, objects) You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail. Example: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'` This will return all pubs where the `community:json-field` value's third element in the array is greater than 90.",
+								"",
+								"**Examples**",
+								"- Basic: `filters[community-slug:fieldName][$eq]=value`",
+								"- Complex: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
+							].join("\n")
+						),
 				}),
 				responses: {
 					200: z.array(processedPubSchema),

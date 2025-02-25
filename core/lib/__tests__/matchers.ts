@@ -7,7 +7,11 @@ import type { db } from "~/kysely/database";
 
 const deepSortValues = (pub: ProcessedPub): ProcessedPub => {
 	pub.values
-		.sort((a, b) => (a.value as string).localeCompare(b.value as string))
+		.sort((a, b) => {
+			const aValue = String(a.value);
+			const bValue = String(b.value);
+			return aValue.localeCompare(bValue);
+		})
 		.map((item) => ({
 			...item,
 			relatedPub: item.relatedPub?.values ? deepSortValues(item.relatedPub) : item.relatedPub,
@@ -60,7 +64,7 @@ expect.extend({
 			message: () =>
 				pass
 					? `Expected pub ${isNot ? "not" : ""} to have values ${JSON.stringify(expected)}, and it does ${isNot ? "not" : ""}`
-					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(sortedPubValues.values, expected)}`,
+					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(expected, sortedPubValues.values)}`,
 		};
 	},
 });
