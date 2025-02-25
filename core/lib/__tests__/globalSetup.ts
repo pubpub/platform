@@ -7,7 +7,10 @@ import { logger } from "logger";
 
 export const setup = async () => {
 	config({
-		path: ["./.env.test", "./.env.test.local"],
+		path: [
+			new URL("../../.env.test", import.meta.url).pathname,
+			new URL("../../.env.test.local", import.meta.url).pathname,
+		],
 	});
 
 	if (process.env.SKIP_RESET) {

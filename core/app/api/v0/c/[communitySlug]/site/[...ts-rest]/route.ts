@@ -5,7 +5,15 @@ import { createNextHandler } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import { z } from "zod";
 
-import type { Communities, CommunitiesId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type {
+	Communities,
+	CommunitiesId,
+	CommunityMembershipsId,
+	PubsId,
+	PubTypesId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import type {
 	ApiAccessPermission,
 	ApiAccessPermissionConstraintsInput,
@@ -25,6 +33,7 @@ import {
 	deletePub,
 	doesPubExist,
 	ForbiddenError,
+	fullTextSearch,
 	getPubsWithRelatedValuesAndChildren,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
@@ -40,7 +49,7 @@ import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
-import { getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
+import { getMember, getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(
@@ -69,13 +78,13 @@ const getAuthorization = async () => {
 	}
 	const apiKey = apiKeyParse.data;
 
-	const communitySlug = await getCommunitySlug();
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug();
 
 	if (!community) {
-		throw new NotFoundError(`No community found for slug ${communitySlug}`);
+		throw new NotFoundError(`No community found`);
 	}
 
+	// this throws, and we should let it
 	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
 
 	const rules = await db
@@ -220,6 +229,20 @@ const handler = createNextHandler(
 	siteApi,
 	{
 		pubs: {
+			search: async ({ query }) => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: true,
+				});
+
+				const pubs = await fullTextSearch(query.query, community.id, user.id);
+
+				return {
+					status: 200,
+					body: pubs,
+				};
+			},
+
 			get: async ({ params, query }) => {
 				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
@@ -408,7 +431,7 @@ const handler = createNextHandler(
 				};
 			},
 			archive: async ({ params }) => {
-				const { lastModifiedBy } = await checkAuthorization({
+				const { lastModifiedBy, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					cookies: {
 						capability: Capabilities.deletePub,
@@ -418,6 +441,7 @@ const handler = createNextHandler(
 
 				const result = await deletePub({
 					pubId: params.pubId as PubsId,
+					communityId: community.id,
 					lastModifiedBy,
 				});
 
@@ -705,7 +729,7 @@ const handler = createNextHandler(
 				});
 
 				const users = await getSuggestedUsers({
-					communityId: community.id,
+					communityId: req.query.communityId,
 					query: {
 						email: req.query.email,
 						firstName: req.query.name,
@@ -716,6 +740,24 @@ const handler = createNextHandler(
 				return {
 					status: 200,
 					body: users,
+				};
+			},
+		},
+		members: {
+			get: async (req) => {
+				const { community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+					cookies: true,
+				});
+				const memberId = req.params.memberId as CommunityMembershipsId;
+				const user = await getMember(memberId).executeTakeFirst();
+				if (!user) {
+					throw new NotFoundError("No member found");
+				}
+
+				return {
+					status: 200,
+					body: user,
 				};
 			},
 		},

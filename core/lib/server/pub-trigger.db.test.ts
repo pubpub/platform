@@ -22,7 +22,7 @@ const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } 
 	await mockServerCode();
 const { getTrx, rollback, commit } = createForEachMockedTransaction(testDb);
 
-const { createSeed } = await import("~/prisma/seed/seedCommunity");
+const { createSeed } = await import("~/prisma/seed/createSeed");
 
 const pubTriggerTestSeed = createSeed({
 	community: {

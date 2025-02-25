@@ -14,7 +14,7 @@ import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
-import { getStageWorkflows } from "~/lib/stages";
+import { getOrderedStages } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
 
@@ -31,22 +31,18 @@ export async function StageList(props: Props) {
 		selectCommunityMembers({ communityId }).execute(),
 	]);
 
-	const stageWorkflows = getStageWorkflows(communityStages);
+	const stages = getOrderedStages(communityStages);
 
 	return (
 		<div>
-			{stageWorkflows.map((stages) => (
-				<div key={stages[0].id}>
-					{stages.map((stage) => (
-						<StageCard
-							userId={props.userId}
-							key={stage.id}
-							stage={stage}
-							members={communityMembers}
-							pageContext={props.pageContext}
-						/>
-					))}
-				</div>
+			{stages.map((stage) => (
+				<StageCard
+					userId={props.userId}
+					key={stage.id}
+					stage={stage}
+					members={communityMembers}
+					pageContext={props.pageContext}
+				/>
 			))}
 		</div>
 	);
