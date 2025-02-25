@@ -129,7 +129,6 @@ export async function StagePubs({
 					return null;
 				}
 				// this way we don't pass unecessary data to the client
-				const { children, ...basePub } = pub;
 				return (
 					<PubRow
 						key={pub.id}
@@ -144,7 +143,7 @@ export async function StagePubs({
 						actions={
 							<StagePubActions
 								key={stage.id}
-								pub={basePub}
+								pub={pub}
 								stage={stage}
 								actionInstances={actionInstances}
 								pageContext={pageContext}

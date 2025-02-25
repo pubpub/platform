@@ -60,24 +60,6 @@ import { validatePubValuesBySchemaName } from "./validateFields";
 
 export type PubValues = Record<string, JsonValue>;
 
-type PubNoChildren = {
-	id: PubsId;
-	communityId: CommunitiesId;
-	createdAt: Date;
-	parentId: PubsId | null;
-	pubTypeId: PubTypesId;
-	updatedAt: Date;
-	values: PubValues;
-};
-
-type NestedPub<T extends PubNoChildren = PubNoChildren> = Omit<T, "children"> & {
-	children: NestedPub<T>[];
-};
-
-type FlatPub = PubNoChildren & {
-	children: PubNoChildren[];
-};
-
 // pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
 // pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parentId or PubsInStages.pubId
 // It doesn't seem to work if you've aliased the table or column (although you can probably work around that with a cast)
@@ -250,7 +232,7 @@ export type GetManyParams = {
 	 */
 	orderDirection?: "asc" | "desc";
 	/**
-	 * Only fetch "Top level" pubs and their children,
+	 * Only fetch "Top level" pubs,
 	 * do not fetch child pubs separately from their parents
 	 *
 	 * @default true
@@ -272,7 +254,7 @@ const GET_PUBS_DEFAULT = {
 } as const;
 
 /**
- * Get a nested array of pubs and their children
+ * Get a nested array of pubs
  *
  * Either per community, or per stage
  */
@@ -1474,7 +1456,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					])
 
 					.$if(Boolean(withLegacyAssignee), (qb) => qb.select("p.assigneeId"))
-					// we don't even need to recurse if we don't want children or related pubs
+					// we don't even need to recurse if we don't want related pubs
 					.$if(withRelatedPubs, (qb) =>
 						qb.union((qb) =>
 							qb
