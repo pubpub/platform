@@ -33,13 +33,9 @@ import {
 } from "db/public";
 
 import type { Json } from "./types";
-import {
-	CreatePubRequestBodyWithNulls,
-	CreatePubRequestBodyWithNullsBase,
-	jsonSchema,
-} from "./types";
+import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
-export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
 	stageId?: StagesId;
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
 	members?: Record<UsersId, MemberRole>;
@@ -47,7 +43,7 @@ export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBo
 
 export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 
-const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
+const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.extend({
 	stageId: stagesIdSchema.optional(),
 	values: z.record(
 		jsonSchema.or(
@@ -136,7 +132,7 @@ type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
 			: { assignee?: Users | null };
 
 /**
- * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
+ * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
  *
  * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
  *

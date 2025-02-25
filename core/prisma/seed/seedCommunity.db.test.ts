@@ -89,15 +89,6 @@ describe("seedCommunity", () => {
 						SubmissionAuthor: [{ value: 0, relatedPubId: authorPubId }],
 					},
 					stage: "Stage 1",
-					children: [
-						{
-							pubType: "Submission",
-							assignee: "test",
-							values: {
-								Title: "Freek",
-							},
-						},
-					],
 					relatedPubs: {
 						SubmissionAuthor: [
 							{
@@ -221,18 +212,6 @@ describe("seedCommunity", () => {
 			{
 				id: submissionPubId,
 				assigneeId: null,
-				children: [
-					{
-						assigneeId: seededCommunity.users.test.id,
-						values: [
-							{
-								relatedPubId: null,
-								value: "Freek",
-							},
-						],
-						valuesBlob: null,
-					},
-				],
 				parentId: null,
 				values: [
 					{
