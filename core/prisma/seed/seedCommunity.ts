@@ -7,6 +7,7 @@ import type {
 
 import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
+import mudder from "mudder";
 
 import type { ProcessedPub } from "contracts";
 import type {
@@ -433,7 +434,7 @@ type PubFieldsByName<PF> = {
 };
 
 type PubTypesByName<PT, PF> = {
-	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
+	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { fields: PubFieldsByName<PF> };
 };
 
 type UsersBySlug<U> = {
@@ -796,25 +797,12 @@ export async function seedCommunity<
 					.execute()
 			: [];
 
-	await Promise.all(
-		createdPubTypes.map((type) =>
-			insertForm(
-				type.id,
-				`${type.name} Editor (Default)`,
-				`${slugifyString(type.name)}-default-editor`,
-				communityId,
-				true,
-				trx
-			).execute()
-		)
-	);
-
 	const pubTypesWithPubFieldsByName = Object.fromEntries(
 		createdPubTypes.map((pubType) => [
 			pubType.name,
 			{
 				...pubType,
-				pubFields: Object.fromEntries(
+				fields: Object.fromEntries(
 					createdPubFieldToPubTypes
 						.filter((pubFieldToPubType) => pubFieldToPubType.B === pubType.id)
 						.map((pubFieldToPubType) => {
@@ -831,6 +819,19 @@ export async function seedCommunity<
 			},
 		])
 	) as PubTypesByName<PT, PF>;
+
+	await Promise.all(
+		Object.values(pubTypesWithPubFieldsByName).map((pubType) =>
+			insertForm(
+				{ ...pubType, fields: Object.values(pubType.fields) },
+				`${pubType.name} Editor (Default)`,
+				`${slugifyString(pubType.name)}-default-editor`,
+				communityId,
+				true,
+				trx
+			).execute()
+		)
+	);
 
 	const userValues = await Promise.all(
 		Object.entries(props.users ?? {}).map(async ([slug, userInfo]) => ({
@@ -1054,8 +1055,13 @@ export async function seedCommunity<
 						db
 							.insertInto("form_elements")
 							.values((eb) =>
-								formList.flatMap(([formTitle, formInput], idx) =>
-									formInput.elements.map((elementInput, elementIndex) => ({
+								formList.flatMap(([formTitle, formInput], idx) => {
+									const ranks = mudder.base62.mudder(
+										"",
+										"",
+										formInput.elements.length
+									);
+									return formInput.elements.map((elementInput, elementIndex) => ({
 										formId: eb
 											.selectFrom("form")
 											.select("form.id")
@@ -1071,10 +1077,10 @@ export async function seedCommunity<
 										label: elementInput.label,
 										element: elementInput.element,
 										component: elementInput.component,
-										order: elementIndex,
+										rank: ranks[elementIndex],
 										config: elementInput.config,
-									}))
-								)
+									}));
+								})
 							)
 							.returningAll()
 					)

@@ -8,7 +8,7 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defaultFormName, defaultFormSlug } from "~/lib/form";
-import { ApiError } from "~/lib/server";
+import { ApiError, getPubType } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -157,7 +157,7 @@ export const createPubType = defineServerAction(async function createPubType(
 	}
 	try {
 		await db.transaction().execute(async (trx) => {
-			const pubType = await autoRevalidate(
+			const { id: pubTypeId } = await autoRevalidate(
 				trx
 					.with("newType", (db) =>
 						db
@@ -180,9 +180,11 @@ export const createPubType = defineServerAction(async function createPubType(
 					.returning("B as id")
 			).executeTakeFirstOrThrow();
 
+			const pubType = await getPubType(pubTypeId).executeTakeFirstOrThrow();
+
 			await autoRevalidate(
 				insertForm(
-					pubType.id,
+					pubType,
 					defaultFormName(name),
 					defaultFormSlug(name),
 					communityId,

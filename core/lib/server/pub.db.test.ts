@@ -502,7 +502,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		expect(pub.pubType).toMatchObject({
 			id: pubTypes["Basic Pub"].id,
-			fields: Object.values(pubTypes["Basic Pub"].pubFields).map((f) => ({
+			fields: Object.values(pubTypes["Basic Pub"].fields).map((f) => ({
 				id: f.id,
 				slug: f.slug,
 			})),
