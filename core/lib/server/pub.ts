@@ -2201,22 +2201,21 @@ export const fullTextSearch = async (
 	return q.execute();
 };
 
-export const getSingleRelatedPub = async (pubId: PubsId, relationFieldSlug: string) => {
+export const getExclusivelyRelatedPub = async (relatedPubId: PubsId, relationFieldSlug: string) => {
 	return autoCache(
 		db
 			.with("related_pub_id", (qb) =>
 				qb
 					.selectFrom("pub_values")
 					.innerJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
-					.where("pub_values.pubId", "=", pubId)
-					.where("pub_fields.isRelation", "is", true)
+					.where("pub_values.relatedPubId", "=", relatedPubId)
+					.where("pub_fields.isRelation", "=", true)
 					.where("pub_fields.slug", "=", relationFieldSlug)
-					.select("pub_values.value")
-					.$narrowType<{ value: PubsId }>()
+					.select("pub_values.pubId")
 					.limit(1)
 			)
-			.selectFrom("pubs")
-			.innerJoin("related_pub_id", "related_pub_id.value", "pubs.id")
+			.selectFrom("related_pub_id")
+			.innerJoin("pubs", "pubs.id", "related_pub_id.pubId")
 			.select((eb) => [
 				...pubColumns,
 				jsonArrayFrom(
@@ -2237,7 +2236,7 @@ export const getSingleRelatedPub = async (pubId: PubsId, relationFieldSlug: stri
 						.whereRef("pub_values.pubId", "=", "pubs.id")
 						.orderBy("pub_values.createdAt desc")
 				).as("values"),
-				pubType({ eb, pubTypeIdRef: "pt.pubTypeId" }),
+				pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
 			])
 	).executeTakeFirstOrThrow();
 };

@@ -21,7 +21,7 @@ import { expect } from "utils";
 
 import { hydratePubValues } from "~/lib/fields/utils";
 import { getPubTitle } from "~/lib/pubs";
-import { getSingleRelatedPub } from "../../pub";
+import { getExclusivelyRelatedPub } from "../../pub";
 import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
 
@@ -46,13 +46,8 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	let value: unknown;
 	let pub: utils.RenderWithPubPub;
 
-	if (attrs.rel !== undefined) {
-		if (attrs.rel === "parent") {
-			const parentPub = expect(context.parentPub, "Missing parent pub");
-			pub = parentPub;
-		} else {
-			return;
-		}
+	if (attrs.rel === "parent") {
+		pub = expect(context.parentPub, "Missing parent pub");
 	} else {
 		pub = context.pub;
 	}
@@ -85,6 +80,10 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 			},
 		],
 	};
+};
+
+const hasRelationRel = (node: NodeMdast & Directive) => {
+	return node.attributes?.rel !== undefined && node.attributes.rel !== "parent";
 };
 
 const visitAssigneeNameDirective = (
@@ -257,7 +256,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
 		const memberFieldNodes: NodeMdast[] = [];
-		const relationNodes: NodeMdast[] = [];
+		const relationRelNodes: NodeMdast[] = [];
 
 		visit(tree, (node) => {
 			if (isDirective(node)) {
@@ -279,15 +278,14 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 				const isMemberFieldWithAttr =
 					directiveName === RenderWithPubToken.Value &&
 					utils.ALLOWED_MEMBER_ATTRIBUTES.some((f) => f in (node.attributes ?? []));
+
 				if (isMemberFieldWithAttr) {
 					memberFieldNodes.push(node);
 				}
 
-				const isRelationNode =
-					node.attributes?.rel !== undefined && node.attributes?.rel !== "parent";
-
-				if (isRelationNode) {
-					relationNodes.push(node);
+				if (hasRelationRel(node)) {
+					relationRelNodes.push(node);
+					return;
 				}
 
 				// Process the directive
@@ -340,16 +338,20 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 
 		// Process related pub nodes
 		await Promise.all(
-			relationNodes.map(async (node) => {
+			relationRelNodes.map(async (node) => {
 				if (isDirective(node)) {
 					const directiveName = node.name.toLowerCase() as RenderWithPubToken;
 					const directiveVisitor = directiveVisitors[directiveName];
 					const { rel, ...attrs } = expect(node.attributes);
-					const relatedPub = await getSingleRelatedPub(context.pub.id as PubsId, rel);
-					directiveVisitor(
-						{ ...node, attributes: attrs },
-						{ ...context, pub: relatedPub as utils.RenderWithPubPub }
+					const relatedPub = await getExclusivelyRelatedPub(
+						context.pub.id as PubsId,
+						rel
 					);
+					node.attributes = attrs;
+					directiveVisitor(node, {
+						...context,
+						pub: relatedPub as utils.RenderWithPubPub,
+					});
 				}
 			})
 		);
