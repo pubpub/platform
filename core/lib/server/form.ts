@@ -55,7 +55,7 @@ export const getForm = (
 							"form_elements.fieldId",
 							"form_elements.component",
 							eb.fn.coalesce("form_elements.config", sql`'{}'`).as("config"),
-							"form_elements.order",
+							"form_elements.rank",
 							"form_elements.label",
 							"form_elements.content",
 							"form_elements.element",
@@ -66,7 +66,7 @@ export const getForm = (
 							"pub_fields.isRelation",
 						])
 						.$narrowType<FormElements>()
-						.orderBy("form_elements.order")
+						.orderBy("form_elements.rank")
 				).as("elements")
 			)
 	);

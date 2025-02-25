@@ -30,7 +30,7 @@ type BasePubFieldElement = {
 	required: boolean | null;
 	stageId: null;
 	element: null;
-	order: number | null;
+	rank: string;
 	slug: string;
 	isRelation: boolean;
 };
@@ -53,7 +53,7 @@ export type ButtonElement = {
 	id: FormElementsId;
 	type: ElementType.button;
 	fieldId: null;
-	order: number | null;
+	rank: string;
 	label: string | null;
 	element: null;
 	content: null;
@@ -70,7 +70,7 @@ export type StructuralElement = {
 	id: FormElementsId;
 	type: ElementType.structural;
 	fieldId: null;
-	order: number | null;
+	rank: string;
 	label: string | null;
 	element: StructuralFormElement | null;
 	content: string | null;
