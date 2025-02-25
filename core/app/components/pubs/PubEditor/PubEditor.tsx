@@ -79,10 +79,7 @@ const getRelatedPubData = async ({
 		return null;
 	}
 	const [relatedPub, relatedPubFieldResult] = await Promise.all([
-		getPubsWithRelatedValues(
-			{ pubId: relatedPubId, communityId },
-			{ withPubType: true }
-		),
+		getPubsWithRelatedValues({ pubId: relatedPubId, communityId }, { withPubType: true }),
 		getPubFields({
 			communityId: communityId,
 			slugs: [slug],
