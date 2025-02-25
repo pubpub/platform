@@ -178,7 +178,6 @@ export type PubInitializer<
 		members?: {
 			[M in keyof U]?: MemberRole;
 		};
-		children?: PubInitializer<PF, PT, U, S>[];
 		/**
 		 * Relations can be specified inline
 		 *
@@ -186,8 +185,7 @@ export type PubInitializer<
 		 * ```ts
 		 * {
 		 * 	relatedPubs: {
-		 * 		// relatedPubs are specified slightly differently than children
-		 * 		// as they need to be mapped to a certain field
+		 * 		// relatedPubs need to be mapped to a certain field
 		 * 		Contributors: [{
 		 * 			value: 0,
 		 * 			// this will also add the same pub as a child
@@ -394,17 +392,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				values,
 				parentId: pub.parentId,
 				members,
-				children:
-					pub.children &&
-					makePubInitializerMatchCreatePubRecursiveInput({
-						pubTypes,
-						users,
-						stages,
-						community,
-						pubs: pub.children,
-						trx,
-					}).map((child) => child.body),
-
 				relatedPubs: relatedPubs,
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
@@ -649,19 +636,9 @@ export async function seedCommunity<
 		 * 					relatedPubId: authorId,
 		 * 				}
 		 * 			},
-		 * 			// children are defined the same way as pubs
-		 * 			children: [
-		 * 				{
-		 * 					pubType: "Author",
-		 * 					values: {
-		 * 						Name: "John Doe",
-		 * 					}
-		 * 				}
-		 * 			],
 		 * 			// or relations can be specified by a nested pub
 		 * 			relatedPubs: {
-		 * 				// relatedPubs are specified slightly differently than children
-		 * 				// as they need to be mapped to a certain field
+		 * 				// relatedPubs need to be mapped to a certain field
 		 * 				Contributors: [{
 		 * 					value: "Draft preparation",
 		 * 					// this will also add the same pub as a child
@@ -1002,7 +979,7 @@ export async function seedCommunity<
 			})
 		: [];
 
-	// TODO: this can be simplified a lot by first creating the pubs and children
+	// TODO: this can be simplified a lot by first creating the pub
 	// and then creating their related pubs
 
 	let createdPubs: ProcessedPub[] = [];

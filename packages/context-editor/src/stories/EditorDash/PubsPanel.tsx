@@ -13,36 +13,6 @@ const getPubTypeName = (pubTypeId: string) => {
 	})?.name;
 };
 
-function buildNestedList(pubs: any) {
-	// Create a map to hold references to each object by its id
-	const pubMap: { [key: string]: any } = {};
-
-	// Loop through the list again to build the hierarchy
-	pubs.forEach((pub: any) => {
-		const parentId = pub.parentId || pub.parentPubId;
-
-		if (!parentId) {
-			pubMap[pub.id] = { ...pub, children: [] };
-		}
-		// 	// If there's a parentId, push the current object into its parent's children array
-		// 	objectMap[parentId].children.push(objectMap[obj.id]);
-		// } else {
-		// 	// If there's no parentId, it is a root object and should be added to the result array
-		// 	result.push(objectMap[obj.id]);
-		// }
-	});
-
-	pubs.forEach((pub: any) => {
-		const parentId = pub.parentId || pub.parentPubId;
-
-		if (parentId) {
-			pubMap[parentId].children.push(pub);
-		}
-	});
-
-	return Object.values(pubMap);
-}
-
 const PubList = (props: any) => {
 	return props.list.map((item: any) => {
 		return (
@@ -53,7 +23,6 @@ const PubList = (props: any) => {
 				{/* {Object.keys(item.values).map((key)=>{
 					return <div className="pl-8 truncate" key={key}><span className="">{key}</span>: {item.values[key]}</div>
 				})} */}
-				{item.children && <PubList list={item.children} />}
 			</div>
 		);
 	});
@@ -81,15 +50,13 @@ type Props = {
 export default function PubsPanel({ editorState, pubId }: Props) {
 	const pubValues: { [key: string]: any } = getPubValues(editorState, pubId);
 	const allPubs = filterDuplicatesById([...initialPubs, ...Object.values(pubValues)]);
-	// console.log("allPubs", allPubs);
-	const nestedPubs = buildNestedList(allPubs);
 
 	return (
 		<>
 			<h2 className="sticky left-0 top-0">Pubs</h2>
 			<div className="panel-content">
 				<div className="mb-2 font-bold">Context</div>
-				<PubList list={nestedPubs} pubId={pubId} />
+				<PubList list={allPubs} pubId={pubId} />
 
 				<div className="mb-2 mt-8 font-bold">Updates Pubs</div>
 				{Object.keys(pubValues).map((key) => {

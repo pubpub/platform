@@ -175,7 +175,7 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 		});
 	});
 
-	it("returns children pub", () => {
+	it("returns related pub", () => {
 		// Adding a pub of type Submission
 		const richTextValue = {
 			type: "doc",

@@ -17,7 +17,7 @@ import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
-const getPubsWithRelatedValuesAndChildrenCached = cache(
+const getPubsWithRelatedValuesCached = cache(
 	async ({
 		userId,
 		pubId,
@@ -52,7 +52,7 @@ export async function generateMetadata(props: {
 		return { title: "Community Not Found" };
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
+	const pub = await getPubsWithRelatedValuesCached({
 		pubId: pubId as PubsId,
 		communityId: community.id as CommunitiesId,
 	});
@@ -103,7 +103,7 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
+	const pub = await getPubsWithRelatedValuesCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id,
 		userId: user.id,
