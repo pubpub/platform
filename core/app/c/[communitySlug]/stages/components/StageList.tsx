@@ -11,7 +11,7 @@ import type { MemberWithUser } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
@@ -102,7 +102,7 @@ export async function StagePubs({
 	userId: UsersId;
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
-		getPubsWithRelatedValuesAndChildren(
+		getPubsWithRelatedValues(
 			{ stageId: stage.id, communityId: stage.communityId },
 			{
 				// fetch one extra pub so we know whether or not to render a show more button
