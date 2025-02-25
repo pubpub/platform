@@ -375,7 +375,29 @@ export const ConstraintFormFieldRender = ({
 			return null;
 		}
 
-		return ExtraContraints;
+		// brief explanation:
+		// ExtraContraints ends up being a nice union of all possible Components
+		// that have extra cosntraints
+		// however, a union of functions leads to the parameters of those functions being intersected
+		// consider the union function
+		// `declare function f: ((a: string) => void) | ((a: number) => void)`
+		// you would think: the first param of F is either a string or a number
+		// but when you call `f(4)` you get an error, as the first param is expected to be
+		// `string & number` which is `never`, not `string | number`.
+		// this is extremely annoying behaviour
+
+		// what we do here is basically pre-emptively get the parameters of the function
+		// for our example, `Parameters<f>[0]` _is_ `string | number`, even though
+		// when you call `f(4)` you get an error.
+		// we do the same below
+
+		type ExtraParams = Parameters<typeof ExtraContraints>[0];
+
+		const CorrectlyTypedExtraContraints = ExtraContraints as (
+			props: ExtraParams
+		) => React.ReactNode;
+
+		return CorrectlyTypedExtraContraints;
 	}, [scope, type]);
 
 	if (!ExtraContrainstsFormItem) {
