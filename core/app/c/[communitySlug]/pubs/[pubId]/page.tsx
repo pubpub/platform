@@ -169,7 +169,7 @@ export default async function Page(props: {
 							<span>Update</span>
 						</Link>
 					</Button>
-					<RemovePubButton pubId={pub.id} />
+					<RemovePubButton pubId={pub.id} redirectTo={`/c/${communitySlug}/pubs`} />
 				</div>
 			</div>
 
