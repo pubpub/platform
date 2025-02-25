@@ -15,6 +15,7 @@ import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
@@ -156,12 +157,20 @@ export default async function Page(props: {
 					</div>
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
-				<Button variant="outline" asChild className="flex items-center gap-1">
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
-						<Pencil size="14" />
-						Update
-					</Link>
-				</Button>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
+						asChild
+						className="flex items-center gap-x-2 py-4"
+					>
+						<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+							<Pencil size="12" />
+							<span>Update</span>
+						</Link>
+					</Button>
+					<RemovePubButton pubId={pub.id} redirectTo={`/c/${communitySlug}/pubs`} />
+				</div>
 			</div>
 
 			<div className="flex flex-wrap space-x-4">

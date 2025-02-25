@@ -1,7 +1,7 @@
 import type { ButtonProps } from "ui/button";
 import { Trash } from "ui/icon";
 
-import type { PubRemoveProps } from "./RemovePubForm";
+import type { PubRemoveProps } from "./RemovePubFormClient";
 import { PathAwareDialog } from "../PathAwareDialog";
 import { PubRemove } from "./RemovePubForm";
 
