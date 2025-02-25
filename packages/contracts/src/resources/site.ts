@@ -393,7 +393,6 @@ const baseFilterSchema = z
 			),
 	})
 	.partial()
-	.passthrough()
 	.refine((data) => {
 		if (!Object.keys(data).length) {
 			return false;
@@ -434,34 +433,32 @@ export const filterSchema: z.ZodType<Filter> = z.lazy(() =>
 	])
 );
 
-const getPubQuerySchema = z
-	.object({
-		depth: z
-			.number()
-			.int()
-			.positive()
-			.default(2)
-			.describe(
-				"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
-			),
-		withChildren: z.boolean().default(false).describe("Whether to fetch children."),
-		withRelatedPubs: z
-			.boolean()
-			.default(false)
-			.describe("Whether to include related pubs with the values"),
-		withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
-		withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
-		withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
-		fieldSlugs: z
-			.array(z.string())
-			// this is necessary bc the query parser doesn't handle single string values as arrays
-			.or(z.string().transform((slug) => [slug]))
-			.optional()
-			.describe(
-				"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
-			),
-	})
-	.passthrough();
+const getPubQuerySchema = z.object({
+	depth: z
+		.number()
+		.int()
+		.positive()
+		.default(2)
+		.describe(
+			"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
+		),
+	withChildren: z.boolean().default(false).describe("Whether to fetch children."),
+	withRelatedPubs: z
+		.boolean()
+		.default(false)
+		.describe("Whether to include related pubs with the values"),
+	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
+	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+	withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
+	fieldSlugs: z
+		.array(z.string())
+		// this is necessary bc the query parser doesn't handle single string values as arrays
+		.or(z.string().transform((slug) => [slug]))
+		.optional()
+		.describe(
+			"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
+		),
+});
 
 export type FTSReturn = {
 	id: PubsId;
