@@ -1212,9 +1212,6 @@ const getRankedValues = async ({
 }: {
 	pubId: PubsId;
 	pubValues: {
-		/**
-		 * specify this if you do not want to use the pubId provided in the input
-		 */
 		pubId?: PubsId;
 		fieldId: PubFieldsId;
 		relatedPubId?: PubsId;
@@ -1231,7 +1228,7 @@ const getRankedValues = async ({
 	> = {};
 	let rankedValues;
 	if (relatedValues?.length) {
-		const firstVal = relatedValues.shift()!;
+		const firstVal = relatedValues[0];
 
 		const valuesQuery = trx
 			.selectFrom("pub_values")
@@ -1246,18 +1243,21 @@ const getRankedValues = async ({
 			const newValue = { ...value, pubId: value.pubId ?? pubId };
 			if (!groupedValues[newValue.pubId]) {
 				groupedValues[newValue.pubId] = { [value.fieldId]: [newValue] };
-			}
-			if (!groupedValues[newValue.pubId][value.fieldId]) {
+			} else if (!groupedValues[newValue.pubId][value.fieldId]) {
 				groupedValues[newValue.pubId][value.fieldId] = [newValue];
 			}
 
 			// If we've already found the highest ranked value for this pubId + fieldId combination,
 			// continue without adding to the query
-			if (
+			else if (
 				groupedValues[newValue.pubId] &&
 				groupedValues[newValue.pubId][value.fieldId]?.length
 			) {
 				groupedValues[newValue.pubId][value.fieldId].push(newValue);
+				continue;
+			}
+
+			if (value === firstVal) {
 				continue;
 			}
 
