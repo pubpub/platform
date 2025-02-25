@@ -2238,5 +2238,5 @@ export const getExclusivelyRelatedPub = async (relatedPubId: PubsId, relationFie
 				).as("values"),
 				pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
 			])
-	).executeTakeFirstOrThrow();
+	).executeTakeFirst();
 };
