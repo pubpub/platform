@@ -7,15 +7,14 @@ import { DndContext } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createPortal } from "react-dom";
+import mudder from "mudder";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import type { Stages } from "db/public";
 import { logger } from "logger";
-import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
-import { CircleCheck, X } from "ui/icon";
+import { CircleCheck } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
@@ -27,7 +26,7 @@ import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
-import { FormBuilderProvider, useFormBuilder } from "./FormBuilderContext";
+import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 
@@ -266,6 +265,28 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 																	activeIndex !== undefined &&
 																	overIndex !== undefined
 																) {
+																	const activeElem =
+																		elements[activeIndex];
+																	const aboveRank =
+																		elements[overIndex + 1]
+																			?.rank ?? "";
+																	const belowRank =
+																		elements[overIndex - 1]
+																			?.rank ?? "";
+																	const [rank] =
+																		mudder.base62.mudder(
+																			belowRank,
+																			aboveRank,
+																			1
+																		);
+																	form.setValue(
+																		`elements.${activeIndex}`,
+																		{
+																			...activeElem,
+																			rank,
+																			updated: true,
+																		}
+																	);
 																	move(activeIndex, overIndex);
 																}
 															}
