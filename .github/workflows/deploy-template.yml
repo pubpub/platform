@@ -95,7 +95,7 @@ jobs:
 
             - name: Fill in the new image ID in the Amazon ECS task definition
               id: task-def-service
-              uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+              uses: aws-actions/amazon-ecs-render-task-definition@a0b65a0335451ae5db6369e46eed06f695d07632
               with:
                   task-definition: template_task_def.json
                   container-name: ${{ env.CONTAINER_NAME }}
@@ -107,7 +107,7 @@ jobs:
             - name: Fill in the new image ID in the Amazon ECS task definition for migrations
               id: task-def-migration
               if: inputs.service == 'core'
-              uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+              uses: aws-actions/amazon-ecs-render-task-definition@a0b65a0335451ae5db6369e46eed06f695d07632
               with:
                   task-definition: ${{ steps.task-def-service.outputs.task-definition }}
                   container-name: migrations
