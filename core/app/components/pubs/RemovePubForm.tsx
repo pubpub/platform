@@ -1,13 +1,8 @@
 import { Suspense } from "react";
 import dynamic from "next/dynamic";
 
-import type { PubsId } from "db/public";
-
+import type { PubRemoveProps } from "./RemovePubFormClient";
 import { SkeletonCard } from "../skeletons/SkeletonCard";
-
-export type PubRemoveProps = {
-	pubId: PubsId;
-};
 
 const PubRemoveForm = dynamic(
 	async () => {
@@ -18,10 +13,10 @@ const PubRemoveForm = dynamic(
 	{ loading: () => <SkeletonCard /> }
 );
 
-export async function PubRemove({ pubId }: PubRemoveProps) {
+export async function PubRemove({ pubId, redirectTo }: PubRemoveProps) {
 	return (
 		<Suspense fallback={<div>Loading...</div>}>
-			<PubRemoveForm pubId={pubId} />
+			<PubRemoveForm pubId={pubId} redirectTo={redirectTo} />
 		</Suspense>
 	);
 }
