@@ -27,6 +27,7 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { RELATED_PUB_SLUG } from "./constants";
 
 const SAVE_WAIT_MS = 5000;
 
@@ -135,7 +136,6 @@ const createSchemaFromElements = (
 							),
 						];
 					}
-
 					return [slug, schemaAllowEmpty];
 				})
 		)
@@ -183,11 +183,14 @@ export interface PubEditorClientProps {
 	formSlug: string;
 	/** ID for the HTML form */
 	htmlFormId?: string;
-	parentId?: PubsId;
 	className?: string;
 	withAutoSave?: boolean;
 	withButtonElements?: boolean;
 	isExternalForm?: boolean;
+	relatedPub?: {
+		id: PubsId;
+		slug: string;
+	};
 }
 
 export const PubEditorClient = ({
@@ -198,11 +201,11 @@ export const PubEditorClient = ({
 	pub,
 	stageId,
 	htmlFormId,
-	parentId,
 	formSlug,
 	withAutoSave,
 	withButtonElements,
 	isExternalForm,
+	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
 	const router = useRouter();
@@ -243,7 +246,11 @@ export const PubEditorClient = ({
 			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
-			const { stageId: stageIdFromForm, ...newValues } = formValues;
+			const {
+				stageId: stageIdFromForm,
+				[RELATED_PUB_SLUG]: relatedPubValue,
+				...newValues
+			} = formValues;
 
 			const pubValues = preparePayload({
 				formElements,
@@ -278,9 +285,18 @@ export const PubEditorClient = ({
 						stageId: stageId,
 					},
 					communityId: community.id,
-					parent: parentId ? { id: parentId } : undefined,
 					addUserToForm: isExternalForm,
 				});
+				// TODO: this currently overwrites existing pub values of the same field
+				if (relatedPub) {
+					await runUpdatePub({
+						pubId: relatedPub.id,
+						pubValues: {
+							[relatedPub.slug]: [{ value: relatedPubValue, relatedPubId: pubId }],
+						},
+						continueOnValidationError: true,
+					});
+				}
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from
