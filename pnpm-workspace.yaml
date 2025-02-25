@@ -17,6 +17,7 @@ catalog:
     date-fns: ^4.1.0
     tsx: ^4.19.0
     typescript: 5.7.2
+    vitest: ^3.0.5
     zod: ^3.23.8
     react-hook-form: ^7.54.2
     "@hookform/resolvers": ^3.9.1

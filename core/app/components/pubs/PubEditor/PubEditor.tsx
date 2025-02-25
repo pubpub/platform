@@ -1,14 +1,15 @@
 import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, PubsId, StagesId } from "db/public";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import { expect } from "utils";
 
-import type { FormElements } from "../../forms/types";
+import type { FormElements, PubFieldElement } from "../../forms/types";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -16,20 +17,94 @@ import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
 import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
+import { PubFieldFormElement } from "../../forms/PubFieldFormElement";
 import { hydrateMarkdownElements } from "../../forms/structural";
 import { StageSelectClient } from "../../StageSelect/StageSelectClient";
+import { RELATED_PUB_SLUG } from "./constants";
 import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorWrapper } from "./PubEditorWrapper";
 import { getCommunityById, getStage } from "./queries";
 
+const RelatedPubValueElement = ({
+	relatedPub,
+	fieldName,
+	element,
+}: {
+	relatedPub: ProcessedPub<{ withPubType: true }>;
+	fieldName: string;
+	element: PubFieldElement;
+}) => {
+	const configLabel = "label" in element.config ? element.config.label : undefined;
+	const label = configLabel || element.label || element.slug;
+
+	return (
+		<div className="flex flex-col gap-4">
+			<div className="flex flex-col gap-4 rounded border p-2">
+				<h2>Related field value</h2>
+				<p className="text-sm">
+					You are creating a Pub related to{" "}
+					<span className="font-semibold">{getPubTitle(relatedPub)}</span> through the{" "}
+					<span className="font-semibold">{fieldName}</span> pub field. Please enter a
+					value for this relationship.
+				</p>
+				<PubFieldFormElement
+					label={label}
+					element={element}
+					pubId={relatedPub.id}
+					slug={RELATED_PUB_SLUG}
+					values={[]}
+				/>
+			</div>
+			<hr />
+		</div>
+	);
+};
+
+const getRelatedPubData = async ({
+	communityId,
+	relatedPubId,
+	slug,
+}: {
+	communityId: CommunitiesId;
+	relatedPubId: PubsId | undefined;
+	slug: string | undefined;
+}) => {
+	if (!relatedPubId || !slug) {
+		return null;
+	}
+	const [relatedPub, relatedPubFieldResult] = await Promise.all([
+		getPubsWithRelatedValuesAndChildren(
+			{ pubId: relatedPubId, communityId },
+			{ withPubType: true }
+		),
+		getPubFields({
+			communityId: communityId,
+			slugs: [slug],
+		}).executeTakeFirstOrThrow(
+			() => new Error(`Could not find related field with slug ${slug}`)
+		),
+	]);
+	const relatedPubField = Object.values(relatedPubFieldResult.fields)[0];
+
+	// TODO: should maybe get this from the source pub's form?
+	// otherwise this will always be the default component
+	const relatedPubElement = makeFormElementDefFromPubFields([
+		relatedPubField,
+	])[0] as PubFieldElement;
+	return {
+		element: { ...relatedPubElement, slug: RELATED_PUB_SLUG },
+		relatedPub,
+		relatedPubField,
+	};
+};
+
 export type PubEditorProps = {
-	searchParams: Record<string, unknown>;
+	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId };
 	formId?: string;
 } & (
 	| {
 			pubId: PubsId;
 			communityId: CommunitiesId;
-			parentId?: PubsId;
 	  }
 	| {
 			communityId: CommunitiesId;
@@ -79,7 +154,9 @@ export async function PubEditor(props: PubEditorProps) {
 		).executeTakeFirstOrThrow();
 	}
 
-	const [pubs, pubTypes] = await Promise.all([
+	const { relatedPubId, slug: relatedFieldSlug } = props.searchParams;
+
+	const [pubs, pubTypes, relatedPubData] = await Promise.all([
 		getPubsWithRelatedValuesAndChildren(
 			{ communityId: community.id },
 			{
@@ -90,6 +167,11 @@ export async function PubEditor(props: PubEditorProps) {
 			}
 		),
 		getPubTypesForCommunity(community.id),
+		getRelatedPubData({
+			relatedPubId,
+			slug: relatedFieldSlug,
+			communityId: community.id,
+		}),
 	]);
 
 	let pubType: AutoReturnType<
@@ -157,6 +239,7 @@ export async function PubEditor(props: PubEditorProps) {
 	const allSlugs = [
 		...form.elements.map((e) => e.slug),
 		...pubOnlyElementDefinitions.map((e) => e.slug),
+		relatedPubData ? relatedPubData.element.slug : undefined,
 	].filter((slug) => !!slug) as string[];
 
 	const member = expect(user?.memberships.find((m) => m.communityId === community?.id));
@@ -195,8 +278,11 @@ export async function PubEditor(props: PubEditorProps) {
 				pubTypes={pubTypes}
 			>
 				<PubEditorWrapper
-					elements={[...form.elements, ...pubOnlyElementDefinitions]}
-					parentId={"parentId" in props ? props.parentId : undefined}
+					elements={[
+						...form.elements,
+						...pubOnlyElementDefinitions,
+						...(relatedPubData ? [relatedPubData.element] : []),
+					]}
 					pub={pubForForm}
 					formSlug={form.slug}
 					isUpdating={isUpdating}
@@ -204,8 +290,23 @@ export async function PubEditor(props: PubEditorProps) {
 					withButtonElements={false}
 					htmlFormId={props.formId}
 					stageId={currentStageId}
+					relatedPub={
+						relatedPubId && relatedFieldSlug
+							? {
+									id: relatedPubId as PubsId,
+									slug: relatedFieldSlug as string,
+								}
+							: undefined
+					}
 				>
 					<>
+						{relatedPubData ? (
+							<RelatedPubValueElement
+								relatedPub={relatedPubData.relatedPub}
+								element={relatedPubData.element}
+								fieldName={relatedPubData.relatedPubField.name}
+							/>
+						) : null}
 						<StageSelectClient
 							fieldLabel="Stage"
 							fieldName="stageId"
