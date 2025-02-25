@@ -1,58 +1,84 @@
-import type { MarkType } from "prosemirror-model";
-import type { Command, EditorState } from "prosemirror-state";
 import type { ReactNode } from "react";
 
 import React from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { toggleMark } from "prosemirror-commands";
 
 import { Button } from "ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "ui/dropdown-menu";
 import { cn } from "utils";
 
-import { baseSchema } from "../schemas";
-import { markIsActive } from "../utils/marks";
+import type { CommandSpec } from "../commands/types";
+import { emToggle, strongToggle } from "../commands/marks";
 
-interface MenuItem {
+type MenuItem = {
 	name: string;
 	icon: ReactNode;
-	type: MarkType; // eventually should also be NodeType
-	command: Command;
-}
+	command: CommandSpec;
+};
 
 const menuItems: MenuItem[] = [
 	{
 		name: "strong",
 		icon: "B",
-		type: baseSchema.marks.strong,
-		command: toggleMark(baseSchema.marks.strong),
+		command: strongToggle,
 	},
 	{
 		name: "em",
 		icon: <span className="italic">I</span>,
-		type: baseSchema.marks.em,
-		command: toggleMark(baseSchema.marks.em),
+		command: emToggle,
 	},
 ];
+
+// const paragraphTypeItems: MenuItem[] = [
+// 	{
+// 		name: "paragraph",
+// 		icon: "Paragraph",
+// 	},
+// ];
+
+const ParagraphDropdown = () => {
+	return (
+		<DropdownMenu>
+			<DropdownMenuTrigger asChild>
+				<Button size="sm" variant="ghost">
+					Paragraph
+				</Button>
+			</DropdownMenuTrigger>
+			<DropdownMenuContent>
+				<DropdownMenuItem>Paragraph</DropdownMenuItem>
+				<DropdownMenuItem>Header 1</DropdownMenuItem>
+				<DropdownMenuItem>Header 2</DropdownMenuItem>
+				<DropdownMenuItem>Header 3</DropdownMenuItem>
+				<DropdownMenuItem>Header 4</DropdownMenuItem>
+				<DropdownMenuItem>Header 5</DropdownMenuItem>
+				<DropdownMenuItem>Header 6</DropdownMenuItem>
+			</DropdownMenuContent>
+		</DropdownMenu>
+	);
+};
 
 export const MenuBar = () => {
 	const { view } = usePluginViewContext();
 	return (
-		<div className="rounded border bg-slate-50">
+		<div className="rounded border bg-slate-50" role="toolbar" aria-label="Formatting tools">
 			{menuItems.map((menuItem) => {
-				const { name, icon, command, type } = menuItem;
-				// Returns if given command can be applied at the cursor selection
-				const isApplicable = command(view.state, undefined, view);
-				const isActive = markIsActive(type, view.state);
+				const { name, icon, command } = menuItem;
+				const { run, canRun, isActive } = command(view)(view.state);
 				return (
 					<Button
 						key={name}
 						onClick={() => {
 							view.focus();
-							command(view.state, view.dispatch, view);
+							run();
 						}}
 						variant="ghost"
 						size="sm"
-						disabled={!isApplicable}
+						disabled={!canRun}
 						type="button"
 						className={cn("w-6 rounded-none", { "bg-slate-300": isActive })}
 					>
@@ -60,6 +86,7 @@ export const MenuBar = () => {
 					</Button>
 				);
 			})}
+			<ParagraphDropdown />
 		</div>
 	);
 };
