@@ -114,7 +114,7 @@ jobs:
                   fi
 
             - name: Build, tag, and push image to Amazon ECR
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               id: build-image
               env:
                   REGISTRY_REF: ${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}-${{env.PACKAGE}}:cache
