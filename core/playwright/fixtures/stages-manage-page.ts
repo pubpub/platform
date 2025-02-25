@@ -1,6 +1,8 @@
 import type { Page } from "@playwright/test";
 
-import type { Action } from "db/public";
+import { test } from "@playwright/test";
+
+import type { Action, StagesId } from "db/public";
 
 import { slugifyString } from "~/lib/string";
 
@@ -22,10 +24,22 @@ export class StagesManagePage {
 		await this.page.keyboard.press("Control+n");
 		const node = this.getStageNode("Untitled Stage");
 		await node.dblclick();
+
+		const configureButton = node.getByRole("link");
+		const stageHref = await configureButton.getAttribute("href");
+		const stageId = stageHref?.split("editingStageId=")[1];
+		test.expect(stageId).not.toBeNull();
+
 		const nameInput = node.getByLabel("Edit stage name");
+
 		await nameInput.fill(stageName);
 		await nameInput.press("Enter");
 		await this.page.waitForTimeout(1000);
+
+		return {
+			id: stageId! as StagesId,
+			name: stageName,
+		};
 	}
 
 	async addMoveConstraint(sourceStage: string, destStage: string) {
