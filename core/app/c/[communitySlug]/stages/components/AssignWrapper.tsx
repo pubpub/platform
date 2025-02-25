@@ -19,7 +19,6 @@ export const AssignWrapper = async (props: {
 		withPubType: true;
 		withLegacyAssignee: true;
 		withRelatedValues: false;
-		withChildren: undefined;
 	}>;
 	members?: MemberWithUser[];
 }) => {
