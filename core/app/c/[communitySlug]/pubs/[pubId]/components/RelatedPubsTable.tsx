@@ -2,9 +2,9 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import type { PubTypes, Stages } from "db/public";
 import { Badge } from "ui/badge";
@@ -12,10 +12,17 @@ import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-import type { FullProcessedPub } from "~/lib/server/pub";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubTitle } from "~/lib/pubs";
-import { createdAtDateOptions } from "./getPubChildrenTableColumns";
+import type { FullProcessedPub } from "~/lib/server/pub";
+
+export const createdAtDateOptions = {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+} satisfies Intl.DateTimeFormatOptions;
 
 const getRelatedPubsColumns = () => {
 	return [

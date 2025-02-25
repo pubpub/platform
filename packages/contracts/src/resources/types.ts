@@ -61,21 +61,14 @@ const commonPubFields = z.object({
 
 // Get pub types
 
-export const GetPubResponseBodyBase = commonPubFields.extend({
+export const GetPubResponseBody = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
 	assignee: User.nullish(),
 	communityId: z.string(),
 	createdAt: z.date(),
 });
-export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
-
-export type GetPubResponseBody = z.infer<typeof GetPubResponseBodyBase> & {
-	children: GetPubResponseBody[];
-};
-export const GetPubResponseBody: z.ZodType<GetPubResponseBody> = GetPubResponseBodyBase.extend({
-	children: z.lazy(() => GetPubResponseBody.array()),
-});
+export type GetPubResponseBody = z.infer<typeof GetPubResponseBody>;
 
 // Create pub types
 
