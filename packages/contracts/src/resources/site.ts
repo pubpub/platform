@@ -356,7 +356,11 @@ export type LogicalFilter = {
 
 export type Filter = BaseFilter | LogicalFilter;
 
-const allSchema = z.string().or(z.coerce.number()).or(z.boolean()).or(z.coerce.date());
+const allSchema = z
+	.string()
+	.or(z.coerce.number())
+	.or(z.enum(["true", "false"]).transform((val) => val === "true"))
+	.or(z.coerce.date());
 
 const numberOrDateSchema = z.coerce.number().or(z.coerce.date());
 
@@ -591,33 +595,41 @@ export const siteApi = contract.router(
 									"Filter pubs by their values or by `updatedAt` or `createdAt`.",
 									"",
 									"**Filters**",
-									"- `$eq`: Equal to. (strings, numbers, dates, booleans)",
-									"- `$eqi`: Equal to (case insensitive). (strings)",
-									"- `$ne`: Not equal to. (strings, numbers, dates, booleans)",
-									"- `$nei`: Not equal to (case insensitive). (strings)",
-									"- `$lt`: Less than. (numbers, dates)",
-									"- `$lte`: Less than or equal to. (numbers, dates)",
-									"- `$gt`: Greater than. (numbers, dates)",
-									"- `$gte`: Greater than or equal to. (numbers, dates)",
-									"- `$contains`: Contains. (strings)",
-									"- `$notContains`: Does not contain. (strings)",
-									"- `$containsi`: Contains (case insensitive). (strings)",
-									"- `$notContainsi`: Does not contain (case insensitive). (strings)",
-									"- `$null`: Is null. (strings, numbers, dates, booleans)",
-									"- `$notNull`: Is not null. (strings, numbers, dates, booleans)",
-									"- `$in`: In. (strings, numbers, dates, booleans)",
-									"- `$notIn`: Not in. (strings, numbers, dates, booleans)",
-									"- `$between`: Between. (numbers, dates)",
-									"- `$startsWith`: Starts with. (strings)",
-									"- `$startsWithi`: Starts with (case insensitive). (strings)",
-									"- `$endsWith`: Ends with. (strings)",
-									"- `$endsWithi`: Ends with (case insensitive). (strings)",
-									"- `$size`: Size. (numbers, dates)",
-									"- `$jsonPath`: JSON path. (strings, arrays, objects) You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail. Example: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'` This will return all pubs where the `community:json-field` value's third element in the array is greater than 90.",
+									"- `$eq`: Equal to. Works with strings, numbers, dates, booleans.",
+									"- `$eqi`: Equal to (case insensitive). Works with strings.",
+									"- `$ne`: Not equal to. Works with strings, numbers, dates, booleans.",
+									"- `$nei`: Not equal to (case insensitive). Works with strings.",
+									"- `$lt`: Less than. Works with numbers, dates.",
+									"- `$lte`: Less than or equal to. Works with numbers, dates.",
+									"- `$gt`: Greater than. Works with numbers, dates.",
+									"- `$gte`: Greater than or equal to. Works with numbers, dates.",
+									"- `$contains`: Contains substring. Works with strings.",
+									"- `$notContains`: Does not contain substring. Works with strings.",
+									"- `$containsi`: Contains substring (case insensitive). Works with strings.",
+									"- `$notContainsi`: Does not contain substring (case insensitive). Works with strings.",
+									"- `$null`: Is null. No value needed - use `filters[field][$null]=true`.",
+									"- `$notNull`: Is not null. No value needed - use `filters[field][$notNull]=true`.",
+									"- `$in`: Value is in array. Format: `filters[field][$in]=value1,value2,value3`.",
+									"- `$notIn`: Value is not in array. Format: `filters[field][$notIn]=value1,value2,value3`.",
+									"- `$between`: Value is between two values. Format: `filters[field][$between]=min,max`.",
+									"- `$startsWith`: String starts with. Works with strings.",
+									"- `$startsWithi`: String starts with (case insensitive). Works with strings.",
+									"- `$endsWith`: String ends with. Works with strings.",
+									"- `$endsWithi`: String ends with (case insensitive). Works with strings.",
+									"- `$jsonPath`: JSON path query for complex JSON fields. Example: `filters[field][$jsonPath]='$[2] > 90'`",
+									"",
+									"**Logical Operators**",
+									"- `$and`: All conditions must match. Format: `filters[$and][0][field][$eq]=value&filters[$and][1][field2][$eq]=value2`",
+									"- `$or`: Any condition can match. Format: `filters[$or][0][field][$eq]=value&filters[$or][1][field2][$eq]=value2`",
+									"- `$not`: Negate a condition. Format: `filters[$not][field][$eq]=value`",
 									"",
 									"**Examples**",
-									"- Basic: `filters[community-slug:fieldName][$eq]=value`",
-									"- Complex: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
+									"- Basic equality: `filters[community-slug:fieldName][$eq]=value`",
+									"- Date range: `filters[createdAt][$gte]=2023-01-01&filters[createdAt][$lte]=2023-12-31`",
+									"- Logical OR: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
+									"- Case-insensitive search: `filters[title][$containsi]=search term`",
+									"- Null check: `filters[assigneeId][$null]=true`",
+									"- JSON array filter: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'`",
 								].join("\n")
 							),
 					})
