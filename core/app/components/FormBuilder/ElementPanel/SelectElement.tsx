@@ -49,7 +49,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						fieldId: field.id,
 						required: true,
 						type: ElementType.pubfield,
-						rank: mudder.base62.mudder(elements[elementsCount].rank, "", 1)[0],
+						rank: mudder.base62.mudder(elements[elementsCount - 1].rank, "", 1)[0],
 						configured: false,
 						label: field.name,
 						component,
@@ -131,7 +131,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 										element: elementType,
 										type: ElementType.structural,
 										rank: mudder.base62.mudder(
-											elements[elementsCount].rank,
+											elements[elementsCount - 1].rank,
 											"",
 											1
 										)[0],
