@@ -1,5 +1,7 @@
 "use client";
 
+import type { DragEndEvent } from "@dnd-kit/core";
+
 import * as React from "react";
 import { useCallback, useReducer, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -197,6 +199,41 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		}
 	}, [elements, remove, panelState.selectedElementIndex]);
 
+	// Update ranks and rhf field array position when elements are dragged
+	const handleDragEnd = useCallback(
+		(event: DragEndEvent) => {
+			const { active, over } = event;
+			if (over && active.id !== over?.id) {
+				// activeIndex is the position the element started at and over is where it was dropped
+				const activeIndex = active.data.current?.sortable?.index;
+				const overIndex = over.data.current?.sortable?.index;
+				if (activeIndex !== undefined && overIndex !== undefined) {
+					// "earlier" means towards the beginning of the list, or towards the top of the page
+					const isMovedEarlier = activeIndex > overIndex;
+					const activeElem = elements[activeIndex];
+
+					// When moving an element earlier in the array, find a rank between the rank of the
+					// element at the dropped position and the element before it. When moving an element
+					// later, instead find a rank between that element and the element after it
+					const aboveRank =
+						elements[isMovedEarlier ? overIndex : overIndex + 1]?.rank ?? "";
+					const belowRank =
+						elements[isMovedEarlier ? overIndex - 1 : overIndex]?.rank ?? "";
+					const [rank] = mudder.base62.mudder(belowRank, aboveRank, 1);
+
+					// move doesn't trigger a rerender, so it's safe to chain these calls
+					move(activeIndex, overIndex);
+					update(overIndex, {
+						...activeElem,
+						rank,
+						updated: true,
+					});
+				}
+			}
+		},
+		[elements]
+	);
+
 	const tokens = { content: renderWithPubTokens };
 
 	return (
@@ -252,51 +289,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 															restrictToVerticalAxis,
 															restrictToParentElement,
 														]}
-														onDragEnd={(event) => {
-															const { active, over } = event;
-															if (over && active.id !== over?.id) {
-																const activeIndex =
-																	active.data.current?.sortable
-																		?.index;
-																const overIndex =
-																	over.data.current?.sortable
-																		?.index;
-																if (
-																	activeIndex !== undefined &&
-																	overIndex !== undefined
-																) {
-																	const isMovedEarlier =
-																		activeIndex > overIndex;
-																	const activeElem =
-																		elements[activeIndex];
-																	const aboveRank =
-																		elements[
-																			isMovedEarlier
-																				? overIndex
-																				: overIndex + 1
-																		]?.rank ?? "";
-																	const belowRank =
-																		elements[
-																			isMovedEarlier
-																				? overIndex - 1
-																				: overIndex
-																		]?.rank ?? "";
-																	const [rank] =
-																		mudder.base62.mudder(
-																			belowRank,
-																			aboveRank,
-																			1
-																		);
-
-																	move(activeIndex, overIndex);
-																	update(overIndex, {
-																		...activeElem,
-																		rank,
-																		updated: true,
-																	});
-																}
-															}
-														}}
+														onDragEnd={handleDragEnd}
 													>
 														<SortableContext
 															items={elements}
