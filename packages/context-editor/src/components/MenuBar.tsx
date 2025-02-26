@@ -114,7 +114,7 @@ const ParagraphDropdown = () => {
 			disabled={!activeType}
 		>
 			<SelectTrigger className="w-fit border-none">
-				<SelectValue>
+				<SelectValue placeholder="Paragraph">
 					{activeType ? activeType.name || activeType.key : "Paragraph"}
 				</SelectValue>
 			</SelectTrigger>
