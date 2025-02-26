@@ -19,6 +19,9 @@ import { baseSchema } from "./schemas";
 
 import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
+// For math
+import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
+import "katex/dist/katex.min.css";
 
 import SuggestPanel from "./components/SuggestPanel";
 

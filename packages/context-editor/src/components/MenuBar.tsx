@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import React from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { Quote } from "lucide-react";
+import { Bold, Italic, Quote, SquareFunction } from "lucide-react";
 
 import { Button } from "ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
@@ -20,33 +20,45 @@ import {
 	paragraphToggle,
 } from "../commands/blocks";
 import { emToggle, strongToggle } from "../commands/marks";
+import { insertNodeIntoEditor } from "../utils/nodes";
 
-type MenuItem = {
+type MenuItemBase = {
 	key: string;
-	name?: string;
+	name: string;
 	icon: ReactNode;
-	command: CommandSpec;
 };
+
+type MenuItem = MenuItemBase & ({ command: CommandSpec } | { insertNodeType: string });
+type ParagraphSelectorItem = MenuItemBase & { command: CommandSpec };
 
 const menuItems: MenuItem[] = [
 	{
 		key: "strong",
-		icon: "B",
+		name: "Bold",
+		icon: <Bold />,
 		command: strongToggle,
 	},
 	{
 		key: "em",
-		icon: <span className="italic">I</span>,
+		name: "Italic",
+		icon: <Italic />,
 		command: emToggle,
 	},
 	{
 		key: "blockquote",
+		name: "Blockquote",
 		icon: <Quote />,
 		command: blockquoteToggle,
 	},
+	{
+		key: "math",
+		name: "Math",
+		icon: <SquareFunction />,
+		insertNodeType: "math_inline",
+	},
 ];
 
-const paragraphTypeItems: MenuItem[] = [
+const paragraphTypeItems: ParagraphSelectorItem[] = [
 	{
 		key: "paragraph",
 		name: "Paragraph",
@@ -112,11 +124,11 @@ const ParagraphDropdown = () => {
 		>
 			<SelectTrigger className="w-fit border-none">
 				<SelectValue placeholder="Paragraph">
-					{activeType ? activeType.name || activeType.key : "Paragraph"}
+					{activeType ? activeType.name : "Paragraph"}
 				</SelectValue>
 			</SelectTrigger>
 			<SelectContent className="bg-white">
-				{paragraphTypeItems.map(({ key, icon, command }) => {
+				{paragraphTypeItems.map(({ key, icon }) => {
 					return (
 						<SelectItem key={key} value={key}>
 							{icon}
@@ -132,31 +144,47 @@ export const MenuBar = () => {
 	const { view } = usePluginViewContext();
 	return (
 		<div
-			className="flex items-center rounded border bg-slate-50"
+			className="flex items-center gap-1 rounded border bg-slate-50"
 			role="toolbar"
 			aria-label="Formatting tools"
 		>
-			{menuItems.map((menuItem) => {
-				const { key, icon, command } = menuItem;
-				const { run, canRun, isActive } = command(view)(view.state);
-				return (
-					<Button
-						key={key}
-						onClick={() => {
-							view.focus();
-							run();
-						}}
-						variant="ghost"
-						size="sm"
-						disabled={!canRun}
-						type="button"
-						className={cn("w-6 rounded-none", { "bg-slate-300": isActive })}
-					>
-						{icon}
-					</Button>
-				);
-			})}
-			<ParagraphDropdown />
+			<div className="border-r-2">
+				<ParagraphDropdown />
+			</div>
+			<div className="flex gap-1">
+				{menuItems.map((menuItem) => {
+					const { key, name, icon } = menuItem;
+					let canRun = true;
+					// TODO: this isn't right
+					let isActive = false;
+					let run: () => void;
+					if ("command" in menuItem) {
+						const { command } = menuItem;
+						({ run, canRun, isActive } = command(view)(view.state));
+					} else {
+						run = () => insertNodeIntoEditor(view, menuItem.insertNodeType);
+					}
+					return (
+						<Button
+							key={key}
+							onClick={() => {
+								view.focus();
+								run();
+							}}
+							variant="ghost"
+							size="sm"
+							disabled={!canRun}
+							type="button"
+							className={cn("w-6 rounded-none", {
+								"bg-slate-300 hover:bg-slate-400": isActive,
+							})}
+							title={name}
+						>
+							{icon}
+						</Button>
+					);
+				})}
+			</div>
 		</div>
 	);
 };

@@ -672,6 +672,9 @@ importers:
 
   packages/context-editor:
     dependencies:
+      '@benrbray/prosemirror-math':
+        specifier: ^1.0.0
+        version: 1.0.0(katex@0.16.18)(prosemirror-commands@1.6.1)(prosemirror-history@1.4.1)(prosemirror-inputrules@1.4.0)(prosemirror-keymap@1.2.2)(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-transform@1.10.2)(prosemirror-view@1.34.3)
       '@nytimes/react-prosemirror':
         specifier: ^1.0.0
         version: 1.0.0(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.34.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -687,6 +690,9 @@ importers:
       install:
         specifier: ^0.13.0
         version: 0.13.0
+      katex:
+        specifier: ^0.16.18
+        version: 0.16.18
       lucide-react:
         specifier: ^0.469.0
         version: 0.469.0(react@19.0.0)
@@ -2154,6 +2160,19 @@ packages:
   '@babel/types@7.25.6':
     resolution: {integrity: sha512-/l42B1qxpG6RdfYf343Uw1vmDjeNhneUXtzhojE7pDgfpEypmRhI6j1kr17XCVv4Cgl9HdAiQY2x0GwKm7rWCw==}
     engines: {node: '>=6.9.0'}
+
+  '@benrbray/prosemirror-math@1.0.0':
+    resolution: {integrity: sha512-5fPeOKP6SJJ3usXhhf6vnLXGJnfPHPzv0OdsOJlGkCdZvNfCuC6f8fZqgpmnP8vxDKjB8fvSVSmAHTMsaiXc6w==}
+    peerDependencies:
+      katex: ^0.16.10
+      prosemirror-commands: ^1.5.2
+      prosemirror-history: ^1.4.0
+      prosemirror-inputrules: ^1.4.0
+      prosemirror-keymap: ^1.2.2
+      prosemirror-model: ^1.20.0
+      prosemirror-state: ^1.4.3
+      prosemirror-transform: ^1.8.0
+      prosemirror-view: ^1.33.4
 
   '@chromatic-com/storybook@1.9.0':
     resolution: {integrity: sha512-vYQ+TcfktEE3GHnLZXHCzXF/sN9dw+KivH8a5cmPyd9YtQs7fZtHrEgsIjWpYycXiweKMo1Lm1RZsjxk8DH3rA==}
@@ -9051,6 +9070,7 @@ packages:
     resolution: {integrity: sha512-t0etAxTUk1w5MYdNOkZBZ8rvYYN5iL+2dHCCx/DpkFm/bW28M6y5nUS83D4XdZiHy35Fpaw6LBb+F88fHZnVCw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
@@ -13536,6 +13556,18 @@ snapshots:
       '@babel/helper-string-parser': 7.24.8
       '@babel/helper-validator-identifier': 7.24.7
       to-fast-properties: 2.0.0
+
+  '@benrbray/prosemirror-math@1.0.0(katex@0.16.18)(prosemirror-commands@1.6.1)(prosemirror-history@1.4.1)(prosemirror-inputrules@1.4.0)(prosemirror-keymap@1.2.2)(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-transform@1.10.2)(prosemirror-view@1.34.3)':
+    dependencies:
+      katex: 0.16.18
+      prosemirror-commands: 1.6.1
+      prosemirror-history: 1.4.1
+      prosemirror-inputrules: 1.4.0
+      prosemirror-keymap: 1.2.2
+      prosemirror-model: 1.24.1
+      prosemirror-state: 1.4.3
+      prosemirror-transform: 1.10.2
+      prosemirror-view: 1.34.3
 
   '@chromatic-com/storybook@1.9.0(react@19.0.0)':
     dependencies:

@@ -1,3 +1,4 @@
+import { mathPlugin } from "@benrbray/prosemirror-math";
 import { exampleSetup } from "prosemirror-example-setup";
 import { Schema } from "prosemirror-model";
 
@@ -24,6 +25,7 @@ export const basePlugins = (
 		structureDecorations(),
 		attributePanel(panelPosition, setPanelPosition),
 		onChange(),
+		mathPlugin,
 		inputRules(schema),
 	];
 };
