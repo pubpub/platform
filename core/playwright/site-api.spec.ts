@@ -19,6 +19,16 @@ let client: ReturnType<typeof initClient<typeof siteApi, any>>;
 
 let token: string;
 
+const createClient = (token: string, jsonQuery: boolean = false) => {
+	return initClient(siteApi, {
+		baseUrl: `http://localhost:3000/`,
+		baseHeaders: {
+			Authorization: `Bearer ${token}`,
+		},
+		jsonQuery,
+	});
+};
+
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
 
@@ -41,14 +51,7 @@ test.beforeAll(async ({ browser }) => {
 	expect(createdToken).not.toBeNull();
 	token = createdToken!;
 
-	client = initClient(siteApi, {
-		baseUrl: `http://localhost:3000/`,
-		baseHeaders: {
-			Authorization: `Bearer ${token}`,
-		},
-		// necessary else filters will not work
-		jsonQuery: true,
-	});
+	client = createClient(token, true);
 });
 
 test.describe("Site API", () => {
@@ -165,6 +168,26 @@ test.describe("Site API", () => {
 		});
 
 		test("should be able to filter by createdAt", async () => {
+			const response = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {
+					filters: {
+						createdAt: {
+							$gte: firstCreatedAt,
+						},
+					},
+				},
+			});
+
+			expectStatus(response, 200);
+			expect(response.body).toHaveLength(1);
+			expect(response.body[0].id).not.toBe(newPubId);
+		});
+
+		test("should be able to filter by without jsonQuery", async () => {
+			const client = createClient(token, false);
 			const response = await client.pubs.getMany({
 				params: {
 					communitySlug: COMMUNITY_SLUG,
