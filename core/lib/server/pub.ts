@@ -1205,6 +1205,11 @@ export const updatePub = async ({
 	return result;
 };
 
+/**
+ * Adds an appropriate "rank" attribute to each related pub value passed in, based on the highest
+ * existing rank on the relevant pub. Returns all the pub values passed in.
+ */
+
 const getRankedValues = async ({
 	pubId,
 	pubValues,

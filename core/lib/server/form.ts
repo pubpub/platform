@@ -7,7 +7,6 @@ import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
 import { AuthTokenType, ElementType, InputComponent, StructuralFormElement } from "db/public";
-import { logger } from "logger";
 
 import type { XOR } from "../types";
 import type { GetPubTypesResult } from "./pubtype";
@@ -216,14 +215,7 @@ export const insertForm = (
 	isDefault: boolean,
 	trx = db
 ) => {
-	logger.debug({ msg: "inserting form", pubType, name });
-	const ranks = mudder.base62.mudder(
-		undefined,
-		undefined,
-		pubType.fields.length + 1,
-		undefined,
-		(pubType.fields.length + 1) * 20
-	);
+	const ranks = mudder.base62.mudder(pubType.fields.length + 1);
 
 	return trx
 		.with("form", (db) =>
