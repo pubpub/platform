@@ -150,6 +150,14 @@ const filterMap = {
 export const isNonRecursiveFilter = (
 	filter: BaseFilter[string]
 ): filter is Exclude<BaseFilter[string], Filter> => {
+	// Check if this is a logical operator within a field filter
+	if (filter && typeof filter === "object" && !Array.isArray(filter)) {
+		const keys = Object.keys(filter);
+		if (keys.some((k) => logicalOperators.includes(k as LogicalOperator))) {
+			return false;
+		}
+	}
+
 	if (Object.keys(filter).every((k) => k.startsWith("$"))) {
 		return true;
 	}
@@ -194,6 +202,38 @@ export function applyFilters<K extends ExpressionBuilder<any, any>>(
 		}
 
 		if (!isNonRecursiveFilter(val)) {
+			// Handle logical operators within field filters
+			const logicalOps = Object.entries(val).filter(([key]) =>
+				logicalOperators.includes(key as LogicalOperator)
+			);
+
+			if (logicalOps.length > 0) {
+				const [op, subFilters] = logicalOps[0] as [LogicalOperator, Filter[]];
+
+				if (op === "$or") {
+					// Transform field-level $or into top-level $or with field constraints
+					return eb.or(
+						subFilters.map((subFilter) => {
+							// Create a new filter with the field and subfilter
+							const newFilter = { [field]: subFilter };
+							return applyFilters(eb, newFilter);
+						})
+					);
+				} else if (op === "$and") {
+					// Transform field-level $and into top-level $and with field constraints
+					return eb.and(
+						subFilters.map((subFilter) => {
+							const newFilter = { [field]: subFilter };
+							return applyFilters(eb, newFilter);
+						})
+					);
+				} else if (op === "$not") {
+					// Handle $not operator
+					const newFilter = { [field]: subFilters };
+					return eb.not(applyFilters(eb, newFilter));
+				}
+			}
+
 			throw new Error(`Unknown filter: ${JSON.stringify(filter)}`);
 		}
 
@@ -226,13 +266,6 @@ export function applyFilters<K extends ExpressionBuilder<any, any>>(
 				);
 			}),
 		]);
-
-		// const validOperators = getValidOperatorsForSchema(getJsonSchemaByCoreSchemaType(field));
-		// // naive check
-
-		// if (!validOperators.includes(operator)) {
-		//     throw new Error(`Operator ${operator} is not valid for schema type ${field}`);
-		// }
 	});
 
 	return eb.and(conditions) as ExpressionWrapped<K>;
