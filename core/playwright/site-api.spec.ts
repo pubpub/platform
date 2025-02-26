@@ -17,6 +17,8 @@ let page: Page;
 
 let client: ReturnType<typeof initClient<typeof siteApi, any>>;
 
+let token: string;
+
 test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
 
@@ -31,11 +33,13 @@ test.beforeAll(async ({ browser }) => {
 
 	const apiTokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
 	await apiTokenPage.goto();
-	const token = await apiTokenPage.createToken({
+	const createdToken = await apiTokenPage.createToken({
 		name: "test token",
 		description: "test description",
 		permissions: true,
 	});
+	expect(createdToken).not.toBeNull();
+	token = createdToken!;
 
 	client = initClient(siteApi, {
 		baseUrl: `http://localhost:3000/`,
@@ -56,6 +60,7 @@ test.describe("Site API", () => {
 				params: {
 					communitySlug: COMMUNITY_SLUG,
 				},
+				query: {},
 			});
 
 			expectStatus(pubTypesResponse, 200);
@@ -211,6 +216,26 @@ test.describe("Site API", () => {
 					value: "Updated title",
 				}),
 			]);
+		});
+
+		/**
+		 * this is to test that ?filters[x][y]=z works
+		 */
+		test("should be able to filter by manually supplying query params", async () => {
+			const response = await fetch(
+				`http://localhost:3000/api/v0/c/${COMMUNITY_SLUG}/site/pubs?filters[createdAt][$gte]=${firstCreatedAt.toISOString()}`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+
+			const responseBody = await response.json();
+
+			expect(response.status).toBe(200);
+			expect(responseBody).toHaveLength(1);
+			expect(responseBody[0].id).not.toBe(newPubId);
 		});
 	});
 });
