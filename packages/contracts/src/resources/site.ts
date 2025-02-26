@@ -356,11 +356,11 @@ export type LogicalFilter = {
 
 export type Filter = BaseFilter | LogicalFilter;
 
-const allSchema = z.string().or(z.number()).or(z.boolean()).or(z.coerce.date());
+const allSchema = z.string().or(z.coerce.number()).or(z.boolean()).or(z.coerce.date());
 
-const numberOrDateSchema = z.number().or(z.coerce.date());
+const numberOrDateSchema = z.coerce.number().or(z.coerce.date());
 
-const baseFilterSchema = z
+export const baseFilterSchema = z
 	.object({
 		$eq: allSchema.describe("Equal to"),
 		$eqi: z.string().describe("Equal to (case insensitive)"),
@@ -393,6 +393,7 @@ const baseFilterSchema = z
 			),
 	})
 	.partial()
+	.passthrough()
 	.refine((data) => {
 		if (!Object.keys(data).length) {
 			return false;
@@ -556,7 +557,7 @@ export const siteApi = contract.router(
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),
-				query: getPubQuerySchema,
+				query: getPubQuerySchema.optional(),
 				responses: {
 					200: processedPubSchema,
 				},
@@ -567,50 +568,61 @@ export const siteApi = contract.router(
 				summary: "Gets a list of pubs",
 				description:
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
-				query: getPubQuerySchema.extend({
-					pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
-					stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-					filters: filterSchema
-						.optional()
-						.describe(
-							[
-								"Filter pubs by their values or by `updatedAt` or `createdAt`.",
-								"",
-								"**Filters**",
-								"- `$eq`: Equal to. (strings, numbers, dates, booleans)",
-								"- `$eqi`: Equal to (case insensitive). (strings)",
-								"- `$ne`: Not equal to. (strings, numbers, dates, booleans)",
-								"- `$nei`: Not equal to (case insensitive). (strings)",
-								"- `$lt`: Less than. (numbers, dates)",
-								"- `$lte`: Less than or equal to. (numbers, dates)",
-								"- `$gt`: Greater than. (numbers, dates)",
-								"- `$gte`: Greater than or equal to. (numbers, dates)",
-								"- `$contains`: Contains. (strings)",
-								"- `$notContains`: Does not contain. (strings)",
-								"- `$containsi`: Contains (case insensitive). (strings)",
-								"- `$notContainsi`: Does not contain (case insensitive). (strings)",
-								"- `$null`: Is null. (strings, numbers, dates, booleans)",
-								"- `$notNull`: Is not null. (strings, numbers, dates, booleans)",
-								"- `$in`: In. (strings, numbers, dates, booleans)",
-								"- `$notIn`: Not in. (strings, numbers, dates, booleans)",
-								"- `$between`: Between. (numbers, dates)",
-								"- `$startsWith`: Starts with. (strings)",
-								"- `$startsWithi`: Starts with (case insensitive). (strings)",
-								"- `$endsWith`: Ends with. (strings)",
-								"- `$endsWithi`: Ends with (case insensitive). (strings)",
-								"- `$size`: Size. (numbers, dates)",
-								"- `$jsonPath`: JSON path. (strings, arrays, objects) You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail. Example: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'` This will return all pubs where the `community:json-field` value's third element in the array is greater than 90.",
-								"",
-								"**Examples**",
-								"- Basic: `filters[community-slug:fieldName][$eq]=value`",
-								"- Complex: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
-							].join("\n")
-						),
-				}),
+				query: getPubQuerySchema
+					.extend({
+						pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
+						stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+						/**
+						 * The parsing of `filters` is handled in the route itself instead,
+						 * because ts-rest cannot parse nested objects in query strings.
+						 * eg `?filters[community-slug:fieldName][$eq]=value` becomes
+						 * `{ filters['community-slug:fieldName']['$eq']: 'value'}`,
+						 * rather than `{ filters: { 'community-slug:fieldName': { $eq: 'value' } } }`.
+						 */
+						filters: z
+							.record(z.any())
+							.optional()
+							.describe(
+								[
+									"Filter pubs by their values or by `updatedAt` or `createdAt`.",
+									"",
+									"**Filters**",
+									"- `$eq`: Equal to. (strings, numbers, dates, booleans)",
+									"- `$eqi`: Equal to (case insensitive). (strings)",
+									"- `$ne`: Not equal to. (strings, numbers, dates, booleans)",
+									"- `$nei`: Not equal to (case insensitive). (strings)",
+									"- `$lt`: Less than. (numbers, dates)",
+									"- `$lte`: Less than or equal to. (numbers, dates)",
+									"- `$gt`: Greater than. (numbers, dates)",
+									"- `$gte`: Greater than or equal to. (numbers, dates)",
+									"- `$contains`: Contains. (strings)",
+									"- `$notContains`: Does not contain. (strings)",
+									"- `$containsi`: Contains (case insensitive). (strings)",
+									"- `$notContainsi`: Does not contain (case insensitive). (strings)",
+									"- `$null`: Is null. (strings, numbers, dates, booleans)",
+									"- `$notNull`: Is not null. (strings, numbers, dates, booleans)",
+									"- `$in`: In. (strings, numbers, dates, booleans)",
+									"- `$notIn`: Not in. (strings, numbers, dates, booleans)",
+									"- `$between`: Between. (numbers, dates)",
+									"- `$startsWith`: Starts with. (strings)",
+									"- `$startsWithi`: Starts with (case insensitive). (strings)",
+									"- `$endsWith`: Ends with. (strings)",
+									"- `$endsWithi`: Ends with (case insensitive). (strings)",
+									"- `$size`: Size. (numbers, dates)",
+									"- `$jsonPath`: JSON path. (strings, arrays, objects) You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail. Example: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'` This will return all pubs where the `community:json-field` value's third element in the array is greater than 90.",
+									"",
+									"**Examples**",
+									"- Basic: `filters[community-slug:fieldName][$eq]=value`",
+									"- Complex: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
+								].join("\n")
+							),
+					})
+					.passthrough()
+					.optional(),
 				responses: {
 					200: z.array(processedPubSchema),
 				},
@@ -715,12 +727,14 @@ export const siteApi = contract.router(
 				summary: "Gets a list of pub types",
 				description:
 					"Get a list of pub types by ID. This endpoint is used by the PubPub site builder to get a list of pub types.",
-				query: z.object({
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
+				query: z
+					.object({
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+					})
+					.optional(),
 				responses: {
 					200: pubTypesSchema.array(),
 				},
@@ -746,12 +760,14 @@ export const siteApi = contract.router(
 				summary: "Gets a list of stages",
 				description:
 					"Get a list of stages by ID. This endpoint is used by the PubPub site builder to get a list of stages.",
-				query: z.object({
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
+				query: z
+					.object({
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+					})
+					.optional(),
 				responses: {
 					200: stagesSchema.array(),
 				},

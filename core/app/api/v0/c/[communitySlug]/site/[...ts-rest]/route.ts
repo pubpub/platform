@@ -1,8 +1,9 @@
 import type { User } from "lucia";
 
 import { headers } from "next/headers";
-import { createNextHandler } from "@ts-rest/serverless/next";
+import { createNextHandler, RequestValidationError } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
+import qs from "qs";
 import { z } from "zod";
 
 import type {
@@ -19,8 +20,9 @@ import type {
 	ApiAccessPermissionConstraintsInput,
 	LastModifiedBy,
 } from "db/types";
-import { siteApi } from "contracts";
+import { baseFilterSchema, filterSchema, siteApi } from "contracts";
 import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
+import { assert } from "utils";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
@@ -228,6 +230,81 @@ const shouldReturnRepresentation = async () => {
 	return false;
 };
 
+/**
+ * manually parses the `?filters` query param.
+ * necessary because ts-rest only supports parsing object in query params
+ * if they're uri encoded.
+ *
+ * eg this does not fly
+ *  ```
+ * ?filters[community-slug:fieldName][$eq]=value
+ * ```
+ * but this does
+ *  ```
+ * ?filters=%7B%22%7B%22updatedAt%22%3A%20%7B%22%24gte%22%3A%20%222025-01-01%22%7D%2C%22field-slug%22%3A%20%7B%22%24eq%22%3A%20%22some-value%22%7D%7D`
+ * ```
+ *
+ * the latter is what a ts-rest client sends if `json-query: true`. we want to support both syntaxes.
+ *
+ */
+const manuallyParsePubFilterQueryParams = (url: string, query?: Record<string, any>) => {
+	if (!query || Object.keys(query).length === 0) {
+		return query;
+	}
+
+	// check if we already have properly structured filters
+	if (query.filters && typeof query.filters === "object") {
+		try {
+			const validatedFilters = filterSchema.parse(query.filters);
+			return {
+				...query,
+				filters: validatedFilters,
+			};
+		} catch (e) {
+			throw new RequestValidationError(null, null, e, null);
+		}
+	}
+
+	// check if we have filter-like keys (using bracket notation)
+	const filterLikeKeys = Object.keys(query).filter((key) => key.startsWith("filters["));
+
+	if (filterLikeKeys.length === 0) {
+		return query;
+	}
+
+	const queryString = url.split("?")[1];
+	if (!queryString) {
+		return query;
+	}
+
+	try {
+		// parse with qs
+		const parsedQuery = qs.parse(queryString, {
+			depth: 10,
+			arrayLimit: 100,
+			allowDots: false, // don't convert dots to objects (use brackets only)
+			ignoreQueryPrefix: true, // remove the leading '?' if present
+		});
+
+		if (!parsedQuery.filters) {
+			return query; // no filters found after parsing
+		}
+
+		const validatedFilters = filterSchema.parse(parsedQuery.filters);
+
+		return {
+			...query,
+			...parsedQuery,
+			filters: validatedFilters,
+		};
+	} catch (e) {
+		if (e instanceof z.ZodError) {
+			throw new RequestValidationError(null, null, e, null);
+		}
+		throw new BadRequestError(`Error parsing filters: ${e.message}`);
+	}
+};
+
 const handler = createNextHandler(
 	siteApi,
 	{
@@ -269,7 +346,7 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async ({ query }) => {
+			getMany: async ({ query }, { request }) => {
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					// TODO: figure out capability here
@@ -278,9 +355,11 @@ const handler = createNextHandler(
 
 				const { pubTypeId, stageId, filters, ...rest } = query;
 
-				if (filters) {
+				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
+
+				if (manuallyParsedFilters?.filters) {
 					try {
-						await validateFilter(community.id, filters);
+						await validateFilter(community.id, manuallyParsedFilters.filters);
 					} catch (e) {
 						throw new BadRequestError(e.message);
 					}
@@ -295,7 +374,7 @@ const handler = createNextHandler(
 					},
 					{
 						...rest,
-						filters,
+						filters: manuallyParsedFilters?.filters,
 					}
 				);
 
