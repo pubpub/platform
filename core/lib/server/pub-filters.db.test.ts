@@ -1,3 +1,4 @@
+import QueryString from "qs";
 import { describe, expect, it } from "vitest";
 
 import type { Filter, Json } from "contracts";
@@ -67,6 +68,18 @@ const seed = createSeed({
 			pubType: "Basic Pub",
 			values: {
 				Number: 42,
+			},
+		},
+		{
+			pubType: "Basic Pub",
+			values: {
+				Number: 24,
+			},
+		},
+		{
+			pubType: "Basic Pub",
+			values: {
+				Number: 54,
 			},
 		},
 		{
@@ -179,6 +192,7 @@ describe("pub-filters", () => {
 				};
 
 				const parsed = filterSchema.safeParse(filter);
+				expect(parsed.error).toBeUndefined();
 				expect(parsed.success).toBe(true);
 				expect(parsed.data).toEqual(filter);
 			});
@@ -339,6 +353,28 @@ describe("pub-filters", () => {
 			resultValues: [
 				[{ value: 42, fieldSlug: slug("number") }],
 				[{ value: "Some title", fieldSlug: slug("title") }],
+			],
+		},
+		{
+			title: "nested logical operators",
+			filter: {
+				[slug("number")]: {
+					$or: [
+						{
+							$lt: 40,
+						},
+						{
+							$gt: 50,
+						},
+					],
+				},
+			},
+
+			sql: `("slug" = $1 and "value" < $2) or ("slug" = $3 and "value" > $4)`,
+			parameters: [slug("number"), 40, slug("number"), 50],
+			resultValues: [
+				[{ value: 54, fieldSlug: slug("number") }],
+				[{ value: 24, fieldSlug: slug("number") }],
 			],
 		},
 		{
@@ -512,6 +548,274 @@ describe("pub-filters", () => {
 			await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
 				error
 			);
+		});
+	});
+
+	const querystringCases: {
+		title: string;
+		querystring: string;
+		filter: Filter;
+	}[] = [
+		{
+			title: "simple equality",
+			querystring: "filters[title][$eq]=Some title",
+			filter: {
+				title: { $eq: "Some title" },
+			},
+		},
+		{
+			title: "multiple operators on same field",
+			querystring: "filters[number][$gt]=10&filters[number][$lt]=50",
+			filter: {
+				number: { $gt: 10, $lt: 50 },
+			},
+		},
+		{
+			title: "multiple fields",
+			querystring: "filters[title][$eq]=Test&filters[number][$eq]=42",
+			filter: {
+				title: { $eq: "Test" },
+				number: { $eq: 42 },
+			},
+		},
+		{
+			title: "boolean coercion",
+			querystring: "filters[boolean][$eq]=true",
+			filter: {
+				boolean: { $eq: true },
+			},
+		},
+		{
+			title: "number coercion",
+			querystring: "filters[number][$eq]=42",
+			filter: {
+				number: { $eq: 42 },
+			},
+		},
+		{
+			title: "date coercion",
+			querystring: "filters[date][$eq]=2023-01-01T00:00:00.000Z",
+			filter: {
+				date: { $eq: new Date("2023-01-01T00:00:00.000Z") },
+			},
+		},
+		{
+			title: "array in operator",
+			querystring:
+				"filters[number][$in][]=1&filters[number][$in][]=2&filters[number][$in][]=3",
+			filter: {
+				number: { $in: [1, 2, 3] },
+			},
+		},
+		{
+			title: "between operator",
+			querystring: "filters[number][$between][0]=10&filters[number][$between][1]=20",
+			filter: {
+				number: { $between: [10, 20] },
+			},
+		},
+		{
+			title: "case insensitive operators",
+			querystring: "filters[title][$containsi]=test&filters[title][$eqi]=another test",
+			filter: {
+				title: { $containsi: "test", $eqi: "another test" },
+			},
+		},
+		{
+			title: "null and notNull operators",
+			querystring: "filters[title][$null]&filters[number][$notNull]",
+			filter: {
+				title: { $null: true },
+				number: { $notNull: true },
+			},
+		},
+		{
+			title: "jsonPath operator",
+			querystring: 'filters[array][$jsonPath]=$[*] == "item1"',
+			filter: {
+				array: { $jsonPath: '$[*] == "item1"' },
+			},
+		},
+		{
+			title: "top-level logical OR",
+			querystring: "filters[$or][0][title][$eq]=Test&filters[$or][1][number][$eq]=42",
+			filter: {
+				$or: [{ title: { $eq: "Test" } }, { number: { $eq: 42 } }],
+			},
+		},
+		{
+			title: "top-level logical AND",
+			querystring: "filters[$and][0][title][$eq]=Test&filters[$and][1][number][$gt]=10",
+			filter: {
+				$and: [{ title: { $eq: "Test" } }, { number: { $gt: 10 } }],
+			},
+		},
+		{
+			title: "top-level logical NOT",
+			querystring: "filters[$not][title][$eq]=Test",
+			filter: {
+				$not: { title: { $eq: "Test" } },
+			},
+		},
+		{
+			title: "nested logical operators",
+			querystring:
+				"filters[$or][0][title][$eq]=Test&filters[$or][1][$and][0][number][$gt]=10&filters[$or][1][$and][1][number][$lt]=50",
+			filter: {
+				$or: [
+					{ title: { $eq: "Test" } },
+					{
+						$and: [{ number: { $gt: 10 } }, { number: { $lt: 50 } }],
+					},
+				],
+			},
+		},
+		{
+			title: "field-level logical OR",
+			querystring: "filters[number][$or][0][$lt]=10&filters[number][$or][1][$gt]=50",
+			filter: {
+				number: {
+					$or: [{ $lt: 10 }, { $gt: 50 }],
+				},
+			},
+		},
+		{
+			title: "complex nested structure",
+			querystring:
+				"filters[$or][0][$and][0][title][$containsi]=test&filters[$or][0][$and][1][boolean][$eq]=true&filters[$or][1][$not][number][$between][0]=10&filters[$or][1][$not][number][$between][1]=20",
+			filter: {
+				$or: [
+					{
+						$and: [{ title: { $containsi: "test" } }, { boolean: { $eq: true } }],
+					},
+					{
+						$not: {
+							number: { $between: [10, 20] },
+						},
+					},
+				],
+			},
+		},
+		{
+			title: "multiple array values with coercion",
+			querystring:
+				"filters[numberArray][$in][]=1&filters[numberArray][$in][]=2&filters[numberArray][$in][]=3&filters[dateArray][$in][]=2023-01-01T00:00:00.000Z&filters[dateArray][$in][]=2023-01-02T00:00:00.000Z",
+			filter: {
+				numberArray: { $in: [1, 2, 3] },
+				dateArray: {
+					$in: [
+						new Date("2023-01-01T00:00:00.000Z"),
+						new Date("2023-01-02T00:00:00.000Z"),
+					],
+				},
+			},
+		},
+		{
+			title: "URL encoded special characters",
+			querystring: "filters[title][$contains]=special%20characters%20%26%20symbols",
+			filter: {
+				title: { $contains: "special characters & symbols" },
+			},
+		},
+		{
+			title: "mixed type coercion in arrays",
+			querystring:
+				"filters[mixedArray][$in][]=string&filters[mixedArray][$in][]=42&filters[mixedArray][$in][]=true",
+			filter: {
+				mixedArray: { $in: ["string", 42, true] },
+			},
+		},
+		{
+			title: "deeply nested logical operators with multiple field types",
+			querystring:
+				"filters[$and][0][$or][0][title][$containsi]=test&filters[$and][0][$or][1][number][$gt]=50&filters[$and][1][$not][$or][0][boolean][$eq]=false&filters[$and][1][$not][$or][1][date][$lt]=2023-01-01T00:00:00.000Z",
+			filter: {
+				$and: [
+					{
+						$or: [{ title: { $containsi: "test" } }, { number: { $gt: 50 } }],
+					},
+					{
+						$not: {
+							$or: [
+								{ boolean: { $eq: false } },
+								{ date: { $lt: new Date("2023-01-01T00:00:00.000Z") } },
+							],
+						},
+					},
+				],
+			},
+		},
+		{
+			title: "complex filter with all operator types",
+			querystring:
+				'filters[$or][0][title][$eq]=Test&filters[$or][0][title][$containsi]=important&filters[$or][1][number][$between][0]=10&filters[$or][1][number][$between][1]=50&filters[$or][2][date][$gt]=2023-01-01T00:00:00.000Z&filters[$or][2][boolean][$eq]=true&filters[$or][3][array][$jsonPath]=$[*] == "item1"',
+			filter: {
+				$or: [
+					{ title: { $eq: "Test", $containsi: "important" } },
+					{ number: { $between: [10, 50] } },
+					{ date: { $gt: new Date("2023-01-01T00:00:00.000Z") }, boolean: { $eq: true } },
+					{ array: { $jsonPath: '$[*] == "item1"' } },
+				],
+			},
+		},
+	];
+	describe("querystring parsing", () => {
+		it.concurrent.each(querystringCases)(
+			"correctly parses $title",
+			async ({ title, querystring, filter }) => {
+				const parsed = QueryString.parse(querystring, {
+					depth: 10,
+				});
+
+				const validatedFilter = filterSchema.safeParse(parsed.filters);
+
+				expect(validatedFilter.error).toBeUndefined();
+				expect(validatedFilter.success).toBe(true);
+
+				expect(validatedFilter.data).toEqual(filter);
+			}
+		);
+
+		it("handles empty filters", async () => {
+			const querystring = "";
+			const parsed = QueryString.parse(querystring);
+			const validatedFilter = filterSchema.safeParse(parsed);
+
+			expect(validatedFilter.success).toBe(true);
+			expect(validatedFilter.data).toEqual({});
+		});
+
+		it("rejects invalid operators", async () => {
+			const querystring = "filters[title][$invalid]=test";
+			const parsed = QueryString.parse(querystring);
+			const validatedFilter = filterSchema.safeParse(parsed);
+
+			expect(validatedFilter.success).toBe(false);
+		});
+
+		it("rejects invalid logical operators", async () => {
+			const querystring = "filters[$invalid][0][title][$eq]=test";
+			const parsed = QueryString.parse(querystring);
+			const validatedFilter = filterSchema.safeParse(parsed);
+
+			expect(validatedFilter.success).toBe(false);
+		});
+
+		it("handles malformed between operator", async () => {
+			const querystring = "filters[number][$between]=10";
+			const parsed = QueryString.parse(querystring);
+			const validatedFilter = filterSchema.safeParse(parsed);
+
+			expect(validatedFilter.success).toBe(false);
+		});
+
+		it("handles malformed array syntax", async () => {
+			const querystring = "filters[number][$in]=1,2,3";
+			const parsed = QueryString.parse(querystring);
+			const validatedFilter = filterSchema.safeParse(parsed);
+
+			// This should fail because $in expects an array
+			expect(validatedFilter.success).toBe(false);
 		});
 	});
 

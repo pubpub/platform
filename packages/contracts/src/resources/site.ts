@@ -341,11 +341,10 @@ export const logicalOperators = ["$and", "$or", "$not"] as const;
 export type LogicalOperator = (typeof logicalOperators)[number];
 
 export type BaseFilter = {
-	[slug: string]:
-		| {
-				[O in FilterOperator]?: unknown;
-		  }
-		| Filter;
+	[O in FilterOperator]?: unknown;
+};
+export type FieldLevelFilter = {
+	[slug: string]: BaseFilter | { $and?: BaseFilter[]; $or?: BaseFilter[]; $not?: BaseFilter };
 };
 
 export type LogicalFilter = {
@@ -354,13 +353,13 @@ export type LogicalFilter = {
 	$not?: Filter;
 };
 
-export type Filter = BaseFilter | LogicalFilter;
+export type Filter = FieldLevelFilter | LogicalFilter;
 
-const allSchema = z
-	.string()
-	.or(z.coerce.number())
+const allSchema = z.coerce
+	.number()
 	.or(z.enum(["true", "false"]).transform((val) => val === "true"))
-	.or(z.coerce.date());
+	.or(z.coerce.date())
+	.or(z.string());
 
 const numberOrDateSchema = z.coerce.number().or(z.coerce.date());
 
@@ -378,8 +377,14 @@ export const baseFilterSchema = z
 		$notContains: z.string().describe("Does not contain"),
 		$containsi: z.string().describe("Contains (case insensitive)"),
 		$notContainsi: z.string().describe("Does not contain (case insensitive)"),
-		$null: z.never().describe("Is null"),
-		$notNull: z.never().describe("Is not null"),
+		$null: z
+			.string()
+			.transform(() => true)
+			.describe("Is null"),
+		$notNull: z
+			.string()
+			.transform(() => true)
+			.describe("Is not null"),
 		$in: z.array(allSchema).describe("In"),
 		$notIn: z.array(allSchema).describe("Not in"),
 		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]).describe("Between"),
@@ -399,43 +404,60 @@ export const baseFilterSchema = z
 	.partial()
 	.refine((data) => {
 		if (!Object.keys(data).length) {
+			console.log(data);
 			return false;
 		}
 		return true;
-	}, "Filter must have at least one operator") satisfies z.ZodType<{
+	}, "Filter must have at least one operator (base filter)") satisfies z.ZodType<{
 	[K in FilterOperator]?: any;
 }>;
 
+const fieldSlugSchema = z
+	.string()
+	.regex(/^[a-zA-Z0-9_.:-]+$/, "At this level, you can only use field slugs");
+
 // this is a recursive type, so we need to use z.lazy()
-export const filterSchema: z.ZodType<Filter> = z.lazy(() =>
-	z.union([
-		// regular field filters
-		z.record(
-			z.union([
-				// operator-value pairs
-				baseFilterSchema,
-				// nested filters (for object types)
-				filterSchema,
-			])
-		),
-		// logical operators
-		z.object({
+export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
+	const topLevelLogicalOperators = z
+		.object({
 			$and: z.array(filterSchema).optional(),
 			$or: z.array(filterSchema).optional(),
-			$not: filterSchema,
-		}),
-		z.object({
-			$and: z.array(filterSchema).optional(),
-			$or: z.array(filterSchema),
 			$not: filterSchema.optional(),
-		}),
-		z.object({
-			$and: z.array(filterSchema),
-			$or: z.array(filterSchema).optional(),
-			$not: filterSchema.optional(),
-		}),
-	])
-);
+		})
+		.refine((data) => {
+			if (!Object.keys(data).length) {
+				return false;
+			}
+			return true;
+		}, "Filter must have at least one operator. A logical operator (e.g. $and, $or, $not) was expected here, but not found.");
+
+	const fieldLevelThings = z
+		.object({
+			$and: z.array(baseFilterSchema).optional(),
+			$or: z.array(baseFilterSchema).optional(),
+			$not: baseFilterSchema.optional(),
+		})
+		.refine((data) => {
+			if (!Object.keys(data).length) {
+				return false;
+			}
+			return true;
+		}, "Filter must have at least one operator (field level)")
+		.or(baseFilterSchema);
+
+	//z.union([
+	// regular field filters
+
+	// field -> operator -> value
+	// field -> logical operator -> operator -> value
+	// field -> logical operator -> logical operator -> ... -> operator -> value
+	// logical operator -> field -> operator -> value
+	// logical operator -> logical operator -> ... -> field -> operator -> value
+
+	return z.union([z.record(fieldSlugSchema, fieldLevelThings), topLevelLogicalOperators]); //,
+	// logicalOperators,
+	// ]);
+});
 
 const getPubQuerySchema = z.object({
 	depth: z
