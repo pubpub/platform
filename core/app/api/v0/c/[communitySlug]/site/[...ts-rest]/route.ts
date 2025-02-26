@@ -353,7 +353,7 @@ const handler = createNextHandler(
 					cookies: false,
 				});
 
-				const { pubTypeId, stageId, filters, ...rest } = query;
+				const { pubTypeId, stageId, filters, ...rest } = query ?? {};
 
 				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
 
