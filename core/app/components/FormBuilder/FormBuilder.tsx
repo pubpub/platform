@@ -265,29 +265,35 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 																	activeIndex !== undefined &&
 																	overIndex !== undefined
 																) {
+																	const isMovedEarlier =
+																		activeIndex > overIndex;
 																	const activeElem =
 																		elements[activeIndex];
 																	const aboveRank =
-																		elements[overIndex + 1]
-																			?.rank ?? "";
+																		elements[
+																			isMovedEarlier
+																				? overIndex
+																				: overIndex + 1
+																		]?.rank ?? "";
 																	const belowRank =
-																		elements[overIndex - 1]
-																			?.rank ?? "";
+																		elements[
+																			isMovedEarlier
+																				? overIndex - 1
+																				: overIndex
+																		]?.rank ?? "";
 																	const [rank] =
 																		mudder.base62.mudder(
 																			belowRank,
 																			aboveRank,
 																			1
 																		);
-																	form.setValue(
-																		`elements.${activeIndex}`,
-																		{
-																			...activeElem,
-																			rank,
-																			updated: true,
-																		}
-																	);
+
 																	move(activeIndex, overIndex);
+																	update(overIndex, {
+																		...activeElem,
+																		rank,
+																		updated: true,
+																	});
 																}
 															}
 														}}
