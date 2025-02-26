@@ -397,7 +397,6 @@ export const baseFilterSchema = z
 			),
 	})
 	.partial()
-	.passthrough()
 	.refine((data) => {
 		if (!Object.keys(data).length) {
 			return false;
