@@ -180,7 +180,7 @@ export const createPubType = defineServerAction(async function createPubType(
 					.returning("B as id")
 			).executeTakeFirstOrThrow();
 
-			const pubType = await getPubType(pubTypeId).executeTakeFirstOrThrow();
+			const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
 
 			await autoRevalidate(
 				insertForm(
