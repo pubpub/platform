@@ -66,8 +66,7 @@ export const getForm = (
 							"pub_fields.isRelation",
 						])
 						.$narrowType<FormElements>()
-						// Use "C" collation order to ensure uppercase letters sort before lowercase to match mudder
-						.orderBy(sql`"rank" collate "C"`)
+						.orderBy("rank")
 				).as("elements")
 			)
 	);

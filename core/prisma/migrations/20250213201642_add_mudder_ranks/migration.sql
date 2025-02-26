@@ -1,14 +1,14 @@
 BEGIN;
   CREATE TEMP TABLE "mudder_ranks" (
     index SERIAL PRIMARY KEY,
-    rank TEXT,
+    rank TEXT
   );
   /*
    * This temp table holds 200 mudder generated keys which we use to assign initial ranks to existing
    * form elements and related pubs in the migration.
    * Generated with: mudder.base62.mudder(200).map((rank) => `('${rank}')`).join(", ")
    */
-  INSERT INTO "mudder_ranks"
+  INSERT INTO "mudder_ranks"("rank")
   VALUES ('0J'), ('0c'), ('0v'), ('1'), ('1X'), ('1q'), ('2'), ('2S'), ('2m'), ('3'), ('3O'), ('3h'),
   ('4'), ('4J'), ('4c'), ('4v'), ('5'), ('5Y'), ('5r'), ('6'), ('6T'), ('6m'), ('7'), ('7O'), ('7i'),
   ('8'), ('8K'), ('8d'), ('8w'), ('9'), ('9Y'), ('9r'), ('A'), ('AU'), ('An'), ('B'), ('BP'), ('Bi'),
@@ -27,7 +27,8 @@ BEGIN;
   ('y'), ('yS'), ('yl'), ('z'), ('zN'), ('zg');
 
   -- Add rank to form_elements
-  ALTER TABLE "form_elements" ADD COLUMN "rank" TEXT;
+  -- Uses "C" collation order to ensure uppercase letters sort before lowercase to match mudder
+  ALTER TABLE "form_elements" ADD COLUMN "rank" TEXT COLLATE "C";
 
   -- Set initial rank values for form elements based on 'order'
   UPDATE "form_elements"
@@ -56,7 +57,7 @@ BEGIN;
 
 -- Add rank to pub_values
 -- This one is nullable for now
-  ALTER TABLE "pub_values" ADD COLUMN "rank" TEXT;
+  ALTER TABLE "pub_values" ADD COLUMN "rank" TEXT COLLATE "C";
 
 -- Get all pub_values with multiple related pubs, then assign initial ranks ordered by updatedAt
   WITH "related_pubs" AS (
