@@ -1,3 +1,6 @@
+import crypto from "crypto";
+
+import type { Blob } from "buffer";
 import type { Auth } from "googleapis";
 
 import { google } from "googleapis";
@@ -135,4 +138,75 @@ export const getContentFromFolder = async (folderId: string): Promise<DriveData 
 		versions: versions,
 		legacyData: legacyData,
 	};
+};
+
+export type AssetData = {
+	mimetype: string;
+	filename: string;
+	buffer: Buffer;
+};
+
+export const getAssetFile = async (assetUrl: string): Promise<AssetData | null> => {
+	const drive = google.drive({ version: "v3", auth });
+
+	const urlObject = new URL(assetUrl);
+	if (urlObject.hostname === "drive.google.com") {
+		try {
+			const urlObject = new URL(assetUrl);
+			let fileId = urlObject.searchParams.get("id");
+
+			if (!fileId) {
+				const fileIdMatch = assetUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+				fileId = fileIdMatch ? fileIdMatch[1] : null;
+			}
+
+			if (!fileId) {
+				throw new Error("Invalid asset URL");
+			}
+
+			const res = await drive.files.get(
+				{ fileId: fileId, alt: "media" },
+				{ responseType: "arraybuffer" }
+			);
+
+			return {
+				mimetype: res.headers["content-type"],
+				filename: fileId,
+				buffer: Buffer.from(res.data as ArrayBuffer),
+			};
+		} catch (error) {
+			logger.error(`Error fetching asset file from Drive, ${assetUrl}:`, error);
+			return null;
+		}
+	} else {
+		try {
+			const response = await fetch(assetUrl);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch asset from URL: ${assetUrl}`);
+			}
+
+			const contentType = response.headers.get("content-type") || "application/octet-stream";
+			const contentDisposition = response.headers.get("content-disposition");
+			const assetUrlHash = crypto.createHash("md5").update(assetUrl).digest("hex");
+			let filename = assetUrlHash;
+
+			if (contentDisposition) {
+				const match = contentDisposition.match(/filename="(.+)"/);
+				if (match && match[1]) {
+					filename = match[1];
+				}
+			}
+
+			const buffer = Buffer.from(await response.arrayBuffer());
+
+			return {
+				mimetype: contentType,
+				filename: filename,
+				buffer: buffer,
+			};
+		} catch (error) {
+			logger.error(`Error fetching non-Drive asset file, ${assetUrl}:`, error);
+			return null;
+		}
+	}
 };

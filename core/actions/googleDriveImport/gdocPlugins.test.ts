@@ -6,6 +6,7 @@ import { logger } from "logger";
 import {
 	appendFigureAttributes,
 	basic,
+	cleanUnusedSpans,
 	formatFigureReferences,
 	formatLists,
 	getDescription,
@@ -91,6 +92,23 @@ test("Convert vert table", async () => {
 			alttext: "123",
 			align: "full",
 			size: "50",
+		},
+	];
+
+	const result = tableToObjectArray(inputNode);
+
+	expect(result).toStrictEqual(expectedOutput);
+});
+
+test("Convert link-source table", async () => {
+	const inputNode = JSON.parse(
+		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Static Image"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Video"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.image-url.com"},"children":[{"type":"text","value":"image-filename.png"}]}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.fallback-url.com"},"children":[{"type":"text","value":"fallback-filename.png"}]}]}]}]}]}]}]}'
+	);
+	const expectedOutput = [
+		{
+			source: "https://www.image-url.com",
+			type: "video",
+			staticimage: "https://www.fallback-url.com",
 		},
 	];
 
@@ -353,7 +371,7 @@ test("Structure Images - DoubleVert Table", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Images", async () => {
+test("Structure Videos", async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -878,6 +896,7 @@ test("Structure References", async () => {
 				</table>
 				<p>I'd also like to add [10.12341] here.</p>
 				<p>And this should be the same number [10.12341] here. But this diff, [10.5123/123]. </p>
+				<p><span>Two more [</span><u><a href="10.1016/S0167-4781(02)00500-6">10.1016/S0167-4781(02)00500-6</a></u><span>]</span><span>[</span><span>10.abc123</span><span>].</span></p>
 			</body>
 		</html>
 	`;
@@ -906,12 +925,50 @@ test("Structure References", async () => {
 							 data-type="reference" data-value="10.5123/123">
 							[4]
 						</a>. </p>
+				<p>Two more <a
+							 data-type="reference" data-value="10.1016/S0167-4781(02)00500-6">
+							[5]
+						</a><a
+							 data-type="reference" data-value="10.abc123">
+							[6]
+						</a>.</p>
 			</body>
 		</html>
 	`;
 
 	const result = await rehype()
+		.use(cleanUnusedSpans)
 		.use(structureReferences)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("cleanUnusedSpans", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p><span>Hello </span><span>there.</span></p>
+				<p><span>What?</span></p>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `<html>
+			<head></head>
+			<body>
+				<p>Hello there.</p>
+				<p>What?</p>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(cleanUnusedSpans)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {

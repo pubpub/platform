@@ -29,7 +29,7 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
+			const formattedData = await formatDriveData(dataFromDrive, communitySlug, pub.id);
 			/* MIGRATION */
 			// TODO: Check and make sure the relations exist, not just the pubs.
 
@@ -74,6 +74,15 @@ export const run = defineRun<typeof action>(
 								pubTypeId: DiscussionType?.id || "",
 								...discussion,
 							},
+						};
+					}),
+				...formattedData.discussions
+					.filter((discussion) => existingDiscussionPubIds.includes(discussion.id))
+					.map((discussion) => {
+						return {
+							slug: `${communitySlug}:discussions`,
+							value: null,
+							relatedPubId: discussion.id,
 						};
 					}),
 				...formattedData.versions
