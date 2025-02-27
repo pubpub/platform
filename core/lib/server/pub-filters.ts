@@ -2,25 +2,27 @@ import type { ExpressionBuilder, ExpressionWrapper } from "kysely";
 
 import { sql } from "kysely";
 
-import type { BaseFilter, Filter, FilterOperator, LogicalFilter, LogicalOperator } from "contracts";
+import type {
+	BaseFilter,
+	FieldLevelFilter,
+	Filter,
+	FilterOperator,
+	LogicalFilter,
+	LogicalOperator,
+} from "contracts";
 import { logicalOperators } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { assert } from "utils";
 
-type PathSegment = string; // Regular property
-
-type Path = PathSegment[];
-
-// Helper type to get the type of a value at a specific path
+import { entries, fromEntries, keys, mapToEntries } from "../mapping";
 
 type EntriedLogicalFilter = [
 	["$or", NonNullable<LogicalFilter["$or"]>],
 	["$and", NonNullable<LogicalFilter["$and"]>],
 	["$not", NonNullable<LogicalFilter["$not"]>],
 ][number];
-type EntriedArrayFilter = [["$any", Filter], ["$all", Filter]];
 
-type EntriedFilter = [string, BaseFilter[keyof BaseFilter]] | EntriedLogicalFilter;
+type EntriedFilter = [string, FieldLevelFilter[keyof FieldLevelFilter]] | EntriedLogicalFilter;
 
 const isLogicalFilter = (filter: EntriedFilter): filter is EntriedLogicalFilter => {
 	return (
@@ -120,8 +122,10 @@ const filterMap = {
 			eb(column, "<=", typeof value[1] === "string" ? JSON.stringify(value[1]) : value[1]),
 		]);
 	},
-	$in: (eb, column, value) => eb(column, "in", value),
-	$notIn: (eb, column, value) => eb(column, "not in", value),
+	$in: (eb, column, value) =>
+		eb(column, "in", typeof value === "string" ? JSON.stringify(value) : value),
+	$notIn: (eb, column, value) =>
+		eb(column, "not in", typeof value === "string" ? JSON.stringify(value) : value),
 	$contains: (eb, column, value) => eb(sql.raw(`${column}::text`), "like", `%${String(value)}%`),
 	$notContains: (eb, column, value) =>
 		eb(sql.raw(`${column}::text`), "not like", `%${String(value)}%`),
@@ -147,13 +151,11 @@ const filterMap = {
 	) => ExpressionWrapper<any, any, any>
 >;
 
-export const isNonRecursiveFilter = (
-	filter: BaseFilter[string]
-): filter is Exclude<BaseFilter[string], Filter> => {
+export const isNonRecursiveFilter = (filter: FieldLevelFilter[string]): filter is BaseFilter => {
 	// Check if this is a logical operator within a field filter
 	if (filter && typeof filter === "object" && !Array.isArray(filter)) {
-		const keys = Object.keys(filter);
-		if (keys.some((k) => logicalOperators.includes(k as LogicalOperator))) {
+		const ks = keys(filter);
+		if (ks.some((k) => logicalOperators.includes(k as LogicalOperator))) {
 			return false;
 		}
 	}
@@ -174,19 +176,12 @@ export function applyFilters<K extends ExpressionBuilder<any, any>>(
 	eb: K,
 	filters: Filter
 ): ExpressionWrapped<K> {
-	const conditions = Object.entries(filters).map((filter: EntriedFilter) => {
+	const conditions = entries(filters).map((filter) => {
+		// Handle top-level logical operators
 		if (isLogicalFilter(filter)) {
-			if (filter[0] === "$or") {
-				return eb.or(filter[1].map((f) => applyFilters(eb, f)));
-			}
-			if (filter[0] === "$and") {
-				return eb.and(filter[1].map((f) => applyFilters(eb, f)));
-			}
-			if (filter[0] === "$not") {
-				return eb.not(applyFilters(eb, filter[1]));
-			}
+			const operatorFilter = mapToEntries(filter, ["operator", "filters"]);
 
-			throw new Error(`Unknown logical operator: ${filter[0]}`);
+			return applyLogicalOperation(eb, operatorFilter);
 		}
 
 		const [field, val] = filter;
@@ -201,46 +196,35 @@ export function applyFilters<K extends ExpressionBuilder<any, any>>(
 			throw new Error(`Date filters must use date operators: ${JSON.stringify(val)}`);
 		}
 
+		// Handle field-level logical operators
 		if (!isNonRecursiveFilter(val)) {
-			// Handle logical operators within field filters
-			const logicalOps = Object.entries(val).filter(([key]) =>
-				logicalOperators.includes(key as LogicalOperator)
-			);
+			const logicalOps = entries(val).filter(([key]) => logicalOperators.includes(key));
 
-			if (logicalOps.length > 0) {
-				const [op, subFilters] = logicalOps[0] as [LogicalOperator, Filter[]];
-
-				if (op === "$or") {
-					// Transform field-level $or into top-level $or with field constraints
-					return eb.or(
-						subFilters.map((subFilter) => {
-							// Create a new filter with the field and subfilter
-							const newFilter = { [field]: subFilter };
-							return applyFilters(eb, newFilter);
-						})
-					);
-				} else if (op === "$and") {
-					// Transform field-level $and into top-level $and with field constraints
-					return eb.and(
-						subFilters.map((subFilter) => {
-							const newFilter = { [field]: subFilter };
-							return applyFilters(eb, newFilter);
-						})
-					);
-				} else if (op === "$not") {
-					// Handle $not operator
-					const newFilter = { [field]: subFilters };
-					return eb.not(applyFilters(eb, newFilter));
-				}
+			if (logicalOps.length === 0) {
+				throw new Error(`Unknown filter: ${JSON.stringify(filter)}`);
 			}
 
-			throw new Error(`Unknown filter: ${JSON.stringify(filter)}`);
+			const [operator, subFilters] = logicalOps[0];
+
+			// For field-level operators, we need to apply the field constraint to each subfilter
+			if (operator === "$not") {
+				// Special case for $not since it takes a single filter, not an array
+				const newFilter = { [field]: subFilters };
+				return eb.not(applyFilters(eb, newFilter));
+			} else {
+				// For $or and $and, map each subfilter to include the field
+				const fieldConstrainedFilters = subFilters.map((subFilter) => ({
+					[field]: subFilter,
+				}));
+				return applyLogicalOperation(eb, { operator, filters: fieldConstrainedFilters });
+			}
 		}
 
+		// Handle regular field filters
 		return eb.and([
 			...(isDate ? [] : [eb("slug", "=", field)]),
-			...Object.entries(val).map((entry) => {
-				const [operator, value] = entry as [FilterOperator, unknown];
+			...entries(val).map((entry) => {
+				const [operator, value] = entry;
 
 				const whereFn = filterMap[operator];
 				if (!whereFn) {
@@ -269,4 +253,24 @@ export function applyFilters<K extends ExpressionBuilder<any, any>>(
 	});
 
 	return eb.and(conditions) as ExpressionWrapped<K>;
+}
+
+// Helper function to apply logical operations
+function applyLogicalOperation<K extends ExpressionBuilder<any, any>>(
+	eb: K,
+	operatorFilters:
+		| { operator: Exclude<LogicalOperator, "$not">; filters: Filter[] }
+		| { operator: "$not"; filters: Filter }
+): ExpressionWrapper<any, any, any> {
+	switch (operatorFilters.operator) {
+		case "$or":
+			return eb.or(operatorFilters.filters.map((f) => applyFilters(eb, f)));
+		case "$and":
+			return eb.and(operatorFilters.filters.map((f) => applyFilters(eb, f)));
+		case "$not":
+			// $not should only have one filter
+			return eb.not(applyFilters(eb, operatorFilters.filters));
+		default:
+			throw new Error(`Unknown logical operator: ${operatorFilters}`);
+	}
 }
