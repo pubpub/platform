@@ -168,8 +168,8 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 			size="sm"
 			disabled={!canRun}
 			type="button"
-			className={cn("w-4 rounded-none", {
-				"bg-slate-300 hover:bg-slate-400": isActive,
+			className={cn("h-fit rounded-none p-1", {
+				"bg-blue-200 hover:bg-blue-300": isActive,
 			})}
 			title={name}
 		>
@@ -202,7 +202,7 @@ export const MenuBar = () => {
 					const isLast = index === menuBlocks.length - 1;
 					return (
 						<>
-							<div className={cn("flex items-center gap-2")}>
+							<div className={cn("flex items-center gap-1")}>
 								{menuBlock.map((menuItem) => {
 									return (
 										<MenuItemButton key={menuItem.key} menuItem={menuItem} />
