@@ -31,6 +31,12 @@ const toggleInlineOrBlock: Command = (state: EditorState, dispatch?: Dispatch) =
 	return true;
 };
 
+/**
+ * If we are not inside any sort of math block, this will add a math element to the editor
+ * If we are inside a math block of the same type, this will 'undo' it (make it a paragraph).
+ * If we are inside a math block of the other type, this will transform it to the other type
+ * (i.e. block <-> inline)
+ */
 const createMathToggle = (state: EditorState, type: MathType, dispatch?: Dispatch) => {
 	// Q: should this ever return false? (when can this func not be run?)
 	const { node } = state.selection as NodeSelection;
