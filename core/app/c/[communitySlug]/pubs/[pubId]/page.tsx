@@ -15,6 +15,7 @@ import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
 import SkeletonTable from "~/app/components/skeletons/SkeletonTable";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
@@ -143,6 +144,8 @@ export default async function Page(props: {
 	if (!pub) {
 		return null;
 	}
+	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
+	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
 
 	const { stage, children, ...slimPub } = pub;
 	return (
@@ -154,12 +157,20 @@ export default async function Page(props: {
 					</div>
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
-				<Button variant="outline" asChild className="flex items-center gap-1">
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
-						<Pencil size="14" />
-						Update
-					</Link>
-				</Button>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
+						asChild
+						className="flex items-center gap-x-2 py-4"
+					>
+						<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+							<Pencil size="12" />
+							<span>Update</span>
+						</Link>
+					</Button>
+					<RemovePubButton pubId={pub.id} redirectTo={`/c/${communitySlug}/pubs`} />
+				</div>
 			</div>
 
 			<div className="flex flex-wrap space-x-4">
@@ -232,13 +243,6 @@ export default async function Page(props: {
 			</div>
 			<div>
 				<h2 className="text-xl font-bold">Pub Contents</h2>
-				<p className="text-muted-foreground">
-					Use the "Add New Pub" button below to create a new pub and add it to this pub's
-					contents.
-				</p>
-			</div>
-			<div className="mb-2">
-				<CreatePubButton text="Add New Pub" communityId={community.id} parentId={pub.id} />
 			</div>
 			<Suspense fallback={<SkeletonTable /> /* does not exist yet */}>
 				<PubChildrenTableWrapper
@@ -247,10 +251,18 @@ export default async function Page(props: {
 					parentPubId={pub.id}
 				/>
 			</Suspense>
-			<div>
-				<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
-				<RelatedPubsTable pub={pub} />
-			</div>
+			{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
+				<div className="flex flex-col gap-2" data-testid="related-pubs">
+					<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
+					<CreatePubButton
+						text="Add Related Pub"
+						communityId={community.id}
+						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
+						className="w-fit"
+					/>
+					<RelatedPubsTable pub={pub} />
+				</div>
+			)}
 		</div>
 	);
 }

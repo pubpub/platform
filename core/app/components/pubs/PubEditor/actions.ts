@@ -178,7 +178,7 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 	}
 
 	try {
-		await deletePub({ pubId, lastModifiedBy });
+		await deletePub({ pubId, lastModifiedBy, communityId: community.id });
 
 		return {
 			success: true,

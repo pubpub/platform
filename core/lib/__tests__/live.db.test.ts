@@ -1,12 +1,48 @@
 import { describe, expect, test } from "vitest";
 
+import { CoreSchemaType, MemberRole } from "db/public";
+
 import type { ClientException } from "../serverActions";
+import { createSeed } from "~/prisma/seed/createSeed";
 import { isClientException } from "../serverActions";
 import { mockServerCode } from "./utils";
 
 const { testDb, getLoginData, createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx, rollback, commit } = createForEachMockedTransaction();
+
+const communitySeed = createSeed({
+	community: {
+		name: "test",
+		slug: "test",
+	},
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+	},
+	pubTypes: {
+		"Basic Pub": {
+			Title: { isTitle: true },
+		},
+	},
+	users: {
+		admin: {
+			role: MemberRole.admin,
+		},
+	},
+	pubs: [
+		{
+			pubType: "Basic Pub",
+			values: {
+				Title: "test",
+			},
+		},
+	],
+});
+
+const seed = async (trx = testDb) => {
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	return seedCommunity(communitySeed, undefined, trx);
+};
 
 describe("live", () => {
 	test("should be able to connect to db", async () => {
@@ -16,6 +52,8 @@ describe("live", () => {
 
 	test("can rollback transactions", async () => {
 		const trx = getTrx();
+
+		const { community, users, pubs } = await seed(trx);
 
 		// Insert a user
 		const user = await trx
@@ -58,6 +96,7 @@ describe("live", () => {
 	describe("transaction block example", () => {
 		test("can add a user that will not persist", async () => {
 			const trx = getTrx();
+
 			await trx
 				.insertInto("users")
 				.values({
@@ -79,6 +118,9 @@ describe("live", () => {
 
 	test("createForm needs a logged in user", async () => {
 		const trx = getTrx();
+
+		const { community, users, pubs } = await seed(trx);
+
 		getLoginData.mockImplementation(() => {
 			return undefined;
 		});
@@ -86,12 +128,6 @@ describe("live", () => {
 		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
 			(m) => m.createForm
 		);
-
-		const community = await trx
-			.selectFrom("communities")
-			.selectAll()
-			.where("slug", "=", "croccroc")
-			.executeTakeFirstOrThrow();
 
 		const pubType = await trx
 			.selectFrom("pub_types")
@@ -110,15 +146,11 @@ describe("live", () => {
 			return { id: "123", isSuperAdmin: true };
 		});
 
+		const { community, users, pubs } = await seed(trx);
 		const getForm = await import("../server/form").then((m) => m.getForm);
 		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
 			(m) => m.createForm
 		);
-		const community = await trx
-			.selectFrom("communities")
-			.selectAll()
-			.where("slug", "=", "croccroc")
-			.executeTakeFirstOrThrow();
 
 		const forms = await getForm({ slug: "my-form-2", communityId: community.id }).execute();
 		expect(forms.length).toEqual(0);

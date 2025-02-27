@@ -19,7 +19,8 @@
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
 		"storybook": "storybook dev -p 6006 --no-open",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"test": "vitest"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^1.9.0",
@@ -40,11 +41,13 @@
 		"@types/react-dom": "catalog:react19",
 		"@types/uuid": "^9.0.8",
 		"@uiw/react-json-view": "2.0.0-alpha.27",
+		"@vitejs/plugin-react": "^4.2.1",
 		"prosemirror-dev-tools": "^4.1.0",
 		"storybook": "^8.4.7",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	},
 	"dependencies": {
 		"@nytimes/react-prosemirror": "^1.0.0",
@@ -70,6 +73,7 @@
 		"react-csv-to-table": "^0.0.4",
 		"react-dom": "catalog:react19",
 		"ui": "workspace:*",
+		"utils": "workspace:*",
 		"uuid": "^11.0.4"
 	},
 	"preconstruct": {

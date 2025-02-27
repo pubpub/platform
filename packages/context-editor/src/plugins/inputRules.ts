@@ -1,4 +1,8 @@
+import type { MarkType } from "prosemirror-model";
+import type { EditorState } from "prosemirror-state";
+
 import { InputRule, inputRules } from "prosemirror-inputrules";
+import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
 
@@ -19,7 +23,24 @@ const abstract = {
 	],
 };
 
-export default () => {
+const italicsRegex = /([_*])([^]+?)\1\x20$/;
+const boldRegex = /(\*\*|__)([^]+?)\1\x20$/;
+
+const applyMarkRule = (markType: MarkType, regex: RegExp) => {
+	return new InputRule(
+		regex,
+		(state: EditorState, match: RegExpMatchArray, start: number, end: number) => {
+			const [whole, marks, content] = match;
+			const fragment = Fragment.fromArray([
+				state.schema.text(content, [state.schema.mark(markType)]),
+				state.schema.text(" "),
+			]);
+			return state.tr.replaceWith(start, end, fragment);
+		}
+	);
+};
+
+export default (schema: Schema) => {
 	const rules = [
 		new InputRule(/^AI please!$/, (state, match, start, end) => {
 			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content;
@@ -29,6 +50,10 @@ export default () => {
 			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
 			return state.tr.replaceWith(start - 1, end, contentToInsert);
 		}),
+		// The order is significant here since bold uses a superset of italic (** vs * or __ vs _)
+		// Prosemirror applies the first rule that matches
+		applyMarkRule(schema.marks.strong, boldRegex),
+		applyMarkRule(schema.marks.em, italicsRegex),
 	];
 	return inputRules({ rules });
 };

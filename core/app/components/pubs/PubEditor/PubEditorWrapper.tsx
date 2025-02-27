@@ -31,6 +31,9 @@ export const PubEditorWrapper = ({
 		if (props.isUpdating) {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		} else {
+			// Delete the params associated with creating a related pub
+			newParams.delete("relatedPubId");
+			newParams.delete("slug");
 			const editPath = `/c/${community.slug}/pubs/${props.pub.id}/edit`;
 			router.push(`${editPath}?${newParams.toString()}`);
 		}

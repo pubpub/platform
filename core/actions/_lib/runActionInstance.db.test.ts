@@ -10,7 +10,7 @@ const { getTrx, rollback, commit } = createForEachMockedTransaction();
 
 const pubTriggerTestSeed = async () => {
 	const slugName = `test-server-pub-${new Date().toISOString()}`;
-	const { createSeed } = await import("~/prisma/seed/seedCommunity");
+	const { createSeed } = await import("~/prisma/seed/createSeed");
 
 	return createSeed({
 		community: {
