@@ -93,10 +93,7 @@ const paragraphTypeItems: MenuItem[] = [
 
 const ParagraphDropdown = () => {
 	const { view } = usePluginViewContext();
-	const activeType = paragraphTypeItems.filter((item) => {
-		const { isActive } = item.command(view)(view.state);
-		return isActive;
-	})[0];
+	const activeType = paragraphTypeItems.find((item) => item.command(view)(view.state).isActive);
 
 	return (
 		<Select
