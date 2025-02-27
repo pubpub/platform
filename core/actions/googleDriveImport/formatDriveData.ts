@@ -8,6 +8,7 @@ import type { PubsId } from "db/public";
 import type { DriveData } from "./getGDriveFiles";
 import {
 	appendFigureAttributes,
+	cleanUnusedSpans,
 	formatFigureReferences,
 	formatLists,
 	getDescription,
@@ -62,6 +63,7 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(structureCodeBlock)
 		.use(structureInlineCode)
 		.use(structureAnchors)
+		.use(cleanUnusedSpans)
 		.use(structureReferences)
 		.use(structureFootnotes)
 		.use(appendFigureAttributes) /* Assumes figures are <figure> elements */
