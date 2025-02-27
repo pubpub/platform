@@ -404,7 +404,6 @@ export const baseFilterSchema = z
 	.partial()
 	.refine((data) => {
 		if (!Object.keys(data).length) {
-			console.log(data);
 			return false;
 		}
 		return true;
