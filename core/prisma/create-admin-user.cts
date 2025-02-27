@@ -74,8 +74,7 @@ async function main() {
 		});
 		console.log("✨ Admin user created successfully!");
 		console.log(`You can now log in with:`);
-		console.log(`Email: ${adminEmail}`);
-		console.log(`Password: ${adminPassword}`);
+		console.log(`${adminEmail}`);
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
 			console.log("⚠️ Admin user already exists, skipping initialization");
