@@ -9,6 +9,22 @@ resource "aws_iam_access_key" "github_actions" {
   user = aws_iam_user.github_actions.name
 }
 
+resource "aws_iam_policy" "lightsail" {
+  name = "lightsail"
+  policy = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "lightsail:*"
+        ],
+        Resource: "*"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_policy" "ecr" {
   name = "ECRAdmin"
   policy = jsonencode({
@@ -128,4 +144,9 @@ resource "aws_iam_role_policy_attachment" "gha_attach_ecs" {
 resource "aws_iam_role_policy_attachment" "gha_attach_secrets" {
   role       = aws_iam_role.github_actions_role.name
   policy_arn = aws_iam_policy.github_actions_secrets.arn
+}
+
+resource "aws_iam_role_policy_attachment" "gha_attach_lightsail" {
+  role       = aws_iam_role.github_actions_role.name
+  policy_arn = aws_iam_policy.lightsail.arn
 }
