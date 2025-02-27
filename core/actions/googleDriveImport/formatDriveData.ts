@@ -1,13 +1,18 @@
-import { writeFile } from "fs/promises";
+// import { writeFile } from "fs/promises";
+import type { Element, Root } from "hast";
 
 import { rehype } from "rehype";
 import rehypeFormat from "rehype-format";
+import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
+import { logger } from "logger";
 
 import type { DriveData } from "./getGDriveFiles";
+import { uploadFileToS3 } from "~/lib/server";
 import {
 	appendFigureAttributes,
+	cleanUnusedSpans,
 	formatFigureReferences,
 	formatLists,
 	getDescription,
@@ -30,7 +35,9 @@ import {
 	structureInlineMath,
 	structureReferences,
 	structureVideos,
+	tableToObjectArray,
 } from "./gdocPlugins";
+import { getAssetFile } from "./getGDriveFiles";
 
 export type FormattedDriveData = {
 	pubDescription: string;
@@ -41,6 +48,60 @@ export type FormattedDriveData = {
 		[content: `${string}:content`]: string;
 	}[];
 	discussions: { id: PubsId; values: {} }[];
+};
+const processAssets = async (html: string, pubId: string): Promise<string> => {
+	const result = await rehype()
+		.use(() => async (tree: Root) => {
+			const assetUrls: { [key: string]: string } = {};
+			visit(tree, "element", (node: any) => {
+				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const isDownload =
+					node.tagName === "a" && node.properties.className === "file-button";
+				if (hasSrc || isDownload) {
+					const propertyKey = hasSrc ? "src" : "href";
+					const originalAssetUrl = node.properties[propertyKey];
+					const urlObject = new URL(originalAssetUrl);
+					if (urlObject.hostname !== "pubpub.org") {
+						assetUrls[originalAssetUrl] = "";
+					}
+				}
+			});
+			await Promise.all(
+				Object.keys(assetUrls).map(async (originalAssetUrl) => {
+					try {
+						const assetData = await getAssetFile(originalAssetUrl);
+						if (assetData) {
+							const uploadedUrl = await uploadFileToS3(
+								pubId,
+								assetData.filename,
+								assetData.buffer,
+								{ contentType: assetData.mimetype }
+							);
+							assetUrls[originalAssetUrl] = uploadedUrl;
+						} else {
+							assetUrls[originalAssetUrl] = originalAssetUrl;
+						}
+					} catch (err) {
+						assetUrls[originalAssetUrl] = originalAssetUrl;
+					}
+				})
+			);
+
+			visit(tree, "element", (node: any) => {
+				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const isDownload =
+					node.tagName === "a" && node.properties.className === "file-button";
+				if (hasSrc || isDownload) {
+					const propertyKey = hasSrc ? "src" : "href";
+					const originalAssetUrl = node.properties[propertyKey];
+					if (assetUrls[originalAssetUrl]) {
+						node.properties[propertyKey] = assetUrls[originalAssetUrl];
+					}
+				}
+			});
+		})
+		.process(html);
+	return String(result);
 };
 
 const processHtml = async (html: string): Promise<string> => {
@@ -62,6 +123,7 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(structureCodeBlock)
 		.use(structureInlineCode)
 		.use(structureAnchors)
+		.use(cleanUnusedSpans)
 		.use(structureReferences)
 		.use(structureFootnotes)
 		.use(appendFigureAttributes) /* Assumes figures are <figure> elements */
@@ -74,9 +136,11 @@ const processHtml = async (html: string): Promise<string> => {
 
 export const formatDriveData = async (
 	dataFromDrive: DriveData,
-	communitySlug: string
+	communitySlug: string,
+	pubId: string
 ): Promise<FormattedDriveData> => {
 	const formattedPubHtml = await processHtml(dataFromDrive.pubHtml);
+	const formattedPubHtmlWithAssets = await processAssets(formattedPubHtml, pubId);
 
 	/* Check for a description in the most recent version */
 	const latestRawVersion = dataFromDrive.versions.reduce((latest, version) => {
@@ -184,7 +248,7 @@ export const formatDriveData = async (
 
 	const output = {
 		pubDescription: latestPubDescription,
-		pubHtml: String(formattedPubHtml),
+		pubHtml: String(formattedPubHtmlWithAssets),
 		versions,
 		discussions: comments,
 	};
