@@ -135,7 +135,7 @@ const ParagraphDropdown = () => {
 			}}
 			disabled={!activeType}
 		>
-			<SelectTrigger className="flex w-fit gap-1 border-none bg-transparent p-0 font-serif">
+			<SelectTrigger className="flex h-6 w-fit gap-1 border-none bg-transparent p-0 font-serif">
 				<SelectValue placeholder="Paragraph">
 					{activeType ? activeType.name : "Paragraph"}
 				</SelectValue>
