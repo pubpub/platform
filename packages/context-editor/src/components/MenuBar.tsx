@@ -48,14 +48,14 @@ const menuBlocks: MenuItem[][] = [
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
 		},
+	],
+	[
 		{
 			key: "blockquote",
 			name: "Blockquote",
 			icon: <Quote {...iconProps} />,
 			command: blockquoteToggle,
 		},
-	],
-	[
 		{
 			key: "inline-math",
 			name: "Inline math",
@@ -135,7 +135,7 @@ const ParagraphDropdown = () => {
 			}}
 			disabled={!activeType}
 		>
-			<SelectTrigger className="w-fit border-none p-0 font-serif">
+			<SelectTrigger className="flex w-fit gap-1 border-none p-0 font-serif">
 				<SelectValue placeholder="Paragraph">
 					{activeType ? activeType.name : "Paragraph"}
 				</SelectValue>
@@ -168,7 +168,7 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 			size="sm"
 			disabled={!canRun}
 			type="button"
-			className={cn("w-6 rounded-none", {
+			className={cn("w-4 rounded-none", {
 				"bg-slate-300 hover:bg-slate-400": isActive,
 			})}
 			title={name}
@@ -189,7 +189,7 @@ const Separator = () => {
 export const MenuBar = () => {
 	return (
 		<div
-			className="flex h-10 items-center rounded border bg-slate-50"
+			className="flex items-center rounded-t border bg-slate-50 p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 		>
@@ -202,7 +202,7 @@ export const MenuBar = () => {
 					const isLast = index === menuBlocks.length - 1;
 					return (
 						<>
-							<div className={cn("flex items-center gap-1")}>
+							<div className={cn("flex items-center gap-2")}>
 								{menuBlock.map((menuItem) => {
 									return (
 										<MenuItemButton key={menuItem.key} menuItem={menuItem} />
