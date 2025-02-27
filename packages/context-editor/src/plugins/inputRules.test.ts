@@ -2,8 +2,8 @@ import { EditorState, TextSelection } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { describe, expect, test } from "vitest";
 
+import { markIsActive } from "../commands/marks";
 import { baseSchema } from "../schemas";
-import { markIsActive } from "../utils/marks";
 import customRules from "./inputRules";
 
 describe("inputRules", () => {
@@ -61,8 +61,10 @@ describe("inputRules", () => {
 	])("italics $text", ({ text, expected }) => {
 		expect(write(text)).toEqual(expected.text);
 		moveSelection(1);
-		expect(markIsActive(baseSchema.marks.em, view.state)).toEqual(expected.isItalicized);
-		expect(markIsActive(baseSchema.marks.strong, view.state)).toBeFalsy();
+		expect(markIsActive({ state: view.state, type: baseSchema.marks.em })).toEqual(
+			expected.isItalicized
+		);
+		expect(markIsActive({ state: view.state, type: baseSchema.marks.strong })).toBeFalsy();
 	});
 
 	test.each([
@@ -75,7 +77,11 @@ describe("inputRules", () => {
 	])("bold $text", ({ text, expected }) => {
 		expect(write(text)).toEqual(expected.text);
 		moveSelection(1);
-		expect(markIsActive(baseSchema.marks.strong, view.state)).toEqual(expected.isBold);
-		expect(markIsActive(baseSchema.marks.em, view.state)).toEqual(expected.isItalicized);
+		expect(markIsActive({ state: view.state, type: baseSchema.marks.strong })).toEqual(
+			expected.isBold
+		);
+		expect(markIsActive({ state: view.state, type: baseSchema.marks.em })).toEqual(
+			expected.isItalicized
+		);
 	});
 });
