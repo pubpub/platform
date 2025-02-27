@@ -168,7 +168,7 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 			size="sm"
 			disabled={!canRun}
 			type="button"
-			className={cn("h-fit rounded-none p-1", {
+			className={cn("h-fit rounded-sm p-1", {
 				"bg-blue-200 hover:bg-blue-300": isActive,
 			})}
 			title={name}
