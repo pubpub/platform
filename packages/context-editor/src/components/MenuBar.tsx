@@ -1,8 +1,9 @@
+import type { LucideProps } from "lucide-react";
 import type { ReactNode } from "react";
 
 import React from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { Bold, Italic, Quote, SquareFunction } from "lucide-react";
+import { Bold, Italic, Quote, Radical, SquareRadical } from "lucide-react";
 
 import { Button } from "ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
@@ -20,85 +21,97 @@ import {
 	paragraphToggle,
 } from "../commands/blocks";
 import { emToggle, strongToggle } from "../commands/marks";
-import { insertNodeIntoEditor } from "../utils/nodes";
+import { mathToggleBlock, mathToggleInline } from "../commands/math";
 
-type MenuItemBase = {
+type MenuItem = {
 	key: string;
 	name: string;
 	icon: ReactNode;
+	command: CommandSpec;
 };
 
-type MenuItem = MenuItemBase & ({ command: CommandSpec } | { insertNodeType: string });
-type ParagraphSelectorItem = MenuItemBase & { command: CommandSpec };
+const iconProps: LucideProps = {
+	strokeWidth: "1px",
+};
 
-const menuItems: MenuItem[] = [
-	{
-		key: "strong",
-		name: "Bold",
-		icon: <Bold />,
-		command: strongToggle,
-	},
-	{
-		key: "em",
-		name: "Italic",
-		icon: <Italic />,
-		command: emToggle,
-	},
-	{
-		key: "blockquote",
-		name: "Blockquote",
-		icon: <Quote />,
-		command: blockquoteToggle,
-	},
-	{
-		key: "math",
-		name: "Math",
-		icon: <SquareFunction />,
-		insertNodeType: "math_inline",
-	},
+const menuBlocks: MenuItem[][] = [
+	[
+		{
+			key: "strong",
+			name: "Bold",
+			icon: <Bold {...iconProps} />,
+			command: strongToggle,
+		},
+		{
+			key: "em",
+			name: "Italic",
+			icon: <Italic {...iconProps} />,
+			command: emToggle,
+		},
+		{
+			key: "blockquote",
+			name: "Blockquote",
+			icon: <Quote {...iconProps} />,
+			command: blockquoteToggle,
+		},
+	],
+	[
+		{
+			key: "inline-math",
+			name: "Inline math",
+			icon: <Radical {...iconProps} />,
+			command: mathToggleInline,
+		},
+		{
+			key: "block-math",
+			name: "Block math",
+			icon: <SquareRadical {...iconProps} />,
+			command: mathToggleBlock,
+		},
+	],
 ];
 
-const paragraphTypeItems: ParagraphSelectorItem[] = [
+const paragraphTypeItems: MenuItem[] = [
 	{
 		key: "paragraph",
 		name: "Paragraph",
-		icon: "Paragraph",
+		icon: <span className="font-serif">Paragraph</span>,
 		command: paragraphToggle,
 	},
 	{
 		key: "h1",
 		name: "Heading 1",
-		icon: <span className="text-3xl font-bold">Heading 1</span>,
+		icon: <span className="font-serif text-3xl font-bold">Heading 1</span>,
 		command: heading1Toggle,
 	},
 	{
 		key: "h2",
 		name: "Heading 2",
-		icon: <span className="text-2xl font-bold">Heading 2</span>,
+		icon: <span className="font-serif text-2xl font-bold">Heading 2</span>,
 		command: heading2Toggle,
 	},
 	{
 		key: "h3",
 		name: "Heading 3",
-		icon: <span className="text-xl">Heading 3</span>,
+		icon: <span className="font-serif text-xl">Heading 3</span>,
 		command: heading3Toggle,
 	},
 	{
 		key: "h4",
 		name: "Heading 4",
-		icon: <span className="text-lg">Heading 4</span>,
+		icon: <span className="font-serif text-lg">Heading 4</span>,
 		command: heading4Toggle,
 	},
 	{
 		key: "h5",
 		name: "Heading 5",
-		icon: <span className="text-base">Heading 5</span>,
+		icon: <span className="font-serif text-base">Heading 5</span>,
 		command: heading5Toggle,
 	},
 	{
 		key: "h6",
 		name: "Heading 6",
-		icon: <span className="text-sm font-normal">Heading 6</span>,
+		icon: <span className="font-serif text-sm font-normal">Heading 6</span>,
 		command: heading6Toggle,
 	},
 ];
@@ -122,7 +135,7 @@ const ParagraphDropdown = () => {
 			}}
 			disabled={!activeType}
 		>
-			<SelectTrigger className="w-fit border-none">
+			<SelectTrigger className="w-fit border-none p-0 font-serif">
 				<SelectValue placeholder="Paragraph">
 					{activeType ? activeType.name : "Paragraph"}
 				</SelectValue>
@@ -140,48 +153,64 @@ const ParagraphDropdown = () => {
 	);
 };
 
-export const MenuBar = () => {
+const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 	const { view } = usePluginViewContext();
+	const { key, name, icon, command } = menuItem;
+	const { run, canRun, isActive } = command(view)(view.state);
+	return (
+		<Button
+			key={key}
+			onClick={() => {
+				view.focus();
+				run();
+			}}
+			variant="ghost"
+			size="sm"
+			disabled={!canRun}
+			type="button"
+			className={cn("w-6 rounded-none", {
+				"bg-slate-300 hover:bg-slate-400": isActive,
+			})}
+			title={name}
+		>
+			{icon}
+		</Button>
+	);
+};
+
+const Separator = () => {
+	return (
+		<div className="flex items-center px-4">
+			<div className="h-6 w-px bg-gray-300" />
+		</div>
+	);
+};
+
+export const MenuBar = () => {
 	return (
 		<div
-			className="flex items-center gap-1 rounded border bg-slate-50"
+			className="flex h-10 items-center rounded border bg-slate-50"
 			role="toolbar"
 			aria-label="Formatting tools"
 		>
-			<div className="border-r-2">
+			<div className="flex pl-2">
 				<ParagraphDropdown />
+				<Separator />
 			</div>
-			<div className="flex gap-1">
-				{menuItems.map((menuItem) => {
-					const { key, name, icon } = menuItem;
-					let canRun = true;
-					// TODO: this isn't right
-					let isActive = false;
-					let run: () => void;
-					if ("command" in menuItem) {
-						const { command } = menuItem;
-						({ run, canRun, isActive } = command(view)(view.state));
-					} else {
-						run = () => insertNodeIntoEditor(view, menuItem.insertNodeType);
-					}
+			<div className="flex items-center">
+				{menuBlocks.map((menuBlock, index) => {
+					const isLast = index === menuBlocks.length - 1;
 					return (
-						<Button
-							key={key}
-							onClick={() => {
-								view.focus();
-								run();
-							}}
-							variant="ghost"
-							size="sm"
-							disabled={!canRun}
-							type="button"
-							className={cn("w-6 rounded-none", {
-								"bg-slate-300 hover:bg-slate-400": isActive,
-							})}
-							title={name}
-						>
-							{icon}
-						</Button>
+						<>
+							<div className={cn("flex items-center gap-1")}>
+								{menuBlock.map((menuItem) => {
+									return (
+										<MenuItemButton key={menuItem.key} menuItem={menuItem} />
+									);
+								})}
+							</div>
+							{!isLast && <Separator />}
+						</>
 					);
 				})}
 			</div>

@@ -3,9 +3,12 @@ import type { Command } from "prosemirror-state";
 import { EditorState, NodeSelection } from "prosemirror-state";
 
 import type { Dispatch } from "./types";
+import { insertNodeIntoEditor } from "../utils/nodes";
 import { createCommandSpec } from "./util";
 
-const toggleKind: Command = (state: EditorState, dispatch?: Dispatch) => {
+type MathType = "math_inline" | "math_display";
+
+const toggleInlineOrBlock: Command = (state: EditorState, dispatch?: Dispatch) => {
 	const { node } = state.selection as NodeSelection;
 	const canRun = node && (node.type.name === "math_inline" || node.type.name === "math_display");
 	if (!canRun) {
@@ -28,31 +31,46 @@ const toggleKind: Command = (state: EditorState, dispatch?: Dispatch) => {
 	return true;
 };
 
-const toggleLabel: Command = (state: EditorState, dispatch?: Dispatch) => {
-	const { node, $anchor } = state.selection as NodeSelection;
-	const canRun = node && node.type.name === "math_display";
-	if (!canRun) return false;
+const createMathToggle = (state: EditorState, type: MathType, dispatch?: Dispatch) => {
+	// Q: should this ever return false? (when can this func not be run?)
+	const { node } = state.selection as NodeSelection;
+	const isActive = node && node.type.name === type;
+
+	const other = type === "math_inline" ? "math_display" : "math_inline";
+	const isOther = node && node.type.name === other;
 	if (dispatch) {
-		const transaction = state.tr.setNodeMarkup(
-			$anchor.pos,
-			node.type,
-			{
-				hideLabel: !node.attrs.hideLabel,
-			},
-			node.marks
-		);
-		dispatch(transaction);
+		if (isOther) {
+			toggleInlineOrBlock(state, dispatch);
+		} else {
+			if (!isActive) {
+				// Insert a new math block
+				insertNodeIntoEditor(state, dispatch, type);
+			} else {
+				const transaction = state.tr.replaceSelectionWith(
+					state.schema.nodes.paragraph.create({}, node.content),
+					true
+				);
+				dispatch(transaction);
+			}
+		}
 	}
+
 	return true;
 };
 
-export const mathToggleKind = createCommandSpec((dispatch, state) => ({
-	run: () => toggleKind(state, dispatch),
-	canRun: toggleKind(state),
-	isActive: false,
+const isMathActive = (state: EditorState, type: MathType) => {
+	const { node } = state.selection as NodeSelection;
+	return node && node.type.name === type;
+};
+
+export const mathToggleInline = createCommandSpec((dispatch, state) => ({
+	run: () => createMathToggle(state, "math_inline", dispatch),
+	canRun: createMathToggle(state, "math_inline"),
+	isActive: isMathActive(state, "math_inline"),
 }));
-export const mathToggleLabel = createCommandSpec((dispatch, state) => ({
-	run: () => toggleLabel(state, dispatch),
-	canRun: toggleLabel(state),
-	isActive: false,
+
+export const mathToggleBlock = createCommandSpec((dispatch, state) => ({
+	run: () => createMathToggle(state, "math_display", dispatch),
+	canRun: createMathToggle(state, "math_display"),
+	isActive: isMathActive(state, "math_display"),
 }));
