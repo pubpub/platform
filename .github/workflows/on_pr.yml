@@ -40,7 +40,7 @@ jobs:
             - uses: pullpreview/action@v5
               with:
                   # Those GitHub users will have SSH access to the servers
-                  admins: crohr,other-github-user
+                  admins: 3mcd
                   # A preview environment will always exist for the main branch
                   always_on: main
                   # Use the cidrs option to restrict access to the live environments to specific IP ranges
