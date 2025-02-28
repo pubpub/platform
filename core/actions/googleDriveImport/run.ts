@@ -138,7 +138,7 @@ export const run = defineRun<typeof action>(
 					const fooDateField = foo.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
-					const barDateField = foo.relatedPub!.values.filter(
+					const barDateField = bar.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
 					const fooDate = new Date(
