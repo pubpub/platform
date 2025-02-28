@@ -1,3 +1,4 @@
+import type { PubsId } from "db/public";
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
@@ -55,7 +56,7 @@ export const run = defineRun<typeof action>(
 					const publicationDate: Date = publicationDateField
 						? (publicationDateField.value as Date)
 						: new Date(values.relatedPub!.createdAt);
-					return { [`${values.id}`]: publicationDate.toISOString() };
+					return { [`${publicationDate.toISOString()}`]: values.relatedPubId };
 				});
 
 			// Versions don't have IDs so we compare timestamps
@@ -123,6 +124,27 @@ export const run = defineRun<typeof action>(
 						};
 					}),
 			];
+
+			/* Lazily update all existing old versions (TODO: Check for changed content) */
+			formattedData.versions
+				.filter((version) =>
+					existingVersionDates.includes(version[`${communitySlug}:publication-date`])
+				)
+				.forEach(async (version) => {
+					const versionDate = version[`${communitySlug}:publication-date`];
+					const relatedVersionId = existingVersionIdPairs.filter(
+						(pair) => pair[versionDate]
+					)[0][versionDate] as PubsId;
+					await updatePub({
+						pubId: relatedVersionId,
+						communityId,
+						lastModifiedBy,
+						continueOnValidationError: false,
+						pubValues: {
+							...version,
+						},
+					});
+				});
 
 			/* NON-MIGRATION */
 			/* If the main doc is updated, make a new version */
