@@ -1,8 +1,6 @@
-import { rehype } from "rehype";
-import { expect, test } from "vitest";
+import { expect, test } from 'vitest';
 
-import { logger } from "logger";
-
+import { rehype } from 'rehype';
 import {
 	appendFigureAttributes,
 	basic,
@@ -30,25 +28,26 @@ import {
 	structureReferences,
 	structureVideos,
 	tableToObjectArray,
-} from "./gdocPlugins";
+} from './gdocPlugins';
+import { logger } from 'logger';
 
 export const trimAll = (html: string | void): string => {
 	if (!html) {
-		return "";
+		return '';
 	}
-	return html.replace(/[\n\t]+/g, "").trim();
+	return html.replace(/[\n\t]+/g, '').trim();
 };
 
-test("Convert basic table", async () => {
+test('Convert basic table', async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Content"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Blockquote"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"ntw1zivowk6"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Share your thoughts!"}]}]},{"type":"element","tagName":"p","children":[{"type":"element","tagName":"u","children":[{"type":"element","tagName":"b","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.pubpub.org"},"children":[{"type":"text","value":"Watch a video tutorial"}]}]}]},{"type":"element","tagName":"span","children":[{"type":"text","value":" on making a PubPub account and commenting."}]}]}]}]}]}]}'
 	);
 	const expectedOutput = [
 		{
-			id: "ntw1zivowk6",
-			type: "blockquote",
+			id: 'ntw1zivowk6',
+			type: 'blockquote',
 			content:
-				"Share your thoughts!Watch a video tutorial on making a PubPub account and commenting.",
+				'Share your thoughts!Watch a video tutorial on making a PubPub account and commenting.',
 		},
 	];
 
@@ -57,21 +56,21 @@ test("Convert basic table", async () => {
 	expect(result).toStrictEqual(expectedOutput);
 });
 
-test("Convert double table", async () => {
+test('Convert double table', async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Alt Text"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Blockquote"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"ntw1zivowk6"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Share your thoughts!"}]}]},{"type":"element","tagName":"p","children":[{"type":"element","tagName":"u","children":[{"type":"element","tagName":"b","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.pubpub.org"},"children":[{"type":"text","value":"Watch a video tutorial"}]}]}]},{"type":"element","tagName":"span","children":[{"type":"text","value":" on making a PubPub account and commenting."}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"123"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"abc"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"okay"}]}]}]}]}]}]}'
 	);
 	const expectedOutput = [
 		{
-			id: "ntw1zivowk6",
-			type: "blockquote",
+			id: 'ntw1zivowk6',
+			type: 'blockquote',
 			alttext:
-				"Share your thoughts!Watch a video tutorial on making a PubPub account and commenting.",
+				'Share your thoughts!Watch a video tutorial on making a PubPub account and commenting.',
 		},
 		{
-			type: "123",
-			id: "abc",
-			alttext: "okay",
+			type: '123',
+			id: 'abc',
+			alttext: 'okay',
 		},
 	];
 
@@ -80,18 +79,18 @@ test("Convert double table", async () => {
 	expect(result).toStrictEqual(expectedOutput);
 });
 
-test("Convert vert table", async () => {
+test('Convert vert table', async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","properties":{},"children":[{"type":"element","tagName":"tbody","properties":{},"children":[{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Image"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Id"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"n8r4ihxcrly"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"https://resize-v3.pubpub.org/123"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Alt Text"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"b","properties":{},"children":[{"type":"text","value":"123"}]}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Align"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"text","value":"full"}]}]}]},{"type":"element","tagName":"tr","properties":{},"children":[{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"element","tagName":"span","properties":{},"children":[{"type":"text","value":"Size"}]}]}]},{"type":"element","tagName":"td","properties":{},"children":[{"type":"element","tagName":"p","properties":{},"children":[{"type":"text","value":"50"}]}]}]}]}]}'
 	);
 	const expectedOutput = [
 		{
-			type: "image",
-			id: "n8r4ihxcrly",
-			source: "https://resize-v3.pubpub.org/123",
-			alttext: "123",
-			align: "full",
-			size: "50",
+			type: 'image',
+			id: 'n8r4ihxcrly',
+			source: 'https://resize-v3.pubpub.org/123',
+			alttext: '123',
+			align: 'full',
+			size: '50',
 		},
 	];
 
@@ -100,15 +99,15 @@ test("Convert vert table", async () => {
 	expect(result).toStrictEqual(expectedOutput);
 });
 
-test("Convert link-source table", async () => {
+test('Convert link-source table', async () => {
 	const inputNode = JSON.parse(
 		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Static Image"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Video"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.image-url.com"},"children":[{"type":"text","value":"image-filename.png"}]}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.fallback-url.com"},"children":[{"type":"text","value":"fallback-filename.png"}]}]}]}]}]}]}]}'
 	);
 	const expectedOutput = [
 		{
-			source: "https://www.image-url.com",
-			type: "video",
-			staticimage: "https://www.fallback-url.com",
+			source: 'https://www.image-url.com',
+			type: 'video',
+			staticimage: 'https://www.fallback-url.com'
 		},
 	];
 
@@ -117,7 +116,7 @@ test("Convert link-source table", async () => {
 	expect(result).toStrictEqual(expectedOutput);
 });
 
-test("Do Nothing", async () => {
+test('Do Nothing', async () => {
 	const inputHtml =
 		'<html><head><script src="blah.js"></script><style>.blah{}</style></head><body><div>Content</div></body></html>';
 	const expectedOutputHtml =
@@ -134,11 +133,11 @@ test("Do Nothing", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Formatting", async () => {
+test('Structure Formatting', async () => {
 	const inputHtml =
 		'<html><head></head><body><div>Content <span style="font-weight: 700">Spatial imaging data</span></div></body></html>';
 	const expectedOutputHtml =
-		"<html><head></head><body><div>Content <b>Spatial imaging data</b></div></body></html>";
+		'<html><head></head><body><div>Content <b>Spatial imaging data</b></div></body></html>';
 
 	const result = await rehype()
 		.use(structureFormatting)
@@ -151,11 +150,11 @@ test("Structure Formatting", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Remove Verbose Attributes", async () => {
+test('Remove Verbose Attributes', async () => {
 	const inputHtml =
 		'<html><head><title>Okay</title><script></script></head><body><div>Content <span class="dog" style="font-weight: 700">Spatial imaging data</span></div></body></html>';
 	const expectedOutputHtml =
-		"<html><head><title>Okay</title></head><body><div>Content <span>Spatial imaging data</span></div></body></html>";
+		'<html><head><title>Okay</title></head><body><div>Content <span>Spatial imaging data</span></div></body></html>';
 
 	const result = await rehype()
 		.use(removeVerboseFormatting)
@@ -168,7 +167,7 @@ test("Remove Verbose Attributes", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Images", async () => {
+test('Structure Images', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -225,7 +224,7 @@ test("Structure Images", async () => {
 
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
-test("Structure Images - Vert Table", async () => {
+test('Structure Images - Vert Table', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -292,7 +291,7 @@ test("Structure Images - Vert Table", async () => {
 
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
-test("Structure Images - DoubleVert Table", async () => {
+test('Structure Images - DoubleVert Table', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -371,7 +370,7 @@ test("Structure Images - DoubleVert Table", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Videos", async () => {
+test('Structure Videos', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -432,7 +431,8 @@ test("Structure Videos", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Audio", async () => {
+
+test('Structure Audio', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -490,7 +490,7 @@ test("Structure Audio", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Files", async () => {
+test('Structure Files', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -547,7 +547,7 @@ test("Structure Files", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Iframes", async () => {
+test('Structure Iframes', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -607,7 +607,7 @@ test("Structure Iframes", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure BlockMath", async () => {
+test('Structure BlockMath', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -652,13 +652,14 @@ test("Structure BlockMath", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure InlineMath", async () => {
+test('Structure InlineMath', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
 			<body>
 				<p>I am just writing a lovely $10 equation like this $y=2x + 5$</p>
 				<p>Should also work as long as styling doesn't <b>change throughout, such as $z= 25x + 2$ and <i>so</i> on.</b></p>
+				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
 			</body>
 		</html>
 	`;
@@ -668,6 +669,7 @@ test("Structure InlineMath", async () => {
 			<body>
 				<p>I am just writing a lovely $10 equation like this <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">y=2x + 5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span></span></p>
 				<p>Should also work as long as styling doesn't <b>change throughout, such as <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>25</mn><mi>x</mi><mo>+</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">z= 25x + 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">25</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></span> and <i>so</i> on.</b></p>
+				<p>Now consider two different genes, <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> and <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span></span>, with variation in allelic state across a population of diploid organisms. One gene <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> has two alleles <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> and <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">a</span></span></span></span></span>, resulting in three allelic states, </p>
 			</body>
 		</html>
 		`;
@@ -683,7 +685,7 @@ test("Structure InlineMath", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Blockquote", async () => {
+test('Structure Blockquote', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -730,7 +732,7 @@ test("Structure Blockquote", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Code Block", async () => {
+test('Structure Code Block', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -781,7 +783,7 @@ test("Structure Code Block", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure InlineCode", async () => {
+test('Structure InlineCode', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -812,7 +814,7 @@ test("Structure InlineCode", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Anchors", async () => {
+test('Structure Anchors', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -854,7 +856,7 @@ test("Structure Anchors", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure References", async () => {
+test('Structure References', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -948,7 +950,7 @@ test("Structure References", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("cleanUnusedSpans", async () => {
+test('cleanUnusedSpans', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -978,7 +980,9 @@ test("cleanUnusedSpans", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Footnotes", async () => {
+
+
+test('Structure Footnotes', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1031,7 +1035,7 @@ test("Structure Footnotes", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("removeGoogleLinkForwards", async () => {
+test('removeGoogleLinkForwards', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1083,7 +1087,7 @@ test("removeGoogleLinkForwards", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("processLocalLinks", async () => {
+test('processLocalLinks', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1133,7 +1137,7 @@ test("processLocalLinks", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("removeEmptyFigCaption", async () => {
+test('removeEmptyFigCaption', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1168,7 +1172,7 @@ test("removeEmptyFigCaption", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("formatLists", async () => {
+test('formatLists', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1235,7 +1239,7 @@ test("formatLists", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("removeDescriptions", async () => {
+test('removeDescriptions', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1271,7 +1275,7 @@ test("removeDescriptions", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("getDescription", async () => {
+test('getDescription', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1296,7 +1300,7 @@ test("getDescription", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("formatFigureReferences", async () => {
+test('formatFigureReferences', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1388,7 +1392,7 @@ test("formatFigureReferences", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("appendFigureAttributes", async () => {
+test('appendFigureAttributes', async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
