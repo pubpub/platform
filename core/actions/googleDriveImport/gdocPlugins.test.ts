@@ -6,6 +6,7 @@ import { logger } from "logger";
 import {
 	appendFigureAttributes,
 	basic,
+	cleanUnusedSpans,
 	formatFigureReferences,
 	formatLists,
 	getDescription,
@@ -91,6 +92,23 @@ test("Convert vert table", async () => {
 			alttext: "123",
 			align: "full",
 			size: "50",
+		},
+	];
+
+	const result = tableToObjectArray(inputNode);
+
+	expect(result).toStrictEqual(expectedOutput);
+});
+
+test("Convert link-source table", async () => {
+	const inputNode = JSON.parse(
+		'{"type":"element","tagName":"table","children":[{"type":"element","tagName":"tbody","children":[{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Type"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"text"},{"type":"element","tagName":"span","children":[{"type":"text","value":"Source"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Static Image"}]}]}]}]},{"type":"element","tagName":"tr","children":[{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"text","value":"Video"}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.image-url.com"},"children":[{"type":"text","value":"image-filename.png"}]}]}]}]},{"type":"element","tagName":"td","children":[{"type":"element","tagName":"p","children":[{"type":"element","tagName":"span","children":[{"type":"element","tagName":"a","properties":{"href":"https://www.fallback-url.com"},"children":[{"type":"text","value":"fallback-filename.png"}]}]}]}]}]}]}]}'
+	);
+	const expectedOutput = [
+		{
+			source: "https://www.image-url.com",
+			type: "video",
+			staticimage: "https://www.fallback-url.com",
 		},
 	];
 
@@ -353,7 +371,7 @@ test("Structure Images - DoubleVert Table", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure Images", async () => {
+test("Structure Videos", async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -641,6 +659,7 @@ test("Structure InlineMath", async () => {
 			<body>
 				<p>I am just writing a lovely $10 equation like this $y=2x + 5$</p>
 				<p>Should also work as long as styling doesn't <b>change throughout, such as $z= 25x + 2$ and <i>so</i> on.</b></p>
+				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
 			</body>
 		</html>
 	`;
@@ -650,6 +669,7 @@ test("Structure InlineMath", async () => {
 			<body>
 				<p>I am just writing a lovely $10 equation like this <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>2</mn><mi>x</mi><mo>+</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">y=2x + 5</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.03588em;">y</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">2</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">5</span></span></span></span></span></p>
 				<p>Should also work as long as styling doesn't <b>change throughout, such as <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>=</mo><mn>25</mn><mi>x</mi><mo>+</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">z= 25x + 2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7278em;vertical-align:-0.0833em;"></span><span class="mord">25</span><span class="mord mathnormal">x</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">2</span></span></span></span></span> and <i>so</i> on.</b></p>
+				<p>Now consider two different genes, <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> and <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi></mrow><annotation encoding="application/x-tex">B</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.05017em;">B</span></span></span></span></span>, with variation in allelic state across a population of diploid organisms. One gene <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> has two alleles <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi></mrow><annotation encoding="application/x-tex">A</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal">A</span></span></span></span></span> and <span class="math-block"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi></mrow><annotation encoding="application/x-tex">a</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">a</span></span></span></span></span>, resulting in three allelic states, </p>
 			</body>
 		</html>
 		`;
@@ -878,6 +898,7 @@ test("Structure References", async () => {
 				</table>
 				<p>I'd also like to add [10.12341] here.</p>
 				<p>And this should be the same number [10.12341] here. But this diff, [10.5123/123]. </p>
+				<p><span>Two more [</span><u><a href="10.1016/S0167-4781(02)00500-6">10.1016/S0167-4781(02)00500-6</a></u><span>]</span><span>[</span><span>10.abc123</span><span>].</span></p>
 			</body>
 		</html>
 	`;
@@ -906,12 +927,50 @@ test("Structure References", async () => {
 							 data-type="reference" data-value="10.5123/123">
 							[4]
 						</a>. </p>
+				<p>Two more <a
+							 data-type="reference" data-value="10.1016/S0167-4781(02)00500-6">
+							[5]
+						</a><a
+							 data-type="reference" data-value="10.abc123">
+							[6]
+						</a>.</p>
 			</body>
 		</html>
 	`;
 
 	const result = await rehype()
+		.use(cleanUnusedSpans)
 		.use(structureReferences)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("cleanUnusedSpans", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p><span>Hello </span><span>there.</span></p>
+				<p><span>What?</span></p>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `<html>
+			<head></head>
+			<body>
+				<p>Hello there.</p>
+				<p>What?</p>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(cleanUnusedSpans)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
