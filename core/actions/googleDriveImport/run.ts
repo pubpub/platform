@@ -41,6 +41,23 @@ export const run = defineRun<typeof action>(
 				existingPubs.forEach((pub) => existingDiscussionPubIds.push(pub.id));
 			}
 
+			const existingVersionIdPairs = pub.values
+				.filter(
+					(values) =>
+						values.fieldSlug === `${communitySlug}:versions` &&
+						values.relatedPubId &&
+						values.relatedPub
+				)
+				.map((values) => {
+					const publicationDateField = values.relatedPub!.values.filter(
+						(value) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+					const publicationDate: Date = publicationDateField
+						? (publicationDateField.value as Date)
+						: new Date(values.relatedPub!.createdAt);
+					return { [`${values.id}`]: publicationDate.toISOString() };
+				});
+
 			// Versions don't have IDs so we compare timestamps
 			const existingVersionDates = pub.values
 				.filter(
@@ -85,6 +102,7 @@ export const run = defineRun<typeof action>(
 							relatedPubId: discussion.id,
 						};
 					}),
+				/* Create new versions from gdrive if they don't exist */
 				...formattedData.versions
 					.filter(
 						(version) =>
@@ -123,13 +141,12 @@ export const run = defineRun<typeof action>(
 					const barDateField = foo.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
-
-					const fooDate: Date = fooDateField
-						? fooDateField.value
-						: foo.relatedPub!.createdAt;
-					const barDate: Date = barDateField
-						? barDateField.value
-						: foo.relatedPub!.createdAt;
+					const fooDate = new Date(
+						fooDateField ? fooDateField.value : foo.relatedPub!.createdAt
+					);
+					const barDate = new Date(
+						barDateField ? barDateField.value : bar.relatedPub!.createdAt
+					);
 					return barDate.getTime() - fooDate.getTime();
 				});
 
