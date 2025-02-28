@@ -590,7 +590,7 @@ export const structureBlockMath = () => (tree: Root) => {
 export const structureInlineMath = () => (tree: Root) => {
 	visit(tree, "text", (node: any, index: any, parent: any) => {
 		if (typeof node.value === "string") {
-			const regex = /\$(\S[^$]*\S)\$/g;
+			const regex = /\$(\S(?:[^$]*\S)?)\$/g;
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
