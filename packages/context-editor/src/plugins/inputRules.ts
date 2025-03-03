@@ -1,7 +1,7 @@
-import type { MarkType } from "prosemirror-model";
+import type { MarkType, NodeType } from "prosemirror-model";
 import type { EditorState } from "prosemirror-state";
 
-import { InputRule, inputRules } from "prosemirror-inputrules";
+import { InputRule, inputRules, wrappingInputRule } from "prosemirror-inputrules";
 import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
@@ -39,6 +39,7 @@ const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 		}
 	);
 };
+const blockQuoteRule = (nodeType: NodeType) => wrappingInputRule(/^\s*>\s$/, nodeType);
 
 export default (schema: Schema) => {
 	const rules = [
@@ -54,6 +55,7 @@ export default (schema: Schema) => {
 		// Prosemirror applies the first rule that matches
 		applyMarkRule(schema.marks.strong, boldRegex),
 		applyMarkRule(schema.marks.em, italicsRegex),
+		blockQuoteRule(schema.nodes.blockquote),
 	];
 	return inputRules({ rules });
 };
