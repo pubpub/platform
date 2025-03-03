@@ -92,6 +92,7 @@
 .ProseMirror h6,
 .ProseMirror p,
 .ProseMirror code,
+.ProseMirror math-display,
 .ProseMirror section {
 	border-left: 1px solid #777;
 	padding-left: 5px;
