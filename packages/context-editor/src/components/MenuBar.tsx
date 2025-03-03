@@ -1,7 +1,7 @@
 import type { LucideProps } from "lucide-react";
 import type { ReactNode } from "react";
 
-import React from "react";
+import React, { Fragment } from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
 import { Bold, Italic, Quote, Radical, SquareRadical } from "lucide-react";
 
@@ -201,7 +201,7 @@ export const MenuBar = () => {
 				{menuBlocks.map((menuBlock, index) => {
 					const isLast = index === menuBlocks.length - 1;
 					return (
-						<>
+						<Fragment key={index}>
 							<div className={cn("flex items-center gap-1")}>
 								{menuBlock.map((menuItem) => {
 									return (
@@ -210,7 +210,7 @@ export const MenuBar = () => {
 								})}
 							</div>
 							{!isLast && <Separator />}
-						</>
+						</Fragment>
 					);
 				})}
 			</div>
