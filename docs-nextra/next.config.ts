@@ -14,7 +14,7 @@ const withNextra = nextra({
 });
 
 const nextConfig: NextConfig = withNextra({
-	// output: "export",
+	output: "export",
 
 	experimental: {
 		// mdxRs: true,
