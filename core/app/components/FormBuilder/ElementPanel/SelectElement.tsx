@@ -51,7 +51,9 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						type: ElementType.pubfield,
 						rank: mudder.base62.mudder(elements[elementsCount - 1].rank, "", 1)[0],
 						configured: false,
-						label: field.name,
+						config: field.isRelation
+							? { relationshipConfig: { label: field.name } }
+							: { label: field.name },
 						component,
 						schemaName,
 						isRelation: field.isRelation,
