@@ -31,15 +31,22 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
+
     deploy-preview:
         runs-on: ubuntu-latest
         timeout-minutes: 30
-        # needs:
-        #     - e2e
+        needs:
+            - build-all
         steps:
             - uses: actions/checkout@v4
+
             - name: Copy .env file
               run: cp ./self-host/.env.example ./self-host/.env
+
+            - name: Login to Amazon ECR
+                id: login-ecr
+                uses: aws-actions/amazon-ecr-login@v2
+
             - uses: pullpreview/action@v5
               with:
                   # Those GitHub users will have SSH access to the servers
@@ -60,3 +67,6 @@ jobs:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   AWS_REGION: ${{ env.AWS_REGION }}
+                  PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
+                  JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
+                  MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}

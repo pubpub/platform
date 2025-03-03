@@ -1,5 +1,6 @@
 services:
     platform:
+        image: ${PLATFORM_IMAGE}
         environment:
             POSTGRES_USER: preview
             POSTGRES_PASSWORD: preview
@@ -8,6 +9,10 @@ services:
             MINIO_ROOT_PASSWORD: preview
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
+    platform-jobs:
+        image: ${JOBS_IMAGE}
+    platform-migrations:
+        image: ${MIGRATIONS_IMAGE}
     caddy:
         image: caddy:latest
         restart: unless-stopped
@@ -28,7 +33,7 @@ services:
     seed:
         platform: linux/amd64
         depends_on:
-            db:
+            platform:
                 condition: service_started
         image: ghcr.io/pubpub/platform-migrations:latest
         env_file: .env
