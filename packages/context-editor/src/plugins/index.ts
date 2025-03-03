@@ -4,6 +4,7 @@ import { Schema } from "prosemirror-model";
 
 import type { ContextEditorProps, PanelProps } from "../ContextEditor";
 import attributePanel from "./attributePanel";
+import code from "./code";
 import contextSuggest from "./contextSuggest";
 import inputRules from "./inputRules";
 import onChange from "./onChange";
@@ -25,7 +26,8 @@ export const basePlugins = (
 		structureDecorations(),
 		attributePanel(panelPosition, setPanelPosition),
 		onChange(),
-		mathPlugin,
 		inputRules(schema),
+		mathPlugin,
+		...code(schema, {}),
 	];
 };
