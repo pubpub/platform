@@ -39,7 +39,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Copy .env file
-              run: cp ./self-host/.env.example .env
+              run: cp ./self-host/.env.example ./self-host/.env
             - uses: pullpreview/action@v5
               with:
                   # Those GitHub users will have SSH access to the servers
