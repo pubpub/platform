@@ -173,6 +173,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 						pubId={"" as PubsId}
 						pubTypeId={"" as PubTypesId}
 						className="-ml-6 -mt-4 h-full w-full overflow-scroll"
+						hideMenu
 					/>
 				</div>
 			);

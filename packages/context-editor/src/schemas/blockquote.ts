@@ -14,6 +14,7 @@ export default {
 			getAttrs: (node) => {
 				return {
 					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
 				};
 			},
 		},

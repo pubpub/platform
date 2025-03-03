@@ -3,7 +3,7 @@ import type { MarkType } from "prosemirror-model";
 import { toggleMark as pmToggleMark } from "prosemirror-commands";
 
 import type { ToggleOptions } from "./types";
-import { createTypeToggle } from "./utils";
+import { createTypeToggle } from "./util";
 
 export const markIsActive = (options: ToggleOptions<MarkType>) => {
 	const { type, state } = options;
