@@ -97,26 +97,55 @@ export const tableToObjectArray = (node: any) => {
 	const isHoriz = validTypes.includes(headersVert[1].toLowerCase());
 	const isVert = validTypes.includes(headersHoriz[1].toLowerCase());
 
+	const getCellContent = (tableType: string, headerVal: string, cell: any): any => {
+		const isTypeWithHtmlValue =
+			!["math", "reference"].includes(tableType) && headerVal === "value";
+		const isCaption = headerVal === "caption";
+		if (isTypeWithHtmlValue || isCaption) {
+			return cell.children;
+		}
+
+		const isAssetSource =
+			["image", "video", "audio", "file"].includes(tableType) && headerVal === "source";
+		const isStaticSource = headerVal === "staticimage";
+		if (isAssetSource || isStaticSource) {
+			const findAnchor = (node: any): any => {
+				if (node.tagName === "a") {
+					return node;
+				}
+				if (node.children) {
+					for (const child of node.children) {
+						const found = findAnchor(child);
+						if (found) {
+							return found;
+						}
+					}
+				}
+				return null;
+			};
+
+			const anchor = findAnchor(cell);
+			if (anchor && anchor.properties.href) {
+				return anchor.properties.href;
+			}
+		}
+
+		return getTextContent(cell).trim();
+	};
+
 	let data;
 	if (isHoriz) {
 		data = rows.slice(1).map((row: any) => {
 			const cells = row.children.filter((child: any) => child.tagName === "td");
-			const obj: { [key: string]: any } = {};
 			const typeIndex = headersHoriz.findIndex((header) => header === "type");
 			const tableType = getTextContent(cells[typeIndex])
 				.trim()
 				.toLowerCase()
 				.replace(/\s+/g, "");
+			const obj: { [key: string]: any } = {};
 			cells.forEach((cell: any, index: number) => {
-				if (
-					(!["math", "reference"].includes(tableType) &&
-						headersHoriz[index] === "value") ||
-					headersHoriz[index] === "caption"
-				) {
-					obj[headersHoriz[index]] = cell.children;
-				} else {
-					obj[headersHoriz[index]] = getTextContent(cell).trim();
-				}
+				const headerVal = headersHoriz[index];
+				obj[headersHoriz[index]] = getCellContent(tableType, headerVal, cell);
 			});
 
 			return { ...obj, type: tableType };
@@ -132,15 +161,8 @@ export const tableToObjectArray = (node: any) => {
 
 			rows.forEach((row: any, rowIndex: number) => {
 				const cell = row.children[colIndex + 1];
-				if (
-					(!["math", "reference"].includes(tableType) &&
-						headersVert[rowIndex] === "value") ||
-					headersVert[rowIndex] === "caption"
-				) {
-					obj[headersVert[rowIndex]] = cell.children;
-				} else {
-					obj[headersVert[rowIndex]] = getTextContent(cell).trim();
-				}
+				const headerVal = headersVert[rowIndex];
+				obj[headersVert[rowIndex]] = getCellContent(tableType, headerVal, cell);
 			});
 			return { ...obj, type: tableType };
 		});
@@ -568,7 +590,7 @@ export const structureBlockMath = () => (tree: Root) => {
 export const structureInlineMath = () => (tree: Root) => {
 	visit(tree, "text", (node: any, index: any, parent: any) => {
 		if (typeof node.value === "string") {
-			const regex = /\$(\S[^$]*\S)\$/g;
+			const regex = /\$(\S(?:[^$]*\S)?)\$/g;
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
@@ -709,8 +731,65 @@ export const structureAnchors = () => (tree: Root) => {
 		}
 	});
 };
+export const cleanUnusedSpans = () => (tree: Root) => {
+	visit(tree, "element", (node: any, index: any, parent: any) => {
+		if (
+			node.tagName === "span" &&
+			(!node.properties || Object.keys(node.properties).length === 0)
+		) {
+			if (parent && typeof index === "number") {
+				parent.children.splice(index, 1, ...node.children);
+			}
+		}
+	});
+
+	visit(tree, "element", (node: any) => {
+		if (node.children) {
+			for (let i = 0; i < node.children.length - 1; i++) {
+				if (node.children[i].type === "text" && node.children[i + 1].type === "text") {
+					node.children[i].value += node.children[i + 1].value;
+					node.children.splice(i + 1, 1);
+					i--;
+				}
+			}
+		}
+	});
+};
+
 export const structureReferences = () => (tree: Root) => {
 	const allReference: any[] = [];
+	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
+	visit(tree, (node: any, index: any, parent: any) => {
+		/* Remove all links on [doi.org/12] references. */
+		if (node.tagName === "u") {
+			const parentText = getTextContent(parent);
+			const nodeText = getTextContent(node);
+			if (doiBracketRegex.test(parentText)) {
+				const elements = [
+					{
+						type: "text",
+						value: `[${nodeText}]`,
+					},
+				];
+
+				if (parent && typeof index === "number") {
+					if (elements.length > 0) {
+						const prevChild = parent.children[index - 1];
+						const nextChild = parent.children[index + 1];
+
+						if (prevChild && prevChild.type === "text") {
+							prevChild.value = prevChild.value.slice(0, -1);
+						}
+
+						if (nextChild && nextChild.type === "text") {
+							nextChild.value = nextChild.value.slice(1);
+						}
+					}
+					parent.children.splice(index, 1, ...elements);
+				}
+			}
+		}
+	});
 
 	const doiReferenceCounts: { [key: string]: number } = {};
 	visit(tree, (node: any, index: any, parent: any) => {
@@ -725,12 +804,11 @@ export const structureReferences = () => (tree: Root) => {
 			}
 		}
 		if (typeof node.value === "string") {
-			const regex = new RegExp(/\[(10\.\S+|https:\/\/doi\.org\/\S+)\]/g);
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
 
-			while ((match = regex.exec(node.value)) !== null) {
+			while ((match = doiBracketRegex.exec(node.value)) !== null) {
 				const [_fullMatch, referenceDoi] = match;
 				let currentRefId;
 				if (!doiReferenceCounts[referenceDoi]) {
@@ -747,7 +825,7 @@ export const structureReferences = () => (tree: Root) => {
 				}
 
 				const startIndex = match.index;
-				const endIndex = regex.lastIndex;
+				const endIndex = doiBracketRegex.lastIndex;
 
 				if (startIndex > lastIndex) {
 					elements.push({
