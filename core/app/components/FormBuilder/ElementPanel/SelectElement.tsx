@@ -2,7 +2,7 @@ import mudder from "mudder";
 import { useFormContext } from "react-hook-form";
 import { defaultComponent } from "schemas";
 
-import { ElementType, StructuralFormElement } from "db/public";
+import { ElementType, InputComponent, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
@@ -52,7 +52,12 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						rank: mudder.base62.mudder(elements[elementsCount - 1].rank, "", 1)[0],
 						configured: false,
 						config: field.isRelation
-							? { relationshipConfig: { label: field.name } }
+							? {
+									relationshipConfig: {
+										label: field.name,
+										component: InputComponent.relationBlock,
+									},
+								}
 							: { label: field.name },
 						component,
 						schemaName,
