@@ -414,7 +414,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 						data-testid="save-configuration-button"
 						type="submit"
 						className="bg-blue-500 hover:bg-blue-600"
-						disabled={!form.formState.isDirty}
+						disabled={!form.formState.isDirty && fieldInputElement.configured}
 					>
 						Save
 					</Button>

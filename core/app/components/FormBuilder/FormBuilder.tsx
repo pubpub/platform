@@ -194,7 +194,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		[elements]
 	);
 	const removeIfUnconfigured = useCallback(() => {
-		if (panelState.selectedElementIndex === null) {
+		if (panelState.selectedElementIndex === null || panelState.backButton !== "selecting") {
 			return;
 		}
 		const element = elements[panelState.selectedElementIndex];
