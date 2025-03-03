@@ -54,6 +54,7 @@
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.445.0",
+		"@aws-sdk/lib-storage": "^3.750.0",
 		"@aws-sdk/s3-request-presigner": "^3.445.0",
 		"@dagrejs/dagre": "^1.0.4",
 		"@dnd-kit/core": "^6.1.0",
@@ -99,7 +100,7 @@
 		"import-in-the-middle": "^1.12.0",
 		"jsonpath-plus": "^10.2.0",
 		"jsonwebtoken": "^9.0.0",
-		"katex": "^0.16.18",
+		"katex": "catalog:",
 		"kysely": "^0.27.3",
 		"lodash.partition": "^4.6.0",
 		"logger": "workspace:*",

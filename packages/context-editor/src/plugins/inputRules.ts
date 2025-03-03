@@ -1,7 +1,13 @@
-import type { MarkType } from "prosemirror-model";
+import type { MarkType, NodeType } from "prosemirror-model";
 import type { EditorState } from "prosemirror-state";
 
-import { InputRule, inputRules } from "prosemirror-inputrules";
+import {
+	makeBlockMathInputRule,
+	makeInlineMathInputRule,
+	REGEX_BLOCK_MATH_DOLLARS,
+	REGEX_INLINE_MATH_DOLLARS,
+} from "@benrbray/prosemirror-math";
+import { InputRule, inputRules, wrappingInputRule } from "prosemirror-inputrules";
 import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
@@ -39,6 +45,11 @@ const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 		}
 	);
 };
+const blockQuoteRule = (nodeType: NodeType) => wrappingInputRule(/^\s*>\s$/, nodeType);
+const inlineMathRule = (nodeType: NodeType) =>
+	makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, nodeType);
+const blockMathRule = (nodeType: NodeType) =>
+	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType);
 
 export default (schema: Schema) => {
 	const rules = [
@@ -54,6 +65,9 @@ export default (schema: Schema) => {
 		// Prosemirror applies the first rule that matches
 		applyMarkRule(schema.marks.strong, boldRegex),
 		applyMarkRule(schema.marks.em, italicsRegex),
+		blockQuoteRule(schema.nodes.blockquote),
+		inlineMathRule(schema.nodes.math_inline),
+		blockMathRule(schema.nodes.math_display),
 	];
 	return inputRules({ rules });
 };
