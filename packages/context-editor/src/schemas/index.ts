@@ -1,5 +1,7 @@
 import { Schema } from "prosemirror-model";
 
+import blockquote from "./blockquote";
+import inlineCode from "./code";
 import contextAtom from "./contextAtom";
 import contextDoc from "./contextDoc";
 // import { marks, nodes } from "prosemirror-schema-basic";
@@ -21,10 +23,12 @@ export const baseSchema = new Schema({
 		heading,
 		contextDoc,
 		contextAtom,
+		blockquote,
 	},
 	marks: {
 		strong,
 		em,
+		code: inlineCode,
 	},
 	topNode: "doc",
 });
