@@ -37,9 +37,9 @@ jobs:
         # needs:
         #     - e2e
         steps:
+            - uses: actions/checkout@v4
             - name: Copy .env file
               run: cp ./self-host/.env.example .env
-            - uses: actions/checkout@v4
             - uses: pullpreview/action@v5
               with:
                   # Those GitHub users will have SSH access to the servers
