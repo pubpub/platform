@@ -53,7 +53,7 @@ jobs:
                   # The preview URL will target this port
                   default_port: 3000
                   # Use a 512MB RAM instance type instead of the default 2GB
-                  instance_type: nano
+                  instance_type: small
                   # Ports to open on the server
                   ports: 3000
               env:
