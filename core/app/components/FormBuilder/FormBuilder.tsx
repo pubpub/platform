@@ -5,9 +5,13 @@ import type { DragEndEvent } from "@dnd-kit/core";
 import * as React from "react";
 import { useCallback, useReducer, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { DndContext } from "@dnd-kit/core";
+import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+	SortableContext,
+	sortableKeyboardCoordinates,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
 import mudder from "mudder";
 import { useFieldArray, useForm } from "react-hook-form";
@@ -236,6 +240,13 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	const tokens = { content: renderWithPubTokens };
 
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
+
 	return (
 		<TokenProvider tokens={tokens}>
 			<FormBuilderProvider
@@ -265,7 +276,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 							<TabsTrigger value="builder">Builder</TabsTrigger>
 							<TabsTrigger value="preview">Preview</TabsTrigger>
 						</TabsList>
-						<TabsContent value="builder">
+						<TabsContent value="builder" tabIndex={-1}>
 							<Form {...form}>
 								<form
 									id={id}
@@ -290,6 +301,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 															restrictToParentElement,
 														]}
 														onDragEnd={handleDragEnd}
+														sensors={sensors}
 													>
 														<SortableContext
 															items={elements}

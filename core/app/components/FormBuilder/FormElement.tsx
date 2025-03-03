@@ -1,3 +1,4 @@
+import type { KeyboardEventHandler } from "react";
 import type { FieldArrayWithId } from "react-hook-form";
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -67,18 +68,20 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		</Button>
 	);
 	return (
+		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div
 			ref={setNodeRef}
 			style={style}
 			{...attributes}
+			onKeyDown={listeners?.onKeyDown as KeyboardEventHandler}
 			className={cn(
-				"flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
+				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				element.deleted && "border-l-red-200"
 			)}
 		>
-			<div className="group flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
+			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
 				{isFieldInput(element) && (
 					<FieldInputElement element={element} isEditing={isEditing} />
 				)}
@@ -92,9 +95,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 						{restoreRemoveButton}
 						<Button
 							type="button"
+							aria-label="Edit field"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="invisible p-2 group-hover:visible"
+							className="invisible p-2 group-hover:visible group-focus:visible"
 							onClick={() => {
 								openConfigPanel(index);
 							}}
@@ -103,10 +107,12 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 						</Button>
 						<Button
 							type="button"
+							aria-label="Drag handle"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="invisible p-1.5 group-hover:visible"
+							className="invisible p-1.5 group-hover:visible group-focus:visible"
 							{...listeners}
+							{...attributes}
 						>
 							<GripVertical size={24} className="text-neutral-400" />
 						</Button>
