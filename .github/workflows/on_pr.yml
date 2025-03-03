@@ -37,6 +37,8 @@ jobs:
         # needs:
         #     - e2e
         steps:
+            - name: Copy .env file
+              run: cp ./self-host/.env.example .env
             - uses: actions/checkout@v4
             - uses: pullpreview/action@v5
               with:
