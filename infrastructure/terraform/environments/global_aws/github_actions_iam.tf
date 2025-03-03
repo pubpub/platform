@@ -146,7 +146,7 @@ resource "aws_iam_role_policy_attachment" "gha_attach_secrets" {
   policy_arn = aws_iam_policy.github_actions_secrets.arn
 }
 
-resource "aws_iam_role_policy_attachment" "gha_attach_lightsail" {
-  role       = aws_iam_role.github_actions_role.name
+resource "aws_iam_user_policy_attachment" "gha_user_attach_lightsail" {
+  user       = aws_iam_user.github_actions.name
   policy_arn = aws_iam_policy.lightsail.arn
 }
