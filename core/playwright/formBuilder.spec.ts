@@ -238,3 +238,32 @@ test.describe("relationship fields", () => {
 		await formEditPage.saveForm();
 	});
 });
+
+test.describe("reordering fields", async () => {
+	test("field order is persisted after saving", async () => {
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+
+		await formEditPage.goto();
+
+		const elementsRegex = RegExp(`(Paragraph|${COMMUNITY_SLUG}).*`);
+
+		const initialElements = await page
+			.getByRole("button", { name: elementsRegex })
+			.allTextContents();
+		await page.getByRole("button", { name: 'Paragraph :value{field="title' }).press(" ");
+		await page.keyboard.press("ArrowDown");
+		await page.keyboard.press(" ");
+
+		const changedElements = await page.getByRole("button", { name: elementsRegex });
+
+		// Make sure reordering worked on the client
+		expect(changedElements).not.toHaveText(initialElements);
+
+		await formEditPage.saveForm();
+
+		// Make sure the form is returned in the same order it was saved in
+		await expect(page.getByRole("button", { name: elementsRegex })).toHaveText(
+			await changedElements.allTextContents()
+		);
+	});
+});
