@@ -175,7 +175,9 @@ test.describe("relationship fields", () => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
-				const authorElement = elements.find((e: PubFieldElement) => e.label === "author");
+				const authorElement = elements.find(
+					(e: PubFieldElement) => "label" in e.config && e.config.label === "Role"
+				);
 				expect(authorElement.component).toEqual(InputComponent.textArea);
 				expect(authorElement.config).toMatchObject({
 					relationshipConfig: {
@@ -219,7 +221,9 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
 				const authorElement = elements.find(
-					(e: PubFieldElement) => e.label === "author null"
+					(e: PubFieldElement) =>
+						"relationshipConfig" in e.config &&
+						e.config.relationshipConfig.label === "Authors"
 				);
 				expect(authorElement.component).toBeNull();
 				expect(authorElement.config).toMatchObject({
