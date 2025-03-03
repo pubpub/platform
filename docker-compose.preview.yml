@@ -10,7 +10,7 @@ services:
             ASSETS_UPLOAD_SECRET_KEY: preview
     seed:
         image: alpine:latest
-        command: ["docker", "compose", "exec", "platform", "pnpm", "--filter", "core", "reset"]'
+        command: ["docker", "compose", "exec", "platform", "pnpm", "--filter", "core", "reset"]
         depends_on:
             platform:
                 condition: service_started
