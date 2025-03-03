@@ -1,58 +1,154 @@
-import type { MarkType } from "prosemirror-model";
-import type { Command, EditorState } from "prosemirror-state";
 import type { ReactNode } from "react";
 
 import React from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { toggleMark } from "prosemirror-commands";
+import { Quote } from "lucide-react";
 
 import { Button } from "ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { cn } from "utils";
 
-import { baseSchema } from "../schemas";
-import { markIsActive } from "../utils/marks";
+import type { CommandSpec } from "../commands/types";
+import {
+	blockquoteToggle,
+	heading1Toggle,
+	heading2Toggle,
+	heading3Toggle,
+	heading4Toggle,
+	heading5Toggle,
+	heading6Toggle,
+	paragraphToggle,
+} from "../commands/blocks";
+import { emToggle, strongToggle } from "../commands/marks";
 
-interface MenuItem {
-	name: string;
+type MenuItem = {
+	key: string;
+	name?: string;
 	icon: ReactNode;
-	type: MarkType; // eventually should also be NodeType
-	command: Command;
-}
+	command: CommandSpec;
+};
 
 const menuItems: MenuItem[] = [
 	{
-		name: "strong",
+		key: "strong",
 		icon: "B",
-		type: baseSchema.marks.strong,
-		command: toggleMark(baseSchema.marks.strong),
+		command: strongToggle,
 	},
 	{
-		name: "em",
+		key: "em",
 		icon: <span className="italic">I</span>,
-		type: baseSchema.marks.em,
-		command: toggleMark(baseSchema.marks.em),
+		command: emToggle,
+	},
+	{
+		key: "blockquote",
+		icon: <Quote />,
+		command: blockquoteToggle,
 	},
 ];
+
+const paragraphTypeItems: MenuItem[] = [
+	{
+		key: "paragraph",
+		name: "Paragraph",
+		icon: "Paragraph",
+		command: paragraphToggle,
+	},
+	{
+		key: "h1",
+		name: "Heading 1",
+		icon: <span className="text-3xl font-bold">Heading 1</span>,
+		command: heading1Toggle,
+	},
+	{
+		key: "h2",
+		name: "Heading 2",
+		icon: <span className="text-2xl font-bold">Heading 2</span>,
+		command: heading2Toggle,
+	},
+	{
+		key: "h3",
+		name: "Heading 3",
+		icon: <span className="text-xl">Heading 3</span>,
+		command: heading3Toggle,
+	},
+	{
+		key: "h4",
+		name: "Heading 4",
+		icon: <span className="text-lg">Heading 4</span>,
+		command: heading4Toggle,
+	},
+	{
+		key: "h5",
+		name: "Heading 5",
+		icon: <span className="text-base">Heading 5</span>,
+		command: heading5Toggle,
+	},
+	{
+		key: "h6",
+		name: "Heading 6",
+		icon: <span className="text-sm font-normal">Heading 6</span>,
+		command: heading6Toggle,
+	},
+];
+
+const ParagraphDropdown = () => {
+	const { view } = usePluginViewContext();
+	const activeType = paragraphTypeItems.find((item) => item.command(view)(view.state).isActive);
+
+	return (
+		<Select
+			value={activeType?.key}
+			onValueChange={(value) => {
+				const item = paragraphTypeItems.find((i) => i.key === value);
+				if (!item) {
+					return;
+				}
+
+				const { run } = item.command(view)(view.state);
+				view.focus();
+				run();
+			}}
+			disabled={!activeType}
+		>
+			<SelectTrigger className="w-fit border-none">
+				<SelectValue placeholder="Paragraph">
+					{activeType ? activeType.name || activeType.key : "Paragraph"}
+				</SelectValue>
+			</SelectTrigger>
+			<SelectContent className="bg-white">
+				{paragraphTypeItems.map(({ key, icon, command }) => {
+					return (
+						<SelectItem key={key} value={key}>
+							{icon}
+						</SelectItem>
+					);
+				})}
+			</SelectContent>
+		</Select>
+	);
+};
 
 export const MenuBar = () => {
 	const { view } = usePluginViewContext();
 	return (
-		<div className="rounded border bg-slate-50">
+		<div
+			className="flex items-center rounded border bg-slate-50"
+			role="toolbar"
+			aria-label="Formatting tools"
+		>
 			{menuItems.map((menuItem) => {
-				const { name, icon, command, type } = menuItem;
-				// Returns if given command can be applied at the cursor selection
-				const isApplicable = command(view.state, undefined, view);
-				const isActive = markIsActive(type, view.state);
+				const { key, icon, command } = menuItem;
+				const { run, canRun, isActive } = command(view)(view.state);
 				return (
 					<Button
-						key={name}
+						key={key}
 						onClick={() => {
 							view.focus();
-							command(view.state, view.dispatch, view);
+							run();
 						}}
 						variant="ghost"
 						size="sm"
-						disabled={!isApplicable}
+						disabled={!canRun}
 						type="button"
 						className={cn("w-6 rounded-none", { "bg-slate-300": isActive })}
 					>
@@ -60,6 +156,7 @@ export const MenuBar = () => {
 					</Button>
 				);
 			})}
+			<ParagraphDropdown />
 		</div>
 	);
 };
