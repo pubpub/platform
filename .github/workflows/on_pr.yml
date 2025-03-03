@@ -42,6 +42,16 @@ jobs:
             - name: Copy .env file
               run: cp ./self-host/.env.example ./self-host/.env
 
+            - name: Configure pullpreview
+              env:
+                  PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
+                  JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
+                  MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
+              run: >
+                  bash -c "sed -i "s|image: PLATFORM_IMAGE|image: $PLATFORM_IMAGE|" docker-compose.preview.yml &&
+                  sed -i "s|image: JOBS_IMAGE|image: $JOBS_IMAGE|" docker-compose.preview.yml &&
+                  sed -i "s|image: MIGRATIONS_IMAGE|image: $MIGRATIONS_IMAGE|" docker-compose.preview.yml"
+
             - uses: pullpreview/action@v5
               with:
                   admins: 3mcd
@@ -56,6 +66,3 @@ jobs:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   AWS_REGION: ${{ env.AWS_REGION }}
-                  PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
-                  JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
-                  MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}

@@ -1,6 +1,6 @@
 services:
     platform:
-        image: ${PLATFORM_IMAGE}
+        image: PLATFORM_IMAGE
         environment:
             POSTGRES_USER: preview
             POSTGRES_PASSWORD: preview
@@ -10,9 +10,9 @@ services:
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
     platform-jobs:
-        image: ${JOBS_IMAGE}
+        image: JOBS_IMAGE
     platform-migrations:
-        image: ${MIGRATIONS_IMAGE}
+        image: MIGRATIONS_IMAGE
     caddy:
         image: caddy:latest
         restart: unless-stopped
