@@ -189,7 +189,7 @@ const Separator = () => {
 export const MenuBar = () => {
 	return (
 		<div
-			className="flex items-center rounded-t border bg-slate-50 p-4"
+			className="flex items-center rounded-t border bg-gray-50 p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 		>
