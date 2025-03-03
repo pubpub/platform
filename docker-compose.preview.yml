@@ -16,9 +16,6 @@ services:
             - platform
             - platform-jobs
             - minio
-        env_file:
-            - path: .env
-              required: true
         ports:
             - "80:80"
             - "443:443"
