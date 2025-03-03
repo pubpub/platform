@@ -137,6 +137,22 @@ export const codeMirrorBlockNodeView = (settings: CodeBlockSettings) => {
 							return false;
 						},
 					},
+					{
+						key: "Enter",
+						run: (cmView) => {
+							const sel = cmView.state.selection.main;
+							if (
+								cmView.state.doc.line(cmView.state.doc.lines).text === "" &&
+								sel.from === sel.to &&
+								sel.from === cmView.state.doc.length
+							) {
+								exitCode(view.state, view.dispatch);
+								view.focus();
+								return true;
+							}
+							return false;
+						},
+					},
 					...defaultKeymap,
 					...foldKeymap,
 					...closeBracketsKeymap,
