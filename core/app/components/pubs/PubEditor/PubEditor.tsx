@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import { expect } from "utils";
 
 import type { FormElements, PubFieldElement } from "../../forms/types";
@@ -34,7 +34,10 @@ const RelatedPubValueElement = ({
 	fieldName: string;
 	element: PubFieldElement;
 }) => {
-	const configLabel = "label" in element.config ? element.config.label : undefined;
+	const configLabel =
+		"relationshipConfig" in element.config
+			? element.config.relationshipConfig.label
+			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
 	return (
