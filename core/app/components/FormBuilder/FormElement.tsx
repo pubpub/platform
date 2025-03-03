@@ -147,7 +147,7 @@ export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps
 			<div>
 				<div className="text-gray-500">{field.slug}</div>
 				<div className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}>
-					{element.label ?? field.name}
+					{(element.config as any)?.label ?? field.name}
 				</div>
 			</div>
 		</>
