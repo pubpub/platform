@@ -1,21 +1,21 @@
 import type { DOMOutputSpec, MarkSpec, Node, NodeSpec } from "prosemirror-model";
 
-// const codeInline = {
-// 	attrs: {
-// 		id: { default: null },
-// 		class: { default: null },
-// 	},
-// 	parseDOM: [{ tag: "code" }],
-// 	toDOM: (mark) => {
-// 		return [
-// 			"code",
-// 			{
-// 				class: mark.attrs.class,
-// 				...(mark.attrs.id && { id: mark.attrs.id }),
-// 			},
-// 		] as DOMOutputSpec;
-// 	},
-// } satisfies MarkSpec;
+const codeInline = {
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
+	parseDOM: [{ tag: "code" }],
+	toDOM: (mark) => {
+		return [
+			"code",
+			{
+				class: mark.attrs.class,
+				...(mark.attrs.id && { id: mark.attrs.id }),
+			},
+		] as DOMOutputSpec;
+	},
+} satisfies MarkSpec;
 
 const codeBlock = {
 	content: "text*",
@@ -43,9 +43,7 @@ const codeBlock = {
 		["pre", { ...(node.attrs.id && { id: node.attrs.id }) }, ["code", 0]] as DOMOutputSpec,
 } satisfies NodeSpec;
 
-export default codeBlock;
-
-// export default {
-// 	code_inline: codeInline,
-// 	code_block: codeBlock,
-// };
+export default {
+	codeInline,
+	codeBlock,
+};

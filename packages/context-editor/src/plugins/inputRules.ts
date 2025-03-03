@@ -31,6 +31,7 @@ const abstract = {
 
 const italicsRegex = /([_*])([^]+?)\1\x20$/;
 const boldRegex = /(\*\*|__)([^]+?)\1\x20$/;
+const codeRegex = /(`)([^`]+)\1\x20/;
 
 const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 	return new InputRule(
@@ -65,6 +66,7 @@ export default (schema: Schema) => {
 		// Prosemirror applies the first rule that matches
 		applyMarkRule(schema.marks.strong, boldRegex),
 		applyMarkRule(schema.marks.em, italicsRegex),
+		applyMarkRule(schema.marks.code, codeRegex),
 		blockQuoteRule(schema.nodes.blockquote),
 		inlineMathRule(schema.nodes.math_inline),
 		blockMathRule(schema.nodes.math_display),

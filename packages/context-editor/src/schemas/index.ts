@@ -22,11 +22,12 @@ export const baseSchema = new Schema({
 		contextAtom,
 		blockquote,
 		...math,
-		code,
+		codeBlock: code.codeBlock,
 	},
 	marks: {
 		strong,
 		em,
+		code: code.codeInline,
 	},
 	topNode: "doc",
 });
