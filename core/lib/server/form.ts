@@ -243,7 +243,7 @@ export const insertForm = (
 		.values((eb) =>
 			pubType.fields.map((field, i) => ({
 				fieldId: field.id,
-				label: field.name,
+				config: { label: field.name },
 				type: ElementType.pubfield,
 				component: defaultComponent(field.schemaName!) ?? InputComponent.relationBlock,
 				rank: ranks[i + 1],
