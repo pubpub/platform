@@ -9,11 +9,14 @@ services:
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
     seed:
-        image: alpine:latest
-        command: ["docker", "compose", "exec", "platform", "pnpm", "--filter", "core", "reset"]
+        platform: linux/amd64
         depends_on:
-            platform:
+            db:
                 condition: service_started
-        restart: on-failure
+        image: ghcr.io/pubpub/platform-migrations:latest
+        env_file: .env
+        environment:
+            DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+        command: ["pnpm", "--filter", "core", "reset"]
         networks:
             - app-network
