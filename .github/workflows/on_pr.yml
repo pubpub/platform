@@ -42,26 +42,16 @@ jobs:
             - name: Copy .env file
               run: cp ./self-host/.env.example ./self-host/.env
 
-            - name: Login to Amazon ECR
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v2
-
             - uses: pullpreview/action@v5
               with:
-                  # Those GitHub users will have SSH access to the servers
                   admins: 3mcd
-                  # A preview environment will always exist for the main branch
                   always_on: main
-                  # Use the cidrs option to restrict access to the live environments to specific IP ranges
                   cidrs: "0.0.0.0/0"
-                  # PullPreview will use those 2 files when running docker-compose up
                   compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
-                  # The preview URL will target this port
                   default_port: 443
-                  # Use a 512MB RAM instance type instead of the default 2GB
                   instance_type: small
-                  # Ports to open on the server
                   ports: 443
+                  registries: docker://AWS:${{secrets.AWS_ECR_TOKEN}}@246372085946.dkr.ecr.us-east-1.amazonaws.com
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
