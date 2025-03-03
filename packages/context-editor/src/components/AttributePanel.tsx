@@ -108,6 +108,10 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 			)
 		);
 	};
+	// Marks will automatically show names, so it is only the 'inline' types
+	// that are not marks that need to be specifically rendered
+	const showName = node.type?.name === "math_inline";
+
 	return (
 		<>
 			{node && (
@@ -135,6 +139,9 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 					}}
 				>
 					<div className="text-sm">Attributes</div>
+					{showName ? (
+						<div className="mt-4 text-sm font-bold">{node.type?.name}</div>
+					) : null}
 					{Object.keys(nodeAttrs).map((attrKey) => {
 						if (attrKey === "data") {
 							return null;
