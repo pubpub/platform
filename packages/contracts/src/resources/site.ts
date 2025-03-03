@@ -343,14 +343,16 @@ export type LogicalOperator = (typeof logicalOperators)[number];
 export type BaseFilter = {
 	[O in FilterOperator]?: unknown;
 };
-export type FieldLevelFilter = {
-	[slug: string]: BaseFilter | { $and?: BaseFilter[]; $or?: BaseFilter[]; $not?: BaseFilter };
-};
 
 export type LogicalFilter = {
-	$and?: Filter[];
-	$or?: Filter[];
-	$not?: Filter;
+	$and?: (BaseFilterWithAndOr | FieldLevelFilter) | (BaseFilterWithAndOr | FieldLevelFilter)[];
+	$or?: (BaseFilterWithAndOr | FieldLevelFilter) | (BaseFilterWithAndOr | FieldLevelFilter)[];
+	$not?: BaseFilterWithAndOr | FieldLevelFilter;
+};
+type BaseFilterWithAndOr = BaseFilter & LogicalFilter;
+
+export type FieldLevelFilter = {
+	[slug: string]: BaseFilterWithAndOr;
 };
 
 export type Filter = FieldLevelFilter | LogicalFilter;
@@ -401,19 +403,37 @@ export const baseFilterSchema = z
 					"This will filter the third element in the array, and check if it's greater than 90."
 			),
 	})
-	.partial()
-	.refine((data) => {
-		if (!Object.keys(data).length) {
-			return false;
-		}
-		return true;
-	}, "Filter must have at least one operator (base filter)") satisfies z.ZodType<{
+	.partial() satisfies z.ZodType<{
 	[K in FilterOperator]?: any;
 }>;
 
 const fieldSlugSchema = z
 	.string()
 	.regex(/^[a-zA-Z0-9_.:-]+$/, "At this level, you can only use field slugs");
+
+const baseFilterSchemaWithAndOr: z.ZodType<BaseFilterWithAndOr> = z
+	.lazy(() =>
+		baseFilterSchema
+			.extend({
+				$and: baseFilterSchemaWithAndOr.or(z.array(baseFilterSchemaWithAndOr)),
+				$or: baseFilterSchemaWithAndOr.or(z.array(baseFilterSchemaWithAndOr)),
+				$not: baseFilterSchemaWithAndOr,
+			})
+			.partial()
+	)
+	.superRefine((data, ctx) => {
+		console.log(ctx.path, data);
+		if (!Object.keys(data).length) {
+			ctx.addIssue({
+				path: ctx.path,
+				code: z.ZodIssueCode.custom,
+				message: "Filter must have at least one operator (base filter)",
+			});
+			return false;
+		}
+		return true;
+	});
+// "Filter must have at least one operator (base filter)");
 
 // this is a recursive type, so we need to use z.lazy()
 export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
@@ -430,20 +450,6 @@ export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
 			return true;
 		}, "Filter must have at least one operator. A logical operator (e.g. $and, $or, $not) was expected here, but not found.");
 
-	const fieldLevelThings = z
-		.object({
-			$and: z.array(baseFilterSchema).optional(),
-			$or: z.array(baseFilterSchema).optional(),
-			$not: baseFilterSchema.optional(),
-		})
-		.refine((data) => {
-			if (!Object.keys(data).length) {
-				return false;
-			}
-			return true;
-		}, "Filter must have at least one operator (field level)")
-		.or(baseFilterSchema);
-
 	//z.union([
 	// regular field filters
 
@@ -453,7 +459,10 @@ export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
 	// logical operator -> field -> operator -> value
 	// logical operator -> logical operator -> ... -> field -> operator -> value
 
-	return z.union([z.record(fieldSlugSchema, fieldLevelThings), topLevelLogicalOperators]); //,
+	return z.union([
+		z.record(fieldSlugSchema, baseFilterSchemaWithAndOr),
+		topLevelLogicalOperators,
+	]); //,
 	// logicalOperators,
 	// ]);
 });

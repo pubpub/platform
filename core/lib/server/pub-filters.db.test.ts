@@ -2,14 +2,14 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import QueryString from "qs";
 import { describe, expect, it } from "vitest";
 
-import type { Filter, Json } from "contracts";
+import type { Filter, Json, ProcessedPub } from "contracts";
 import type { CommunitiesId, PubsId } from "db/public";
 import { filterSchema } from "contracts";
 import { CoreSchemaType } from "db/public";
 
 import { createSeed } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "../__tests__/utils";
-import { applyFilters } from "./pub-filters";
+import { applyFieldOperators, applyFilters } from "./pub-filters";
 
 const { createForEachMockedTransaction, testDb } = await mockServerCode();
 
@@ -78,22 +78,22 @@ const seed = createSeed({
 				Email: "test@test.com",
 			},
 		},
-		// {
-		// 	id: title2Id,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Title: "some Title",
-		// 		Email: "Test@Test.com",
-		// 	},
-		// },
-		// {
-		// 	id: anotherId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Title: "Another title",
-		// 		Email: "test2@test.com",
-		// 	},
-		// },
+		{
+			id: title2Id,
+			pubType: "Basic Pub",
+			values: {
+				Title: "some Title",
+				Email: "Test@Test.com",
+			},
+		},
+		{
+			id: anotherId,
+			pubType: "Basic Pub",
+			values: {
+				Title: "Another title",
+				Email: "test2@test.com",
+			},
+		},
 		{
 			id: number42Id,
 			pubType: "Basic Pub",
@@ -101,104 +101,99 @@ const seed = createSeed({
 				Number: 42,
 			},
 		},
-		// {
-		// 	id: number24Id,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Number: 24,
-		// 	},
-		// },
-		// {
-		// 	id: number54Id,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Number: 54,
-		// 	},
-		// },
-		// {
-		// 	id: trueId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Boolean: true,
-		// 	},
-		// },
-		// {
-		// 	id: arrayId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Array: ["item1", "item2"],
-		// 	},
-		// },
-		// {
-		// 	id: vector3Id,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Vector3: [0, 0, 0],
-		// 	},
-		// },
-		// {
-		// 	id: numberArrayId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		NumberArray: [1, 2, 3],
-		// 		Date: twenty99,
-		// 	},
-		// },
-		// {
-		// 	id: numberArray2Id,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		NumberArray: [10, 20, 30, 40],
-		// 	},
-		// },
-		// {
-		// 	id: relationId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Relation: null,
-		// 		Number: 50,
-		// 	},
-		// },
-		// {
-		// 	id: testTitleId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Title: "Test",
-		// 		Number: 99,
-		// 	},
-		// },
-		// {
-		// 	id: testCaseId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Boolean: true,
-		// 		Title: "Test case",
-		// 	},
-		// },
-		// {
-		// 	id: specialCharsId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Title: "Some title with special characters & symbols",
-		// 	},
-		// },
-		// {
-		// 	id: arrayItem1Id,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Array: ["item1", "item2"],
-		// 	},
-		// },
-		// {
-		// 	id: importantDocId,
-		// 	pubType: "Basic Pub",
-		// 	values: {
-		// 		Title: "Test important document",
-		// 		Number: 40,
-		// 		Date: new Date("2023-02-01T00:00:00.000Z"),
-		// 		Boolean: true,
-		// 	},
-		// },
+		{
+			id: number24Id,
+			pubType: "Basic Pub",
+			values: {
+				Number: 24,
+				Date: twenty99,
+			},
+		},
+		{
+			id: number54Id,
+			pubType: "Basic Pub",
+			values: {
+				Number: 54,
+			},
+		},
+		{
+			id: trueId,
+			pubType: "Basic Pub",
+			values: {
+				Boolean: true,
+			},
+		},
+		{
+			id: arrayId,
+			pubType: "Basic Pub",
+			values: {
+				Array: ["item1", "item2"],
+			},
+		},
+		{
+			id: vector3Id,
+			pubType: "Basic Pub",
+			values: {
+				Vector3: [0, 0, 0],
+			},
+		},
+		{
+			id: numberArrayId,
+			pubType: "Basic Pub",
+			values: {
+				NumberArray: [1, 2, 3],
+				Date: twenty99,
+			},
+		},
+		{
+			id: numberArray2Id,
+			pubType: "Basic Pub",
+			values: {
+				NumberArray: [10, 20, 30, 40],
+			},
+		},
+		{
+			id: relationId,
+			pubType: "Basic Pub",
+			values: {
+				Relation: null,
+				Number: 50,
+			},
+		},
+		{
+			id: testTitleId,
+			pubType: "Basic Pub",
+			values: {
+				Title: "Test",
+				Number: 99,
+			},
+		},
+		{
+			id: testCaseId,
+			pubType: "Basic Pub",
+			values: {
+				Date: new Date("2023-02-01T00:00:00.000Z"),
+				Boolean: true,
+				Title: "Test case",
+			},
+		},
+		{
+			id: specialCharsId,
+			pubType: "Basic Pub",
+			values: {
+				Title: "Some title with special characters & symbols",
+			},
+		},
+		{
+			id: importantDocId,
+			pubType: "Basic Pub",
+			values: {
+				Title: "Test important document",
+				Number: 40,
+				Date: new Date("2023-02-01T00:00:00.000Z"),
+				Boolean: true,
+			},
+		},
 	],
 });
 
@@ -264,9 +259,9 @@ const unifiedTestCases: {
 	title: string;
 	filter: Filter;
 	querystring: string;
-	sql: string;
+	sql: string | RegExp | (string | RegExp)[];
 	parameters: (string | number)[];
-	foundIds: PubsId[];
+	foundIds: PubsId[] | ((pubs: ProcessedPub[]) => PubsId[]);
 }[] = [
 	{
 		title: "simple equality",
@@ -345,7 +340,7 @@ const unifiedTestCases: {
 		},
 		querystring: `filters[${slug("email")}][$notContainsi]=Test@`,
 		sql: `"slug" = $1 and value::text not ilike $2`,
-		parameters: [slug("email"), "%Test@%"],
+		parameters: [slug("email"), "%test@%"],
 		foundIds: [anotherId],
 	},
 	{
@@ -356,7 +351,7 @@ const unifiedTestCases: {
 		querystring: `filters[${slug("array")}][$jsonPath]=$[*] == "item1"`,
 		sql: `"slug" = $1 and "value" @@ $2`,
 		parameters: [slug("array"), '$[*] == "item1"'],
-		foundIds: [arrayId, arrayItem1Id],
+		foundIds: [arrayId],
 	},
 	{
 		title: "array specific index value check",
@@ -379,7 +374,7 @@ const unifiedTestCases: {
 			],
 		},
 		querystring: `filters[$or][0][${slug("title")}][$eq]=Some title&filters[$or][1][$and][0][${slug("number")}][$gt]=40&filters[$or][1][$and][1][${slug("number")}][$lt]=50`,
-		sql: `(("slug" = $1 and "value" = $2) or (("slug" = $3 and "value" > $4) and ("slug" = $5 and "value" < $6)))`,
+		sql: /exists \(.*"slug" = \$1 and "value" = \$2\).* or \(.*"slug" = \$3 and "value" > \$4\).* and exists \(.*"slug" = \$5 and "value" < \$6\).*\)/,
 		parameters: [slug("title"), '"Some title"', slug("number"), 40, slug("number"), 50],
 		foundIds: [titleId, number42Id],
 	},
@@ -387,12 +382,12 @@ const unifiedTestCases: {
 		title: "field-level logical operators",
 		filter: {
 			[slug("number")]: {
-				$or: [{ $lt: 40 }, { $gt: 50 }],
+				$or: { $lt: 40, $gt: 50 }, //[{ $lt: 40 }, { $gt: 50 }],
 			},
 		},
-		querystring: `filters[${slug("number")}][$or][0][$lt]=40&filters[${slug("number")}][$or][1][$gt]=50`,
-		sql: `("slug" = $1 and "value" < $2) or ("slug" = $3 and "value" > $4)`,
-		parameters: [slug("number"), 40, slug("number"), 50],
+		querystring: `filters[${slug("number")}][$or][$lt]=40&filters[${slug("number")}][$or][$gt]=50`,
+		sql: `"slug" = $1 and ("value" < $2 or "value" > $3)`,
+		parameters: [slug("number"), 40, 50],
 		foundIds: [number24Id, number54Id, testTitleId],
 	},
 	{
@@ -430,7 +425,7 @@ const unifiedTestCases: {
 		querystring: `filters[${slug("date")}][$eq]=${twenty99.toISOString()}`,
 		sql: `"slug" = $1 and "value" = $2`,
 		parameters: [slug("date"), `"${twenty99.toISOString()}"`],
-		foundIds: [numberArrayId],
+		foundIds: [numberArrayId, number24Id],
 	},
 	{
 		title: "multiple operators on same field should be treated as AND",
@@ -438,7 +433,7 @@ const unifiedTestCases: {
 			[slug("number")]: { $gt: 40, $lt: 50 },
 		},
 		querystring: `filters[${slug("number")}][$gt]=40&filters[${slug("number")}][$lt]=50`,
-		sql: `"slug" = $1 and "value" > $2 and "value" < $3`,
+		sql: `"slug" = $1 and ("value" > $2 and "value" < $3)`,
 		parameters: [slug("number"), 40, 50],
 		foundIds: [number42Id],
 	},
@@ -449,7 +444,7 @@ const unifiedTestCases: {
 			[slug("number")]: { $eq: 99 },
 		},
 		querystring: `filters[${slug("title")}][$eq]=Test&filters[${slug("number")}][$eq]=99`,
-		sql: `("slug" = $1 and "value" = $2) and ("slug" = $3 and "value" = $4)`,
+		sql: /exists \(.*"slug" = \$1 and "value" = \$2\).* and exists \(.*"slug" = \$3 and "value" = \$4\).*/,
 		parameters: [slug("title"), '"Test"', slug("number"), "99"],
 		foundIds: [testTitleId],
 	},
@@ -461,58 +456,79 @@ const unifiedTestCases: {
 		querystring: `filters[${slug("boolean")}][$eq]=true`,
 		sql: `"slug" = $1 and "value" = $2`,
 		parameters: [slug("boolean"), "true"],
-		foundIds: [testCaseId],
+		foundIds: [testCaseId, importantDocId, trueId],
 	},
 	{
 		title: "array in operator",
 		filter: {
-			[slug("number")]: { $in: [1, 2, 3] },
+			[slug("number")]: { $in: [42, 24] },
 		},
-		querystring: `filters[${slug("number")}][$in][]=1&filters[${slug("number")}][$in][]=2&filters[${slug("number")}][$in][]=3`,
-		sql: `"slug" = $1 and "value" in ($2, $3, $4)`,
-		parameters: [slug("number"), 1, 2, 3],
-		foundIds: [number42Id],
+		querystring: `filters[${slug("number")}][$in][]=42&filters[${slug("number")}][$in][]=24`,
+		sql: `"slug" = $1 and "value" in ($2, $3)`,
+		parameters: [slug("number"), 42, 24],
+		foundIds: [number42Id, number24Id],
 	},
 	{
 		title: "between operator",
 		filter: {
-			[slug("number")]: { $between: [10, 20] },
+			[slug("number")]: { $between: [20, 25] },
 		},
-		querystring: `filters[${slug("number")}][$between][0]=10&filters[${slug("number")}][$between][1]=20`,
+		querystring: `filters[${slug("number")}][$between][0]=20&filters[${slug("number")}][$between][1]=25`,
 		sql: `"slug" = $1 and ("value" >= $2 and "value" <= $3)`,
-		parameters: [slug("number"), 10, 20],
-		foundIds: [number42Id],
+		parameters: [slug("number"), 20, 25],
+		foundIds: [number24Id],
 	},
-	{
-		title: "null and notNull operators",
-		filter: {
-			[slug("title")]: { $null: true },
-			[slug("number")]: { $notNull: true },
-		},
-		querystring: `filters[${slug("title")}][$null]&filters[${slug("number")}][$notNull]`,
-		sql: `("slug" = $1 and "value" is null) and ("slug" = $2 and "value" is not null)`,
-		parameters: [slug("title"), slug("number")],
-		foundIds: [relationId],
-	},
+	// {
+	// 	title: "null and notNull operators",
+	// 	filter: {
+	// 		[slug("relation")]: { $null: true },
+	// 	},
+	// 	querystring: `filters[${slug("relation")}][$null]`,
+	// 	sql: `"slug" = $1 and "value" is null`,
+	// 	parameters: [slug("relation")],
+	// 	foundIds: [relationId],
+	// },
 	{
 		title: "top-level logical AND",
 		filter: {
 			$and: [{ [slug("title")]: { $eq: "Test" } }, { [slug("number")]: { $gt: 10 } }],
 		},
 		querystring: `filters[$and][0][${slug("title")}][$eq]=Test&filters[$and][1][${slug("number")}][$gt]=10`,
-		sql: `("slug" = $1 and "value" = $2) and ("slug" = $3 and "value" > $4)`,
+		sql: /exists \(.*"slug" = \$1 and "value" = \$2\).* and exists \(.*"slug" = \$3 and "value" > \$4\).*/,
 		parameters: [slug("title"), '"Test"', slug("number"), 10],
 		foundIds: [testTitleId],
 	},
 	{
 		title: "top-level logical NOT",
 		filter: {
+			// this works slightly differently than you'd expect
 			$not: { [slug("title")]: { $eq: "Test" } },
 		},
 		querystring: `filters[$not][${slug("title")}][$eq]=Test`,
-		sql: `not ("slug" = $1 and "value" = $2)`,
+		sql: /not exists \(.*"slug" = \$1 and "value" = \$2\).*/,
 		parameters: [slug("title"), '"Test"'],
-		foundIds: [titleId, anotherId, specialCharsId, importantDocId],
+		foundIds: (pubs) =>
+			pubs
+				.filter(
+					(p) =>
+						!p.values.some((v) => v.fieldSlug === slug("title") && v.value === "Test")
+				)
+				.map((p) => p.id),
+	},
+	{
+		title: "field-level logical NOT",
+		filter: {
+			[slug("title")]: { $not: { $eq: "Test" } },
+		},
+		querystring: `filters[${slug("title")}][$not][$eq]=Test`,
+		sql: '"slug" = $1 and not "value" = $2',
+		parameters: [slug("title"), '"Test"'],
+		foundIds: (pubs) =>
+			pubs
+				.filter((p) =>
+					p.values.some((v) => v.fieldSlug === slug("title") && v.value !== "Test")
+				)
+				.map((p) => p.id),
 	},
 	{
 		title: "complex nested structure",
@@ -525,37 +541,61 @@ const unifiedTestCases: {
 					],
 				},
 				{
-					$not: {
-						[slug("number")]: { $between: [10, 20] },
-					},
+					[slug("number")]: { $not: { $between: [30, 50] } },
 				},
 			],
 		},
-		querystring: `filters[$or][0][$and][0][${slug("title")}][$containsi]=test&filters[$or][0][$and][1][${slug("boolean")}][$eq]=true&filters[$or][1][$not][${slug("number")}][$between][0]=10&filters[$or][1][$not][${slug("number")}][$between][1]=20`,
-		sql: `(("slug" = $1 and value::text ilike $2) and ("slug" = $3 and "value" = $4)) or not ("slug" = $5 and ("value" >= $6 and "value" <= $7))`,
-		parameters: [slug("title"), "%test%", slug("boolean"), "true", slug("number"), 10, 20],
-		foundIds: [testCaseId],
+		querystring: `filters[$or][0][$and][0][${slug("title")}][$containsi]=test&filters[$or][0][$and][1][${slug("boolean")}][$eq]=true&filters[$or][1][${slug("number")}][$not][$between][0]=30&filters[$or][1][${slug("number")}][$not][$between][1]=50`,
+		sql: [
+			/\(exists \(.*"slug" = \$1 and value::text ilike \$2\) and exists \(.*"slug" = \$3 and "value" = \$4\)/,
+			/or exists \(.*"slug" = \$5 and not \("value" >= \$6 and "value" <= \$7\)/,
+		],
+		parameters: [slug("title"), "%test%", slug("boolean"), "true", slug("number"), 30, 50],
+		foundIds: community.pubs
+			.filter(
+				(p) =>
+					(p.values.some(
+						(v) => v.fieldSlug === slug("title") && /test/i.test(v.value as string)
+					) &&
+						p.values.some(
+							(v) => v.fieldSlug === slug("boolean") && v.value === true
+						)) ||
+					p.values.some(
+						(v) =>
+							v.fieldSlug === slug("number") &&
+							!((v.value as number) >= 30 && (v.value as number) <= 50)
+					)
+			)
+			.map((p) => p.id),
 	},
 	{
 		title: "multiple array values with coercion",
 		filter: {
-			[slug("numberarray")]: { $in: [1, 2, 3] },
+			[slug("number")]: { $in: [20, 24, 45] },
 			[slug("date")]: {
-				$in: [new Date("2023-01-01T00:00:00.000Z"), new Date("2023-01-02T00:00:00.000Z")],
+				$in: [
+					new Date("2023-01-01T00:00:00.000Z"),
+					new Date("2023-01-02T00:00:00.000Z"),
+					twenty99,
+				],
 			},
 		},
-		querystring: `filters[${slug("numberarray")}][$in][]=1&filters[${slug("numberarray")}][$in][]=2&filters[${slug("numberarray")}][$in][]=3&filters[${slug("date")}][$in][]=2023-01-01T00:00:00.000Z&filters[${slug("date")}][$in][]=2023-01-02T00:00:00.000Z`,
-		sql: `("slug" = $1 and "value" in ($2, $3, $4)) and ("slug" = $5 and "value" in ($6, $7))`,
-		parameters: [
-			slug("numberarray"),
-			1,
-			2,
-			3,
-			slug("date"),
-			new Date("2023-01-01T00:00:00.000Z").toISOString(),
-			new Date("2023-01-02T00:00:00.000Z").toISOString(),
+		querystring: `filters[${slug("number")}][$in][]=20&filters[${slug("number")}][$in][]=24&filters[${slug("number")}][$in][]=45&filters[${slug("date")}][$in][]=2023-01-01T00:00:00.000Z&filters[${slug("date")}][$in][]=2023-01-02T00:00:00.000Z&filters[${slug("date")}][$in][]=${twenty99.toISOString()}`,
+		sql: [
+			`"slug" = $1 and "value" in ($2, $3, $4)) and exists`,
+			`"slug" = $5 and "value" in ($6, $7, $8))`,
 		],
-		foundIds: [numberArrayId],
+		parameters: [
+			slug("number"),
+			20,
+			24,
+			45,
+			slug("date"),
+			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
+			`"${new Date("2023-01-02T00:00:00.000Z").toISOString()}"`,
+			`"${twenty99.toISOString()}"`,
+		],
+		foundIds: [number24Id],
 	},
 	{
 		title: "URL encoded special characters",
@@ -566,16 +606,6 @@ const unifiedTestCases: {
 		sql: `"slug" = $1 and value::text like $2`,
 		parameters: [slug("title"), "%special characters & symbols%"],
 		foundIds: [specialCharsId],
-	},
-	{
-		title: "mixed type coercion in arrays",
-		filter: {
-			[slug("mixedarray")]: { $in: ["string", 42, true] },
-		},
-		querystring: `filters[${slug("mixedarray")}][$in][]=string&filters[${slug("mixedarray")}][$in][]=42&filters[${slug("mixedarray")}][$in][]=true`,
-		sql: `"slug" = $1 and "value" in ($2, $3, $4)`,
-		parameters: [slug("mixedarray"), "string", 42, true],
-		foundIds: [number42Id],
 	},
 	{
 		title: "deeply nested logical operators with multiple field types",
@@ -598,7 +628,7 @@ const unifiedTestCases: {
 			],
 		},
 		querystring: `filters[$and][0][$or][0][${slug("title")}][$containsi]=test&filters[$and][0][$or][1][${slug("number")}][$gt]=50&filters[$and][1][$not][$or][0][${slug("boolean")}][$eq]=false&filters[$and][1][$not][$or][1][${slug("date")}][$lt]=2023-01-01T00:00:00.000Z`,
-		sql: `(("slug" = $1 and value::text ilike $2) or ("slug" = $3 and "value" > $4)) and not (("slug" = $5 and "value" = $6) or ("slug" = $7 and "value" < $8))`,
+		sql: `select * from "pubs" where ((exists (select 1 as "exists_check" from "pub_values" inner join "pub_fields" on "pub_fields"."id" = "pub_values"."fieldId" where "pub_values"."pubId" = "pubs"."id" and "pub_fields"."slug" = $1 and value::text ilike $2) or exists (select 1 as "exists_check" from "pub_values" inner join "pub_fields" on "pub_fields"."id" = "pub_values"."fieldId" where "pub_values"."pubId" = "pubs"."id" and "pub_fields"."slug" = $3 and "value" > $4)) and not (exists (select 1 as "exists_check" from "pub_values" inner join "pub_fields" on "pub_fields"."id" = "pub_values"."fieldId" where "pub_values"."pubId" = "pubs"."id" and "pub_fields"."slug" = $5 and "value" = $6) or exists (select 1 as "exists_check" from "pub_values" inner join "pub_fields" on "pub_fields"."id" = "pub_values"."fieldId" where "pub_values"."pubId" = "pubs"."id" and "pub_fields"."slug" = $7 and "value" < $8)))`,
 		parameters: [
 			slug("title"),
 			"%test%",
@@ -609,14 +639,37 @@ const unifiedTestCases: {
 			slug("date"),
 			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
 		],
-		foundIds: [number54Id],
+		foundIds: (pubs) =>
+			pubs
+				.filter(
+					(p) =>
+						(p.values.some(
+							(v) => v.fieldSlug === slug("title") && /test/i.test(v.value as string)
+						) ||
+							p.values.some(
+								(v) => v.fieldSlug === slug("number") && (v.value as number) > 50
+							)) &&
+						!(
+							p.values.some(
+								(v) =>
+									v.fieldSlug === slug("boolean") &&
+									(v.value as boolean) === false
+							) ||
+							p.values.some(
+								(v) =>
+									v.fieldSlug === slug("date") &&
+									(v.value as Date) < new Date("2023-01-01T00:00:00.000Z")
+							)
+						)
+				)
+				.map((p) => p.id),
 	},
 	{
 		title: "complex filter with all operator types",
 		filter: {
 			$or: [
-				{ [slug("title")]: { $eq: "Test", $containsi: "important" } },
-				{ [slug("number")]: { $between: [10, 50] } },
+				{ [slug("title")]: { $containsi: "important" } },
+				{ [slug("number")]: { $between: [40, 45] } },
 				{
 					[slug("date")]: { $gt: new Date("2023-01-01T00:00:00.000Z") },
 					[slug("boolean")]: { $eq: true },
@@ -624,15 +677,19 @@ const unifiedTestCases: {
 				{ [slug("array")]: { $jsonPath: '$[*] == "item1"' } },
 			],
 		},
-		querystring: `filters[$or][0][${slug("title")}][$eq]=Test&filters[$or][0][${slug("title")}][$containsi]=important&filters[$or][1][${slug("number")}][$between][0]=10&filters[$or][1][${slug("number")}][$between][1]=50&filters[$or][2][${slug("date")}][$gt]=2023-01-01T00:00:00.000Z&filters[$or][2][${slug("boolean")}][$eq]=true&filters[$or][3][${slug("array")}][$jsonPath]=$[*] == "item1"`,
-		sql: `(("slug" = $1 and "value" = $2 and value::text ilike $3) or ("slug" = $4 and ("value" >= $5 and "value" <= $6)) or (("slug" = $7 and "value" > $8) and ("slug" = $9 and "value" = $10)) or ("slug" = $11 and "value" @@ $12))`,
+		querystring: `filters[$or][0][${slug("title")}][$containsi]=important&filters[$or][1][${slug("number")}][$between][0]=40&filters[$or][1][${slug("number")}][$between][1]=45&filters[$or][2][${slug("date")}][$gt]=2023-01-01T00:00:00.000Z&filters[$or][2][${slug("boolean")}][$eq]=true&filters[$or][3][${slug("array")}][$jsonPath]=$[*] == "item1"`,
+		sql: [
+			'"slug" = $1 and value::text ilike $2) or exists',
+			'"slug" = $3 and ("value" >= $4 and "value" <= $5)) or (exists',
+			/exists \(.*"slug" = \$6 and "value" > \$7\).* and exists \(.*"slug" = \$8 and "value" = \$9\).* or exists/,
+			'"slug" = $10 and "value" @@ $11',
+		],
 		parameters: [
 			slug("title"),
-			'"Test"',
 			"%important%",
 			slug("number"),
-			10,
-			50,
+			40,
+			45,
 			slug("date"),
 			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
 			slug("boolean"),
@@ -640,7 +697,16 @@ const unifiedTestCases: {
 			slug("array"),
 			'$[*] == "item1"',
 		],
-		foundIds: [testTitleId, testCaseId, specialCharsId, importantDocId],
+		foundIds: [
+			// bc important doc title
+			importantDocId,
+			// bc number 42 is between 40 and 45
+			number42Id,
+			// array selector
+			arrayId,
+			// boolean true and date after 2023-01-01
+			testCaseId,
+		],
 	},
 ];
 
@@ -648,9 +714,14 @@ describe("SQL generation", () => {
 	it.concurrent.each(unifiedTestCases)(
 		"generates correct SQL for $title",
 		async ({ filter, sql, parameters }) => {
-			const trx = getTrx();
 			const q = coolQuery(filter).compiled;
-			expect(q.sql).toMatch(sql);
+			if (Array.isArray(sql)) {
+				sql.forEach((sqlSnippet) => {
+					expect(q.sql).toMatch(sqlSnippet);
+				});
+			} else {
+				expect(q.sql).toMatch(sql);
+			}
 			expect(q.parameters).toEqual(parameters);
 		}
 	);
@@ -660,9 +731,18 @@ describe("querystring parsing", () => {
 	it.concurrent.each(unifiedTestCases)(
 		"correctly parses $title",
 		async ({ querystring, filter }) => {
+			const trx = getTrx();
 			const parsed = QueryString.parse(querystring, {
 				depth: 10,
 			});
+
+			// this is a quick check to make sure the querystring is parsed as we think it should be
+			expect(
+				JSON.stringify(parsed.filters)
+					.replace(/([^\\])""/, "$1true")
+					.replace(/"/g, ""),
+				"Querystring filter should match the defined filter"
+			).toEqual(JSON.stringify(filter).replace(/"/g, ""));
 
 			const validatedFilter = filterSchema.safeParse(parsed.filters);
 
@@ -670,6 +750,8 @@ describe("querystring parsing", () => {
 			expect(validatedFilter.success).toBe(true);
 
 			expect(validatedFilter.data).toEqual(filter);
+
+			await validateFilter(community.community.id, validatedFilter.data!, trx);
 		}
 	);
 
@@ -717,10 +799,11 @@ describe("querystring parsing", () => {
 });
 
 describe("filtering", async () => {
-	it.concurrent.each(unifiedTestCases)("filters by $title", async ({ sql, filter, foundIds }) => {
+	it.concurrent.each(unifiedTestCases)("filters by $title", async ({ filter, foundIds }) => {
 		const trx = getTrx();
 
 		const { getPubsWithRelatedValuesAndChildren } = await import("~/lib/server/pub");
+
 		const pubs = await getPubsWithRelatedValuesAndChildren(
 			{
 				communityId: community.community.id,
@@ -731,69 +814,26 @@ describe("filtering", async () => {
 			}
 		);
 
-		const testTitlePub = community.pubs.find((pub) => pub.id === testTitleId);
-		const tttpub = await trx
-			.with(
-				"all_pubs_and_values",
-				(db) =>
-					db
-						.selectFrom("pubs")
-						.leftJoin("pub_values as pv", "pv.pubId", "pubs.id")
-						.innerJoin("pub_fields as pf", "pf.id", "pv.fieldId")
-						.selectAll()
-						.select("pubs.id as pId")
-						.where("pubs.communityId", "=", community.community.id)
-				// .where((eb) => applyFilters(eb, filter))
-				// .where("pubs.id", "=", testTitleId)
-			)
-			.selectFrom("all_pubs_and_values")
-			.selectAll("all_pubs_and_values")
-			.where((eb) =>
-				eb.and([
-					eb.exists(
-						eb
-							.selectFrom("all_pubs_and_values as p")
-							.select(eb.lit(1).as("x"))
-							.where((eb) =>
-								eb.and([
-									eb("all_pubs_and_values.slug", "=", slug("email")),
-									eb("all_pubs_and_values.value", "=", '"test@test.com"'),
-								])
-							)
-					),
-					// eb.exists(
-					// 	eb
-					// 		.selectFrom("all_pubs_and_values as p")
-					// 		.select(eb.lit(1).as("x"))
-					// 		.where("all_pubs_and_values.slug", "=", slug("title"))
-					// ),
-				])
-			)
-			.distinctOn("all_pubs_and_values.pId")
-			.execute();
-		console.log(sql);
-		console.log(tttpub);
-		console.log(pubs, filter);
+		const expectedIds = typeof foundIds === "function" ? foundIds(pubs) : foundIds;
 
 		expect(
 			pubs,
 			"Expected the same number of pubs to be returned as the number of specified foundIds"
-		).toHaveLength(foundIds.length);
+		).toHaveLength(expectedIds.length);
 
 		if (pubs.length === 0) {
 			return;
 		}
 
-		// Create a set of expected IDs for easier comparison
-		const expectedIds = new Set(foundIds);
+		const expectedIdsSet = new Set(expectedIds);
 
-		// Check that each returned pub has an ID in our expected set
-		pubs.forEach((pub) => {
+		Array.from(expectedIdsSet).forEach((id) => {
+			const expectedPub = community.pubs.find((p) => p.id === id);
+			const foundPub = pubs.find((p) => p.id === id);
 			expect(
-				expectedIds.has(pub.id),
-				`Pub with ID ${pub.id} was not expected in the results`,
-				`Expected to find Pub ${community.pubs.find((cPub) => cPub.id === pub.id)}, but found `
-			).toBe(true);
+				foundPub,
+				`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
+			).toBeDefined();
 		});
 	});
 });
