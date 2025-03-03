@@ -247,7 +247,9 @@ export const insertForm = (
 					? { relationshipConfig: { label: field.name } }
 					: { label: field.name },
 				type: ElementType.pubfield,
-				component: defaultComponent(field.schemaName!) ?? InputComponent.relationBlock,
+				component: field.isRelation
+					? InputComponent.relationBlock
+					: defaultComponent(field.schemaName!),
 				rank: ranks[i + 1],
 				formId: eb.selectFrom("form").select("form.id"),
 			}))
