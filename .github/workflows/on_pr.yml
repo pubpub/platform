@@ -57,6 +57,9 @@ jobs:
                   # Ports to open on the server
                   ports: 80,5432
               env:
-                  AWS_ACCESS_KEY_ID: "${{ secrets.AWS_ACCESS_KEY_ID }}"
-                  AWS_SECRET_ACCESS_KEY: "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   AWS_REGION: ${{ env.AWS_REGION }}
+                  PREVIEW_POSTGRES_PASSWORD: ${{ secrets.PREVIEW_POSTGRES_PASSWORD }}
+                  PREVIEW_MINIO_ROOT_PASSWORD: ${{ secrets.PREVIEW_MINIO_ROOT_PASSWORD }}
+                  PREVIEW_ASSETS_UPLOAD_SECRET_KEY: ${{ secrets.PREVIEW_ASSETS_UPLOAD_SECRET_KEY }}

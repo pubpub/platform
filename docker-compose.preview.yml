@@ -2,12 +2,12 @@ services:
     platform:
         env:
             POSTGRES_USER: preview
-            POSTGRES_PASSWORD: ${{ secrets.PREVIEW_POSTGRES_PASSWORD }}
+            POSTGRES_PASSWORD: ${PREVIEW_POSTGRES_PASSWORD}
             POSTGRES_DB: preview
             MINIO_ROOT_USER: preview
-            MINIO_ROOT_PASSWORD: ${{ secrets.PREVIEW_MINIO_ROOT_PASSWORD }}
+            MINIO_ROOT_PASSWORD: ${PREVIEW_MINIO_ROOT_PASSWORD}
             ASSETS_UPLOAD_KEY: preview
-            ASSETS_UPLOAD_SECRET_KEY: ${{ secrets.PREVIEW_ASSETS_UPLOAD_SECRET_KEY }}
+            ASSETS_UPLOAD_SECRET_KEY: ${PREVIEW_ASSETS_UPLOAD_SECRET_KEY}
     seed:
         image: alpine:latest
         entrypoint: >
