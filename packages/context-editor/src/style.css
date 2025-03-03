@@ -148,3 +148,19 @@
 	/* Otherwise the widget button is too hard to click without triggering math */
 	margin-left: 4px;
 }
+
+/* Code block */
+.ProseMirror .codeblock-select-wrapper {
+	position: absolute;
+	left: 0;
+	top: 100%;
+	z-index: 100;
+	opacity: 0;
+	transition: all 0.3s ease;
+}
+.ProseMirror .codeblock-root {
+	position: relative;
+}
+.ProseMirror .codeblock-root:hover .codeblock-select-wrapper {
+	opacity: 1;
+}
