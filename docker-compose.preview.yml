@@ -1,6 +1,6 @@
 services:
     platform:
-        env:
+        environment:
             POSTGRES_USER: preview
             POSTGRES_PASSWORD: ${PREVIEW_POSTGRES_PASSWORD}
             POSTGRES_DB: preview
