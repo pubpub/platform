@@ -138,3 +138,7 @@
 	overflow: scroll;
 	position: relative;
 }
+.ProseMirror blockquote {
+	padding-left: 1rem;
+	border-left: solid 4px rgba(181, 181, 181, 0.5);
+}
