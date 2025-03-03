@@ -5,7 +5,17 @@ const codeInline = {
 		id: { default: null },
 		class: { default: null },
 	},
-	parseDOM: [{ tag: "code" }],
+	parseDOM: [
+		{
+			tag: "code",
+			getAttrs: (node) => {
+				return {
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
+				};
+			},
+		},
+	],
 	toDOM: (mark) => {
 		return [
 			"code",

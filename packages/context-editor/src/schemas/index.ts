@@ -22,7 +22,7 @@ export const baseSchema = new Schema({
 		contextAtom,
 		blockquote,
 		...math,
-		codeBlock: code.codeBlock,
+		code_block: code.codeBlock,
 	},
 	marks: {
 		strong,
