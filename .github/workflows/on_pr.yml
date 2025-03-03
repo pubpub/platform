@@ -31,7 +31,6 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
-
     deploy-preview:
         runs-on: ubuntu-latest
         timeout-minutes: 30
@@ -44,8 +43,8 @@ jobs:
               run: cp ./self-host/.env.example ./self-host/.env
 
             - name: Login to Amazon ECR
-                id: login-ecr
-                uses: aws-actions/amazon-ecr-login@v2
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v2
 
             - uses: pullpreview/action@v5
               with:
