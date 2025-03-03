@@ -50,7 +50,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 					restoreElement(index);
 				}}
 			>
-				<ArchiveRestore size={24} className="text-neutral-400 hover:text-red-500" />
+				<ArchiveRestore
+					size={24}
+					className="!pointer-events-auto text-neutral-400 hover:text-red-500"
+				/>
 			</Button>
 		</>
 	) : (
@@ -64,7 +67,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				removeElement(index);
 			}}
 		>
-			<Trash size={24} className="text-neutral-400 hover:text-red-500" />
+			<Trash size={24} className="!pointer-events-auto text-neutral-400 hover:text-red-500" />
 		</Button>
 	);
 	return (
