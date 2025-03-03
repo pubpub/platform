@@ -8,13 +8,3 @@ services:
             MINIO_ROOT_PASSWORD: preview
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
-    seed:
-        image: alpine:latest
-        entrypoint: >
-            /bin/sh -c '
-            docker compose exec platform-migrations pnpm --filter core reset
-            exit 0;
-            '
-        depends_on:
-            platform-migrations:
-                condition: service_completed_successfully
