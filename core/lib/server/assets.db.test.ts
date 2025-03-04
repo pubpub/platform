@@ -33,7 +33,9 @@ describe("assets upload", () => {
 	it("should be able to upload a file to the minio bucket from the server", async () => {
 		const { uploadFileToS3 } = await import("./assets");
 
-		const file = await fs.readFile(new URL("./assets.ts", import.meta.url));
+		const file = await fs.readFile(
+			new URL("../__tests__/fixtures/big-croc.jpg", import.meta.url)
+		);
 
 		const url = await uploadFileToS3("test", "test.ts", file, {
 			contentType: "text/plain",
