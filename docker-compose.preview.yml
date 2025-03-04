@@ -10,6 +10,12 @@ services:
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
             ASSETS_STORAGE_ENDPOINT: ${PULLPREVIEW_PUBLIC_DNS}/assets
+    minio-init:
+        environment:
+            MINIO_ROOT_USER: preview
+            MINIO_ROOT_PASSWORD: preview
+            ASSETS_UPLOAD_KEY: preview
+            ASSETS_UPLOAD_SECRET_KEY: preview
     minio:
         volumes: []
     platform-jobs:
