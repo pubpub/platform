@@ -1643,6 +1643,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								"pv.id as id",
 								"pv.fieldId",
 								"pv.value",
+								"pv.rank",
 								"pv.relatedPubId",
 								"pv.createdAt as createdAt",
 								"pv.updatedAt as updatedAt",
