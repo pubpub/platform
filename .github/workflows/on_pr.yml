@@ -32,6 +32,7 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     deploy-preview:
+        permissions: write-all
         runs-on: ubuntu-latest
         timeout-minutes: 30
         needs:
