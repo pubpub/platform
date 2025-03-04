@@ -6,11 +6,13 @@ import dynamic from "next/dynamic";
 import type { PubsId, PubTypesId } from "db/public";
 import { Skeleton } from "ui/skeleton";
 
-import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
+import type { GetPubTypesResult } from "~/lib/server";
 import { upload } from "../forms/actions";
 import { ContextAtom } from "./AtomRenderer";
 
 import "context-editor/style.css";
+
+import type { ContextEditorPub } from "./ContextEditorContext";
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
@@ -28,7 +30,7 @@ export const ContextEditorClient = ({
 	disabled,
 	hideMenu,
 }: {
-	pubs: GetPubsResult;
+	pubs: ContextEditorPub[];
 	pubTypes: GetPubTypesResult;
 	pubId: PubsId;
 	pubTypeId: PubTypesId;

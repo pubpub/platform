@@ -15,7 +15,6 @@ import mudder from "mudder";
 import type {
 	CreatePubRequestBodyWithNullsNew,
 	FTSReturn,
-	GetPubResponseBody,
 	Json,
 	JsonValue,
 	MaybePubOptions,
@@ -42,7 +41,7 @@ import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { DefinitelyHas, MaybeHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, MaybeHas, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { env } from "../env/env.mjs";
@@ -140,23 +139,6 @@ export const pubType = <
 		.$notNull()
 		.as("pubType");
 
-const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
-	jsonObjectFrom(
-		eb
-			.selectFrom("users")
-			.whereRef("users.id", "=", "pubs.assigneeId")
-			.select([
-				"users.id",
-				"slug",
-				"firstName",
-				"lastName",
-				"avatar",
-				"createdAt",
-				"email",
-				"communityId",
-			])
-	).as("assignee");
-
 const pubColumns = [
 	"id",
 	"communityId",
@@ -166,57 +148,6 @@ const pubColumns = [
 	"assigneeId",
 	"title",
 ] as const satisfies SelectExpression<Database, "pubs">[];
-
-export const getPubBase = (
-	props:
-		| { pubId: PubsId; communityId?: never; stageId?: never }
-		| { pubId?: never; communityId: CommunitiesId; stageId?: never }
-		| {
-				pubId?: never;
-				communityId?: never;
-				stageId: StagesId;
-		  }
-) =>
-	db
-		.selectFrom("pubs")
-		.select((eb) => [
-			...pubColumns,
-			pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
-			pubAssignee(eb),
-			jsonArrayFrom(
-				eb
-					.selectFrom("PubsInStages")
-					.select(["PubsInStages.stageId as id"])
-					.whereRef("PubsInStages.pubId", "=", "pubs.id")
-			).as("stages"),
-		])
-		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
-		.$if(!props.pubId, (eb) => eb.select(pubValuesByRef("pubs.id")))
-		.$narrowType<{ values: PubValues }>();
-
-export const _deprecated_getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	const pub = await getPubBase({ pubId }).where("pubs.id", "=", pubId).executeTakeFirst();
-
-	if (!pub) {
-		throw PubNotFoundError;
-	}
-
-	return pub;
-};
-
-export const _deprecated_getPubCached = async (pubId: PubsId) => {
-	const pub = await autoCache(
-		getPubBase({ pubId }).where("pubs.id", "=", pubId)
-	).executeTakeFirst();
-
-	if (!pub) {
-		throw PubNotFoundError;
-	}
-
-	return pub;
-};
-
-export type GetPubResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubCached>>>;
 
 export type GetManyParams = {
 	limit?: number;
@@ -237,42 +168,6 @@ export const GET_MANY_DEFAULT = {
 	orderBy: "createdAt",
 	orderDirection: "desc",
 } as const;
-
-const GET_PUBS_DEFAULT = {
-	...GET_MANY_DEFAULT,
-	select: pubColumns,
-} as const;
-
-/**
- * Get a nested array of pubs
- *
- * Either per community, or per stage
- */
-export const _deprecated_getPubs = async (
-	props: XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>,
-	params: GetManyParams = GET_PUBS_DEFAULT
-) => {
-	const { limit, offset, orderBy, orderDirection } = { ...GET_PUBS_DEFAULT, ...params };
-
-	const pubs = await autoCache(
-		getPubBase(props)
-			.$if(Boolean(props.communityId), (eb) =>
-				eb.where("pubs.communityId", "=", props.communityId!)
-			)
-			.$if(Boolean(props.stageId), (eb) =>
-				eb
-					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-					.where("PubsInStages.stageId", "=", props.stageId!)
-			)
-			.limit(limit)
-			.offset(offset)
-			.orderBy(orderBy, orderDirection)
-	).execute();
-
-	return pubs;
-};
-
-export type GetPubsResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubs>>>;
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 

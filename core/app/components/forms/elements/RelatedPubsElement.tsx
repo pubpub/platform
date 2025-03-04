@@ -16,9 +16,9 @@ import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
 
+import type { ContextEditorPub } from "../../ContextEditor/ContextEditorContext";
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import type { ElementProps } from "../types";
-import type { GetPubsResult } from "~/lib/server";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
@@ -32,7 +32,7 @@ const RelatedPubBlock = ({
 	slug,
 	onBlur,
 }: {
-	pub: GetPubsResult[number];
+	pub: ContextEditorPub;
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: string;
@@ -178,7 +178,7 @@ export const RelatedPubsElement = ({
 				acc[pub.id] = pub;
 				return acc;
 			},
-			{} as Record<string, GetPubsResult[number]>
+			{} as Record<string, ContextEditorPub>
 		);
 	}, [pubs]);
 
