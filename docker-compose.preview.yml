@@ -1,6 +1,6 @@
 services:
     platform:
-        # image: PLATFORM_IMAGE
+        image: PLATFORM_IMAGE
         environment:
             POSTGRES_USER: preview
             POSTGRES_PASSWORD: preview
@@ -22,10 +22,10 @@ services:
             MINIO_ROOT_PASSWORD: preview123
         # volumes:
         #     - ./minio:/data
-    # platform-jobs:
-    # image: JOBS_IMAGE
+    platform-jobs:
+        image: JOBS_IMAGE
     platform-migrations:
-        # image: MIGRATIONS_IMAGE
+        image: MIGRATIONS_IMAGE
         command: pnpm --filter core reset
     caddy:
         environment:
