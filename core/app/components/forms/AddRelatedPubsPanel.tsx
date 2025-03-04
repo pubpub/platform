@@ -76,7 +76,7 @@ export const AddRelatedPubsPanel = ({
 	};
 
 	return (
-		<SidePanel ref={sidebarRef} className="justify-between">
+		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={title} showCancel onCancel={onCancel} />
 				<DataTable
@@ -87,7 +87,7 @@ export const AddRelatedPubsPanel = ({
 					getRowId={(d) => d.id}
 				/>
 			</div>
-			<div className="flex w-full justify-between gap-2">
+			<div className="mt-auto flex w-full justify-between gap-2">
 				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
 					Cancel
 				</Button>
