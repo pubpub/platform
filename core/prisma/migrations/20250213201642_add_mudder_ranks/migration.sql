@@ -8,8 +8,10 @@ BEGIN;
    * form elements and related pubs in the migration.
    * Generated with: mudder.base62.mudder(200).map((rank) => `('${rank}')`).join(", ")
    */
+
+  INSERT INTO "mudder_ranks"("index","rank") VALUES (0,'0J');
   INSERT INTO "mudder_ranks"("rank")
-  VALUES ('0J'), ('0c'), ('0v'), ('1'), ('1X'), ('1q'), ('2'), ('2S'), ('2m'), ('3'), ('3O'), ('3h'),
+  VALUES ('0c'), ('0v'), ('1'), ('1X'), ('1q'), ('2'), ('2S'), ('2m'), ('3'), ('3O'), ('3h'),
   ('4'), ('4J'), ('4c'), ('4v'), ('5'), ('5Y'), ('5r'), ('6'), ('6T'), ('6m'), ('7'), ('7O'), ('7i'),
   ('8'), ('8K'), ('8d'), ('8w'), ('9'), ('9Y'), ('9r'), ('A'), ('AU'), ('An'), ('B'), ('BP'), ('Bi'),
   ('C'), ('CK'), ('Ce'), ('Cx'), ('D'), ('DZ'), ('Ds'), ('E'), ('EU'), ('En'), ('F'), ('FQ'), ('Fj'),
