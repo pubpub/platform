@@ -54,6 +54,7 @@ jobs:
 
             - uses: pullpreview/action@v5
               with:
+                  label: preview
                   admins: 3mcd
                   always_on: main
                   cidrs: "0.0.0.0/0"
