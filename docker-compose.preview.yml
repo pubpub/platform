@@ -22,18 +22,7 @@ services:
     # image: JOBS_IMAGE
     platform-migrations:
         # image: MIGRATIONS_IMAGE
-        command:
-            [
-                "pnpm",
-                "--filter",
-                "core",
-                "migrate-docker",
-                "&&",
-                "pnpm",
-                "--filter",
-                "core",
-                "reset",
-            ]
+        command: pnpm --filter core reset
     caddy:
         image: caddy:latest
         depends_on:
