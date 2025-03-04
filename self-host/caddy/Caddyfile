@@ -7,7 +7,9 @@
 example.com {
     # keep this if you want your files to be accessible at example.com/assets/*
     handle_path /assets/* {
-        reverse_proxy minio:9000
+        reverse_proxy minio:9000 {
+            header_up Host minio:9000
+        }
     }
 
     handle {
