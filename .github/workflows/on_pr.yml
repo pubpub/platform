@@ -48,7 +48,6 @@ jobs:
                   PLATFORM_IMAGE: "" #${{ needs.build-all.outputs.core-image }}
                   JOBS_IMAGE: "" #${{ needs.build-all.outputs.jobs-image }}
                   MIGRATIONS_IMAGE: "" #${{ needs.build-all.outputs.base-image }}
-                  PULLPREVIEW_PUBLIC_DNS: ${{ env.PULLPREVIEW_PUBLIC_DNS }}
               run: |
                   sed -i "s|image: PLATFORM_IMAGE|image: $PLATFORM_IMAGE|" docker-compose.preview.yml
                   sed -i "s|image: JOBS_IMAGE|image: $JOBS_IMAGE|" docker-compose.preview.yml
