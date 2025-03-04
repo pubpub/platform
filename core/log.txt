@@ -1,0 +1,56 @@
+Base
+
+      127.14 real       210.20 user        32.80 sys       
+
+Parallel traces      
+      93.87 real       157.80 user        28.09 sys
+        0.00 real         0.00 user         0.00 sys
+        0.00 real         0.00 user         0.00 sys
+        0.00 real         0.00 user         0.00 sys
+        0.57 real         0.47 user         0.07 sys
+
+Worker only
+      102.50 real       183.38 user        31.65 sys
+
+Main - preconstruct      
+      118.19 real       198.11 user        32.31 sys
+
+Parallel traces -preconstruct
+       85.63 real       152.23 user        26.83 sys
+       84.88 real       154.92 user        26.42 sys
+
+Parallel traces +preconstruct       
+      84.87 real       157.53 user        26.99 sys
+      85.96 real       151.66 user        26.79 sys
+
+Parallel traces +sentry update
+       84.15 real       148.79 user        26.30 sys
+       83.87 real       148.66 user        26.21 sys
+
+Parallel traces +sentry update +sentry plugin disable
+       82.49 real       145.19 user        26.07 sys
+
+Parallel traces +sentry update +sentry plugin disable +otel reuse
+       81.94 real       143.09 user        25.82 sys
+       88.20 real       152.83 user        26.53 sys
+
+Parallel traces +sentry update +webpack freeze
+       76.65 real       107.46 user        16.51 sys
+       75.88 real       107.77 user        16.19 sys
+
+
+Parallel traces +sentry update -webpack freeze  + custom webpack config     
+       90.16 real       153.39 user        26.37 sys
+
+
+Parallel traces +sentry update -webpack freeze -custom webpack config     
+       89.74 real       153.69 user        25.84 sys
+
+
+Parallel traces +webpack freeze  +swcTraceProfiling    
+       90.16 real       153.39 user        26.37 sys
+       77.43 real       113.78 user        17.20 sys
+       74.43 real       111.62 user        17.38 sys
+
+Parallel traces +webpack freeze +workerThreads           58.92 real       121.60 user        16.89 sys
+       74.22 real       166.89 user        27.58 sys
