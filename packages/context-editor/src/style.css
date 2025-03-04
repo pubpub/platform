@@ -164,3 +164,6 @@
 .ProseMirror .codeblock-root:hover .codeblock-select-wrapper {
 	opacity: 1;
 }
+.ProseMirror .codeblock-wrapper {
+	margin-bottom: 16px;
+}
