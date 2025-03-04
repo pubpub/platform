@@ -52,8 +52,8 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 		).as("fields"),
 	]);
 
-export const getPubType = (pubTypeId: PubTypesId) =>
-	autoCache(getPubTypeBase().where("pub_types.id", "=", pubTypeId));
+export const getPubType = (pubTypeId: PubTypesId, trx = db) =>
+	autoCache(getPubTypeBase(trx).where("pub_types.id", "=", pubTypeId));
 
 export const getPubTypeForPubId = async (pubId: PubsId) => {
 	return autoCache(

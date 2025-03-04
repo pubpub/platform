@@ -175,7 +175,9 @@ test.describe("relationship fields", () => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
-				const authorElement = elements.find((e: PubFieldElement) => e.label === "author");
+				const authorElement = elements.find(
+					(e: PubFieldElement) => "label" in e.config && e.config.label === "Role"
+				);
 				expect(authorElement.component).toEqual(InputComponent.textArea);
 				expect(authorElement.config).toMatchObject({
 					relationshipConfig: {
@@ -219,7 +221,9 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
 				const authorElement = elements.find(
-					(e: PubFieldElement) => e.label === "author null"
+					(e: PubFieldElement) =>
+						"relationshipConfig" in e.config &&
+						e.config.relationshipConfig.label === "Authors"
 				);
 				expect(authorElement.component).toBeNull();
 				expect(authorElement.config).toMatchObject({
@@ -236,5 +240,34 @@ test.describe("relationship fields", () => {
 
 		await formEditPage.saveFormElementConfiguration();
 		await formEditPage.saveForm();
+	});
+});
+
+test.describe("reordering fields", async () => {
+	test("field order is persisted after saving", async () => {
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+
+		await formEditPage.goto();
+
+		const elementsRegex = RegExp(`(Paragraph|${COMMUNITY_SLUG}).*`);
+
+		const initialElements = await page
+			.getByRole("button", { name: elementsRegex })
+			.allTextContents();
+		await page.getByRole("button", { name: 'Paragraph :value{field="title' }).press(" ");
+		await page.keyboard.press("ArrowDown");
+		await page.keyboard.press(" ");
+
+		const changedElements = await page.getByRole("button", { name: elementsRegex });
+
+		// Make sure reordering worked on the client
+		expect(changedElements).not.toHaveText(initialElements);
+
+		await formEditPage.saveForm();
+
+		// Make sure the form is returned in the same order it was saved in
+		await expect(page.getByRole("button", { name: elementsRegex })).toHaveText(
+			await changedElements.allTextContents()
+		);
 	});
 });
