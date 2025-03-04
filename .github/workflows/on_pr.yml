@@ -72,7 +72,7 @@ jobs:
                   compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
                   default_port: 443
                   instance_type: small
-                  ports: 443
+                  ports: 443,9001
                   registries: docker://AWS:${{steps.ecrtoken.outputs.value}}@246372085946.dkr.ecr.us-east-1.amazonaws.com
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
