@@ -51,6 +51,8 @@ jobs:
                   sed -i "s|image: PLATFORM_IMAGE|image: $PLATFORM_IMAGE|" docker-compose.preview.yml
                   sed -i "s|image: JOBS_IMAGE|image: $JOBS_IMAGE|" docker-compose.preview.yml
                   sed -i "s|image: MIGRATIONS_IMAGE|image: $MIGRATIONS_IMAGE|" docker-compose.preview.yml
+                  sed -i "s|example.com|$PULLPREVIEW_PUBLIC_DNS|" self-host/caddy/Caddyfile
+                  sed -i "s|email someone@example.com|email dev@pubpub.org|" self-host/caddy/Caddyfile
 
             - uses: pullpreview/action@v5
               with:

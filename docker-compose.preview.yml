@@ -9,36 +9,24 @@ services:
             MINIO_ROOT_PASSWORD: preview
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
+            ASSETS_STORAGE_ENDPOINT=${PULLPREVIEW_PUBLIC_DNS}/assets
     platform-jobs:
         image: JOBS_IMAGE
     platform-migrations:
         image: MIGRATIONS_IMAGE
+        command: ["pnpm", "--filter", "core", "migrate-docker", "&&", "pnpm", "--filter", "core", "reset"]
     caddy:
         image: caddy:latest
-        restart: unless-stopped
-        command: "caddy reverse-proxy --from '${PULLPREVIEW_PUBLIC_DNS}' --to platform:3000"
         depends_on:
             - platform
             - platform-jobs
             - minio
+        env_file: .env
         ports:
-            - "80:80"
             - "443:443"
         volumes:
-            - ./caddy:/etc/caddy
+            - ./self-host/caddy:/etc/caddy
             - caddy-data:/data
             - caddy-config:/config
-        networks:
-            - app-network
-    seed:
-        platform: linux/amd64
-        depends_on:
-            platform:
-                condition: service_started
-        image: ghcr.io/pubpub/platform-migrations:latest
-        env_file: .env
-        environment:
-            DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-        command: ["pnpm", "--filter", "core", "reset"]
         networks:
             - app-network

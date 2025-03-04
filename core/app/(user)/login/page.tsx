@@ -29,7 +29,6 @@ export default async function Login({
 
 	return (
 		<div className="mx-auto max-w-sm">
-			<p>It works!</p>
 			<LoginForm />
 			{/* <div className="text-gray-600 text-center mt-6">
 				Don't have an account?{" "}
