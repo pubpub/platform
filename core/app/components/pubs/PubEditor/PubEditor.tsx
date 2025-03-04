@@ -9,7 +9,7 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubTitle } from "~/lib/pubs";
+import { getPubTitle } from "~/lib/pubs"; 
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -47,8 +47,10 @@ const RelatedPubValueElement = ({
 				<p className="text-sm">
 					You are creating a Pub related to{" "}
 					<span className="font-semibold">{getPubTitle(relatedPub)}</span> through the{" "}
-					<span className="font-semibold">{fieldName}</span> pub field. Please enter a
-					value for this relationship.
+					<span className="font-semibold">{fieldName}</span> pub field.
+					{element.schemaName !== CoreSchemaType.Null && (
+						<span>Please enter a value for this relationship.</span>
+					)}
 				</p>
 				<PubFieldFormElement
 					label={label}
@@ -272,12 +274,17 @@ export async function PubEditor(props: PubEditorProps) {
 	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
 	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
+	// For the Context, we want both the pubs from the initial pub query (which is limited)
+	// as well as the pubs related to this pub
+	const relatedPubs = pub ? pub.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) : [];
+	const pubsForContext = [...pubs, ...relatedPubs];
+
 	return (
 		<FormElementToggleProvider fieldSlugs={allSlugs}>
 			<ContextEditorContextProvider
 				pubId={pubId}
 				pubTypeId={pubType.id}
-				pubs={pubs}
+				pubs={pubsForContext}
 				pubTypes={pubTypes}
 			>
 				<PubEditorWrapper
