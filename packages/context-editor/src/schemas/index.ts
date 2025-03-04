@@ -7,6 +7,7 @@ import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
 import heading from "./heading";
+import image from "./image";
 import math from "./math";
 import paragraph from "./paragraph";
 import strong from "./strong";
@@ -22,6 +23,7 @@ export const baseSchema = new Schema({
 		contextAtom,
 		blockquote,
 		...math,
+		image,
 	},
 	marks: {
 		strong,
