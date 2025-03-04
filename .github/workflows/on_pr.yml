@@ -71,7 +71,6 @@ jobs:
               with:
                   label: preview
                   admins: 3mcd
-                  always_on: main
                   cidrs: "0.0.0.0/0"
                   compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
                   default_port: 443
