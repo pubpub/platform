@@ -3,7 +3,16 @@ import type { ReactNode } from "react";
 
 import React, { Fragment } from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { Bold, Code, CodeSquare, Italic, Quote, Radical, SquareRadical } from "lucide-react";
+import {
+	Bold,
+	Code,
+	CodeSquare,
+	ImagePlus,
+	Italic,
+	Quote,
+	Radical,
+	SquareRadical,
+} from "lucide-react";
 
 import { Button } from "ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
@@ -21,6 +30,7 @@ import {
 	heading6Toggle,
 	paragraphToggle,
 } from "../commands/blocks";
+import { insertImage } from "../commands/images";
 import { codeToggle, emToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 
@@ -80,6 +90,14 @@ const menuBlocks: MenuItem[][] = [
 			name: "Block math",
 			icon: <SquareRadical {...iconProps} />,
 			command: mathToggleBlock,
+		},
+	],
+	[
+		{
+			key: "image",
+			name: "Image",
+			icon: <ImagePlus {...iconProps} />,
+			command: insertImage,
 		},
 	],
 ];

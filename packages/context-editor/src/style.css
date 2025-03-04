@@ -94,6 +94,7 @@
 .ProseMirror .codeblock-wrapper,
 .ProseMirror math-display,
 .ProseMirror blockquote,
+.ProseMirror img,
 .ProseMirror section {
 	border-left: 1px solid #777;
 	padding-left: 5px;
