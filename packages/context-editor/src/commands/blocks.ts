@@ -85,5 +85,4 @@ export const blockquoteToggle = createBlockTypeToggle({
 	typeName: "blockquote",
 	commandFn: toggleWrap,
 });
-// TODO
 export const codeBlockToggle = createBlockTypeToggle({ typeName: "code_block" });
