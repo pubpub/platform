@@ -83,8 +83,11 @@ export default () => {
 							Decoration.widget(pos, wrapWidget(state, node, pos, setPanelPosition))
 						);
 					}
-					if (!node.type.isBlock && node.marks.length) {
-						/* If it's an inline node with marks */
+					const isInline = !node.type.isBlock;
+					const hasMarks = !!node.marks.length;
+					const isMath = node.type.name === "math_inline";
+					if (isInline && (hasMarks || isMath)) {
+						/* If it's an inline node with marks OR is inline math */
 						decorations.push(
 							Decoration.widget(pos, wrapWidget(state, node, pos, setPanelPosition))
 						);

@@ -26,13 +26,17 @@ export const ContextEditorClient = ({
 	initialDoc,
 	onChange,
 	disabled,
+	hideMenu,
 }: {
 	pubs: GetPubsResult;
 	pubTypes: GetPubTypesResult;
 	pubId: PubsId;
 	pubTypeId: PubTypesId;
 	// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
-} & Pick<ContextEditorProps, "onChange" | "initialDoc" | "className" | "disabled">) => {
+} & Pick<
+	ContextEditorProps,
+	"onChange" | "initialDoc" | "className" | "disabled" | "hideMenu"
+>) => {
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
@@ -57,6 +61,7 @@ export const ContextEditorClient = ({
 				initialDoc={initialDoc}
 				disabled={disabled}
 				className={className}
+				hideMenu={hideMenu}
 			/>
 		);
 	}, [pubs, pubTypes, disabled]);

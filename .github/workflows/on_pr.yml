@@ -11,6 +11,10 @@ on:
 env:
     AWS_REGION: us-east-1
 
+permissions:
+    id-token: write
+    contents: read
+
 jobs:
     ci:
         uses: ./.github/workflows/ci.yml
