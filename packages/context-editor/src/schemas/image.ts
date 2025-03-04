@@ -1,7 +1,7 @@
 import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
 
 type Alignment = "left" | "center" | "right" | "block";
-type ImageAttrs = {
+export type ImageAttrs = {
 	id: string | null;
 	class: string | null;
 	alt: string;
