@@ -12,7 +12,6 @@ services:
             ASSETS_STORAGE_ENDPOINT: https://${PULLPREVIEW_PUBLIC_DNS}/assets
     minio-init:
         restart: on-failure
-        attach: false
         environment:
             MINIO_ROOT_USER: preview
             MINIO_ROOT_PASSWORD: preview123
