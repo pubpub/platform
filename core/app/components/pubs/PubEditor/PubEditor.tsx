@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
 import type { FormElements, PubFieldElement } from "../../forms/types";
@@ -9,7 +10,7 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubTitle } from "~/lib/pubs"; 
+import { getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
