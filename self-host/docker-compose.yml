@@ -93,12 +93,12 @@ services:
     minio:
         image: minio/minio:latest
         env_file: .env
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
-            start_period: 30s
+        # healthcheck:
+        #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+        #     interval: 1m30s
+        #     timeout: 30s
+        #     retries: 5
+        #     start_period: 30s
         restart: unless-stopped
         command: server --console-address ":9001" /data
         ports:
