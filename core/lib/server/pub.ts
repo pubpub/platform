@@ -1429,6 +1429,7 @@ export type UnprocessedPub = {
 		schemaName: CoreSchemaType;
 		fieldSlug: string;
 		fieldName: string;
+		rank: string;
 	}[];
 	children?: { id: PubsId }[];
 };
@@ -2062,7 +2063,14 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 
 		const processedPub = {
 			...usefulProcessedPubColumns,
-			values: processedValues ?? [],
+			values:
+				processedValues?.toSorted((a, b) => {
+					// Sort values by fieldId, rank
+					if (a.fieldId === b.fieldId && a.rank !== null && b.rank !== null) {
+						return a.rank > b.rank ? 1 : -1;
+					}
+					return a.fieldId.localeCompare(b.fieldId);
+				}) ?? [],
 			children: processedChildren ?? undefined,
 		} as ProcessedPub;
 
