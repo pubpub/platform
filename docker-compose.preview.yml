@@ -6,16 +6,16 @@ services:
             POSTGRES_PASSWORD: preview
             POSTGRES_DB: preview
             MINIO_ROOT_USER: preview
-            MINIO_ROOT_PASSWORD: preview
+            MINIO_ROOT_PASSWORD: preview123
             ASSETS_UPLOAD_KEY: preview
-            ASSETS_UPLOAD_SECRET_KEY: preview
+            ASSETS_UPLOAD_SECRET_KEY: preview123
             ASSETS_STORAGE_ENDPOINT: ${PULLPREVIEW_PUBLIC_DNS}/assets
     minio-init:
         environment:
             MINIO_ROOT_USER: preview
-            MINIO_ROOT_PASSWORD: preview
+            MINIO_ROOT_PASSWORD: preview123
             ASSETS_UPLOAD_KEY: preview
-            ASSETS_UPLOAD_SECRET_KEY: preview
+            ASSETS_UPLOAD_SECRET_KEY: preview123
     minio:
         volumes: []
     # platform-jobs:
