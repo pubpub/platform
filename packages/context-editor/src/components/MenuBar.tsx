@@ -173,7 +173,7 @@ const ImagePopoverMenuItem = () => {
 					<ImagePlus {...iconProps} />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent>
+			<PopoverContent className="w-96">
 				<ImageUploader />
 			</PopoverContent>
 		</Popover>
