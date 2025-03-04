@@ -15,7 +15,7 @@ const runInsertImage = (state: EditorState, dispatch?: Dispatch) => {
 	return true;
 };
 
-const isImageActive = (state: EditorState) => {
+export const isImageActive = (state: EditorState) => {
 	const { node } = state.selection as NodeSelection;
 	return node && node.type.name === "image";
 };

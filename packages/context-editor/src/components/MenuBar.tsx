@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { cn } from "utils";
 
@@ -30,9 +31,10 @@ import {
 	heading6Toggle,
 	paragraphToggle,
 } from "../commands/blocks";
-import { insertImage } from "../commands/images";
+import { isImageActive } from "../commands/images";
 import { codeToggle, emToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
+import { ImageUploader } from "./ImageUploader";
 
 type MenuItem = {
 	key: string;
@@ -90,14 +92,6 @@ const menuBlocks: MenuItem[][] = [
 			name: "Block math",
 			icon: <SquareRadical {...iconProps} />,
 			command: mathToggleBlock,
-		},
-	],
-	[
-		{
-			key: "image",
-			name: "Image",
-			icon: <ImagePlus {...iconProps} />,
-			command: insertImage,
 		},
 	],
 ];
@@ -184,6 +178,30 @@ const ParagraphDropdown = () => {
 	);
 };
 
+const ImagePopoverMenuItem = () => {
+	const { view } = usePluginViewContext();
+	const isActive = isImageActive(view.state);
+	return (
+		<Popover>
+			<PopoverTrigger asChild>
+				<Button
+					variant="ghost"
+					size="sm"
+					title="Image"
+					className={cn("h-fit rounded-sm p-1", {
+						"bg-blue-200 hover:bg-blue-300": isActive,
+					})}
+				>
+					<ImagePlus {...iconProps} />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent>
+				<ImageUploader />
+			</PopoverContent>
+		</Popover>
+	);
+};
+
 const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 	const { view } = usePluginViewContext();
 	const { key, name, icon, command } = menuItem;
@@ -240,10 +258,13 @@ export const MenuBar = () => {
 									);
 								})}
 							</div>
-							{!isLast && <Separator />}
+							<Separator />
 						</Fragment>
 					);
 				})}
+			</div>
+			<div className="flex items-center">
+				<ImagePopoverMenuItem />
 			</div>
 		</div>
 	);
