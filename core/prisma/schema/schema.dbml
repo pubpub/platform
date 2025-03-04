@@ -509,6 +509,8 @@ Enum Event {
   pubEnteredStage
   pubLeftStage
   pubInStageForDuration
+  actionSucceeded
+  actionFailed
 }
 
 Enum FormAccessType {
