@@ -109,7 +109,6 @@ test("PubTitle component includes the pub title", async () => {
 				},
 			},
 		],
-		children: [],
 		members: [],
 	};
 

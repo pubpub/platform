@@ -40,7 +40,7 @@ interface PubCreate {
  * _______
  * | My new title
  *
- * This would return a new "Submission" pub with empty fields in children,
+ * This would return a new "Submission" pub with empty fields
  * and a new title field in values (i.e. {"croccroc:title":"My new title" })
  *
  * TODO: what to do about multiple rich text fields?

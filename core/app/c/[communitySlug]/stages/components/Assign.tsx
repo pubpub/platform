@@ -29,7 +29,6 @@ type Props = {
 		withPubType: true;
 		withLegacyAssignee: true;
 		withRelatedValues: false;
-		withChildren: undefined;
 	}>;
 };
 

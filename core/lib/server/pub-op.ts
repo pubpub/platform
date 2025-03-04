@@ -14,7 +14,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import {
 	deletePub,
 	deletePubValuesByValueId,
-	getPubsWithRelatedValuesAndChildren,
+	getPubsWithRelatedValues,
 	maybeWithTrx,
 	upsertPubRelationValues,
 	upsertPubValues,
@@ -517,10 +517,7 @@ abstract class BasePubOp {
 	async execute(): Promise<ProcessedPub> {
 		const { trx = db } = this.options;
 		const pubId = await maybeWithTrx(trx, (trx) => this.executeWithTrx(trx));
-		return getPubsWithRelatedValuesAndChildren(
-			{ pubId, communityId: this.options.communityId },
-			{ trx }
-		);
+		return getPubsWithRelatedValues({ pubId, communityId: this.options.communityId }, { trx });
 	}
 
 	private collectOperations(processed = new Set<PubsId>()): OperationsMap {

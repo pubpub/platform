@@ -25,7 +25,7 @@ import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
+import { getPubsWithRelatedValues } from "~/lib/server/pub";
 import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { capitalize } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
@@ -142,12 +142,12 @@ export default async function FormPage(props: {
 			communityId: community.id,
 		}).executeTakeFirst(),
 		searchParams.pubId
-			? await getPubsWithRelatedValuesAndChildren(
+			? await getPubsWithRelatedValues(
 					{ pubId: searchParams.pubId, communityId: community.id },
 					{ withStage: true, withLegacyAssignee: true, withPubType: true }
 				)
 			: undefined,
-		getPubsWithRelatedValuesAndChildren(
+		getPubsWithRelatedValues(
 			{ communityId: community.id, userId: user?.id },
 			{
 				limit: 30,
@@ -203,7 +203,7 @@ export default async function FormPage(props: {
 	}
 
 	const parentPub = pub?.parentId
-		? await getPubsWithRelatedValuesAndChildren(
+		? await getPubsWithRelatedValues(
 				{ pubId: pub.parentId, communityId: community.id },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
