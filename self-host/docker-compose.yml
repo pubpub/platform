@@ -104,8 +104,8 @@ services:
         ports:
             - "9000:9000" # API
             - "9001:9001" # Console
-        volumes:
-            - ./minio:/data
+        # volumes:
+        #     - ./minio:/data
         networks:
             - app-network
 
