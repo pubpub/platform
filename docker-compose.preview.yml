@@ -17,7 +17,8 @@ services:
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview123
     minio:
-        volumes: []
+        volumes:
+            - ./self-host/minio:/data
     # platform-jobs:
     # image: JOBS_IMAGE
     platform-migrations:
