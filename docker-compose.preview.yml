@@ -21,7 +21,7 @@ services:
             MINIO_ROOT_USER: preview
             MINIO_ROOT_PASSWORD: preview123
         volumes:
-            - ./self-host/minio:/data
+            - ./minio:/data
     # platform-jobs:
     # image: JOBS_IMAGE
     platform-migrations:
@@ -39,7 +39,7 @@ services:
         ports:
             - "443:443"
         volumes:
-            - ./self-host/caddy:/etc/caddy
+            - ./caddy:/etc/caddy
             - caddy-data:/data
             - caddy-config:/config
         networks:
