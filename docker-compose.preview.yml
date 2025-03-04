@@ -26,6 +26,7 @@ services:
         image: JOBS_IMAGE
     platform-migrations:
         image: MIGRATIONS_IMAGE
+        restart: on-failure
         command: pnpm --filter core reset
     caddy:
         environment:
