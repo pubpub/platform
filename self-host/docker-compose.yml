@@ -14,9 +14,7 @@ services:
                 condition: service_completed_successfully
         platform: linux/amd64
         image: ghcr.io/pubpub/platform:latest
-        env_file:
-            - path: .env
-              required: true
+        env_file: .env
         environment:
             DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
         ports:
@@ -32,9 +30,7 @@ services:
                 condition: service_completed_successfully
         platform: linux/amd64
         image: ghcr.io/pubpub/platform-jobs:latest
-        env_file:
-            - path: .env
-              required: true
+        env_file: .env
         environment:
             DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
         networks:
@@ -46,9 +42,7 @@ services:
             db:
                 condition: service_started
         image: ghcr.io/pubpub/platform-migrations:latest
-        env_file:
-            - path: .env
-              required: true
+        env_file: .env
         environment:
             DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
         # FIXME: remove this once it's merged into main
@@ -64,9 +58,7 @@ services:
     db:
         image: postgres:15
         restart: always
-        env_file:
-            - path: .env
-              required: true
+        env_file: .env
         volumes:
             - postgres-data:/var/lib/postgresql/data
         networks:
@@ -100,9 +92,7 @@ services:
     # can be removed if you manually set up a storage service like s3 or minio instead
     minio:
         image: minio/minio:latest
-        env_file:
-            - path: .env
-              required: true
+        env_file: .env
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
             interval: 1m30s
@@ -114,8 +104,8 @@ services:
         ports:
             - "9000:9000" # API
             - "9001:9001" # Console
-        volumes:
-            - ./minio:/data
+        # volumes:
+        #     - ./minio:/data
         networks:
             - app-network
 
@@ -125,9 +115,7 @@ services:
             minio:
                 condition: service_healthy
         image: minio/mc:latest
-        env_file:
-            - path: .env
-              required: true
+        env_file: .env
         entrypoint: >
             /bin/sh -c '
             /usr/bin/mc config host add myminio http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
