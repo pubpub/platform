@@ -1,14 +1,11 @@
-import type { AppRouteResponse, ContractOtherResponse, Opaque } from "@ts-rest/core";
-
 import { initContract } from "@ts-rest/core";
-import { z, ZodNull } from "zod";
+import { z } from "zod";
 
 import type {
 	CommunitiesId,
 	CoreSchemaType,
 	MemberRole,
 	PubFields,
-	PubFieldSchemaId,
 	PubFieldsId,
 	PubsId,
 	PubTypes,
@@ -21,7 +18,6 @@ import type {
 } from "db/public";
 import {
 	communitiesIdSchema,
-	communityMembershipsIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
 	memberRoleSchema,
@@ -225,6 +221,7 @@ type ValueBase = {
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
 	fieldName: string;
+	rank: string | null;
 };
 
 type ProcessedPubBase = {
@@ -289,6 +286,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 			schemaName: coreSchemaTypeSchema,
 			relatedPubId: pubsIdSchema.nullable(),
 			relatedPub: z.lazy(() => processedPubSchema.nullish()),
+			rank: z.string().nullable(),
 		})
 	),
 	createdAt: z.date(),
