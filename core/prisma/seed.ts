@@ -60,10 +60,10 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
-async function main() {
-	const arcadiaId = crypto.randomUUID() as CommunitiesId;
-	const croccrocId = crypto.randomUUID() as CommunitiesId;
+const arcadiaId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const croccrocId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
+async function main() {
 	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b" as CommunitiesId;
 	// do not seed arcadia if the minimal seed flag is set
 	// this is because it will slow down ci/testing
