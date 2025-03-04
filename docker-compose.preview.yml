@@ -9,12 +9,23 @@ services:
             MINIO_ROOT_PASSWORD: preview
             ASSETS_UPLOAD_KEY: preview
             ASSETS_UPLOAD_SECRET_KEY: preview
-            ASSETS_STORAGE_ENDPOINT=${PULLPREVIEW_PUBLIC_DNS}/assets
+            ASSETS_STORAGE_ENDPOINT: ${PULLPREVIEW_PUBLIC_DNS}/assets
     platform-jobs:
         image: JOBS_IMAGE
     platform-migrations:
         image: MIGRATIONS_IMAGE
-        command: ["pnpm", "--filter", "core", "migrate-docker", "&&", "pnpm", "--filter", "core", "reset"]
+        command:
+            [
+                "pnpm",
+                "--filter",
+                "core",
+                "migrate-docker",
+                "&&",
+                "pnpm",
+                "--filter",
+                "core",
+                "reset",
+            ]
     caddy:
         image: caddy:latest
         depends_on:
