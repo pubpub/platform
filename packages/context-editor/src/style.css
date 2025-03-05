@@ -91,6 +91,7 @@
 .ProseMirror h5,
 .ProseMirror h6,
 .ProseMirror p,
+.ProseMirror .codeblock-wrapper,
 .ProseMirror math-display,
 .ProseMirror blockquote,
 .ProseMirror section {
@@ -162,6 +163,7 @@
 }
 .ProseMirror .codeblock-root {
 	position: relative;
+	border-width: 0;
 }
 .ProseMirror .codeblock-root:hover .codeblock-select-wrapper {
 	opacity: 1;
