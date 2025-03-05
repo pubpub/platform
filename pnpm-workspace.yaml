@@ -5,7 +5,6 @@ packages:
     - "packages/*"
     - "storybook"
     - "docs"
-    - "docs-nextra"
 
 # A catalog is used to line up the package versions across workspaces
 catalog:

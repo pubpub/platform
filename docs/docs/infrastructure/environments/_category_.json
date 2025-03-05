@@ -1,8 +1,0 @@
-{
-	"label": "Environments",
-	"position": 0,
-	"link": {
-		"type": "generated-index",
-		"description": "Terraform environments for PubPub."
-	}
-}
