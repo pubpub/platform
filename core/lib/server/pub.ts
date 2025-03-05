@@ -713,7 +713,6 @@ export const deletePub = async ({
 		const pubValues = await trx
 			.selectFrom("pub_values")
 			.where("pubId", "in", Array.isArray(pubId) ? pubId : [pubId])
-			.orderBy(["pub_values.fieldId", "pub_values.rank"])
 			.selectAll()
 			.execute();
 
