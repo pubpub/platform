@@ -39,7 +39,7 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 	const id = props.id ? `dashboard-${props.id}` : "uppy-dashboard";
 	const [uppy] = useState(() => new Uppy<Meta, AwsBody>({ id }).use(AwsS3Multipart));
 	useEffect(() => {
-		uppy.on("complete", () => {
+		const handler = () => {
 			const uploadedFiles = uppy.getFiles();
 			const formattedFiles = uploadedFiles.map((file) => {
 				return {
@@ -54,7 +54,13 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 				};
 			}) as FormattedFile[];
 			props.onUpdateFiles(formattedFiles);
-		});
+		};
+		uppy.on("complete", handler);
+
+		// Make sure we only have one listener at a time
+		return () => {
+			uppy.off("complete", handler);
+		};
 	}, [props.onUpdateFiles]);
 
 	useEffect(() => {
