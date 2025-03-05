@@ -17,7 +17,6 @@ import { codeMirrorBlockNodeView } from "./codeMirrorBlockNodeView";
 import { defaultSettings } from "./defaults";
 import languageLoaders from "./languageLoaders";
 import { CodeBlockLanguages } from "./languages";
-import parsers from "./parsers";
 import { codeBlockArrowHandlers } from "./utils";
 
 export const codeMirrorBlockKey = new PluginKey("codemirror-block");
@@ -42,7 +41,6 @@ export {
 	type LanguageLoaders,
 	CodeBlockLanguages,
 	defaultSettings,
-	parsers,
 	languageLoaders,
 };
 
