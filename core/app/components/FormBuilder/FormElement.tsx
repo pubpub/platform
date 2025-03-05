@@ -1,4 +1,3 @@
-import type { KeyboardEventHandler } from "react";
 import type { FieldArrayWithId } from "react-hook-form";
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -44,16 +43,13 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				type="button"
 				disabled={isDisabled}
 				variant="ghost"
-				className="invisible p-2 hover:bg-white group-hover:visible"
+				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
 				aria-label="Restore element"
 				onClick={() => {
 					restoreElement(index);
 				}}
 			>
-				<ArchiveRestore
-					size={24}
-					className="!pointer-events-auto text-neutral-400 hover:text-red-500"
-				/>
+				<ArchiveRestore size={24} className="text-neutral-400" />
 			</Button>
 		</>
 	) : (
@@ -61,22 +57,19 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			type="button"
 			disabled={isDisabled}
 			variant="ghost"
-			className="invisible p-2 hover:bg-white group-hover:visible"
+			className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
 			aria-label="Delete element"
 			onClick={() => {
 				removeElement(index);
 			}}
 		>
-			<Trash size={24} className="!pointer-events-auto text-neutral-400 hover:text-red-500" />
+			<Trash size={24} className="text-neutral-400" />
 		</Button>
 	);
 	return (
-		// eslint-disable-next-line jsx-a11y/no-static-element-interactions
 		<div
 			ref={setNodeRef}
 			style={style}
-			{...attributes}
-			onKeyDown={listeners?.onKeyDown as KeyboardEventHandler}
 			className={cn(
 				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
@@ -101,7 +94,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							aria-label="Edit field"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="invisible p-2 group-hover:visible group-focus:visible"
+							className="p-2 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
 							onClick={() => {
 								openConfigPanel(index);
 							}}
@@ -113,9 +106,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							aria-label="Drag handle"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="invisible p-1.5 group-hover:visible group-focus:visible"
+							className="p-1.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
 							{...listeners}
 							{...attributes}
+							tabIndex={0}
 						>
 							<GripVertical size={24} className="text-neutral-400" />
 						</Button>
