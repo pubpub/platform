@@ -91,7 +91,6 @@
 .ProseMirror h5,
 .ProseMirror h6,
 .ProseMirror p,
-.ProseMirror code,
 .ProseMirror math-display,
 .ProseMirror blockquote,
 .ProseMirror section {
@@ -104,6 +103,9 @@
 .ProseMirror section {
 	margin-left: -5px;
 }
+
+.ProseMirror math-inline,
+.ProseMirror code,
 .ProseMirror strong,
 .ProseMirror em {
 	border-top: 1px solid #777;
@@ -146,7 +148,7 @@
 }
 .ProseMirror math-inline {
 	/* Otherwise the widget button is too hard to click without triggering math */
-	margin-left: 4px;
+	padding-left: 4px;
 }
 
 /* Code block */
