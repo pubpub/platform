@@ -1,5 +1,6 @@
 import type { FieldArrayWithId } from "react-hook-form";
 
+import { useId } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Markdown from "react-markdown";
@@ -36,6 +37,8 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 
 	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder();
 
+	const labelId = useId();
+
 	const restoreRemoveButton = element.deleted ? (
 		<>
 			<div className="my-auto text-gray-500">Deleted on save</div>
@@ -43,13 +46,13 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				type="button"
 				disabled={isDisabled}
 				variant="ghost"
-				className="invisible p-2 hover:bg-white group-hover:visible"
+				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
 				aria-label="Restore element"
 				onClick={() => {
 					restoreElement(index);
 				}}
 			>
-				<ArchiveRestore size={24} className="text-neutral-400 hover:text-red-500" />
+				<ArchiveRestore size={24} className="text-neutral-400" />
 			</Button>
 		</>
 	) : (
@@ -57,33 +60,33 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			type="button"
 			disabled={isDisabled}
 			variant="ghost"
-			className="invisible p-2 hover:bg-white group-hover:visible"
+			className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
 			aria-label="Delete element"
 			onClick={() => {
 				removeElement(index);
 			}}
 		>
-			<Trash size={24} className="text-neutral-400 hover:text-red-500" />
+			<Trash size={24} className="text-neutral-400" />
 		</Button>
 	);
 	return (
-		<div
+		<li
+			aria-labelledby={labelId}
 			ref={setNodeRef}
 			style={style}
-			{...attributes}
 			className={cn(
-				"flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
+				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
 				element.deleted && "border-l-red-200"
 			)}
 		>
-			<div className="group flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
+			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
 				{isFieldInput(element) && (
-					<FieldInputElement element={element} isEditing={isEditing} />
+					<FieldInputElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
 				{isStructuralElement(element) && (
-					<StructuralElement element={element} isEditing={isEditing} />
+					<StructuralElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
 				{isEditing ? (
 					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
@@ -92,9 +95,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 						{restoreRemoveButton}
 						<Button
 							type="button"
+							aria-label="Edit field"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="invisible p-2 group-hover:visible"
+							className="p-2 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
 							onClick={() => {
 								openConfigPanel(index);
 							}}
@@ -103,25 +107,29 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 						</Button>
 						<Button
 							type="button"
+							aria-label="Drag handle"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="invisible p-1.5 group-hover:visible"
+							className="p-1.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
 							{...listeners}
+							{...attributes}
+							tabIndex={0}
 						>
 							<GripVertical size={24} className="text-neutral-400" />
 						</Button>
 					</div>
 				)}
 			</div>
-		</div>
+		</li>
 	);
 };
 
 type FieldInputElementProps = {
 	element: InputElement;
 	isEditing: boolean;
+	labelId?: string;
 };
-export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
+export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
 
@@ -137,8 +145,11 @@ export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps
 			/>
 			<div>
 				<div className="text-gray-500">{field.slug}</div>
-				<div className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}>
-					{element.label ?? field.name}
+				<div
+					id={labelId}
+					className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}
+				>
+					{(element.config as any)?.label ?? field.name}
 				</div>
 			</div>
 		</>
@@ -148,8 +159,9 @@ export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps
 type StructuralElementProps = {
 	element: StructuralElement;
 	isEditing: boolean;
+	labelId?: string;
 };
-const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
+const StructuralElement = ({ element, isEditing, labelId }: StructuralElementProps) => {
 	const { Icon, name } = structuralElements[element.element];
 
 	return (
@@ -163,7 +175,9 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 				)}
 			/>
 			<div>
-				<div className="text-gray-500">{name}</div>
+				<div id={labelId} className="text-gray-500">
+					{name}
+				</div>
 				<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
 					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
 					<Markdown className="line-clamp-2">{element.content}</Markdown>

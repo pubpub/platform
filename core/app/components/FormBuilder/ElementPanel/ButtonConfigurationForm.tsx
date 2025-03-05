@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import mudder from "mudder";
 import { useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,7 +28,7 @@ import { ChevronDown } from "ui/icon";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
-import type { ButtonElement, FormBuilderSchema } from "../types";
+import type { FormBuilderSchema } from "../types";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { useFormBuilder } from "../FormBuilderContext";
 import { ButtonOption } from "../SubmissionSettings";
@@ -48,7 +49,7 @@ export const ButtonConfigurationForm = ({
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext<FormBuilderSchema>();
 	// Derive some initial values based on the state of the parent form when this panel was opened
-	const { button, buttonIndex, otherButtons, numElements } = useMemo(() => {
+	const { button, buttonIndex, otherButtons, numElements, elements } = useMemo(() => {
 		const elements = getValues()["elements"];
 		// Because a button might not have an ID yet (if it wasn't saved to the db yet) fall back to its label as an identifier
 		const buttonIndex = buttonIdentifier
@@ -66,7 +67,7 @@ export const ButtonConfigurationForm = ({
 				e.elementId !== buttonIdentifier &&
 				e.label !== buttonIdentifier
 		);
-		return { button, buttonIndex, otherButtons, numElements: elements.length };
+		return { button, buttonIndex, otherButtons, numElements: elements.length, elements };
 	}, []);
 
 	const schema = z.object({
@@ -102,7 +103,11 @@ export const ButtonConfigurationForm = ({
 	const onSubmit = (values: z.infer<typeof schema>) => {
 		const index = buttonIndex === -1 ? numElements : buttonIndex;
 		update(index, {
-			order: null,
+			rank: mudder.base62.mudder(
+				elements[index - 1]?.rank ?? "",
+				elements[index + 1]?.rank ?? "",
+				1
+			)[0],
 			type: ElementType.button,
 			elementId: button?.elementId,
 			label: values.label,
