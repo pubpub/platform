@@ -1643,6 +1643,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "stageId",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{
