@@ -120,3 +120,23 @@ export type AutoReturnType<T extends (...args: any[]) => DirectAutoOutput<any>> 
 export type UnionOmit<T, K extends keyof T> = T extends T ? Omit<T, K> : never;
 
 export type UnionPick<T, K extends keyof T> = T extends T ? Pick<T, K> : never;
+
+/**
+ * Maps a union of tuples to a union of objects
+ * TupleToObject<["a", number] | ["b", string]> = { key: "a", value: number } | { key: "b", value: string }
+ */
+export type TupleToObject<T extends [string, any]> = T extends [infer K extends string, infer V]
+	? { [key in K]: V }
+	: never;
+
+/**
+ * Converts a tuple [K, V] to an object with custom property names
+ * Example: TupleToCustomObject<["$or", Filter[]], "operator", "filters"> = { operator: "$or", filters: Filter[] }
+ */
+export type TupleToCustomObject<
+	T extends [string, any],
+	KeyProp extends string = "key",
+	ValueProp extends string = "value",
+> = T extends [infer K extends string, infer V]
+	? { [key in KeyProp]: K } & { [key in ValueProp]: V }
+	: never;
