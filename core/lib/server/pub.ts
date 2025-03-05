@@ -1434,7 +1434,6 @@ export type UnprocessedPub = {
 		schemaName: CoreSchemaType;
 		fieldSlug: string;
 		fieldName: string;
-		rank: string;
 	}[];
 	children?: { id: PubsId }[];
 };
@@ -1920,7 +1919,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 								"pv.id as id",
 								"pv.fieldId",
 								"pv.value",
-								"pv.rank",
 								"pv.relatedPubId",
 								"pv.createdAt as createdAt",
 								"pv.updatedAt as updatedAt",

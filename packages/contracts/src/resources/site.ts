@@ -221,7 +221,6 @@ type ValueBase = {
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
 	fieldName: string;
-	rank: string | null;
 };
 
 type ProcessedPubBase = {
@@ -286,7 +285,6 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 			schemaName: coreSchemaTypeSchema,
 			relatedPubId: pubsIdSchema.nullable(),
 			relatedPub: z.lazy(() => processedPubSchema.nullish()),
-			rank: z.string().nullable(),
 		})
 	),
 	createdAt: z.date(),
