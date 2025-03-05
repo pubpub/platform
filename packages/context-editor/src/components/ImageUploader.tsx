@@ -1,34 +1,25 @@
-import React, { useState } from "react";
+import React from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
 
-import type { FormattedFile } from "ui/customRenderers/fileUpload/fileUpload";
-import { Button } from "ui/button";
+import type { FileUploadProps, FormattedFile } from "ui/customRenderers/fileUpload/fileUpload";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
-import { Input } from "ui/input";
+import { Label } from "ui/label";
 
 import type { ImageAttrs } from "../schemas/image";
 import { insertNodeIntoEditor } from "../utils/nodes";
 
-const fakeFile: FormattedFile = {
-	id: "test",
-	fileName: "cat.jpeg",
-	fileSource: "https://placecats.com/300/200",
-	fileType: "",
-	fileMeta: {},
-	fileSize: 100,
-};
+export type Upload = FileUploadProps["upload"];
 
-export const ImageUploader = () => {
+export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: () => void }) => {
 	const { view } = usePluginViewContext();
-	const [url, setUrl] = useState("");
 
 	const onUpload = (files: FormattedFile[]) => {
 		for (const file of files) {
 			const attrs: ImageAttrs = {
-				src: file.fileSource,
-				id: file.id, // maybe?
+				src: file.fileUploadUrl || "",
+				id: "",
 				class: null,
-				alt: "",
+				alt: file.fileName,
 				linkTo: "",
 				credit: null,
 				license: null,
@@ -37,41 +28,13 @@ export const ImageUploader = () => {
 			};
 			insertNodeIntoEditor(view.state, view.dispatch, "image", attrs);
 		}
+		onInsert();
 	};
 
 	return (
-		<div className="flex gap-2">
-			{/* Temporary form while figuring out FileUpload
-			The Button onClick should be able to be passed into onUpdateFiles */}
-			<Input
-				type="text"
-				value={url}
-				onChange={(evt) => {
-					setUrl(evt.target.value);
-				}}
-				placeholder="url to an image"
-			/>
-			<Button
-				onClick={() => {
-					onUpload([
-						{ ...fakeFile, fileSource: url },
-						{ ...fakeFile, fileSource: "https://placecats.com/neo/300/200" },
-					]);
-				}}
-			>
-				insert
-			</Button>
-			{/* TODO: figure out how to do signed uploads here */}
-			{/* <FileUpload
-				upload={(filename) => {
-					console.log({ filename });
-					// TODO: how best to get signed upload here?
-					return Promise.resolve("test");
-				}}
-				onUpdateFiles={(event) => {
-					console.log({ event });
-				}}
-			/> */}
+		<div className="flex flex-col gap-2">
+			<Label>Media Upload</Label>
+			<FileUpload upload={upload} onUpdateFiles={onUpload} id="editor-image-uploader" />
 		</div>
 	);
 };

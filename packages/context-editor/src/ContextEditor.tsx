@@ -45,6 +45,7 @@ export interface ContextEditorProps {
 		nodeProp: any;
 	}> /* A react component that is given the ContextAtom pubtype and renders it accordingly */;
 	hideMenu?: boolean;
+	upload: (fileName: string) => Promise<string | { error: string }>;
 }
 
 export interface PanelProps {
@@ -121,7 +122,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 					: [
 							new Plugin({
 								view: pluginViewFactory({
-									component: () => <MenuBar />,
+									component: () => <MenuBar upload={props.upload} />,
 									root: () => {
 										return document.getElementById(MENU_BAR_ID) as HTMLElement;
 									},
