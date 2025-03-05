@@ -140,10 +140,19 @@ const processHtml = async (html: string): Promise<string> => {
 export const formatDriveData = async (
 	dataFromDrive: DriveData,
 	communitySlug: string,
-	pubId: string
+	pubId: string,
+	createVersions: boolean
 ): Promise<FormattedDriveData> => {
 	const formattedPubHtml = await processHtml(dataFromDrive.pubHtml);
 	const formattedPubHtmlWithAssets = await processAssets(formattedPubHtml, pubId);
+	if (!createVersions) {
+		return {
+			pubHtml: String(formattedPubHtmlWithAssets),
+			pubDescription: "",
+			versions: [],
+			discussions: [],
+		};
+	}
 
 	/* Check for a description in the most recent version */
 	const latestRawVersion = dataFromDrive.versions.reduce((latest, version) => {
