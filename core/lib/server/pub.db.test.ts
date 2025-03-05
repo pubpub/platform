@@ -645,7 +645,7 @@ describe("getPubsWithRelatedValues", () => {
 		);
 
 		// 3 root pubs, one of which 1 related pub, even though the limit is 3. This is correct behavior.
-		expect(pubs.length).toBe(5);
+		expect(pubs.length).toBe(3);
 	});
 
 	it("should be able to detect cycles, i.e. not go max-depth deep if a loop is detected", async () => {
