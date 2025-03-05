@@ -259,6 +259,9 @@ importers:
       '@faker-js/faker':
         specifier: ^9.0.0
         version: 9.0.0
+      '@googleapis/drive':
+        specifier: ^8.16.0
+        version: 8.16.0
       '@honeycombio/opentelemetry-node':
         specifier: 'catalog:'
         version: 0.6.1
@@ -500,9 +503,6 @@ importers:
         specifier: 'catalog:'
         version: 3.23.8
     devDependencies:
-      '@googleapis/drive':
-        specifier: ^8.16.0
-        version: 8.16.0
       '@hookform/devtools':
         specifier: ^4.3.1
         version: 4.3.1(@types/react@19.0.6)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -8777,6 +8777,7 @@ packages:
     resolution: {integrity: sha512-t0etAxTUk1w5MYdNOkZBZ8rvYYN5iL+2dHCCx/DpkFm/bW28M6y5nUS83D4XdZiHy35Fpaw6LBb+F88fHZnVCw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
