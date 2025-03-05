@@ -128,6 +128,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 			}
 
 			return {
+				value: "",
 				alsoAsChild: true,
 				pub,
 			};
@@ -535,6 +536,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 															{
 																alsoAsChild: true,
 																pub: {
+																	value: "",
 																	id: articleId,
 																	pubType: "Journal Article",
 																	stage: "Articles",
