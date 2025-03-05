@@ -125,7 +125,13 @@ const pubValues = (
 						.as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
-			.orderBy(["pub_values.fieldId", "pub_values.rank"])
+			.orderBy([
+				(eb) =>
+					sql`${eb.fn
+						.max("pub_values.updatedAt")
+						.over((ob) => ob.partitionBy("pub_values.fieldId"))} desc`,
+				"pub_values.rank",
+			])
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pubId", "=", ref(pubIdRef!)))
 			.as(alias)
@@ -1914,6 +1920,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 								"pv.id as id",
 								"pv.fieldId",
 								"pv.value",
+								"pv.rank",
 								"pv.relatedPubId",
 								"pv.createdAt as createdAt",
 								"pv.updatedAt as updatedAt",
@@ -1922,7 +1929,15 @@ export async function getPubsWithRelatedValuesAndChildren<
 								"pub_fields.name as fieldName",
 							])
 							.whereRef("pv.pubId", "=", "pt.pubId")
-							.orderBy("pv.createdAt desc")
+							// Order by most recently updated value (grouped by pub field), then rank
+							.orderBy([
+								(eb) =>
+									// Equivalent to: max(pv."updatedAt") over(partition by pv."fieldId") desc
+									sql`${eb.fn
+										.max("pv.updatedAt")
+										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
+								"pv.rank",
+							])
 					).as("values")
 				)
 			)
@@ -2062,14 +2077,7 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 
 		const processedPub = {
 			...usefulProcessedPubColumns,
-			values:
-				processedValues?.toSorted((a, b) => {
-					// Sort values by fieldId, rank
-					if (a.fieldId === b.fieldId && a.rank !== null && b.rank !== null) {
-						return a.rank > b.rank ? 1 : -1;
-					}
-					return a.fieldId.localeCompare(b.fieldId);
-				}) ?? [],
+			values: processedValues ?? [],
 			children: processedChildren ?? undefined,
 		} as ProcessedPub;
 
