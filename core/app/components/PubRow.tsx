@@ -1,13 +1,13 @@
-import Link from "next/link";
 import React, { Suspense } from "react";
+import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Skeleton } from "ui/skeleton";
 
+import type { XOR } from "~/lib/types";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import type { XOR } from "~/lib/types";
 import { PubDropDown } from "./pubs/PubDropDown";
 import { PubTitle } from "./PubTitle";
 import { Row, RowContent, RowHeader } from "./Row";
