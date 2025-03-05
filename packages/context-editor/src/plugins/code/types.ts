@@ -6,15 +6,14 @@
  * * No themes, getCurrentTheme, or codeBlockName
  */
 
+import type { sql } from "@codemirror/lang-sql";
+import type { LanguageSupport, LRLanguage } from "@codemirror/language";
 import type { Extension } from "@codemirror/state";
-
-import { sql } from "@codemirror/lang-sql";
-import { LanguageSupport, LRLanguage } from "@codemirror/language";
-import { LRParser } from "@lezer/lr";
-import { MarkdownParser } from "@lezer/markdown";
-import { Node } from "prosemirror-model";
-import { EditorState, Transaction } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
+import type { LRParser } from "@lezer/lr";
+import type { MarkdownParser } from "@lezer/markdown";
+import type { Node } from "prosemirror-model";
+import type { EditorState, Transaction } from "prosemirror-state";
+import type { EditorView } from "prosemirror-view";
 
 import { CodeBlockLanguages } from "./languages";
 
@@ -22,9 +21,7 @@ type LanguageName = (typeof CodeBlockLanguages)[number];
 
 export type LanguageLoaders = Record<LanguageName, () => Promise<LanguageSupport>>;
 
-const sqlParser = sql().language.parser;
-type SQLParser = typeof sqlParser;
-
+type SQLParser = ReturnType<typeof sql>["language"]["parser"];
 export type Parsers = Record<
 	LanguageName[number],
 	LRLanguage["parser"] | LRParser | MarkdownParser | SQLParser
