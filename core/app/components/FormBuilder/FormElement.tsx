@@ -1,5 +1,6 @@
 import type { FieldArrayWithId } from "react-hook-form";
 
+import { useId } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import Markdown from "react-markdown";
@@ -36,6 +37,8 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 
 	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder();
 
+	const labelId = useId();
+
 	const restoreRemoveButton = element.deleted ? (
 		<>
 			<div className="my-auto text-gray-500">Deleted on save</div>
@@ -67,7 +70,8 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		</Button>
 	);
 	return (
-		<div
+		<li
+			aria-labelledby={labelId}
 			ref={setNodeRef}
 			style={style}
 			className={cn(
@@ -79,10 +83,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
 				{isFieldInput(element) && (
-					<FieldInputElement element={element} isEditing={isEditing} />
+					<FieldInputElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
 				{isStructuralElement(element) && (
-					<StructuralElement element={element} isEditing={isEditing} />
+					<StructuralElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
 				{isEditing ? (
 					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
@@ -116,15 +120,16 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 					</div>
 				)}
 			</div>
-		</div>
+		</li>
 	);
 };
 
 type FieldInputElementProps = {
 	element: InputElement;
 	isEditing: boolean;
+	labelId?: string;
 };
-export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps) => {
+export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputElementProps) => {
 	const pubFields = usePubFieldContext();
 	const field = pubFields[element.fieldId as PubFieldsId];
 
@@ -140,7 +145,10 @@ export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps
 			/>
 			<div>
 				<div className="text-gray-500">{field.slug}</div>
-				<div className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}>
+				<div
+					id={labelId}
+					className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}
+				>
 					{(element.config as any)?.label ?? field.name}
 				</div>
 			</div>
@@ -151,8 +159,9 @@ export const FieldInputElement = ({ element, isEditing }: FieldInputElementProps
 type StructuralElementProps = {
 	element: StructuralElement;
 	isEditing: boolean;
+	labelId?: string;
 };
-const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
+const StructuralElement = ({ element, isEditing, labelId }: StructuralElementProps) => {
 	const { Icon, name } = structuralElements[element.element];
 
 	return (
@@ -166,7 +175,9 @@ const StructuralElement = ({ element, isEditing }: StructuralElementProps) => {
 				)}
 			/>
 			<div>
-				<div className="text-gray-500">{name}</div>
+				<div id={labelId} className="text-gray-500">
+					{name}
+				</div>
 				<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
 					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
 					<Markdown className="line-clamp-2">{element.content}</Markdown>

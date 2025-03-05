@@ -280,6 +280,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 							<Form {...form}>
 								<form
 									id={id}
+									aria-label="Form builder"
 									onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
 										logger.error({
 											msg: "unable to submit form",
@@ -294,7 +295,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 										name="elements"
 										render={() => (
 											<>
-												<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
+												<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
 													<DndContext
 														modifiers={[
 															restrictToVerticalAxis,
@@ -329,7 +330,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 															)}
 														</SortableContext>
 													</DndContext>
-												</div>
+												</ol>
 												<PanelWrapper sidebar={sidebarRef.current}>
 													<FormItem className="relative flex h-screen flex-col">
 														<PanelHeader

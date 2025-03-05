@@ -249,25 +249,24 @@ test.describe("reordering fields", async () => {
 
 		await formEditPage.goto();
 
-		const elementsRegex = RegExp(`(Paragraph|${COMMUNITY_SLUG}).*`);
+		const elements = page.getByRole("form", { name: "Form builder" }).getByRole("listitem");
+		const initialElements = await elements.allTextContents();
 
-		const initialElements = await page
-			.getByRole("button", { name: elementsRegex })
-			.allTextContents();
-		await page.getByRole("button", { name: 'Paragraph :value{field="title' }).press(" ");
+		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press(" ");
 
-		const changedElements = await page.getByRole("button", { name: elementsRegex });
+		await page.getByRole("button", { name: "Drag handle" }).last().press(" ");
+		await page.keyboard.press("ArrowUp");
+		await page.keyboard.press(" ");
 
 		// Make sure reordering worked on the client
-		expect(changedElements).not.toHaveText(initialElements);
+		await expect(elements).not.toHaveText(initialElements);
 
+		const changedElements = await elements.allTextContents();
 		await formEditPage.saveForm();
 
 		// Make sure the form is returned in the same order it was saved in
-		await expect(page.getByRole("button", { name: elementsRegex })).toHaveText(
-			await changedElements.allTextContents()
-		);
+		await expect(elements).toHaveText(changedElements);
 	});
 });
