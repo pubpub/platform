@@ -28,7 +28,7 @@ export type FormattedFile = {
 	filePreview?: string;
 };
 
-type FileUploadProps = {
+export type FileUploadProps = {
 	upload: (fileName: string) => Promise<string | { error: string }>;
 	onUpdateFiles: (files: FormattedFile[]) => void;
 	disabled?: boolean;
@@ -36,7 +36,8 @@ type FileUploadProps = {
 };
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
-	const [uppy] = useState(() => new Uppy<Meta, AwsBody>({ id: props.id }).use(AwsS3Multipart));
+	const id = props.id ? `dashboard-${props.id}` : "uppy-dashboard";
+	const [uppy] = useState(() => new Uppy<Meta, AwsBody>({ id }).use(AwsS3Multipart));
 	useEffect(() => {
 		uppy.on("complete", () => {
 			const uploadedFiles = uppy.getFiles();
@@ -85,13 +86,7 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 		});
 	}, [props.upload]);
 
-	return (
-		<Dashboard
-			uppy={uppy}
-			disabled={props.disabled}
-			id={props.id ? `dashboard-${props.id}` : undefined}
-		/>
-	);
+	return <Dashboard uppy={uppy} disabled={props.disabled} id={id} width="100%" />;
 });
 
 export { FileUpload };

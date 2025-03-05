@@ -1,7 +1,7 @@
 import type { LucideProps } from "lucide-react";
 import type { ReactNode } from "react";
 
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
 import {
 	Bold,
@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { cn } from "utils";
 
 import type { CommandSpec } from "../commands/types";
+import type { Upload } from "./ImageUploader";
 import {
 	blockquoteToggle,
 	codeBlockToggle,
@@ -178,11 +179,12 @@ const ParagraphDropdown = () => {
 	);
 };
 
-const ImagePopoverMenuItem = () => {
+const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
 	const { view } = usePluginViewContext();
+	const [isOpen, setIsOpen] = useState(false);
 	const isActive = isImageActive(view.state);
 	return (
-		<Popover>
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"
@@ -195,8 +197,13 @@ const ImagePopoverMenuItem = () => {
 					<ImagePlus {...iconProps} />
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-96">
-				<ImageUploader />
+			<PopoverContent className="w-72">
+				<ImageUploader
+					upload={upload}
+					onInsert={() => {
+						setIsOpen(false);
+					}}
+				/>
 			</PopoverContent>
 		</Popover>
 	);
@@ -235,10 +242,10 @@ const Separator = () => {
 	);
 };
 
-export const MenuBar = () => {
+export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
 		<div
-			className="flex items-center rounded-t border bg-gray-50 p-4"
+			className="flex items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 		>
@@ -264,7 +271,7 @@ export const MenuBar = () => {
 				})}
 			</div>
 			<div className="flex items-center">
-				<ImagePopoverMenuItem />
+				<ImagePopoverMenuItem upload={upload} />
 			</div>
 		</div>
 	);

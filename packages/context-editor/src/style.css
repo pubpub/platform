@@ -172,3 +172,9 @@
 .ProseMirror .codeblock-wrapper {
 	margin-bottom: 16px;
 }
+
+/* Media upload */
+.uppy-Dashboard-inner {
+	height: 182px !important; /* Ensure it takes 100% of its parent container's height */
+	min-height: unset !important; /* Remove the default min-height */
+}

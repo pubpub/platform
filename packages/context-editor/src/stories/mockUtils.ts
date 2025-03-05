@@ -1,3 +1,5 @@
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import fuzzy from "fuzzy";
 
 import initialPubs from "./initialPubs.json";
@@ -10,4 +12,36 @@ export const getPubs = async (filter: string) => {
 			},
 		})
 		.map((result) => result.original);
+};
+
+const getS3Client = () => {
+	const region = import.meta.env.STORYBOOK_ASSETS_REGION;
+	const key = import.meta.env.STORYBOOK_ASSETS_UPLOAD_KEY;
+	const secret = import.meta.env.STORYBOOK_ASSETS_UPLOAD_SECRET_KEY;
+
+	const s3Client = new S3Client({
+		endpoint: import.meta.env.STORYBOOK_ASSETS_STORAGE_ENDPOINT,
+		region: region,
+		credentials: {
+			accessKeyId: key,
+			secretAccessKey: secret,
+		},
+		forcePathStyle: import.meta.env.STORYBOOK_ASSETS_STORAGE_ENDPOINT, // Required for MinIO
+	});
+
+	return s3Client;
+};
+
+export const generateSignedAssetUploadUrl = async (key: string) => {
+	const client = getS3Client();
+
+	const bucket = import.meta.env.STORYBOOK_ASSETS_BUCKET_NAME;
+	const command = new PutObjectCommand({
+		Bucket: bucket,
+		Key: key,
+	});
+
+	const url = await getSignedUrl(client, command, { expiresIn: 3600 });
+	console.log({ url });
+	return url;
 };
