@@ -406,6 +406,7 @@ model ActionInstance {
   config    Json?
   rules     Rule[]
   runs      ActionRun[]
+  watchedBy Rule[]      @relation("WatchedActions")
 
   @@map(name: "action_instances")
 }
@@ -448,13 +449,16 @@ enum ActionRunStatus {
 }
 
 model Rule {
-  id               String         @id @default(dbgenerated("gen_random_uuid()"))
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
   event            Event
-  actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstance   ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String
   config           Json?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now()) @updatedAt
+  // as the trigger for "actionSucceeded" or "actionFailed"
+  watchedActionId  String?
+  watchedAction    ActionInstance? @relation("WatchedActions", fields: [watchedActionId], references: [id], onDelete: SetNull)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")

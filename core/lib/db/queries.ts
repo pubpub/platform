@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { StagesId, UsersId } from "db/public";
 
@@ -58,19 +59,32 @@ export const getStageMembers = cache((stageId: StagesId) => {
 	);
 });
 
-export const getStageRules = cache((stageId: string) => {
+export const getStageRules = cache((stageId: StagesId) => {
 	return autoCache(
 		db
-			.selectFrom("action_instances")
-			.where("stageId", "=", stageId as StagesId)
-			.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
-			.select([
+			.selectFrom("rules")
+			.innerJoin("action_instances as ai", "ai.id", "rules.actionInstanceId")
+			.where("ai.stageId", "=", stageId)
+			.select((eb) => [
 				"rules.id",
 				"rules.event",
 				"rules.config",
-				"action_instances.name as instanceName",
-				"action_instances.action",
-				"actionInstanceId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_instances")
+						.selectAll("action_instances")
+						.whereRef("action_instances.id", "=", "rules.actionInstanceId")
+				)
+					.$notNull()
+					.as("actionInstance"),
+				"watchedActionId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_instances")
+						.selectAll("action_instances")
+						.whereRef("action_instances.id", "=", "rules.watchedActionId")
+					// .where("action_instances.stageId", "=", stageId)
+				).as("watchedActionInstance"),
 			])
 			.$narrowType<{ config: RuleConfig | null }>()
 	);

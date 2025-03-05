@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import type { ActionInstances } from "db/public";
 import { Event } from "db/public";
 
 import { defineRule } from "~/actions/types";
@@ -37,7 +38,30 @@ export const pubEnteredStage = defineRule({
 });
 export type PubEnteredStage = typeof pubEnteredStage;
 
-export type Rules = PubInStageForDuration | PubLeftStage | PubEnteredStage;
+export const actionSucceeded = defineRule({
+	event: Event.actionSucceeded,
+	display: {
+		base: "a specific action succeeds",
+		withConfig: (actionInstance: ActionInstances) => `${actionInstance.name} succeeds`,
+	},
+});
+export type ActionSucceeded = typeof actionSucceeded;
+
+export const actionFailed = defineRule({
+	event: Event.actionFailed,
+	display: {
+		base: "a specific action fails",
+		withConfig: (actionInstance) => `${actionInstance.name} fails`,
+	},
+});
+export type ActionFailed = typeof actionFailed;
+
+export type Rules =
+	| PubInStageForDuration
+	| PubLeftStage
+	| PubEnteredStage
+	| ActionSucceeded
+	| ActionFailed;
 
 export type RuleForEvent<E extends Event> = Extract<Rules, { event: E }>;
 

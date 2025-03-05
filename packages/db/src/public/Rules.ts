@@ -26,6 +26,12 @@ export interface RulesTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	watchedActionId: ColumnType<
+		ActionInstancesId | null,
+		ActionInstancesId | null,
+		ActionInstancesId | null
+	>;
 }
 
 export type Rules = Selectable<RulesTable>;
@@ -43,6 +49,7 @@ export const rulesSchema = z.object({
 	config: z.unknown().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	watchedActionId: actionInstancesIdSchema.nullable(),
 });
 
 export const rulesInitializerSchema = z.object({
@@ -52,6 +59,7 @@ export const rulesInitializerSchema = z.object({
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	watchedActionId: actionInstancesIdSchema.optional().nullable(),
 });
 
 export const rulesMutatorSchema = z.object({
@@ -61,4 +69,5 @@ export const rulesMutatorSchema = z.object({
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	watchedActionId: actionInstancesIdSchema.optional().nullable(),
 });

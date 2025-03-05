@@ -19,6 +19,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 		getStageActions(props.stageId).execute(),
 		getStageRules(props.stageId).execute(),
 	]);
+	console.log(rules);
 	if (!stage) {
 		return <SkeletonCard />;
 	}

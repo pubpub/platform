@@ -321,6 +321,7 @@ Table action_instances {
   config Json
   rules rules [not null]
   runs action_runs [not null]
+  watchedBy rules [not null]
 }
 
 Table action_runs {
@@ -347,6 +348,8 @@ Table rules {
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
   config Json
+  watchedActionId String
+  watchedAction action_instances
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 
@@ -688,6 +691,8 @@ Ref: action_runs.pubId > pubs.id
 Ref: action_runs.userId > users.id [delete: Set Null]
 
 Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
+
+Ref: rules.watchedActionId > action_instances.id [delete: Cascade]
 
 Ref: forms.communityId > communities.id [delete: Cascade]
 
