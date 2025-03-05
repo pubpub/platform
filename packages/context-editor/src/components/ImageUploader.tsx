@@ -6,7 +6,7 @@ import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { Label } from "ui/label";
 
 import type { ImageAttrs } from "../schemas/image";
-import { insertNodeIntoEditor } from "../utils/nodes";
+import { insertNodeAfterSelection } from "../utils/nodes";
 
 export type Upload = FileUploadProps["upload"];
 
@@ -14,7 +14,8 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 	const { view } = usePluginViewContext();
 
 	const onUpload = (files: FormattedFile[]) => {
-		for (const file of files) {
+		// Reverse the files since files are inserted starting at the selection
+		for (const file of files.reverse()) {
 			const attrs: ImageAttrs = {
 				src: file.fileUploadUrl || "",
 				id: "",
@@ -26,7 +27,7 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				width: 100,
 				align: "center",
 			};
-			insertNodeIntoEditor(view.state, view.dispatch, "image", attrs);
+			insertNodeAfterSelection(view.state, view.dispatch, "image", attrs);
 		}
 		onInsert();
 	};
