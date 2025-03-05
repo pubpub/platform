@@ -12,6 +12,7 @@ import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
 
 import type { AwsBody } from "@uppy/aws-s3";
+import type { Restrictions } from "@uppy/core/lib/Restricter";
 
 import AwsS3Multipart from "@uppy/aws-s3";
 
@@ -33,11 +34,14 @@ export type FileUploadProps = {
 	onUpdateFiles: (files: FormattedFile[]) => void;
 	disabled?: boolean;
 	id?: string;
+	restrictions?: Partial<Restrictions>;
 };
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 	const id = props.id ? `dashboard-${props.id}` : "uppy-dashboard";
-	const [uppy] = useState(() => new Uppy<Meta, AwsBody>({ id }).use(AwsS3Multipart));
+	const [uppy] = useState(() =>
+		new Uppy<Meta, AwsBody>({ id, restrictions: props.restrictions }).use(AwsS3Multipart)
+	);
 	useEffect(() => {
 		const handler = () => {
 			const uploadedFiles = uppy.getFiles();

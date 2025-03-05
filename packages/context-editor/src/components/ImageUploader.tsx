@@ -35,7 +35,14 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 	return (
 		<div className="flex flex-col gap-2">
 			<Label>Media Upload</Label>
-			<FileUpload upload={upload} onUpdateFiles={onUpload} id="editor-image-uploader" />
+			<FileUpload
+				upload={upload}
+				onUpdateFiles={onUpload}
+				id="editor-image-uploader"
+				restrictions={{
+					allowedFileTypes: ["image/*"],
+				}}
+			/>
 		</div>
 	);
 };
