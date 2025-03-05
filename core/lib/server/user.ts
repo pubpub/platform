@@ -237,11 +237,43 @@ export const createUserWithMembership = async (data: {
 			};
 		}
 
-		if (!user?.isSuperAdmin && isSuperAdmin) {
+		if (!user.isSuperAdmin && isSuperAdmin) {
 			return {
 				title: "Failed to add member",
 				error: "You cannot add members as super admins",
 			};
+		}
+
+		// If they're adding a community member, make sure their role is equivalent or higher than
+		// the new member's. If they're adding a different type of membership, the community
+		// membership is always a contributor, so we can skip this check.
+		if (membership.type === MembershipType.community) {
+			const rolesRanking = {
+				[MemberRole.admin]: 2,
+				[MemberRole.editor]: 1,
+				[MemberRole.contributor]: 0,
+			};
+			const highestRole = user.memberships.reduce(
+				(highestRole, m) => {
+					if (m.communityId === community.id) {
+						if (!highestRole || rolesRanking[m.role] > rolesRanking[highestRole]) {
+							return m.role;
+						}
+					}
+					return highestRole;
+				},
+				undefined as MemberRole | undefined
+			);
+
+			const roleIsHighEnough =
+				highestRole && rolesRanking[highestRole] >= rolesRanking[membership.role];
+
+			if (!roleIsHighEnough) {
+				return {
+					title: "Failed to add member",
+					error: "You cannot add members with a higher role than your own",
+				};
+			}
 		}
 
 		let nameQuery: (trx: Transaction<Database>) => Promise<string>;

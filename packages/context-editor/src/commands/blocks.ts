@@ -3,7 +3,7 @@ import { Node, NodeType } from "prosemirror-model";
 import { NodeSelection } from "prosemirror-state";
 
 import type { Attrs, ToggleCommandFn, ToggleOptions } from "./types";
-import { createTypeToggle } from "./utils";
+import { createTypeToggle } from "./util";
 
 const nodeMatchesTypeAndAttrs = (node: Node, type: NodeType, attrs?: Attrs) => {
 	if (node.type === type) {
@@ -85,5 +85,4 @@ export const blockquoteToggle = createBlockTypeToggle({
 	typeName: "blockquote",
 	commandFn: toggleWrap,
 });
-// TODO
 export const codeBlockToggle = createBlockTypeToggle({ typeName: "code_block" });

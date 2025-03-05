@@ -16,7 +16,7 @@ on:
         outputs:
             core-image:
                 description: "Core image SHA"
-                value: ${{ jobs.build-core.outputs.image-sha}}
+                value: ${{ jobs.build-core.outputs.image-sha }}
             base-image:
                 description: "Base image SHA"
                 value: ${{ jobs.build-base.outputs.image-sha }}

@@ -1,9 +1,9 @@
 import crypto from "crypto";
 
-import type { Blob } from "buffer";
-import type { Auth } from "googleapis";
+import type { JWTInput } from "google-auth-library";
 
-import { google } from "googleapis";
+import { drive } from "@googleapis/drive";
+import { JWT } from "google-auth-library";
 
 import { logger } from "logger";
 
@@ -14,7 +14,7 @@ import { env } from "~/lib/env/env.mjs";
 // const keyFile = JSON.parse(fs.readFileSync(keyFilePath, 'utf8'));
 // const keyFile = JSON.parse(env.GCLOUD_KEY_FILE);
 
-let keyFile: Auth.JWTInput;
+let keyFile: JWTInput;
 
 try {
 	if (!env.GCLOUD_KEY_FILE) {
@@ -30,9 +30,11 @@ try {
 }
 
 // Configure a JWT auth client
-const auth = new google.auth.JWT(keyFile.client_email, undefined, keyFile.private_key, [
-	"https://www.googleapis.com/auth/drive",
-]);
+const auth = new JWT({
+	email: keyFile.client_email,
+	key: keyFile.private_key,
+	scopes: ["https://www.googleapis.com/auth/drive"],
+});
 
 auth.authorize((err, tokens) => {
 	if (err) {
@@ -51,10 +53,10 @@ export type DriveData = {
 };
 
 export const getContentFromFolder = async (folderId: string): Promise<DriveData | null> => {
-	const drive = google.drive({ version: "v3", auth });
+	const gdrive = drive({ auth, version: "v3" });
 
 	/* List all files in the folder */
-	const res = await drive.files.list({
+	const res = await gdrive.files.list({
 		q: `'${folderId}' in parents`,
 		fields: "files(id, name, mimeType)",
 	});
@@ -93,7 +95,7 @@ export const getContentFromFolder = async (folderId: string): Promise<DriveData 
 	}
 
 	/* Download the pubDoc  */
-	const pubDocExport = await drive.files.export(
+	const pubDocExport = await gdrive.files.export(
 		{ fileId: pubDoc.id || "", mimeType: "text/html" },
 		{ responseType: "text" }
 	);
@@ -101,7 +103,7 @@ export const getContentFromFolder = async (folderId: string): Promise<DriveData 
 
 	/* Get list of files in legacyPubData folder */
 	if (legacyPubDataFolder) {
-		const legacyRes = await drive.files.list({
+		const legacyRes = await gdrive.files.list({
 			q: `'${legacyPubDataFolder.id}' in parents`,
 			fields: "files(id, name, mimeType)",
 		});
@@ -114,13 +116,13 @@ export const getContentFromFolder = async (folderId: string): Promise<DriveData 
 				const fileId = file.id;
 
 				if (file.mimeType === "application/json") {
-					const legacyDataExport = await drive.files.get(
+					const legacyDataExport = await gdrive.files.get(
 						{ fileId: fileId || "", alt: "media" },
 						{ responseType: "text" }
 					);
 					legacyData = JSON.parse(legacyDataExport.data as string);
 				} else if (file.mimeType === "application/vnd.google-apps.document") {
-					const exportRes = await drive.files.export(
+					const exportRes = await gdrive.files.export(
 						{ fileId: fileId || "", mimeType: "text/html" },
 						{ responseType: "text" }
 					);
@@ -147,7 +149,7 @@ export type AssetData = {
 };
 
 export const getAssetFile = async (assetUrl: string): Promise<AssetData | null> => {
-	const drive = google.drive({ version: "v3", auth });
+	const gdrive = drive({ version: "v3", auth });
 
 	const urlObject = new URL(assetUrl);
 	if (urlObject.hostname === "drive.google.com") {
@@ -164,7 +166,7 @@ export const getAssetFile = async (assetUrl: string): Promise<AssetData | null> 
 				throw new Error("Invalid asset URL");
 			}
 
-			const res = await drive.files.get(
+			const res = await gdrive.files.get(
 				{ fileId: fileId, alt: "media" },
 				{ responseType: "arraybuffer" }
 			);

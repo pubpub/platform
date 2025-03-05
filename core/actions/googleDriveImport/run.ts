@@ -30,7 +30,37 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			const formattedData = await formatDriveData(dataFromDrive, communitySlug, pub.id);
+			const pubTypes = await getPubTypesForCommunity(communityId);
+			const NarrativeType = pubTypes.find((pubType) => pubType.name === "Narrative");
+			const createVersions = !NarrativeType || pub.pubTypeId !== NarrativeType.id;
+
+			const formattedData = await formatDriveData(
+				dataFromDrive,
+				communitySlug,
+				pub.id,
+				createVersions
+			);
+
+			/* NARRATIVES */
+			/* If !createVersions, we simply write the pubHtml to a content field.  */
+			if (!createVersions) {
+				await updatePub({
+					pubId: pub.id,
+					communityId,
+					lastModifiedBy,
+					continueOnValidationError: false,
+					pubValues: {
+						[`${communitySlug}:content`]: formattedData.pubHtml,
+					},
+				});
+
+				return {
+					success: true,
+					report: "Successfully imported",
+					data: {},
+				};
+			}
+
 			/* MIGRATION */
 			// TODO: Check and make sure the relations exist, not just the pubs.
 
@@ -77,7 +107,6 @@ export const run = defineRun<typeof action>(
 					return publicationDate.toISOString();
 				});
 
-			const pubTypes = await getPubTypesForCommunity(communityId);
 			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
 			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
 
