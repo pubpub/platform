@@ -53,7 +53,7 @@ export type DriveData = {
 };
 
 export const getContentFromFolder = async (folderId: string): Promise<DriveData | null> => {
-	const gdrive = drive({ version: "v3", auth });
+	const gdrive = drive({ auth, version: "v3" });
 
 	/* List all files in the folder */
 	const res = await gdrive.files.list({
