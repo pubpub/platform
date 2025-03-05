@@ -117,7 +117,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			getPubsWithRelatedValuesAndChildren(
 				{
 					communityId: community.id,
-					stageId: stages["Stage 1"].id,
+					stageId: [stages["Stage 1"].id],
 				},
 				{
 					limit: 5,
@@ -131,7 +131,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			getPubsWithRelatedValuesAndChildren(
 				{
 					communityId: community.id,
-					stageId: stages["Stage 2"].id,
+					stageId: [stages["Stage 2"].id],
 				},
 				{
 					limit: 5,

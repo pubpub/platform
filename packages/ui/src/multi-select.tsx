@@ -181,6 +181,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 												{option?.label}
 												<XCircle
 													className="ml-2 h-4 w-4 cursor-pointer"
+													data-testid={`multi-select-remove-${value}`}
 													onClick={(event) => {
 														event.stopPropagation();
 														toggleOption(value);
@@ -209,6 +210,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 													event.stopPropagation();
 													clearExtraOptions();
 												}}
+												data-testid={`multi-select-clear-extra`}
 											/>
 										</Badge>
 									)}
@@ -216,6 +218,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 								<div className="flex items-center justify-between">
 									<XIcon
 										className="mx-2 h-4 cursor-pointer text-muted-foreground"
+										data-testid={`multi-select-clear-all`}
 										onClick={(event) => {
 											event.stopPropagation();
 											handleClear();
@@ -252,6 +255,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									key="all"
 									onSelect={toggleAll}
 									className="cursor-pointer"
+									data-testid={`multi-select-toggle-all`}
 								>
 									<div
 										className={cn(
@@ -272,6 +276,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											key={option.value}
 											onSelect={() => toggleOption(option.value)}
 											className="cursor-pointer"
+											data-testid={`multi-select-option-${option.value}`}
 										>
 											<div
 												className={cn(
@@ -299,6 +304,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											<CommandItem
 												onSelect={handleClear}
 												className="flex-1 cursor-pointer justify-center"
+												data-testid={`multi-select-clear`}
 											>
 												Clear
 											</CommandItem>
@@ -312,6 +318,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									<CommandItem
 										onSelect={() => setIsPopoverOpen(false)}
 										className="flex-1 cursor-pointer justify-center"
+										data-testid={`multi-select-close`}
 									>
 										Close
 									</CommandItem>

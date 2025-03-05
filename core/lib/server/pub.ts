@@ -37,8 +37,9 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type { LastModifiedBy } from "db/types";
+import type { LastModifiedBy, StageConstraint } from "db/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
+import { NO_STAGE_OPTION } from "db/types";
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
@@ -1475,6 +1476,7 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
 			pubId: PubsId;
+			pubIds?: never;
 			pubTypeId?: never;
 			stageId?: never;
 			communityId: CommunitiesId;
@@ -1482,8 +1484,12 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	  }
 	| {
 			pubId?: never;
-			pubTypeId?: PubTypesId;
-			stageId?: StagesId;
+			/**
+			 * Multiple pubIds to filter by
+			 */
+			pubIds?: PubsId[];
+			pubTypeId?: PubTypesId[];
+			stageId?: StageConstraint[];
 			communityId: CommunitiesId;
 			userId?: UsersId;
 	  };
@@ -1881,12 +1887,29 @@ export async function getPubsWithRelatedValuesAndChildren<
 								)
 						)
 					)
-					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
-					.$if(Boolean(props.stageId), (qb) =>
-						qb.where("PubsInStages.stageId", "=", props.stageId!)
+					.$if(!!props.pubId, (qb) => qb.where("pubs.id", "=", props.pubId!))
+					.$if(!!props.pubIds && props.pubIds.length > 0, (qb) =>
+						qb.where("pubs.id", "in", props.pubIds!)
 					)
-					.$if(Boolean(props.pubTypeId), (qb) =>
-						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
+					.$if(!!props.stageId && props.stageId.length > 0, (qb) => {
+						const noStage = props.stageId!.find(
+							(stage) => stage === NO_STAGE_OPTION.value
+						);
+						const stages = props.stageId!.filter(
+							(stage): stage is StagesId => stage !== NO_STAGE_OPTION.value
+						);
+
+						return qb.where((eb) =>
+							eb.or([
+								...(stages.length > 0
+									? [eb("PubsInStages.stageId", "in", stages)]
+									: []),
+								...(noStage ? [eb("PubsInStages.stageId", "is", null)] : []),
+							])
+						);
+					})
+					.$if(!!props.pubTypeId && props.pubTypeId.length > 0, (qb) =>
+						qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
 					)
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
