@@ -32,5 +32,26 @@ class StringWithTokens extends z.ZodString {
 	}
 }
 
+const actionInstanceShape = {
+	name: z.string(),
+	description: z.string(),
+	icon: z.string(),
+	action: z.string(),
+	actionInstanceId: z.string().uuid(),
+};
+
+export type ActionInstanceConfig = z.infer<z.ZodObject<typeof actionInstanceShape>>;
+
+class ActionInstance extends z.ZodObject<typeof actionInstanceShape, "strip", z.ZodTypeAny> {
+	static create = () =>
+		new ActionInstance({
+			typeName: "ActionInstance" as z.ZodFirstPartyTypeKind.ZodObject,
+			shape: () => actionInstanceShape,
+			catchall: z.never(),
+			unknownKeys: "strip",
+		});
+}
+
 export const markdown = Markdown.create;
 export const stringWithTokens = StringWithTokens.create;
+export const actionInstance = ActionInstance.create;
