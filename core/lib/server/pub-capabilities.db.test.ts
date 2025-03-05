@@ -99,28 +99,28 @@ const seed = createSeed({
 	],
 });
 
-describe("getPubsWithRelatedValuesAndChildren capabilities", () => {
+describe("getPubsWithRelatedValues capabilities", () => {
 	it("should restrict pubs by visibility", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubFields, pubTypes, stages, pubs, users } = await seedCommunity(seed);
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues: getPubsWithRelatedValues } = await import("./pub");
 
 		// Admins and editors of the community should see all pubs
-		const pubsVisibleToAdmin = await getPubsWithRelatedValuesAndChildren({
+		const pubsVisibleToAdmin = await getPubsWithRelatedValues({
 			communityId: community.id,
 			userId: users.admin.id,
 		});
 		// Includes +1 related pub
 		expect(pubsVisibleToAdmin.length).toEqual(4);
 		// Do the same check for editors
-		const pubsVisibleToEditor = await getPubsWithRelatedValuesAndChildren({
+		const pubsVisibleToEditor = await getPubsWithRelatedValues({
 			communityId: community.id,
 			userId: users.editor.id,
 		});
 		expect(pubsVisibleToEditor.length).toEqual(4);
 
 		// Stage member should only see stages they were added to
-		const pubsVisibleToStage1Editor = await getPubsWithRelatedValuesAndChildren({
+		const pubsVisibleToStage1Editor = await getPubsWithRelatedValues({
 			communityId: community.id,
 			userId: users.stage1Editor.id,
 		});
@@ -135,7 +135,7 @@ describe("getPubsWithRelatedValuesAndChildren capabilities", () => {
 		]);
 
 		// Check a stage that has a related pub not in the same stage. Should not get the related pub
-		const pubsVisibleToStage2Editor = await getPubsWithRelatedValuesAndChildren({
+		const pubsVisibleToStage2Editor = await getPubsWithRelatedValues({
 			communityId: community.id,
 			userId: users.stage2Editor.id,
 		});
@@ -145,14 +145,14 @@ describe("getPubsWithRelatedValuesAndChildren capabilities", () => {
 		]);
 
 		// Check a user who is normally a contributor but is admin on one pub
-		const pubsVisibleToPubMember = await getPubsWithRelatedValuesAndChildren({
+		const pubsVisibleToPubMember = await getPubsWithRelatedValues({
 			communityId: community.id,
 			userId: users.minimalPubMember.id,
 		});
 		expect(pubsVisibleToPubMember).toMatchObject([{ title: "Minimal pub" }]);
 
 		// Contributor should not see any pubs
-		const pubsVisibleToContributor = await getPubsWithRelatedValuesAndChildren({
+		const pubsVisibleToContributor = await getPubsWithRelatedValues({
 			communityId: community.id,
 			userId: users.contributor.id,
 		});

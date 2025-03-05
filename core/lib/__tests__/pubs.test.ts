@@ -10,7 +10,6 @@ const mockPub = (
 	overrides?: DeepPartial<
 		ProcessedPub<{
 			withPubType: true;
-			withChildren: false;
 			withRelatedPubs: false;
 			withMembers: false;
 			withStage: false;
@@ -32,7 +31,6 @@ const mockPub = (
 
 	return (overrides ? { ...base, ...overrides } : base) as ProcessedPub<{
 		withPubType: true;
-		withChildren: false;
 		withRelatedPubs: false;
 	}>;
 };

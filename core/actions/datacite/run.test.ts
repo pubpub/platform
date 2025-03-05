@@ -32,7 +32,7 @@ vitest.mock("~/lib/env/env.mjs", () => {
 
 vitest.mock("~/lib/server", () => {
 	return {
-		getPubsWithRelatedValuesAndChildren: () => {
+		getPubsWithRelatedValues: () => {
 			return { ...pub, values: [] };
 		},
 		updatePub: vitest.fn(() => {
@@ -110,7 +110,6 @@ const pub = {
 			relatedPubId: null,
 		},
 	],
-	children: [],
 	communityId: "" as CommunitiesId,
 	createdAt: new Date(),
 	updatedAt: new Date(),

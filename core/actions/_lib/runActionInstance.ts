@@ -18,7 +18,7 @@ import type { ClientException, ClientExceptionOptions } from "~/lib/serverAction
 import { db } from "~/kysely/database";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientException } from "~/lib/serverActions";
 import { getActionByName } from "../api";
@@ -40,7 +40,7 @@ const _runActionInstance = async (
 ): Promise<ActionInstanceRunResult> => {
 	const isActionUserInitiated = "userId" in args;
 
-	const pubPromise = getPubsWithRelatedValuesAndChildren(
+	const pubPromise = getPubsWithRelatedValues(
 		{
 			pubId: args.pubId,
 			communityId: args.communityId,

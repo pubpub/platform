@@ -5,7 +5,7 @@ import { cn } from "utils";
 
 import { BasicPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
-import { getPubsCount, getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
 const PAGE_SIZE = 10;
@@ -26,7 +26,7 @@ type PaginatedPubListProps = {
 const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	const [count, pubs] = await Promise.all([
 		getPubsCount({ communityId: props.communityId }),
-		getPubsWithRelatedValuesAndChildren(
+		getPubsWithRelatedValues(
 			{ communityId: props.communityId, userId: props.userId },
 			{
 				limit: PAGE_SIZE,

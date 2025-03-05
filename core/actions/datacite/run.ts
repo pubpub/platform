@@ -10,7 +10,7 @@ import type { ActionPub } from "../types";
 import type { action } from "./action";
 import type { components } from "./types";
 import { env } from "~/lib/env/env.mjs";
-import { getPubsWithRelatedValuesAndChildren, updatePub } from "~/lib/server";
+import { getPubsWithRelatedValues, updatePub } from "~/lib/server";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import { defineRun } from "../types";
 
@@ -18,9 +18,7 @@ type ConfigSchema = z.infer<(typeof action)["config"]["schema"]>;
 type Config = ConfigSchema & { pubFields: { [K in keyof ConfigSchema]?: string[] } };
 type Payload = components["schemas"]["Doi"];
 
-type RelatedPubs = Awaited<
-	ReturnType<typeof getPubsWithRelatedValuesAndChildren<{}>>
->[number]["values"];
+type RelatedPubs = Awaited<ReturnType<typeof getPubsWithRelatedValues<{}>>>[number]["values"];
 
 const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
@@ -65,7 +63,7 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 		"The DataCite action is missing a publication date field override."
 	);
 
-	const { values } = await getPubsWithRelatedValuesAndChildren({
+	const { values } = await getPubsWithRelatedValues({
 		pubId: pub.id as PubsId,
 		communityId: pub.communityId,
 	});
