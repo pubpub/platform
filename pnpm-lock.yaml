@@ -356,8 +356,8 @@ importers:
         specifier: ^3.1.1
         version: 3.5.0
       google-auth-library:
-        specifier: ^9.15.1
-        version: 9.15.1
+        specifier: ^9.15.0
+        version: 9.15.0
       graphile-worker:
         specifier: ^0.16.5
         version: 0.16.6(typescript@5.7.2)
@@ -8122,6 +8122,10 @@ packages:
 
   globrex@0.1.2:
     resolution: {integrity: sha512-uHJgbwAMwNFf5mLst7IWLNg14x1CkeqglJb/K3doi4dw6q2IvAAmM/Y81kevy83wP+Sst+nutFTYOGg3d1lsxg==}
+
+  google-auth-library@9.15.0:
+    resolution: {integrity: sha512-7ccSEJFDFO7exFbO6NRyC+xH8/mZ1GZGG2xxx9iHxZWcjUjJpjWxIMw3cofAKcueZ6DATiukmmprD7yavQHOyQ==}
+    engines: {node: '>=14'}
 
   google-auth-library@9.15.1:
     resolution: {integrity: sha512-Jb6Z0+nvECVz+2lzSMt9u98UsoakXxA2HGHMCxh+so3n90XgYWkq5dur19JAJV7ONiJY22yBTyJB1TSkvPq9Ng==}
@@ -20216,6 +20220,18 @@ snapshots:
       slash: 3.0.0
 
   globrex@0.1.2: {}
+
+  google-auth-library@9.15.0:
+    dependencies:
+      base64-js: 1.5.1
+      ecdsa-sig-formatter: 1.0.11
+      gaxios: 6.7.1
+      gcp-metadata: 6.1.0
+      gtoken: 7.1.0
+      jws: 4.0.0
+    transitivePeerDependencies:
+      - encoding
+      - supports-color
 
   google-auth-library@9.15.1:
     dependencies:

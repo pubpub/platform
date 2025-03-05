@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import type { JWTInput } from "google-auth-library";
 
-import { drive_v3 as drive } from "@googleapis/drive";
+import { drive } from "@googleapis/drive";
 import { JWT } from "google-auth-library";
 
 import { logger } from "logger";
@@ -53,7 +53,7 @@ export type DriveData = {
 };
 
 export const getContentFromFolder = async (folderId: string): Promise<DriveData | null> => {
-	const gdrive = new drive.Drive({ version: "v3", auth });
+	const gdrive = drive({ version: "v3", auth });
 
 	/* List all files in the folder */
 	const res = await gdrive.files.list({
@@ -149,7 +149,7 @@ export type AssetData = {
 };
 
 export const getAssetFile = async (assetUrl: string): Promise<AssetData | null> => {
-	const gdrive = new drive.Drive({ version: "v3", auth });
+	const gdrive = drive({ version: "v3", auth });
 
 	const urlObject = new URL(assetUrl);
 	if (urlObject.hostname === "drive.google.com") {
