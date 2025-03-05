@@ -91,7 +91,9 @@
 .ProseMirror h5,
 .ProseMirror h6,
 .ProseMirror p,
-.ProseMirror code,
+.ProseMirror .codeblock-wrapper,
+.ProseMirror math-display,
+.ProseMirror blockquote,
 .ProseMirror section {
 	border-left: 1px solid #777;
 	padding-left: 5px;
@@ -102,6 +104,9 @@
 .ProseMirror section {
 	margin-left: -5px;
 }
+
+.ProseMirror math-inline,
+.ProseMirror code,
 .ProseMirror strong,
 .ProseMirror em {
 	border-top: 1px solid #777;
@@ -141,4 +146,28 @@
 .ProseMirror blockquote {
 	padding-left: 1rem;
 	border-left: solid 4px rgba(181, 181, 181, 0.5);
+}
+.ProseMirror math-inline {
+	/* Otherwise the widget button is too hard to click without triggering math */
+	padding-left: 4px;
+}
+
+/* Code block */
+.ProseMirror .codeblock-select-wrapper {
+	position: absolute;
+	left: 0;
+	top: 100%;
+	z-index: 100;
+	opacity: 0;
+	transition: all 0.3s ease;
+}
+.ProseMirror .codeblock-root {
+	position: relative;
+	border-width: 0;
+}
+.ProseMirror .codeblock-root:hover .codeblock-select-wrapper {
+	opacity: 1;
+}
+.ProseMirror .codeblock-wrapper {
+	margin-bottom: 16px;
 }
