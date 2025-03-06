@@ -202,13 +202,6 @@ export default async function FormPage(props: {
 		}
 	}
 
-	const parentPub = pub?.parentId
-		? await getPubsWithRelatedValues(
-				{ pubId: pub.parentId, communityId: community.id },
-				{ withStage: true, withLegacyAssignee: true, withPubType: true }
-			)
-		: undefined;
-
 	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
 
 	const memberWithUser = {
@@ -230,7 +223,6 @@ export default async function FormPage(props: {
 		recipient: memberWithUser,
 		communitySlug: params.communitySlug,
 		pub,
-		parentPub,
 	};
 
 	if (submitId && submitElement) {

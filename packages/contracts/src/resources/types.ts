@@ -56,7 +56,6 @@ export const jsonSchema: z.ZodType<Json> = z.lazy(() =>
 
 const commonPubFields = z.object({
 	pubTypeId: z.string(),
-	parentId: z.string().optional().nullable(),
 });
 
 // Get pub types

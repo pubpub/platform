@@ -14,7 +14,6 @@ test("PubTitle component includes the pub title", async () => {
 		communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
 		createdAt: currentDate,
 		updatedAt: currentDate,
-		parentId: "6234d4ed-e87e-41ab-9b5b-68bf9fb9a61c",
 		title: null as string | null,
 		pubType: {
 			id: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225",

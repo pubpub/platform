@@ -125,7 +125,6 @@ const pub = {
 	},
 	pubTypeId: "" as PubTypesId,
 	stageId: null,
-	parentId: null,
 	depth: 1,
 } as ActionPub;
 

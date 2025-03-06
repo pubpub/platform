@@ -153,11 +153,9 @@ const pubColumns = [
 	"id",
 	"communityId",
 	"createdAt",
-	"parentId",
 	"pubTypeId",
 	"updatedAt",
 	"assigneeId",
-	"parentId",
 	"title",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
@@ -266,7 +264,6 @@ export const _deprecated_getPubs = async (
 					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 					.where("PubsInStages.stageId", "=", props.stageId!)
 			)
-			.$if(Boolean(params.onlyParents), (eb) => eb.where("pubs.parentId", "is", null))
 			.limit(limit)
 			.offset(offset)
 			.orderBy(orderBy, orderDirection)
@@ -386,7 +383,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 ): Promise<ProcessedPub> => {
 	const trx = options?.trx ?? db;
 
-	const parentId = parent?.id ?? body.parentId;
 	const stageId = body.stageId;
 
 	let values = body.values ?? {};
@@ -413,7 +409,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 					communityId: communityId,
 					pubTypeId: body.pubTypeId as PubTypesId,
 					assigneeId: body.assigneeId as UsersId,
-					parentId: parentId as PubsId,
 				})
 				.returningAll()
 		).executeTakeFirstOrThrow();
@@ -1158,7 +1153,6 @@ export const upsertPubRelationValues = async ({
 export type UnprocessedPub = {
 	id: PubsId;
 	depth: number;
-	parentId: PubsId | null;
 	stageId: StagesId | null;
 	stage?: Stages;
 	communityId: CommunitiesId;
@@ -1332,7 +1326,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						"p.updatedAt",
 						"p.title",
 						"PubsInStages.stageId",
-						"p.parentId",
 						sql<number>`1`.as("depth"),
 						sql<boolean>`false`.as("isCycle"),
 						sql<PubsId[]>`array[p.id]`.as("path"),
@@ -1442,7 +1435,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									"pubs.updatedAt",
 									"pubs.title",
 									"PubsInStages.stageId",
-									"pubs.parentId",
 									// increment the depth
 									sql<number>`pub_tree.depth + 1`.as("depth"),
 									// this is a standard way to detect cycles
@@ -1624,7 +1616,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 			.selectFrom("pub_tree as pt")
 			.select([
 				"pt.pubId as id",
-				"pt.parentId",
 				"pt.pubTypeId",
 				"pt.depth",
 				"pt.stageId",
@@ -1702,7 +1693,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 			// this is necessary to filter out all the duplicate entries for the values
 			.groupBy([
 				"pt.pubId",
-				"pt.parentId",
 				"pt.depth",
 				"pt.pubTypeId",
 				"pt.updatedAt",
@@ -1946,7 +1936,6 @@ export const fullTextSearch = async (
 		.select((eb) => [
 			"pubs.id",
 			"pubs.title",
-			"pubs.parentId",
 			"pubs.assigneeId",
 			"pubs.communityId",
 			"pubs.createdAt",

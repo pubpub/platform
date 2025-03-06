@@ -1,6 +1,5 @@
 {
 	"id": "cba899e2-22b6-493f-821d-74216147cb45",
-	"parentId": "db95df9f-bdfb-43e6-9dba-f6e868d78dd3",
 	"pubTypeId": "436034c9-faa9-4a52-afd5-14e21115230b",
 	"depth": 3,
 	"stageId": "73459f53-be93-4b23-b474-0e870166bff8",
@@ -392,7 +391,6 @@
 			"fieldName": "Tag",
 			"relatedPub": {
 				"id": "0b208587-d213-4bb9-9c55-995732a39954",
-				"parentId": null,
 				"pubTypeId": "924cafd0-6e69-4c40-a052-8566e321e77e",
 				"depth": 2,
 				"stageId": "975bc611-2da6-437e-8215-9beefda12ca6",
@@ -457,7 +455,6 @@
 			"fieldName": "ConnectedPubs",
 			"relatedPub": {
 				"id": "4fb50dcf-8a76-4111-8a1e-90fa433dcea6",
-				"parentId": null,
 				"pubTypeId": "436034c9-faa9-4a52-afd5-14e21115230b",
 				"depth": 3,
 				"stageId": null,
@@ -713,7 +710,6 @@
 			"fieldName": "Contributors",
 			"relatedPub": {
 				"id": "49c76406-2ec0-4ca0-9194-cff54ce95132",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "3a65e0e8-8476-4652-9bc2-11c6b0af66bf",
 				"depth": 2,
 				"stageId": "aa2297c2-fcf6-4709-a8d8-a646d57b6f93",
@@ -800,7 +796,6 @@
 						"fieldName": "Articles",
 						"relatedPub": {
 							"id": "cba899e2-22b6-493f-821d-74216147cb45",
-							"parentId": "db95df9f-bdfb-43e6-9dba-f6e868d78dd3",
 							"pubTypeId": "436034c9-faa9-4a52-afd5-14e21115230b",
 							"depth": 3,
 							"stageId": "73459f53-be93-4b23-b474-0e870166bff8",
@@ -1192,7 +1187,6 @@
 									"fieldName": "Tag",
 									"relatedPub": {
 										"id": "0b208587-d213-4bb9-9c55-995732a39954",
-										"parentId": null,
 										"pubTypeId": "924cafd0-6e69-4c40-a052-8566e321e77e",
 										"depth": 2,
 										"stageId": "975bc611-2da6-437e-8215-9beefda12ca6",
@@ -1257,7 +1251,6 @@
 									"fieldName": "ConnectedPubs",
 									"relatedPub": {
 										"id": "4fb50dcf-8a76-4111-8a1e-90fa433dcea6",
-										"parentId": null,
 										"pubTypeId": "436034c9-faa9-4a52-afd5-14e21115230b",
 										"depth": 3,
 										"stageId": null,
@@ -1593,7 +1586,6 @@
 						"fieldName": "Articles",
 						"relatedPub": {
 							"id": "4fb50dcf-8a76-4111-8a1e-90fa433dcea6",
-							"parentId": null,
 							"pubTypeId": "436034c9-faa9-4a52-afd5-14e21115230b",
 							"depth": 3,
 							"stageId": null,
@@ -1885,7 +1877,6 @@
 			"fieldName": "Downloads",
 			"relatedPub": {
 				"id": "9ca7e272-d4a5-4844-a0df-a6eb617a41b5",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "7ccd108f-1a86-4358-be0e-4ec4a3ece2cc",
 				"depth": 2,
 				"stageId": null,
@@ -1940,7 +1931,6 @@
 			"fieldName": "Tables",
 			"relatedPub": {
 				"id": "2c6fac0d-9e8e-472d-ae56-915b588f5447",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "2e49303c-a97d-4b58-b057-2b37152bc2d7",
 				"depth": 2,
 				"stageId": null,
@@ -2016,7 +2006,6 @@
 			"fieldName": "Tables",
 			"relatedPub": {
 				"id": "87539d2d-af7a-4ae9-b044-a3d6c95b171b",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "2e49303c-a97d-4b58-b057-2b37152bc2d7",
 				"depth": 2,
 				"stageId": null,
@@ -2092,7 +2081,6 @@
 			"fieldName": "Images",
 			"relatedPub": {
 				"id": "fbf292a9-7fcc-4bde-a892-41502b136420",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "4afa709c-00ac-4ed2-b613-264862d84a3a",
 				"depth": 2,
 				"stageId": null,
@@ -2168,7 +2156,6 @@
 			"fieldName": "Citations",
 			"relatedPub": {
 				"id": "239ebb5d-04d0-4d5a-ba0f-445de357c61e",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "88836fd7-b5c1-45e1-bc0e-f90700456506",
 				"depth": 2,
 				"stageId": null,
@@ -2275,7 +2262,6 @@
 			"fieldName": "Citations",
 			"relatedPub": {
 				"id": "7e4ae96e-d621-49fd-b344-ab0b804af240",
-				"parentId": "cba899e2-22b6-493f-821d-74216147cb45",
 				"pubTypeId": "322020bb-3560-453c-bdc1-8f8935ed971f",
 				"depth": 2,
 				"stageId": null,

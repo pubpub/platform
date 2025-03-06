@@ -125,10 +125,6 @@ model Pub {
   // do not attempt to set this manually
   title       String?
 
-  parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id], onDelete: Cascade)
-  parentId String?
-  children Pub[]   @relation("pub_parent")
-
   values          PubValue[]       @relation("original_pub")
   stages          PubsInStages[]
   actionRuns      ActionRun[]

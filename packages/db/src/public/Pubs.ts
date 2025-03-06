@@ -29,8 +29,6 @@ export interface PubsTable {
 
 	valuesBlob: ColumnType<unknown | null, unknown | null, unknown | null>;
 
-	parentId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
-
 	assigneeId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
 	title: ColumnType<string | null, string | null, string | null>;
@@ -53,7 +51,6 @@ export const pubsSchema = z.object({
 	pubTypeId: pubTypesIdSchema,
 	communityId: communitiesIdSchema,
 	valuesBlob: z.unknown().nullable(),
-	parentId: pubsIdSchema.nullable(),
 	assigneeId: usersIdSchema.nullable(),
 	title: z.string().nullable(),
 	searchVector: z.string().nullable(),
@@ -66,7 +63,6 @@ export const pubsInitializerSchema = z.object({
 	pubTypeId: pubTypesIdSchema,
 	communityId: communitiesIdSchema,
 	valuesBlob: z.unknown().optional().nullable(),
-	parentId: pubsIdSchema.optional().nullable(),
 	assigneeId: usersIdSchema.optional().nullable(),
 	title: z.string().optional().nullable(),
 	searchVector: z.string().optional().nullable(),
@@ -79,7 +75,6 @@ export const pubsMutatorSchema = z.object({
 	pubTypeId: pubTypesIdSchema.optional(),
 	communityId: communitiesIdSchema.optional(),
 	valuesBlob: z.unknown().optional().nullable(),
-	parentId: pubsIdSchema.optional().nullable(),
 	assigneeId: usersIdSchema.optional().nullable(),
 	title: z.string().optional().nullable(),
 	searchVector: z.string().optional().nullable(),
