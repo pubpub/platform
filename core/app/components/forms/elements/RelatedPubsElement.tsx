@@ -94,8 +94,11 @@ export const ConfigureRelatedValue = ({
 	onBlur?: () => void;
 	className?: string;
 }) => {
-	const configLabel = "label" in element.config ? element.config.label : undefined;
-	const label = configLabel || element.label || slug;
+	const configLabel =
+		"relationshipConfig" in element.config
+			? element.config.relationshipConfig.label
+			: element.config.label;
+	const label = configLabel || element.label || element.slug;
 
 	const { watch, formState } = useFormContext<FormValue | FormValueSingle>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);

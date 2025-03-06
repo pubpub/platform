@@ -1,0 +1,48 @@
+services:
+    platform:
+        image: PLATFORM_IMAGE
+        environment:
+            POSTGRES_USER: preview
+            POSTGRES_PASSWORD: preview
+            POSTGRES_DB: preview
+            MINIO_ROOT_USER: preview
+            MINIO_ROOT_PASSWORD: preview123
+            ASSETS_UPLOAD_KEY: preview-different
+            ASSETS_UPLOAD_SECRET_KEY: preview-different123
+            ASSETS_STORAGE_ENDPOINT: https://${PULLPREVIEW_PUBLIC_DNS}/assets
+    # minio-init:
+    #     restart: on-failure
+    #     environment:
+    #         MINIO_ROOT_USER: preview
+    #         MINIO_ROOT_PASSWORD: preview123
+    #         ASSETS_UPLOAD_KEY: preview-different
+    #         ASSETS_UPLOAD_SECRET_KEY: preview-different123
+    minio:
+        environment:
+            MINIO_ROOT_USER: preview
+            MINIO_ROOT_PASSWORD: preview123
+        # volumes:
+        #     - ./minio:/data
+    platform-jobs:
+        image: JOBS_IMAGE
+    platform-migrations:
+        image: MIGRATIONS_IMAGE
+        restart: on-failure
+        command: pnpm --filter core reset
+    caddy:
+        environment:
+            PUBLIC_URL: ${PULLPREVIEW_PUBLIC_DNS}
+        image: caddy:latest
+        depends_on:
+            - platform
+            - platform-jobs
+            - minio
+        env_file: .env
+        ports:
+            - "443:443"
+        volumes:
+            - ./caddy:/etc/caddy
+            - caddy-data:/data
+            - caddy-config:/config
+        networks:
+            - app-network

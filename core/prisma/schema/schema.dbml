@@ -149,6 +149,7 @@ Table pub_values {
   updatedAt DateTime [default: `now()`, not null]
   relatedPub pubs
   relatedPubId String
+  rank String
 }
 
 Table pub_types {
@@ -352,10 +353,6 @@ Table rules {
   watchedAction action_instances
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-
-  indexes {
-    (actionInstanceId, event) [unique]
-  }
 }
 
 Table forms {
@@ -387,6 +384,7 @@ Table form_elements {
   field pub_fields
   formId String [not null]
   order Int
+  rank String [not null]
   label String
   element StructuralFormElement
   component InputComponent

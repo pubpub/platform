@@ -175,7 +175,9 @@ test.describe("relationship fields", () => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
-				const authorElement = elements.find((e: PubFieldElement) => e.label === "author");
+				const authorElement = elements.find(
+					(e: PubFieldElement) => "label" in e.config && e.config.label === "Role"
+				);
 				expect(authorElement.component).toEqual(InputComponent.textArea);
 				expect(authorElement.config).toMatchObject({
 					relationshipConfig: {
@@ -219,7 +221,9 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
 				const authorElement = elements.find(
-					(e: PubFieldElement) => e.label === "author null"
+					(e: PubFieldElement) =>
+						"relationshipConfig" in e.config &&
+						e.config.relationshipConfig.label === "Authors"
 				);
 				expect(authorElement.component).toBeNull();
 				expect(authorElement.config).toMatchObject({
@@ -236,5 +240,33 @@ test.describe("relationship fields", () => {
 
 		await formEditPage.saveFormElementConfiguration();
 		await formEditPage.saveForm();
+	});
+});
+
+test.describe("reordering fields", async () => {
+	test("field order is persisted after saving", async () => {
+		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+
+		await formEditPage.goto();
+
+		const elements = page.getByRole("form", { name: "Form builder" }).getByRole("listitem");
+		const initialElements = await elements.allTextContents();
+
+		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.keyboard.press("ArrowDown");
+		await page.keyboard.press(" ");
+
+		await page.getByRole("button", { name: "Drag handle" }).last().press(" ");
+		await page.keyboard.press("ArrowUp");
+		await page.keyboard.press(" ");
+
+		// Make sure reordering worked on the client
+		await expect(elements).not.toHaveText(initialElements);
+
+		const changedElements = await elements.allTextContents();
+		await formEditPage.saveForm();
+
+		// Make sure the form is returned in the same order it was saved in
+		await expect(elements).toHaveText(changedElements);
 	});
 });

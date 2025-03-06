@@ -5,15 +5,19 @@ import type { PubsId } from "db/public";
 
 import type { db } from "~/kysely/database";
 
-const deepSortValues = (pub: ProcessedPub): ProcessedPub => {
-	pub.values
+const deepSortValues = (
+	values: Partial<ProcessedPub["values"][number]>[]
+): Partial<ProcessedPub["values"][number]>[] => {
+	values
 		.sort((a, b) => (a.value as string).localeCompare(b.value as string))
 		.map((item) => ({
 			...item,
-			relatedPub: item.relatedPub?.values ? deepSortValues(item.relatedPub) : item.relatedPub,
+			relatedPub: item.relatedPub?.values
+				? deepSortValues(item.relatedPub.values)
+				: item.relatedPub,
 		}));
 
-	return pub;
+	return values;
 };
 
 expect.extend({
@@ -35,10 +39,10 @@ expect.extend({
 
 	toHaveValues(received: ProcessedPub, expected: Partial<ProcessedPub["values"][number]>[]) {
 		const pub = received;
-		const sortedPubValues = deepSortValues(pub);
+		const sortedPubValues = deepSortValues(pub.values);
 
 		const expectedLength = expected.length;
-		const receivedLength = sortedPubValues.values.length;
+		const receivedLength = sortedPubValues.length;
 
 		const isNot = this.isNot;
 		if (!isNot && !this.equals(expectedLength, receivedLength)) {
@@ -50,7 +54,7 @@ expect.extend({
 		}
 
 		// equiv. to .toMatchObject
-		const pass = this.equals(sortedPubValues.values, expected, [
+		const pass = this.equals(sortedPubValues, deepSortValues(expected), [
 			this.utils.iterableEquality,
 			this.utils.subsetEquality,
 		]);
