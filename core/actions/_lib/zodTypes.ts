@@ -42,6 +42,7 @@ const actionInstanceShape = {
 
 export type ActionInstanceConfig = z.infer<z.ZodObject<typeof actionInstanceShape>>;
 
+// @ts-expect-error FIXME: '{ name: z.ZodString; description: z.ZodString; icon: z.ZodString; action: z.ZodString; actionInstanceId: z.ZodString; }' is assignable to the constraint of type 'T_1', but 'T_1' could be instantiated with a different subtype of constraint 'ZodRawShape'.ts(2417)
 class ActionInstance extends z.ZodObject<typeof actionInstanceShape, "strip", z.ZodTypeAny> {
 	static create = () =>
 		new ActionInstance({
