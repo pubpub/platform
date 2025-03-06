@@ -11,6 +11,7 @@ import {
 	Italic,
 	Quote,
 	Radical,
+	SeparatorHorizontal,
 	SquareRadical,
 } from "lucide-react";
 
@@ -32,6 +33,7 @@ import {
 	heading6Toggle,
 	paragraphToggle,
 } from "../commands/blocks";
+import { insertHorizontalLine } from "../commands/horizontal";
 import { isImageActive } from "../commands/images";
 import { codeToggle, emToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
@@ -61,6 +63,14 @@ const menuBlocks: MenuItem[][] = [
 			name: "Italic",
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
+		},
+	],
+	[
+		{
+			key: "horizontal_rule",
+			name: "Horizontal line",
+			icon: <SeparatorHorizontal {...iconProps} />,
+			command: insertHorizontalLine,
 		},
 	],
 	[
@@ -255,7 +265,6 @@ export const MenuBar = ({ upload }: { upload: Upload }) => {
 			</div>
 			<div className="flex items-center">
 				{menuBlocks.map((menuBlock, index) => {
-					const isLast = index === menuBlocks.length - 1;
 					return (
 						<Fragment key={index}>
 							<div className={cn("flex items-center gap-1")}>

@@ -7,6 +7,7 @@ import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
 import heading from "./heading";
+import horizontal_rule from "./horizontal";
 import image from "./image";
 import math from "./math";
 import paragraph from "./paragraph";
@@ -25,6 +26,7 @@ export const baseSchema = new Schema({
 		...math,
 		code_block: code.codeBlock,
 		image,
+		horizontal_rule,
 	},
 	marks: {
 		strong,
