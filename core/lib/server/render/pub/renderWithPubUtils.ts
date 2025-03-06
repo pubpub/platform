@@ -1,12 +1,12 @@
 import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType } from "db/public";
-import { assert, expect } from "utils";
+import { expect } from "utils";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { addMemberToForm, createFormInviteLink } from "../../form";
 
-export type RenderWithPubRel = "parent" | "self";
+export type RenderWithPubRel = "self";
 
 export type RenderWithPubPub = {
 	id: string;
@@ -41,26 +41,12 @@ export type RenderWithPubContext = {
 	communityId: CommunitiesId;
 	communitySlug: string;
 	pub: RenderWithPubPub;
-	parentPub?: RenderWithPubPub | null;
 };
 
 export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const;
 
-const parseRel = (rel: string | undefined): RenderWithPubRel => {
-	if (rel === undefined) {
-		return "self";
-	}
-	assert(rel === "parent" || rel === "self", 'Invalid value for "rel" attribute');
-	return rel;
-};
-
 const getPub = (context: RenderWithPubContext, rel?: string) => {
-	const parsedRel = parseRel(rel);
-	if (parsedRel === "parent") {
-		return expect(context.parentPub, 'Expected pub to have parent when rel is "parent"');
-	} else {
-		return context.pub;
-	}
+	return context.pub;
 };
 
 const getAssignee = (context: RenderWithPubContext, rel?: string) => {

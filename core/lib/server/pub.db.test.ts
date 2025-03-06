@@ -482,7 +482,6 @@ describe("getPubsWithRelatedValues", () => {
 				"pubTypeId",
 				"createdAt",
 				"updatedAt",
-				"parentId",
 				"title",
 				"communityId",
 				"depth",
