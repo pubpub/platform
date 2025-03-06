@@ -1147,7 +1147,7 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	 */
 	const figureCount: { [key: string]: number } = {};
 	visit(tree, "element", (node: any, index: any, parent: any) => {
-		if (node.tagName === "figure") {
+		if (node.tagName === "figure" && node.properties.dataFigureType !== "table") {
 			const tableType = node.properties.dataFigureType;
 			if (tableType && node.properties.dataHideLabel?.toLowerCase() !== "true") {
 				figureCount[tableType] = (figureCount[tableType] || 0) + 1;
@@ -1176,10 +1176,7 @@ export const structureTables = () => (tree: Root) => {
 						foundNonEmpty = true;
 						return false;
 					}
-					if (isEmpty) {
-						return false;
-					}
-					if (foundNonEmpty) {
+					if (isEmpty || foundNonEmpty) {
 						return false;
 					}
 					return true;
