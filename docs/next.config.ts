@@ -13,6 +13,7 @@ const withNextra = nextra({
 
 const nextConfig: NextConfig = withNextra({
 	output: "export",
+	basePath: `/platform${process.env.PR_NUMBER ? `/pr-preview/pr-${process.env.PR_NUMBER}` : ""}`,
 	typescript: {
 		ignoreBuildErrors: true,
 	},
