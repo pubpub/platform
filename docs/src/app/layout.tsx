@@ -6,6 +6,8 @@ import { getPageMap } from "nextra/page-map";
 import "./globals.css";
 import "nextra-theme-docs/style.css";
 
+import { path } from "../../utils/path";
+
 export const metadata: Metadata = {
 	title: {
 		template: "%s | PubPub Developer Docs",
@@ -17,7 +19,7 @@ const navbar = (
 	<Navbar
 		logo={
 			<div className="flex items-center">
-				<img src="/logo.svg" alt="PubPub" height="20" width="20" />
+				<img src={path("/logo.svg")} alt="PubPub" height="20" width="20" />
 				<span className="ml-2 font-semibold">PubPub Development Docs</span>
 			</div>
 		}
