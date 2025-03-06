@@ -265,7 +265,6 @@ export const MenuBar = ({ upload }: { upload: Upload }) => {
 			</div>
 			<div className="flex items-center">
 				{menuBlocks.map((menuBlock, index) => {
-					const isLast = index === menuBlocks.length - 1;
 					return (
 						<Fragment key={index}>
 							<div className={cn("flex items-center gap-1")}>
