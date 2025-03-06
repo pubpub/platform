@@ -11,6 +11,8 @@ const withNextra = nextra({
 	},
 });
 
+// test
+
 const nextConfig: NextConfig = withNextra({
 	output: "export",
 	basePath: `/platform${process.env.PR_NUMBER ? `/pr-preview/pr-${process.env.PR_NUMBER}` : ""}`,
