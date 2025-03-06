@@ -11,6 +11,7 @@ import {
 	Italic,
 	Quote,
 	Radical,
+	SeparatorHorizontal,
 	SquareRadical,
 } from "lucide-react";
 
@@ -32,6 +33,7 @@ import {
 	heading6Toggle,
 	paragraphToggle,
 } from "../commands/blocks";
+import { insertHorizontalLine } from "../commands/horizontal";
 import { isImageActive } from "../commands/images";
 import { codeToggle, emToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
@@ -61,6 +63,14 @@ const menuBlocks: MenuItem[][] = [
 			name: "Italic",
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
+		},
+	],
+	[
+		{
+			key: "horizontal_rule",
+			name: "Horizontal line",
+			icon: <SeparatorHorizontal {...iconProps} />,
+			command: insertHorizontalLine,
 		},
 	],
 	[
