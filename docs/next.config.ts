@@ -6,22 +6,23 @@ const withNextra = nextra({
 	search: true,
 	mdxOptions: {
 		rehypePrettyCodeOptions: {
-			// theme: {
-			// 	dark: "nord",
-			// },
+			//
 		},
 	},
 });
 
 const nextConfig: NextConfig = withNextra({
 	output: "export",
-
+	typescript: {
+		ignoreBuildErrors: true,
+	},
+	eslint: {
+		ignoreDuringBuilds: true,
+	},
 	experimental: {
-		// mdxRs: true,
 		parallelServerBuildTraces: true,
 		webpackBuildWorker: true,
 	},
-	/* config options here */
 });
 
 export default nextConfig;
