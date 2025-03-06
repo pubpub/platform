@@ -18,6 +18,7 @@ permissions:
 jobs:
     path-filter:
         runs-on: ubuntu-latest
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
         outputs:
             docs: ${{ steps.changes.outputs.docs }}
         steps:
@@ -30,15 +31,18 @@ jobs:
                           - 'docs/**'
 
     ci:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
         uses: ./.github/workflows/ci.yml
 
     build-all:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     e2e:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
         needs:
             - build-all
             # could theoretically be skipped, but in practice is always faster
@@ -104,13 +108,13 @@ jobs:
     deploy-docs-preview:
         needs:
             - path-filter
-        if: github.event.action != 'closed' && needs.path-filter.outputs.docs == 'true'
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') && needs.path-filter.outputs.docs == 'true'
         uses: ./.github/workflows/build-docs.yml
         with:
-            preview: false
+            preview: true
 
     close-docs-preview:
-        if: github.event.action == 'closed'
+        if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
         runs-on: ubuntu-latest
         steps:
             - name: Close docs preview
