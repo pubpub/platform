@@ -102,7 +102,7 @@ jobs:
     deploy-docs-preview:
         needs:
             - path-filter
-        if: github.event.action != 'closed' && needs.path-filter.outputs.docs == 'docs'
+        if: github.event.action != 'closed' && needs.path-filter.outputs.docs == 'true'
         uses: ./.github/workflows/build-docs.yml
         with:
             preview: true
