@@ -128,7 +128,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 			}
 
 			return {
-				value: null,
+				value: "",
 				alsoAsChild: true,
 				pub,
 			};
@@ -195,7 +195,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				"Issue Number": { schemaName: CoreSchemaType.Number },
 				ISSN: { schemaName: CoreSchemaType.String },
 				Issues: { schemaName: CoreSchemaType.Null, relation: true },
-				Articles: { schemaName: CoreSchemaType.Null, relation: true },
+				Articles: { schemaName: CoreSchemaType.String, relation: true },
 				Journals: { schemaName: CoreSchemaType.Null, relation: true },
 				// site settings
 
@@ -534,9 +534,9 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 													relatedPubs: {
 														Articles: [
 															{
-																value: null,
 																alsoAsChild: true,
 																pub: {
+																	value: "",
 																	id: articleId,
 																	pubType: "Journal Article",
 																	stage: "Articles",
@@ -739,6 +739,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				value: '"Edited"',
 				fieldId: seed.pubFields.Articles.id,
 				lastModifiedBy: createLastModifiedBy("system"),
+				rank: "0",
 			},
 			{
 				pubId: authorId as PubsId,
@@ -746,6 +747,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				relatedPubId: articleId2 as PubsId,
 				fieldId: seed.pubFields.Articles.id,
 				lastModifiedBy: createLastModifiedBy("system"),
+				rank: "1",
 			},
 		])
 		.execute();

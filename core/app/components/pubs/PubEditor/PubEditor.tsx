@@ -35,7 +35,10 @@ const RelatedPubValueElement = ({
 	fieldName: string;
 	element: PubFieldElement;
 }) => {
-	const configLabel = "label" in element.config ? element.config.label : undefined;
+	const configLabel =
+		"relationshipConfig" in element.config
+			? element.config.relationshipConfig.label
+			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
 	return (
