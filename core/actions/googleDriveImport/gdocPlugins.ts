@@ -92,6 +92,7 @@ export const tableToObjectArray = (node: any) => {
 		"reference",
 		"footnote",
 		"description",
+		"table",
 	];
 
 	const isHoriz = validTypes.includes(headersVert[1].toLowerCase());
@@ -1159,4 +1160,65 @@ export const appendFigureAttributes = () => (tree: Root) => {
 			}
 		}
 	});
+};
+
+export const structureTables = () => (tree: Root) => {
+	visit(tree, "element", (node: any, index: any, parent: any) => {
+		if (node.tagName === "table") {
+			const tableData: any = tableToObjectArray(node);
+			const tableType = tableData[0].type;
+			if (tableType === "empty") {
+				let foundNonEmpty = false;
+				const nextSibling = parent.children.slice(index + 1).find((sibling: any) => {
+					const isEmpty = getTextContent(sibling).trim() === "";
+					const isTable = sibling.type === "element" && sibling.tagName === "table";
+					if (!isEmpty && !isTable) {
+						foundNonEmpty = true;
+						return false;
+					}
+					if (isEmpty) {
+						return false;
+					}
+					if (foundNonEmpty) {
+						return false;
+					}
+					return true;
+				});
+				if (nextSibling) {
+					const nextTableData: any = tableToObjectArray(nextSibling);
+					const nextTableType = nextTableData[0].type;
+					if (nextTableType === "table") {
+						const figureNode: Element = {
+							type: "element",
+							tagName: "figure",
+							properties: {
+								dataFigureType: "table",
+								id: nextTableData[0].id,
+							},
+							children: [
+								node,
+								{
+									type: "element",
+									tagName: "figcaption",
+									properties: {},
+									children: nextTableData[0].caption || [],
+								},
+							],
+						};
+						parent.children.splice(index, 1, figureNode);
+					}
+				}
+			}
+		}
+	});
+
+	const nextTree = filter(tree, (node: any) => {
+		if (node.tagName === "table") {
+			const tableData: any = tableToObjectArray(node);
+			const tableType = tableData[0].type;
+			return tableType !== "table";
+		}
+		return true;
+	});
+	return nextTree;
 };
