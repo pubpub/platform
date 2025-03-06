@@ -4,7 +4,7 @@ name: PR Updated triggers
 
 on:
     pull_request:
-        types: [labeled, unlabeled, synchronize, closed, reopened]
+        types: [labeled, unlabeled, synchronize, closed]
 
 env:
     AWS_REGION: us-east-1
@@ -127,6 +127,8 @@ jobs:
         if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
         runs-on: ubuntu-latest
         steps:
+            - uses: actions/checkout@v4
+
             - name: Close docs preview
               uses: rossjrw/pr-preview-action@v1
               with:
