@@ -23,12 +23,14 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
+import { cn } from "utils";
+
 import SuggestPanel from "./components/SuggestPanel";
 
 const MENU_BAR_ID = "context-editor-menu-container";
 export interface ContextEditorProps {
 	placeholder?: string;
-	className?: string;
+	className?: string /* classname for the editor view */;
 	disabled?: boolean;
 	initialDoc?: object;
 	pubId: string /* id of the current pub whose field is being directly edited */;
@@ -169,10 +171,10 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	return (
 		<div
 			id="context-editor-container"
-			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
+			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""}`}
 		>
 			<div id={MENU_BAR_ID} className="sticky top-0 z-10"></div>
-			<div ref={viewHost} className="font-serif" />
+			<div ref={viewHost} className={cn("font-serif", props.className)} />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />
 		</div>
