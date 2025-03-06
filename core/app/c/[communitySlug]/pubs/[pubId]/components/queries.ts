@@ -53,11 +53,8 @@ const memberFields = (pubId: Expression<string>) =>
 			.whereRef("pub_values.pubId", "=", pubId)
 			.where("pub_fields.schemaName", "=", CoreSchemaType.MemberId)
 			.distinctOn("pub_fields.id")
-			.orderBy(["pub_fields.id", "pub_values.createdAt desc"])
+			.orderBy(["pub_fields.id", "pub_values.updatedAt desc"])
 	);
-
-const pubType = (pubTypeId: Expression<string>) =>
-	jsonObjectFrom(getPubTypeBase().whereRef("pub_types.id", "=", pubTypeId));
 
 export const getPubChildrenTable = (parentId: PubsId, selectedPubTypeId?: PubTypesId) => {
 	return autoCache(

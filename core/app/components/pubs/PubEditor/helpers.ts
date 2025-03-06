@@ -1,3 +1,4 @@
+import mudder from "mudder";
 import { defaultComponent } from "schemas";
 
 import type { FormElementsId } from "db/public";
@@ -20,7 +21,7 @@ export function makeFormElementDefFromPubFields(
 					slug: field.slug,
 					schemaName: field.schemaName,
 					type: ElementType.pubfield,
-					order: index + 1,
+					rank: mudder.base62.numberToString(index + 1),
 					stageId: null,
 					fieldId: field.id,
 					label: field.name ?? null,

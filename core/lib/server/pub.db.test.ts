@@ -501,7 +501,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		expect(pub.pubType).toMatchObject({
 			id: pubTypes["Basic Pub"].id,
-			fields: Object.values(pubTypes["Basic Pub"].pubFields).map((f) => ({
+			fields: Object.values(pubTypes["Basic Pub"].fields).map((f) => ({
 				id: f.id,
 				slug: f.slug,
 			})),
@@ -1142,15 +1142,13 @@ describe("upsertPubRelations", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: { values: [{ value: "Some title" }] },
-				},
-			],
-		});
+		expect(updatedPub).toHaveValues([
+			{ value: "test title" },
+			{
+				value: "test relation value",
+				relatedPub: { values: [{ value: "Some title" }] },
+			},
+		]);
 	});
 
 	it("should be able to create new pubs as relations", async () => {
@@ -1198,15 +1196,14 @@ describe("upsertPubRelations", () => {
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: { values: [{ value: "new related pub" }] },
-				},
-			],
-		});
+		expect(updatedPub).toHaveValues([
+			{ fieldSlug: pubFields["Title"].slug, value: "test title" },
+			{
+				fieldSlug: pubFields["Some relation"].slug,
+				value: "test relation value",
+				relatedPub: { values: [{ value: "new related pub" }] },
+			},
+		]);
 	});
 
 	it("should validate relation values against schema", async () => {
