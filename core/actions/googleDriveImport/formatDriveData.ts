@@ -1,5 +1,5 @@
 // import { writeFile } from "fs/promises";
-import type { Element, Root } from "hast";
+import type { Root } from "hast";
 
 import { defaultMarkdownSerializer } from "prosemirror-markdown";
 import { Node } from "prosemirror-model";
@@ -8,11 +8,9 @@ import rehypeFormat from "rehype-format";
 import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
-import { logger } from "logger";
 
 import type { DriveData } from "./getGDriveFiles";
 import { uploadFileToS3 } from "~/lib/server";
-// import { schema } from "prosemirror-schema-basic";
 import schema from "./discussionSchema";
 import {
 	appendFigureAttributes,
