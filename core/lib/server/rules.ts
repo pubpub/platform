@@ -5,6 +5,7 @@ import { Event } from "db/public";
 import { expect } from "utils";
 
 import type { ReferentialRuleEvent } from "~/actions/types";
+import { isReferentialRuleEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -24,8 +25,8 @@ async function wouldCreateCycle(
 		.withRecursive("action_path", (cte) =>
 			cte
 				.selectFrom("action_instances")
-				.where("id", "=", watchedActionId)
 				.select(["id", sql<ActionInstancesId[]>`array[id]`.as("path")])
+				.where("id", "=", watchedActionId)
 				.unionAll((qb) =>
 					qb
 						.selectFrom("action_path")
@@ -35,15 +36,18 @@ async function wouldCreateCycle(
 							"action_instances.id",
 							"rules.actionInstanceId"
 						)
-						.where((eb) =>
-							eb.not(eb("action_instances.id", "=", eb.fn.any("action_path.path")))
-						)
 						.select([
 							"action_instances.id",
 							sql<
 								ActionInstancesId[]
 							>`action_path.path || array[action_instances.id]`.as("path"),
 						])
+						.where((eb) =>
+							// @ts-expect-error FIXME: i straight up don't know what it's yelling about
+							// might be related to https://github.com/RobinBlomberg/kysely-codegen/issues/184
+							eb.not(eb("action_instances.id", "=", eb.fn.any("action_path.path")))
+						)
+						.$narrowType<{ id: ActionInstancesId }>()
 				)
 		)
 		.selectFrom("action_path")
@@ -56,9 +60,6 @@ async function wouldCreateCycle(
 		// .where("id", "=", toBeRunActionId)
 		.executeTakeFirst();
 
-	console.log("===============");
-	console.log(result);
-	console.log("===============");
 	if (!result) {
 		return {
 			hasCycle: false,
@@ -81,12 +82,8 @@ async function wouldCreateCycle(
 		return actionInstance;
 	});
 
-	console.log("===============");
-	console.log(filledInPath);
-	console.log("===============");
-
 	return {
-		hasCycle: !!result?.id,
+		hasCycle: true,
 		path: filledInPath,
 	};
 }
@@ -171,12 +168,17 @@ export async function createRuleWithCycleCheck(data: {
 		}).executeTakeFirstOrThrow();
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
-			console.error(e);
-			throw new ReferentialRuleAlreadyExistsError(
-				data.event,
-				data.actionInstanceId,
-				data.watchedActionId
-			);
+			if (isReferentialRuleEvent(data.event)) {
+				if (data.watchedActionId) {
+					throw new ReferentialRuleAlreadyExistsError(
+						data.event,
+						data.actionInstanceId,
+						data.watchedActionId
+					);
+				}
+			} else {
+				throw new RegularRuleAlreadyExistsError(data.event, data.actionInstanceId);
+			}
 		}
 		throw e;
 	}
