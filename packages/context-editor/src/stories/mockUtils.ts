@@ -14,10 +14,11 @@ export const getPubs = async (filter: string) => {
 		.map((result) => result.original);
 };
 
-// S3 funcs adapted from https://github.com/pubpub/platform/blob/07ab053760374081b5b61c55c3720e0550e4c289/core/lib/server/assets.ts#L12-L32
-// Used in storybook only so that file uploading can work in stories.
-// Requires minio server to be running
-
+/**
+ * getS3Client and generateSignedAssetUploadUrl adapted from https://github.com/pubpub/platform/blob/07ab053760374081b5b61c55c3720e0550e4c289/core/lib/server/assets.ts#L12-L32
+ * Used in storybook only so that file uploading can work in stories.
+ * Requires minio server to be running
+ * */
 const getS3Client = () => {
 	const region = import.meta.env.STORYBOOK_ASSETS_REGION;
 	const key = import.meta.env.STORYBOOK_ASSETS_UPLOAD_KEY;
