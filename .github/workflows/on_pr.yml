@@ -18,7 +18,7 @@ permissions:
 jobs:
     path-filter:
         runs-on: ubuntu-latest
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || github.event.action == 'closed'
         outputs:
             docs: ${{ steps.changes.outputs.docs }}
         steps:
