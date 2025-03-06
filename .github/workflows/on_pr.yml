@@ -11,7 +11,7 @@ env:
 
 permissions:
     id-token: write
-    contents: write
+    contents: read
     pages: write
     pull-requests: write
 
@@ -106,6 +106,10 @@ jobs:
                   PULLPREVIEW_LOGGER_LEVEL: DEBUG
 
     deploy-docs-preview:
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
         needs:
             - path-filter
         if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') && needs.path-filter.outputs.docs == 'true'
@@ -114,6 +118,10 @@ jobs:
             preview: true
 
     close-docs-preview:
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
         if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
         runs-on: ubuntu-latest
         steps:
