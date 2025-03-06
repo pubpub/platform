@@ -130,4 +130,5 @@ jobs:
             - name: Close docs preview
               uses: rossjrw/pr-preview-action@v1
               with:
-                  action: close
+                  source-dir: docs/out
+                  action: remove
