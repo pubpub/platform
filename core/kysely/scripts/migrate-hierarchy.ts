@@ -82,18 +82,15 @@ const migrateHierarchy = async () => {
 
 	console.log(persistedRelationsByRelationSlug);
 
-	const relationValueInsertExpressions = relations.map((relation) => {
-		if (!persistedRelationsByRelationSlug.has(relation.relationSlug)) {
-			console.log(relation.relationSlug);
-		}
-		return {
+	const relationValueInsertExpressions = relations
+		.filter((relation) => persistedRelationsByRelationSlug.has(relation.relationSlug))
+		.map((relation) => ({
 			fieldId: expect(persistedRelationsByRelationSlug.get(relation.relationSlug)).id,
 			pubId: relation.parentPubId,
 			relatedPubId: relation.childPubId,
 			lastModifiedBy: createLastModifiedBy("system"),
 			value: null,
-		};
-	});
+		}));
 
 	// upsert relation values
 	await db
