@@ -24,7 +24,7 @@ const navbar = (
 			</div>
 		}
 		projectLink="https://github.com/pubpub/platform"
-		logoLink="/"
+		logoLink={path("/")}
 	/>
 );
 const footer = <Footer>MIT {new Date().getFullYear()} © Knowledge Futures Inc.</Footer>;
