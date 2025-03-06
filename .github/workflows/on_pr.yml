@@ -87,7 +87,7 @@ jobs:
                   PULLPREVIEW_LOGGER_LEVEL: DEBUG
 
     deploy-docs-preview:
-        if: github.event.action != 'closed' && contains(join(github.event.pull_request.changed_files, ','), 'docs/')
+        if: github.event.action != 'closed'
         uses: ./.github/workflows/build-docs.yml
         with:
             preview: true
