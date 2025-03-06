@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 import nextra from "nextra";
 
+import { path } from "./utils/path";
+
 const withNextra = nextra({
 	search: true,
 	mdxOptions: {
@@ -13,7 +15,7 @@ const withNextra = nextra({
 
 const nextConfig: NextConfig = withNextra({
 	output: "export",
-	basePath: `/platform${process.env.PR_NUMBER ? `/pr-preview/pr-${process.env.PR_NUMBER}` : ""}`,
+	basePath: path(""),
 	typescript: {
 		ignoreBuildErrors: true,
 	},
