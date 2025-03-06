@@ -4,9 +4,9 @@ import type { CommunitiesId, PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
-import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
+import { db } from "../database";
 
 type Relation = {
 	parentPubId: PubsId;
@@ -55,15 +55,17 @@ const migrateHierarchy = async () => {
 	const relationsByCommunityId = makeRelationsByCommunityId(relations);
 
 	const relationFieldInsertExpressions = Array.from(relationsByCommunityId.entries()).flatMap(
-		([communityId, communityRelationSlugs]) =>
-			Array.from(communityRelationSlugs).map(([, communityRelation]) => ({
+		([communityId, relationSlugs]) =>
+			Array.from(relationSlugs).map(([, relation]) => ({
 				communityId,
-				name: pluralize(communityRelation.childPubTypeName),
-				slug: communityRelation.relationSlug,
+				name: pluralize(relation.childPubTypeName),
+				slug: relation.relationSlug,
 				schemaName: CoreSchemaType.Null,
 				isRelation: true,
 			}))
 	);
+
+	console.log(relationFieldInsertExpressions);
 
 	// upsert new relation fields
 	const relationResults = await db
@@ -78,13 +80,20 @@ const migrateHierarchy = async () => {
 		relationResults.map((relationResult) => [relationResult.slug, relationResult])
 	);
 
-	const relationValueInsertExpressions = relations.map((relation) => ({
-		fieldId: expect(persistedRelationsByRelationSlug.get(relation.relationSlug)).id,
-		pubId: relation.parentPubId,
-		relatedPubId: relation.childPubId,
-		lastModifiedBy: createLastModifiedBy("system"),
-		value: null,
-	}));
+	console.log(persistedRelationsByRelationSlug);
+
+	const relationValueInsertExpressions = relations.map((relation) => {
+		if (!persistedRelationsByRelationSlug.has(relation.relationSlug)) {
+			console.log(relation.relationSlug);
+		}
+		return {
+			fieldId: expect(persistedRelationsByRelationSlug.get(relation.relationSlug)).id,
+			pubId: relation.parentPubId,
+			relatedPubId: relation.childPubId,
+			lastModifiedBy: createLastModifiedBy("system"),
+			value: null,
+		};
+	});
 
 	// upsert relation values
 	await db
