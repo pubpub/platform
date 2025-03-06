@@ -85,3 +85,18 @@ jobs:
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                   AWS_REGION: ${{ env.AWS_REGION }}
                   PULLPREVIEW_LOGGER_LEVEL: DEBUG
+
+    deploy-docs-preview:
+        if: github.event.action != 'closed' && contains(join(github.event.pull_request.changed_files, ','), 'docs/')
+        uses: ./.github/workflows/build-docs.yml
+        with:
+            preview: true
+
+    close-docs-preview:
+        if: github.event.action == 'closed'
+        runs-on: ubuntu-latest
+        steps:
+            - name: Close docs preview
+              uses: rossjrw/pr-preview-action@v1
+              with:
+                  action: close
