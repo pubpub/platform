@@ -22,15 +22,13 @@ type ActionType = {
 };
 
 export type ActionInstanceContext = {
-	actions: Record<Action, ActionType>;
+	actions: Record<string, ActionType>;
 	actionInstances: ActionInstances[];
 };
 
 type Props = {
 	children: React.ReactNode;
-	actionInstances: ActionInstances[];
-	actions: Record<Action, ActionType>;
-};
+} & ActionInstanceContext;
 
 const ActionInstanceContext = createContext<ActionInstanceContext>({
 	actions: {},
