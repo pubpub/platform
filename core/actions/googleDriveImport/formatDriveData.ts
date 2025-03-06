@@ -1,15 +1,17 @@
 // import { writeFile } from "fs/promises";
-import type { Element, Root } from "hast";
+import type { Root } from "hast";
 
+import { defaultMarkdownSerializer } from "prosemirror-markdown";
+import { Node } from "prosemirror-model";
 import { rehype } from "rehype";
 import rehypeFormat from "rehype-format";
 import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
-import { logger } from "logger";
 
 import type { DriveData } from "./getGDriveFiles";
 import { uploadFileToS3 } from "~/lib/server";
+import schema from "./discussionSchema";
 import {
 	appendFigureAttributes,
 	cleanUnusedSpans,
@@ -224,6 +226,12 @@ export const formatDriveData = async (
 							: comment.commenter && comment.commenter.orcid
 								? `https://orcid.org/${comment.commenter.orcid}`
 								: null;
+					const prosemirrorToMarkdown = (content: any): string => {
+						const doc = Node.fromJSON(schema, content);
+						return defaultMarkdownSerializer.serialize(doc);
+					};
+
+					const markdownContent = prosemirrorToMarkdown(comment.content);
 					const commentObject: any = {
 						id: comment.id,
 						values: {
@@ -231,7 +239,8 @@ export const formatDriveData = async (
 								index === 0 && discussion.anchors.length
 									? JSON.stringify(discussion.anchors[0])
 									: undefined,
-							[`${communitySlug}:content`]: comment.text,
+							// [`${communitySlug}:content`]: comment.text,
+							[`${communitySlug}:content`]: markdownContent,
 							[`${communitySlug}:publication-date`]: comment.createdAt,
 							[`${communitySlug}:full-name`]: commentAuthorName,
 							[`${communitySlug}:orcid`]: commentAuthorORCID,
