@@ -1,8 +1,10 @@
+import { Callout } from "nextra/components";
+
 # Kysely
 
 ## Documentation
 
-As we start replacing Prisma with Kysely, here are some resources that may help:
+Here are some resources that may help:
 
 - Kysely's high-level docs are very useful for writing simple queries, including joining/querying related tables and returning the results as nested json (like an ORM)
     - Make sure to look at the [Examples](https://kysely.dev/docs/category/examples) and [Recipes](https://kysely.dev/docs/category/recipes)
@@ -19,8 +21,10 @@ We use Kanel to generate these types, which can be configured via [.kanelrc.js](
 
 ### Generating types for JSON fields
 
-> [!NOTE]
-> You might need to run `pnpm --filter core migrate-dev` twice to get the types to update properly.
+<Callout type="warning">
+	You might need to run `pnpm --filter core migrate-dev` twice to get the types to update
+	properly.
+</Callout>
 
 It is possible to generate more specific types for JSON fields defined.
 
