@@ -52,6 +52,8 @@ const migrateHierarchy = async () => {
 		};
 	});
 
+	console.log(`Migrating ${relations.length} parent-child relationship(s) to relation fields:`);
+
 	const relationsByCommunityId = makeRelationsByCommunityId(relations);
 
 	const relationFieldInsertExpressions = Array.from(relationsByCommunityId.entries()).flatMap(
@@ -65,41 +67,55 @@ const migrateHierarchy = async () => {
 			}))
 	);
 
-	console.log(relationFieldInsertExpressions);
+	console.log(`Creating ${relationFieldInsertExpressions.length} relation fields`);
 
-	// upsert new relation fields
-	const relationResults = await db
-		.insertInto("pub_fields")
-		.values(relationFieldInsertExpressions)
-		.returningAll()
-		// Field slugs are unique, so do nothing if the slug already exists
-		.onConflict((b) => b.doNothing())
-		.execute();
+	relationsByCommunityId.forEach((relationSlugs, communityId) => {
+		console.log(
+			`  In community ${communityId}: ${Array.from(relationSlugs.keys()).join(", ")}`
+		);
+	});
 
-	const persistedRelationsByRelationSlug = new Map(
-		relationResults.map((relationResult) => [relationResult.slug, relationResult])
-	);
+	await db.transaction().execute(async (trx) => {
+		// upsert new relation fields
+		const relationResults = await trx
+			.insertInto("pub_fields")
+			.values(relationFieldInsertExpressions)
+			.returningAll()
+			// Field slugs are unique, so do nothing if the slug already exists
+			.onConflict((b) => b.doNothing())
+			.execute();
 
-	console.log(persistedRelationsByRelationSlug);
+		const persistedRelationsByRelationSlug = new Map(
+			relationResults.map((relationResult) => [relationResult.slug, relationResult])
+		);
 
-	const relationValueInsertExpressions = relations
-		.filter((relation) => persistedRelationsByRelationSlug.has(relation.relationSlug))
-		.map((relation) => ({
-			fieldId: expect(persistedRelationsByRelationSlug.get(relation.relationSlug)).id,
-			pubId: relation.parentPubId,
-			relatedPubId: relation.childPubId,
-			lastModifiedBy: createLastModifiedBy("system"),
-			value: null,
-		}));
+		const relationValueInsertExpressions = relations
+			.filter((relation) => persistedRelationsByRelationSlug.has(relation.relationSlug))
+			.map((relation) => ({
+				fieldId: expect(persistedRelationsByRelationSlug.get(relation.relationSlug)).id,
+				pubId: relation.parentPubId,
+				relatedPubId: relation.childPubId,
+				lastModifiedBy: createLastModifiedBy("system"),
+				value: null,
+			}));
 
-	// upsert relation values
-	await db
-		.insertInto("pub_values")
-		.values(relationValueInsertExpressions)
-		// [pubId, relatedPubId, fieldId] is unique, so do nothing if the
-		// relationship already exists
-		.onConflict((b) => b.doNothing())
-		.execute();
+		console.log(`Creating ${relationValueInsertExpressions.length} relation values`);
+
+		// upsert relation values
+		await trx
+			.insertInto("pub_values")
+			.values(relationValueInsertExpressions)
+			// [pubId, relatedPubId, fieldId] is unique, so do nothing if the
+			// relationship already exists
+			.onConflict((b) => b.doNothing())
+			.execute();
+	});
 };
 
-migrateHierarchy();
+migrateHierarchy()
+	.then(() => {
+		console.log("Successfully migrated hierarchy.");
+	})
+	.catch(() => {
+		console.error("Failed to migrate hierarchy. Any database changes were rolled back.");
+	});
