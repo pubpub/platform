@@ -12,6 +12,7 @@ env:
 permissions:
     id-token: write
     contents: read
+    pages: write
 
 jobs:
     path-filter:
