@@ -20,12 +20,12 @@ type Relation = {
 const makeRelationsByCommunityId = (relations: Relation[]) => {
 	const relationsByCommunityId = new Map<CommunitiesId, Map<string, Relation>>();
 	for (const relation of relations) {
-		let communityRelationSlugs = relationsByCommunityId.get(relation.communityId);
-		if (communityRelationSlugs === undefined) {
-			communityRelationSlugs = new Map();
-			relationsByCommunityId.set(relation.communityId, communityRelationSlugs);
+		let relationSlugs = relationsByCommunityId.get(relation.communityId);
+		if (relationSlugs === undefined) {
+			relationSlugs = new Map();
+			relationsByCommunityId.set(relation.communityId, relationSlugs);
 		}
-		communityRelationSlugs.set(relation.relationSlug, relation);
+		relationSlugs.set(relation.relationSlug, relation);
 	}
 	return relationsByCommunityId;
 };
