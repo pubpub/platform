@@ -212,7 +212,6 @@ describe("seedCommunity", () => {
 			{
 				id: submissionPubId,
 				assigneeId: null,
-				parentId: null,
 				values: [
 					{
 						relatedPubId: null,
@@ -231,8 +230,6 @@ describe("seedCommunity", () => {
 					{
 						value: 2,
 						relatedPub: {
-							// it has a parent
-							parentId: submissionPubId,
 							pubTypeId: seededCommunity.pubTypes["Author"].id,
 						},
 					},
