@@ -107,7 +107,7 @@ jobs:
         if: github.event.action != 'closed' && needs.path-filter.outputs.docs == 'true'
         uses: ./.github/workflows/build-docs.yml
         with:
-            preview: true
+            preview: false
 
     close-docs-preview:
         if: github.event.action == 'closed'

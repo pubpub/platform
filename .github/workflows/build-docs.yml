@@ -52,10 +52,16 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
+            - name: set pr number if preview
+              id: set-pr-number
+              if: inputs.preview == true
+              run: |
+                  echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+
             - name: Build docs
               env:
-                  PR_NUMBER: ${{ github.event.pull_request.number }}
-              run: PR_NUMBER=${{ github.event.pull_request.number }} pnpm --filter docs build
+                  PR_NUMBER: ${{ steps.set-pr-number.outputs.PR_NUMBER }}
+              run: pnpm --filter docs build
 
             - name: Deploy docs main 🚀
               if: inputs.preview == false
