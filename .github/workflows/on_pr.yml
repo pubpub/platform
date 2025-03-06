@@ -118,6 +118,8 @@ jobs:
             preview: true
 
     close-docs-preview:
+        needs:
+            - path-filter
         permissions:
             contents: write
             pages: write
