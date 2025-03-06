@@ -47,6 +47,8 @@ jobs:
                       ${{ runner.os }}-turbo-
 
             - name: Build docs
+              env:
+                  PR_NUMBER: ${{ github.event.pull_request.number }}
               run: pnpm build:docs
 
             - name: Deploy docs main 🚀
