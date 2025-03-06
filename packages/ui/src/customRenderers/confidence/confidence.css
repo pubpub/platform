@@ -1,6 +1,0 @@
-.slider-thumb:after {
-	position: absolute;
-	top: 1.5rem;
-	content: attr(aria-valuenow);
-	font-size: 0.8rem;
-}
