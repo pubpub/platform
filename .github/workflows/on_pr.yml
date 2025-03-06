@@ -4,7 +4,7 @@ name: PR Updated triggers
 
 on:
     pull_request:
-        types: [labeled, unlabeled, synchronize, closed]
+        types: [labeled, unlabeled, synchronize, closed, reopened]
 
 env:
     AWS_REGION: us-east-1
