@@ -124,6 +124,8 @@ model Pub {
   // and the _PubFieldToPubType table
   // do not attempt to set this manually
   title       String?
+  stage       Stage?    @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId     String?
 
   parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id], onDelete: Cascade)
   parentId String?
@@ -269,6 +271,7 @@ model Stage {
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
+  Pub                   Pub[]
 
   @@map(name: "stages")
 }
