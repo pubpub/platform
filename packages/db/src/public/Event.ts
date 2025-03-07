@@ -8,6 +8,8 @@ export enum Event {
 	pubEnteredStage = "pubEnteredStage",
 	pubLeftStage = "pubLeftStage",
 	pubInStageForDuration = "pubInStageForDuration",
+	actionSucceeded = "actionSucceeded",
+	actionFailed = "actionFailed",
 }
 
 /** Zod schema for Event */
