@@ -34,7 +34,7 @@ import {
 	doesPubExist,
 	ForbiddenError,
 	fullTextSearch,
-	getPubsWithRelatedValuesAndChildren,
+	getPubsWithRelatedValues,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
 	removePubRelations,
@@ -253,7 +253,7 @@ const handler = createNextHandler(
 					},
 				});
 
-				const pub = await getPubsWithRelatedValuesAndChildren(
+				const pub = await getPubsWithRelatedValues(
 					{
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
@@ -276,7 +276,7 @@ const handler = createNextHandler(
 
 				const { pubTypeId, stageId, ...rest } = query;
 
-				const pubs = await getPubsWithRelatedValuesAndChildren(
+				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
 						pubTypeId,
@@ -361,7 +361,7 @@ const handler = createNextHandler(
 					};
 				}
 
-				const pub = await getPubsWithRelatedValuesAndChildren({
+				const pub = await getPubsWithRelatedValues({
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
 					userId: user.id,
@@ -476,7 +476,7 @@ const handler = createNextHandler(
 						};
 					}
 
-					const pub = await getPubsWithRelatedValuesAndChildren({
+					const pub = await getPubsWithRelatedValues({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
 						userId: user.id,
@@ -524,7 +524,7 @@ const handler = createNextHandler(
 						};
 					}
 
-					const pub = await getPubsWithRelatedValuesAndChildren({
+					const pub = await getPubsWithRelatedValues({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
 						userId: user.id,
@@ -571,7 +571,7 @@ const handler = createNextHandler(
 						};
 					}
 
-					const pub = await getPubsWithRelatedValuesAndChildren({
+					const pub = await getPubsWithRelatedValues({
 						pubId: params.pubId as PubsId,
 						communityId: community.id,
 						userId: user.id,
@@ -716,10 +716,10 @@ const handler = createNextHandler(
 );
 
 export {
+	handler as DELETE,
 	handler as GET,
+	handler as OPTIONS,
+	handler as PATCH,
 	handler as POST,
 	handler as PUT,
-	handler as PATCH,
-	handler as DELETE,
-	handler as OPTIONS,
 };
