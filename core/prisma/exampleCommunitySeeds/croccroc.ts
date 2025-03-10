@@ -3,6 +3,7 @@ import {
 	Action,
 	CoreSchemaType,
 	ElementType,
+	Event,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
@@ -32,6 +33,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				File: { schemaName: CoreSchemaType.FileUpload },
 				Confidence: { schemaName: CoreSchemaType.Vector3 },
 				"Published At": { schemaName: CoreSchemaType.DateTime },
+				"File Upload": { schemaName: CoreSchemaType.FileUpload },
 			},
 			pubTypes: {
 				Submission: {
@@ -44,6 +46,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					File: { isTitle: false },
 					Confidence: { isTitle: false },
 					"Published At": { isTitle: false },
+					"File Upload": { isTitle: false },
 				},
 				Evaluation: {
 					Title: { isTitle: true },
@@ -94,6 +97,15 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 						},
 					],
 					stage: "Submitted",
+				},
+				{
+					pubType: "Submission",
+					values: {
+						Title: "Rule Test",
+						Content: "Rule Test Content",
+						"Published At": new Date(),
+					},
+					stage: "Rule Test",
 				},
 			],
 			forms: {
@@ -165,6 +177,105 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				"In Production": {},
 				Published: {},
 				Shelved: {},
+				"Rule Test": {
+					actions: {
+						"Log 1": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 2": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 3": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 4": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 5": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 6": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 7": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 8": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 9": {
+							action: Action.log,
+							config: {},
+						},
+
+						"Email 1": {
+							action: Action.email,
+							config: {
+								body: "test",
+								subject: "Hello",
+							},
+						},
+						"Log X": {
+							action: Action.log,
+							config: {},
+						},
+					},
+					rules: [
+						{
+							actionInstance: "Log 1",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 2",
+						},
+						{
+							actionInstance: "Log 2",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 3",
+						},
+						{
+							actionInstance: "Log 3",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 4",
+						},
+						{
+							actionInstance: "Log 4",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 5",
+						},
+						{
+							actionInstance: "Log 5",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 6",
+						},
+						{
+							actionInstance: "Log 6",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 7",
+						},
+						{
+							actionInstance: "Log 7",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 8",
+						},
+						{
+							actionInstance: "Log 8",
+							event: Event.actionSucceeded,
+							watchedAction: "Log 9",
+						},
+						{
+							actionInstance: "Log 1",
+							event: Event.actionFailed,
+							watchedAction: "Email 1",
+						},
+					],
+				},
 			},
 			stageConnections: {
 				Submitted: {
