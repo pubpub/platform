@@ -48,6 +48,7 @@ export const ActionRunForm = ({
 					pubId,
 					actionInstanceArgs: values,
 					communityId: community.id as CommunitiesId,
+					stack: [],
 				});
 
 				if ("success" in result) {

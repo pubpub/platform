@@ -1,7 +1,8 @@
 import { createNextHandler } from "@ts-rest/serverless/next";
 
-import type { ActionInstancesId, CommunitiesId, Event, PubsId, StagesId } from "db/public";
+import type { ActionInstancesId, CommunitiesId, PubsId, StagesId } from "db/public";
 import { api } from "contracts";
+import { Event } from "db/public";
 
 import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
 import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
@@ -21,7 +22,7 @@ const handler = createNextHandler(
 	{
 		triggerAction: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
-			const { pubId, event } = body;
+			const { pubId, event, stack, scheduledActionRunId } = body;
 
 			const { actionInstanceId } = params;
 			const community = await findCommunityBySlug();
@@ -30,10 +31,12 @@ const handler = createNextHandler(
 			}
 
 			const actionRunResults = await runActionInstance({
-				pubId: pubId as PubsId,
-				event: event as Event,
+				pubId: pubId,
+				event: event,
 				actionInstanceId: actionInstanceId as ActionInstancesId,
 				communityId: community.id as CommunitiesId,
+				stack: stack ?? [],
+				scheduledActionRunId: scheduledActionRunId,
 			});
 
 			return {
@@ -56,7 +59,8 @@ const handler = createNextHandler(
 				pubId as PubsId,
 				stageId as StagesId,
 				event as Event,
-				community.id as CommunitiesId
+				community.id as CommunitiesId,
+				[]
 			);
 
 			return {
@@ -76,6 +80,8 @@ const handler = createNextHandler(
 			const actionScheduleResults = await scheduleActionInstances({
 				pubId: pubId as PubsId,
 				stageId: stageId as StagesId,
+				stack: [],
+				event: Event.pubInStageForDuration,
 			});
 
 			return {

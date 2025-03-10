@@ -1,6 +1,8 @@
 import { cache } from "react";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { StagesId, UsersId } from "db/public";
+import type { ActionInstancesId, StagesId, UsersId } from "db/public";
+import { Event } from "db/public";
 
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
@@ -58,20 +60,61 @@ export const getStageMembers = cache((stageId: StagesId) => {
 	);
 });
 
-export const getStageRules = cache((stageId: string) => {
+export type GetEventRuleOptions =
+	| {
+			event: Event.pubInStageForDuration;
+			watchedActionInstanceId?: never;
+	  }
+	| {
+			event: Event.actionFailed | Event.actionSucceeded;
+			watchedActionInstanceId: ActionInstancesId;
+	  };
+export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOptions) => {
 	return autoCache(
 		db
-			.selectFrom("action_instances")
-			.where("stageId", "=", stageId as StagesId)
-			.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
-			.select([
+			.selectFrom("rules")
+			.innerJoin("action_instances as ai", "ai.id", "rules.actionInstanceId")
+			.where("ai.stageId", "=", stageId)
+			.select((eb) => [
 				"rules.id",
 				"rules.event",
 				"rules.config",
-				"action_instances.name as instanceName",
-				"action_instances.action",
-				"actionInstanceId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_instances")
+						.selectAll("action_instances")
+						.whereRef("action_instances.id", "=", "rules.actionInstanceId")
+				)
+					.$notNull()
+					.as("actionInstance"),
+				"watchedActionId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_instances")
+						.selectAll("action_instances")
+						.whereRef("action_instances.id", "=", "rules.watchedActionId")
+					// .where("action_instances.stageId", "=", stageId)
+				).as("watchedActionInstance"),
 			])
+			.$if(!!options?.event, (eb) => {
+				const where = eb.where("rules.event", "=", options!.event);
+
+				if (options!.event === Event.pubInStageForDuration) {
+					return where;
+				}
+
+				return where.where("rules.watchedActionId", "=", options!.watchedActionInstanceId);
+			})
 			.$narrowType<{ config: RuleConfig | null }>()
 	);
 });
+
+// export const getReferentialRules = cache(
+// 	(stageId: StagesId, event: Event, watchedActionId: ActionInstancesId) => {
+// 		return autoCache(
+// 			getStageRules(stageId)
+// 				.qb.where("rules.watchedActionId", "=", watchedActionId)
+// 				.where("rules.event", "=", event)
+// 		);
+// 	}
+// );

@@ -410,6 +410,7 @@ model ActionInstance {
   config    Json?
   rules     Rule[]
   runs      ActionRun[]
+  watchedBy Rule[]      @relation("WatchedActions")
 
   @@map(name: "action_instances")
 }
@@ -442,6 +443,13 @@ model ActionRun {
   updatedAt        DateTime          @default(now()) @updatedAt
   PubValueHistory  PubValueHistory[]
 
+  // action run that triggered this action run
+  triggeringActionRunId String?
+  triggeringActionRun   ActionRun? @relation("triggering_action_run", fields: [triggeringActionRunId], references: [id], onDelete: SetNull)
+
+  // action runs that were triggered by this action run
+  sequentialActionRuns ActionRun[] @relation("triggering_action_run")
+
   @@map(name: "action_runs")
 }
 
@@ -452,15 +460,17 @@ enum ActionRunStatus {
 }
 
 model Rule {
-  id               String         @id @default(dbgenerated("gen_random_uuid()"))
+  id               String          @id @default(dbgenerated("gen_random_uuid()"))
   event            Event
-  actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstance   ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String
   config           Json?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now()) @updatedAt
+  // as the trigger for "actionSucceeded" or "actionFailed"
+  watchedActionId  String?
+  watchedAction    ActionInstance? @relation("WatchedActions", fields: [watchedActionId], references: [id], onDelete: SetNull)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
 
-  @@unique([actionInstanceId, event])
   @@map(name: "rules")
 }
 
@@ -468,6 +478,8 @@ enum Event {
   pubEnteredStage
   pubLeftStage
   pubInStageForDuration
+  actionSucceeded
+  actionFailed
 }
 
 enum FormAccessType {
