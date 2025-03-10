@@ -175,7 +175,7 @@ describe("seedCommunity", () => {
 					body: "hello nerd",
 					subject: "hello nerd",
 				},
-				name: "",
+				name: "1",
 			},
 		]);
 

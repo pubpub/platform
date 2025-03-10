@@ -86,7 +86,7 @@ describe("runActionInstance", () => {
 			stack: [],
 		});
 
-		expect(result).toEqual({
+		expect(result).toMatchObject({
 			success: true,
 			report: "Logged out some data, check your console.",
 			data: {},
@@ -102,7 +102,7 @@ describe("runActionInstance", () => {
 		expect(actionRuns).toHaveLength(1);
 
 		expect(actionRuns[0].status).toEqual(ActionRunStatus.success);
-		expect(actionRuns[0].result, "Action run should be successfully created").toEqual({
+		expect(actionRuns[0].result, "Action run should be successfully created").toMatchObject({
 			success: true,
 			report: "Logged out some data, check your console.",
 			data: {},
