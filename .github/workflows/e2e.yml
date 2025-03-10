@@ -95,6 +95,9 @@ jobs:
 
             - run: pnpm --filter core exec playwright install chromium --with-deps
 
+            - name: Run playwright on context-editor
+              run: pnpm --filter context-editor run playwright:test
+
             - name: Start up core etc
               run: pnpm integration:setup
               env:

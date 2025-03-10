@@ -1,5 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const baseURL = "http://localhost:6006";
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -23,10 +24,19 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: "html",
+	webServer: [
+		{
+			command: "pnpm run storybook",
+			url: baseURL,
+			stderr: "pipe",
+			stdout: "pipe",
+			reuseExistingServer: true,
+		},
+	],
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
 	use: {
 		/* Base URL to use in actions like `await page.goto('/')`. */
-		baseURL: "http://localhost:6006",
+		baseURL,
 
 		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
 		trace: "on-first-retry",
