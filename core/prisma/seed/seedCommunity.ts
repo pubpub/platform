@@ -456,7 +456,11 @@ type UsersBySlug<U> = {
 	[K in keyof U]: U[K] & Users;
 };
 
-type StagesWithPermissionsAndActionsAndRulesByName<S, StagePermissions> = {
+type StagesWithPermissionsAndActionsAndRulesByName<
+	U extends UsersInitializer,
+	S extends StagesInitializer<U>,
+	StagePermissions,
+> = {
 	[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
 		permissions: StagePermissions;
 	} & ("actions" extends keyof S[K]
@@ -1181,7 +1185,7 @@ export async function seedCommunity<
 				},
 			];
 		})
-	) as StagesWithPermissionsAndActionsAndRulesByName<S, typeof stageMemberships>;
+	) as unknown as StagesWithPermissionsAndActionsAndRulesByName<U, S, typeof stageMemberships>;
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
 

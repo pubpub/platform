@@ -140,17 +140,20 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			stages: {
 				Submitted: {
 					members: { new: MemberRole.contributor },
-					actions: [
-						{
+					actions: {
+						"Log Review": {
+							action: Action.log,
+							config: {},
+						},
+						"Send Review email": {
 							action: Action.email,
 							config: {
 								subject: "HELLO :recipientName REVIEW OUR STUFF PLEASE",
 								recipient: memberId,
 								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
 							},
-							name: "Send Review email",
 						},
-					],
+					},
 				},
 				"Ask Author for Consent": {
 					members: { new: MemberRole.contributor },
