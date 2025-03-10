@@ -29,29 +29,29 @@ const pubTriggerTestSeed = async () => {
 		},
 		stages: {
 			Submission: {
-				actions: [
-					{
+				actions: {
+					"1": {
 						action: Action.log,
 						config: {
 							debounce: 1,
 						},
 					},
-					{
+					"2": {
 						action: Action.email,
 						config: {
-							recipient: "all@pubpub.org",
+							recipientEmail: "all@pubpub.org",
 							body: "Hello",
 							subject: "Test",
 						},
 					},
-					{
+					"3": {
 						action: Action.googleDriveImport,
 						config: {
 							docUrl: "https://docs.google.com/document/d/1234567890",
 							outputField: `${slugName}:title`,
 						},
 					},
-				],
+				},
 			},
 		},
 		pubs: [

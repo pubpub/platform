@@ -15,6 +15,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 	if (!user) {
 		return {
 			error: "Not logged in",
+			stack: [],
 		};
 	}
 

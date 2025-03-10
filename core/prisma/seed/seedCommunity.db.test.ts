@@ -60,16 +60,16 @@ describe("seedCommunity", () => {
 			stages: {
 				"Stage 1": {
 					members: { hih: MemberRole.contributor },
-					actions: [
-						{
+					actions: {
+						"1": {
 							action: Action.email,
 							config: {
 								body: "hello nerd",
 								subject: "hello nerd",
-								recipient: testUserId,
+								recipientEmail: "all@pubpub.org",
 							},
 						},
-					],
+					},
 				},
 				"Stage 2": {},
 			},
