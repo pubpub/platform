@@ -1,130 +1,116 @@
 // "use server";
 
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-
-import type { ActionInstancesId, PubsId, Rules, StagesId } from "db/public";
+import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
-import type { RuleConfig } from "./rules";
+import type { SchedulableRule } from "./rules";
+import type { GetEventRuleOptions } from "~/lib/db/queries";
 import { db } from "~/kysely/database";
 import { addDuration } from "~/lib/dates";
-import { autoCache } from "~/lib/server/cache/autoCache";
+import { getStageRules } from "~/lib/db/queries";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
 
-export const scheduleActionInstances = async ({
-	pubId,
-	stageId,
-}: {
-	pubId: PubsId;
-	stageId: StagesId;
-}) => {
-	if (!pubId || !stageId) {
+export const scheduleActionInstances = async (
+	options: {
+		pubId: PubsId;
+		stageId: StagesId;
+		stack: ActionRunsId[];
+	} & GetEventRuleOptions
+) => {
+	if (!options.pubId || !options.stageId) {
 		throw new Error("pubId and stageId are required");
 	}
 
-	const instances = await autoCache(
-		db
-			.selectFrom("action_instances")
-			.where("action_instances.stageId", "=", stageId)
-			.select((eb) => [
-				"id",
-				"name",
-				"config",
-				"stageId",
-				jsonArrayFrom(
-					eb
-						.selectFrom("rules")
-						.select([
-							"rules.id as id",
-							"rules.event as event",
-							"rules.config as config",
-							"actionInstanceId",
-						])
-						.where("rules.actionInstanceId", "=", eb.ref("action_instances.id"))
-						.where("rules.event", "=", Event.pubInStageForDuration)
-				).as("rules"),
-			])
-	).execute();
+	const [rules, jobsClient] = await Promise.all([
+		getStageRules(options.stageId, options).execute(),
+		getJobsClient(),
+	]);
 
-	if (!instances.length) {
+	if (!rules.length) {
 		logger.debug({
-			msg: `No action instances found for stage ${stageId}. Most likely this is because a Pub is moved into a stage without action instances.`,
-			pubId,
-			stageId,
-			instances,
+			msg: `No action instances found for stage ${options.stageId}. Most likely this is because a Pub is moved into a stage without action instances.`,
+			pubId: options.pubId,
+			stageId: options.stageId,
+			rules,
 		});
 		return;
 	}
 
-	const validRules = instances.flatMap((instance) =>
-		instance.rules
-			.filter((rule): rule is Rules & { config: RuleConfig } =>
-				Boolean(
-					typeof rule.config === "object" &&
-						rule.config &&
-						"duration" in rule.config &&
-						rule.config.duration &&
-						"interval" in rule.config &&
-						rule.config.interval
-				)
-			)
-			.map((rule) => ({
-				...rule,
-				actionName: instance.name,
-				actionInstanceConfig: instance.config,
-			}))
-	);
+	const validRules = rules
 
-	if (!validRules.length) {
-		logger.debug({
-			msg: "No action instances connected to a pubInStageForDuration rule found for pub",
-			pubId,
-			stageId,
-			instances,
-		});
-		return;
-	}
+		.filter(
+			(rule): rule is typeof rule & SchedulableRule =>
+				rule.event === Event.actionFailed ||
+				rule.event === Event.actionSucceeded ||
+				(rule.event === Event.pubInStageForDuration &&
+					Boolean(
+						typeof rule.config === "object" &&
+							rule.config &&
+							"duration" in rule.config &&
+							rule.config.duration &&
+							"interval" in rule.config &&
+							rule.config.interval
+					))
+		)
+		.map((rule) => ({
+			...rule,
+			duration: rule.config?.duration || 0,
+			interval: rule.config?.interval || "minute",
+		}));
 
-	const jobsClient = await getJobsClient();
+	// if (!validRules.length) {
+	// 	logger.debug({
+	// 		msg: "No action instances connected to a pubInStageForDuration rule found for pub",
+	// 		pubId,
+	// 		stageId,
+	// 		instances,
+	// 	});
+	// 	return;
+	// }
 
 	const results = await Promise.all(
 		validRules.flatMap(async (rule) => {
+			const runAt = addDuration({
+				duration: rule.duration,
+				interval: rule.interval,
+			}).toISOString();
+
+			const scheduledActionRun = await autoRevalidate(
+				db
+					.insertInto("action_runs")
+					.values({
+						actionInstanceId: rule.actionInstance.id,
+						pubId: options.pubId,
+						status: ActionRunStatus.scheduled,
+						config: rule.actionInstance.config,
+						result: { scheduled: `Action scheduled for ${runAt}` },
+						event: rule.event,
+						triggeringActionRunId: options.stack.at(-1),
+					})
+					.returning("id")
+			).executeTakeFirstOrThrow();
+
 			const job = await jobsClient.scheduleAction({
-				actionInstanceId: rule.actionInstanceId,
-				duration: rule.config.duration,
-				interval: rule.config.interval,
-				stageId: stageId,
-				pubId,
+				actionInstanceId: rule.actionInstance.id,
+				duration: rule.duration,
+				interval: rule.interval,
+				stageId: options.stageId,
+				pubId: options.pubId,
 				community: {
 					slug: await getCommunitySlug(),
 				},
+				stack: options.stack,
+				scheduledActionRunId: scheduledActionRun.id,
+				event: rule.event,
 			});
-
-			const runAt = addDuration({
-				duration: rule.config.duration,
-				interval: rule.config.interval,
-			}).toISOString();
-
-			if (job.id) {
-				await autoRevalidate(
-					db.insertInto("action_runs").values({
-						actionInstanceId: rule.actionInstanceId,
-						pubId: pubId,
-						status: ActionRunStatus.scheduled,
-						config: rule.actionInstanceConfig,
-						result: { scheduled: `Action scheduled for ${runAt}` },
-						event: Event.pubInStageForDuration,
-					})
-				).execute();
-			}
 
 			return {
 				result: job,
-				actionInstanceId: rule.actionInstanceId,
-				actionInstanceName: rule.actionName,
+				actionInstanceId: rule.actionInstance.id,
+				actionInstanceName: rule.actionInstance.name,
 				runAt,
 			};
 		})

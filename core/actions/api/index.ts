@@ -4,7 +4,7 @@ import type * as z from "zod";
 
 import type { ActionInstances, Event } from "db/public";
 
-import type { ReferentialRuleEvent } from "../types";
+import type { SequentialRuleEvent } from "../types";
 import {
 	actionFailed,
 	actionSucceeded,
@@ -20,7 +20,7 @@ import * as log from "../log/action";
 import * as move from "../move/action";
 import * as pdf from "../pdf/action";
 import * as pushToV6 from "../pushToV6/action";
-import { isReferentialRuleEvent, referentialRuleEvents } from "../types";
+import { isSequentialRuleEvent, sequentialRuleEvents } from "../types";
 
 export const actions = {
 	[log.action.name]: log.action,
@@ -59,8 +59,8 @@ export const getRuleByName = <T extends Event>(name: T) => {
 
 export const isReferentialRule = (
 	rule: (typeof rules)[keyof typeof rules]
-): rule is Extract<typeof rule, { event: ReferentialRuleEvent }> =>
-	referentialRuleEvents.includes(rule.event as any);
+): rule is Extract<typeof rule, { event: SequentialRuleEvent }> =>
+	sequentialRuleEvents.includes(rule.event as any);
 
 export const humanReadableEvent = <T extends Event>(
 	event: T,

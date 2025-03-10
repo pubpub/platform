@@ -22,8 +22,10 @@ import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientException } from "~/lib/serverActions";
 import { getActionByName } from "../api";
+import { isScheduableRuleEvent } from "../types";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
+import { scheduleActionInstances } from "./scheduleActionInstance";
 
 export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
 
@@ -32,6 +34,8 @@ export type RunActionInstanceArgs = {
 	communityId: CommunitiesId;
 	actionInstanceId: ActionInstancesId;
 	actionInstanceArgs?: Record<string, unknown>;
+	stack: ActionRunsId[];
+	scheduledActionRunId?: ActionRunsId;
 } & ({ event: Event } | { userId: UsersId });
 
 const _runActionInstance = async (
@@ -203,10 +207,27 @@ const _runActionInstance = async (
 			actionRunId: args.actionRunId,
 		});
 
+		await scheduleActionInstances({
+			pubId: args.pubId,
+			stageId: actionInstance.stageId,
+			event: Event.actionSucceeded,
+			stack: [...args.stack, args.actionRunId],
+			watchedActionInstanceId: actionInstance.id,
+		});
+
 		return result;
 	} catch (error) {
 		captureException(error);
 		logger.error(error);
+
+		await scheduleActionInstances({
+			pubId: args.pubId,
+			stageId: actionInstance.stageId,
+			event: Event.actionFailed,
+			stack: [...args.stack, args.actionRunId],
+			watchedActionInstanceId: actionInstance.id,
+		});
+
 		return {
 			title: "Failed to run action",
 			error: error.message,
@@ -217,28 +238,19 @@ const _runActionInstance = async (
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	const isActionUserInitiated = "userId" in args;
 
+	console.log("+++++++++++");
+	console.log(args);
+	console.log("+++++++++++");
+
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
+
 	const actionRuns = await autoRevalidate(
 		trx
-			.with(
-				"existingScheduledActionRun",
-				(db) =>
-					db
-						.selectFrom("action_runs")
-						.selectAll()
-						.where("actionInstanceId", "=", args.actionInstanceId)
-						.where("pubId", "=", args.pubId)
-						.where("status", "=", ActionRunStatus.scheduled)
-				// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
-			)
 			.insertInto("action_runs")
 			.values((eb) => ({
-				id:
-					isActionUserInitiated || args.event !== Event.pubInStageForDuration
-						? undefined
-						: eb.selectFrom("existingScheduledActionRun").select("id"),
+				id: args.scheduledActionRunId,
 				actionInstanceId: args.actionInstanceId,
 				pubId: args.pubId,
 				userId: isActionUserInitiated ? args.userId : null,
@@ -252,6 +264,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					.where("action_instances.id", "=", args.actionInstanceId),
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
+				triggeringActionRunId: args.stack.at(-1),
 			}))
 			.returningAll()
 			// conflict should only happen if a scheduled action is excecuted
@@ -296,9 +309,15 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 
 	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success;
 
+	console.log("---------------");
+	console.log(args.scheduledActionRunId ?? actionRun.id);
+	console.log("---------------");
 	// update the action run with the result
 	await autoRevalidate(
-		trx.updateTable("action_runs").set({ status, result }).where("id", "=", actionRun.id)
+		trx
+			.updateTable("action_runs")
+			.set({ status, result })
+			.where("id", "=", args.scheduledActionRunId ?? actionRun.id)
 	).executeTakeFirstOrThrow(
 		() =>
 			new Error(
@@ -314,6 +333,7 @@ export const runInstancesForEvent = async (
 	stageId: StagesId,
 	event: Event,
 	communityId: CommunitiesId,
+	stack: ActionRunsId[],
 	trx = db
 ) => {
 	const instances = await trx
@@ -335,6 +355,7 @@ export const runInstancesForEvent = async (
 						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
+						stack,
 					},
 					trx
 				),

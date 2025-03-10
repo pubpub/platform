@@ -443,6 +443,13 @@ model ActionRun {
   updatedAt        DateTime          @default(now()) @updatedAt
   PubValueHistory  PubValueHistory[]
 
+  // action run that triggered this action run
+  triggeringActionRunId String?
+  triggeringActionRun   ActionRun? @relation("triggering_action_run", fields: [triggeringActionRunId], references: [id], onDelete: SetNull)
+
+  // action runs that were triggered by this action run
+  sequentialActionRuns ActionRun[] @relation("triggering_action_run")
+
   @@map(name: "action_runs")
 }
 

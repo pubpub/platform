@@ -31,7 +31,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
-import type { ReferentialRuleEvent } from "~/actions/types";
+import type { SequentialRuleEvent } from "~/actions/types";
 import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { addRule } from "../../../actions";

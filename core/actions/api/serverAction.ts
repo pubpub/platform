@@ -21,6 +21,7 @@ export const runActionInstance = defineServerAction(async function runActionInst
 	const result = await runActionInstanceInner({
 		...args,
 		userId: user.id as UsersId,
+		stack: args.stack ?? [],
 	});
 
 	return result;

@@ -1,18 +1,14 @@
+import type { ActionRunsId, PubsId, StagesId } from "db/public";
 import type { logger } from "logger";
+import { Event } from "db/public";
 
 import type { InternalClient } from "../clients";
 import { defineJob } from "../defineJob";
 
-enum Event {
-	pubEnteredStage = "pubEnteredStage",
-	pubLeftStage = "pubLeftStage",
-	pubInStageForDuration = "pubInStageForDuration",
-}
-
 // TODO: Use kanel generated types for these
 type PubInStagesRow = {
-	pubId: string;
-	stageId: string;
+	pubId: PubsId;
+	stageId: StagesId;
 };
 
 type DBTriggerEventPayload<T> = {
@@ -26,16 +22,19 @@ type DBTriggerEventPayload<T> = {
 };
 
 type ScheduledEventPayload = {
-	event: Event.pubInStageForDuration;
+	event: Event;
 	duration: number;
 	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
 	runAt: Date;
-	stageId: string;
-	pubId: string;
+	stageId: StagesId;
+	pubId: PubsId;
 	actionInstanceId: string;
 	community: {
 		slug: string;
 	};
+	triggeringActionRunId?: string;
+	stack?: ActionRunsId[];
+	scheduledActionRunId: ActionRunsId;
 };
 
 type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
@@ -137,8 +136,20 @@ const triggerAction = async (
 	payload: ScheduledEventPayload,
 	logger: Logger
 ) => {
-	const { stageId, event, pubId, actionInstanceId, community, ...context } = payload;
+	const {
+		stageId,
+		stack,
+		event,
+		pubId,
+		actionInstanceId,
+		scheduledActionRunId,
+		community,
+		...context
+	} = payload;
 
+	console.log("+++++++++++");
+	console.log(payload);
+	console.log("+++++++++++");
 	try {
 		const { status, body } = await client.triggerAction({
 			params: {
@@ -148,10 +159,15 @@ const triggerAction = async (
 			body: {
 				pubId,
 				event,
+				scheduledActionRunId,
+				stack,
 			},
 		});
+		console.log("---------------");
+		console.log(status, body);
+		console.log("---------------");
 
-		if (status > 400) {
+		if (status >= 400) {
 			logger.error({ msg: `API error triggering action`, body, ...context });
 			return;
 		}

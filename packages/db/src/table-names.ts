@@ -427,6 +427,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "triggeringActionRunId",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{

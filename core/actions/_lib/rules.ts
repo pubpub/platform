@@ -63,7 +63,14 @@ export type Rules =
 	| ActionSucceeded
 	| ActionFailed;
 
-export type RuleForEvent<E extends Event> = Extract<Rules, { event: E }>;
+export type SchedulableEvent =
+	| Event.pubInStageForDuration
+	| Event.actionFailed
+	| Event.actionSucceeded;
+
+export type RuleForEvent<E extends Event> = E extends E ? Extract<Rules, { event: E }> : never;
+
+export type SchedulableRule = RuleForEvent<SchedulableEvent>;
 
 export type RuleConfig<Rule extends Rules = Rules> = Rule extends Rule
 	? NonNullable<Rule["additionalConfig"]>["_input"]

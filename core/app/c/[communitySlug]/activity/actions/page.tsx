@@ -65,6 +65,14 @@ export default async function Page(props: {
 						.whereRef("action_instances.id", "=", "action_runs.actionInstanceId")
 						.select(["action_instances.name", "action_instances.action"])
 				).as("actionInstance"),
+				"action_runs.triggeringActionRunId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_runs as ar")
+						.innerJoin("action_instances", "ar.actionInstanceId", "action_instances.id")
+						.whereRef("ar.id", "=", "action_runs.triggeringActionRunId")
+						.select(["action_instances.name", "action_instances.action"])
+				).as("triggeringActionInstance"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("stages")
@@ -87,6 +95,7 @@ export default async function Page(props: {
 			])
 			.orderBy("action_runs.createdAt", "desc")
 	).execute()) as ActionRun[];
+	console.log(actionRuns);
 
 	return (
 		<>

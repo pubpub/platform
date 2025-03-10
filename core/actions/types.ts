@@ -177,11 +177,21 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>;
 
-export const referentialRuleEvents = [Event.actionSucceeded, Event.actionFailed] as const;
-export type ReferentialRuleEvent = (typeof referentialRuleEvents)[number];
+export const sequentialRuleEvents = [Event.actionSucceeded, Event.actionFailed] as const;
+export type SequentialRuleEvent = (typeof sequentialRuleEvents)[number];
 
-export const isReferentialRuleEvent = (event: Event): event is ReferentialRuleEvent =>
-	referentialRuleEvents.includes(event as any);
+export const isSequentialRuleEvent = (event: Event): event is SequentialRuleEvent =>
+	sequentialRuleEvents.includes(event as any);
+
+export const scheduableRuleEvents = [
+	Event.pubInStageForDuration,
+	Event.actionFailed,
+	Event.actionSucceeded,
+] as const;
+export type ScheduableRuleEvent = (typeof scheduableRuleEvents)[number];
+
+export const isScheduableRuleEvent = (event: Event): event is ScheduableRuleEvent =>
+	scheduableRuleEvents.includes(event as any);
 
 export type EventRuleOptionsBase<
 	E extends Event,
@@ -204,7 +214,7 @@ export type EventRuleOptionsBase<
 		 */
 		[K in "withConfig" as AC extends Record<string, any>
 			? K
-			: E extends ReferentialRuleEvent
+			: E extends SequentialRuleEvent
 				? K
 				: never]: (
 			options: AC extends Record<string, any> ? AC : ActionInstances

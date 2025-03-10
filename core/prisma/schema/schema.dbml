@@ -341,6 +341,9 @@ Table action_runs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   PubValueHistory pub_values_history [not null]
+  triggeringActionRunId String
+  triggeringActionRun action_runs
+  sequentialActionRuns action_runs [not null]
 }
 
 Table rules {
@@ -687,6 +690,8 @@ Ref: action_runs.actionInstanceId > action_instances.id [delete: Cascade]
 Ref: action_runs.pubId > pubs.id
 
 Ref: action_runs.userId > users.id [delete: Set Null]
+
+Ref: action_runs.triggeringActionRunId - action_runs.id [delete: Set Null]
 
 Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
 

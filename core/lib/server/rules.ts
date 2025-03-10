@@ -4,8 +4,8 @@ import type { ActionInstances, ActionInstancesId, NewRules, RulesId } from "db/p
 import { Event } from "db/public";
 import { expect } from "utils";
 
-import type { ReferentialRuleEvent } from "~/actions/types";
-import { isReferentialRuleEvent } from "~/actions/types";
+import type { SequentialRuleEvent } from "~/actions/types";
+import { isSequentialRuleEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -115,7 +115,7 @@ export class RuleAlreadyExistsError extends RuleError {
 
 export class ReferentialRuleAlreadyExistsError extends RuleAlreadyExistsError {
 	constructor(
-		public event: ReferentialRuleEvent,
+		public event: SequentialRuleEvent,
 		public actionInstanceId: ActionInstancesId,
 		public watchedActionId: ActionInstancesId
 	) {
@@ -168,7 +168,7 @@ export async function createRuleWithCycleCheck(data: {
 		}).executeTakeFirstOrThrow();
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
-			if (isReferentialRuleEvent(data.event)) {
+			if (isSequentialRuleEvent(data.event)) {
 				if (data.watchedActionId) {
 					throw new ReferentialRuleAlreadyExistsError(
 						data.event,
