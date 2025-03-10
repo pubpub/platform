@@ -15,6 +15,9 @@ catalogs:
     '@opentelemetry/auto-instrumentations-node':
       specifier: 0.53.0
       version: 0.53.0
+    '@playwright/test':
+      specifier: ^1.48.0
+      version: 1.48.0
     '@sentry/nextjs':
       specifier: ^8.48.0
       version: 8.48.0
@@ -929,6 +932,9 @@ importers:
       '@chromatic-com/storybook':
         specifier: ^1.9.0
         version: 1.9.0(react@19.0.0)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.48.0
       '@pubpub/prettier-config':
         specifier: workspace:*
         version: link:../../config/prettier

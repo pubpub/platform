@@ -24,6 +24,7 @@
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^1.9.0",
+		"@playwright/test": "catalog:",
 		"@pubpub/prettier-config": "workspace:*",
 		"@storybook/addon-essentials": "^8.4.7",
 		"@storybook/addon-interactions": "^8.4.7",
