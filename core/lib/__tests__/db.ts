@@ -39,3 +39,5 @@ export const testDb = new Kysely<Database>({
 	log: kyselyLogger,
 	plugins: [updatedAtPlugin],
 });
+
+export { testDb as db };

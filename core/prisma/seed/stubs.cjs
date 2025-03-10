@@ -6,5 +6,6 @@ module.exports = {
 	forwardRef: stubFn,
 	autoCache: stubFn,
 	autoRevalidate: stubFn,
+	NextResponse: {},
 	// Add other stubbed methods as needed
 };

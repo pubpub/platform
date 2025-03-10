@@ -6,7 +6,7 @@
 	"scripts": {
 		"playwright:test": "playwright test",
 		"playwright:ui": "playwright test --ui",
-		"playwright:test:dev": "TEST_DEV=true playwright test",
+		"playwright:test:dev": "SKIP_VALIDATION=true NODE_OPTIONS=\"--experimental-loader=./playwright/fixtures/playwright-module-loader.js\" TEST_DEV=true dotenv -e .env.dev -e .env.local playwright test",
 		"playwright:ui:dev": "TEST_DEV=true playwright test --ui",
 		"db:migrate-dev": "pnpm migrate-dev",
 		"db:migrate-deploy": "pnpm migrate-deploy",
