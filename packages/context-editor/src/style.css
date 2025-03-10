@@ -94,6 +94,8 @@
 .ProseMirror .codeblock-wrapper,
 .ProseMirror math-display,
 .ProseMirror blockquote,
+.ProseMirror img,
+.ProseMirror hr,
 .ProseMirror section {
 	border-left: 1px solid #777;
 	padding-left: 5px;
@@ -170,4 +172,10 @@
 }
 .ProseMirror .codeblock-wrapper {
 	margin-bottom: 16px;
+}
+
+/* Media upload https://github.com/transloadit/uppy/issues/1127#issuecomment-2130708834 */
+.uppy-Dashboard-inner {
+	height: 182px !important; /* Ensure it takes 100% of its parent container's height */
+	min-height: unset !important; /* Remove the default min-height */
 }

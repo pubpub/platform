@@ -1,15 +1,27 @@
 import type { LucideProps } from "lucide-react";
 import type { ReactNode } from "react";
 
-import React, { Fragment } from "react";
+import React, { Fragment, useState } from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { Bold, Code, CodeSquare, Italic, Quote, Radical, SquareRadical } from "lucide-react";
+import {
+	Bold,
+	Code,
+	CodeSquare,
+	ImagePlus,
+	Italic,
+	Quote,
+	Radical,
+	SeparatorHorizontal,
+	SquareRadical,
+} from "lucide-react";
 
 import { Button } from "ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { cn } from "utils";
 
 import type { CommandSpec } from "../commands/types";
+import type { Upload } from "./ImageUploader";
 import {
 	blockquoteToggle,
 	codeBlockToggle,
@@ -21,8 +33,11 @@ import {
 	heading6Toggle,
 	paragraphToggle,
 } from "../commands/blocks";
+import { insertHorizontalLine } from "../commands/horizontal";
+import { isImageActive } from "../commands/images";
 import { codeToggle, emToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
+import { ImageUploader } from "./ImageUploader";
 
 type MenuItem = {
 	key: string;
@@ -48,6 +63,14 @@ const menuBlocks: MenuItem[][] = [
 			name: "Italic",
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
+		},
+	],
+	[
+		{
+			key: "horizontal_rule",
+			name: "Horizontal line",
+			icon: <SeparatorHorizontal {...iconProps} />,
+			command: insertHorizontalLine,
 		},
 	],
 	[
@@ -166,6 +189,36 @@ const ParagraphDropdown = () => {
 	);
 };
 
+const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
+	const { view } = usePluginViewContext();
+	const [isOpen, setIsOpen] = useState(false);
+	const isActive = isImageActive(view.state);
+	return (
+		<Popover open={isOpen} onOpenChange={setIsOpen}>
+			<PopoverTrigger asChild>
+				<Button
+					variant="ghost"
+					size="sm"
+					title="Image"
+					className={cn("h-fit rounded-sm p-1", {
+						"bg-blue-200 hover:bg-blue-300": isActive,
+					})}
+				>
+					<ImagePlus {...iconProps} />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent className="w-72">
+				<ImageUploader
+					upload={upload}
+					onInsert={() => {
+						setIsOpen(false);
+					}}
+				/>
+			</PopoverContent>
+		</Popover>
+	);
+};
+
 const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 	const { view } = usePluginViewContext();
 	const { key, name, icon, command } = menuItem;
@@ -199,10 +252,10 @@ const Separator = () => {
 	);
 };
 
-export const MenuBar = () => {
+export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
 		<div
-			className="flex items-center rounded-t border bg-gray-50 p-4"
+			className="flex items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 		>
@@ -212,7 +265,6 @@ export const MenuBar = () => {
 			</div>
 			<div className="flex items-center">
 				{menuBlocks.map((menuBlock, index) => {
-					const isLast = index === menuBlocks.length - 1;
 					return (
 						<Fragment key={index}>
 							<div className={cn("flex items-center gap-1")}>
@@ -222,10 +274,13 @@ export const MenuBar = () => {
 									);
 								})}
 							</div>
-							{!isLast && <Separator />}
+							<Separator />
 						</Fragment>
 					);
 				})}
+			</div>
+			<div className="flex items-center">
+				<ImagePopoverMenuItem upload={upload} />
 			</div>
 		</div>
 	);

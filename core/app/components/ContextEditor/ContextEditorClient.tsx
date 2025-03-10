@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 
 import type { PubsId, PubTypesId } from "db/public";
 import { Skeleton } from "ui/skeleton";
-import { cn } from "utils";
 
 import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
+import { upload } from "../forms/actions";
 import { ContextAtom } from "./AtomRenderer";
 
 import "context-editor/style.css";
@@ -45,6 +45,9 @@ export const ContextEditorClient = ({
 		},
 		[pubs]
 	);
+	const signedUploadUrl = (fileName: string) => {
+		return upload(pubId, fileName);
+	};
 
 	const memoEditor = useMemo(() => {
 		return (
@@ -62,6 +65,7 @@ export const ContextEditorClient = ({
 				disabled={disabled}
 				className={className}
 				hideMenu={hideMenu}
+				upload={signedUploadUrl}
 			/>
 		);
 	}, [pubs, pubTypes, disabled]);
