@@ -179,6 +179,9 @@ const triggerAction = async (
 		logger.error({
 			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${pubId}`,
 		});
+		if (e instanceof Error) {
+			logger.error({ message: e.message });
+		}
 	}
 };
 
