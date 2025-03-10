@@ -516,7 +516,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 														Articles: [
 															{
 																value: "",
-																alsoAsChild: true,
 																pub: {
 																	value: "",
 																	id: articleId,
