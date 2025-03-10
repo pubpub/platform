@@ -88,6 +88,27 @@ export const createRule = (props: NewRules) => autoRevalidate(db.insertInto("rul
 export const removeRule = (ruleId: RulesId) =>
 	autoRevalidate(db.deleteFrom("rules").where("id", "=", ruleId));
 
+const getFullPath = (
+	pathResult: { isCycle: boolean; id: ActionInstancesId; path: ActionInstancesId[] },
+	watchedActionId: ActionInstancesId,
+	toBeRunActionId: ActionInstancesId
+): ActionInstancesId[] => {
+	// for MAX_STACK_DEPTH issues, or for direct cycles, show the full path
+	if (!pathResult.isCycle || pathResult.id === watchedActionId) {
+		return [watchedActionId, toBeRunActionId, ...pathResult.path];
+	}
+
+	// indirect cycle (watchedActionId -> toBeRunActionId -> path -> (some node in path))
+	const cycleIndex = pathResult.path.findIndex((id) => id === pathResult.id);
+
+	if (cycleIndex !== -1) {
+		return [watchedActionId, toBeRunActionId, ...pathResult.path.slice(0, cycleIndex + 1)];
+	}
+
+	// fallback - shouldn't happen but just in case
+	return [watchedActionId, toBeRunActionId, ...pathResult.path];
+};
+
 /**
  * The maximum number of action instances that can be in a sequence in a single stage.
  * TODO: make this trackable across stages
@@ -95,13 +116,8 @@ export const removeRule = (ruleId: RulesId) =>
 export const MAX_STACK_DEPTH = 10;
 
 /**
- * Checks if adding a rule would create a cycle, or else adding it would create
+ * checks if adding a rule would create a cycle, or else adding it would create
  * a sequence exceeding the MAXIMUM_STACK_DEPTH
- *
- * This is a recursive function that checks if there is a path from the watched action to the toBeRun action.
- * If there is, it returns the path and a flag indicating that a cycle would be created.
- * Otherwise, it returns false.
- *
  */
 async function wouldCreateCycle(
 	toBeRunActionId: ActionInstancesId,
@@ -112,7 +128,7 @@ async function wouldCreateCycle(
 	| { hasCycle: false; exceedsMaxDepth: true; path: ActionInstances[] }
 	| { hasCycle: false; exceedsMaxDepth: false; path?: never }
 > {
-	// Check if there's a path from toBeRunActionId back to watchedActionId (cycle)
+	// check if there's a path from toBeRunActionId back to watchedActionId (cycle)
 	// or if any path would exceed MAX_STACK_DEPTH
 	const result = await db
 		.withRecursive("action_path", (cte) =>
@@ -145,9 +161,9 @@ async function wouldCreateCycle(
 							),
 						])
 						.where((eb) =>
-							// Continue recursion if:
-							// 1. We haven't found a cycle yet
-							// 2. We haven't exceeded MAX_STACK_DEPTH
+							// continue recursion if:
+							// 1. we haven't found a cycle yet
+							// 2. we haven't exceeded MAX_STACK_DEPTH
 							eb.and([
 								eb("action_path.isCycle", "=", false),
 								eb("action_path.depth", "<=", maxStackDepth),
@@ -158,9 +174,9 @@ async function wouldCreateCycle(
 		.selectFrom("action_path")
 		.select(["id", "path", "depth", "isCycle"])
 		.where((eb) =>
-			// Find either:
-			// 1. A path that creates a cycle (id = watchedActionId or id already in path)
-			// 2. A path that would exceed MAX_STACK_DEPTH when adding the new rule
+			// find either:
+			// 1. a path that creates a cycle (id = watchedActionId or id already in path)
+			// 2. a path that would exceed MAX_STACK_DEPTH when adding the new rule
 			eb.or([eb("isCycle", "=", true), eb("depth", ">=", maxStackDepth)])
 		)
 		.orderBy(["isCycle desc", "depth desc"])
@@ -168,7 +184,6 @@ async function wouldCreateCycle(
 		.execute();
 
 	if (result.length === 0) {
-		// No issues found
 		return {
 			hasCycle: false,
 			exceedsMaxDepth: false,
@@ -177,34 +192,7 @@ async function wouldCreateCycle(
 
 	const pathResult = result[0];
 
-	// Construct the full path
-	let fullPath: ActionInstancesId[];
-
-	if (pathResult.isCycle) {
-		// For cycles, include the watchedActionId at the beginning to show the complete cycle
-		if (pathResult.id === watchedActionId) {
-			// Direct cycle: watchedActionId -> toBeRunActionId -> watchedActionId
-			fullPath = [watchedActionId, toBeRunActionId, watchedActionId];
-		} else {
-			// Indirect cycle: watchedActionId -> toBeRunActionId -> path -> (some node in path)
-			// Find where the cycle occurs
-			const cycleIndex = pathResult.path.findIndex((id) => id === pathResult.id);
-			if (cycleIndex !== -1) {
-				// Include only the part of the path that forms the cycle
-				fullPath = [
-					watchedActionId,
-					toBeRunActionId,
-					...pathResult.path.slice(0, cycleIndex + 1),
-				];
-			} else {
-				// Fallback - shouldn't happen but just in case
-				fullPath = [watchedActionId, toBeRunActionId, ...pathResult.path];
-			}
-		}
-	} else {
-		// For MAX_STACK_DEPTH issues, show the full path that would be created
-		fullPath = [watchedActionId, toBeRunActionId, ...pathResult.path];
-	}
+	const fullPath = getFullPath(pathResult, watchedActionId, toBeRunActionId);
 
 	// Get the action instances for the path
 	const actionInstances = await db
@@ -238,7 +226,6 @@ async function wouldCreateCycle(
 		  };
 }
 
-// Function to actually create the rule after checking for cycles
 export async function createRuleWithCycleCheck(
 	data: {
 		event: Event;
@@ -259,7 +246,7 @@ export async function createRuleWithCycleCheck(
 		}
 	}
 
-	// Only check for cycles if this is an action event with a watched action
+	// only check for cycles if this is an action event with a watched action
 	if (
 		(data.event === Event.actionSucceeded || data.event === Event.actionFailed) &&
 		data.watchedActionId

@@ -40,7 +40,6 @@ export const scheduleActionInstances = async (
 	}
 
 	const validRules = rules
-
 		.filter(
 			(rule): rule is typeof rule & SchedulableRule =>
 				rule.event === Event.actionFailed ||
@@ -60,16 +59,6 @@ export const scheduleActionInstances = async (
 			duration: rule.config?.duration || 0,
 			interval: rule.config?.interval || "minute",
 		}));
-
-	// if (!validRules.length) {
-	// 	logger.debug({
-	// 		msg: "No action instances connected to a pubInStageForDuration rule found for pub",
-	// 		pubId,
-	// 		stageId,
-	// 		instances,
-	// 	});
-	// 	return;
-	// }
 
 	const results = await Promise.all(
 		validRules.flatMap(async (rule) => {
