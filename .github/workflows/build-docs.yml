@@ -1,0 +1,80 @@
+name: Build Docs
+
+on:
+    workflow_call:
+        inputs:
+            preview:
+                type: boolean
+                required: true
+
+jobs:
+    build-docs:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              with:
+                  # necessary in order to show latest updates in docs
+                  fetch-depth: 0
+              uses: actions/checkout@v4
+
+            - name: Install Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22.13.1
+
+            - uses: pnpm/action-setup@v4
+              name: Install pnpm
+              with:
+                  run_install: false
+
+            - name: Get pnpm store directory
+              id: get-store-path
+              shell: bash
+              run: |
+                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+            - name: Setup pnpm cache
+              uses: actions/cache@v4
+              with:
+                  path: ${{ steps.get-store-path.outputs.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+
+            # - name: Cache turbo
+            #   uses: actions/cache@v4
+            #   with:
+            #       path: .turbo
+            #       key: ${{ runner.os }}-turbo-${{ github.sha }}
+            #       restore-keys: |
+            #           ${{ runner.os }}-turbo-
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --prefer-offline
+
+            - name: set pr number if preview
+              id: set-pr-number
+              if: inputs.preview == true
+              run: |
+                  echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+
+            - name: Build docs
+              env:
+                  PR_NUMBER: ${{ steps.set-pr-number.outputs.PR_NUMBER }}
+              run: pnpm --filter docs build
+
+            - name: Deploy docs main 🚀
+              if: inputs.preview == false
+              uses: JamesIves/github-pages-deploy-action@v4
+              with:
+                  folder: docs/out
+                  branch: gh-pages
+                  clean-exclude: pr-preview
+                  force: false
+
+            - name: Deploy docs preview
+              if: inputs.preview == true
+              uses: rossjrw/pr-preview-action@v1
+              with:
+                  source-dir: docs/out
+                  action: deploy

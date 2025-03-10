@@ -32,17 +32,17 @@ pnpm --filter db migrate-dev
 
 If you have added a new table, make sure to add
 
-```ts
+```ts filename="/packages/db/src/public.ts"
 export * from "./tableName";
 ```
 
-to `src/public.ts`, otherwise you will not be able to import it.
+to `/packages/db/src/public.ts`, otherwise you will not be able to import it.
 
 ## Special hooks
 
 Because `kanel` is a bit messy, we have a few special hooks to make it easier to work with.
 
-See `src/kanel` for more details.
+See `packages/db/src/kanel` for more details.
 
 ## Adding extra types you want to use
 

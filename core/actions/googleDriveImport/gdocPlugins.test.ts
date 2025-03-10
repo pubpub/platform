@@ -28,6 +28,7 @@ import {
 	structureInlineCode,
 	structureInlineMath,
 	structureReferences,
+	structureTables,
 	structureVideos,
 	tableToObjectArray,
 } from "./gdocPlugins";
@@ -1503,6 +1504,78 @@ test("appendFigureAttributes", async () => {
 		.use(structureImages)
 		.use(appendFigureAttributes)
 		.use(removeEmptyFigCaption)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("Structure Tables", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<table>
+					<tbody>
+						<tr>
+							<td>A</td>
+							<td>B</td>
+						</tr>
+						<tr>
+							<td>C and then <sup>2</sup></td>
+							<td>D</td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tr>
+						<td>Type</td>
+						<td>Caption</td>
+					</tr>
+					<tr>
+						<td>Table</td>
+						<td>
+							<p><span>Elephants</span></p>
+							<p><em><span>Ca<sup>t</sup>s</span></em></p>
+						</td>
+					</tr>
+				</table>
+				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<figure data-figure-type="table">
+					<table>
+						<tbody>
+							<tr>
+								<td>A</td>
+								<td>B</td>
+							</tr>
+							<tr>
+								<td>C and then <sup>2</sup></td>
+								<td>D</td>
+							</tr>
+						</tbody>
+					</table>
+					<figcaption>
+						<p><span>Elephants</span></p>
+						<p><em><span>Ca<sup>t</sup>s</span></em></p>
+					</figcaption>
+				</figure>
+				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
+			</body>
+		</html>
+		`;
+
+	const result = await rehype()
+		.use(structureTables)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {
