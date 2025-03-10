@@ -49,7 +49,6 @@ type Props = {
 	}[];
 };
 
-// Action selector component to be reused
 const ActionSelector = ({
 	fieldProps,
 	actionInstances,
@@ -204,21 +203,20 @@ export const StagePanelRuleCreator = (props: Props) => {
 	const selectedActionInstanceId = form.watch("actionInstanceId");
 	const watchedActionInstanceId = form.watch("watchedActionInstanceId");
 
-	// For action chaining events, filter out self-references
+	// for action chaining events, filter out self-references
 	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;
 
-	// Get disallowed events based on current configuration
 	const getDisallowedEvents = useCallback(() => {
 		if (!selectedActionInstanceId) return [];
 
 		return props.rules
 			.filter((rule) => {
-				// For regular events, disallow if same action+event already exists
+				// for regular events, disallow if same action+event already exists
 				if (rule.event !== Event.actionSucceeded && rule.event !== Event.actionFailed) {
 					return rule.actionInstance.id === selectedActionInstanceId;
 				}
 
-				// For action chaining events, allow multiple rules with different watched actions
+				// for action chaining events, allow multiple rules with different watched actions
 				return (
 					rule.actionInstance.id === selectedActionInstanceId &&
 					rule.event === event &&
