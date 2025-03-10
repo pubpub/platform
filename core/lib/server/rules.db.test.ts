@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, expectTypeOf, it } from "vitest";
+import { beforeAll, describe, expect, expectTypeOf, it, vi } from "vitest";
 
 import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
 
@@ -47,6 +47,11 @@ const seed = createSeed({
 				"3": {
 					action: Action.log,
 					name: "3",
+					config: {},
+				},
+				"4": {
+					action: Action.log,
+					name: "4",
 					config: {},
 				},
 			},
@@ -185,6 +190,21 @@ describe("rules.db", () => {
 					config: {},
 				})
 			).resolves.not.toThrow();
+		});
+
+		it("should throw a RuleMaxDepthError if the rule would exceed the maximum stack depth", async () => {
+			const { createRuleWithCycleCheck, RuleMaxDepthError } = await import("./rules");
+			await expect(
+				createRuleWithCycleCheck(
+					{
+						event: Event.actionSucceeded,
+						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
+						watchedActionId: community.stages["Stage 1"].actions["4"].id,
+						config: {},
+					},
+					3
+				)
+			).rejects.toThrow(RuleMaxDepthError);
 		});
 	});
 });

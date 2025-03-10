@@ -20,9 +20,9 @@ import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { isClientException, isClientExceptionOptions } from "~/lib/serverActions";
+import { MAX_STACK_DEPTH } from "~/lib/server/rules";
+import { isClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
-import { isScheduableRuleEvent } from "../types";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
 import { scheduleActionInstances } from "./scheduleActionInstance";
@@ -257,8 +257,6 @@ const _runActionInstance = async (
 		};
 	}
 };
-
-const MAX_STACK_DEPTH = 10 as const;
 
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	if (args.stack.length > MAX_STACK_DEPTH) {
