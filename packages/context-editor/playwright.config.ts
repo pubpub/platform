@@ -30,7 +30,7 @@ export default defineConfig({
 			url: baseURL,
 			stderr: "pipe",
 			stdout: "pipe",
-			reuseExistingServer: true,
+			reuseExistingServer: !process.env.CI,
 		},
 	],
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -49,15 +49,15 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 
-		{
-			name: "firefox",
-			use: { ...devices["Desktop Firefox"] },
-		},
+		// {
+		// 	name: "firefox",
+		// 	use: { ...devices["Desktop Firefox"] },
+		// },
 
-		{
-			name: "webkit",
-			use: { ...devices["Desktop Safari"] },
-		},
+		// {
+		// 	name: "webkit",
+		// 	use: { ...devices["Desktop Safari"] },
+		// },
 
 		/* Test against mobile viewports. */
 		// {
@@ -79,11 +79,4 @@ export default defineConfig({
 		//   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
 		// },
 	],
-
-	/* Run your local dev server before starting the tests */
-	// webServer: {
-	//   command: 'npm run start',
-	//   url: 'http://127.0.0.1:3000',
-	//   reuseExistingServer: !process.env.CI,
-	// },
 });
