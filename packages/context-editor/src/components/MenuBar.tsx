@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import React, { Fragment } from "react";
 import { usePluginViewContext } from "@prosemirror-adapter/react";
-import { Bold, Code, CodeSquare, Italic, Quote, Radical, SquareRadical } from "lucide-react";
+import { Bold, Code, CodeSquare, Italic, Link, Quote, Radical, SquareRadical } from "lucide-react";
 
 import { Button } from "ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
@@ -21,7 +21,7 @@ import {
 	heading6Toggle,
 	paragraphToggle,
 } from "../commands/blocks";
-import { codeToggle, emToggle, strongToggle } from "../commands/marks";
+import { codeToggle, emToggle, linkToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 
 type MenuItem = {
@@ -50,6 +50,7 @@ const menuBlocks: MenuItem[][] = [
 			command: emToggle,
 		},
 	],
+	[{ key: "link", name: "Link", icon: <Link {...iconProps} />, command: linkToggle }],
 	[
 		{
 			key: "blockquote",
