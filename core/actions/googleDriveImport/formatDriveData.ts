@@ -56,15 +56,17 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 		.use(() => async (tree: Root) => {
 			const assetUrls: { [key: string]: string } = {};
 			visit(tree, "element", (node: any) => {
-				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const hasSrc = ["img", "video", "audio", "source"].includes(node.tagName);
 				const isDownload =
 					node.tagName === "a" && node.properties.className === "file-button";
 				if (hasSrc || isDownload) {
 					const propertyKey = hasSrc ? "src" : "href";
 					const originalAssetUrl = node.properties[propertyKey];
-					const urlObject = new URL(originalAssetUrl);
-					if (urlObject.hostname !== "pubpub.org") {
-						assetUrls[originalAssetUrl] = "";
+					if (originalAssetUrl) {
+						const urlObject = new URL(originalAssetUrl);
+						if (urlObject.hostname !== "pubpub.org") {
+							assetUrls[originalAssetUrl] = "";
+						}
 					}
 				}
 			});
@@ -226,11 +228,37 @@ export const formatDriveData = async (
 							: comment.commenter && comment.commenter.orcid
 								? `https://orcid.org/${comment.commenter.orcid}`
 								: null;
+					const convertDiscussionContent = (content: any) => {
+						const traverse = (node: any) => {
+							if (node.type === "image") {
+								return { ...node, attrs: { ...node.attrs, src: node.attrs.url } };
+							}
+							if (node.type === "file") {
+								return {
+									type: "paragraph",
+									content: [
+										{
+											text: node.attrs.fileName,
+											type: "text",
+											marks: [
+												{ type: "link", attrs: { href: node.attrs.url } },
+											],
+										},
+									],
+								};
+							}
+							if (node.content) {
+								return { ...node, content: node.content.map(traverse) };
+							}
+							return node;
+						};
+						return traverse(content);
+					};
 					const prosemirrorToMarkdown = (content: any): string => {
-						const doc = Node.fromJSON(schema, content);
+						const convertedContent = convertDiscussionContent(content);
+						const doc = Node.fromJSON(schema, convertedContent);
 						return defaultMarkdownSerializer.serialize(doc);
 					};
-
 					const markdownContent = prosemirrorToMarkdown(comment.content);
 					const commentObject: any = {
 						id: comment.id,

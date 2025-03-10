@@ -210,6 +210,137 @@ export const baseNodes: { [key: string]: NodeSpec } = {
 			return ["br"] as DOMOutputSpec;
 		},
 	},
+	image: {
+		atom: true,
+		reactive: true,
+		attrs: {
+			id: { default: null },
+			url: { default: null },
+			src: { default: null },
+			size: { default: 50 }, // number as percentage
+			align: { default: "center" },
+			caption: { default: "" },
+			altText: { default: "" },
+			hideLabel: { default: false },
+			fullResolution: { default: false },
+			href: { default: null },
+		},
+		parseDOM: [
+			{
+				tag: "figure",
+				getAttrs: (node) => {
+					if (node.getAttribute("data-node-type") !== "image") {
+						return false;
+					}
+					return {
+						id: node.getAttribute("id") || null,
+						url: node.getAttribute("data-url") || null,
+						caption: node.getAttribute("data-caption") || "",
+						size: Number(node.getAttribute("data-size")) || 50,
+						align: node.getAttribute("data-align") || "center",
+						altText: node.getAttribute("data-alt-text") || "",
+						hideLabel: node.getAttribute("data-hide-label") || "",
+						href: node.getAttribute("data-href") || null,
+					};
+				},
+			},
+		],
+		toDOM: (node) => {
+			const { url, align, id, altText, caption, size, hideLabel, href } = node.attrs;
+			return [
+				"figure",
+				{
+					...(id && { id }),
+					"data-node-type": "image",
+					"data-size": size,
+					"data-align": align,
+					"data-url": url,
+					"data-caption": caption,
+					"data-href": href,
+					"data-alt-text": altText,
+					"data-hide-label": hideLabel,
+				},
+				[
+					"img",
+					{
+						src: url,
+						alt: altText || "",
+					},
+				],
+			] as unknown as DOMOutputSpec;
+		},
+		inline: false,
+		group: "block",
+	},
+	file: {
+		atom: true,
+		attrs: {
+			id: { default: null },
+			url: { default: null },
+			fileName: { default: null },
+			fileSize: { default: null },
+			caption: { default: "" },
+		},
+		parseDOM: [
+			{
+				tag: "figure",
+				getAttrs: (node) => {
+					if (node.getAttribute("data-node-type") !== "file") {
+						return false;
+					}
+					return {
+						id: node.getAttribute("id") || null,
+						url: node.getAttribute("data-url") || null,
+						fileName: node.getAttribute("data-file-name") || null,
+						fileSize: node.getAttribute("data-file-size") || null,
+						caption: node.getAttribute("data-caption") || "",
+					};
+				},
+			},
+		],
+		toDOM: (node: Node) => {
+			const attrs = node.attrs;
+			return [
+				"p",
+				[
+					"a",
+					{
+						href: attrs.url,
+						target: "_blank",
+						rel: "noopener noreferrer",
+						download: attrs.fileName,
+						class: `download`,
+					},
+					attrs.fileName,
+				],
+			];
+		},
+		inline: false,
+		group: "block",
+	},
+	code_block: {
+		content: "text*",
+		group: "block",
+		attrs: {
+			lang: { default: null },
+			id: { default: null },
+		},
+		code: true,
+		selectable: false,
+		parseDOM: [
+			{
+				tag: "pre",
+				getAttrs: (node) => {
+					return {
+						id: (node as Element).getAttribute("id"),
+					};
+				},
+				preserveWhitespace: "full" as const,
+			},
+		],
+		toDOM: (node: Node) =>
+			["pre", { ...(node.attrs.id && { id: node.attrs.id }) }, ["code", 0]] as DOMOutputSpec,
+	},
 };
 
 export const baseMarks = {
