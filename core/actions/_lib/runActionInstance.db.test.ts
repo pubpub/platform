@@ -83,6 +83,7 @@ describe("runActionInstance", () => {
 			pubId: pubs[0].id,
 			event: Event.pubEnteredStage,
 			communityId: community.id,
+			stack: [],
 		});
 
 		expect(result).toEqual({
@@ -133,6 +134,7 @@ describe("runActionInstance", () => {
 				docUrl: fakeDocURL,
 			},
 			communityId: community.id,
+			stack: [],
 		});
 
 		expect(result).toEqual({
