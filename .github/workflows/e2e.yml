@@ -98,6 +98,13 @@ jobs:
             - name: Run playwright on context-editor
               run: pnpm --filter context-editor run playwright:test
 
+            - uses: actions/upload-artifact@v4
+              if: ${{ failure() || cancelled() }}
+              with:
+                  name: playwright-snapshots-editor
+                  path: packages/context-editor/test-results
+                  retention-days: 10
+
             - name: Start up core etc
               run: pnpm integration:setup
               env:
