@@ -1072,16 +1072,25 @@ export const formatFigureReferences = () => (tree: Root) => {
 		if (node.tagName === "table") {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
-			const validFigureTypes = ["image", "video", "audio", "file", "iframe", "table", "math"];
+			const aggregateFigureTypes = ["image", "audio", "file", "iframe"];
+			const independentFigureTypes = ["video", "table", "math"];
+			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 			if (validFigureTypes.includes(tableType)) {
 				tableData.forEach((data: any) => {
 					if (data.hidelabel?.toLowerCase() !== "true") {
-						figureCount[tableType] = (figureCount[tableType] || 0) + 1;
-						figureCount.total = (figureCount.total || 0) + 1;
+						const isAggregateType = aggregateFigureTypes.includes(tableType);
+						if (isAggregateType) {
+							figureCount.total = (figureCount.total || 0) + 1;
+						} else {
+							figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+						}
 						figuresById[data.id] = {
 							type: tableType,
-							typeCount: figureCount[tableType],
-							totalCount: figureCount.total,
+							figureCount: isAggregateType
+								? figureCount.total
+								: figureCount[tableType],
+							// typeCount: figureCount[tableType],
+							// totalCount: figureCount.total,
 						};
 					}
 				});
@@ -1114,8 +1123,10 @@ export const formatFigureReferences = () => (tree: Root) => {
 						tagName: "a",
 						properties: {
 							href: `#${figureId}`,
-							dataFigureTotalCount: figuresById[figureId].totalCount,
-							dataFigureTypeCount: figuresById[figureId].typeCount,
+							dataFigureCount: figuresById[figureId].figureCount,
+							// dataFigureTypeCount: figuresById[figureId].typeCount,
+							// dataFigureTotalCountMinusTableVideo:
+							// 	figuresById[figureId].totalCountMinusTableVideo,
 						},
 						children: [],
 					});
@@ -1146,16 +1157,26 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	/*
 	 */
 	const figureCount: { [key: string]: number } = {};
+	const aggregateFigureTypes = ["img", "audio", "file", "iframe"];
+	const independentFigureTypes = ["video", "table", "math"];
+	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 	visit(tree, "element", (node: any, index: any, parent: any) => {
 		if (node.tagName === "figure" && node.properties.dataFigureType !== "table") {
 			const tableType = node.properties.dataFigureType;
-			if (tableType && node.properties.dataHideLabel?.toLowerCase() !== "true") {
-				figureCount[tableType] = (figureCount[tableType] || 0) + 1;
-				figureCount.total = (figureCount.total || 0) + 1;
+			if (
+				validFigureTypes.includes(tableType) &&
+				node.properties.dataHideLabel?.toLowerCase() !== "true"
+			) {
+				const isAggregateType = aggregateFigureTypes.includes(tableType);
+				if (isAggregateType) {
+					figureCount.total = (figureCount.total || 0) + 1;
+				} else {
+					figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+				}
+
 				node.properties = {
 					...node.properties,
-					dataFigureTotalCount: figureCount.total,
-					dataFigureTypeCount: figureCount[tableType],
+					dataFigureCount: isAggregateType ? figureCount.total : figureCount[tableType],
 				};
 			}
 		}
