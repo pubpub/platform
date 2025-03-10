@@ -118,7 +118,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 			}
 
 			return {
-				value: null,
+				value: "",
 				pub,
 			};
 		}) as any;
@@ -515,7 +515,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 													relatedPubs: {
 														Articles: [
 															{
-																value: null,
+																value: "",
 																pub: {
 																	value: "",
 																	id: articleId,
