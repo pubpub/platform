@@ -20,14 +20,16 @@ import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { isClientException } from "~/lib/serverActions";
+import { isClientException, isClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
 import { isScheduableRuleEvent } from "../types";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
 import { scheduleActionInstances } from "./scheduleActionInstance";
 
-export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
+export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
+	stack: ActionRunsId[];
+};
 
 export type RunActionInstanceArgs = {
 	pubId: PubsId;
@@ -43,6 +45,8 @@ const _runActionInstance = async (
 	trx = db
 ): Promise<ActionInstanceRunResult> => {
 	const isActionUserInitiated = "userId" in args;
+
+	const stack = [...args.stack, args.actionRunId];
 
 	const pubPromise = getPubsWithRelatedValuesAndChildren(
 		{
@@ -87,6 +91,7 @@ const _runActionInstance = async (
 		return {
 			error: "Pub not found",
 			cause: pubResult.reason,
+			stack,
 		};
 	}
 
@@ -95,6 +100,7 @@ const _runActionInstance = async (
 		return {
 			error: "Action instance not found",
 			cause: actionInstanceResult.reason,
+			stack,
 		};
 	}
 
@@ -111,12 +117,14 @@ const _runActionInstance = async (
 		return {
 			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
 			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+			stack,
 		};
 	}
 
 	if (!actionInstance.action) {
 		return {
 			error: "Action not found",
+			stack,
 		};
 	}
 
@@ -126,6 +134,7 @@ const _runActionInstance = async (
 	if (!actionRun || !action) {
 		return {
 			error: "Action not found",
+			stack,
 		};
 	}
 
@@ -135,6 +144,7 @@ const _runActionInstance = async (
 		const err = {
 			error: "Invalid config",
 			cause: parsedConfig.error,
+			stack,
 		};
 		if (args.actionInstanceArgs) {
 			// Check if the args passed can substitute for missing or invalid config
@@ -154,6 +164,7 @@ const _runActionInstance = async (
 			title: "Invalid pub config",
 			cause: parsedArgs.error,
 			error: "The action was run with invalid parameters",
+			stack,
 		};
 	}
 
@@ -207,15 +218,26 @@ const _runActionInstance = async (
 			actionRunId: args.actionRunId,
 		});
 
+		if (isClientExceptionOptions(result)) {
+			await scheduleActionInstances({
+				pubId: args.pubId,
+				stageId: actionInstance.stageId,
+				event: Event.actionFailed,
+				stack,
+				watchedActionInstanceId: actionInstance.id,
+			});
+			return { ...result, stack };
+		}
+
 		await scheduleActionInstances({
 			pubId: args.pubId,
 			stageId: actionInstance.stageId,
 			event: Event.actionSucceeded,
-			stack: [...args.stack, args.actionRunId],
+			stack,
 			watchedActionInstanceId: actionInstance.id,
 		});
 
-		return result;
+		return { ...result, stack };
 	} catch (error) {
 		captureException(error);
 		logger.error(error);
@@ -224,18 +246,27 @@ const _runActionInstance = async (
 			pubId: args.pubId,
 			stageId: actionInstance.stageId,
 			event: Event.actionFailed,
-			stack: [...args.stack, args.actionRunId],
+			stack,
 			watchedActionInstanceId: actionInstance.id,
 		});
 
 		return {
 			title: "Failed to run action",
 			error: error.message,
+			stack,
 		};
 	}
 };
 
+const MAX_STACK_DEPTH = 10 as const;
+
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
+	if (args.stack.length > MAX_STACK_DEPTH) {
+		throw new Error(
+			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
+		);
+	}
+
 	const isActionUserInitiated = "userId" in args;
 
 	// we need to first create the action run,
@@ -278,6 +309,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 			title: "Action run failed",
 			error: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
 			cause: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
+			stack: args.stack,
 		};
 
 		await autoRevalidate(
@@ -303,7 +335,9 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 
 	const result = await _runActionInstance({ ...args, actionRunId: actionRun.id });
 
-	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success;
+	const status = isClientExceptionOptions(result)
+		? ActionRunStatus.failure
+		: ActionRunStatus.success;
 
 	// update the action run with the result
 	await autoRevalidate(
