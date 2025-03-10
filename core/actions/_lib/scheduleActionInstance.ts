@@ -1,5 +1,3 @@
-// "use server";
-
 import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
