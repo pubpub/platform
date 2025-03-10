@@ -7,6 +7,7 @@ import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
 import heading from "./heading";
+import link from "./link";
 import math from "./math";
 import paragraph from "./paragraph";
 import strong from "./strong";
@@ -28,6 +29,7 @@ export const baseSchema = new Schema({
 		strong,
 		em,
 		code: code.codeInline,
+		link,
 	},
 	topNode: "doc",
 });
