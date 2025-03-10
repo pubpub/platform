@@ -406,7 +406,6 @@ export const addRule = defineServerAction(async function addRule({
 				cause: error,
 			};
 		}
-		console.log(error);
 
 		return {
 			error: "Failed to add rule",

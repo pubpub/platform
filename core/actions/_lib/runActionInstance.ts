@@ -238,10 +238,6 @@ const _runActionInstance = async (
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	const isActionUserInitiated = "userId" in args;
 
-	console.log("+++++++++++");
-	console.log(args);
-	console.log("+++++++++++");
-
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
@@ -309,9 +305,6 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 
 	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success;
 
-	console.log("---------------");
-	console.log(args.scheduledActionRunId ?? actionRun.id);
-	console.log("---------------");
 	// update the action run with the result
 	await autoRevalidate(
 		trx

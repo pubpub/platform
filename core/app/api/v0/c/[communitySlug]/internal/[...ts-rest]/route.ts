@@ -21,9 +21,6 @@ const handler = createNextHandler(
 	api.internal,
 	{
 		triggerAction: async ({ headers, params, body }) => {
-			console.log("---------------");
-			console.log(body);
-			console.log("---------------");
 			checkAuthentication(headers.authorization);
 			const { pubId, event, stack, scheduledActionRunId } = body;
 

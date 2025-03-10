@@ -95,7 +95,6 @@ export default async function Page(props: {
 			])
 			.orderBy("action_runs.createdAt", "desc")
 	).execute()) as ActionRun[];
-	console.log(actionRuns);
 
 	return (
 		<>
