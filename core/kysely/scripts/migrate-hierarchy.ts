@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 import pluralize from "pluralize";
 
 import type { CommunitiesId, PubsId } from "db/public";
@@ -54,6 +56,11 @@ const migrateHierarchy = async () => {
 
 	console.log(`Migrating ${relations.length} parent-child relationship(s) to relation fields:`);
 
+	if (relations.length === 0) {
+		console.log("No parent-child relations to migrate.");
+		return;
+	}
+
 	const relationsByCommunityId = makeRelationsByCommunityId(relations);
 
 	const relationFieldInsertExpressions = Array.from(relationsByCommunityId.entries()).flatMap(
@@ -99,6 +106,11 @@ const migrateHierarchy = async () => {
 				value: null,
 			}));
 
+		if (relationValueInsertExpressions.length === 0) {
+			console.log("No relation values to create.");
+			return;
+		}
+
 		console.log(`Creating ${relationValueInsertExpressions.length} relation values`);
 
 		// upsert relation values
@@ -116,6 +128,7 @@ migrateHierarchy()
 	.then(() => {
 		console.log("Successfully migrated hierarchy.");
 	})
-	.catch(() => {
+	.catch((error) => {
 		console.error("Failed to migrate hierarchy. Any database changes were rolled back.");
+		console.error(error);
 	});
