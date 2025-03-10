@@ -56,12 +56,14 @@ const ActionSelector = ({
 	label,
 	placeholder,
 	disabledActionId,
+	dataTestIdPrefix,
 }: {
 	fieldProps: Omit<ControllerRenderProps<CreateRuleSchema, "watchedActionInstanceId">, "name">;
 	actionInstances: ActionInstances[];
 	label: string;
 	placeholder: string;
 	disabledActionId?: string;
+	dataTestIdPrefix?: string;
 }) => {
 	return (
 		<FormItem>
@@ -71,7 +73,7 @@ const ActionSelector = ({
 				defaultValue={fieldProps.value}
 				value={fieldProps.value}
 			>
-				<SelectTrigger>
+				<SelectTrigger data-testid={`${dataTestIdPrefix}-select-trigger`}>
 					<SelectValue placeholder={placeholder} />
 				</SelectTrigger>
 				<SelectContent>
@@ -85,6 +87,7 @@ const ActionSelector = ({
 								value={instance.id}
 								className="hover:bg-gray-100"
 								disabled={isDisabled}
+								data-testid={`${dataTestIdPrefix}-select-item-${instance.name}`}
 							>
 								<div className="flex flex-row items-center gap-x-2">
 									<action.icon size="12" />
@@ -234,7 +237,9 @@ export const StagePanelRuleCreator = (props: Props) => {
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>
-					<Button variant="secondary">Add a rule</Button>
+					<Button variant="secondary" data-testid="add-rule-button">
+						Add a rule
+					</Button>
 				</DialogTrigger>
 				<DialogContent>
 					<DialogHeader>
@@ -258,6 +263,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 											actionInstances={props.actionInstances}
 											label="Run..."
 											placeholder="Action"
+											dataTestIdPrefix="action-selector"
 										/>
 									)}
 								/>
@@ -272,22 +278,14 @@ export const StagePanelRuleCreator = (props: Props) => {
 												<>
 													<Select
 														onValueChange={(value) => {
-															// Reset watchedActionInstanceId when event changes
-															// if (
-															// 	value === Event.actionSucceeded ||
-															// 	value === Event.actionFailed
-															// ) {
-															// 	form.setValue(
-															// 		"watchedActionInstanceId",
-															// 		undefined
-															// 	);
-															// }
 															field.onChange(value);
 														}}
 														defaultValue={field.value}
 														key={field.value}
 													>
-														<SelectTrigger>
+														<SelectTrigger
+															data-testid={`event-select-trigger`}
+														>
 															<SelectValue placeholder="Event">
 																{field.value
 																	? humanReadableEvent(
@@ -302,6 +300,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 																	key={event}
 																	value={event}
 																	className="hover:bg-gray-100"
+																	data-testid={`event-select-item-${event}`}
 																>
 																	{humanReadableEvent(event)}{" "}
 																</SelectItem>
@@ -333,6 +332,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 												placeholder="Select action to watch"
 												key={field.value}
 												disabledActionId={selectedActionInstanceId} // Prevent self-references
+												dataTestIdPrefix="watched-action"
 											/>
 										)}
 									/>
