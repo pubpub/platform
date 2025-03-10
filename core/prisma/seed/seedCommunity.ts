@@ -1150,8 +1150,6 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
-	// as StagesWithPermissionsByName<S, typeof stageMemberships>;
-
 	const possibleRules = consolidatedStages.flatMap(
 		(stage, idx) =>
 			stage.rules?.map((rule) => ({

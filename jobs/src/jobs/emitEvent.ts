@@ -147,9 +147,6 @@ const triggerAction = async (
 		...context
 	} = payload;
 
-	console.log("+++++++++++");
-	console.log(payload);
-	console.log("+++++++++++");
 	try {
 		const { status, body } = await client.triggerAction({
 			params: {
@@ -163,9 +160,6 @@ const triggerAction = async (
 				stack,
 			},
 		});
-		console.log("---------------");
-		console.log(status, body);
-		console.log("---------------");
 
 		if (status >= 400) {
 			logger.error({ msg: `API error triggering action`, body, ...context });
