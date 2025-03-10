@@ -404,9 +404,6 @@ export const baseMarks = {
 			},
 		],
 		toDOM: (mark: Mark, inline: boolean) => {
-			/* Links seem to be recieving a target attr that is a dom element */
-			/* coming from the wrong source in some interfaces. This ensures */
-			/* only strings can be a target attr. */
 			let attrs = mark.attrs;
 			if (attrs.target && typeof attrs.target !== "string") {
 				attrs = { ...attrs, target: null };
