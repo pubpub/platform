@@ -38,7 +38,6 @@ import {
 	structureReferences,
 	structureTables,
 	structureVideos,
-	tableToObjectArray,
 } from "./gdocPlugins";
 import { getAssetFile } from "./getGDriveFiles";
 
