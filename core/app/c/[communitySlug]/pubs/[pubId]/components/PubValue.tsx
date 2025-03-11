@@ -19,12 +19,20 @@ import { FileUploadPreview } from "~/app/components/forms/FileUpload";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
 import { PubValues } from "./PubValues";
 
-export const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
+export const PubValue = ({
+	value,
+	relatedPubNode,
+}: {
+	value: FullProcessedPub["values"][number];
+	relatedPubNode: ReactNode;
+}) => {
 	const [isOpen, setIsOpen] = useState(false);
 	if (value.relatedPub) {
 		const { relatedPub, ...justValue } = value;
 		const justValueElement = justValue.value ? (
-			<span className="mr-2 italic">{<PubValue value={justValue} />}:</span>
+			<span className="mr-2 italic">
+				{<PubValue value={justValue} relatedPubNode={relatedPubNode} />}:
+			</span>
 		) : null;
 		if (relatedPub.isCycle) {
 			return (
@@ -61,7 +69,9 @@ export const PubValue = ({ value }: { value: FullProcessedPub["values"][number] 
 				<CollapsibleContent>
 					{renderRelatedValues && (
 						<div className="ml-4">
-							<PubValues pub={relatedPub} />
+							{/* <PubValues pub={relatedPub} />
+							 */}
+							{relatedPubNode}
 						</div>
 					)}
 				</CollapsibleContent>

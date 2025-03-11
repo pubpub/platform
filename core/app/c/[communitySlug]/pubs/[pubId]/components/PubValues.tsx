@@ -4,6 +4,7 @@ import { config } from "dotenv";
 
 import type { Form } from "~/lib/server/form";
 import type { FullProcessedPub } from "~/lib/server/pub";
+import { getForm } from "~/lib/server/form";
 import { PubValue } from "./PubValue";
 
 const PubValueHeading = ({
@@ -28,25 +29,25 @@ const PubValueHeading = ({
 	}
 };
 
-// const PubValueServer = async ({ value }: { value: FullProcessedPub["values"][number] }) => {
-// 	const { relatedPub } = value;
-// 	const form = relatedPub
-// 		? await getForm({
-// 				communityId: relatedPub.communityId,
-// 				pubTypeId: relatedPub.pubTypeId,
-// 			}).executeTakeFirstOrThrow()
-// 		: undefined;
+const PubValueServer = async ({ value }: { value: FullProcessedPub["values"][number] }) => {
+	const { relatedPub } = value;
+	const form = relatedPub
+		? await getForm({
+				communityId: relatedPub.communityId,
+				pubTypeId: relatedPub.pubTypeId,
+			}).executeTakeFirstOrThrow()
+		: undefined;
 
-// 	if (value.relatedPub && form) {
-// 		return (
-// 			<PubValue
-// 				value={value}
-// 				relatedPubNode={<PubValues pub={value.relatedPub} form={form} />}
-// 			/>
-// 		);
-// 	}
-// 	return <PubValue value={value} relatedPubNode={null} />;
-// };
+	if (value.relatedPub && form) {
+		return (
+			<PubValue
+				value={value}
+				relatedPubNode={<PubValues pub={value.relatedPub} form={form} />}
+			/>
+		);
+	}
+	return <PubValue value={value} relatedPubNode={null} />;
+};
 
 const FieldBlock = ({
 	name,
@@ -67,7 +68,7 @@ const FieldBlock = ({
 				{name}
 			</PubValueHeading>
 			<div className={"ml-2"} data-testid={`${name}-value`}>
-				{values?.map((value) => <PubValue value={value} key={value.id} />)}
+				{values?.map((value) => <PubValueServer value={value} key={value.id} />)}
 			</div>
 		</div>
 	);
