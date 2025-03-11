@@ -8,7 +8,14 @@ import { expect } from "utils";
 
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
-import { db } from "../database";
+import { createDatabase } from "../database-init";
+
+const db = createDatabase({
+	url: `DATABASE_URL=postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`,
+	logLevel: "debug",
+	debug: true,
+	env: "production",
+});
 
 type Relation = {
 	parentPubId: PubsId;
