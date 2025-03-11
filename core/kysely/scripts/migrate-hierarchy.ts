@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, no-restricted-properties */
 
 import pluralize from "pluralize";
 
