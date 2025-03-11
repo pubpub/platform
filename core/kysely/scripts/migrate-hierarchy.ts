@@ -11,7 +11,7 @@ import { slugifyString } from "~/lib/string";
 import { createDatabase } from "../database-init";
 
 const db = createDatabase({
-	url: `DATABASE_URL=postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`,
+	url: `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`,
 	logLevel: "debug",
 	debug: true,
 });
