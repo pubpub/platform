@@ -3,8 +3,17 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType } from "db/public";
+import {
+	CoreSchemaType,
+	ElementType,
+	InputComponent,
+	MemberRole,
+	StructuralFormElement,
+} from "db/public";
 
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
@@ -13,54 +22,123 @@ import { MembersPage } from "./fixtures/member-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity } from "./helpers";
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-const FORM_SLUG = `playwright-test-form-${now}`;
-
-test.describe.configure({ mode: "serial" });
-
+const seed = createSeed({
+	community: {
+		name: `test community`,
+		slug: "test-community",
+	},
+	pubFields: {
+		Title: {
+			schemaName: CoreSchemaType.String,
+		},
+		Content: {
+			schemaName: CoreSchemaType.String,
+		},
+		Email: {
+			schemaName: CoreSchemaType.Email,
+		},
+	},
+	users: {
+		admin: {
+			role: MemberRole.admin,
+			password: "password",
+		},
+		user2: {
+			role: MemberRole.contributor,
+			password: "xxxx-xxxx",
+		},
+	},
+	pubTypes: {
+		Submission: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+		},
+		Evaluation: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+			Email: { isTitle: false },
+		},
+	},
+	stages: {
+		Evaluating: {},
+	},
+	pubs: [
+		{
+			pubType: "Submission",
+			values: {
+				Title: "The Activity of Snails",
+			},
+			stage: "Evaluating",
+		},
+	],
+	forms: {
+		Evaluation: {
+			slug: "evaluation",
+			pubType: "Evaluation",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Title",
+					component: InputComponent.textInput,
+					label: "Title",
+					config: {},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Content",
+					component: InputComponent.textArea,
+					label: "Content",
+					config: {},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Email",
+					label: "Email",
+					component: InputComponent.textInput,
+					config: {},
+				},
+			],
+		},
+	},
+});
+let community: CommunitySeedOutput<typeof seed>;
 let page: Page;
 
 test.beforeAll(async ({ browser }) => {
+	community = await seedCommunity(seed);
+
 	page = await browser.newPage();
-	page.on("console", async (msg) => {
-		if (msg.type() === "error") {
-			// eslint-disable-next-line no-console
-			console.error("Error:", msg, msg.location());
-		}
-	});
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
-
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
-
-	/**
-	 * Fill out everything required to make an external form:
-	 * 1. Fields
-	 * 2. Form with fields
-	 */
-	// Add email field
-	const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
-	await fieldsPage.goto();
-	await fieldsPage.addField("email", CoreSchemaType.Email);
-	// Make a form (by default has title and content)
-	const formsPage = new FormsPage(page, COMMUNITY_SLUG);
-	await formsPage.goto();
-	await formsPage.addForm("Evaluation", FORM_SLUG);
-	// We are automatically redirected to the form editor. Add email element
-	const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
-	await formEditPage.openAddForm();
-	await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:email`);
-	await formEditPage.saveForm();
-
-	// Go to the external form page
-	await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${FORM_SLUG}/fill`);
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
+	await page.goto(
+		`/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`
+	);
 });
+
+// /**
+//  * Fill out everything required to make an external form:
+//  * 1. Fields
+//  * 2. Form with fields
+//  */
+// // Add email field
+// const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+// await fieldsPage.goto();
+// await fieldsPage.addField("email", CoreSchemaType.Email);
+// // Make a form (by default has title and content)
+// const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+// await formsPage.goto();
+// await formsPage.addForm("Evaluation", FORM_SLUG);
+// // We are automatically redirected to the form editor. Add email element
+// const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+// await formEditPage.openAddForm();
+// await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:email`);
+// await formEditPage.saveForm();
+
+// Go to the external form page
+// await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${FORM_SLUG}/fill`);
+// });
 
 test.afterAll(async () => {
 	await page.close();
@@ -69,33 +147,37 @@ test.afterAll(async () => {
 test("Can create a pub from an external form", async () => {
 	const title = "new pub";
 	await expect(page.locator("h1").filter({ hasText: "Evaluation" })).toHaveCount(1);
-	await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
-	await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("new content");
-	await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
+	await page.getByTestId(`${community.community.slug}:title`).fill(title);
+	await page.getByTestId(`${community.community.slug}:content`).fill("new content");
+	await page.getByTestId(`${community.community.slug}:email`).fill("test@email.com");
 	await page.getByRole("button", { name: "Submit" }).click();
 	await expect(page.getByTestId("completed")).toHaveCount(1);
 
 	// Check the pub page that this pub was created
-	await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+	await page.goto(`/c/${community.community.slug}/pubs`);
 	await expect(page.getByRole("link", { name: title })).toHaveCount(1);
 });
 
 test.describe("Multivalue inputs", () => {
 	test("Can add multivalue inputs", async () => {
 		// test.setTimeout(60_000);
-		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		// Add a numeric array and string arrays
 		await fieldsPage.addField("Favorite numbers", CoreSchemaType.NumericArray);
 		await fieldsPage.addField("Favorite animals", CoreSchemaType.StringArray);
 		await fieldsPage.addField("Favorite fruits", CoreSchemaType.StringArray);
 		// Add these to existing form
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+		const formEditPage = new FormsEditPage(
+			page,
+			community.community.slug,
+			community.forms.Evaluation.slug
+		);
 		await formEditPage.goto();
 		await formEditPage.openAddForm();
 
 		// Radio button group with numbers
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-numbers`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:favorite-numbers`);
 		const numberElement = {
 			name: "Favorite numbers",
 			description: "Mine are odd, how about you?",
@@ -113,7 +195,7 @@ test.describe("Multivalue inputs", () => {
 
 		// Checkbox group with strings
 		await formEditPage.openAddForm();
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-animals`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:favorite-animals`);
 		const animalElement = {
 			name: "Favorite animals",
 			description: "Mine are furry, how about yours?",
@@ -132,7 +214,7 @@ test.describe("Multivalue inputs", () => {
 
 		// Select dropdown with strings
 		await formEditPage.openAddForm();
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:favorite-fruits`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:favorite-fruits`);
 		const fruitElement = {
 			name: "Favorite fruits",
 			description: "Make sure it isn't a vegetable",
@@ -162,9 +244,9 @@ test.describe("Multivalue inputs", () => {
 
 		// Fill out the form
 		const title = "multivalue";
-		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
-		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
-		await page.getByTestId(`${COMMUNITY_SLUG}:email`).fill("test@email.com");
+		await page.getByTestId(`${community.community.slug}:title`).fill(title);
+		await page.getByTestId(`${community.community.slug}:content`).fill("content");
+		await page.getByTestId(`${community.community.slug}:email`).fill("test@email.com");
 		// Radio group
 		await page.getByTestId("radio-0").click();
 		// Checkbox group
@@ -177,7 +259,7 @@ test.describe("Multivalue inputs", () => {
 		await page.getByText("Form Successfully Submitted").waitFor();
 
 		// Check the pub page to make sure the values we expect are there
-		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+		await page.goto(`/c/${community.community.slug}/pubs`);
 		await page.getByRole("link", { name: title }).click();
 		// Make sure pub details page has loaded before making assertions
 		await page.getByText("Assignee").waitFor();
@@ -193,33 +275,33 @@ test.describe("Multivalue inputs", () => {
 test.describe("Rich text editor", () => {
 	test("Can edit a rich text field", async () => {
 		// Add rich text field
-		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		await fieldsPage.addField("Rich text", CoreSchemaType.RichText);
 
 		// Add a new form
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		const formsPage = new FormsPage(page, community.community.slug);
 		formsPage.goto();
 		const formSlug = "rich-text-test";
 		await formsPage.addForm("Rich text test", formSlug);
 
-		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
+		await page.waitForURL(`/c/${community.community.slug}/forms/${formSlug}/edit`);
 
 		// Add to existing form
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
 		await formEditPage.goto();
 		await formEditPage.openAddForm();
 
 		// Add rich text field to form
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:rich-text`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:rich-text`);
 		// Save the form builder and go to external form
 		await formEditPage.saveForm();
 		await formEditPage.goToExternalForm();
 
 		// Fill out the form
 		const actualTitle = "rich text title";
-		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill("form title");
-		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		await page.getByTestId(`${community.community.slug}:title`).fill("form title");
+		await page.getByTestId(`${community.community.slug}:content`).fill("content");
 		// Rich text field
 		await page.locator(".ProseMirror").click();
 		await page.keyboard.type("@title");
@@ -229,7 +311,7 @@ test.describe("Rich text editor", () => {
 		await page.getByText("Form Successfully Submitted", { exact: true }).waitFor();
 
 		// Check the pub page to make sure the values we expect are there
-		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+		await page.goto(`/c/${community.community.slug}/pubs`);
 		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
 	});
 });
@@ -238,25 +320,25 @@ test.describe("Member select", async () => {
 	test("Can select a member", async () => {
 		// Add a member (all@pubpub.org is the only member by default)
 		const member1 = "all@pubpub.org";
-		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
+		const membersPage = new MembersPage(page, community.community.slug);
 		await membersPage.goto();
 		const { email: member2 } = await membersPage.addNewUser(faker.internet.email());
 
-		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		await fieldsPage.addField("member", CoreSchemaType.MemberId);
 
 		// Add these to a new form
 		const formSlug = "member-form";
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		const formsPage = new FormsPage(page, community.community.slug);
 		await formsPage.goto();
 		await formsPage.addForm("member form", formSlug);
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
 		await formEditPage.goto();
 
 		// Add the member field
 		await formEditPage.openAddForm();
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:member`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:member`);
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Member");
 		await formEditPage.saveFormElementConfiguration();
 
@@ -264,13 +346,13 @@ test.describe("Member select", async () => {
 		await formEditPage.saveForm();
 		await formEditPage.goToExternalForm();
 
-		const memberInput = page.getByTestId(`autocomplete-${COMMUNITY_SLUG}:member`);
+		const memberInput = page.getByTestId(`autocomplete-${community.community.slug}:member`);
 		await expect(memberInput).toHaveCount(1);
 
 		// Filling out an email should make the user show up in the dropdown
 		const title = "member test";
-		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
-		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		await page.getByTestId(`${community.community.slug}:title`).fill(title);
+		await page.getByTestId(`${community.community.slug}:content`).fill("content");
 		await memberInput.fill(member1);
 		await page.getByLabel(member1).click();
 		await expect(memberInput).toHaveValue(member1);
@@ -303,13 +385,13 @@ test.describe("Related pubs", () => {
 	test("Can add related pubs", async () => {
 		// Create a related pub we can link to
 		const relatedPubTitle = "related pub";
-		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		const pubsPage = new PubsPage(page, community.community.slug);
 		await pubsPage.goTo();
 		await pubsPage.createPub({
 			values: { title: relatedPubTitle, content: "my content" },
 		});
 
-		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
+		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		// Add a string, string array, and null related field
 		const relatedFields = [
@@ -322,16 +404,18 @@ test.describe("Related pubs", () => {
 		}
 		// Add these to a new form
 		const formSlug = "relationship-form";
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		const formsPage = new FormsPage(page, community.community.slug);
 		await formsPage.goto();
 		await formsPage.addForm("relationship form", formSlug);
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
 		await formEditPage.goto();
 
 		// Configure these 3 fields
 		for (const relatedField of relatedFields) {
 			await formEditPage.openAddForm();
-			await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:${relatedField.name}`);
+			await formEditPage.openFormElementPanel(
+				`${community.community.slug}:${relatedField.name}`
+			);
 			await page.getByRole("textbox", { name: "Label" }).first().fill(relatedField.name);
 			await formEditPage.saveFormElementConfiguration();
 		}
@@ -346,8 +430,8 @@ test.describe("Related pubs", () => {
 
 		// Fill out the form
 		const title = "pub with related fields";
-		await page.getByTestId(`${COMMUNITY_SLUG}:title`).fill(title);
-		await page.getByTestId(`${COMMUNITY_SLUG}:content`).fill("content");
+		await page.getByTestId(`${community.community.slug}:title`).fill(title);
+		await page.getByTestId(`${community.community.slug}:content`).fill("content");
 		// string related field
 		const stringRelated = page.getByTestId("related-pubs-string");
 		await stringRelated.getByRole("button", { name: "Add" }).click();
@@ -358,7 +442,7 @@ test.describe("Related pubs", () => {
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(stringRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		await stringRelated.getByRole("button", { name: "Add string" }).click();
-		await page.getByTestId(`${COMMUNITY_SLUG}:string.0.value`).fill("admin");
+		await page.getByTestId(`${community.community.slug}:string.0.value`).fill("admin");
 		// Click the button again (which now has the edited value) to 'exit' the popover
 		await stringRelated.getByRole("button", { name: "admin" }).click();
 		await expect(stringRelated.getByText("admin")).toHaveCount(1);
@@ -401,7 +485,7 @@ test.describe("Related pubs", () => {
 		await page.getByText("Form Successfully Submitted").waitFor();
 
 		// Check the pub page to make sure the values we expect are there
-		await page.goto(`/c/${COMMUNITY_SLUG}/pubs`);
+		await page.goto(`/c/${community.community.slug}/pubs`);
 		await page.getByRole("link", { name: title }).click();
 		// Make sure pub details page has loaded before making assertions
 		await page.getByText("Assignee").waitFor();
