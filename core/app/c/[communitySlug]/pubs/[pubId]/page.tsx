@@ -178,9 +178,7 @@ export default async function Page(props: {
 
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
-					pub values
 					<PubValues pub={pub} form={form} />
-					end
 				</div>
 				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 					{pub.stage ? (

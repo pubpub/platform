@@ -76,21 +76,19 @@ export const PubValues = ({ pub, form }: { pub: FullProcessedPub; form?: Form })
 	}
 
 	// Group values by field so we only render one heading for relationship values that have multiple entries
-	const groupedValues: Record<string, FullProcessedPub["values"]> = {};
+	const groupedValues: Record<string, { name: string; values: FullProcessedPub["values"] }> = {};
 	values.forEach((value) => {
 		if (groupedValues[value.fieldSlug]) {
-			groupedValues[value.fieldSlug].push(value);
+			groupedValues[value.fieldSlug].values.push(value);
 		} else {
-			groupedValues[value.fieldSlug] = [value];
+			groupedValues[value.fieldSlug] = { name: value.fieldName, values: [value] };
 		}
 	});
 
 	// Can hopefully remove this later
 	if (!form) {
-		return Object.entries(groupedValues).map(([fieldName, fieldValues]) => {
-			return (
-				<FieldBlock key={fieldName} name={fieldName} values={fieldValues} depth={depth} />
-			);
+		return Object.entries(groupedValues).map(([fieldName, { values }]) => {
+			return <FieldBlock key={fieldName} name={fieldName} values={values} depth={depth} />;
 		});
 	}
 	return form.elements.map((element) => {
@@ -98,8 +96,9 @@ export const PubValues = ({ pub, form }: { pub: FullProcessedPub; form?: Form })
 			return null;
 		}
 		const configLabel = "label" in element.config ? element.config.label : undefined;
-		const label = configLabel || element.label || element.fieldName || element.slug;
-		const values = groupedValues[element.slug];
-		return <FieldBlock key={element.id} name={label} values={values} depth={depth} />;
+		const grouped = groupedValues[element.slug];
+		const label = configLabel || element.label || grouped?.name || element.slug;
+
+		return <FieldBlock key={element.id} name={label} values={grouped?.values} depth={depth} />;
 	});
 };

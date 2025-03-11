@@ -24,8 +24,7 @@
 			"stageId": null,
 			"schemaName": null,
 			"slug": null,
-			"isRelation": null,
-			"fieldName": null
+			"isRelation": null
 		},
 		{
 			"id": "748edc36-2922-4df4-8858-36a70d3f27ee",
@@ -43,8 +42,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:title",
-			"isRelation": false,
-			"fieldName": "Title"
+			"isRelation": false
 		},
 		{
 			"id": "3e057bbb-254b-43e7-b004-2cd72be743c2",
@@ -62,8 +60,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:slug",
-			"isRelation": false,
-			"fieldName": "Slug"
+			"isRelation": false
 		},
 		{
 			"id": "46f5e619-305f-4c7f-9af4-57e5c83d883f",
@@ -81,8 +78,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:abstract",
-			"isRelation": false,
-			"fieldName": "Abstract"
+			"isRelation": false
 		},
 		{
 			"id": "83b69159-c5dd-49e1-b99e-834af8c82368",
@@ -100,8 +96,7 @@
 			"stageId": null,
 			"schemaName": "DateTime",
 			"slug": "arcadia-research:last-edited",
-			"isRelation": false,
-			"fieldName": "Last Edited"
+			"isRelation": false
 		},
 		{
 			"id": "3009b24a-3eeb-47cd-a8c5-b4ae2458bf34",
@@ -119,8 +114,7 @@
 			"stageId": null,
 			"schemaName": "DateTime",
 			"slug": "arcadia-research:publication-date",
-			"isRelation": false,
-			"fieldName": "Publication Date"
+			"isRelation": false
 		},
 		{
 			"id": "e2fa4a82-7b51-4db6-95a3-c4177172cb90",
@@ -138,8 +132,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:doi",
-			"isRelation": false,
-			"fieldName": "DOI"
+			"isRelation": false
 		},
 		{
 			"id": "553c2fe3-03e3-411c-b0b5-fbe32e71e7a8",
@@ -157,8 +150,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:doi-suffix",
-			"isRelation": false,
-			"fieldName": "DOI Suffix"
+			"isRelation": false
 		},
 		{
 			"id": "f0d06b00-995f-4845-b1f8-0e8ae858430c",
@@ -176,8 +168,7 @@
 			"stageId": null,
 			"schemaName": "URL",
 			"slug": "arcadia-research:url",
-			"isRelation": false,
-			"fieldName": "URL"
+			"isRelation": false
 		},
 		{
 			"id": "9f96f4c0-aedf-45ba-9bec-790f7cfe9122",
@@ -195,8 +186,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:pubcontent",
-			"isRelation": false,
-			"fieldName": "PubContent"
+			"isRelation": false
 		},
 		{
 			"id": "ffd8755e-67a2-47ea-b9a6-4c18a6439356",
@@ -214,8 +204,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:license",
-			"isRelation": false,
-			"fieldName": "License"
+			"isRelation": false
 		},
 		{
 			"id": "33610a68-c07c-4383-b2c2-ab2bf156e70f",
@@ -233,8 +222,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:description",
-			"isRelation": false,
-			"fieldName": "Description"
+			"isRelation": false
 		},
 		{
 			"id": "78e61faa-e2d0-4bde-86e7-738322ec82cb",
@@ -252,8 +240,7 @@
 			"stageId": null,
 			"schemaName": "DateTime",
 			"slug": "arcadia-research:creation-date",
-			"isRelation": false,
-			"fieldName": "Creation Date"
+			"isRelation": false
 		},
 		{
 			"id": "396667ee-1437-4050-91f1-7ba92704f762",
@@ -271,8 +258,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:avatar",
-			"isRelation": false,
-			"fieldName": "Avatar"
+			"isRelation": false
 		},
 		{
 			"id": "39ff1e4c-0d0d-42cb-87ab-2bad47faec53",
@@ -293,8 +279,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:contributors",
-			"isRelation": true,
-			"fieldName": "Contributors"
+			"isRelation": true
 		},
 		{
 			"id": "2ae20186-d157-4ce4-a128-dd16b47461b7",
@@ -315,8 +300,7 @@
 			"stageId": null,
 			"schemaName": "Null",
 			"slug": "arcadia-research:tag",
-			"isRelation": true,
-			"fieldName": "Tag"
+			"isRelation": true
 		},
 		{
 			"id": "48dd2078-8be6-4024-bf08-34c81e10e7fa",
@@ -337,8 +321,7 @@
 			"stageId": null,
 			"schemaName": "Null",
 			"slug": "arcadia-research:editors",
-			"isRelation": true,
-			"fieldName": "Editors"
+			"isRelation": true
 		},
 		{
 			"id": "e50383f5-d33a-4cea-a68b-95031162022c",
@@ -359,8 +342,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:downloads",
-			"isRelation": true,
-			"fieldName": "Downloads"
+			"isRelation": true
 		},
 		{
 			"id": "be93a87c-cc0f-4fb0-8b70-3ebc3e945c7d",
@@ -381,8 +363,7 @@
 			"stageId": null,
 			"schemaName": "Null",
 			"slug": "arcadia-research:images",
-			"isRelation": true,
-			"fieldName": "Images"
+			"isRelation": true
 		},
 		{
 			"id": "185b55a0-b9ae-4ae8-b3f0-caf8b437bde4",
@@ -403,8 +384,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:citations",
-			"isRelation": true,
-			"fieldName": "Citations"
+			"isRelation": true
 		},
 		{
 			"id": "ba401575-feef-4243-a3f6-1fb984245249",
@@ -422,8 +402,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:inline-citation-style",
-			"isRelation": false,
-			"fieldName": "Inline Citation Style"
+			"isRelation": false
 		},
 		{
 			"id": "62499a6e-d915-476e-aabb-f482603dcc65",
@@ -441,8 +420,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:citation-style",
-			"isRelation": false,
-			"fieldName": "Citation Style"
+			"isRelation": false
 		},
 		{
 			"id": "8252c1a9-c341-461f-b66b-4bb7baa5c8ff",
@@ -463,8 +441,7 @@
 			"stageId": null,
 			"schemaName": "Null",
 			"slug": "arcadia-research:tables",
-			"isRelation": true,
-			"fieldName": "Tables"
+			"isRelation": true
 		},
 		{
 			"id": "2c5664ff-f9f4-4351-8b30-dc7bc309b5d8",
@@ -485,8 +462,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:connectedpubs",
-			"isRelation": true,
-			"fieldName": "ConnectedPubs"
+			"isRelation": true
 		}
 	]
 }

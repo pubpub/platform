@@ -24,8 +24,7 @@
 			"stageId": null,
 			"schemaName": null,
 			"slug": null,
-			"isRelation": null,
-			"fieldName": null
+			"isRelation": null
 		},
 		{
 			"id": "46b88c5d-6062-4dc1-bc48-00cc236402f0",
@@ -43,8 +42,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:name",
-			"isRelation": false,
-			"fieldName": "Name"
+			"isRelation": false
 		},
 		{
 			"id": "51676726-4d17-4fc4-ad18-0a1b240201db",
@@ -62,8 +60,7 @@
 			"stageId": null,
 			"schemaName": "URL",
 			"slug": "arcadia-research:orcid",
-			"isRelation": false,
-			"fieldName": "ORCiD"
+			"isRelation": false
 		},
 		{
 			"id": "a0737eb8-e789-4933-a838-ee271495daa6",
@@ -81,8 +78,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:affiliation",
-			"isRelation": false,
-			"fieldName": "Affiliation"
+			"isRelation": false
 		},
 		{
 			"id": "41f2711f-7a86-4c25-b618-d3554aa83812",
@@ -100,8 +96,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:memberid",
-			"isRelation": false,
-			"fieldName": "MemberId"
+			"isRelation": false
 		},
 		{
 			"id": "076f7ac3-1b29-46c6-92cc-b3b9d0f53caa",
@@ -122,8 +117,7 @@
 			"stageId": null,
 			"schemaName": "String",
 			"slug": "arcadia-research:articles",
-			"isRelation": true,
-			"fieldName": "Articles"
+			"isRelation": true
 		}
 	]
 }
