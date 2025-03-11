@@ -103,8 +103,6 @@ describe("seedCommunity", () => {
 							},
 							{
 								value: 2,
-								// also adds this pub as a child of the current pub
-								alsoAsChild: true,
 								pub: {
 									pubType: "Author",
 									values: {
