@@ -62,10 +62,12 @@ export const baseSeed = createSeed({
 	community: { name: `test community`, slug: `test-community-slug` },
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
+		Content: { schemaName: CoreSchemaType.String },
 	},
 	pubTypes: {
 		Submission: {
 			Title: { isTitle: true },
+			Content: { isTitle: false },
 		},
 	},
 	users: {

@@ -51,7 +51,7 @@ import { slugifyString } from "~/lib/string";
 export type PubFieldsInitializer = Record<
 	string,
 	{
-		relation?: true;
+		isRelation?: true;
 		schemaName: CoreSchemaType;
 	}
 >;
@@ -207,7 +207,7 @@ export type PubInitializer<
 				? FieldName
 				: never]?: FieldName extends keyof PF
 				? PF[FieldName]["schemaName"] extends CoreSchemaType
-					? PF[FieldName]["relation"] extends true
+					? PF[FieldName]["isRelation"] extends true
 						? {
 								/**
 								 * Also add this pub as a child of the current pub.
@@ -228,27 +228,31 @@ export type PubInitializer<
 	};
 }[keyof PT & string];
 
-export type FormElementInitializer<
-	PF extends PubFieldsInitializer,
-	PT extends PubTypeInitializer<PF>,
-	PubType extends keyof PT,
-> = PT[PubType] extends infer PubFieldsForPubType
-	? {
-			[FieldName in keyof PubFieldsForPubType]: FieldName extends keyof PF
-				? (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
-						InputComponent
-					? {
-							type: ElementType.pubfield;
-							field: FieldName;
-							component: Component;
-							content?: never;
-							element?: never;
-							config: Static<(typeof componentConfigSchemas)[Component]>;
-						}
-					: never
-				: never;
-		}[keyof PubFieldsForPubType]
-	: never;
+export type FormElementInitializer<PF extends PubFieldsInitializer> = {
+	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
+		InputComponent
+		? {
+				type: ElementType.pubfield;
+				field: FieldName;
+				component: PF[FieldName]["isRelation"] extends true
+					? InputComponent.relationBlock
+					: Component;
+				content?: never;
+				element?: never;
+				label: string;
+				config: Static<(typeof componentConfigSchemas)[Component]> &
+					(PF[FieldName]["isRelation"] extends true
+						? {
+								relationshipConfig: {
+									label: string;
+									help: string;
+									component: Component;
+								};
+							}
+						: {});
+			}
+		: never;
+}[keyof PF];
 
 export type FormInitializer<
 	PF extends PubFieldsInitializer,
@@ -271,7 +275,7 @@ export type FormInitializer<
 			pubType: PubType;
 			members?: (keyof U)[];
 			elements: (
-				| FormElementInitializer<PF, PT, PubType>
+				| FormElementInitializer<PF>
 				| {
 						type: ElementType.structural;
 						element: StructuralFormElement;
@@ -436,9 +440,7 @@ type StagesWithPermissionsByName<S, StagePermissions> = {
 
 type FormsByName<F extends FormInitializer<any, any, any, any>> = {
 	[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
-		elements: {
-			[KK in keyof F[K]["elements"]]: F[K]["elements"][KK] & FormElements;
-		};
+		elements: (F[K]["elements"][number] & FormElements)[];
 	};
 };
 // ===================================
@@ -711,7 +713,7 @@ export async function seedCommunity<
 							slug: `${communitySlug}:${slug}`,
 							communityId: communityId,
 							schemaName: info.schemaName,
-							isRelation: info.relation,
+							isRelation: info.isRelation,
 						};
 					})
 				)
@@ -1041,8 +1043,11 @@ export async function seedCommunity<
 											.selectFrom("form")
 											.select("form.id")
 											.limit(1)
-											.offset(idx)
-											.where("form.name", "=", formTitle),
+											.where(
+												"form.slug",
+												"=",
+												formInput.slug ?? slugifyString(formTitle)
+											),
 
 										type: elementInput.type,
 										fieldId: createdPubFields.find(
@@ -1074,7 +1079,7 @@ export async function seedCommunity<
 
 	const formsByName = Object.fromEntries(
 		createdForms.map((form) => [form.name, form])
-	) as FormsByName<F>;
+	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's
 	const possibleActions = consolidatedStages.flatMap(
