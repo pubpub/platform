@@ -762,7 +762,7 @@ export const structureReferences = () => (tree: Root) => {
 	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
-		if (node.tagName === "u") {
+		if (node.tagName === "u" || node.tagName === "a") {
 			const parentText = getTextContent(parent);
 			const nodeText = getTextContent(node);
 			if (doiBracketRegex.test(parentText)) {
