@@ -58,6 +58,11 @@ describe("rendering related pub values", () => {
 			})
 		).toBeVisible();
 	});
+	it("doesn't render the title", () => {
+		renderAuthor();
+		expect(screen.queryByText("James McJimothy")).not.toBeInTheDocument();
+		expect(screen.queryByRole("heading", { name: "Name" })).not.toBeInTheDocument();
+	});
 	it("renders values in order of the form", () => {
 		const { rerender } = renderAuthor();
 		const headings = screen
