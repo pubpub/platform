@@ -1,3 +1,5 @@
+// import { register } from "node:module";
+
 import type { APIRequestContext, Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
@@ -18,6 +20,7 @@ let page: Page;
 let client: ReturnType<typeof initClient<typeof siteApi, any>>;
 
 test.beforeAll(async ({ browser }) => {
+	// register("../prisma/seed/stubs/module-loader.js", import.meta.url);
 	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 	const randomApiToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;

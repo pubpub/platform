@@ -4,10 +4,11 @@
 	"version": "0.0.0",
 	"private": true,
 	"scripts": {
-		"playwright:test": "playwright test",
-		"playwright:ui": "playwright test --ui",
-		"playwright:test:dev": "SKIP_VALIDATION=true NODE_OPTIONS=\"--experimental-loader=./playwright/fixtures/playwright-module-loader.js\" TEST_DEV=true dotenv -e .env.dev -e .env.local playwright test",
-		"playwright:ui:dev": "TEST_DEV=true playwright test --ui",
+		"_playwright": "node --import  node_modules/.bin/playwright",
+		"playwright:test": "NODE_OPTIONS='--import #register-loader' playwright test",
+		"playwright:ui": "NODE_OPTIONS='--import #register-loader' playwright test --ui",
+		"playwright:test:dev": "NODE_OPTIONS='--import #register-loader' TEST_DEV=true dotenv -e .env.dev -e .env.local pnpm playwright test",
+		"playwright:ui:dev": "NODE_OPTIONS='--import #register-loader' TEST_DEV=true dotenv -e .env.dev -e .env.local pnpm playwright test --ui",
 		"db:migrate-dev": "pnpm migrate-dev",
 		"db:migrate-deploy": "pnpm migrate-deploy",
 		"db:migrate-diff": "pnpm migrate-diff",
@@ -49,8 +50,8 @@
 		"public"
 	],
 	"prisma": {
-		"__comment": "The cts is to trick `tsx` into using CommonJS modules, even though we are using type: module",
-		"seed": "tsx --require ./prisma/seed/register-stub.cjs prisma/seed/seed-wrapper.cts"
+		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
+		"seed": "tsx --import #register-loader prisma/seed.ts"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.758.0",
@@ -194,5 +195,8 @@
 		"vitest": "catalog:",
 		"yargs": "^17.7.2"
 	},
-	"prettier": "@pubpub/prettier-config"
+	"prettier": "@pubpub/prettier-config",
+	"imports": {
+		"#register-loader": "./prisma/seed/stubs/register-loader.js"
+	}
 }

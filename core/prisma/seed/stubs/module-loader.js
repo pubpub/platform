@@ -1,12 +1,14 @@
-console.log("we have loaded");
+// @ts-check
 
 const resolvedDestination = {
 	url: new URL("./stubs.js", import.meta.url).href,
 	shortCircuit: true,
 };
 
+/**
+ * @type {import("node:module").ResolveHook}
+ */
 export async function resolve(specifier, context, nextResolve) {
-	// Mock specific modules
 	if (
 		specifier === "server-only" ||
 		specifier === "react" ||
@@ -21,8 +23,7 @@ export async function resolve(specifier, context, nextResolve) {
 	}
 
 	if (/kysely\/database.ts/.test(specifier)) {
-		const newUrl = new URL("../../lib/__tests__/db.ts", import.meta.url).href;
-		console.log(newUrl);
+		const newUrl = new URL("../../../lib/__tests__/db.ts", import.meta.url).href;
 		return {
 			url: newUrl,
 			shortCircuit: true,
@@ -30,10 +31,9 @@ export async function resolve(specifier, context, nextResolve) {
 	}
 
 	// Use the default resolver for all other modules
-	return nextResolve(specifier);
+	return nextResolve(specifier, context);
 }
 
 export default async () => {
-	console.log("playwright-module-loader");
 	return;
 };

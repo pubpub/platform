@@ -57,6 +57,4 @@ export default defineConfig({
 			use: { ...devices["Desktop Chrome"] },
 		},
 	],
-	// globalSetup: "./lib/__tests__/globalSetup.ts",
-	// /playwright/fixtures/playwright-module-loader.js",
 });

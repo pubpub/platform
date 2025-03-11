@@ -80,5 +80,8 @@
 			"@radix-ui/react-focus-scope": "^1.0.4"
 		}
 	},
-	"name": "v7"
+	"name": "v7",
+	"imports": {
+		"#register-loader": "./core/prisma/seed/stubs/register-loader.js"
+	}
 }
