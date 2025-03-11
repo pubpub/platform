@@ -34,7 +34,7 @@ describe("seedCommunity", () => {
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
-				SubmissionAuthor: { schemaName: CoreSchemaType.Number, relation: true },
+				SubmissionAuthor: { schemaName: CoreSchemaType.Number, isRelation: true },
 			},
 			pubTypes: {
 				Submission: {
@@ -138,9 +138,8 @@ describe("seedCommunity", () => {
 							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							field: "Title",
-							config: {
-								label: "Title hihihi",
-							},
+							label: "Title hihihi",
+							config: {},
 						},
 						{
 							type: ElementType.button,

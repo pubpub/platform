@@ -18,7 +18,4 @@
 
 import { register } from "node:module";
 
-// console.log(import.meta.url.replace("file:///Users/thomas/Projects/v7/core/prisma/seed/stubs", ""));
 register("./module-loader.js", import.meta.url);
-
-// register("./prisma/seed/stubs/module-loader.js", "./");

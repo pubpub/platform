@@ -33,7 +33,8 @@
 		"cache-handler.js",
 		"prisma/generate-history-table.mts",
 		"prisma/seed.cts",
-		"prisma/scripts/comment-generator.mts"
+		"prisma/scripts/comment-generator.mts",
+		"prisma/seed/stubs/*.js"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
