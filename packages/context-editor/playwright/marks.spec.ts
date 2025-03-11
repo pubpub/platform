@@ -10,7 +10,7 @@ test.describe("bold", () => {
 	});
 	test("can use markdown shortcut", async ({ page }) => {
 		await page.keyboard.type("hi **bold** ");
-		expect(page.getByRole("strong")).toHaveText("bold");
+		await expect(page.getByRole("strong")).toHaveText("bold");
 	});
 
 	test("can use menu bar", async ({ page }) => {
@@ -19,7 +19,7 @@ test.describe("bold", () => {
 		await page.keyboard.type("bold");
 		await page.getByRole("button", { name: "Bold" }).click();
 		await page.keyboard.type("not bold");
-		expect(page.getByRole("strong")).toHaveText("bold");
+		await expect(page.getByRole("strong")).toHaveText("bold");
 	});
 
 	test("can use menu bar to affect selection", async ({ page }) => {
@@ -29,7 +29,7 @@ test.describe("bold", () => {
 			await page.keyboard.press("Shift+ArrowLeft");
 		}
 		await page.getByRole("button", { name: "Bold" }).click();
-		expect(page.getByRole("strong")).toHaveText("world");
+		await expect(page.getByRole("strong")).toHaveText("world");
 		await page.getByRole("button", { name: "Bold" }).click();
 	});
 });
