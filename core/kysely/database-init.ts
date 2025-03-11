@@ -68,7 +68,7 @@ export const createDatabase = (options: DatabaseOptions) => {
 	 * For debugging and testing of latency
 	 */
 	const artificialLatencyPlugin =
-		options.latency && options.env !== "production"
+		options.latency && options.nodeEnv !== "production"
 			? new ArtificialLatencyPlugin(options.latency)
 			: null;
 
