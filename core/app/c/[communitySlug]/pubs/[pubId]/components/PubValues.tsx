@@ -1,7 +1,10 @@
 "use server";
 
+import { cn } from "utils";
+
 import type { Form } from "~/lib/server/form";
 import type { FullProcessedPub } from "~/lib/server/pub";
+import { getTitleField, valuesWithoutTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { PubValue } from "./PubValue";
 
@@ -65,7 +68,12 @@ const FieldBlock = async ({
 			>
 				{name}
 			</PubValueHeading>
-			<div className={"ml-2"} data-testid={`${name}-value`}>
+			<div
+				className={cn("ml-2", {
+					"mb-6": !values, // leave a gap for when there are no values
+				})}
+				data-testid={`${name}-value`}
+			>
 				{values?.map((value) => <PubValueServer value={value} key={value.id} />)}
 			</div>
 		</div>
@@ -78,9 +86,12 @@ export const PubValues = async ({ pub, form }: { pub: FullProcessedPub; form?: F
 		return null;
 	}
 
+	const titleField = getTitleField(pub);
+	const filteredValues = valuesWithoutTitle(pub);
+
 	// Group values by field so we only render one heading for relationship values that have multiple entries
 	const groupedValues: Record<string, { name: string; values: FullProcessedPub["values"] }> = {};
-	values.forEach((value) => {
+	filteredValues.forEach((value) => {
 		if (groupedValues[value.fieldSlug]) {
 			groupedValues[value.fieldSlug].values.push(value);
 		} else {
@@ -107,6 +118,9 @@ export const PubValues = async ({ pub, form }: { pub: FullProcessedPub; form?: F
 			{/* Form elements */}
 			{form.elements.map((element) => {
 				if (!element.slug) {
+					return null;
+				}
+				if (element.slug === titleField?.slug) {
 					return null;
 				}
 				const configLabel = "label" in element.config ? element.config.label : undefined;
