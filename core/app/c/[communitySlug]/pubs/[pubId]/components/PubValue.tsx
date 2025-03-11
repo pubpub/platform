@@ -17,7 +17,6 @@ import type { FileUpload } from "~/lib/fields/fileUpload";
 import type { FullProcessedPub } from "~/lib/server/pub";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
-import { PubValues } from "./PubValues";
 
 export const PubValue = ({
 	value,
@@ -67,13 +66,7 @@ export const PubValue = ({
 					)}
 				</div>
 				<CollapsibleContent>
-					{renderRelatedValues && (
-						<div className="ml-4">
-							{/* <PubValues pub={relatedPub} />
-							 */}
-							{relatedPubNode}
-						</div>
-					)}
+					{renderRelatedValues && <div className="ml-4">{relatedPubNode}</div>}
 				</CollapsibleContent>
 			</Collapsible>
 		);

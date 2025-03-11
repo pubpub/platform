@@ -1,6 +1,4 @@
-import type { ReactNode } from "react";
-
-import { config } from "dotenv";
+"use server";
 
 import type { Form } from "~/lib/server/form";
 import type { FullProcessedPub } from "~/lib/server/pub";
@@ -49,7 +47,7 @@ const PubValueServer = async ({ value }: { value: FullProcessedPub["values"][num
 	return <PubValue value={value} relatedPubNode={null} />;
 };
 
-const FieldBlock = ({
+const FieldBlock = async ({
 	name,
 	values,
 	depth,
@@ -74,7 +72,7 @@ const FieldBlock = ({
 	);
 };
 
-export const PubValues = ({ pub, form }: { pub: FullProcessedPub; form?: Form }): ReactNode => {
+export const PubValues = async ({ pub, form }: { pub: FullProcessedPub; form?: Form }) => {
 	const { values, depth } = pub;
 	if (!values.length) {
 		return null;
