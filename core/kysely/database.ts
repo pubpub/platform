@@ -1,7 +1,7 @@
 import type { LogEvent } from "kysely";
 
 import { Kysely, PostgresDialect } from "kysely";
-import * as pg from "pg";
+import pg from "pg";
 
 import type { Database } from "db/Database";
 import { databaseTables } from "db/table-names";

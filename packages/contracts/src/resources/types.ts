@@ -61,39 +61,26 @@ const commonPubFields = z.object({
 
 // Get pub types
 
-export const GetPubResponseBodyBase = commonPubFields.extend({
+export const GetPubResponseBody = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
 	assignee: User.nullish(),
 	communityId: z.string(),
 	createdAt: z.date(),
 });
-export type GetPubResponseBodyBase = z.infer<typeof GetPubResponseBodyBase>;
-
-export type GetPubResponseBody = z.infer<typeof GetPubResponseBodyBase> & {
-	children: GetPubResponseBody[];
-};
-export const GetPubResponseBody: z.ZodType<GetPubResponseBody> = GetPubResponseBodyBase.extend({
-	children: z.lazy(() => GetPubResponseBody.array()),
-});
+export type GetPubResponseBody = z.infer<typeof GetPubResponseBody>;
 
 // Create pub types
 
-const CreatePubRequestBodyBase = commonPubFields.extend({
+export const CreatePubRequestBody = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(JsonInput),
 	assigneeId: z.string().optional(),
 });
-export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBodyBase> & {
-	children?: CreatePubRequestBody[];
-};
-export const CreatePubRequestBody: z.ZodType<CreatePubRequestBody> =
-	CreatePubRequestBodyBase.extend({
-		children: z.lazy(() => CreatePubRequestBody.array().optional()),
-	});
+export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBody>;
 
 // TODO: there has to be a better way to allow the API requests to include nulls in json fields
-export const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
+export const CreatePubRequestBodyWithNulls = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(
 		z.union([jsonSchema, z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }).array()])
@@ -101,21 +88,9 @@ export const CreatePubRequestBodyWithNullsBase = commonPubFields.extend({
 	assigneeId: z.string().optional(),
 });
 
-export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
-	children?: CreatePubRequestBodyWithNulls[];
-};
-export const CreatePubRequestBodyWithNulls: z.ZodType<CreatePubRequestBodyWithNulls> =
-	CreatePubRequestBodyWithNullsBase.extend({
-		children: z.lazy(() => CreatePubRequestBodyWithNulls.array().optional()),
-	});
+export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNulls>;
 
-export const CreatePubResponseBodyBase = commonPubFields.extend({
+export const CreatePubResponseBody = commonPubFields.extend({
 	id: z.string(),
 });
-export type CreatePubResponseBody = z.infer<typeof CreatePubResponseBodyBase> & {
-	children: CreatePubResponseBody[];
-};
-export const CreatePubResponseBody: z.ZodType<CreatePubResponseBody> =
-	CreatePubResponseBodyBase.extend({
-		children: z.lazy(() => CreatePubResponseBody.array()),
-	});
+export type CreatePubResponseBody = z.infer<typeof CreatePubResponseBody>;

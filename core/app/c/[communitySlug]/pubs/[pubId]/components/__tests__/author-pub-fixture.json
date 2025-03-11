@@ -66,7 +66,7 @@
 				"id": "1f6478f0-29ef-44a1-ba7f-3b8f57fae5b6",
 				"name": "Articles",
 				"slug": "arcadia-research:articles",
-				"schemaName": "Null",
+				"schemaName": "String",
 				"isRelation": true,
 				"isTitle": false,
 				"schema": null
@@ -305,7 +305,7 @@
 									"id": "1f6478f0-29ef-44a1-ba7f-3b8f57fae5b6",
 									"name": "Articles",
 									"slug": "arcadia-research:articles",
-									"schemaName": "Null",
+									"schemaName": "String",
 									"isRelation": true,
 									"isTitle": false,
 									"schema": null
@@ -1677,7 +1677,7 @@
 										"id": "1f6478f0-29ef-44a1-ba7f-3b8f57fae5b6",
 										"name": "Articles",
 										"slug": "arcadia-research:articles",
-										"schemaName": "Null",
+										"schemaName": "String",
 										"isRelation": true,
 										"isTitle": false,
 										"schema": null

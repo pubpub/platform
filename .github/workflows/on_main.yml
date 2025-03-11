@@ -40,3 +40,12 @@ jobs:
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+
+    deploy-docs:
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
+        uses: ./.github/workflows/build-docs.yml
+        with:
+            preview: false

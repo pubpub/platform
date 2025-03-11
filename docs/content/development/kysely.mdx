@@ -1,8 +1,10 @@
+import { Callout } from "nextra/components";
+
 # Kysely
 
 ## Documentation
 
-As we start replacing Prisma with Kysely, here are some resources that may help:
+Here are some resources that may help:
 
 - Kysely's high-level docs are very useful for writing simple queries, including joining/querying related tables and returning the results as nested json (like an ORM)
     - Make sure to look at the [Examples](https://kysely.dev/docs/category/examples) and [Recipes](https://kysely.dev/docs/category/recipes)
@@ -19,27 +21,53 @@ We use Kanel to generate these types, which can be configured via [.kanelrc.js](
 
 ### Generating types for JSON fields
 
-> [!NOTE]
-> You might need to run `pnpm --filter core migrate-dev` twice to get the types to update properly.
+<Callout type="warning">
+	You might need to run `pnpm --filter core migrate-dev` twice to get the types to update
+	properly.
+</Callout>
 
 It is possible to generate more specific types for JSON fields defined.
 
 This is done in the Prisma schema, by adding an annotation to the field which will add a comment to the database.
 
-https://github.com/pubpub/v7/blob/e99c9cb0eec498a9a7a2a2622f294f42bfd8e8b2/core/prisma/schema.prisma#L392
+```prisma filename=core/prisma/schema/schema.prisma
+model ApiAccessPermission {
+  id               String         @id @default(dbgenerated("gen_random_uuid()"))
+  apiAccessTokenId String
+  apiAccessToken   ApiAccessToken @relation(fields: [apiAccessTokenId], references: [id], onDelete: Cascade)
+  scope            ApiAccessScope
+  accessType       ApiAccessType
+  constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
 
-Adding a `///` will add the string as a comment to that column in the database using a custom generator defined here:
+  // this ensures that only one permission per token and scope and access type exists
+  @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")
+  @@map(name: "api_access_permissions")
+}
+```
 
-https://github.com/pubpub/v7/blob/e99c9cb0eec498a9a7a2a2622f294f42bfd8e8b2/core/prisma/schema.prisma#L14-L16
+Adding a `///` will add the string as a comment to that column in the database using a custom generator defined [here](https://github.com/pubpub/platform/blob/e99c9cb0eec498a9a7a2a2622f294f42bfd8e8b2/core/prisma/schema.prisma#L14-L16)
+
+```prisma filename=core/prisma/schema/schema.prisma
+generator comments {
+  provider = "pnpm exec tsx prisma/scripts/comment-generator.mts"
+}
+```
 
 This will lead to the following migration:
-https://github.com/pubpub/v7/blob/0e7ad15ea0ecd08b86133fde9a7ecb6075941da7/core/prisma/migrations/20240523130939_update_comments/migration.sql#L85
+
+```sql filename=core/prisma/migrations/20240523130939_update_comments/migration.sql
+-- Model api_access_permissions comments
+
+COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../types'', true, false, true)';
+```
 
 This comment then gets picked up by Kanel and turned into a type definition for the field.
 
 The syntax (largely undocumented, except for here https://github.com/kristiandupont/kanel/issues/429#issuecomment-1636126264), is:
 
-```
+```prisma
 @type(name, path, isAbsolute, isDefault, importAsType)
 ```
 
@@ -85,6 +113,39 @@ declare global {
 
 // necessary to make `declare global` work with or without using `import`s
 export {};
+```
+
+It is also possible to use these comments to provide nicer documentation for other elements, such as enums.
+
+```prisma filename=core/prisma/schema/schema.prisma
+/// @property generic - For most use-cases. This will just authenticate you with a regular session.
+/// @property passwordReset - For resetting your password only
+/// @property signup - For signing up, but also when you're invited to a community
+/// @property verifyEmail - For verifying your email address
+enum AuthTokenType {
+  generic
+  passwordReset
+  signup
+  verifyEmail
+}
+```
+
+This will generate the following `enum`
+
+```ts filename=packages/db/src/public/AuthTokenType.ts
+/**
+ * Represents the enum public.AuthTokenType
+ * @property generic - For most use-cases. This will just authenticate you with a regular session.
+ * @property passwordReset - For resetting your password only
+ * @property signup - For signing up, but also when you're invited to a community
+ * @property verifyEmail - For verifying your email address
+ */
+export enum AuthTokenType {
+	generic = "generic",
+	passwordReset = "passwordReset",
+	signup = "signup",
+	verifyEmail = "verifyEmail",
+}
 ```
 
 ## Maintainability
