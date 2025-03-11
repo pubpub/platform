@@ -98,10 +98,6 @@ jobs:
             - name: Run playwright on context-editor
               run: pnpm --filter context-editor run playwright:test
 
-            - name: Print container logs
-              if: ${{failure() || cancelled()}}
-              run: docker compose -f docker-compose.test.yml --profile integration logs
-
             - name: Upload playwright snapshots artifact
               if: failure()
               uses: actions/upload-artifact@v4
