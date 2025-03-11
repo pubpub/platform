@@ -82,7 +82,6 @@ export const processedPubToPubResult = <T extends InputPub>(pub: T): GetPubsResu
 		assigneeId: pub.assignee?.id ?? null,
 		assignee: (pub.assignee ?? null) as GetPubsResult[number]["assignee"],
 		pubType: pub.pubType as GetPubsResult[number]["pubType"],
-		children: pub.children.length ? pub.children.map(processedPubToPubResult) : [],
 	};
 };
 
