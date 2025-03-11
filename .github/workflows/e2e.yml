@@ -129,6 +129,9 @@ jobs:
             - name: Print container logs
               if: ${{(failure() && steps.coreTests.outcome == 'failure') || cancelled()}}
               run: docker compose -f docker-compose.test.yml --profile integration logs
+              env:
+                  INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
+                  JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
             - name: Upload playwright snapshots artifact
               if: failure() && steps.coreTests.outcome == 'failure'
