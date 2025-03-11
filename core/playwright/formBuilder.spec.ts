@@ -231,12 +231,9 @@ test.describe("Submission buttons", () => {
 test.describe("relationship fields", () => {
 	test("Create a form with a relationship field", async () => {
 		const formSlug = community.forms["RelationshipForm"].slug;
-		const formsPage = new FormsPage(page, community.community.slug);
-		await formsPage.goto();
-		await formsPage.addForm("relationship form", formSlug);
-		await page.waitForURL(`/c/${community.community.slug}/forms/${formSlug}/edit`);
 
 		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
+		await formEditPage.goto();
 		await formEditPage.openAddForm();
 		await formEditPage.openFormElementPanel(`${community.community.slug}:author`);
 		// Fill out relationship config first
@@ -277,6 +274,7 @@ test.describe("relationship fields", () => {
 
 	test("Create a form with a null relationship field", async () => {
 		const formSlug = community.forms["NullForm"].slug;
+		await page.goto(`/c/${community.community.slug}/forms/${formSlug}/edit`);
 
 		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
 		await formEditPage.goto();

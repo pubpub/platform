@@ -117,29 +117,6 @@ test.beforeAll(async ({ browser }) => {
 	);
 });
 
-// /**
-//  * Fill out everything required to make an external form:
-//  * 1. Fields
-//  * 2. Form with fields
-//  */
-// // Add email field
-// const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
-// await fieldsPage.goto();
-// await fieldsPage.addField("email", CoreSchemaType.Email);
-// // Make a form (by default has title and content)
-// const formsPage = new FormsPage(page, COMMUNITY_SLUG);
-// await formsPage.goto();
-// await formsPage.addForm("Evaluation", FORM_SLUG);
-// // We are automatically redirected to the form editor. Add email element
-// const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
-// await formEditPage.openAddForm();
-// await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:email`);
-// await formEditPage.saveForm();
-
-// Go to the external form page
-// await page.goto(`/c/${COMMUNITY_SLUG}/public/forms/${FORM_SLUG}/fill`);
-// });
-
 test.afterAll(async () => {
 	await page.close();
 });

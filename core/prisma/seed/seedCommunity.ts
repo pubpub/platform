@@ -68,19 +68,27 @@ export type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
  */
 export type UsersInitializer = Record<
 	string,
-	{
-		/**
-		 * @default randomUUID
-		 */
-		id?: UsersId;
-		email?: string;
-		/** Plain string, will be hashed */
-		password?: string;
-		firstName?: string;
-		lastName?: string;
-		avatar?: string;
-		role?: MemberRole | null;
-	}
+	| {
+			/**
+			 * @default randomUUID
+			 */
+			id?: UsersId;
+			email?: string;
+			/** Plain string, will be hashed */
+			password?: string;
+			firstName?: string;
+			lastName?: string;
+			avatar?: string;
+			role?: MemberRole | null;
+			isSuperAdmin?: boolean;
+			slug?: string;
+			existing?: false;
+	  }
+	| {
+			id: UsersId;
+			existing: true;
+			role: MemberRole;
+	  }
 >;
 
 export type ActionInstanceInitializer = {
@@ -428,7 +436,7 @@ type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { fields: PubFieldsByName<PF> };
 };
 
-type UsersBySlug<U> = {
+type UsersBySlug<U extends UsersInitializer> = {
 	[K in keyof U]: U[K] & Users;
 };
 
@@ -686,14 +694,15 @@ export async function seedCommunity<
 ) {
 	const { community } = props;
 
+	const randomSlugSuffix = options?.randomSlug === false ? "" : `-${crypto.randomUUID()}`;
+
 	logger.info(`Starting seed for ${community.name}`);
 
 	const createdCommunity = await trx
 		.insertInto("communities")
 		.values({
 			...community,
-			slug:
-				options?.randomSlug === false ? community.slug : `${community.slug}-${Date.now()}`,
+			slug: `${community.slug}${randomSlugSuffix}`,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
@@ -810,40 +819,48 @@ export async function seedCommunity<
 		)
 	);
 
-	const userValues = await Promise.all(
-		Object.entries(props.users ?? {}).map(async ([slug, userInfo]) => ({
-			slug: options?.randomSlug === false ? slug : `${slug}-${new Date().toISOString()}`,
-			email: userInfo?.email ?? faker.internet.email(),
-			firstName: userInfo?.firstName ?? faker.person.firstName(),
-			lastName: userInfo?.lastName ?? faker.person.lastName(),
-			avatar: userInfo?.avatar ?? faker.image.avatar(),
-			passwordHash: await createPasswordHash(userInfo?.password ?? faker.internet.password()),
+	const newUsers = Object.entries(props.users ?? {}).filter(
+		(user): user is [string, (typeof user)[1] & { existing: false }] => !user[1].existing
+	);
+	const newUserValues = await Promise.all(
+		newUsers.map(async ([slug, userInfo]) => ({
+			id: userInfo.id ?? (crypto.randomUUID() as UsersId),
+			slug:
+				options?.randomSlug === false
+					? (userInfo.slug ?? slug)
+					: `${userInfo.slug ?? slug}-${randomSlugSuffix}`,
+			email: userInfo.email ?? faker.internet.email(),
+			firstName: userInfo.firstName ?? faker.person.firstName(),
+			lastName: userInfo.lastName ?? faker.person.lastName(),
+			avatar: userInfo.avatar ?? faker.image.avatar(),
+			passwordHash: await createPasswordHash(userInfo.password ?? faker.internet.password()),
+			isSuperAdmin: userInfo.isSuperAdmin ?? false,
+			// the key of the user initializer
 		}))
 	);
 
-	const createdUsers = userValues.length
-		? await trx.insertInto("users").values(userValues).returningAll().execute()
+	const createdUsers = newUserValues.length
+		? await trx.insertInto("users").values(newUserValues).returningAll().execute()
 		: [];
 
-	const usersBySlug = Object.fromEntries(
-		createdUsers.map((user) => [
-			user.slug.replace(new RegExp(`-${new Date().getUTCFullYear()}.*`), ""),
-			user,
-		])
-	) as UsersBySlug<U>;
+	// we use the index of the userinitializers as the slug for the users, even though
+	// it could be something else. it just makes finding it back easier
+	const usersBySlug = Object.fromEntries([
+		...newUsers.map(([slug], idx) => [slug, { ...createdUsers[idx], ...newUsers[idx][1] }]),
+		...Object.entries(props.users ?? {})
+			.filter(
+				(user): user is [string, (typeof user)[1] & { existing: true }] =>
+					!!user[1].existing
+			)
+			.map(([slug, userInfo]) => [slug, userInfo]),
+	]) as UsersBySlug<U>;
 
-	const possibleMembers = Object.entries(props.users ?? {})
+	const possibleMembers = Object.entries(usersBySlug)
 		.filter(([slug, userInfo]) => !!userInfo.role)
 		.flatMap(([slug, userWithRole]) => {
-			// const createdUser = createdUsers.find((createdUser) => createdUser.slug === slug);
-			const createdUser = findBySlug(createdUsers, slug);
-			if (!createdUser) {
-				return [];
-			}
-
 			return [
 				{
-					userId: createdUser.id,
+					userId: userWithRole.id,
 					communityId,
 					role: userWithRole.role!,
 				} satisfies NewCommunityMemberships,
@@ -858,10 +875,17 @@ export async function seedCommunity<
 				.execute()
 		: [];
 
-	const usersWithMemberShips = createdUsers.map((user) => ({
-		...user,
-		member: createdMembers.find((member) => member.userId === user.id),
-	}));
+	const usersWithMemberShips = Object.fromEntries(
+		Object.entries(usersBySlug)
+			.filter(([slug, user]) => !!user.role)
+			.map(([slug, user], idx) => [
+				slug,
+				{
+					...user,
+					member: createdMembers[idx],
+				},
+			])
+	);
 
 	const stageList = Object.entries(props.stages ?? {});
 
@@ -884,6 +908,7 @@ export async function seedCommunity<
 		...stageList[idx][1],
 		...stage,
 	}));
+	//
 
 	const stageMembers = consolidatedStages
 		.flatMap((stage, idx) => {
@@ -891,7 +916,7 @@ export async function seedCommunity<
 
 			return Object.entries(stage.members)?.map(([member, role]) => ({
 				stage,
-				user: findBySlug(usersWithMemberShips, member as string)!,
+				user: usersWithMemberShips[member as string],
 				role,
 			}));
 		})

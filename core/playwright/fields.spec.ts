@@ -48,7 +48,7 @@ test.describe("Creating a field", () => {
 			}
 			await expect(
 				page.getByRole("button", { name: `Select row ${schema} ${schema}` })
-			).toHaveCount(1);
+			).toHaveCount(1, { timeout: 1000 });
 		}
 
 		// Try to create a field with the same name, should error
