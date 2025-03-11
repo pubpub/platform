@@ -5,6 +5,6 @@ export const db = createDatabase({
 	url: env.DATABASE_URL,
 	logLevel: env.LOG_LEVEL,
 	debug: env.KYSELY_DEBUG === "true",
-	env: env.NODE_ENV,
+	nodeEnv: env.NODE_ENV,
 	latency: env.KYSELY_ARTIFICIAL_LATENCY,
 });
