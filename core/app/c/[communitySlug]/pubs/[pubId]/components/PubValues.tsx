@@ -11,6 +11,10 @@ const PubValueHeading = ({
 	children,
 	...props
 }: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
+	// For "Other Fields" section header which might be one lower than any pub depth
+	if (depth < 1) {
+		return <h1 {...props}>{children}</h1>;
+	}
 	// Pub depth starts at 1
 	switch (depth - 1) {
 		case 0:
@@ -91,14 +95,46 @@ export const PubValues = ({ pub, form }: { pub: FullProcessedPub; form?: Form })
 			return <FieldBlock key={fieldName} name={fieldName} values={values} depth={depth} />;
 		});
 	}
-	return form.elements.map((element) => {
-		if (!element.slug) {
-			return null;
-		}
-		const configLabel = "label" in element.config ? element.config.label : undefined;
-		const grouped = groupedValues[element.slug];
-		const label = configLabel || element.label || grouped?.name || element.slug;
+	const valuesNotInForm = Object.entries(groupedValues)
+		.filter(([slug]) => {
+			return !form.elements.find((e) => e.slug === slug);
+		})
+		.map(([slug, { name, values }]) => {
+			return { slug, name, values };
+		});
 
-		return <FieldBlock key={element.id} name={label} values={grouped?.values} depth={depth} />;
-	});
+	return (
+		<div>
+			{/* Form elements */}
+			{form.elements.map((element) => {
+				if (!element.slug) {
+					return null;
+				}
+				const configLabel = "label" in element.config ? element.config.label : undefined;
+				const grouped = groupedValues[element.slug];
+				const label = configLabel || element.label || grouped?.name || element.slug;
+
+				return (
+					<FieldBlock
+						key={element.id}
+						name={label}
+						values={grouped?.values}
+						depth={depth}
+					/>
+				);
+			})}
+			{/* Pub values not in the form. TODO: check for perms */}
+			{valuesNotInForm.length ? (
+				<div className="flex flex-col gap-2">
+					<hr className="mt-2" />
+					<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
+						Other Fields
+					</PubValueHeading>
+					{valuesNotInForm.map(({ slug, name, values }) => (
+						<FieldBlock key={slug} name={name} values={values} depth={depth} />
+					))}
+				</div>
+			) : null}
+		</div>
+	);
 };
