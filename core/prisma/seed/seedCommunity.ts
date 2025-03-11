@@ -247,7 +247,7 @@ export type FormElementInitializer<PF extends PubFieldsInitializer> = {
 					: Component;
 				content?: never;
 				element?: never;
-				label: string;
+				label?: never;
 				config: Static<(typeof componentConfigSchemas)[Component]> &
 					(PF[FieldName]["relation"] extends true
 						? {
@@ -722,7 +722,7 @@ export async function seedCommunity<
 							slug: `${communitySlug}:${slug}`,
 							communityId: communityId,
 							schemaName: info.schemaName,
-							relation: info.relation,
+							isRelation: info.relation,
 						};
 					})
 				)
@@ -846,7 +846,7 @@ export async function seedCommunity<
 	// we use the index of the userinitializers as the slug for the users, even though
 	// it could be something else. it just makes finding it back easier
 	const usersBySlug = Object.fromEntries([
-		...newUsers.map(([slug], idx) => [slug, { ...createdUsers[idx], ...newUsers[idx][1] }]),
+		...newUsers.map(([slug], idx) => [slug, { ...newUsers[idx][1], ...createdUsers[idx] }]),
 		...Object.entries(props.users ?? {})
 			.filter(
 				(user): user is [string, (typeof user)[1] & { existing: true }] =>

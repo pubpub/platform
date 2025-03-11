@@ -56,8 +56,9 @@ const seed = createSeed({
 					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
-					label: "Title",
-					config: {},
+					config: {
+						label: "Title",
+					},
 				},
 			],
 		},
@@ -69,8 +70,9 @@ const seed = createSeed({
 					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
-					label: "Title",
-					config: {},
+					config: {
+						label: "Title",
+					},
 				},
 			],
 		},
@@ -82,22 +84,24 @@ const seed = createSeed({
 					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
-					label: "Title",
-					config: {},
+					config: {
+						label: "Title",
+					},
 				},
 				{
 					type: ElementType.pubfield,
 					field: "Content",
 					component: InputComponent.textArea,
-					label: "Content",
-					config: {},
+					config: {
+						label: "Content",
+					},
 				},
 				{
 					type: ElementType.pubfield,
 					field: "Author",
 					component: InputComponent.relationBlock,
-					label: "Author",
 					config: {
+						label: "Author",
 						relationshipConfig: {
 							component: InputComponent.textArea,
 							help: "",

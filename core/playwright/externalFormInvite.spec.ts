@@ -99,22 +99,25 @@ const seed = createSeed({
 					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
-					label: "Title",
-					config: {},
+					config: {
+						label: "Title",
+					},
 				},
 				{
 					type: ElementType.pubfield,
 					field: "Content",
 					component: InputComponent.textArea,
-					label: "Content",
-					config: {},
+					config: {
+						label: "Content",
+					},
 				},
 				{
 					type: ElementType.pubfield,
 					field: "Email",
-					label: "Email",
 					component: InputComponent.textInput,
-					config: {},
+					config: {
+						label: "Email",
+					},
 				},
 			],
 		},

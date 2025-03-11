@@ -138,8 +138,9 @@ describe("seedCommunity", () => {
 							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							field: "Title",
-							label: "Title hihihi",
-							config: {},
+							config: {
+								label: "Title hihihi",
+							},
 						},
 						{
 							type: ElementType.button,

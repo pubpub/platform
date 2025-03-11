@@ -178,8 +178,8 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 							field: "Title",
 							type: ElementType.pubfield,
 							component: InputComponent.textInput,
-							label: "Title",
 							config: {
+								label: "Title",
 								maxLength: 255,
 								help: "Give your review a snazzy title.",
 							},
@@ -188,8 +188,8 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 							field: "Content",
 							type: ElementType.pubfield,
 							component: InputComponent.textArea,
-							label: "Content",
 							config: {
+								label: "Content",
 								help: "Enter your review here",
 								minLength: 255,
 							},
