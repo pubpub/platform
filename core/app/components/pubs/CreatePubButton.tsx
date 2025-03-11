@@ -4,7 +4,7 @@ import { Plus } from "ui/icon";
 
 import type { GetPubTypesResult } from "~/lib/server";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubsWithRelatedValuesAndChildren, getPubTypesForCommunity } from "~/lib/server";
+import { getPubsWithRelatedValues, getPubTypesForCommunity } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -34,7 +34,7 @@ const InitialCreatePubFormWithRelatedPub = async ({
 }) => {
 	const { user } = await getLoginData();
 	const [pubs, pubFieldsResponse] = await Promise.all([
-		getPubsWithRelatedValuesAndChildren(
+		getPubsWithRelatedValues(
 			{ communityId: communityId, userId: user?.id },
 			{
 				limit: 30,
