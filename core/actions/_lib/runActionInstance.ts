@@ -18,7 +18,7 @@ import type { ClientException, ClientExceptionOptions } from "~/lib/serverAction
 import { db } from "~/kysely/database";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { MAX_STACK_DEPTH } from "~/lib/server/rules";
 import { isClientExceptionOptions } from "~/lib/serverActions";
@@ -48,7 +48,7 @@ const _runActionInstance = async (
 
 	const stack = [...args.stack, args.actionRunId];
 
-	const pubPromise = getPubsWithRelatedValuesAndChildren(
+	const pubPromise = getPubsWithRelatedValues(
 		{
 			pubId: args.pubId,
 			communityId: args.communityId,

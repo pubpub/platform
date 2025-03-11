@@ -34,6 +34,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				Confidence: { schemaName: CoreSchemaType.Vector3 },
 				"Published At": { schemaName: CoreSchemaType.DateTime },
 				"File Upload": { schemaName: CoreSchemaType.FileUpload },
+				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
 			},
 			pubTypes: {
 				Submission: {
@@ -47,6 +48,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					Confidence: { isTitle: false },
 					"Published At": { isTitle: false },
 					"File Upload": { isTitle: false },
+					Evaluations: { isTitle: false },
 				},
 				Evaluation: {
 					Title: { isTitle: true },
@@ -87,15 +89,20 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 						Confidence: [0, 0, 0],
 						"Published At": new Date(),
 					},
-					children: [
-						{
-							pubType: "Evaluation",
-							values: {
-								Title: "Evaluation of Ancient Giants",
-								"Published At": new Date(),
+					relatedPubs: {
+						Evaluations: [
+							{
+								value: null,
+								pub: {
+									pubType: "Evaluation",
+									values: {
+										Title: "Evaluation of Ancient Giants",
+										"Published At": new Date(),
+									},
+								},
 							},
-						},
-					],
+						],
+					},
 					stage: "Submitted",
 				},
 				{
