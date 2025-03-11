@@ -22,13 +22,13 @@ export async function resolve(specifier, context, nextResolve) {
 		return resolvedDestination;
 	}
 
-	if (/kysely\/database.ts/.test(specifier)) {
-		const newUrl = new URL("../../../lib/__tests__/db.ts", import.meta.url).href;
-		return {
-			url: newUrl,
-			shortCircuit: true,
-		};
-	}
+	// if (/kysely\/database.ts/.test(specifier)) {
+	// 	const newUrl = new URL("../../../lib/__tests__/db.ts", import.meta.url).href;
+	// 	return {
+	// 		url: newUrl,
+	// 		shortCircuit: true,
+	// 	};
+	// }
 
 	// Use the default resolver for all other modules
 	return nextResolve(specifier, context);

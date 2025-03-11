@@ -1,8 +1,11 @@
 /* eslint-disable no-restricted-properties */
 import type { Page } from "@playwright/test";
 
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 
+import type { CommunitySeedOutput, Seed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { CommunityPage } from "./fixtures/community-page";
 import { FieldsPage } from "./fixtures/fields-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
@@ -53,4 +56,28 @@ export const retryAction = async (action: () => Promise<void>, maxAttempts = 3) 
 			if (attempt === maxAttempts) throw error;
 		}
 	}
+};
+
+export const baseSeed = createSeed({
+	community: { name: `test community`, slug: `test-community-slug` },
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+	},
+	pubTypes: {
+		Submission: {
+			Title: { isTitle: true },
+		},
+	},
+	users: {
+		admin: {
+			password: "password",
+			role: MemberRole.admin,
+		},
+	},
+});
+
+export type BaseSeedOutput = CommunitySeedOutput<typeof baseSeed>;
+
+export const seedBase = async () => {
+	return seedCommunity(baseSeed) as any;
 };

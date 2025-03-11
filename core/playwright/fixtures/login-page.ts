@@ -15,6 +15,6 @@ export class LoginPage {
 
 	async loginAndWaitForNavigation(email = "all@pubpub.org", password = "pubpub-all") {
 		await this.login(email, password);
-		await this.page.waitForURL(/.*\/c\/\w+\/stages.*/);
+		await this.page.waitForURL(/.*\/c\/.+\/stages.*/);
 	}
 }

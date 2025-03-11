@@ -691,9 +691,7 @@ export async function seedCommunity<
 		.values({
 			...community,
 			slug:
-				options?.randomSlug === false
-					? community.slug
-					: `${community.slug}-${new Date().toISOString()}`,
+				options?.randomSlug === false ? community.slug : `${community.slug}-${Date.now()}`,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
