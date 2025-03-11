@@ -15,7 +15,7 @@ type DatabaseOptions = {
 	debug?: boolean;
 	logLevel?: string;
 	latency?: number;
-	env?: string;
+	nodeEnv?: string;
 };
 
 const int8TypeId = 20;
