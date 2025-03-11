@@ -759,13 +759,19 @@ export const cleanUnusedSpans = () => (tree: Root) => {
 
 export const structureReferences = () => (tree: Root) => {
 	const allReference: any[] = [];
+	/* This regex business casued a lot of headache tracking down. */
+	/* The use of .test with the /g flag caused inconsistencies. But */
+	/* then calling .exec without that /g flag would crash. There may */
+	/* be a cleaner solution where we manually reset regex.lastIndex */
+	/* in certain places, but it's late and brittle, and this is currently working. */
+	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/);
 	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
-		if (node.tagName === "u") {
+		if (node.tagName === "u" || node.tagName === "a") {
 			const parentText = getTextContent(parent);
 			const nodeText = getTextContent(node);
-			if (doiBracketRegex.test(parentText)) {
+			if (doiBracketRegexTest.test(parentText)) {
 				const elements = [
 					{
 						type: "text",

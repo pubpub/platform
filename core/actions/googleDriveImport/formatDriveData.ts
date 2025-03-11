@@ -36,8 +36,8 @@ import {
 	structureInlineCode,
 	structureInlineMath,
 	structureReferences,
+	structureTables,
 	structureVideos,
-	tableToObjectArray,
 } from "./gdocPlugins";
 import { getAssetFile } from "./getGDriveFiles";
 
@@ -130,6 +130,7 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(structureCodeBlock)
 		.use(structureInlineCode)
 		.use(structureAnchors)
+		.use(structureTables)
 		.use(cleanUnusedSpans)
 		.use(structureReferences)
 		.use(structureFootnotes)
