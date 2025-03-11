@@ -116,9 +116,9 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 							field: "Title",
 							type: ElementType.pubfield,
 							component: InputComponent.textInput,
+							label: "Title",
 							config: {
 								maxLength: 255,
-								label: "Title",
 								help: "Give your review a snazzy title.",
 							},
 						},
@@ -126,18 +126,18 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 							field: "Content",
 							type: ElementType.pubfield,
 							component: InputComponent.textArea,
+							label: "Content",
 							config: {
 								help: "Enter your review here",
 								minLength: 255,
-								label: "Content",
 							},
 						},
 						{
 							field: "File",
 							type: ElementType.pubfield,
 							component: InputComponent.fileUpload,
+							label: "Attachment",
 							config: {
-								label: "Attachment",
 								help: "Please attach the file for your review here.",
 							},
 						},

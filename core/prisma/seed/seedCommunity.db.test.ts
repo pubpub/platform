@@ -34,7 +34,7 @@ describe("seedCommunity", () => {
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
-				SubmissionAuthor: { schemaName: CoreSchemaType.Number, isRelation: true },
+				SubmissionAuthor: { schemaName: CoreSchemaType.Number, relation: true },
 			},
 			pubTypes: {
 				Submission: {

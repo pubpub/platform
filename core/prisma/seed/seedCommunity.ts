@@ -51,7 +51,7 @@ import { slugifyString } from "~/lib/string";
 export type PubFieldsInitializer = Record<
 	string,
 	{
-		isRelation?: true;
+		relation?: true;
 		schemaName: CoreSchemaType;
 	}
 >;
@@ -215,7 +215,7 @@ export type PubInitializer<
 				? FieldName
 				: never]?: FieldName extends keyof PF
 				? PF[FieldName]["schemaName"] extends CoreSchemaType
-					? PF[FieldName]["isRelation"] extends true
+					? PF[FieldName]["relation"] extends true
 						? {
 								/**
 								 * Also add this pub as a child of the current pub.
@@ -242,14 +242,14 @@ export type FormElementInitializer<PF extends PubFieldsInitializer> = {
 		? {
 				type: ElementType.pubfield;
 				field: FieldName;
-				component: PF[FieldName]["isRelation"] extends true
+				component: PF[FieldName]["relation"] extends true
 					? InputComponent.relationBlock
 					: Component;
 				content?: never;
 				element?: never;
 				label: string;
 				config: Static<(typeof componentConfigSchemas)[Component]> &
-					(PF[FieldName]["isRelation"] extends true
+					(PF[FieldName]["relation"] extends true
 						? {
 								relationshipConfig: {
 									label: string;
@@ -722,7 +722,7 @@ export async function seedCommunity<
 							slug: `${communitySlug}:${slug}`,
 							communityId: communityId,
 							schemaName: info.schemaName,
-							isRelation: info.isRelation,
+							relation: info.relation,
 						};
 					})
 				)

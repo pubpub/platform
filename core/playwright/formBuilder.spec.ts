@@ -32,8 +32,8 @@ const seed = createSeed({
 		Title: { schemaName: CoreSchemaType.String },
 		Content: { schemaName: CoreSchemaType.String },
 		Sjon: { schemaName: CoreSchemaType.Number },
-		Author: { schemaName: CoreSchemaType.String, isRelation: true },
-		AuthorNull: { schemaName: CoreSchemaType.Null, isRelation: true },
+		Author: { schemaName: CoreSchemaType.String, relation: true },
+		AuthorNull: { schemaName: CoreSchemaType.Null, relation: true },
 	},
 	pubTypes: {
 		Submission: {
