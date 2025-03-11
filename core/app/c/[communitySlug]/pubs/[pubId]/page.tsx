@@ -23,6 +23,7 @@ import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getForm } from "~/lib/server/form";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import {
@@ -140,6 +141,12 @@ export default async function Page(props: {
 	if (!pub) {
 		return null;
 	}
+	const form = await getForm({
+		communityId: community.id,
+		pubTypeId: pub.pubType.id,
+	}).executeTakeFirstOrThrow(
+		() => new Error(`Could not find a form for pubtype ${pub.pubType.name}`)
+	);
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
 	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
 
@@ -171,7 +178,9 @@ export default async function Page(props: {
 
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
-					<PubValues pub={pub} />
+					pub values
+					<PubValues pub={pub} form={form} />
+					end
 				</div>
 				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 					{pub.stage ? (

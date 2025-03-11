@@ -1,0 +1,492 @@
+{
+	"id": "85cfb01f-f90d-4c42-aea4-b556a44de146",
+	"name": "Journal Article Editor (Default)",
+	"pubTypeId": "51a32a97-3808-44c2-8ca7-26d149f5885c",
+	"isArchived": false,
+	"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+	"slug": "journal-article-default-editor",
+	"access": "private",
+	"isDefault": true,
+	"createdAt": "2025-03-06T20:29:39.393Z",
+	"updatedAt": "2025-03-06T20:29:39.393Z",
+	"elements": [
+		{
+			"id": "4b4e2d8c-144d-4d41-9c84-688ef2adb521",
+			"type": "structural",
+			"fieldId": null,
+			"component": null,
+			"config": {},
+			"rank": "2",
+			"label": null,
+			"content": "# :value{field=\"title\"}",
+			"element": "p",
+			"required": null,
+			"stageId": null,
+			"schemaName": null,
+			"slug": null,
+			"isRelation": null,
+			"fieldName": null
+		},
+		{
+			"id": "748edc36-2922-4df4-8858-36a70d3f27ee",
+			"type": "pubfield",
+			"fieldId": "cfab4736-addc-4a37-a9b7-3fcaf6b7bcee",
+			"component": "textInput",
+			"config": {
+				"label": "Title"
+			},
+			"rank": "4",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:title",
+			"isRelation": false,
+			"fieldName": "Title"
+		},
+		{
+			"id": "3e057bbb-254b-43e7-b004-2cd72be743c2",
+			"type": "pubfield",
+			"fieldId": "e1d53453-ba95-4cd5-b556-39a10eec2c88",
+			"component": "textInput",
+			"config": {
+				"label": "Slug"
+			},
+			"rank": "7",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:slug",
+			"isRelation": false,
+			"fieldName": "Slug"
+		},
+		{
+			"id": "46f5e619-305f-4c7f-9af4-57e5c83d883f",
+			"type": "pubfield",
+			"fieldId": "44315e3a-50f0-48a9-acff-a5499e8796c2",
+			"component": "textInput",
+			"config": {
+				"label": "Abstract"
+			},
+			"rank": "9",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:abstract",
+			"isRelation": false,
+			"fieldName": "Abstract"
+		},
+		{
+			"id": "83b69159-c5dd-49e1-b99e-834af8c82368",
+			"type": "pubfield",
+			"fieldId": "dfd24b4e-d365-448f-9193-e5f2bd73b902",
+			"component": "datePicker",
+			"config": {
+				"label": "Last Edited"
+			},
+			"rank": "C",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "DateTime",
+			"slug": "arcadia-research:last-edited",
+			"isRelation": false,
+			"fieldName": "Last Edited"
+		},
+		{
+			"id": "3009b24a-3eeb-47cd-a8c5-b4ae2458bf34",
+			"type": "pubfield",
+			"fieldId": "a4bfdcc8-cfdd-44af-90c3-f1ae858a1b48",
+			"component": "datePicker",
+			"config": {
+				"label": "Publication Date"
+			},
+			"rank": "E",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "DateTime",
+			"slug": "arcadia-research:publication-date",
+			"isRelation": false,
+			"fieldName": "Publication Date"
+		},
+		{
+			"id": "e2fa4a82-7b51-4db6-95a3-c4177172cb90",
+			"type": "pubfield",
+			"fieldId": "04928b1d-71e8-4c5e-876a-bf4f3a5d8768",
+			"component": "textInput",
+			"config": {
+				"label": "DOI"
+			},
+			"rank": "H",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:doi",
+			"isRelation": false,
+			"fieldName": "DOI"
+		},
+		{
+			"id": "553c2fe3-03e3-411c-b0b5-fbe32e71e7a8",
+			"type": "pubfield",
+			"fieldId": "319c9f4a-e876-401f-a9fe-b2e045497b6a",
+			"component": "textInput",
+			"config": {
+				"label": "DOI Suffix"
+			},
+			"rank": "J",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:doi-suffix",
+			"isRelation": false,
+			"fieldName": "DOI Suffix"
+		},
+		{
+			"id": "f0d06b00-995f-4845-b1f8-0e8ae858430c",
+			"type": "pubfield",
+			"fieldId": "daa1fb0a-72af-4383-a236-78ab0b23fe2e",
+			"component": "textInput",
+			"config": {
+				"label": "URL"
+			},
+			"rank": "M",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "URL",
+			"slug": "arcadia-research:url",
+			"isRelation": false,
+			"fieldName": "URL"
+		},
+		{
+			"id": "9f96f4c0-aedf-45ba-9bec-790f7cfe9122",
+			"type": "pubfield",
+			"fieldId": "27aca72d-0254-46df-b58c-d2b10805e74c",
+			"component": "textInput",
+			"config": {
+				"label": "PubContent"
+			},
+			"rank": "O",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:pubcontent",
+			"isRelation": false,
+			"fieldName": "PubContent"
+		},
+		{
+			"id": "ffd8755e-67a2-47ea-b9a6-4c18a6439356",
+			"type": "pubfield",
+			"fieldId": "845e7691-6333-446f-970f-0de2486c3edb",
+			"component": "textInput",
+			"config": {
+				"label": "License"
+			},
+			"rank": "R",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:license",
+			"isRelation": false,
+			"fieldName": "License"
+		},
+		{
+			"id": "33610a68-c07c-4383-b2c2-ab2bf156e70f",
+			"type": "pubfield",
+			"fieldId": "1f9bf542-623d-4893-aaa4-1ad723e5f42c",
+			"component": "textInput",
+			"config": {
+				"label": "Description"
+			},
+			"rank": "T",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:description",
+			"isRelation": false,
+			"fieldName": "Description"
+		},
+		{
+			"id": "78e61faa-e2d0-4bde-86e7-738322ec82cb",
+			"type": "pubfield",
+			"fieldId": "3fabe9db-2f11-4575-85f9-071a1139fe6f",
+			"component": "datePicker",
+			"config": {
+				"label": "Creation Date"
+			},
+			"rank": "W",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "DateTime",
+			"slug": "arcadia-research:creation-date",
+			"isRelation": false,
+			"fieldName": "Creation Date"
+		},
+		{
+			"id": "396667ee-1437-4050-91f1-7ba92704f762",
+			"type": "pubfield",
+			"fieldId": "b92c269d-2961-4da0-9c93-3ce689754e9f",
+			"component": "textInput",
+			"config": {
+				"label": "Avatar"
+			},
+			"rank": "Y",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:avatar",
+			"isRelation": false,
+			"fieldName": "Avatar"
+		},
+		{
+			"id": "39ff1e4c-0d0d-42cb-87ab-2bad47faec53",
+			"type": "pubfield",
+			"fieldId": "9ac627ca-8d51-4fc9-a64c-fd47f6cfe011",
+			"component": "textInput",
+			"config": {
+				"relationshipConfig": {
+					"label": "Contributors",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "b",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:contributors",
+			"isRelation": true,
+			"fieldName": "Contributors"
+		},
+		{
+			"id": "2ae20186-d157-4ce4-a128-dd16b47461b7",
+			"type": "pubfield",
+			"fieldId": "2d9d7c25-e1d6-4897-8ff0-69a59154aab4",
+			"component": null,
+			"config": {
+				"relationshipConfig": {
+					"label": "Tag",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "d",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "Null",
+			"slug": "arcadia-research:tag",
+			"isRelation": true,
+			"fieldName": "Tag"
+		},
+		{
+			"id": "48dd2078-8be6-4024-bf08-34c81e10e7fa",
+			"type": "pubfield",
+			"fieldId": "b3056cb1-18a4-413c-bba7-efee1c257f18",
+			"component": null,
+			"config": {
+				"relationshipConfig": {
+					"label": "Editors",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "g",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "Null",
+			"slug": "arcadia-research:editors",
+			"isRelation": true,
+			"fieldName": "Editors"
+		},
+		{
+			"id": "e50383f5-d33a-4cea-a68b-95031162022c",
+			"type": "pubfield",
+			"fieldId": "673bce0e-b160-4ac0-b769-a37aec829004",
+			"component": "textInput",
+			"config": {
+				"relationshipConfig": {
+					"label": "Downloads",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "i",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:downloads",
+			"isRelation": true,
+			"fieldName": "Downloads"
+		},
+		{
+			"id": "be93a87c-cc0f-4fb0-8b70-3ebc3e945c7d",
+			"type": "pubfield",
+			"fieldId": "fb26c180-c0f6-44b4-87bc-78be89dd4d33",
+			"component": null,
+			"config": {
+				"relationshipConfig": {
+					"label": "Images",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "l",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "Null",
+			"slug": "arcadia-research:images",
+			"isRelation": true,
+			"fieldName": "Images"
+		},
+		{
+			"id": "185b55a0-b9ae-4ae8-b3f0-caf8b437bde4",
+			"type": "pubfield",
+			"fieldId": "1100ce1f-71a1-4c94-b4f4-73b56f9326c4",
+			"component": "textInput",
+			"config": {
+				"relationshipConfig": {
+					"label": "Citations",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "n",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:citations",
+			"isRelation": true,
+			"fieldName": "Citations"
+		},
+		{
+			"id": "ba401575-feef-4243-a3f6-1fb984245249",
+			"type": "pubfield",
+			"fieldId": "5a1e259a-7739-4b5f-b412-51c398ddaa06",
+			"component": "textInput",
+			"config": {
+				"label": "Inline Citation Style"
+			},
+			"rank": "q",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:inline-citation-style",
+			"isRelation": false,
+			"fieldName": "Inline Citation Style"
+		},
+		{
+			"id": "62499a6e-d915-476e-aabb-f482603dcc65",
+			"type": "pubfield",
+			"fieldId": "69cc29cd-6cac-49f1-883d-ee8a5d828daf",
+			"component": "textInput",
+			"config": {
+				"label": "Citation Style"
+			},
+			"rank": "s",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:citation-style",
+			"isRelation": false,
+			"fieldName": "Citation Style"
+		},
+		{
+			"id": "8252c1a9-c341-461f-b66b-4bb7baa5c8ff",
+			"type": "pubfield",
+			"fieldId": "190b484a-431e-407b-a080-77326f220cda",
+			"component": null,
+			"config": {
+				"relationshipConfig": {
+					"label": "Tables",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "v",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "Null",
+			"slug": "arcadia-research:tables",
+			"isRelation": true,
+			"fieldName": "Tables"
+		},
+		{
+			"id": "2c5664ff-f9f4-4351-8b30-dc7bc309b5d8",
+			"type": "pubfield",
+			"fieldId": "738484a3-50c6-4a6e-b990-93e2d442ee42",
+			"component": "textInput",
+			"config": {
+				"relationshipConfig": {
+					"label": "ConnectedPubs",
+					"component": "relationBlock"
+				}
+			},
+			"rank": "x",
+			"label": null,
+			"content": null,
+			"element": null,
+			"required": null,
+			"stageId": null,
+			"schemaName": "String",
+			"slug": "arcadia-research:connectedpubs",
+			"isRelation": true,
+			"fieldName": "ConnectedPubs"
+		}
+	]
+}
