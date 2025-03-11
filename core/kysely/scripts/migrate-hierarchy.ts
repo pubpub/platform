@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, no-restricted-properties */
 
 import pluralize from "pluralize";
 
@@ -8,7 +8,13 @@ import { expect } from "utils";
 
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
-import { db } from "../database";
+import { createDatabase } from "../database-init";
+
+const db = createDatabase({
+	url: `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT}/${process.env.PGDATABASE}`,
+	logLevel: "debug",
+	debug: true,
+});
 
 type Relation = {
 	parentPubId: PubsId;
