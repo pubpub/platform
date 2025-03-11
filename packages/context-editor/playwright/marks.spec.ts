@@ -19,7 +19,7 @@ test.describe("bold", () => {
 		await page.keyboard.type("bold");
 		await page.getByRole("button", { name: "Bold" }).click();
 		await page.keyboard.type("not bold");
-		await expect(page.getByRole("strong")).toHaveText("bold expect fail");
+		await expect(page.getByRole("strong")).toHaveText("bold");
 	});
 
 	test("can use menu bar to affect selection", async ({ page }) => {
