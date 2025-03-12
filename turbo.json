@@ -45,6 +45,10 @@
 		"test-run": {
 			"dependsOn": ["^topo"],
 			"outputs": [".cache/.vitestcache"]
+		},
+		"//#turbo:p:build": {
+			"inputs": ["packages/*/src/**"],
+			"outputs": ["packages/*/dist/**"]
 		}
 	}
 }

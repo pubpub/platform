@@ -7,6 +7,8 @@ services:
             timeout: 30s
             retries: 5
             start_period: 30s
+            # just spam the shit out of the healthcheck to make sure it's ready
+            start_interval: 1s
         restart: unless-stopped
         command: server --console-address ":9001" /data
         ports:
