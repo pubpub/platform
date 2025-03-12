@@ -58,6 +58,7 @@ interface MultiSelectProps
 	asChild?: boolean;
 	className?: string;
 	badgeClassName?: string;
+	showClearAll?: boolean;
 }
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
@@ -73,6 +74,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			asChild = false,
 			className,
 			badgeClassName,
+			showClearAll = true,
 			...props
 		},
 		ref
@@ -299,7 +301,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 							<CommandSeparator />
 							<CommandGroup>
 								<div className="flex items-center justify-between">
-									{selectedValues.length > 0 && (
+									{showClearAll && selectedValues.length > 0 && (
 										<>
 											<CommandItem
 												onSelect={handleClear}

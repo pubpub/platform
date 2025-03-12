@@ -143,6 +143,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						Select the stages this token can read Pubs from
 					</span>
 					<MultiSelect
+						showClearAll={false}
 						variant="inverted"
 						options={context.stages.allOptions}
 						defaultValue={
@@ -156,16 +157,18 @@ const permissionContraintMap: PermissionContraintMap = {
 								typeof value === "object" &&
 								value.pubTypes?.length === context.pubTypes.allValues.length;
 
-							if ((allStagesSelected || val.length === 0) && allPubTypesSelected) {
+							if (allStagesSelected && allPubTypesSelected) {
 								onChange(true);
 								return;
 							}
 
+							if (val.length === 0) {
+								// do not allow the length to be set to 0
+								return;
+							}
+
 							onChange({
-								stages:
-									val.length === 0
-										? context.stages.allValues
-										: (val as StagesId[]),
+								stages: val as StagesId[],
 								pubTypes:
 									typeof value === "object"
 										? value.pubTypes
@@ -181,6 +184,7 @@ const permissionContraintMap: PermissionContraintMap = {
 						Select the types of Pubs this token can read
 					</span>
 					<MultiSelect
+						showClearAll={false}
 						variant="inverted"
 						options={context.pubTypes.allOptions}
 						defaultValue={
@@ -194,16 +198,18 @@ const permissionContraintMap: PermissionContraintMap = {
 								typeof value === "object" &&
 								value.stages?.length === context.stages.allValues.length;
 
-							if ((allStagesSelected || val.length === 0) && allPubTypesSelected) {
+							if (allStagesSelected && allPubTypesSelected) {
 								onChange(true);
 								return;
 							}
 
+							if (val.length === 0) {
+								// do not allow the length to be set to 0
+								return;
+							}
+
 							onChange({
-								pubTypes:
-									val.length === 0
-										? context.pubTypes.allValues
-										: (val as PubTypesId[]),
+								pubTypes: val as PubTypesId[],
 								stages:
 									typeof value == "object"
 										? value.stages
