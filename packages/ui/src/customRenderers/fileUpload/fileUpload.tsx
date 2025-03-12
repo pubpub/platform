@@ -12,6 +12,7 @@ import "@uppy/core/dist/style.min.css";
 import "@uppy/dashboard/dist/style.min.css";
 
 import type { AwsBody } from "@uppy/aws-s3";
+import type { Restrictions } from "@uppy/core/lib/Restricter";
 
 import AwsS3Multipart from "@uppy/aws-s3";
 
@@ -28,17 +29,21 @@ export type FormattedFile = {
 	filePreview?: string;
 };
 
-type FileUploadProps = {
+export type FileUploadProps = {
 	upload: (fileName: string) => Promise<string | { error: string }>;
 	onUpdateFiles: (files: FormattedFile[]) => void;
 	disabled?: boolean;
 	id?: string;
+	restrictions?: Partial<Restrictions>;
 };
 
 const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
-	const [uppy] = useState(() => new Uppy<Meta, AwsBody>({ id: props.id }).use(AwsS3Multipart));
+	const id = props.id ? `dashboard-${props.id}` : "uppy-dashboard";
+	const [uppy] = useState(() =>
+		new Uppy<Meta, AwsBody>({ id, restrictions: props.restrictions }).use(AwsS3Multipart)
+	);
 	useEffect(() => {
-		uppy.on("complete", () => {
+		const handler = () => {
 			const uploadedFiles = uppy.getFiles();
 			const formattedFiles = uploadedFiles.map((file) => {
 				return {
@@ -53,7 +58,13 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 				};
 			}) as FormattedFile[];
 			props.onUpdateFiles(formattedFiles);
-		});
+		};
+		uppy.on("complete", handler);
+
+		// Make sure we only have one listener at a time
+		return () => {
+			uppy.off("complete", handler);
+		};
 	}, [props.onUpdateFiles]);
 
 	useEffect(() => {
@@ -85,13 +96,7 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 		});
 	}, [props.upload]);
 
-	return (
-		<Dashboard
-			uppy={uppy}
-			disabled={props.disabled}
-			id={props.id ? `dashboard-${props.id}` : undefined}
-		/>
-	);
+	return <Dashboard uppy={uppy} disabled={props.disabled} id={id} width="100%" />;
 });
 
 export { FileUpload };
