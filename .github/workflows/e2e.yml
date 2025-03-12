@@ -124,7 +124,7 @@ jobs:
                   INTEGRATION_TEST_HOST: localhost
 
             - name: Print container logs
-              if: ${{(failure()  || cancelled()}}
+              if: ${{failure() || cancelled()}}
               run: docker compose -f docker-compose.test.yml --profile integration logs
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
