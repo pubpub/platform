@@ -1764,9 +1764,9 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									.onRef("forms.pubTypeId", "=", "pt.pubTypeId")
 									.on("forms.isDefault", "=", true)
 							)
-							.leftJoin("form_elements", (join) =>
+							.fullJoin("form_elements", (join) =>
 								join
-									.onRef("form_elements.fieldId", "=", "pub_fields.id")
+									.onRef("form_elements.fieldId", "=", "pv.fieldId")
 									.onRef("form_elements.formId", "=", "forms.id")
 							)
 							.$if(Boolean(fieldSlugs), (qb) =>

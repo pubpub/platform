@@ -1017,8 +1017,8 @@ describe("getPubsWithRelatedValues", () => {
 			{ pubId: pubs[0].id, communityId: community.id },
 			{ withValues: true }
 		);
-		// Ideally this also returns an item for the form but with empty values...
-		expect(pub1.values).toHaveLength(2);
+		// TODO: Ideally this also returns an item for the form but with empty values...
+		expect(pub1.values).toHaveLength(3);
 		expect(pub1.values).toMatchObject([
 			{
 				value: "Some title",
