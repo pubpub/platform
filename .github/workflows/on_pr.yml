@@ -119,3 +119,13 @@ jobs:
               with:
                   source-dir: docs/out
                   action: remove
+
+    status-check:
+        needs:
+            - ci
+            - e2e
+        runs-on: ubuntu-latest
+        steps:
+            - name: ok
+              run: |
+                  echo ok
