@@ -80,28 +80,3 @@ jobs:
 
             - name: Run task
               run: pnpm ${{ matrix.task }}
-
-            # - name: Run all tasks simultaneously
-            #   run: >
-            #       pnpm format &
-            #       pnpm lint &
-            #       pnpm type-check &
-            #       pnpm test:setup && pnpm --filter core migrate-test && pnpm test-run
-
-            # - name: Run prettier
-            #   run: pnpm format
-
-            # - name: Run eslint
-            #   run: pnpm lint
-
-            # - name: Run typecheck
-            #   run: pnpm type-check
-
-            # - name: Start test dependencies
-            #   run: pnpm test:setup
-
-            # - name: Run migrations
-            #   run: pnpm --filter core migrate-test
-
-            # - name: Run vitest tests
-            #   run: pnpm test-run
