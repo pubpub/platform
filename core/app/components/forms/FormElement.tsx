@@ -1,48 +1,18 @@
-import { defaultComponent } from "schemas";
-
-import type { ProcessedPub } from "contracts";
-import type { CommunityMembershipsId, PubsId } from "db/public";
-import { CoreSchemaType, ElementType, InputComponent } from "db/public";
+import { ElementType } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
 
+import type { PubFieldFormElementProps } from "./PubFieldFormElement";
 import type { FormElements } from "./types";
-import { CheckboxElement } from "./elements/CheckboxElement";
-import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
-import { ConfidenceElement } from "./elements/ConfidenceElement";
-import { ContextEditorElement } from "./elements/ContextEditorElement";
-import { DateElement } from "./elements/DateElement";
-import { FileUploadElement } from "./elements/FileUploadElement";
-import { MemberSelectElement } from "./elements/MemberSelectElement";
-import { MultivalueInputElement } from "./elements/MultivalueInputElement";
-import { RadioGroupElement } from "./elements/RadioGroupElement";
-import { SelectDropdownElement } from "./elements/SelectDropdownElement";
-import { TextAreaElement } from "./elements/TextAreaElement";
-import { TextInputElement } from "./elements/TextInputElement";
+import { RelatedPubsElement } from "./elements/RelatedPubsElement";
 import { FormElementToggle } from "./FormElementToggle";
+import { PubFieldFormElement } from "./PubFieldFormElement";
 
-export type FormElementProps = {
-	pubId: PubsId;
+export type FormElementProps = Omit<PubFieldFormElementProps, "element"> & {
 	element: FormElements;
-	searchParams: Record<string, unknown>;
-	communitySlug: string;
-	values: ProcessedPub["values"];
 };
 
-export const FormElement = ({
-	pubId,
-	element: propElement,
-	searchParams,
-	communitySlug,
-	values,
-}: FormElementProps) => {
-	const element = {
-		...propElement,
-		component:
-			propElement.component ??
-			(propElement.schemaName ? defaultComponent(propElement.schemaName) : null),
-	} as typeof propElement;
-
+export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
 			return (
@@ -56,116 +26,35 @@ export const FormElement = ({
 		return null;
 	}
 
-	if (!element.schemaName || !element.component) {
+	if (!element.schemaName) {
 		return null;
 	}
 
+	const configLabel =
+		"relationshipConfig" in element.config
+			? element.config.relationshipConfig.label
+			: element.config.label;
+
 	const basicProps = {
-		label: element.config.label || element.label || element.slug,
+		label: configLabel || element.label || element.slug,
 		slug: element.slug,
 	};
 
-	let input: React.ReactNode | undefined;
+	let input = (
+		<PubFieldFormElement pubId={pubId} element={element} values={values} {...basicProps} />
+	);
 
-	if (element.component === InputComponent.textInput) {
+	if (element.isRelation && "relationshipConfig" in element.config) {
 		input = (
-			<TextInputElement
+			<RelatedPubsElement
 				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}
-				type={element.schemaName === CoreSchemaType.Number ? "number" : undefined}
-			/>
-		);
-	} else if (element.component === InputComponent.textArea) {
-		input = (
-			<TextAreaElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.checkbox) {
-		input = (
-			<CheckboxElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.fileUpload) {
-		input = (
-			<FileUploadElement
-				pubId={pubId}
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.confidenceInterval) {
-		input = (
-			<ConfidenceElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.datePicker) {
-		input = (
-			<DateElement {...basicProps} config={element.config} schemaName={element.schemaName} />
-		);
-	} else if (element.component === InputComponent.memberSelect) {
-		const userId = values.find((v) => v.fieldSlug === element.slug)?.value as
-			| CommunityMembershipsId
-			| undefined;
-		input = (
-			<MemberSelectElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-				id={element.id}
-				searchParams={searchParams}
-				value={userId}
-				communitySlug={communitySlug}
-			/>
-		);
-	} else if (element.component === InputComponent.radioGroup) {
-		input = (
-			<RadioGroupElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.checkboxGroup) {
-		input = (
-			<CheckboxGroupElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.selectDropdown) {
-		input = (
-			<SelectDropdownElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.multivalueInput) {
-		input = (
-			<MultivalueInputElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-			/>
-		);
-	} else if (element.component === InputComponent.richText) {
-		input = (
-			<ContextEditorElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
+				valueComponentProps={{
+					pubId,
+					element,
+					values,
+				}}
 			/>
 		);
 	}

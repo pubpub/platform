@@ -35,7 +35,7 @@ export const DateElement = ({ slug, label, config }: ElementProps<InputComponent
 					<FormLabel>{label}</FormLabel>
 					<DatePicker
 						disabled={!isEnabled}
-						date={field.value ?? new Date()}
+						date={field.value}
 						setDate={(date) => field.onChange(date)}
 					/>
 					<FormDescription>{config.help}</FormDescription>

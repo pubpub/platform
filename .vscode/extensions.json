@@ -3,6 +3,8 @@
 		"ms-playwright.playwright",
 		"YoavBls.pretty-ts-errors",
 		"esbenp.prettier-vscode",
-		"dbaeumer.vscode-eslint"
+		"dbaeumer.vscode-eslint",
+		// for yaml autocompletion using the # yaml-language-server: $schema=... directive
+		"redhat.vscode-yaml"
 	]
 }

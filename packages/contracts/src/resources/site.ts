@@ -25,7 +25,6 @@ import {
 	memberRoleSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
-	pubsSchema,
 	pubTypesIdSchema,
 	pubTypesSchema,
 	pubValuesSchema,
@@ -36,22 +35,17 @@ import {
 } from "db/public";
 
 import type { Json } from "./types";
-import {
-	CreatePubRequestBodyWithNulls,
-	CreatePubRequestBodyWithNullsBase,
-	jsonSchema,
-} from "./types";
+import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
-export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
 	stageId?: StagesId;
-	children?: CreatePubRequestBodyWithNulls[];
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
 	members?: Record<UsersId, MemberRole>;
 };
 
 export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 
-const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
+const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.extend({
 	stageId: stagesIdSchema.optional(),
 	values: z.record(
 		jsonSchema.or(
@@ -68,7 +62,6 @@ const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBa
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
 	CreatePubRequestBodyWithNullsWithStageId.extend({
-		children: z.lazy(() => CreatePubRequestBodyWithNullsNew.array().optional()),
 		relatedPubs: z
 			.lazy(() =>
 				z.record(
@@ -79,16 +72,6 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 	});
 
 const contract = initContract();
-
-export type PubWithChildren = z.infer<typeof pubsSchema> & {
-	children?: PubWithChildren[];
-};
-
-const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
-	z.object({
-		children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
-	})
-);
 
 const upsertPubRelationsSchema = z.record(
 	z.array(
@@ -102,14 +85,9 @@ const upsertPubRelationsSchema = z.record(
 	)
 );
 
-/** Only add the `children` if the `withChildren` option has not been set to `false */
-type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"] extends false
-	? { children?: never }
-	: Options["withChildren"] extends undefined
-		? { children?: ProcessedPub<Options>[] }
-		: { children: ProcessedPub<Options>[] };
-
-/** Only add the `stage` if the `withStage` option has not been set to `false */
+/**
+ * Only add the `stage` if the `withStage` option has not been set to `false
+ */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
 	? { stage: Stages | null }
 	: Options["withStage"] extends false
@@ -152,19 +130,12 @@ type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
 			: { assignee?: Users | null };
 
 /**
- * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of
- * `ProcessedPub`
+ * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
  *
  * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of
  * a function
  */
 export type MaybePubOptions = {
-	/**
-	 * Whether to recursively fetch children up to depth `depth`.
-	 *
-	 * @default true
-	 */
-	withChildren?: boolean;
 	/**
 	 * Whether to recursively fetch related pubs.
 	 *
@@ -239,8 +210,7 @@ type ProcessedPubBase = {
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
 	/** Is an empty array if `withValues` is false */
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
-} & MaybePubChildren<Options> &
-	MaybePubStage<Options> &
+} & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &
 	MaybePubLegacyAssignee<Options>;
@@ -257,29 +227,16 @@ export type PubTypeWithFields = Prettify<
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages | null;
-	pubType?: PubTypeWithFields;
-	children?: NonGenericProcessedPub[];
+	pubType?: PubTypes;
 	values?: (ValueBase & {
 		relatedPub?: NonGenericProcessedPub | null;
 		relatedPubId: PubsId | null;
 	})[];
 }
 
-const pubTypeReturnSchema = pubTypesSchema.extend({
-	fields: z.array(
-		pubFieldsSchema
-			.omit({
-				createdAt: true,
-				updatedAt: true,
-				communityId: true,
-				isArchived: true,
-				pubFieldSchemaId: true,
-			})
-			.extend({
-				isTitle: z.boolean(),
-			})
-	),
-}) satisfies z.ZodType<PubTypeWithFields>;
+const pubTypeWithFieldsSchema = pubTypesSchema.extend({
+	fields: z.array(pubFieldsSchema.extend({ isTitle: z.boolean() })),
+});
 
 const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	id: pubsIdSchema,
@@ -303,8 +260,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	stage: stagesSchema.nullish(),
-	pubType: pubTypeReturnSchema.optional(),
-	children: z.lazy(() => z.array(processedPubSchema)).optional(),
+	pubType: pubTypeWithFieldsSchema.optional(),
 	assignee: usersSchema.nullish(),
 });
 
@@ -326,9 +282,8 @@ const getPubQuerySchema = z
 			.positive()
 			.default(2)
 			.describe(
-				"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
+				"The depth to which to fetch related pubs. Defaults to 2, which means to fetch the top level pub and one degree of related pubs."
 			),
-		withChildren: z.boolean().default(false).describe("Whether to fetch children."),
 		withRelatedPubs: z
 			.boolean()
 			.default(false)
@@ -347,6 +302,93 @@ const getPubQuerySchema = z
 	})
 	.passthrough();
 
+export type FTSReturn = {
+	id: PubsId;
+	createdAt: Date;
+	updatedAt: Date;
+	communityId: CommunitiesId;
+	parentId: PubsId | null;
+	assigneeId: UsersId | null;
+	title: string | null;
+	searchVector: string | null;
+	stage: {
+		id: StagesId;
+		name: string;
+	} | null;
+	pubType: {
+		id: PubTypesId;
+		createdAt: Date;
+		updatedAt: Date;
+		communityId: CommunitiesId;
+		name: string;
+		description: string | null;
+	};
+	titleHighlights: string;
+	matchingValues: {
+		slug: string;
+		name: string;
+		value: Json;
+		isTitle: boolean;
+		highlights: string;
+	}[];
+};
+
+const pubTypeReturnSchema = pubTypesSchema.extend({
+	fields: z.array(
+		pubFieldsSchema
+			.omit({
+				createdAt: true,
+				updatedAt: true,
+				communityId: true,
+				isArchived: true,
+				pubFieldSchemaId: true,
+			})
+			.extend({
+				isTitle: z.boolean(),
+			})
+	),
+}) satisfies z.ZodType<PubTypeWithFields>;
+
+export const ftsReturnSchema = z.object({
+	id: pubsIdSchema,
+	createdAt: z.date(),
+	updatedAt: z.date(),
+	communityId: communitiesIdSchema,
+	parentId: pubsIdSchema.nullable(),
+	assigneeId: usersIdSchema.nullable(),
+	title: z.string().nullable(),
+	searchVector: z.string().nullable(),
+	stage: z
+		.object({
+			id: stagesIdSchema,
+			name: z.string(),
+		})
+		.nullable(),
+	pubType: pubTypeReturnSchema,
+	titleHighlights: z.string(),
+	matchingValues: z.array(
+		z.object({
+			slug: z.string(),
+			name: z.string(),
+			value: jsonSchema,
+			isTitle: z.boolean(),
+			highlights: z.string(),
+		})
+	),
+}) satisfies z.ZodType<FTSReturn>;
+
+export const zodErrorSchema = z.object({
+	name: z.string(),
+	issues: z.array(
+		z.object({
+			code: z.string(),
+			expected: z.string(),
+			received: z.string(),
+			path: z.array(z.string()),
+			message: z.string(),
+		})
+	),
+});
 export interface CommunitySpecificTypes {
 	Pub?: {};
 	PubType?: {};
@@ -372,16 +414,28 @@ export const createSiteApi = <
 	contract.router(
 		{
 			pubs: {
+				search: {
+					method: "GET",
+					path: "/pubs/search",
+					summary: "Search for pubs",
+					description: "Search for pubs by title or value.",
+					query: z.object({
+						query: z.string(),
+					}),
+					responses: {
+						200: ftsReturnSchema.array(),
+					},
+				},
 				get: {
 					method: "GET",
 					path: "/pubs/:pubId",
 					summary: "Gets a pub",
 					description:
-						"Get a pub and its children by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
+						"Get a pub by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
 					pathParams: z.object({
 						pubId: z.string().uuid(),
 					}),
-					query: getPubQuerySchema.optional(),
+					query: getPubQuerySchema,
 					responses: {
 						200: processedPubSchema as unknown as z.ZodType<Pub>,
 					},
@@ -430,58 +484,33 @@ export const createSiteApi = <
 					responses: {
 						200: processedPubSchema as unknown as z.ZodType<Pub>,
 						204: z.never().optional(),
+						400: zodErrorSchema.or(z.string()),
 					},
 				},
-				archive: {
-					summary: "Archives a pub",
-					description: "Archives a pub by ID.",
+				replace: {
+					summary: "Replace pub relation fields",
+					description:
+						"Replaces all pub relations for the specified slugs. If you want to add or modify relations without overwriting existing ones, use PATCH.",
+					method: "PUT",
+					path: "/pubs/:pubId/relations",
+					headers: preferRepresentationHeaderSchema,
+					body: upsertPubRelationsSchema,
+					responses: {
+						200: processedPubSchema as unknown as z.ZodType<Pub>,
+						204: z.never().optional(),
+						400: zodErrorSchema.or(z.string()),
+					},
+				},
+				remove: {
+					summary: "Remove pub relation fields",
+					description:
+						"Removes related pubs from the specified pubfields. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.\n Note: This endpoint does not remove the related pubs themselves, only the relations.",
 					method: "DELETE",
 					body: z.never().nullish(),
 					path: "/pubs/:pubId",
 					responses: {
 						204: z.never().optional(),
-						404: z.literal("Pub not found"),
-					},
-				},
-				relations: {
-					update: {
-						summary: "Update pub relation fields",
-						description:
-							"Updates pub relations for the specified slugs. Only adds or modifies specified relations, leaves existing relations alone. If you want to replace all relations for a field, use PUT.",
-						method: "PATCH",
-						path: "/pubs/:pubId/relations",
-						headers: preferRepresentationHeaderSchema,
-						body: upsertPubRelationsSchema,
-						responses: {
-							200: processedPubSchema as unknown as z.ZodType<Pub>,
-							204: z.never().optional(),
-						},
-					},
-					replace: {
-						summary: "Replace pub relation fields",
-						description:
-							"Replaces all pub relations for the specified slugs. If you want to add or modify relations without overwriting existing ones, use PATCH.",
-						method: "PUT",
-						path: "/pubs/:pubId/relations",
-						headers: preferRepresentationHeaderSchema,
-						body: upsertPubRelationsSchema,
-						responses: {
-							200: processedPubSchema as unknown as z.ZodType<Pub>,
-							204: z.never().optional(),
-						},
-					},
-					remove: {
-						summary: "Remove pub relation fields",
-						description:
-							"Removes related pubs from the specified pubfields. Provide a dictionary with field slugs as keys and arrays of pubIds to remove as values. Use '*' to remove all relations for a given field slug.\n Note: This endpoint does not remove the related pubs themselves, only the relations.",
-						method: "DELETE",
-						path: "/pubs/:pubId/relations",
-						headers: preferRepresentationHeaderSchema,
-						body: z.record(z.union([z.literal("*"), z.array(pubsIdSchema)])),
-						responses: {
-							200: processedPubSchema as unknown as z.ZodType<Pub>,
-							204: z.never().optional(),
-						},
+						400: zodErrorSchema.or(z.string()),
 					},
 				},
 			},
@@ -496,7 +525,7 @@ export const createSiteApi = <
 						pubTypeId: z.string().uuid(),
 					}),
 					responses: {
-						200: pubTypeReturnSchema as unknown as z.ZodType<PubType>,
+						200: pubTypesSchema as unknown as z.ZodType<PubType>,
 					},
 				},
 				getMany: {
@@ -512,7 +541,7 @@ export const createSiteApi = <
 						orderDirection: z.enum(["asc", "desc"]).optional(),
 					}),
 					responses: {
-						200: z.array(pubTypeReturnSchema) as unknown as z.ZodType<PubType[]>,
+						200: pubTypesSchema.array() as unknown as z.ZodType<PubType[]>,
 					},
 				},
 			},
@@ -567,8 +596,26 @@ export const createSiteApi = <
 					},
 				},
 			},
+			members: {
+				get: {
+					path: "/members/:memberId",
+					method: "GET",
+					summary: "Gets a member",
+					description:
+						"Get a member by its community membership ID. This endpoint is used by the MemberSelect component, though we may not want to keep this since community membership IDs can change and would prefer to use user ID.",
+					pathParams: z.object({
+						memberId: z.string().uuid(),
+					}),
+					responses: {
+						200: safeUserSchema.extend({
+							member: communityMembershipsSchema.nullable(),
+						}),
+					},
+				},
+			},
 		},
 		{
+			strictStatusCodes: true,
 			pathPrefix: "/api/v0/c/:communitySlug/site",
 			baseHeaders: z.object({
 				authorization: z
@@ -576,6 +623,12 @@ export const createSiteApi = <
 					.regex(/^Bearer /)
 					.optional(),
 			}),
+			commonResponses: {
+				// this makes sure that 400 is always a valid response code
+				400: zodErrorSchema,
+				403: z.string(),
+				404: z.string(),
+			},
 		}
 	);
 

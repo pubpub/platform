@@ -1,12 +1,15 @@
 "use client";
 
-import type { Event } from "@prisma/client";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import Link from "next/link";
+
+import type { PubsId } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
+import type { PubTitleProps } from "~/lib/pubs";
 import { PubTitle } from "~/app/components/PubTitle";
 
 export type ActionRun = {
@@ -14,13 +17,7 @@ export type ActionRun = {
 	createdAt: Date;
 	actionInstance: { name: string; action: string } | null;
 	stage: { id: string; name: string } | null;
-	pub: {
-		id: string;
-		values: { field: { slug: string }; value: unknown }[] | Record<string, unknown>;
-		createdAt: Date;
-		pubType: { name: string };
-		title: string | null;
-	} | null;
+	pub: PubTitleProps & { id: PubsId };
 	result: unknown;
 } & (
 	| {
@@ -37,7 +34,7 @@ export type ActionRun = {
 	  }
 );
 
-export const getActionRunsTableColumns = () =>
+export const getActionRunsTableColumns = (communitySlug: string) =>
 	[
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Action" />,
@@ -78,7 +75,13 @@ export const getActionRunsTableColumns = () =>
 			accessorKey: "pub",
 			cell: ({ getValue }) => {
 				const pub = getValue<ActionRun["pub"]>();
-				return pub ? <PubTitle pub={pub} /> : "Unknown";
+				return pub ? (
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>
+						<PubTitle pub={pub} />
+					</Link>
+				) : (
+					"Unknown"
+				);
 			},
 		},
 		{

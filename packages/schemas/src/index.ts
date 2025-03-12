@@ -61,7 +61,7 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 		case CoreSchemaType.MemberId:
 			return "";
 		case CoreSchemaType.Null:
-			return undefined;
+			return null;
 		case CoreSchemaType.Number:
 			return undefined;
 		case CoreSchemaType.NumericArray:

@@ -30,23 +30,28 @@ export const useSaveStatus = ({ defaultMessage }: { defaultMessage?: string }) =
 	return status;
 };
 
-export const SaveStatus = () => {
-	const status = useSaveStatus({ defaultMessage: "Progress will be automatically saved" });
+export const SaveStatus = ({ autosave }: { autosave?: boolean }) => {
+	const defaultMessage = autosave
+		? "Progress will be automatically saved"
+		: "Form will save when you click submit";
+	const status = useSaveStatus({ defaultMessage });
 
 	return (
 		<div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
 			<span>{status}</span>
-			<Tooltip>
-				<TooltipContent side="bottom" className="w-60 text-sm">
-					Bookmark this page to return to your saved progress anytime.
-				</TooltipContent>
-				<TooltipTrigger asChild>
-					<div>
-						<span className="sr-only">More info</span>
-						<CircleHelp size={16} />
-					</div>
-				</TooltipTrigger>
-			</Tooltip>
+			{autosave ? (
+				<Tooltip>
+					<TooltipContent side="bottom" className="w-60 text-sm">
+						Bookmark this page to return to your saved progress anytime.
+					</TooltipContent>
+					<TooltipTrigger asChild>
+						<div>
+							<span className="sr-only">More info</span>
+							<CircleHelp size={16} />
+						</div>
+					</TooltipTrigger>
+				</Tooltip>
+			) : null}
 		</div>
 	);
 };

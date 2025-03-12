@@ -13,12 +13,13 @@ import {
 const baseElementSchema = z.object({
 	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
 	elementId: formElementsIdSchema.optional(),
-	order: z.number().int().nullable(),
+	rank: z.string(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
 	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),
+	isRelation: z.boolean().nullable().default(false),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
@@ -35,6 +36,7 @@ export type InputElement = baseElement & {
 	content: never;
 	schemaName: CoreSchemaType;
 	component: InputComponent;
+	config?: unknown;
 };
 
 export type StructuralElement = baseElement & {

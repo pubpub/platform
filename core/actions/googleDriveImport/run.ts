@@ -1,7 +1,4 @@
-import { ReplicationStatus } from "@aws-sdk/client-s3";
-import { ValuesNode } from "kysely";
-
-import type { StagesId } from "db/public";
+import type { PubsId } from "db/public";
 import { logger } from "logger";
 
 import { doPubsExist, getPubTypesForCommunity, updatePub, upsertPubRelations } from "~/lib/server";
@@ -33,7 +30,36 @@ export const run = defineRun<typeof action>(
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");
 			}
-			const formattedData = await formatDriveData(dataFromDrive, communitySlug);
+			const pubTypes = await getPubTypesForCommunity(communityId);
+			const NarrativeType = pubTypes.find((pubType) => pubType.name === "Narrative");
+			const createVersions = !NarrativeType || pub.pubTypeId !== NarrativeType.id;
+
+			const formattedData = await formatDriveData(
+				dataFromDrive,
+				communitySlug,
+				pub.id,
+				createVersions
+			);
+
+			/* NARRATIVES */
+			/* If !createVersions, we simply write the pubHtml to a content field.  */
+			if (!createVersions) {
+				await updatePub({
+					pubId: pub.id,
+					communityId,
+					lastModifiedBy,
+					continueOnValidationError: false,
+					pubValues: {
+						[`${communitySlug}:content`]: formattedData.pubHtml,
+					},
+				});
+
+				return {
+					success: true,
+					report: "Successfully imported",
+					data: {},
+				};
+			}
 
 			/* MIGRATION */
 			// TODO: Check and make sure the relations exist, not just the pubs.
@@ -45,6 +71,23 @@ export const run = defineRun<typeof action>(
 				const { pubs: existingPubs } = await doPubsExist(legacyDiscussionIds, communityId);
 				existingPubs.forEach((pub) => existingDiscussionPubIds.push(pub.id));
 			}
+
+			const existingVersionIdPairs = pub.values
+				.filter(
+					(values) =>
+						values.fieldSlug === `${communitySlug}:versions` &&
+						values.relatedPubId &&
+						values.relatedPub
+				)
+				.map((values) => {
+					const publicationDateField = values.relatedPub!.values.filter(
+						(value) => value.fieldSlug === `${communitySlug}:publication-date`
+					)[0];
+					const publicationDate: Date = publicationDateField
+						? (publicationDateField.value as Date)
+						: new Date(values.relatedPub!.createdAt);
+					return { [`${publicationDate.toISOString()}`]: values.relatedPubId };
+				});
 
 			// Versions don't have IDs so we compare timestamps
 			const existingVersionDates = pub.values
@@ -64,7 +107,6 @@ export const run = defineRun<typeof action>(
 					return publicationDate.toISOString();
 				});
 
-			const pubTypes = await getPubTypesForCommunity(communityId);
 			const DiscussionType = pubTypes.find((pubType) => pubType.name === "Discussion");
 			const VersionType = pubTypes.find((pubType) => pubType.name === "Version");
 
@@ -81,6 +123,16 @@ export const run = defineRun<typeof action>(
 							},
 						};
 					}),
+				...formattedData.discussions
+					.filter((discussion) => existingDiscussionPubIds.includes(discussion.id))
+					.map((discussion) => {
+						return {
+							slug: `${communitySlug}:discussions`,
+							value: null,
+							relatedPubId: discussion.id,
+						};
+					}),
+				/* Create new versions from gdrive if they don't exist */
 				...formattedData.versions
 					.filter(
 						(version) =>
@@ -102,6 +154,27 @@ export const run = defineRun<typeof action>(
 					}),
 			];
 
+			/* Lazily update all existing old versions (TODO: Check for changed content) */
+			formattedData.versions
+				.filter((version) =>
+					existingVersionDates.includes(version[`${communitySlug}:publication-date`])
+				)
+				.forEach(async (version) => {
+					const versionDate = version[`${communitySlug}:publication-date`];
+					const relatedVersionId = existingVersionIdPairs.filter(
+						(pair) => pair[versionDate]
+					)[0][versionDate] as PubsId;
+					await updatePub({
+						pubId: relatedVersionId,
+						communityId,
+						lastModifiedBy,
+						continueOnValidationError: false,
+						pubValues: {
+							...version,
+						},
+					});
+				});
+
 			/* NON-MIGRATION */
 			/* If the main doc is updated, make a new version */
 			const orderedVersions = pub.values
@@ -116,16 +189,15 @@ export const run = defineRun<typeof action>(
 					const fooDateField = foo.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
-					const barDateField = foo.relatedPub!.values.filter(
+					const barDateField = bar.relatedPub!.values.filter(
 						(value: any) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
-
-					const fooDate: Date = fooDateField
-						? fooDateField.value
-						: foo.relatedPub!.createdAt;
-					const barDate: Date = barDateField
-						? barDateField.value
-						: foo.relatedPub!.createdAt;
+					const fooDate = new Date(
+						fooDateField ? fooDateField.value : foo.relatedPub!.createdAt
+					);
+					const barDate = new Date(
+						barDateField ? barDateField.value : bar.relatedPub!.createdAt
+					);
 					return barDate.getTime() - fooDate.getTime();
 				});
 
@@ -148,6 +220,21 @@ export const run = defineRun<typeof action>(
 						},
 					});
 				}
+				// If there's html but no version yet exists, create one
+			} else {
+				if (formattedData.pubHtml) {
+					relations.push({
+						slug: `${communitySlug}:versions`,
+						value: null,
+						relatedPub: {
+							pubTypeId: VersionType?.id || "",
+							values: {
+								[`${communitySlug}:description`]: "",
+								[`${communitySlug}:content`]: formattedData.pubHtml,
+							},
+						},
+					});
+				}
 			}
 
 			if (relations.length > 0) {
@@ -158,6 +245,15 @@ export const run = defineRun<typeof action>(
 					relations,
 				});
 			}
+			await updatePub({
+				pubId: pub.id,
+				communityId,
+				lastModifiedBy,
+				continueOnValidationError: false,
+				pubValues: {
+					[`${communitySlug}:description`]: formattedData.pubDescription,
+				},
+			});
 
 			return {
 				success: true,
@@ -169,7 +265,8 @@ export const run = defineRun<typeof action>(
 
 			return {
 				title: "Error",
-				error: err.title,
+				error: "An error occurred while importing the pub from Google Drive.",
+				cause: err,
 			};
 		}
 

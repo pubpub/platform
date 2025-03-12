@@ -6,7 +6,6 @@ import type {
 	FormElementsId,
 	InputComponent,
 	PubFieldsId,
-	StagesId,
 	StructuralFormElement,
 } from "db/public";
 
@@ -31,8 +30,9 @@ type BasePubFieldElement = {
 	required: boolean | null;
 	stageId: null;
 	element: null;
-	order: number | null;
+	rank: string;
 	slug: string;
+	isRelation: boolean;
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {
@@ -53,7 +53,7 @@ export type ButtonElement = {
 	id: FormElementsId;
 	type: ElementType.button;
 	fieldId: null;
-	order: number | null;
+	rank: string;
 	label: string | null;
 	element: null;
 	content: null;
@@ -63,13 +63,14 @@ export type ButtonElement = {
 	component: null;
 	schemaName: null;
 	slug: null;
+	isRelation: false;
 };
 
 export type StructuralElement = {
 	id: FormElementsId;
 	type: ElementType.structural;
 	fieldId: null;
-	order: number | null;
+	rank: string;
 	label: string | null;
 	element: StructuralFormElement | null;
 	content: string | null;
@@ -79,6 +80,7 @@ export type StructuralElement = {
 	component: null;
 	schemaName: null;
 	slug: null;
+	isRelation: false;
 };
 
 export type FormElements = PubFieldElement | StructuralElement | ButtonElement;

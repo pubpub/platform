@@ -52,15 +52,22 @@ const nextConfig = {
 	],
 	experimental: {
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
+		webpackBuildWorker: true,
+		parallelServerBuildTraces: true,
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
-	// webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
-	// 	if (isServer) {
-	// 		config.ignoreWarnings = [{ module: /opentelemetry/ }];
-	// 	}
-	// 	return config;
-	// },
+	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
+		if (config.cache && !dev) {
+			config.cache = Object.freeze({
+				type: "memory",
+			});
+		}
+		if (isServer) {
+			config.ignoreWarnings = [{ module: /opentelemetry/ }];
+		}
+		return config;
+	},
 };
 
 const modifiedConfig = withPreconstruct(

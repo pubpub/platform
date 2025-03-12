@@ -63,9 +63,11 @@ model Session {
 }
 
 model AuthToken {
-  id        String        @id @default(dbgenerated("gen_random_uuid()"))
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   hash      String
-  createdAt DateTime      @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   expiresAt DateTime // Tokens expire within 1 week...
   isUsed    Boolean       @default(false) // ...or after one use
   user      User          @relation(fields: [userId], references: [id])
@@ -94,14 +96,14 @@ model Community {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  pubTypes             PubType[]
-  pubs                 Pub[]
-  memberGroups         MemberGroup[]
-  stages               Stage[]
-  APIAccessToken       ApiAccessToken[]
-  Form                 Form[]
-  pubFields            PubField[]
-  members              CommunityMembership[]
+  pubTypes       PubType[]
+  pubs           Pub[]
+  memberGroups   MemberGroup[]
+  stages         Stage[]
+  APIAccessToken ApiAccessToken[]
+  Form           Form[]
+  pubFields      PubField[]
+  members        CommunityMembership[]
 
   @@map(name: "communities")
 }
@@ -127,13 +129,16 @@ model Pub {
   parentId String?
   children Pub[]   @relation("pub_parent")
 
-  values                   PubValue[]                 @relation("original_pub")
-  stages                   PubsInStages[]
-  actionRuns               ActionRun[]
-  relatedValues            PubValue[]                 @relation("related_pub")
-  members                  PubMembership[]
-  formMemberships          FormMembership[]
+  values          PubValue[]       @relation("original_pub")
+  stages          PubsInStages[]
+  actionRuns      ActionRun[]
+  relatedValues   PubValue[]       @relation("related_pub")
+  members         PubMembership[]
+  formMemberships FormMembership[]
 
+  searchVector Unsupported("tsvector")?
+
+  @@index([searchVector], type: Gin)
   @@map(name: "pubs")
 }
 
@@ -202,6 +207,10 @@ model PubValue {
   relatedPub     Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
   relatedPubId   String?
 
+  // Rank is only used for ordering multiple related pubs for a single field, not for ordering
+  // values within a pub
+  rank String? // Uses "C" collation
+
   @@map(name: "pub_values")
 }
 
@@ -229,11 +238,13 @@ model PubType {
 }
 
 model PubFieldToPubType {
-  A       String
-  B       String
+  A         String
+  B         String
   // when this changes, a trigger is run to update the title of all pubs in that pubType
   // see migrations/20241210172906_trigger_for_changing_is_title/migration.sql
-  isTitle Boolean @default(false)
+  isTitle   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   pubField PubField @relation(fields: [A], references: [id], onUpdate: Cascade, onDelete: Cascade)
   pubType  PubType  @relation(fields: [B], references: [id], onUpdate: Cascade, onDelete: Cascade)
@@ -253,8 +264,8 @@ model Stage {
   updatedAt   DateTime  @default(now()) @updatedAt
 
   pubs                  PubsInStages[]
-  moveConstraints       MoveConstraint[]      @relation("move_constraint")
-  moveConstraintSources MoveConstraint[]      @relation("move_constraint_destination")
+  moveConstraints       MoveConstraint[]  @relation("move_constraint")
+  moveConstraintSources MoveConstraint[]  @relation("move_constraint_destination")
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
@@ -263,10 +274,12 @@ model Stage {
 }
 
 model PubsInStages {
-  pub     Pub    @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId   String
-  stage   Stage  @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId String
+  pub       Pub      @relation(fields: [pubId], references: [id], onDelete: Cascade)
+  pubId     String
+  stage     Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@id([pubId, stageId])
 }
@@ -444,6 +457,8 @@ model Rule {
   actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId String
   config           Json?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
 
   @@unique([actionInstanceId, event])
   @@map(name: "rules")
@@ -473,6 +488,8 @@ model Form {
   isArchived  Boolean        @default(false)
   access      FormAccessType @default(private)
   isDefault   Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
 
   members FormMembership[]
 
@@ -508,6 +525,7 @@ enum InputComponent {
   richText
   selectDropdown
   multivalueInput
+  relationBlock
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
@@ -518,6 +536,7 @@ model FormElement {
   field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId    String
   order     Int?
+  rank      String // Uses "C" collation
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
   label     String?
   element   StructuralFormElement?
@@ -528,6 +547,8 @@ model FormElement {
   form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
   stage     Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId   String?
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @default(now()) @updatedAt
 
   @@unique([type, label, formId])
   @@unique([fieldId, formId])
@@ -545,6 +566,7 @@ model ApiAccessToken {
   issuedBy        User?                 @relation(fields: [issuedById], references: [id], onDelete: SetNull)
   issuedById      String?
   issuedAt        DateTime              @default(now())
+  updatedAt       DateTime              @default(now()) @updatedAt
   accessRules     ApiAccessPermission[]
   logs            ApiAccessLog[]
   PubValueHistory PubValueHistory[]
@@ -578,6 +600,8 @@ model ApiAccessPermission {
   scope            ApiAccessScope
   accessType       ApiAccessType
   constraints      Json? /// @type(ApiAccessPermissionConstraints, '../types', true, false, true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @default(now()) @updatedAt
 
   // this ensures that only one permission per token and scope and access type exists
   @@index([apiAccessTokenId, scope, accessType], name: "api_access_permissions_idx")

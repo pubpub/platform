@@ -217,15 +217,15 @@ Using this strategy, we can ensure that all data is fresh when it needs to be, b
 
 We fetch all data associated with a specific `pub` quite often. All the data of a `pub` is dependend on
 
--   the state of `pub_values` and `pub_fields` table for the values associated with a `pub`.
--   the state of the `pubs` table for the data of the `pub` itself, as well as its children.
--   possibly the `pubsinstages` table for the stage the `pub` is in.
+- the state of `pub_values` and `pub_fields` table for the values associated with a `pub`.
+- the state of the `pubs` table for the data of the `pub` itself.
+- possibly the `pubsinstages` table for the stage the `pub` is in.
 
 When caching this data, we want to have the maximum balance between freshness and having a long cache time, while ideally not having to manually remember every single way we cache things. We can do this by invalidating the cache for a query for a specific `pub` when any of the tables are modified, as then we are assured that the data is fresh when needed.
 
 You might think: "Isn't this wasteful? Why can't we just invalidate the cache when that specific pub is changed?" There are two reason why it's hard to invalidate things more granularly on a per-row basis in this example:
 
-1. It's hard to invalidate the cache for this specific pub when its children or values are changed. We would need to be very diligent and always be sure to also invalidate the cache for the parent pub whenever we change any of those tables, which is hard to remember as when updating those tables we are maybe not specifically referencing that pub.
+1. It's hard to invalidate the cache for this specific pub when its values are changed. We would need to be very diligent and always be sure to also invalidate the cache for the parent pub whenever we change any of those tables, which is hard to remember as when updating those tables we are maybe not specifically referencing that pub.
 
 Say a community removes a pubfield for whatever reason. We would need to invalidate the cache for all pubs that have that field, which is hard to remember to do. Additionally, `next` has an upper limit of 1024 tags per invalidation call per request, so if a community has more than that number of pubs using that field, we would need to invalidate the cache for all of them in multiple calls.
 

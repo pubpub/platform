@@ -1,10 +1,12 @@
+import { mathPlugin } from "@benrbray/prosemirror-math";
 import { exampleSetup } from "prosemirror-example-setup";
 import { Schema } from "prosemirror-model";
 
 import type { ContextEditorProps, PanelProps } from "../ContextEditor";
 import attributePanel from "./attributePanel";
+import code from "./code";
 import contextSuggest from "./contextSuggest";
-import lorem from "./lorem";
+import inputRules from "./inputRules";
 import onChange from "./onChange";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
@@ -24,6 +26,8 @@ export const basePlugins = (
 		structureDecorations(),
 		attributePanel(panelPosition, setPanelPosition),
 		onChange(),
-		lorem(),
+		inputRules(schema),
+		mathPlugin,
+		...code(schema, {}),
 	];
 };

@@ -12,6 +12,7 @@ import { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
@@ -55,7 +56,7 @@ const EditorFormElement = ({
 	return (
 		<FormItem>
 			<FormLabel className="flex">{label}</FormLabel>
-			<div className="w-full">
+			<div className="max-h-96 w-full overflow-scroll">
 				<FormControl>
 					<ContextEditorClient
 						pubId={pubId}
@@ -105,7 +106,9 @@ export const ContextEditorElement = ({
 					<EditorFormElement
 						label={label}
 						help={config.help}
-						onChange={(state) => field.onChange(state.doc)}
+						onChange={(state) => {
+							field.onChange(serializeProseMirrorDoc(state.doc));
+						}}
 						initialValue={field.value}
 						disabled={!isEnabled}
 					/>

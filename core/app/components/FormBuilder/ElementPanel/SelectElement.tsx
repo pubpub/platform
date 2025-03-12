@@ -1,14 +1,15 @@
+import mudder from "mudder";
 import { useFormContext } from "react-hook-form";
-import { defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { defaultComponent } from "schemas";
 
-import { ElementType, StructuralFormElement } from "db/public";
+import { ElementType, InputComponent, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
-import { Type } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { FormElementData, PanelState } from "../types";
+import { FieldIcon } from "../FieldIcon";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
 
@@ -17,9 +18,9 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 
 	const { elementsCount, dispatch, addElement } = useFormBuilder();
 	const { getValues } = useFormContext();
+	const elements: FormElementData[] = getValues()["elements"];
 
 	const fieldButtons = Object.values(fields).map((field) => {
-		const elements: FormElementData[] = getValues()["elements"];
 		const usedFields = elements.map((e) => e.fieldId);
 		if (
 			usedFields.includes(field.id) ||
@@ -31,7 +32,6 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 		) {
 			return null;
 		}
-		const Icon = (field.schemaName && SCHEMA_TYPES_WITH_ICONS[field.schemaName]?.icon) || Type;
 
 		const schemaName = field.schemaName;
 		if (schemaName === null) {
@@ -49,11 +49,19 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						fieldId: field.id,
 						required: true,
 						type: ElementType.pubfield,
-						order: elementsCount,
+						rank: mudder.base62.mudder(elements[elementsCount - 1]?.rank, "", 1)[0],
 						configured: false,
-						label: field.name,
+						config: field.isRelation
+							? {
+									relationshipConfig: {
+										label: field.name,
+										component: InputComponent.relationBlock,
+									},
+								}
+							: { label: field.name },
 						component,
 						schemaName,
+						isRelation: field.isRelation,
 					});
 					dispatch({
 						eventName: "edit",
@@ -62,7 +70,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				}}
 				data-testid={`field-button-${field.slug}`}
 			>
-				<Icon size={20} className="my-auto text-emerald-500" />
+				<FieldIcon field={field} className="my-auto text-emerald-500" />
 				<div className="flex flex-col items-start text-left">
 					<div className="text-muted-foreground">{field.slug}</div>
 					<div className="text-left font-semibold">{field.name}</div>
@@ -104,7 +112,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				<Button
 					type="button"
 					variant="outline"
-					className="w-full border-slate-950"
+					className="w-full border-gray-950"
 					onClick={() => {
 						dispatch({ eventName: "cancel" });
 					}}
@@ -129,7 +137,11 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 									addElement({
 										element: elementType,
 										type: ElementType.structural,
-										order: elementsCount,
+										rank: mudder.base62.mudder(
+											elements[elementsCount - 1]?.rank,
+											"",
+											1
+										)[0],
 										configured: false,
 									});
 									dispatch({
@@ -147,7 +159,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 				<Button
 					type="button"
 					variant="outline"
-					className="mb-3 w-full border-slate-950"
+					className="mb-3 w-full border-gray-950"
 					onClick={() => dispatch({ eventName: "cancel" })}
 				>
 					Cancel

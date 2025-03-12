@@ -40,20 +40,20 @@ interface PubCreate {
  * _______
  * | My new title
  *
- * This would return a new "Submission" pub with empty fields in children,
+ * This would return a new "Submission" pub with empty fields
  * and a new title field in values (i.e. {"croccroc:title":"My new title" })
  *
  * TODO: what to do about multiple rich text fields?
  * TODO: we can't fill out the Submission pub type without ContextAtom rendering first
  */
-export const parseRichTextForPubFieldsAndRelatedPubs = ({
+export const parseRichTextForPubFieldsAndRelatedPubs = <T extends JsonValue>({
 	pubId,
 	values,
 }: {
 	pubId: PubsId;
-	values: Record<string, JsonValue>;
+	values: Record<string, T>;
 }) => {
-	const newValues = structuredClone(values);
+	const newValues: Record<string, T | string> = structuredClone(values);
 	const pubs: PubCreate[] = [];
 
 	// Find a rich text value if one exists

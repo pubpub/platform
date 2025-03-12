@@ -25,7 +25,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 		getStageActions(props.stageId).execute(),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 	]);
-	const communitySlug = getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 
 	if (!stage) {
 		throw new Error("Stage not found");
@@ -37,7 +37,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 				<div className="flex flex-wrap items-center justify-between">
 					<h4 className="mb-2 text-base font-semibold">Pubs</h4>
 					<Suspense fallback={<SkeletonCard />}>
-						<CreatePubButton stageId={props.stageId as StagesId} />
+						<CreatePubButton stageId={props.stageId} />
 					</Suspense>
 				</div>
 				{stagePubs.map((pub) => (

@@ -89,15 +89,6 @@ describe("seedCommunity", () => {
 						SubmissionAuthor: [{ value: 0, relatedPubId: authorPubId }],
 					},
 					stage: "Stage 1",
-					children: [
-						{
-							pubType: "Submission",
-							assignee: "test",
-							values: {
-								Title: "Freek",
-							},
-						},
-					],
 					relatedPubs: {
 						SubmissionAuthor: [
 							{
@@ -221,18 +212,6 @@ describe("seedCommunity", () => {
 			{
 				id: submissionPubId,
 				assigneeId: null,
-				children: [
-					{
-						assigneeId: seededCommunity.users.test.id,
-						values: [
-							{
-								relatedPubId: null,
-								value: "Freek",
-							},
-						],
-						valuesBlob: null,
-					},
-				],
 				parentId: null,
 				values: [
 					{
@@ -289,7 +268,7 @@ describe("seedCommunity", () => {
 						element: "p",
 						fieldId: null,
 						label: null,
-						order: 0,
+						rank: "F",
 						required: null,
 						stageId: null,
 						type: "structural",
@@ -302,7 +281,7 @@ describe("seedCommunity", () => {
 						content: null,
 						element: null,
 						label: null,
-						order: 1,
+						rank: "U",
 						required: null,
 						stageId: null,
 						type: "pubfield",
@@ -314,7 +293,7 @@ describe("seedCommunity", () => {
 						element: null,
 						fieldId: null,
 						label: "Submit",
-						order: 2,
+						rank: "k",
 						required: null,
 						stageId: null,
 						type: "button",

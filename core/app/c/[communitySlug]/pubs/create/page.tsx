@@ -59,15 +59,6 @@ export default async function Page(props: {
 
 	const formId = `create-pub`;
 
-	// Build the specifiers conditionally since PubEditor checks for the existence of the prop
-	const pubEditorSpecifiers: Record<string, string> = {};
-	if (searchParams["stageId"]) {
-		pubEditorSpecifiers.stageId = searchParams["stageId"];
-	}
-	if (searchParams["parentId"]) {
-		pubEditorSpecifiers.parentId = searchParams["parentId"];
-	}
-
 	return (
 		<ContentLayout
 			left={
@@ -79,12 +70,13 @@ export default async function Page(props: {
 			right={<div />}
 		>
 			<div className="flex justify-center py-10">
-				<div className="max-w-prose">
+				<div className="max-w-prose flex-1">
 					<PubEditor
 						searchParams={searchParams}
 						communityId={community.id}
 						formId={formId}
-						{...pubEditorSpecifiers}
+						// PubEditor checks for the existence of the stageId prop
+						{...(searchParams["stageId"] ? { stageId: searchParams["stageId"] } : {})}
 					/>
 				</div>
 			</div>

@@ -21,8 +21,11 @@ import { expect } from "utils";
 
 import { hydratePubValues } from "~/lib/fields/utils";
 import { getPubTitle } from "~/lib/pubs";
+import { getExclusivelyRelatedPub } from "../../pub";
 import { RenderWithPubToken } from "./renderWithPubTokens";
 import * as utils from "./renderWithPubUtils";
+
+const ERR_FORM_MISSING_RECIPIENT = `You can't use :link{form="slug"} directive with an email address. You must set the "Recipient member" field.`;
 
 const isDirective = (node: Node): node is NodeMdast & Directive => {
 	return (
@@ -43,9 +46,8 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	let value: unknown;
 	let pub: utils.RenderWithPubPub;
 
-	if (attrs?.rel === "parent") {
-		const parentPub = expect(context.parentPub, "Missing parent pub");
-		pub = parentPub;
+	if (attrs.rel === "parent") {
+		pub = expect(context.parentPub, "Missing parent pub");
 	} else {
 		pub = context.pub;
 	}
@@ -78,6 +80,10 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 			},
 		],
 	};
+};
+
+const hasRelationRel = (node: NodeMdast & Directive) => {
+	return node.attributes?.rel !== undefined && node.attributes.rel !== "parent";
 };
 
 const visitAssigneeNameDirective = (
@@ -250,6 +256,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 	return async (tree) => {
 		const tokenAuthLinkNodes: NodeMdast[] = [];
 		const memberFieldNodes: NodeMdast[] = [];
+		const relationRelNodes: NodeMdast[] = [];
 
 		visit(tree, (node) => {
 			if (isDirective(node)) {
@@ -271,8 +278,14 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 				const isMemberFieldWithAttr =
 					directiveName === RenderWithPubToken.Value &&
 					utils.ALLOWED_MEMBER_ATTRIBUTES.some((f) => f in (node.attributes ?? []));
+
 				if (isMemberFieldWithAttr) {
 					memberFieldNodes.push(node);
+				}
+
+				if (hasRelationRel(node)) {
+					relationRelNodes.push(node);
+					return;
 				}
 
 				// Process the directive
@@ -290,7 +303,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 					if ("form" in attrs) {
 						props.href = await utils.renderFormInviteLink({
 							formSlug: expect(attrs.form),
-							userId: context.recipient.user.id,
+							userId: expect(context.recipient, ERR_FORM_MISSING_RECIPIENT).user.id,
 							communityId: context.communityId,
 							pubId: context.pub.id as PubsId,
 						});
@@ -319,6 +332,26 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							communitySlug: context.communitySlug,
 						}),
 					};
+				}
+			})
+		);
+
+		// Process related pub nodes
+		await Promise.all(
+			relationRelNodes.map(async (node) => {
+				if (isDirective(node)) {
+					const directiveName = node.name.toLowerCase() as RenderWithPubToken;
+					const directiveVisitor = directiveVisitors[directiveName];
+					const { rel, ...attrs } = expect(node.attributes);
+					const relatedPub = expect(
+						await getExclusivelyRelatedPub(context.pub.id as PubsId, rel),
+						`The email template included a directive containing rel="${rel}", but the pub is not related to any other pubs through this field.`
+					);
+					node.attributes = attrs;
+					directiveVisitor(node, {
+						...context,
+						pub: relatedPub as utils.RenderWithPubPub,
+					});
 				}
 			})
 		);

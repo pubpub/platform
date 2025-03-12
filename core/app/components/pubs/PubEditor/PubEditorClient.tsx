@@ -26,15 +26,10 @@ import { useFormElementToggleContext } from "~/app/components/forms/FormElementT
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { RELATED_PUB_SLUG } from "./constants";
 
 const SAVE_WAIT_MS = 5000;
-
-const isUserSelectField = (slug: string, elements: BasicFormElements[]) => {
-	const element = elements.find((e) => e.slug === slug);
-	return element?.schemaName === CoreSchemaType.MemberId;
-};
 
 const preparePayload = ({
 	formElements,
@@ -48,17 +43,16 @@ const preparePayload = ({
 	toggleContext: FormElementToggleContext;
 }) => {
 	const payload: Record<string, JsonValue> = {};
-	for (const { slug, schemaName } of formElements) {
+	for (const { slug } of formElements) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
 			// Only send fields that were changed.
+			// TODO: this check doesn't quite work for related pub field arrays.
+			// perhaps they are initialized differently so always show up as dirty?
 			formState.dirtyFields[slug]
 		) {
-			payload[slug] =
-				schemaName === CoreSchemaType.RichText
-					? serializeProseMirrorDoc(formValues[slug])
-					: formValues[slug];
+			payload[slug] = formValues[slug];
 		}
 	}
 	return payload;
@@ -69,18 +63,29 @@ const preparePayload = ({
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
 const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
-	const defaultValues: FieldValues = { ...pubValues };
+	const defaultValues: FieldValues = {};
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
+
 			defaultValues[element.slug] =
 				pubValue ?? getDefaultValueByCoreSchemaType(element.schemaName);
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
 				defaultValues[element.slug] = new Date(pubValue as string);
 			}
+			// There can be multiple relations for a single slug
+			if (element.isRelation) {
+				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
+				defaultValues[element.slug] = relatedPubValues.map((pv) => ({
+					value:
+						pv.schemaName === CoreSchemaType.DateTime
+							? new Date(pv.value as string)
+							: pv.value,
+					relatedPubId: pv.relatedPubId,
+				}));
+			}
 		}
 	}
-
 	return defaultValues;
 };
 
@@ -96,7 +101,7 @@ const createSchemaFromElements = (
 					(e) =>
 						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
 				)
-				.map(({ slug, schemaName, config }) => {
+				.map(({ slug, schemaName, config, isRelation }) => {
 					if (!schemaName) {
 						return [slug, undefined];
 					}
@@ -106,17 +111,32 @@ const createSchemaFromElements = (
 						return [slug, undefined];
 					}
 
-					if (schema.type !== "string") {
-						return [slug, Type.Optional(schema)];
-					}
-
-					// this allows for empty strings, which happens when you enter something
-					// in an input field and then delete it
+					// Allow fields to be empty or optional. Special case for empty strings,
+					// which happens when you enter something in an input field and then delete it
 					// TODO: reevaluate whether this should be "" or undefined
-					const schemaWithAllowedEmpty = Type.Union([schema, Type.Literal("")], {
-						error: schema.error ?? "Invalid value",
-					});
-					return [slug, schemaWithAllowedEmpty];
+					const schemaAllowEmpty =
+						schema.type === "string"
+							? Type.Union([schema, Type.Literal("")], {
+									error: schema.error ?? "Invalid value",
+								})
+							: Type.Optional(schema);
+
+					if (isRelation) {
+						return [
+							slug,
+							Type.Array(
+								Type.Object(
+									{
+										relatedPubId: Type.String(),
+										value: schemaAllowEmpty,
+									},
+									{ additionalProperties: true, error: "object error" }
+								),
+								{ error: "array error" }
+							),
+						];
+					}
+					return [slug, schemaAllowEmpty];
 				})
 		)
 	);
@@ -163,11 +183,14 @@ export interface PubEditorClientProps {
 	formSlug: string;
 	/** ID for the HTML form */
 	htmlFormId?: string;
-	parentId?: PubsId;
 	className?: string;
 	withAutoSave?: boolean;
 	withButtonElements?: boolean;
 	isExternalForm?: boolean;
+	relatedPub?: {
+		id: PubsId;
+		slug: string;
+	};
 }
 
 export const PubEditorClient = ({
@@ -178,11 +201,11 @@ export const PubEditorClient = ({
 	pub,
 	stageId,
 	htmlFormId,
-	parentId,
 	formSlug,
 	withAutoSave,
 	withButtonElements,
 	isExternalForm,
+	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
 	const router = useRouter();
@@ -223,7 +246,11 @@ export const PubEditorClient = ({
 			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
-			const { stageId: stageIdFromForm, ...newValues } = formValues;
+			const {
+				stageId: stageIdFromForm,
+				[RELATED_PUB_SLUG]: relatedPubValue,
+				...newValues
+			} = formValues;
 
 			const pubValues = preparePayload({
 				formElements,
@@ -231,6 +258,7 @@ export const PubEditorClient = ({
 				formState: formInstance.formState,
 				toggleContext,
 			});
+
 			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
 				evt,
 				withButtonElements,
@@ -257,9 +285,18 @@ export const PubEditorClient = ({
 						stageId: stageId,
 					},
 					communityId: community.id,
-					parent: parentId ? { id: parentId } : undefined,
 					addUserToForm: isExternalForm,
 				});
+				// TODO: this currently overwrites existing pub values of the same field
+				if (relatedPub) {
+					await runUpdatePub({
+						pubId: relatedPub.id,
+						pubValues: {
+							[relatedPub.slug]: [{ value: relatedPubValue, relatedPubId: pubId }],
+						},
+						continueOnValidationError: true,
+					});
+				}
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from
@@ -297,12 +334,6 @@ export const PubEditorClient = ({
 
 	const handleAutoSave = useCallback(
 		(values: FieldValues, evt: React.BaseSyntheticEvent | undefined) => {
-			// Don't auto save while editing the user ID field. the query params
-			// will clash and it will be a bad time :(
-			const target = evt?.target as HTMLInputElement;
-			if (target?.name && isUserSelectField(target.name, formElements)) {
-				return;
-			}
 			if (saveTimer) {
 				clearTimeout(saveTimer);
 			}

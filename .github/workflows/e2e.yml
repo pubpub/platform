@@ -20,6 +20,8 @@ jobs:
     integration-tests:
         name: Integration tests
         runs-on: ubuntu-latest
+        env:
+            ENV_FILE: .env.docker-compose.test
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -27,7 +29,7 @@ jobs:
             - name: Install Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: 22.13.1
 
             - uses: pnpm/action-setup@v4
               name: Install pnpm
@@ -47,31 +49,6 @@ jobs:
                   key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
-
-            - name: Install dependencies
-              run: pnpm install --frozen-lockfile --prefer-offline
-
-            - name: Start up DB
-              run: docker compose -f docker-compose.test.yml --profile test up -d
-
-            - name: p:build
-              run: pnpm p:build
-
-            - name: Run migrations
-              run: pnpm --filter core prisma migrate deploy
-              env:
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
-
-            - name: generate prisma
-              run: pnpm --filter core prisma generate
-
-            - name: seed db
-              run: pnpm --filter core prisma db seed
-              env:
-                  # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
-                  MINIMAL_SEED: true
-                  SKIP_VALIDATION: true
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -100,10 +77,26 @@ jobs:
                   echo "jobs_label=$ECR_REGISTRY/${ECR_REPOSITORY_NAME_OVERRIDE:-$ECR_REPOSITORY_PREFIX-jobs}:$IMAGE_TAG" >> $GITHUB_OUTPUT
                   echo "base_label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --prefer-offline
+
+            - name: Start up db images
+              run: pnpm test:setup
+
+            - name: p:build
+              run: pnpm p:build
+
+            - name: Run migrations and seed
+              run: pnpm --filter core db:test:reset
+              env:
+                  # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
+                  MINIMAL_SEED: true
+                  SKIP_VALIDATION: true
+
             - run: pnpm --filter core exec playwright install chromium --with-deps
 
-            - name: Start up core
-              run: docker compose -f docker-compose.test.yml --profile integration up -d
+            - name: Start up core etc
+              run: pnpm integration:setup
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
@@ -121,7 +114,7 @@ jobs:
                   INTEGRATION_TEST_HOST: localhost
 
             - name: Print container logs
-              if: failure()
+              if: ${{failure() || cancelled()}}
               run: docker compose -f docker-compose.test.yml --profile integration logs
 
             - name: Upload playwright snapshots artifact

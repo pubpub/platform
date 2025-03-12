@@ -1,12 +1,17 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ProsemirrorAdapterProvider, useNodeViewFactory } from "@prosemirror-adapter/react";
+import {
+	ProsemirrorAdapterProvider,
+	useNodeViewFactory,
+	usePluginViewFactory,
+} from "@prosemirror-adapter/react";
 import { Node } from "prosemirror-model";
-import { EditorState } from "prosemirror-state";
+import { EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
 import { AttributePanel } from "./components/AttributePanel";
+import { MenuBar } from "./components/MenuBar";
 import { basePlugins } from "./plugins";
 import { attributePanelKey } from "./plugins/attributePanel";
 import { reactPropsKey } from "./plugins/reactProps";
@@ -14,9 +19,13 @@ import { baseSchema } from "./schemas";
 
 import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
+// For math
+import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
+import "katex/dist/katex.min.css";
 
 import SuggestPanel from "./components/SuggestPanel";
 
+const MENU_BAR_ID = "context-editor-menu-container";
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string;
@@ -35,6 +44,7 @@ export interface ContextEditorProps {
 	atomRenderingComponent: React.ComponentType<{
 		nodeProp: any;
 	}> /* A react component that is given the ContextAtom pubtype and renders it accordingly */;
+	hideMenu?: boolean;
 }
 
 export interface PanelProps {
@@ -84,6 +94,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		};
 	}, [props.atomRenderingComponent]);
 	const nodeViewFactory = useNodeViewFactory();
+	const pluginViewFactory = usePluginViewFactory();
 	const viewHost = useRef<HTMLDivElement | null>(null);
 	const view = useRef<EditorView | null>(null);
 	const [panelPosition, setPanelPosition] = useState<PanelProps>(initPanelProps);
@@ -96,14 +107,28 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		const state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
-			plugins: basePlugins(
-				baseSchema,
-				props,
-				panelPosition,
-				setPanelPosition,
-				suggestData,
-				setSuggestData
-			),
+			plugins: [
+				...basePlugins(
+					baseSchema,
+					props,
+					panelPosition,
+					setPanelPosition,
+					suggestData,
+					setSuggestData
+				),
+				...(props.hideMenu
+					? []
+					: [
+							new Plugin({
+								view: pluginViewFactory({
+									component: () => <MenuBar />,
+									root: () => {
+										return document.getElementById(MENU_BAR_ID) as HTMLElement;
+									},
+								}),
+							}),
+						]),
+			],
 		});
 		if (viewHost.current) {
 			view.current = new EditorView(viewHost.current, {
@@ -143,8 +168,9 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	return (
 		<div
 			id="context-editor-container"
-			className={`relative max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
+			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""} ${props.className}`}
 		>
+			<div id={MENU_BAR_ID} className="sticky top-0 z-10"></div>
 			<div ref={viewHost} className="font-serif" />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />

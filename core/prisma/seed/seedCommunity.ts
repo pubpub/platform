@@ -7,6 +7,7 @@ import type {
 
 import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
+import mudder from "mudder";
 
 import type { ProcessedPub } from "contracts";
 import type {
@@ -55,7 +56,7 @@ export type PubFieldsInitializer = Record<
 	}
 >;
 
-type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
+export type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
 	Partial<Record<keyof PF, { isTitle: boolean }>>
 >;
@@ -65,7 +66,7 @@ type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
  * except the `role`, which will be set to `MemberRole.editor` by default.
  * Set to `null` if you don't want to add the user as a member
  */
-type UsersInitializer = Record<
+export type UsersInitializer = Record<
 	string,
 	{
 		/**
@@ -82,7 +83,7 @@ type UsersInitializer = Record<
 	}
 >;
 
-type ActionInstanceInitializer = {
+export type ActionInstanceInitializer = {
 	[K in ActionName]: {
 		/**
 		 * @default randomUUID
@@ -97,7 +98,7 @@ type ActionInstanceInitializer = {
 /**
  * Map of stagename to list of permissions
  */
-type StagesInitializer<U extends UsersInitializer> = Record<
+export type StagesInitializer<U extends UsersInitializer> = Record<
 	string,
 	{
 		id?: StagesId;
@@ -108,7 +109,7 @@ type StagesInitializer<U extends UsersInitializer> = Record<
 	}
 >;
 
-type StageConnectionsInitializer<S extends StagesInitializer<any>> = Partial<
+export type StageConnectionsInitializer<S extends StagesInitializer<any>> = Partial<
 	Record<
 		keyof S,
 		{
@@ -118,7 +119,7 @@ type StageConnectionsInitializer<S extends StagesInitializer<any>> = Partial<
 	>
 >;
 
-type PubInitializer<
+export type PubInitializer<
 	PF extends PubFieldsInitializer,
 	PT extends PubTypeInitializer<PF>,
 	U extends UsersInitializer,
@@ -178,7 +179,6 @@ type PubInitializer<
 		members?: {
 			[M in keyof U]?: MemberRole;
 		};
-		children?: PubInitializer<PF, PT, U, S>[];
 		/**
 		 * Relations can be specified inline
 		 *
@@ -186,8 +186,7 @@ type PubInitializer<
 		 * ```ts
 		 * {
 		 * 	relatedPubs: {
-		 * 		// relatedPubs are specified slightly differently than children
-		 * 		// as they need to be mapped to a certain field
+		 * 		// relatedPubs need to be mapped to a certain field
 		 * 		Contributors: [{
 		 * 			value: 0,
 		 * 			// this will also add the same pub as a child
@@ -229,7 +228,7 @@ type PubInitializer<
 	};
 }[keyof PT & string];
 
-type FormElementInitializer<
+export type FormElementInitializer<
 	PF extends PubFieldsInitializer,
 	PT extends PubTypeInitializer<PF>,
 	PubType extends keyof PT,
@@ -251,7 +250,7 @@ type FormElementInitializer<
 		}[keyof PubFieldsForPubType]
 	: never;
 
-type FormInitializer<
+export type FormInitializer<
 	PF extends PubFieldsInitializer,
 	PT extends PubTypeInitializer<PF>,
 	U extends UsersInitializer,
@@ -394,17 +393,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				values,
 				parentId: pub.parentId,
 				members,
-				children:
-					pub.children &&
-					makePubInitializerMatchCreatePubRecursiveInput({
-						pubTypes,
-						users,
-						stages,
-						community,
-						pubs: pub.children,
-						trx,
-					}).map((child) => child.body),
-
 				relatedPubs: relatedPubs,
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
@@ -433,7 +421,7 @@ type PubFieldsByName<PF> = {
 };
 
 type PubTypesByName<PT, PF> = {
-	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { pubFields: PubFieldsByName<PF> };
+	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { fields: PubFieldsByName<PF> };
 };
 
 type UsersBySlug<U> = {
@@ -649,19 +637,9 @@ export async function seedCommunity<
 		 * 					relatedPubId: authorId,
 		 * 				}
 		 * 			},
-		 * 			// children are defined the same way as pubs
-		 * 			children: [
-		 * 				{
-		 * 					pubType: "Author",
-		 * 					values: {
-		 * 						Name: "John Doe",
-		 * 					}
-		 * 				}
-		 * 			],
 		 * 			// or relations can be specified by a nested pub
 		 * 			relatedPubs: {
-		 * 				// relatedPubs are specified slightly differently than children
-		 * 				// as they need to be mapped to a certain field
+		 * 				// relatedPubs need to be mapped to a certain field
 		 * 				Contributors: [{
 		 * 					value: "Draft preparation",
 		 * 					// this will also add the same pub as a child
@@ -796,25 +774,12 @@ export async function seedCommunity<
 					.execute()
 			: [];
 
-	await Promise.all(
-		createdPubTypes.map((type) =>
-			insertForm(
-				type.id,
-				`${type.name} Editor (Default)`,
-				`${slugifyString(type.name)}-default-editor`,
-				communityId,
-				true,
-				trx
-			).execute()
-		)
-	);
-
 	const pubTypesWithPubFieldsByName = Object.fromEntries(
 		createdPubTypes.map((pubType) => [
 			pubType.name,
 			{
 				...pubType,
-				pubFields: Object.fromEntries(
+				fields: Object.fromEntries(
 					createdPubFieldToPubTypes
 						.filter((pubFieldToPubType) => pubFieldToPubType.B === pubType.id)
 						.map((pubFieldToPubType) => {
@@ -831,6 +796,19 @@ export async function seedCommunity<
 			},
 		])
 	) as PubTypesByName<PT, PF>;
+
+	await Promise.all(
+		Object.values(pubTypesWithPubFieldsByName).map((pubType) =>
+			insertForm(
+				{ ...pubType, fields: Object.values(pubType.fields) },
+				`${pubType.name} Editor (Default)`,
+				`${slugifyString(pubType.name)}-default-editor`,
+				communityId,
+				true,
+				trx
+			).execute()
+		)
+	);
 
 	const userValues = await Promise.all(
 		Object.entries(props.users ?? {}).map(async ([slug, userInfo]) => ({
@@ -1002,7 +980,7 @@ export async function seedCommunity<
 			})
 		: [];
 
-	// TODO: this can be simplified a lot by first creating the pubs and children
+	// TODO: this can be simplified a lot by first creating the pub
 	// and then creating their related pubs
 
 	let createdPubs: ProcessedPub[] = [];
@@ -1054,8 +1032,13 @@ export async function seedCommunity<
 						db
 							.insertInto("form_elements")
 							.values((eb) =>
-								formList.flatMap(([formTitle, formInput], idx) =>
-									formInput.elements.map((elementInput, elementIndex) => ({
+								formList.flatMap(([formTitle, formInput], idx) => {
+									const ranks = mudder.base62.mudder(
+										"",
+										"",
+										formInput.elements.length
+									);
+									return formInput.elements.map((elementInput, elementIndex) => ({
 										formId: eb
 											.selectFrom("form")
 											.select("form.id")
@@ -1071,10 +1054,10 @@ export async function seedCommunity<
 										label: elementInput.label,
 										element: elementInput.element,
 										component: elementInput.component,
-										order: elementIndex,
+										rank: ranks[elementIndex],
 										config: elementInput.config,
-									}))
-								)
+									}));
+								})
 							)
 							.returningAll()
 					)
@@ -1169,32 +1152,3 @@ export async function seedCommunity<
 				: undefined,
 	};
 }
-
-/**
- * Convenience method in case you want to define the input of `seedCommunity` before actually calling it
- */
-export const createSeed = <
-	const PF extends PubFieldsInitializer,
-	const PT extends PubTypeInitializer<PF>,
-	const U extends UsersInitializer,
-	const S extends StagesInitializer<U>,
-	const SC extends StageConnectionsInitializer<S>,
-	const PI extends PubInitializer<PF, PT, U, S>[],
-	const F extends FormInitializer<PF, PT, U, S>,
->(props: {
-	community: {
-		id?: CommunitiesId;
-		name: string;
-		slug: string;
-		avatar?: string;
-	};
-	pubFields?: PF;
-	pubTypes?: PT;
-	users?: U;
-	stages?: S;
-	stageConnections?: SC;
-	pubs?: PI;
-	forms?: F;
-}) => props;
-
-export type Seed = Parameters<typeof createSeed>[0];

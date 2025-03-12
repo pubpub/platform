@@ -2,28 +2,20 @@ import type { QueryCreator } from "kysely";
 
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
-import { componentsBySchema } from "schemas";
+import mudder from "mudder";
+import { defaultComponent } from "schemas";
 
-import type {
-	CommunitiesId,
-	CoreSchemaType,
-	FormsId,
-	InputComponent,
-	PublicSchema,
-	PubsId,
-	PubTypesId,
-	UsersId,
-} from "db/public";
-import { AuthTokenType, ElementType, StructuralFormElement } from "db/public";
+import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
+import { AuthTokenType, ElementType, InputComponent, StructuralFormElement } from "db/public";
 
 import type { XOR } from "../types";
+import type { GetPubTypesResult } from "./pubtype";
 import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
-import { _getPubFields } from "./pubFields";
 import { getUser } from "./user";
 
 /**
@@ -62,7 +54,7 @@ export const getForm = (
 							"form_elements.fieldId",
 							"form_elements.component",
 							eb.fn.coalesce("form_elements.config", sql`'{}'`).as("config"),
-							"form_elements.order",
+							"form_elements.rank",
 							"form_elements.label",
 							"form_elements.content",
 							"form_elements.element",
@@ -70,9 +62,10 @@ export const getForm = (
 							"form_elements.stageId",
 							"pub_fields.schemaName",
 							"pub_fields.slug",
+							"pub_fields.isRelation",
 						])
 						.$narrowType<FormElements>()
-						.orderBy("form_elements.order")
+						.orderBy("rank")
 				).as("elements")
 			)
 	);
@@ -214,61 +207,23 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 	return magicLink;
 };
 
-const componentsBySchemaTable = Object.entries(componentsBySchema)
-	.map(([schema, components]) => {
-		const component = components[0]
-			? `'${components[0]}'::"InputComponent"`
-			: `null::"InputComponent"`;
-		return `('${schema}'::"CoreSchemaType", ${component})`;
-	})
-	.join(", ");
-
 export const insertForm = (
-	pubTypeId: PubTypesId,
+	pubType: GetPubTypesResult[number],
 	name: string,
 	slug: string,
 	communityId: CommunitiesId,
 	isDefault: boolean,
 	trx = db
 ) => {
+	const ranks = mudder.base62.mudder(pubType.fields.length + 1);
+
 	return trx
-		.with("components", (db) =>
-			// This lets us set an appropriate default component during creation by turning
-			// the js mapping from schemaName to InputComponent into a temporary table which
-			// can be used during the query. Without this, we would need to first query for
-			// the pubtype's fields (and their schemaNames), then determine the input
-			// components in js before inserting
-			db
-				.selectFrom(
-					sql<{
-						schema: CoreSchemaType;
-						component: InputComponent;
-					}>`(values ${sql.raw(componentsBySchemaTable)})`.as<"c">(
-						sql`c(schema, component)`
-					)
-				)
-				.selectAll("c")
-		)
-		.with("fields", () =>
-			_getPubFields({ pubTypeId, communityId })
-				.clearSelect()
-				.select((eb) => [
-					eb.ref("f.id").as("fieldId"),
-					eb.ref("f.json", "->>").key("name").as("name"),
-					eb
-						.cast<CoreSchemaType>(
-							eb.ref("f.json", "->>").key("schemaName"),
-							sql.raw('"CoreSchemaType"')
-						)
-						.as("schemaName"),
-				])
-		)
 		.with("form", (db) =>
 			db
 				.insertInto("forms")
 				.values({
 					name,
-					pubTypeId,
+					pubTypeId: pubType.id,
 					slug,
 					communityId,
 					isDefault,
@@ -281,31 +236,26 @@ export const insertForm = (
 				type: ElementType.structural,
 				element: StructuralFormElement.p,
 				content: '# :value{field="title"}',
-				order: 0,
+				rank: ranks[0],
 			}))
 		)
 		.insertInto("form_elements")
-		.columns(["fieldId", "formId", "label", "type", "order", "component"])
-		.expression((eb) =>
-			eb
-				.selectFrom("fields")
-				.innerJoin("form", (join) => join.onTrue())
-				.select((eb) => [
-					"fields.fieldId",
-					"form.id as formId",
-					"fields.name as label",
-					eb.val("pubfield").as("type"),
-					eb(
-						eb.fn.agg<number>("ROW_NUMBER").over((o) => o.partitionBy("id")),
-						"+",
-						1 // Offset order by 1 for the title element
-					).as("order"),
-					eb
-						.selectFrom("components")
-						.select("component")
-						.whereRef("components.schema", "=", "fields.schemaName")
-						.as("component"),
-				])
+		.values((eb) =>
+			pubType.fields.map((field, i) => ({
+				fieldId: field.id,
+				config: field.isRelation
+					? {
+							relationshipConfig: {
+								component: InputComponent.relationBlock,
+								label: field.name,
+							},
+						}
+					: { label: field.name },
+				type: ElementType.pubfield,
+				component: defaultComponent(field.schemaName!),
+				rank: ranks[i + 1],
+				formId: eb.selectFrom("form").select("form.id"),
+			}))
 		);
 };
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";

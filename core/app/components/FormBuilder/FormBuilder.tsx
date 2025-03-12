@@ -1,21 +1,26 @@
 "use client";
 
+import type { DragEndEvent } from "@dnd-kit/core";
+
 import * as React from "react";
 import { useCallback, useReducer, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { DndContext } from "@dnd-kit/core";
+import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import {
+	SortableContext,
+	sortableKeyboardCoordinates,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createPortal } from "react-dom";
+import mudder from "mudder";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import type { Stages } from "db/public";
 import { logger } from "logger";
-import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
-import { CircleCheck, X } from "ui/icon";
+import { CircleCheck } from "ui/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
@@ -24,9 +29,10 @@ import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from 
 import type { Form as PubForm } from "~/lib/server/form";
 import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
-import { FormBuilderProvider, useFormBuilder } from "./FormBuilderContext";
+import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 
@@ -95,48 +101,11 @@ const elementPanelTitles: Record<PanelState["state"], string> = {
 	editingButton: "Edit Submission Button",
 };
 
-const PanelHeader = ({ state }: { state: PanelState["state"] }) => {
-	const { dispatch } = useFormBuilder();
-	return (
-		<>
-			<div className="flex items-center justify-between">
-				<div className="text-sm uppercase text-slate-500">{elementPanelTitles[state]}</div>
-				{state !== "initial" && (
-					<Button
-						aria-label="Cancel"
-						variant="ghost"
-						size="sm"
-						className=""
-						onClick={() => dispatch({ eventName: "cancel" })}
-					>
-						<X size={16} className="text-muted-foreground" />
-					</Button>
-				)}
-			</div>
-			<hr />
-		</>
-	);
-};
-
 type Props = {
 	pubForm: PubForm;
 	id: string;
 	stages: Stages[];
 };
-
-// Render children in a portal so they can safely use <form> components
-function PanelWrapper({
-	children,
-	sidebar,
-}: {
-	children: React.ReactNode;
-	sidebar: Element | null;
-}) {
-	if (!sidebar) {
-		return null;
-	}
-	return createPortal(children, sidebar);
-}
 
 export function FormBuilder({ pubForm, id, stages }: Props) {
 	const router = useRouter();
@@ -225,7 +194,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		[elements]
 	);
 	const removeIfUnconfigured = useCallback(() => {
-		if (panelState.selectedElementIndex === null) {
+		if (panelState.selectedElementIndex === null || panelState.backButton !== "selecting") {
 			return;
 		}
 		const element = elements[panelState.selectedElementIndex];
@@ -234,7 +203,49 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		}
 	}, [elements, remove, panelState.selectedElementIndex]);
 
+	// Update ranks and rhf field array position when elements are dragged
+	const handleDragEnd = useCallback(
+		(event: DragEndEvent) => {
+			const { active, over } = event;
+			if (over && active.id !== over?.id) {
+				// activeIndex is the position the element started at and over is where it was dropped
+				const activeIndex = active.data.current?.sortable?.index;
+				const overIndex = over.data.current?.sortable?.index;
+				if (activeIndex !== undefined && overIndex !== undefined) {
+					// "earlier" means towards the beginning of the list, or towards the top of the page
+					const isMovedEarlier = activeIndex > overIndex;
+					const activeElem = elements[activeIndex];
+
+					// When moving an element earlier in the array, find a rank between the rank of the
+					// element at the dropped position and the element before it. When moving an element
+					// later, instead find a rank between that element and the element after it
+					const aboveRank =
+						elements[isMovedEarlier ? overIndex : overIndex + 1]?.rank ?? "";
+					const belowRank =
+						elements[isMovedEarlier ? overIndex - 1 : overIndex]?.rank ?? "";
+					const [rank] = mudder.base62.mudder(belowRank, aboveRank, 1);
+
+					// move doesn't trigger a rerender, so it's safe to chain these calls
+					move(activeIndex, overIndex);
+					update(overIndex, {
+						...activeElem,
+						rank,
+						updated: true,
+					});
+				}
+			}
+		},
+		[elements]
+	);
+
 	const tokens = { content: renderWithPubTokens };
+
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
 
 	return (
 		<TokenProvider tokens={tokens}>
@@ -265,10 +276,11 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 							<TabsTrigger value="builder">Builder</TabsTrigger>
 							<TabsTrigger value="preview">Preview</TabsTrigger>
 						</TabsList>
-						<TabsContent value="builder">
+						<TabsContent value="builder" tabIndex={-1}>
 							<Form {...form}>
 								<form
 									id={id}
+									aria-label="Form builder"
 									onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
 										logger.error({
 											msg: "unable to submit form",
@@ -283,29 +295,14 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 										name="elements"
 										render={() => (
 											<>
-												<div className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
+												<ol className="flex flex-col items-center justify-center gap-4 overflow-y-auto">
 													<DndContext
 														modifiers={[
 															restrictToVerticalAxis,
 															restrictToParentElement,
 														]}
-														onDragEnd={(event) => {
-															const { active, over } = event;
-															if (over && active.id !== over?.id) {
-																const activeIndex =
-																	active.data.current?.sortable
-																		?.index;
-																const overIndex =
-																	over.data.current?.sortable
-																		?.index;
-																if (
-																	activeIndex !== undefined &&
-																	overIndex !== undefined
-																) {
-																	move(activeIndex, overIndex);
-																}
-															}
-														}}
+														onDragEnd={handleDragEnd}
+														sensors={sensors}
 													>
 														<SortableContext
 															items={elements}
@@ -333,10 +330,20 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 															)}
 														</SortableContext>
 													</DndContext>
-												</div>
+												</ol>
 												<PanelWrapper sidebar={sidebarRef.current}>
 													<FormItem className="relative flex h-screen flex-col">
-														<PanelHeader state={panelState.state} />
+														<PanelHeader
+															title={
+																elementPanelTitles[panelState.state]
+															}
+															showCancel={
+																!(panelState.state === "initial")
+															}
+															onCancel={() =>
+																dispatch({ eventName: "cancel" })
+															}
+														/>
 														<FormControl>
 															<ElementPanel panelState={panelState} />
 														</FormControl>
@@ -351,10 +358,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 						<TabsContent value="preview">Preview your form here</TabsContent>
 					</div>
 				</Tabs>
-				<div
-					ref={sidebarRef}
-					className="fixed right-0 top-[72px] z-30 flex h-[calc(100%-72px)] w-[380px] flex-col gap-10 overflow-auto border-l border-gray-200 bg-gray-50 p-4 pr-6 shadow"
-				></div>
+				<SidePanel ref={sidebarRef} />
 			</FormBuilderProvider>
 		</TokenProvider>
 	);

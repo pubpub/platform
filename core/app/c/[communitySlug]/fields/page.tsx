@@ -59,7 +59,6 @@ export default async function Page(props: Props) {
 
 	const pubFields = await getPubFields({
 		communityId: community?.id as CommunitiesId,
-		includeRelations: true,
 	}).executeTakeFirst();
 
 	if (!pubFields || !pubFields.fields) {
@@ -75,7 +74,7 @@ export default async function Page(props: Props) {
 			<ContentLayout
 				title={
 					<>
-						<FormInput size={24} strokeWidth={1} className="mr-2 text-slate-500" />{" "}
+						<FormInput size={24} strokeWidth={1} className="mr-2 text-gray-500" />{" "}
 						Fields
 					</>
 				}

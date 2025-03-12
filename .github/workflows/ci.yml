@@ -19,6 +19,7 @@ jobs:
         runs-on: ubuntu-latest
         env:
             COMPOSE_FILE: docker-compose.test.yml
+            ENV_FILE: .env.docker-compose.test
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -26,7 +27,7 @@ jobs:
             - name: Install Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: 20
+                  node-version: 22.13.1
 
             - uses: pnpm/action-setup@v4
               name: Install pnpm
@@ -55,8 +56,8 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-turbo-
 
-            - name: Start up DB
-              run: docker compose --profile test up -d
+            - name: Start test dependencies
+              run: pnpm test:setup
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
@@ -66,11 +67,6 @@ jobs:
 
             - name: Run migrations
               run: pnpm --filter core migrate-test
-              env:
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:5433/postgres
-
-            - name: generate prisma
-              run: pnpm --filter core prisma generate
 
             - name: Run prettier
               run: pnpm format

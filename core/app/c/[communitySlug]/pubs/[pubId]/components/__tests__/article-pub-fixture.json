@@ -779,7 +779,7 @@
 							"id": "ad6d769f-ace6-4c25-ba8f-1a9a12b69222",
 							"name": "Articles",
 							"slug": "arcadia-research:articles",
-							"schemaName": "Null",
+							"schemaName": "String",
 							"isRelation": true,
 							"isTitle": false,
 							"schema": null

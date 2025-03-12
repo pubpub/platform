@@ -11,10 +11,10 @@ import type { MemberWithUser } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
-import { getStageWorkflows } from "~/lib/stages";
+import { getOrderedStages } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubActions } from "./StagePubActions";
 
@@ -31,22 +31,18 @@ export async function StageList(props: Props) {
 		selectCommunityMembers({ communityId }).execute(),
 	]);
 
-	const stageWorkflows = getStageWorkflows(communityStages);
+	const stages = getOrderedStages(communityStages);
 
 	return (
 		<div>
-			{stageWorkflows.map((stages) => (
-				<div key={stages[0].id}>
-					{stages.map((stage) => (
-						<StageCard
-							userId={props.userId}
-							key={stage.id}
-							stage={stage}
-							members={communityMembers}
-							pageContext={props.pageContext}
-						/>
-					))}
-				</div>
+			{stages.map((stage) => (
+				<StageCard
+					userId={props.userId}
+					key={stage.id}
+					stage={stage}
+					members={communityMembers}
+					pageContext={props.pageContext}
+				/>
 			))}
 		</div>
 	);
@@ -106,7 +102,7 @@ export async function StagePubs({
 	userId: UsersId;
 }) {
 	const [stagePubs, actionInstances] = await Promise.all([
-		getPubsWithRelatedValuesAndChildren(
+		getPubsWithRelatedValues(
 			{ stageId: stage.id, communityId: stage.communityId },
 			{
 				// fetch one extra pub so we know whether or not to render a show more button
@@ -133,7 +129,6 @@ export async function StagePubs({
 					return null;
 				}
 				// this way we don't pass unecessary data to the client
-				const { children, ...basePub } = pub;
 				return (
 					<PubRow
 						key={pub.id}
@@ -148,7 +143,7 @@ export async function StagePubs({
 						actions={
 							<StagePubActions
 								key={stage.id}
-								pub={basePub}
+								pub={pub}
 								stage={stage}
 								actionInstances={actionInstances}
 								pageContext={pageContext}

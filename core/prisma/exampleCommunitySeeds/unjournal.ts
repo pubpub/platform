@@ -1,27 +1,26 @@
-import type { PrismaClient } from "@prisma/client";
-
 import { faker } from "@faker-js/faker";
 import { v4 as uuidv4 } from "uuid";
 
 import type { CommunitiesId, PubFieldsId, PubTypesId, StagesId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
+import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { env } from "../../lib/env/env.mjs";
 import { FileUpload } from "../../lib/fields/fileUpload";
 
-export const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b";
-
-export default async function main(prisma: PrismaClient, communityUUID: string) {
-	await prisma.community.create({
-		data: {
+export default async function main(communityUUID: CommunitiesId) {
+	logger.info("Creating Unjournal Community");
+	await db
+		.insertInto("communities")
+		.values({
 			id: communityUUID,
 			name: "Unjournal",
 			slug: "unjournal",
 			avatar: env.PUBPUB_URL + "/demo/unjournal.png",
-		},
-	});
+		})
+		.executeTakeFirst();
 
 	const confidenceCommentsObject = {
 		confidence2: {
@@ -55,240 +54,231 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 		items: { type: "number", minimum: 0, maximum: 5 },
 	};
 
-	const metricsSchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "metrics",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:metrics",
-				title: "Metrics",
-				description:
-					"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories'>here</a> for details on the categories.",
-				type: "object",
-				$defs: {
-					confidence: HundredConfidenceDef,
-				},
-				properties: {
-					metrics1: {
-						title: "Overall assessment",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
-						},
+	const [
+		metricsSchema,
+		evaluatorSchema,
+		predictionsSchema,
+		confidentialCommentsSchema,
+		surveySchema,
+		feedbackSchema,
+		anonymitySchema,
+		evaluationSchema,
+		fileUploadSchema,
+	] = await db
+		.insertInto("PubFieldSchema")
+		.values([
+			{
+				name: "metrics",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:metrics",
+					title: "Metrics",
+					description:
+						"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#metrics-overall-assessment-categories'>here</a> for details on the categories.",
+					type: "object",
+					$defs: {
+						confidence: HundredConfidenceDef,
 					},
-					metrics2: {
-						title: "Advancing knowledge and practice",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+					properties: {
+						metrics1: {
+							title: "Overall assessment",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
-					},
-					metrics3: {
-						title: "Methods: Justification, reasonableness, validity, robustness",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+						metrics2: {
+							title: "Advancing knowledge and practice",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
-					},
-					metrics4: {
-						title: "Logic & communication",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+						metrics3: {
+							title: "Methods: Justification, reasonableness, validity, robustness",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
-					},
-					metrics5: {
-						title: "Open, collaborative, replicable",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+						metrics4: {
+							title: "Logic & communication",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
-					},
-					metrics6: {
-						title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+						metrics5: {
+							title: "Open, collaborative, replicable",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
-					},
-					metrics7: {
-						title: "Relevance to global priorities",
-						type: "object",
-						properties: {
-							confidence1: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+						metrics6: {
+							title: "Engaging with real-world, impact quantification; practice, realism, and relevance",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
-					},
-				},
-			},
-		},
-	});
-
-	const evaluator = await prisma.pubFieldSchema.create({
-		data: {
-			name: "evaluator",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:evaluator",
-				title: "Evaluator",
-				type: "string",
-				minLength: 36,
-				maxLength: 36,
-			},
-		},
-	});
-
-	const predictionsSchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "predictions",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:predictions",
-				title: "Prediction metric",
-				description:
-					"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#journal-prediction-metrics'>here</a> for details on the metrics.",
-				type: "object",
-				$defs: {
-					confidence: FiveConfidenceDef,
-				},
-				properties: {
-					qualityJournal: {
-						title: "What 'quality journal' do you expect this work will this be published in?",
-						type: "object",
-						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
-						},
-					},
-					qualityLevel: {
-						title: "Overall assessment on 'scale of journals'; i.e., quality-level of  journal it should be published in.",
-						type: "object",
-						properties: {
-							confidence: { $ref: "#/$defs/confidence" },
-							...confidenceCommentsObject,
+						metrics7: {
+							title: "Relevance to global priorities",
+							type: "object",
+							properties: {
+								confidence1: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
 						},
 					},
 				},
 			},
-		},
-	});
-
-	const confidentialCommentsSchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "confidential-comments",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:confidential-comments",
-				title: "Please write confidential comments here",
-				description:
-					"Response will not be public or seen by authors, please use this section only for comments that are personal/sensitivity in nature and place most of your evaluation in the public section).",
-				type: "string",
+			{
+				name: "evaluator",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:evaluator",
+					title: "Evaluator",
+					type: "string",
+					minLength: 36,
+					maxLength: 36,
+				},
 			},
-		},
-	});
-
-	const surveySchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "survey",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:survey",
-				title: "Survey questions",
-				description: "Responses will be public unless you ask us to keep them private.",
-				type: "object",
-				properties: {
-					field: {
-						title: "How long have you been in this field?",
-						type: "string",
+			{
+				name: "predictions",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:predictions",
+					title: "Prediction metric",
+					description:
+						"Responses will be public. See <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators#journal-prediction-metrics'>here</a> for details on the metrics.",
+					type: "object",
+					$defs: {
+						confidence: FiveConfidenceDef,
 					},
-					papers: {
-						title: "How many proposals, papers, and projects have you evaluated/reviewed (for journals, grants, or other peer-review)?",
-						type: "string",
+					properties: {
+						qualityJournal: {
+							title: "What 'quality journal' do you expect this work will this be published in?",
+							type: "object",
+							properties: {
+								confidence: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
+						},
+						qualityLevel: {
+							title: "Overall assessment on 'scale of journals'; i.e., quality-level of  journal it should be published in.",
+							type: "object",
+							properties: {
+								confidence: { $ref: "#/$defs/confidence" },
+								...confidenceCommentsObject,
+							},
+						},
 					},
 				},
 			},
-		},
-	});
-
-	const feedbackSchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "feedback",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:feedback",
-				title: "Feedback",
-				description: "Responses will not be public or seen by authors.",
-				type: "object",
-				properties: {
-					rating: {
-						title: "How would you rate this template and process?",
-						type: "string",
-					},
-					suggestions: {
-						title: "Do you have any suggestions or questions about this process or the Unjournal? (We will try to respond, and incorporate your suggestions.)",
-						type: "string",
-					},
-					time: {
-						title: "Approximately how long did you spend completing this evaluation?",
-						type: "string",
-					},
-					revision: {
-						title: "Would you be willing to consider evaluating a revised version of this work?",
-						type: "boolean",
-						default: false,
+			{
+				name: "confidential-comments",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:confidential-comments",
+					title: "Please write confidential comments here",
+					description:
+						"Response will not be public or seen by authors, please use this section only for comments that are personal/sensitivity in nature and place most of your evaluation in the public section).",
+					type: "string",
+				},
+			},
+			{
+				name: "survey",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:survey",
+					title: "Survey questions",
+					description: "Responses will be public unless you ask us to keep them private.",
+					type: "object",
+					properties: {
+						field: {
+							title: "How long have you been in this field?",
+							type: "string",
+						},
+						papers: {
+							title: "How many proposals, papers, and projects have you evaluated/reviewed (for journals, grants, or other peer-review)?",
+							type: "string",
+						},
 					},
 				},
 			},
-		},
-	});
-
-	const anonymitySchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "anonymity",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:anonymity",
-				title: "Would you like to publicly sign your review?",
-				description:
-					"If no, the public sections of your review will be published anonymously.",
-				type: "boolean",
-				default: false,
+			{
+				name: "feedback",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:feedback",
+					title: "Feedback",
+					description: "Responses will not be public or seen by authors.",
+					type: "object",
+					properties: {
+						rating: {
+							title: "How would you rate this template and process?",
+							type: "string",
+						},
+						suggestions: {
+							title: "Do you have any suggestions or questions about this process or the Unjournal? (We will try to respond, and incorporate your suggestions.)",
+							type: "string",
+						},
+						time: {
+							title: "Approximately how long did you spend completing this evaluation?",
+							type: "string",
+						},
+						revision: {
+							title: "Would you be willing to consider evaluating a revised version of this work?",
+							type: "boolean",
+							default: false,
+						},
+					},
+				},
 			},
-		},
-	});
-
-	const fileUploadSchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "uploadFile",
-			namespace: "unjournal",
-			schema: FileUpload,
-		},
-	});
-
-	const evaluationSchema = await prisma.pubFieldSchema.create({
-		data: {
-			name: "evaluation",
-			namespace: "unjournal",
-			schema: {
-				$id: "unjournal:evaluation",
-				title: "Please link to or upload your evaluation here",
-				description:
-					"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting 'half a day' and 'two days'. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
-				type: "string",
+			{
+				name: "anonymity",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:anonymity",
+					title: "Would you like to publicly sign your review?",
+					description:
+						"If no, the public sections of your review will be published anonymously.",
+					type: "boolean",
+					default: false,
+				},
 			},
-		},
-	});
+			{
+				name: "uploadFile",
+				namespace: "unjournal",
+				schema: FileUpload,
+			},
+			{
+				name: "evaluation",
+				namespace: "unjournal",
+				schema: {
+					$id: "unjournal:evaluation",
+					title: "Please link to or upload your evaluation here",
+					description:
+						"Remember that your responses will be made public. Please consult <a href='https://globalimpact.gitbook.io/archived-the-unjournal-project/policies-projects-evaluation-workflow/evaluation/guidelines-for-evaluators'>our criteria</a>. We are essentially asking for a 'standard high-quality referee report' here, with some specific considerations (mentioned in the above link). We welcome detail, elaboration, and technical discussion. If you prefer to link or submit your evaluation content in a different format, please link it here or send it to the corresponding/managing editor. Length and time spent: This is of course, up to you.  The Econometrics society recommends a 2-3 page referee report. In a recent survey (Charness et al, 2022), economists report spending (median and mean) about one day per report, with substantial shares reporting 'half a day' and 'two days'. We expect that that reviewers tend to spend more time on papers for high-status journals, and when reviewing work closely tied to their own agenda.",
+					type: "string",
+				},
+			},
+		])
+		.returningAll()
+		.execute();
 
-	const fieldIds = [...Array(17)].map(() => uuidv4());
+	const fieldIds = [...Array(17)].map(() => uuidv4() as PubFieldsId);
 
-	await prisma.pubField.createMany({
-		data: [
+	const pubFields = await db
+		.insertInto("pub_fields")
+		.values([
 			{
 				id: fieldIds[0],
 				name: "Title",
@@ -405,7 +395,7 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			{
 				id: fieldIds[14],
 				name: "Submission Evaluator",
-				pubFieldSchemaId: evaluator.id,
+				pubFieldSchemaId: evaluatorSchema.id,
 				slug: "unjournal:evaluator",
 				communityId: communityUUID,
 				schemaName: CoreSchemaType.MemberId,
@@ -417,158 +407,163 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				communityId: communityUUID,
 				schemaName: CoreSchemaType.URL,
 			},
-		],
-	});
-
-	const submissionTypeId = "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225";
-	await prisma.pubType.create({
-		data: {
-			id: submissionTypeId,
-			name: "Submission",
-			communityId: communityUUID,
-		},
-	});
-	await db
-		.insertInto("_PubFieldToPubType")
-		.values([
-			// title
-			{ A: fieldIds[0] as PubFieldsId, B: submissionTypeId as PubTypesId, isTitle: true },
-			// description, manager's notes, doi, url
-			...[fieldIds[1], fieldIds[2], fieldIds[8], fieldIds[16]].map((fieldId) => {
-				return {
-					A: fieldId as PubFieldsId,
-					B: submissionTypeId as PubTypesId,
-					isTitle: false,
-				};
-			}),
 		])
+		.returningAll()
 		.execute();
 
-	const evaluationSummaryTypeId = "2981e8ca-dabe-416f-bce0-fcc418036529";
-	await prisma.pubType.create({
-		data: {
-			id: evaluationSummaryTypeId,
-			name: "Evaluation Summary",
-			communityId: communityUUID,
-		},
-	});
+	const submissionTypeId = "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225" as PubTypesId;
+
+	const evaluationSummaryTypeId = "2981e8ca-dabe-416f-bce0-fcc418036529" as PubTypesId;
+
+	const authorResponseTypeId = "d2ad1f23-f310-4974-8d45-3c55a3dc0638" as PubTypesId;
+
+	const evaluationTypeId = "81d18691-3ac4-42c1-b55b-d3b2c065b9ad" as PubTypesId;
+
 	await db
-		.insertInto("_PubFieldToPubType")
+		.insertInto("pub_types")
 		.values([
-			// title
 			{
-				A: fieldIds[0] as PubFieldsId,
-				B: evaluationSummaryTypeId as PubTypesId,
-				isTitle: true,
+				id: submissionTypeId,
+				name: "Submission",
+				communityId: communityUUID,
 			},
-			// description, manager's notes
-			...[fieldIds[1], fieldIds[2]].map((fieldId) => {
-				return {
-					A: fieldId as PubFieldsId,
-					B: evaluationSummaryTypeId as PubTypesId,
-					isTitle: false,
-				};
-			}),
-		])
-		.execute();
-
-	const authorResponseTypeId = "d2ad1f23-f310-4974-8d45-3c55a3dc0638";
-	await prisma.pubType.create({
-		data: {
-			id: authorResponseTypeId,
-			name: "Author Response",
-			communityId: communityUUID,
-		},
-	});
-	await db
-		.insertInto("_PubFieldToPubType")
-		.values([
-			// title
-			{ A: fieldIds[0] as PubFieldsId, B: authorResponseTypeId as PubTypesId, isTitle: true },
-			// description
 			{
-				A: fieldIds[1] as PubFieldsId,
-				B: authorResponseTypeId as PubTypesId,
-				isTitle: false,
+				id: evaluationSummaryTypeId,
+				name: "Evaluation Summary",
+				communityId: communityUUID,
+			},
+			{
+				id: authorResponseTypeId,
+				name: "Author Response",
+				communityId: communityUUID,
+			},
+			{
+				id: evaluationTypeId,
+				name: "Evaluation",
+				communityId: communityUUID,
 			},
 		])
 		.execute();
 
-	const evaluationTypeId = "81d18691-3ac4-42c1-b55b-d3b2c065b9ad";
-	await prisma.pubType.create({
-		data: {
-			id: evaluationTypeId,
-			name: "Evaluation",
-			communityId: communityUUID,
-		},
-	});
 	await db
 		.insertInto("_PubFieldToPubType")
 		.values([
-			// title
-			{ A: fieldIds[0] as PubFieldsId, B: evaluationTypeId as PubTypesId, isTitle: true },
-			// description, manager's notes
 			...[
-				fieldIds[3],
-				fieldIds[4],
-				fieldIds[5],
-				fieldIds[9],
-				fieldIds[10],
-				fieldIds[11],
-				fieldIds[12],
-				fieldIds[13],
-				fieldIds[14],
-				fieldIds[15],
-			].map((fieldId) => {
-				return {
-					A: fieldId as PubFieldsId,
-					B: evaluationTypeId as PubTypesId,
+				// title
+				{ A: fieldIds[0] as PubFieldsId, B: submissionTypeId as PubTypesId, isTitle: true },
+				// description, manager's notes, doi, url
+				...[fieldIds[1], fieldIds[2], fieldIds[8], fieldIds[16]].map((fieldId) => {
+					return {
+						A: fieldId as PubFieldsId,
+						B: submissionTypeId as PubTypesId,
+						isTitle: false,
+					};
+				}),
+			],
+			...[
+				// title
+				{
+					A: fieldIds[0] as PubFieldsId,
+					B: evaluationSummaryTypeId as PubTypesId,
+					isTitle: true,
+				},
+				// description, manager's notes
+				...[fieldIds[1], fieldIds[2]].map((fieldId) => {
+					return {
+						A: fieldId as PubFieldsId,
+						B: evaluationSummaryTypeId as PubTypesId,
+						isTitle: false,
+					};
+				}),
+			],
+			...[
+				// title
+				{
+					A: fieldIds[0] as PubFieldsId,
+					B: authorResponseTypeId as PubTypesId,
+					isTitle: true,
+				},
+				// description
+				{
+					A: fieldIds[1] as PubFieldsId,
+					B: authorResponseTypeId as PubTypesId,
 					isTitle: false,
-				};
-			}),
+				},
+			],
+			...[
+				// title
+				{ A: fieldIds[0] as PubFieldsId, B: evaluationTypeId as PubTypesId, isTitle: true },
+				// description, manager's notes
+				...[
+					fieldIds[3],
+					fieldIds[4],
+					fieldIds[5],
+					fieldIds[9],
+					fieldIds[10],
+					fieldIds[11],
+					fieldIds[12],
+					fieldIds[13],
+					fieldIds[14],
+					fieldIds[15],
+				].map((fieldId) => {
+					return {
+						A: fieldId as PubFieldsId,
+						B: evaluationTypeId as PubTypesId,
+						isTitle: false,
+					};
+				}),
+			],
 		])
 		.execute();
 
-	const user1 = await prisma.user.create({
-		data: {
-			slug: faker.lorem.slug(),
-			email: faker.internet.email(),
-			firstName: "David",
-			lastName: faker.person.lastName(),
-			avatar: faker.image.avatar(),
-		},
-	});
-
-	const user2 = await prisma.user.create({
-		data: {
-			slug: faker.lorem.slug(),
-			email: faker.internet.email(),
-			firstName: faker.person.firstName(),
-			lastName: faker.person.lastName(),
-			avatar: faker.image.avatar(),
-		},
-	});
-
-	const member = await prisma.communityMembership.create({
-		data: {
-			userId: user1.id,
-			communityId: communityUUID,
-			role: "admin",
-		},
-	});
-
-	const memberGroup = await prisma.memberGroup.create({
-		data: {
-			communityId: communityUUID,
-			users: {
-				connect: [{ id: user2.id }],
+	const [user1, user2] = await db
+		.insertInto("users")
+		.values([
+			{
+				slug: faker.lorem.slug(),
+				email: faker.internet.email(),
+				firstName: "David",
+				lastName: faker.person.lastName(),
+				avatar: faker.image.avatar(),
 			},
-		},
-	});
+			{
+				slug: faker.lorem.slug(),
+				email: faker.internet.email(),
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+				avatar: faker.image.avatar(),
+			},
+		])
+		.returningAll()
+		.execute();
 
-	const stageIds = [...Array(8)].map((x) => uuidv4());
-	await prisma.stage.createMany({
-		data: [
+	await db
+		.insertInto("community_memberships")
+		.values([
+			{
+				userId: user1.id,
+				communityId: communityUUID,
+				role: MemberRole.admin,
+			},
+		])
+		.execute();
+
+	await db
+		.insertInto("community_memberships")
+		.values([
+			{
+				userId: user2.id,
+				communityId: communityUUID,
+				role: MemberRole.editor,
+			},
+		])
+		.execute();
+
+	const stageIds = [...Array(8)].map((x) => uuidv4() as StagesId);
+
+	await db
+		.insertInto("stages")
+		.values([
 			{
 				id: stageIds[0],
 				communityId: communityUUID,
@@ -611,68 +606,63 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 				name: "Shelved",
 				order: "hh",
 			},
-		],
-	});
+		])
+		.execute();
 
 	//  Submitted can be moved to: Consent, To Evaluate, Under Evaluation, Shelved
-	await prisma.stage.update({
-		where: { id: stageIds[0] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [{ destinationId: stageIds[1] }],
-				},
+	await db
+		.insertInto("move_constraint")
+		.values([
+			{
+				stageId: stageIds[0],
+				destinationId: stageIds[1],
 			},
-		},
-	});
+		])
+		.execute();
 
 	// Consent --> To Evaluate, Under Evaluation, Shelved
-	await prisma.stage.update({
-		where: { id: stageIds[1] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [{ destinationId: stageIds[2] }],
-				},
+	await db
+		.insertInto("move_constraint")
+		.values([
+			{
+				stageId: stageIds[1],
+				destinationId: stageIds[2],
 			},
-		},
-	});
+		])
+		.execute();
 
 	// To Evaluate --> Under Evaluation, Shelved
-	await prisma.stage.update({
-		where: { id: stageIds[2] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [{ destinationId: stageIds[3] }],
-				},
+	await db
+		.insertInto("move_constraint")
+		.values([
+			{
+				stageId: stageIds[2],
+				destinationId: stageIds[3],
 			},
-		},
-	});
+		])
+		.execute();
 
 	// Under Evaluation --> In Production, Shelved
-	await prisma.stage.update({
-		where: { id: stageIds[3] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [{ destinationId: stageIds[4] }],
-				},
+	await db
+		.insertInto("move_constraint")
+		.values([
+			{
+				stageId: stageIds[3],
+				destinationId: stageIds[4],
 			},
-		},
-	});
+		])
+		.execute();
 
 	// Production --> Published, Shelved
-	await prisma.stage.update({
-		where: { id: stageIds[4] },
-		data: {
-			moveConstraints: {
-				createMany: {
-					data: [{ destinationId: stageIds[5] }],
-				},
+	await db
+		.insertInto("move_constraint")
+		.values([
+			{
+				stageId: stageIds[4],
+				destinationId: stageIds[5],
 			},
-		},
-	});
+		])
+		.execute();
 
 	await db
 		.with("new_pubs", (db) =>
@@ -708,4 +698,6 @@ export default async function main(prisma: PrismaClient, communityUUID: string) 
 			},
 		])
 		.execute();
+
+	logger.info("Unjournal Community created");
 }

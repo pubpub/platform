@@ -1,4 +1,3 @@
-import { PrismaClient } from "@prisma/client";
 import { makeWorkerUtils } from "graphile-worker";
 
 import type { CommunitiesId, CommunityMembershipsId } from "db/public";
@@ -11,9 +10,7 @@ import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env.mjs";
 import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
 import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
-import { default as buildUnjournal, unJournalId } from "./exampleCommunitySeeds/unjournal";
-
-const prisma = new PrismaClient();
+import { default as buildUnjournal } from "./exampleCommunitySeeds/unjournal";
 
 async function createUserMembers({
 	email,
@@ -63,9 +60,11 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
+const arcadiaId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const croccrocId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+
 async function main() {
-	const arcadiaId = crypto.randomUUID() as CommunitiesId;
-	const croccrocId = crypto.randomUUID() as CommunitiesId;
+	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b" as CommunitiesId;
 	// do not seed arcadia if the minimal seed flag is set
 	// this is because it will slow down ci/testing
 	// this flag is set in the `globalSetup.ts` file
@@ -87,11 +86,7 @@ async function main() {
 
 	const arcadiaPromise = shouldSeedArcadia ? seedArcadia(arcadiaId) : null;
 
-	await Promise.all([
-		buildUnjournal(prisma, unJournalId),
-		seedCroccroc(croccrocId),
-		arcadiaPromise,
-	]);
+	await Promise.all([buildUnjournal(unJournalId), seedCroccroc(croccrocId), arcadiaPromise]);
 
 	await Promise.all([
 		createUserMembers({
@@ -130,17 +125,14 @@ async function main() {
 }
 main()
 	.then(async () => {
-		await prisma.$disconnect();
 		logger.info("Finished seeding, exiting...");
 		process.exit(0);
 	})
 	.catch(async (e) => {
 		if (!isUniqueConstraintError(e)) {
 			logger.error(e);
-			await prisma.$disconnect();
 			process.exit(1);
 		}
 		logger.error(e);
 		logger.info("Attempted to add duplicate entries, db is already seeded?");
-		await prisma.$disconnect();
 	});
