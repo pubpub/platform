@@ -179,8 +179,8 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							config: {
-								maxLength: 255,
 								label: "Title",
+								maxLength: 255,
 								help: "Give your review a snazzy title.",
 							},
 						},
@@ -189,9 +189,9 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 							type: ElementType.pubfield,
 							component: InputComponent.textArea,
 							config: {
+								label: "Content",
 								help: "Enter your review here",
 								minLength: 255,
-								label: "Content",
 							},
 						},
 					],

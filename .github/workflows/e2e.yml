@@ -43,12 +43,22 @@ jobs:
                   echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
             - name: Setup pnpm cache
-              uses: actions/cache@v4
+              # since this always runs after CI, there's no need to save the cache afterwards, since it's guaranteed to be the same
+              uses: actions/cache/restore@v4
               with:
                   path: ${{ steps.get-store-path.outputs.STORE_PATH }}
                   key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
+
+            # mostly to skip preconstruct build
+            - name: Setup turbo cache
+              uses: actions/cache/restore@v4
+              with:
+                  path: .turbo
+                  key: ${{ runner.os }}-turbo-${{ github.sha }}
+                  restore-keys: |
+                      ${{ runner.os }}-turbo-
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -112,6 +122,7 @@ jobs:
               run: pnpm --filter core playwright:test
               env:
                   INTEGRATION_TEST_HOST: localhost
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
 
             - name: Print container logs
               if: ${{failure() || cancelled()}}

@@ -11,6 +11,7 @@ import { UpdatedAtPlugin } from "~/kysely/updated-at-plugin";
 import { env } from "../env/env.mjs";
 
 const int8TypeId = 20;
+
 // Map int8 to number.
 // this is likely fine
 Pg.types.setTypeParser(int8TypeId, (val: any) => {
@@ -39,3 +40,5 @@ export const testDb = new Kysely<Database>({
 	log: kyselyLogger,
 	plugins: [updatedAtPlugin],
 });
+
+export { testDb as db };
