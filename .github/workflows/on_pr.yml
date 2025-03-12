@@ -28,42 +28,7 @@ jobs:
                       docs:
                           - 'docs/**'
 
-    warm-pnpm-cache:
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-
-            - name: Install Node.js
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 22.13.1
-
-            - uses: pnpm/action-setup@v4
-              name: Install pnpm
-              with:
-                  run_install: false
-
-            - name: Get pnpm store directory
-              id: get-store-path
-              shell: bash
-              run: |
-                  echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-            - name: Setup pnpm cache
-              uses: actions/cache@v4
-              with:
-                  path: ${{ steps.get-store-path.outputs.STORE_PATH }}
-                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-                  restore-keys: |
-                      ${{ runner.os }}-pnpm-store-
-
-            - name: Install dependencies
-              run: pnpm fetch
-
     ci:
-        needs: warm-pnpm-cache
         if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
         uses: ./.github/workflows/ci.yml
 
