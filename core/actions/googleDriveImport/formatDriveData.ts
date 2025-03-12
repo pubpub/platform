@@ -1,15 +1,17 @@
 // import { writeFile } from "fs/promises";
-import type { Element, Root } from "hast";
+import type { Root } from "hast";
 
+import { defaultMarkdownSerializer } from "prosemirror-markdown";
+import { Node } from "prosemirror-model";
 import { rehype } from "rehype";
 import rehypeFormat from "rehype-format";
 import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
-import { logger } from "logger";
 
 import type { DriveData } from "./getGDriveFiles";
 import { uploadFileToS3 } from "~/lib/server";
+import schema from "./discussionSchema";
 import {
 	appendFigureAttributes,
 	cleanUnusedSpans,
@@ -34,8 +36,8 @@ import {
 	structureInlineCode,
 	structureInlineMath,
 	structureReferences,
+	structureTables,
 	structureVideos,
-	tableToObjectArray,
 } from "./gdocPlugins";
 import { getAssetFile } from "./getGDriveFiles";
 
@@ -54,15 +56,17 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 		.use(() => async (tree: Root) => {
 			const assetUrls: { [key: string]: string } = {};
 			visit(tree, "element", (node: any) => {
-				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const hasSrc = ["img", "video", "audio", "source"].includes(node.tagName);
 				const isDownload =
 					node.tagName === "a" && node.properties.className === "file-button";
 				if (hasSrc || isDownload) {
 					const propertyKey = hasSrc ? "src" : "href";
 					const originalAssetUrl = node.properties[propertyKey];
-					const urlObject = new URL(originalAssetUrl);
-					if (urlObject.hostname !== "pubpub.org") {
-						assetUrls[originalAssetUrl] = "";
+					if (originalAssetUrl) {
+						const urlObject = new URL(originalAssetUrl);
+						if (urlObject.hostname !== "pubpub.org") {
+							assetUrls[originalAssetUrl] = "";
+						}
 					}
 				}
 			});
@@ -126,6 +130,7 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(structureCodeBlock)
 		.use(structureInlineCode)
 		.use(structureAnchors)
+		.use(structureTables)
 		.use(cleanUnusedSpans)
 		.use(structureReferences)
 		.use(structureFootnotes)
@@ -140,10 +145,19 @@ const processHtml = async (html: string): Promise<string> => {
 export const formatDriveData = async (
 	dataFromDrive: DriveData,
 	communitySlug: string,
-	pubId: string
+	pubId: string,
+	createVersions: boolean
 ): Promise<FormattedDriveData> => {
 	const formattedPubHtml = await processHtml(dataFromDrive.pubHtml);
 	const formattedPubHtmlWithAssets = await processAssets(formattedPubHtml, pubId);
+	if (!createVersions) {
+		return {
+			pubHtml: String(formattedPubHtmlWithAssets),
+			pubDescription: "",
+			versions: [],
+			discussions: [],
+		};
+	}
 
 	/* Check for a description in the most recent version */
 	const latestRawVersion = dataFromDrive.versions.reduce((latest, version) => {
@@ -215,6 +229,38 @@ export const formatDriveData = async (
 							: comment.commenter && comment.commenter.orcid
 								? `https://orcid.org/${comment.commenter.orcid}`
 								: null;
+					const convertDiscussionContent = (content: any) => {
+						const traverse = (node: any) => {
+							if (node.type === "image") {
+								return { ...node, attrs: { ...node.attrs, src: node.attrs.url } };
+							}
+							if (node.type === "file") {
+								return {
+									type: "paragraph",
+									content: [
+										{
+											text: node.attrs.fileName,
+											type: "text",
+											marks: [
+												{ type: "link", attrs: { href: node.attrs.url } },
+											],
+										},
+									],
+								};
+							}
+							if (node.content) {
+								return { ...node, content: node.content.map(traverse) };
+							}
+							return node;
+						};
+						return traverse(content);
+					};
+					const prosemirrorToMarkdown = (content: any): string => {
+						const convertedContent = convertDiscussionContent(content);
+						const doc = Node.fromJSON(schema, convertedContent);
+						return defaultMarkdownSerializer.serialize(doc);
+					};
+					const markdownContent = prosemirrorToMarkdown(comment.content);
 					const commentObject: any = {
 						id: comment.id,
 						values: {
@@ -222,7 +268,8 @@ export const formatDriveData = async (
 								index === 0 && discussion.anchors.length
 									? JSON.stringify(discussion.anchors[0])
 									: undefined,
-							[`${communitySlug}:content`]: comment.text,
+							// [`${communitySlug}:content`]: comment.text,
+							[`${communitySlug}:content`]: markdownContent,
 							[`${communitySlug}:publication-date`]: comment.createdAt,
 							[`${communitySlug}:full-name`]: commentAuthorName,
 							[`${communitySlug}:orcid`]: commentAuthorORCID,

@@ -1,9 +1,9 @@
+import mudder from "mudder";
 import { useFormContext } from "react-hook-form";
-import { defaultComponent, SCHEMA_TYPES_WITH_ICONS } from "schemas";
+import { defaultComponent } from "schemas";
 
-import { ElementType, StructuralFormElement } from "db/public";
+import { ElementType, InputComponent, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
-import { Type } from "ui/icon";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
@@ -18,9 +18,9 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 
 	const { elementsCount, dispatch, addElement } = useFormBuilder();
 	const { getValues } = useFormContext();
+	const elements: FormElementData[] = getValues()["elements"];
 
 	const fieldButtons = Object.values(fields).map((field) => {
-		const elements: FormElementData[] = getValues()["elements"];
 		const usedFields = elements.map((e) => e.fieldId);
 		if (
 			usedFields.includes(field.id) ||
@@ -49,9 +49,16 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						fieldId: field.id,
 						required: true,
 						type: ElementType.pubfield,
-						order: elementsCount,
+						rank: mudder.base62.mudder(elements[elementsCount - 1]?.rank, "", 1)[0],
 						configured: false,
-						label: field.name,
+						config: field.isRelation
+							? {
+									relationshipConfig: {
+										label: field.name,
+										component: InputComponent.relationBlock,
+									},
+								}
+							: { label: field.name },
 						component,
 						schemaName,
 						isRelation: field.isRelation,
@@ -130,7 +137,11 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 									addElement({
 										element: elementType,
 										type: ElementType.structural,
-										order: elementsCount,
+										rank: mudder.base62.mudder(
+											elements[elementsCount - 1]?.rank,
+											"",
+											1
+										)[0],
 										configured: false,
 									});
 									dispatch({

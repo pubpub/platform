@@ -13,7 +13,7 @@ import {
 const baseElementSchema = z.object({
 	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
 	elementId: formElementsIdSchema.optional(),
-	order: z.number().int().nullable(),
+	rank: z.string(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),

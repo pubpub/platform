@@ -110,38 +110,6 @@ describe("createPubRecursive", () => {
 		});
 	});
 
-	it("should be able to create a pub with children", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubFields, pubTypes } = await seedCommunity(seed);
-		const { createPubRecursiveNew } = await import("./pub");
-
-		const pub = await createPubRecursiveNew({
-			communityId: community.id,
-			body: {
-				pubTypeId: pubTypes["Basic Pub"].id,
-				values: {
-					[pubFields.Title.slug]: "test title",
-				},
-				children: [
-					{
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: {
-							[pubFields.Title.slug]: "test child title",
-						},
-					},
-				],
-			},
-			trx,
-			lastModifiedBy: createLastModifiedBy("system"),
-		});
-
-		expect(pub).toMatchObject({
-			values: [{ value: "test title" }],
-			children: [{ values: [{ value: "test child title" }] }],
-		});
-	});
-
 	it("should be able to create a pub in a stage", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
@@ -199,7 +167,7 @@ describe("createPubRecursive", () => {
 		});
 	});
 
-	it("should be able to create relation pubs inline, like children", async () => {
+	it("should be able to create relation pubs inline", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubFields, pubTypes } = await seedCommunity(seed);
@@ -276,7 +244,7 @@ describe("createPubRecursive", () => {
 		});
 	});
 
-	it("should return the titles of the created pub, the children, and the related pubs", async () => {
+	it("should return the titles of the created pub, and the related pubs", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubFields, pubTypes } = await seedCommunity(seed);
@@ -289,14 +257,6 @@ describe("createPubRecursive", () => {
 				values: {
 					[pubFields.Title.slug]: "test title",
 				},
-				children: [
-					{
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: {
-							[pubFields.Title.slug]: "test child title",
-						},
-					},
-				],
 				relatedPubs: {
 					[pubFields["Some relation"].slug]: [
 						{
@@ -317,7 +277,6 @@ describe("createPubRecursive", () => {
 
 		expect(pub).toMatchObject({
 			title: "test title",
-			children: [{ title: "test child title" }],
 		});
 		const relatedPubValue = pub.values.find(
 			(v) => v.fieldSlug === pubFields["Some relation"].slug
@@ -409,7 +368,7 @@ describe("updatePub", () => {
 	});
 });
 
-describe("getPubsWithRelatedValuesAndChildren", () => {
+describe("getPubsWithRelatedValues", () => {
 	it("should be able to recursively fetch pubvalues", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
@@ -441,9 +400,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 		const rootPubId = pub.id;
-		const pubValues = await getPubsWithRelatedValuesAndChildren(
+		const pubValues = await getPubsWithRelatedValues(
 			{ pubId: rootPubId, communityId: community.id, userId: users.admin.id },
 			{ depth: 10 }
 		);
@@ -459,8 +418,6 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			{ value: "Some title" },
 		]);
 
-		// check that children are defined because `withChildren` is not `false`
-		expectTypeOf(pubValues.children).not.toEqualTypeOf<undefined>();
 		// check that relatedPub is defined because `withRelatedPubs` is not `false`
 		expectTypeOf(pubValues.values[0].relatedPub).not.toEqualTypeOf<undefined>();
 	});
@@ -483,8 +440,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pub = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const pub = await getPubsWithRelatedValues(
 			{ pubId: createdPub.id, communityId: community.id },
 			{
 				depth: 10,
@@ -501,7 +458,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		expect(pub.pubType).toMatchObject({
 			id: pubTypes["Basic Pub"].id,
-			fields: Object.values(pubTypes["Basic Pub"].pubFields).map((f) => ({
+			fields: Object.values(pubTypes["Basic Pub"].fields).map((f) => ({
 				id: f.id,
 				slug: f.slug,
 			})),
@@ -521,7 +478,6 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				"members",
 				"assignee",
 				"values",
-				"children",
 				"stageId",
 				"pubTypeId",
 				"createdAt",
@@ -535,7 +491,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		);
 	});
 
-	it("should be able to fetch pubvalues with children", async () => {
+	it("should be able to fetch pubvalues", async () => {
 		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubFields, pubTypes } = await seedCommunity(seed);
@@ -557,141 +513,44 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 								values: {
 									[pubFields.Title.slug]: "Nested Related Pub",
 								},
-								children: [
-									{
-										pubTypeId: pubTypes["Basic Pub"].id,
-										values: {
-											[pubFields.Title.slug]:
-												"Nested Child of Nested Related Pub",
-										},
-									},
-								],
 							},
 						},
 					],
 				},
-				children: [
-					{
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: {
-							[pubFields.Title.slug]: "Child of Root Pub",
-						},
-						relatedPubs: {
-							[pubFields["Some relation"].slug]: [
-								{
-									value: "Nested Relation",
-									pub: {
-										pubTypeId: pubTypes["Basic Pub"].id,
-										values: {
-											[pubFields.Title.slug]:
-												"Nested Related Pub of Child of Root Pub",
-										},
-										relatedPubs: {
-											[pubFields["Some relation"].slug]: [
-												{
-													value: "Double nested relation",
-													pub: {
-														pubTypeId: pubTypes["Basic Pub"].id,
-														values: {
-															[pubFields.Title.slug]:
-																"Double nested relation title",
-														},
-													},
-												},
-											],
-										},
-									},
-								},
-								{
-									value: "Nested Relation 2",
-									pub: {
-										pubTypeId: pubTypes["Basic Pub"].id,
-										values: {
-											[pubFields.Title.slug]:
-												"Nested Related Pub of Child of Root Pub 2",
-										},
-									},
-								},
-							],
-						},
-						children: [
-							{
-								pubTypeId: pubTypes["Basic Pub"].id,
-								values: {
-									[pubFields.Title.slug]: "Grandchild of Root Pub",
-								},
-							},
-						],
-					},
-				],
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 			trx,
 		});
 
 		const rootPubId = pub.id;
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const pubWithRelatedValues = await getPubsWithRelatedValues(
 			{ pubId: rootPubId, communityId: community.id },
 			{ depth: 10, withPubType: true }
 		);
 
-		expectTypeOf(pubWithRelatedValuesAndChildren.pubType).toEqualTypeOf<
+		expectTypeOf(pubWithRelatedValues.pubType).toEqualTypeOf<
 			PubTypes & { fields: PubTypePubField[] }
 		>();
 
-		pubWithRelatedValuesAndChildren.values.sort((a, b) =>
-			a.fieldSlug.localeCompare(b.fieldSlug)
-		);
-		pubWithRelatedValuesAndChildren.children[0].values.sort((a, b) =>
-			a.fieldSlug.localeCompare(b.fieldSlug)
-		);
-		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+		pubWithRelatedValues.values.sort((a, b) => a.fieldSlug.localeCompare(b.fieldSlug));
+		expect(pubWithRelatedValues).toHaveValues([
 			{ value: "Some title" },
 			{
 				value: "test relation value",
 				relatedPub: {
 					values: [{ value: "Nested Related Pub" }],
-					children: [{ values: [{ value: "Nested Child of Nested Related Pub" }] }],
 				},
 			},
-		]);
-
-		expect(pubWithRelatedValuesAndChildren.children).toHaveLength(1);
-		expect(pubWithRelatedValuesAndChildren.children[0]).toHaveValues([
-			{ value: "Child of Root Pub" },
-			{
-				value: "Nested Relation",
-				relatedPub: {
-					values: [
-						{
-							value: "Double nested relation",
-							relatedPub: {
-								values: [{ value: "Double nested relation title" }],
-							},
-						},
-						{
-							value: "Nested Related Pub of Child of Root Pub",
-						},
-					],
-				},
-			},
-			{
-				value: "Nested Relation 2",
-			},
-		]);
-		expect(pubWithRelatedValuesAndChildren.children[0].children).toHaveLength(1);
-		expect(pubWithRelatedValuesAndChildren.children[0].children[0]).toHaveValues([
-			{ value: "Grandchild of Root Pub" },
 		]);
 	});
 
 	it("should be able to filter by pubtype or stage and pubtype and stage", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubTypes, stages } = await seedCommunity(seed);
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
-		const allPubs = await getPubsWithRelatedValuesAndChildren(
+		const allPubs = await getPubsWithRelatedValues(
 			{ communityId: community.id },
 			{ depth: 10 }
 		);
@@ -699,15 +558,15 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(allPubs.length).toBe(4);
 
 		const [minimalPubs, pubsInStage1, basicPubsInStage1] = await Promise.all([
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{ pubTypeId: pubTypes["Minimal Pub"].id, communityId: community.id },
 				{ withPubType: true, depth: 10 }
 			),
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{ stageId: stages["Stage 1"].id, communityId: community.id },
 				{ withStage: true, depth: 10 }
 			),
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{
 					pubTypeId: pubTypes["Basic Pub"].id,
 					stageId: stages["Stage 1"].id,
@@ -727,7 +586,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id);
 	});
 
-	it("should be able to limit the amount of top-level pubs retrieved while still fetching children and related pubs", async () => {
+	it("should be able to limit the amount of top-level pubs retrieved while still fetching related pubs", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 		const newCommunity = await seedCommunity({
@@ -769,20 +628,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 							},
 						],
 					},
-					children: [
-						{
-							pubType: "Article",
-							values: {
-								Title: "Article Child Title",
-							},
-						},
-					],
 				},
 			],
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pubs = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const pubs = await getPubsWithRelatedValues(
 			{ communityId: newCommunity.community.id },
 			{
 				depth: 10,
@@ -793,8 +644,8 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			}
 		);
 
-		// 3 root pubs, one of which has 1 child pub & 1 related pub, even though the limit is 3. This is correct behavior.
-		expect(pubs.length).toBe(5);
+		// 3 root pubs, one of which 1 related pub, even though the limit is 3. This is correct behavior.
+		expect(pubs.length).toBe(3);
 	});
 
 	it("should be able to detect cycles, i.e. not go max-depth deep if a loop is detected", async () => {
@@ -838,14 +689,14 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		});
 		expect(pub).toBeDefined();
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
 		const [withCycleIncluded, withCycleExcluded] = (await Promise.all([
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, _debugDontNest: true }
 			),
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{ pubId: newPubId, communityId: community.id },
 				{ depth: 10, cycle: "exclude", _debugDontNest: true }
 			),
@@ -896,13 +747,13 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pubWithRelatedValuesAndChildren = (await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const pubWithRelatedValues = (await getPubsWithRelatedValues(
 			{ pubId: newPubId, communityId: community.id },
 			{ depth: 10, fieldSlugs: [pubFields.Title.slug, pubFields["Some relation"].slug] }
 		)) as unknown as UnprocessedPub[];
 
-		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+		expect(pubWithRelatedValues).toHaveValues([
 			{
 				value: "test relation value",
 				relatedPub: {
@@ -917,7 +768,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		]);
 	});
 
-	it("is able to exclude children and related pubs from being fetched", async () => {
+	it("is able to exclude related pubs from being fetched", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubFields, pubTypes } = await seedCommunity(seed);
 
@@ -929,12 +780,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				values: {
 					[pubFields.Title.slug]: "test title",
 				},
-				children: [
-					{
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: { [pubFields.Title.slug]: "test child title" },
-					},
-				],
+
 				relatedPubs: {
 					[pubFields["Some relation"].slug]: [
 						{
@@ -952,25 +798,22 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const pubWithRelatedValuesAndChildren = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const pubWithRelatedValues = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
-			{ depth: 10, withChildren: false, withRelatedPubs: false }
+			{ depth: 10, withRelatedPubs: false }
 		);
 
-		expectTypeOf(pubWithRelatedValuesAndChildren.children).toEqualTypeOf<undefined>();
-
-		expect(pubWithRelatedValuesAndChildren.children).toEqual(undefined);
-		expect(pubWithRelatedValuesAndChildren).toHaveValues([
+		expect(pubWithRelatedValues).toHaveValues([
 			{
 				value: "test relation value",
 			},
 			{ value: "test title" },
 		]);
 
-		expect(pubWithRelatedValuesAndChildren.values[1].relatedPub).toBeUndefined();
+		expect(pubWithRelatedValues.values[1].relatedPub).toBeUndefined();
 		// check that the relatedPub is `undefined` in type as well as value due to `{withRelatedPubs: false}`
-		expectTypeOf(pubWithRelatedValuesAndChildren.values[1]).toMatchTypeOf<{
+		expectTypeOf(pubWithRelatedValues.values[1]).toMatchTypeOf<{
 			relatedPub?: undefined;
 		}>();
 	});
@@ -979,9 +822,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubs } = await seedCommunity(seed);
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
-		const pub = await getPubsWithRelatedValuesAndChildren(
+		const pub = await getPubsWithRelatedValues(
 			{ pubId: pubs[0].id, communityId: community.id },
 			{ withStage: true }
 		);
@@ -1019,9 +862,9 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			.values(userIds.map(({ id }) => ({ userId: id, pubId, role: MemberRole.admin })))
 			.execute();
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
-		const pub = await getPubsWithRelatedValuesAndChildren(
+		const pub = await getPubsWithRelatedValues(
 			{ pubId, communityId: community.id, userId: users.admin.id },
 			{ withMembers: true }
 		);
@@ -1049,15 +892,12 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 			trx,
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
-		const pub = await getPubsWithRelatedValuesAndChildren(
-			{
-				pubId: emptyPub.id,
-				communityId: community.id,
-			},
-			{ withChildren: false }
-		);
+		const pub = await getPubsWithRelatedValues({
+			pubId: emptyPub.id,
+			communityId: community.id,
+		});
 
 		expect(pub).toMatchObject({
 			id: emptyPub.id,
@@ -1077,25 +917,18 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 				values: {
 					[pubFields.Title.slug]: "test title",
 				},
-				children: [
-					{
-						pubTypeId: pubTypes["Basic Pub"].id,
-						values: { [pubFields.Title.slug]: "test child title" },
-					},
-				],
 			},
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
-		const pub = await getPubsWithRelatedValuesAndChildren(
+		const pub = await getPubsWithRelatedValues(
 			{ pubId: createdPub.id, communityId: community.id },
 			{ withValues: false }
 		);
 
 		expect(pub.values.length).toBe(0);
-		expect(pub.children?.[0].values.length).toBe(0);
 	});
 });
 
@@ -1135,22 +968,20 @@ describe("upsertPubRelations", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: { values: [{ value: "Some title" }] },
-				},
-			],
-		});
+		expect(updatedPub).toHaveValues([
+			{ value: "test title" },
+			{
+				value: "test relation value",
+				relatedPub: { values: [{ value: "Some title" }] },
+			},
+		]);
 	});
 
 	it("should be able to create new pubs as relations", async () => {
@@ -1192,21 +1023,20 @@ describe("upsertPubRelations", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
 
-		expect(updatedPub).toMatchObject({
-			values: [
-				{ value: "test title" },
-				{
-					value: "test relation value",
-					relatedPub: { values: [{ value: "new related pub" }] },
-				},
-			],
-		});
+		expect(updatedPub).toHaveValues([
+			{ fieldSlug: pubFields["Title"].slug, value: "test title" },
+			{
+				fieldSlug: pubFields["Some relation"].slug,
+				value: "test relation value",
+				relatedPub: { values: [{ value: "new related pub" }] },
+			},
+		]);
 	});
 
 	it("should validate relation values against schema", async () => {
@@ -1369,8 +1199,8 @@ describe("upsertPubRelations", () => {
 			trx,
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1442,8 +1272,8 @@ describe("upsertPubRelations", () => {
 			trx,
 		});
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("./pub");
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const { getPubsWithRelatedValues } = await import("./pub");
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1512,10 +1342,10 @@ describe("removePubRelations", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { removePubRelations, getPubsWithRelatedValuesAndChildren } = await import("./pub");
+		const { removePubRelations, getPubsWithRelatedValues } = await import("./pub");
 
 		// check that the pub has 2 relations
-		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
+		const pubWithRelations = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1538,7 +1368,7 @@ describe("removePubRelations", () => {
 
 		expect(removedRelatedPubIds).toEqual([pubs[0].id]);
 
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1579,12 +1409,10 @@ describe("removePubRelations", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { removeAllPubRelationsBySlugs, getPubsWithRelatedValuesAndChildren } = await import(
-			"./pub"
-		);
+		const { removeAllPubRelationsBySlugs, getPubsWithRelatedValues } = await import("./pub");
 
 		// Verify initial state has 2 relations
-		const pubWithRelations = await getPubsWithRelatedValuesAndChildren(
+		const pubWithRelations = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1600,7 +1428,7 @@ describe("removePubRelations", () => {
 
 		expect(removedRelatedPubIds.sort()).toEqual([pubs[0].id, pubs[1].id].sort());
 
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1745,9 +1573,7 @@ describe("replacePubRelationsBySlug", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
-			"./pub"
-		);
+		const { replacePubRelationsBySlug, getPubsWithRelatedValues } = await import("./pub");
 
 		// Replace relations
 		await replacePubRelationsBySlug({
@@ -1768,7 +1594,7 @@ describe("replacePubRelationsBySlug", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);
@@ -1800,9 +1626,7 @@ describe("replacePubRelationsBySlug", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const { replacePubRelationsBySlug, getPubsWithRelatedValuesAndChildren } = await import(
-			"./pub"
-		);
+		const { replacePubRelationsBySlug, getPubsWithRelatedValues } = await import("./pub");
 
 		await replacePubRelationsBySlug({
 			pubId: pub.id,
@@ -1811,7 +1635,7 @@ describe("replacePubRelationsBySlug", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const updatedPub = await getPubsWithRelatedValuesAndChildren(
+		const updatedPub = await getPubsWithRelatedValues(
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10 }
 		);

@@ -32,6 +32,8 @@ export interface PubValuesTable {
 	relatedPubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
+
+	rank: ColumnType<string | null, string | null, string | null>;
 }
 
 export type PubValues = Selectable<PubValuesTable>;
@@ -51,6 +53,7 @@ export const pubValuesSchema = z.object({
 	updatedAt: z.date(),
 	relatedPubId: pubsIdSchema.nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
+	rank: z.string().nullable(),
 });
 
 export const pubValuesInitializerSchema = z.object({
@@ -62,6 +65,7 @@ export const pubValuesInitializerSchema = z.object({
 	updatedAt: z.date().optional(),
 	relatedPubId: pubsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
+	rank: z.string().optional().nullable(),
 });
 
 export const pubValuesMutatorSchema = z.object({
@@ -73,4 +77,5 @@ export const pubValuesMutatorSchema = z.object({
 	updatedAt: z.date().optional(),
 	relatedPubId: pubsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema.optional(),
+	rank: z.string().optional().nullable(),
 });

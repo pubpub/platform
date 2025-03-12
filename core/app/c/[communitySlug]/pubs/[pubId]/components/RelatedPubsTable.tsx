@@ -15,7 +15,14 @@ import { DataTableColumnHeader } from "ui/data-table";
 import type { FullProcessedPub } from "~/lib/server/pub";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubTitle } from "~/lib/pubs";
-import { createdAtDateOptions } from "./getPubChildrenTableColumns";
+
+export const createdAtDateOptions = {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+} satisfies Intl.DateTimeFormatOptions;
 
 const getRelatedPubsColumns = () => {
 	return [

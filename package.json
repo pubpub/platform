@@ -2,12 +2,14 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
+		"build:docs": "turbo build --filter=docs",
 		"dev": "pnpm p:dev && turbo dev --filter=!emails --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
 		"p:dev": "preconstruct dev",
-		"p:build": "preconstruct build",
+		"p:build": "turbo run turbo:p:build",
+		"turbo:p:build": "preconstruct build",
 		"format": "turbo run format --continue",
 		"format:fix": "turbo format:fix --continue",
 		"lint": "turbo lint --continue",
@@ -42,7 +44,7 @@
 		"lint-staged": "^13.2.2",
 		"pino-pretty": "^10.3.1",
 		"prettier": "catalog:",
-		"turbo": "^2.1.1"
+		"turbo": "^2.4.4"
 	},
 	"lint-staged": {
 		"*.{ts,tsx,js,jsx,scss,json,md}": [

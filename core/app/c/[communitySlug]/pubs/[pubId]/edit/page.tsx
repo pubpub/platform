@@ -14,10 +14,10 @@ import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
-const getPubsWithRelatedValuesAndChildrenCached = cache(
+const getPubsWithRelatedValuesCached = cache(
 	async ({
 		userId,
 		pubId,
@@ -27,7 +27,7 @@ const getPubsWithRelatedValuesAndChildrenCached = cache(
 		pubId: PubsId;
 		communityId: CommunitiesId;
 	}) => {
-		return getPubsWithRelatedValuesAndChildren(
+		return getPubsWithRelatedValues(
 			{
 				pubId,
 				communityId,
@@ -52,7 +52,7 @@ export async function generateMetadata(props: {
 		return { title: "Community Not Found" };
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
+	const pub = await getPubsWithRelatedValuesCached({
 		pubId: pubId as PubsId,
 		communityId: community.id as CommunitiesId,
 	});
@@ -103,7 +103,7 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesAndChildrenCached({
+	const pub = await getPubsWithRelatedValuesCached({
 		pubId: params.pubId as PubsId,
 		communityId: community.id,
 		userId: user.id,
@@ -130,7 +130,7 @@ export default async function Page(props: {
 			}
 		>
 			<div className="flex justify-center py-10">
-				<div className="prose max-w-prose flex-1">
+				<div className="max-w-prose flex-1">
 					<PubEditor
 						searchParams={searchParams}
 						pubId={pub.id}
