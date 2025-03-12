@@ -207,6 +207,10 @@ model PubValue {
   relatedPub     Pub?     @relation(fields: [relatedPubId], references: [id], onDelete: Cascade, name: "related_pub")
   relatedPubId   String?
 
+  // Rank is only used for ordering multiple related pubs for a single field, not for ordering
+  // values within a pub
+  rank String? // Uses "C" collation
+
   @@map(name: "pub_values")
 }
 
@@ -532,6 +536,7 @@ model FormElement {
   field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId    String
   order     Int?
+  rank      String // Uses "C" collation
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
   label     String?
   element   StructuralFormElement?

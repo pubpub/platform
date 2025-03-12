@@ -12,7 +12,7 @@ import type {
 	RenderWithPubPub,
 } from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
@@ -30,7 +30,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		// will redundantly load the child pub. Ideally we would lazily fetch and
 		// cache the parent pub while processing the email template.
 		if (parentId) {
-			parentPub = await getPubsWithRelatedValuesAndChildren(
+			parentPub = await getPubsWithRelatedValues(
 				{ pubId: parentId, communityId },
 				{
 					withPubType: true,

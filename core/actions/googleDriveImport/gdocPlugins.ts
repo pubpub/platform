@@ -92,6 +92,7 @@ export const tableToObjectArray = (node: any) => {
 		"reference",
 		"footnote",
 		"description",
+		"table",
 	];
 
 	const isHoriz = validTypes.includes(headersVert[1].toLowerCase());
@@ -758,13 +759,19 @@ export const cleanUnusedSpans = () => (tree: Root) => {
 
 export const structureReferences = () => (tree: Root) => {
 	const allReference: any[] = [];
+	/* This regex business casued a lot of headache tracking down. */
+	/* The use of .test with the /g flag caused inconsistencies. But */
+	/* then calling .exec without that /g flag would crash. There may */
+	/* be a cleaner solution where we manually reset regex.lastIndex */
+	/* in certain places, but it's late and brittle, and this is currently working. */
+	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/);
 	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
-		if (node.tagName === "u") {
+		if (node.tagName === "u" || node.tagName === "a") {
 			const parentText = getTextContent(parent);
 			const nodeText = getTextContent(node);
-			if (doiBracketRegex.test(parentText)) {
+			if (doiBracketRegexTest.test(parentText)) {
 				const elements = [
 					{
 						type: "text",
@@ -1071,16 +1078,25 @@ export const formatFigureReferences = () => (tree: Root) => {
 		if (node.tagName === "table") {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
-			const validFigureTypes = ["image", "video", "audio", "file", "iframe", "table", "math"];
+			const aggregateFigureTypes = ["image", "audio", "file", "iframe"];
+			const independentFigureTypes = ["video", "table", "math"];
+			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 			if (validFigureTypes.includes(tableType)) {
 				tableData.forEach((data: any) => {
 					if (data.hidelabel?.toLowerCase() !== "true") {
-						figureCount[tableType] = (figureCount[tableType] || 0) + 1;
-						figureCount.total = (figureCount.total || 0) + 1;
+						const isAggregateType = aggregateFigureTypes.includes(tableType);
+						if (isAggregateType) {
+							figureCount.total = (figureCount.total || 0) + 1;
+						} else {
+							figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+						}
 						figuresById[data.id] = {
 							type: tableType,
-							typeCount: figureCount[tableType],
-							totalCount: figureCount.total,
+							figureCount: isAggregateType
+								? figureCount.total
+								: figureCount[tableType],
+							// typeCount: figureCount[tableType],
+							// totalCount: figureCount.total,
 						};
 					}
 				});
@@ -1113,8 +1129,10 @@ export const formatFigureReferences = () => (tree: Root) => {
 						tagName: "a",
 						properties: {
 							href: `#${figureId}`,
-							dataFigureTotalCount: figuresById[figureId].totalCount,
-							dataFigureTypeCount: figuresById[figureId].typeCount,
+							dataFigureCount: figuresById[figureId].figureCount,
+							// dataFigureTypeCount: figuresById[figureId].typeCount,
+							// dataFigureTotalCountMinusTableVideo:
+							// 	figuresById[figureId].totalCountMinusTableVideo,
 						},
 						children: [],
 					});
@@ -1145,18 +1163,86 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	/*
 	 */
 	const figureCount: { [key: string]: number } = {};
+	const aggregateFigureTypes = ["img", "audio", "file", "iframe"];
+	const independentFigureTypes = ["video", "table", "math"];
+	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 	visit(tree, "element", (node: any, index: any, parent: any) => {
-		if (node.tagName === "figure") {
+		if (node.tagName === "figure" && node.properties.dataFigureType !== "table") {
 			const tableType = node.properties.dataFigureType;
-			if (tableType && node.properties.dataHideLabel?.toLowerCase() !== "true") {
-				figureCount[tableType] = (figureCount[tableType] || 0) + 1;
-				figureCount.total = (figureCount.total || 0) + 1;
+			if (
+				validFigureTypes.includes(tableType) &&
+				node.properties.dataHideLabel?.toLowerCase() !== "true"
+			) {
+				const isAggregateType = aggregateFigureTypes.includes(tableType);
+				if (isAggregateType) {
+					figureCount.total = (figureCount.total || 0) + 1;
+				} else {
+					figureCount[tableType] = (figureCount[tableType] || 0) + 1;
+				}
+
 				node.properties = {
 					...node.properties,
-					dataFigureTotalCount: figureCount.total,
-					dataFigureTypeCount: figureCount[tableType],
+					dataFigureCount: isAggregateType ? figureCount.total : figureCount[tableType],
 				};
 			}
 		}
 	});
+};
+
+export const structureTables = () => (tree: Root) => {
+	visit(tree, "element", (node: any, index: any, parent: any) => {
+		if (node.tagName === "table") {
+			const tableData: any = tableToObjectArray(node);
+			const tableType = tableData[0].type;
+			if (tableType === "empty") {
+				let foundNonEmpty = false;
+				const nextSibling = parent.children.slice(index + 1).find((sibling: any) => {
+					const isEmpty = getTextContent(sibling).trim() === "";
+					const isTable = sibling.type === "element" && sibling.tagName === "table";
+					if (!isEmpty && !isTable) {
+						foundNonEmpty = true;
+						return false;
+					}
+					if (isEmpty || foundNonEmpty) {
+						return false;
+					}
+					return true;
+				});
+				if (nextSibling) {
+					const nextTableData: any = tableToObjectArray(nextSibling);
+					const nextTableType = nextTableData[0].type;
+					if (nextTableType === "table") {
+						const figureNode: Element = {
+							type: "element",
+							tagName: "figure",
+							properties: {
+								dataFigureType: "table",
+								id: nextTableData[0].id,
+							},
+							children: [
+								node,
+								{
+									type: "element",
+									tagName: "figcaption",
+									properties: {},
+									children: nextTableData[0].caption || [],
+								},
+							],
+						};
+						parent.children.splice(index, 1, figureNode);
+					}
+				}
+			}
+		}
+	});
+
+	const nextTree = filter(tree, (node: any) => {
+		if (node.tagName === "table") {
+			const tableData: any = tableToObjectArray(node);
+			const tableType = tableData[0].type;
+			return tableType !== "table";
+		}
+		return true;
+	});
+	return nextTree;
 };

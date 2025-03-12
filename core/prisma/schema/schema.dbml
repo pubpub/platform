@@ -149,6 +149,7 @@ Table pub_values {
   updatedAt DateTime [default: `now()`, not null]
   relatedPub pubs
   relatedPubId String
+  rank String
 }
 
 Table pub_types {
@@ -384,6 +385,7 @@ Table form_elements {
   field pub_fields
   formId String [not null]
   order Int
+  rank String [not null]
   label String
   element StructuralFormElement
   component InputComponent

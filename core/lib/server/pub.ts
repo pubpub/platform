@@ -10,6 +10,7 @@ import type {
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import partition from "lodash.partition";
+import mudder from "mudder";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
@@ -42,7 +43,7 @@ import { NO_STAGE_OPTION } from "db/types";
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { MaybeHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, MaybeHas, Prettify, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { env } from "../env/env.mjs";
@@ -59,24 +60,6 @@ import { SAFE_USER_SELECT } from "./user";
 import { validatePubValuesBySchemaName } from "./validateFields";
 
 export type PubValues = Record<string, JsonValue>;
-
-type PubNoChildren = {
-	id: PubsId;
-	communityId: CommunitiesId;
-	createdAt: Date;
-	parentId: PubsId | null;
-	pubTypeId: PubTypesId;
-	updatedAt: Date;
-	values: PubValues;
-};
-
-type NestedPub<T extends PubNoChildren = PubNoChildren> = Omit<T, "children"> & {
-	children: NestedPub<T>[];
-};
-
-type FlatPub = PubNoChildren & {
-	children: PubNoChildren[];
-};
 
 // pubValuesByRef adds a JSON object of pub_values keyed by their field name under the `fields` key to the output of a query
 // pubIdRef should be a column name that refers to a pubId in the current query context, such as pubs.parentId or PubsInStages.pubId
@@ -125,6 +108,13 @@ const pubValues = (
 						.as("fields"),
 				(join) => join.onRef("fields.id", "=", "pub_values.fieldId")
 			)
+			.orderBy([
+				(eb) =>
+					sql`${eb.fn
+						.max("pub_values.updatedAt")
+						.over((ob) => ob.partitionBy("pub_values.fieldId"))} desc`,
+				"pub_values.rank",
+			])
 			.$if(!!pubId, (qb) => qb.where("pub_values.pubId", "=", pubId!))
 			.$if(!!pubIdRef, (qb) => qb.whereRef("pub_values.pubId", "=", ref(pubIdRef!)))
 			.as(alias)
@@ -150,77 +140,6 @@ export const pubType = <
 	)
 		.$notNull()
 		.as("pubType");
-
-// Converts a pub from having all its children (regardless of depth) in a flat array to a tree
-// structure. Assumes that pub.children are ordered by depth (leaves last)
-export const nestChildren = <T extends FlatPub>(pub: T): NestedPub<T> => {
-	const pubList = [pub, ...pub.children];
-	const pubsMap = new Map();
-	pubList.forEach((pub) => pubsMap.set(pub.id, { ...pub, children: [] }));
-
-	pubList.forEach((pub) => {
-		if (pub.parentId) {
-			const parent = pubsMap.get(pub.parentId);
-			if (parent) {
-				parent.children.push(pubsMap.get(pub.id));
-			}
-		}
-	});
-
-	return pubsMap.get(pub.id);
-};
-
-// TODO: make this usable in a subquery, possibly by turning it into a view
-// Create a CTE ("children") with the pub's children and their values
-const withPubChildren = ({
-	pubId,
-	pubIdRef,
-	communityId,
-	stageId,
-}: {
-	pubId?: PubsId;
-	pubIdRef?: StringReference<Database, keyof Database>;
-	communityId?: CommunitiesId;
-	stageId?: StagesId;
-}) => {
-	const { ref } = db.dynamic;
-
-	return db.withRecursive("children", (qc) => {
-		return qc
-			.selectFrom("pubs")
-			.select((eb) => [
-				"id",
-				"parentId",
-				"pubTypeId",
-				"assigneeId",
-				pubValuesByRef("pubs.id"),
-				pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
-			])
-			.$if(!!pubId, (qb) => qb.where("pubs.parentId", "=", pubId!))
-			.$if(!!pubIdRef, (qb) => qb.whereRef("pubs.parentId", "=", ref(pubIdRef!)))
-			.$if(!!communityId, (qb) =>
-				qb.where("pubs.communityId", "=", communityId!).where("pubs.parentId", "is", null)
-			)
-			.$if(!!stageId, (qb) =>
-				qb
-					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-					.where("PubsInStages.stageId", "=", stageId!)
-			)
-			.unionAll((eb) => {
-				return eb
-					.selectFrom("pubs")
-					.innerJoin("children", "pubs.parentId", "children.id")
-					.select([
-						"pubs.id",
-						"pubs.parentId",
-						"pubs.pubTypeId",
-						"pubs.assigneeId",
-						pubValuesByRef("pubs.id"),
-						pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
-					]);
-			});
-	});
-};
 
 const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
 	jsonObjectFrom(
@@ -261,7 +180,7 @@ export const getPubBase = (
 				stageId: StagesId;
 		  }
 ) =>
-	withPubChildren(props)
+	db
 		.selectFrom("pubs")
 		.select((eb) => [
 			...pubColumns,
@@ -273,22 +192,6 @@ export const getPubBase = (
 					.select(["PubsInStages.stageId as id"])
 					.whereRef("PubsInStages.pubId", "=", "pubs.id")
 			).as("stages"),
-			jsonArrayFrom(
-				eb
-					.selectFrom("children")
-					.select((eb) => [
-						...pubColumns,
-						"children.values",
-						"children.pubType",
-						jsonArrayFrom(
-							eb
-								.selectFrom("PubsInStages")
-								.select(["PubsInStages.stageId as id"])
-								.whereRef("PubsInStages.pubId", "=", "children.id")
-						).as("stages"),
-					])
-					.$narrowType<{ values: PubValues }>()
-			).as("children"),
 		])
 		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
 		.$if(!props.pubId, (eb) => eb.select(pubValuesByRef("pubs.id")))
@@ -301,7 +204,7 @@ export const _deprecated_getPub = async (pubId: PubsId): Promise<GetPubResponseB
 		throw PubNotFoundError;
 	}
 
-	return nestChildren(pub);
+	return pub;
 };
 
 export const _deprecated_getPubCached = async (pubId: PubsId) => {
@@ -313,7 +216,7 @@ export const _deprecated_getPubCached = async (pubId: PubsId) => {
 		throw PubNotFoundError;
 	}
 
-	return nestChildren(pub);
+	return pub;
 };
 
 export type GetPubResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubCached>>>;
@@ -330,7 +233,7 @@ export type GetManyParams = {
 	 */
 	orderDirection?: "asc" | "desc";
 	/**
-	 * Only fetch "Top level" pubs and their children,
+	 * Only fetch "Top level" pubs,
 	 * do not fetch child pubs separately from their parents
 	 *
 	 * @default true
@@ -352,7 +255,7 @@ const GET_PUBS_DEFAULT = {
 } as const;
 
 /**
- * Get a nested array of pubs and their children
+ * Get a nested array of pubs
  *
  * Either per community, or per stage
  */
@@ -378,7 +281,7 @@ export const _deprecated_getPubs = async (
 			.orderBy(orderBy, orderDirection)
 	).execute();
 
-	return pubs.map(nestChildren);
+	return pubs;
 };
 
 export type GetPubsResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubs>>>;
@@ -551,17 +454,23 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 				)
 				.execute();
 		}
+		const rankedValues = await getRankedValues({
+			pubId: newPub.id,
+			pubValues: valuesWithFieldIds,
+			trx,
+		});
 
 		const pubValues = valuesWithFieldIds.length
 			? await autoRevalidate(
 					trx
 						.insertInto("pub_values")
 						.values(
-							valuesWithFieldIds.map(({ fieldId, value, relatedPubId }, index) => ({
+							rankedValues.map(({ fieldId, value, relatedPubId, rank }, index) => ({
 								fieldId,
 								pubId: newPub.id,
 								value: JSON.stringify(value),
 								relatedPubId,
+								rank,
 								lastModifiedBy,
 							}))
 						)
@@ -583,41 +492,11 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			};
 		});
 
-		if (!body.children && !body.relatedPubs) {
-			return {
-				...pub,
-				stageId: createdStageId ?? null,
-				values: hydratedValues,
-				children: [],
-				depth,
-			} satisfies ProcessedPub;
-		}
-
-		// TODO: could be parallelized with relatedPubs if we want to
-		const children = await Promise.all(
-			body.children?.map(async (child) => {
-				const childPub = await createPubRecursiveNew(
-					{
-						body: child,
-						communityId,
-						parent: {
-							id: newPub.id,
-						},
-						trx,
-						lastModifiedBy,
-					},
-					depth + 1
-				);
-				return childPub;
-			}) ?? []
-		);
-
 		if (!body.relatedPubs) {
 			return {
 				...pub,
 				stageId: createdStageId ?? null,
 				values: hydratedValues,
-				children: children.length ? children : [],
 				depth,
 			} satisfies ProcessedPub;
 		}
@@ -645,7 +524,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			...pub,
 			stageId: createdStageId,
 			values: [...pubValues, ...relatedPubs],
-			children,
 			depth,
 		} as ProcessedPub;
 	});
@@ -1197,6 +1075,104 @@ export const updatePub = async ({
 	return result;
 };
 
+/**
+ * Adds an appropriate "rank" attribute to each related pub value passed in, based on the highest
+ * existing rank on the relevant pub. Returns all the pub values passed in.
+ */
+
+const getRankedValues = async ({
+	pubId,
+	pubValues,
+	trx,
+}: {
+	pubId: PubsId;
+	pubValues: {
+		pubId?: PubsId;
+		fieldId: PubFieldsId;
+		relatedPubId?: PubsId;
+		value: unknown;
+	}[];
+	trx: typeof db;
+}) => {
+	const { relatedValues, plainValues } = Object.groupBy(pubValues, (v) =>
+		v.relatedPubId === undefined ? "plainValues" : "relatedValues"
+	);
+	const groupedValues: Record<
+		PubsId,
+		Record<PubFieldsId, DefinitelyHas<(typeof pubValues)[number], "pubId">[]>
+	> = {};
+	let rankedValues;
+	if (relatedValues?.length) {
+		const firstVal = relatedValues[0];
+
+		const valuesQuery = trx
+			.selectFrom("pub_values")
+			.select(["rank", "fieldId", "pubId"])
+			.where("pubId", "=", firstVal.pubId ?? pubId)
+			.where("fieldId", "=", firstVal.fieldId)
+			.where("rank", "is not", null)
+			.orderBy("rank desc")
+			.limit(1);
+
+		for (const value of relatedValues) {
+			const newValue = { ...value, pubId: value.pubId ?? pubId };
+			if (!groupedValues[newValue.pubId]) {
+				groupedValues[newValue.pubId] = { [value.fieldId]: [newValue] };
+			} else if (!groupedValues[newValue.pubId][value.fieldId]) {
+				groupedValues[newValue.pubId][value.fieldId] = [newValue];
+			}
+
+			// If we've already found the highest ranked value for this pubId + fieldId combination,
+			// continue without adding to the query
+			else if (
+				groupedValues[newValue.pubId] &&
+				groupedValues[newValue.pubId][value.fieldId]?.length
+			) {
+				groupedValues[newValue.pubId][value.fieldId].push(newValue);
+				continue;
+			}
+
+			if (value === firstVal) {
+				continue;
+			}
+
+			// Select the highest ranked value for the given pub + field, and append (UNION ALL)
+			// that single row to the output
+			valuesQuery.unionAll((eb) =>
+				eb
+					.selectFrom("pub_values")
+					.select(["rank", "fieldId", "pubId"])
+					.where("pubId", "=", newValue.pubId)
+					.where("fieldId", "=", value.fieldId)
+					.where("rank", "is not", null)
+					.orderBy("rank desc")
+					.limit(1)
+			);
+		}
+		const highestRanks = await valuesQuery.execute();
+
+		rankedValues = Object.values(groupedValues).flatMap((valuesForPub) =>
+			Object.values(valuesForPub).flatMap((valuesForField) => {
+				const highestRank =
+					highestRanks.find(
+						({ pubId, fieldId }) =>
+							valuesForField[0].pubId === pubId &&
+							valuesForField[0].fieldId === fieldId
+					)?.rank ?? "";
+				const ranks = mudder.base62.mudder(highestRank, "", valuesForField.length);
+				return valuesForField.map((value, i) => ({ ...value, rank: ranks[i] }));
+			})
+		);
+	}
+
+	const allValues: ((typeof pubValues)[number] & { rank?: string })[] = [
+		...(plainValues || []),
+		...(rankedValues || []),
+	];
+
+	return allValues;
+};
+
 export const upsertPubValues = async ({
 	pubId,
 	pubValues,
@@ -1219,17 +1195,19 @@ export const upsertPubValues = async ({
 	if (!pubValues.length) {
 		return [];
 	}
+	const rankedValues = await getRankedValues({ pubId, pubValues, trx });
 
 	return autoRevalidate(
 		trx
 			.insertInto("pub_values")
 			.values(
-				pubValues.map((value) => ({
+				rankedValues.map((value) => ({
 					pubId: value.pubId ?? pubId,
 					fieldId: value.fieldId,
 					value: JSON.stringify(value.value),
 					lastModifiedBy,
 					relatedPubId: value.relatedPubId,
+					rank: value.rank,
 				}))
 			)
 			.onConflict((oc) =>
@@ -1266,15 +1244,18 @@ export const upsertPubRelationValues = async ({
 		return [];
 	}
 
+	const rankedValues = await getRankedValues({ pubId, pubValues: allRelationsToCreate, trx });
+
 	return autoRevalidate(
 		trx
 			.insertInto("pub_values")
 			.values(
-				allRelationsToCreate.map((value) => ({
+				rankedValues.map((value) => ({
 					pubId: value.pubId ?? pubId,
 					relatedPubId: value.relatedPubId,
 					value: JSON.stringify(value.value),
 					fieldId: value.fieldId,
+					rank: value.rank,
 					lastModifiedBy,
 				}))
 			)
@@ -1319,13 +1300,12 @@ export type UnprocessedPub = {
 		fieldSlug: string;
 		fieldName: string;
 	}[];
-	children?: { id: PubsId }[];
 };
 
-interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, MaybePubOptions {
+interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions {
 	/**
 	 * The maximum depth to recurse to.
-	 * Does not do anything if `includeChildren` and `includeRelatedPubs` is `false`.
+	 * Does not do anything if `includeRelatedPubs` is `false`.
 	 *
 	 * @default 2
 	 */
@@ -1343,7 +1323,7 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 	cycle?: "include" | "exclude";
 	/**
 	 * Only used for testing.
-	 * If true the raw result of the query is returned, without nesting the values and children.
+	 * If true the raw result of the query is returned, without nesting the values.
 	 */
 	_debugDontNest?: boolean;
 	fieldSlugs?: string[];
@@ -1351,7 +1331,7 @@ interface GetPubsWithRelatedValuesAndChildrenOptions extends GetManyParams, Mayb
 	trx?: typeof db;
 }
 
-// TODO: We allow calling getPubsWithRelatedValuesAndChildren with no userId so that event driven
+// TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
 // actions can select a pub even when no user is present (and some other scenarios where the
 // filtering wouldn't make sense). We probably need to do that, but we should make it more explicit
 // than just leaving out the userId to avoid accidentally letting certain routes select pubs without
@@ -1379,7 +1359,6 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 
 const DEFAULT_OPTIONS = {
 	depth: 2,
-	withChildren: true,
 	withRelatedPubs: true,
 	withPubType: false,
 	withStage: false,
@@ -1387,28 +1366,22 @@ const DEFAULT_OPTIONS = {
 	cycle: "include",
 	withValues: true,
 	trx: db,
-} as const satisfies GetPubsWithRelatedValuesAndChildrenOptions;
+} as const satisfies GetPubsWithRelatedValuesOptions;
 
-export async function getPubsWithRelatedValuesAndChildren<
-	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
->(
+export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
 	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
 	// if only pubId + communityId is provided, we return a single pub
 ): Promise<ProcessedPub<Options>>;
-export async function getPubsWithRelatedValuesAndChildren<
-	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
->(
+export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
 	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
 	// if any other props are provided, we return an array of pubs
 ): Promise<ProcessedPub<Options>[]>;
 /**
- * Retrieves a pub and all its related values, children, and related pubs up to a given depth.
+ * Retrieves a pub and all its values and related pubs up to a given depth.
  */
-export async function getPubsWithRelatedValuesAndChildren<
-	Options extends GetPubsWithRelatedValuesAndChildrenOptions,
->(
+export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
 	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
@@ -1419,7 +1392,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 
 	const {
 		depth,
-		withChildren,
 		withRelatedPubs,
 		withValues,
 		cycle,
@@ -1449,7 +1421,7 @@ export async function getPubsWithRelatedValuesAndChildren<
 			//  { pubId: 2, rootId: 1, parentId: 1, depth: 2, value: 'Some child value', valueId: 3, relatedPubId: null},
 			//  { pubId: 3, rootId: 1, parentId: 2, depth: 2, value: 'Some related value', valueId: 4, relatedPubId: null},
 			// ]
-			// so it's an array of length (pub + children + relatedPubs) * values,
+			// so it's an array of length (pub + relatedPubs) * values,
 			// with information about their depth, parent, and pub they are related to
 			//
 			// we could instead only look for the related and child pubs and ignore the other values
@@ -1490,15 +1462,15 @@ export async function getPubsWithRelatedValuesAndChildren<
 					])
 
 					.$if(Boolean(withLegacyAssignee), (qb) => qb.select("p.assigneeId"))
-					// we don't even need to recurse if we don't want children or related pubs
-					.$if(withChildren || withRelatedPubs, (qb) =>
+					// we don't even need to recurse if we don't want related pubs
+					.$if(withRelatedPubs, (qb) =>
 						qb.union((qb) =>
 							qb
 								.selectFrom("pub_tree")
 								.innerJoin("pubs", (join) =>
 									join.on((eb) =>
-										eb.or([
-											...(withRelatedPubs
+										eb.or(
+											withRelatedPubs
 												? [
 														eb(
 															"pubs.id",
@@ -1506,17 +1478,8 @@ export async function getPubsWithRelatedValuesAndChildren<
 															eb.ref("pub_tree.relatedPubId")
 														),
 													]
-												: []),
-											...(withChildren
-												? [
-														eb(
-															"pubs.parentId",
-															"=",
-															eb.ref("pub_tree.pubId")
-														),
-													]
-												: []),
-										])
+												: []
+										)
 									)
 								)
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
@@ -1833,7 +1796,15 @@ export async function getPubsWithRelatedValuesAndChildren<
 								"pub_fields.name as fieldName",
 							])
 							.whereRef("pv.pubId", "=", "pt.pubId")
-							.orderBy("pv.createdAt desc")
+							// Order by most recently updated value (grouped by pub field), then rank
+							.orderBy([
+								(eb) =>
+									// Equivalent to: max(pv."updatedAt") over(partition by pv."fieldId") desc
+									sql`${eb.fn
+										.max("pv.updatedAt")
+										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
+								"pv.rank",
+							])
 					).as("values")
 				)
 			)
@@ -1845,17 +1816,6 @@ export async function getPubsWithRelatedValuesAndChildren<
 							.select(SAFE_USER_SELECT)
 							.whereRef("users.id", "=", "pt.assigneeId")
 					).as("assignee")
-				)
-			)
-			.$if(Boolean(withChildren), (qb) =>
-				qb.select((eb) =>
-					jsonArrayFrom(
-						eb
-							.selectFrom("pub_tree as children")
-							.select(["children.pubId as id"])
-							.distinctOn(["children.pubId"])
-							.whereRef("children.parentId", "=", "pt.pubId")
-					).as("children")
 				)
 			)
 			// TODO: is there a more efficient way to do this?
@@ -1910,18 +1870,18 @@ export async function getPubsWithRelatedValuesAndChildren<
 	}
 
 	if (props.pubId) {
-		return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
+		return nestRelatedPubs(result as UnprocessedPub[], {
 			rootPubId: props.pubId,
 			...opts,
 		}) as ProcessedPub<Options>;
 	}
 
-	return nestRelatedPubsAndChildren(result as UnprocessedPub[], {
+	return nestRelatedPubs(result as UnprocessedPub[], {
 		...opts,
 	}) as ProcessedPub<Options>[];
 }
 
-function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndChildrenOptions>(
+function nestRelatedPubs<Options extends GetPubsWithRelatedValuesOptions>(
 	pubs: UnprocessedPub[],
 	options?: {
 		rootPubId?: PubsId;
@@ -1965,16 +1925,11 @@ function nestRelatedPubsAndChildren<Options extends GetPubsWithRelatedValuesAndC
 			} as ProcessedPub<Options>["values"][number];
 		});
 
-		const processedChildren = unprocessedPub?.children
-			?.map((child) => processPub(child.id, depth - 1))
-			?.filter((child) => !!child);
-
 		const { values, path, ...usefulProcessedPubColumns } = unprocessedPub;
 
 		const processedPub = {
 			...usefulProcessedPubColumns,
 			values: processedValues ?? [],
-			children: processedChildren ?? undefined,
 		} as ProcessedPub;
 
 		const forceCast = processedPub as unknown as ProcessedPub<Options>;
@@ -2035,7 +1990,6 @@ export const getPubsCount = async (props: {
 };
 export type FullProcessedPub = ProcessedPub<{
 	withRelatedPubs: true;
-	withChildren: true;
 	withMembers: true;
 	withPubType: true;
 	withStage: true;
@@ -2222,4 +2176,44 @@ export const fullTextSearch = async (
 	}
 
 	return q.execute();
+};
+
+export const getExclusivelyRelatedPub = async (relatedPubId: PubsId, relationFieldSlug: string) => {
+	return autoCache(
+		db
+			.with("related_pub_id", (qb) =>
+				qb
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
+					.where("pub_values.relatedPubId", "=", relatedPubId)
+					.where("pub_fields.isRelation", "=", true)
+					.where("pub_fields.slug", "=", relationFieldSlug)
+					.select("pub_values.pubId")
+					.limit(1)
+			)
+			.selectFrom("related_pub_id")
+			.innerJoin("pubs", "pubs.id", "related_pub_id.pubId")
+			.select((eb) => [
+				...pubColumns,
+				jsonArrayFrom(
+					eb
+						.selectFrom("pub_values")
+						.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+						.select([
+							"pub_values.id as id",
+							"pub_values.fieldId",
+							"pub_values.value",
+							"pub_values.relatedPubId",
+							"pub_values.createdAt as createdAt",
+							"pub_values.updatedAt as updatedAt",
+							"pub_fields.schemaName",
+							"pub_fields.slug as fieldSlug",
+							"pub_fields.name as fieldName",
+						])
+						.whereRef("pub_values.pubId", "=", "pubs.id")
+						.orderBy("pub_values.createdAt desc")
+				).as("values"),
+				pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
+			])
+	).executeTakeFirst();
 };

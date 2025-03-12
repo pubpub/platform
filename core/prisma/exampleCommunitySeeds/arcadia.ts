@@ -27,15 +27,11 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					"Inline Citation Style": "Author Year",
 					"Citation Style": "APA 7",
 				},
-				// the relevant pubs are implemented as both children
-				// and related pubs for demonstration purposes
 				relatedPubs: {
 					// connections in Legacy
-					// all of the below are also added as children to make it easier to see them in the ui as of OCt 22
 					Contributors: [
 						{
 							value: "Editing & Draft Preparation",
-							alsoAsChild: true,
 							pub: {
 								pubType: "Author",
 								values: {
@@ -50,7 +46,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						{
 							// acting as a description of the download
 							value: "PDF Download",
-							alsoAsChild: true,
 							pub: {
 								pubType: "PDF Download",
 								// can't really add the actual file here
@@ -61,7 +56,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					Tables: [
 						{
 							value: null,
-							alsoAsChild: true,
 							pub: {
 								pubType: "Table",
 								values: {
@@ -72,7 +66,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						},
 						{
 							value: null,
-							alsoAsChild: true,
 							pub: {
 								pubType: "Table",
 								values: {
@@ -85,7 +78,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					Images: [
 						{
 							value: null,
-							alsoAsChild: true,
 							pub: {
 								pubType: "Pub Image",
 								values: {
@@ -97,7 +89,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					Citations: [
 						{
 							value: "Chapter 5",
-							alsoAsChild: true,
 							pub: {
 								pubType: "ExternalBook",
 								values: {
@@ -109,7 +100,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						},
 						{
 							value: "pp. 35-53",
-							alsoAsChild: true,
 							pub: {
 								pubType: "ExternalJournalArticle",
 								values: {
@@ -128,8 +118,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 			}
 
 			return {
-				value: null,
-				alsoAsChild: true,
+				value: "",
 				pub,
 			};
 		}) as any;
@@ -195,7 +184,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				"Issue Number": { schemaName: CoreSchemaType.Number },
 				ISSN: { schemaName: CoreSchemaType.String },
 				Issues: { schemaName: CoreSchemaType.Null, relation: true },
-				Articles: { schemaName: CoreSchemaType.Null, relation: true },
+				Articles: { schemaName: CoreSchemaType.String, relation: true },
 				Journals: { schemaName: CoreSchemaType.Null, relation: true },
 				// site settings
 
@@ -418,7 +407,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						Header: [
 							{
 								value: null,
-								alsoAsChild: true,
 								pub: {
 									pubType: "Header",
 									values: {
@@ -430,7 +418,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 										Navigation: [
 											{
 												value: null,
-												alsoAsChild: true,
 												pub: {
 													pubType: "Navigation",
 													stage: "Navigations",
@@ -441,7 +428,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 														"Navigation Items": [
 															{
 																value: null,
-																alsoAsChild: true,
 																pub: {
 																	pubType: "Navigation Item",
 																	values: {
@@ -463,7 +449,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						Footer: [
 							{
 								value: null,
-								alsoAsChild: true,
 								pub: {
 									pubType: "Footer",
 									values: {
@@ -475,7 +460,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 										Navigation: [
 											{
 												value: null,
-												alsoAsChild: true,
 												pub: {
 													pubType: "Navigation",
 													stage: "Navigations",
@@ -484,7 +468,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 														"Navigation Items": [
 															{
 																value: null,
-																alsoAsChild: true,
 																pub: {
 																	pubType: "Navigation Item",
 																	values: {
@@ -507,7 +490,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 						Journals: [
 							{
 								value: null,
-								alsoAsChild: true,
 								pub: {
 									pubType: "Journal",
 									stage: "Journals",
@@ -521,7 +503,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 										Issues: [
 											{
 												value: null,
-												alsoAsChild: true,
 												pub: {
 													pubType: "Issue",
 													stage: "Issues",
@@ -534,9 +515,9 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 													relatedPubs: {
 														Articles: [
 															{
-																value: null,
-																alsoAsChild: true,
+																value: "",
 																pub: {
+																	value: "",
 																	id: articleId,
 																	pubType: "Journal Article",
 																	stage: "Articles",
@@ -559,8 +540,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																		"Citation Style": "APA 7",
 																	},
 
-																	// the relevant pubs are implemented as both children
-																	// and related pubs for demonstration purposes
 																	relatedPubs: {
 																		Tag: [
 																			{
@@ -588,11 +567,9 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																				},
 																			},
 																		],
-																		// all of the below are also added as children to make it easier to see them in the ui as of OCt 22
 																		Contributors: [
 																			{
 																				value: "Editing & Draft Preparation",
-																				alsoAsChild: true,
 																				pub: {
 																					id: authorId,
 																					stage: "Authors",
@@ -625,7 +602,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																			{
 																				// acting as a description of the download
 																				value: "PDF Download",
-																				alsoAsChild: true,
 																				pub: {
 																					pubType:
 																						"PDF Download",
@@ -637,7 +613,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																		Tables: [
 																			{
 																				value: null,
-																				alsoAsChild: true,
 																				pub: {
 																					pubType:
 																						"Table",
@@ -650,7 +625,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																			},
 																			{
 																				value: null,
-																				alsoAsChild: true,
 																				pub: {
 																					pubType:
 																						"Table",
@@ -665,7 +639,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																		Images: [
 																			{
 																				value: null,
-																				alsoAsChild: true,
 																				pub: {
 																					pubType:
 																						"Pub Image",
@@ -679,7 +652,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																		Citations: [
 																			{
 																				value: "Chapter 5",
-																				alsoAsChild: true,
 																				pub: {
 																					pubType:
 																						"ExternalBook",
@@ -692,7 +664,6 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																			},
 																			{
 																				value: "pp. 35-53",
-																				alsoAsChild: true,
 																				pub: {
 																					pubType:
 																						"ExternalJournalArticle",
@@ -739,6 +710,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				value: '"Edited"',
 				fieldId: seed.pubFields.Articles.id,
 				lastModifiedBy: createLastModifiedBy("system"),
+				rank: "0",
 			},
 			{
 				pubId: authorId as PubsId,
@@ -746,6 +718,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				relatedPubId: articleId2 as PubsId,
 				fieldId: seed.pubFields.Articles.id,
 				lastModifiedBy: createLastModifiedBy("system"),
+				rank: "1",
 			},
 		])
 		.execute();

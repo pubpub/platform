@@ -28,6 +28,7 @@ import {
 	structureInlineCode,
 	structureInlineMath,
 	structureReferences,
+	structureTables,
 	structureVideos,
 	tableToObjectArray,
 } from "./gdocPlugins";
@@ -1351,6 +1352,21 @@ test("formatFigureReferences", async () => {
 						</tr>
 					</tbody>
 				</table>
+				<p>Again, @test4 shows this.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Video</span></p></td>
+							<td><p><span>test4</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123.mp4</span></p></td>
+						</tr>
+					</tbody>
+				</table>
 			</body>
 		</html>
 
@@ -1366,11 +1382,18 @@ test("formatFigureReferences", async () => {
 				<figure data-figure-type="iframe" id="abra" data-hide-label="True">
 					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
 				</figure>
-				<p>As seen in <a href="#test1" data-figure-total-count="1" data-figure-type-count="1"></a> we have more.</p>
-				<p>Also seen in <a href="#test2" data-figure-total-count="2" data-figure-type-count="1"></a> we have an image.</p>
-				<p>Again, <a href="#test1" data-figure-total-count="1" data-figure-type-count="1"></a> shows this.</p>
+				<p>As seen in <a href="#test1" data-figure-count="1"></a> we have more.</p>
+				<p>Also seen in <a href="#test2" data-figure-count="2"></a> we have an image.</p>
+				<p>Again, <a href="#test1" data-figure-count="1"></a> shows this.</p>
 				<figure data-figure-type="img" id="test2">
 					<img src="https://resize-v3.pubpub.org/123">
+				</figure>
+				<p>Again, <a href="#test4" data-figure-count="1"></a> shows this.</p>
+				<figure data-figure-type="video" id="test4">
+					<video controls>
+						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
+						<img alt="Video fallback image">
+					</video>
 				</figure>
 			</body>
 		</html>
@@ -1379,6 +1402,7 @@ test("formatFigureReferences", async () => {
 	const result = await rehype()
 		.use(formatFigureReferences)
 		.use(structureIframes)
+		.use(structureVideos)
 		.use(structureImages)
 		.use(removeEmptyFigCaption)
 		.process(inputHtml)
@@ -1472,16 +1496,16 @@ test("appendFigureAttributes", async () => {
 			<body>
 				<p>Hello.</p>
 				
-				<figure data-figure-type="iframe" id="test1" data-figure-total-count="1" data-figure-type-count="1">
+				<figure data-figure-type="iframe" id="test1" data-figure-count="1">
 					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
 				</figure>
 				<figure data-figure-type="iframe" id="abra" data-hide-label="True">
 					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
 				</figure>
-				<figure data-figure-type="img" id="test2" data-figure-total-count="2" data-figure-type-count="1">
+				<figure data-figure-type="img" id="test2" data-figure-count="2">
 					<img src="https://resize-v3.pubpub.org/123">
 				</figure>
-				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50" data-figure-total-count="3" data-figure-type-count="1">
+				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50" data-figure-count="1">
 					<video controls poster="https://example.com">
 						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
 						<img src="https://example.com" alt="Video fallback image">
@@ -1503,6 +1527,78 @@ test("appendFigureAttributes", async () => {
 		.use(structureImages)
 		.use(appendFigureAttributes)
 		.use(removeEmptyFigCaption)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("Structure Tables", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<table>
+					<tbody>
+						<tr>
+							<td>A</td>
+							<td>B</td>
+						</tr>
+						<tr>
+							<td>C and then <sup>2</sup></td>
+							<td>D</td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tr>
+						<td>Type</td>
+						<td>Caption</td>
+					</tr>
+					<tr>
+						<td>Table</td>
+						<td>
+							<p><span>Elephants</span></p>
+							<p><em><span>Ca<sup>t</sup>s</span></em></p>
+						</td>
+					</tr>
+				</table>
+				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
+			</body>
+		</html>
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<figure data-figure-type="table">
+					<table>
+						<tbody>
+							<tr>
+								<td>A</td>
+								<td>B</td>
+							</tr>
+							<tr>
+								<td>C and then <sup>2</sup></td>
+								<td>D</td>
+							</tr>
+						</tbody>
+					</table>
+					<figcaption>
+						<p><span>Elephants</span></p>
+						<p><em><span>Ca<sup>t</sup>s</span></em></p>
+					</figcaption>
+				</figure>
+				<p>Now consider two different genes, $A$ and $B$, with variation in allelic state across a population of diploid organisms. One gene $A$ has two alleles $A$ and $a$, resulting in three allelic states, </p>
+			</body>
+		</html>
+		`;
+
+	const result = await rehype()
+		.use(structureTables)
 		.process(inputHtml)
 		.then((file) => String(file))
 		.catch((error) => {

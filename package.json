@@ -2,6 +2,7 @@
 	"private": true,
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
+		"build:docs": "turbo build --filter=docs",
 		"dev": "pnpm p:dev && turbo dev --filter=!emails --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",

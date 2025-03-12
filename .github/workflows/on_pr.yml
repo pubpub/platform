@@ -4,7 +4,7 @@ name: PR Updated triggers
 
 on:
     pull_request:
-        types: [labeled, unlabeled, synchronize, closed, reopened]
+        types: [labeled, unlabeled, synchronize, closed, reopened, opened]
 
 env:
     AWS_REGION: us-east-1
@@ -14,16 +14,33 @@ permissions:
     contents: read
 
 jobs:
+    path-filter:
+        runs-on: ubuntu-latest
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || github.event.action == 'closed'
+        outputs:
+            docs: ${{ steps.changes.outputs.docs }}
+        steps:
+            - uses: actions/checkout@v4
+            - uses: dorny/paths-filter@v2
+              id: changes
+              with:
+                  filters: |
+                      docs:
+                          - 'docs/**'
+
     ci:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
         uses: ./.github/workflows/ci.yml
 
     build-all:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     e2e:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
         needs:
             - build-all
             # could theoretically be skipped, but in practice is always faster
@@ -35,49 +52,70 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     deploy-preview:
-        permissions: write-all
-        runs-on: ubuntu-latest
-        timeout-minutes: 30
+        uses: ./.github/workflows/pull-preview.yml
         needs:
             - build-all
+        permissions:
+            contents: read
+            deployments: write
+            pull-requests: write
+            statuses: write
+        with:
+            PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
+            JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
+            MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
+            PUBLIC_URL: ${{ github.event.repository.html_url }}
+            AWS_REGION: "us-east-1"
+        secrets:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
+
+    close-preview:
+        uses: ./.github/workflows/pull-preview.yml
+        if: github.event.action == 'closed' || (github.event.action == 'unlabeled' && github.event.label.name == 'preview')
+        permissions:
+            contents: read
+            deployments: write
+            pull-requests: write
+            statuses: write
+        with:
+            PLATFORM_IMAGE: "x" # not used
+            JOBS_IMAGE: "x" # not used
+            MIGRATIONS_IMAGE: "x" # not used
+            PUBLIC_URL: ${{ github.event.repository.html_url }}
+            AWS_REGION: "us-east-1"
+        secrets:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
+
+    deploy-docs-preview:
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
+        needs:
+            - path-filter
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') && needs.path-filter.outputs.docs == 'true'
+        uses: ./.github/workflows/build-docs.yml
+        with:
+            preview: true
+
+    close-docs-preview:
+        needs:
+            - path-filter
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
+        if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
+        runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
 
-            - name: Copy .env file
-              run: cp ./self-host/.env.example ./self-host/.env
-
-            - name: Configure pullpreview
-              env:
-                  PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
-                  JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
-                  MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
-              run: |
-                  sed -i "s|image: PLATFORM_IMAGE|image: $PLATFORM_IMAGE|" docker-compose.preview.yml
-                  sed -i "s|image: JOBS_IMAGE|image: $JOBS_IMAGE|" docker-compose.preview.yml
-                  sed -i "s|image: MIGRATIONS_IMAGE|image: $MIGRATIONS_IMAGE|" docker-compose.preview.yml
-                  sed -i "s|email someone@example.com|email dev@pubpub.org|" self-host/caddy/Caddyfile
-                  sed -i "s|example.com|{\$PUBLIC_URL}|" self-host/caddy/Caddyfile
-
-            - name: Get ECR token
-              id: ecrtoken
-              run: echo "value=$(aws ecr get-login-password --region us-east-1)" >> $GITHUB_OUTPUT
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  AWS_DEFAULT_REGION: "us-east-1"
-
-            - uses: pullpreview/action@v5
+            - name: Close docs preview
+              uses: rossjrw/pr-preview-action@v1
               with:
-                  label: preview
-                  admins: 3mcd
-                  compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
-                  default_port: 443
-                  instance_type: small
-                  ports: 80,443,9001
-                  registries: docker://AWS:${{steps.ecrtoken.outputs.value}}@246372085946.dkr.ecr.us-east-1.amazonaws.com
-                  github_token: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  AWS_REGION: ${{ env.AWS_REGION }}
-                  PULLPREVIEW_LOGGER_LEVEL: DEBUG
+                  source-dir: docs/out
+                  action: remove

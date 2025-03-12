@@ -18,7 +18,6 @@ type Props = {
 		withPubType: true;
 		withRelatedValues: false;
 		withLegacyAssignee: true;
-		withChildren: undefined;
 	}>;
 	stage: CommunityStage;
 	actionInstances: ActionInstances[];

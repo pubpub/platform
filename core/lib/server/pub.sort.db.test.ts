@@ -39,12 +39,12 @@ const seed = createSeed({
 	pubs: [],
 });
 
-describe("getPubsWithRelatedValuesAndChildren", () => {
+describe("getPubsWithRelatedValues", () => {
 	it("should sort pubs by updatedAt", async () => {
 		const {
 			createPubRecursiveNew,
 			removeAllPubRelationsBySlugs,
-			getPubsWithRelatedValuesAndChildren,
+			getPubsWithRelatedValues: getPubsWithRelatedValues,
 			upsertPubRelations: addPubRelations,
 		} = await import("./pub");
 
@@ -114,7 +114,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 
 		// Fetch pubs with and without limits, and with/without values
 		const [stage1pubs, stage2pubs, allPubs] = await Promise.all([
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{
 					communityId: community.id,
 					stageId: [stages["Stage 1"].id],
@@ -128,7 +128,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					trx,
 				}
 			),
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{
 					communityId: community.id,
 					stageId: [stages["Stage 2"].id],
@@ -142,7 +142,7 @@ describe("getPubsWithRelatedValuesAndChildren", () => {
 					trx,
 				}
 			),
-			getPubsWithRelatedValuesAndChildren(
+			getPubsWithRelatedValues(
 				{
 					communityId: community.id,
 				},

@@ -7,6 +7,7 @@ import { assert } from "utils";
 
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { getPubType } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -27,8 +28,9 @@ export const createForm = defineServerAction(async function createForm(
 	}
 
 	try {
+		const pubType = await getPubType(pubTypeId).executeTakeFirstOrThrow();
 		await autoRevalidate(
-			insertForm(pubTypeId, name, slug, communityId, false)
+			insertForm(pubType, name, slug, communityId, false)
 		).executeTakeFirstOrThrow();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {

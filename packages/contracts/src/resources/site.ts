@@ -6,7 +6,6 @@ import type {
 	CoreSchemaType,
 	MemberRole,
 	PubFields,
-	PubFieldSchemaId,
 	PubFieldsId,
 	PubsId,
 	PubTypes,
@@ -19,13 +18,11 @@ import type {
 } from "db/public";
 import {
 	communitiesIdSchema,
-	communityMembershipsIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
 	memberRoleSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
-	pubsSchema,
 	pubTypesIdSchema,
 	pubTypesSchema,
 	pubValuesSchema,
@@ -37,22 +34,17 @@ import {
 import { stageConstraintSchema } from "db/types";
 
 import type { Json } from "./types";
-import {
-	CreatePubRequestBodyWithNulls,
-	CreatePubRequestBodyWithNullsBase,
-	jsonSchema,
-} from "./types";
+import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
-export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNullsBase> & {
+export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
 	stageId?: StagesId;
-	children?: CreatePubRequestBodyWithNulls[];
 	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
 	members?: Record<UsersId, MemberRole>;
 };
 
 export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 
-const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBase.extend({
+const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.extend({
 	stageId: stagesIdSchema.optional(),
 	values: z.record(
 		jsonSchema.or(
@@ -69,7 +61,6 @@ const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNullsBa
 
 export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWithNullsNew> =
 	CreatePubRequestBodyWithNullsWithStageId.extend({
-		children: z.lazy(() => CreatePubRequestBodyWithNullsNew.array().optional()),
 		relatedPubs: z
 			.lazy(() =>
 				z.record(
@@ -80,16 +71,6 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 	});
 
 const contract = initContract();
-
-export type PubWithChildren = z.infer<typeof pubsSchema> & {
-	children?: PubWithChildren[];
-};
-
-const pubWithChildrenSchema: z.ZodType<PubWithChildren> = pubsSchema.and(
-	z.object({
-		children: z.lazy(() => z.array(pubWithChildrenSchema).optional()),
-	})
-);
 
 const upsertPubRelationsSchema = z.record(
 	z.array(
@@ -102,15 +83,6 @@ const upsertPubRelationsSchema = z.record(
 		])
 	)
 );
-
-/**
- * Only add the `children` if the `withChildren` option has not been set to `false
- */
-type MaybePubChildren<Options extends MaybePubOptions> = Options["withChildren"] extends false
-	? { children?: never }
-	: Options["withChildren"] extends undefined
-		? { children?: ProcessedPub<Options>[] }
-		: { children: ProcessedPub<Options>[] };
 
 /**
  * Only add the `stage` if the `withStage` option has not been set to `false
@@ -161,19 +133,12 @@ type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
 			: { assignee?: Users | null };
 
 /**
- * Those options of `GetPubsWithRelatedValuesAndChildrenOptions` that affect the output of `ProcessedPub`
+ * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
  *
  * This way it's more easy to specify what kind of `ProcessedPub` we want as e.g. the input type of a function
  *
  **/
 export type MaybePubOptions = {
-	/**
-	 * Whether to recursively fetch children up to depth `depth`.
-	 *
-	 * @default true
-	 *
-	 */
-	withChildren?: boolean;
 	/**
 	 * Whether to recursively fetch related pubs.
 	 *
@@ -251,8 +216,7 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	 * Is an empty array if `withValues` is false
 	 */
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
-} & MaybePubChildren<Options> &
-	MaybePubStage<Options> &
+} & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &
 	MaybePubLegacyAssignee<Options>;
@@ -260,7 +224,6 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages | null;
 	pubType?: PubTypes;
-	children?: NonGenericProcessedPub[];
 	values?: (ValueBase & {
 		relatedPub?: NonGenericProcessedPub | null;
 		relatedPubId: PubsId | null;
@@ -294,7 +257,6 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	updatedAt: z.date(),
 	stage: stagesSchema.nullish(),
 	pubType: pubTypeWithFieldsSchema.optional(),
-	children: z.lazy(() => z.array(processedPubSchema)).optional(),
 	assignee: usersSchema.nullish(),
 });
 
@@ -316,9 +278,8 @@ const getPubQuerySchema = z
 			.positive()
 			.default(2)
 			.describe(
-				"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and its children."
+				"The depth to which to fetch related pubs. Defaults to 2, which means to fetch the top level pub and one degree of related pubs."
 			),
-		withChildren: z.boolean().default(false).describe("Whether to fetch children."),
 		withRelatedPubs: z
 			.boolean()
 			.default(false)
@@ -429,7 +390,7 @@ export const siteApi = contract.router(
 				path: "/pubs/:pubId",
 				summary: "Gets a pub",
 				description:
-					"Get a pub and its children by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
+					"Get a pub by ID. This endpoint is used by the PubPub site builder to get a pub's details.",
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),

@@ -12,7 +12,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
-import { getPubsWithRelatedValuesAndChildren } from "~/lib/server/pub";
+import { getPubsWithRelatedValues } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContextEditorContextProvider } from "../../ContextEditor/ContextEditorContext";
@@ -35,7 +35,10 @@ const RelatedPubValueElement = ({
 	fieldName: string;
 	element: PubFieldElement;
 }) => {
-	const configLabel = "label" in element.config ? element.config.label : undefined;
+	const configLabel =
+		"relationshipConfig" in element.config
+			? element.config.relationshipConfig.label
+			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
 	return (
@@ -76,10 +79,7 @@ const getRelatedPubData = async ({
 		return null;
 	}
 	const [relatedPub, relatedPubFieldResult] = await Promise.all([
-		getPubsWithRelatedValuesAndChildren(
-			{ pubId: relatedPubId, communityId },
-			{ withPubType: true }
-		),
+		getPubsWithRelatedValues({ pubId: relatedPubId, communityId }, { withPubType: true }),
 		getPubFields({
 			communityId: communityId,
 			slugs: [slug],
@@ -127,7 +127,7 @@ export async function PubEditor(props: PubEditorProps) {
 	const { user } = await getLoginData();
 
 	if ("pubId" in props) {
-		pub = await getPubsWithRelatedValuesAndChildren(
+		pub = await getPubsWithRelatedValues(
 			{
 				pubId: props.pubId,
 				communityId: props.communityId,
@@ -160,7 +160,7 @@ export async function PubEditor(props: PubEditorProps) {
 	const { relatedPubId, slug: relatedFieldSlug } = props.searchParams;
 
 	const [pubs, pubTypes, relatedPubData] = await Promise.all([
-		getPubsWithRelatedValuesAndChildren(
+		getPubsWithRelatedValues(
 			{ communityId: community.id },
 			{
 				withLegacyAssignee: true,
@@ -220,7 +220,7 @@ export async function PubEditor(props: PubEditorProps) {
 		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
 	);
 	const parentPub = pub?.parentId
-		? await getPubsWithRelatedValuesAndChildren(
+		? await getPubsWithRelatedValues(
 				{ pubId: pub.parentId, communityId: props.communityId },
 				{ withStage: true, withLegacyAssignee: true, withPubType: true }
 			)
