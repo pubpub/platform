@@ -1758,6 +1758,17 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("pub_values as pv")
 							.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+							// TODO: it seems possible that there can be more than one isDefault form!
+							.innerJoin("forms", (join) =>
+								join
+									.onRef("forms.pubTypeId", "=", "pt.pubTypeId")
+									.on("forms.isDefault", "=", true)
+							)
+							.leftJoin("form_elements", (join) =>
+								join
+									.onRef("form_elements.fieldId", "=", "pub_fields.id")
+									.onRef("form_elements.formId", "=", "forms.id")
+							)
 							.$if(Boolean(fieldSlugs), (qb) =>
 								qb.where("pub_fields.slug", "in", fieldSlugs!)
 							)
@@ -1771,6 +1782,9 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								"pub_fields.schemaName",
 								"pub_fields.slug as fieldSlug",
 								"pub_fields.name as fieldName",
+								"form_elements.id as formElementId",
+								"form_elements.label as formElementLabel",
+								"form_elements.config as formElementConfig",
 							])
 							.whereRef("pv.pubId", "=", "pt.pubId")
 							// Order by most recently updated value (grouped by pub field), then rank
@@ -1780,6 +1794,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									sql`${eb.fn
 										.max("pv.updatedAt")
 										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
+								"form_elements.rank",
 								"pv.rank",
 							])
 					).as("values")

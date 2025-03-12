@@ -127,7 +127,6 @@ describe("seedCommunity", () => {
 			forms: {
 				"submission-form": {
 					pubType: "Submission",
-					name: "Submission Form",
 					elements: [
 						{
 							type: ElementType.structural,
@@ -147,6 +146,17 @@ describe("seedCommunity", () => {
 							label: "Submit",
 							content: "Submit",
 							stage: "Stage 1",
+						},
+					],
+				},
+				"author-form": {
+					pubType: "Author",
+					elements: [
+						{
+							type: ElementType.pubfield,
+							component: InputComponent.textInput,
+							field: "Title",
+							config: { label: "Name" },
 						},
 					],
 				},
@@ -302,6 +312,27 @@ describe("seedCommunity", () => {
 				isArchived: false,
 				name: "submission-form",
 				slug: "submission-form",
+			},
+			"author-form": {
+				access: "private",
+				elements: [
+					{
+						component: "textInput",
+						config: {
+							label: "Name",
+						},
+						content: null,
+						element: null,
+						label: null,
+						rank: "U",
+						required: null,
+						stageId: null,
+						type: "pubfield",
+					},
+				],
+				isArchived: false,
+				name: "author-form",
+				slug: "author-form",
 			},
 		});
 
