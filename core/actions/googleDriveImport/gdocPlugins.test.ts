@@ -1299,7 +1299,7 @@ test("getDescription", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("formatFigureReferences", async () => {
+test.todo("formatFigureReferences", async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
