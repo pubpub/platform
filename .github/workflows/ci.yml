@@ -48,7 +48,8 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
-            - name: Cache turbo
+            # to cache p:build, format, lint, type-check and test-run
+            - name: Setup turbo cache
               uses: actions/cache@v4
               with:
                   path: .turbo
