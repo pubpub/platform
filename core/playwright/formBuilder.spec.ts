@@ -6,35 +6,123 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType, InputComponent } from "db/public";
+import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
 
+import type { BaseSeedOutput } from "./helpers";
 import type { PubFieldElement } from "~/app/components/forms/types";
-import { FieldsPage } from "./fixtures/fields-page";
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
-import { createCommunity } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
 const now = new Date().getTime();
 const FORM_SLUG = `playwright-test-form-${now}`;
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
+// const COMMUNITY_SLUG = `playwright-test-community-${now}`;
 
 // Single page instance https://playwright.dev/docs/test-retries#reuse-single-page-between-tests
 let page: Page;
 
+const seed = createSeed({
+	community: { name: `test community`, slug: `test-community-slug` },
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+		Content: { schemaName: CoreSchemaType.String },
+		Sjon: { schemaName: CoreSchemaType.Number },
+		Author: { schemaName: CoreSchemaType.String, relation: true },
+		AuthorNull: { schemaName: CoreSchemaType.Null, relation: true },
+	},
+	pubTypes: {
+		Submission: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+		},
+	},
+	users: {
+		admin: {
+			password: "password",
+			role: MemberRole.admin,
+		},
+	},
+	forms: {
+		RelationshipForm: {
+			pubType: "Submission",
+			slug: "relationship-form",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Title",
+					component: InputComponent.textInput,
+					config: {
+						label: "Title",
+					},
+				},
+			],
+		},
+		NullForm: {
+			pubType: "Submission",
+			slug: "relationship-with-null-form",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Title",
+					component: InputComponent.textInput,
+					config: {
+						label: "Title",
+					},
+				},
+			],
+		},
+		ReorderForm: {
+			pubType: "Submission",
+			slug: "reorder-form-slug",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Title",
+					component: InputComponent.textInput,
+					config: {
+						label: "Title",
+					},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Content",
+					component: InputComponent.textArea,
+					config: {
+						label: "Content",
+					},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Author",
+					component: InputComponent.relationBlock,
+					config: {
+						label: "Author",
+						relationshipConfig: {
+							component: InputComponent.textArea,
+							help: "",
+							label: "Role",
+						},
+					},
+				},
+			],
+		},
+	},
+});
+
+let community: CommunitySeedOutput<typeof seed>;
+
 test.beforeAll(async ({ browser }) => {
+	community = await seedCommunity(seed);
 	page = await browser.newPage();
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
-
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
 });
 
 test.afterAll(async () => {
@@ -43,19 +131,19 @@ test.afterAll(async () => {
 
 test.describe("Creating a form", () => {
 	test("Create a new form for the first time", async () => {
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		const formsPage = new FormsPage(page, community.community.slug);
 		await formsPage.goto();
 		await formsPage.addForm("new form", FORM_SLUG);
-		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
+		await page.waitForURL(`/c/${community.community.slug}/forms/${FORM_SLUG}/edit`);
 	});
 	test("Cannot create a form with the same slug", async () => {
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		const formsPage = new FormsPage(page, community.community.slug);
 		await formsPage.goto();
 		await formsPage.addForm("another form", FORM_SLUG, false);
 		await expect(page.getByRole("status").filter({ hasText: "Error" })).toHaveCount(1);
 	});
 	test("Can archive and restore a form", async () => {
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
+		const formsPage = new FormsPage(page, community.community.slug);
 		await formsPage.goto();
 
 		// Open actions menu and archive form
@@ -77,7 +165,7 @@ test.describe("Creating a form", () => {
 
 test.describe("Submission buttons", () => {
 	test("Add a new button and edit without saving", async () => {
-		await page.goto(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
+		await page.goto(`/c/${community.community.slug}/forms/${FORM_SLUG}/edit`);
 		await page.getByTestId("add-submission-settings-button").click();
 		await page.getByTestId("save-button-configuration-button").click();
 		await page.getByTestId("button-option-Submit").getByTestId("edit-button").click();
@@ -91,7 +179,7 @@ test.describe("Submission buttons", () => {
 	});
 
 	test("Add two new buttons", async () => {
-		await page.goto(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
+		await page.goto(`/c/${community.community.slug}/forms/${FORM_SLUG}/edit`);
 		// Add first button with default fields
 		await page.getByTestId("add-submission-settings-button").click();
 		await page.getByTestId("save-button-configuration-button").click();
@@ -131,7 +219,7 @@ test.describe("Submission buttons", () => {
 			}
 		});
 
-		await page.goto(`/c/${COMMUNITY_SLUG}/forms/${FORM_SLUG}/edit`);
+		await page.goto(`/c/${community.community.slug}/forms/${FORM_SLUG}/edit`);
 		await page.getByTestId("button-option-Decline").getByTestId("edit-button").click();
 		await page.getByRole("textbox", { name: "label" }).fill(newData.label);
 		await page.getByRole("textbox").nth(1).fill(newData.content);
@@ -146,20 +234,12 @@ test.describe("Submission buttons", () => {
 
 test.describe("relationship fields", () => {
 	test("Create a form with a relationship field", async () => {
-		// Add a field that is a relationship
-		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
-		await fieldsPage.goto();
-		await fieldsPage.addField("author", CoreSchemaType.String, true);
+		const formSlug = community.forms["RelationshipForm"].slug;
 
-		const formSlug = "relationship-form";
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
-		await formsPage.goto();
-		await formsPage.addForm("relationship form", formSlug);
-		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
-
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
+		await formEditPage.goto();
 		await formEditPage.openAddForm();
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:author`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:author`);
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
@@ -197,20 +277,13 @@ test.describe("relationship fields", () => {
 	});
 
 	test("Create a form with a null relationship field", async () => {
-		// Add a field that is a relationship
-		const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
-		await fieldsPage.goto();
-		await fieldsPage.addField("author null", CoreSchemaType.Null, true);
+		const formSlug = community.forms["NullForm"].slug;
+		await page.goto(`/c/${community.community.slug}/forms/${formSlug}/edit`);
 
-		const formSlug = "relationship-form-with-null";
-		const formsPage = new FormsPage(page, COMMUNITY_SLUG);
-		await formsPage.goto();
-		await formsPage.addForm("relationship form with null", formSlug);
-		await page.waitForURL(`/c/${COMMUNITY_SLUG}/forms/${formSlug}/edit`);
-
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, formSlug);
+		const formEditPage = new FormsEditPage(page, community.community.slug, formSlug);
+		await formEditPage.goto();
 		await formEditPage.openAddForm();
-		await formEditPage.openFormElementPanel(`${COMMUNITY_SLUG}:author-null`);
+		await formEditPage.openFormElementPanel(`${community.community.slug}:authornull`);
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
@@ -245,7 +318,11 @@ test.describe("relationship fields", () => {
 
 test.describe("reordering fields", async () => {
 	test("field order is persisted after saving", async () => {
-		const formEditPage = new FormsEditPage(page, COMMUNITY_SLUG, FORM_SLUG);
+		const formEditPage = new FormsEditPage(
+			page,
+			community.community.slug,
+			community.forms["ReorderForm"].slug
+		);
 
 		await formEditPage.goto();
 

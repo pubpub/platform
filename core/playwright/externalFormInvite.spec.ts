@@ -3,19 +3,16 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import type { PubsId } from "db/public";
-import { Action } from "db/public";
+import { Action, CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
 
-import { FormsPage } from "./fixtures/forms-page";
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubsPage } from "./fixtures/pubs-page";
-import { StagesManagePage } from "./fixtures/stages-manage-page";
-import { createCommunity, inbucketClient } from "./helpers";
+import { inbucketClient } from "./helpers";
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-const FORM_SLUG = `playwright-test-form-${now}`;
 const ACTION_NAME = "Invite evaluator";
 const firstName = faker.person.firstName();
 const lastName = faker.person.lastName();
@@ -24,41 +21,121 @@ const email = `${firstName}@example.com`;
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
-let pubId: PubsId;
-let pubId2: PubsId;
+
+const seed = createSeed({
+	community: {
+		name: `test community`,
+		slug: "test-community",
+	},
+	pubFields: {
+		Title: {
+			schemaName: CoreSchemaType.String,
+		},
+		Content: {
+			schemaName: CoreSchemaType.String,
+		},
+		Email: {
+			schemaName: CoreSchemaType.Email,
+		},
+	},
+	users: {
+		admin: {
+			role: MemberRole.admin,
+			password: "password",
+		},
+		user2: {
+			role: MemberRole.contributor,
+			password: "xxxx-xxxx",
+		},
+	},
+	pubTypes: {
+		Submission: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+		},
+		Evaluation: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+			Email: { isTitle: false },
+		},
+	},
+	stages: {
+		Evaluating: {
+			actions: [
+				{
+					action: Action.email,
+					name: ACTION_NAME,
+					config: {
+						subject: "Hello",
+						body: "Greetings",
+						recipientEmail: "test@example.com",
+					},
+				},
+			],
+		},
+	},
+	pubs: [
+		{
+			pubType: "Submission",
+			values: {
+				Title: "The Activity of Snails",
+			},
+			stage: "Evaluating",
+		},
+		{
+			pubType: "Submission",
+			values: {
+				Title: "Do not let anyone edit me",
+			},
+			stage: "Evaluating",
+		},
+	],
+	forms: {
+		Evaluation: {
+			slug: "evaluation",
+			pubType: "Evaluation",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Title",
+					component: InputComponent.textInput,
+					config: {
+						label: "Title",
+					},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Content",
+					component: InputComponent.textArea,
+					config: {
+						label: "Content",
+					},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Email",
+					component: InputComponent.textInput,
+					config: {
+						label: "Email",
+					},
+				},
+			],
+		},
+	},
+});
+let community: CommunitySeedOutput<typeof seed>;
 
 test.beforeAll(async ({ browser }) => {
+	community = await seedCommunity(seed);
+
 	page = await browser.newPage();
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
-
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
-
-	const formsPage = new FormsPage(page, COMMUNITY_SLUG);
-	await formsPage.goto();
-	await formsPage.addForm("Evaluation", FORM_SLUG);
-
-	const stagesManagePage = new StagesManagePage(page, COMMUNITY_SLUG);
-	await stagesManagePage.goTo();
-	await stagesManagePage.addStage("Evaluating");
-	await stagesManagePage.addAction("Evaluating", Action.email, ACTION_NAME);
-
-	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
-	await pubsPage.goTo();
-	pubId = await pubsPage.createPub({
-		stage: "Evaluating",
-		values: { title: "The Activity of Snails" },
-	});
-	await pubsPage.goTo();
-	pubId2 = await pubsPage.createPub({
-		stage: "Evaluating",
-		values: { title: "Do not let anyone edit me" },
-	});
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
+	await page.goto(
+		`/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`
+	);
 });
 
 test.afterAll(async () => {
@@ -67,7 +144,11 @@ test.afterAll(async () => {
 
 test.describe("Inviting a new user to fill out a form", () => {
 	test("Admin can invite a new user and send them a form link with an email action", async () => {
-		const pubDetailsPage = new PubDetailsPage(page, COMMUNITY_SLUG, pubId!);
+		const pubDetailsPage = new PubDetailsPage(
+			page,
+			community.community.slug,
+			community.pubs[0].id
+		);
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
 			// Invite a new user to fill out the form
@@ -103,7 +184,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 				.fill("Test invitation for :RecipientFirstName");
 			await runActionDialog
 				.getByLabel("Email body")
-				.fill(`Please fill out :link[this form]{form=${FORM_SLUG}}`);
+				.fill(`Please fill out :link[this form]{form=${community.forms.Evaluation.slug}}`);
 		});
 	});
 	// fails with large number of pubs in the db
@@ -135,7 +216,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.getByText("Form Successfully Submitted").waitFor();
 
 		// Test authorization for new contributor
-		const pubsPage = new PubsPage(newPage, COMMUNITY_SLUG);
+		const pubsPage = new PubsPage(newPage, community.community.slug);
 		await pubsPage.goTo();
 		// User should see the pubs page in the community they are a contributor of
 		expect(newPage.url()).toMatch(/\/pubs$/);
@@ -146,14 +227,14 @@ test.describe("Inviting a new user to fill out a form", () => {
 		expect(await newPage.url()).toMatch(/\/settings$/);
 
 		// Creating a pub without a pubId should work
-		const createPage = decodedUrl.replace(`pubId%3D${pubId}`, "");
+		const createPage = decodedUrl.replace(`pubId%3D${community.pubs[0].id}`, "");
 		await newPage.goto(createPage);
 		await newPage.getByLabel("Title").fill("new pub");
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 		await newPage.getByText("Form Successfully Submitted").waitFor();
 
 		// Try to sneakily swap out the pubId in our decoded url for a different pubId
-		const swappedPubIdUrl = decodedUrl.replace(pubId, pubId2);
+		const swappedPubIdUrl = decodedUrl.replace(community.pubs[0].id, community.pubs[1].id);
 		await newPage.goto(swappedPubIdUrl);
 		// Expect 404 page
 		await expect(newPage.getByText("This page could not be found.")).toHaveCount(1);
