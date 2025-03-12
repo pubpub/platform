@@ -3,28 +3,28 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
+import type { BaseSeedOutput } from "./helpers";
 import { LoginPage } from "./fixtures/login-page";
 import { MembersPage } from "./fixtures/member-page";
-import { createCommunity, inbucketClient } from "./helpers";
+import { inbucketClient, seedBase } from "./helpers";
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-
-// test.describe.configure({ mode: "serial" });
+let COMMUNITY_SLUG = `playwright-test-community`;
 
 let page: Page;
+let community: BaseSeedOutput;
 
 test.beforeAll(async ({ browser }) => {
+	const password = "password";
+
+	community = await seedBase();
+
 	page = await browser.newPage();
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, password);
 
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
+	COMMUNITY_SLUG = community.community.slug;
 });
 
 test.afterAll(async () => {
