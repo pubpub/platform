@@ -168,7 +168,7 @@ export const CreateTokenForm = () => {
 						<Button
 							type="submit"
 							className="justify-self-end"
-							// disabled={!form.formState.isValid}
+							disabled={!form.formState.isValid}
 							data-testid="create-token-button"
 						>
 							Create Token
