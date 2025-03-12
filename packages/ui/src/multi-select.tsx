@@ -61,6 +61,34 @@ interface MultiSelectProps
 	showClearAll?: boolean;
 }
 
+const XButton = ({
+	className,
+	onClick,
+	dataTestId,
+}: {
+	className?: string;
+	onClick: () => void;
+	dataTestId: string;
+}) => (
+	<span
+		role="button"
+		tabIndex={0}
+		data-testid={dataTestId}
+		className={cn("h-4 w-4 cursor-pointer rounded-full hover:bg-white/20", className)}
+		onClick={(event) => {
+			event.stopPropagation();
+			onClick();
+		}}
+		onKeyDown={(event) => {
+			if (event.key === "Enter" || event.key === " ") {
+				onClick();
+			}
+		}}
+	>
+		<XCircle />
+	</span>
+);
+
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
 	(
 		{
@@ -173,6 +201,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 														variant,
 														className: badgeClassName,
 													}),
+													"flex items-center gap-2",
 													badgeClassName
 												)}
 												style={{ animationDuration: `${animation}s` }}
@@ -180,14 +209,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 												{IconComponent && (
 													<IconComponent className="mr-2 h-4 w-4" />
 												)}
+
 												{option?.label}
-												<XCircle
-													className="ml-2 h-4 w-4 cursor-pointer"
-													data-testid={`multi-select-remove-${value}`}
-													onClick={(event) => {
-														event.stopPropagation();
-														toggleOption(value);
-													}}
+												<XButton
+													onClick={() => toggleOption(value)}
+													dataTestId={`multi-select-remove-${value}`}
 												/>
 											</Badge>
 										);
@@ -201,31 +227,31 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 													variant,
 													className: badgeClassName,
 												}),
+												"flex items-center gap-2",
 												badgeClassName
 											)}
 											style={{ animationDuration: `${animation}s` }}
 										>
 											{`+ ${selectedValues.length - maxCount} more`}
-											<XCircle
-												className="ml-2 h-4 w-4 cursor-pointer"
-												onClick={(event) => {
-													event.stopPropagation();
-													clearExtraOptions();
-												}}
-												data-testid={`multi-select-clear-extra`}
+											<XButton
+												onClick={clearExtraOptions}
+												className="hover:bg-black/20"
+												dataTestId={`multi-select-clear-extra`}
 											/>
 										</Badge>
 									)}
 								</div>
 								<div className="flex items-center justify-between">
-									<XIcon
-										className="mx-2 h-4 cursor-pointer text-muted-foreground"
-										data-testid={`multi-select-clear-all`}
-										onClick={(event) => {
-											event.stopPropagation();
-											handleClear();
-										}}
-									/>
+									{showClearAll && (
+										<XIcon
+											className="mx-2 h-4 cursor-pointer text-muted-foreground"
+											data-testid={`multi-select-clear-all`}
+											onClick={(event) => {
+												event.stopPropagation();
+												handleClear();
+											}}
+										/>
+									)}
 									<Separator
 										orientation="vertical"
 										className="flex h-full min-h-6"
