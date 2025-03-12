@@ -57,26 +57,33 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-turbo-
 
-            - name: Start test dependencies
-              run: pnpm test:setup
-
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
             - name: p:build
               run: pnpm p:build
 
-            - name: Run migrations
-              run: pnpm --filter core migrate-test
+            - name: Run all tasks simultaneously
+              run: >
+                  pnpm format &
+                  pnpm lint &
+                  pnpm type-check &
+                  pnpm test:setup && pnpm --filter core migrate-test && pnpm test-run
 
-            - name: Run prettier
-              run: pnpm format
+            # - name: Run prettier
+            #   run: pnpm format
 
-            - name: Run eslint
-              run: pnpm lint
+            # - name: Run eslint
+            #   run: pnpm lint
 
-            - name: Run typecheck
-              run: pnpm type-check
+            # - name: Run typecheck
+            #   run: pnpm type-check
 
-            - name: Run vitest tests
-              run: pnpm test-run
+            # - name: Start test dependencies
+            #   run: pnpm test:setup
+
+            # - name: Run migrations
+            #   run: pnpm --filter core migrate-test
+
+            # - name: Run vitest tests
+            #   run: pnpm test-run
