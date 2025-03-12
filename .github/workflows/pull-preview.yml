@@ -70,6 +70,7 @@ jobs:
                   ports: 80,443,9001
                   registries: docker://AWS:${{steps.ecrtoken.outputs.value}}@246372085946.dkr.ecr.us-east-1.amazonaws.com
                   github_token: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
+                  pre_script: "./.github/workflows/pull-preview-script.sh"
               env:
                   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
                   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
