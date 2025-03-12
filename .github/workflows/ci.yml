@@ -17,6 +17,13 @@ jobs:
     ci:
         timeout-minutes: 15
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                task:
+                    - format
+                    - lint
+                    - type-check
+                    - test-run
         env:
             COMPOSE_FILE: docker-compose.test.yml
             ENV_FILE: .env.docker-compose.test
@@ -48,7 +55,8 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-pnpm-store-
 
-            - name: Cache turbo
+            # to cache p:build, format, lint, type-check and test-run
+            - name: Setup turbo cache
               uses: actions/cache@v4
               with:
                   path: .turbo
@@ -56,26 +64,19 @@ jobs:
                   restore-keys: |
                       ${{ runner.os }}-turbo-
 
-            - name: Start test dependencies
-              run: pnpm test:setup
-
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
 
             - name: p:build
               run: pnpm p:build
 
+            - name: Setup test dependencies
+              if: matrix.task == 'test-run'
+              run: pnpm test:setup
+
             - name: Run migrations
+              if: matrix.task == 'test-run'
               run: pnpm --filter core migrate-test
 
-            - name: Run prettier
-              run: pnpm format
-
-            - name: Run eslint
-              run: pnpm lint
-
-            - name: Run typecheck
-              run: pnpm type-check
-
-            - name: Run vitest tests
-              run: pnpm test-run
+            - name: Run task
+              run: pnpm ${{ matrix.task }}
