@@ -39,83 +39,83 @@ jobs:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
-    # e2e:
-    #     if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
-    #     needs:
-    #         - build-all
-    #         # could theoretically be skipped, but in practice is always faster
-    #         # than waiting for the build-all job to finish anyway
-    #         - ci
-    #     uses: ./.github/workflows/e2e.yml
-    #     secrets:
-    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    e2e:
+        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
+        needs:
+            - build-all
+            # could theoretically be skipped, but in practice is always faster
+            # than waiting for the build-all job to finish anyway
+            - ci
+        uses: ./.github/workflows/e2e.yml
+        secrets:
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
-    # deploy-preview:
-    #     uses: ./.github/workflows/pull-preview.yml
-    #     needs:
-    #         - build-all
-    #     permissions:
-    #         contents: read
-    #         deployments: write
-    #         pull-requests: write
-    #         statuses: write
-    #     with:
-    #         PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
-    #         JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
-    #         MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
-    #         PUBLIC_URL: ${{ github.event.repository.html_url }}
-    #         AWS_REGION: "us-east-1"
-    #     secrets:
-    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #         GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
+    deploy-preview:
+        uses: ./.github/workflows/pull-preview.yml
+        needs:
+            - build-all
+        permissions:
+            contents: read
+            deployments: write
+            pull-requests: write
+            statuses: write
+        with:
+            PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
+            JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
+            MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
+            PUBLIC_URL: ${{ github.event.repository.html_url }}
+            AWS_REGION: "us-east-1"
+        secrets:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
 
-    # close-preview:
-    #     uses: ./.github/workflows/pull-preview.yml
-    #     if: github.event.action == 'closed' || (github.event.action == 'unlabeled' && github.event.label.name == 'preview')
-    #     permissions:
-    #         contents: read
-    #         deployments: write
-    #         pull-requests: write
-    #         statuses: write
-    #     with:
-    #         PLATFORM_IMAGE: "x" # not used
-    #         JOBS_IMAGE: "x" # not used
-    #         MIGRATIONS_IMAGE: "x" # not used
-    #         PUBLIC_URL: ${{ github.event.repository.html_url }}
-    #         AWS_REGION: "us-east-1"
-    #     secrets:
-    #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #         GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
+    close-preview:
+        uses: ./.github/workflows/pull-preview.yml
+        if: github.event.action == 'closed' || (github.event.action == 'unlabeled' && github.event.label.name == 'preview')
+        permissions:
+            contents: read
+            deployments: write
+            pull-requests: write
+            statuses: write
+        with:
+            PLATFORM_IMAGE: "x" # not used
+            JOBS_IMAGE: "x" # not used
+            MIGRATIONS_IMAGE: "x" # not used
+            PUBLIC_URL: ${{ github.event.repository.html_url }}
+            AWS_REGION: "us-east-1"
+        secrets:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
 
-    # deploy-docs-preview:
-    #     permissions:
-    #         contents: write
-    #         pages: write
-    #         pull-requests: write
-    #     needs:
-    #         - path-filter
-    #     if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') && needs.path-filter.outputs.docs == 'true'
-    #     uses: ./.github/workflows/build-docs.yml
-    #     with:
-    #         preview: true
+    deploy-docs-preview:
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
+        needs:
+            - path-filter
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize') && needs.path-filter.outputs.docs == 'true'
+        uses: ./.github/workflows/build-docs.yml
+        with:
+            preview: true
 
-    # close-docs-preview:
-    #     needs:
-    #         - path-filter
-    #     permissions:
-    #         contents: write
-    #         pages: write
-    #         pull-requests: write
-    #     if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
-    #     runs-on: ubuntu-latest
-    #     steps:
-    #         - uses: actions/checkout@v4
+    close-docs-preview:
+        needs:
+            - path-filter
+        permissions:
+            contents: write
+            pages: write
+            pull-requests: write
+        if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-    #         - name: Close docs preview
-    #           uses: rossjrw/pr-preview-action@v1
-    #           with:
-    #               source-dir: docs/out
-    #               action: remove
+            - name: Close docs preview
+              uses: rossjrw/pr-preview-action@v1
+              with:
+                  source-dir: docs/out
+                  action: remove

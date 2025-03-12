@@ -47,8 +47,7 @@ COPY pnpm-lock.yaml ./
 
 # Could possibly be sped up using `turbo prune` 
 # https://turbo.build/repo/docs/guides/tools/docker
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-  pnpm fetch
+RUN pnpm fetch
 
 # Install dependencies we only need to run pnpm install
 RUN apk add g++ make py3-pip 
