@@ -29,7 +29,8 @@
 		"dev:setup": "pnpm install && docker compose -f docker-compose.dev.yml up -d && pnpm p:dev && pnpm --filter core migrate-dev && pnpm --filter core reset",
 		"dev:teardown": "docker compose -f docker-compose.dev.yml down -v",
 		"integration:setup": "docker compose -f docker-compose.test.yml --profile integration up -d",
-		"integration:teardown": "docker compose -f docker-compose.test.yml --profile integration down -v"
+		"integration:teardown": "docker compose -f docker-compose.test.yml --profile integration down -v",
+		"context-editor:playwright": "pnpm --filter context-editor run playwright:test"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.22.17",

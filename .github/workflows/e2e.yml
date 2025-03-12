@@ -105,18 +105,6 @@ jobs:
 
             - run: pnpm --filter core exec playwright install chromium --with-deps
 
-            - name: Run playwright on context-editor
-              id: editorTests
-              run: pnpm --filter context-editor run playwright:test
-
-            - name: Upload playwright snapshots artifact
-              if: failure() && steps.editorTests.outcome == 'failure'
-              uses: actions/upload-artifact@v4
-              with:
-                  name: playwright-snapshots-editor
-                  path: packages/context-editor/test-results
-                  retention-days: 10
-
             - name: Start up core etc
               run: pnpm integration:setup
               env:
@@ -131,20 +119,19 @@ jobs:
               run: while [ "`docker inspect -f {{.State.Health.Status}} ${{steps.log-container-id.outputs.CONTAINER_ID}}`" != "healthy" ]; do     sleep .2; done
 
             - name: Run integration tests
-              id: coreTests
               run: pnpm --filter core playwright:test
               env:
                   INTEGRATION_TEST_HOST: localhost
 
             - name: Print container logs
-              if: ${{(failure() && steps.coreTests.outcome == 'failure') || cancelled()}}
+              if: ${{(failure()  || cancelled()}}
               run: docker compose -f docker-compose.test.yml --profile integration logs
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
             - name: Upload playwright snapshots artifact
-              if: failure() && steps.coreTests.outcome == 'failure'
+              if: failure()
               uses: actions/upload-artifact@v4
               with:
                   name: playwright-snapshots
