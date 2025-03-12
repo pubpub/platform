@@ -73,7 +73,7 @@ jobs:
 
     close-preview:
         uses: ./.github/workflows/pull-preview.yml
-        if: github.event.action == 'closed' || (github.event.action == 'unlabeled' && github.event.label.name == 'preview')
+        if: ${{(github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name,  'preview')) || (github.event.action == 'unlabeled' && github.event.label.name == 'preview')}}
         permissions:
             contents: read
             deployments: write
