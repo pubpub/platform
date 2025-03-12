@@ -1106,7 +1106,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/(?<=[\s\[\(])@(\S+?)(?=[\s\.;,\]\)])/g);
+			const regex = new RegExp(/(?:^|[\s\[\(])@(\S+?)(?=[\s\.;,\]\)])/g);
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
