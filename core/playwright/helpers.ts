@@ -1,8 +1,13 @@
 /* eslint-disable no-restricted-properties */
 import type { Page } from "@playwright/test";
 
-import { CoreSchemaType } from "db/public";
+import { faker } from "@faker-js/faker";
 
+import { CoreSchemaType, MemberRole } from "db/public";
+
+import type { CommunitySeedOutput, Seed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { CommunityPage } from "./fixtures/community-page";
 import { FieldsPage } from "./fixtures/fields-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
@@ -54,3 +59,43 @@ export const retryAction = async (action: () => Promise<void>, maxAttempts = 3) 
 		}
 	}
 };
+
+export const createBaseSeed = () => {
+	const id = crypto.randomUUID();
+	return createSeed({
+		community: { name: `test community ${id}`, slug: `test-community-${id}` },
+		pubFields: {
+			Title: { schemaName: CoreSchemaType.String },
+			Content: { schemaName: CoreSchemaType.String },
+		},
+		pubTypes: {
+			Submission: {
+				Title: { isTitle: true },
+				Content: { isTitle: false },
+			},
+		},
+		users: {
+			admin: {
+				slug: faker.string.nanoid(),
+				password: "password",
+				role: MemberRole.admin,
+			},
+		},
+	});
+};
+
+export type BaseSeedOutput = CommunitySeedOutput<ReturnType<typeof createBaseSeed>>;
+
+export const seedBase = async () => {
+	const baseSeed = createBaseSeed();
+	return seedCommunity(baseSeed) as any;
+};
+
+export const PubFieldsOfEachType = Object.fromEntries(
+	Object.values(CoreSchemaType).map((type) => [
+		type,
+		{
+			schemaName: type,
+		},
+	])
+) as Record<CoreSchemaType, { schemaName: CoreSchemaType }>;
