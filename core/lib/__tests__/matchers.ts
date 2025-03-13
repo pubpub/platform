@@ -64,7 +64,7 @@ expect.extend({
 			message: () =>
 				pass
 					? `Expected pub ${isNot ? "not" : ""} to have values ${JSON.stringify(expected)}, and it does ${isNot ? "not" : ""}`
-					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(sortedPubValues.values, expected)}`,
+					: `Expected pub ${isNot ? "not to" : "to"} match values ${this.utils.diff(expected, sortedPubValues.values)}`,
 		};
 	},
 });
