@@ -372,6 +372,7 @@ Table forms {
   indexes {
     (name, communityId) [unique]
     (slug, communityId) [unique]
+    (isDefault, pubTypeId) [unique]
   }
 }
 
@@ -595,6 +596,7 @@ Enum Capabilities {
   archiveForm
   createApiToken
   revokeApiToken
+  seeExtraPubValues
 }
 
 Enum MembershipType {

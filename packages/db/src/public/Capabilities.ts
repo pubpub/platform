@@ -40,6 +40,7 @@ export enum Capabilities {
 	archiveForm = "archiveForm",
 	createApiToken = "createApiToken",
 	revokeApiToken = "revokeApiToken",
+	seeExtraPubValues = "seeExtraPubValues",
 }
 
 /** Zod schema for Capabilities */
