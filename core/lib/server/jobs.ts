@@ -9,7 +9,7 @@ import { env } from "../env/env.mjs";
 
 import "date-fns";
 
-import type { ActionInstancesId, PubsId, StagesId } from "db/public";
+import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import { Event } from "db/public";
 
 import type { Interval } from "~/actions/_lib/rules";
@@ -36,6 +36,9 @@ export type JobsClient = {
 		community: {
 			slug: string;
 		};
+		event: Event;
+		stack: ActionRunsId[];
+		scheduledActionRunId: ActionRunsId;
 	}): Promise<Job | ClientExceptionOptions>;
 };
 
@@ -56,24 +59,37 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				job: { key: jobKey },
 			});
 		},
-		async scheduleAction({ actionInstanceId, stageId, duration, interval, pubId, community }) {
+		async scheduleAction({
+			actionInstanceId,
+			stageId,
+			duration,
+			interval,
+			pubId,
+			community,
+			event,
+			stack,
+			scheduledActionRunId,
+		}) {
 			const runAt = addDuration({ duration, interval });
 			const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
 
 			logger.info({
-				msg: `Scheduling action with key: ${actionInstanceId} to run at ${runAt}`,
+				msg: `Scheduling action with key: ${actionInstanceId} to run at ${runAt}. Cause: ${event}${stack?.length ? `, triggered by: ${stack.join(" -> ")}` : ""}`,
 				actionInstanceId,
 				stageId,
 				duration,
 				interval,
 				runAt,
 				pubId,
+				stack,
+				event,
+				scheduledActionRunId,
 			});
 			try {
 				const job = await workerUtils.addJob(
 					"emitEvent",
 					{
-						event: Event.pubInStageForDuration,
+						event,
 						duration,
 						interval,
 						runAt,
@@ -81,6 +97,8 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						stageId,
 						pubId,
 						community,
+						stack,
+						scheduledActionRunId,
 					},
 					{
 						runAt,
@@ -106,7 +124,9 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					duration,
 					interval,
 					pubId,
-					err,
+					err: err.message,
+					stack,
+					event,
 				});
 				return {
 					error: err,

@@ -16,6 +16,7 @@ export async function resolve(specifier, context, nextResolve) {
 		specifier === "next/cache" ||
 		specifier === "next/server" ||
 		specifier === "next/navigation" ||
+		specifier === "@sentry/nextjs" ||
 		/@nimpl/.test(specifier) ||
 		/cache\/auto/.test(specifier)
 	) {

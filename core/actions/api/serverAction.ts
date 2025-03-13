@@ -15,12 +15,14 @@ export const runActionInstance = defineServerAction(async function runActionInst
 	if (!user) {
 		return {
 			error: "Not logged in",
+			stack: [],
 		};
 	}
 
 	const result = await runActionInstanceInner({
 		...args,
 		userId: user.id as UsersId,
+		stack: args.stack ?? [],
 	});
 
 	return result;

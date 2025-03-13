@@ -61,6 +61,7 @@ services:
         env_file: .env.docker-compose.test
         environment:
             - OTEL_SERVICE_NAME=jobs.jobs
+            - PUBPUB_URL=${JOBS_INTEGRATION_PUBPUB_URL:-http://integration-tests:3000}
         networks:
             - app-network
         depends_on:

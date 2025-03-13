@@ -200,8 +200,8 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 			stages: {
 				Submitted: {
 					members: { new: MemberRole.contributor },
-					actions: [
-						{
+					actions: {
+						"Send Review email": {
 							action: Action.email,
 							config: {
 								subject: "HELLO :recipientName REVIEW OUR STUFF PLEASE",
@@ -210,7 +210,7 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 							},
 							name: "Send Review email",
 						},
-					],
+					},
 				},
 				"Ask Author for Consent": {
 					members: { new: MemberRole.contributor },

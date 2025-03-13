@@ -780,15 +780,15 @@ describe("pub_values_history trigger", () => {
 			},
 			stages: {
 				"Stage 1": {
-					actions: [
-						{
+					actions: {
+						"1": {
 							action: Action.log,
 							name: "Log Action",
 							config: {
 								debounce: 1000,
 							},
 						},
-					],
+					},
 				},
 			},
 		});

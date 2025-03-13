@@ -19,4 +19,5 @@ export {
 	stubFn as unstable_cache,
 	stubFn as Suspense,
 	stubFn as default,
+	stubFn as reactErrorHandler,
 };
