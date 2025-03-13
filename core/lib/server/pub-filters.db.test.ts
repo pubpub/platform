@@ -837,3 +837,125 @@ describe("filtering", async () => {
 		});
 	});
 });
+
+// specific validaton failure modes
+describe("validation", () => {
+	it("rejects string operators on number fields", async () => {
+		const trx = getTrx();
+		const filter = {
+			[slug("number")]: { $containsi: "test" },
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			`Operators [$containsi] are not valid for schema type Number of field ${communitySlug}:number`
+		);
+	});
+
+	it("rejects number operators on string fields", async () => {
+		const trx = getTrx();
+		const filter = {
+			[slug("title")]: { $gt: 42 },
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			`Operators [$gt] are not valid for schema type String of field ${communitySlug}:title`
+		);
+	});
+
+	it("rejects array operators on boolean fields", async () => {
+		const trx = getTrx();
+		const filter = {
+			[slug("boolean")]: { $contains: true },
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			`Operators [$contains] are not valid for schema type Boolean of field ${communitySlug}:boolean`
+		);
+	});
+
+	it("rejects invalid operators on date fields", async () => {
+		const trx = getTrx();
+		const filter = {
+			createdAt: { $containsi: "2024" },
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			"Operators [$containsi] are not valid for date field createdAt"
+		);
+	});
+
+	it("rejects multiple invalid operators", async () => {
+		const trx = getTrx();
+		const filter = {
+			[slug("number")]: { $containsi: "test", $endsWith: "42", $startsWith: "1" },
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			`Operators [$containsi, $endsWith, $startsWith] are not valid for schema type Number of field ${communitySlug}:number`
+		);
+	});
+
+	it("validates nested logical operators correctly", async () => {
+		const trx = getTrx();
+		const filter = {
+			$or: [
+				{
+					[slug("number")]: { $containsi: "test" },
+				},
+				{
+					$and: [
+						{
+							[slug("number")]: { $gt: 42 },
+						},
+						{
+							[slug("boolean")]: { $contains: true },
+						},
+					],
+				},
+			],
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			`Operators [$containsi] are not valid for schema type Number of field ${communitySlug}:number`
+		);
+	});
+
+	it("validates field-level logical operators", async () => {
+		const trx = getTrx();
+		const filter = {
+			[slug("number")]: {
+				$or: {
+					$containsi: "test",
+					$endsWith: "42",
+				},
+			},
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+			`Operators [$containsi, $endsWith] are not valid for schema type Number of field ${communitySlug}:number`
+		);
+	});
+
+	it("allows valid operators in complex nested structures", async () => {
+		const trx = getTrx();
+		const filter = {
+			$or: [
+				{
+					[slug("number")]: { $gt: 42 },
+				},
+				{
+					$and: [
+						{
+							[slug("title")]: { $containsi: "test" },
+						},
+						{
+							[slug("boolean")]: { $eq: true },
+						},
+					],
+				},
+			],
+		};
+
+		await expect(validateFilter(community.community.id, filter, trx)).resolves.toBeUndefined();
+	});
+});
