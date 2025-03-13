@@ -22,6 +22,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 const pubId = "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70";
+const upload = (filename: string) => generateSignedAssetUploadUrl(`${pubId}/${filename}`);
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary: Story = {
@@ -37,7 +38,7 @@ export const Primary: Story = {
 		},
 		getPubById: () => undefined,
 		atomRenderingComponent: AtomRenderer,
-		upload: (filename) => generateSignedAssetUploadUrl(`${pubId}/${filename}`),
+		upload,
 	},
 };
 
@@ -53,5 +54,6 @@ export const Blank: Story = {
 		},
 		getPubById: () => undefined,
 		atomRenderingComponent: AtomRenderer,
+		upload,
 	},
 };
