@@ -5,7 +5,7 @@ import AtomRenderer from "./AtomRenderer";
 import initialDoc from "./initialDoc.json";
 import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
-import { getPubs } from "./mockUtils";
+import { generateSignedAssetUploadUrl, getPubs } from "./mockUtils";
 
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
@@ -21,6 +21,7 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
+const pubId = "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70";
 
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary: Story = {
@@ -28,7 +29,7 @@ export const Primary: Story = {
 		placeholder: "Helloooo",
 		initialDoc: initialDoc,
 		pubTypes: initialTypes,
-		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
+		pubId,
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		getPubs,
 		onChange: (state) => {
@@ -36,6 +37,7 @@ export const Primary: Story = {
 		},
 		getPubById: () => undefined,
 		atomRenderingComponent: AtomRenderer,
+		upload: (filename) => generateSignedAssetUploadUrl(`${pubId}/${filename}`),
 	},
 };
 

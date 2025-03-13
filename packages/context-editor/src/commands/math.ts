@@ -3,7 +3,7 @@ import type { Command } from "prosemirror-state";
 import { EditorState, NodeSelection } from "prosemirror-state";
 
 import type { Dispatch } from "./types";
-import { insertNodeIntoEditor } from "../utils/nodes";
+import { replaceSelectionWithNode } from "../utils/nodes";
 import { createCommandSpec } from "./util";
 
 type MathType = "math_inline" | "math_display";
@@ -50,7 +50,7 @@ const createMathToggle = (state: EditorState, type: MathType, dispatch?: Dispatc
 		} else {
 			if (!isActive) {
 				// Insert a new math block
-				insertNodeIntoEditor(state, dispatch, type);
+				replaceSelectionWithNode(state, dispatch, type);
 			} else {
 				const transaction = state.tr.replaceSelectionWith(
 					state.schema.nodes.paragraph.create({}, node.content),
