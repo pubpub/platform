@@ -229,13 +229,6 @@ export type GetManyParams = {
 	 * @default "desc"
 	 */
 	orderDirection?: "asc" | "desc";
-	/**
-	 * Only fetch "Top level" pubs,
-	 * do not fetch child pubs separately from their parents
-	 *
-	 * @default true
-	 */
-	onlyParents?: boolean;
 };
 
 export const GET_MANY_DEFAULT = {
@@ -243,7 +236,6 @@ export const GET_MANY_DEFAULT = {
 	offset: 0,
 	orderBy: "createdAt",
 	orderDirection: "desc",
-	onlyParents: true,
 } as const;
 
 const GET_PUBS_DEFAULT = {

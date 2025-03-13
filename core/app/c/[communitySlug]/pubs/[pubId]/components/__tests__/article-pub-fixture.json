@@ -8,7 +8,6 @@
 	"createdAt": "2024-12-24T02:48:49.519Z",
 	"updatedAt": "2024-12-24T02:48:49.519Z",
 	"title": "Identification of capsid-like proteins in venomous and parasitic animals",
-	"children": [],
 	"stage": {
 		"id": "73459f53-be93-4b23-b474-0e870166bff8",
 		"createdAt": "2024-12-23T20:48:49.507",
@@ -399,7 +398,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": "Icebox",
-				"children": [],
 				"stage": {
 					"id": "975bc611-2da6-437e-8215-9beefda12ca6",
 					"createdAt": "2024-12-23T20:48:49.507",
@@ -463,7 +461,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": "A Comment on Capsid Identification",
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "436034c9-faa9-4a52-afd5-14e21115230b",
@@ -718,7 +715,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:51.336Z",
 				"title": "James McJimothy",
-				"children": [],
 				"stage": {
 					"id": "aa2297c2-fcf6-4709-a8d8-a646d57b6f93",
 					"createdAt": "2024-12-23T20:48:49.507",
@@ -804,7 +800,6 @@
 							"createdAt": "2024-12-24T02:48:49.519Z",
 							"updatedAt": "2024-12-24T02:48:49.519Z",
 							"title": "Identification of capsid-like proteins in venomous and parasitic animals",
-							"children": [],
 							"stage": {
 								"id": "73459f53-be93-4b23-b474-0e870166bff8",
 								"createdAt": "2024-12-23T20:48:49.507",
@@ -1195,7 +1190,6 @@
 										"createdAt": "2024-12-24T02:48:49.519Z",
 										"updatedAt": "2024-12-24T02:48:49.519Z",
 										"title": "Icebox",
-										"children": [],
 										"stage": {
 											"id": "975bc611-2da6-437e-8215-9beefda12ca6",
 											"createdAt": "2024-12-23T20:48:49.507",
@@ -1259,7 +1253,6 @@
 										"createdAt": "2024-12-24T02:48:49.519Z",
 										"updatedAt": "2024-12-24T02:48:49.519Z",
 										"title": "A Comment on Capsid Identification",
-										"children": [],
 										"stage": null,
 										"pubType": {
 											"id": "436034c9-faa9-4a52-afd5-14e21115230b",
@@ -1594,7 +1587,6 @@
 							"createdAt": "2024-12-24T02:48:49.519Z",
 							"updatedAt": "2024-12-24T02:48:49.519Z",
 							"title": "A Comment on Capsid Identification",
-							"children": [],
 							"stage": null,
 							"pubType": {
 								"id": "436034c9-faa9-4a52-afd5-14e21115230b",
@@ -1885,7 +1877,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": null,
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "7ccd108f-1a86-4358-be0e-4ec4a3ece2cc",
@@ -1939,7 +1930,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": null,
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "2e49303c-a97d-4b58-b057-2b37152bc2d7",
@@ -2014,7 +2004,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": null,
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "2e49303c-a97d-4b58-b057-2b37152bc2d7",
@@ -2089,7 +2078,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": null,
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "4afa709c-00ac-4ed2-b613-264862d84a3a",
@@ -2164,7 +2152,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": "A Great Book",
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "88836fd7-b5c1-45e1-bc0e-f90700456506",
@@ -2270,7 +2257,6 @@
 				"createdAt": "2024-12-24T02:48:49.519Z",
 				"updatedAt": "2024-12-24T02:48:49.519Z",
 				"title": "A Great Journal Article",
-				"children": [],
 				"stage": null,
 				"pubType": {
 					"id": "322020bb-3560-453c-bdc1-8f8935ed971f",
