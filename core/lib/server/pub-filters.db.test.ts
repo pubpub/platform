@@ -802,9 +802,9 @@ describe("filtering", async () => {
 	it.concurrent.each(unifiedTestCases)("filters by $title", async ({ filter, foundIds }) => {
 		const trx = getTrx();
 
-		const { getPubsWithRelatedValuesAndChildren } = await import("~/lib/server/pub");
+		const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
 
-		const pubs = await getPubsWithRelatedValuesAndChildren(
+		const pubs = await getPubsWithRelatedValues(
 			{
 				communityId: community.community.id,
 			},
