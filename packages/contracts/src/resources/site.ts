@@ -382,7 +382,6 @@ const baseFilterSchemaWithAndOr: z.ZodType<BaseFilterWithAndOr> = z
 			.partial()
 	)
 	.superRefine((data, ctx) => {
-		console.log(ctx.path, data);
 		if (!Object.keys(data).length) {
 			ctx.addIssue({
 				path: ctx.path,

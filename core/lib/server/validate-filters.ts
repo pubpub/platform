@@ -8,7 +8,7 @@ import { getFieldInfoForSlugs } from "./pub";
 import { coreSchemaTypeAllowedOperators } from "./pub-filters";
 
 /**
- * Base error class for filter validation errors
+ * base error class for filter validation errors
  */
 export class InvalidFilterError extends Error {
 	constructor(
@@ -26,7 +26,7 @@ export class InvalidFilterError extends Error {
 }
 
 /**
- * Error thrown when a filter uses invalid operators for a pub field
+ * error thrown when a filter uses invalid operators for a pub field
  */
 export class InvalidPubFieldFilterError extends InvalidFilterError {
 	constructor(
@@ -43,7 +43,7 @@ export class InvalidPubFieldFilterError extends InvalidFilterError {
 }
 
 /**
- * Error thrown when a filter uses invalid operators for a date field
+ * error thrown when a filter uses invalid operators for a date field
  */
 export class InvalidDateFilterError extends InvalidFilterError {
 	constructor(
@@ -56,17 +56,14 @@ export class InvalidDateFilterError extends InvalidFilterError {
 }
 
 /**
- * Checks if a field is a date field (updatedAt or createdAt)
+ * checks if a field is a date field (updatedAt or createdAt)
  */
 const isDateField = (field: string): boolean => {
 	return field === "updatedAt" || field === "createdAt";
 };
 
 /**
- * Extracts operators from a filter value, including those nested in logical operators
- * @param value The filter value to extract operators from
- * @param accumulatedOperators Set to accumulate operators into
- * @returns Set of all operators found
+ * extracts operators from a filter value, including those nested in logical operators
  */
 const extractOperatorsFromValue = (
 	value: any,
@@ -79,39 +76,31 @@ const extractOperatorsFromValue = (
 
 	const keys = Object.keys(value);
 
-	// If this is not a logical operator or has multiple keys, process each key as a potential operator
+	// we are assuming logica operators are "alone"
 	if (keys.length > 1 || !logicalOperators.includes(keys[0] as LogicalOperator)) {
 		for (const key of keys) {
 			if (logicalOperators.includes(key as LogicalOperator)) {
-				// Process nested logical operators
 				extractOperatorsFromValue({ [key]: value[key] }, accumulatedOperators);
 			} else {
-				// Add regular operators
 				accumulatedOperators.add(key as FilterOperator);
 			}
 		}
 		return accumulatedOperators;
 	}
 
-	// Handle logical operators
 	const logicalOperator = keys[0] as LogicalOperator;
 	const conditions = value[logicalOperator];
 
-	// If conditions is not an object, we're done
 	if (typeof conditions !== "object" || conditions === null) {
 		return accumulatedOperators;
 	}
 
-	// Add the logical operator itself
 	accumulatedOperators.add(logicalOperator as FilterOperator);
 
-	// Process nested conditions
 	for (const [op, val] of Object.entries(conditions)) {
 		if (logicalOperators.includes(op as LogicalOperator)) {
-			// Handle nested logical operators
 			extractOperatorsFromValue({ [op]: val }, accumulatedOperators);
 		} else {
-			// Add regular operators
 			accumulatedOperators.add(op as FilterOperator);
 		}
 	}
@@ -153,7 +142,6 @@ const findFieldsWithOperators = (
 		if (isDateField(field)) {
 			const operators = extractOperatorsFromValue(val);
 
-			// check if all operators are valid for DateTime
 			const invalidOperators = Array.from(operators).filter(
 				(op) =>
 					!coreSchemaTypeAllowedOperators.DateTime.includes(op as any) &&
