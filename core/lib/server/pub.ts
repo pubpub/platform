@@ -1787,14 +1787,40 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								"form_elements.config as formElementConfig",
 							])
 							.whereRef("pv.pubId", "=", "pt.pubId")
-							// Order by most recently updated value (grouped by pub field), then rank
+							// .where((eb) =>
+							// 	eb
+							// 		.selectFrom("memberships")
+							// 		.innerJoin("membership_capabilities", (join) =>
+							// 			join.on((eb) =>
+							// 				eb.and([
+							// 					eb(
+							// 						"membership_capabilities.role",
+							// 						"=",
+							// 						eb.ref("memberships.role")
+							// 					),
+							// 					eb(
+							// 						"membership_capabilities.type",
+							// 						"=",
+							// 						eb.ref("memberships.type")
+							// 					),
+							// 				])
+							// 			)
+							// 		)
+							// 		.where(
+							// 			"membership_capabilities.capability",
+							// 			"=",
+							// 			Capabilities.seeExtraPubValues
+							// 		)
+							// )
+
+							// Order by form element, then most recently updated value (grouped by pub field), then pub value rank
 							.orderBy([
+								"form_elements.rank",
 								(eb) =>
 									// Equivalent to: max(pv."updatedAt") over(partition by pv."fieldId") desc
 									sql`${eb.fn
 										.max("pv.updatedAt")
 										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
-								"form_elements.rank",
 								"pv.rank",
 							])
 					).as("values")

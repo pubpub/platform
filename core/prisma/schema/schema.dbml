@@ -598,6 +598,7 @@ Enum Capabilities {
   archiveForm
   createApiToken
   revokeApiToken
+  seeExtraPubValues
 }
 
 Enum MembershipType {

@@ -13,6 +13,7 @@ export const pubCapabilities = [
 	Capabilities.addPubMember,
 	Capabilities.removePubMember,
 	Capabilities.runAction,
+	Capabilities.seeExtraPubValues,
 ] as const;
 
 export const communityCapabilities = [
