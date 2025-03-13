@@ -1106,7 +1106,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/(?<=\s)@(\S+?)(?=[\s.,)])/g);
+			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}])/g);
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
@@ -1122,7 +1122,14 @@ export const formatFigureReferences = () => (tree: Root) => {
 						value: textNode.value.slice(lastIndex, startIndex),
 					});
 				}
-
+				if (fullMatch.indexOf(figureId) === 2) {
+					/* If there is an opening delimiter (e.g. it's not on a newline), */
+					/* make sure that open delimiter is replaced. */
+					elements.push({
+						type: "text",
+						value: fullMatch[0],
+					});
+				}
 				if (figuresById[figureId]) {
 					elements.push({
 						type: "element",

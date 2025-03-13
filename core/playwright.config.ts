@@ -13,10 +13,11 @@ export default defineConfig({
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
 	// multiple workers in CI is too flaky for now
-	workers: process.env.CI ? 1 : undefined,
+	workers: process.env.CI ? 2 : undefined,
 	expect: {
 		timeout: process.env.CI ? 5_000 : 60_000,
 	},
+
 	// don't continue going after 3 tests have failed, that's too many
 	maxFailures: process.env.CI ? 3 : undefined,
 	// a
@@ -39,7 +40,7 @@ export default defineConfig({
 	// max 30 seconds per test in CI
 	timeout: process.env.CI ? 30 * 1000 : 10 * 60 * 1000,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
-	reporter: process.env.CI ? "github" : "html",
+	reporter: process.env.CI ? "github" : "list",
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
 	use: {
 		/* Base URL to use in actions like `await page.goto('/')`. */

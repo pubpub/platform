@@ -71,19 +71,27 @@ export type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
  */
 export type UsersInitializer = Record<
 	string,
-	{
-		/**
-		 * @default randomUUID
-		 */
-		id?: UsersId;
-		email?: string;
-		/** Plain string, will be hashed */
-		password?: string;
-		firstName?: string;
-		lastName?: string;
-		avatar?: string;
-		role?: MemberRole | null;
-	}
+	| {
+			/**
+			 * @default randomUUID
+			 */
+			id?: UsersId;
+			email?: string;
+			/** Plain string, will be hashed */
+			password?: string;
+			firstName?: string;
+			lastName?: string;
+			avatar?: string;
+			role?: MemberRole | null;
+			isSuperAdmin?: boolean;
+			slug?: string;
+			existing?: false;
+	  }
+	| {
+			id: UsersId;
+			existing: true;
+			role: MemberRole;
+	  }
 >;
 
 export type ActionInstanceInitializer = Record<
@@ -243,27 +251,31 @@ export type PubInitializer<
 	};
 }[keyof PT & string];
 
-export type FormElementInitializer<
-	PF extends PubFieldsInitializer,
-	PT extends PubTypeInitializer<PF>,
-	PubType extends keyof PT,
-> = PT[PubType] extends infer PubFieldsForPubType
-	? {
-			[FieldName in keyof PubFieldsForPubType]: FieldName extends keyof PF
-				? (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
-						InputComponent
-					? {
-							type: ElementType.pubfield;
-							field: FieldName;
-							component: Component;
-							content?: never;
-							element?: never;
-							config: Static<(typeof componentConfigSchemas)[Component]>;
-						}
-					: never
-				: never;
-		}[keyof PubFieldsForPubType]
-	: never;
+export type FormElementInitializer<PF extends PubFieldsInitializer> = {
+	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
+		InputComponent
+		? {
+				type: ElementType.pubfield;
+				field: FieldName;
+				component: PF[FieldName]["relation"] extends true
+					? InputComponent.relationBlock
+					: Component;
+				content?: never;
+				element?: never;
+				label?: never;
+				config: Static<(typeof componentConfigSchemas)[Component]> &
+					(PF[FieldName]["relation"] extends true
+						? {
+								relationshipConfig: {
+									label: string;
+									help: string;
+									component: Component;
+								};
+							}
+						: {});
+			}
+		: never;
+}[keyof PF];
 
 export type FormInitializer<
 	PF extends PubFieldsInitializer,
@@ -286,7 +298,7 @@ export type FormInitializer<
 			pubType: PubType;
 			members?: (keyof U)[];
 			elements: (
-				| FormElementInitializer<PF, PT, PubType>
+				| FormElementInitializer<PF>
 				| {
 						type: ElementType.structural;
 						element: StructuralFormElement;
@@ -439,7 +451,7 @@ type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { fields: PubFieldsByName<PF> };
 };
 
-type UsersBySlug<U> = {
+type UsersBySlug<U extends UsersInitializer> = {
 	[K in keyof U]: U[K] & Users;
 };
 
@@ -467,9 +479,7 @@ type StagesWithPermissionsAndActionsAndRulesByName<
 
 type FormsByName<F extends FormInitializer<any, any, any, any>> = {
 	[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
-		elements: {
-			[KK in keyof F[K]["elements"]]: F[K]["elements"][KK] & FormElements;
-		};
+		elements: (F[K]["elements"][number] & FormElements)[];
 	};
 };
 // ===================================
@@ -715,16 +725,15 @@ export async function seedCommunity<
 ) {
 	const { community } = props;
 
+	const randomSlugSuffix = options?.randomSlug === false ? "" : `-${crypto.randomUUID()}`;
+
 	logger.info(`Starting seed for ${community.name}`);
 
 	const createdCommunity = await trx
 		.insertInto("communities")
 		.values({
 			...community,
-			slug:
-				options?.randomSlug === false
-					? community.slug
-					: `${community.slug}-${new Date().toISOString()}`,
+			slug: `${community.slug}${randomSlugSuffix}`,
 		})
 		.returningAll()
 		.executeTakeFirstOrThrow();
@@ -841,40 +850,48 @@ export async function seedCommunity<
 		)
 	);
 
-	const userValues = await Promise.all(
-		Object.entries(props.users ?? {}).map(async ([slug, userInfo]) => ({
-			slug: options?.randomSlug === false ? slug : `${slug}-${new Date().toISOString()}`,
-			email: userInfo?.email ?? faker.internet.email(),
-			firstName: userInfo?.firstName ?? faker.person.firstName(),
-			lastName: userInfo?.lastName ?? faker.person.lastName(),
-			avatar: userInfo?.avatar ?? faker.image.avatar(),
-			passwordHash: await createPasswordHash(userInfo?.password ?? faker.internet.password()),
+	const newUsers = Object.entries(props.users ?? {}).filter(
+		(user): user is [string, (typeof user)[1] & { existing: false }] => !user[1].existing
+	);
+	const newUserValues = await Promise.all(
+		newUsers.map(async ([slug, userInfo]) => ({
+			id: userInfo.id ?? (crypto.randomUUID() as UsersId),
+			slug:
+				options?.randomSlug === false
+					? (userInfo.slug ?? slug)
+					: `${userInfo.slug ?? slug}-${randomSlugSuffix}`,
+			email: userInfo.email ?? faker.internet.email(),
+			firstName: userInfo.firstName ?? faker.person.firstName(),
+			lastName: userInfo.lastName ?? faker.person.lastName(),
+			avatar: userInfo.avatar ?? faker.image.avatar(),
+			passwordHash: await createPasswordHash(userInfo.password ?? faker.internet.password()),
+			isSuperAdmin: userInfo.isSuperAdmin ?? false,
+			// the key of the user initializer
 		}))
 	);
 
-	const createdUsers = userValues.length
-		? await trx.insertInto("users").values(userValues).returningAll().execute()
+	const createdUsers = newUserValues.length
+		? await trx.insertInto("users").values(newUserValues).returningAll().execute()
 		: [];
 
-	const usersBySlug = Object.fromEntries(
-		createdUsers.map((user) => [
-			user.slug.replace(new RegExp(`-${new Date().getUTCFullYear()}.*`), ""),
-			user,
-		])
-	) as UsersBySlug<U>;
+	// we use the index of the userinitializers as the slug for the users, even though
+	// it could be something else. it just makes finding it back easier
+	const usersBySlug = Object.fromEntries([
+		...newUsers.map(([slug], idx) => [slug, { ...newUsers[idx][1], ...createdUsers[idx] }]),
+		...Object.entries(props.users ?? {})
+			.filter(
+				(user): user is [string, (typeof user)[1] & { existing: true }] =>
+					!!user[1].existing
+			)
+			.map(([slug, userInfo]) => [slug, userInfo]),
+	]) as UsersBySlug<U>;
 
-	const possibleMembers = Object.entries(props.users ?? {})
+	const possibleMembers = Object.entries(usersBySlug)
 		.filter(([slug, userInfo]) => !!userInfo.role)
 		.flatMap(([slug, userWithRole]) => {
-			// const createdUser = createdUsers.find((createdUser) => createdUser.slug === slug);
-			const createdUser = findBySlug(createdUsers, slug);
-			if (!createdUser) {
-				return [];
-			}
-
 			return [
 				{
-					userId: createdUser.id,
+					userId: userWithRole.id,
 					communityId,
 					role: userWithRole.role!,
 				} satisfies NewCommunityMemberships,
@@ -889,10 +906,17 @@ export async function seedCommunity<
 				.execute()
 		: [];
 
-	const usersWithMemberShips = createdUsers.map((user) => ({
-		...user,
-		member: createdMembers.find((member) => member.userId === user.id),
-	}));
+	const usersWithMemberShips = Object.fromEntries(
+		Object.entries(usersBySlug)
+			.filter(([slug, user]) => !!user.role)
+			.map(([slug, user], idx) => [
+				slug,
+				{
+					...user,
+					member: createdMembers[idx],
+				},
+			])
+	);
 
 	const stageList = Object.entries(props.stages ?? {});
 
@@ -915,6 +939,7 @@ export async function seedCommunity<
 		...stageList[idx][1],
 		...stage,
 	}));
+	//
 
 	const stageMembers = consolidatedStages
 		.flatMap((stage, idx) => {
@@ -922,7 +947,7 @@ export async function seedCommunity<
 
 			return Object.entries(stage.members)?.map(([member, role]) => ({
 				stage,
-				user: findBySlug(usersWithMemberShips, member as string)!,
+				user: usersWithMemberShips[member as string],
 				role,
 			}));
 		})
@@ -1074,8 +1099,11 @@ export async function seedCommunity<
 											.selectFrom("form")
 											.select("form.id")
 											.limit(1)
-											.offset(idx)
-											.where("form.name", "=", formTitle),
+											.where(
+												"form.slug",
+												"=",
+												formInput.slug ?? slugifyString(formTitle)
+											),
 
 										type: elementInput.type,
 										fieldId: createdPubFields.find(
@@ -1107,7 +1135,7 @@ export async function seedCommunity<
 
 	const formsByName = Object.fromEntries(
 		createdForms.map((form) => [form.name, form])
-	) as FormsByName<F>;
+	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's
 	const possibleActions = consolidatedStages.flatMap((stage, idx) =>

@@ -100,7 +100,8 @@ services:
             interval: 1m30s
             timeout: 30s
             retries: 5
-            start_period: 30s
+            start_period: 60s
+            start_interval: 1s
         restart: unless-stopped
         command: server --console-address ":9001" /data
         ports:

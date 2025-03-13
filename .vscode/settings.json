@@ -3,5 +3,11 @@
 		"*.css": "tailwindcss"
 	},
 	"typescript.tsdk": "./core/node_modules/typescript/lib",
-	"javascript.preferences.autoImportSpecifierExcludeRegexes": ["@prisma\\/client"]
+	"javascript.preferences.autoImportSpecifierExcludeRegexes": ["@prisma\\/client"],
+	// these variables are necessary in order to correctly run seeds
+	"playwright.env": {
+		"NODE_OPTIONS": "--import=\"#register-loader\"",
+		"SKIP_VALIDATION": "true",
+		"DATABASE_URL": "postgresql://postgres:postgres@localhost:54322/postgres"
+	}
 }
