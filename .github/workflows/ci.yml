@@ -20,11 +20,11 @@ jobs:
         strategy:
             matrix:
                 task:
-                    - pnpm format
-                    - pnpm lint
-                    - pnpm type-check
-                    - pnpm test-run
-                    - NODE_ENV=test pnpm context-editor:playwright
+                    - format
+                    - lint
+                    - type-check
+                    - test-run
+                    - context-editor:playwright
         env:
             COMPOSE_FILE: docker-compose.test.yml
             ENV_FILE: .env.docker-compose.test
@@ -81,7 +81,7 @@ jobs:
 
             - name: Setup playwright dependencies
               if: matrix.task == 'context-editor:playwright'
-              run: NODE_ENV=test pnpm --filter context-editor exec playwright install --with-deps
+              run: pnpm --filter context-editor exec playwright install --with-deps
 
             - name: Run task
-              run: ${{ matrix.task }}
+              run: NODE_ENV=test pnpm ${{ matrix.task }}
