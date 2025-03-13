@@ -85,3 +85,11 @@ jobs:
 
             - name: Run task
               run: NODE_ENV=test pnpm ${{ matrix.task }}
+
+            - name: Upload playwright snapshots artifact
+              if: failure() && matrix.task == 'context-editor:playwright'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-snapshots
+                  path: packages/context-editor/test-results
+                  retention-days: 10
