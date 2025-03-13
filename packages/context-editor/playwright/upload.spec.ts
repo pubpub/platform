@@ -2,9 +2,6 @@ import { expect, test } from "@playwright/test";
 
 import { BLANK_EDITOR_STORY } from "./constants";
 
-// https://stackoverflow.com/questions/78333672/playwright-test-with-file-uploading-says-target-is-closed
-test.use({ headless: false });
-
 test.describe("image upload", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(BLANK_EDITOR_STORY);
