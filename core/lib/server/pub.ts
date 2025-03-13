@@ -1758,7 +1758,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("pub_values as pv")
 							.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
-							// TODO: it seems possible that there can be more than one isDefault form!
 							.innerJoin("forms", (join) =>
 								join
 									.onRef("forms.pubTypeId", "=", "pt.pubTypeId")

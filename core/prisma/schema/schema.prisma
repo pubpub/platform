@@ -495,6 +495,9 @@ model Form {
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
+  // FIXME: https://github.com/prisma/prisma/issues/6974
+  // Unique index manually set in migration
+  // @@unique([isDefault, pubTypeId], where: { isDefault: true })
   @@map(name: "forms")
 }
 
