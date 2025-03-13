@@ -2,8 +2,11 @@ import type { Page } from "@playwright/test";
 
 import test from "@playwright/test";
 
-import { Action, CoreSchemaType, Event } from "db/public";
+import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
 
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
@@ -12,53 +15,62 @@ import { PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
 import { createCommunity } from "./helpers";
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-const FORM_SLUG = `playwright-test-form-${now}`;
-
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
 
+const seed = createSeed({
+	community: {
+		name: "Test Community",
+		slug: "test-community-1",
+	},
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+	},
+	pubTypes: {
+		Submission: {
+			Title: { isTitle: true },
+		},
+	},
+	stages: {
+		Test: {
+			actions: {
+				"Log 1": {
+					action: Action.log,
+					config: {},
+				},
+				"Log 2": {
+					action: Action.log,
+					config: {},
+				},
+			},
+		},
+	},
+	users: {
+		admin: {
+			password: "password",
+			isSuperAdmin: true,
+			role: MemberRole.admin,
+		},
+	},
+	pubs: [
+		{
+			pubType: "Submission",
+			stage: "Test",
+			values: { Title: "Test" },
+		},
+	],
+});
+let community: CommunitySeedOutput<typeof seed>;
+
 test.beforeAll(async ({ browser }) => {
+	community = await seedCommunity(seed);
+
 	page = await browser.newPage();
-	page.on("console", async (msg) => {
-		if (msg.type() === "error") {
-			// eslint-disable-next-line no-console
-			console.error("Error:", msg, msg.location());
-		}
-	});
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
-
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
-
-	const stagesManagePage = new StagesManagePage(page, COMMUNITY_SLUG);
-	await stagesManagePage.goTo();
-
-	const stage = await stagesManagePage.addStage("Test");
-
-	await stagesManagePage.goTo();
-
-	await stagesManagePage.addAction("Test", Action.log, "Log 1");
-	await stagesManagePage.goTo();
-	await stagesManagePage.addAction("Test", Action.log, "Log 2");
-
-	const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
-
-	await pubsPage.goTo();
-	await pubsPage.createPub({
-		pubType: "Submission",
-		stage: "Test",
-		values: {
-			title: "Test",
-		},
-	});
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
 });
 
 test.afterAll(async () => {
@@ -67,7 +79,7 @@ test.afterAll(async () => {
 
 test.describe("sequential rules", () => {
 	test("can run sequential rule", async () => {
-		const stagesManagePage = new StagesManagePage(page, COMMUNITY_SLUG);
+		const stagesManagePage = new StagesManagePage(page, community.community.slug);
 		await stagesManagePage.goTo();
 
 		await stagesManagePage.addRule("Test", {
@@ -86,7 +98,7 @@ test.describe("sequential rules", () => {
 
 		await page.waitForTimeout(1000);
 
-		await page.goto(`/c/${COMMUNITY_SLUG}/activity/actions`);
+		await page.goto(`/c/${community.community.slug}/activity/actions`);
 
 		await page.getByText("Log 1").waitFor();
 		await page.getByText("Rule (Log 2 Succeeded)", { exact: true });
