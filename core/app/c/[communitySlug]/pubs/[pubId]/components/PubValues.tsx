@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { Value } from "@sinclair/typebox/value";
+import partition from "lodash.partition";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import type { JsonValue } from "contracts";
@@ -36,6 +37,27 @@ const PubValueHeading = ({
 	}
 };
 
+const FieldBlock = ({
+	name,
+	values,
+	depth,
+}: {
+	name: string;
+	values: FullProcessedPub["values"] | undefined;
+	depth: number;
+}) => {
+	return (
+		<div className="my-2" key={name}>
+			<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
+				{name}
+			</PubValueHeading>
+			<div className={"ml-2"} data-testid={`${name}-value`}>
+				{values?.map((value) => <PubValue value={value} key={value.id} />)}
+			</div>
+		</div>
+	);
+};
+
 export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 	const { values, depth } = pub;
 	if (!values.length) {
@@ -45,28 +67,43 @@ export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 	const filteredValues = valuesWithoutTitle(pub);
 
 	// Group values by field so we only render one heading for relationship values that have multiple entries
-	const groupedValues: Record<string, FullProcessedPub["values"]> = {};
+	const groupedValues: Record<
+		string,
+		{ label: string; isInForm: boolean; values: FullProcessedPub["values"] }
+	> = {};
 	filteredValues.forEach((value) => {
-		if (groupedValues[value.fieldName]) {
-			groupedValues[value.fieldName].push(value);
+		if (groupedValues[value.fieldSlug]) {
+			groupedValues[value.fieldSlug].values.push(value);
 		} else {
-			groupedValues[value.fieldName] = [value];
+			const label =
+				value.formElementLabel || value.formElementConfig?.label || value.fieldName;
+			const isInForm = !(value.formElementId == null);
+			groupedValues[value.fieldSlug] = { label, values: [value], isInForm };
 		}
 	});
-	return Object.entries(groupedValues).map(([fieldName, fieldValues]) => {
-		return (
-			<div className="my-2" key={fieldName}>
-				<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
-					{fieldName}
-				</PubValueHeading>
-				<div className={"ml-2"} data-testid={`${fieldName}-value`}>
-					{fieldValues.map((value) => (
-						<PubValue value={value} key={value.id} />
+	// console.log({ groupedValues });
+	const [valuesInForm, valuesNotInForm] = partition(
+		Object.values(groupedValues),
+		(values) => values.isInForm
+	);
+	return (
+		<div>
+			{valuesInForm.map(({ label, values }) => {
+				return <FieldBlock key={label} name={label} values={values} depth={depth} />;
+			})}
+			{valuesNotInForm.length ? (
+				<div className="flex flex-col gap-2">
+					{valuesInForm.length && <hr className="mt-2" />}
+					<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
+						Other Fields
+					</PubValueHeading>
+					{valuesNotInForm.map(({ label, values }) => (
+						<FieldBlock key={label} name={label} values={values} depth={depth} />
 					))}
 				</div>
-			</div>
-		);
-	});
+			) : null}
+		</div>
+	);
 };
 
 const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
