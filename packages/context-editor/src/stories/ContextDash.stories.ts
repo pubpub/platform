@@ -7,8 +7,6 @@ import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
 import { generateSignedAssetUploadUrl, getPubs } from "./mockUtils";
 
-import "../style.css";
-
 // More on how to set up stories at: https://storybook.js.org/docs/writing-stories#default-export
 const meta = {
 	title: "EditorDash",
