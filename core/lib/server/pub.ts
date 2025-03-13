@@ -1737,15 +1737,8 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
 					)
-					.$if(
-						Boolean(options?.filters),
-						(qb) =>
-							// TODO: maybe dedupe this
-							qb.where((eb) => applyFilters(eb, options!.filters!))
-
-						// .leftJoin("pub_values as pv", "pv.pubId", "pubs.id")
-						// .innerJoin("pub_fields as pf", "pf.id", "pv.fieldId")
-						// .where((eb) => applyFilters(eb, options!.filters!))
+					.$if(Boolean(options?.filters), (qb) =>
+						qb.where((eb) => applyFilters(eb, options!.filters!))
 					)
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
