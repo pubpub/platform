@@ -145,13 +145,6 @@ export type PubInitializer<
 		 */
 		assignee?: keyof U;
 		/**
-		 * Parent of the pub.
-		 *
-		 * If you set `alsoAsChild` when creating a relatedPub,
-		 * this will automatically set the parentId of the current pub.
-		 */
-		parentId?: PubsId;
-		/**
 		 * The name of the pubType you specified in the pubTypes object.
 		 */
 		pubType: PubTypeName;
@@ -198,7 +191,6 @@ export type PubInitializer<
 		 * 		Contributors: [{
 		 * 			value: 0,
 		 * 			// this will also add the same pub as a child
-		 * 			alsoAsChild: true,
 		 * 			pub: {
 		 * 				pubType: "Author",
 		 * 				values: {
@@ -217,12 +209,6 @@ export type PubInitializer<
 				? PF[FieldName]["schemaName"] extends CoreSchemaType
 					? PF[FieldName]["relation"] extends true
 						? {
-								/**
-								 * Also add this pub as a child of the current pub.
-								 * Experimental, will probably be removed in the future, currently
-								 * useful because we cannot fetch related pubs in the frontend.
-								 */
-								alsoAsChild?: boolean;
 								/**
 								 * Acts as relation metadata
 								 */
@@ -381,9 +367,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 									community,
 									pubs: [
 										{
-											// this order means that parentId will get overridden if
-											// it's actually set
-											...(info.alsoAsChild ? { parentId: rootPubId } : {}),
 											...info.pub,
 										},
 									],
@@ -403,7 +386,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				assigneeId: assigneeId,
 				stageId: stageId,
 				values,
-				parentId: pub.parentId,
 				members,
 				relatedPubs: relatedPubs,
 			},
@@ -652,8 +634,6 @@ export async function seedCommunity<
 		 * 				// relatedPubs need to be mapped to a certain field
 		 * 				Contributors: [{
 		 * 					value: "Draft preparation",
-		 * 					// this will also add the same pub as a child
-		 * 					alsoAsChild: true,
 		 * 					pub: {
 		 * 						pubType: "Author",
 		 * 						values: {
