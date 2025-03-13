@@ -9,6 +9,8 @@ import type { PubsId, PubTypesId, StagesId } from "db/public";
 import { siteApi } from "contracts";
 import { CoreSchemaType, MemberRole } from "db/public";
 
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
 import { ApiTokenPage, expectStatus } from "./fixtures/api-token-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
@@ -19,6 +21,141 @@ let page: Page;
 
 let client: ReturnType<typeof initClient<typeof siteApi, any>>;
 
+const allToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+const onlyPubTypeToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+const onlyStageToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+const bothToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+const noStageToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+
+const basicPubTypeId = `${crypto.randomUUID()}` as PubTypesId;
+const testPubTypeId = `${crypto.randomUUID()}` as PubTypesId;
+const testPubType2Id = `${crypto.randomUUID()}` as PubTypesId;
+const testStage1Id = `${crypto.randomUUID()}` as StagesId;
+const testStage2Id = `${crypto.randomUUID()}` as StagesId;
+
+const pubTypeIds = [testPubTypeId, testPubType2Id];
+
+const stageIds = [testStage1Id, testStage2Id, "no-stage" as const];
+
+const pubsStagePubTypeCombinations = pubTypeIds.flatMap((pubTypeId, pubTypeIdIdx) =>
+	stageIds.map((stageId, stageIdIdx) => {
+		const pubName =
+			`pubPubType${pubTypeIdIdx + 1}Stage${stageIdIdx > 1 ? "None" : stageIdIdx + 1}` as const;
+		return {
+			pubType: `Test Pub Type ${(pubTypeIdIdx + 1) as 1 | 2}` as const,
+			stage: stageIdIdx > 1 ? null : (`Test Stage ${(stageIdIdx + 1) as 1 | 2}` as const),
+			values: {
+				Title: pubName,
+			},
+		};
+	})
+);
+
+const seed = createSeed({
+	community: {
+		name: `test community ${Date.now()}`,
+		slug: "test",
+	},
+	users: {
+		admin: {
+			password: "password",
+			role: MemberRole.admin,
+		},
+	},
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+	},
+	pubTypes: {
+		Basic: {
+			id: basicPubTypeId,
+			fields: {
+				Title: { isTitle: true },
+			},
+		},
+		"Test Pub Type 1": {
+			id: testPubTypeId,
+			fields: {
+				Title: { isTitle: true },
+			},
+		},
+		"Test Pub Type 2": {
+			id: testPubType2Id,
+			fields: {
+				Title: { isTitle: true },
+			},
+		},
+	},
+	stages: {
+		"Test Stage 1": {
+			id: testStage1Id,
+		},
+		"Test Stage 2": {
+			id: testStage2Id,
+		},
+	},
+	pubs: [
+		{
+			pubType: "Basic",
+			values: {
+				Title: "what is up world",
+			},
+		},
+		// @ts-expect-error Yeahyeah
+		...pubsStagePubTypeCombinations,
+	],
+	apiTokens: {
+		allToken: {
+			id: allToken,
+		},
+		onlyPubTypeToken: {
+			id: onlyPubTypeToken,
+			permissions: {
+				pub: {
+					read: {
+						pubTypes: [testPubTypeId],
+						stages: stageIds,
+					},
+				},
+			},
+		},
+		onlyStageToken: {
+			id: onlyStageToken,
+			permissions: {
+				pub: {
+					read: {
+						pubTypes: pubTypeIds,
+						stages: [testStage1Id],
+					},
+				},
+			},
+		},
+		bothToken: {
+			id: bothToken,
+			permissions: {
+				pub: {
+					read: {
+						pubTypes: [testPubTypeId],
+						stages: [testStage1Id],
+					},
+				},
+			},
+		},
+		noStageToken: {
+			id: noStageToken,
+			permissions: {
+				pub: {
+					read: {
+						pubTypes: pubTypeIds,
+						stages: ["no-stage"],
+					},
+				},
+			},
+		},
+	},
+});
+
+let community: CommunitySeedOutput<typeof seed>;
+
 const createClient = (token: string) =>
 	initClient(siteApi, {
 		baseUrl: `http://localhost:3000/`,
@@ -28,80 +165,18 @@ const createClient = (token: string) =>
 	});
 
 test.beforeAll(async ({ browser }) => {
-	// register("../prisma/seed/stubs/module-loader.js", import.meta.url);
 	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
-	const randomApiToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
-
-	const community = await seedCommunity(
-		{
-			community: {
-				name: `test community ${Date.now()}`,
-				slug: "test",
-			},
-			users: {
-				admin: {
-					password: "password",
-					role: MemberRole.admin,
-				},
-			},
-			pubFields: {
-				Title: { schemaName: CoreSchemaType.String },
-			},
-			pubTypes: {
-				Basic: {
-					Title: { isTitle: true },
-				},
-			},
-			pubs: [
-				{
-					pubType: "Basic",
-					values: {
-						Title: "what is up world",
-					},
-				},
-			],
-		},
-		{
-			withApiToken: randomApiToken,
-		}
-	);
+	community = await seedCommunity(seed);
 
 	COMMUNITY_SLUG = community.community.slug;
 
 	page = await browser.newPage();
 
-	// const loginPage = new LoginPage(page);
-	// await loginPage.goto();
-	// await loginPage.loginAndWaitForNavigation();
-
-	// await createCommunity({
-	// 	page,
-	// 	community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	// });
-
-	// const apiTokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-	// await apiTokenPage.goto();
-	// const token = await apiTokenPage.createToken({
-	// 	name: "test token",
-	// 	description: "test description",
-	// 	permissions: true,
-	// });
-	// expect(token).not.toBeNull();
-
-	// client = createClient(token!);
-	// const apiTokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-	// await apiTokenPage.goto();
-	// const token = await apiTokenPage.createToken({
-	// 	name: "test token",
-	// 	description: "test description",
-	// 	permissions: true,
-	// });
-
 	client = initClient(siteApi, {
 		baseUrl: `http://localhost:3000/`,
 		baseHeaders: {
-			Authorization: `Bearer ${community.apiToken}`,
+			Authorization: `Bearer ${allToken}`,
 		},
 	});
 });
@@ -117,7 +192,7 @@ test.describe("Site API", () => {
 			});
 
 			expectStatus(pubTypesResponse, 200);
-			expect(pubTypesResponse.body).toHaveLength(1);
+			expect(pubTypesResponse.body).toHaveLength(3);
 
 			const pubType = pubTypesResponse.body[0];
 
@@ -164,87 +239,26 @@ test.describe("Site API", () => {
 			expectStatus(response, 200);
 			expect(response.body.id).toBe(newPubId);
 		});
+
+		test("should be able to delete a pub", async () => {
+			await expect(
+				client.pubs.archive({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+						pubId: newPubId,
+					},
+					body: null,
+				})
+			)
+				// basically  because we don't return a body ts rest freaks out
+				// TODO: fix this not really working
+				.rejects.toThrow("Unexpected end of JSON input");
+		});
 	});
 
 	test.describe("restrictions", () => {
-		let clientOnlyPubTypeClient: ReturnType<typeof createClient>;
-		let clientOnlyStageClient: ReturnType<typeof createClient>;
-		let clientBothClient: ReturnType<typeof createClient>;
-		let clientNoStageClient: ReturnType<typeof createClient>;
-		let testPubType1: PubTypesId;
-		let testPubType2: PubTypesId;
-		let testStage1: StagesId;
-		let testStage2: StagesId;
-
-		test.beforeAll(async () => {
-			const pubTypesPage = new PubTypesPage(page, COMMUNITY_SLUG);
-			await pubTypesPage.goto();
-			const pubType1 = await pubTypesPage.addType(
-				"test pub type 1",
-				"test pub type description",
-				[`title`]
-			);
-			testPubType1 = pubType1.id;
-			const pubType2 = await pubTypesPage.addType(
-				"test pub type 2",
-				"test pub type description 2",
-				[`title`]
-			);
-			testPubType2 = pubType2.id;
-
-			const stagePage = new StagesManagePage(page, COMMUNITY_SLUG);
-			await stagePage.goTo();
-			const stage1 = await stagePage.addStage("test stage");
-			testStage1 = stage1.id;
-			const stage2 = await stagePage.addStage("test stage 2");
-			testStage2 = stage2.id;
-
-			const pubResponses = await Promise.all(
-				[pubType1, pubType2].flatMap((pubType) =>
-					[null, stage1, stage2].map((stage) =>
-						client.pubs.create({
-							headers: {
-								prefer: "return=representation",
-							},
-							params: {
-								communitySlug: COMMUNITY_SLUG,
-							},
-							body: {
-								pubTypeId: pubType.id,
-								stageId: stage?.id,
-								values: {
-									[`${COMMUNITY_SLUG}:title`]: `pubType: "${pubType.name}"; stage: "${stage?.name}"`,
-								},
-							},
-						})
-					)
-				)
-			);
-
-			expect(pubResponses).toHaveLength(6);
-			pubResponses.forEach((response) => {
-				expectStatus(response, 201);
-			});
-		});
-
 		test("if only pub type is restricted, only pubs of that pub type are returned", async () => {
-			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-			await tokenPage.goto();
-
-			const onlyPubTypeToken = await tokenPage.createToken({
-				name: "test token with pub type restriction",
-				permissions: {
-					pub: {
-						read: {
-							stages: ["no-stage", testStage1, testStage2],
-							pubTypes: [testPubType1],
-						},
-						write: true,
-					},
-				},
-			});
-
-			clientOnlyPubTypeClient = createClient(onlyPubTypeToken!);
+			const clientOnlyPubTypeClient = createClient(onlyPubTypeToken!);
 
 			const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
 				params: {
@@ -255,25 +269,13 @@ test.describe("Site API", () => {
 
 			expectStatus(pubResponseRestricted, 200);
 			expect(pubResponseRestricted.body).toHaveLength(3);
-			expect(pubResponseRestricted.body.every((pub) => pub.pubTypeId === testPubType1)).toBe(
+			expect(pubResponseRestricted.body.every((pub) => pub.pubTypeId === testPubTypeId)).toBe(
 				true
 			);
 		});
 
 		test("if only stage is restricted, only pubs of that stage are returned", async () => {
-			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-			const onlyStageToken = await tokenPage.createToken({
-				name: "test token",
-				permissions: {
-					pub: {
-						read: {
-							stages: [testStage1],
-							pubTypes: [testPubType1, testPubType2],
-						},
-					},
-				},
-			});
-			clientOnlyStageClient = createClient(onlyStageToken!);
+			const clientOnlyStageClient = createClient(onlyStageToken!);
 
 			const pubResponseRestricted = await clientOnlyStageClient.pubs.getMany({
 				params: {
@@ -284,26 +286,13 @@ test.describe("Site API", () => {
 
 			expectStatus(pubResponseRestricted, 200);
 			expect(pubResponseRestricted.body).toHaveLength(2);
-			expect(pubResponseRestricted.body.every((pub) => pub.stageId === testStage1)).toBe(
+			expect(pubResponseRestricted.body.every((pub) => pub.stageId === testStage1Id)).toBe(
 				true
 			);
 		});
 
 		test("if both pub type and stage are restricted, only pubs of that pub type and stage are returned", async () => {
-			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-			tokenPage.goto();
-			const bothToken = await tokenPage.createToken({
-				name: "test token with pub type and stage restriction",
-				permissions: {
-					pub: {
-						read: {
-							pubTypes: [testPubType1],
-							stages: [testStage1],
-						},
-					},
-				},
-			});
-			clientBothClient = createClient(bothToken!);
+			const clientBothClient = createClient(bothToken!);
 
 			const pubResponseRestricted = await clientBothClient.pubs.getMany({
 				params: {
@@ -314,26 +303,12 @@ test.describe("Site API", () => {
 
 			expectStatus(pubResponseRestricted, 200);
 			expect(pubResponseRestricted.body).toHaveLength(1);
-			expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubType1);
-			expect(pubResponseRestricted.body[0].stageId).toBe(testStage1);
+			expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubTypeId);
+			expect(pubResponseRestricted.body[0].stageId).toBe(testStage1Id);
 		});
 
 		test("if stage is restricted, we can still further filter by pub type", async () => {
-			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-			tokenPage.goto();
-			const onlyStageToken = await tokenPage.createToken({
-				name: "test token with stage restriction",
-				description: "test token with stage restriction",
-				permissions: {
-					pub: {
-						read: {
-							stages: [testStage1],
-							pubTypes: [testPubType1, testPubType2],
-						},
-					},
-				},
-			});
-			clientOnlyStageClient = createClient(onlyStageToken!);
+			const clientOnlyStageClient = createClient(onlyStageToken!);
 
 			const pubResponseRestrictedToStage1FilteredByPubType1 =
 				await clientOnlyStageClient.pubs.getMany({
@@ -341,35 +316,22 @@ test.describe("Site API", () => {
 						communitySlug: COMMUNITY_SLUG,
 					},
 					query: {
-						pubTypeId: testPubType1,
+						pubTypeId: testPubTypeId,
 					},
 				});
 
 			expectStatus(pubResponseRestrictedToStage1FilteredByPubType1, 200);
 			expect(pubResponseRestrictedToStage1FilteredByPubType1.body).toHaveLength(1);
 			expect(pubResponseRestrictedToStage1FilteredByPubType1.body[0].pubTypeId).toBe(
-				testPubType1
+				testPubTypeId
 			);
 			expect(pubResponseRestrictedToStage1FilteredByPubType1.body[0].stageId).toBe(
-				testStage1
+				testStage1Id
 			);
 		});
 
 		test("if stages are restricted to pubs not in a stage ", async () => {
-			const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-			tokenPage.goto();
-			const noStageToken = await tokenPage.createToken({
-				name: "test token with no stage restriction",
-				permissions: {
-					pub: {
-						read: {
-							stages: ["no-stage"],
-							pubTypes: [testPubType1, testPubType2],
-						},
-					},
-				},
-			});
-			clientNoStageClient = createClient(noStageToken!);
+			const clientNoStageClient = createClient(noStageToken);
 
 			const pubResponseRestricted = await clientNoStageClient.pubs.getMany({
 				params: {

@@ -1203,10 +1203,6 @@ export async function seedCommunity<
 					);
 				}
 
-				if (tokenString && tokenString.length !== 22) {
-					throw new Error("Token string must be 22 characters long");
-				}
-
 				const { token } = await createApiAccessToken(
 					{
 						token: {
