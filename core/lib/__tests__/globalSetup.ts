@@ -34,3 +34,5 @@ export const setup = async () => {
 		throw error;
 	}
 };
+
+export default setup;

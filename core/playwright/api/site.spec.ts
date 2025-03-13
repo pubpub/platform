@@ -3,12 +3,14 @@ import type { Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 
 import type { PubTypesId, StagesId } from "db/public";
+import { MemberRole } from "db/public";
 
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { ApiTokenPage } from "../fixtures/api-token-page";
 import { LoginPage } from "../fixtures/login-page";
-import { PubTypesPage } from "../fixtures/pub-types-page";
-import { StagesManagePage } from "../fixtures/stages-manage-page";
-import { createCommunity } from "../helpers";
+import { createBaseSeed } from "../helpers";
 
 const now = new Date().getTime();
 const COMMUNITY_SLUG = `playwright-test-community-${now}`;
@@ -24,38 +26,47 @@ let testStage1Id: StagesId;
 let testStage2Id: StagesId;
 
 let testPubTypeId: PubTypesId;
+const baseSeed = createBaseSeed();
+const seed = createSeed({
+	...baseSeed,
+	users: {
+		admin: {
+			...baseSeed.users!.admin,
+			password: "password",
+			isSuperAdmin: true,
+			role: MemberRole.admin,
+		},
+	},
+	pubTypes: {
+		"test pub type": {
+			Title: { isTitle: true },
+		},
+		Submission: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+		},
+	},
+	stages: {
+		[TEST_STAGE_1]: {},
+		[TEST_STAGE_2]: {},
+	},
+	pubs: [],
+});
+let community: CommunitySeedOutput<typeof seed>;
 
 test.beforeAll(async ({ browser }) => {
+	community = await seedCommunity(seed);
+
 	page = await browser.newPage();
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
-
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
-
-	const stagesPage = new StagesManagePage(page, COMMUNITY_SLUG);
-	await stagesPage.goTo();
-	const testStage1 = await stagesPage.addStage(TEST_STAGE_1);
-	testStage1Id = testStage1.id;
-	const testStage2 = await stagesPage.addStage(TEST_STAGE_2);
-	testStage2Id = testStage2.id;
-
-	const pubTypesPage = new PubTypesPage(page, COMMUNITY_SLUG);
-	await pubTypesPage.goto();
-	const testPubType = await pubTypesPage.addType("test pub type", "test pub type description", [
-		`title`,
-	]);
-	testPubTypeId = testPubType.id;
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
 });
 
 test("should be able to create token with all permissions", async () => {
-	const tokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
+	const tokenPage = new ApiTokenPage(page, community.community.slug);
 	await tokenPage.goto();
 	const token = await tokenPage.createToken({
-		// expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
 		name: "test token",
 		permissions: {
 			community: { read: true, write: true, archive: true },
@@ -88,8 +99,8 @@ test("should be able to create token with special permissions", async () => {
 		permissions: {
 			pub: {
 				read: {
-					stages: [testStage1Id],
-					pubTypes: [testPubTypeId],
+					stages: [community.stages[TEST_STAGE_1].id],
+					pubTypes: [community.pubTypes["test pub type"].id],
 				},
 			},
 		},
@@ -109,7 +120,8 @@ test("should be able to create token with special permissions", async () => {
 
 	const permissionContraintsJson = JSON.parse(permissionContraints!);
 	test.expect(permissionContraintsJson).toMatchObject({
-		stages: [testStage1Id],
-		pubTypes: [testPubTypeId],
+		stages: [community.stages[TEST_STAGE_1].id],
+		pubTypes: [community.pubTypes["test pub type"].id],
 	});
+	await expect(page.getByText("test token")).toBeVisible();
 });
