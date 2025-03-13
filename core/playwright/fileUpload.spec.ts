@@ -2,45 +2,51 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
+import { CoreSchemaType, MemberRole } from "db/public";
+
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { FieldsPage } from "./fixtures/fields-page";
 import { LoginPage } from "./fixtures/login-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { createCommunity } from "./helpers";
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
-
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
 
+const seed = createSeed({
+	community: { name: `test community`, slug: `test-community-slug` },
+	pubFields: {
+		Title: { schemaName: CoreSchemaType.String },
+		Content: { schemaName: CoreSchemaType.String },
+		FileUpload: { schemaName: CoreSchemaType.FileUpload },
+	},
+	pubTypes: {
+		"File Upload Test": {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
+			FileUpload: { isTitle: false },
+		},
+	},
+	users: {
+		admin: {
+			password: "password",
+			role: MemberRole.admin,
+		},
+	},
+});
+
+let community: CommunitySeedOutput<typeof seed>;
 test.beforeAll(async ({ browser }) => {
+	community = await seedCommunity(seed);
 	page = await browser.newPage();
 
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
-
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
-	});
-
-	/**
-	 * Fill out everything required to make an external form:
-	 * 1. Fields
-	 * 2. Form with fields
-	 * 3. A pub
-	 */
-	// Populate the fields page with options
-	const fieldsPage = new FieldsPage(page, COMMUNITY_SLUG);
-	await fieldsPage.goto();
-	await fieldsPage.addFieldsOfEachType();
-
-	const pubTypePage = new PubTypesPage(page, COMMUNITY_SLUG);
-	await pubTypePage.goto();
-	await pubTypePage.addType("File Upload Test", "", ["title", "fileupload"]);
+	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
 });
 
 test.afterAll(async () => {
@@ -49,14 +55,14 @@ test.afterAll(async () => {
 
 test.describe("File upload", () => {
 	test("should upload a file", async ({ context }) => {
-		const pubsPage = new PubsPage(page, COMMUNITY_SLUG);
+		const pubsPage = new PubsPage(page, community.community.slug);
 		await pubsPage.goTo();
 		const pubId = await pubsPage.createPub({
 			pubType: "File Upload Test",
 			values: { title: "The Activity of Slugs" },
 		});
 
-		const pubEditUrl = `/c/${COMMUNITY_SLUG}/pubs/${pubId}/edit`;
+		const pubEditUrl = `/c/${community.community.slug}/pubs/${pubId}/edit`;
 		await page.goto(pubEditUrl);
 
 		await page.setInputFiles("input[type='file']", [
@@ -77,7 +83,7 @@ test.describe("File upload", () => {
 		});
 
 		await page.getByRole("link", { name: "View Pub", exact: true }).click();
-		await page.waitForURL(`/c/${COMMUNITY_SLUG}/pubs/${pubId}`);
+		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}`);
 
 		const fileUploadValue = await page
 			.getByTestId(`FileUpload-value`)

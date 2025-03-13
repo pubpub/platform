@@ -251,6 +251,10 @@ export default async function FormPage(props: {
 	const isUpdating = !!pub;
 	const pubId = pub?.id ?? (randomUUID() as PubsId);
 	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	// For the Context, we want both the pubs from the initial pub query (which is limited)
+	// as well as the pubs related to this pub
+	const relatedPubs = pub ? pub.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) : [];
+	const pubsForContext = [...pubs, ...relatedPubs];
 
 	return (
 		<div className="isolate min-h-screen">
@@ -276,7 +280,7 @@ export default async function FormPage(props: {
 							<ContextEditorContextProvider
 								pubId={pubId}
 								pubTypeId={form.pubTypeId}
-								pubs={pubs}
+								pubs={pubsForContext}
 								pubTypes={pubTypes}
 							>
 								<ExternalFormWrapper

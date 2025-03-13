@@ -1,3 +1,5 @@
+// import { register } from "node:module";
+
 import type { APIRequestContext, Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
@@ -5,13 +7,13 @@ import { initClient } from "@ts-rest/core";
 
 import type { PubsId } from "db/public";
 import { siteApi } from "contracts";
+import { CoreSchemaType, MemberRole } from "db/public";
 
 import { ApiTokenPage, expectStatus } from "./fixtures/api-token-page";
 import { LoginPage } from "./fixtures/login-page";
 import { createCommunity } from "./helpers";
 
-const now = new Date().getTime();
-const COMMUNITY_SLUG = `playwright-test-community-${now}`;
+let COMMUNITY_SLUG: string;
 
 let page: Page;
 
@@ -29,29 +31,72 @@ const createClient = (token: string, jsonQuery: boolean = false) => {
 	});
 };
 
+const randomApiToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
 test.beforeAll(async ({ browser }) => {
+	// register("../prisma/seed/stubs/module-loader.js", import.meta.url);
+	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+
+	const community = await seedCommunity(
+		{
+			community: {
+				name: `test community ${Date.now()}`,
+				slug: "test",
+			},
+			users: {
+				admin: {
+					password: "password",
+					role: MemberRole.admin,
+				},
+			},
+			pubFields: {
+				Title: { schemaName: CoreSchemaType.String },
+			},
+			pubTypes: {
+				Basic: {
+					Title: { isTitle: true },
+				},
+			},
+			pubs: [
+				{
+					pubType: "Basic",
+					values: {
+						Title: "what is up world",
+					},
+				},
+			],
+		},
+		{
+			withApiToken: randomApiToken,
+		}
+	);
+
+	COMMUNITY_SLUG = community.community.slug;
+
 	page = await browser.newPage();
 
-	const loginPage = new LoginPage(page);
-	await loginPage.goto();
-	await loginPage.loginAndWaitForNavigation();
+	// const loginPage = new LoginPage(page);
+	// await loginPage.goto();
+	// await loginPage.loginAndWaitForNavigation();
 
-	await createCommunity({
-		page,
-		community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
+	// await createCommunity({
+	// 	page,
+	// 	community: { name: `test community ${now}`, slug: COMMUNITY_SLUG },
+	// });
+
+	// const apiTokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
+	// await apiTokenPage.goto();
+	// const token = await apiTokenPage.createToken({
+	// 	name: "test token",
+	// 	description: "test description",
+	// 	permissions: true,
+	// });
+
+	client = initClient(siteApi, {
+		baseUrl: `http://localhost:3000/`,
+		baseHeaders: {
+			Authorization: `Bearer ${community.apiToken}`,
+		},
 	});
-
-	const apiTokenPage = new ApiTokenPage(page, COMMUNITY_SLUG);
-	await apiTokenPage.goto();
-	const createdToken = await apiTokenPage.createToken({
-		name: "test token",
-		description: "test description",
-		permissions: true,
-	});
-	expect(createdToken).not.toBeNull();
-	token = createdToken!;
-
-	client = createClient(token, true);
 });
 
 test.describe("Site API", () => {
@@ -187,7 +232,7 @@ test.describe("Site API", () => {
 		});
 
 		test("should be able to filter by without jsonQuery", async () => {
-			const client = createClient(token, false);
+			const client = createClient(randomApiToken, false);
 			const response = await client.pubs.getMany({
 				params: {
 					communitySlug: COMMUNITY_SLUG,
@@ -249,7 +294,7 @@ test.describe("Site API", () => {
 				`http://localhost:3000/api/v0/c/${COMMUNITY_SLUG}/site/pubs?filters[createdAt][$gte]=${firstCreatedAt.toISOString()}`,
 				{
 					headers: {
-						Authorization: `Bearer ${token}`,
+						Authorization: `Bearer ${randomApiToken}`,
 					},
 				}
 			);
