@@ -1,6 +1,7 @@
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { describe, expect, test } from "vitest";
 
-import type { PubsId, UsersId } from "db/public";
+import type { ApiAccessTokensId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import {
 	Action,
 	CoreSchemaType,
@@ -11,6 +12,7 @@ import {
 } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
+import { allPermissions } from "~/lib/server/apiAccessTokens";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -27,6 +29,9 @@ describe("seedCommunity", () => {
 		const authorPubId = crypto.randomUUID() as PubsId;
 		const author2PubId = crypto.randomUUID() as PubsId;
 
+		const stage1Id = crypto.randomUUID() as StagesId;
+		const AuthorPubTypeId = crypto.randomUUID() as PubTypesId;
+
 		const seededCommunity = await seedCommunity({
 			community: {
 				name: "test",
@@ -42,7 +47,10 @@ describe("seedCommunity", () => {
 					SubmissionAuthor: { isTitle: false },
 				},
 				Author: {
-					Title: { isTitle: true },
+					id: AuthorPubTypeId,
+					fields: {
+						Title: { isTitle: true },
+					},
 				},
 			},
 			users: {
@@ -59,6 +67,7 @@ describe("seedCommunity", () => {
 			},
 			stages: {
 				"Stage 1": {
+					id: stage1Id,
 					members: { hih: MemberRole.contributor },
 					actions: [
 						{
@@ -151,6 +160,19 @@ describe("seedCommunity", () => {
 					],
 				},
 			},
+			apiTokens: {
+				"all token": {},
+				"test-token": {
+					permissions: {
+						pub: {
+							read: {
+								stages: ["no-stage", stage1Id],
+								pubTypes: [AuthorPubTypeId],
+							},
+						},
+					},
+				},
+			},
 		});
 
 		expect(seededCommunity).toBeDefined();
@@ -203,6 +225,7 @@ describe("seedCommunity", () => {
 				name: "Submission",
 			},
 			Author: {
+				id: AuthorPubTypeId,
 				name: "Author",
 			},
 		});
@@ -304,6 +327,56 @@ describe("seedCommunity", () => {
 				slug: "submission-form",
 			},
 		});
+
+		expect(seededCommunity.apiTokens, "apiTokens").toMatchObject({
+			"all token": expect.stringMatching(/^[a-f0-9-]{36}\..{22}$/),
+			"test-token": expect.stringMatching(/^[a-f0-9-]{36}\..{22}$/),
+		});
+
+		const permissions = await trx
+			.selectFrom("api_access_tokens")
+			.selectAll("api_access_tokens")
+			.select((eb) =>
+				jsonArrayFrom(
+					eb
+						.selectFrom("api_access_permissions")
+						.selectAll("api_access_permissions")
+						.whereRef(
+							"api_access_permissions.apiAccessTokenId",
+							"=",
+							eb.ref("api_access_tokens.id")
+						)
+				).as("permissions")
+			)
+			.where("api_access_tokens.id", "in", [
+				seededCommunity.apiTokens["test-token"].split(".")[0] as ApiAccessTokensId,
+				seededCommunity.apiTokens["all token"].split(".")[0] as ApiAccessTokensId,
+			])
+			.execute();
+
+		const testToken = permissions.find((token) => token.name === "test-token");
+		const allToken = permissions.find((token) => token.name === "all token");
+
+		expect(testToken?.permissions).toMatchObject([
+			{
+				scope: "pub",
+				accessType: "read",
+				constraints: {
+					stages: expect.arrayContaining(["no-stage", stage1Id]),
+					pubTypes: [AuthorPubTypeId],
+				},
+			},
+		]);
+
+		expect(
+			allToken?.permissions?.sort((a, b) =>
+				`${a.scope}-${a.accessType}`.localeCompare(`${b.scope}-${b.accessType}`)
+			)
+		).toMatchObject(
+			allPermissions.sort((a, b) =>
+				`${a.scope}-${a.accessType}`.localeCompare(`${b.scope}-${b.accessType}`)
+			)
+		);
 
 		rollback();
 	});
