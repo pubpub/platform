@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-const BLANK_EDITOR_STORY = "/iframe.html?id=contexteditor--blank";
+import { BLANK_EDITOR_STORY } from "./constants";
 
 test.describe("bold", () => {
 	test.beforeEach(async ({ page }) => {
