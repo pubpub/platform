@@ -1758,16 +1758,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("pub_values as pv")
 							.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
-							.innerJoin("forms", (join) =>
-								join
-									.onRef("forms.pubTypeId", "=", "pt.pubTypeId")
-									.on("forms.isDefault", "=", true)
-							)
-							.fullJoin("form_elements", (join) =>
-								join
-									.onRef("form_elements.fieldId", "=", "pv.fieldId")
-									.onRef("form_elements.formId", "=", "forms.id")
-							)
 							.$if(Boolean(fieldSlugs), (qb) =>
 								qb.where("pub_fields.slug", "in", fieldSlugs!)
 							)
@@ -1781,40 +1771,10 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								"pub_fields.schemaName",
 								"pub_fields.slug as fieldSlug",
 								"pub_fields.name as fieldName",
-								"form_elements.id as formElementId",
-								"form_elements.label as formElementLabel",
-								"form_elements.config as formElementConfig",
 							])
 							.whereRef("pv.pubId", "=", "pt.pubId")
-							// .where((eb) =>
-							// 	eb
-							// 		.selectFrom("memberships")
-							// 		.innerJoin("membership_capabilities", (join) =>
-							// 			join.on((eb) =>
-							// 				eb.and([
-							// 					eb(
-							// 						"membership_capabilities.role",
-							// 						"=",
-							// 						eb.ref("memberships.role")
-							// 					),
-							// 					eb(
-							// 						"membership_capabilities.type",
-							// 						"=",
-							// 						eb.ref("memberships.type")
-							// 					),
-							// 				])
-							// 			)
-							// 		)
-							// 		.where(
-							// 			"membership_capabilities.capability",
-							// 			"=",
-							// 			Capabilities.seeExtraPubValues
-							// 		)
-							// )
-
-							// Order by form element, then most recently updated value (grouped by pub field), then pub value rank
+							// Order by most recently updated value (grouped by pub field), then rank
 							.orderBy([
-								"form_elements.rank",
 								(eb) =>
 									// Equivalent to: max(pv."updatedAt") over(partition by pv."fieldId") desc
 									sql`${eb.fn

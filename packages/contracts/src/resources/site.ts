@@ -188,12 +188,6 @@ type ValueBase = {
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
 	fieldName: string;
-	/**
-	 * Information about the corresponding form.
-	 */
-	formElementId: string | null;
-	formElementLabel: string | null;
-	formElementConfig: { label?: string } | null;
 };
 
 type ProcessedPubBase = {
