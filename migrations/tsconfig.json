@@ -4,7 +4,10 @@
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
 		"lib": ["ESNext"],
 		"types": ["node"],
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"paths": {
+			"~/*": ["../core/*"]
+		}
 	},
 	"include": ["./**/*.ts"],
 	"exclude": ["dist", "build", "node_modules", ".turbo"]

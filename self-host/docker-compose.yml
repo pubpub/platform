@@ -48,7 +48,7 @@ services:
         # FIXME: remove this once it's merged into main
         volumes:
             - ../core/prisma/create-admin-user.cts:/usr/src/app/core/prisma/create-admin-user.cts
-        command: ["pnpm", "--filter", "core", "migrate-docker"]
+        command: ["pnpm", "migrate-docker"]
         networks:
             - app-network
 
