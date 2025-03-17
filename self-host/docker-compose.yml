@@ -47,10 +47,7 @@ services:
         env_file: .env
         environment:
             DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
-        # FIXME: remove this once it's merged into main
-        volumes:
-            - ../core/prisma/create-admin-user.cts:/usr/src/app/core/prisma/create-admin-user.cts
-        command: ["pnpm", "--filter", "core", "reset"]
+        command: ["pnpm", "--filter", "core", "migrate-docker"]
         networks:
             - app-network
 
