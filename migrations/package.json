@@ -28,7 +28,8 @@
 		"dotenv-cli": "^7.2.1",
 		"prisma": "^5.19.0",
 		"prisma-dbml-generator": "^0.12.0",
-		"logger": "workspace:*"
+		"logger": "workspace:*",
+		"tsx": "catalog:"
 	},
 	"devDependencies": {
 		"tsconfig": "workspace:*",

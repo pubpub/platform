@@ -286,9 +286,6 @@ importers:
       '@opentelemetry/auto-instrumentations-node':
         specifier: 'catalog:'
         version: 0.53.0(@opentelemetry/api@1.9.0)
-      '@prisma/client':
-        specifier: 5.19.1
-        version: 5.19.1(prisma@5.19.1)
       '@prosemirror-adapter/react':
         specifier: ^0.2.6
         version: 0.2.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -769,6 +766,9 @@ importers:
       prisma-dbml-generator:
         specifier: ^0.12.0
         version: 0.12.0
+      tsx:
+        specifier: 'catalog:'
+        version: 4.19.0
     devDependencies:
       tsconfig:
         specifier: workspace:*
