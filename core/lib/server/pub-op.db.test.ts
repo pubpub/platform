@@ -932,9 +932,7 @@ describe("relation management", () => {
 				.relate(seededCommunity.pubFields["Some relation"].slug, "to I", pubI)
 				.execute();
 
-			const { getPubsWithRelatedValues: getPubsWithRelatedValues } = await import(
-				"~/lib/server/pub"
-			);
+			const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
 
 			// verify the initial state
 			const initialState = await getPubsWithRelatedValues(

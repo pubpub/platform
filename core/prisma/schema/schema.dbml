@@ -94,9 +94,6 @@ Table pubs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   title String
-  parent pubs
-  parentId String
-  children pubs [not null]
   values pub_values [not null]
   stages PubsInStages [not null]
   actionRuns action_runs [not null]
@@ -626,8 +623,6 @@ Ref: pubs.pubTypeId > pub_types.id
 Ref: pubs.communityId > communities.id
 
 Ref: pubs.assigneeId > users.id
-
-Ref: pubs.parentId - pubs.id [delete: Cascade]
 
 Ref: pub_fields.pubFieldSchemaId > PubFieldSchema.id
 

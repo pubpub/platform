@@ -7,12 +7,8 @@ import { logger } from "logger";
 import { assert, expect } from "utils";
 
 import type { action } from "./action";
-import type {
-	RenderWithPubContext,
-	RenderWithPubPub,
-} from "~/lib/server/render/pub/renderWithPubUtils";
+import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { db } from "~/kysely/database";
-import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
@@ -22,23 +18,6 @@ import { defineRun } from "../types";
 export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
 	try {
 		const communitySlug = await getCommunitySlug();
-
-		const { parentId } = pub;
-		let parentPub: RenderWithPubPub | undefined;
-
-		// TODO: This is a pretty inefficient way of loading the parent pub, as it
-		// will redundantly load the child pub. Ideally we would lazily fetch and
-		// cache the parent pub while processing the email template.
-		if (parentId) {
-			parentPub = await getPubsWithRelatedValues(
-				{ pubId: parentId, communityId },
-				{
-					withPubType: true,
-					withStage: true,
-				}
-			);
-		}
-
 		const recipientEmail = args?.recipientEmail ?? config.recipientEmail;
 		const recipientMemberId = (args?.recipientMember ?? config.recipientMember) as
 			| CommunityMembershipsId
@@ -76,7 +55,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 			communitySlug,
 			recipient,
 			pub,
-			parentPub,
 		} as RenderWithPubContext;
 
 		const html = await renderMarkdownWithPub(

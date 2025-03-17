@@ -103,7 +103,7 @@ describe("getPubsWithRelatedValues capabilities", () => {
 	it("should restrict pubs by visibility", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { community, pubFields, pubTypes, stages, pubs, users } = await seedCommunity(seed);
-		const { getPubsWithRelatedValues: getPubsWithRelatedValues } = await import("./pub");
+		const { getPubsWithRelatedValues } = await import("./pub");
 
 		// Admins and editors of the community should see all pubs
 		const pubsVisibleToAdmin = await getPubsWithRelatedValues({
