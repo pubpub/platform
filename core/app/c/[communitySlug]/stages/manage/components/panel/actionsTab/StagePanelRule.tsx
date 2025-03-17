@@ -2,9 +2,10 @@
 
 import { useCallback } from "react";
 
-import type { Action, CommunitiesId, Event, RulesId, StagesId } from "db/public";
+import type { Action, ActionInstances, CommunitiesId, Event, RulesId, StagesId } from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
+import { cn } from "utils";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
@@ -18,15 +19,15 @@ type Props = {
 	rule: {
 		id: RulesId;
 		event: Event;
-		instanceName: string;
-		action: Action;
+		actionInstance: ActionInstances;
+		sourceActionInstance?: ActionInstances | null;
 		config?: RuleConfig<RuleForEvent<Event>> | null;
 	};
 };
 
-const actionIcon = (actionName: Action) => {
-	const action = getActionByName(actionName);
-	return <action.icon className="inline text-sm" />;
+const ActionIcon = (props: { actionName: Action; className?: string }) => {
+	const action = getActionByName(props.actionName);
+	return <action.icon className={cn("inline text-sm", props.className)} />;
 };
 
 export const StagePanelRule = (props: Props) => {
@@ -40,15 +41,33 @@ export const StagePanelRule = (props: Props) => {
 		<div className="w-full space-y-2 border px-3 py-2">
 			<div className="flex w-full items-center justify-between space-x-4 text-sm">
 				<div className="flex items-center gap-2 overflow-auto">
-					{actionIcon(rule.action)}
 					<span className="flex-grow-0 overflow-auto text-ellipsis">
+						If{" "}
 						<span className="italic underline decoration-dotted">
-							{rule.instanceName}
-						</span>{" "}
-						will run when{" "}
-						<span className="italic underline decoration-dotted">
-							{humanReadableEvent(rule.event, rule.config ?? undefined)}
+							{rule.sourceActionInstance ? (
+								<>
+									<ActionIcon
+										actionName={rule.sourceActionInstance.action}
+										className="mr-1 h-4 w-4 text-xs"
+									/>
+									{humanReadableEvent(
+										rule.event,
+										rule.config ?? undefined,
+										rule.sourceActionInstance
+									)}
+								</>
+							) : (
+								humanReadableEvent(rule.event, rule.config ?? undefined)
+							)}
 						</span>
+						, run{" "}
+						<span className="italic underline decoration-dotted">
+							<ActionIcon
+								actionName={rule.actionInstance.action}
+								className="mx-1 h-4 w-4 text-xs"
+							/>
+							{rule.actionInstance.name}
+						</span>{" "}
 					</span>
 				</div>
 				<div className="flex-gap-1">

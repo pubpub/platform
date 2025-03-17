@@ -1,3 +1,4 @@
+import { ActionInstanceSelectorInput } from "../actionInstances/ActionInstanceSelectorInput";
 import { InputWithTokens, MarkdownEditor } from "../editors";
 import AutoFormCheckbox from "./fields/checkbox";
 import AutoFormDate from "./fields/date";
@@ -21,6 +22,7 @@ export const INPUT_COMPONENTS = {
 	fallback: AutoFormInput,
 	markdown: MarkdownEditor,
 	stringWithTokens: InputWithTokens,
+	actionInstance: ActionInstanceSelectorInput,
 };
 
 /**
@@ -37,4 +39,5 @@ export const DEFAULT_ZOD_HANDLERS: {
 	ZodNumber: "number",
 	Markdown: "markdown",
 	StringWithTokens: "stringWithTokens",
+	ActionInstance: "actionInstance",
 };

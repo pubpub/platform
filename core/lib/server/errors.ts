@@ -2,6 +2,7 @@ import type { ErrorHttpStatusCode } from "@ts-rest/core";
 import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
+import { reactErrorHandler } from "@sentry/nextjs";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
 import pg from "pg";
 
@@ -83,6 +84,7 @@ export const handleDatabaseErrors = (error: pg.DatabaseError, req: TsRestRequest
 };
 
 export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestResponse => {
+	logger.error(error);
 	if (error instanceof RequestValidationError) {
 		return TsRestResponse.fromJson(
 			{

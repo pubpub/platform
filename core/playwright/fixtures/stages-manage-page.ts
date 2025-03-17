@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-import type { Action } from "db/public";
+import type { Action, Event } from "db/public";
 
 import { slugifyString } from "~/lib/string";
 
@@ -68,5 +68,57 @@ export class StagesManagePage {
 		await editButton.click();
 		await stagePanel.getByLabel("Edit action name", { exact: true }).fill(actionName);
 		await editButton.click();
+	}
+
+	/**
+	 * TODO: add support for config
+	 */
+	async addRule(
+		stageName: string,
+		rule: {
+			event: Event;
+			actionInstanceName: string;
+			sourceActionInstanceName?: string;
+		}
+	) {
+		await this.openStagePanelTab(stageName, "Actions");
+
+		await this.page.getByTestId("add-rule-button").click({ timeout: 1_000 });
+
+		await this.page.getByTestId("action-selector-select-trigger").click({
+			timeout: 2_000,
+		});
+		await this.page
+			.getByTestId(`action-selector-select-item-${rule.actionInstanceName}`)
+			.click({
+				timeout: 1_000,
+			});
+
+		await this.page.getByTestId("event-select-trigger").click({
+			timeout: 1_000,
+		});
+		await this.page.getByTestId(`event-select-item-${rule.event}`).click({
+			timeout: 1_000,
+		});
+
+		if (rule.sourceActionInstanceName) {
+			await this.page.getByTestId("watched-action-select-trigger").click({
+				timeout: 1_000,
+			});
+			await this.page
+				.getByTestId(`watched-action-select-item-${rule.sourceActionInstanceName}`)
+				.click({
+					timeout: 1_000,
+				});
+		}
+
+		await this.page
+			.getByRole("button", {
+				name: "Save rule",
+				exact: true,
+			})
+			.click({
+				timeout: 1_000,
+			});
 	}
 }
