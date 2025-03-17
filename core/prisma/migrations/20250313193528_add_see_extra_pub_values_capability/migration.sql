@@ -14,4 +14,24 @@ VALUES
         'admin'::"MemberRole", 
         'pub'::"MembershipType", 
         'seeExtraPubValues'::"Capabilities"
+    ),
+    (
+        'editor'::"MemberRole",
+        'stage'::"MembershipType",
+        'seeExtraPubValues'::"Capabilities"
+    ),
+    (
+        'admin'::"MemberRole", 
+        'stage'::"MembershipType", 
+        'seeExtraPubValues'::"Capabilities"
+    ),
+    (
+        'editor'::"MemberRole",
+        'community'::"MembershipType",
+        'seeExtraPubValues'::"Capabilities"
+    ),
+    (
+        'admin'::"MemberRole", 
+        'community'::"MembershipType", 
+        'seeExtraPubValues'::"Capabilities"
     );

@@ -32,6 +32,7 @@ export const communityCapabilities = [
 	Capabilities.createForm,
 	Capabilities.createApiToken,
 	Capabilities.revokeApiToken,
+	Capabilities.seeExtraPubValues,
 ] as const;
 export const stageCapabilities = [
 	Capabilities.viewStage,
@@ -39,6 +40,7 @@ export const stageCapabilities = [
 	Capabilities.deleteStage,
 	Capabilities.addStageMember,
 	Capabilities.removeStageMember,
+	Capabilities.seeExtraPubValues,
 ] as const;
 export const formCapabilities = [
 	Capabilities.createPubWithForm,

@@ -375,7 +375,6 @@ Table forms {
   indexes {
     (name, communityId) [unique]
     (slug, communityId) [unique]
-    (isDefault, pubTypeId) [unique]
   }
 }
 
