@@ -8,16 +8,22 @@ import { Value } from "@sinclair/typebox/value";
 import partition from "lodash.partition";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { JsonValue } from "contracts";
+import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronDown, ChevronRight } from "ui/icon";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
-import type { FullProcessedPub } from "~/lib/server/pub";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
+
+type FullProcessedPubWithForm = ProcessedPubWithForm<{
+	withRelatedPubs: true;
+	withStage: true;
+	withPubType: true;
+	withMembers: true;
+}>;
 
 const PubValueHeading = ({
 	depth,
@@ -43,7 +49,7 @@ const FieldBlock = ({
 	depth,
 }: {
 	name: string;
-	values: FullProcessedPub["values"] | undefined;
+	values: FullProcessedPubWithForm["values"] | undefined;
 	depth: number;
 }) => {
 	return (
@@ -52,13 +58,15 @@ const FieldBlock = ({
 				{name}
 			</PubValueHeading>
 			<div className={"ml-2"} data-testid={`${name}-value`}>
-				{values?.map((value) => <PubValue value={value} key={value.id} />)}
+				{values?.map((value) =>
+					value.id ? <PubValue value={value} key={value.id} /> : null
+				)}
 			</div>
 		</div>
 	);
 };
 
-export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
+export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode => {
 	const { values, depth } = pub;
 	if (!values.length) {
 		return null;
@@ -69,7 +77,7 @@ export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 	// Group values by field so we only render one heading for relationship values that have multiple entries
 	const groupedValues: Record<
 		string,
-		{ label: string; isInForm: boolean; values: FullProcessedPub["values"] }
+		{ label: string; isInForm: boolean; values: FullProcessedPubWithForm["values"] }
 	> = {};
 	filteredValues.forEach((value) => {
 		if (groupedValues[value.fieldSlug]) {
@@ -77,7 +85,7 @@ export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 		} else {
 			const label =
 				value.formElementLabel || value.formElementConfig?.label || value.fieldName;
-			const isInForm = !(value.formElementId == null);
+			const isInForm = !!value.id;
 			groupedValues[value.fieldSlug] = { label, values: [value], isInForm };
 		}
 	});
@@ -106,7 +114,7 @@ export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 	);
 };
 
-const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
+const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number] }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	if (value.relatedPub) {
 		const { relatedPub, ...justValue } = value;

@@ -1,6 +1,9 @@
-import type { JsonValue, ProcessedPub } from "contracts";
+import type { JsonValue, ProcessedPub, ProcessedPubWithForm } from "contracts";
+import type { PubFieldsId } from "db/public";
+import { ElementType } from "db/public";
 
-import type { GetPubsResult } from "./server";
+import type { FullProcessedPub, GetPubsResult } from "./server";
+import type { Form } from "./server/form";
 
 export type PubTitleProps = {
 	title?: string | null;
@@ -99,4 +102,72 @@ export const valuesWithoutTitle = <T extends InputPub>(pub: T): T["values"] => {
 		return pub.values;
 	}
 	return pub.values.filter((value) => value.fieldId !== titleField?.id);
+};
+
+export const getPubByForm = ({
+	pub,
+	form,
+	withExtraPubValues,
+}: {
+	pub: FullProcessedPub;
+	form: Form;
+	withExtraPubValues: boolean;
+}): ProcessedPubWithForm<{
+	withRelatedPubs: true;
+	withStage: true;
+	withPubType: true;
+	withMembers: true;
+}> => {
+	const { values } = pub;
+	if (!values.length) {
+		return pub;
+	}
+
+	const valuesByFieldSlug = values.reduce<Record<string, FullProcessedPub["values"][number]>>(
+		(acc, value) => {
+			acc[value.fieldSlug] = value;
+			return acc;
+		},
+		{}
+	);
+
+	const pubFieldFormElements = form.elements.filter((fe) => fe.type === ElementType.pubfield);
+	const valuesWithFormElements = pubFieldFormElements.map((formElement) => {
+		const value = valuesByFieldSlug[formElement.slug];
+		const formInfo = {
+			formElementId: formElement.id,
+			formElementLabel: formElement.label,
+			formElementConfig: formElement.config,
+		};
+		if (!value) {
+			return {
+				id: null,
+				value: null,
+				createdAt: null,
+				updatedAt: null,
+				schemaName: formElement.schemaName,
+				fieldId: formElement.fieldId as PubFieldsId,
+				fieldSlug: formElement.slug,
+				relatedPubId: null,
+				...formInfo,
+			};
+		}
+		return {
+			...value,
+			...formInfo,
+		};
+	});
+
+	if (!withExtraPubValues) {
+		return { ...pub, values: valuesWithFormElements };
+	}
+
+	const formElementSlugs = new Set(pubFieldFormElements.map((fe) => fe.slug));
+	const valueFieldSlugs = new Set(Object.keys(valuesByFieldSlug));
+	const slugsNotInForm = Array.from(valueFieldSlugs.difference(formElementSlugs));
+	const valuesNotInForm = slugsNotInForm.map((slug) => valuesByFieldSlug[slug]);
+
+	const newValues = [...valuesWithFormElements, ...valuesNotInForm];
+
+	return { ...pub, values: newValues };
 };
