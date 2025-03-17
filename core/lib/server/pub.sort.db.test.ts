@@ -44,7 +44,7 @@ describe("getPubsWithRelatedValues", () => {
 		const {
 			createPubRecursiveNew,
 			removeAllPubRelationsBySlugs,
-			getPubsWithRelatedValues: getPubsWithRelatedValues,
+			getPubsWithRelatedValues,
 			upsertPubRelations: addPubRelations,
 		} = await import("./pub");
 
