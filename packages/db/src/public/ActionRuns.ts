@@ -47,11 +47,7 @@ export interface ActionRunsTable {
 
 	result: ColumnType<unknown, unknown, unknown>;
 
-	triggeringActionRunId: ColumnType<
-		ActionRunsId | null,
-		ActionRunsId | null,
-		ActionRunsId | null
-	>;
+	sourceActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
 }
 
 export type ActionRuns = Selectable<ActionRunsTable>;
@@ -74,7 +70,7 @@ export const actionRunsSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	result: z.unknown(),
-	triggeringActionRunId: actionRunsIdSchema.nullable(),
+	sourceActionRunId: actionRunsIdSchema.nullable(),
 });
 
 export const actionRunsInitializerSchema = z.object({
@@ -89,7 +85,7 @@ export const actionRunsInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown(),
-	triggeringActionRunId: actionRunsIdSchema.optional().nullable(),
+	sourceActionRunId: actionRunsIdSchema.optional().nullable(),
 });
 
 export const actionRunsMutatorSchema = z.object({
@@ -104,5 +100,5 @@ export const actionRunsMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown().optional(),
-	triggeringActionRunId: actionRunsIdSchema.optional().nullable(),
+	sourceActionRunId: actionRunsIdSchema.optional().nullable(),
 });

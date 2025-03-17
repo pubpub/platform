@@ -126,7 +126,7 @@ export type StagesInitializer<
 		rules?: {
 			event: Event;
 			actionInstance: keyof A;
-			watchedAction?: keyof A;
+			sourceAction?: keyof A;
 			config?: Record<string, unknown> | null;
 		}[];
 	}
@@ -1142,8 +1142,9 @@ export async function seedCommunity<
 				actionInstanceId: expect(
 					createdActions.find((action) => action.name === rule.actionInstance)?.id
 				),
-				watchedActionId: createdActions.find((action) => action.name === rule.watchedAction)
-					?.id,
+				sourceActionInstanceId: createdActions.find(
+					(action) => action.name === rule.sourceAction
+				)?.id,
 				config: rule.config ? JSON.stringify(rule.config) : null,
 			})) ?? []
 	);

@@ -67,14 +67,14 @@ export const humanReadableEvent = <T extends Event>(
 	config?: (typeof rules)[T]["additionalConfig"] extends undefined
 		? never
 		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>,
-	watchedAction?: ActionInstances | null
+	sourceAction?: ActionInstances | null
 ) => {
 	const rule = getRuleByName(event);
 	if (config && rule.additionalConfig) {
 		return rule.display.withConfig(config);
 	}
-	if (watchedAction && isReferentialRule(rule)) {
-		return rule.display.withConfig(watchedAction);
+	if (sourceAction && isReferentialRule(rule)) {
+		return rule.display.withConfig(sourceAction);
 	}
 
 	return rule.display.base;

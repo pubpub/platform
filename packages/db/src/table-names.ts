@@ -428,7 +428,7 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
-				name: "triggeringActionRunId",
+				name: "sourceActionRunId",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",
 				isNullable: true,
@@ -1699,7 +1699,7 @@ export const databaseTables = [
 				hasDefaultValue: true,
 			},
 			{
-				name: "watchedActionId",
+				name: "sourceActionInstanceId",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",
 				isNullable: true,

@@ -78,7 +78,7 @@ export class StagesManagePage {
 		rule: {
 			event: Event;
 			actionInstanceName: string;
-			watchedActionInstanceName?: string;
+			sourceActionInstanceName?: string;
 		}
 	) {
 		await this.openStagePanelTab(stageName, "Actions");
@@ -101,12 +101,12 @@ export class StagesManagePage {
 			timeout: 1_000,
 		});
 
-		if (rule.watchedActionInstanceName) {
+		if (rule.sourceActionInstanceName) {
 			await this.page.getByTestId("watched-action-select-trigger").click({
 				timeout: 1_000,
 			});
 			await this.page
-				.getByTestId(`watched-action-select-item-${rule.watchedActionInstanceName}`)
+				.getByTestId(`watched-action-select-item-${rule.sourceActionInstanceName}`)
 				.click({
 					timeout: 1_000,
 				});

@@ -59,12 +59,12 @@ const seed = createSeed({
 				{
 					event: Event.actionSucceeded,
 					actionInstance: "1",
-					watchedAction: "2",
+					sourceAction: "2",
 				},
 				{
 					event: Event.actionFailed,
 					actionInstance: "2",
-					watchedAction: "3",
+					sourceAction: "3",
 				},
 				{
 					event: Event.pubInStageForDuration,
@@ -130,7 +130,7 @@ describe("rules.db", () => {
 			createRuleWithCycleCheck({
 				event: Event.actionSucceeded,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-				watchedActionId: community.stages["Stage 1"].actions["2"].id,
+				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
 				config: {},
 			})
 		).rejects.toThrow(SequentialRuleAlreadyExistsError);
@@ -154,7 +154,7 @@ describe("rules.db", () => {
 				createRuleWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-					watchedActionId: community.stages["Stage 1"].actions["1"].id,
+					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					config: {},
 				})
 			).rejects.toThrow(RuleCycleError);
@@ -164,7 +164,7 @@ describe("rules.db", () => {
 				createRuleWithCycleCheck({
 					event: Event.actionFailed,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-					watchedActionId: community.stages["Stage 1"].actions["1"].id,
+					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					config: {},
 				})
 			).rejects.toThrow(RuleCycleError);
@@ -174,7 +174,7 @@ describe("rules.db", () => {
 				createRuleWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
-					watchedActionId: community.stages["Stage 1"].actions["1"].id,
+					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					config: {},
 				})
 			).rejects.toThrow(RuleCycleError);
@@ -186,7 +186,7 @@ describe("rules.db", () => {
 				createRuleWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-					watchedActionId: community.stages["Stage 1"].actions["3"].id,
+					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					config: {},
 				})
 			).resolves.not.toThrow();
@@ -199,7 +199,7 @@ describe("rules.db", () => {
 					{
 						event: Event.actionSucceeded,
 						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-						watchedActionId: community.stages["Stage 1"].actions["4"].id,
+						sourceActionInstanceId: community.stages["Stage 1"].actions["4"].id,
 						config: {},
 					},
 					3

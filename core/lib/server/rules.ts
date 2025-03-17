@@ -52,7 +52,7 @@ export class RuleAlreadyExistsError extends RuleError {
 		message: string,
 		public event: Event,
 		public actionInstanceId: ActionInstancesId,
-		public watchedActionId?: ActionInstancesId
+		public sourceActionInstanceId?: ActionInstancesId
 	) {
 		super(message);
 		this.name = "RuleAlreadyExistsError";
@@ -63,13 +63,13 @@ export class SequentialRuleAlreadyExistsError extends RuleAlreadyExistsError {
 	constructor(
 		public event: SequentialRuleEvent,
 		public actionInstanceId: ActionInstancesId,
-		public watchedActionId: ActionInstancesId
+		public sourceActionInstanceId: ActionInstancesId
 	) {
 		super(
-			` ${event} rule for ${watchedActionId} running ${actionInstanceId} already exists`,
+			` ${event} rule for ${sourceActionInstanceId} running ${actionInstanceId} already exists`,
 			event,
 			actionInstanceId,
-			watchedActionId
+			sourceActionInstanceId
 		);
 	}
 }
@@ -90,23 +90,27 @@ export const removeRule = (ruleId: RulesId) =>
 
 const getFullPath = (
 	pathResult: { isCycle: boolean; id: ActionInstancesId; path: ActionInstancesId[] },
-	watchedActionId: ActionInstancesId,
+	sourceActionInstanceId: ActionInstancesId,
 	toBeRunActionId: ActionInstancesId
 ): ActionInstancesId[] => {
 	// for MAX_STACK_DEPTH issues, or for direct cycles, show the full path
-	if (!pathResult.isCycle || pathResult.id === watchedActionId) {
-		return [watchedActionId, toBeRunActionId, ...pathResult.path];
+	if (!pathResult.isCycle || pathResult.id === sourceActionInstanceId) {
+		return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path];
 	}
 
-	// indirect cycle (watchedActionId -> toBeRunActionId -> path -> (some node in path))
+	// indirect cycle (sourceActionInstanceId -> toBeRunActionId -> path -> (some node in path))
 	const cycleIndex = pathResult.path.findIndex((id) => id === pathResult.id);
 
 	if (cycleIndex !== -1) {
-		return [watchedActionId, toBeRunActionId, ...pathResult.path.slice(0, cycleIndex + 1)];
+		return [
+			sourceActionInstanceId,
+			toBeRunActionId,
+			...pathResult.path.slice(0, cycleIndex + 1),
+		];
 	}
 
 	// fallback - shouldn't happen but just in case
-	return [watchedActionId, toBeRunActionId, ...pathResult.path];
+	return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path];
 };
 
 /**
@@ -121,14 +125,14 @@ export const MAX_STACK_DEPTH = 10;
  */
 async function wouldCreateCycle(
 	toBeRunActionId: ActionInstancesId,
-	watchedActionId: ActionInstancesId,
+	sourceActionInstanceId: ActionInstancesId,
 	maxStackDepth = MAX_STACK_DEPTH
 ): Promise<
 	| { hasCycle: true; exceedsMaxDepth: false; path: ActionInstances[] }
 	| { hasCycle: false; exceedsMaxDepth: true; path: ActionInstances[] }
 	| { hasCycle: false; exceedsMaxDepth: false; path?: never }
 > {
-	// check if there's a path from toBeRunActionId back to watchedActionId (cycle)
+	// check if there's a path from toBeRunActionId back to sourceActionInstanceId (cycle)
 	// or if any path would exceed MAX_STACK_DEPTH
 	const result = await db
 		.withRecursive("action_path", (cte) =>
@@ -144,7 +148,7 @@ async function wouldCreateCycle(
 				.union((qb) =>
 					qb
 						.selectFrom("action_path")
-						.innerJoin("rules", "rules.watchedActionId", "action_path.id")
+						.innerJoin("rules", "rules.sourceActionInstanceId", "action_path.id")
 						.innerJoin(
 							"action_instances",
 							"action_instances.id",
@@ -156,7 +160,7 @@ async function wouldCreateCycle(
 								ActionInstancesId[]
 							>`action_path.path || array[action_instances.id]`.as("path"),
 							sql<number>`action_path.depth + 1`.as("depth"),
-							sql<boolean>`action_instances.id = any(action_path.path) OR action_instances.id = ${watchedActionId}`.as(
+							sql<boolean>`action_instances.id = any(action_path.path) OR action_instances.id = ${sourceActionInstanceId}`.as(
 								"isCycle"
 							),
 						])
@@ -175,7 +179,7 @@ async function wouldCreateCycle(
 		.select(["id", "path", "depth", "isCycle"])
 		.where((eb) =>
 			// find either:
-			// 1. a path that creates a cycle (id = watchedActionId or id already in path)
+			// 1. a path that creates a cycle (id = sourceActionInstanceId or id already in path)
 			// 2. a path that would exceed MAX_STACK_DEPTH when adding the new rule
 			eb.or([eb("isCycle", "=", true), eb("depth", ">=", maxStackDepth)])
 		)
@@ -192,7 +196,7 @@ async function wouldCreateCycle(
 
 	const pathResult = result[0];
 
-	const fullPath = getFullPath(pathResult, watchedActionId, toBeRunActionId);
+	const fullPath = getFullPath(pathResult, sourceActionInstanceId, toBeRunActionId);
 
 	// Get the action instances for the path
 	const actionInstances = await db
@@ -230,7 +234,7 @@ export async function createRuleWithCycleCheck(
 	data: {
 		event: Event;
 		actionInstanceId: ActionInstancesId;
-		watchedActionId?: ActionInstancesId;
+		sourceActionInstanceId?: ActionInstancesId;
 		config?: Record<string, unknown> | null;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
@@ -249,11 +253,11 @@ export async function createRuleWithCycleCheck(
 	// only check for cycles if this is an action event with a watched action
 	if (
 		(data.event === Event.actionSucceeded || data.event === Event.actionFailed) &&
-		data.watchedActionId
+		data.sourceActionInstanceId
 	) {
 		const result = await wouldCreateCycle(
 			data.actionInstanceId,
-			data.watchedActionId,
+			data.sourceActionInstanceId,
 			maxStackDepth
 		);
 
@@ -270,18 +274,18 @@ export async function createRuleWithCycleCheck(
 		const createdRule = await createRule({
 			event: data.event,
 			actionInstanceId: data.actionInstanceId,
-			watchedActionId: data.watchedActionId,
+			sourceActionInstanceId: data.sourceActionInstanceId,
 			config: data.config ? JSON.stringify(data.config) : null,
 		}).executeTakeFirstOrThrow();
 		return createdRule;
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
 			if (isSequentialRuleEvent(data.event)) {
-				if (data.watchedActionId) {
+				if (data.sourceActionInstanceId) {
 					throw new SequentialRuleAlreadyExistsError(
 						data.event,
 						data.actionInstanceId,
-						data.watchedActionId
+						data.sourceActionInstanceId
 					);
 				}
 			} else {

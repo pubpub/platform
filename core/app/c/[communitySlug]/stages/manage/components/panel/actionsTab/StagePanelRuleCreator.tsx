@@ -44,7 +44,7 @@ type Props = {
 		id: string;
 		event: Event;
 		actionInstance: ActionInstances;
-		watchedAction?: ActionInstances;
+		sourceAction?: ActionInstances;
 		config?: RuleConfig<RuleForEvent<Event>> | null;
 	}[];
 };
@@ -57,7 +57,7 @@ const ActionSelector = ({
 	disabledActionId,
 	dataTestIdPrefix,
 }: {
-	fieldProps: Omit<ControllerRenderProps<CreateRuleSchema, "watchedActionInstanceId">, "name">;
+	fieldProps: Omit<ControllerRenderProps<CreateRuleSchema, "sourceActionInstanceId">, "name">;
 	actionInstances: ActionInstances[];
 	label: string;
 	placeholder: string;
@@ -120,12 +120,12 @@ const schema = z
 		z.object({
 			event: z.literal(Event.actionSucceeded),
 			actionInstanceId: actionInstancesIdSchema,
-			watchedActionInstanceId: actionInstancesIdSchema,
+			sourceActionInstanceId: actionInstancesIdSchema,
 		}),
 		z.object({
 			event: z.literal(Event.actionFailed),
 			actionInstanceId: actionInstancesIdSchema,
-			watchedActionInstanceId: actionInstancesIdSchema,
+			sourceActionInstanceId: actionInstancesIdSchema,
 		}),
 		...Object.values(rules)
 			.filter(
@@ -163,9 +163,9 @@ const schema = z
 			return;
 		}
 
-		if (data.watchedActionInstanceId === data.actionInstanceId) {
+		if (data.sourceActionInstanceId === data.actionInstanceId) {
 			ctx.addIssue({
-				path: ["watchedActionInstanceId"],
+				path: ["sourceActionInstanceId"],
 				code: z.ZodIssueCode.custom,
 				message: "Rules may not trigger actions in a loop",
 			});
@@ -201,7 +201,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 
 	const event = form.watch("event");
 	const selectedActionInstanceId = form.watch("actionInstanceId");
-	const watchedActionInstanceId = form.watch("watchedActionInstanceId");
+	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
 
 	// for action chaining events, filter out self-references
 	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;
@@ -220,7 +220,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 				return (
 					rule.actionInstance.id === selectedActionInstanceId &&
 					rule.event === event &&
-					rule.watchedAction?.id === watchedActionInstanceId
+					rule.sourceAction?.id === sourceActionInstanceId
 				);
 			})
 			.map((rule) => rule.event);
@@ -321,7 +321,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 								{isActionChainingEvent && (
 									<FormField
 										control={form.control}
-										name="watchedActionInstanceId"
+										name="sourceActionInstanceId"
 										render={({ field }) => (
 											<ActionSelector
 												fieldProps={field}
@@ -356,7 +356,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 									type="submit"
 									disabled={
 										allowedEvents.length === 0 ||
-										(isActionChainingEvent && !watchedActionInstanceId)
+										(isActionChainingEvent && !sourceActionInstanceId)
 									}
 								>
 									Save rule

@@ -20,7 +20,7 @@ type Props = {
 		id: RulesId;
 		event: Event;
 		actionInstance: ActionInstances;
-		watchedActionInstance?: ActionInstances | null;
+		sourceActionInstance?: ActionInstances | null;
 		config?: RuleConfig<RuleForEvent<Event>> | null;
 	};
 };
@@ -44,16 +44,16 @@ export const StagePanelRule = (props: Props) => {
 					<span className="flex-grow-0 overflow-auto text-ellipsis">
 						If{" "}
 						<span className="italic underline decoration-dotted">
-							{rule.watchedActionInstance ? (
+							{rule.sourceActionInstance ? (
 								<>
 									<ActionIcon
-										actionName={rule.watchedActionInstance.action}
+										actionName={rule.sourceActionInstance.action}
 										className="mr-1 h-4 w-4 text-xs"
 									/>
 									{humanReadableEvent(
 										rule.event,
 										rule.config ?? undefined,
-										rule.watchedActionInstance
+										rule.sourceActionInstance
 									)}
 								</>
 							) : (

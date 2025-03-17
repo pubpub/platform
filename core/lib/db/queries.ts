@@ -63,11 +63,11 @@ export const getStageMembers = cache((stageId: StagesId) => {
 export type GetEventRuleOptions =
 	| {
 			event: Event.pubInStageForDuration;
-			watchedActionInstanceId?: never;
+			sourceActionInstanceId?: never;
 	  }
 	| {
 			event: Event.actionFailed | Event.actionSucceeded;
-			watchedActionInstanceId: ActionInstancesId;
+			sourceActionInstanceId: ActionInstancesId;
 	  };
 export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOptions) => {
 	return autoCache(
@@ -87,14 +87,14 @@ export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOpt
 				)
 					.$notNull()
 					.as("actionInstance"),
-				"watchedActionId",
+				"sourceActionInstanceId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("action_instances")
 						.selectAll("action_instances")
-						.whereRef("action_instances.id", "=", "rules.watchedActionId")
+						.whereRef("action_instances.id", "=", "rules.sourceActionInstanceId")
 					// .where("action_instances.stageId", "=", stageId)
-				).as("watchedActionInstance"),
+				).as("sourceActionInstance"),
 			])
 			.$if(!!options?.event, (eb) => {
 				const where = eb.where("rules.event", "=", options!.event);
@@ -103,17 +103,21 @@ export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOpt
 					return where;
 				}
 
-				return where.where("rules.watchedActionId", "=", options!.watchedActionInstanceId);
+				return where.where(
+					"rules.sourceActionInstanceId",
+					"=",
+					options!.sourceActionInstanceId
+				);
 			})
 			.$narrowType<{ config: RuleConfig | null }>()
 	);
 });
 
 // export const getReferentialRules = cache(
-// 	(stageId: StagesId, event: Event, watchedActionId: ActionInstancesId) => {
+// 	(stageId: StagesId, event: Event, sourceActionInstanceId: ActionInstancesId) => {
 // 		return autoCache(
 // 			getStageRules(stageId)
-// 				.qb.where("rules.watchedActionId", "=", watchedActionId)
+// 				.qb.where("rules.sourceActionInstanceId", "=", sourceActionInstanceId)
 // 				.where("rules.event", "=", event)
 // 		);
 // 	}

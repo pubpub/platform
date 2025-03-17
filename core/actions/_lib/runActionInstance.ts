@@ -224,7 +224,7 @@ const _runActionInstance = async (
 				stageId: actionInstance.stageId,
 				event: Event.actionFailed,
 				stack,
-				watchedActionInstanceId: actionInstance.id,
+				sourceActionInstanceId: actionInstance.id,
 			});
 			return { ...result, stack };
 		}
@@ -234,7 +234,7 @@ const _runActionInstance = async (
 			stageId: actionInstance.stageId,
 			event: Event.actionSucceeded,
 			stack,
-			watchedActionInstanceId: actionInstance.id,
+			sourceActionInstanceId: actionInstance.id,
 		});
 
 		return { ...result, stack };
@@ -247,7 +247,7 @@ const _runActionInstance = async (
 			stageId: actionInstance.stageId,
 			event: Event.actionFailed,
 			stack,
-			watchedActionInstanceId: actionInstance.id,
+			sourceActionInstanceId: actionInstance.id,
 		});
 
 		return {
@@ -289,7 +289,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					.where("action_instances.id", "=", args.actionInstanceId),
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
-				triggeringActionRunId: args.stack.at(-1),
+				sourceActionRunId: args.stack.at(-1),
 			}))
 			.returningAll()
 			// conflict should only happen if a scheduled action is excecuted

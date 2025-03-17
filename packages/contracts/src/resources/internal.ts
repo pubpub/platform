@@ -63,7 +63,7 @@ export const internalApi = contract.router(
 			body: z.object({
 				pubId: pubsIdSchema,
 				event: eventSchema,
-				watchedActionInstanceId: actionInstancesIdSchema.optional(),
+				sourceActionInstanceId: actionInstancesIdSchema.optional(),
 			}),
 			responses: {
 				200: z.array(

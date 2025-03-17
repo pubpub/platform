@@ -32,7 +32,7 @@ type ScheduledEventPayload = {
 	community: {
 		slug: string;
 	};
-	triggeringActionRunId?: string;
+	sourceActionRunId?: string;
 	stack?: ActionRunsId[];
 	scheduledActionRunId: ActionRunsId;
 };

@@ -17,7 +17,7 @@ export type ActionRun = {
 	id: string;
 	createdAt: Date;
 	actionInstance: { name: string; action: string } | null;
-	triggeringActionInstance: { name: string; action: string } | null;
+	sourceActionInstance: { name: string; action: string } | null;
 	stage: { id: string; name: string } | null;
 	pub: PubTitleProps & { id: PubsId };
 	result: unknown;
@@ -56,9 +56,9 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 				}
 				switch (getValue()) {
 					case Event.actionFailed:
-						return `Rule (${row.original.triggeringActionInstance?.name} failed)`;
+						return `Rule (${row.original.sourceActionInstance?.name} failed)`;
 					case Event.actionSucceeded:
-						return `Rule (${row.original.triggeringActionInstance?.name} succeeded)`;
+						return `Rule (${row.original.sourceActionInstance?.name} succeeded)`;
 					case Event.pubEnteredStage:
 						return "Rule (Pub entered stage)";
 					case Event.pubLeftStage:

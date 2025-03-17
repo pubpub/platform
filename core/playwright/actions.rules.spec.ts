@@ -85,7 +85,7 @@ test.describe("sequential rules", () => {
 		await stagesManagePage.addRule("Test", {
 			event: Event.actionSucceeded,
 			actionInstanceName: "Log 1",
-			watchedActionInstanceName: "Log 2",
+			sourceActionInstanceName: "Log 2",
 		});
 		await page.waitForTimeout(1_000);
 

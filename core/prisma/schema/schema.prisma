@@ -406,7 +406,7 @@ model ActionInstance {
   config    Json?
   rules     Rule[]
   runs      ActionRun[]
-  watchedBy Rule[]      @relation("WatchedActions")
+  watchedBy Rule[]      @relation("source_action_instance")
 
   @@map(name: "action_instances")
 }
@@ -440,11 +440,11 @@ model ActionRun {
   PubValueHistory  PubValueHistory[]
 
   // action run that triggered this action run
-  triggeringActionRunId String?
-  triggeringActionRun   ActionRun? @relation("triggering_action_run", fields: [triggeringActionRunId], references: [id], onDelete: SetNull)
+  sourceActionRunId String?
+  sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[] @relation("triggering_action_run")
+  sequentialActionRuns ActionRun[] @relation("source_action_run")
 
   @@map(name: "action_runs")
 }
@@ -456,16 +456,16 @@ enum ActionRunStatus {
 }
 
 model Rule {
-  id               String          @id @default(dbgenerated("gen_random_uuid()"))
-  event            Event
-  actionInstance   ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId String
-  config           Json?
+  id                     String          @id @default(dbgenerated("gen_random_uuid()"))
+  event                  Event
+  actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId       String
+  config                 Json?
   // as the trigger for "actionSucceeded" or "actionFailed"
-  watchedActionId  String?
-  watchedAction    ActionInstance? @relation("WatchedActions", fields: [watchedActionId], references: [id], onDelete: SetNull)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @default(now()) @updatedAt
+  sourceActionInstanceId String?
+  sourceActionInstance   ActionInstance? @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @default(now()) @updatedAt
 
   @@map(name: "rules")
 }

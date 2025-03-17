@@ -75,7 +75,7 @@ export const scheduleActionInstances = async (
 						config: rule.actionInstance.config,
 						result: { scheduled: `Action scheduled for ${runAt}` },
 						event: rule.event,
-						triggeringActionRunId: options.stack.at(-1),
+						sourceActionRunId: options.stack.at(-1),
 					})
 					.returning("id")
 			).executeTakeFirstOrThrow();

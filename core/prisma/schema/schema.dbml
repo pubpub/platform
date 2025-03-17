@@ -338,8 +338,8 @@ Table action_runs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   PubValueHistory pub_values_history [not null]
-  triggeringActionRunId String
-  triggeringActionRun action_runs
+  sourceActionRunId String
+  sourceActionRun action_runs
   sequentialActionRuns action_runs [not null]
 }
 
@@ -349,8 +349,8 @@ Table rules {
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
   config Json
-  watchedActionId String
-  watchedAction action_instances
+  sourceActionInstanceId String
+  sourceActionInstance action_instances
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
@@ -686,11 +686,11 @@ Ref: action_runs.pubId > pubs.id
 
 Ref: action_runs.userId > users.id [delete: Set Null]
 
-Ref: action_runs.triggeringActionRunId - action_runs.id [delete: Set Null]
+Ref: action_runs.sourceActionRunId - action_runs.id [delete: Set Null]
 
 Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
 
-Ref: rules.watchedActionId > action_instances.id [delete: Cascade]
+Ref: rules.sourceActionInstanceId > action_instances.id [delete: Cascade]
 
 Ref: forms.communityId > communities.id [delete: Cascade]
 

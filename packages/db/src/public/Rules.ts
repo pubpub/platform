@@ -27,7 +27,7 @@ export interface RulesTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	watchedActionId: ColumnType<
+	sourceActionInstanceId: ColumnType<
 		ActionInstancesId | null,
 		ActionInstancesId | null,
 		ActionInstancesId | null
@@ -49,7 +49,7 @@ export const rulesSchema = z.object({
 	config: z.unknown().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
-	watchedActionId: actionInstancesIdSchema.nullable(),
+	sourceActionInstanceId: actionInstancesIdSchema.nullable(),
 });
 
 export const rulesInitializerSchema = z.object({
@@ -59,7 +59,7 @@ export const rulesInitializerSchema = z.object({
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	watchedActionId: actionInstancesIdSchema.optional().nullable(),
+	sourceActionInstanceId: actionInstancesIdSchema.optional().nullable(),
 });
 
 export const rulesMutatorSchema = z.object({
@@ -69,5 +69,5 @@ export const rulesMutatorSchema = z.object({
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
-	watchedActionId: actionInstancesIdSchema.optional().nullable(),
+	sourceActionInstanceId: actionInstancesIdSchema.optional().nullable(),
 });

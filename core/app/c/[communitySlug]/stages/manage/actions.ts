@@ -394,8 +394,8 @@ export const addRule = defineServerAction(async function addRule({
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
 			config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
-			watchedActionId:
-				"watchedActionInstanceId" in data ? data.watchedActionInstanceId : undefined,
+			sourceActionInstanceId:
+				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
 		});
 	} catch (error) {
 		logger.error(error);
