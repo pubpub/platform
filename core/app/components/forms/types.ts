@@ -25,6 +25,7 @@ type BasePubFieldElement = {
 	id: FormElementsId;
 	type: ElementType.pubfield;
 	fieldId: PubFieldsId | null;
+	fieldName: string;
 	label: string | null;
 	content: null;
 	required: boolean | null;

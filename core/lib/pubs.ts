@@ -164,6 +164,7 @@ export const getPubByForm = ({
 				schemaName: formElement.schemaName,
 				fieldId: formElement.fieldId as PubFieldsId,
 				fieldSlug: formElement.slug,
+				fieldName: formElement.fieldName,
 				relatedPubId: null,
 				...formInfo,
 			};

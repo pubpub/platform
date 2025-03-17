@@ -199,7 +199,10 @@ type ValuesWithFormElements =
 	(ValueBase & {
 			formElementId: FormElementsId;
 			formElementLabel: string | null;
-			formElementConfig: { label?: string } | null;
+			formElementConfig:
+				| { label?: string }
+				| { relationshipConfig: { label?: string } }
+				| null;
 	  })
 	// With only value info
 	| ValueBase
@@ -211,7 +214,10 @@ type ValuesWithFormElements =
 			updatedAt: null;
 			formElementId: FormElementsId;
 			formElementLabel: string | null;
-			formElementConfig: { label?: string } | null;
+			formElementConfig:
+				| { label?: string }
+				| { relationshipConfig: { label?: string } }
+				| null;
 	  } & ValueFieldInfo);
 
 type ProcessedPubBase = {

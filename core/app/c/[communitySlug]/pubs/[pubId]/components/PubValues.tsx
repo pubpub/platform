@@ -71,6 +71,24 @@ const FieldBlock = ({
 	);
 };
 
+const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
+	// Default to the field name
+	const defaultLabel = value.fieldName;
+	let configLabel;
+	let relationshipConfigLabel;
+	let formElementLabel;
+	if ("formElementId" in value) {
+		const config = value.formElementConfig;
+		if (config) {
+			configLabel = "label" in config ? config.label : undefined;
+			relationshipConfigLabel =
+				"relationshipConfig" in config ? config.relationshipConfig.label : undefined;
+		}
+		formElementLabel = value.formElementLabel;
+	}
+	return formElementLabel || configLabel || relationshipConfigLabel || defaultLabel;
+};
+
 export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode => {
 	const { values, depth } = pub;
 	if (!values.length) {
@@ -88,11 +106,7 @@ export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode
 		if (groupedValues[value.fieldSlug]) {
 			groupedValues[value.fieldSlug].values.push(value);
 		} else {
-			const labelFromForm =
-				"formElementLabel" in value
-					? value.formElementLabel || value.formElementConfig?.label
-					: undefined;
-			const label = labelFromForm || value.fieldName;
+			const label = getLabel(value);
 			const isInForm = "formElementId" in value;
 			groupedValues[value.fieldSlug] = { label, values: [value], isInForm };
 		}
