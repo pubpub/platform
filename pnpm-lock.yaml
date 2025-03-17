@@ -745,9 +745,6 @@ importers:
 
   migrations:
     dependencies:
-      '@prisma/client':
-        specifier: 5.19.1
-        version: 5.19.1(prisma@5.19.1)
       '@prisma/generator-helper':
         specifier: ^5.19.0
         version: 5.22.0
@@ -770,6 +767,12 @@ importers:
         specifier: 'catalog:'
         version: 4.19.0
     devDependencies:
+      '@pubpub/prettier-config':
+        specifier: workspace:*
+        version: link:../config/prettier
+      prettier:
+        specifier: 'catalog:'
+        version: 3.4.2
       tsconfig:
         specifier: workspace:*
         version: link:../config/tsconfig
@@ -4753,15 +4756,6 @@ packages:
 
   '@preconstruct/next@4.0.0':
     resolution: {integrity: sha512-vSrc8wFQgBErU7dKTKSQtr/DLWPHcN9jMoiWOAQodB1+B4Kpqqry6QhGYoRm0DQU5gNL+Rcp+Xb350O1E/gjsg==}
-
-  '@prisma/client@5.19.1':
-    resolution: {integrity: sha512-x30GFguInsgt+4z5I4WbkZP2CGpotJMUXy+Gl/aaUjHn2o1DnLYNTA+q9XdYmAQZM8fIIkvUiA2NpgosM3fneg==}
-    engines: {node: '>=16.13'}
-    peerDependencies:
-      prisma: '*'
-    peerDependenciesMeta:
-      prisma:
-        optional: true
 
   '@prisma/debug@5.0.0':
     resolution: {integrity: sha512-3q/M/KqlQ01/HJXifU/zCNOHkoTWu24kGelMF/IBrRxm7njPqTTbwfnT1dh4JK+nuWM5/Dg1Lv00u2c0l7AHxg==}
@@ -17386,10 +17380,6 @@ snapshots:
       - supports-color
 
   '@preconstruct/next@4.0.0': {}
-
-  '@prisma/client@5.19.1(prisma@5.19.1)':
-    optionalDependencies:
-      prisma: 5.19.1
 
   '@prisma/debug@5.0.0':
     dependencies:

@@ -12,6 +12,8 @@
 		"db:prisma": "pnpm prisma",
 		"db:studio": "pnpm prisma studio",
 		"db:generate-history-table": "pnpm exec tsx scripts/history-tables/generate-history-table.mts",
+		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore && prisma format",
+		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore && prisma format",
 		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm --filter db make-kysely-types",
 		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
 		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
@@ -31,6 +33,8 @@
 		"tsx": "catalog:"
 	},
 	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
+		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
 	},
