@@ -1,0 +1,46 @@
+{
+	"name": "migrations",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"db:migrate-dev": "pnpm migrate-dev",
+		"db:migrate-deploy": "pnpm migrate-deploy",
+		"db:migrate-diff": "pnpm migrate-diff",
+		"db:migrate-docker": "pnpm migrate-docker",
+		"db:test:migrate": "pnpm migrate-test",
+		"db:test:reset": "dotenv -e .env.test -- prisma migrate reset --preview-feature --force",
+		"db:prisma": "pnpm prisma",
+		"db:studio": "pnpm prisma studio",
+		"db:generate-history-table": "pnpm exec tsx scripts/history-tables/generate-history-table.mts",
+		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm --filter db make-kysely-types",
+		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
+		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
+		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
+		"migrate-test": "dotenv -e .env.test -- prisma migrate deploy",
+		"prisma": "dotenv -e .env.local -e .env.development prisma",
+		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
+		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force"
+	},
+	"dependencies": {
+		"@prisma/client": "5.19.1",
+		"@prisma/generator-helper": "^5.19.0",
+		"@prisma/internals": "^5.19.0",
+		"dotenv-cli": "^7.2.1",
+		"prisma": "^5.19.0",
+		"prisma-dbml-generator": "^0.12.0",
+		"logger": "workspace:*"
+	},
+	"devDependencies": {
+		"tsconfig": "workspace:*",
+		"typescript": "catalog:"
+	},
+	"prisma": {
+		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
+		"seed": "tsx --import #register-loader ../core/prisma/seed.ts",
+		"schema": "./schema/"
+	},
+	"prettier": "@pubpub/prettier-config",
+	"imports": {
+		"#register-loader": "../core/prisma/seed/stubs/register-loader.js"
+	}
+}

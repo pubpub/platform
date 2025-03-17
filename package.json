@@ -69,7 +69,7 @@
 	"prettier": "@pubpub/prettier-config",
 	"packageManager": "pnpm@9.10.0",
 	"prisma": {
-		"schema": "core/prisma/schema/"
+		"schema": "migrations/schema/"
 	},
 	"pnpm": {
 		"overrides": {

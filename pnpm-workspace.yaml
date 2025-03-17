@@ -5,6 +5,7 @@ packages:
     - "packages/*"
     - "storybook"
     - "docs"
+    - "migrations"
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
