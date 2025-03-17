@@ -1785,8 +1785,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					jsonObjectFrom(
 						eb
 							.selectFrom("stages")
-							.where("pt.stageId", "is not", null)
-							.whereRef("stages.id", "=", "pt.stageId")
 							.selectAll("stages")
 							.$if(Boolean(withStageActionInstances), (qb) =>
 								qb.select(
@@ -1798,6 +1796,8 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									).as("actionInstances")
 								)
 							)
+							.where("pt.stageId", "is not", null)
+							.whereRef("stages.id", "=", "pt.stageId")
 							.limit(1)
 					).as("stage")
 				)
