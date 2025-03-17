@@ -22,7 +22,6 @@
 		"reset": "dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force"
 	},
 	"dependencies": {
-		"@prisma/client": "5.19.1",
 		"@prisma/generator-helper": "^5.19.0",
 		"@prisma/internals": "^5.19.0",
 		"dotenv-cli": "^7.2.1",
