@@ -390,9 +390,7 @@ const baseFilterSchemaWithAndOr: z.ZodType<BaseFilterWithAndOr> = z
 		}
 		return true;
 	});
-// "Filter must have at least one operator (base filter)");
 
-// this is a recursive type, so we need to use z.lazy()
 export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
 	const topLevelLogicalOperators = z
 		.object({
@@ -407,21 +405,10 @@ export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
 			return true;
 		}, "Filter must have at least one operator. A logical operator (e.g. $and, $or, $not) was expected here, but not found.");
 
-	//z.union([
-	// regular field filters
-
-	// field -> operator -> value
-	// field -> logical operator -> operator -> value
-	// field -> logical operator -> logical operator -> ... -> operator -> value
-	// logical operator -> field -> operator -> value
-	// logical operator -> logical operator -> ... -> field -> operator -> value
-
 	return z.union([
 		z.record(fieldSlugSchema, baseFilterSchemaWithAndOr),
 		topLevelLogicalOperators,
-	]); //,
-	// logicalOperators,
-	// ]);
+	]);
 });
 
 const getPubQuerySchema = z.object({
