@@ -199,7 +199,7 @@ type ValuesWithFormElements =
 	(ValueBase & {
 			formElementId: FormElementsId;
 			formElementLabel: string | null;
-			formElementConfig: Record<string, unknown>;
+			formElementConfig: { label?: string } | null;
 	  })
 	// With only value info
 	| ValueBase
@@ -212,7 +212,7 @@ type ValuesWithFormElements =
 			formElementId: FormElementsId;
 			formElementLabel: string | null;
 			formElementConfig: { label?: string } | null;
-	  } & Omit<ValueFieldInfo, "fieldName">);
+	  } & ValueFieldInfo);
 
 type ProcessedPubBase = {
 	id: PubsId;

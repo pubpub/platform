@@ -92,11 +92,27 @@ export const processedPubsToPubsResult = (pubs: InputPub[]): GetPubsResult => {
 	return pubs.map(processedPubToPubResult);
 };
 
-export const getTitleField = <T extends InputPub>(
+const getTitleField = <
+	T extends ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+	}>,
+>(
 	pub: T
 ): T["pubType"]["fields"][number] | undefined => pub.pubType.fields.find((field) => field.isTitle);
 
-export const valuesWithoutTitle = <T extends InputPub>(pub: T): T["values"] => {
+export const valuesWithoutTitle = <
+	T extends ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+	}>,
+>(
+	pub: T
+): T["values"] => {
 	const titleField = getTitleField(pub);
 	if (!titleField) {
 		return pub.values;

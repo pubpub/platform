@@ -63,6 +63,7 @@ export const getForm = (
 							"pub_fields.schemaName",
 							"pub_fields.slug",
 							"pub_fields.isRelation",
+							"pub_fields.name as fieldName",
 						])
 						.$narrowType<FormElements>()
 						.orderBy("rank")

@@ -49,7 +49,7 @@ const FieldBlock = ({
 	depth,
 }: {
 	name: string;
-	values: FullProcessedPubWithForm["values"] | undefined;
+	values: FullProcessedPubWithForm["values"];
 	depth: number;
 }) => {
 	return (
@@ -58,8 +58,13 @@ const FieldBlock = ({
 				{name}
 			</PubValueHeading>
 			<div className={"ml-2"} data-testid={`${name}-value`}>
-				{values?.map((value) =>
-					value.id ? <PubValue value={value} key={value.id} /> : null
+				{values.map((value) =>
+					value.id ? (
+						<PubValue value={value} key={value.id} />
+					) : (
+						// Blank space if there is no value
+						<div className="h-1" key={value.id} />
+					)
 				)}
 			</div>
 		</div>
@@ -83,13 +88,16 @@ export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode
 		if (groupedValues[value.fieldSlug]) {
 			groupedValues[value.fieldSlug].values.push(value);
 		} else {
-			const label =
-				value.formElementLabel || value.formElementConfig?.label || value.fieldName;
-			const isInForm = !!value.id;
+			const labelFromForm =
+				"formElementLabel" in value
+					? value.formElementLabel || value.formElementConfig?.label
+					: undefined;
+			const label = labelFromForm || value.fieldName;
+			const isInForm = "formElementId" in value;
 			groupedValues[value.fieldSlug] = { label, values: [value], isInForm };
 		}
 	});
-	// console.log({ groupedValues });
+
 	const [valuesInForm, valuesNotInForm] = partition(
 		Object.values(groupedValues),
 		(values) => values.isInForm
