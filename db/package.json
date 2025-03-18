@@ -89,7 +89,7 @@
 	},
 	"prisma": {
 		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
-		"seed": "tsx --import ./../../core/prisma/seed/stubs/register-loader.js ../../core/prisma/seed.ts",
+		"seed": "tsx --import ./../core/prisma/seed/stubs/register-loader.js ../core/prisma/seed.ts",
 		"schema": "./schema/"
 	}
 }

@@ -4,9 +4,9 @@
 		"noEmit": true,
 		"isolatedModules": true,
 		"paths": {
-			"~/*": ["../../core/*"]
+			"~/*": ["../core/*"]
 		}
 	},
-	"include": ["./src", "scripts/comment-generator.ts"],
+	"include": ["./src", "./scripts"],
 	"exclude": ["dist", "build", "node_modules"]
 }
