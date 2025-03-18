@@ -3,12 +3,12 @@ const { makeKyselyHook } = require("kanel-kysely");
 const { generateZodSchemas } = require("kanel-zod");
 const {
 	kanelKyselyZodCompatibilityPreRenderHook,
-} = require("./src/kanel/kanel-kysely-zod-compatibility-hook.cjs");
+} = require("./kanel/kanel-kysely-zod-compatibility-hook.cjs");
 const {
 	kanelDatabaseDefaultExportFixPreRenderHook,
-} = require("./src/kanel/kanel-database-default-export-fix-hook.cjs");
-const { cleanupEnumComments } = require("./src/kanel/kanel-cleanup-enum-comments.cjs");
-const { kanelHistoryTableGeneric } = require("./src/kanel/kanel-history-table-generic.cjs");
+} = require("./kanel/kanel-database-default-export-fix-hook.cjs");
+const { cleanupEnumComments } = require("./kanel/kanel-cleanup-enum-comments.cjs");
+const { kanelHistoryTableGeneric } = require("./kanel/kanel-history-table-generic.cjs");
 const { escapeIdentifier } = require("kanel");
 const { resolveType } = require("kanel");
 const { escapeString } = require("kanel");
