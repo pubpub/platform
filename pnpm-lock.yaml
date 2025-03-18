@@ -711,6 +711,9 @@ importers:
       contracts:
         specifier: workspace:*
         version: link:../packages/contracts
+      db:
+        specifier: workspace:*
+        version: link:../packages/db
       graphile-worker:
         specifier: ^0.16.5
         version: 0.16.6(typescript@5.7.2)

@@ -65,6 +65,14 @@ export default async function Page(props: {
 						.whereRef("action_instances.id", "=", "action_runs.actionInstanceId")
 						.select(["action_instances.name", "action_instances.action"])
 				).as("actionInstance"),
+				"action_runs.sourceActionRunId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_runs as ar")
+						.innerJoin("action_instances", "ar.actionInstanceId", "action_instances.id")
+						.whereRef("ar.id", "=", "action_runs.sourceActionRunId")
+						.select(["action_instances.name", "action_instances.action"])
+				).as("sourceActionInstance"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("stages")

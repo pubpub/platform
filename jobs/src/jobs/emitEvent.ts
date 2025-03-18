@@ -1,18 +1,14 @@
+import type { ActionRunsId, PubsId, StagesId } from "db/public";
 import type { logger } from "logger";
+import { Event } from "db/public";
 
 import type { InternalClient } from "../clients";
 import { defineJob } from "../defineJob";
 
-enum Event {
-	pubEnteredStage = "pubEnteredStage",
-	pubLeftStage = "pubLeftStage",
-	pubInStageForDuration = "pubInStageForDuration",
-}
-
 // TODO: Use kanel generated types for these
 type PubInStagesRow = {
-	pubId: string;
-	stageId: string;
+	pubId: PubsId;
+	stageId: StagesId;
 };
 
 type DBTriggerEventPayload<T> = {
@@ -26,16 +22,19 @@ type DBTriggerEventPayload<T> = {
 };
 
 type ScheduledEventPayload = {
-	event: Event.pubInStageForDuration;
+	event: Event;
 	duration: number;
 	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
 	runAt: Date;
-	stageId: string;
-	pubId: string;
+	stageId: StagesId;
+	pubId: PubsId;
 	actionInstanceId: string;
 	community: {
 		slug: string;
 	};
+	sourceActionRunId?: string;
+	stack?: ActionRunsId[];
+	scheduledActionRunId: ActionRunsId;
 };
 
 type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
@@ -137,7 +136,16 @@ const triggerAction = async (
 	payload: ScheduledEventPayload,
 	logger: Logger
 ) => {
-	const { stageId, event, pubId, actionInstanceId, community, ...context } = payload;
+	const {
+		stageId,
+		stack,
+		event,
+		pubId,
+		actionInstanceId,
+		scheduledActionRunId,
+		community,
+		...context
+	} = payload;
 
 	try {
 		const { status, body } = await client.triggerAction({
@@ -148,10 +156,12 @@ const triggerAction = async (
 			body: {
 				pubId,
 				event,
+				scheduledActionRunId,
+				stack,
 			},
 		});
 
-		if (status > 400) {
+		if (status >= 400) {
 			logger.error({ msg: `API error triggering action`, body, ...context });
 			return;
 		}
@@ -163,6 +173,9 @@ const triggerAction = async (
 		logger.error({
 			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${pubId}`,
 		});
+		if (e instanceof Error) {
+			logger.error({ message: e.message });
+		}
 	}
 };
 
