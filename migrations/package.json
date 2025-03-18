@@ -2,6 +2,7 @@
 	"name": "migrations",
 	"version": "0.1.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"db:migrate-dev": "pnpm migrate-dev",
 		"db:migrate-deploy": "pnpm migrate-deploy",
@@ -35,6 +36,7 @@
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
+		"@types/node": "catalog:",
 		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
