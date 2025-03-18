@@ -1,21 +1,13 @@
 import { AuthTokenType } from "db/public";
 
+import { SignupForm } from "~/app/components/SignUp/SignupForm";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { SignupForm } from "../../components/Signup/SignupForm";
 
 export default async function Page() {
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.signup],
 	});
-
-	if (!session || !user) {
-		return (
-			<div>
-				You are not allowed to signup for an account, or the link that you clicked is
-				invalid or expired. Please try again
-			</div>
-		);
-	}
+	console.log("ignup page");
 
 	return (
 		<div className="m-auto max-w-lg">

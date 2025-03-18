@@ -15,7 +15,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
-import { signup } from "~/lib/authentication/actions";
+import { publicSignup } from "~/lib/authentication/actions";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 
 registerFormats();
@@ -31,22 +31,22 @@ const formSchema = Type.Object({
 });
 
 export function SignupForm(props: {
-	user: Pick<Users, "firstName" | "lastName" | "email" | "id">;
+	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
 }) {
-	const runSignup = useServerAction(signup);
+	const runSignup = useServerAction(publicSignup);
 
 	const resolver = useMemo(() => typeboxResolver(formSchema), []);
 
 	const form = useForm<Static<typeof formSchema>>({
 		resolver,
-		defaultValues: { ...props.user, lastName: props.user.lastName ?? undefined },
+		defaultValues: { ...(props?.user ?? {}), lastName: props.user?.lastName ?? undefined },
 	});
 
 	const searchParams = useSearchParams();
 
 	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
 		await runSignup({
-			id: props.user.id,
+			id: props.user?.id ?? "",
 			firstName: data.firstName,
 			lastName: data.lastName,
 			email: data.email,
