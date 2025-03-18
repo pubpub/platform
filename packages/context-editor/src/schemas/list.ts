@@ -8,7 +8,6 @@ const orderedList = {
 		class: { default: null },
 		// The number the list starts at
 		order: { default: 1, validate: "number" },
-		rtl: { default: null },
 	},
 	selectable: false,
 	parseDOM: [

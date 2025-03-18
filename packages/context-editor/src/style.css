@@ -156,6 +156,12 @@
 	/* Otherwise the widget button is too hard to click without triggering math */
 	padding-left: 4px;
 }
+.ProseMirror ol {
+	list-style-type: decimal;
+}
+.ProseMirror ul {
+	list-style-type: disc;
+}
 
 /* Code block */
 .ProseMirror .codeblock-select-wrapper {

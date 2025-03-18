@@ -9,6 +9,8 @@ import {
 	CodeSquare,
 	ImagePlus,
 	Italic,
+	List,
+	ListOrdered,
 	Quote,
 	Radical,
 	SeparatorHorizontal,
@@ -24,6 +26,7 @@ import type { CommandSpec } from "../commands/types";
 import type { Upload } from "./ImageUploader";
 import {
 	blockquoteToggle,
+	bulletListToggle,
 	codeBlockToggle,
 	heading1Toggle,
 	heading2Toggle,
@@ -31,6 +34,7 @@ import {
 	heading4Toggle,
 	heading5Toggle,
 	heading6Toggle,
+	orderedListToggle,
 	paragraphToggle,
 } from "../commands/blocks";
 import { insertHorizontalLine } from "../commands/horizontal";
@@ -71,6 +75,18 @@ const menuBlocks: MenuItem[][] = [
 			name: "Horizontal line",
 			icon: <SeparatorHorizontal {...iconProps} />,
 			command: insertHorizontalLine,
+		},
+		{
+			key: "bullet_list",
+			name: "Bullet list",
+			icon: <List {...iconProps} />,
+			command: bulletListToggle,
+		},
+		{
+			key: "ordered_list",
+			name: "Ordered list",
+			icon: <ListOrdered {...iconProps} />,
+			command: orderedListToggle,
 		},
 	],
 	[
