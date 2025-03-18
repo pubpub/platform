@@ -134,7 +134,7 @@ export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode
 			})}
 			{valuesNotInForm.length ? (
 				<div className="flex flex-col gap-2">
-					{valuesInForm.length && <hr className="mt-2" />}
+					{valuesInForm.length ? <hr className="mt-2" /> : null}
 					<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
 						Other Fields
 					</PubValueHeading>
