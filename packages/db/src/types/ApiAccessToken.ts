@@ -100,7 +100,7 @@ export type CreateTokenFormContext = {
 		allValues: [typeof NO_STAGE_OPTION.value, ...StagesId[]];
 	};
 	pubTypes: {
-		pubTypes: PubTypes[];
+		pubTypes: { id: PubTypesId; name: string }[];
 		allOptions: { label: string; value: PubTypesId }[];
 		allValues: PubTypesId[];
 	};

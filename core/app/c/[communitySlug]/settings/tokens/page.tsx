@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { NO_STAGE_OPTION } from "db/types";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getPubTypesForCommunity } from "~/lib/server";
+import { getAllPubTypesForCommunity, getPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
@@ -26,7 +26,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 
 	const [stages, pubTypes, existingTokens] = await Promise.all([
 		getStages({ communityId: community.id, userId: user.id }).execute(),
-		getPubTypesForCommunity(community.id),
+		getAllPubTypesForCommunity(community.slug).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 
