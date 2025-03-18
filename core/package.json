@@ -28,8 +28,6 @@
 		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore",
 		"start": "next start",
 		"start:dev": "dotenv -e .env.local -e .env.development pnpm start | pino-pretty",
-		"reset-base": "dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force | pino-pretty",
-		"reset": "pnpm reset-base && pnpm clear-cache",
 		"test": "SKIP_VALIDATION=true vitest --logHeapUsage",
 		"test-run": "SKIP_VALIDATION=true vitest run --logHeapUsage",
 		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
@@ -180,6 +178,6 @@
 	},
 	"prettier": "@pubpub/prettier-config",
 	"imports": {
-		"#register-loader": "./prisma/seed/stubs/register-loader.js"
+		"#register-loader": "./seed/stubs/register-loader.js"
 	}
 }

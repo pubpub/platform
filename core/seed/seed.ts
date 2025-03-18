@@ -20,7 +20,7 @@ async function createUserMembers({
 	lastName,
 	isSuperAdmin,
 	role,
-	prismaCommunityIds,
+	communityIds,
 }: {
 	email: string;
 	password: string;
@@ -29,7 +29,7 @@ async function createUserMembers({
 	lastName: string | undefined;
 	isSuperAdmin: boolean;
 	role: MemberRole;
-	prismaCommunityIds: string[];
+	communityIds: string[];
 }) {
 	const values = {
 		slug,
@@ -41,7 +41,7 @@ async function createUserMembers({
 		isSuperAdmin,
 	};
 
-	const memberships = prismaCommunityIds.map((id) => ({
+	const memberships = communityIds.map((id) => ({
 		id: crypto.randomUUID(),
 		communityId: id as CommunitiesId,
 		role,
@@ -72,11 +72,9 @@ async function main() {
 	// eslint-disable-next-line no-restricted-properties
 	const shouldSeedArcadia = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [
-		unJournalId,
-		croccrocId,
-		shouldSeedArcadia ? arcadiaId : null,
-	].filter(Boolean) as CommunitiesId[];
+	const communityIds = [unJournalId, croccrocId, shouldSeedArcadia ? arcadiaId : null].filter(
+		Boolean
+	) as CommunitiesId[];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -97,7 +95,7 @@ async function main() {
 			lastName: "Admin",
 			isSuperAdmin: true,
 			role: MemberRole.admin,
-			prismaCommunityIds,
+			communityIds,
 		}),
 
 		createUserMembers({
@@ -108,7 +106,7 @@ async function main() {
 			lastName: "Editor",
 			isSuperAdmin: false,
 			role: MemberRole.editor,
-			prismaCommunityIds,
+			communityIds,
 		}),
 
 		createUserMembers({
@@ -119,7 +117,7 @@ async function main() {
 			lastName: "Contributor",
 			isSuperAdmin: false,
 			role: MemberRole.contributor,
-			prismaCommunityIds,
+			communityIds,
 		}),
 	]);
 }

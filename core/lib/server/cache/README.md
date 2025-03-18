@@ -72,10 +72,6 @@ It will create a `key` for the query as a combination of the resulting SQL and t
 In this way it's slightly more lenient than `unstable_cache` and `memoize`, which requires you to pass the exact same function (down to the indentation) to get the cached result.
 See below for more information on the difference between cache tags and cache keys.
 
-> [!WARNING]
-> For now, be sparing with this function. Since we do not invalidate the cache at every point where we modify data, we can easily end up with stale data if we cache too much. Only use this for queries (for now) where you are certain that this data will get invalidated when it needs to be.
-> Currently, we do not use `kysely` for every mutation, relying a lot on `prisma` still, where we need to be more diligent about invalidating the cache manually.
-
 ### `autoRevalidate`
 
 Wrap this around any mutation that modifies the database, and it will automatically revalidate the correct tags.
@@ -182,8 +178,7 @@ or a list of all communities.
 
 ### Additional utilities
 
-The other utilities are `createCacheTag`, `createCommunityCacheTags` and `revalidateTagsForCommunity`. Use these when you manually need to create cache tags or revalidate tags,
-such as when caching a legacy `prisma` query.
+The other utilities are `createCacheTag`, `createCommunityCacheTags` and `revalidateTagsForCommunity`. Use these when you manually need to create cache tags or revalidate tags. This comes up when dealing with cross-community data, such as users.
 
 #### `createCacheTag`
 

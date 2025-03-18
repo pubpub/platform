@@ -51,7 +51,7 @@ const pubTriggerTestSeed = createSeed({
 	forms: {},
 });
 
-// this is testing the trigger defined in prisma/migrations/20241126113759_add_pub_values_updated_at_trigger/migration.sql
+// this is testing the trigger defined in db/migrations/20241126113759_add_pub_values_updated_at_trigger/migration.sql
 describe("updatedAt trigger", () => {
 	it("should update the updatedAt timestamp on a pub whenever a pubvalue is updated, inserted, or deleted", async () => {
 		// we can't do this inside of a transaction and roll it back,

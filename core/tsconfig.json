@@ -28,13 +28,11 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
-		"../db/scripts/scripts/generateDatabaseObject.mts",
-		"../db/src/prisma/comment-generator.ts",
 		"cache-handler.js",
 		"seed/generate-history-table.mts",
 		"seed/seed.cts",
 		"seed/scripts/comment-generator.mts",
-		"seed/seed/stubs/*.js"
+		"seed/stubs/*.js"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
