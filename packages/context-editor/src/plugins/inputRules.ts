@@ -7,7 +7,7 @@ import {
 	REGEX_BLOCK_MATH_DOLLARS,
 	REGEX_INLINE_MATH_DOLLARS,
 } from "@benrbray/prosemirror-math";
-import { InputRule, inputRules, textblockTypeInputRule } from "prosemirror-inputrules";
+import { InputRule, inputRules } from "prosemirror-inputrules";
 import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
@@ -50,7 +50,6 @@ const inlineMathRule = (nodeType: NodeType) =>
 	makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, nodeType);
 const blockMathRule = (nodeType: NodeType) =>
 	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType);
-const codeBlockRule = (nodeType: NodeType) => textblockTypeInputRule(/^```$/, nodeType);
 
 export default (schema: Schema) => {
 	const rules = [
@@ -69,7 +68,6 @@ export default (schema: Schema) => {
 		applyMarkRule(schema.marks.code, codeRegex),
 		inlineMathRule(schema.nodes.math_inline),
 		blockMathRule(schema.nodes.math_display),
-		codeBlockRule(schema.nodes.code_block),
 	];
 	return inputRules({ rules });
 };
