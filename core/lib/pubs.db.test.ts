@@ -322,6 +322,95 @@ describe("getPubByForm", () => {
 		});
 	});
 
+	it("should keep extra pub values ordered", async () => {
+		const seed2 = createSeed({
+			community: {
+				name: "test2",
+				slug: "test-ordered-pub-values",
+			},
+			users: {
+				admin: {
+					role: MemberRole.admin,
+				},
+			},
+			pubFields: {
+				Title: { schemaName: CoreSchemaType.String },
+				Description: { schemaName: CoreSchemaType.String },
+				"First name": { schemaName: CoreSchemaType.String },
+				"Middle name": { schemaName: CoreSchemaType.String },
+				"Last name": { schemaName: CoreSchemaType.String },
+				Suffix: { schemaName: CoreSchemaType.String },
+			},
+			pubTypes: {
+				"Basic Pub": {
+					Title: { isTitle: true },
+				},
+			},
+			pubs: [
+				{
+					pubType: "Basic Pub",
+					values: {
+						Title: "Some title",
+						Description: "Some description",
+						"First name": "First",
+						"Middle name": "Middle",
+						"Last name": "Last",
+						Suffix: "Junior",
+					},
+					members: { admin: MemberRole.admin },
+				},
+			],
+			forms: {
+				"basic-pub-form": {
+					pubType: "Basic Pub",
+					elements: [
+						{
+							type: ElementType.pubfield,
+							field: "Title",
+							component: InputComponent.textInput,
+							config: {
+								label: "Title",
+							},
+						},
+					],
+				},
+			},
+		});
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { pubs, community, forms } = await seedCommunity(seed2);
+		const { getPubByForm } = await import("./pubs");
+		const { getPubsWithRelatedValues } = await import("./server/pub");
+		const { getForm } = await import("./server/form");
+
+		const pubId = pubs[0].id;
+
+		const [pub, form] = await Promise.all([
+			getPubsWithRelatedValues(
+				{ pubId, communityId: community.id },
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
+			),
+			getForm({
+				id: forms["basic-pub-form"].id,
+				communityId: community.id,
+			}).executeTakeFirstOrThrow(),
+		]);
+
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+
+		// The extra pub values should be in the same order as the original `pub`
+		const justTheValues = pubWithForm.values.map((v) => v.value);
+		const pubValues = pub.values.filter((v) => v.fieldName !== "Title").map((v) => v.value);
+		const expectedValues = ["Some title", ...pubValues];
+
+		expect(justTheValues).toEqual(expectedValues);
+	});
+
 	it("should handle multiple relations with a form", async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { pubs, community, forms } = await seedCommunity(seed);
@@ -409,9 +498,7 @@ describe("getPubByForm", () => {
 				communityId,
 			}).executeTakeFirstOrThrow(),
 		]);
-
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
-
 		expect(pubWithForm).toMatchObject({
 			values: [
 				{
