@@ -27,7 +27,6 @@ export * from "./public/MembershipCapabilities";
 export * from "./public/MembershipType";
 export * from "./public/MoveConstraint";
 export * from "./public/OperationType";
-export * from "./public/PrismaMigrations";
 export * from "./public/PubFields";
 export * from "./public/PubFieldSchema";
 export * from "./public/PubFieldToPubType";

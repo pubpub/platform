@@ -17,7 +17,7 @@ generator dbml {
 }
 
 generator comments {
-  provider = "pnpm exec tsx scripts/comment-generator.mts"
+  provider = "pnpm exec tsx scripts/comment-generator.ts"
 }
 
 model User {

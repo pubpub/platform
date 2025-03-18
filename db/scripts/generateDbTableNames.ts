@@ -1,6 +1,8 @@
 import { writeFile } from "fs/promises";
 
-import { Kysely, PostgresDialect, TableMetadata } from "kysely";
+import type { TableMetadata } from "kysely";
+
+import { Kysely, PostgresDialect } from "kysely";
 import pg from "pg";
 
 import { logger } from "logger";

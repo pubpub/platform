@@ -27,7 +27,7 @@
 		"db:test:reset": "dotenv -e .env.test -- prisma migrate reset --preview-feature --force",
 		"db:prisma": "pnpm prisma",
 		"db:studio": "pnpm prisma studio",
-		"db:generate-history-table": "pnpm exec tsx scripts/history-tables/generate-history-table.mts",
+		"db:generate-history-table": "pnpm exec tsx scripts/history-tables/generate-history-table.ts",
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore && prisma format",
 		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore && prisma format",
 		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
@@ -89,7 +89,7 @@
 	},
 	"prisma": {
 		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
-		"seed": "tsx --import ./../core/prisma/seed/stubs/register-loader.js ../core/prisma/seed.ts",
+		"seed": "tsx --import ./../core/seed/stubs/register-loader.js ../core/seed/seed.ts",
 		"schema": "./schema/"
 	}
 }

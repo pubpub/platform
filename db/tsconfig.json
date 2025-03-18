@@ -3,10 +3,12 @@
 	"compilerOptions": {
 		"noEmit": true,
 		"isolatedModules": true,
+		"moduleResolution": "Bundler",
+		"module": "ESNext",
 		"paths": {
 			"~/*": ["../core/*"]
 		}
 	},
-	"include": ["./src", "./scripts"],
+	"include": ["./src", "./scripts/**/*.ts"],
 	"exclude": ["dist", "build", "node_modules"]
 }
