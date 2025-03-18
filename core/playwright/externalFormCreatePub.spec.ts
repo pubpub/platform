@@ -11,9 +11,9 @@ import {
 	StructuralFormElement,
 } from "db/public";
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import type { CommunitySeedOutput } from "~/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
+import { seedCommunity } from "~/seed/seedCommunity";
 import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";

@@ -11,7 +11,7 @@ const { getTrx } = createForEachMockedTransaction();
 describe("getStages", () => {
 	test("permissions", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { community, stages, users } = await seedCommunity({
 			community: {
 				name: "test",

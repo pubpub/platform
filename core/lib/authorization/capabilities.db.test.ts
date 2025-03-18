@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import { seedCommunity } from "~/seed/seedCommunity";
 import { pubCapabilities, stageCapabilities } from "./capabilities";
 
 const { createForEachMockedTransaction } = await mockServerCode();

@@ -10,7 +10,7 @@ import {
 } from "db/public";
 
 import { env } from "~/lib/env/env.mjs";
-import { seedCommunity } from "../seed/seedCommunity";
+import { seedCommunity } from "../seedCommunity";
 
 export async function seedCroccroc(communityId?: CommunitiesId) {
 	const memberId = crypto.randomUUID() as UsersId;

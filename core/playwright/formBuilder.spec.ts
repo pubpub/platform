@@ -10,9 +10,9 @@ import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/publ
 
 import type { BaseSeedOutput } from "./helpers";
 import type { PubFieldElement } from "~/app/components/forms/types";
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import type { CommunitySeedOutput } from "~/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
+import { seedCommunity } from "~/seed/seedCommunity";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";

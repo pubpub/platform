@@ -35,7 +35,7 @@ describe("createPubRecursive", () => {
 		},
 	])("$name", async ({ loginUser, userRole, expected }) => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { community, pubTypes, users } = await seedCommunity({
 			community: {
 				name: "test",
@@ -117,7 +117,7 @@ describe("updatePub", () => {
 			],
 		},
 	])("$name", async ({ loginUser, userRole, expected }) => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { community, pubs, users } = await seedCommunity({
 			community: {
 				name: "test",

@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { ClientException } from "../serverActions";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
 import { isClientException } from "../serverActions";
 import { mockServerCode } from "./utils";
 
@@ -40,7 +40,7 @@ const communitySeed = createSeed({
 });
 
 const seed = async (trx = testDb) => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	const { seedCommunity } = await import("~/seed/seedCommunity");
 	return seedCommunity(communitySeed, undefined, trx);
 };
 

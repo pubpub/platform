@@ -2,9 +2,9 @@ import { beforeAll, describe, expect, expectTypeOf, it, vi } from "vitest";
 
 import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import type { CommunitySeedOutput } from "~/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -95,7 +95,7 @@ const seed = createSeed({
 let community: CommunitySeedOutput<typeof seed>;
 
 beforeAll(async () => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	const { seedCommunity } = await import("~/seed/seedCommunity");
 	community = await seedCommunity(seed);
 });
 

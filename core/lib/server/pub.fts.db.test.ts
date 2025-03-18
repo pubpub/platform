@@ -2,9 +2,9 @@ import { describe, expect, expectTypeOf, it } from "vitest";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import type { Seed } from "~/prisma/seed/createSeed";
+import type { Seed } from "~/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
 
 const { createForEachMockedTransaction, testDb } = await mockServerCode();
 
@@ -78,7 +78,7 @@ const communitySeed = createSeed({
 });
 
 const seed = async <T extends Seed | undefined>(trx = testDb, seed?: T) => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	const { seedCommunity } = await import("~/seed/seedCommunity");
 	if (!seed) {
 		return seedCommunity(communitySeed, undefined, trx);
 	}

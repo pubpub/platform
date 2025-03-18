@@ -5,9 +5,9 @@ import { faker } from "@faker-js/faker";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import type { CommunitySeedOutput, Seed } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import type { CommunitySeedOutput, Seed } from "~/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
+import { seedCommunity } from "~/seed/seedCommunity";
 import { CommunityPage } from "./fixtures/community-page";
 import { FieldsPage } from "./fixtures/fields-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";

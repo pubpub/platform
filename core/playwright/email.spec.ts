@@ -4,9 +4,9 @@ import { expect, test } from "@playwright/test";
 
 import { Action, CoreSchemaType, MemberRole } from "db/public";
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import type { CommunitySeedOutput } from "~/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
+import { seedCommunity } from "~/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { inbucketClient } from "./helpers";

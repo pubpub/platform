@@ -10,7 +10,7 @@ const { getTrx, rollback, commit } = createForEachMockedTransaction();
 
 const pubTriggerTestSeed = async () => {
 	const slugName = `test-server-pub-${new Date().toISOString()}`;
-	const { createSeed } = await import("~/prisma/seed/createSeed");
+	const { createSeed } = await import("~/seed/createSeed");
 
 	return createSeed({
 		community: {
@@ -71,7 +71,7 @@ const pubTriggerTestSeed = async () => {
 describe("runActionInstance", () => {
 	it("should be able to successfully run the most simple action", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
 		});
@@ -111,7 +111,7 @@ describe("runActionInstance", () => {
 
 	it.skip("should properly blame the action run if an action modifies a pub", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubs, actions, community, pubFields } = await seedCommunity(
 			await pubTriggerTestSeed(),
 			{

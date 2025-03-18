@@ -5,7 +5,7 @@ import { CoreSchemaType, MemberRole } from "db/public";
 
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { seedCommunity } from "../seed/seedCommunity";
+import { seedCommunity } from "../seedCommunity";
 
 export const seedArcadia = async (communityId?: CommunitiesId) => {
 	const articleSeed = (number = 1_000, asRelation = false) =>

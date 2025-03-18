@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import { createSeed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
 import { mockServerCode } from "../__tests__/utils";
 
 await mockServerCode();
@@ -101,7 +101,7 @@ const seed = createSeed({
 
 describe("getPubsWithRelatedValues capabilities", () => {
 	it("should restrict pubs by visibility", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { community, pubFields, pubTypes, stages, pubs, users } = await seedCommunity(seed);
 		const { getPubsWithRelatedValues } = await import("./pub");
 

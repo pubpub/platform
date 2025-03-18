@@ -3,12 +3,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
-import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import type { CommunitySeedOutput } from "~/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
 import { PubOp } from "./pub-op";
 
-const { createSeed } = await import("~/prisma/seed/createSeed");
+const { createSeed } = await import("~/seed/createSeed");
 
 const { createForEachMockedTransaction } = await mockServerCode();
 const { getTrx, rollback, commit } = createForEachMockedTransaction();
@@ -94,7 +94,7 @@ const seed = createSeed({
 let seededCommunity: CommunitySeedOutput<typeof seed>;
 
 beforeAll(async () => {
-	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+	const { seedCommunity } = await import("~/seed/seedCommunity");
 	seededCommunity = await seedCommunity(seed);
 });
 

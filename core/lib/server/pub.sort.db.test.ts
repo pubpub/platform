@@ -6,7 +6,7 @@ import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { createSeed } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/seed/createSeed";
 import { createLastModifiedBy } from "../lastModifiedBy";
 
 const { testDb } = await mockServerCode();
@@ -50,7 +50,7 @@ describe("getPubsWithRelatedValues", () => {
 
 		const trx = testDb;
 
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 
 		const { pubs, community, pubFields, pubTypes, stages } = await seedCommunity(seed);
 

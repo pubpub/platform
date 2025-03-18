@@ -22,7 +22,7 @@ const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } 
 	await mockServerCode();
 const { getTrx, rollback, commit } = createForEachMockedTransaction(testDb);
 
-const { createSeed } = await import("~/prisma/seed/createSeed");
+const { createSeed } = await import("~/seed/createSeed");
 
 const pubTriggerTestSeed = createSeed({
 	community: {
@@ -58,7 +58,7 @@ describe("updatedAt trigger", () => {
 		// bc the timestamp inside of one transaction will not change
 		// therefore we persist this to the db
 		const trx = testDb;
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
 
 		const pub = pubs[0];
@@ -165,7 +165,7 @@ const getPubTitle = async (pubId: PubsId, trx = testDb) => {
 describe("pub_values title trigger", () => {
 	it("should set a title on a pub when a pub is created with a title", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 
 		const { pubs } = await seedCommunity(
 			{
@@ -188,7 +188,7 @@ describe("pub_values title trigger", () => {
 
 	it("should not set a title on a pub when a pub is created without a title", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 
 		const { pubFields, pubs } = await seedCommunity(
 			{
@@ -211,7 +211,7 @@ describe("pub_values title trigger", () => {
 
 	it("should update a title on a pub when a pubvalue is updated", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
@@ -234,7 +234,7 @@ describe("pub_values title trigger", () => {
 
 	it("can handle the highly unusual scenario where a title value is set to null", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
@@ -255,7 +255,7 @@ describe("pub_values title trigger", () => {
 
 	it("should set a title on a pub when a pubvalue is inserted", async () => {
 		const trx = testDb;
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubs } = await seedCommunity(
 			{
 				...pubTriggerTestSeed,
@@ -308,7 +308,7 @@ describe("pub_values title trigger", () => {
 		// for some, strange strange reason, this doesn't work then
 		// with the transaction rolled back
 		const trx = testDb;
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed, undefined, trx);
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
@@ -337,7 +337,7 @@ describe("pub_values title trigger", () => {
 
 	it("should delete a title on a pub when a pubvalue is deleted", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubs } = await seedCommunity(pubTriggerTestSeed);
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe("Some title");
@@ -357,7 +357,7 @@ describe("pub_values title trigger", () => {
 describe("pubType title change trigger", () => {
 	it("should update titles when a field is marked as title", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			pubTriggerTestSeed,
 			undefined,
@@ -389,7 +389,7 @@ describe("pubType title change trigger", () => {
 
 	it("should set title to null when no field is marked as title", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			pubTriggerTestSeed,
 			undefined,
@@ -410,7 +410,7 @@ describe("pubType title change trigger", () => {
 	it("should update titles for all pubs in the pub type", async () => {
 		const trx = getTrx();
 
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { community, pubFields, pubTypes, pubs } = await seedCommunity({
 			...pubTriggerTestSeed,
 			pubs: [
@@ -458,7 +458,7 @@ describe("pubType title change trigger", () => {
 
 	it("should set title to null when a pubfield is removed from a pubtype", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			pubTriggerTestSeed,
 			undefined,
@@ -479,7 +479,7 @@ describe("pubType title change trigger", () => {
 
 	it("should update title when a pubfield is added as a title", async () => {
 		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity } = await import("~/seed/seedCommunity");
 		const { pubFields, pubTypes, pubs } = await seedCommunity(
 			{
 				...pubTriggerTestSeed,
@@ -561,7 +561,7 @@ describe("pub_values_history trigger", () => {
 		it("should create a pub_values_history row when a pubvalue is inserted", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -602,7 +602,7 @@ describe("pub_values_history trigger", () => {
 		it("should create a pub_values_history row when a pubvalue is updated", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -643,7 +643,7 @@ describe("pub_values_history trigger", () => {
 		it("should create an update pub_values_history row when a pubvalue is inserted on conflict", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -711,7 +711,7 @@ describe("pub_values_history trigger", () => {
 		it("should allow setting lastModifiedBy to 'unknown' or 'system'", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -796,7 +796,7 @@ describe("pub_values_history trigger", () => {
 		it("should allow setting lastModifiedBy to a user id, api-token, and actionRunId, and set them to null when removed", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs, users, actions, apiToken } = await seedCommunity(
 				multiCommunityTestSeed,
 				{
@@ -923,7 +923,7 @@ describe("pub_values_history trigger", () => {
 		it("should throw a constraint error if lastModifiedBy is not a valid uuid", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -952,7 +952,7 @@ describe("pub_values_history trigger", () => {
 		it("should throw a different error if it is a valid id, but not a valid foreign key", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -987,7 +987,7 @@ describe("pub_values_history trigger", () => {
 		it("should set throw if you are updating a pub_value and the lastModifiedBy is not set", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
@@ -1020,7 +1020,7 @@ describe("pub_values_history trigger", () => {
 		it("should throw if no lastModifiedBy is set during onConflict doUpdate", async () => {
 			const trx = getTrx();
 
-			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+			const { seedCommunity } = await import("~/seed/seedCommunity");
 			const { pubFields, pubs } = await seedCommunity(
 				pubValuesHistoryTestSeed,
 				undefined,
