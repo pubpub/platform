@@ -2,6 +2,7 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import type {
+	ActionInstances,
 	CommunitiesId,
 	CoreSchemaType,
 	FormElementsId,
@@ -88,7 +89,9 @@ const upsertPubRelationsSchema = z.record(
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
-	? { stage: Stages | null }
+	? Options["withStageActionInstances"] extends true
+		? { stage: (Stages & { actionInstances: ActionInstances[] }) | null }
+		: { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
 		: { stage?: Stages | null };
@@ -157,6 +160,12 @@ export type MaybePubOptions = {
 	 * @default false
 	 */
 	withStage?: boolean;
+	/**
+	 * Whether to include action instances for pub stages.
+	 *
+	 * @default false
+	 */
+	withStageActionInstances?: boolean;
 	/**
 	 * Whether to include members of the pub.
 	 *

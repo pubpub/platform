@@ -33,7 +33,7 @@ import {
 	setPubMemberRole,
 } from "./actions";
 import { PubValues } from "./components/PubValues";
-import { RelatedPubsTable } from "./components/RelatedPubsTable";
+import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper";
 
 export async function generateMetadata(props: {
 	params: Promise<{ pubId: PubsId; communitySlug: string }>;
@@ -126,6 +126,7 @@ export default async function Page(props: {
 			withPubType: true,
 			withRelatedPubs: true,
 			withStage: true,
+			withStageActionInstances: true,
 			withMembers: true,
 			depth: 3,
 		}
@@ -156,6 +157,10 @@ export default async function Page(props: {
 
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
 	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
+	const pageContext = {
+		params: params,
+		searchParams,
+	};
 
 	const { stage, ...slimPub } = pub;
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
@@ -210,10 +215,7 @@ export default async function Page(props: {
 									actionInstances={actions}
 									pubId={pubId}
 									stage={stage!}
-									pageContext={{
-										params: params,
-										searchParams,
-									}}
+									pageContext={pageContext}
 								/>
 							</div>
 						) : (
@@ -264,7 +266,7 @@ export default async function Page(props: {
 						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
 						className="w-fit"
 					/>
-					<RelatedPubsTable pub={pub} />
+					<RelatedPubsTableWrapper pub={pub} pageContext={pageContext} />
 				</div>
 			)}
 		</div>
