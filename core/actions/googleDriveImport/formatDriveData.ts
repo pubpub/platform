@@ -95,7 +95,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 			);
 
 			visit(tree, "element", (node: any) => {
-				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const hasSrc = ["img", "video", "audio", "source"].includes(node.tagName);
 				const isDownload =
 					node.tagName === "a" && node.properties.className === "file-button";
 				if (hasSrc || isDownload) {
