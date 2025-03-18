@@ -1,10 +1,17 @@
 import type * as z from "zod";
 
 import type { ProcessedPub } from "contracts";
-import type { Action as ActionName, ActionRunsId, CommunitiesId, Event, StagesId } from "db/public";
+import type {
+	ActionInstances,
+	Action as ActionName,
+	ActionRunsId,
+	CommunitiesId,
+	StagesId,
+} from "db/public";
 import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
+import { Event } from "db/public";
 
 import type { CorePubField } from "./corePubFields";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
@@ -167,6 +174,22 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>;
 
+export const sequentialRuleEvents = [Event.actionSucceeded, Event.actionFailed] as const;
+export type SequentialRuleEvent = (typeof sequentialRuleEvents)[number];
+
+export const isSequentialRuleEvent = (event: Event): event is SequentialRuleEvent =>
+	sequentialRuleEvents.includes(event as any);
+
+export const scheduableRuleEvents = [
+	Event.pubInStageForDuration,
+	Event.actionFailed,
+	Event.actionSucceeded,
+] as const;
+export type ScheduableRuleEvent = (typeof scheduableRuleEvents)[number];
+
+export const isScheduableRuleEvent = (event: Event): event is ScheduableRuleEvent =>
+	scheduableRuleEvents.includes(event as any);
+
 export type EventRuleOptionsBase<
 	E extends Event,
 	AC extends Record<string, any> | undefined = undefined,
@@ -186,7 +209,13 @@ export type EventRuleOptionsBase<
 		/**
 		 * The display name for this event when used in a rule
 		 */
-		[K in "withConfig" as AC extends Record<string, any> ? K : never]: (options: AC) => string;
+		[K in "withConfig" as AC extends Record<string, any>
+			? K
+			: E extends SequentialRuleEvent
+				? K
+				: never]: (
+			options: AC extends Record<string, any> ? AC : ActionInstances
+		) => string;
 	};
 };
 
