@@ -64,7 +64,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 					const originalAssetUrl = node.properties[propertyKey];
 					if (originalAssetUrl) {
 						const urlObject = new URL(originalAssetUrl);
-						if (urlObject.hostname !== "pubpub.org") {
+						if (!urlObject.hostname.endsWith('.pubpub.org')) {
 							assetUrls[originalAssetUrl] = "";
 						}
 					}
