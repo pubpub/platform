@@ -3,6 +3,7 @@ import {
 	Action,
 	CoreSchemaType,
 	ElementType,
+	Event,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
@@ -32,6 +33,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				File: { schemaName: CoreSchemaType.FileUpload },
 				Confidence: { schemaName: CoreSchemaType.Vector3 },
 				"Published At": { schemaName: CoreSchemaType.DateTime },
+				"File Upload": { schemaName: CoreSchemaType.FileUpload },
 				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
 			},
 			pubTypes: {
@@ -45,6 +47,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					File: { isTitle: false },
 					Confidence: { isTitle: false },
 					"Published At": { isTitle: false },
+					"File Upload": { isTitle: false },
 					Evaluations: { isTitle: false },
 				},
 				Evaluation: {
@@ -102,6 +105,15 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 					},
 					stage: "Submitted",
 				},
+				{
+					pubType: "Submission",
+					values: {
+						Title: "Rule Test",
+						Content: "Rule Test Content",
+						"Published At": new Date(),
+					},
+					stage: "Rule Test",
+				},
 			],
 			forms: {
 				Review: {
@@ -147,17 +159,20 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			stages: {
 				Submitted: {
 					members: { new: MemberRole.contributor },
-					actions: [
-						{
+					actions: {
+						"Log Review": {
+							action: Action.log,
+							config: {},
+						},
+						"Send Review email": {
 							action: Action.email,
 							config: {
 								subject: "HELLO :recipientName REVIEW OUR STUFF PLEASE",
 								recipient: memberId,
 								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
 							},
-							name: "Send Review email",
 						},
-					],
+					},
 				},
 				"Ask Author for Consent": {
 					members: { new: MemberRole.contributor },
@@ -169,6 +184,105 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				"In Production": {},
 				Published: {},
 				Shelved: {},
+				"Rule Test": {
+					actions: {
+						"Log 1": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 2": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 3": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 4": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 5": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 6": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 7": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 8": {
+							action: Action.log,
+							config: {},
+						},
+						"Log 9": {
+							action: Action.log,
+							config: {},
+						},
+
+						"Email 1": {
+							action: Action.email,
+							config: {
+								body: "test",
+								subject: "Hello",
+							},
+						},
+						"Log X": {
+							action: Action.log,
+							config: {},
+						},
+					},
+					rules: [
+						{
+							actionInstance: "Log 1",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 2",
+						},
+						{
+							actionInstance: "Log 2",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 3",
+						},
+						{
+							actionInstance: "Log 3",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 4",
+						},
+						{
+							actionInstance: "Log 4",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 5",
+						},
+						{
+							actionInstance: "Log 5",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 6",
+						},
+						{
+							actionInstance: "Log 6",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 7",
+						},
+						{
+							actionInstance: "Log 7",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 8",
+						},
+						{
+							actionInstance: "Log 8",
+							event: Event.actionSucceeded,
+							sourceAction: "Log 9",
+						},
+						{
+							actionInstance: "Log 1",
+							event: Event.actionFailed,
+							sourceAction: "Email 1",
+						},
+					],
+				},
 			},
 			stageConnections: {
 				Submitted: {

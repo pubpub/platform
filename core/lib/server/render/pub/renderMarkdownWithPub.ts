@@ -44,18 +44,11 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	const field = expect(attrs.field, "Missing field attribute in value directive");
 
 	let value: unknown;
-	let pub: utils.RenderWithPubPub;
 
-	if (attrs.rel === "parent") {
-		pub = expect(context.parentPub, "Missing parent pub");
-	} else {
-		pub = context.pub;
-	}
-
-	const hydratedPubValues = hydratePubValues(pub.values);
+	const hydratedPubValues = hydratePubValues(context.pub.values);
 
 	if (field === "title") {
-		value = getPubTitle(pub);
+		value = getPubTitle(context.pub);
 	} else {
 		const val = hydratedPubValues.find((value) => value.fieldSlug === field);
 

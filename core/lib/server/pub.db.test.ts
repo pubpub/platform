@@ -482,7 +482,6 @@ describe("getPubsWithRelatedValues", () => {
 				"pubTypeId",
 				"createdAt",
 				"updatedAt",
-				"parentId",
 				"title",
 				"communityId",
 				"depth",
@@ -656,7 +655,7 @@ describe("getPubsWithRelatedValues", () => {
 			}
 		);
 
-		// 3 root pubs, one of which 1 related pub, even though the limit is 3. This is correct behavior.
+		// 1 root pub with two nested descendants
 		expect(pubs.length).toBe(3);
 	});
 

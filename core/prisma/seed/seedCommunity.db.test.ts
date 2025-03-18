@@ -69,16 +69,16 @@ describe("seedCommunity", () => {
 				"Stage 1": {
 					id: stage1Id,
 					members: { hih: MemberRole.contributor },
-					actions: [
-						{
+					actions: {
+						"1": {
 							action: Action.email,
 							config: {
 								body: "hello nerd",
 								subject: "hello nerd",
-								recipient: testUserId,
+								recipientEmail: "all@pubpub.org",
 							},
 						},
-					],
+					},
 				},
 				"Stage 2": {},
 			},
@@ -112,8 +112,6 @@ describe("seedCommunity", () => {
 							},
 							{
 								value: 2,
-								// also adds this pub as a child of the current pub
-								alsoAsChild: true,
 								pub: {
 									pubType: "Author",
 									values: {
@@ -188,7 +186,7 @@ describe("seedCommunity", () => {
 					body: "hello nerd",
 					subject: "hello nerd",
 				},
-				name: "",
+				name: "1",
 			},
 		]);
 
@@ -235,7 +233,6 @@ describe("seedCommunity", () => {
 			{
 				id: submissionPubId,
 				assigneeId: null,
-				parentId: null,
 				values: [
 					{
 						relatedPubId: null,
@@ -254,8 +251,6 @@ describe("seedCommunity", () => {
 					{
 						value: 2,
 						relatedPub: {
-							// it has a parent
-							parentId: submissionPubId,
 							pubTypeId: seededCommunity.pubTypes["Author"].id,
 						},
 					},

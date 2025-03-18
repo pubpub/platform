@@ -33,7 +33,7 @@ import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { insertStageMember } from "~/lib/server/member";
-import { createRule, removeRule } from "~/lib/server/rules";
+import { createRule, createRuleWithCycleCheck, removeRule, RuleError } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
@@ -390,19 +390,19 @@ export const addRule = defineServerAction(async function addRule({
 	}
 
 	try {
-		await createRule({
+		await createRuleWithCycleCheck({
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
 			config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
-		}).executeTakeFirstOrThrow();
+			sourceActionInstanceId:
+				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
+		});
 	} catch (error) {
 		logger.error(error);
-		if (error.message?.includes("unique constraint")) {
+		if (error instanceof RuleError) {
 			return {
-				title: "Rule already exists",
-				error: `A rule for '${humanReadableEvent(data.event)}' and this action already exists. Please add another action
-						of the same type to this stage in order to have the same action trigger
-						multiple times for '${humanReadableEvent(data.event)}'.`,
+				title: "Error creating rule",
+				error: error.message,
 				cause: error,
 			};
 		}

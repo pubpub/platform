@@ -14,6 +14,7 @@
 		"src"
 	],
 	"dependencies": {
+		"db": "workspace:*",
 		"zod": "catalog:",
 		"react": "catalog:react19",
 		"@honeycombio/opentelemetry-node": "catalog:",
