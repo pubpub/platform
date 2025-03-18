@@ -19,8 +19,26 @@
 		"types"
 	],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
+		"db:migrate-dev": "pnpm migrate-dev",
+		"db:migrate-deploy": "pnpm migrate-deploy",
+		"db:migrate-diff": "pnpm migrate-diff",
+		"db:migrate-docker": "pnpm migrate-docker",
+		"db:test:migrate": "pnpm migrate-test",
+		"db:test:reset": "dotenv -e .env.test -- prisma migrate reset --preview-feature --force",
+		"db:prisma": "pnpm prisma",
+		"db:studio": "pnpm prisma studio",
+		"db:generate-history-table": "pnpm exec tsx scripts/history-tables/generate-history-table.mts",
+		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore && prisma format",
+		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore --ignore-path ./.prettierignore && prisma format",
+		"migrate-dev": "dotenv -e .env.local -e .env.development prisma migrate dev && pnpm make-kysely-types",
+		"migrate-deploy": "dotenv -e .env.local -e .env.development prisma migrate deploy",
+		"migrate-diff": "dotenv -e .env.local -e .env.development prisma migrate diff",
+		"migrate-docker": "dotenv -e .env.docker -- prisma migrate deploy",
+		"migrate-test": "dotenv -e .env.test -- prisma migrate deploy",
+		"prisma": "dotenv -e .env.local -e .env.development prisma",
+		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
+		"reset": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force",
+		"create-admin-user": "pnpm exec tsx scripts/create-admin-user.ts",
 		"type-check": "tsc --noEmit",
 		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
 		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/"
@@ -29,29 +47,30 @@
 	"license": "GPL-2.0+",
 	"dependencies": {
 		"@kristiandupont/recase": "^1.3.1",
+		"@node-rs/argon2": "^1.8.3",
+		"@prisma/client": "5.19.1",
+		"@prisma/generator-helper": "^5.19.0",
+		"@prisma/internals": "^5.19.0",
+		"dotenv-cli": "^7.2.1",
+		"kysely": "catalog:",
 		"logger": "workspace:*",
-		"utils": "workspace:*"
-	},
-	"peerDependencies": {
-		"@ts-rest/core": "catalog:",
-		"kysely": "^0.27.2",
+		"pg": "^8.11.3",
+		"prisma": "^5.19.0",
+		"prisma-dbml-generator": "^0.12.0",
+		"tsx": "catalog:",
+		"utils": "workspace:*",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
-		"@ts-rest/core": "catalog:",
 		"@types/pg": "^8.11.6",
-		"dotenv-cli": "^7.2.1",
 		"eslint": "catalog:",
 		"kanel": "^3.8.2",
 		"kanel-kysely": "^0.4.0",
 		"kanel-zod": "^1.3.4",
-		"pg": "^8.11.3",
 		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
-		"tsx": "catalog:",
-		"typescript": "catalog:",
-		"zod": "catalog:"
+		"typescript": "catalog:"
 	},
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
@@ -67,5 +86,10 @@
 			"./table-names.ts",
 			"./types/index.ts"
 		]
+	},
+	"prisma": {
+		"__comment": "The #register-loader goes to the correct file based on the .imports setting below",
+		"seed": "tsx --import ./../../core/prisma/seed/stubs/register-loader.js ../../core/prisma/seed.ts",
+		"schema": "./schema/"
 	}
 }

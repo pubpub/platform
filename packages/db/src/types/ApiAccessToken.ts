@@ -1,7 +1,5 @@
 // temporary until the db types are moved to a separate package again
 
-import type { Prettify } from "@ts-rest/core";
-
 import { z } from "zod";
 
 import type { ApiAccessPermissions as NonGenericApiAccessPermissions } from "../public/ApiAccessPermissions";
@@ -9,6 +7,10 @@ import type { ApiAccessType } from "../public/ApiAccessType";
 import type { Stages } from "../public/Stages";
 import { ApiAccessScope } from "../public/ApiAccessScope";
 import { stagesIdSchema } from "../public/Stages";
+
+type Prettify<T> = {
+	[K in keyof T]: T[K];
+} & {};
 
 /**
  * General shape of a generic ApiAccessToken constraint,
