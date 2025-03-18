@@ -2,9 +2,16 @@
 
 import type * as z from "zod";
 
-import type { Event } from "db/public";
+import type { ActionInstances, Event } from "db/public";
 
-import { pubEnteredStage, pubInStageForDuration, pubLeftStage } from "../_lib/rules";
+import type { SequentialRuleEvent } from "../types";
+import {
+	actionFailed,
+	actionSucceeded,
+	pubEnteredStage,
+	pubInStageForDuration,
+	pubLeftStage,
+} from "../_lib/rules";
 import * as datacite from "../datacite/action";
 import * as email from "../email/action";
 import * as googleDriveImport from "../googleDriveImport/action";
@@ -13,6 +20,7 @@ import * as log from "../log/action";
 import * as move from "../move/action";
 import * as pdf from "../pdf/action";
 import * as pushToV6 from "../pushToV6/action";
+import { isSequentialRuleEvent, sequentialRuleEvents } from "../types";
 
 export const actions = {
 	[log.action.name]: log.action,
@@ -41,21 +49,32 @@ export const rules = {
 	[pubInStageForDuration.event]: pubInStageForDuration,
 	[pubEnteredStage.event]: pubEnteredStage,
 	[pubLeftStage.event]: pubLeftStage,
+	[actionSucceeded.event]: actionSucceeded,
+	[actionFailed.event]: actionFailed,
 } as const;
 
 export const getRuleByName = <T extends Event>(name: T) => {
 	return rules[name];
 };
 
+export const isReferentialRule = (
+	rule: (typeof rules)[keyof typeof rules]
+): rule is Extract<typeof rule, { event: SequentialRuleEvent }> =>
+	sequentialRuleEvents.includes(rule.event as any);
+
 export const humanReadableEvent = <T extends Event>(
 	event: T,
 	config?: (typeof rules)[T]["additionalConfig"] extends undefined
 		? never
-		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
+		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>,
+	sourceAction?: ActionInstances | null
 ) => {
 	const rule = getRuleByName(event);
 	if (config && rule.additionalConfig) {
 		return rule.display.withConfig(config);
+	}
+	if (sourceAction && isReferentialRule(rule)) {
+		return rule.display.withConfig(sourceAction);
 	}
 
 	return rule.display.base;

@@ -11,10 +11,12 @@ import mudder from "mudder";
 
 import type { ProcessedPub } from "contracts";
 import type {
+	ActionInstances,
 	ActionInstancesId,
 	ApiAccessTokensId,
 	Communities,
 	CommunitiesId,
+	Event,
 	FormAccessType,
 	FormElements,
 	Forms,
@@ -23,6 +25,7 @@ import type {
 	PubFields,
 	PubsId,
 	PubTypes,
+	Rules,
 	Stages,
 	StagesId,
 	Users,
@@ -91,29 +94,41 @@ export type UsersInitializer = Record<
 	  }
 >;
 
-export type ActionInstanceInitializer = {
-	[K in ActionName]: {
-		/**
-		 * @default randomUUID
-		 */
-		id?: ActionInstancesId;
-		action: K;
-		name?: string;
-		config: (typeof actions)[K]["config"]["schema"]["_input"];
-	};
-}[keyof typeof actions];
+export type ActionInstanceInitializer = Record<
+	string,
+	{
+		[K in ActionName]: {
+			/**
+			 * @default randomUUID
+			 */
+			id?: ActionInstancesId;
+			action: K;
+			name?: string;
+			config: (typeof actions)[K]["config"]["schema"]["_input"];
+		};
+	}[keyof typeof actions]
+>;
 
 /**
  * Map of stagename to list of permissions
  */
-export type StagesInitializer<U extends UsersInitializer> = Record<
+export type StagesInitializer<
+	U extends UsersInitializer,
+	A extends ActionInstanceInitializer = ActionInstanceInitializer,
+> = Record<
 	string,
 	{
 		id?: StagesId;
 		members?: {
 			[M in keyof U]?: MemberRole;
 		};
-		actions?: ActionInstanceInitializer[];
+		actions?: A;
+		rules?: {
+			event: Event;
+			actionInstance: keyof A;
+			sourceAction?: keyof A;
+			config?: Record<string, unknown> | null;
+		}[];
 	}
 >;
 
@@ -422,10 +437,26 @@ type UsersBySlug<U extends UsersInitializer> = {
 	[K in keyof U]: U[K] & Users;
 };
 
-type StagesWithPermissionsByName<S, StagePermissions> = {
+type StagesWithPermissionsAndActionsAndRulesByName<
+	U extends UsersInitializer,
+	S extends StagesInitializer<U>,
+	StagePermissions,
+> = {
 	[K in keyof S]: Omit<Stages, "name"> & { name: K } & {
 		permissions: StagePermissions;
-	};
+	} & ("actions" extends keyof S[K]
+			? {
+					actions: {
+						[KK in keyof S[K]["actions"]]: S[K]["actions"][KK] & ActionInstances;
+					};
+				} & ("rules" extends keyof S[K]
+					? {
+							rules: {
+								[KK in keyof S[K]["rules"]]: S[K]["rules"][KK] & Rules;
+							};
+						}
+					: {})
+			: {});
 };
 
 type FormsByName<F extends FormInitializer<any, any, any, any>> = {
@@ -929,7 +960,7 @@ export async function seedCommunity<
 				),
 			},
 		])
-	) as StagesWithPermissionsByName<S, typeof stageMemberships>;
+	);
 
 	const stageConnectionsList = props.stageConnections
 		? await db
@@ -1087,14 +1118,15 @@ export async function seedCommunity<
 	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's
-	const possibleActions = consolidatedStages.flatMap(
-		(stage, idx) =>
-			stage.actions?.map((action) => ({
-				stageId: stage.id,
-				action: action.action,
-				name: action.name,
-				config: JSON.stringify(action.config),
-			})) ?? []
+	const possibleActions = consolidatedStages.flatMap((stage, idx) =>
+		stage.actions
+			? Object.entries(stage.actions).map(([actionName, action]) => ({
+					stageId: stage.id,
+					action: action.action,
+					name: actionName,
+					config: JSON.stringify(action.config),
+				}))
+			: []
 	);
 
 	const createdActions = possibleActions.length
@@ -1102,6 +1134,44 @@ export async function seedCommunity<
 		: [];
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
+
+	const possibleRules = consolidatedStages.flatMap(
+		(stage, idx) =>
+			stage.rules?.map((rule) => ({
+				event: rule.event,
+				actionInstanceId: expect(
+					createdActions.find((action) => action.name === rule.actionInstance)?.id
+				),
+				sourceActionInstanceId: createdActions.find(
+					(action) => action.name === rule.sourceAction
+				)?.id,
+				config: rule.config ? JSON.stringify(rule.config) : null,
+			})) ?? []
+	);
+
+	const createdRules = possibleRules.length
+		? await trx.insertInto("rules").values(possibleRules).returningAll().execute()
+		: [];
+
+	const fullStages = Object.fromEntries(
+		consolidatedStages.map((stage) => {
+			const actionsForStage = createdActions.filter((action) => action.stageId === stage.id);
+			return [
+				stage.name,
+				{
+					...stage,
+					actions: Object.fromEntries(
+						actionsForStage.map((action) => [action.name, action])
+					),
+					rules: createdRules.filter((rule) =>
+						actionsForStage.some((action) => action.id === rule.actionInstanceId)
+					),
+				},
+			];
+		})
+	) as unknown as StagesWithPermissionsAndActionsAndRulesByName<U, S, typeof stageMemberships>;
+
+	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
 
 	let apiToken: string | undefined = undefined;
 
@@ -1148,7 +1218,7 @@ export async function seedCommunity<
 		pubTypes: pubTypesWithPubFieldsByName,
 		users: usersBySlug,
 		members: createdMembers,
-		stages: stagesWithPermissionsByName,
+		stages: fullStages,
 		stageConnections: stageConnectionsList,
 		pubs: createdPubs,
 		actions: createdActions,

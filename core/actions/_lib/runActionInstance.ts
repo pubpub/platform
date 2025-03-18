@@ -20,18 +20,24 @@ import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { isClientException } from "~/lib/serverActions";
+import { MAX_STACK_DEPTH } from "~/lib/server/rules";
+import { isClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
 import { getActionRunByName } from "./getRuns";
 import { resolveWithPubfields } from "./resolvePubfields";
+import { scheduleActionInstances } from "./scheduleActionInstance";
 
-export type ActionInstanceRunResult = ClientException | ClientExceptionOptions | ActionSuccess;
+export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
+	stack: ActionRunsId[];
+};
 
 export type RunActionInstanceArgs = {
 	pubId: PubsId;
 	communityId: CommunitiesId;
 	actionInstanceId: ActionInstancesId;
 	actionInstanceArgs?: Record<string, unknown>;
+	stack: ActionRunsId[];
+	scheduledActionRunId?: ActionRunsId;
 } & ({ event: Event } | { userId: UsersId });
 
 const _runActionInstance = async (
@@ -39,6 +45,8 @@ const _runActionInstance = async (
 	trx = db
 ): Promise<ActionInstanceRunResult> => {
 	const isActionUserInitiated = "userId" in args;
+
+	const stack = [...args.stack, args.actionRunId];
 
 	const pubPromise = getPubsWithRelatedValues(
 		{
@@ -83,6 +91,7 @@ const _runActionInstance = async (
 		return {
 			error: "Pub not found",
 			cause: pubResult.reason,
+			stack,
 		};
 	}
 
@@ -91,6 +100,7 @@ const _runActionInstance = async (
 		return {
 			error: "Action instance not found",
 			cause: actionInstanceResult.reason,
+			stack,
 		};
 	}
 
@@ -107,12 +117,14 @@ const _runActionInstance = async (
 		return {
 			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
 			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+			stack,
 		};
 	}
 
 	if (!actionInstance.action) {
 		return {
 			error: "Action not found",
+			stack,
 		};
 	}
 
@@ -122,6 +134,7 @@ const _runActionInstance = async (
 	if (!actionRun || !action) {
 		return {
 			error: "Action not found",
+			stack,
 		};
 	}
 
@@ -131,6 +144,7 @@ const _runActionInstance = async (
 		const err = {
 			error: "Invalid config",
 			cause: parsedConfig.error,
+			stack,
 		};
 		if (args.actionInstanceArgs) {
 			// Check if the args passed can substitute for missing or invalid config
@@ -150,6 +164,7 @@ const _runActionInstance = async (
 			title: "Invalid pub config",
 			cause: parsedArgs.error,
 			error: "The action was run with invalid parameters",
+			stack,
 		};
 	}
 
@@ -203,42 +218,64 @@ const _runActionInstance = async (
 			actionRunId: args.actionRunId,
 		});
 
-		return result;
+		if (isClientExceptionOptions(result)) {
+			await scheduleActionInstances({
+				pubId: args.pubId,
+				stageId: actionInstance.stageId,
+				event: Event.actionFailed,
+				stack,
+				sourceActionInstanceId: actionInstance.id,
+			});
+			return { ...result, stack };
+		}
+
+		await scheduleActionInstances({
+			pubId: args.pubId,
+			stageId: actionInstance.stageId,
+			event: Event.actionSucceeded,
+			stack,
+			sourceActionInstanceId: actionInstance.id,
+		});
+
+		return { ...result, stack };
 	} catch (error) {
 		captureException(error);
 		logger.error(error);
+
+		await scheduleActionInstances({
+			pubId: args.pubId,
+			stageId: actionInstance.stageId,
+			event: Event.actionFailed,
+			stack,
+			sourceActionInstanceId: actionInstance.id,
+		});
+
 		return {
 			title: "Failed to run action",
 			error: error.message,
+			stack,
 		};
 	}
 };
 
 export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
+	if (args.stack.length > MAX_STACK_DEPTH) {
+		throw new Error(
+			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
+		);
+	}
+
 	const isActionUserInitiated = "userId" in args;
 
 	// we need to first create the action run,
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
+
 	const actionRuns = await autoRevalidate(
 		trx
-			.with(
-				"existingScheduledActionRun",
-				(db) =>
-					db
-						.selectFrom("action_runs")
-						.selectAll()
-						.where("actionInstanceId", "=", args.actionInstanceId)
-						.where("pubId", "=", args.pubId)
-						.where("status", "=", ActionRunStatus.scheduled)
-				// this should be guaranteed to be unique, as only one actionInstance should be scheduled per pub
-			)
 			.insertInto("action_runs")
 			.values((eb) => ({
-				id:
-					isActionUserInitiated || args.event !== Event.pubInStageForDuration
-						? undefined
-						: eb.selectFrom("existingScheduledActionRun").select("id"),
+				id: args.scheduledActionRunId,
 				actionInstanceId: args.actionInstanceId,
 				pubId: args.pubId,
 				userId: isActionUserInitiated ? args.userId : null,
@@ -252,6 +289,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 					.where("action_instances.id", "=", args.actionInstanceId),
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
+				sourceActionRunId: args.stack.at(-1),
 			}))
 			.returningAll()
 			// conflict should only happen if a scheduled action is excecuted
@@ -269,6 +307,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 			title: "Action run failed",
 			error: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
 			cause: `Multiple scheduled action runs found for pub ${args.pubId} and action instance ${args.actionInstanceId}. This should never happen.`,
+			stack: args.stack,
 		};
 
 		await autoRevalidate(
@@ -294,11 +333,16 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 
 	const result = await _runActionInstance({ ...args, actionRunId: actionRun.id });
 
-	const status = isClientException(result) ? ActionRunStatus.failure : ActionRunStatus.success;
+	const status = isClientExceptionOptions(result)
+		? ActionRunStatus.failure
+		: ActionRunStatus.success;
 
 	// update the action run with the result
 	await autoRevalidate(
-		trx.updateTable("action_runs").set({ status, result }).where("id", "=", actionRun.id)
+		trx
+			.updateTable("action_runs")
+			.set({ status, result })
+			.where("id", "=", args.scheduledActionRunId ?? actionRun.id)
 	).executeTakeFirstOrThrow(
 		() =>
 			new Error(
@@ -314,6 +358,7 @@ export const runInstancesForEvent = async (
 	stageId: StagesId,
 	event: Event,
 	communityId: CommunitiesId,
+	stack: ActionRunsId[],
 	trx = db
 ) => {
 	const instances = await trx
@@ -335,6 +380,7 @@ export const runInstancesForEvent = async (
 						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
+						stack,
 					},
 					trx
 				),
