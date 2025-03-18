@@ -220,10 +220,10 @@ export const run = defineRun<typeof action>(
 						},
 					});
 				}
-			// If there's html but no version on platform yet, create one.
-			// Unless, there are existing legacy Versions which we'll be creating,
-			// in which one of those is identical to formattedData.pubHtml, so we skip
-			// to avoid a duplicate version.
+				// If there's html but no version on platform yet, create one.
+				// Unless, there are existing legacy Versions which we'll be creating,
+				// in which one of those is identical to formattedData.pubHtml, so we skip
+				// to avoid a duplicate version.
 			} else {
 				const hasLegacyVersions = !!formattedData.versions.length;
 				if (!hasLegacyVersions && formattedData.pubHtml) {
