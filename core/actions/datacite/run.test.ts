@@ -75,6 +75,7 @@ const pub = {
 			updatedAt: new Date(),
 			schemaName: CoreSchemaType.String,
 			relatedPubId: null,
+			rank: "a",
 		},
 		{
 			id: "" as PubValuesId,
@@ -86,6 +87,7 @@ const pub = {
 			updatedAt: new Date(),
 			schemaName: CoreSchemaType.String,
 			relatedPubId: null,
+			rank: "b",
 		},
 		{
 			id: "" as PubValuesId,
@@ -97,6 +99,7 @@ const pub = {
 			updatedAt: new Date(),
 			schemaName: CoreSchemaType.URL,
 			relatedPubId: null,
+			rank: "c",
 		},
 		{
 			id: "" as PubValuesId,
@@ -108,6 +111,7 @@ const pub = {
 			updatedAt: new Date(),
 			schemaName: CoreSchemaType.DateTime,
 			relatedPubId: null,
+			rank: "d",
 		},
 	],
 	communityId: "" as CommunitiesId,

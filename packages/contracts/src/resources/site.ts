@@ -32,12 +32,12 @@ import {
 	usersSchema,
 } from "db/public";
 
-import type { Json } from "./types";
+import type { Json, JsonValue } from "./types";
 import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
 	stageId?: StagesId;
-	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
+	relatedPubs?: Record<string, { value: Json | Date; pub: CreatePubRequestBodyWithNulls }[]>;
 	members?: Record<UsersId, MemberRole>;
 };
 
@@ -46,12 +46,16 @@ export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.extend({
 	stageId: stagesIdSchema.optional(),
 	values: z.record(
-		jsonSchema.or(
-			z.object({
-				value: jsonSchema,
-				relatedPubId: pubsIdSchema,
-			})
-		)
+		jsonSchema
+			.or(
+				z.array(
+					z.object({
+						value: jsonSchema.or(z.date()),
+						relatedPubId: pubsIdSchema,
+					})
+				)
+			)
+			.or(z.date())
 	),
 	members: (
 		z.record(usersIdSchema, memberRoleSchema) as z.ZodType<Record<UsersId, MemberRole>>
@@ -63,7 +67,12 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 		relatedPubs: z
 			.lazy(() =>
 				z.record(
-					z.array(z.object({ value: jsonSchema, pub: CreatePubRequestBodyWithNullsNew }))
+					z.array(
+						z.object({
+							value: jsonSchema.or(z.date()),
+							pub: CreatePubRequestBodyWithNullsNew,
+						})
+					)
 				)
 			)
 			.optional(),
@@ -75,10 +84,10 @@ const upsertPubRelationsSchema = z.record(
 	z.array(
 		z.union([
 			z.object({
-				value: jsonSchema,
+				value: jsonSchema.or(z.date()),
 				relatedPub: CreatePubRequestBodyWithNullsNew,
 			}),
-			z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }),
+			z.object({ value: jsonSchema.or(z.date()), relatedPubId: pubsIdSchema }),
 		])
 	)
 );
@@ -179,7 +188,7 @@ export type MaybePubOptions = {
 type ValueBase = {
 	id: PubValuesId;
 	fieldId: PubFieldsId;
-	value: unknown;
+	value: JsonValue;
 	createdAt: Date;
 	updatedAt: Date;
 	/**
@@ -188,6 +197,7 @@ type ValueBase = {
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
 	fieldName: string;
+	rank: string | null;
 };
 
 type ProcessedPubBase = {
@@ -248,6 +258,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 			schemaName: coreSchemaTypeSchema,
 			relatedPubId: pubsIdSchema.nullable(),
 			relatedPub: z.lazy(() => processedPubSchema.nullish()),
+			rank: z.string().nullable(),
 		})
 	),
 	createdAt: z.date(),

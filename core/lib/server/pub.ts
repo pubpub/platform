@@ -44,6 +44,7 @@ import { assert, expect } from "utils";
 import type { DefinitelyHas, MaybeHas, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { env } from "../env/env.mjs";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
@@ -221,7 +222,7 @@ export const maybeWithTrx = async <T>(
 
 const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
 	Array.isArray(value) &&
-	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
+	value.every((v) => typeof v === "object" && v && "value" in v && "relatedPubId" in v);
 
 /**
  * Transform pub values which can either be
@@ -235,15 +236,15 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
  * to a more standardized
  * [ { slug, value, relatedPubId } ]
  */
-const normalizePubValues = (
-	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>
+export const normalizePubValues = <T extends JsonValue | Date>(
+	pubValues: Record<string, T | { value: T; relatedPubId: PubsId }[]>
 ) => {
 	return Object.entries(pubValues).flatMap(([slug, value]) =>
 		isRelatedPubInit(value)
 			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
 			: ([{ slug, value, relatedPubId: undefined }] as {
 					slug: string;
-					value: unknown;
+					value: T;
 					relatedPubId: PubsId | undefined;
 				}[])
 	);
@@ -284,7 +285,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	if (body.id) {
 		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId: body.id as PubsId,
-			values,
+			values: values as Record<string, JsonValue>,
 		});
 		values = processedVals;
 	}
@@ -356,6 +357,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 							}))
 						)
 						.returningAll()
+						.$narrowType<{ value: JsonValue }>()
 				).execute()
 			: [];
 
@@ -588,11 +590,11 @@ export const validatePubValues = async <T extends { slug: string; value: unknown
 	throw new BadRequestError(validationErrors.map(({ error }) => error).join(" "));
 };
 
-type AddPubRelationsInput = { value: unknown; slug: string } & XOR<
+type AddPubRelationsInput = { value: JsonValue | Date; slug: string } & XOR<
 	{ relatedPubId: PubsId },
 	{ relatedPub: CreatePubRequestBodyWithNullsNew }
 >;
-type UpdatePubRelationsInput = { value: unknown; slug: string; relatedPubId: PubsId };
+type UpdatePubRelationsInput = { value: JsonValue | Date; slug: string; relatedPubId: PubsId };
 
 type RemovePubRelationsInput = { value?: never; slug: string; relatedPubId: PubsId };
 
@@ -685,12 +687,7 @@ export const upsertPubRelations = async (
 			relatedPubId: expect(newlyCreatedPubs[index].id),
 		}));
 
-		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs] as {
-			relatedPubId: PubsId;
-			value: unknown;
-			slug: string;
-			fieldId: PubFieldsId;
-		}[];
+		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs];
 
 		const pubRelations = await upsertPubRelationValues({
 			pubId,
@@ -894,7 +891,13 @@ export const updatePub = async ({
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
-			await movePub(pubId, stageId, trx).execute();
+			try {
+				await movePub(pubId, stageId, trx).execute();
+			} catch (err) {
+				if (!isUniqueConstraintError(err)) {
+					throw err;
+				}
+			}
 		}
 
 		// Allow rich text fields to overwrite other fields
@@ -1115,12 +1118,12 @@ export const upsertPubRelationValues = async ({
 	allRelationsToCreate: {
 		pubId?: PubsId;
 		relatedPubId: PubsId;
-		value: unknown;
+		value: JsonValue | Date;
 		fieldId: PubFieldsId;
 	}[];
 	lastModifiedBy: LastModifiedBy;
 	trx: typeof db;
-}): Promise<PubValuesType[]> => {
+}) => {
 	if (!allRelationsToCreate.length) {
 		return [];
 	}
@@ -1148,9 +1151,11 @@ export const upsertPubRelationValues = async ({
 					.doUpdateSet((eb) => ({
 						value: eb.ref("excluded.value"),
 						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+						rank: eb.ref("excluded.rank"),
 					}))
 			)
 			.returningAll()
+			.$narrowType<{ value: JsonValue }>()
 	).execute();
 };
 
@@ -1983,7 +1988,7 @@ export const fullTextSearch = async (
 						)`.as("highlights"),
 					])
 					.$narrowType<{
-						value: Json;
+						value: JsonValue;
 					}>()
 					.whereRef("pub_values.pubId", "=", "pubs.id")
 					.where(

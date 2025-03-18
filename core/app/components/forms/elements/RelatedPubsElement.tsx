@@ -18,7 +18,6 @@ import mudder from "mudder";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
-import type { JsonValue } from "contracts";
 import type { InputComponent, PubsId } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -29,7 +28,7 @@ import { cn } from "utils";
 
 import type { ContextEditorPub } from "../../ContextEditor/ContextEditorContext";
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
-import type { ElementProps } from "../types";
+import type { ElementProps, FormValue, FormValueSingle } from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
@@ -95,14 +94,6 @@ const RelatedPubBlock = ({
 			</div>
 		</div>
 	);
-};
-
-type FieldValue = { value: JsonValue; relatedPubId: PubsId; rank: string };
-type FormValue = {
-	[slug: string]: FieldValue[];
-};
-type FormValueSingle = {
-	[slug: string]: JsonValue;
 };
 
 const parseRelatedPubValuesSlugError = (
@@ -198,11 +189,13 @@ export const RelatedPubsElement = ({
 }) => {
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
-	const { control } = useFormContext<FormValue>();
+	const { control, getValues, setValue } = useFormContext<
+		FormValue & { deleted: { slug: string; relatedPubId: PubsId }[] }
+	>();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
 
-	const { fields, append, remove, move, update } = useFieldArray({ control, name: slug });
+	const { fields, append, move, update, remove } = useFieldArray({ control, name: slug });
 
 	const sensors = useSensors(
 		useSensor(PointerSensor),
@@ -223,7 +216,7 @@ export const RelatedPubsElement = ({
 				if (activeIndex !== undefined && overIndex !== undefined) {
 					// "earlier" means towards the beginning of the list, or towards the top of the page
 					const isMovedEarlier = activeIndex > overIndex;
-					const activeElem = fields[activeIndex];
+					const { id, ...activeElem } = fields[activeIndex];
 
 					// When moving an element earlier in the array, find a rank between the rank of the
 					// element at the dropped position and the element before it. When moving an element
@@ -320,16 +313,26 @@ export const RelatedPubsElement = ({
 														items={fields}
 														strategy={verticalListSortingStrategy}
 													>
-														{fields.map((item, index) => {
+														{fields.map(({ id, ...item }, index) => {
 															const handleRemovePub = () => {
 																remove(index);
+																if (item.valueId) {
+																	setValue("deleted", [
+																		...getValues("deleted"),
+																		{
+																			relatedPubId:
+																				item.relatedPubId,
+																			slug,
+																		},
+																	]);
+																}
 															};
 															const innerSlug =
 																`${slug}.${index}.value` as const;
 															return (
 																<RelatedPubBlock
-																	key={item.id}
-																	id={item.id}
+																	key={id}
+																	id={id}
 																	pub={
 																		pubsById[item.relatedPubId]
 																	}

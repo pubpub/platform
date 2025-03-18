@@ -1,11 +1,14 @@
 import { type InputComponentConfigSchema, type SchemaTypeByInputComponent } from "schemas";
 
+import type { JsonValue, ProcessedPub } from "contracts";
 import type {
 	CoreSchemaType,
 	ElementType,
 	FormElementsId,
 	InputComponent,
 	PubFieldsId,
+	PubsId,
+	PubValuesId,
 	StructuralFormElement,
 } from "db/public";
 
@@ -86,3 +89,24 @@ export type StructuralElement = {
 export type FormElements = PubFieldElement | StructuralElement | ButtonElement;
 
 export type BasicFormElements = ButtonElement | StructuralElement | BasicPubFieldElement;
+
+export type FieldValue = {
+	value: JsonValue;
+	relatedPubId: PubsId;
+	rank: string;
+	valueId?: PubValuesId;
+};
+
+export type HydratedFieldValue = Omit<FieldValue, "value"> & { value: JsonValue | Date };
+
+export type FormValue = {
+	[slug: string]: FieldValue[];
+};
+
+export type FormValueSingle = {
+	[slug: string]: JsonValue;
+};
+
+export const isRelatedValue = (
+	value: ProcessedPub["values"][number]
+): value is ProcessedPub["values"][number] & FieldValue => Boolean(value.relatedPubId);

@@ -82,7 +82,10 @@ export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBody>;
 export const CreatePubRequestBodyWithNulls = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(
-		z.union([jsonSchema, z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }).array()])
+		z.union([
+			jsonSchema.or(z.date()),
+			z.object({ value: jsonSchema.or(z.date()), relatedPubId: pubsIdSchema }).array(),
+		])
 	),
 	assigneeId: z.string().optional(),
 });

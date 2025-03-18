@@ -21,7 +21,7 @@ import {
 	validatePubValues,
 } from "./pub";
 
-type PubValue = string | number | boolean | JsonValue;
+type PubValue = string | number | boolean | JsonValue | Date;
 
 type PubOpOptionsBase = {
 	communityId: CommunitiesId;
@@ -31,9 +31,11 @@ type PubOpOptionsBase = {
 
 type PubOpOptionsCreateUpsert = PubOpOptionsBase & {
 	pubTypeId: PubTypesId;
+	continueOnValidationError?: boolean;
 };
 
 type PubOpOptionsUpdate = PubOpOptionsBase & {
+	continueOnValidationError?: boolean;
 	pubTypeId?: never;
 };
 
@@ -979,7 +981,7 @@ abstract class BasePubOp {
 		const validated = await validatePubValues({
 			pubValues: toUpsert,
 			communityId: this.options.communityId,
-			continueOnValidationError: false,
+			continueOnValidationError: this.options.continueOnValidationError,
 			trx,
 		});
 
