@@ -68,6 +68,15 @@ const seed = createSeed({
 							},
 						},
 					},
+					{
+						value: "second relation value",
+						pub: {
+							pubType: "Basic Pub",
+							values: {
+								Title: "Another pub related to another Pub",
+							},
+						},
+					},
 				],
 			},
 		},
@@ -90,6 +99,31 @@ const seed = createSeed({
 					component: InputComponent.textInput,
 					config: {
 						label: "Title",
+					},
+				},
+			],
+		},
+		"second-form": {
+			pubType: "Basic Pub",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Title",
+					component: InputComponent.textInput,
+					config: {
+						label: "Title",
+					},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Some relation",
+					component: InputComponent.relationBlock,
+					config: {
+						relationshipConfig: {
+							label: "Related",
+							help: "Help",
+							component: InputComponent.textInput,
+						},
 					},
 				},
 			],
@@ -262,5 +296,106 @@ describe("getPubByForm", () => {
 				},
 			],
 		});
+	});
+
+	it("should handle multiple relations with a form", async () => {
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { pubs, community, forms } = await seedCommunity(seed);
+		const { getPubByForm } = await import("./pubs");
+		const { getPubsWithRelatedValues } = await import("./server/pub");
+		const { getForm } = await import("./server/form");
+		// This pub has relation fields
+		const pubId = pubs[1].id;
+		const communityId = community.id;
+
+		const [pub, form] = await Promise.all([
+			getPubsWithRelatedValues(
+				{ pubId, communityId },
+				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+			),
+			// Get the second form which has a relation field
+			getForm({
+				id: forms["second-form"].id,
+				communityId,
+			}).executeTakeFirstOrThrow(),
+		]);
+
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+
+		expect(pubWithForm).toMatchObject({
+			values: [
+				{
+					value: "Another title",
+					formElementConfig: { label: "Title" },
+				},
+				{
+					value: "test relation value",
+					formElementConfig: {
+						relationshipConfig: {
+							label: "Related",
+							help: "Help",
+							component: InputComponent.textInput,
+						},
+					},
+				},
+				{
+					value: "second relation value",
+					formElementConfig: {
+						relationshipConfig: {
+							label: "Related",
+							help: "Help",
+							component: InputComponent.textInput,
+						},
+					},
+				},
+			],
+		});
+	});
+
+	it("should handle multiple relations without a form element", async () => {
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { pubs, community, forms } = await seedCommunity(seed);
+		const { getPubByForm } = await import("./pubs");
+		const { getPubsWithRelatedValues } = await import("./server/pub");
+		const { getForm } = await import("./server/form");
+		// This pub has relation fields
+		const pubId = pubs[1].id;
+		const communityId = community.id;
+
+		const [pub, form] = await Promise.all([
+			getPubsWithRelatedValues(
+				{ pubId, communityId },
+				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+			),
+			// Get the first form which does not have a relation field
+			getForm({
+				id: forms["basic-pub-form"].id,
+				communityId,
+			}).executeTakeFirstOrThrow(),
+		]);
+
+		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+
+		expect(pubWithForm).toMatchObject({
+			values: [
+				{
+					value: null,
+					formElementConfig: { label: "Description" },
+				},
+				{
+					value: "Another title",
+					formElementConfig: { label: "Title" },
+				},
+				{
+					value: "test relation value",
+				},
+				{
+					value: "second relation value",
+				},
+			],
+		});
+		// Check that the element without a form does not have any form related values
+		expect(pubWithForm.values[2]).not.toHaveProperty("formElementId");
+		expect(pubWithForm.values[3]).not.toHaveProperty("formElementId");
 	});
 });

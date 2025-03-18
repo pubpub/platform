@@ -144,24 +144,34 @@ export const getPubByForm = ({
 		return pub;
 	}
 
-	const valuesByFieldSlug = values.reduce<Record<string, FullProcessedPub["values"][number]>>(
+	const valuesByFieldSlug = values.reduce<Record<string, FullProcessedPub["values"][number][]>>(
 		(acc, value) => {
-			acc[value.fieldSlug] = value;
+			if (!acc[value.fieldSlug]) {
+				acc[value.fieldSlug] = [value];
+			} else {
+				acc[value.fieldSlug].push(value);
+			}
 			return acc;
 		},
 		{}
 	);
 
 	const pubFieldFormElements = form.elements.filter((fe) => fe.type === ElementType.pubfield);
-	const valuesWithFormElements = pubFieldFormElements.map((formElement) => {
-		const value = valuesByFieldSlug[formElement.slug];
+	const valuesWithFormElements: ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+	}>["values"] = [];
+	for (const formElement of pubFieldFormElements) {
+		const values = valuesByFieldSlug[formElement.slug];
 		const formInfo = {
 			formElementId: formElement.id,
 			formElementLabel: formElement.label,
 			formElementConfig: formElement.config,
 		};
-		if (!value) {
-			return {
+		if (!values) {
+			valuesWithFormElements.push({
 				id: null,
 				value: null,
 				createdAt: null,
@@ -172,13 +182,13 @@ export const getPubByForm = ({
 				fieldName: formElement.fieldName,
 				relatedPubId: null,
 				...formInfo,
-			};
+			});
+		} else {
+			for (const value of values) {
+				valuesWithFormElements.push({ ...value, ...formInfo });
+			}
 		}
-		return {
-			...value,
-			...formInfo,
-		};
-	});
+	}
 
 	if (!withExtraPubValues) {
 		return { ...pub, values: valuesWithFormElements };
@@ -187,7 +197,17 @@ export const getPubByForm = ({
 	const formElementSlugs = new Set(pubFieldFormElements.map((fe) => fe.slug));
 	const valueFieldSlugs = new Set(Object.keys(valuesByFieldSlug));
 	const slugsNotInForm = Array.from(valueFieldSlugs.difference(formElementSlugs));
-	const valuesNotInForm = slugsNotInForm.map((slug) => valuesByFieldSlug[slug]);
+	const valuesNotInForm: ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+	}>["values"] = [];
+	for (const slug of slugsNotInForm) {
+		for (const value of valuesByFieldSlug[slug]) {
+			valuesNotInForm.push(value);
+		}
+	}
 
 	const newValues = [...valuesWithFormElements, ...valuesNotInForm];
 
