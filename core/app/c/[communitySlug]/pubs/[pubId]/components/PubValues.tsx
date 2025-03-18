@@ -25,11 +25,40 @@ type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withMembers: true;
 }>;
 
+/**
+ * Get the label a form/pub value combo might have. In preference order:
+ * 1. "label" on a FormElement
+ * 2. "config.label" on a FormElement
+ * 3. "config.relationshipConfig.label" on a FormElement (for related values)
+ * 4. the name of the PubField
+ **/
+const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
+	// Default to the field name
+	const defaultLabel = value.fieldName;
+	let configLabel;
+	let relationshipConfigLabel;
+	let formElementLabel;
+	if ("formElementId" in value) {
+		const config = value.formElementConfig;
+		if (config) {
+			configLabel = "label" in config ? config.label : undefined;
+			relationshipConfigLabel =
+				"relationshipConfig" in config ? config.relationshipConfig.label : undefined;
+		}
+		formElementLabel = value.formElementLabel;
+	}
+	return formElementLabel || configLabel || relationshipConfigLabel || defaultLabel;
+};
+
 const PubValueHeading = ({
 	depth,
 	children,
 	...props
 }: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
+	// For "Other Fields" section header which might be one lower than any pub depth
+	if (depth < 1) {
+		return <h1 {...props}>{children}</h1>;
+	}
 	// Pub depth starts at 1
 	switch (depth - 1) {
 		case 0:
@@ -63,30 +92,12 @@ const FieldBlock = ({
 						<PubValue value={value} key={value.id} />
 					) : (
 						// Blank space if there is no value
-						<div className="h-1" key={value.id} />
+						<div className="h-1" key={value.fieldId} />
 					)
 				)}
 			</div>
 		</div>
 	);
-};
-
-const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
-	// Default to the field name
-	const defaultLabel = value.fieldName;
-	let configLabel;
-	let relationshipConfigLabel;
-	let formElementLabel;
-	if ("formElementId" in value) {
-		const config = value.formElementConfig;
-		if (config) {
-			configLabel = "label" in config ? config.label : undefined;
-			relationshipConfigLabel =
-				"relationshipConfig" in config ? config.relationshipConfig.label : undefined;
-		}
-		formElementLabel = value.formElementLabel;
-	}
-	return formElementLabel || configLabel || relationshipConfigLabel || defaultLabel;
 };
 
 export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode => {
