@@ -67,15 +67,15 @@ module "service_core" {
 
   init_containers = [{
     name  = "migrations"
-    image = "${var.ecr_repository_urls.root}:latest"
+    image = "${var.ecr_repository_urls.migrations}:latest"
     command = [
-      "pnpm", "--filter", "core", "migrate-docker",
+      "pnpm", "migrate-docker",
     ]
   }]
 
   resources = {
-    cpu = 1024
-    memory = 2048
+    cpu           = 1024
+    memory        = 2048
     desired_count = 1
   }
 
@@ -151,7 +151,7 @@ module "service_bastion" {
   service_name = "bastion"
   cluster_info = module.cluster.cluster_info
 
-  repository_url = var.ecr_repository_urls.root
+  repository_url = var.ecr_repository_urls.migrations
   # Make bastion idle indefinitely, so we can ssh into it when needed
   # If this is not here, the task will exit and try to restart immediately.
   # TODO: Maybe there's a less hacky way to do this?

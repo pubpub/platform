@@ -63,7 +63,7 @@ jobs:
         with:
             PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
             JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
-            MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
+            MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.migrations-image }}
             PUBLIC_URL: ${{ github.event.repository.html_url }}
             AWS_REGION: "us-east-1"
         secrets:

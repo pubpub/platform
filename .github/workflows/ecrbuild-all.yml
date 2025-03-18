@@ -17,9 +17,9 @@ on:
             core-image:
                 description: "Core image SHA"
                 value: ${{ jobs.build-core.outputs.image-sha }}
-            base-image:
-                description: "Base image SHA"
-                value: ${{ jobs.build-base.outputs.image-sha }}
+            migrations-image:
+                description: "Migrations image SHA"
+                value: ${{ jobs.build-migrations.outputs.image-sha }}
             jobs-image:
                 description: "Jobs image SHA"
                 value: ${{ jobs.build-jobs.outputs.image-sha }}
@@ -38,9 +38,10 @@ jobs:
                   echo "Building containers with tag:"
                   echo "$sha_short"
 
-    build-base:
+    build-migrations:
         uses: ./.github/workflows/ecrbuild-template.yml
         with:
+            package: migrations
             publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
             ghcr_image_name: platform-migrations
         secrets:

@@ -42,10 +42,10 @@ locals {
   pubpub_hostname = "blake.duqduq.org"
   route53_zone_id = "Z059164612717GL8VGM95"
   ecr_repository_urls = {
-    core             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
-    jobs             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
-    nginx            = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
-    root             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
+    core       = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
+    jobs       = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
+    nginx      = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
+    migrations = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-migrations"
   }
 
   MAILGUN_SMTP_USERNAME           = "v7@mg.pubpub.org"

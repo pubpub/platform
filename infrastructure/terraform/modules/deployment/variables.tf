@@ -27,10 +27,10 @@ variable "route53_zone_id" {
 variable "ecr_repository_urls" {
   description = "URLs for ECR repositories created at a global level"
   type = object({
-    core             = string
-    jobs             = string
-    nginx            = string
-    root             = string
+    core       = string
+    jobs       = string
+    nginx      = string
+    migrations = string
   })
 }
 
