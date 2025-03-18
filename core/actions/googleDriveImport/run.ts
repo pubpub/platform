@@ -220,23 +220,13 @@ export const run = defineRun<typeof action>(
 						},
 					});
 				}
-			// If there's html but no version yet exists, create one
-			// Except, we have to check to make sure the content held in
-			// formattedData.pubHtml doesn't match one of the versions
-			// we're newly creating (e.g. is in formattedData.versions, but not orderedVersions)
+			// If there's html but no version on platform yet, create one.
+			// Unless, there are existing legacy Versions which we'll be creating,
+			// in which one of those is identical to formattedData.pubHtml, so we skip
+			// to avoid a duplicate version.
 			} else {
 				const hasLegacyVersions = !!formattedData.versions.length;
 				if (!hasLegacyVersions && formattedData.pubHtml) {
-					// const sortedLegacyVersions = formattedData.versions.sort((foo,bar)=>{
-					// 	const fooDate = new Date(foo[`${communitySlug}:publication-date`]);
-					// 	const barDate = new Date(bar[`${communitySlug}:publication-date`]);
-					// 	return fooDate.getTime() - barDate.getTime();
-					// })
-
-					// const latestNewVersion = sortedLegacyVersions[sortedLegacyVersions.length - 1];
-					// if (latestNewVersion[`${communitySlug}:content`] === formattedData.pubHtml) {
-					// 	logger.warn ('They are the same!');
-					// }
 					relations.push({
 						slug: `${communitySlug}:versions`,
 						value: null,
