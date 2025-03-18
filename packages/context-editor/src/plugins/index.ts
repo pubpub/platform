@@ -21,6 +21,8 @@ export const basePlugins = (
 ) => {
 	return [
 		...contextSuggest(suggestData, setSuggestData),
+		// Example setup includes inputRules for headers, blockquotes, codeblock, lists
+		// https://github.com/ProseMirror/prosemirror-example-setup/blob/master/src/inputrules.ts
 		...exampleSetup({ schema, menuBar: false }),
 		reactProps(props),
 		structureDecorations(),

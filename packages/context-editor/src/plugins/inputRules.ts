@@ -7,12 +7,7 @@ import {
 	REGEX_BLOCK_MATH_DOLLARS,
 	REGEX_INLINE_MATH_DOLLARS,
 } from "@benrbray/prosemirror-math";
-import {
-	InputRule,
-	inputRules,
-	textblockTypeInputRule,
-	wrappingInputRule,
-} from "prosemirror-inputrules";
+import { InputRule, inputRules, textblockTypeInputRule } from "prosemirror-inputrules";
 import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
@@ -51,7 +46,6 @@ const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 		}
 	);
 };
-const blockQuoteRule = (nodeType: NodeType) => wrappingInputRule(/^\s*>\s$/, nodeType);
 const inlineMathRule = (nodeType: NodeType) =>
 	makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, nodeType);
 const blockMathRule = (nodeType: NodeType) =>
@@ -73,7 +67,6 @@ export default (schema: Schema) => {
 		applyMarkRule(schema.marks.strong, boldRegex),
 		applyMarkRule(schema.marks.em, italicsRegex),
 		applyMarkRule(schema.marks.code, codeRegex),
-		blockQuoteRule(schema.nodes.blockquote),
 		inlineMathRule(schema.nodes.math_inline),
 		blockMathRule(schema.nodes.math_display),
 		codeBlockRule(schema.nodes.code_block),

@@ -1,5 +1,6 @@
 import { lift, setBlockType, wrapIn } from "prosemirror-commands";
 import { Node, NodeType } from "prosemirror-model";
+import { wrapInList } from "prosemirror-schema-list";
 import { NodeSelection } from "prosemirror-state";
 
 import type { Attrs, ToggleCommandFn, ToggleOptions } from "./types";
@@ -56,6 +57,14 @@ const toggleWrap = (options: ToggleOptions<NodeType>) => {
 	return wrapIn(type)(state, dispatch);
 };
 
+const toggleWrapList = (options: ToggleOptions<NodeType>) => {
+	const { state, type, dispatch } = options;
+	if (blockTypeIsActive(options)) {
+		return lift(state, dispatch);
+	}
+	return wrapInList(type)(state, dispatch);
+};
+
 const createBlockTypeToggle = (options: {
 	typeName: string;
 	withAttrs?: Attrs;
@@ -67,6 +76,13 @@ const createBlockTypeToggle = (options: {
 		commandFn,
 		isActiveFn: blockTypeIsActive,
 		getTypeFromSchema: (schema) => schema.nodes[typeName] as NodeType,
+	});
+};
+
+export const createListTypeToggle = (typeName: string) => {
+	return createBlockTypeToggle({
+		typeName,
+		commandFn: toggleWrapList,
 	});
 };
 
@@ -86,3 +102,5 @@ export const blockquoteToggle = createBlockTypeToggle({
 	commandFn: toggleWrap,
 });
 export const codeBlockToggle = createBlockTypeToggle({ typeName: "code_block" });
+export const bulletListToggle = createListTypeToggle("bullet_list");
+export const orderedListToggle = createListTypeToggle("ordered_list");

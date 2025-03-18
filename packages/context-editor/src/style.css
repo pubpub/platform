@@ -96,6 +96,9 @@
 .ProseMirror blockquote,
 .ProseMirror img,
 .ProseMirror hr,
+.ProseMirror ul,
+.ProseMirror ol,
+.ProseMirror li,
 .ProseMirror section {
 	border-left: 1px solid #777;
 	padding-left: 5px;
