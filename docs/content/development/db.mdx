@@ -1,20 +1,16 @@
 # db
 
-Store the types from our database in a single place.
+Here we store our database schema and generated types.
 
-They are generated using `kanel`, `kanel-kysely`, and `kanel-zod` from our postgres database.
+It is also built as a docker image into `platform-migrations`, to serve as a small container which handles migrations.
+
+`prisma` is used to create the schema and migrations.
+
+Types are generated using `kanel`, `kanel-kysely`, and `kanel-zod` from our postgres database.
 
 ## Generating the types
 
-Make sure the database is running on `localhost:54322` and the user is `postgres`.
-
-The default way of doing this is by following the instruction in `core/README.md`.
-
-Or, if you don't have it run there, create an `.env.local` file with the following content:
-
-```bash
-DATABASE_URL="your postgres url"
-```
+Make sure the database is running on `localhost:54322` and the user is `postgres` (this is usually accomplished by running `pnpm -w dev:setup`)
 
 To generate just the types, run
 
@@ -32,17 +28,17 @@ pnpm --filter db migrate-dev
 
 If you have added a new table, make sure to add
 
-```ts filename="/packages/db/src/public.ts"
+```ts filename="/db/src/public.ts"
 export * from "./tableName";
 ```
 
-to `/packages/db/src/public.ts`, otherwise you will not be able to import it.
+to `/db/src/public.ts`, otherwise you will not be able to import it.
 
 ## Special hooks
 
 Because `kanel` is a bit messy, we have a few special hooks to make it easier to work with.
 
-See `packages/db/src/kanel` for more details.
+See `db/kanel` for more details.
 
 ## Adding extra types you want to use
 
