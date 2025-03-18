@@ -107,6 +107,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 				}
 			});
 		})
+		.use(rehypeFormat)
 		.process(html);
 	return String(result);
 };

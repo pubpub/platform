@@ -225,7 +225,8 @@ export const run = defineRun<typeof action>(
 			// formattedData.pubHtml doesn't match one of the versions
 			// we're newly creating (e.g. is in formattedData.versions, but not orderedVersions)
 			} else {
-				if (formattedData.pubHtml) {
+				const hasLegacyVersions = !!formattedData.versions.length;
+				if (!hasLegacyVersions && formattedData.pubHtml) {
 					// const sortedLegacyVersions = formattedData.versions.sort((foo,bar)=>{
 					// 	const fooDate = new Date(foo[`${communitySlug}:publication-date`]);
 					// 	const barDate = new Date(bar[`${communitySlug}:publication-date`]);
