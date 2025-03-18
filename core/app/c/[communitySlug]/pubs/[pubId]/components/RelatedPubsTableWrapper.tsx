@@ -43,18 +43,19 @@ type Props = {
 };
 
 export const RelatedPubsTableWrapper = async (props: Props) => {
-	const relatedPubRunActionsDropdowns = props.pub.values
-		.filter((value) => value.relatedPubId !== null)
-		.reduce(
-			(a, value) => ({
-				...a,
-				[value.relatedPubId!]: getRelatedPubRunActionsDropdowns(
-					value.relatedPub as FullProcessedPub,
-					props.pageContext
-				),
-			}),
-			{}
-		);
+	const relatedPubRunActionsDropdowns = props.pub.values.reduce(
+		(a, value) =>
+			value.relatedPubId && value.relatedPub
+				? {
+						...a,
+						[value.relatedPubId]: getRelatedPubRunActionsDropdowns(
+							value.relatedPub,
+							props.pageContext
+						),
+					}
+				: a,
+		{}
+	);
 	return (
 		<RelatedPubsTable
 			pub={props.pub}
