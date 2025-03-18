@@ -142,7 +142,13 @@ describe("getPubByForm", () => {
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
 				{ pubId: pubs[0].id, communityId: community.id },
-				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
 			),
 			// Get the default form for this pub
 			getForm({
@@ -188,7 +194,13 @@ describe("getPubByForm", () => {
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
 				{ pubId: pubs[0].id, communityId: community.id },
-				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
 			),
 			// Get the default form for this pub
 			getForm({
@@ -229,7 +241,13 @@ describe("getPubByForm", () => {
 		const [pub, form, adminCan, editorCan, contributorCan] = await Promise.all([
 			getPubsWithRelatedValues(
 				{ pubId: pubs[0].id, communityId: community.id },
-				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
 			),
 			// Get the default form for this pub
 			getForm({
@@ -273,7 +291,13 @@ describe("getPubByForm", () => {
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
 				{ pubId: pubs[0].id, communityId: community.id },
-				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
 			),
 			// Get a form we made in the seed which puts description before title
 			getForm({
@@ -311,7 +335,13 @@ describe("getPubByForm", () => {
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
 				{ pubId, communityId },
-				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
 			),
 			// Get the second form which has a relation field
 			getForm({
@@ -365,7 +395,13 @@ describe("getPubByForm", () => {
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
 				{ pubId, communityId },
-				{ withRelatedPubs: true, withMembers: true, withPubType: true, withStage: true }
+				{
+					withRelatedPubs: true,
+					withMembers: true,
+					withPubType: true,
+					withStage: true,
+					withStageActionInstances: true,
+				}
 			),
 			// Get the first form which does not have a relation field
 			getForm({
