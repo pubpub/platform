@@ -764,8 +764,8 @@ export const structureReferences = () => (tree: Root) => {
 	/* then calling .exec without that /g flag would crash. There may */
 	/* be a cleaner solution where we manually reset regex.lastIndex */
 	/* in certain places, but it's late and brittle, and this is currently working. */
-	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/);
-	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
+	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/);
+	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/g);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
 		if (node.tagName === "u" || node.tagName === "a") {
@@ -1106,7 +1106,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}])/g);
+			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}]|$)/g);
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
