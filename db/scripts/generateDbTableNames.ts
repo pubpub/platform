@@ -31,7 +31,7 @@ async function generateDatabaseTables(destination: string, schemas = ["public"])
 
 	const currentPath = new URL(import.meta.url).pathname;
 
-	const packageDbPath = currentPath.match(/.*?\/packages\/db\//)?.[0];
+	const packageDbPath = currentPath.match(/.*?\/db\//)?.[0];
 
 	const destinationPath = `${packageDbPath}${destination}`;
 
@@ -67,5 +67,6 @@ generateDatabaseTables(destination, schemas)
 		process.exit(0);
 	})
 	.catch((error) => {
+		console.error(error);
 		logger.error({ msg: "Error generating database tables", error });
 	});
