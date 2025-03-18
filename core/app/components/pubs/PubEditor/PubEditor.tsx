@@ -219,12 +219,6 @@ export async function PubEditor(props: PubEditorProps) {
 	}).executeTakeFirstOrThrow(
 		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
 	);
-	const parentPub = pub?.parentId
-		? await getPubsWithRelatedValues(
-				{ pubId: pub.parentId, communityId: props.communityId },
-				{ withStage: true, withLegacyAssignee: true, withPubType: true }
-			)
-		: undefined;
 
 	const formElements = form.elements.map((e) => (
 		<FormElement key={e.id} pubId={pubId} element={e} values={pub ? pub.values : []} />
@@ -261,7 +255,6 @@ export async function PubEditor(props: PubEditorProps) {
 		recipient: memberWithUser as RenderWithPubContext["recipient"],
 		communitySlug: community.slug,
 		pub: pub as RenderWithPubContext["pub"],
-		parentPub,
 	} satisfies RenderWithPubContext;
 
 	await hydrateMarkdownElements({

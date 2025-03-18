@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 import type { PubsId } from "db/public";
+import { Event } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
@@ -16,6 +17,7 @@ export type ActionRun = {
 	id: string;
 	createdAt: Date;
 	actionInstance: { name: string; action: string } | null;
+	sourceActionInstance: { name: string; action: string } | null;
 	stage: { id: string; name: string } | null;
 	pub: PubTitleProps & { id: PubsId };
 	result: unknown;
@@ -53,11 +55,15 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 					return `${user.firstName} ${user.lastName}`;
 				}
 				switch (getValue()) {
-					case "pubEnteredStage":
+					case Event.actionFailed:
+						return `Rule (${row.original.sourceActionInstance?.name} failed)`;
+					case Event.actionSucceeded:
+						return `Rule (${row.original.sourceActionInstance?.name} succeeded)`;
+					case Event.pubEnteredStage:
 						return "Rule (Pub entered stage)";
-					case "pubLeftStage":
+					case Event.pubLeftStage:
 						return "Rule (Pub exited stage)";
-					case "pubInStageForDuration":
+					case Event.pubInStageForDuration:
 						return "Rule (Pub in stage for duration)";
 				}
 			},

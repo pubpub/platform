@@ -1,5 +1,7 @@
 "use client";
 
+import type { ControllerRenderProps, FieldValue, UseFormReturn } from "react-hook-form";
+
 import { useCallback, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -12,7 +14,8 @@ import type {
 	CommunitiesId,
 	StagesId,
 } from "db/public";
-import { Event } from "db/public";
+import { actionInstancesIdSchema, Event } from "db/public";
+import { ActionInstanceProvider } from "ui/actionInstances";
 import { AutoFormObject } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
@@ -27,9 +30,10 @@ import {
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import type { Rules } from "~/actions/_lib/rules";
+import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
+import type { SequentialRuleEvent } from "~/actions/types";
 import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
+import { isClientException, useServerAction } from "~/lib/serverActions";
 import { addRule } from "../../../actions";
 
 type Props = {
@@ -39,36 +43,134 @@ type Props = {
 	rules: {
 		id: string;
 		event: Event;
-		instanceName: string;
-		action: Action;
-		actionInstanceId: ActionInstancesId;
+		actionInstance: ActionInstances;
+		sourceAction?: ActionInstances;
+		config?: RuleConfig<RuleForEvent<Event>> | null;
 	}[];
 };
 
-const schema = z.discriminatedUnion("event", [
-	z.object({
-		event: z.literal(Event.pubEnteredStage),
-		actionInstanceId: z.string().uuid(),
-	}),
-	z.object({
-		event: z.literal(Event.pubLeftStage),
-		actionInstanceId: z.string().uuid(),
-	}),
-	...Object.values(rules)
-		.filter(
-			(rule): rule is Exclude<Rules, { event: Event.pubEnteredStage | Event.pubLeftStage }> =>
-				rule.event !== Event.pubEnteredStage && rule.event !== Event.pubLeftStage
-		)
-		.map((rule) =>
-			z.object({
-				event: z.literal(rule.event),
-				actionInstanceId: z.string().uuid(),
-				additionalConfiguration: rule.additionalConfig
-					? rule.additionalConfig
-					: z.null().optional(),
-			})
-		),
-]);
+const ActionSelector = ({
+	fieldProps,
+	actionInstances,
+	label,
+	placeholder,
+	disabledActionId,
+	dataTestIdPrefix,
+}: {
+	fieldProps: Omit<ControllerRenderProps<CreateRuleSchema, "sourceActionInstanceId">, "name">;
+	actionInstances: ActionInstances[];
+	label: string;
+	placeholder: string;
+	disabledActionId?: string;
+	dataTestIdPrefix?: string;
+}) => {
+	return (
+		<FormItem>
+			<FormLabel>{label}</FormLabel>
+			<Select
+				onValueChange={fieldProps.onChange}
+				defaultValue={fieldProps.value}
+				value={fieldProps.value}
+			>
+				<SelectTrigger data-testid={`${dataTestIdPrefix}-select-trigger`}>
+					<SelectValue placeholder={placeholder} />
+				</SelectTrigger>
+				<SelectContent>
+					{actionInstances.map((instance) => {
+						const action = actions[instance.action];
+						const isDisabled = instance.id === disabledActionId;
+
+						return (
+							<SelectItem
+								key={instance.id}
+								value={instance.id}
+								className="hover:bg-gray-100"
+								disabled={isDisabled}
+								data-testid={`${dataTestIdPrefix}-select-item-${instance.name}`}
+							>
+								<div className="flex flex-row items-center gap-x-2">
+									<action.icon size="12" />
+									<span>{instance.name}</span>
+									{isDisabled && (
+										<span className="text-xs text-gray-400">
+											(self-reference not allowed)
+										</span>
+									)}
+								</div>
+							</SelectItem>
+						);
+					})}
+				</SelectContent>
+			</Select>
+			<FormMessage />
+		</FormItem>
+	);
+};
+
+const schema = z
+	.discriminatedUnion("event", [
+		z.object({
+			event: z.literal(Event.pubEnteredStage),
+			actionInstanceId: actionInstancesIdSchema,
+		}),
+		z.object({
+			event: z.literal(Event.pubLeftStage),
+			actionInstanceId: actionInstancesIdSchema,
+		}),
+		z.object({
+			event: z.literal(Event.actionSucceeded),
+			actionInstanceId: actionInstancesIdSchema,
+			sourceActionInstanceId: actionInstancesIdSchema,
+		}),
+		z.object({
+			event: z.literal(Event.actionFailed),
+			actionInstanceId: actionInstancesIdSchema,
+			sourceActionInstanceId: actionInstancesIdSchema,
+		}),
+		...Object.values(rules)
+			.filter(
+				(
+					rule
+				): rule is Exclude<
+					Rules,
+					{
+						event:
+							| Event.pubEnteredStage
+							| Event.pubLeftStage
+							| Event.actionSucceeded
+							| Event.actionFailed;
+					}
+				> =>
+					![
+						Event.pubEnteredStage,
+						Event.pubLeftStage,
+						Event.actionSucceeded,
+						Event.actionFailed,
+					].includes(rule.event)
+			)
+			.map((rule) =>
+				z.object({
+					event: z.literal(rule.event),
+					actionInstanceId: actionInstancesIdSchema,
+					additionalConfiguration: rule.additionalConfig
+						? rule.additionalConfig
+						: z.null().optional(),
+				})
+			),
+	])
+	.superRefine((data, ctx) => {
+		if (data.event !== Event.actionSucceeded && data.event !== Event.actionFailed) {
+			return;
+		}
+
+		if (data.sourceActionInstanceId === data.actionInstanceId) {
+			ctx.addIssue({
+				path: ["sourceActionInstanceId"],
+				code: z.ZodIssueCode.custom,
+				message: "Rules may not trigger actions in a loop",
+			});
+		}
+	});
 
 export type CreateRuleSchema = z.infer<typeof schema>;
 
@@ -77,10 +179,12 @@ export const StagePanelRuleCreator = (props: Props) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const onSubmit = useCallback(
 		async (data: CreateRuleSchema) => {
-			setIsOpen(false);
-			runAddRule({ stageId: props.stageId, data });
+			const result = await runAddRule({ stageId: props.stageId, data });
+			if (!isClientException(result)) {
+				setIsOpen(false);
+			}
 		},
-		[props.communityId]
+		[props.stageId, runAddRule]
 	);
 
 	const onOpenChange = useCallback((open: boolean) => {
@@ -89,15 +193,40 @@ export const StagePanelRuleCreator = (props: Props) => {
 
 	const form = useForm<z.infer<typeof schema>>({
 		resolver: zodResolver(schema),
+		defaultValues: {
+			actionInstanceId: undefined,
+			event: undefined,
+		},
 	});
 
 	const event = form.watch("event");
+	const selectedActionInstanceId = form.watch("actionInstanceId");
+	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
 
-	const selectedAction = form.watch("actionInstanceId");
+	// for action chaining events, filter out self-references
+	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;
 
-	const disallowedEvents = props.rules
-		.filter((rule) => rule.actionInstanceId === selectedAction)
-		.map((rule) => rule.event);
+	const getDisallowedEvents = useCallback(() => {
+		if (!selectedActionInstanceId) return [];
+
+		return props.rules
+			.filter((rule) => {
+				// for regular events, disallow if same action+event already exists
+				if (rule.event !== Event.actionSucceeded && rule.event !== Event.actionFailed) {
+					return rule.actionInstance.id === selectedActionInstanceId;
+				}
+
+				// for action chaining events, allow multiple rules with different watched actions
+				return (
+					rule.actionInstance.id === selectedActionInstanceId &&
+					rule.event === event &&
+					rule.sourceAction?.id === sourceActionInstanceId
+				);
+			})
+			.map((rule) => rule.event);
+	}, [props.rules, selectedActionInstanceId, event, form]);
+
+	const disallowedEvents = getDisallowedEvents();
 	const allowedEvents = Object.values(Event).filter((event) => !disallowedEvents.includes(event));
 
 	const rule = getRuleByName(event);
@@ -106,7 +235,9 @@ export const StagePanelRuleCreator = (props: Props) => {
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>
-					<Button variant="secondary">Add a rule</Button>
+					<Button variant="secondary" data-testid="add-rule-button">
+						Add a rule
+					</Button>
 				</DialogTrigger>
 				<DialogContent>
 					<DialogHeader>
@@ -125,36 +256,13 @@ export const StagePanelRuleCreator = (props: Props) => {
 									control={form.control}
 									name="actionInstanceId"
 									render={({ field }) => (
-										<FormItem>
-											<FormLabel></FormLabel>
-											<Select
-												onValueChange={field.onChange}
-												defaultValue={field.value}
-											>
-												<SelectTrigger>
-													<SelectValue placeholder="Action" />
-												</SelectTrigger>
-												<SelectContent>
-													{props.actionInstances.map((instance) => {
-														const action = actions[instance.action];
-
-														return (
-															<SelectItem
-																key={instance.id}
-																value={instance.id}
-																className="hover:bg-gray-100"
-															>
-																<div className="flex flex-row items-center gap-x-2">
-																	<action.icon size="12" />
-																	<span>{instance.name}</span>
-																</div>
-															</SelectItem>
-														);
-													})}
-												</SelectContent>
-											</Select>
-											<FormMessage />
-										</FormItem>
+										<ActionSelector
+											fieldProps={field}
+											actionInstances={props.actionInstances}
+											label="Run..."
+											placeholder="Action"
+											dataTestIdPrefix="action-selector"
+										/>
 									)}
 								/>
 								<FormField
@@ -162,16 +270,27 @@ export const StagePanelRuleCreator = (props: Props) => {
 									name="event"
 									render={({ field }) => (
 										<FormItem>
-											<FormLabel></FormLabel>
+											<FormLabel>when...</FormLabel>
 
 											{allowedEvents.length > 0 ? (
 												<>
 													<Select
-														onValueChange={field.onChange}
+														onValueChange={(value) => {
+															field.onChange(value);
+														}}
 														defaultValue={field.value}
+														key={field.value}
 													>
-														<SelectTrigger>
-															<SelectValue placeholder="Event" />
+														<SelectTrigger
+															data-testid={`event-select-trigger`}
+														>
+															<SelectValue placeholder="Event">
+																{field.value
+																	? humanReadableEvent(
+																			field.value
+																		)
+																	: "Event"}
+															</SelectValue>
 														</SelectTrigger>
 														<SelectContent>
 															{allowedEvents.map((event) => (
@@ -179,6 +298,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 																	key={event}
 																	value={event}
 																	className="hover:bg-gray-100"
+																	data-testid={`event-select-item-${event}`}
 																>
 																	{humanReadableEvent(event)}{" "}
 																</SelectItem>
@@ -196,6 +316,26 @@ export const StagePanelRuleCreator = (props: Props) => {
 										</FormItem>
 									)}
 								/>
+
+								{/* Additional selector for watched action when using action chaining events */}
+								{isActionChainingEvent && (
+									<FormField
+										control={form.control}
+										name="sourceActionInstanceId"
+										render={({ field }) => (
+											<ActionSelector
+												fieldProps={field}
+												actionInstances={props.actionInstances}
+												label="after action..."
+												placeholder="Select action to watch"
+												key={field.value}
+												disabledActionId={selectedActionInstanceId} // Prevent self-references
+												dataTestIdPrefix="watched-action"
+											/>
+										)}
+									/>
+								)}
+
 								{rule?.additionalConfig && (
 									<AutoFormObject
 										// @ts-expect-error FIXME: this fails because AutoFormObject
@@ -212,7 +352,13 @@ export const StagePanelRuleCreator = (props: Props) => {
 								)}
 							</div>
 							<DialogFooter>
-								<Button type="submit" disabled={allowedEvents.length === 0}>
+								<Button
+									type="submit"
+									disabled={
+										allowedEvents.length === 0 ||
+										(isActionChainingEvent && !sourceActionInstanceId)
+									}
+								>
 									Save rule
 								</Button>
 							</DialogFooter>

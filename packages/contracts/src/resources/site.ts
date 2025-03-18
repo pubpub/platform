@@ -225,7 +225,6 @@ type ProcessedPubBase = {
 	stageId: StagesId | null;
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
-	parentId: PubsId | null;
 	createdAt: Date;
 	title: string | null;
 	depth: number;
@@ -277,7 +276,6 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	stageId: stagesIdSchema.nullable(),
 	communityId: communitiesIdSchema,
 	pubTypeId: pubTypesIdSchema,
-	parentId: pubsIdSchema.nullable(),
 	isCycle: z.boolean().optional(),
 	depth: z.number(),
 	title: z.string().nullable(),
@@ -341,7 +339,6 @@ export type FTSReturn = {
 	createdAt: Date;
 	updatedAt: Date;
 	communityId: CommunitiesId;
-	parentId: PubsId | null;
 	assigneeId: UsersId | null;
 	title: string | null;
 	searchVector: string | null;
@@ -372,7 +369,6 @@ export const ftsReturnSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	communityId: communitiesIdSchema,
-	parentId: pubsIdSchema.nullable(),
 	assigneeId: usersIdSchema.nullable(),
 	title: z.string().nullable(),
 	searchVector: z.string().nullable(),

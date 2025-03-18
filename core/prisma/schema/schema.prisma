@@ -125,10 +125,6 @@ model Pub {
   // do not attempt to set this manually
   title       String?
 
-  parent   Pub?    @relation("pub_parent", fields: [parentId], references: [id], onDelete: Cascade)
-  parentId String?
-  children Pub[]   @relation("pub_parent")
-
   values          PubValue[]       @relation("original_pub")
   stages          PubsInStages[]
   actionRuns      ActionRun[]
@@ -410,6 +406,7 @@ model ActionInstance {
   config    Json?
   rules     Rule[]
   runs      ActionRun[]
+  watchedBy Rule[]      @relation("source_action_instance")
 
   @@map(name: "action_instances")
 }
@@ -442,6 +439,13 @@ model ActionRun {
   updatedAt        DateTime          @default(now()) @updatedAt
   PubValueHistory  PubValueHistory[]
 
+  // action run that triggered this action run
+  sourceActionRunId String?
+  sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
+
+  // action runs that were triggered by this action run
+  sequentialActionRuns ActionRun[] @relation("source_action_run")
+
   @@map(name: "action_runs")
 }
 
@@ -452,15 +456,17 @@ enum ActionRunStatus {
 }
 
 model Rule {
-  id               String         @id @default(dbgenerated("gen_random_uuid()"))
-  event            Event
-  actionInstance   ActionInstance @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId String
-  config           Json?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @default(now()) @updatedAt
+  id                     String          @id @default(dbgenerated("gen_random_uuid()"))
+  event                  Event
+  actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId       String
+  config                 Json?
+  // as the trigger for "actionSucceeded" or "actionFailed"
+  sourceActionInstanceId String?
+  sourceActionInstance   ActionInstance? @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @default(now()) @updatedAt
 
-  @@unique([actionInstanceId, event])
   @@map(name: "rules")
 }
 
@@ -468,6 +474,8 @@ enum Event {
   pubEnteredStage
   pubLeftStage
   pubInStageForDuration
+  actionSucceeded
+  actionFailed
 }
 
 enum FormAccessType {

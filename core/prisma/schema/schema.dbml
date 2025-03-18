@@ -94,9 +94,6 @@ Table pubs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   title String
-  parent pubs
-  parentId String
-  children pubs [not null]
   values pub_values [not null]
   stages PubsInStages [not null]
   actionRuns action_runs [not null]
@@ -322,6 +319,7 @@ Table action_instances {
   config Json
   rules rules [not null]
   runs action_runs [not null]
+  watchedBy rules [not null]
 }
 
 Table action_runs {
@@ -340,6 +338,9 @@ Table action_runs {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   PubValueHistory pub_values_history [not null]
+  sourceActionRunId String
+  sourceActionRun action_runs
+  sequentialActionRuns action_runs [not null]
 }
 
 Table rules {
@@ -348,12 +349,10 @@ Table rules {
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
   config Json
+  sourceActionInstanceId String
+  sourceActionInstance action_instances
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-
-  indexes {
-    (actionInstanceId, event) [unique]
-  }
 }
 
 Table forms {
@@ -511,6 +510,8 @@ Enum Event {
   pubEnteredStage
   pubLeftStage
   pubInStageForDuration
+  actionSucceeded
+  actionFailed
 }
 
 Enum FormAccessType {
@@ -624,8 +625,6 @@ Ref: pubs.communityId > communities.id
 
 Ref: pubs.assigneeId > users.id
 
-Ref: pubs.parentId - pubs.id [delete: Cascade]
-
 Ref: pub_fields.pubFieldSchemaId > PubFieldSchema.id
 
 Ref: pub_fields.communityId > communities.id
@@ -688,7 +687,11 @@ Ref: action_runs.pubId > pubs.id
 
 Ref: action_runs.userId > users.id [delete: Set Null]
 
+Ref: action_runs.sourceActionRunId - action_runs.id [delete: Set Null]
+
 Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
+
+Ref: rules.sourceActionInstanceId > action_instances.id [delete: Cascade]
 
 Ref: forms.communityId > communities.id [delete: Cascade]
 

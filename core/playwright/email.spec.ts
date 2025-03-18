@@ -48,8 +48,8 @@ const seed = createSeed({
 	},
 	stages: {
 		Evaluating: {
-			actions: [
-				{
+			actions: {
+				[ACTION_NAME]: {
 					action: Action.email,
 					name: ACTION_NAME,
 					config: {
@@ -58,7 +58,7 @@ const seed = createSeed({
 						recipientEmail: "test@example.com",
 					},
 				},
-			],
+			},
 		},
 	},
 	pubs: [
