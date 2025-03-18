@@ -46,6 +46,8 @@ locals {
     jobs       = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
     nginx      = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
     migrations = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-migrations"
+    // TODO: delete as soon as migrations is now standard
+    root = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
   }
 
   MAILGUN_SMTP_USERNAME           = "v7@mg.pubpub.org"

@@ -31,6 +31,7 @@ variable "ecr_repository_urls" {
     jobs       = string
     nginx      = string
     migrations = string
+    root       = string
   })
 }
 

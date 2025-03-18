@@ -4,6 +4,7 @@ output "ecr_repository_urls" {
     jobs       = aws_ecr_repository.pubpub_v7_jobs.repository_url
     nginx      = aws_ecr_repository.nginx.repository_url
     migrations = aws_ecr_repository.pubpub_v7_migrations.repository_url
+    root       = aws_ecr_repository.pubpub_v7.repository_url
   }
 }
 
