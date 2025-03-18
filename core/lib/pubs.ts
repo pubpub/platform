@@ -120,6 +120,11 @@ export const valuesWithoutTitle = <
 	return pub.values.filter((value) => value.fieldId !== titleField?.id);
 };
 
+/**
+ * Merges a pub with a form so that each pub value also has information from its
+ * corresponding form element. This is a full join, such that we will also have
+ * form elements that do not have pub values, and pub values that do not have form elements.
+ */
 export const getPubByForm = ({
 	pub,
 	form,
