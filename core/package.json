@@ -90,7 +90,7 @@
 		"jsonpath-plus": "^10.2.0",
 		"jsonwebtoken": "^9.0.0",
 		"katex": "catalog:",
-		"kysely": "^0.27.5",
+		"kysely": "catalog:",
 		"lodash.partition": "^4.6.0",
 		"logger": "workspace:*",
 		"lucia": "^3.2.2",

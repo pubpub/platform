@@ -22,14 +22,18 @@
 		"migrate-test": "dotenv -e .env.test -- prisma migrate deploy",
 		"prisma": "dotenv -e .env.local -e .env.development prisma",
 		"prisma-studio": "dotenv -e .env.local -e .env.development prisma studio",
-		"reset": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force"
+		"reset": "SKIP_VALIDATION=true dotenv -e .env.local -e .env.development prisma migrate reset -- --preview-feature --force",
+		"create-admin-user": "pnpm exec tsx scripts/create-admin-user.ts"
 	},
 	"dependencies": {
+		"@node-rs/argon2": "^1.8.3",
 		"@prisma/client": "5.19.1",
 		"@prisma/generator-helper": "^5.19.0",
 		"@prisma/internals": "^5.19.0",
 		"dotenv-cli": "^7.2.1",
+		"kysely": "catalog:",
 		"logger": "workspace:*",
+		"pg": "^8.11.3",
 		"prisma": "^5.19.0",
 		"prisma-dbml-generator": "^0.12.0",
 		"tsx": "catalog:"
@@ -37,6 +41,8 @@
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
+		"@types/pg": "^8.11.6",
+		"db": "workspace:*",
 		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"

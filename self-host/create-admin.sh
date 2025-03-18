@@ -16,6 +16,6 @@ docker compose run --rm \
     -e ADMIN_PASSWORD="$ADMIN_PASSWORD" \
     -e ADMIN_FIRSTNAME="$ADMIN_FIRSTNAME" \
     -e ADMIN_LASTNAME="$ADMIN_LASTNAME" \
-    platform-migrations pnpm --filter core exec tsx prisma/create-admin-user.cts
+    platform-migrations pnpm generate-admin-user
 
 echo "✨ Done! You can now login to Platform at $PUBPUB_URL"
