@@ -100,7 +100,19 @@ const FieldBlock = ({
 	);
 };
 
-export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode => {
+export const PubValues = ({
+	pub,
+	isNested,
+}: {
+	pub: FullProcessedPubWithForm;
+	/**
+	 * If this is a nested related pub. This can likely be removed once we have related pubs
+	 * using default forms as well, as right now we only need it to not render
+	 * the "Other fields" header which will always show up since related pubs do not have
+	 * forms joined currently
+	 **/
+	isNested?: boolean;
+}): ReactNode => {
 	const { values, depth } = pub;
 	if (!values.length) {
 		return null;
@@ -135,9 +147,11 @@ export const PubValues = ({ pub }: { pub: FullProcessedPubWithForm }): ReactNode
 			{valuesNotInForm.length ? (
 				<div className="flex flex-col gap-2">
 					{valuesInForm.length ? <hr className="mt-2" /> : null}
-					<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
-						Other Fields
-					</PubValueHeading>
+					{!isNested ? (
+						<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
+							Other Fields
+						</PubValueHeading>
+					) : null}
 					{valuesNotInForm.map(({ label, values }) => (
 						<FieldBlock key={label} name={label} values={values} depth={depth} />
 					))}
@@ -189,7 +203,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 				<CollapsibleContent>
 					{renderRelatedValues && (
 						<div className="ml-4">
-							<PubValues pub={relatedPub} />
+							<PubValues pub={relatedPub} isNested />
 						</div>
 					)}
 				</CollapsibleContent>
