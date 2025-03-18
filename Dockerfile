@@ -81,14 +81,14 @@ ENV CI $CI
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
   pnpm --filter $PACKAGE build 
 
-FROM withpackage as prepare-jobs
+FROM withpackage as prepare-generic
 
 ARG PACKAGE
 
 RUN pnpm --filter $PACKAGE --prod deploy /tmp/app
 
 
-FROM base as jobs
+FROM base as generic
 
 WORKDIR /usr/src/app
 

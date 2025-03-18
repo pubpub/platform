@@ -41,7 +41,9 @@ jobs:
     build-migrations:
         uses: ./.github/workflows/ecrbuild-template.yml
         with:
-            package: migrations
+            package: db
+            target: generic
+            image_suffix: migrations
             publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
             ghcr_image_name: platform-migrations
         secrets:
@@ -50,10 +52,9 @@ jobs:
 
     build-core:
         uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
         with:
             package: core
+            target: next-app-core
             publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
             ghcr_image_name: platform
         secrets:
@@ -62,11 +63,9 @@ jobs:
 
     build-jobs:
         uses: ./.github/workflows/ecrbuild-template.yml
-        # needs:
-        #   - build-base
         with:
             package: jobs
-            target: jobs
+            target: generic
             publish_to_ghcr: ${{ inputs.publish_to_ghcr }}
             ghcr_image_name: platform-jobs
         secrets:

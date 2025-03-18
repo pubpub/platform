@@ -12,10 +12,14 @@ on:
                 default: ubuntu-latest
             target:
                 type: string
+                required: true
             publish_to_ghcr:
                 type: boolean
                 default: false
             ghcr_image_name:
+                type: string
+                required: false
+            image_suffix:
                 type: string
                 required: false
         outputs:
@@ -82,18 +86,12 @@ jobs:
             - name: Get image label
               id: label
               env:
-                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+                  IMAGE_SUFFIX: ${{ inputs.image_suffix }}
               run: |
                   sha_short=$(git describe --always --abbrev=40 --dirty)
-                  if [[ -z $PACKAGE ]]
-                  then
-                    package_suffix=""
-                    echo "target=monorepo" >> $GITHUB_OUTPUT
-                  else
-                    package_suffix="-${PACKAGE}"
-                    echo "target=${TARGET:-next-app-${PACKAGE}}" >> $GITHUB_OUTPUT
-                  fi
-                  echo "label=$ECR_REGISTRY/$ECR_REPOSITORY_PREFIX$package_suffix:$sha_short" >> $GITHUB_OUTPUT
+
+                  echo "label=${{steps.login-ecr.outputs.registry}}/${{env.ECR_REPOSITORY_PREFIX}}${IMAGE_SUFFIX:-${{inputs.package}}}:$sha_short" >> $GITHUB_OUTPUT
+
                   if [[ ${{ inputs.publish_to_ghcr }} == "true" && -n ${{ inputs.ghcr_image_name }} ]]
                   then
                     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
