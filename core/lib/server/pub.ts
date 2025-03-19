@@ -10,13 +10,11 @@ import type {
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import partition from "lodash.partition";
-import mudder from "mudder";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
 	Filter,
 	FTSReturn,
-	GetPubResponseBody,
 	Json,
 	JsonValue,
 	MaybePubOptions,
@@ -43,13 +41,15 @@ import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { DefinitelyHas, MaybeHas, Prettify, XOR } from "../types";
+import type { DefinitelyHas, MaybeHas, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { env } from "../env/env.mjs";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
+import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
@@ -142,23 +142,6 @@ export const pubType = <
 		.$notNull()
 		.as("pubType");
 
-const pubAssignee = (eb: ExpressionBuilder<Database, "pubs">) =>
-	jsonObjectFrom(
-		eb
-			.selectFrom("users")
-			.whereRef("users.id", "=", "pubs.assigneeId")
-			.select([
-				"users.id",
-				"slug",
-				"firstName",
-				"lastName",
-				"avatar",
-				"createdAt",
-				"email",
-				"communityId",
-			])
-	).as("assignee");
-
 const pubColumns = [
 	"id",
 	"communityId",
@@ -168,57 +151,6 @@ const pubColumns = [
 	"assigneeId",
 	"title",
 ] as const satisfies SelectExpression<Database, "pubs">[];
-
-export const getPubBase = (
-	props:
-		| { pubId: PubsId; communityId?: never; stageId?: never }
-		| { pubId?: never; communityId: CommunitiesId; stageId?: never }
-		| {
-				pubId?: never;
-				communityId?: never;
-				stageId: StagesId;
-		  }
-) =>
-	db
-		.selectFrom("pubs")
-		.select((eb) => [
-			...pubColumns,
-			pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }),
-			pubAssignee(eb),
-			jsonArrayFrom(
-				eb
-					.selectFrom("PubsInStages")
-					.select(["PubsInStages.stageId as id"])
-					.whereRef("PubsInStages.pubId", "=", "pubs.id")
-			).as("stages"),
-		])
-		.$if(!!props.pubId, (eb) => eb.select(pubValuesByVal(props.pubId!)))
-		.$if(!props.pubId, (eb) => eb.select(pubValuesByRef("pubs.id")))
-		.$narrowType<{ values: PubValues }>();
-
-export const _deprecated_getPub = async (pubId: PubsId): Promise<GetPubResponseBody> => {
-	const pub = await getPubBase({ pubId }).where("pubs.id", "=", pubId).executeTakeFirst();
-
-	if (!pub) {
-		throw PubNotFoundError;
-	}
-
-	return pub;
-};
-
-export const _deprecated_getPubCached = async (pubId: PubsId) => {
-	const pub = await autoCache(
-		getPubBase({ pubId }).where("pubs.id", "=", pubId)
-	).executeTakeFirst();
-
-	if (!pub) {
-		throw PubNotFoundError;
-	}
-
-	return pub;
-};
-
-export type GetPubResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubCached>>>;
 
 export type GetManyParams = {
 	limit?: number;
@@ -239,42 +171,6 @@ export const GET_MANY_DEFAULT = {
 	orderBy: "createdAt",
 	orderDirection: "desc",
 } as const;
-
-const GET_PUBS_DEFAULT = {
-	...GET_MANY_DEFAULT,
-	select: pubColumns,
-} as const;
-
-/**
- * Get a nested array of pubs
- *
- * Either per community, or per stage
- */
-export const _deprecated_getPubs = async (
-	props: XOR<{ communityId: CommunitiesId }, { stageId: StagesId }>,
-	params: GetManyParams = GET_PUBS_DEFAULT
-) => {
-	const { limit, offset, orderBy, orderDirection } = { ...GET_PUBS_DEFAULT, ...params };
-
-	const pubs = await autoCache(
-		getPubBase(props)
-			.$if(Boolean(props.communityId), (eb) =>
-				eb.where("pubs.communityId", "=", props.communityId!)
-			)
-			.$if(Boolean(props.stageId), (eb) =>
-				eb
-					.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-					.where("PubsInStages.stageId", "=", props.stageId!)
-			)
-			.limit(limit)
-			.offset(offset)
-			.orderBy(orderBy, orderDirection)
-	).execute();
-
-	return pubs;
-};
-
-export type GetPubsResult = Prettify<Awaited<ReturnType<typeof _deprecated_getPubs>>>;
 
 const PubNotFoundError = new NotFoundError("Pub not found");
 
@@ -328,7 +224,7 @@ export const maybeWithTrx = async <T>(
 
 const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
 	Array.isArray(value) &&
-	value.every((v) => typeof v === "object" && "value" in v && "relatedPubId" in v);
+	value.every((v) => typeof v === "object" && v && "value" in v && "relatedPubId" in v);
 
 /**
  * Transform pub values which can either be
@@ -342,15 +238,15 @@ const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPub
  * to a more standardized
  * [ { slug, value, relatedPubId } ]
  */
-const normalizePubValues = (
-	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>
+export const normalizePubValues = <T extends JsonValue | Date>(
+	pubValues: Record<string, T | { value: T; relatedPubId: PubsId }[]>
 ) => {
 	return Object.entries(pubValues).flatMap(([slug, value]) =>
 		isRelatedPubInit(value)
 			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
 			: ([{ slug, value, relatedPubId: undefined }] as {
 					slug: string;
-					value: unknown;
+					value: T;
 					relatedPubId: PubsId | undefined;
 				}[])
 	);
@@ -391,7 +287,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 	if (body.id) {
 		const { values: processedVals } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId: body.id as PubsId,
-			values,
+			values: values as Record<string, JsonValue>,
 		});
 		values = processedVals;
 	}
@@ -463,6 +359,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 							}))
 						)
 						.returningAll()
+						.$narrowType<{ value: JsonValue }>()
 				).execute()
 			: [];
 
@@ -695,11 +592,11 @@ export const validatePubValues = async <T extends { slug: string; value: unknown
 	throw new BadRequestError(validationErrors.map(({ error }) => error).join(" "));
 };
 
-type AddPubRelationsInput = { value: unknown; slug: string } & XOR<
+type AddPubRelationsInput = { value: JsonValue | Date; slug: string } & XOR<
 	{ relatedPubId: PubsId },
 	{ relatedPub: CreatePubRequestBodyWithNullsNew }
 >;
-type UpdatePubRelationsInput = { value: unknown; slug: string; relatedPubId: PubsId };
+type UpdatePubRelationsInput = { value: JsonValue | Date; slug: string; relatedPubId: PubsId };
 
 type RemovePubRelationsInput = { value?: never; slug: string; relatedPubId: PubsId };
 
@@ -792,12 +689,7 @@ export const upsertPubRelations = async (
 			relatedPubId: expect(newlyCreatedPubs[index].id),
 		}));
 
-		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs] as {
-			relatedPubId: PubsId;
-			value: unknown;
-			slug: string;
-			fieldId: PubFieldsId;
-		}[];
+		const allRelationsToCreate = [...newPubsWithRelatedPubId, ...existingPubs];
 
 		const pubRelations = await upsertPubRelationValues({
 			pubId,
@@ -1001,7 +893,13 @@ export const updatePub = async ({
 	const result = await maybeWithTrx(db, async (trx) => {
 		// Update the stage if a target stage was provided.
 		if (stageId !== undefined) {
-			await movePub(pubId, stageId, trx).execute();
+			try {
+				await movePub(pubId, stageId, trx).execute();
+			} catch (err) {
+				if (!isUniqueConstraintError(err)) {
+					throw err;
+				}
+			}
 		}
 
 		// Allow rich text fields to overwrite other fields
@@ -1147,7 +1045,10 @@ const getRankedValues = async ({
 							valuesForField[0].pubId === pubId &&
 							valuesForField[0].fieldId === fieldId
 					)?.rank ?? "";
-				const ranks = mudder.base62.mudder(highestRank, "", valuesForField.length);
+				const ranks = findRanksBetween({
+					start: highestRank,
+					numberOfRanks: valuesForField.length,
+				});
 				return valuesForField.map((value, i) => ({ ...value, rank: ranks[i] }));
 			})
 		);
@@ -1222,12 +1123,12 @@ export const upsertPubRelationValues = async ({
 	allRelationsToCreate: {
 		pubId?: PubsId;
 		relatedPubId: PubsId;
-		value: unknown;
+		value: JsonValue | Date;
 		fieldId: PubFieldsId;
 	}[];
 	lastModifiedBy: LastModifiedBy;
 	trx: typeof db;
-}): Promise<PubValuesType[]> => {
+}) => {
 	if (!allRelationsToCreate.length) {
 		return [];
 	}
@@ -1255,9 +1156,11 @@ export const upsertPubRelationValues = async ({
 					.doUpdateSet((eb) => ({
 						value: eb.ref("excluded.value"),
 						lastModifiedBy: eb.ref("excluded.lastModifiedBy"),
+						rank: eb.ref("excluded.rank"),
 					}))
 			)
 			.returningAll()
+			.$narrowType<{ value: JsonValue }>()
 	).execute();
 };
 
@@ -1755,6 +1658,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								"pv.id as id",
 								"pv.fieldId",
 								"pv.value",
+								"pv.rank",
 								"pv.relatedPubId",
 								"pv.createdAt as createdAt",
 								"pv.updatedAt as updatedAt",
@@ -2105,7 +2009,7 @@ export const fullTextSearch = async (
 						)`.as("highlights"),
 					])
 					.$narrowType<{
-						value: Json;
+						value: JsonValue;
 					}>()
 					.whereRef("pub_values.pubId", "=", "pubs.id")
 					.where(

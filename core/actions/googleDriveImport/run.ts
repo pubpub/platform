@@ -84,7 +84,7 @@ export const run = defineRun<typeof action>(
 						(value) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
 					const publicationDate: Date = publicationDateField
-						? (publicationDateField.value as Date)
+						? (publicationDateField.value as unknown as Date)
 						: new Date(values.relatedPub!.createdAt);
 					return { [`${publicationDate.toISOString()}`]: values.relatedPubId };
 				});
@@ -102,7 +102,7 @@ export const run = defineRun<typeof action>(
 						(value) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
 					const publicationDate: Date = publicationDateField
-						? (publicationDateField.value as Date)
+						? (publicationDateField.value as unknown as Date)
 						: new Date(values.relatedPub!.createdAt);
 					return publicationDate.toISOString();
 				});
