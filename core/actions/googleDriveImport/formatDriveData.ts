@@ -64,7 +64,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 					const originalAssetUrl = node.properties[propertyKey];
 					if (originalAssetUrl) {
 						const urlObject = new URL(originalAssetUrl);
-						if (urlObject.hostname !== "pubpub.org") {
+						if (!urlObject.hostname.endsWith(".pubpub.org")) {
 							assetUrls[originalAssetUrl] = "";
 						}
 					}
@@ -95,7 +95,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 			);
 
 			visit(tree, "element", (node: any) => {
-				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const hasSrc = ["img", "video", "audio", "source"].includes(node.tagName);
 				const isDownload =
 					node.tagName === "a" && node.properties.className === "file-button";
 				if (hasSrc || isDownload) {
@@ -107,6 +107,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 				}
 			});
 		})
+		.use(rehypeFormat)
 		.process(html);
 	return String(result);
 };

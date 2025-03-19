@@ -1,18 +1,21 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
+import type { ReactNode } from "react";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { PubTypes, Stages } from "db/public";
+import type { ActionInstances, PubTypes, Stages } from "db/public";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
+import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { FullProcessedPub } from "~/lib/server/pub";
+import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getPubTitle } from "~/lib/pubs";
 
@@ -24,7 +27,7 @@ export const createdAtDateOptions = {
 	minute: "2-digit",
 } satisfies Intl.DateTimeFormatOptions;
 
-const getRelatedPubsColumns = () => {
+const getRelatedPubsColumns = (relatedPubActionsDropdowns: Record<string, ReactNode>) => {
 	return [
 		{
 			id: "select",
@@ -73,7 +76,7 @@ const getRelatedPubsColumns = () => {
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
-			accessorKey: "stages",
+			accessorKey: "stage",
 			cell: ({ getValue }) => {
 				const stageName = getValue<Stages>()?.name;
 				return stageName ? (
@@ -92,16 +95,35 @@ const getRelatedPubsColumns = () => {
 				</time>
 			),
 		},
+		{
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
+			accessorKey: "stage.actions",
+			cell: ({ getValue, row }) => {
+				return relatedPubActionsDropdowns[row.original.id];
+			},
+		},
 	] as const satisfies ColumnDef<FullProcessedPub, unknown>[];
 };
 
-const Table = ({ pubs }: { pubs: FullProcessedPub[] }) => {
-	const columns = getRelatedPubsColumns();
+const Table = ({
+	pubs,
+	relatedPubActionsDropdowns,
+}: {
+	pubs: FullProcessedPub[];
+	relatedPubActionsDropdowns: Record<string, ReactNode>;
+}) => {
+	const columns = getRelatedPubsColumns(relatedPubActionsDropdowns);
 
 	return <DataTable columns={columns} data={pubs} hidePaginationWhenSinglePage />;
 };
 
-export const RelatedPubsTable = ({ pub }: { pub: FullProcessedPub }) => {
+export const RelatedPubsTable = ({
+	pub,
+	relatedPubActionsDropdowns,
+}: {
+	pub: FullProcessedPub;
+	relatedPubActionsDropdowns: Record<string, ReactNode>;
+}) => {
 	const groupedBySlug = useMemo(() => {
 		const grouped: Record<string, { pub: FullProcessedPub; fieldName: string }[]> = {};
 		for (const value of pub.values) {
@@ -125,7 +147,7 @@ export const RelatedPubsTable = ({ pub }: { pub: FullProcessedPub }) => {
 	const [selected, setSelected] = useState(fields[0]?.slug);
 
 	if (fields.length === 0) {
-		return <Table pubs={[]} />;
+		return <Table pubs={[]} relatedPubActionsDropdowns={{}} />;
 	}
 
 	return (
@@ -147,7 +169,10 @@ export const RelatedPubsTable = ({ pub }: { pub: FullProcessedPub }) => {
 					);
 				})}
 			</div>
-			<Table pubs={groupedBySlug[selected].map((value) => value.pub)} />
+			<Table
+				pubs={groupedBySlug[selected].map((value) => value.pub)}
+				relatedPubActionsDropdowns={relatedPubActionsDropdowns}
+			/>
 		</div>
 	);
 };

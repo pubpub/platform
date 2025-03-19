@@ -1283,6 +1283,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		search,
 		withPubType,
 		withStage,
+		withStageActionInstances,
 		withMembers,
 		trx,
 		withLegacyAssignee,
@@ -1686,6 +1687,16 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						eb
 							.selectFrom("stages")
 							.selectAll("stages")
+							.$if(Boolean(withStageActionInstances), (qb) =>
+								qb.select(
+									jsonArrayFrom(
+										eb
+											.selectFrom("action_instances")
+											.whereRef("action_instances.stageId", "=", "pt.stageId")
+											.selectAll()
+									).as("actionInstances")
+								)
+							)
 							.where("pt.stageId", "is not", null)
 							.whereRef("stages.id", "=", "pt.stageId")
 							.limit(1)
@@ -1853,6 +1864,7 @@ export type FullProcessedPub = ProcessedPub<{
 	withMembers: true;
 	withPubType: true;
 	withStage: true;
+	withStageActionInstances: true;
 }>;
 
 export interface SearchConfig {
