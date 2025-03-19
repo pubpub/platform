@@ -10,7 +10,6 @@ import type {
 import { sql, Transaction } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import partition from "lodash.partition";
-import mudder from "mudder";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
@@ -49,6 +48,7 @@ import { env } from "../env/env.mjs";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
 import { hydratePubValues, mergeSlugsWithFields } from "../fields/utils";
 import { parseLastModifiedBy } from "../lastModifiedBy";
+import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
@@ -1043,7 +1043,10 @@ const getRankedValues = async ({
 							valuesForField[0].pubId === pubId &&
 							valuesForField[0].fieldId === fieldId
 					)?.rank ?? "";
-				const ranks = mudder.base62.mudder(highestRank, "", valuesForField.length);
+				const ranks = findRanksBetween({
+					start: highestRank,
+					numberOfRanks: valuesForField.length,
+				});
 				return valuesForField.map((value, i) => ({ ...value, rank: ranks[i] }));
 			})
 		);

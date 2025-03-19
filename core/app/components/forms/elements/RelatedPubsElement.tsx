@@ -14,7 +14,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
-import mudder from "mudder";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
@@ -31,6 +30,7 @@ import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import type { ElementProps, FormValue, FormValueSingle } from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
+import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
@@ -207,33 +207,15 @@ export const RelatedPubsElement = ({
 	// Update ranks and rhf field array position when elements are dragged
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
-			const { active, over } = event;
-			if (over && active.id !== over?.id) {
-				// activeIndex is the position the element started at and over is where it was
-				// dropped
-				const activeIndex = active.data.current?.sortable?.index;
-				const overIndex = over.data.current?.sortable?.index;
-				if (activeIndex !== undefined && overIndex !== undefined) {
-					// "earlier" means towards the beginning of the list, or towards the top of the page
-					const isMovedEarlier = activeIndex > overIndex;
-					const { id, ...activeElem } = fields[activeIndex];
-
-					// When moving an element earlier in the array, find a rank between the rank of the
-					// element at the dropped position and the element before it. When moving an element
-					// later, instead find a rank between that element and the element after it
-					const aboveRank =
-						fields[isMovedEarlier ? overIndex : overIndex + 1]?.rank ?? "";
-					const belowRank =
-						fields[isMovedEarlier ? overIndex - 1 : overIndex]?.rank ?? "";
-					const [rank] = mudder.base62.mudder(belowRank, aboveRank, 1);
-
-					// move doesn't trigger a rerender, so it's safe to chain these calls
-					move(activeIndex, overIndex);
-					update(overIndex, {
-						...activeElem,
-						rank,
-					});
-				}
+			const changes = getRankAndIndexChanges(event, fields);
+			if (changes) {
+				// move doesn't trigger a rerender, so it's safe to chain these calls
+				move(changes.activeIndex, changes.overIndex);
+				const { id, ...movedField } = fields[changes.activeIndex];
+				update(changes.overIndex, {
+					...movedField,
+					rank: changes.rank,
+				});
 			}
 		},
 		[fields]
@@ -266,11 +248,10 @@ export const RelatedPubsElement = ({
 				name={slug}
 				render={({ field }) => {
 					const handleAddPubs = (newPubs: ContextEditorPub[]) => {
-						const ranks = mudder.base62.mudder(
-							field.value[field.value.length - 1]?.rank,
-							"",
-							newPubs.length
-						);
+						const ranks = findRanksBetween({
+							start: field.value[field.value.length - 1]?.rank,
+							numberOfRanks: newPubs.length,
+						});
 						const values = newPubs.map((p, i) => ({
 							relatedPubId: p.id,
 							value: null,
