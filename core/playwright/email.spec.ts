@@ -18,6 +18,9 @@ test.describe.configure({ mode: "serial" });
 
 let page: Page;
 
+const memberId = crypto.randomUUID();
+const pubId = crypto.randomUUID();
+
 const seed = createSeed({
 	community: {
 		name: `test community`,
@@ -40,7 +43,7 @@ const seed = createSeed({
 	},
 	users: {
 		admin: {
-			id: "fd6d27d5-3d05-466b-906a-6b6dd29116e4" as UsersId,
+			id: memberId as UsersId,
 			role: MemberRole.admin,
 			password: "password",
 			firstName: "Jill",
@@ -79,7 +82,7 @@ const seed = createSeed({
 	},
 	pubs: [
 		{
-			id: "98deab44-0c57-4bca-8941-e7f97ceeb471" as PubsId,
+			id: pubId as PubsId,
 			pubType: "Evaluation",
 			values: {
 				Title: "Review of The Activity of Snails",
@@ -93,10 +96,10 @@ const seed = createSeed({
 				Evaluations: [
 					{
 						value: null,
-						relatedPubId: "98deab44-0c57-4bca-8941-e7f97ceeb471" as PubsId,
+						relatedPubId: pubId as PubsId,
 					},
 				],
-				EvaluationManager: "fd6d27d5-3d05-466b-906a-6b6dd29116e4",
+				EvaluationManager: memberId,
 			},
 			stage: "Evaluating",
 		},
