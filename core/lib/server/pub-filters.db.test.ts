@@ -707,7 +707,7 @@ const unifiedTestCases: {
 						p.values.some(
 							(v) =>
 								v.fieldSlug === slug("date") &&
-								(v.value as Date) < new Date("2023-01-01T00:00:00.000Z")
+								new Date(v.value as string) < new Date("2023-01-01T00:00:00.000Z")
 						)
 					)
 			),
@@ -907,7 +907,7 @@ const unifiedTestCases: {
 						!p.values.some(
 							(v) =>
 								v.fieldSlug === slug("date") &&
-								(v.value as Date) >= new Date("2023-01-01T00:00:00.000Z")
+								new Date(v.value as string) >= new Date("2023-01-01T00:00:00.000Z")
 						))
 			),
 	},
@@ -975,7 +975,7 @@ const unifiedTestCases: {
 						p.values.some(
 							(v) =>
 								v.fieldSlug === slug("date") &&
-								!((v.value as Date) < new Date("2023-01-01T00:00:00.000Z"))
+								new Date(v.value as string) < new Date("2023-01-01T00:00:00.000Z")
 						)) ||
 					!(
 						p.values.some(
@@ -1061,7 +1061,9 @@ const unifiedTestCases: {
 							(v) => v.fieldSlug === slug("boolean") && v.value === false
 						) ||
 						p.values.some(
-							(v) => v.fieldSlug === slug("date") && !((v.value as Date) > twenty99)
+							(v) =>
+								v.fieldSlug === slug("date") &&
+								!(new Date(v.value as string) > twenty99)
 						)
 					)
 			),
