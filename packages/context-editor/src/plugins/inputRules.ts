@@ -107,6 +107,21 @@ export const createLinkRuleHandler = (
 const linkRule = (markType: MarkType) =>
 	new InputRule(EMAIL_OR_URI_REGEX_WITH_SPACE, createLinkRuleHandler(markType, undefined, true));
 
+// Rule to recognize markdown link syntax and return a link:
+// [text](https://www.example.com) -> <a href="https://www.example.com">text</a>
+const markdownLinkRule = (markType: MarkType) =>
+	new InputRule(
+		new RegExp(`\\[([^\\]]+)\\]\\((${emailOrUriRegexBase})\\)`),
+		(state, match, start, end) => {
+			const [_, text, url] = match;
+			const fragment = Fragment.fromArray([
+				state.schema.text(text, [state.schema.mark(markType, { href: url })]),
+				state.schema.text(" "),
+			]);
+			return state.tr.replaceWith(start, end, fragment);
+		}
+	);
+
 export default (schema: Schema) => {
 	const rules = [
 		new InputRule(/^AI please!$/, (state, match, start, end) => {
@@ -117,6 +132,7 @@ export default (schema: Schema) => {
 			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
 			return state.tr.replaceWith(start - 1, end, contentToInsert);
 		}),
+		markdownLinkRule(schema.marks.link),
 		linkRule(schema.marks.link),
 		// The order is significant here since bold uses a superset of italic (** vs * or __ vs _)
 		// Prosemirror applies the first rule that matches
