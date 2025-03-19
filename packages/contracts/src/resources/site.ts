@@ -407,12 +407,18 @@ export type TopLevelLogicalFilter = {
 	$not?: Filter;
 };
 
+/**
+ * & here, because you can mix and match field level operators and top level logical operators
+ */
 export type FieldLevelFilter = BaseFilter & FieldLevelLogicalFilter;
 
 export type SlugKeyFilter = {
 	[slug: string]: FieldLevelFilter;
 };
 
+/**
+ * | here, because you can only have either a slug key filter or a top level logical filter
+ */
 export type Filter = SlugKeyFilter | TopLevelLogicalFilter;
 
 const coercedNumber = z.coerce.number();

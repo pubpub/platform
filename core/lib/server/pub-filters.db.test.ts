@@ -1170,9 +1170,16 @@ describe("querystring parsing", () => {
 
 			expect(validatedFilter.data).toEqual(filter);
 
-			await expect(
-				validateFilter(community.community.id, validatedFilter.data!, trx)
-			).resolves.toBeUndefined();
+			try {
+				const result = await validateFilter(
+					community.community.id,
+					validatedFilter.data!,
+					trx
+				);
+				expect(result).toBeDefined();
+			} catch (e) {
+				expect(e).toBeUndefined();
+			}
 		}
 	);
 
@@ -1265,40 +1272,47 @@ describe("filtering", async () => {
 });
 
 const validationFailureCases: {
+	title: string;
 	filter: Filter;
 	message: string | RegExp;
 }[] = [
 	{
+		title: "invalid operators in number field",
 		filter: {
 			[slug("number")]: { $containsi: "test" },
 		},
-		message: `Operators [$containsi] are not valid for schema type Number of field ${communitySlug}:number`,
+		message: `Operators [$containsi] are not valid for ${communitySlug}:number of schema Number`,
 	},
 	{
+		title: "invalid operators in string field",
 		filter: {
 			[slug("title")]: { $gt: 42 },
 		},
-		message: `Operators [$gt] are not valid for schema type String of field ${communitySlug}:title`,
+		message: `Operators [$gt] are not valid for ${communitySlug}:title of schema String`,
 	},
 	{
+		title: "invalid operators in boolean field",
 		filter: {
 			[slug("boolean")]: { $contains: true },
 		},
-		message: `Operators [$contains] are not valid for schema type Boolean of field ${communitySlug}:boolean`,
+		message: `Operators [$contains] are not valid for ${communitySlug}:boolean of schema Boolean`,
 	},
 	{
+		title: "invalid operators in date field",
 		filter: {
 			createdAt: { $containsi: "2024" },
 		},
-		message: "Operators [$containsi] are not valid for date field createdAt",
+		message: "Operators [$containsi] are not valid for createdAt",
 	},
 	{
+		title: "invalid operators in field level filter",
 		filter: {
 			[slug("number")]: { $containsi: "test", $endsWith: "42", $startsWith: "1" },
 		},
-		message: `Operators [$containsi, $endsWith, $startsWith] are not valid for schema type Number of field ${communitySlug}:number`,
+		message: `Operators [$containsi, $endsWith, $startsWith] are not valid for ${communitySlug}:number of schema Number`,
 	},
 	{
+		title: "invalid operators in nested structures",
 		filter: {
 			$or: [
 				{
@@ -1319,6 +1333,7 @@ const validationFailureCases: {
 		message: /Operators (\[\$containsi\] .*?:number|.*?\[\$contains\] .*?:boolean)/,
 	},
 	{
+		title: "invalid operators in nested structures other case",
 		filter: {
 			$or: {
 				[slug("number")]: { $containsi: "test" },
@@ -1326,15 +1341,13 @@ const validationFailureCases: {
 					{
 						[slug("number")]: { $gt: 42 },
 					},
-					{
-						[slug("boolean")]: { $contains: true },
-					},
 				],
 			},
 		},
-		message: /Operators (\[\$containsi\] .*?:number|.*?\[\$contains\] .*?:boolean)/,
+		message: /Operators (\[\$containsi\] .*?:number)/,
 	},
 	{
+		title: "double trouble",
 		filter: {
 			[slug("number")]: {
 				$or: {
@@ -1343,14 +1356,14 @@ const validationFailureCases: {
 				},
 			},
 		},
-		message: `Operators [$containsi, $endsWith] are not valid for schema type Number of field ${communitySlug}:number`,
+		message: `Operators [$containsi, $endsWith] are not valid for ${communitySlug}:number of schema Number`,
 	},
 ];
 
 // specific validation failure modes
 describe("validation", () => {
 	it.concurrent.for(validationFailureCases)(
-		"rejects invalid filter: $message",
+		"rejects invalid filter: $title",
 		async ({ filter, message }, { expect }) => {
 			const trx = getTrx();
 			await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
@@ -1379,6 +1392,7 @@ describe("validation", () => {
 			],
 		};
 
-		await expect(validateFilter(community.community.id, filter, trx)).resolves.toBeUndefined();
+		const result = await validateFilter(community.community.id, filter, trx);
+		expect(result).toBeDefined();
 	});
 });

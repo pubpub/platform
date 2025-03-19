@@ -1,16 +1,10 @@
 import type { FieldLevelFilter, Filter, FilterOperator, LogicalOperator } from "contracts";
 import type { CommunitiesId } from "db/public";
-import { logicalOperators } from "contracts";
-import { CoreSchemaType } from "db/public";
 
 import { db } from "~/kysely/database";
 import { entries } from "../mapping";
 import { getFieldInfoForSlugs } from "./pub";
-import {
-	coreSchemaTypeAllowedOperators,
-	isFieldLevelEntriedLogicalOperator,
-	isTopLevelEntriedLogicalFilter,
-} from "./pub-filters";
+import { coreSchemaTypeAllowedOperators } from "./pub-filters";
 
 /**
  * base error class for filter validation errors
@@ -18,176 +12,33 @@ import {
 export class InvalidFilterError extends Error {
 	constructor(
 		fieldInfo: string,
-		allowedOperators: FilterOperator[],
-		operators: FilterOperator[]
+		allowedOperators: Set<FilterOperator>,
+		operators: Set<FilterOperator>
 	) {
-		const incorrectOperators = Array.from(new Set(operators)).filter(
-			(op) => !allowedOperators.includes(op)
-		);
+		const incorrectOperators = operators.difference(allowedOperators);
 
-		const message = `Operators [${incorrectOperators.join(", ")}] are not valid for ${fieldInfo}: Only [${allowedOperators.join(", ")}] are allowed`;
+		if (incorrectOperators.size === 0) {
+			throw new Error(
+				"Something went wrong throwing an InvalidFilterError, no incorrect operators found"
+			);
+		}
+
+		const message = `Operators [${Array.from(incorrectOperators).join(", ")}] are not valid for ${fieldInfo}: Only [${Array.from(allowedOperators).join(", ")}] are allowed`;
 		super(message);
 	}
 }
 
-/**
- * error thrown when a filter uses invalid operators for a pub field
- */
-export class InvalidPubFieldFilterError extends InvalidFilterError {
-	constructor(
-		field: { schemaName: CoreSchemaType; slug: string },
-		allowedOperators: FilterOperator[],
-		operators: FilterOperator[]
-	) {
-		super(
-			`schema type ${field.schemaName} of field ${field.slug}`,
-			allowedOperators,
-			operators
-		);
+const assertAllowedOperators = (
+	fieldInfo: string,
+	field: Set<FilterOperator>,
+	allowedOperators: FilterOperator[]
+): void => {
+	const allowedOperatorsSet = new Set(allowedOperators);
+	const hasDissallowedOperators = !field.isSubsetOf(allowedOperatorsSet);
+
+	if (hasDissallowedOperators) {
+		throw new InvalidFilterError(fieldInfo, allowedOperatorsSet, field);
 	}
-}
-
-/**
- * error thrown when a filter uses invalid operators for a date field
- */
-export class InvalidDateFilterError extends InvalidFilterError {
-	constructor(
-		field: "updatedAt" | "createdAt",
-		allowedOperators: FilterOperator[],
-		operators: FilterOperator[]
-	) {
-		super(`date field ${field}`, allowedOperators, operators);
-	}
-}
-
-/**
- * checks if a field is a date field (updatedAt or createdAt)
- */
-const isDateField = (field: string): boolean => {
-	return field === "updatedAt" || field === "createdAt";
-};
-
-/**
- * extracts operators from a filter value, including those nested in logical operators
- */
-const extractOperatorsFromValue = (
-	value: FieldLevelFilter,
-	accumulatedOperators: Set<FilterOperator> = new Set()
-): Set<FilterOperator> => {
-	// handle non-object values
-	if (typeof value !== "object" || value === null) {
-		return accumulatedOperators;
-	}
-
-	const keys = Object.keys(value);
-
-	// if (isFieldLevelEntriedLogicalOperator(value)) {
-	// 	return extractOperatorsFromValue(value[0], accumulatedOperators);
-	// }
-
-	// we are assuming logic operators are "alone"
-	// if (!logicalOperators.includes(keys[0] as LogicalOperator)) {
-	// 	for (const key of keys) {
-	// 		if (logicalOperators.includes(key as LogicalOperator)) {
-	// 			extractOperatorsFromValue({ [key]: value[key] }, accumulatedOperators);
-	// 		} else {
-	// 			accumulatedOperators.add(key as FilterOperator);
-	// 		}
-	// 	}
-	// 	return accumulatedOperators;
-	// }
-
-	// const logicalOperator = keys[0] as LogicalOperator;
-	// const conditions = value[logicalOperator];
-
-	// if (typeof conditions !== "object" || conditions === null) {
-	// 	return accumulatedOperators;
-	// }
-
-	// accumulatedOperators.add(logicalOperator as FilterOperator);
-
-	for (const [op, val] of entries(value)) {
-		if (logicalOperators.includes(op as LogicalOperator)) {
-			if (Array.isArray(val)) {
-				for (const subVal of val) {
-					extractOperatorsFromValue(subVal, accumulatedOperators);
-				}
-			} else {
-				extractOperatorsFromValue(val, accumulatedOperators);
-			}
-		} else {
-			accumulatedOperators.add(op as FilterOperator);
-		}
-	}
-
-	return accumulatedOperators;
-};
-
-/**
- * type to track fields and their associated filter operators
- */
-type FieldsWithFilters = Record<string, Set<FilterOperator>>;
-
-/**
- * recursively finds all fields and their operators in a filter
- * @param filter
- * @param fieldsWithFilters accumulator for fields and their operators
- * @returns record of field names to sets of operators
- */
-const findFieldsWithOperators = (
-	filter: Filter,
-	fieldsWithFilters: FieldsWithFilters = {}
-): FieldsWithFilters => {
-	for (const condition of entries(filter)) {
-		// handle logical operators
-		if (isTopLevelEntriedLogicalFilter(condition)) {
-			const [field, val] = condition;
-			// top level logical operators, which group other pubfield filters
-			if (Array.isArray(val)) {
-				for (const subFilter of val) {
-					findFieldsWithOperators(subFilter, fieldsWithFilters);
-				}
-				// "pubfield level" logical operator, eg { [slug]: { $or: { $eq: "Test", $contains: "test" }}}
-			} else if (typeof val === "object" && val !== null) {
-				findFieldsWithOperators(val, fieldsWithFilters);
-			}
-			continue;
-		}
-
-		// handle updatedAt and createdAt fields
-		const [field, val] = condition;
-		if (isDateField(field)) {
-			const operators = extractOperatorsFromValue(val);
-
-			const invalidOperators = Array.from(operators).filter(
-				(op) =>
-					!coreSchemaTypeAllowedOperators.DateTime.includes(op as any) &&
-					!logicalOperators.includes(op as any)
-			);
-
-			if (invalidOperators.length > 0) {
-				throw new InvalidDateFilterError(
-					field as "updatedAt" | "createdAt",
-					coreSchemaTypeAllowedOperators.DateTime,
-					invalidOperators as FilterOperator[]
-				);
-			}
-
-			continue;
-		}
-
-		if (typeof val !== "object" || val === null) {
-			continue;
-		}
-		// handle regular fields
-		const operators = extractOperatorsFromValue(val);
-
-		fieldsWithFilters[field] = fieldsWithFilters[field]
-			? new Set([...fieldsWithFilters[field], ...operators])
-			: operators;
-	}
-
-	return fieldsWithFilters;
 };
 
 /**
@@ -196,24 +47,36 @@ const findFieldsWithOperators = (
  * @param filter the filter to validate
  * @param trx optional transaction
  *
+ * FIXME: this function shares a lot in common with `applyFilters`, they are both walking the filter in some way
+ * It would be good to use a common helper function for this
+ *
  * @throws {InvalidFilterError}
  * @throws {InvalidDateFilterError}
  * @throws {InvalidPubFieldFilterError}
  */
-export async function validateFilter(
-	communityId: CommunitiesId,
-	filter: Filter,
-	trx = db
-): Promise<void> {
-	const fieldsWithOperators = findFieldsWithOperators(filter);
+export async function validateFilter(communityId: CommunitiesId, filter: Filter, trx = db) {
+	const fieldsWithOperators = extractFilterOperators(filter);
 
 	if (Object.keys(fieldsWithOperators).length === 0) {
 		return;
 	}
 
+	const { updatedAt, createdAt, ...actualFields } = fieldsWithOperators;
+
+	for (const [operators, field] of [
+		[updatedAt, "updatedAt"],
+		[createdAt, "createdAt"],
+	] as const) {
+		if (!operators) {
+			continue;
+		}
+
+		assertAllowedOperators(field, operators, coreSchemaTypeAllowedOperators.DateTime);
+	}
+
 	const fieldInfos = await getFieldInfoForSlugs({
 		communityId,
-		slugs: Object.keys(fieldsWithOperators),
+		slugs: Object.keys(actualFields),
 		trx,
 	});
 
@@ -225,20 +88,93 @@ export async function validateFilter(
 	for (const field of fieldsWithSchemaAndOperators) {
 		const allowedOperators = coreSchemaTypeAllowedOperators[field.schemaName];
 
-		const fieldOperators = Array.from(field.operators).filter(
-			(op) => !logicalOperators.includes(op as any)
+		assertAllowedOperators(
+			`${field.slug} of schema ${field.schemaName}`,
+			field.operators,
+			allowedOperators
 		);
+	}
 
-		const invalidOperators = fieldOperators.filter(
-			(op) => !allowedOperators.includes(op as any)
-		);
+	// just for testing
+	return fieldsWithSchemaAndOperators;
+}
 
-		if (invalidOperators.length > 0) {
-			throw new InvalidPubFieldFilterError(
-				{ schemaName: field.schemaName, slug: field.slug },
-				allowedOperators,
-				invalidOperators as FilterOperator[]
-			);
+const isLogicalOperator = (key: string): key is LogicalOperator => {
+	return key === "$or" || key === "$and" || key === "$not";
+};
+
+const isFilterOperator = (key: string): key is FilterOperator => {
+	return key.startsWith("$") && !isLogicalOperator(key);
+};
+
+/**
+ * Extracts all operators used for each field slug in a filter
+ * @param filter The filter object to analyze
+ * @returns Record mapping field slugs to their used operators
+ */
+function extractFilterOperators(filter: Filter): Record<string, Set<FilterOperator>> {
+	const result: Record<string, Set<FilterOperator>> = {};
+
+	function addOperator(slug: string, operator: FilterOperator) {
+		if (!result[slug]) {
+			result[slug] = new Set<FilterOperator>();
+		}
+
+		result[slug].add(operator);
+	}
+
+	function processObject(
+		obj: Filter | Filter[] | FieldLevelFilter | FieldLevelFilter[],
+		currentSlug?: string
+	) {
+		// handle arrays (could be array format of logical operators)
+		if (Array.isArray(obj)) {
+			obj.forEach((item) => processObject(item, currentSlug));
+			return;
+		}
+
+		for (const [key, value] of entries(obj)) {
+			// handle top-level logical operators
+			if (isLogicalOperator(key)) {
+				processObject(value, currentSlug);
+				continue;
+			}
+
+			if (currentSlug && isFilterOperator(key)) {
+				// this is an operator inside a logical operator
+				addOperator(currentSlug, key);
+				continue;
+			}
+
+			if (Array.isArray(value)) {
+				throw new Error(
+					`Non logical array value detected for a filter: ${JSON.stringify([key, value])}`
+				);
+			}
+
+			// handle field slugs (non-logical operators, not special fields)
+			if (!key.startsWith("$")) {
+				// this is a field slug
+				const fieldSlug = key;
+
+				for (const [opKey, opValue] of entries(value)) {
+					if (isLogicalOperator(opKey)) {
+						// handle logical operators at field level
+						processObject(opValue, fieldSlug);
+					} else if (isFilterOperator(opKey)) {
+						// direct operator
+						addOperator(fieldSlug, opKey);
+					} else {
+						throw new Error(
+							`Invalid operator detected for a filter: ${JSON.stringify([opKey, opValue])}`
+						);
+					}
+				}
+				return;
+			}
 		}
 	}
+
+	processObject(filter);
+	return result;
 }
