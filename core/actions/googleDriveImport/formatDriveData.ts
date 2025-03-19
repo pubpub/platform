@@ -81,10 +81,15 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 								assetData.buffer,
 								{ contentType: assetData.mimetype }
 							);
-							assetUrls[originalAssetUrl] = uploadedUrl.replace(
-								"assets.app.pubpub.org.s3.us-east-1.amazonaws.com",
-								"assets.app.pubpub.org"
-							);
+							assetUrls[originalAssetUrl] = uploadedUrl
+								.replace(
+									"assets.app.pubpub.org.s3.us-east-1.amazonaws.com",
+									"assets.app.pubpub.org"
+								)
+								.replace(
+									"s3.us-east-1.amazonaws.com/assets.app.pubpub.org",
+									"assets.app.pubpub.org"
+								);
 						} else {
 							assetUrls[originalAssetUrl] = originalAssetUrl;
 						}
