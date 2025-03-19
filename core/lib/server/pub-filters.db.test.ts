@@ -9,7 +9,7 @@ import { CoreSchemaType } from "db/public";
 
 import { createSeed } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "../__tests__/utils";
-import { applyFieldOperators, applyFilters } from "./pub-filters";
+import { applyFieldLevelFilters, applyFilters } from "./pub-filters";
 
 const { createForEachMockedTransaction, testDb } = await mockServerCode();
 
@@ -194,6 +194,21 @@ const seed = createSeed({
 				Boolean: true,
 			},
 		},
+		{
+			pubType: "Basic Pub",
+			values: {
+				Date: new Date("2022-02-01T00:00:00.000Z"),
+				Number: 43,
+			},
+		},
+
+		{
+			pubType: "Basic Pub",
+			values: {
+				Date: new Date("2024-02-01T00:00:00.000Z"),
+				Number: 43,
+			},
+		},
 	],
 });
 
@@ -249,7 +264,7 @@ const coolQuery = (filter: Filter) => {
 };
 
 const validateFilter = async (communityId: CommunitiesId, filter: Filter, trx = getTrx()) => {
-	const { validateFilter: valFilter } = await import("./validate-filters");
+	const { validateFilter: valFilter } = await import("./pub-filters-validate");
 	return valFilter(communityId, filter, trx);
 };
 
@@ -259,9 +274,12 @@ const unifiedTestCases: {
 	title: string;
 	filter: Filter;
 	querystring: string;
-	sql: string | RegExp | (string | RegExp)[];
-	parameters: (string | number)[];
-	foundIds: PubsId[] | ((pubs: ProcessedPub[]) => PubsId[]);
+	/**
+	 * null here means to match snapshot
+	 */
+	sql: string | RegExp | (string | RegExp)[] | null;
+	parameters: (string | number | boolean)[];
+	foundIds: PubsId[] | ((pubs: ProcessedPub[]) => ProcessedPub[]);
 }[] = [
 	{
 		title: "simple equality",
@@ -376,7 +394,16 @@ const unifiedTestCases: {
 		querystring: `filters[$or][0][${slug("title")}][$eq]=Some title&filters[$or][1][$and][0][${slug("number")}][$gt]=40&filters[$or][1][$and][1][${slug("number")}][$lt]=50`,
 		sql: /exists \(.*"slug" = \$1 and "value" = \$2\).* or \(.*"slug" = \$3 and "value" > \$4\).* and exists \(.*"slug" = \$5 and "value" < \$6\).*\)/,
 		parameters: [slug("title"), '"Some title"', slug("number"), 40, slug("number"), 50],
-		foundIds: [titleId, number42Id],
+		foundIds: (pubs) =>
+			pubs.filter((p) =>
+				p.values.some(
+					(v) =>
+						(v.fieldSlug === slug("title") && v.value === "Some title") ||
+						(v.fieldSlug === slug("number") &&
+							(v.value as number) > 40 &&
+							(v.value as number) < 50)
+				)
+			),
 	},
 	{
 		title: "field-level logical operators",
@@ -435,7 +462,15 @@ const unifiedTestCases: {
 		querystring: `filters[${slug("number")}][$gt]=40&filters[${slug("number")}][$lt]=50`,
 		sql: `"slug" = $1 and ("value" > $2 and "value" < $3)`,
 		parameters: [slug("number"), 40, 50],
-		foundIds: [number42Id],
+		foundIds: (pubs) =>
+			pubs.filter((p) =>
+				p.values.some(
+					(v) =>
+						v.fieldSlug === slug("number") &&
+						(v.value as number) > 40 &&
+						(v.value as number) < 50
+				)
+			),
 	},
 	{
 		title: "multiple fields should be treated as AND",
@@ -445,7 +480,7 @@ const unifiedTestCases: {
 		},
 		querystring: `filters[${slug("title")}][$eq]=Test&filters[${slug("number")}][$eq]=99`,
 		sql: /exists \(.*"slug" = \$1 and "value" = \$2\).* and exists \(.*"slug" = \$3 and "value" = \$4\).*/,
-		parameters: [slug("title"), '"Test"', slug("number"), "99"],
+		parameters: [slug("title"), '"Test"', slug("number"), 99],
 		foundIds: [testTitleId],
 	},
 	{
@@ -455,7 +490,7 @@ const unifiedTestCases: {
 		},
 		querystring: `filters[${slug("boolean")}][$eq]=true`,
 		sql: `"slug" = $1 and "value" = $2`,
-		parameters: [slug("boolean"), "true"],
+		parameters: [slug("boolean"), true],
 		foundIds: [testCaseId, importantDocId, trueId],
 	},
 	{
@@ -489,6 +524,27 @@ const unifiedTestCases: {
 	// 	foundIds: [relationId],
 	// },
 	{
+		title: "exists operator",
+		filter: {
+			[slug("title")]: { $exists: true },
+		},
+		querystring: `filters[${slug("title")}][$exists]=true`,
+		sql: `exists (select 1 as "exists_check" from "pub_values" inner join "pub_fields" on "pub_fields"."id" = "pub_values"."fieldId" where "pub_values"."pubId" = "pubs"."id" and "pub_fields"."slug" = $1 and true)`,
+		parameters: [slug("title")],
+		foundIds: (pubs) => pubs.filter((p) => p.values.some((v) => v.fieldSlug === slug("title"))),
+	},
+	{
+		title: "exists operator with false",
+		filter: {
+			[slug("title")]: { $exists: false },
+		},
+		querystring: `filters[${slug("title")}][$exists]=false`,
+		sql: `not exists (select 1 as "exists_check" from "pub_values" inner join "pub_fields" on "pub_fields"."id" = "pub_values"."fieldId" where "pub_values"."pubId" = "pubs"."id" and "pub_fields"."slug" = $1 and true)`,
+		parameters: [slug("title")],
+		foundIds: (pubs) =>
+			pubs.filter((p) => !p.values.some((v) => v.fieldSlug === slug("title"))),
+	},
+	{
 		title: "top-level logical AND",
 		filter: {
 			$and: [{ [slug("title")]: { $eq: "Test" } }, { [slug("number")]: { $gt: 10 } }],
@@ -508,12 +564,9 @@ const unifiedTestCases: {
 		sql: /not exists \(.*"slug" = \$1 and "value" = \$2\).*/,
 		parameters: [slug("title"), '"Test"'],
 		foundIds: (pubs) =>
-			pubs
-				.filter(
-					(p) =>
-						!p.values.some((v) => v.fieldSlug === slug("title") && v.value === "Test")
-				)
-				.map((p) => p.id),
+			pubs.filter(
+				(p) => !p.values.some((v) => v.fieldSlug === slug("title") && v.value === "Test")
+			),
 	},
 	{
 		title: "field-level logical NOT",
@@ -524,11 +577,9 @@ const unifiedTestCases: {
 		sql: '"slug" = $1 and not "value" = $2',
 		parameters: [slug("title"), '"Test"'],
 		foundIds: (pubs) =>
-			pubs
-				.filter((p) =>
-					p.values.some((v) => v.fieldSlug === slug("title") && v.value !== "Test")
-				)
-				.map((p) => p.id),
+			pubs.filter((p) =>
+				p.values.some((v) => v.fieldSlug === slug("title") && v.value !== "Test")
+			),
 	},
 	{
 		title: "complex nested structure",
@@ -550,7 +601,7 @@ const unifiedTestCases: {
 			/\(exists \(.*"slug" = \$1 and value::text ilike \$2\) and exists \(.*"slug" = \$3 and "value" = \$4\)/,
 			/or exists \(.*"slug" = \$5 and not \("value" >= \$6 and "value" <= \$7\)/,
 		],
-		parameters: [slug("title"), "%test%", slug("boolean"), "true", slug("number"), 30, 50],
+		parameters: [slug("title"), "%test%", slug("boolean"), true, slug("number"), 30, 50],
 		foundIds: community.pubs
 			.filter(
 				(p) =>
@@ -635,34 +686,53 @@ const unifiedTestCases: {
 			slug("number"),
 			50,
 			slug("boolean"),
-			"false",
+			false,
 			slug("date"),
 			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
 		],
 		foundIds: (pubs) =>
-			pubs
-				.filter(
-					(p) =>
-						(p.values.some(
-							(v) => v.fieldSlug === slug("title") && /test/i.test(v.value as string)
+			pubs.filter(
+				(p) =>
+					(p.values.some(
+						(v) => v.fieldSlug === slug("title") && /test/i.test(v.value as string)
+					) ||
+						p.values.some(
+							(v) => v.fieldSlug === slug("number") && (v.value as number) > 50
+						)) &&
+					!(
+						p.values.some(
+							(v) => v.fieldSlug === slug("boolean") && (v.value as boolean) === false
 						) ||
-							p.values.some(
-								(v) => v.fieldSlug === slug("number") && (v.value as number) > 50
-							)) &&
-						!(
-							p.values.some(
-								(v) =>
-									v.fieldSlug === slug("boolean") &&
-									(v.value as boolean) === false
-							) ||
-							p.values.some(
-								(v) =>
-									v.fieldSlug === slug("date") &&
-									(v.value as Date) < new Date("2023-01-01T00:00:00.000Z")
-							)
+						p.values.some(
+							(v) =>
+								v.fieldSlug === slug("date") &&
+								(v.value as Date) < new Date("2023-01-01T00:00:00.000Z")
 						)
+					)
+			),
+	},
+	{
+		title: "field level and",
+		filter: {
+			[slug("number")]: {
+				$and: {
+					$gte: 40,
+					$lte: 45,
+				},
+			},
+		},
+		querystring: `filters[${slug("number")}][$and][$gte]=40&filters[${slug("number")}][$and][$lte]=45`,
+		sql: `"slug" = $1 and ("value" >= $2 and "value" <= $3)`,
+		parameters: [slug("number"), 40, 45],
+		foundIds: (pubs) =>
+			pubs.filter((p) =>
+				p.values.some(
+					(v) =>
+						v.fieldSlug === slug("number") &&
+						(v.value as number) >= 40 &&
+						(v.value as number) <= 45
 				)
-				.map((p) => p.id),
+			),
 	},
 	{
 		title: "complex filter with all operator types",
@@ -670,19 +740,19 @@ const unifiedTestCases: {
 			$or: [
 				{ [slug("title")]: { $containsi: "important" } },
 				{ [slug("number")]: { $between: [40, 45] } },
+				{ [slug("array")]: { $jsonPath: '$[*] == "item1"' } },
 				{
 					[slug("date")]: { $gt: new Date("2023-01-01T00:00:00.000Z") },
 					[slug("boolean")]: { $eq: true },
 				},
-				{ [slug("array")]: { $jsonPath: '$[*] == "item1"' } },
 			],
 		},
-		querystring: `filters[$or][0][${slug("title")}][$containsi]=important&filters[$or][1][${slug("number")}][$between][0]=40&filters[$or][1][${slug("number")}][$between][1]=45&filters[$or][2][${slug("date")}][$gt]=2023-01-01T00:00:00.000Z&filters[$or][2][${slug("boolean")}][$eq]=true&filters[$or][3][${slug("array")}][$jsonPath]=$[*] == "item1"`,
+		querystring: `filters[$or][0][${slug("title")}][$containsi]=important&filters[$or][1][${slug("number")}][$between][0]=40&filters[$or][1][${slug("number")}][$between][1]=45&filters[$or][3][${slug("date")}][$gt]=2023-01-01T00:00:00.000Z&filters[$or][3][${slug("boolean")}][$eq]=true&filters[$or][2][${slug("array")}][$jsonPath]=$[*] == "item1"`,
 		sql: [
 			'"slug" = $1 and value::text ilike $2) or exists',
-			'"slug" = $3 and ("value" >= $4 and "value" <= $5)) or (exists',
-			/exists \(.*"slug" = \$6 and "value" > \$7\).* and exists \(.*"slug" = \$8 and "value" = \$9\).* or exists/,
-			'"slug" = $10 and "value" @@ $11',
+			'"slug" = $3 and ("value" >= $4 and "value" <= $5)) or exists',
+			'"slug" = $6 and "value" @@ $7) or (exists',
+			/exists .*"slug" = \$8 and "value" > \$9.* and exists .*"slug" = \$10 and "value" = \$11.*/,
 		],
 		parameters: [
 			slug("title"),
@@ -690,35 +760,383 @@ const unifiedTestCases: {
 			slug("number"),
 			40,
 			45,
+			slug("array"),
+			'$[*] == "item1"',
 			slug("date"),
 			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
 			slug("boolean"),
-			"true",
-			slug("array"),
-			'$[*] == "item1"',
+			true,
 		],
-		foundIds: [
-			// bc important doc title
-			importantDocId,
-			// bc number 42 is between 40 and 45
-			number42Id,
-			// array selector
-			arrayId,
-			// boolean true and date after 2023-01-01
-			testCaseId,
+		foundIds: (pubs) =>
+			pubs.filter(
+				(p) =>
+					p.values.some(
+						(v) =>
+							(v.fieldSlug === slug("title") &&
+								/important/i.test(v.value as string)) ||
+							(v.fieldSlug === slug("number") &&
+								(v.value as number) > 40 &&
+								(v.value as number) < 45) ||
+							(v.fieldSlug === slug("array") &&
+								(v.value as string[]).includes("item1"))
+					) ||
+					// $or object
+					(p.values.some(
+						(v) =>
+							v.fieldSlug === slug("date") &&
+							new Date(v.value as string) > new Date("2023-01-01T00:00:00.000Z")
+					) &&
+						p.values.some((v) => v.fieldSlug === slug("boolean") && v.value === true))
+			),
+	},
+	{
+		title: "not not",
+		filter: {
+			$not: {
+				$not: {
+					[slug("number")]: {
+						$eq: 42,
+					},
+				},
+			},
+		},
+		querystring: `filters[$not][$not][${slug("number")}][$eq]=42`,
+		sql: /where not not exists \(.*"slug" = \$1 and "value" = \$2\).*/,
+		parameters: [slug("number"), 42],
+		foundIds: (pubs) =>
+			pubs.filter((p) =>
+				p.values.some((v) => v.fieldSlug === slug("number") && v.value == 42)
+			),
+	},
+	{
+		title: "not slug not",
+		filter: {
+			$not: {
+				[slug("number")]: {
+					$not: {
+						$eq: 42,
+					},
+				},
+			},
+		},
+		querystring: `filters[$not][${slug("number")}][$not][$eq]=42`,
+		sql: /where not exists \(.*"slug" = \$1 and not "value" = \$2\).*/,
+		parameters: [slug("number"), 42],
+		foundIds: (pubs) =>
+			pubs.filter(
+				(p) => !p.values.some((v) => v.fieldSlug === slug("number") && v.value !== 42)
+			),
+	},
+	{
+		title: "array syntax: complex mixture of field and top-level logical operators",
+		filter: {
+			$or: [
+				{
+					$and: [
+						{
+							[slug("title")]: {
+								$or: [{ $containsi: "test" }, { $containsi: "important" }],
+							},
+						},
+						{
+							[slug("boolean")]: { $eq: true },
+						},
+					],
+				},
+				{
+					$and: [
+						{
+							[slug("number")]: {
+								$and: [{ $gte: 40 }, { $lte: 45 }],
+							},
+						},
+						{
+							$not: {
+								[slug("date")]: {
+									$not: {
+										$lt: new Date("2023-01-01T00:00:00.000Z"),
+									},
+								},
+							},
+						},
+					],
+				},
+			],
+		},
+		querystring: `filters[$or][0][$and][0][${slug("title")}][$or][0][$containsi]=test&filters[$or][0][$and][0][${slug("title")}][$or][1][$containsi]=important&filters[$or][0][$and][1][${slug("boolean")}][$eq]=true&filters[$or][1][$and][0][${slug("number")}][$and][0][$gte]=40&filters[$or][1][$and][0][${slug("number")}][$and][1][$lte]=45&filters[$or][1][$and][1][$not][${slug("date")}][$not][$lt]=2023-01-01T00:00:00.000Z`,
+		sql: [
+			/exists \(.*"slug" = \$1 and \(value::text ilike \$2 or value::text ilike \$3\)\)/,
+			/exists \(.*"slug" = \$4 and "value" = \$5\)/,
+			/exists \(.*"slug" = \$6 and \("value" >= \$7 and "value" <= \$8\)\)/,
+			/not exists \(.*"slug" = \$9 and not "value" < \$10\)/,
 		],
+		parameters: [
+			slug("title"),
+			"%test%",
+			"%important%",
+			slug("boolean"),
+			true,
+			slug("number"),
+			40,
+			45,
+			slug("date"),
+			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
+		],
+		foundIds: (pubs) =>
+			pubs.filter(
+				(p) =>
+					// Top-level OR:
+					// First condition: Title contains "test"/"important" AND boolean is true
+					(p.values.some(
+						(v) =>
+							v.fieldSlug === slug("title") &&
+							(/test/i.test(v.value as string) ||
+								/important/i.test(v.value as string))
+					) &&
+						p.values.some(
+							(v) => v.fieldSlug === slug("boolean") && v.value === true
+						)) ||
+					// Second condition: Number between 40-45 AND date NOT earlier than 2023-01-01
+					(p.values.some(
+						(v) =>
+							v.fieldSlug === slug("number") &&
+							(v.value as number) >= 40 &&
+							(v.value as number) <= 45
+					) &&
+						!p.values.some(
+							(v) =>
+								v.fieldSlug === slug("date") &&
+								(v.value as Date) >= new Date("2023-01-01T00:00:00.000Z")
+						))
+			),
+	},
+	{
+		title: "object syntax: complex mixture of field and top-level logical operators ",
+		filter: {
+			$or: {
+				// Top-level $or with object syntax
+				$and: {
+					// Top-level $and with object syntax
+					[slug("title")]: {
+						$or: {
+							// Field-level $or with object syntax
+							$containsi: "test",
+							$startsWithi: "test",
+						},
+					},
+					[slug("date")]: {
+						$not: {
+							// Field-level $not
+							$lt: new Date("2023-01-01T00:00:00.000Z"),
+						},
+					},
+				},
+				$not: {
+					// Top-level $not
+					$and: {
+						// Top-level $and inside $not
+						[slug("number")]: {
+							$not: {
+								// Field-level $not
+								$between: [0, 30],
+							},
+						},
+						[slug("boolean")]: { $eq: false },
+					},
+				},
+			},
+		},
+		querystring: `filters[$or][$and][${slug("title")}][$or][$containsi]=test&filters[$or][$and][${slug("title")}][$or][$startsWithi]=test&filters[$or][$and][${slug("date")}][$not][$lt]=2023-01-01T00:00:00.000Z&filters[$or][$not][$and][${slug("number")}][$not][$between][0]=0&filters[$or][$not][$and][${slug("number")}][$not][$between][1]=30&filters[$or][$not][$and][${slug("boolean")}][$eq]=false`,
+		sql: null,
+		parameters: [
+			slug("title"),
+			"%test%",
+			"test%",
+			slug("date"),
+			`"${new Date("2023-01-01T00:00:00.000Z").toISOString()}"`,
+			slug("number"),
+			0,
+			30,
+			slug("boolean"),
+			false,
+		],
+		// foundIds: [testCaseId, importantDocId],
+		foundIds: (pubs) =>
+			pubs.filter(
+				(p) =>
+					// Top-level OR:
+					(p.values.some(
+						(v) =>
+							v.fieldSlug === slug("title") &&
+							(/test/i.test(v.value as string) ||
+								(v.value as string).toLowerCase().startsWith("test"))
+					) &&
+						p.values.some(
+							(v) =>
+								v.fieldSlug === slug("date") &&
+								!((v.value as Date) < new Date("2023-01-01T00:00:00.000Z"))
+						)) ||
+					!(
+						p.values.some(
+							(v) =>
+								v.fieldSlug === slug("number") &&
+								!((v.value as number) >= 0 && (v.value as number) <= 30)
+						) &&
+						p.values.some((v) => v.fieldSlug === slug("boolean") && v.value === false)
+					)
+			),
+	},
+	{
+		title: "mixed array and object syntax with deeply nested conditions",
+		filter: {
+			$and: [
+				{
+					$or: [
+						{
+							[slug("title")]: {
+								$and: {
+									$containsi: "test",
+									$not: { $containsi: "case" },
+								},
+							},
+						},
+						{
+							[slug("number")]: {
+								$or: {
+									$gte: 90,
+									$eq: 42,
+								},
+							},
+						},
+					],
+				},
+				{
+					$not: {
+						$or: {
+							[slug("boolean")]: { $eq: false },
+							[slug("date")]: {
+								$not: {
+									$gt: twenty99,
+								},
+							},
+						},
+					},
+				},
+			],
+		},
+		querystring: `filters[$and][0][$or][0][${slug("title")}][$and][$containsi]=test&filters[$and][0][$or][0][${slug("title")}][$and][$not][$containsi]=case&filters[$and][0][$or][1][${slug("number")}][$or][$gte]=90&filters[$and][0][$or][1][${slug("number")}][$or][$eq]=42&filters[$and][1][$not][$or][${slug("boolean")}][$eq]=false&filters[$and][1][$not][$or][${slug("date")}][$not][$gt]=${twenty99.toISOString()}`,
+		sql: null,
+		parameters: [
+			slug("title"),
+			"%test%",
+			"%case%",
+			slug("number"),
+			90,
+			42,
+			slug("boolean"),
+			false,
+			slug("date"),
+			`"${twenty99.toISOString()}"`,
+		],
+		foundIds: (pubs) =>
+			pubs.filter(
+				(p) =>
+					// Top-level AND:
+					// First condition: (Title contains "test" AND not "garbage") OR (Number >= 90 OR Number = 42)
+					(p.values.some(
+						(v) =>
+							v.fieldSlug === slug("title") &&
+							/test/i.test(v.value as string) &&
+							!/garbage/i.test(v.value as string)
+					) ||
+						p.values.some(
+							(v) =>
+								v.fieldSlug === slug("number") &&
+								((v.value as number) >= 90 || (v.value as number) === 42)
+						)) &&
+					// Second condition: NOT(boolean is false OR date is NOT > twenty99)
+					!(
+						p.values.some(
+							(v) => v.fieldSlug === slug("boolean") && v.value === false
+						) ||
+						p.values.some(
+							(v) => v.fieldSlug === slug("date") && !((v.value as Date) > twenty99)
+						)
+					)
+			),
+	},
+	{
+		title: "multiple field-level logical operators with nested conditions",
+		filter: {
+			[slug("title")]: {
+				$or: {
+					// Field-level $or with object
+					$containsi: "test",
+					$not: {
+						// Field-level $not inside $or
+						$and: {
+							// Field-level $and inside $not
+							$containsi: "document",
+							$contains: "important",
+						},
+					},
+				},
+			},
+			[slug("number")]: {
+				$and: {
+					// Field-level $and with object
+					$not: { $lt: 40 },
+					$or: [{ $eq: 42 }, { $eq: 99 }],
+				},
+			},
+		},
+		querystring: `filters[${slug("title")}][$or][$containsi]=test&filters[${slug("title")}][$or][$not][$and][$containsi]=document&filters[${slug("title")}][$or][$not][$and][$contains]=important&filters[${slug("number")}][$and][$not][$lt]=40&filters[${slug("number")}][$and][$or][0][$eq]=42&filters[${slug("number")}][$and][$or][1][$eq]=99`,
+		sql: null,
+		parameters: [
+			slug("title"),
+			"%test%",
+			"%document%",
+			"%important%",
+			slug("number"),
+			40,
+			42,
+			99,
+		],
+		foundIds: (pubs) =>
+			pubs.filter(
+				(p) =>
+					// Title condition: contains "test" OR NOT(contains "document" AND "important")
+					p.values.some(
+						(v) =>
+							v.fieldSlug === slug("title") &&
+							(/test/i.test(v.value as string) ||
+								!(
+									/document/i.test(v.value as string) &&
+									/important/i.test(v.value as string)
+								))
+					) &&
+					// Number condition: NOT < 40 AND (= 42 OR = 99)
+					p.values.some(
+						(v) =>
+							v.fieldSlug === slug("number") &&
+							!((v.value as number) < 40) &&
+							((v.value as number) === 42 || (v.value as number) === 99)
+					)
+			),
 	},
 ];
 
 describe("SQL generation", () => {
-	it.concurrent.each(unifiedTestCases)(
+	it.concurrent.for(unifiedTestCases)(
 		"generates correct SQL for $title",
-		async ({ filter, sql, parameters }) => {
+		async ({ filter, sql, parameters }, { expect }) => {
 			const q = coolQuery(filter).compiled;
 			if (Array.isArray(sql)) {
 				sql.forEach((sqlSnippet) => {
 					expect(q.sql).toMatch(sqlSnippet);
 				});
+			} else if (sql === null) {
+				expect(q.sql).toMatchSnapshot();
 			} else {
 				expect(q.sql).toMatch(sql);
 			}
@@ -728,9 +1146,9 @@ describe("SQL generation", () => {
 });
 
 describe("querystring parsing", () => {
-	it.concurrent.each(unifiedTestCases)(
+	it.concurrent.for(unifiedTestCases)(
 		"correctly parses $title",
-		async ({ querystring, filter }) => {
+		async ({ querystring, filter }, { expect }) => {
 			const trx = getTrx();
 			const parsed = QueryString.parse(querystring, {
 				depth: 10,
@@ -751,17 +1169,18 @@ describe("querystring parsing", () => {
 
 			expect(validatedFilter.data).toEqual(filter);
 
-			await validateFilter(community.community.id, validatedFilter.data!, trx);
+			await expect(
+				validateFilter(community.community.id, validatedFilter.data!, trx)
+			).resolves.toBeUndefined();
 		}
 	);
 
-	it("handles empty filters", async () => {
+	it("rejects empty filters", async () => {
 		const querystring = "";
 		const parsed = QueryString.parse(querystring);
 		const validatedFilter = filterSchema.safeParse(parsed);
 
-		expect(validatedFilter.success).toBe(true);
-		expect(validatedFilter.data).toEqual({});
+		expect(validatedFilter.success).toBe(false);
 	});
 
 	it("rejects invalid operators", async () => {
@@ -799,105 +1218,95 @@ describe("querystring parsing", () => {
 });
 
 describe("filtering", async () => {
-	it.concurrent.each(unifiedTestCases)("filters by $title", async ({ filter, foundIds }) => {
-		const trx = getTrx();
+	it.for(unifiedTestCases)(
+		"filters by $title",
+		async ({ filter, foundIds, title }, { expect }) => {
+			const trx = getTrx();
 
-		const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
+			const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
 
-		const pubs = await getPubsWithRelatedValues(
-			{
-				communityId: community.community.id,
-			},
-			{
-				trx,
-				filters: filter,
-			}
-		);
+			performance.mark("start");
+			const pubs = await getPubsWithRelatedValues(
+				{
+					communityId: community.community.id,
+				},
+				{
+					trx,
+					filters: filter,
+				}
+			);
+			performance.mark("end");
+			console.log(
+				title,
+				"getPubQuerySchema",
+				performance.measure(`getPubsWithRelatedValues`, "start", "end").duration
+			);
 
-		const expectedIds = typeof foundIds === "function" ? foundIds(pubs) : foundIds;
+			performance.mark("start");
+			const expectedIds =
+				typeof foundIds === "function" ? foundIds(pubs).map((p) => p.id) : foundIds;
 
-		expect(
-			pubs,
-			"Expected the same number of pubs to be returned as the number of specified foundIds"
-		).toHaveLength(expectedIds.length);
-
-		if (pubs.length === 0) {
-			return;
-		}
-
-		const expectedIdsSet = new Set(expectedIds);
-
-		Array.from(expectedIdsSet).forEach((id) => {
-			const expectedPub = community.pubs.find((p) => p.id === id);
-			const foundPub = pubs.find((p) => p.id === id);
 			expect(
-				foundPub,
-				`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
-			).toBeDefined();
-		});
-	});
+				pubs,
+				"Expected the same number of pubs to be returned as the number of specified foundIds"
+			).toHaveLength(expectedIds.length);
+
+			if (pubs.length === 0) {
+				return;
+			}
+
+			const expectedIdsSet = new Set(expectedIds);
+
+			Array.from(expectedIdsSet).forEach((id) => {
+				const expectedPub = community.pubs.find((p) => p.id === id);
+				const foundPub = pubs.find((p) => p.id === id);
+				expect(
+					foundPub,
+					`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
+				).toBeDefined();
+			});
+			performance.mark("end");
+			console.log(title, "expect", performance.measure(`expect`, "start", "end").duration);
+		}
+	);
 });
 
-// specific validaton failure modes
-describe("validation", () => {
-	it("rejects string operators on number fields", async () => {
-		const trx = getTrx();
-		const filter = {
+const validationFailureCases: {
+	filter: Filter;
+	message: string | RegExp;
+}[] = [
+	{
+		filter: {
 			[slug("number")]: { $containsi: "test" },
-		};
-
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			`Operators [$containsi] are not valid for schema type Number of field ${communitySlug}:number`
-		);
-	});
-
-	it("rejects number operators on string fields", async () => {
-		const trx = getTrx();
-		const filter = {
+		},
+		message: `Operators [$containsi] are not valid for schema type Number of field ${communitySlug}:number`,
+	},
+	{
+		filter: {
 			[slug("title")]: { $gt: 42 },
-		};
-
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			`Operators [$gt] are not valid for schema type String of field ${communitySlug}:title`
-		);
-	});
-
-	it("rejects array operators on boolean fields", async () => {
-		const trx = getTrx();
-		const filter = {
+		},
+		message: `Operators [$gt] are not valid for schema type String of field ${communitySlug}:title`,
+	},
+	{
+		filter: {
 			[slug("boolean")]: { $contains: true },
-		};
-
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			`Operators [$contains] are not valid for schema type Boolean of field ${communitySlug}:boolean`
-		);
-	});
-
-	it("rejects invalid operators on date fields", async () => {
-		const trx = getTrx();
-		const filter = {
+		},
+		message: `Operators [$contains] are not valid for schema type Boolean of field ${communitySlug}:boolean`,
+	},
+	{
+		filter: {
 			createdAt: { $containsi: "2024" },
-		};
-
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			"Operators [$containsi] are not valid for date field createdAt"
-		);
-	});
-
-	it("rejects multiple invalid operators", async () => {
-		const trx = getTrx();
-		const filter = {
+		},
+		message: "Operators [$containsi] are not valid for date field createdAt",
+	},
+	{
+		filter: {
 			[slug("number")]: { $containsi: "test", $endsWith: "42", $startsWith: "1" },
-		};
-
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			`Operators [$containsi, $endsWith, $startsWith] are not valid for schema type Number of field ${communitySlug}:number`
-		);
-	});
-
-	it("validates nested logical operators correctly", async () => {
-		const trx = getTrx();
-		const filter = {
+		},
+		message: `Operators [$containsi, $endsWith, $startsWith] are not valid for schema type Number of field ${communitySlug}:number`,
+	},
+	{
+		filter: {
 			$or: [
 				{
 					[slug("number")]: { $containsi: "test" },
@@ -913,28 +1322,49 @@ describe("validation", () => {
 					],
 				},
 			],
-		};
-
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			`Operators [$containsi] are not valid for schema type Number of field ${communitySlug}:number`
-		);
-	});
-
-	it("validates field-level logical operators", async () => {
-		const trx = getTrx();
-		const filter = {
+		},
+		message: /Operators (\[\$containsi\] .*?:number|.*?\[\$contains\] .*?:boolean)/,
+	},
+	{
+		filter: {
+			$or: {
+				[slug("number")]: { $containsi: "test" },
+				$and: [
+					{
+						[slug("number")]: { $gt: 42 },
+					},
+					{
+						[slug("boolean")]: { $contains: true },
+					},
+				],
+			},
+		},
+		message: /Operators (\[\$containsi\] .*?:number|.*?\[\$contains\] .*?:boolean)/,
+	},
+	{
+		filter: {
 			[slug("number")]: {
 				$or: {
 					$containsi: "test",
 					$endsWith: "42",
 				},
 			},
-		};
+		},
+		message: `Operators [$containsi, $endsWith] are not valid for schema type Number of field ${communitySlug}:number`,
+	},
+];
 
-		await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
-			`Operators [$containsi, $endsWith] are not valid for schema type Number of field ${communitySlug}:number`
-		);
-	});
+// specific validation failure modes
+describe("validation", () => {
+	it.concurrent.for(validationFailureCases)(
+		"rejects invalid filter: $message",
+		async ({ filter, message }, { expect }) => {
+			const trx = getTrx();
+			await expect(validateFilter(community.community.id, filter, trx)).rejects.toThrow(
+				message
+			);
+		}
+	);
 
 	it("allows valid operators in complex nested structures", async () => {
 		const trx = getTrx();

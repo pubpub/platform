@@ -50,10 +50,10 @@ import {
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
-import { validateFilter } from "~/lib/server/validate-filters";
 
 const baseAuthorizationObject = Object.fromEntries(
 	Object.keys(ApiAccessScope).map(

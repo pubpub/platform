@@ -1,11 +1,16 @@
-import type { Filter, FilterOperator, LogicalOperator } from "contracts";
+import type { FieldLevelFilter, Filter, FilterOperator, LogicalOperator } from "contracts";
 import type { CommunitiesId } from "db/public";
 import { logicalOperators } from "contracts";
 import { CoreSchemaType } from "db/public";
 
 import { db } from "~/kysely/database";
+import { entries } from "../mapping";
 import { getFieldInfoForSlugs } from "./pub";
-import { coreSchemaTypeAllowedOperators } from "./pub-filters";
+import {
+	coreSchemaTypeAllowedOperators,
+	isFieldLevelEntriedLogicalOperator,
+	isTopLevelEntriedLogicalFilter,
+} from "./pub-filters";
 
 /**
  * base error class for filter validation errors
@@ -66,7 +71,7 @@ const isDateField = (field: string): boolean => {
  * extracts operators from a filter value, including those nested in logical operators
  */
 const extractOperatorsFromValue = (
-	value: any,
+	value: FieldLevelFilter,
 	accumulatedOperators: Set<FilterOperator> = new Set()
 ): Set<FilterOperator> => {
 	// handle non-object values
@@ -76,30 +81,40 @@ const extractOperatorsFromValue = (
 
 	const keys = Object.keys(value);
 
-	// we are assuming logica operators are "alone"
-	if (keys.length > 1 || !logicalOperators.includes(keys[0] as LogicalOperator)) {
-		for (const key of keys) {
-			if (logicalOperators.includes(key as LogicalOperator)) {
-				extractOperatorsFromValue({ [key]: value[key] }, accumulatedOperators);
-			} else {
-				accumulatedOperators.add(key as FilterOperator);
-			}
-		}
-		return accumulatedOperators;
-	}
+	// if (isFieldLevelEntriedLogicalOperator(value)) {
+	// 	return extractOperatorsFromValue(value[0], accumulatedOperators);
+	// }
 
-	const logicalOperator = keys[0] as LogicalOperator;
-	const conditions = value[logicalOperator];
+	// we are assuming logic operators are "alone"
+	// if (!logicalOperators.includes(keys[0] as LogicalOperator)) {
+	// 	for (const key of keys) {
+	// 		if (logicalOperators.includes(key as LogicalOperator)) {
+	// 			extractOperatorsFromValue({ [key]: value[key] }, accumulatedOperators);
+	// 		} else {
+	// 			accumulatedOperators.add(key as FilterOperator);
+	// 		}
+	// 	}
+	// 	return accumulatedOperators;
+	// }
 
-	if (typeof conditions !== "object" || conditions === null) {
-		return accumulatedOperators;
-	}
+	// const logicalOperator = keys[0] as LogicalOperator;
+	// const conditions = value[logicalOperator];
 
-	accumulatedOperators.add(logicalOperator as FilterOperator);
+	// if (typeof conditions !== "object" || conditions === null) {
+	// 	return accumulatedOperators;
+	// }
 
-	for (const [op, val] of Object.entries(conditions)) {
+	// accumulatedOperators.add(logicalOperator as FilterOperator);
+
+	for (const [op, val] of entries(value)) {
 		if (logicalOperators.includes(op as LogicalOperator)) {
-			extractOperatorsFromValue({ [op]: val }, accumulatedOperators);
+			if (Array.isArray(val)) {
+				for (const subVal of val) {
+					extractOperatorsFromValue(subVal, accumulatedOperators);
+				}
+			} else {
+				extractOperatorsFromValue(val, accumulatedOperators);
+			}
 		} else {
 			accumulatedOperators.add(op as FilterOperator);
 		}
@@ -123,9 +138,10 @@ const findFieldsWithOperators = (
 	filter: Filter,
 	fieldsWithFilters: FieldsWithFilters = {}
 ): FieldsWithFilters => {
-	for (const [field, val] of Object.entries(filter)) {
+	for (const condition of entries(filter)) {
 		// handle logical operators
-		if (logicalOperators.includes(field as LogicalOperator)) {
+		if (isTopLevelEntriedLogicalFilter(condition)) {
+			const [field, val] = condition;
 			// top level logical operators, which group other pubfield filters
 			if (Array.isArray(val)) {
 				for (const subFilter of val) {
@@ -139,6 +155,7 @@ const findFieldsWithOperators = (
 		}
 
 		// handle updatedAt and createdAt fields
+		const [field, val] = condition;
 		if (isDateField(field)) {
 			const operators = extractOperatorsFromValue(val);
 

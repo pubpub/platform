@@ -1721,9 +1721,16 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
 					)
-					.$if(Boolean(options?.filters), (qb) =>
-						qb.where((eb) => applyFilters(eb, options!.filters!))
-					)
+					.$if(Boolean(options?.filters), (qb) => {
+						performance.mark("start");
+						const result = qb.where((eb) => applyFilters(eb, options!.filters!));
+						performance.mark("end");
+						console.log(
+							"applyFilters",
+							performance.measure(`applyFilters`, "start", "end").duration
+						);
+						return result;
+					})
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))

@@ -280,6 +280,7 @@ export const filterOperators = [
 	"$notContains",
 	"$containsi",
 	"$notContainsi",
+	"$exists",
 	"$null",
 	"$notNull",
 	"$in",
@@ -302,24 +303,114 @@ export type BaseFilter = {
 	[O in FilterOperator]?: unknown;
 };
 
-export type LogicalFilter = {
-	$and?: (BaseFilterWithAndOr | FieldLevelFilter) | (BaseFilterWithAndOr | FieldLevelFilter)[];
-	$or?: (BaseFilterWithAndOr | FieldLevelFilter) | (BaseFilterWithAndOr | FieldLevelFilter)[];
-	$not?: BaseFilterWithAndOr | FieldLevelFilter;
+/**
+ * at the slug level, you can do something like
+ *
+ * ```ts
+ * {
+ *  title: {
+ *    $or: [
+ *      { $contains: "value" },
+ *      { $contains: "value2" }
+ *    ]
+ *  }
+ * }
+ * ```
+ *
+ * or
+ *
+ * ```ts
+ * {
+ *  title: {
+ *    $or: { $contains: "value", $contains: "value2" }
+ *  }
+ * }
+ * ```
+ *
+ * or
+ *
+ * ```ts
+ * {
+ *  title: { $not: { $contains: "value" } }
+ * }
+ */
+export type FieldLevelLogicalFilter = {
+	$and?: FieldLevelFilter | FieldLevelFilter[];
+	$or?: FieldLevelFilter | FieldLevelFilter[];
+	$not?: FieldLevelFilter;
 };
-type BaseFilterWithAndOr = BaseFilter & LogicalFilter;
 
-export type FieldLevelFilter = {
-	[slug: string]: BaseFilterWithAndOr;
+/**
+ * At the top level, you can do something like
+ *
+ * ```ts
+ * {
+ *  $and: [
+ *    { $eq: "value" },
+ *    { $eq: "value2" }
+ *  ]
+ * }
+ * ```
+ *
+ * or nested
+ *
+ * ```ts
+ * {
+ *  $or: [
+ *    { $or: [
+ *      { title: { $eq: "value" } },
+ *      { content: { $eq: "value2" } }
+ *    ]},
+ *    { title: { $contains: "value3" } }
+ *  ]
+ * }
+ * ```
+ *
+ * or, instead of an array, you can use a single filter
+ *
+ * // this is the same if you would remove $and
+ * ```ts
+ * {
+ *  $and: {
+ *    title: { $eq: "value" },
+ *    content: { $contains: "value2" }
+ *  }
+ * }
+ * ```
+ *
+ * `$not` always takes an object, not an array
+ *
+ * ```ts
+ * {
+ *  $not: {
+ *    $and: [
+ *      { title: { $eq: "value" } },
+ *      { content: { $contains: "value2" } }
+ *    ]
+ *  }
+ * }
+ * ```
+ *
+ */
+export type TopLevelLogicalFilter = {
+	$and?: Filter[] | Filter;
+	$or?: Filter[] | Filter;
+	$not?: Filter;
 };
 
-export type Filter = FieldLevelFilter | LogicalFilter;
+export type FieldLevelFilter = BaseFilter & FieldLevelLogicalFilter;
 
-const allSchema = z.coerce
-	.number()
-	.or(z.enum(["true", "false"]).transform((val) => val === "true"))
-	.or(z.coerce.date())
-	.or(z.string());
+export type SlugKeyFilter = {
+	[slug: string]: FieldLevelFilter;
+};
+
+export type Filter = SlugKeyFilter | TopLevelLogicalFilter;
+
+const coercedNumber = z.coerce.number();
+const coercedBoolean = z.enum(["true", "false"]).transform((val) => val === "true");
+const coercedDate = z.coerce.date();
+
+const allSchema = z.union([coercedNumber, coercedBoolean, coercedDate, z.string()]);
 
 const numberOrDateSchema = z.coerce.number().or(z.coerce.date());
 
@@ -345,6 +436,7 @@ export const baseFilterSchema = z
 			.string()
 			.transform(() => true)
 			.describe("Is not null"),
+		$exists: coercedBoolean.describe("Exists"),
 		$in: z.array(allSchema).describe("In"),
 		$notIn: z.array(allSchema).describe("Not in"),
 		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]).describe("Between"),
@@ -361,20 +453,20 @@ export const baseFilterSchema = z
 					"This will filter the third element in the array, and check if it's greater than 90."
 			),
 	})
+	// .passthrough()
 	.partial() satisfies z.ZodType<{
 	[K in FilterOperator]?: any;
 }>;
 
-const fieldSlugSchema = z
-	.string()
-	.regex(/^[a-zA-Z0-9_.:-]+$/, "At this level, you can only use field slugs");
+const fieldSlugSchema = z.string();
+// .regex(/^[a-zA-Z0-9_.:-]+$/, "At this level, you can only use field slugs");
 
-const baseFilterSchemaWithAndOr: z.ZodType<BaseFilterWithAndOr> = z
+const baseFilterSchemaWithAndOr: z.ZodType<FieldLevelFilter> = z
 	.lazy(() =>
 		baseFilterSchema
 			.extend({
-				$and: baseFilterSchemaWithAndOr.or(z.array(baseFilterSchemaWithAndOr)),
-				$or: baseFilterSchemaWithAndOr.or(z.array(baseFilterSchemaWithAndOr)),
+				$and: z.array(baseFilterSchemaWithAndOr).or(baseFilterSchemaWithAndOr),
+				$or: z.array(baseFilterSchemaWithAndOr).or(baseFilterSchemaWithAndOr),
 				$not: baseFilterSchemaWithAndOr,
 			})
 			.partial()
@@ -392,23 +484,32 @@ const baseFilterSchemaWithAndOr: z.ZodType<BaseFilterWithAndOr> = z
 	});
 
 export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
-	const topLevelLogicalOperators = z
-		.object({
-			$and: z.array(filterSchema).optional(),
-			$or: z.array(filterSchema).optional(),
-			$not: filterSchema.optional(),
-		})
-		.refine((data) => {
+	const schema = z
+		.union([
+			z.record(fieldSlugSchema, baseFilterSchemaWithAndOr),
+			z
+				.object({
+					$and: filterSchema.or(z.array(filterSchema)),
+					$or: filterSchema.or(z.array(filterSchema)),
+					$not: filterSchema,
+				})
+				.partial(),
+		])
+		// ideally this would be `.and`, st you can have both fieldSlugs and topLevelLogicalOperators on the same level, but
+		// zod does not really support this
+		.superRefine((data, ctx) => {
 			if (!Object.keys(data).length) {
+				ctx.addIssue({
+					path: ctx.path,
+					code: z.ZodIssueCode.custom,
+					message: "Filter must have at least one operator",
+				});
 				return false;
 			}
 			return true;
-		}, "Filter must have at least one operator. A logical operator (e.g. $and, $or, $not) was expected here, but not found.");
+		});
 
-	return z.union([
-		z.record(fieldSlugSchema, baseFilterSchemaWithAndOr),
-		topLevelLogicalOperators,
-	]);
+	return schema;
 });
 
 const getPubQuerySchema = z.object({
@@ -578,6 +679,7 @@ export const siteApi = contract.router(
 									"- `$notContains`: Does not contain substring. Works with strings.",
 									"- `$containsi`: Contains substring (case insensitive). Works with strings.",
 									"- `$notContainsi`: Does not contain substring (case insensitive). Works with strings.",
+									"- `$exists`: Exists. Works with boolean values - use `filters[field][$exists]=true`, or `filters[field][$exists]=false`.",
 									"- `$null`: Is null. No value needed - use `filters[field][$null]=true`.",
 									"- `$notNull`: Is not null. No value needed - use `filters[field][$notNull]=true`.",
 									"- `$in`: Value is in array. Format: `filters[field][$in]=value1,value2,value3`.",

@@ -4,30 +4,17 @@ import { sql } from "kysely";
 
 import type {
 	FieldLevelFilter,
+	FieldLevelLogicalFilter,
 	Filter,
 	FilterOperator,
-	LogicalFilter,
 	LogicalOperator,
+	TopLevelLogicalFilter,
 } from "contracts";
 import { logicalOperators } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { assert } from "utils";
 
-type EntriedLogicalFilter = [
-	["$or", NonNullable<LogicalFilter["$or"]>],
-	["$and", NonNullable<LogicalFilter["$and"]>],
-	["$not", NonNullable<LogicalFilter["$not"]>],
-][number];
-
-type EntriedFilter = [string, FieldLevelFilter[keyof FieldLevelFilter]] | EntriedLogicalFilter;
-
-const isLogicalFilter = (filter: EntriedFilter): filter is EntriedLogicalFilter => {
-	return (
-		typeof filter === "object" &&
-		filter !== null &&
-		logicalOperators.includes(filter[0] as LogicalOperator)
-	);
-};
+import { entries } from "../mapping";
 
 export const stringOperators = [
 	"$eq",
@@ -46,10 +33,11 @@ export const stringOperators = [
 	"$notNull",
 	"$in",
 	"$notIn",
+	"$exists",
 ] as const satisfies FilterOperator[];
 
 export const coreSchemaTypeAllowedOperators = {
-	[CoreSchemaType.Boolean]: ["$eq", "$ne", "$null", "$notNull"],
+	[CoreSchemaType.Boolean]: ["$eq", "$ne", "$null", "$notNull", "$exists"],
 	[CoreSchemaType.String]: stringOperators,
 	[CoreSchemaType.Number]: [
 		"$eq",
@@ -63,10 +51,25 @@ export const coreSchemaTypeAllowedOperators = {
 		"$notNull",
 		"$in",
 		"$notIn",
+		"$exists",
 	],
-	[CoreSchemaType.Vector3]: ["$eq", "$ne", "$null", "$notNull", "$jsonPath"],
-	[CoreSchemaType.NumericArray]: ["$contains", "$notContains", "$null", "$notNull", "$jsonPath"],
-	[CoreSchemaType.StringArray]: ["$contains", "$notContains", "$null", "$notNull", "$jsonPath"],
+	[CoreSchemaType.Vector3]: ["$eq", "$ne", "$null", "$notNull", "$jsonPath", "$exists"],
+	[CoreSchemaType.NumericArray]: [
+		"$contains",
+		"$notContains",
+		"$null",
+		"$notNull",
+		"$jsonPath",
+		"$exists",
+	],
+	[CoreSchemaType.StringArray]: [
+		"$contains",
+		"$notContains",
+		"$null",
+		"$notNull",
+		"$jsonPath",
+		"$exists",
+	],
 	[CoreSchemaType.DateTime]: [
 		"$eq",
 		"$ne",
@@ -79,11 +82,12 @@ export const coreSchemaTypeAllowedOperators = {
 		"$notNull",
 		"$in",
 		"$notIn",
+		"$exists",
 	],
 	[CoreSchemaType.Email]: stringOperators,
 	[CoreSchemaType.URL]: stringOperators,
-	[CoreSchemaType.MemberId]: ["$eq", "$ne", "$null", "$notNull", "$in", "$notIn"],
-	[CoreSchemaType.FileUpload]: ["$null", "$notNull", "$jsonPath"],
+	[CoreSchemaType.MemberId]: ["$eq", "$ne", "$null", "$notNull", "$in", "$notIn", "$exists"],
+	[CoreSchemaType.FileUpload]: ["$null", "$notNull", "$jsonPath", "$exists"],
 	[CoreSchemaType.RichText]: [
 		"$eq",
 		"$ne",
@@ -97,19 +101,23 @@ export const coreSchemaTypeAllowedOperators = {
 		"$endsWithi",
 		"$null",
 		"$notNull",
+		"$exists",
 	],
-	[CoreSchemaType.Null]: ["$null"],
+	[CoreSchemaType.Null]: ["$null", "$exists"],
 } as const satisfies Record<CoreSchemaType, FilterOperator[]>;
 
 const filterMap = {
-	$eq: (eb, column, value) => eb(column, "=", JSON.stringify(value)),
+	$eq: (eb, column, value) =>
+		eb(column, "=", typeof value === "string" ? JSON.stringify(value) : value),
 	$eqi: (eb, column, value) =>
 		eb(sql.raw(`lower(${column}::text)`), "=", JSON.stringify(String(value).toLowerCase())),
-	$ne: (eb, column, value) => eb(column, "!=", JSON.stringify(value)),
+	$ne: (eb, column, value) =>
+		eb(column, "!=", typeof value === "string" ? JSON.stringify(value) : value),
 	$nei: (eb, column, value) =>
 		eb(sql.raw(`lower(${column}::text)`), "!=", JSON.stringify(String(value).toLowerCase())),
 	$null: (eb, column, value) => eb(column, "is", null),
 	$notNull: (eb, column, value) => eb(column, "is not", null),
+	$exists: (eb, column, value) => eb.lit(true),
 	$lt: (eb, column, value) =>
 		eb(column, "<", typeof value === "string" ? JSON.stringify(value) : value),
 	$lte: (eb, column, value) =>
@@ -144,10 +152,12 @@ const filterMap = {
 		eb(sql.raw(`${column}::text`), "ilike", `%${String(value).toLowerCase()}%`),
 	$notContainsi: (eb, column, value) =>
 		eb(sql.raw(`${column}::text`), "not ilike", `%${String(value).toLowerCase()}%`),
-	$startsWith: (eb, column, value) => eb(column, "like", `${String(value)}%`),
-	$startsWithi: (eb, column, value) => eb(column, "ilike", `${String(value).toLowerCase()}%`),
-	$endsWith: (eb, column, value) => eb(column, "like", `%${String(value)}`),
-	$endsWithi: (eb, column, value) => eb(column, "ilike", `%${String(value).toLowerCase()}`),
+	$startsWith: (eb, column, value) => eb(sql.raw(`${column}::text`), "like", `${String(value)}%`),
+	$startsWithi: (eb, column, value) =>
+		eb(sql.raw(`${column}::text`), "ilike", `${String(value).toLowerCase()}%`),
+	$endsWith: (eb, column, value) => eb(sql.raw(`${column}::text`), "like", `%${String(value)}`),
+	$endsWithi: (eb, column, value) =>
+		eb(sql.raw(`${column}::text`), "ilike", `%${String(value).toLowerCase()}`),
 	$jsonPath: (eb, column, value) => {
 		assert(typeof value === "string");
 		return eb("value", "@@", value);
@@ -176,71 +186,89 @@ const maybeStringifiedValue = (value: unknown): unknown => {
 
 	return value;
 };
+type EntriedFieldLevelLogicalOperator = {
+	[K in keyof FieldLevelLogicalFilter]-?: [K, NonNullable<FieldLevelLogicalFilter[K]>];
+}[keyof FieldLevelLogicalFilter];
 
-/**
- * Checks if an object is a field-level logical operator
- */
-const isFieldLevelLogicalOperator = (obj: any): boolean => {
-	if (typeof obj !== "object" || obj === null) {
-		return false;
-	}
+type EntriedTopLevelLogicalFilter = [
+	["$or", NonNullable<TopLevelLogicalFilter["$or"]>],
+	["$and", NonNullable<TopLevelLogicalFilter["$and"]>],
+	["$not", NonNullable<TopLevelLogicalFilter["$not"]>],
+][number];
 
-	const keys = Object.keys(obj);
-	return keys.length === 1 && logicalOperators.includes(keys[0] as LogicalOperator);
+type EntriedFilter = [string, FieldLevelFilter] | EntriedTopLevelLogicalFilter;
+
+type EntriedFieldLevelFilter = [FilterOperator, unknown] | EntriedFieldLevelLogicalOperator;
+
+export const isTopLevelEntriedLogicalFilter = (
+	filter: EntriedFilter
+): filter is EntriedTopLevelLogicalFilter => {
+	return logicalOperators.includes(filter[0] as LogicalOperator);
 };
 
 /**
- * Apply operators for a single field
+ * checks if an object is a field-level logical operator
  */
-export const applyFieldOperators = <K extends ExpressionBuilder<any, any>>(
+export const isFieldLevelEntriedLogicalOperator = (
+	obj: EntriedFieldLevelFilter
+): obj is EntriedFieldLevelLogicalOperator => {
+	return logicalOperators.includes(obj[0] as LogicalOperator);
+};
+
+/**
+ * apply field level filters
+ */
+export const applyFieldLevelFilters = <K extends ExpressionBuilder<any, any>>(
 	eb: K,
-	operators: Record<string, any>,
+	fieldLevelFilter: FieldLevelFilter,
 	column: "value" | "pubs.updatedAt" | "pubs.createdAt"
 ): ExpressionWrapper<any, any, any> => {
-	const keys = Object.keys(operators);
-	// check if this is a field-level logical operator like { $or: {...} }
-	// TODO: doesn't per se need to be length 1
-	if (keys.length === 1 && logicalOperators.includes(keys[0] as LogicalOperator)) {
-		const operator = keys[0] as LogicalOperator;
-		const conditions = operators[operator];
-
-		if (operator === "$or") {
-			return eb.or(
-				Object.entries(conditions).map(([op, value]) => {
-					if (isFieldLevelLogicalOperator({ [op]: value })) {
-						return applyFieldOperators(eb, { [op]: value }, column);
-					}
-					const whereFn = filterMap[op as FilterOperator];
-					if (!whereFn) {
-						throw new Error(`Unknown operator: ${op}`);
-					}
-					return whereFn(eb, column, maybeStringifiedValue(value));
-				})
-			);
-		} else if (operator === "$and") {
-			return eb.and(
-				Object.entries(conditions).map(([op, value]) => {
-					if (isFieldLevelLogicalOperator({ [op]: value })) {
-						return applyFieldOperators(eb, { [op]: value }, column);
-					}
-					const whereFn = filterMap[op as FilterOperator];
-					if (!whereFn) {
-						throw new Error(`Unknown operator: ${op}`);
-					}
-					return whereFn(eb, column, maybeStringifiedValue(value));
-				})
-			);
-		} else if (operator === "$not") {
-			return eb.not(applyFieldOperators(eb, conditions, column));
-		}
-	}
-
-	// Regular field operators
 	return eb.and(
-		Object.entries(operators).map(([op, value]) => {
-			if (isFieldLevelLogicalOperator({ [op]: value })) {
-				return applyFieldOperators(eb, { [op]: value }, column);
+		entries(fieldLevelFilter).map((condition) => {
+			if (isFieldLevelEntriedLogicalOperator(condition)) {
+				const [op, conditions] = condition;
+
+				// return applyLogicalOperator(eb, op, conditions, (eb, condition) =>
+				// 	applyFieldLevelFilters(eb, condition, column)
+				// );
+
+				switch (op) {
+					case "$or":
+						if (Array.isArray(conditions)) {
+							return eb.or(
+								conditions.map((condition) =>
+									applyFieldLevelFilters(eb, condition, column)
+								)
+							);
+						}
+
+						return eb.or(
+							entries(conditions).map(([op, value]) => {
+								return applyFieldLevelFilters(eb, { [op]: value }, column);
+							})
+						);
+					case "$and":
+						if (Array.isArray(conditions)) {
+							return eb.and(
+								conditions.map((condition) =>
+									applyFieldLevelFilters(eb, condition, column)
+								)
+							);
+						}
+						return eb.and(
+							entries(conditions).map(([op, value]) => {
+								return applyFieldLevelFilters(eb, { [op]: value }, column);
+							})
+						);
+					case "$not":
+						return eb.not(applyFieldLevelFilters(eb, conditions, column));
+					default:
+						const neverShouldHaveComeHere: never = op;
+						throw new Error(`Unknown field level operator: ${neverShouldHaveComeHere}`);
+				}
 			}
+			const [op, value] = condition;
+
 			const whereFn = filterMap[op as FilterOperator];
 			if (!whereFn) {
 				throw new Error(`Unknown operator: ${op}`);
@@ -260,49 +288,76 @@ export function applyFilters<K extends ExpressionBuilder<any, any>>(
 	eb: K,
 	filters: Filter
 ): ExpressionWrapped<K> {
-	// top-level logical operators
-	if (filters.$and) {
-		return eb.and(
-			// @ts-expect-error TODO: FIX
-			filters.$and.map((condition) => applyFilters(eb, condition))
-		) as ExpressionWrapped<K>;
-	} else if (filters.$or) {
-		return eb.or(
-			// @ts-expect-error TODO: FIX
-			filters.$or.map((condition) => applyFilters(eb, condition))
-		) as ExpressionWrapped<K>;
-	} else if (filters.$not) {
-		return eb.not(applyFilters(eb, filters.$not)) as ExpressionWrapped<K>;
-	}
-
 	// handle field filters - we treat multiple fields as an implicit AND
-	const fieldConditions = Object.entries(filters);
+	const fieldConditions = entries(filters);
 
 	if (fieldConditions.length === 0) {
 		return eb.val(true) as ExpressionWrapped<K>;
 	}
 
 	return eb.and(
-		fieldConditions.map(([field, operators]) => {
-			const isDate = field === "updatedAt" || field === "createdAt";
+		fieldConditions.map((condition) => {
+			if (isTopLevelEntriedLogicalFilter(condition)) {
+				const [op, conditions] = condition;
+
+				switch (op) {
+					case "$and":
+						if (Array.isArray(conditions)) {
+							return eb.and(
+								conditions.map((condition) => applyFilters(eb, condition))
+							) as ExpressionWrapped<K>;
+						}
+						return eb.and(
+							entries(conditions).map(([op, value]) =>
+								applyFilters(eb, { [op]: value })
+							)
+						) as ExpressionWrapped<K>;
+					case "$or":
+						if (Array.isArray(conditions)) {
+							return eb.or(
+								conditions.map((condition) => applyFilters(eb, condition))
+							) as ExpressionWrapped<K>;
+						}
+						return eb.or(
+							entries(conditions).map(([op, value]) =>
+								applyFilters(eb, { [op]: value })
+							)
+						) as ExpressionWrapped<K>;
+					case "$not":
+						return eb.not(applyFilters(eb, conditions)) as ExpressionWrapped<K>;
+					default:
+						const neverShouldHaveComeHere: never = op;
+						throw new Error(`Unknown logical operator: ${neverShouldHaveComeHere}`);
+				}
+			}
+
+			const [slug, fieldLevelFilter] = condition;
+
+			const isDate = slug === "updatedAt" || slug === "createdAt";
 
 			if (isDate) {
 				// handle date fields directly on the pubs table
-				return applyFieldOperators(eb, operators, `pubs.${field}`);
-			} else {
-				// for regular fields, use EXISTS subquery
-				return eb.exists(
-					eb
-						.selectFrom("pub_values")
-						.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
-						.select(eb.lit(1).as("exists_check"))
-						.where("pub_values.pubId", "=", eb.ref("pubs.id"))
-						.where("pub_fields.slug", "=", field)
-						.where((innerEb) => {
-							return applyFieldOperators(innerEb, operators, "value");
-						})
-				);
+				return applyFieldLevelFilters(eb, fieldLevelFilter, `pubs.${slug}`);
 			}
+
+			const exists = eb.exists(
+				eb
+					.selectFrom("pub_values")
+					.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+					.select(eb.lit(1).as("exists_check"))
+					.where("pub_values.pubId", "=", eb.ref("pubs.id"))
+					.where("pub_fields.slug", "=", slug)
+					.where((innerEb) => {
+						return applyFieldLevelFilters(innerEb, fieldLevelFilter, "value");
+					})
+			);
+
+			// we need to treat the case of `$exists: false` as a special case, as it's equiv to `{$not: {$exists: true}}`, which cannot be expressed inside the EXISTS subquery
+			if (fieldLevelFilter.$exists === false) {
+				return eb.not(exists);
+			}
+
+			return exists;
 		})
 	) as ExpressionWrapped<K>;
 }
