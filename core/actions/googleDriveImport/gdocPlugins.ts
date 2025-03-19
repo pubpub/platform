@@ -366,48 +366,52 @@ export const structureVideos = () => (tree: Root) => {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
 			if (tableType === "video") {
-				const elements: Element[] = tableData.map((data: any) => ({
-					type: "element",
-					tagName: "figure",
-					properties: {
-						dataFigureType: "video",
-						id: data.id,
-						dataAlign: data.align,
-						dataSize: data.size,
-						dataHideLabel: data.hidelabel,
-					},
-					children: [
-						{
-							type: "element",
-							tagName: "video",
-							properties: { controls: true, poster: data.staticimage },
-							children: [
-								{
-									type: "element",
-									tagName: "source",
-									properties: {
-										src: data.source,
-										type: `video/${path.extname(data.source).replace(".", "")}`,
-									},
-								},
-								{
-									type: "element",
-									tagName: "img",
-									properties: {
-										src: data.staticimage,
-										alt: "Video fallback image",
-									},
-								},
-							],
+				const elements: Element[] = tableData.map((data: any) => {
+					const extension = path.extname(data.source).replace(".", "");
+					const type = extension ? `video/${extension}` : undefined;
+					return {
+						type: "element",
+						tagName: "figure",
+						properties: {
+							dataFigureType: "video",
+							id: data.id,
+							dataAlign: data.align,
+							dataSize: data.size,
+							dataHideLabel: data.hidelabel,
 						},
-						{
-							type: "element",
-							tagName: "figcaption",
-							properties: {},
-							children: data.caption || [],
-						},
-					],
-				}));
+						children: [
+							{
+								type: "element",
+								tagName: "video",
+								properties: { controls: true, poster: data.staticimage },
+								children: [
+									{
+										type: "element",
+										tagName: "source",
+										properties: {
+											src: data.source,
+											type,
+										},
+									},
+									{
+										type: "element",
+										tagName: "img",
+										properties: {
+											src: data.staticimage,
+											alt: "Video fallback image",
+										},
+									},
+								],
+							},
+							{
+								type: "element",
+								tagName: "figcaption",
+								properties: {},
+								children: data.caption || [],
+							},
+						],
+					};
+				});
 
 				if (parent && typeof index === "number") {
 					parent.children.splice(index, 1, ...elements);
@@ -764,8 +768,8 @@ export const structureReferences = () => (tree: Root) => {
 	/* then calling .exec without that /g flag would crash. There may */
 	/* be a cleaner solution where we manually reset regex.lastIndex */
 	/* in certain places, but it's late and brittle, and this is currently working. */
-	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/);
-	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
+	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/);
+	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/g);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
 		if (node.tagName === "u" || node.tagName === "a") {
@@ -1106,7 +1110,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}])/g);
+			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}]|$)/g);
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
