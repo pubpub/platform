@@ -288,7 +288,6 @@ export const PubEditorClient = ({
 
 	const [defaultValues, arrayDefaults] = useMemo(() => {
 		const { defaultValues, arrayDefaults } = buildDefaultValues(formElements, pub.values);
-		// const parsedDefaults = Value.Parse(schema, defaultPubValues);
 		return [{ ...defaultValues, stageId }, arrayDefaults];
 	}, [formElements, stageId, schema]);
 
@@ -350,7 +349,7 @@ export const PubEditorClient = ({
 						id: pubId,
 						pubTypeId: pub.pubTypeId,
 						values: pubValues,
-						stageId: stageIdChanged ? newStageId : undefined,
+						stageId: newStageId,
 					},
 					communityId: community.id,
 					addUserToForm: isExternalForm,
