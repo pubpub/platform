@@ -254,6 +254,7 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 				"bg-blue-200 hover:bg-blue-300": isActive,
 			})}
 			title={name}
+			aria-pressed={isActive}
 		>
 			{icon}
 		</Button>
