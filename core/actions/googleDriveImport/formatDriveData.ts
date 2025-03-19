@@ -1,7 +1,7 @@
 // import { writeFile } from "fs/promises";
 import type { Root } from "hast";
 
-import { defaultMarkdownSerializer } from "prosemirror-markdown";
+import { defaultMarkdownSerializer, MarkdownSerializer } from "prosemirror-markdown";
 import { Node } from "prosemirror-model";
 import { rehype } from "rehype";
 import rehypeFormat from "rehype-format";
@@ -81,10 +81,15 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 								assetData.buffer,
 								{ contentType: assetData.mimetype }
 							);
-							assetUrls[originalAssetUrl] = uploadedUrl.replace(
-								"assets.app.pubpub.org.s3.us-east-1.amazonaws.com",
-								"assets.app.pubpub.org"
-							);
+							assetUrls[originalAssetUrl] = uploadedUrl
+								.replace(
+									"assets.app.pubpub.org.s3.us-east-1.amazonaws.com",
+									"assets.app.pubpub.org"
+								)
+								.replace(
+									"s3.us-east-1.amazonaws.com/assets.app.pubpub.org",
+									"assets.app.pubpub.org"
+								);
 						} else {
 							assetUrls[originalAssetUrl] = originalAssetUrl;
 						}
@@ -259,7 +264,14 @@ export const formatDriveData = async (
 					const prosemirrorToMarkdown = (content: any): string => {
 						const convertedContent = convertDiscussionContent(content);
 						const doc = Node.fromJSON(schema, convertedContent);
-						return defaultMarkdownSerializer.serialize(doc);
+						const mdSerializer = new MarkdownSerializer(
+							defaultMarkdownSerializer.nodes,
+							{
+								...defaultMarkdownSerializer.marks,
+								sup: { open: "^", close: "^", mixable: true },
+							}
+						);
+						return mdSerializer.serialize(doc);
 					};
 					const markdownContent = prosemirrorToMarkdown(comment.content);
 					const commentObject: any = {

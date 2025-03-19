@@ -399,6 +399,28 @@ test("Structure Videos", async () => {
 						</tr>
 					</tbody>
 				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>Static Image</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Video</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td>https://example.com</td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
+						</tr>
+					</tbody>
+				</table>
 			</body>
 		</html>
 	`;
@@ -409,6 +431,18 @@ test("Structure Videos", async () => {
 				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<video controls poster="https://example.com">
 						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
+						<img src="https://example.com" alt="Video fallback image">
+					</video>
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50">
+					<video controls poster="https://example.com">
+						<source src="https://resize-v3.pubpub.org/123">
 						<img src="https://example.com" alt="Video fallback image">
 					</video>
 					<figcaption>
