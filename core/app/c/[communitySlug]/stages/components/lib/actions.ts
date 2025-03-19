@@ -34,7 +34,7 @@ export const move = defineServerAction(async function move(
 	}
 
 	try {
-		await movePub(pubId, destinationStageId).executeTakeFirstOrThrow();
+		await movePub(pubId, destinationStageId).execute();
 	} catch {
 		return { error: "The Pub was not successully moved" };
 	}

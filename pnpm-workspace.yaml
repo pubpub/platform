@@ -25,7 +25,7 @@ catalog:
     react-hook-form: ^7.54.2
     "@hookform/resolvers": ^3.9.1
     "@playwright/test": ^1.49.0
-    "@sinclair/typebox": ^0.32.34
+    "@sinclair/typebox": ^0.34.30
     "@types/node": ^20
     "@honeycombio/opentelemetry-node": ^0.6.1
     "@opentelemetry/auto-instrumentations-node": 0.53.0
