@@ -29,25 +29,21 @@ type FullProcessedPubWithForm = ProcessedPubWithForm<{
  * Get the label a form/pub value combo might have. In preference order:
  * 1. "label" on a FormElement
  * 2. "config.label" on a FormElement
- * 3. "config.relationshipConfig.label" on a FormElement (for related values)
- * 4. the name of the PubField
+ * 3. the name of the PubField
  **/
 const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
 	// Default to the field name
 	const defaultLabel = value.fieldName;
 	let configLabel;
-	let relationshipConfigLabel;
 	let formElementLabel;
 	if ("formElementId" in value) {
 		const config = value.formElementConfig;
 		if (config) {
 			configLabel = "label" in config ? config.label : undefined;
-			relationshipConfigLabel =
-				"relationshipConfig" in config ? config.relationshipConfig.label : undefined;
 		}
 		formElementLabel = value.formElementLabel;
 	}
-	return formElementLabel || configLabel || relationshipConfigLabel || defaultLabel;
+	return formElementLabel || configLabel || defaultLabel;
 };
 
 const PubValueHeading = ({

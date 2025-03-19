@@ -149,9 +149,7 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 					id={labelId}
 					className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}
 				>
-					{(element.config as any)?.relationshipConfig?.label ??
-						(element.config as any)?.label ??
-						field.name}
+					{(element.config as any)?.label ?? field.name}
 				</div>
 			</div>
 		</>
