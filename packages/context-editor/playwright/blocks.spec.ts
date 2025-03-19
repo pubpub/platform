@@ -35,6 +35,7 @@ test.describe("lists", () => {
 		});
 	}
 
+	/** Similar to the test above, but not parameterizing because nested parameters are confusing */
 	test(`can use markdown shortcut 1. for number lists`, async ({ page }) => {
 		await assertMenuItemActiveState({ page, name: "Ordered list", isActive: false });
 		const text = "one";
@@ -75,36 +76,42 @@ test.describe("lists", () => {
 		});
 	}
 
-	for (const listType of ["Bullet list", "Ordered list"]) {
-		test(`can add sublists for ${listType}`, async ({ page }) => {
-			const blockName = listType.toLowerCase().replace(" ", "_");
-			await page.getByRole("button", { name: listType }).click();
-			// This will look like:
-			// 1. one
-			// 2. two
-			await page.keyboard.type("one");
-			await page.keyboard.press("Enter");
-			await page.keyboard.type("two");
-			await expect(page.getByRole("listitem")).toHaveCount(2);
-			await expect(page.getByRole("list")).toHaveCount(1);
+	for (const { indent, deindent } of [
+		{ indent: "ControlOrMeta+]", deindent: "ControlOrMeta+[" },
+		{ indent: "Tab", deindent: "Shift+Tab" },
+	])
+		for (const listType of ["Bullet list", "Ordered list"]) {
+			test(`can add sublists for ${listType} via ${indent} and ${deindent}`, async ({
+				page,
+			}) => {
+				const blockName = listType.toLowerCase().replace(" ", "_");
+				await page.getByRole("button", { name: listType }).click();
+				// This will look like:
+				// 1. one
+				// 2. two
+				await page.keyboard.type("one");
+				await page.keyboard.press("Enter");
+				await page.keyboard.type("two");
+				await expect(page.getByRole("listitem")).toHaveCount(2);
+				await expect(page.getByRole("list")).toHaveCount(1);
 
-			// Now we indent 2. so it looks like and there should be two lists
-			// 1. one
-			//   1. two
-			await page.keyboard.press("ControlOrMeta+]");
-			await expect(page.getByRole("list")).toHaveCount(2);
+				// Now we indent 2. so it looks like and there should be two lists
+				// 1. one
+				//   1. two
+				await page.keyboard.press(indent);
+				await expect(page.getByRole("list")).toHaveCount(2);
 
-			// Can unindent
-			await page.keyboard.press("ControlOrMeta+[");
-			await expect(page.getByRole("list")).toHaveCount(1);
+				// Can unindent
+				await page.keyboard.press(deindent);
+				await expect(page.getByRole("list")).toHaveCount(1);
 
-			// Enter twice will exit the list
-			await page.keyboard.press("Enter");
-			await assertMenuItemActiveState({ page, name: listType, isActive: true });
-			await page.keyboard.press("Enter");
-			await assertMenuItemActiveState({ page, name: listType, isActive: false });
-		});
-	}
+				// Enter twice will exit the list
+				await page.keyboard.press("Enter");
+				await assertMenuItemActiveState({ page, name: listType, isActive: true });
+				await page.keyboard.press("Enter");
+				await assertMenuItemActiveState({ page, name: listType, isActive: false });
+			});
+		}
 
 	/**
 	 * For the requirement:

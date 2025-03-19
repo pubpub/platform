@@ -7,6 +7,7 @@ import attributePanel from "./attributePanel";
 import code from "./code";
 import contextSuggest from "./contextSuggest";
 import inputRules from "./inputRules";
+import keymap from "./keymap";
 import onChange from "./onChange";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
@@ -31,5 +32,6 @@ export const basePlugins = (
 		inputRules(schema),
 		mathPlugin,
 		...code(schema, {}),
+		...keymap(schema),
 	];
 };
