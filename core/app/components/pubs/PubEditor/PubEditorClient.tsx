@@ -118,12 +118,6 @@ const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedP
 					defaultValues[element.slug].push(relatedVal);
 					arrayDefaults[pv.id] = relatedVal;
 				});
-				defaultValues[element.slug] = relatedPubValues.map((pv) => ({
-					value: pv.value,
-					relatedPubId: pv.relatedPubId,
-					rank: pv.rank,
-					valueId: pv.id,
-				}));
 			}
 		}
 	}
