@@ -1,21 +1,22 @@
 "use server";
 
-import type { Json } from "contracts";
+import type { JsonValue } from "contracts";
 import type { PubsId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { logger } from "logger";
 
-import type { PubValues } from "~/lib/server";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
+import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { addMemberToForm, userHasPermissionToForm } from "~/lib/server/form";
-import { updatePub as _updatePub, deletePub } from "~/lib/server/pub";
+import { deletePub, normalizePubValues } from "~/lib/server/pub";
+import { PubOp } from "~/lib/server/pub-op";
 
 type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
 
@@ -77,12 +78,17 @@ export const updatePub = defineServerAction(async function updatePub({
 	stageId,
 	formSlug,
 	continueOnValidationError,
+	deleted,
 }: {
 	pubId: PubsId;
-	pubValues: Record<string, Json | { value: Json; relatedPubId: PubsId }[]>;
+	pubValues: Record<
+		string,
+		JsonValue | Date | { value: JsonValue | Date; relatedPubId: PubsId }[]
+	>;
 	stageId?: StagesId;
 	formSlug?: string;
 	continueOnValidationError: boolean;
+	deleted: { slug: string; relatedPubId: PubsId }[];
 }) {
 	const loginData = await getLoginData();
 
@@ -96,14 +102,14 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	const canUpdateFromForm = formSlug
-		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id, pubId })
-		: false;
-	const canUpdatePubValues = await userCan(
-		Capabilities.updatePubValues,
-		{ type: MembershipType.pub, pubId },
-		loginData.user.id
-	);
+	const [canUpdateFromForm, canUpdatePubValues] = await Promise.all([
+		formSlug ? userHasPermissionToForm({ formSlug, userId: loginData.user.id, pubId }) : false,
+		userCan(
+			Capabilities.updatePubValues,
+			{ type: MembershipType.pub, pubId },
+			loginData.user.id
+		),
+	]);
 
 	if (!canUpdatePubValues && !canUpdateFromForm) {
 		return ApiError.UNAUTHORIZED;
@@ -114,16 +120,38 @@ export const updatePub = defineServerAction(async function updatePub({
 	});
 
 	try {
-		const result = await _updatePub({
-			pubId,
+		const updateQuery = PubOp.update(pubId, {
 			communityId: community.id,
-			pubValues,
-			stageId,
-			continueOnValidationError,
 			lastModifiedBy,
+			continueOnValidationError,
 		});
 
-		return result;
+		if (stageId) {
+			updateQuery.setStage(stageId);
+		}
+
+		const { values: processedVals }: { values: typeof pubValues } =
+			parseRichTextForPubFieldsAndRelatedPubs({
+				pubId: pubId,
+				values: pubValues as Record<string, JsonValue>,
+			});
+
+		const normalizedValues = normalizePubValues(processedVals);
+		for (const { slug, value, relatedPubId } of normalizedValues) {
+			if (relatedPubId) {
+				updateQuery.relate(slug, value, relatedPubId, {
+					replaceExisting: false,
+				});
+			} else {
+				updateQuery.set(slug, value);
+			}
+		}
+
+		for (const { slug, relatedPubId } of deleted) {
+			updateQuery.unrelate(slug, relatedPubId);
+		}
+
+		return await updateQuery.execute();
 	} catch (error) {
 		logger.error(error);
 		return {

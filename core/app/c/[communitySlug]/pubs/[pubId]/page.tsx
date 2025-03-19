@@ -254,9 +254,6 @@ export default async function Page(props: {
 					</div>
 				</div>
 			</div>
-			<div>
-				<h2 className="text-xl font-bold">Pub Contents</h2>
-			</div>
 			{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
 				<div className="flex flex-col gap-2" data-testid="related-pubs">
 					<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>

@@ -2,7 +2,7 @@ import type { JsonValue, ProcessedPub, ProcessedPubWithForm } from "contracts";
 import type { PubFieldsId } from "db/public";
 import { ElementType } from "db/public";
 
-import type { FullProcessedPub, GetPubsResult } from "./server";
+import type { FullProcessedPub } from "./server";
 import type { Form } from "./server/form";
 
 export type PubTitleProps = {
@@ -50,49 +50,7 @@ export const getPubTitle = (pub: PubTitleProps): string => {
 
 type InputPub = ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>;
 
-/**
- * this is a bridge function for places where we still use the `{ slug: value }` pubvalues shape, rather than an array
- * this is eg the case in the contexteditor at the time of writing (2024-12-18)
- */
-export const processedPubToPubResult = <T extends InputPub>(pub: T): GetPubsResult[number] => {
-	return {
-		...pub,
-		values: pub.values.reduce(
-			(acc, value) => {
-				const existingValue = acc[value.fieldSlug] as JsonValue | JsonValue[] | undefined;
-
-				if (!value?.relatedPubId) {
-					acc[value.fieldSlug] = value.value as JsonValue;
-					return acc;
-				}
-
-				const existingVal = existingValue
-					? Array.isArray(existingValue)
-						? existingValue
-						: [existingValue]
-					: [];
-
-				acc[value.fieldSlug] = [
-					...existingVal,
-					{ relatedPubId: value.relatedPubId, value: value.value as JsonValue },
-				];
-
-				return acc;
-			},
-			{} as GetPubsResult[number]["values"]
-		),
-		stages: pub.stage ? [pub.stage] : [],
-		assigneeId: pub.assignee?.id ?? null,
-		assignee: (pub.assignee ?? null) as GetPubsResult[number]["assignee"],
-		pubType: pub.pubType as GetPubsResult[number]["pubType"],
-	};
-};
-
-export const processedPubsToPubsResult = (pubs: InputPub[]): GetPubsResult => {
-	return pubs.map(processedPubToPubResult);
-};
-
-const getTitleField = <
+export const getTitleField = <
 	T extends ProcessedPubWithForm<{
 		withRelatedPubs: true;
 		withStage: true;
@@ -181,6 +139,7 @@ export const getPubByForm = ({
 				fieldSlug: formElement.slug,
 				fieldName: formElement.fieldName,
 				relatedPubId: null,
+				rank: null,
 				...formInfo,
 			});
 		} else {

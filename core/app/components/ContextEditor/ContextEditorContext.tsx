@@ -7,11 +7,10 @@ import { createContext, useContext, useState } from "react";
 import type { ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId } from "db/public";
 
-import type { GetPubsResult, GetPubTypesResult } from "~/lib/server";
-import { processedPubsToPubsResult } from "~/lib/pubs";
+import type { GetPubTypesResult } from "~/lib/server";
 
 export type ContextEditorContext = {
-	pubs: GetPubsResult;
+	pubs: ContextEditorPub[];
 	pubTypes: GetPubTypesResult;
 	pubId?: PubsId;
 	pubTypeId?: PubTypesId;
@@ -22,21 +21,23 @@ const ContextEditorContext = createContext<ContextEditorContext>({
 	pubTypes: [],
 });
 
-type InputPub = ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>;
+export type ContextEditorPub = ProcessedPub<{
+	withStage: true;
+	withLegacyAssignee: true;
+	withPubType: true;
+}>;
 type Props = PropsWithChildren<
 	Omit<ContextEditorContext, "pubs"> & {
-		pubs: InputPub[];
+		pubs: ContextEditorPub[];
 	}
 >;
 
 export const ContextEditorContextProvider = (props: Props) => {
 	const [cachedPubId] = useState(props.pubId);
-	const { children, pubId, ...value } = props;
-
-	const contextPubs = processedPubsToPubsResult(value.pubs);
+	const { children, pubId, pubs, ...value } = props;
 
 	return (
-		<ContextEditorContext.Provider value={{ ...value, pubs: contextPubs, pubId: cachedPubId }}>
+		<ContextEditorContext.Provider value={{ ...value, pubs, pubId: cachedPubId }}>
 			{children}
 		</ContextEditorContext.Provider>
 	);

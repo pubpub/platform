@@ -2,7 +2,6 @@ import type { QueryCreator } from "kysely";
 
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
-import mudder from "mudder";
 import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
@@ -13,6 +12,7 @@ import type { GetPubTypesResult } from "./pubtype";
 import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
+import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
@@ -216,7 +216,7 @@ export const insertForm = (
 	isDefault: boolean,
 	trx = db
 ) => {
-	const ranks = mudder.base62.mudder(pubType.fields.length + 1);
+	const ranks = findRanksBetween({ numberOfRanks: pubType.fields.length + 1 });
 
 	return trx
 		.with("form", (db) =>
