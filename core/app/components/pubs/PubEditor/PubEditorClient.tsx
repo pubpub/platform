@@ -22,10 +22,10 @@ import { cn } from "utils";
 
 import type {
 	BasicFormElements,
-	RelatedFieldValue,
 	FormElements,
-	SingleFormValues,
 	HydratedRelatedFieldValue,
+	RelatedFieldValue,
+	SingleFormValues,
 } from "../../forms/types";
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { DefinitelyHas } from "~/lib/types";
@@ -51,7 +51,10 @@ const preparePayload = ({
 	formValues: FieldValues;
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
-	defaultValues: Record<string, HydratedRelatedFieldValue | SingleFormValues | undefined | StagesId>;
+	defaultValues: Record<
+		string,
+		HydratedRelatedFieldValue | SingleFormValues | undefined | StagesId
+	>;
 	arrayDefaults: Record<string, HydratedRelatedFieldValue>;
 }) => {
 	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {};
