@@ -27,7 +27,7 @@ import { cn } from "utils";
 
 import type { ContextEditorPub } from "../../ContextEditor/ContextEditorContext";
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
-import type { ElementProps, FormValue, FormValueSingle } from "../types";
+import type { ElementProps, RelatedFormValues, SingleFormValues } from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
@@ -98,16 +98,17 @@ const RelatedPubBlock = ({
 
 const parseRelatedPubValuesSlugError = (
 	slug: string,
-	formStateErrors: FieldErrors<FormValueSingle> | FieldErrors<FormValue>
+	formStateErrors: FieldErrors<SingleFormValues> | FieldErrors<RelatedFormValues>
 ) => {
 	const [baseSlug, index] = slug.split(".");
 	const indexNumber = index ? parseInt(index) : undefined;
 
 	if (!indexNumber || isNaN(indexNumber)) {
-		const baseError = (formStateErrors as FieldErrors<FormValueSingle>)[baseSlug];
+		const baseError = (formStateErrors as FieldErrors<SingleFormValues>)[baseSlug];
 		return baseError;
 	}
-	const valueError = (formStateErrors as FieldErrors<FormValue>)[baseSlug]?.[indexNumber]?.value;
+	const valueError = (formStateErrors as FieldErrors<RelatedFormValues>)[baseSlug]?.[indexNumber]
+		?.value;
 	return valueError;
 };
 
@@ -128,7 +129,7 @@ export const ConfigureRelatedValue = ({
 			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
-	const { watch, formState } = useFormContext<FormValue | FormValueSingle>();
+	const { watch, formState } = useFormContext<RelatedFormValues | SingleFormValues>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
 	const showValue = value != null && value !== "";
@@ -190,7 +191,7 @@ export const RelatedPubsElement = ({
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
 	const { control, getValues, setValue } = useFormContext<
-		FormValue & { deleted: { slug: string; relatedPubId: PubsId }[] }
+		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
 	>();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);

@@ -22,10 +22,10 @@ import { cn } from "utils";
 
 import type {
 	BasicFormElements,
-	FieldValue,
+	RelatedFieldValue,
 	FormElements,
-	FormValueSingle,
-	HydratedFieldValue,
+	SingleFormValues,
+	HydratedRelatedFieldValue,
 } from "../../forms/types";
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type { DefinitelyHas } from "~/lib/types";
@@ -51,10 +51,10 @@ const preparePayload = ({
 	formValues: FieldValues;
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
-	defaultValues: Record<string, HydratedFieldValue | FormValueSingle | undefined | StagesId>;
-	arrayDefaults: Record<string, HydratedFieldValue>;
+	defaultValues: Record<string, HydratedRelatedFieldValue | SingleFormValues | undefined | StagesId>;
+	arrayDefaults: Record<string, HydratedRelatedFieldValue>;
 }) => {
-	const valuesPayload: Record<string, HydratedFieldValue[] | JsonValue | Date> = {};
+	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {};
 	for (const { slug } of formElements) {
 		if (
 			slug &&
@@ -65,7 +65,7 @@ const preparePayload = ({
 		) {
 			const val = formValues[slug];
 			if (Array.isArray(val)) {
-				const filteredVal = val.filter((v: FieldValue) => {
+				const filteredVal = val.filter((v: RelatedFieldValue) => {
 					const isNew = !v.valueId;
 					const isChanged = v.valueId && !isEqualWith(arrayDefaults[v.valueId], v);
 					return isNew || isChanged;
@@ -87,7 +87,7 @@ const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedP
 	const defaultValues: FieldValues = { deleted: [] };
 	// Build a record of the default values for array elements (related pubs) keyed by pub_values.id
 	// for dirty checking in preparePayload
-	const arrayDefaults: Record<string, HydratedFieldValue> = {};
+	const arrayDefaults: Record<string, HydratedRelatedFieldValue> = {};
 	for (const element of elements) {
 		if (element.slug && element.schemaName) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;

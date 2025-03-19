@@ -90,23 +90,25 @@ export type FormElements = PubFieldElement | StructuralElement | ButtonElement;
 
 export type BasicFormElements = ButtonElement | StructuralElement | BasicPubFieldElement;
 
-export type FieldValue = {
+export type RelatedFieldValue = {
 	value: JsonValue;
 	relatedPubId: PubsId;
 	rank: string;
 	valueId?: PubValuesId;
 };
 
-export type HydratedFieldValue = Omit<FieldValue, "value"> & { value: JsonValue | Date };
-
-export type FormValue = {
-	[slug: string]: FieldValue[];
+export type HydratedRelatedFieldValue = Omit<RelatedFieldValue, "value"> & {
+	value: JsonValue | Date;
 };
 
-export type FormValueSingle = {
+export type RelatedFormValues = {
+	[slug: string]: RelatedFieldValue[];
+};
+
+export type SingleFormValues = {
 	[slug: string]: JsonValue;
 };
 
 export const isRelatedValue = (
 	value: ProcessedPub["values"][number]
-): value is ProcessedPub["values"][number] & FieldValue => Boolean(value.relatedPubId);
+): value is ProcessedPub["values"][number] & RelatedFieldValue => Boolean(value.relatedPubId);
