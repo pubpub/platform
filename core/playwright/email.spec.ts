@@ -142,19 +142,27 @@ test.describe("Sending an email to an email address", () => {
 	});
 });
 
-test("Admin can include the name of a member on a related pub", async () => {
-	const pubDetailsPage = new PubDetailsPage(page, community.community.slug, community.pubs[0].id);
-	await pubDetailsPage.goTo();
-	await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
-		await runActionDialog
-			.getByLabel("Recipient email address")
-			.fill(community.users.user2.email);
-		await runActionDialog.getByLabel("Email subject").fill("Hello");
-		await runActionDialog
-			.getByLabel("Email body")
-			.fill(
-				':value{field="test-community:EvaluationManager" firstName lastName rel="test-community:Evaluations"}'
-			);
+test.describe("Sending an email containing a MemberId field from a related pub", () => {
+	test("Admin can include the name of a member on a related pub", async () => {
+		const pubDetailsPage = new PubDetailsPage(
+			page,
+			community.community.slug,
+			community.pubs[0].id
+		);
+		await pubDetailsPage.goTo();
+		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+			await runActionDialog
+				.getByLabel("Recipient email address")
+				.fill(community.users.user2.email);
+			await runActionDialog.getByLabel("Email subject").fill("Hello");
+			await runActionDialog
+				.getByLabel("Email body")
+				.fill(
+					':value{field="test-community:EvaluationManager" firstName lastName rel="test-community:Evaluations"}'
+				);
+		});
+	});
+	test("Email recipient sees the member name", async () => {
 		const { message } = await (
 			await inbucketClient.getMailbox(community.users.user2.email.split("@")[0])
 		).getLatestMessage();
