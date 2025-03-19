@@ -9,6 +9,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
+import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -129,7 +130,13 @@ export const updatePub = defineServerAction(async function updatePub({
 			updateQuery.setStage(stageId);
 		}
 
-		const normalizedValues = normalizePubValues(pubValues);
+		const { values: processedVals }: { values: typeof pubValues } =
+			parseRichTextForPubFieldsAndRelatedPubs({
+				pubId: pubId,
+				values: pubValues as Record<string, JsonValue>,
+			});
+
+		const normalizedValues = normalizePubValues(processedVals);
 		for (const { slug, value, relatedPubId } of normalizedValues) {
 			if (relatedPubId) {
 				updateQuery.relate(slug, value, relatedPubId, {
