@@ -33,7 +33,7 @@ export const env = createEnv({
 		DATABASE_URL: z.string().url(),
 		KYSELY_DEBUG: z.string().optional(),
 		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
-		LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).optional(),
+		LOG_LEVEL: z.enum(["benchmark", "debug", "info", "warn", "error"]).optional(),
 		MAILGUN_SMTP_PASSWORD: selfHostedOptional(z.string()),
 		MAILGUN_SMTP_USERNAME: selfHostedOptional(z.string()),
 		MAILGUN_SMTP_HOST: selfHostedOptional(z.string()),
