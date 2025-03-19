@@ -1219,47 +1219,49 @@ describe("querystring parsing", () => {
 });
 
 describe("filtering", async () => {
-	it.for(unifiedTestCases)("filters by $title", async ({ filter, foundIds }, { expect }) => {
-		const trx = getTrx();
+	it.concurrent.for(unifiedTestCases)(
+		"filters by $title",
+		async ({ filter, foundIds, title }, { expect }) => {
+			const trx = getTrx();
 
-		const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
+			const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
 
-		logger.debug("getPubsWithRelatedValues");
-		const pubs = benchmark("getPubsWithRelatedValues")(
-			await getPubsWithRelatedValues(
-				{
-					communityId: community.community.id,
-				},
-				{
-					trx,
-					filters: filter,
-				}
-			)
-		);
+			const pubs = await benchmark(`getPubsWithRelatedValues: ${title}`)(() =>
+				getPubsWithRelatedValues(
+					{
+						communityId: community.community.id,
+					},
+					{
+						trx,
+						filters: filter,
+					}
+				)
+			);
 
-		const expectedIds =
-			typeof foundIds === "function" ? foundIds(pubs).map((p) => p.id) : foundIds;
+			const expectedIds =
+				typeof foundIds === "function" ? foundIds(pubs).map((p) => p.id) : foundIds;
 
-		expect(
-			pubs,
-			"Expected the same number of pubs to be returned as the number of specified foundIds"
-		).toHaveLength(expectedIds.length);
-
-		if (pubs.length === 0) {
-			return;
-		}
-
-		const expectedIdsSet = new Set(expectedIds);
-
-		Array.from(expectedIdsSet).forEach((id) => {
-			const expectedPub = community.pubs.find((p) => p.id === id);
-			const foundPub = pubs.find((p) => p.id === id);
 			expect(
-				foundPub,
-				`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
-			).toBeDefined();
-		});
-	});
+				pubs,
+				"Expected the same number of pubs to be returned as the number of specified foundIds"
+			).toHaveLength(expectedIds.length);
+
+			if (pubs.length === 0) {
+				return;
+			}
+
+			const expectedIdsSet = new Set(expectedIds);
+
+			Array.from(expectedIdsSet).forEach((id) => {
+				const expectedPub = community.pubs.find((p) => p.id === id);
+				const foundPub = pubs.find((p) => p.id === id);
+				expect(
+					foundPub,
+					`Expected to find Pub with values  ${JSON.stringify(expectedPub?.values.map((v) => v.value))} but found pubs with values ${JSON.stringify(pubs.map((p) => p.values.map((v) => v.value)))}`
+				).toBeDefined();
+			});
+		}
+	);
 });
 
 const validationFailureCases: {

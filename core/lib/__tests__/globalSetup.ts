@@ -19,7 +19,7 @@ export const setup = async () => {
 
 	logger.info("Resetting database...");
 	const result = spawnSync(
-		"MINIMAL_SEED=true LOG_LEVEL=info pnpm --filter core exec dotenv -e ./.env.test -e ./.env.test.local prisma migrate reset -- --preview-feature --force",
+		"pnpm --filter core exec dotenv -e ./.env.test -e ./.env.test.local prisma migrate reset -- --preview-feature --force",
 		{
 			shell: true,
 			// stdio: "inherit",

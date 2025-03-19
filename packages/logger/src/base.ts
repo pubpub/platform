@@ -14,13 +14,13 @@ export const logger = pino({
 
 export const benchmark =
 	(name: string) =>
-	<T>(thing: T) => {
+	async <T>(thing: () => Promise<T>) => {
 		if (!logger.isLevelEnabled("benchmark")) {
-			return thing;
+			return await thing();
 		}
 
 		const start = performance.now();
-		const result = thing;
+		const result = await thing();
 		const duration = performance.now() - start;
 		logger.benchmark({ msg: name, duration });
 
