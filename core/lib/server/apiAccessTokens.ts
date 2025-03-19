@@ -102,17 +102,20 @@ export type SafeApiAccessToken = Awaited<
 /**
  * Create a new API access token with the given permissions
  */
-export const createApiAccessToken = ({
-	token,
-	permissions,
-}: {
-	token: Omit<NewApiAccessTokens, "token">;
-	permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
-}) => {
+export const createApiAccessToken = (
+	{
+		token,
+		permissions,
+	}: {
+		token: Omit<NewApiAccessTokens, "token">;
+		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
+	},
+	trx = db
+) => {
 	const tokenString = generateToken();
 
 	return autoRevalidate(
-		db
+		trx
 			.with("new_token", (db) =>
 				db
 					.insertInto("api_access_tokens")
@@ -143,9 +146,9 @@ export const createApiAccessToken = ({
 	);
 };
 
-export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }) =>
+export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }, trx = db) =>
 	autoRevalidate(
-		db
+		trx
 			.with("token", (db) => db.deleteFrom("api_access_tokens").where("id", "=", id))
 			.with("permissions", (db) =>
 				db.deleteFrom("api_access_permissions").where("apiAccessTokenId", "=", id)
