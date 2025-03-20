@@ -53,7 +53,7 @@ const PubValueHeading = ({
 }: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
 	// For "Other Fields" section header which might be one lower than any pub depth
 	if (depth < 1) {
-		return <h1 {...props}>{children}</h1>;
+		return <h2 {...props}>{children}</h2>;
 	}
 	// Pub depth starts at 1
 	switch (depth - 1) {
@@ -136,7 +136,7 @@ export const PubValues = ({
 		(values) => values.isInForm
 	);
 	return (
-		<div>
+		<article>
 			{valuesInForm.map(({ label, values }) => {
 				return <FieldBlock key={label} name={label} values={values} depth={depth} />;
 			})}
@@ -153,7 +153,7 @@ export const PubValues = ({
 					))}
 				</div>
 			) : null}
-		</div>
+		</article>
 	);
 };
 

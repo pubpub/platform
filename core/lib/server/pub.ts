@@ -1769,7 +1769,14 @@ function nestRelatedPubs<Options extends GetPubsWithRelatedValuesOptions>(
 	const depth = opts.depth ?? DEFAULT_OPTIONS.depth;
 
 	// create a map of all pubs by their ID for easy lookup
-	const unprocessedPubsById = new Map(pubs.map((pub) => [pub.id, pub]));
+	const unprocessedPubsById = new Map<PubsId, UnprocessedPub>();
+	for (const pub of pubs) {
+		// Only include the first one we found to not overwrite any at lower depths,
+		// in the case of a cycle
+		if (!unprocessedPubsById.has(pub.id)) {
+			unprocessedPubsById.set(pub.id, pub);
+		}
+	}
 
 	const processedPubsById = new Map<PubsId, ProcessedPub<Options>>();
 
