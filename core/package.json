@@ -6,8 +6,8 @@
 	"scripts": {
 		"playwright:test": "SKIP_VALIDATION=true NODE_OPTIONS='--import #register-loader' playwright test",
 		"playwright:ui": "SKIP_VALIDATION=true NODE_OPTIONS='--import #register-loader' playwright test --ui",
-		"playwright:test:dev": "SKIP_VALIDATION=true NODE_OPTIONS='--import #register-loader' TEST_DEV=true dotenv -e .env.dev -e .env.local pnpm playwright test",
-		"playwright:ui:dev": "SKIP_VALIDATION=true NODE_OPTIONS='--import #register-loader' TEST_DEV=true dotenv -e .env.dev -e .env.local pnpm playwright test --ui",
+		"playwright:test:dev": "SKIP_VALIDATION=true NODE_OPTIONS='--import #register-loader' TEST_DEV=true dotenv -e .env.development -e .env.local pnpm playwright test",
+		"playwright:ui:dev": "SKIP_VALIDATION=true NODE_OPTIONS='--import #register-loader' TEST_DEV=true dotenv -e .env.development -e .env.local pnpm playwright test --ui",
 		"db:migrate-dev": "pnpm migrate-dev",
 		"db:migrate-deploy": "pnpm migrate-deploy",
 		"db:migrate-diff": "pnpm migrate-diff",

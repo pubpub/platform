@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import type { UsersId } from "db/public";
+import type { PubsId, UsersId } from "db/public";
 import { Action, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
@@ -81,24 +81,24 @@ const seed = createSeed({
 		},
 	},
 	pubs: [
-		// {
-		// 	id: pubId as PubsId,
-		// 	pubType: "Evaluation",
-		// 	values: {
-		// 		Title: "Review of The Activity of Snails",
-		// 	},
-		// 	stage: "Evaluating",
-		// },
+		{
+			id: pubId as PubsId,
+			pubType: "Evaluation",
+			values: {
+				Title: "Review of The Activity of Snails",
+			},
+			stage: "Evaluating",
+		},
 		{
 			pubType: "Submission",
 			values: {
 				Title: "The Activity of Snails",
 				Content: "",
 				Evaluations: [
-					// {
-					// 	value: null,
-					// 	relatedPubId: pubId as PubsId,
-					// },
+					{
+						value: null,
+						relatedPubId: pubId as PubsId,
+					},
 				],
 				EvaluationManager: memberId,
 			},
@@ -126,7 +126,7 @@ test.describe("Sending an email to an email address", () => {
 		const pubDetailsPage = new PubDetailsPage(
 			page,
 			community.community.slug,
-			community.pubs[0].id
+			community.pubs[1].id
 		);
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
@@ -161,7 +161,7 @@ test.describe("Sending an email containing a MemberId field from a related pub",
 			await runActionDialog
 				.getByLabel("Email body")
 				.fill(
-					':value{field="test-community:EvaluationManager" firstName lastName rel="test-community:Evaluations"}'
+					`:value{field="${community.pubFields.EvaluationManager.slug}" firstName lastName rel="${community.pubFields.Evaluations.slug}"}`
 				);
 		});
 	});
@@ -169,6 +169,6 @@ test.describe("Sending an email containing a MemberId field from a related pub",
 		const { message } = await (
 			await inbucketClient.getMailbox(community.users.user2.email.split("@")[0])
 		).getLatestMessage();
-		expect(message.body.html?.trim()).toBe("<p>Jill Admin</p>");
+		expect(message.body.html?.trim()).toBe("<p><span>Jill Admin</span></p>");
 	});
 });
