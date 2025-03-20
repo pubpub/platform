@@ -159,7 +159,7 @@ set -e
 		// create commit with this author
 		scriptContent += `git add ${outputPath}\n`;
 		scriptContent += `GIT_COMMITTER_NAME="${author}" GIT_COMMITTER_EMAIL="${email}" `;
-		scriptContent += `git commit --author="${authorString}" -m "Move migration ${migration} to flattened file"\n\n`;
+		scriptContent += `git commit --no-verify --no-gpg-sign --author="${authorString}" -m "Move migration ${migration} to flattened file"\n\n`;
 	}
 
 	// write script and make it executable
