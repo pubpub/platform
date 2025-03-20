@@ -1,3 +1,5 @@
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
+
 import { sql, Table } from "drizzle-orm";
 import {
 	boolean,
@@ -164,17 +166,11 @@ export const stages = pgTable(
 		updatedAt,
 		name: text().notNull(),
 		order: text().notNull(),
-		communityId: text().notNull(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "restrict", onUpdate: "cascade" }),
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "stages_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-	]
+	(table) => []
 );
 
 export const communities = pgTable(
@@ -207,17 +203,11 @@ export const memberGroups = pgTable(
 			.notNull(),
 		createdAt,
 		updatedAt,
-		communityId: text().notNull(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "member_groups_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	]
+	(table) => []
 );
 
 export const pubTypes = pgTable(
@@ -229,7 +219,9 @@ export const pubTypes = pgTable(
 			.notNull(),
 		createdAt,
 		updatedAt,
-		communityId: text().notNull(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		name: text().notNull(),
 		description: text(),
 	},
@@ -239,13 +231,6 @@ export const pubTypes = pgTable(
 			table.name.asc().nullsLast().op("text_ops"),
 			table.communityId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "pub_types_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
 	]
 );
 
@@ -264,10 +249,17 @@ export const pubs = pgTable(
 			.notNull(),
 		createdAt,
 		updatedAt,
-		pubTypeId: text().notNull(),
-		communityId: text().notNull(),
+		pubTypeId: text()
+			.notNull()
+			.references(() => pubTypes.id, { onDelete: "restrict", onUpdate: "cascade" }),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		valuesBlob: jsonb(),
-		assigneeId: text(),
+		assigneeId: text().references(() => users.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 		title: text(),
 		searchVector: tsVector("searchVector"),
 	},
@@ -276,27 +268,6 @@ export const pubs = pgTable(
 			"gin",
 			table.searchVector.asc().nullsLast().op("tsvector_ops")
 		),
-		foreignKey({
-			columns: [table.pubTypeId],
-			foreignColumns: [pubTypes.id],
-			name: "pubs_pubTypeId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "pubs_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-		foreignKey({
-			columns: [table.assigneeId],
-			foreignColumns: [users.id],
-			name: "pubs_assigneeId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
 	]
 );
 
@@ -319,12 +290,19 @@ export const pubValues = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		fieldId: text().notNull(),
+		fieldId: text()
+			.notNull()
+			.references(() => pubFields.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		value: jsonb(),
-		pubId: text().notNull(),
+		pubId: text()
+			.notNull()
+			.references(() => pubs.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		createdAt,
 		updatedAt,
-		relatedPubId: text("relatedPubId"),
+		relatedPubId: text("relatedPubId").references(() => pubs.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
 		lastModifiedBy: text("lastModifiedBy").notNull(),
 		rank: text(),
 	},
@@ -344,27 +322,7 @@ export const pubValues = pgTable(
 				table.fieldId.asc().nullsLast().op("text_ops")
 			)
 			.where(sql`("relatedPubId" IS NOT NULL)`),
-		foreignKey({
-			columns: [table.fieldId],
-			foreignColumns: [pubFields.id],
-			name: "pub_values_fieldId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-		foreignKey({
-			columns: [table.pubId],
-			foreignColumns: [pubs.id],
-			name: "pub_values_pubId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.relatedPubId],
-			foreignColumns: [pubs.id],
-			name: "pub_values_relatedPubId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
+
 		lastModifiedByCheck("pub_values"),
 	]
 );
@@ -379,11 +337,16 @@ export const pubFields = pgTable(
 		name: text().notNull(),
 		createdAt,
 		updatedAt,
-		pubFieldSchemaId: text(),
+		pubFieldSchemaId: text().references(() => pubFieldSchema.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 		slug: text().notNull(),
 		schemaName: coreSchemaType(),
 		isArchived: boolean().default(false).notNull(),
-		communityId: text().notNull(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		isRelation: boolean().default(false).notNull(),
 	},
 	(table) => [
@@ -391,28 +354,18 @@ export const pubFields = pgTable(
 			"btree",
 			table.slug.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.pubFieldSchemaId],
-			foreignColumns: [pubFieldSchema.id],
-			name: "pub_fields_pubFieldSchemaId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "pub_fields_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
 	]
 );
 
 export const pubFieldToPubType = pgTable(
 	"_PubFieldToPubType",
 	{
-		a: text("A").notNull(),
-		b: text("B").notNull(),
+		a: text("A")
+			.notNull()
+			.references(() => pubFields.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		b: text("B")
+			.notNull()
+			.references(() => pubTypes.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		isTitle: boolean().default(false).notNull(),
 		createdAt,
 		updatedAt,
@@ -427,20 +380,6 @@ export const pubFieldToPubType = pgTable(
 		uniqueIndex("unique_pubtype_istitle")
 			.using("btree", table.b.asc().nullsLast().op("text_ops"))
 			.where(sql`("isTitle" IS TRUE)`),
-		foreignKey({
-			columns: [table.a],
-			foreignColumns: [pubFields.id],
-			name: "_PubFieldToPubType_A_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.b],
-			foreignColumns: [pubTypes.id],
-			name: "_PubFieldToPubType_B_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	]
 );
 
@@ -455,26 +394,24 @@ export const authTokens = pgTable(
 		createdAt,
 		expiresAt: timestamp({ precision: 3, mode: "string" }).notNull(),
 		isUsed: boolean().default(false).notNull(),
-		userId: text().notNull(),
+		userId: text()
+			.notNull()
+			.references(() => users.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		type: authTokenType().default("generic").notNull(),
 		updatedAt,
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "auth_tokens_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-	]
+	(table) => []
 );
 
 export const memberGroupToUser = pgTable(
 	"_MemberGroupToUser",
 	{
-		a: text("A").notNull(),
-		b: text("B").notNull(),
+		a: text("A")
+			.notNull()
+			.references(() => memberGroups.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		b: text("B")
+			.notNull()
+			.references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	},
 	(table) => [
 		uniqueIndex("_MemberGroupToUser_AB_unique").using(
@@ -483,20 +420,6 @@ export const memberGroupToUser = pgTable(
 			table.b.asc().nullsLast().op("text_ops")
 		),
 		index().using("btree", table.b.asc().nullsLast().op("text_ops")),
-		foreignKey({
-			columns: [table.a],
-			foreignColumns: [memberGroups.id],
-			name: "_MemberGroupToUser_A_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.b],
-			foreignColumns: [users.id],
-			name: "_MemberGroupToUser_B_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	]
 );
 
@@ -522,30 +445,20 @@ export const pubFieldSchema = pgTable(
 	]
 );
 
-export const actionInstances = pgTable(
-	"action_instances",
-	{
-		id: text()
-			.default(sql`gen_random_uuid()`)
-			.primaryKey()
-			.notNull(),
-		stageId: text().notNull(),
-		createdAt,
-		updatedAt,
-		config: jsonb(),
-		name: text().default("").notNull(),
-		action: action().notNull(),
-	},
-	(table) => [
-		foreignKey({
-			columns: [table.stageId],
-			foreignColumns: [stages.id],
-			name: "action_instances_stageId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-	]
-);
+export const actionInstances = pgTable("action_instances", {
+	id: text()
+		.default(sql`gen_random_uuid()`)
+		.primaryKey()
+		.notNull(),
+	stageId: text()
+		.notNull()
+		.references(() => stages.id, { onDelete: "cascade", onUpdate: "cascade" }),
+	createdAt,
+	updatedAt,
+	config: jsonb(),
+	name: text().default("").notNull(),
+	action: action().notNull(),
+});
 
 export const rules = pgTable(
 	"rules",
@@ -555,11 +468,16 @@ export const rules = pgTable(
 			.primaryKey()
 			.notNull(),
 		event: event().notNull(),
-		actionInstanceId: text().notNull(),
+		actionInstanceId: text()
+			.notNull()
+			.references(() => actionInstances.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		config: jsonb(),
 		createdAt,
 		updatedAt,
-		sourceActionInstanceId: text(),
+		sourceActionInstanceId: text().references(() => actionInstances.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 	},
 	(table) => [
 		uniqueIndex("unique_action_chaining_events")
@@ -577,20 +495,6 @@ export const rules = pgTable(
 				table.event.asc().nullsLast().op("text_ops")
 			)
 			.where(sql`("sourceActionInstanceId" IS NULL)`),
-		foreignKey({
-			columns: [table.actionInstanceId],
-			foreignColumns: [actionInstances.id],
-			name: "rules_actionInstanceId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.sourceActionInstanceId],
-			foreignColumns: [actionInstances.id],
-			name: "rules_sourceActionInstanceId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
 	]
 );
 
@@ -602,9 +506,13 @@ export const forms = pgTable(
 			.primaryKey()
 			.notNull(),
 		name: text().notNull(),
-		pubTypeId: text().notNull(),
+		pubTypeId: text()
+			.notNull()
+			.references(() => pubTypes.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		isArchived: boolean().default(false).notNull(),
-		communityId: text().notNull(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		slug: text().notNull(),
 		access: formAccessType().default("private").notNull(),
 		isDefault: boolean().default(false).notNull(),
@@ -622,20 +530,6 @@ export const forms = pgTable(
 			table.slug.asc().nullsLast().op("text_ops"),
 			table.communityId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.pubTypeId],
-			foreignColumns: [pubTypes.id],
-			name: "forms_pubTypeId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "forms_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	]
 );
 
@@ -646,48 +540,25 @@ export const actionRuns = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		actionInstanceId: text(),
-		pubId: text(),
+		actionInstanceId: text().references(() => actionInstances.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
+		pubId: text().references(() => pubs.id, { onDelete: "set null", onUpdate: "cascade" }),
 		config: jsonb(),
 		event: event(),
 		params: jsonb(),
 		status: actionRunStatus().notNull(),
-		userId: text(),
+		userId: text().references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
 		createdAt,
 		updatedAt,
 		result: jsonb().notNull(),
-		sourceActionRunId: text(),
+		sourceActionRunId: text().references((): AnyPgColumn => actionRuns.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.actionInstanceId],
-			foreignColumns: [actionInstances.id],
-			name: "action_runs_actionInstanceId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.pubId],
-			foreignColumns: [pubs.id],
-			name: "action_runs_pubId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "action_runs_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-		foreignKey({
-			columns: [table.sourceActionRunId],
-			foreignColumns: [table.id],
-			name: "action_runs_sourceActionRunId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-	]
+	(table) => []
 );
 
 export const apiAccessLogs = pgTable(
@@ -697,21 +568,16 @@ export const apiAccessLogs = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		accessTokenId: text(),
+		accessTokenId: text().references(() => apiAccessTokens.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 		timestamp: timestamp({ precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
 		action: text().notNull(),
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.accessTokenId],
-			foreignColumns: [apiAccessTokens.id],
-			name: "api_access_logs_accessTokenId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-	]
+	(table) => []
 );
 
 export const apiAccessTokens = pgTable(
@@ -724,9 +590,14 @@ export const apiAccessTokens = pgTable(
 		token: text().notNull(),
 		name: text().notNull(),
 		description: text(),
-		communityId: text().notNull(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		expiration: timestamp({ precision: 3, mode: "string" }).notNull(),
-		issuedById: text(),
+		issuedById: text().references(() => users.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 		issuedAt: timestamp({ precision: 3, mode: "string" })
 			.default(sql`CURRENT_TIMESTAMP`)
 			.notNull(),
@@ -738,20 +609,6 @@ export const apiAccessTokens = pgTable(
 			table.token.asc().nullsLast().op("text_ops")
 		),
 		index("token_idx").using("btree", table.token.asc().nullsLast().op("text_ops")),
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "api_access_tokens_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.issuedById],
-			foreignColumns: [users.id],
-			name: "api_access_tokens_issuedById_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
 	]
 );
 
@@ -762,21 +619,15 @@ export const sessions = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		userId: text().notNull(),
+		userId: text()
+			.notNull()
+			.references(() => users.id, { onDelete: "restrict", onUpdate: "cascade" }),
 		expiresAt: timestamp({ precision: 3, mode: "string" }).notNull(),
 		createdAt,
 		updatedAt,
 		type: authTokenType().default("generic").notNull(),
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "sessions_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("restrict"),
-	]
+	(table) => []
 );
 
 export const apiAccessPermissions = pgTable(
@@ -786,7 +637,9 @@ export const apiAccessPermissions = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		apiAccessTokenId: text().notNull(),
+		apiAccessTokenId: text()
+			.notNull()
+			.references(() => apiAccessTokens.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		scope: apiAccessScope().notNull(),
 		accessType: apiAccessType().notNull(),
 		constraints: jsonb(),
@@ -800,13 +653,6 @@ export const apiAccessPermissions = pgTable(
 			table.scope.asc().nullsLast().op("text_ops"),
 			table.accessType.asc().nullsLast().op("enum_ops")
 		),
-		foreignKey({
-			columns: [table.apiAccessTokenId],
-			foreignColumns: [apiAccessTokens.id],
-			name: "api_access_permissions_apiAccessTokenId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	]
 );
 
@@ -818,13 +664,18 @@ export const formElements = pgTable(
 			.primaryKey()
 			.notNull(),
 		type: elementType().notNull(),
-		fieldId: text(),
-		formId: text().notNull(),
+		fieldId: text().references(() => pubFields.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
+		formId: text()
+			.notNull()
+			.references(() => forms.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		label: text(),
 		element: structuralFormElement(),
 		content: text(),
 		required: boolean(),
-		stageId: text(),
+		stageId: text().references(() => stages.id, { onDelete: "set null", onUpdate: "cascade" }),
 		component: inputComponent(),
 		config: jsonb(),
 		createdAt,
@@ -843,27 +694,6 @@ export const formElements = pgTable(
 			table.label.asc().nullsLast().op("text_ops"),
 			table.formId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.stageId],
-			foreignColumns: [stages.id],
-			name: "form_elements_stageId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-		foreignKey({
-			columns: [table.fieldId],
-			foreignColumns: [pubFields.id],
-			name: "form_elements_fieldId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.formId],
-			foreignColumns: [forms.id],
-			name: "form_elements_formId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 	]
 );
 
@@ -875,9 +705,14 @@ export const communityMemberships = pgTable(
 			.primaryKey()
 			.notNull(),
 		role: memberRole().notNull(),
-		communityId: text().notNull(),
-		userId: text(),
-		memberGroupId: text(),
+		communityId: text()
+			.notNull()
+			.references(() => communities.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		userId: text().references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		memberGroupId: text().references(() => memberGroups.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
 		createdAt,
 		updatedAt,
 	},
@@ -892,27 +727,7 @@ export const communityMemberships = pgTable(
 			table.communityId.asc().nullsLast().op("text_ops"),
 			table.userId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.communityId],
-			foreignColumns: [communities.id],
-			name: "community_memberships_communityId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "community_memberships_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.memberGroupId],
-			foreignColumns: [memberGroups.id],
-			name: "community_memberships_memberGroupId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
+
 		check("community_memberships_check", sql`num_nonnulls("userId", "memberGroupId") = 1`),
 	]
 );
@@ -925,9 +740,14 @@ export const pubMemberships = pgTable(
 			.primaryKey()
 			.notNull(),
 		role: memberRole().notNull(),
-		pubId: text().notNull(),
-		userId: text(),
-		memberGroupId: text(),
+		pubId: text()
+			.notNull()
+			.references(() => pubs.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		userId: text().references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		memberGroupId: text().references(() => memberGroups.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
 		createdAt,
 		updatedAt,
 	},
@@ -942,27 +762,7 @@ export const pubMemberships = pgTable(
 			table.pubId.asc().nullsLast().op("text_ops"),
 			table.userId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.pubId],
-			foreignColumns: [pubs.id],
-			name: "pub_memberships_pubId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "pub_memberships_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.memberGroupId],
-			foreignColumns: [memberGroups.id],
-			name: "pub_memberships_memberGroupId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
+
 		check("pub_memberships_check", sql`num_nonnulls("userId", "memberGroupId") = 1`),
 	]
 );
@@ -975,9 +775,14 @@ export const stageMemberships = pgTable(
 			.primaryKey()
 			.notNull(),
 		role: memberRole().notNull(),
-		stageId: text().notNull(),
-		userId: text(),
-		memberGroupId: text(),
+		stageId: text()
+			.notNull()
+			.references(() => stages.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		userId: text().references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		memberGroupId: text().references(() => memberGroups.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
 		createdAt,
 		updatedAt,
 	},
@@ -992,27 +797,7 @@ export const stageMemberships = pgTable(
 			table.stageId.asc().nullsLast().op("text_ops"),
 			table.userId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.stageId],
-			foreignColumns: [stages.id],
-			name: "stage_memberships_stageId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "stage_memberships_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.memberGroupId],
-			foreignColumns: [memberGroups.id],
-			name: "stage_memberships_memberGroupId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
+
 		check("stage_memberships_check", sql`num_nonnulls("userId", "memberGroupId") = 1`),
 	]
 );
@@ -1029,33 +814,18 @@ export const pubValuesHistory = pgTable(
 		oldRowData: jsonb(),
 		newRowData: jsonb(),
 		pubValueId: text(),
-		userId: text(),
-		apiAccessTokenId: text(),
-		actionRunId: text(),
+		userId: text().references(() => users.id, { onDelete: "set null", onUpdate: "cascade" }),
+		apiAccessTokenId: text().references(() => apiAccessTokens.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
+		actionRunId: text().references(() => actionRuns.id, {
+			onDelete: "set null",
+			onUpdate: "cascade",
+		}),
 		other: text(),
 	},
 	(table) => [
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "pub_values_history_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-		foreignKey({
-			columns: [table.apiAccessTokenId],
-			foreignColumns: [apiAccessTokens.id],
-			name: "pub_values_history_apiAccessTokenId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
-		foreignKey({
-			columns: [table.actionRunId],
-			foreignColumns: [actionRuns.id],
-			name: "pub_values_history_actionRunId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("set null"),
 		check(
 			"chk_pub_values_history_crudtype_rowdata",
 			sql`(("operationType" = 'insert'::"OperationType") AND ("oldRowData" IS NULL) AND ("newRowData" IS NOT NULL)) OR (("operationType" = 'update'::"OperationType") AND ("oldRowData" IS NOT NULL) AND ("newRowData" IS NOT NULL)) OR (("operationType" = 'delete'::"OperationType") AND ("oldRowData" IS NOT NULL) AND ("newRowData" IS NULL))`
@@ -1070,12 +840,17 @@ export const formMemberships = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		formId: text().notNull(),
-		userId: text(),
-		memberGroupId: text(),
+		formId: text()
+			.notNull()
+			.references(() => forms.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		userId: text().references(() => users.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		memberGroupId: text().references(() => memberGroups.id, {
+			onDelete: "cascade",
+			onUpdate: "cascade",
+		}),
 		createdAt: createdAt,
 		updatedAt,
-		pubId: text(),
+		pubId: text().references(() => pubs.id, { onDelete: "cascade", onUpdate: "cascade" }),
 	},
 	(table) => [
 		uniqueIndex("form_memberships_formId_memberGroupId_pubId_key").using(
@@ -1090,34 +865,7 @@ export const formMemberships = pgTable(
 			table.userId.asc().nullsLast().op("text_ops"),
 			table.pubId.asc().nullsLast().op("text_ops")
 		),
-		foreignKey({
-			columns: [table.formId],
-			foreignColumns: [forms.id],
-			name: "form_memberships_formId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.userId],
-			foreignColumns: [users.id],
-			name: "form_memberships_userId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.memberGroupId],
-			foreignColumns: [memberGroups.id],
-			name: "form_memberships_memberGroupId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.pubId],
-			foreignColumns: [pubs.id],
-			name: "form_memberships_pubId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
+
 		check("form_memberships_check", sql`num_nonnulls("userId", "memberGroupId") = 1`),
 	]
 );
@@ -1140,26 +888,16 @@ export const membershipCapabilities = pgTable(
 export const moveConstraint = pgTable(
 	"move_constraint",
 	{
-		stageId: text().notNull(),
-		destinationId: text().notNull(),
+		stageId: text()
+			.notNull()
+			.references(() => stages.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		destinationId: text()
+			.notNull()
+			.references(() => stages.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		createdAt,
 		updatedAt,
 	},
 	(table) => [
-		foreignKey({
-			columns: [table.stageId],
-			foreignColumns: [stages.id],
-			name: "move_constraint_stageId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.destinationId],
-			foreignColumns: [stages.id],
-			name: "move_constraint_destinationId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
 		primaryKey({ columns: [table.stageId, table.destinationId], name: "move_constraint_pkey" }),
 	]
 );
@@ -1167,26 +905,14 @@ export const moveConstraint = pgTable(
 export const pubsInStages = pgTable(
 	"PubsInStages",
 	{
-		pubId: text().notNull(),
-		stageId: text().notNull(),
+		pubId: text()
+			.notNull()
+			.references(() => pubs.id, { onDelete: "cascade", onUpdate: "cascade" }),
+		stageId: text()
+			.notNull()
+			.references(() => stages.id, { onDelete: "cascade", onUpdate: "cascade" }),
 		createdAt,
 		updatedAt,
 	},
-	(table) => [
-		foreignKey({
-			columns: [table.pubId],
-			foreignColumns: [pubs.id],
-			name: "PubsInStages_pubId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		foreignKey({
-			columns: [table.stageId],
-			foreignColumns: [stages.id],
-			name: "PubsInStages_stageId_fkey",
-		})
-			.onUpdate("cascade")
-			.onDelete("cascade"),
-		primaryKey({ columns: [table.pubId, table.stageId], name: "PubsInStages_pkey" }),
-	]
+	(table) => [primaryKey({ columns: [table.pubId, table.stageId], name: "PubsInStages_pkey" })]
 );
