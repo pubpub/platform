@@ -883,6 +883,7 @@ export async function seedCommunity<
 		? await trx
 				.insertInto("community_memberships")
 				.values(possibleMembers)
+				.onConflict((qb) => qb.doNothing())
 				.returningAll()
 				.execute()
 		: [];
