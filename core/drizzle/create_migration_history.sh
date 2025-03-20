@@ -1,4 +1,12 @@
+#!/bin/bash
+set -e
 
+# Create empty migration file
+>drizzle/migrations/0000_init.sql
+
+# Process migrations in chronological order
+# Migration: 20230614132455_init_user by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230614132455_init_user
 
 -- CreateTable
@@ -20,6 +28,13 @@ CREATE UNIQUE INDEX "users_slug_key" ON "users"("slug");
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230614132455_init_user to flattened file"
+
+# Migration: 20230615122708_placeholders by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230615122708_placeholders
 
 -- CreateTable
@@ -114,6 +129,13 @@ CREATE TABLE "pins" (
     CONSTRAINT "pins_pkey" PRIMARY KEY ("id")
 );
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230615122708_placeholders to flattened file"
+
+# Migration: 20230621173054_pub_schema_pass_1 by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230621173054_pub_schema_pass_1
 
 /*
@@ -154,6 +176,13 @@ ALTER TABLE "pub_types" ADD CONSTRAINT "pub_types_community_id_fkey" FOREIGN KEY
 -- AddForeignKey
 ALTER TABLE "metadata" ADD CONSTRAINT "metadata_pub_id_fkey" FOREIGN KEY ("pub_id") REFERENCES "pubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230621173054_pub_schema_pass_1 to flattened file"
+
+# Migration: 20230621173228_community_name by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230621173228_community_name
 
 /*
@@ -165,6 +194,13 @@ ALTER TABLE "metadata" ADD CONSTRAINT "metadata_pub_id_fkey" FOREIGN KEY ("pub_i
 -- AlterTable
 ALTER TABLE "communities" ADD COLUMN     "name" TEXT NOT NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230621173228_community_name to flattened file"
+
+# Migration: 20230621174338_fix_pub_parent_required by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230621174338_fix_pub_parent_required
 
 -- DropForeignKey
@@ -176,6 +212,13 @@ ALTER TABLE "pubs" ALTER COLUMN "parent_id" DROP NOT NULL;
 -- AddForeignKey
 ALTER TABLE "pubs" ADD CONSTRAINT "pubs_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "pubs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230621174338_fix_pub_parent_required to flattened file"
+
+# Migration: 20230621175305_add_community_to_pub by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230621175305_add_community_to_pub
 
 /*
@@ -190,6 +233,13 @@ ALTER TABLE "pubs" ADD COLUMN     "community_id" TEXT NOT NULL;
 -- AddForeignKey
 ALTER TABLE "pubs" ADD CONSTRAINT "pubs_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230621175305_add_community_to_pub to flattened file"
+
+# Migration: 20230622182329_metadata_refactor by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230622182329_metadata_refactor
 
 /*
@@ -244,11 +294,25 @@ ALTER TABLE "metadata_values" ADD CONSTRAINT "metadata_values_field_id_fkey" FOR
 -- AddForeignKey
 ALTER TABLE "metadata_values" ADD CONSTRAINT "metadata_values_pub_id_fkey" FOREIGN KEY ("pub_id") REFERENCES "pubs"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230622182329_metadata_refactor to flattened file"
+
+# Migration: 20230622182626_blob_optional by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230622182626_blob_optional
 
 -- AlterTable
 ALTER TABLE "pubs" ALTER COLUMN "metadataBlob" DROP NOT NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230622182626_blob_optional to flattened file"
+
+# Migration: 20230622194921_workflow_init by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230622194921_workflow_init
 
 /*
@@ -346,6 +410,13 @@ ALTER TABLE "_PubToStage" ADD CONSTRAINT "_PubToStage_A_fkey" FOREIGN KEY ("A") 
 -- AddForeignKey
 ALTER TABLE "_PubToStage" ADD CONSTRAINT "_PubToStage_B_fkey" FOREIGN KEY ("B") REFERENCES "stages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230622194921_workflow_init to flattened file"
+
+# Migration: 20230622195031_workflows_to_community by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230622195031_workflows_to_community
 
 /*
@@ -360,6 +431,13 @@ ALTER TABLE "workflows" ADD COLUMN     "community_id" TEXT NOT NULL;
 -- AddForeignKey
 ALTER TABLE "workflows" ADD CONSTRAINT "workflows_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230622195031_workflows_to_community to flattened file"
+
+# Migration: 20230622195558_stage_names_order by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230622195558_stage_names_order
 
 /*
@@ -377,6 +455,13 @@ ADD COLUMN     "order" TEXT NOT NULL;
 -- AlterTable
 ALTER TABLE "workflows" ADD COLUMN     "name" TEXT NOT NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230622195558_stage_names_order to flattened file"
+
+# Migration: 20230705201158_refactor_fields by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230705201158_refactor_fields
 
 /*
@@ -457,6 +542,13 @@ ALTER TABLE "_PubFieldToPubType" ADD CONSTRAINT "_PubFieldToPubType_A_fkey" FORE
 -- AddForeignKey
 ALTER TABLE "_PubFieldToPubType" ADD CONSTRAINT "_PubFieldToPubType_B_fkey" FOREIGN KEY ("B") REFERENCES "pub_types"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230705201158_refactor_fields to flattened file"
+
+# Migration: 20230706134853_instances by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230706134853_instances
 
 /*
@@ -522,6 +614,13 @@ ALTER TABLE "_IntegrationInstanceToStage" ADD CONSTRAINT "_IntegrationInstanceTo
 -- AddForeignKey
 ALTER TABLE "_IntegrationInstanceToStage" ADD CONSTRAINT "_IntegrationInstanceToStage_B_fkey" FOREIGN KEY ("B") REFERENCES "stages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230706134853_instances to flattened file"
+
+# Migration: 20230706152501_integegration_field_ids by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230706152501_integegration_field_ids
 
 -- AlterTable
@@ -530,6 +629,13 @@ ALTER TABLE "pub_fields" ADD COLUMN     "integration_id" TEXT;
 -- AddForeignKey
 ALTER TABLE "pub_fields" ADD CONSTRAINT "pub_fields_integration_id_fkey" FOREIGN KEY ("integration_id") REFERENCES "integrations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230706152501_integegration_field_ids to flattened file"
+
+# Migration: 20230710105851_instance_community by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230710105851_instance_community
 
 /*
@@ -544,11 +650,25 @@ ALTER TABLE "integration_instances" ADD COLUMN     "community_id" TEXT NOT NULL;
 -- AddForeignKey
 ALTER TABLE "integration_instances" ADD CONSTRAINT "integration_instances_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230710105851_instance_community to flattened file"
+
+# Migration: 20230712173822_community_avatar by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230712173822_community_avatar
 
 -- AlterTable
 ALTER TABLE "communities" ADD COLUMN     "avatar" TEXT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230712173822_community_avatar to flattened file"
+
+# Migration: 20230712174327_pin_schema by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230712174327_pin_schema
 
 /*
@@ -575,11 +695,25 @@ ALTER TABLE "pins" ADD CONSTRAINT "pins_workflow_id_fkey" FOREIGN KEY ("workflow
 -- AddForeignKey
 ALTER TABLE "pins" ADD CONSTRAINT "pins_instance_id_fkey" FOREIGN KEY ("instance_id") REFERENCES "integration_instances"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230712174327_pin_schema to flattened file"
+
+# Migration: 20230713124028_type_description by Travis Rich
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230713124028_type_description
 
 -- AlterTable
 ALTER TABLE "pub_types" ADD COLUMN     "description" TEXT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis Rich" GIT_COMMITTER_EMAIL="travis.s.rich@gmail.com" git commit --author="Travis Rich <travis.s.rich@gmail.com>" -m "Move migration 20230713124028_type_description to flattened file"
+
+# Migration: 20230730130805_remove_workflowws by Travis
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230730130805_remove_workflowws
 
 /*
@@ -681,6 +815,13 @@ ALTER TABLE "_PermissionToWorkflow" ADD CONSTRAINT "_PermissionToWorkflow_A_fkey
 -- AddForeignKey
 ALTER TABLE "_PermissionToWorkflow" ADD CONSTRAINT "_PermissionToWorkflow_B_fkey" FOREIGN KEY ("B") REFERENCES "workflows"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis" GIT_COMMITTER_EMAIL="isTravis@users.noreply.github.com" git commit --author="Travis <isTravis@users.noreply.github.com>" -m "Move migration 20230730130805_remove_workflowws to flattened file"
+
+# Migration: 20230730131013_really_drop_workflows by Travis
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230730131013_really_drop_workflows
 
 /*
@@ -751,11 +892,25 @@ ALTER TABLE "_MemberGroupToUser" ADD CONSTRAINT "_MemberGroupToUser_A_fkey" FORE
 -- AddForeignKey
 ALTER TABLE "_MemberGroupToUser" ADD CONSTRAINT "_MemberGroupToUser_B_fkey" FOREIGN KEY ("B") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis" GIT_COMMITTER_EMAIL="isTravis@users.noreply.github.com" git commit --author="Travis <isTravis@users.noreply.github.com>" -m "Move migration 20230730131013_really_drop_workflows to flattened file"
+
+# Migration: 20230730141617_community_slug_first by Travis
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230730141617_community_slug_first
 
 -- AlterTable
 ALTER TABLE "communities" ADD COLUMN     "slug" TEXT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis" GIT_COMMITTER_EMAIL="isTravis@users.noreply.github.com" git commit --author="Travis <isTravis@users.noreply.github.com>" -m "Move migration 20230730141617_community_slug_first to flattened file"
+
+# Migration: 20230730141652_community_slug_final by Travis
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230730141652_community_slug_final
 
 /*
@@ -771,6 +926,13 @@ ALTER TABLE "communities" ALTER COLUMN "slug" SET NOT NULL;
 -- CreateIndex
 CREATE UNIQUE INDEX "communities_slug_key" ON "communities"("slug");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Travis" GIT_COMMITTER_EMAIL="isTravis@users.noreply.github.com" git commit --author="Travis <isTravis@users.noreply.github.com>" -m "Move migration 20230730141652_community_slug_final to flattened file"
+
+# Migration: 20230906210115_add_auth_tokens by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230906210115_add_auth_tokens
 
 -- CreateTable
@@ -788,6 +950,13 @@ CREATE TABLE "auth_tokens" (
 -- AddForeignKey
 ALTER TABLE "auth_tokens" ADD CONSTRAINT "auth_tokens_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20230906210115_add_auth_tokens to flattened file"
+
+# Migration: 20230907211557_zero_to_one_stages_per_integration_instance by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230907211557_zero_to_one_stages_per_integration_instance
 
 /*
@@ -811,6 +980,13 @@ DROP TABLE "_IntegrationInstanceToStage";
 -- AddForeignKey
 ALTER TABLE "integration_instances" ADD CONSTRAINT "integration_instances_stage_id_fkey" FOREIGN KEY ("stage_id") REFERENCES "stages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20230907211557_zero_to_one_stages_per_integration_instance to flattened file"
+
+# Migration: 20230913200757_add_pub_hierarchy by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230913200757_add_pub_hierarchy
 
 -- AlterTable
@@ -819,6 +995,13 @@ ALTER TABLE "pubs" ADD COLUMN     "parent_id" TEXT;
 -- AddForeignKey
 ALTER TABLE "pubs" ADD CONSTRAINT "pubs_parent_id_fkey" FOREIGN KEY ("parent_id") REFERENCES "pubs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20230913200757_add_pub_hierarchy to flattened file"
+
+# Migration: 20230919171747_add_pubfieldschema by Gabriel Stein
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230919171747_add_pubfieldschema
 
 -- AlterTable
@@ -840,12 +1023,26 @@ CREATE UNIQUE INDEX "PubFieldSchema_name_namespace_key" ON "PubFieldSchema"("nam
 -- AddForeignKey
 ALTER TABLE "pub_fields" ADD CONSTRAINT "pub_fields_pubFieldSchemaId_fkey" FOREIGN KEY ("pubFieldSchemaId") REFERENCES "PubFieldSchema"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Gabriel Stein" GIT_COMMITTER_EMAIL="g@gabestein.com" git commit --author="Gabriel Stein <g@gabestein.com>" -m "Move migration 20230919171747_add_pubfieldschema to flattened file"
+
+# Migration: 20230925191147_add_pubfieldschema_dates by Gabriel Stein
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230925191147_add_pubfieldschema_dates
 
 -- AlterTable
 ALTER TABLE "PubFieldSchema" ADD COLUMN     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN     "updated_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Gabriel Stein" GIT_COMMITTER_EMAIL="g@gabestein.com" git commit --author="Gabriel Stein <g@gabestein.com>" -m "Move migration 20230925191147_add_pubfieldschema_dates to flattened file"
+
+# Migration: 20230926234242_add_pubfield_slugs by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230926234242_add_pubfield_slugs
 
 /*
@@ -861,6 +1058,13 @@ ALTER TABLE "pub_fields" ADD COLUMN     "slug" TEXT NOT NULL;
 -- CreateIndex
 CREATE UNIQUE INDEX "pub_fields_slug_key" ON "pub_fields"("slug");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20230926234242_add_pubfield_slugs to flattened file"
+
+# Migration: 20230928124422_user_name_first_last by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20230928124422_user_name_first_last
 
 /*
@@ -879,6 +1083,13 @@ ALTER TABLE "users"
 
 ALTER TABLE "users" RENAME COLUMN "name" TO "firstName";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20230928124422_user_name_first_last to flattened file"
+
+# Migration: 20231010215802_add_supabase_id by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20231010215802_add_supabase_id
 
 /*
@@ -893,6 +1104,13 @@ ALTER TABLE "users" ADD COLUMN     "supabaseId" TEXT;
 -- CreateIndex
 CREATE UNIQUE INDEX "users_supabaseId_key" ON "users"("supabaseId");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20231010215802_add_supabase_id to flattened file"
+
+# Migration: 20231012092908_pub_delete_cascade by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20231012092908_pub_delete_cascade
 
 -- DropForeignKey
@@ -907,11 +1125,25 @@ ALTER TABLE "pubs" ADD CONSTRAINT "pubs_parent_id_fkey" FOREIGN KEY ("parent_id"
 -- AddForeignKey
 ALTER TABLE "pub_values" ADD CONSTRAINT "pub_values_pub_id_fkey" FOREIGN KEY ("pub_id") REFERENCES "pubs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20231012092908_pub_delete_cascade to flattened file"
+
+# Migration: 20231016133737_nullable_last_name by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20231016133737_nullable_last_name
 
 -- AlterTable
 ALTER TABLE "users" ALTER COLUMN "lastName" DROP NOT NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20231016133737_nullable_last_name to flattened file"
+
+# Migration: 20231030180206_add_config_column_to_schema by qweliant
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20231030180206_add_config_column_to_schema
 
 -- AlterTable
@@ -921,6 +1153,13 @@ ALTER TABLE "integration_instances" ADD COLUMN     "config" JSONB;
 ALTER TABLE "users" ALTER COLUMN "firstName" DROP DEFAULT,
 ALTER COLUMN "lastName" DROP DEFAULT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="qweliant" GIT_COMMITTER_EMAIL="dmtorcode@gmail.com" git commit --author="qweliant <dmtorcode@gmail.com>" -m "Move migration 20231030180206_add_config_column_to_schema to flattened file"
+
+# Migration: 20231031164256_add_integration_instance_state_table by qweliant
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20231031164256_add_integration_instance_state_table
 
 -- CreateTable
@@ -939,6 +1178,13 @@ ALTER TABLE "IntegrationInstanceState" ADD CONSTRAINT "IntegrationInstanceState_
 -- AddForeignKey
 ALTER TABLE "IntegrationInstanceState" ADD CONSTRAINT "IntegrationInstanceState_instance_id_fkey" FOREIGN KEY ("instance_id") REFERENCES "integration_instances"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="qweliant" GIT_COMMITTER_EMAIL="dmtorcode@gmail.com" git commit --author="qweliant <dmtorcode@gmail.com>" -m "Move migration 20231031164256_add_integration_instance_state_table to flattened file"
+
+# Migration: 20231107143830_change_to_state by qweliant
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20231107143830_change_to_state
 
 /*
@@ -952,6 +1198,13 @@ ALTER TABLE "IntegrationInstanceState" ADD CONSTRAINT "IntegrationInstanceState_
 ALTER TABLE "IntegrationInstanceState" DROP COLUMN "value",
 ADD COLUMN     "state" JSONB NOT NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="qweliant" GIT_COMMITTER_EMAIL="dmtorcode@gmail.com" git commit --author="qweliant <dmtorcode@gmail.com>" -m "Move migration 20231107143830_change_to_state to flattened file"
+
+# Migration: 20240117220109_add_unique_constraint_on_move_constraints by qweliant
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240117220109_add_unique_constraint_on_move_constraints
 
 /*
@@ -963,6 +1216,13 @@ ADD COLUMN     "state" JSONB NOT NULL;
 -- CreateIndex
 CREATE UNIQUE INDEX "move_constraint_stage_id_destination_id_key" ON "move_constraint"("stage_id", "destination_id");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="qweliant" GIT_COMMITTER_EMAIL="dmtorcode@gmail.com" git commit --author="qweliant <dmtorcode@gmail.com>" -m "Move migration 20240117220109_add_unique_constraint_on_move_constraints to flattened file"
+
+# Migration: 20240117220908_create_compound_move_constraint_id by qweliant
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240117220908_create_compound_move_constraint_id
 
 /*
@@ -980,6 +1240,13 @@ ALTER TABLE "move_constraint" DROP CONSTRAINT "move_constraint_pkey",
 DROP COLUMN "id",
 ADD CONSTRAINT "move_constraint_pkey" PRIMARY KEY ("stage_id", "destination_id");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="qweliant" GIT_COMMITTER_EMAIL="dmtorcode@gmail.com" git commit --author="qweliant <dmtorcode@gmail.com>" -m "Move migration 20240117220908_create_compound_move_constraint_id to flattened file"
+
+# Migration: 20240306184411_actions by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240306184411_actions
 
 -- CreateTable
@@ -1013,6 +1280,13 @@ ALTER TABLE "_ActionToPubField" ADD CONSTRAINT "_ActionToPubField_A_fkey" FOREIG
 -- AddForeignKey
 ALTER TABLE "_ActionToPubField" ADD CONSTRAINT "_ActionToPubField_B_fkey" FOREIGN KEY ("B") REFERENCES "pub_fields"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240306184411_actions to flattened file"
+
+# Migration: 20240307023916_move_constraint_ondelete_cascade by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240307023916_move_constraint_ondelete_cascade
 
 -- DropForeignKey
@@ -1027,6 +1301,13 @@ ALTER TABLE "move_constraint" ADD CONSTRAINT "move_constraint_stage_id_fkey" FOR
 -- AddForeignKey
 ALTER TABLE "move_constraint" ADD CONSTRAINT "move_constraint_destination_id_fkey" FOREIGN KEY ("destination_id") REFERENCES "stages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240307023916_move_constraint_ondelete_cascade to flattened file"
+
+# Migration: 20240314025159_add_assignee_column by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240314025159_add_assignee_column
 
 -- AlterTable
@@ -1035,6 +1316,13 @@ ALTER TABLE "pubs" ADD COLUMN     "assignee_id" TEXT;
 -- AddForeignKey
 ALTER TABLE "pubs" ADD CONSTRAINT "pubs_assignee_id_fkey" FOREIGN KEY ("assignee_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240314025159_add_assignee_column to flattened file"
+
+# Migration: 20240318203453_add_action_instance by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240318203453_add_action_instance
 
 -- CreateTable
@@ -1054,21 +1342,49 @@ ALTER TABLE "action_instances" ADD CONSTRAINT "action_instances_action_id_fkey" 
 -- AddForeignKey
 ALTER TABLE "action_instances" ADD CONSTRAINT "action_instances_stage_id_fkey" FOREIGN KEY ("stage_id") REFERENCES "stages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240318203453_add_action_instance to flattened file"
+
+# Migration: 20240328181858_add_action_description by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240328181858_add_action_description
 
 -- AlterTable
 ALTER TABLE "actions" ADD COLUMN     "description" TEXT NOT NULL DEFAULT '';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240328181858_add_action_description to flattened file"
+
+# Migration: 20240403211924_add_action_instance_config by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240403211924_add_action_instance_config
 
 -- AlterTable
 ALTER TABLE "action_instances" ADD COLUMN     "config" JSONB;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240403211924_add_action_instance_config to flattened file"
+
+# Migration: 20240410194529_add_is_super_admin_to_user_model by Qwelian D Tanner
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240410194529_add_is_super_admin_to_user_model
 
 -- AlterTable
 ALTER TABLE "users" ADD COLUMN     "isSuperAdmin" BOOLEAN NOT NULL DEFAULT false;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Qwelian D Tanner" GIT_COMMITTER_EMAIL="dmtorcode@tutanota.com" git commit --author="Qwelian D Tanner <dmtorcode@tutanota.com>" -m "Move migration 20240410194529_add_is_super_admin_to_user_model to flattened file"
+
+# Migration: 20240410232644_add_explicit_pubs_to_stages_m_m_relationship by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240410232644_add_explicit_pubs_to_stages_m_m_relationship
 
 -- CreateTable
@@ -1085,6 +1401,13 @@ ALTER TABLE "PubsInStages" ADD CONSTRAINT "PubsInStages_pubId_fkey" FOREIGN KEY 
 -- AddForeignKey
 ALTER TABLE "PubsInStages" ADD CONSTRAINT "PubsInStages_stageId_fkey" FOREIGN KEY ("stageId") REFERENCES "stages"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240410232644_add_explicit_pubs_to_stages_m_m_relationship to flattened file"
+
+# Migration: 20240410233228_remove_implicit_pubs_to_stages_relationship by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240410233228_remove_implicit_pubs_to_stages_relationship
 
 /*
@@ -1105,6 +1428,13 @@ ALTER TABLE "_PubToStage" DROP CONSTRAINT "_PubToStage_B_fkey";
 -- DropTable
 DROP TABLE "_PubToStage";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240410233228_remove_implicit_pubs_to_stages_relationship to flattened file"
+
+# Migration: 20240411012752_create_trigger_on_pub_stage_join_table by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240411012752_create_trigger_on_pub_stage_join_table
 
 CREATE OR REPLACE FUNCTION emit_event()
@@ -1132,11 +1462,25 @@ CREATE TRIGGER pub_moved
     FOR EACH ROW
     EXECUTE FUNCTION emit_event();
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240411012752_create_trigger_on_pub_stage_join_table to flattened file"
+
+# Migration: 20240415174050_add_name_to_action_instances by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240415174050_add_name_to_action_instances
 
 -- AlterTable
 ALTER TABLE "action_instances" ADD COLUMN     "name" TEXT NOT NULL DEFAULT '';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240415174050_add_name_to_action_instances to flattened file"
+
+# Migration: 20240415185449_remove_action_table by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240415185449_remove_action_table
 
 /*
@@ -1173,6 +1517,13 @@ DROP TABLE "_ActionToPubField";
 -- DropTable
 DROP TABLE "actions";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240415185449_remove_action_table to flattened file"
+
+# Migration: 20240416111211_drop_actions_pubfields by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240416111211_drop_actions_pubfields
 
 /*
@@ -1184,6 +1535,13 @@ DROP TABLE "actions";
 -- AlterTable
 ALTER TABLE "pub_fields" DROP COLUMN "actions";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240416111211_drop_actions_pubfields to flattened file"
+
+# Migration: 20240416124817_set_postgres_defaults_for_uuids by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240416124817_set_postgres_defaults_for_uuids
 
 -- AlterTable
@@ -1234,11 +1592,25 @@ ALTER TABLE "stages" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();
 -- AlterTable
 ALTER TABLE "users" ALTER COLUMN "id" SET DEFAULT gen_random_uuid();
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240416124817_set_postgres_defaults_for_uuids to flattened file"
+
+# Migration: 20240416211436_add_push_to_v6_action by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240416211436_add_push_to_v6_action
 
 -- AlterEnum
 ALTER TYPE "Action" ADD VALUE 'pushToV6';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240416211436_add_push_to_v6_action to flattened file"
+
+# Migration: 20240416214541_add_rules by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240416214541_add_rules
 
 -- CreateEnum
@@ -1259,6 +1631,13 @@ CREATE UNIQUE INDEX "rules_action_instance_id_event_key" ON "rules"("action_inst
 -- AddForeignKey
 ALTER TABLE "rules" ADD CONSTRAINT "rules_action_instance_id_fkey" FOREIGN KEY ("action_instance_id") REFERENCES "action_instances"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240416214541_add_rules to flattened file"
+
+# Migration: 20240416234734_add_cascade_on_delete by Qwelian D Tanner
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240416234734_add_cascade_on_delete
 
 -- DropForeignKey
@@ -1267,6 +1646,13 @@ ALTER TABLE "members" DROP CONSTRAINT "members_community_id_fkey";
 -- AddForeignKey
 ALTER TABLE "members" ADD CONSTRAINT "members_community_id_fkey" FOREIGN KEY ("community_id") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Qwelian D Tanner" GIT_COMMITTER_EMAIL="dmtorcode@tutanota.com" git commit --author="Qwelian D Tanner <dmtorcode@tutanota.com>" -m "Move migration 20240416234734_add_cascade_on_delete to flattened file"
+
+# Migration: 20240418185908_remove_pubs_in_stages_if_pubs_or_stages_are_removed by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240418185908_remove_pubs_in_stages_if_pubs_or_stages_are_removed
 
 -- DropForeignKey
@@ -1281,16 +1667,37 @@ ALTER TABLE "PubsInStages" ADD CONSTRAINT "PubsInStages_pubId_fkey" FOREIGN KEY 
 -- AddForeignKey
 ALTER TABLE "PubsInStages" ADD CONSTRAINT "PubsInStages_stageId_fkey" FOREIGN KEY ("stageId") REFERENCES "stages"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240418185908_remove_pubs_in_stages_if_pubs_or_stages_are_removed to flattened file"
+
+# Migration: 20240422152704_add_http_action by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240422152704_add_http_action
 
 -- AlterEnum
 ALTER TYPE "Action" ADD VALUE 'http';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240422152704_add_http_action to flattened file"
+
+# Migration: 20240506184830_add_move_action by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240506184830_add_move_action
 
 -- AlterEnum
 ALTER TYPE "Action" ADD VALUE 'move';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240506184830_add_move_action to flattened file"
+
+# Migration: 20240520190654_add_action_runs by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240520190654_add_action_runs
 
 -- CreateEnum
@@ -1321,16 +1728,37 @@ ALTER TABLE "action_runs" ADD CONSTRAINT "action_runs_pub_id_fkey" FOREIGN KEY (
 -- AddForeignKey
 ALTER TABLE "action_runs" ADD CONSTRAINT "action_runs_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240520190654_add_action_runs to flattened file"
+
+# Migration: 20240523104802_add_new_duration_event by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240523104802_add_new_duration_event
 
 -- AlterEnum
 ALTER TYPE "Event" ADD VALUE 'pubInStageForDuration';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240523104802_add_new_duration_event to flattened file"
+
+# Migration: 20240523122445_add_config_option_for_rules by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240523122445_add_config_option_for_rules
 
 -- AlterTable
 ALTER TABLE "rules" ADD COLUMN     "config" JSONB;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240523122445_add_config_option_for_rules to flattened file"
+
+# Migration: 20240523130939_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240523130939_update_comments
 
 -- generator-version: 1.0.0
@@ -1419,6 +1847,13 @@ ALTER TABLE "rules" ADD COLUMN     "config" JSONB;
 
 COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', true, false, true)';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240523130939_update_comments to flattened file"
+
+# Migration: 20240529145416_add_forms by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240529145416_add_forms
 
 -- CreateTable
@@ -1455,6 +1890,13 @@ ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_form_id_fkey" FOREIGN KEY 
 -- Only allow one is_submit = true column per form_id
 CREATE UNIQUE INDEX form_inputs_is_submit_unique ON "form_inputs" ("form_id") WHERE "is_submit" = true;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240529145416_add_forms to flattened file"
+
+# Migration: 20240529160343_record_action_rsult by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240529160343_record_action_rsult
 
 /*
@@ -1466,6 +1908,13 @@ CREATE UNIQUE INDEX form_inputs_is_submit_unique ON "form_inputs" ("form_id") WH
 -- AlterTable
 ALTER TABLE "action_runs" ADD COLUMN     "result" JSONB NOT NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240529160343_record_action_rsult to flattened file"
+
+# Migration: 20240530103008_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240530103008_update_comments
 
 -- generator-version: 1.0.0
@@ -1558,11 +2007,25 @@ ALTER TABLE "action_runs" ADD COLUMN     "result" JSONB NOT NULL;
 
 COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', true, false, true)';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240530103008_update_comments to flattened file"
+
+# Migration: 20240530112116_add_scheduled_action_run_status by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240530112116_add_scheduled_action_run_status
 
 -- AlterEnum
 ALTER TYPE "ActionRunStatus" ADD VALUE 'scheduled';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240530112116_add_scheduled_action_run_status to flattened file"
+
+# Migration: 20240603202647_update_comments by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240603202647_update_comments
 
 -- generator-version: 1.0.0
@@ -1662,6 +2125,13 @@ COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', t
 
 -- Model form_inputs comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240603202647_update_comments to flattened file"
+
+# Migration: 20240604094500_transition_to_camelcase by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240604094500_transition_to_camelcase
 
 /*
@@ -2300,6 +2770,13 @@ ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_fieldId_fkey" FOREIGN KEY 
 -- AddForeignKey
 ALTER TABLE "form_inputs" ADD CONSTRAINT "form_inputs_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240604094500_transition_to_camelcase to flattened file"
+
+# Migration: 20240604102349_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240604102349_update_comments
 
 -- generator-version: 1.0.0
@@ -2399,6 +2876,13 @@ COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', t
 
 -- Model form_inputs comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240604102349_update_comments to flattened file"
+
+# Migration: 20240604114027_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240604114027_update_comments
 
 -- generator-version: 1.0.0
@@ -2498,6 +2982,13 @@ COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', t
 
 -- Model form_inputs comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240604114027_update_comments to flattened file"
+
+# Migration: 20240617120000_update_pub_moved_trigger_to_include_community_slug by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240617120000_update_pub_moved_trigger_to_include_community_slug
 
 -- Create the new function
@@ -2537,6 +3028,13 @@ $$
 LANGUAGE plpgsql
 VOLATILE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240617120000_update_pub_moved_trigger_to_include_community_slug to flattened file"
+
+# Migration: 20240702114658_add_schemaname_column_to_pubfield by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240702114658_add_schemaname_column_to_pubfield
 
 -- CreateEnum
@@ -2545,6 +3043,13 @@ CREATE TYPE "CoreSchemaType" AS ENUM ('String', 'Boolean', 'Vector3', 'DateTime'
 -- AlterTable
 ALTER TABLE "pub_fields" ADD COLUMN     "schemaName" "CoreSchemaType";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240702114658_add_schemaname_column_to_pubfield to flattened file"
+
+# Migration: 20240703161852_add_api_access_tokens by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240703161852_add_api_access_tokens
 
 -- CreateEnum
@@ -2609,6 +3114,13 @@ ALTER TABLE "api_access_logs" ADD CONSTRAINT "api_access_logs_accessTokenId_fkey
 -- AddForeignKey
 ALTER TABLE "api_access_permissions" ADD CONSTRAINT "api_access_permissions_apiAccessTokenId_fkey" FOREIGN KEY ("apiAccessTokenId") REFERENCES "api_access_tokens"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240703161852_add_api_access_tokens to flattened file"
+
+# Migration: 20240703161854_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240703161854_update_comments
 
 -- generator-version: 1.0.0
@@ -2723,11 +3235,25 @@ COMMENT ON COLUMN "rules"."config" IS '@type(RuleConfigs, ''~/actions/types'', t
 
 COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../../ApiAccessToken'', true, false, true)';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240703161854_update_comments to flattened file"
+
+# Migration: 20240709044026_add_forms_archiving by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240709044026_add_forms_archiving
 
 -- AlterTable
 ALTER TABLE "forms" ADD COLUMN     "isArchived" BOOLEAN NOT NULL DEFAULT false;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240709044026_add_forms_archiving to flattened file"
+
+# Migration: 20240710022410_add_forms_slug_and_unique_constraint by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240710022410_add_forms_slug_and_unique_constraint
 
 /*
@@ -2752,11 +3278,25 @@ CREATE UNIQUE INDEX "forms_slug_communityId_key" ON "forms"("slug", "communityId
 -- AddForeignKey
 ALTER TABLE "forms" ADD CONSTRAINT "forms_communityId_fkey" FOREIGN KEY ("communityId") REFERENCES "communities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240710022410_add_forms_slug_and_unique_constraint to flattened file"
+
+# Migration: 20240711145906_add_is_archived_to_pubfields by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240711145906_add_is_archived_to_pubfields
 
 -- AlterTable
 ALTER TABLE "pub_fields" ADD COLUMN     "isArchived" BOOLEAN NOT NULL DEFAULT false;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20240711145906_add_is_archived_to_pubfields to flattened file"
+
+# Migration: 20240711171041_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240711171041_update_comments
 
 -- generator-version: 1.0.0
@@ -2871,6 +3411,13 @@ COMMENT ON COLUMN "rules"."config" IS NULL;
 
 COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../types'', true, false, true)';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240711171041_update_comments to flattened file"
+
+# Migration: 20240715133139_add_member_role_column by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240715133139_add_member_role_column
 
 -- CreateEnum
@@ -2891,6 +3438,13 @@ WHERE
 
 COMMIT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240715133139_add_member_role_column to flattened file"
+
+# Migration: 20240715133257_remove_can_admin_column by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240715133257_remove_can_admin_column
 
 /*
@@ -2902,6 +3456,13 @@ COMMIT;
 -- AlterTable
 ALTER TABLE "members" DROP COLUMN "canAdmin";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240715133257_remove_can_admin_column to flattened file"
+
+# Migration: 20240717105403_add_role_to_membergroup by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240717105403_add_role_to_membergroup
 
 -- AlterTable
@@ -2915,6 +3476,13 @@ set
 where
     "canAdmin" = true;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240717105403_add_role_to_membergroup to flattened file"
+
+# Migration: 20240717105614_remove_can_admin_column_on_membergroup by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240717105614_remove_can_admin_column_on_membergroup
 
 /*
@@ -2926,6 +3494,13 @@ where
 -- AlterTable
 ALTER TABLE "member_groups" DROP COLUMN "canAdmin";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240717105614_remove_can_admin_column_on_membergroup to flattened file"
+
+# Migration: 20240722140326_add_explicit_relation_between_forms_and_permissions_and_add_constraint_that_forces_xor_on_memberid_and_membergroup_id_on_permissions by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240722140326_add_explicit_relation_between_forms_and_permissions_and_add_constraint_that_forces_xor_on_memberid_and_membergroup_id_on_permissions
 
 -- CreateTable
@@ -2956,6 +3531,13 @@ ALTER TABLE "permissions" ADD CONSTRAINT "memberId_xor_memberGroupId" CHECK (
     )
 );
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240722140326_add_explicit_relation_between_forms_and_permissions_and_add_constraint_that_forces_xor_on_memberid_and_membergroup_id_on_permissions to flattened file"
+
+# Migration: 20240722185836_add_community_id_to_pubfields by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240722185836_add_community_id_to_pubfields
 
 BEGIN;
@@ -2978,6 +3560,13 @@ COMMIT;
 -- AddForeignKey
 ALTER TABLE "pub_fields" ADD CONSTRAINT "pub_fields_communityId_fkey" FOREIGN KEY ("communityId") REFERENCES "communities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20240722185836_add_community_id_to_pubfields to flattened file"
+
+# Migration: 20240724231044_update_form_elements by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240724231044_update_form_elements
 
 /*
@@ -3033,6 +3622,13 @@ ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_fieldId_fkey" FOREIGN 
 -- AddForeignKey
 ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240724231044_update_form_elements to flattened file"
+
+# Migration: 20240725202915_enforce_unique_user_community_columns_in_members_table by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240725202915_enforce_unique_user_community_columns_in_members_table
 
 /*
@@ -3044,10 +3640,24 @@ ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_formId_fkey" FOREIGN K
 -- CreateIndex
 CREATE UNIQUE INDEX "members_userId_communityId_key" ON "members"("userId", "communityId");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240725202915_enforce_unique_user_community_columns_in_members_table to flattened file"
+
+# Migration: 20240729202132_user_id_to_member_id by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240729202132_user_id_to_member_id
 
 ALTER TYPE "CoreSchemaType" RENAME VALUE 'UserId' TO 'MemberId';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240729202132_user_id_to_member_id to flattened file"
+
+# Migration: 20240731145045_remove_old_references_in_schemas by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240731145045_remove_old_references_in_schemas
 
 UPDATE
@@ -3059,12 +3669,26 @@ WHERE
 RETURNING
     schema;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240731145045_remove_old_references_in_schemas to flattened file"
+
+# Migration: 20240806164513_add_password_hash_and_salt_to_users_table by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240806164513_add_password_hash_and_salt_to_users_table
 
 -- AlterTable
 ALTER TABLE "users"
 ADD COLUMN "passwordHash" TEXT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240806164513_add_password_hash_and_salt_to_users_table to flattened file"
+
+# Migration: 20240806170730_add_sessions_table by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240806170730_add_sessions_table
 
 -- CreateTable
@@ -3081,6 +3705,13 @@ CREATE TABLE
 -- AddForeignKey
 ALTER TABLE "sessions" ADD CONSTRAINT "sessions_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240806170730_add_sessions_table to flattened file"
+
+# Migration: 20240806170732_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240806170732_update_comments
 
 -- generator-version: 1.0.0
@@ -3201,6 +3832,13 @@ COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPerm
 
 -- Model form_to_permissions comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240806170732_update_comments to flattened file"
+
+# Migration: 20240806183507_support_buttons_in_form_element by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240806183507_support_buttons_in_form_element
 
 /*
@@ -3225,6 +3863,13 @@ CREATE UNIQUE INDEX "form_elements_type_label_formId_key" ON "form_elements"("ty
 -- AddForeignKey
 ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_stageId_fkey" FOREIGN KEY ("stageId") REFERENCES "stages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20240806183507_support_buttons_in_form_element to flattened file"
+
+# Migration: 20240819104844_add_authtokentype_to_both_session_and_authtoken by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240819104844_add_authtokentype_to_both_session_and_authtoken
 
 -- CreateEnum
@@ -3245,6 +3890,13 @@ SET DEFAULT gen_random_uuid ();
 ALTER TABLE "sessions"
 ADD COLUMN "type" "AuthTokenType" NOT NULL DEFAULT 'generic';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240819104844_add_authtokentype_to_both_session_and_authtoken to flattened file"
+
+# Migration: 20240821101734_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240821101734_update_comments
 
 -- generator-version: 1.0.0
@@ -3423,6 +4075,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum ApiAccessScope comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240821101734_update_comments to flattened file"
+
+# Migration: 20240829135909_rename_unjournal_fields by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240829135909_rename_unjournal_fields
 
 -- Add "legacy" to fields that don't have schemas and archive
@@ -3452,6 +4111,13 @@ WHERE
     "form_elements"."fieldId" IS NOT null
     AND "pub_fields"."schemaName" IS null;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240829135909_rename_unjournal_fields to flattened file"
+
+# Migration: 20240829182113_remove_supabase_id by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240829182113_remove_supabase_id
 
 /*
@@ -3466,6 +4132,13 @@ DROP INDEX "users_supabaseId_key";
 -- AlterTable
 ALTER TABLE "users" DROP COLUMN "supabaseId";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20240829182113_remove_supabase_id to flattened file"
+
+# Migration: 20240905145651_component_configuration by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240905145651_component_configuration
 
 /*
@@ -3492,6 +4165,13 @@ UPDATE "form_elements" SET "component" = 'textInput'::"InputComponent" FROM "pub
 UPDATE "form_elements" SET "component" = 'memberSelect'::"InputComponent" FROM "pub_fields" WHERE "form_elements"."fieldId" = "pub_fields"."id" AND "pub_fields"."schemaName" = 'MemberId'::"CoreSchemaType";
 UPDATE "form_elements" SET "component" = 'confidenceInterval'::"InputComponent" FROM "pub_fields" WHERE "form_elements"."fieldId" = "pub_fields"."id" AND "pub_fields"."schemaName" = 'Vector3'::"CoreSchemaType";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20240905145651_component_configuration to flattened file"
+
+# Migration: 20240917200221_add_relationships_to_pub_values by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240917200221_add_relationships_to_pub_values
 
 /*
@@ -3513,6 +4193,13 @@ CREATE UNIQUE INDEX "pub_values_pubId_relatedPubId_fieldId_key" ON "pub_values"(
 -- AddForeignKey
 ALTER TABLE "pub_values" ADD CONSTRAINT "pub_values_relatedPubId_fkey" FOREIGN KEY ("relatedPubId") REFERENCES "pubs"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20240917200221_add_relationships_to_pub_values to flattened file"
+
+# Migration: 20240923161145_add_null_core_schema_type_and_make_pubvalues_unique_constraint_not_null_unique by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240923161145_add_null_core_schema_type_and_make_pubvalues_unique_constraint_not_null_unique
 
 -- AlterEnum
@@ -3529,6 +4216,13 @@ CREATE UNIQUE INDEX "pub_values_pubId_fieldId_key" ON "pub_values"("pubId", "fie
 WHERE "relatedPubId" IS NULL;
 COMMIT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20240923161145_add_null_core_schema_type_and_make_pubvalues_unique_constraint_not_null_unique to flattened file"
+
+# Migration: 20240930150006_add_number_numeric_string_array by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20240930150006_add_number_numeric_string_array
 
 -- AlterEnum
@@ -3543,6 +4237,13 @@ ALTER TYPE "CoreSchemaType" ADD VALUE 'Number';
 ALTER TYPE "CoreSchemaType" ADD VALUE 'NumericArray';
 ALTER TYPE "CoreSchemaType" ADD VALUE 'StringArray';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20240930150006_add_number_numeric_string_array to flattened file"
+
+# Migration: 20241002220742_remove_label_column_from_inputs by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241002220742_remove_label_column_from_inputs
 
 -- Move existing labels into the config object
@@ -3553,6 +4254,13 @@ UPDATE "form_elements"
   SET config = jsonb_build_object('groupLabel', "form_elements"."label")
   WHERE component = 'checkbox'::"InputComponent" AND type = 'pubfield'::"ElementType";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241002220742_remove_label_column_from_inputs to flattened file"
+
+# Migration: 20241007162426_drop_history_tables_and_add_cascades by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241007162426_drop_history_tables_and_add_cascades
 
 /*
@@ -3631,6 +4339,13 @@ ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_fieldId_fkey" FOREIGN 
 -- AddForeignKey
 ALTER TABLE "form_elements" ADD CONSTRAINT "form_elements_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241007162426_drop_history_tables_and_add_cascades to flattened file"
+
+# Migration: 20241007162428_update_comments by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241007162428_update_comments
 
 -- generator-version: 1.0.0
@@ -3806,6 +4521,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum ApiAccessScope comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241007162428_update_comments to flattened file"
+
+# Migration: 20241007212932_add_more_options_to_input_component_enum by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241007212932_add_more_options_to_input_component_enum
 
 -- AlterEnum
@@ -3820,11 +4542,25 @@ ALTER TYPE "InputComponent" ADD VALUE 'checkboxGroup';
 ALTER TYPE "InputComponent" ADD VALUE 'radioGroup';
 ALTER TYPE "InputComponent" ADD VALUE 'selectDropdown';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20241007212932_add_more_options_to_input_component_enum to flattened file"
+
+# Migration: 20241016174257_add_multivalue_input_to_input_component_enum by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241016174257_add_multivalue_input_to_input_component_enum
 
 -- AlterEnum
 ALTER TYPE "InputComponent" ADD VALUE 'multivalueInput';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20241016174257_add_multivalue_input_to_input_component_enum to flattened file"
+
+# Migration: 20241017223037_add_new_membership_tables by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241017223037_add_new_membership_tables
 
 /*
@@ -3951,6 +4687,13 @@ ALTER TABLE "form_memberships" ADD CONSTRAINT "form_memberships_userId_fkey" FOR
 -- AddForeignKey
 ALTER TABLE "form_memberships" ADD CONSTRAINT "form_memberships_memberGroupId_fkey" FOREIGN KEY ("memberGroupId") REFERENCES "member_groups"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241017223037_add_new_membership_tables to flattened file"
+
+# Migration: 20241017223040_update_comments by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241017223040_update_comments
 
 -- generator-version: 1.0.0
@@ -4142,6 +4885,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum ApiAccessScope comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241017223040_update_comments to flattened file"
+
+# Migration: 20241021151230_add_rich_text_type by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241021151230_add_rich_text_type
 
 -- AlterEnum
@@ -4150,6 +4900,13 @@ ALTER TYPE "CoreSchemaType" ADD VALUE 'RichText';
 -- AlterEnum
 ALTER TYPE "InputComponent" ADD VALUE 'richText';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20241021151230_add_rich_text_type to flattened file"
+
+# Migration: 20241030175616_add_is_title_to_pubfield_pubtype_join_table by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241030175616_add_is_title_to_pubfield_pubtype_join_table
 
 -- AlterTable
@@ -4187,6 +4944,13 @@ WHERE
   AND "_PubFieldToPubType"."B" = FirstMatchingPubField.pubtype 
   AND FirstMatchingPubField.row_num = 1;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20241030175616_add_is_title_to_pubfield_pubtype_join_table to flattened file"
+
+# Migration: 20241030175617_update_comments by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241030175617_update_comments
 
 -- generator-version: 1.0.0
@@ -4366,6 +5130,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum ApiAccessScope comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20241030175617_update_comments to flattened file"
+
+# Migration: 20241105184158_copy_membership_data by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241105184158_copy_membership_data
 
 BEGIN;
@@ -4384,6 +5155,13 @@ INSERT INTO "form_memberships" ("formId", "userId")
 
 COMMIT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241105184158_copy_membership_data to flattened file"
+
+# Migration: 20241106060651_delete_old_permissions_and_membership_tables by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241106060651_delete_old_permissions_and_membership_tables
 
 /*
@@ -4441,6 +5219,13 @@ DROP TABLE "members";
 -- DropTable
 DROP TABLE "permissions";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241106060651_delete_old_permissions_and_membership_tables to flattened file"
+
+# Migration: 20241106060653_update_comments by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241106060653_update_comments
 
 -- generator-version: 1.0.0
@@ -4624,6 +5409,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum ApiAccessScope comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241106060653_update_comments to flattened file"
+
+# Migration: 20241107193617_add_capabilities_to_db by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241107193617_add_capabilities_to_db
 
 -- CreateEnum
@@ -4774,6 +5566,13 @@ VALUES
     ('admin'::"MemberRole", 'community'::"MembershipType", 'revokeApiToken'::"Capabilities")
 ;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241107193617_add_capabilities_to_db to flattened file"
+
+# Migration: 20241107193619_update_comments by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241107193619_update_comments
 
 -- generator-version: 1.0.0
@@ -4971,6 +5770,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum MembershipType comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241107193619_update_comments to flattened file"
+
+# Migration: 20241126113759_add_pub_values_updated_at_trigger by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241126113759_add_pub_values_updated_at_trigger
 
 CREATE OR REPLACE FUNCTION update_pub_updated_at()
@@ -4993,16 +5799,37 @@ CREATE TRIGGER trigger_pub_values_update_pub
     FOR EACH ROW
     EXECUTE FUNCTION update_pub_updated_at();
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241126113759_add_pub_values_updated_at_trigger to flattened file"
+
+# Migration: 20241126151624_add_google_drive_import_action by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241126151624_add_google_drive_import_action
 
 -- AlterEnum
 ALTER TYPE "Action" ADD VALUE 'googleDriveImport';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241126151624_add_google_drive_import_action to flattened file"
+
+# Migration: 20241203035210_add_default_forms by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241203035210_add_default_forms
 
 -- AlterTable
 ALTER TABLE "forms" ADD COLUMN     "isDefault" BOOLEAN NOT NULL DEFAULT false;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241203035210_add_default_forms to flattened file"
+
+# Migration: 20241203164958_add_base_history_fn by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241203164958_add_base_history_fn
 
 -- CreateEnum
@@ -5076,11 +5903,25 @@ END;
 $$
 LANGUAGE plpgsql;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241203164958_add_base_history_fn to flattened file"
+
+# Migration: 20241203193207_add_datacite_action by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241203193207_add_datacite_action
 
 -- AlterEnum
 ALTER TYPE "Action" ADD VALUE 'datacite';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20241203193207_add_datacite_action to flattened file"
+
+# Migration: 20241205152006_add_title_field by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241205152006_add_title_field
 
 -- AlterTable
@@ -5201,6 +6042,13 @@ WITH values_titles AS (
 WHERE
     "pubs"."id" = values_titles."pubId";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241205152006_add_title_field to flattened file"
+
+# Migration: 20241205192106_unique_pub_type_names by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241205192106_unique_pub_type_names
 
 /*
@@ -5212,6 +6060,13 @@ WHERE
 -- CreateIndex
 CREATE UNIQUE INDEX "pub_types_name_communityId_key" ON "pub_types"("name", "communityId");
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241205192106_unique_pub_type_names to flattened file"
+
+# Migration: 20241205231134_backfill_default_forms by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241205231134_backfill_default_forms
 
 WITH "components" AS (
@@ -5300,6 +6155,13 @@ FROM
     INNER JOIN "pub_fields" ON "pub_fields"."id" = "_PubFieldToPubType"."A"
     INNER JOIN "components" ON "components"."schema" = "pub_fields"."schemaName";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20241205231134_backfill_default_forms to flattened file"
+
+# Migration: 20241210172906_trigger_for_changing_is_title by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241210172906_trigger_for_changing_is_title
 
 -- when _PubFieldToPubType.isTitle is set to true, we need to update the pub.title
@@ -5350,6 +6212,13 @@ FOR EACH ROW
 WHEN (OLD."isTitle" IS TRUE)
 EXECUTE FUNCTION update_pub_title_for_pub_type();
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241210172906_trigger_for_changing_is_title to flattened file"
+
+# Migration: 20241212130738_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241212130738_update_comments
 
 -- generator-version: 1.0.0
@@ -5556,6 +6425,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum MembershipType comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241212130738_update_comments to flattened file"
+
+# Migration: 20241212164758_fix_cascading_delete_issues by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241212164758_fix_cascading_delete_issues
 
 -- DropForeignKey
@@ -5588,6 +6464,13 @@ ALTER TABLE "api_access_logs" ADD CONSTRAINT "api_access_logs_accessTokenId_fkey
 -- AddForeignKey
 ALTER TABLE "api_access_permissions" ADD CONSTRAINT "api_access_permissions_apiAccessTokenId_fkey" FOREIGN KEY ("apiAccessTokenId") REFERENCES "api_access_tokens"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241212164758_fix_cascading_delete_issues to flattened file"
+
+# Migration: 20241214173138_add_pub_values_history_history_table by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241214173138_add_pub_values_history_history_table
 
 /*
@@ -5652,6 +6535,13 @@ CREATE TRIGGER trigger_pub_values_history
   FOR EACH ROW
   EXECUTE FUNCTION f_generic_history('pubValueId');
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241214173138_add_pub_values_history_history_table to flattened file"
+
+# Migration: 20241214173204_update_comments by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241214173204_update_comments
 
 -- generator-version: 1.0.0
@@ -5859,6 +6749,13 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum MembershipType comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241214173204_update_comments to flattened file"
+
+# Migration: 20241217171434_add_pubid_to_form_memberships by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241217171434_add_pubid_to_form_memberships
 
 /*
@@ -5911,6 +6808,13 @@ AND form_memberships."userId" = email_invites."userId";
 
 END;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20241217171434_add_pubid_to_form_memberships to flattened file"
+
+# Migration: 20241219131700_fix_title_update_trigger by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20241219131700_fix_title_update_trigger
 
 CREATE OR REPLACE FUNCTION update_pub_for_value_changes()
@@ -5984,6 +6888,13 @@ END;
 $$
 LANGUAGE plpgsql;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20241219131700_fix_title_update_trigger to flattened file"
+
+# Migration: 20250114185819_rm_integrations by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250114185819_rm_integrations
 
 /*
@@ -6035,6 +6946,13 @@ DROP TABLE "integration_instances";
 -- DropTable
 DROP TABLE "integrations";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20250114185819_rm_integrations to flattened file"
+
+# Migration: 20250114190224_update_comments by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250114190224_update_comments
 
 -- generator-version: 1.0.0
@@ -6230,11 +7148,25 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum MembershipType comments;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20250114190224_update_comments to flattened file"
+
+# Migration: 20250114195812_add_relation_block_input_component by Allison King
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250114195812_add_relation_block_input_component
 
 -- AlterEnum
 ALTER TYPE "InputComponent" ADD VALUE 'relationBlock';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Allison King" GIT_COMMITTER_EMAIL="aking@knowledgefutures.org" git commit --author="Allison King <aking@knowledgefutures.org>" -m "Move migration 20250114195812_add_relation_block_input_component to flattened file"
+
+# Migration: 20250130165541_add_ts_vector_to_pub_values by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250130165541_add_ts_vector_to_pub_values
 
 -- Create the search vector column
@@ -6341,6 +7273,13 @@ SET "searchVector" = (
          )), 'B')
 );
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20250130165541_add_ts_vector_to_pub_values to flattened file"
+
+# Migration: 20250203230851_add_updated_at_to_everything by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250203230851_add_updated_at_to_everything
 
 -- AlterTable
@@ -6373,6 +7312,13 @@ ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE "rules" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 ADD COLUMN     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20250203230851_add_updated_at_to_everything to flattened file"
+
+# Migration: 20250205172301_stage_updated_at_trigger by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250205172301_stage_updated_at_trigger
 
 CREATE OR REPLACE FUNCTION update_pub_updated_at()
@@ -6395,6 +7341,13 @@ CREATE TRIGGER trigger_pubs_in_stages_update_pub
     FOR EACH ROW
     EXECUTE FUNCTION update_pub_updated_at();
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20250205172301_stage_updated_at_trigger to flattened file"
+
+# Migration: 20250213201642_add_mudder_ranks by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250213201642_add_mudder_ranks
 
 BEGIN;
@@ -6490,6 +7443,13 @@ BEGIN;
     AND "row_numbers"."id" = "pub_values"."id";
 COMMIT;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20250213201642_add_mudder_ranks to flattened file"
+
+# Migration: 20250227001152_let_community_editors_invite_users by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250227001152_let_community_editors_invite_users
 
 INSERT INTO
@@ -6501,6 +7461,13 @@ VALUES
         'addCommunityMember'::"Capabilities"
     );
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20250227001152_let_community_editors_invite_users to flattened file"
+
+# Migration: 20250304132049_add_action_success_events by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250304132049_add_action_success_events
 
 -- AlterEnum
@@ -6514,6 +7481,13 @@ VALUES
 ALTER TYPE "Event" ADD VALUE 'actionSucceeded';
 ALTER TYPE "Event" ADD VALUE 'actionFailed';
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20250304132049_add_action_success_events to flattened file"
+
+# Migration: 20250305135055_add_action_ref_to_rul by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250305135055_add_action_ref_to_rul
 
 -- AlterTable
@@ -6530,6 +7504,13 @@ CREATE UNIQUE INDEX "unique_action_chaining_events" ON "rules" ("actionInstanceI
 -- unique index for regular events
 CREATE UNIQUE INDEX "unique_regular_events" ON "rules" ("actionInstanceId", "event") WHERE "sourceActionInstanceId" IS NULL;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20250305135055_add_action_ref_to_rul to flattened file"
+
+# Migration: 20250306165526_log_triggering_action_run by Thomas F. K. Jorna
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250306165526_log_triggering_action_run
 
 -- AlterTable
@@ -6538,6 +7519,13 @@ ALTER TABLE "action_runs" ADD COLUMN     "sourceActionRunId" TEXT;
 -- AddForeignKey
 ALTER TABLE "action_runs" ADD CONSTRAINT "action_runs_sourceActionRunId_fkey" FOREIGN KEY ("sourceActionRunId") REFERENCES "action_runs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Thomas F. K. Jorna" GIT_COMMITTER_EMAIL="hello@tefkah.com" git commit --author="Thomas F. K. Jorna <hello@tefkah.com>" -m "Move migration 20250306165526_log_triggering_action_run to flattened file"
+
+# Migration: 20250306184110_remove_parent_id by Eric McDaniel
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250306184110_remove_parent_id
 
 /*
@@ -6552,6 +7540,13 @@ ALTER TABLE "pubs" DROP CONSTRAINT "pubs_parentId_fkey";
 -- AlterTable
 ALTER TABLE "pubs" DROP COLUMN "parentId";
 
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Eric McDaniel" GIT_COMMITTER_EMAIL="eric.g.mcdaniel@gmail.com" git commit --author="Eric McDaniel <eric.g.mcdaniel@gmail.com>" -m "Move migration 20250306184110_remove_parent_id to flattened file"
+
+# Migration: 20250319022702_remove_order by Kalil Smith-Nuevelle
+cat >> drizzle/migrations/0000_init.sql << 'EOF'
 -- migration: 20250319022702_remove_order
 
 /*
@@ -6562,3 +7557,9 @@ ALTER TABLE "pubs" DROP COLUMN "parentId";
 */
 -- AlterTable
 ALTER TABLE "form_elements" DROP COLUMN "order";
+
+EOF
+
+git add drizzle/migrations/0000_init.sql
+GIT_COMMITTER_NAME="Kalil Smith-Nuevelle" GIT_COMMITTER_EMAIL="kalilsn@gmail.com" git commit --author="Kalil Smith-Nuevelle <kalilsn@gmail.com>" -m "Move migration 20250319022702_remove_order to flattened file"
+

@@ -2,23 +2,82 @@ import { execSync } from "child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+interface CommitInfo {
+	hash: string;
+	author: string;
+	email: string;
+	date: string;
+	content: string;
+}
+
+// get primary author for a migration file
+async function getFilePrimaryAuthor(
+	migrationFile: URL
+): Promise<{ author: string; email: string } | null> {
+	try {
+		const filePath = path.relative(process.cwd(), migrationFile.pathname);
+
+		// get the author who contributed the most lines
+		const blameOutput = execSync(`git blame --line-porcelain ${filePath}`, {
+			encoding: "utf-8",
+		});
+
+		const authorCounts = new Map<string, { count: number; email: string }>();
+
+		let currentAuthor = "";
+		let currentEmail = "";
+
+		blameOutput.split("\n").forEach((line) => {
+			if (line.startsWith("author ")) {
+				currentAuthor = line.substring(7);
+			} else if (line.startsWith("author-mail ")) {
+				currentEmail = line.substring(12).replace(/[<>]/g, "");
+			} else if (line.startsWith("\t")) {
+				// content line - count it
+				const authorKey = currentAuthor;
+				if (!authorCounts.has(authorKey)) {
+					authorCounts.set(authorKey, { count: 0, email: currentEmail });
+				}
+
+				const record = authorCounts.get(authorKey);
+				record.count++;
+			}
+		});
+
+		// find author with most contributions
+		let primaryAuthor = null;
+		let maxCount = 0;
+
+		for (const [author, data] of authorCounts.entries()) {
+			if (data.count > maxCount) {
+				maxCount = data.count;
+				primaryAuthor = { author, email: data.email };
+			}
+		}
+
+		return primaryAuthor;
+	} catch (error) {
+		console.warn(`Could not get git blame for ${migrationFile}: ${error.message}`);
+		return null;
+	}
+}
+
 async function main() {
 	const prismaMigrationsFolder = new URL("../prisma/migrations", import.meta.url);
 	const prismaMigrations = await fs.readdir(prismaMigrationsFolder);
 
 	// ensure output directory exists
 	await fs.mkdir(new URL("./migrations", import.meta.url), { recursive: true });
-
 	const outputFile = new URL("./migrations/0000_init.sql", import.meta.url);
 	const outputPath = path.relative(process.cwd(), outputFile.pathname);
 
-	// create or truncate output file
-	await fs.writeFile(outputFile, "");
+	// Sort migrations by name to ensure chronological order
+	const sortedMigrations = prismaMigrations.sort();
 
-	// track source file paths for git move
-	const sourcePaths = [];
+	// gather all migrations with their authors
+	const migrationsWithAuthors = [];
 
-	for (const migration of prismaMigrations) {
+	for (const migration of sortedMigrations) {
 		const migrationPath = path.join(prismaMigrationsFolder.pathname, migration);
 		const stats = await fs.stat(migrationPath);
 		if (!stats.isDirectory()) continue;
@@ -27,11 +86,9 @@ async function main() {
 			`../prisma/migrations/${migration}/migration.sql`,
 			import.meta.url
 		);
-		const relativeMigrationPath = path.relative(process.cwd(), migrationFile.pathname);
-		sourcePaths.push(relativeMigrationPath);
 
 		try {
-			// read migration file content as stream to handle large files efficiently
+			// read raw content
 			const fileHandle = await fs.open(migrationFile, "r");
 			const content = await fileHandle.readFile({ encoding: "utf-8" });
 			await fileHandle.close();
@@ -42,9 +99,32 @@ async function main() {
 				processedContent += ";";
 			}
 
-			// append migration header and content to output file
-			const header = `\n-- migration: ${migration}\n\n`;
-			await fs.appendFile(outputFile, header + processedContent + "\n");
+			// get primary author for this migration
+			const authorInfo = await getFilePrimaryAuthor(migrationFile);
+
+			if (authorInfo) {
+				migrationsWithAuthors.push({
+					migration,
+					content: `-- migration: ${migration}\n\n${processedContent}\n`,
+					author: authorInfo.author,
+					email: authorInfo.email,
+				});
+			} else {
+				// fallback: use current git user
+				const currentAuthor = execSync("git config user.name", {
+					encoding: "utf-8",
+				}).trim();
+				const currentEmail = execSync("git config user.email", {
+					encoding: "utf-8",
+				}).trim();
+
+				migrationsWithAuthors.push({
+					migration,
+					content: `-- migration: ${migration}\n\n${processedContent}\n`,
+					author: currentAuthor,
+					email: currentEmail,
+				});
+			}
 		} catch (error) {
 			if (error.code === "ENOENT") {
 				console.warn(`Migration file not found for ${migration}`);
@@ -54,22 +134,42 @@ async function main() {
 		}
 	}
 
-	console.log(`Flattened migrations written to ${outputFile}`);
+	// create script to generate all commits in order
+	const scriptFile = new URL("./create_migration_history.sh", import.meta.url);
+	const scriptPath = path.relative(process.cwd(), scriptFile.pathname);
 
-	// generate git commands to preserve history
-	console.log("\nTo preserve git history, run the following commands:");
-	console.log(`git add ${outputPath}`);
-	console.log(`git commit -m "Create flattened migration file"`);
+	let scriptContent = `#!/bin/bash
+set -e
 
-	// Create commands for each source file
-	sourcePaths.forEach((sourcePath) => {
-		execSync(
-			`git blame ${sourcePath} --porcelain | awk '/^[0-9a-f]{40}/{print $1}' | xargs -I{} git blame ${outputPath} -C {} -f`
-		);
-	});
+# Create empty migration file
+>${outputPath}
 
+# Process migrations in chronological order
+`;
+
+	// add each migration as a separate commit by its author
+	for (const { migration, content, author, email } of migrationsWithAuthors) {
+		const authorString = `${author} <${email}>`;
+
+		scriptContent += `# Migration: ${migration} by ${author}\n`;
+		scriptContent += `cat >> ${outputPath} << 'EOF'\n`;
+		scriptContent += content + "\n";
+		scriptContent += "EOF\n\n";
+
+		// create commit with this author
+		scriptContent += `git add ${outputPath}\n`;
+		scriptContent += `GIT_COMMITTER_NAME="${author}" GIT_COMMITTER_EMAIL="${email}" `;
+		scriptContent += `git commit --author="${authorString}" -m "Move migration ${migration} to flattened file"\n\n`;
+	}
+
+	// write script and make it executable
+	await fs.writeFile(scriptFile, scriptContent);
+	await fs.chmod(scriptFile, 0o755);
+
+	console.log(`Script generated at ${scriptPath}`);
+	console.log(`Run it to create the flattened migration file with preserved git history.`);
 	console.log(
-		"\nNote: This approach doesn't perfectly preserve git blame history but helps Git recognize moved code."
+		`Note: This will create ${migrationsWithAuthors.length} commits in chronological order.`
 	);
 }
 
