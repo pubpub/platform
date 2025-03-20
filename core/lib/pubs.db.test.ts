@@ -132,12 +132,19 @@ const seed = createSeed({
 });
 
 describe("getPubByForm", () => {
-	it("should be able to get a pub with form elements", async () => {
+	const getAllImports = async () => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubs, community, pubTypes } = await seedCommunity(seed);
 		const { getPubByForm } = await import("./pubs");
 		const { getPubsWithRelatedValues } = await import("./server/pub");
 		const { getForm } = await import("./server/form");
+
+		return { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm };
+	};
+
+	it("should be able to get a pub with form elements", async () => {
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
+		const { pubs, community } = await seedCommunity(seed);
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -185,11 +192,9 @@ describe("getPubByForm", () => {
 	});
 
 	it("should filter out pub values if needed", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { pubs, community, pubTypes } = await seedCommunity(seed);
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
+		const { pubs, community } = await seedCommunity(seed);
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -230,12 +235,9 @@ describe("getPubByForm", () => {
 	});
 
 	it("should filter out pub values by user permissions", async () => {
-		const trx = getTrx();
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
 		const { pubs, community, users } = await seedCommunity(seed);
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
 		const { userCan } = await import("./authorization/capabilities");
 
 		const [pub, form, adminCan, editorCan, contributorCan] = await Promise.all([
@@ -282,11 +284,9 @@ describe("getPubByForm", () => {
 	});
 
 	it("should respect form order", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
 		const { pubs, community, forms } = await seedCommunity(seed);
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
 
 		const [pub, form] = await Promise.all([
 			getPubsWithRelatedValues(
@@ -376,11 +376,9 @@ describe("getPubByForm", () => {
 				},
 			},
 		});
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
 		const { pubs, community, forms } = await seedCommunity(seed2);
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
 
 		const pubId = pubs[0].id;
 
@@ -412,11 +410,9 @@ describe("getPubByForm", () => {
 	});
 
 	it("should handle multiple relations with a form", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
 		const { pubs, community, forms } = await seedCommunity(seed);
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
 		// This pub has relation fields
 		const pubId = pubs[1].id;
 		const communityId = community.id;
@@ -472,11 +468,9 @@ describe("getPubByForm", () => {
 	});
 
 	it("should handle multiple relations without a form element", async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm } =
+			await getAllImports();
 		const { pubs, community, forms } = await seedCommunity(seed);
-		const { getPubByForm } = await import("./pubs");
-		const { getPubsWithRelatedValues } = await import("./server/pub");
-		const { getForm } = await import("./server/form");
 		// This pub has relation fields
 		const pubId = pubs[1].id;
 		const communityId = community.id;
