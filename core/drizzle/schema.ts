@@ -324,10 +324,7 @@ export const pubValues = pgTable(
 		pubId: text().notNull(),
 		createdAt,
 		updatedAt,
-		relatedPubId: text("relatedPubId").references(() => pubs.id, {
-			onDelete: "cascade",
-		}),
-		// TODO: failed to parse database type 'modified_by_type'
+		relatedPubId: text("relatedPubId"),
 		lastModifiedBy: text("lastModifiedBy").notNull(),
 		rank: text(),
 	},
@@ -932,10 +929,7 @@ export const pubMemberships = pgTable(
 		userId: text(),
 		memberGroupId: text(),
 		createdAt,
-		updatedAt: timestamp({ precision: 3, mode: "string" })
-			.default(sql`CURRENT_TIMESTAMP`)
-			.generatedAlwaysAs(sql`CURRENT_TIMESTAMP`)
-			.notNull(),
+		updatedAt,
 	},
 	(table) => [
 		uniqueIndex("pub_memberships_pubId_memberGroupId_key").using(
