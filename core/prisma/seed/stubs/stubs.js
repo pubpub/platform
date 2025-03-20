@@ -20,4 +20,5 @@ export {
 	stubFn as Suspense,
 	stubFn as default,
 	stubFn as reactErrorHandler,
+	stubFn as withSentryConfig,
 };

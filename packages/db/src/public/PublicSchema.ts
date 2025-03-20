@@ -33,16 +33,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	_MemberGroupToUser: MemberGroupToUserTable;
-
-	auth_tokens: AuthTokensTable;
-
-	PubFieldSchema: PubFieldSchemaTable;
-
-	action_instances: ActionInstancesTable;
-
-	PubsInStages: PubsInStagesTable;
-
 	rules: RulesTable;
 
 	action_runs: ActionRunsTable;
@@ -92,4 +82,14 @@ export interface PublicSchema {
 	pub_values: PubValuesTable;
 
 	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	_MemberGroupToUser: MemberGroupToUserTable;
+
+	auth_tokens: AuthTokensTable;
+
+	PubFieldSchema: PubFieldSchemaTable;
+
+	action_instances: ActionInstancesTable;
+
+	PubsInStages: PubsInStagesTable;
 }

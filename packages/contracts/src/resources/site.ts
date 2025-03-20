@@ -2,6 +2,7 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import type {
+	ActionInstances,
 	CommunitiesId,
 	CoreSchemaType,
 	MemberRole,
@@ -32,12 +33,12 @@ import {
 	usersSchema,
 } from "db/public";
 
-import type { Json } from "./types";
+import type { Json, JsonValue } from "./types";
 import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
 	stageId?: StagesId;
-	relatedPubs?: Record<string, { value: Json; pub: CreatePubRequestBodyWithNulls }[]>;
+	relatedPubs?: Record<string, { value: Json | Date; pub: CreatePubRequestBodyWithNulls }[]>;
 	members?: Record<UsersId, MemberRole>;
 };
 
@@ -46,12 +47,16 @@ export const safeUserSchema = usersSchema.omit({ passwordHash: true }).strict();
 const CreatePubRequestBodyWithNullsWithStageId = CreatePubRequestBodyWithNulls.extend({
 	stageId: stagesIdSchema.optional(),
 	values: z.record(
-		jsonSchema.or(
-			z.object({
-				value: jsonSchema,
-				relatedPubId: pubsIdSchema,
-			})
-		)
+		jsonSchema
+			.or(
+				z.array(
+					z.object({
+						value: jsonSchema.or(z.date()),
+						relatedPubId: pubsIdSchema,
+					})
+				)
+			)
+			.or(z.date())
 	),
 	members: (
 		z.record(usersIdSchema, memberRoleSchema) as z.ZodType<Record<UsersId, MemberRole>>
@@ -63,7 +68,12 @@ export const CreatePubRequestBodyWithNullsNew: z.ZodType<CreatePubRequestBodyWit
 		relatedPubs: z
 			.lazy(() =>
 				z.record(
-					z.array(z.object({ value: jsonSchema, pub: CreatePubRequestBodyWithNullsNew }))
+					z.array(
+						z.object({
+							value: jsonSchema.or(z.date()),
+							pub: CreatePubRequestBodyWithNullsNew,
+						})
+					)
 				)
 			)
 			.optional(),
@@ -75,10 +85,10 @@ const upsertPubRelationsSchema = z.record(
 	z.array(
 		z.union([
 			z.object({
-				value: jsonSchema,
+				value: jsonSchema.or(z.date()),
 				relatedPub: CreatePubRequestBodyWithNullsNew,
 			}),
-			z.object({ value: jsonSchema, relatedPubId: pubsIdSchema }),
+			z.object({ value: jsonSchema.or(z.date()), relatedPubId: pubsIdSchema }),
 		])
 	)
 );
@@ -87,7 +97,9 @@ const upsertPubRelationsSchema = z.record(
  * Only add the `stage` if the `withStage` option has not been set to `false
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
-	? { stage: Stages | null }
+	? Options["withStageActionInstances"] extends true
+		? { stage: (Stages & { actionInstances: ActionInstances[] }) | null }
+		: { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }
 		: { stage?: Stages | null };
@@ -157,6 +169,12 @@ export type MaybePubOptions = {
 	 */
 	withStage?: boolean;
 	/**
+	 * Whether to include action instances for pub stages.
+	 *
+	 * @default false
+	 */
+	withStageActionInstances?: boolean;
+	/**
 	 * Whether to include members of the pub.
 	 *
 	 * @default false
@@ -179,7 +197,7 @@ export type MaybePubOptions = {
 type ValueBase = {
 	id: PubValuesId;
 	fieldId: PubFieldsId;
-	value: unknown;
+	value: JsonValue;
 	createdAt: Date;
 	updatedAt: Date;
 	/**
@@ -188,6 +206,7 @@ type ValueBase = {
 	schemaName: CoreSchemaType;
 	fieldSlug: string;
 	fieldName: string;
+	rank: string | null;
 };
 
 type ProcessedPubBase = {
@@ -248,6 +267,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 			schemaName: coreSchemaTypeSchema,
 			relatedPubId: pubsIdSchema.nullable(),
 			relatedPub: z.lazy(() => processedPubSchema.nullish()),
+			rank: z.string().nullable(),
 		})
 	),
 	createdAt: z.date(),
@@ -267,33 +287,283 @@ const preferRepresentationHeaderSchema = z.object({
 		.default("return=minimal"),
 });
 
-const getPubQuerySchema = z
+export const filterOperators = [
+	"$eq",
+	"$eqi",
+	"$ne",
+	"$nei",
+	"$lt",
+	"$lte",
+	"$gt",
+	"$gte",
+	"$contains",
+	"$notContains",
+	"$containsi",
+	"$notContainsi",
+	"$exists",
+	"$null",
+	"$notNull",
+	"$in",
+	"$notIn",
+	"$between",
+	"$startsWith",
+	"$startsWithi",
+	"$endsWith",
+	"$endsWithi",
+	"$jsonPath", // json path (maybe dangerous),
+] as const;
+
+export type FilterOperator = (typeof filterOperators)[number];
+
+export const logicalOperators = ["$and", "$or", "$not"] as const;
+
+export type LogicalOperator = (typeof logicalOperators)[number];
+
+export type BaseFilter = {
+	[O in FilterOperator]?: unknown;
+};
+
+/**
+ * at the slug level, you can do something like
+ *
+ * ```ts
+ * {
+ *  title: {
+ *    $or: [
+ *      { $contains: "value" },
+ *      { $contains: "value2" }
+ *    ]
+ *  }
+ * }
+ * ```
+ *
+ * or
+ *
+ * ```ts
+ * {
+ *  title: {
+ *    $or: { $contains: "value", $contains: "value2" }
+ *  }
+ * }
+ * ```
+ *
+ * or
+ *
+ * ```ts
+ * {
+ *  title: { $not: { $contains: "value" } }
+ * }
+ */
+export type FieldLevelLogicalFilter = {
+	$and?: FieldLevelFilter | FieldLevelFilter[];
+	$or?: FieldLevelFilter | FieldLevelFilter[];
+	$not?: FieldLevelFilter;
+};
+
+/**
+ * At the top level, you can do something like
+ *
+ * ```ts
+ * {
+ *  $and: [
+ *    { $eq: "value" },
+ *    { $eq: "value2" }
+ *  ]
+ * }
+ * ```
+ *
+ * or nested
+ *
+ * ```ts
+ * {
+ *  $or: [
+ *    { $or: [
+ *      { title: { $eq: "value" } },
+ *      { content: { $eq: "value2" } }
+ *    ]},
+ *    { title: { $contains: "value3" } }
+ *  ]
+ * }
+ * ```
+ *
+ * or, instead of an array, you can use a single filter
+ *
+ * // this is the same if you would remove $and
+ * ```ts
+ * {
+ *  $and: {
+ *    title: { $eq: "value" },
+ *    content: { $contains: "value2" }
+ *  }
+ * }
+ * ```
+ *
+ * `$not` always takes an object, not an array
+ *
+ * ```ts
+ * {
+ *  $not: {
+ *    $and: [
+ *      { title: { $eq: "value" } },
+ *      { content: { $contains: "value2" } }
+ *    ]
+ *  }
+ * }
+ * ```
+ *
+ */
+export type TopLevelLogicalFilter = {
+	$and?: Filter[] | Filter;
+	$or?: Filter[] | Filter;
+	$not?: Filter;
+};
+
+/**
+ * & here, because you can mix and match field level operators and top level logical operators
+ */
+export type FieldLevelFilter = BaseFilter & FieldLevelLogicalFilter;
+
+export type SlugKeyFilter = {
+	[slug: string]: FieldLevelFilter;
+};
+
+/**
+ * | here, because you can only have either a slug key filter or a top level logical filter
+ */
+export type Filter = SlugKeyFilter | TopLevelLogicalFilter;
+
+const coercedNumber = z.coerce.number();
+const coercedBoolean = z.enum(["true", "false"]).transform((val) => val === "true");
+const coercedDate = z.coerce.date();
+
+const allSchema = z.union([coercedNumber, coercedBoolean, coercedDate, z.string()]);
+
+const numberOrDateSchema = z.coerce.number().or(z.coerce.date());
+
+export const baseFilterSchema = z
 	.object({
-		depth: z
-			.number()
-			.int()
-			.positive()
-			.default(2)
+		$eq: allSchema.describe("Equal to"),
+		$eqi: z.string().describe("Equal to (case insensitive)"),
+		$ne: allSchema.describe("Not equal to"),
+		$nei: z.string().describe("Not equal to (case insensitive)"),
+		$lt: numberOrDateSchema.describe("Less than"),
+		$lte: numberOrDateSchema.describe("Less than or equal to"),
+		$gt: numberOrDateSchema.describe("Greater than"),
+		$gte: numberOrDateSchema.describe("Greater than or equal to"),
+		$contains: z.string().describe("Contains"),
+		$notContains: z.string().describe("Does not contain"),
+		$containsi: z.string().describe("Contains (case insensitive)"),
+		$notContainsi: z.string().describe("Does not contain (case insensitive)"),
+		$null: z
+			.string()
+			.transform(() => true)
+			.describe("Is null"),
+		$notNull: z
+			.string()
+			.transform(() => true)
+			.describe("Is not null"),
+		$exists: coercedBoolean.describe("Exists"),
+		$in: z.array(allSchema).describe("In"),
+		$notIn: z.array(allSchema).describe("Not in"),
+		$between: z.tuple([numberOrDateSchema, numberOrDateSchema]).describe("Between"),
+		$startsWith: z.string().describe("Starts with"),
+		$startsWithi: z.string().describe("Starts with (case insensitive)"),
+		$endsWith: z.string().describe("Ends with"),
+		$endsWithi: z.string().describe("Ends with (case insensitive)"),
+		$size: z.number().describe("Size"),
+		$jsonPath: z
+			.string()
 			.describe(
-				"The depth to which to fetch related pubs. Defaults to 2, which means to fetch the top level pub and one degree of related pubs."
-			),
-		withRelatedPubs: z
-			.boolean()
-			.default(false)
-			.describe("Whether to include related pubs with the values"),
-		withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
-		withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
-		withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
-		fieldSlugs: z
-			.array(z.string())
-			// this is necessary bc the query parser doesn't handle single string values as arrays
-			.or(z.string().transform((slug) => [slug]))
-			.optional()
-			.describe(
-				"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
+				"You can use this to filter more complex json fields, like arrays. See the Postgres documentation for more detail.\n" +
+					'Example: `filters[community-slug:jsonField][$jsonPath]="$[2] > 90"`\n' +
+					"This will filter the third element in the array, and check if it's greater than 90."
 			),
 	})
-	.passthrough();
+	// .passthrough()
+	.partial() satisfies z.ZodType<{
+	[K in FilterOperator]?: any;
+}>;
+
+const fieldSlugSchema = z.string();
+// .regex(/^[a-zA-Z0-9_.:-]+$/, "At this level, you can only use field slugs");
+
+const baseFilterSchemaWithAndOr: z.ZodType<FieldLevelFilter> = z
+	.lazy(() =>
+		baseFilterSchema
+			.extend({
+				$and: z.array(baseFilterSchemaWithAndOr).or(baseFilterSchemaWithAndOr),
+				$or: z.array(baseFilterSchemaWithAndOr).or(baseFilterSchemaWithAndOr),
+				$not: baseFilterSchemaWithAndOr,
+			})
+			.partial()
+	)
+	.superRefine((data, ctx) => {
+		if (!Object.keys(data).length) {
+			ctx.addIssue({
+				path: ctx.path,
+				code: z.ZodIssueCode.custom,
+				message: "Filter must have at least one operator (base filter)",
+			});
+			return false;
+		}
+		return true;
+	});
+
+export const filterSchema: z.ZodType<Filter> = z.lazy(() => {
+	const schema = z
+		.union([
+			z.record(fieldSlugSchema, baseFilterSchemaWithAndOr),
+			z
+				.object({
+					$and: filterSchema.or(z.array(filterSchema)),
+					$or: filterSchema.or(z.array(filterSchema)),
+					$not: filterSchema,
+				})
+				.partial(),
+		])
+		// ideally this would be `.and`, st you can have both fieldSlugs and topLevelLogicalOperators on the same level, but
+		// zod does not really support this
+		.superRefine((data, ctx) => {
+			if (!Object.keys(data).length) {
+				ctx.addIssue({
+					path: ctx.path,
+					code: z.ZodIssueCode.custom,
+					message: "Filter must have at least one operator",
+				});
+				return false;
+			}
+			return true;
+		});
+
+	return schema;
+});
+
+const getPubQuerySchema = z.object({
+	depth: z
+		.number()
+		.int()
+		.positive()
+		.default(2)
+		.describe(
+			"The depth to which to fetch children and related pubs. Defaults to 2, which means to fetch the top level pub and one degree of related pubs."
+		),
+	withChildren: z.boolean().default(false).describe("Whether to fetch children."),
+	withRelatedPubs: z
+		.boolean()
+		.default(false)
+		.describe("Whether to include related pubs with the values"),
+	withPubType: z.boolean().default(false).describe("Whether to fetch the pub type."),
+	withStage: z.boolean().default(false).describe("Whether to fetch the stage."),
+	withMembers: z.boolean().default(false).describe("Whether to fetch the pub's members."),
+	fieldSlugs: z
+		.array(z.string())
+		// this is necessary bc the query parser doesn't handle single string values as arrays
+		.or(z.string().transform((slug) => [slug]))
+		.optional()
+		.describe(
+			"Which field values to include in the response. Useful if you have very large pubs or want to save on bandwidth."
+		),
+});
 
 export type FTSReturn = {
 	id: PubsId;
@@ -389,7 +659,7 @@ export const siteApi = contract.router(
 				pathParams: z.object({
 					pubId: z.string().uuid(),
 				}),
-				query: getPubQuerySchema,
+				query: getPubQuerySchema.optional(),
 				responses: {
 					200: processedPubSchema,
 				},
@@ -400,14 +670,70 @@ export const siteApi = contract.router(
 				summary: "Gets a list of pubs",
 				description:
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
-				query: getPubQuerySchema.extend({
-					pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
-					stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
+				query: getPubQuerySchema
+					.extend({
+						pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
+						stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+						/**
+						 * The parsing of `filters` is handled in the route itself instead,
+						 * because ts-rest cannot parse nested objects in query strings.
+						 * eg `?filters[community-slug:fieldName][$eq]=value` becomes
+						 * `{ filters['community-slug:fieldName']['$eq']: 'value'}`,
+						 * rather than `{ filters: { 'community-slug:fieldName': { $eq: 'value' } } }`.
+						 */
+						filters: z
+							.record(z.any())
+							.optional()
+							.describe(
+								[
+									"Filter pubs by their values or by `updatedAt` or `createdAt`.",
+									"",
+									"**Filters**",
+									"- `$eq`: Equal to. Works with strings, numbers, dates, booleans.",
+									"- `$eqi`: Equal to (case insensitive). Works with strings.",
+									"- `$ne`: Not equal to. Works with strings, numbers, dates, booleans.",
+									"- `$nei`: Not equal to (case insensitive). Works with strings.",
+									"- `$lt`: Less than. Works with numbers, dates.",
+									"- `$lte`: Less than or equal to. Works with numbers, dates.",
+									"- `$gt`: Greater than. Works with numbers, dates.",
+									"- `$gte`: Greater than or equal to. Works with numbers, dates.",
+									"- `$contains`: Contains substring. Works with strings.",
+									"- `$notContains`: Does not contain substring. Works with strings.",
+									"- `$containsi`: Contains substring (case insensitive). Works with strings.",
+									"- `$notContainsi`: Does not contain substring (case insensitive). Works with strings.",
+									"- `$exists`: Exists. Works with boolean values - use `filters[field][$exists]=true`, or `filters[field][$exists]=false`.",
+									"- `$null`: Is null. No value needed - use `filters[field][$null]=true`.",
+									"- `$notNull`: Is not null. No value needed - use `filters[field][$notNull]=true`.",
+									"- `$in`: Value is in array. Format: `filters[field][$in]=value1,value2,value3`.",
+									"- `$notIn`: Value is not in array. Format: `filters[field][$notIn]=value1,value2,value3`.",
+									"- `$between`: Value is between two values. Format: `filters[field][$between]=min,max`.",
+									"- `$startsWith`: String starts with. Works with strings.",
+									"- `$startsWithi`: String starts with (case insensitive). Works with strings.",
+									"- `$endsWith`: String ends with. Works with strings.",
+									"- `$endsWithi`: String ends with (case insensitive). Works with strings.",
+									"- `$jsonPath`: JSON path query for complex JSON fields. Example: `filters[field][$jsonPath]='$[2] > 90'`",
+									"",
+									"**Logical Operators**",
+									"- `$and`: All conditions must match. Format: `filters[$and][0][field][$eq]=value&filters[$and][1][field2][$eq]=value2`",
+									"- `$or`: Any condition can match. Format: `filters[$or][0][field][$eq]=value&filters[$or][1][field2][$eq]=value2`",
+									"- `$not`: Negate a condition. Format: `filters[$not][field][$eq]=value`",
+									"",
+									"**Examples**",
+									"- Basic equality: `filters[community-slug:fieldName][$eq]=value`",
+									"- Date range: `filters[createdAt][$gte]=2023-01-01&filters[createdAt][$lte]=2023-12-31`",
+									"- Logical OR: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
+									"- Case-insensitive search: `filters[title][$containsi]=search term`",
+									"- Null check: `filters[assigneeId][$null]=true`",
+									"- JSON array filter: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'`",
+								].join("\n")
+							),
+					})
+					.passthrough()
+					.optional(),
 				responses: {
 					200: z.array(processedPubSchema),
 				},
@@ -512,12 +838,14 @@ export const siteApi = contract.router(
 				summary: "Gets a list of pub types",
 				description:
 					"Get a list of pub types by ID. This endpoint is used by the PubPub site builder to get a list of pub types.",
-				query: z.object({
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
+				query: z
+					.object({
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+					})
+					.optional(),
 				responses: {
 					200: pubTypesSchema.array(),
 				},
@@ -543,12 +871,14 @@ export const siteApi = contract.router(
 				summary: "Gets a list of stages",
 				description:
 					"Get a list of stages by ID. This endpoint is used by the PubPub site builder to get a list of stages.",
-				query: z.object({
-					limit: z.number().default(10),
-					offset: z.number().default(0).optional(),
-					orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
-					orderDirection: z.enum(["asc", "desc"]).optional(),
-				}),
+				query: z
+					.object({
+						limit: z.number().default(10),
+						offset: z.number().default(0).optional(),
+						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
+						orderDirection: z.enum(["asc", "desc"]).optional(),
+					})
+					.optional(),
 				responses: {
 					200: stagesSchema.array(),
 				},

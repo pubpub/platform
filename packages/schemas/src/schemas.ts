@@ -117,11 +117,16 @@ export const getStringArrayWithMinMax = (config: unknown) => {
 	});
 };
 
-export const DateTime = Type.Date({
-	description: "A moment in time",
-	examples: ["2021-01-01T00:00:00Z"],
-	error: "Invalid date",
-});
+export const DateTime = Type.Union([
+	Type.Date({
+		description: "A moment in time",
+		examples: ["2021-01-01T00:00:00Z"],
+		error: "Invalid date",
+	}),
+	Type.Transform(Type.String())
+		.Decode((value) => new Date(value))
+		.Encode((value) => value.toISOString()),
+]);
 
 export const Email = Type.String({
 	format: "email",

@@ -5,12 +5,11 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useRef, useState } from "react";
 
 import type { PubsId } from "db/public";
-import { pubFieldsIdSchema, pubsIdSchema } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-import type { GetPubsResult } from "~/lib/server";
+import type { ContextEditorPub } from "../ContextEditor/ContextEditorContext";
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
 import { getPubTitle } from "~/lib/pubs";
 import { DataTable } from "../DataTable/v2/DataTable";
@@ -51,7 +50,7 @@ const getColumns = () =>
 				);
 			},
 		},
-	] as const satisfies ColumnDef<GetPubsResult[number], unknown>[];
+	] as const satisfies ColumnDef<ContextEditorPub, unknown>[];
 
 export const AddRelatedPubsPanel = ({
 	title,
@@ -61,8 +60,8 @@ export const AddRelatedPubsPanel = ({
 }: {
 	title: string;
 	onCancel: () => void;
-	onAdd: (pubs: GetPubsResult) => void;
-	pubs: GetPubsResult;
+	onAdd: (pubs: ContextEditorPub[]) => void;
+	pubs: ContextEditorPub[];
 }) => {
 	const sidebarRef = useRef(null);
 	const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -77,7 +76,7 @@ export const AddRelatedPubsPanel = ({
 	};
 
 	return (
-		<SidePanel ref={sidebarRef} className="justify-between">
+		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={title} showCancel onCancel={onCancel} />
 				<DataTable
@@ -88,7 +87,7 @@ export const AddRelatedPubsPanel = ({
 					getRowId={(d) => d.id}
 				/>
 			</div>
-			<div className="flex w-full justify-between gap-2">
+			<div className="mt-auto flex w-full justify-between gap-2">
 				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
 					Cancel
 				</Button>

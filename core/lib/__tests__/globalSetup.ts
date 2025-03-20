@@ -19,15 +19,16 @@ export const setup = async () => {
 
 	logger.info("Resetting database...");
 	const result = spawnSync(
-		"MINIMAL_SEED=true pnpm --filter core exec dotenv -e ./.env.test -e ./.env.test.local prisma migrate reset -- --preview-feature --force",
+		"pnpm --filter core exec dotenv -e ./.env.test -e ./.env.test.local prisma migrate reset -- --preview-feature --force",
 		{
 			shell: true,
-			stdio: "inherit",
+			// stdio: "inherit",
 		}
 	);
 	const { stderr, error } = result;
-
-	if (error) {
+	if (!error) {
+		logger.info("Database reset successful");
+	} else {
 		logger.error(
 			"Something went wrong while trying to reset the database before running tests."
 		);

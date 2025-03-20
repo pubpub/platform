@@ -846,14 +846,6 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
-				name: "order",
-				dataType: "int4",
-				dataTypeSchema: "pg_catalog",
-				isNullable: true,
-				isAutoIncrementing: false,
-				hasDefaultValue: false,
-			},
-			{
 				name: "label",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",
