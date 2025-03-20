@@ -41,6 +41,8 @@ Table users {
   pubMemberships pub_memberships [not null]
   stageMemberships stage_memberships [not null]
   PubValueHistory pub_values_history [not null]
+  Invite invites [not null]
+  InvitedBy invites [not null]
 }
 
 Table sessions {
@@ -80,6 +82,7 @@ Table communities {
   Form forms [not null]
   pubFields pub_fields [not null]
   members community_memberships [not null]
+  Invite invites [not null]
 }
 
 Table pubs {
@@ -100,6 +103,7 @@ Table pubs {
   relatedValues pub_values [not null]
   members pub_memberships [not null]
   formMemberships form_memberships [not null]
+  Invite invites [not null]
 }
 
 Table pub_fields {
@@ -194,6 +198,7 @@ Table stages {
   actionInstances action_instances [not null]
   formElements form_elements [not null]
   members stage_memberships [not null]
+  Invite invites [not null]
 }
 
 Table PubsInStages {
@@ -341,6 +346,7 @@ Table action_runs {
   sourceActionRunId String
   sourceActionRun action_runs
   sequentialActionRuns action_runs [not null]
+  Invite invites [not null]
 }
 
 Table rules {
@@ -370,6 +376,7 @@ Table forms {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
+  Invite invites [not null]
 
   indexes {
     (name, communityId) [unique]
@@ -446,6 +453,38 @@ Table membership_capabilities {
   indexes {
     (role, type, capability) [pk]
   }
+}
+
+Table invites {
+  id String [pk]
+  email String
+  InvitedUser users
+  userId String
+  token String [unique, not null]
+  expiresAt DateTime [not null]
+  acceptedAt DateTime
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  community communities [not null]
+  communityId String [not null]
+  communityRole MemberRole [not null, default: 'contributor']
+  Pub pubs
+  pubId String
+  Form forms
+  formId String
+  Stage stages
+  stageId String
+  otherRole MemberRole
+  message String
+  sentAt DateTime
+  lastSentAt DateTime
+  sendAttempts Int [not null, default: 0]
+  status String [not null, default: 'active']
+  revokedAt DateTime
+  InvitedByUser users
+  invitedByUserId String
+  InvitedByActionRun action_runs
+  invitedByActionRunId String
 }
 
 Table MemberGroupToUser {
@@ -708,3 +747,17 @@ Ref: api_access_tokens.issuedById > users.id [delete: Set Null]
 Ref: api_access_logs.accessTokenId > api_access_tokens.id [delete: Set Null]
 
 Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id [delete: Cascade]
+
+Ref: invites.userId > users.id [delete: Set Null]
+
+Ref: invites.communityId > communities.id [delete: Cascade]
+
+Ref: invites.pubId > pubs.id [delete: Set Null]
+
+Ref: invites.formId > forms.id [delete: Set Null]
+
+Ref: invites.stageId > stages.id [delete: Set Null]
+
+Ref: invites.invitedByUserId > users.id [delete: Set Null]
+
+Ref: invites.invitedByActionRunId > action_runs.id [delete: Set Null]

@@ -12,6 +12,7 @@ import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
 import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
+import type { InvitesTable } from "./Invites";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
 import type { MembershipCapabilitiesTable } from "./MembershipCapabilities";
@@ -33,34 +34,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	rules: RulesTable;
-
-	action_runs: ActionRunsTable;
-
-	forms: FormsTable;
-
-	api_access_tokens: ApiAccessTokensTable;
-
-	api_access_logs: ApiAccessLogsTable;
-
-	api_access_permissions: ApiAccessPermissionsTable;
-
-	form_elements: FormElementsTable;
-
-	sessions: SessionsTable;
-
-	community_memberships: CommunityMembershipsTable;
-
-	pub_memberships: PubMembershipsTable;
-
-	stage_memberships: StageMembershipsTable;
-
-	form_memberships: FormMembershipsTable;
-
-	membership_capabilities: MembershipCapabilitiesTable;
-
-	pub_values_history: PubValuesHistoryTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -92,4 +65,34 @@ export interface PublicSchema {
 	action_instances: ActionInstancesTable;
 
 	PubsInStages: PubsInStagesTable;
+
+	rules: RulesTable;
+
+	action_runs: ActionRunsTable;
+
+	forms: FormsTable;
+
+	api_access_tokens: ApiAccessTokensTable;
+
+	api_access_logs: ApiAccessLogsTable;
+
+	api_access_permissions: ApiAccessPermissionsTable;
+
+	form_elements: FormElementsTable;
+
+	sessions: SessionsTable;
+
+	community_memberships: CommunityMembershipsTable;
+
+	pub_memberships: PubMembershipsTable;
+
+	stage_memberships: StageMembershipsTable;
+
+	form_memberships: FormMembershipsTable;
+
+	membership_capabilities: MembershipCapabilitiesTable;
+
+	pub_values_history: PubValuesHistoryTable;
+
+	invites: InvitesTable;
 }
