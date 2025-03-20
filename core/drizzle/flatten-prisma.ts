@@ -63,7 +63,7 @@ async function main() {
 
 	// Create commands for each source file
 	sourcePaths.forEach((sourcePath) => {
-		console.log(
+		execSync(
 			`git blame ${sourcePath} --porcelain | awk '/^[0-9a-f]{40}/{print $1}' | xargs -I{} git blame ${outputPath} -C {} -f`
 		);
 	});
