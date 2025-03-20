@@ -17,9 +17,9 @@ export class PubDetailsPage {
 		actionName: string,
 		configureCallback?: (runActionDialog: Locator) => Promise<void>
 	) {
-		await this.page.getByRole("button", { name: "Run action", exact: true }).click();
+		await this.page.getByTestId("run-action-primary").click();
 		await this.page
-			.getByRole("menu", { name: "Run action", exact: true })
+			.getByTestId("run-action-primary")
 			.getByRole("button", { name: actionName, exact: true })
 			.click();
 

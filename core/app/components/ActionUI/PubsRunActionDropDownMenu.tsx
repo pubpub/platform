@@ -17,11 +17,13 @@ export const PubsRunActionDropDownMenu = async ({
 	pubId,
 	stage,
 	pageContext,
+	testId,
 }: {
 	actionInstances: ActionInstances[];
 	pubId: PubsId;
 	stage: Stages;
 	pageContext: PageContext;
+	testId?: string;
 }) => {
 	if (!actionInstances.length) {
 		return null;
@@ -30,7 +32,12 @@ export const PubsRunActionDropDownMenu = async ({
 	return (
 		<DropdownMenu modal={true}>
 			<DropdownMenuTrigger asChild>
-				<Button className="flex items-center gap-x-2" variant="outline" size="sm">
+				<Button
+					className="flex items-center gap-x-2"
+					variant="outline"
+					size="sm"
+					data-testId={testId}
+				>
 					<Play size="12" />
 					Run action
 					<ChevronDown size="14" />
