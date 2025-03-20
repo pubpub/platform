@@ -13,6 +13,7 @@ import partition from "lodash.partition";
 
 import type {
 	CreatePubRequestBodyWithNullsNew,
+	Filter,
 	FTSReturn,
 	Json,
 	JsonValue,
@@ -52,6 +53,7 @@ import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
+import { applyFilters } from "./pub-filters";
 import { getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { movePub } from "./stages";
@@ -502,7 +504,7 @@ export const getPlainPub = (pubId: PubsId, trx = db) =>
  * Validates that all provided slugs exist in the community.
  * @throws Error if any slugs don't exist in the community
  */
-const getFieldInfoForSlugs = async ({
+export const getFieldInfoForSlugs = async ({
 	slugs,
 	communityId,
 	trx = db,
@@ -1217,6 +1219,7 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	fieldSlugs?: string[];
 	onlyTitles?: boolean;
 	trx?: typeof db;
+	filters?: Filter;
 }
 
 // TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
@@ -1621,6 +1624,9 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
 						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
+					)
+					.$if(Boolean(options?.filters), (qb) =>
+						qb.where((eb) => applyFilters(eb, options!.filters!))
 					)
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
