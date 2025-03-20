@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import type { PubsId, UsersId } from "db/public";
+import type { UsersId } from "db/public";
 import { Action, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
@@ -81,24 +81,24 @@ const seed = createSeed({
 		},
 	},
 	pubs: [
-		{
-			id: pubId as PubsId,
-			pubType: "Evaluation",
-			values: {
-				Title: "Review of The Activity of Snails",
-			},
-			stage: "Evaluating",
-		},
+		// {
+		// 	id: pubId as PubsId,
+		// 	pubType: "Evaluation",
+		// 	values: {
+		// 		Title: "Review of The Activity of Snails",
+		// 	},
+		// 	stage: "Evaluating",
+		// },
 		{
 			pubType: "Submission",
 			values: {
 				Title: "The Activity of Snails",
 				Content: "",
 				Evaluations: [
-					{
-						value: null,
-						relatedPubId: pubId as PubsId,
-					},
+					// {
+					// 	value: null,
+					// 	relatedPubId: pubId as PubsId,
+					// },
 				],
 				EvaluationManager: memberId,
 			},
