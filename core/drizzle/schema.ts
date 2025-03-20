@@ -131,29 +131,22 @@ const updatedAt = timestamp("updatedAt", { precision: 3, mode: "string" })
 	.default(sql`CURRENT_TIMESTAMP`)
 	.notNull();
 
-export const users = pgTable(
-	"users",
-	{
-		id: text()
-			.default(sql`gen_random_uuid()`)
-			.primaryKey()
-			.notNull(),
-		slug: text().notNull(),
-		email: text().notNull(),
-		firstName: text().notNull(),
-		avatar: text(),
-		createdAt,
-		updatedAt,
-		lastName: text(),
-		orcid: text(),
-		isSuperAdmin: boolean().default(false).notNull(),
-		passwordHash: text(),
-	},
-	(table) => [
-		uniqueIndex("users_email_key").using("btree", table.email.asc().nullsLast().op("text_ops")),
-		uniqueIndex("users_slug_key").using("btree", table.slug.asc().nullsLast().op("text_ops")),
-	]
-);
+export const users = pgTable("users", {
+	id: text()
+		.default(sql`gen_random_uuid()`)
+		.primaryKey()
+		.notNull(),
+	slug: text().notNull().unique("users_slug_key"),
+	email: text().notNull().unique("users_email_key"),
+	firstName: text().notNull(),
+	avatar: text(),
+	createdAt,
+	updatedAt,
+	lastName: text(),
+	orcid: text(),
+	isSuperAdmin: boolean().default(false).notNull(),
+	passwordHash: text(),
+});
 
 export const stages = pgTable(
 	"stages",
@@ -173,26 +166,17 @@ export const stages = pgTable(
 	(table) => []
 );
 
-export const communities = pgTable(
-	"communities",
-	{
-		id: text()
-			.default(sql`gen_random_uuid()`)
-			.primaryKey()
-			.notNull(),
-		createdAt,
-		updatedAt,
-		name: text().notNull(),
-		avatar: text(),
-		slug: text().notNull(),
-	},
-	(table) => [
-		uniqueIndex("communities_slug_key").using(
-			"btree",
-			table.slug.asc().nullsLast().op("text_ops")
-		),
-	]
-);
+export const communities = pgTable("communities", {
+	id: text()
+		.default(sql`gen_random_uuid()`)
+		.primaryKey()
+		.notNull(),
+	createdAt,
+	updatedAt,
+	name: text().notNull(),
+	avatar: text(),
+	slug: text().notNull().unique("communities_slug_key"),
+});
 
 export const memberGroups = pgTable(
 	"member_groups",
@@ -327,35 +311,26 @@ export const pubValues = pgTable(
 	]
 );
 
-export const pubFields = pgTable(
-	"pub_fields",
-	{
-		id: text()
-			.default(sql`gen_random_uuid()`)
-			.primaryKey()
-			.notNull(),
-		name: text().notNull(),
-		createdAt,
-		updatedAt,
-		pubFieldSchemaId: text().references(() => pubFieldSchema.id, {
-			onDelete: "set null",
-			onUpdate: "cascade",
-		}),
-		slug: text().notNull(),
-		schemaName: coreSchemaType(),
-		isArchived: boolean().default(false).notNull(),
-		communityId: text()
-			.notNull()
-			.references(() => communities.id, { onDelete: "restrict", onUpdate: "cascade" }),
-		isRelation: boolean().default(false).notNull(),
-	},
-	(table) => [
-		uniqueIndex("pub_fields_slug_key").using(
-			"btree",
-			table.slug.asc().nullsLast().op("text_ops")
-		),
-	]
-);
+export const pubFields = pgTable("pub_fields", {
+	id: text()
+		.default(sql`gen_random_uuid()`)
+		.primaryKey()
+		.notNull(),
+	name: text().notNull(),
+	createdAt,
+	updatedAt,
+	pubFieldSchemaId: text().references(() => pubFieldSchema.id, {
+		onDelete: "set null",
+		onUpdate: "cascade",
+	}),
+	slug: text().notNull().unique("pub_fields_slug_key"),
+	schemaName: coreSchemaType(),
+	isArchived: boolean().default(false).notNull(),
+	communityId: text()
+		.notNull()
+		.references(() => communities.id, { onDelete: "restrict", onUpdate: "cascade" }),
+	isRelation: boolean().default(false).notNull(),
+});
 
 export const pubFieldToPubType = pgTable(
 	"_PubFieldToPubType",
@@ -587,7 +562,7 @@ export const apiAccessTokens = pgTable(
 			.default(sql`gen_random_uuid()`)
 			.primaryKey()
 			.notNull(),
-		token: text().notNull(),
+		token: text().notNull().unique("api_access_tokens_token_key"),
 		name: text().notNull(),
 		description: text(),
 		communityId: text()
@@ -603,13 +578,7 @@ export const apiAccessTokens = pgTable(
 			.notNull(),
 		updatedAt,
 	},
-	(table) => [
-		uniqueIndex("api_access_tokens_token_key").using(
-			"btree",
-			table.token.asc().nullsLast().op("text_ops")
-		),
-		index("token_idx").using("btree", table.token.asc().nullsLast().op("text_ops")),
-	]
+	(table) => [index("token_idx").using("btree", table.token.asc().nullsLast().op("text_ops"))]
 );
 
 export const sessions = pgTable(
