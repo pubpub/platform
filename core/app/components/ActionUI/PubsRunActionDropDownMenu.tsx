@@ -36,7 +36,7 @@ export const PubsRunActionDropDownMenu = async ({
 					className="flex items-center gap-x-2"
 					variant="outline"
 					size="sm"
-					data-testId={testId}
+					data-testid={testId}
 				>
 					<Play size="12" />
 					Run action
