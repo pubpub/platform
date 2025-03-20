@@ -115,8 +115,8 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		resolver: zodResolver(formBuilderSchema),
 		values: {
 			elements: pubForm.elements.map((e) => {
-				// Do not include slug here
-				const { slug, id, ...rest } = e;
+				// Do not include extra fields here
+				const { slug, id, fieldName, ...rest } = e;
 				// Rename id to avoid conflict with rhf generated id
 				return { ...rest, elementId: id };
 			}),

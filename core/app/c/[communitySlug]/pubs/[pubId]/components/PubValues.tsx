@@ -5,24 +5,56 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { Value } from "@sinclair/typebox/value";
+import partition from "lodash.partition";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { JsonValue } from "contracts";
+import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronDown, ChevronRight } from "ui/icon";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
-import type { FullProcessedPub } from "~/lib/server/pub";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
+
+type FullProcessedPubWithForm = ProcessedPubWithForm<{
+	withRelatedPubs: true;
+	withStage: true;
+	withPubType: true;
+	withMembers: true;
+}>;
+
+/**
+ * Get the label a form/pub value combo might have. In preference order:
+ * 1. "label" on a FormElement
+ * 2. "config.label" on a FormElement
+ * 3. the name of the PubField
+ **/
+const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
+	// Default to the field name
+	const defaultLabel = value.fieldName;
+	let configLabel;
+	let formElementLabel;
+	if ("formElementId" in value) {
+		const config = value.formElementConfig;
+		if (config) {
+			configLabel = "label" in config ? config.label : undefined;
+		}
+		formElementLabel = value.formElementLabel;
+	}
+	return formElementLabel || configLabel || defaultLabel;
+};
 
 const PubValueHeading = ({
 	depth,
 	children,
 	...props
 }: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
+	// For "Other Fields" section header which might be one lower than any pub depth
+	if (depth < 1) {
+		return <h2 {...props}>{children}</h2>;
+	}
 	// Pub depth starts at 1
 	switch (depth - 1) {
 		case 0:
@@ -36,7 +68,47 @@ const PubValueHeading = ({
 	}
 };
 
-export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
+const FieldBlock = ({
+	name,
+	values,
+	depth,
+}: {
+	name: string;
+	values: FullProcessedPubWithForm["values"];
+	depth: number;
+}) => {
+	return (
+		<div className="my-2" key={name}>
+			<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
+				{name}
+			</PubValueHeading>
+			<div className={"ml-2"} data-testid={`${name}-value`}>
+				{values.map((value) =>
+					value.id ? (
+						<PubValue value={value} key={value.id} />
+					) : (
+						// Blank space if there is no value
+						<div className="h-1" key={value.fieldId} />
+					)
+				)}
+			</div>
+		</div>
+	);
+};
+
+export const PubValues = ({
+	pub,
+	isNested,
+}: {
+	pub: FullProcessedPubWithForm;
+	/**
+	 * If this is a nested related pub. This can likely be removed once we have related pubs
+	 * using default forms as well, as right now we only need it to not render
+	 * the "Other fields" header which will always show up since related pubs do not have
+	 * forms joined currently
+	 **/
+	isNested?: boolean;
+}): ReactNode => {
 	const { values, depth } = pub;
 	if (!values.length) {
 		return null;
@@ -45,31 +117,47 @@ export const PubValues = ({ pub }: { pub: FullProcessedPub }): ReactNode => {
 	const filteredValues = valuesWithoutTitle(pub);
 
 	// Group values by field so we only render one heading for relationship values that have multiple entries
-	const groupedValues: Record<string, FullProcessedPub["values"]> = {};
+	const groupedValues: Record<
+		string,
+		{ label: string; isInForm: boolean; values: FullProcessedPubWithForm["values"] }
+	> = {};
 	filteredValues.forEach((value) => {
-		if (groupedValues[value.fieldName]) {
-			groupedValues[value.fieldName].push(value);
+		if (groupedValues[value.fieldSlug]) {
+			groupedValues[value.fieldSlug].values.push(value);
 		} else {
-			groupedValues[value.fieldName] = [value];
+			const label = getLabel(value);
+			const isInForm = "formElementId" in value;
+			groupedValues[value.fieldSlug] = { label, values: [value], isInForm };
 		}
 	});
-	return Object.entries(groupedValues).map(([fieldName, fieldValues]) => {
-		return (
-			<div className="my-2" key={fieldName}>
-				<PubValueHeading depth={depth} className={"mb-2 text-base font-semibold"}>
-					{fieldName}
-				</PubValueHeading>
-				<div className={"ml-2"} data-testid={`${fieldName}-value`}>
-					{fieldValues.map((value) => (
-						<PubValue value={value} key={value.id} />
+
+	const [valuesInForm, valuesNotInForm] = partition(
+		Object.values(groupedValues),
+		(values) => values.isInForm
+	);
+	return (
+		<article>
+			{valuesInForm.map(({ label, values }) => {
+				return <FieldBlock key={label} name={label} values={values} depth={depth} />;
+			})}
+			{valuesNotInForm.length ? (
+				<div className="flex flex-col gap-2">
+					{valuesInForm.length ? <hr className="mt-2" /> : null}
+					{!isNested ? (
+						<PubValueHeading depth={depth - 1} className="text-lg font-semibold">
+							Other Fields
+						</PubValueHeading>
+					) : null}
+					{valuesNotInForm.map(({ label, values }) => (
+						<FieldBlock key={label} name={label} values={values} depth={depth} />
 					))}
 				</div>
-			</div>
-		);
-	});
+			) : null}
+		</article>
+	);
 };
 
-const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
+const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number] }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	if (value.relatedPub) {
 		const { relatedPub, ...justValue } = value;
@@ -111,7 +199,7 @@ const PubValue = ({ value }: { value: FullProcessedPub["values"][number] }) => {
 				<CollapsibleContent>
 					{renderRelatedValues && (
 						<div className="ml-4">
-							<PubValues pub={relatedPub} />
+							<PubValues pub={relatedPub} isNested />
 						</div>
 					)}
 				</CollapsibleContent>
