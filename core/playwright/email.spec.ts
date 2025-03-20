@@ -48,7 +48,6 @@ const seed = createSeed({
 			password: "password",
 			firstName: "Jill",
 			lastName: "Admin",
-			existing: true,
 		},
 		user2: {
 			role: MemberRole.contributor,
