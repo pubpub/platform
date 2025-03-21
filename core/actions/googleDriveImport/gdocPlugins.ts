@@ -1082,7 +1082,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 		if (node.tagName === "table") {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
-			const aggregateFigureTypes = ["image", "audio", "file", "iframe"];
+			const aggregateFigureTypes = ["image", "audio", "iframe"]; // Don't count 'file' figure types
 			const independentFigureTypes = ["video", "table", "math"];
 			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 			if (validFigureTypes.includes(tableType)) {
@@ -1174,7 +1174,7 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	/*
 	 */
 	const figureCount: { [key: string]: number } = {};
-	const aggregateFigureTypes = ["img", "audio", "file", "iframe"];
+	const aggregateFigureTypes = ["img", "audio", "iframe"]; // Don't count 'file' figure types
 	const independentFigureTypes = ["video", "table", "math"];
 	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 	visit(tree, "element", (node: any, index: any, parent: any) => {
