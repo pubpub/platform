@@ -8,10 +8,11 @@ import { logger } from "logger";
 export const setup = async () => {
 	config({
 		path: [
+			new URL("../../.env.local", import.meta.url).pathname,
 			new URL("../../.env.test", import.meta.url).pathname,
-			new URL("../../.env.test.local", import.meta.url).pathname,
 		],
 	});
+	return;
 
 	if (process.env.SKIP_RESET) {
 		return;

@@ -918,7 +918,7 @@ describe("pub_values_history trigger", () => {
 		});
 
 		const isModifiedByCheckConstraintError = (error: unknown) =>
-			isCheckContraintError(error) && error.constraint === "modified_by_type_check";
+			isCheckContraintError(error) && error.constraint?.includes("lastModifiedBy_check");
 
 		it("should throw a constraint error if lastModifiedBy is not a valid uuid", async () => {
 			const trx = getTrx();
