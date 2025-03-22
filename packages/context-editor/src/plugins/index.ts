@@ -7,6 +7,7 @@ import attributePanel from "./attributePanel";
 import code from "./code";
 import contextSuggest from "./contextSuggest";
 import inputRules from "./inputRules";
+import keymap from "./keymap";
 import onChange from "./onChange";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
@@ -20,6 +21,7 @@ export const basePlugins = (
 	setSuggestData: any
 ) => {
 	return [
+		keymap(schema),
 		...contextSuggest(suggestData, setSuggestData),
 		...exampleSetup({ schema, menuBar: false }),
 		reactProps(props),

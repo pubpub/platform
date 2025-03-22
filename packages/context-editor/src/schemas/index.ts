@@ -9,6 +9,7 @@ import em from "./em";
 import heading from "./heading";
 import horizontal_rule from "./horizontal";
 import image from "./image";
+import link from "./link";
 import math from "./math";
 import paragraph from "./paragraph";
 import strong from "./strong";
@@ -32,6 +33,7 @@ export const baseSchema = new Schema({
 		strong,
 		em,
 		code: code.codeInline,
+		link,
 	},
 	topNode: "doc",
 });
