@@ -216,6 +216,7 @@ export default async function Page(props: {
 									pubId={pubId}
 									stage={stage!}
 									pageContext={pageContext}
+									testId="run-action-primary"
 								/>
 							</div>
 						) : (

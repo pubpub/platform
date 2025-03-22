@@ -1,7 +1,7 @@
 import assert from "assert";
 
 import type { Node as NodeMdast, Parent as ParentMdast } from "mdast";
-import type { Directive } from "micromark-extension-directive";
+import type { Directive as MicromarkDirective } from "micromark-extension-directive";
 import type { Plugin, Processor } from "unified";
 import type { Node } from "unist";
 
@@ -27,7 +27,9 @@ import * as utils from "./renderWithPubUtils";
 
 const ERR_FORM_MISSING_RECIPIENT = `You can't use :link{form="slug"} directive with an email address. You must set the "Recipient member" field.`;
 
-const isDirective = (node: Node): node is NodeMdast & Directive => {
+type Directive = NodeMdast & MicromarkDirective;
+
+const isDirective = (node: Node): node is Directive => {
 	return (
 		node.type === "containerDirective" ||
 		node.type === "leafDirective" ||
@@ -39,7 +41,7 @@ const isParent = (node: Node): node is ParentMdast => {
 	return "children" in node;
 };
 
-const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderWithPubContext) => {
+const visitValueDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	const attrs = expect(node.attributes, "Invalid syntax in value directive");
 	const field = expect(attrs.field, "Missing field attribute in value directive");
 
@@ -75,14 +77,11 @@ const visitValueDirective = (node: NodeMdast & Directive, context: utils.RenderW
 	};
 };
 
-const hasRelationRel = (node: NodeMdast & Directive) => {
+const hasRelationRel = (node: Directive) => {
 	return node.attributes?.rel !== undefined && node.attributes.rel !== "parent";
 };
 
-const visitAssigneeNameDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitAssigneeNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -95,10 +94,7 @@ const visitAssigneeNameDirective = (
 	};
 };
 
-const visitAssigneeFirstNameDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitAssigneeFirstNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -111,10 +107,7 @@ const visitAssigneeFirstNameDirective = (
 	};
 };
 
-const visitAssigneeLastNameDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitAssigneeLastNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -127,10 +120,7 @@ const visitAssigneeLastNameDirective = (
 	};
 };
 
-const visitRecipientNameDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitRecipientNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -143,10 +133,7 @@ const visitRecipientNameDirective = (
 	};
 };
 
-const visitRecipientFirstNameDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitRecipientFirstNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -159,10 +146,7 @@ const visitRecipientFirstNameDirective = (
 	};
 };
 
-const visitRecipientLastNameDirective = (
-	node: NodeMdast & Directive,
-	context: utils.RenderWithPubContext
-) => {
+const visitRecipientLastNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
 		hName: "span",
@@ -175,7 +159,7 @@ const visitRecipientLastNameDirective = (
 	};
 };
 
-const visitLinkDirective = (node: NodeMdast & Directive, context: utils.RenderWithPubContext) => {
+const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	// `node.attributes` should always be defined for directive nodes
 	const attrs = expect(node.attributes, "Invalid syntax in link directive");
 	// All directives are considered parent nodes
@@ -232,7 +216,25 @@ const visitLinkDirective = (node: NodeMdast & Directive, context: utils.RenderWi
 	};
 };
 
-type DirectiveVisitor = (node: NodeMdast & Directive, context: utils.RenderWithPubContext) => void;
+const visitValueDirectiveWithMemberField: DirectiveVisitor = async (node, context) => {
+	// Insert and extract the member id
+	visitValueDirective(node, context);
+	const children = expect(node.data?.hChildren);
+	// Replace the member id with a formatted string (e.g. firstName + lastName)
+	const attrs = expect(node.attributes);
+	children[0] = {
+		...children[0],
+		type: "text",
+		value: await utils.renderMemberFields({
+			fieldSlug: expect(attrs.field),
+			attributes: Object.keys(attrs),
+			memberId: expect((children[0] as any).value),
+			communitySlug: context.communitySlug,
+		}),
+	};
+};
+
+type DirectiveVisitor = (node: Directive, context: utils.RenderWithPubContext) => void;
 
 const directiveVisitors: Record<RenderWithPubToken, DirectiveVisitor> = {
 	[RenderWithPubToken.Value]: visitValueDirective,
@@ -245,39 +247,41 @@ const directiveVisitors: Record<RenderWithPubToken, DirectiveVisitor> = {
 	[RenderWithPubToken.Link]: visitLinkDirective,
 };
 
+const asyncVisitors = new Set([visitValueDirectiveWithMemberField]);
+
+const getDirectiveVisitor = (node: Directive) => {
+	const directiveName = node.name.toLowerCase() as RenderWithPubToken;
+	if (
+		directiveName === RenderWithPubToken.Value &&
+		utils.ALLOWED_MEMBER_ATTRIBUTES.some((f) => f in (node.attributes ?? []))
+	) {
+		return visitValueDirectiveWithMemberField;
+	}
+	return expect(directiveVisitors[directiveName], "Invalid directive used in markdown template.");
+};
+
 const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (context) => {
 	return async (tree) => {
-		const tokenAuthLinkNodes: NodeMdast[] = [];
-		const memberFieldNodes: NodeMdast[] = [];
-		const relationRelNodes: NodeMdast[] = [];
+		const authLinkNodes: Directive[] = [];
+		const deferredNodes: Directive[] = [];
 
 		visit(tree, (node) => {
 			if (isDirective(node)) {
 				// Directive names are case-insensitive
 				const directiveName = node.name.toLowerCase() as RenderWithPubToken;
-				const directiveVisitor = directiveVisitors[directiveName];
+				const directiveVisitor = getDirectiveVisitor(node);
 				// Some links, like private form links, require one-time token authentication
 				const directiveRendersAuthLink =
 					directiveName === RenderWithPubToken.Link &&
 					node.attributes?.form !== undefined;
-				// Throw an error if the email contains an invalid/undefined directive
-				assert(directiveVisitor !== undefined, "Invalid directive used in email.");
+
 				// Collect all auth link nodes to be processed after all other directives
 				if (directiveRendersAuthLink) {
-					tokenAuthLinkNodes.push(node);
+					authLinkNodes.push(node);
 				}
 
-				// Collect any member fields used
-				const isMemberFieldWithAttr =
-					directiveName === RenderWithPubToken.Value &&
-					utils.ALLOWED_MEMBER_ATTRIBUTES.some((f) => f in (node.attributes ?? []));
-
-				if (isMemberFieldWithAttr) {
-					memberFieldNodes.push(node);
-				}
-
-				if (hasRelationRel(node)) {
-					relationRelNodes.push(node);
+				if (hasRelationRel(node) || asyncVisitors.has(directiveVisitor)) {
+					deferredNodes.push(node);
 					return;
 				}
 
@@ -288,7 +292,7 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 
 		// Append one-time auth tokens to authenticated hrefs.
 		await Promise.all(
-			tokenAuthLinkNodes.map(async (node) => {
+			authLinkNodes.map(async (node) => {
 				const data = expect(node.data);
 				const props = expect(data.hProperties);
 				if (isDirective(node)) {
@@ -305,46 +309,24 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 			})
 		);
 
-		// Append member field data
+		// Process deferred nodes
 		await Promise.all(
-			memberFieldNodes.map(async (node) => {
-				const hChildren = expect(node.data?.hChildren);
-				const curValue = expect((hChildren[0] as any).value);
-				hChildren[0] = { type: "text", value: "" };
-
-				if (isDirective(node)) {
-					const attrs = expect(node.attributes);
-					const fieldSlug = expect(attrs.field);
-
-					hChildren[0] = {
-						...hChildren[0],
-						value: await utils.renderMemberFields({
-							fieldSlug,
-							attributes: Object.keys(attrs),
-							memberId: curValue,
-							communitySlug: context.communitySlug,
-						}),
-					};
-				}
-			})
-		);
-
-		// Process related pub nodes
-		await Promise.all(
-			relationRelNodes.map(async (node) => {
-				if (isDirective(node)) {
-					const directiveName = node.name.toLowerCase() as RenderWithPubToken;
-					const directiveVisitor = directiveVisitors[directiveName];
+			deferredNodes.map(async (node) => {
+				const visitor = getDirectiveVisitor(node);
+				// Override context for nodes with rel="relation_field"
+				if (hasRelationRel(node)) {
 					const { rel, ...attrs } = expect(node.attributes);
 					const relatedPub = expect(
 						await getExclusivelyRelatedPub(context.pub.id as PubsId, rel),
-						`The email template included a directive containing rel="${rel}", but the pub is not related to any other pubs through this field.`
+						`The markdown template included a directive containing rel="${rel}", but the pub is not related to any other pubs through this field.`
 					);
 					node.attributes = attrs;
-					directiveVisitor(node, {
+					await visitor(node, {
 						...context,
 						pub: relatedPub as utils.RenderWithPubPub,
 					});
+				} else {
+					await visitor(node, context);
 				}
 			})
 		);
