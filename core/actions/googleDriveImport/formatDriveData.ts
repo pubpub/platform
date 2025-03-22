@@ -312,10 +312,10 @@ export const formatDriveData = async (
 	const output = {
 		pubDescription: latestPubDescription,
 		pubHtml: String(formattedPubHtmlWithAssets),
+		// pubHtml: String(dataFromDrive.pubHtml),
 		versions,
 		discussions: comments,
 	};
-	// console.log("Got output");
 	// await writeFile("output.json", JSON.stringify(output, null, 2));
 	return output;
 };
