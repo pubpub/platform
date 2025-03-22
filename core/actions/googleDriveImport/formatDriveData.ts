@@ -4,7 +4,6 @@ import type { Root } from "hast";
 import { defaultMarkdownSerializer, MarkdownSerializer } from "prosemirror-markdown";
 import { Node } from "prosemirror-model";
 import { rehype } from "rehype";
-import rehypeFormat from "rehype-format";
 import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
@@ -112,7 +111,6 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 				}
 			});
 		})
-		.use(rehypeFormat)
 		.process(html);
 	return String(result);
 };
@@ -143,7 +141,6 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(appendFigureAttributes) /* Assumes figures are <figure> elements */
 		.use(removeEmptyFigCaption)
 		.use(removeDescription)
-		.use(rehypeFormat)
 		.process(html);
 	return String(result);
 };
