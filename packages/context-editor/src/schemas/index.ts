@@ -9,6 +9,7 @@ import em from "./em";
 import heading from "./heading";
 import horizontal_rule from "./horizontal";
 import image from "./image";
+import list from "./list";
 import math from "./math";
 import paragraph from "./paragraph";
 import strong from "./strong";
@@ -27,6 +28,9 @@ export const baseSchema = new Schema({
 		code_block: code.codeBlock,
 		image,
 		horizontal_rule,
+		bullet_list: list.bulletList,
+		ordered_list: list.orderedList,
+		list_item: list.listItem,
 	},
 	marks: {
 		strong,

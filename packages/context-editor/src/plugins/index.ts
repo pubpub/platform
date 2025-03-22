@@ -7,6 +7,7 @@ import attributePanel from "./attributePanel";
 import code from "./code";
 import contextSuggest from "./contextSuggest";
 import inputRules from "./inputRules";
+import keymap from "./keymap";
 import onChange from "./onChange";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
@@ -21,6 +22,8 @@ export const basePlugins = (
 ) => {
 	return [
 		...contextSuggest(suggestData, setSuggestData),
+		// Example setup includes inputRules for headers, blockquotes, codeblock, lists
+		// https://github.com/ProseMirror/prosemirror-example-setup/blob/master/src/inputrules.ts
 		...exampleSetup({ schema, menuBar: false }),
 		reactProps(props),
 		structureDecorations(),
@@ -29,5 +32,6 @@ export const basePlugins = (
 		inputRules(schema),
 		mathPlugin,
 		...code(schema, {}),
+		...keymap(schema),
 	];
 };

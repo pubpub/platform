@@ -96,6 +96,9 @@
 .ProseMirror blockquote,
 .ProseMirror img,
 .ProseMirror hr,
+.ProseMirror ul,
+.ProseMirror ol,
+.ProseMirror li,
 .ProseMirror section {
 	border-left: 1px solid #777;
 	padding-left: 5px;
@@ -152,6 +155,12 @@
 .ProseMirror math-inline {
 	/* Otherwise the widget button is too hard to click without triggering math */
 	padding-left: 4px;
+}
+.ProseMirror ol {
+	list-style-type: decimal;
+}
+.ProseMirror ul {
+	list-style-type: disc;
 }
 
 /* Code block */
