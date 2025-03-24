@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { EditorView } from "prosemirror-view";
 
 import { Input } from "ui/input";
@@ -11,10 +11,11 @@ const animationHeightMS = 100;
 
 export interface AttributePanelProps {
 	panelPosition: PanelProps;
-	viewRef: React.MutableRefObject<EditorView | null>;
+	viewRef: React.RefObject<EditorView | null>;
+	isLink: boolean;
 }
 
-export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) {
+export function AttributePanel({ panelPosition, viewRef, isLink }: AttributePanelProps) {
 	const [position, setPosition] = useState(panelPosition);
 	/* Set as init position and then keep track of state here, while syncing 
 	so the panel doesn't become out of sync with doc (only an issue if values are shown
