@@ -9,6 +9,7 @@ import contextSuggest from "./contextSuggest";
 import inputRules from "./inputRules";
 import keymap from "./keymap";
 import onChange from "./onChange";
+import pasteRules from "./pasteRules";
 import reactProps from "./reactProps";
 import structureDecorations from "./structureDecorations";
 
@@ -28,6 +29,7 @@ export const basePlugins = (
 		structureDecorations(),
 		attributePanel(panelPosition, setPanelPosition),
 		onChange(),
+		pasteRules(schema),
 		inputRules(schema),
 		mathPlugin,
 		...code(schema, {}),
