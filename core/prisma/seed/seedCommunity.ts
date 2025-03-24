@@ -875,7 +875,7 @@ export async function seedCommunity<
 		.flatMap(([slug, userWithRole]) => {
 			return [
 				{
-					id: userWithRole.id,
+					id: userWithRole.existing ? undefined : userWithRole.id,
 					userId: userWithRole.id,
 					communityId,
 					role: userWithRole.role!,
