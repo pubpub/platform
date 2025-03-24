@@ -13,7 +13,7 @@ export default defineConfig({
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
 	// multiple workers in CI is too flaky for now
-	workers: process.env.CI ? 2 : undefined,
+	workers: process.env.CI ? 1 : undefined,
 	expect: {
 		timeout: process.env.CI ? 5_000 : 60_000,
 	},
