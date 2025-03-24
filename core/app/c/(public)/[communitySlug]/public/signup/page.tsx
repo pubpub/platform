@@ -1,10 +1,9 @@
 import { notFound, redirect } from "next/navigation";
 
-import { AuthTokenType } from "db/public";
-
 import { PublicSignupForm } from "~/app/components/Signup/PublicSignupForm";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { publicSignupsAllowed } from "~/lib/server/user";
 
 export default async function Page({
 	searchParams,
@@ -14,6 +13,13 @@ export default async function Page({
 	const [community, { user }] = await Promise.all([findCommunityBySlug(), getLoginData()]);
 
 	if (!community) {
+		notFound();
+	}
+
+	const isAllowedToSignup = await publicSignupsAllowed(community.id);
+
+	if (!isAllowedToSignup) {
+		// this community does not allow public signups
 		notFound();
 	}
 
