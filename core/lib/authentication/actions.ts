@@ -225,118 +225,44 @@ const addUserToCommunity = defineServerAction(async function addUserToCommunity(
 	};
 });
 
-export const publicSignup = defineServerAction(async function signup(
-	props: {
-		firstName: string;
-		lastName: string;
-		email: string;
-		password: string;
-		redirect: string | null;
-		slug?: string;
-		role?: MemberRole;
-	} & XOR<
-		{
-			communityId: CommunitiesId;
-		},
-		{
-			id: UsersId;
-		}
-	>
-) {
-	const { user, session } = await getLoginData({
-		allowedSessions: [AuthTokenType.signup],
-	});
-
-	if (!user && !props.allowUserCreation) {
-		captureException(new Error("User tried to signup without existing"), {
-			user: {
-				id: props.id,
-				firstName: props.firstName,
-				lastName: props.lastName,
-				email: props.email,
-			},
-		});
-		return {
-			error: "Something went wrong. Please try again later.",
-		};
-	}
-
-	if (user && user.id !== props.id) {
-		captureException(new Error("User tried to signup with a different id"), {
-			user: {
-				id: props.id,
-				firstName: props.firstName,
-				lastName: props.lastName,
-				email: props.email,
-			},
-		});
-		return {
-			error: "Something went wrong. Please try again later.",
-		};
-	}
-
+export const publicSignup = defineServerAction(async function signup(props: {
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+	redirect: string | null;
+	slug?: string;
+	role?: MemberRole;
+	communityId: CommunitiesId;
+}) {
 	const trx = db.transaction();
 
 	const newUser = await trx.execute(async (trx) => {
-		if (props.communityId !== undefined) {
-			const newUser = await addUser(
-				{
-					firstName: props.firstName,
-					lastName: props.lastName,
-					email: props.email,
-					slug:
-						props.slug ??
-						generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
-					passwordHash: await createPasswordHash(props.password),
-				},
-				trx
-			).executeTakeFirstOrThrow((err) => {
-				Sentry.captureException(err);
-				return new Error(`Unable to create user ${props.id}`);
-			});
-
-			// TODO: add to community
-			await addUserToCommunity({
-				userId: newUser.id,
-				communityId: props.communityId,
-				role: props.role ?? MemberRole.contributor,
-			});
-
-			// TODO: send verification email
-			return { ...newUser, needsVerification: false };
-		}
-
-		if (!user) {
-			throw new Error("Something went wrong. Expected user to exist");
-		}
-
-		const updatedUser = await updateUser(
+		const newUser = await addUser(
 			{
-				id: props.id,
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
+				slug:
+					props.slug ??
+					generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
+				passwordHash: await createPasswordHash(props.password),
 			},
 			trx
-		);
+		).executeTakeFirstOrThrow((err) => {
+			Sentry.captureException(err);
+			return new Error(`Unable to create user ${props.id}`);
+		});
 
-		await setUserPassword(
-			{
-				userId: props.id,
-				password: props.password,
-			},
-			trx
-		);
+		// TODO: add to community
+		await addUserToCommunity({
+			userId: newUser.id,
+			communityId: props.communityId,
+			role: props.role ?? MemberRole.contributor,
+		});
 
-		if (updatedUser.email !== user.email) {
-			return { ...updatedUser, needsVerification: true };
-			// TODO: send email verification
-		}
-
-		return {
-			...updatedUser,
-			needsVerification: false,
-		};
+		// TODO: send verification email
+		return { ...newUser, needsVerification: false };
 	});
 
 	if ("needsVerification" in newUser && newUser.needsVerification) {
@@ -348,11 +274,6 @@ export const publicSignup = defineServerAction(async function signup(
 	}
 
 	// log them in
-
-	const [invalidatedSessions, invalidatedTokens] = await Promise.all([
-		lucia.invalidateUserSessions(newUser.id),
-		invalidateTokensForUser(newUser.id, [AuthTokenType.signup]),
-	]);
 
 	// lucia authentication
 	const newSession = await lucia.createSession(newUser.id, { type: AuthTokenType.generic });
@@ -372,7 +293,7 @@ export const publicSignup = defineServerAction(async function signup(
 /**
  * flow for when a user has been invited to a community already
  */
-export const invitedSignup = defineServerAction(async function signup(props: {
+export const legacySignup = defineServerAction(async function signup(props: {
 	id: UsersId;
 	firstName: string;
 	lastName: string;
@@ -472,3 +393,12 @@ export const invitedSignup = defineServerAction(async function signup(props: {
 	}
 	await redirectUser();
 });
+
+export const invitedSignup = defineServerAction(async function signup(props: {
+	id: UsersId;
+	inviteToken: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+}) {});

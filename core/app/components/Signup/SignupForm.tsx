@@ -3,7 +3,7 @@
 import type { Static } from "@sinclair/typebox";
 
 import React, { useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
@@ -15,8 +15,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
-import { publicSignup } from "~/lib/authentication/actions";
-import { isClientException, useServerAction } from "~/lib/serverActions";
+import { legacySignup } from "~/lib/authentication/actions";
+import { useServerAction } from "~/lib/serverActions";
 
 registerFormats();
 
@@ -33,7 +33,7 @@ const formSchema = Type.Object({
 export function SignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
 }) {
-	const runSignup = useServerAction(publicSignup);
+	const runSignup = useServerAction(legacySignup);
 
 	const resolver = useMemo(() => typeboxResolver(formSchema), []);
 
@@ -46,7 +46,7 @@ export function SignupForm(props: {
 
 	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
 		await runSignup({
-			id: props.user?.id ?? "",
+			id: props.user?.id,
 			firstName: data.firstName,
 			lastName: data.lastName,
 			email: data.email,
