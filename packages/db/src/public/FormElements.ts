@@ -31,8 +31,6 @@ export interface FormElementsTable {
 
 	formId: ColumnType<FormsId, FormsId, FormsId>;
 
-	order: ColumnType<number | null, number | null, number | null>;
-
 	label: ColumnType<string | null, string | null, string | null>;
 
 	element: ColumnType<
@@ -71,7 +69,6 @@ export const formElementsSchema = z.object({
 	type: elementTypeSchema,
 	fieldId: pubFieldsIdSchema.nullable(),
 	formId: formsIdSchema,
-	order: z.number().nullable(),
 	label: z.string().nullable(),
 	element: structuralFormElementSchema.nullable(),
 	content: z.string().nullable(),
@@ -89,7 +86,6 @@ export const formElementsInitializerSchema = z.object({
 	type: elementTypeSchema,
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema,
-	order: z.number().optional().nullable(),
 	label: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),
@@ -107,7 +103,6 @@ export const formElementsMutatorSchema = z.object({
 	type: elementTypeSchema.optional(),
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional(),
-	order: z.number().optional().nullable(),
 	label: z.string().optional().nullable(),
 	element: structuralFormElementSchema.optional().nullable(),
 	content: z.string().optional().nullable(),

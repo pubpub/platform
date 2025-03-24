@@ -76,8 +76,7 @@ export const getPubTypesForCommunity = async (
 		getPubTypeBase()
 			.where("pub_types.communityId", "=", communityId)
 			.orderBy(orderBy, orderDirection)
-			.limit(limit)
-			.offset(offset)
+			.$if(limit !== 0, (qb) => qb.limit(limit).offset(offset))
 	).execute();
 
 export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>;

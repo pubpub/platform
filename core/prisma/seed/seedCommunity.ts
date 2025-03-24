@@ -7,7 +7,6 @@ import type {
 
 import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
-import mudder from "mudder";
 
 import type { ProcessedPub } from "contracts";
 import type {
@@ -46,6 +45,7 @@ import type { actions } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
+import { findRanksBetween } from "~/lib/rank";
 import { createPubRecursiveNew } from "~/lib/server";
 import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { insertForm } from "~/lib/server/form";
@@ -283,6 +283,10 @@ export type FormInitializer<
 			slug?: string;
 			pubType: PubType;
 			members?: (keyof U)[];
+			/**
+			 * @default false
+			 */
+			isDefault?: boolean;
 			elements: (
 				| FormElementInitializer<PF>
 				| {
@@ -1061,6 +1065,7 @@ export async function seedCommunity<
 									pubTypeId: createdPubTypes.find(
 										(pubType) => pubType.name === formInput.pubType
 									)!.id,
+									isDefault: formInput.isDefault,
 								}))
 							)
 							.returningAll()
@@ -1070,11 +1075,9 @@ export async function seedCommunity<
 							.insertInto("form_elements")
 							.values((eb) =>
 								formList.flatMap(([formTitle, formInput], idx) => {
-									const ranks = mudder.base62.mudder(
-										"",
-										"",
-										formInput.elements.length
-									);
+									const ranks = findRanksBetween({
+										numberOfRanks: formInput.elements.length,
+									});
 									return formInput.elements.map((elementInput, elementIndex) => ({
 										formId: eb
 											.selectFrom("form")
@@ -1085,7 +1088,6 @@ export async function seedCommunity<
 												"=",
 												formInput.slug ?? slugifyString(formTitle)
 											),
-
 										type: elementInput.type,
 										fieldId: createdPubFields.find(
 											(pubField) => pubField.name === elementInput.field

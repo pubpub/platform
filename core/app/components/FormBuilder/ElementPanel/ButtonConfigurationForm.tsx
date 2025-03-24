@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import mudder from "mudder";
 import { useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
@@ -29,6 +28,7 @@ import { Input } from "ui/input";
 import { cn } from "utils";
 
 import type { FormBuilderSchema } from "../types";
+import { findRanksBetween } from "~/lib/rank";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { useFormBuilder } from "../FormBuilderContext";
 import { ButtonOption } from "../SubmissionSettings";
@@ -103,11 +103,10 @@ export const ButtonConfigurationForm = ({
 	const onSubmit = (values: z.infer<typeof schema>) => {
 		const index = buttonIndex === -1 ? numElements : buttonIndex;
 		update(index, {
-			rank: mudder.base62.mudder(
-				elements[index - 1]?.rank ?? "",
-				elements[index + 1]?.rank ?? "",
-				1
-			)[0],
+			rank: findRanksBetween({
+				start: elements[index - 1]?.rank ?? "",
+				end: elements[index + 1]?.rank ?? "",
+			})[0],
 			type: ElementType.button,
 			elementId: button?.elementId,
 			label: values.label,

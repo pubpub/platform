@@ -1,51 +1,75 @@
 "use client";
 
+import type { DragEndEvent } from "@dnd-kit/core";
 import type { FieldErrors } from "react-hook-form";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import {
+	SortableContext,
+	sortableKeyboardCoordinates,
+	useSortable,
+	verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
-import type { JsonValue } from "contracts";
 import type { InputComponent, PubsId } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
+import { GripVertical, Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
 
+import type { ContextEditorPub } from "../../ContextEditor/ContextEditorContext";
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
-import type { ElementProps } from "../types";
-import type { GetPubsResult } from "~/lib/server";
+import type { ElementProps, RelatedFormValues, SingleFormValues } from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
+import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
 const RelatedPubBlock = ({
+	id,
 	pub,
 	onRemove,
 	valueComponentProps,
 	slug,
 	onBlur,
 }: {
-	pub: GetPubsResult[number];
+	id: string;
+	pub: ContextEditorPub;
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: string;
 	onBlur?: () => void;
 }) => {
+	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+		id,
+	});
+
+	const style = {
+		transform: CSS.Translate.toString(transform),
+		transition,
+	};
 	return (
-		<div className="flex items-center justify-between rounded border border-l-[12px] border-l-emerald-100 p-3">
+		<div
+			ref={setNodeRef}
+			style={style}
+			className="flex items-center justify-start rounded border border-l-[12px] border-l-emerald-100 p-3"
+		>
 			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
 			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
 				<span className="font-semibold">{getPubTitle(pub)}</span>
 				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
 			</div>
-			<div>
+			<div className="ml-auto">
 				<Button
 					type="button"
 					variant="ghost"
@@ -56,30 +80,35 @@ const RelatedPubBlock = ({
 					<Trash size={24} />
 				</Button>
 			</div>
+			<div>
+				<Button
+					type="button"
+					aria-label="Drag handle"
+					variant="ghost"
+					className="p-2"
+					{...listeners}
+					{...attributes}
+				>
+					<GripVertical size={24} className="text-neutral-400" />
+				</Button>
+			</div>
 		</div>
 	);
 };
 
-type FieldValue = { value: JsonValue; relatedPubId: PubsId };
-type FormValue = {
-	[slug: string]: FieldValue[];
-};
-type FormValueSingle = {
-	[slug: string]: JsonValue;
-};
-
 const parseRelatedPubValuesSlugError = (
 	slug: string,
-	formStateErrors: FieldErrors<FormValueSingle> | FieldErrors<FormValue>
+	formStateErrors: FieldErrors<SingleFormValues> | FieldErrors<RelatedFormValues>
 ) => {
 	const [baseSlug, index] = slug.split(".");
 	const indexNumber = index ? parseInt(index) : undefined;
 
 	if (!indexNumber || isNaN(indexNumber)) {
-		const baseError = (formStateErrors as FieldErrors<FormValueSingle>)[baseSlug];
+		const baseError = (formStateErrors as FieldErrors<SingleFormValues>)[baseSlug];
 		return baseError;
 	}
-	const valueError = (formStateErrors as FieldErrors<FormValue>)[baseSlug]?.[indexNumber]?.value;
+	const valueError = (formStateErrors as FieldErrors<RelatedFormValues>)[baseSlug]?.[indexNumber]
+		?.value;
 	return valueError;
 };
 
@@ -100,7 +129,7 @@ export const ConfigureRelatedValue = ({
 			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
-	const { watch, formState } = useFormContext<FormValue | FormValueSingle>();
+	const { watch, formState } = useFormContext<RelatedFormValues | SingleFormValues>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
 	const value = watch(slug);
 	const showValue = value != null && value !== "";
@@ -161,11 +190,37 @@ export const RelatedPubsElement = ({
 }) => {
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
-	const { control } = useFormContext<FormValue>();
+	const { control, getValues, setValue } = useFormContext<
+		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
+	>();
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
 
-	const { fields, append, remove } = useFieldArray({ control, name: slug });
+	const { fields, append, move, update, remove } = useFieldArray({ control, name: slug });
+
+	const sensors = useSensors(
+		useSensor(PointerSensor),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
+
+	// Update ranks and rhf field array position when elements are dragged
+	const handleDragEnd = useCallback(
+		(event: DragEndEvent) => {
+			const changes = getRankAndIndexChanges(event, fields);
+			if (changes) {
+				// move doesn't trigger a rerender, so it's safe to chain these calls
+				move(changes.activeIndex, changes.overIndex);
+				const { id, ...movedField } = fields[changes.activeIndex];
+				update(changes.overIndex, {
+					...movedField,
+					rank: changes.rank,
+				});
+			}
+		},
+		[fields]
+	);
 
 	Value.Default(relationBlockConfigSchema, config);
 	if (!Value.Check(relationBlockConfigSchema, config)) {
@@ -178,7 +233,7 @@ export const RelatedPubsElement = ({
 				acc[pub.id] = pub;
 				return acc;
 			},
-			{} as Record<string, GetPubsResult[number]>
+			{} as Record<string, ContextEditorPub>
 		);
 	}, [pubs]);
 
@@ -193,12 +248,21 @@ export const RelatedPubsElement = ({
 				control={control}
 				name={slug}
 				render={({ field }) => {
-					const handleAddPubs = (newPubs: GetPubsResult) => {
-						const values = newPubs.map((p) => ({ relatedPubId: p.id, value: null }));
+					const handleAddPubs = (newPubs: ContextEditorPub[]) => {
+						const ranks = findRanksBetween({
+							start: field.value[field.value.length - 1]?.rank,
+							numberOfRanks: newPubs.length,
+						});
+						const values = newPubs.map((p, i) => ({
+							relatedPubId: p.id,
+							value: null,
+							rank: ranks[i],
+						}));
 						for (const value of values) {
 							append(value);
 						}
 					};
+
 					return (
 						<FormItem data-testid={`related-pubs-${label}`}>
 							{showPanel && (
@@ -219,25 +283,52 @@ export const RelatedPubsElement = ({
 									>
 										{fields.length ? (
 											<div className="flex flex-col gap-2">
-												{fields.map((item, index) => {
-													const handleRemovePub = () => {
-														remove(index);
-													};
-													const innerSlug =
-														`${slug}.${index}.value` as const;
-													return (
-														<RelatedPubBlock
-															key={item.id}
-															pub={pubsById[item.relatedPubId]}
-															onRemove={handleRemovePub}
-															slug={innerSlug}
-															valueComponentProps={
-																valueComponentProps
-															}
-															onBlur={field.onBlur}
-														/>
-													);
-												})}
+												<DndContext
+													modifiers={[
+														restrictToVerticalAxis,
+														restrictToParentElement,
+													]}
+													onDragEnd={handleDragEnd}
+													sensors={sensors}
+												>
+													<SortableContext
+														items={fields}
+														strategy={verticalListSortingStrategy}
+													>
+														{fields.map(({ id, ...item }, index) => {
+															const handleRemovePub = () => {
+																remove(index);
+																if (item.valueId) {
+																	setValue("deleted", [
+																		...getValues("deleted"),
+																		{
+																			relatedPubId:
+																				item.relatedPubId,
+																			slug,
+																		},
+																	]);
+																}
+															};
+															const innerSlug =
+																`${slug}.${index}.value` as const;
+															return (
+																<RelatedPubBlock
+																	key={id}
+																	id={id}
+																	pub={
+																		pubsById[item.relatedPubId]
+																	}
+																	onRemove={handleRemovePub}
+																	slug={innerSlug}
+																	valueComponentProps={
+																		valueComponentProps
+																	}
+																	onBlur={field.onBlur}
+																/>
+															);
+														})}
+													</SortableContext>
+												</DndContext>
 											</div>
 										) : null}
 									</MultiBlock>

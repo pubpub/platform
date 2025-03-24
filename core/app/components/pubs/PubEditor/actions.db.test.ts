@@ -110,11 +110,17 @@ describe("updatePub", () => {
 			name: "Can update if all permissions are satisfied",
 			loginUser: { id: crypto.randomUUID() as UsersId },
 			userRole: MemberRole.admin,
-			expected: [
-				{
-					value: "new title",
-				},
-			],
+			expected: {
+				values: [
+					{
+						fieldName: "Title",
+						rank: null,
+						relatedPubId: null,
+						schemaName: "String",
+						value: "new title",
+					},
+				],
+			},
 		},
 	])("$name", async ({ loginUser, userRole, expected }) => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
@@ -169,6 +175,7 @@ describe("updatePub", () => {
 				[`${community.slug}:title`]: "new title",
 			},
 			continueOnValidationError: false,
+			deleted: [],
 		});
 		expect(result).toMatchObject(expected);
 	});

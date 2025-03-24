@@ -1,4 +1,3 @@
-import mudder from "mudder";
 import { useFormContext } from "react-hook-form";
 import { defaultComponent } from "schemas";
 
@@ -9,6 +8,7 @@ import { usePubFieldContext } from "ui/pubFields";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { FormElementData, PanelState } from "../types";
+import { findRanksBetween } from "~/lib/rank";
 import { FieldIcon } from "../FieldIcon";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
@@ -49,7 +49,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						fieldId: field.id,
 						required: true,
 						type: ElementType.pubfield,
-						rank: mudder.base62.mudder(elements[elementsCount - 1]?.rank, "", 1)[0],
+						rank: findRanksBetween({ start: elements[elementsCount - 1]?.rank })[0],
 						configured: false,
 						config: field.isRelation
 							? {
@@ -137,11 +137,9 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 									addElement({
 										element: elementType,
 										type: ElementType.structural,
-										rank: mudder.base62.mudder(
-											elements[elementsCount - 1]?.rank,
-											"",
-											1
-										)[0],
+										rank: findRanksBetween({
+											start: elements[elementsCount - 1]?.rank,
+										})[0],
 										configured: false,
 									});
 									dispatch({

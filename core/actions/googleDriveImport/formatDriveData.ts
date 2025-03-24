@@ -1,10 +1,9 @@
 // import { writeFile } from "fs/promises";
 import type { Root } from "hast";
 
-import { defaultMarkdownSerializer } from "prosemirror-markdown";
+import { defaultMarkdownSerializer, MarkdownSerializer } from "prosemirror-markdown";
 import { Node } from "prosemirror-model";
 import { rehype } from "rehype";
-import rehypeFormat from "rehype-format";
 import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
@@ -64,7 +63,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 					const originalAssetUrl = node.properties[propertyKey];
 					if (originalAssetUrl) {
 						const urlObject = new URL(originalAssetUrl);
-						if (urlObject.hostname !== "pubpub.org") {
+						if (!urlObject.hostname.endsWith(".pubpub.org")) {
 							assetUrls[originalAssetUrl] = "";
 						}
 					}
@@ -81,10 +80,15 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 								assetData.buffer,
 								{ contentType: assetData.mimetype }
 							);
-							assetUrls[originalAssetUrl] = uploadedUrl.replace(
-								"assets.app.pubpub.org.s3.us-east-1.amazonaws.com",
-								"assets.app.pubpub.org"
-							);
+							assetUrls[originalAssetUrl] = uploadedUrl
+								.replace(
+									"assets.app.pubpub.org.s3.us-east-1.amazonaws.com",
+									"assets.app.pubpub.org"
+								)
+								.replace(
+									"s3.us-east-1.amazonaws.com/assets.app.pubpub.org",
+									"assets.app.pubpub.org"
+								);
 						} else {
 							assetUrls[originalAssetUrl] = originalAssetUrl;
 						}
@@ -95,7 +99,7 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 			);
 
 			visit(tree, "element", (node: any) => {
-				const hasSrc = ["img", "video", "audio"].includes(node.tagName);
+				const hasSrc = ["img", "video", "audio", "source"].includes(node.tagName);
 				const isDownload =
 					node.tagName === "a" && node.properties.className === "file-button";
 				if (hasSrc || isDownload) {
@@ -137,7 +141,6 @@ const processHtml = async (html: string): Promise<string> => {
 		.use(appendFigureAttributes) /* Assumes figures are <figure> elements */
 		.use(removeEmptyFigCaption)
 		.use(removeDescription)
-		.use(rehypeFormat)
 		.process(html);
 	return String(result);
 };
@@ -258,7 +261,14 @@ export const formatDriveData = async (
 					const prosemirrorToMarkdown = (content: any): string => {
 						const convertedContent = convertDiscussionContent(content);
 						const doc = Node.fromJSON(schema, convertedContent);
-						return defaultMarkdownSerializer.serialize(doc);
+						const mdSerializer = new MarkdownSerializer(
+							defaultMarkdownSerializer.nodes,
+							{
+								...defaultMarkdownSerializer.marks,
+								sup: { open: "^", close: "^", mixable: true },
+							}
+						);
+						return mdSerializer.serialize(doc);
 					};
 					const markdownContent = prosemirrorToMarkdown(comment.content);
 					const commentObject: any = {
@@ -299,10 +309,10 @@ export const formatDriveData = async (
 	const output = {
 		pubDescription: latestPubDescription,
 		pubHtml: String(formattedPubHtmlWithAssets),
+		// pubHtml: String(dataFromDrive.pubHtml),
 		versions,
 		discussions: comments,
 	};
-	// console.log("Got output");
 	// await writeFile("output.json", JSON.stringify(output, null, 2));
 	return output;
 };

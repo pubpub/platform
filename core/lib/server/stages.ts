@@ -172,8 +172,5 @@ export const movePub = (pubId: PubsId, stageId: StagesId, trx = db) => {
 			.with("leave_stage", (db) => db.deleteFrom("PubsInStages").where("pubId", "=", pubId))
 			.insertInto("PubsInStages")
 			.values([{ pubId, stageId }])
-			// Without this on conflict clause, the db errors if this function is called with the
-			// stageId the pub already belongs to
-			.onConflict((oc) => oc.doNothing())
 	);
 };

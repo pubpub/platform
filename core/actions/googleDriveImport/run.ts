@@ -84,7 +84,7 @@ export const run = defineRun<typeof action>(
 						(value) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
 					const publicationDate: Date = publicationDateField
-						? (publicationDateField.value as Date)
+						? (publicationDateField.value as unknown as Date)
 						: new Date(values.relatedPub!.createdAt);
 					return { [`${publicationDate.toISOString()}`]: values.relatedPubId };
 				});
@@ -102,7 +102,7 @@ export const run = defineRun<typeof action>(
 						(value) => value.fieldSlug === `${communitySlug}:publication-date`
 					)[0];
 					const publicationDate: Date = publicationDateField
-						? (publicationDateField.value as Date)
+						? (publicationDateField.value as unknown as Date)
 						: new Date(values.relatedPub!.createdAt);
 					return publicationDate.toISOString();
 				});
@@ -220,9 +220,13 @@ export const run = defineRun<typeof action>(
 						},
 					});
 				}
-				// If there's html but no version yet exists, create one
+				// If there's html but no version on platform yet, create one.
+				// Unless, there are existing legacy Versions which we'll be creating,
+				// in which one of those is identical to formattedData.pubHtml, so we skip
+				// to avoid a duplicate version.
 			} else {
-				if (formattedData.pubHtml) {
+				const hasLegacyVersions = !!formattedData.versions.length;
+				if (!hasLegacyVersions && formattedData.pubHtml) {
 					relations.push({
 						slug: `${communitySlug}:versions`,
 						value: null,
