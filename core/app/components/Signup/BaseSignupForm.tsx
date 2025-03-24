@@ -15,12 +15,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
-import { legacySignup } from "~/lib/authentication/actions";
-import { useServerAction } from "~/lib/serverActions";
-
 registerFormats();
 
-const formSchema = Type.Object({
+export const formSchema = Type.Object({
 	firstName: Type.String(),
 	lastName: Type.String(),
 	email: Type.String({ format: "email" }),
@@ -30,11 +27,10 @@ const formSchema = Type.Object({
 	}),
 });
 
-export function SignupForm(props: {
+export function BaseSignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
+	onSubmit: (data: Static<typeof formSchema>) => Promise<void>;
 }) {
-	const runSignup = useServerAction(legacySignup);
-
 	const resolver = useMemo(() => typeboxResolver(formSchema), []);
 
 	const form = useForm<Static<typeof formSchema>>({
@@ -42,22 +38,9 @@ export function SignupForm(props: {
 		defaultValues: { ...(props?.user ?? {}), lastName: props.user?.lastName ?? undefined },
 	});
 
-	const searchParams = useSearchParams();
-
-	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
-		await runSignup({
-			id: props.user?.id,
-			firstName: data.firstName,
-			lastName: data.lastName,
-			email: data.email,
-			password: data.password,
-			redirect: searchParams.get("redirectTo"),
-		});
-	}, []);
-
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(handleSubmit)}>
+			<form onSubmit={form.handleSubmit(props.onSubmit)}>
 				<Card className="mx-auto max-w-sm">
 					<CardHeader>
 						<CardTitle className="text-xl">Sign Up</CardTitle>

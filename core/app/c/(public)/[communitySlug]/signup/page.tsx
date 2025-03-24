@@ -1,6 +1,6 @@
 import { AuthTokenType } from "db/public";
 
-import { SignupForm } from "~/app/components/SignUp/SignupForm";
+import { LegacySignupForm } from "~/app/components/Signup/LegacySignupForm";
 import { getLoginData } from "~/lib/authentication/loginData";
 
 export default async function Page() {
@@ -11,7 +11,7 @@ export default async function Page() {
 
 	return (
 		<div className="m-auto max-w-lg">
-			<SignupForm user={user} />
+			<LegacySignupForm user={user} />
 		</div>
 	);
 }
