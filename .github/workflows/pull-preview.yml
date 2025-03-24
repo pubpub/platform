@@ -16,6 +16,9 @@ on:
             AWS_REGION:
                 required: true
                 type: string
+            ALWAYS_ON:
+                required: false
+                type: string
         secrets:
             AWS_ACCESS_KEY_ID:
                 required: true
@@ -67,6 +70,7 @@ jobs:
                   compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
                   default_port: 443
                   instance_type: small
+                  always_on: ${{ inputs.ALWAYS_ON }}
                   ports: 80,443,9001
                   registries: docker://AWS:${{steps.ecrtoken.outputs.value}}@246372085946.dkr.ecr.us-east-1.amazonaws.com
                   github_token: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
