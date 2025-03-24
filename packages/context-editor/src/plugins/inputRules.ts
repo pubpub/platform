@@ -1,5 +1,5 @@
 import type { MarkType, NodeType, Schema } from "prosemirror-model";
-import type { EditorState, Transaction } from "prosemirror-state";
+import type { EditorState } from "prosemirror-state";
 
 import {
 	makeBlockMathInputRule,
@@ -16,6 +16,7 @@ import {
 import { Fragment } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
+import { createLinkRuleHandler, emailOrUriRegexBase, markdownLinkRegex } from "../utils/links";
 
 const abstract = {
 	type: "doc",
@@ -58,48 +59,7 @@ const blockMathRule = (nodeType: NodeType) =>
 	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType);
 const codeBlockRule = (nodeType: NodeType) => textblockTypeInputRule(/^```$/, nodeType);
 
-const emailOrUriRegexBase =
-	"(?<emailOrUri>(?:(?:(https|http|ftp)+)://)?(?:\\S+(?::\\S*)?(?<atSign>@))?(?:(?:([a-z0-9][a-z0-9-]*)?[a-z0-9]+)(?:\\.(?:[a-z0-9-])*[a-z0-9]+)*(?:\\.(?:[a-z]{2,})(:\\d{1,5})?))(?:/[^\\s]*)?)";
-
-// Export a version of the regex and handler so that we can reuse this logic in a custom command
-// mapped to the `enter` key, because input rules don't work across nodes
-export const EMAIL_OR_URI_REGEX = new RegExp(`${emailOrUriRegexBase}$`);
-
 const EMAIL_OR_URI_REGEX_WITH_SPACE = new RegExp(`${emailOrUriRegexBase}(?<whitespace>\\s)$`);
-
-// Returns a function to determine if the matched content is a url or an email and add a link mark
-// to it if so
-export const createLinkRuleHandler = (
-	markType: MarkType,
-	transaction?: Transaction,
-	appendWhitespace = false
-) => {
-	return (state: EditorState, match: RegExpMatchArray, start: number, end: number) => {
-		const resolvedStart = state.doc.resolve(start);
-		const tr = transaction ?? state.tr;
-		if (!resolvedStart.parent.type.allowsMarkType(markType)) {
-			return tr;
-		}
-
-		if (!match.groups) {
-			return tr;
-		}
-		const emailOrUri = match.groups.emailOrUri;
-
-		const href = `${match.groups.atSign ? "mailto:" : ""}${emailOrUri}`;
-
-		const link = state.schema.text(emailOrUri, [state.schema.mark(markType, { href })]);
-
-		const content = [link];
-
-		if (appendWhitespace) {
-			const whitespace = state.schema.text(match.groups.whitespace);
-			content.push(whitespace);
-		}
-
-		return tr.replaceWith(start, end, content);
-	};
-};
 
 // Given a link mark type, returns an input rule that wraps emails and URLs in link marks.
 // Typing www.example.com in the editor will produce <a href="www.example.com">www.example.com</a>
@@ -110,17 +70,14 @@ const linkRule = (markType: MarkType) =>
 // Rule to recognize markdown link syntax and return a link:
 // [text](https://www.example.com) -> <a href="https://www.example.com">text</a>
 const markdownLinkRule = (markType: MarkType) =>
-	new InputRule(
-		new RegExp(`\\[([^\\]]+)\\]\\((${emailOrUriRegexBase})\\)`),
-		(state, match, start, end) => {
-			const [_, text, url] = match;
-			const fragment = Fragment.fromArray([
-				state.schema.text(text, [state.schema.mark(markType, { href: url })]),
-				state.schema.text(" "),
-			]);
-			return state.tr.replaceWith(start, end, fragment);
-		}
-	);
+	new InputRule(markdownLinkRegex, (state, match, start, end) => {
+		const [_, text, url] = match;
+		const fragment = Fragment.fromArray([
+			state.schema.text(text, [state.schema.mark(markType, { href: url })]),
+			state.schema.text(" "),
+		]);
+		return state.tr.replaceWith(start, end, fragment);
+	});
 
 export default (schema: Schema) => {
 	const rules = [

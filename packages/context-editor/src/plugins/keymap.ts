@@ -7,13 +7,15 @@ import {
 	liftEmptyBlock,
 	newlineInCode,
 	splitBlock,
-	toggleMark,
 } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
 import { TextSelection } from "prosemirror-state";
 
 import type { Dispatch } from "../commands/types";
-import { createLinkRuleHandler, EMAIL_OR_URI_REGEX } from "./inputRules";
+import { toggleMarkExpandEmpty } from "../commands/marks";
+import { createLinkRuleHandler, emailOrUriRegexBase } from "../utils/links";
+
+const EMAIL_OR_URI_REGEX = new RegExp(`${emailOrUriRegexBase}$`);
 
 export default (schema: Schema) => {
 	const keys: Record<string, Command> = {};
@@ -21,7 +23,9 @@ export default (schema: Schema) => {
 		keys[key] = cmd;
 	};
 
-	bind("Mod-k", toggleMark(schema.marks.link));
+	bind("Mod-k", (state, dispatch) =>
+		toggleMarkExpandEmpty({ state, dispatch, type: schema.marks.link })
+	);
 	// This command runs the link input rule (converting emails and urls into links) whenever the
 	// user presses enter. Adding this to our enter handler is a hack to make sure the input rule
 	// behavior still works even though input rules don't work across nodes (see
@@ -47,7 +51,7 @@ export default (schema: Schema) => {
 		}
 
 		if (dispatch) {
-			// Call our custom split block command, then add the link marks as part of the same
+			// Call the standard split block command, then add the link marks as part of the same
 			// transaction. This should be safe to do without mapping the start and end positions
 			// because the changes caused by splitBlock will all be after the cursor
 			splitBlock(state, (tr) => {
