@@ -66,7 +66,6 @@ const menuBlocks: MenuItem[][] = [
 			command: emToggle,
 		},
 	],
-	[{ key: "link", name: "Link", icon: <Link {...iconProps} />, command: linkToggle }],
 	[
 		{
 			key: "horizontal_rule",
@@ -76,6 +75,7 @@ const menuBlocks: MenuItem[][] = [
 		},
 	],
 	[
+		{ key: "link", name: "Link", icon: <Link {...iconProps} />, command: linkToggle },
 		{
 			key: "blockquote",
 			name: "Blockquote",
