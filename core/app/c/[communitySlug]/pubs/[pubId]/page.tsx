@@ -19,10 +19,11 @@ import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
-import { getPubTitle } from "~/lib/pubs";
+import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getForm } from "~/lib/server/form";
 import { selectCommunityMembers } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import {
@@ -130,17 +131,30 @@ export default async function Page(props: {
 			depth: 3,
 		}
 	);
-
-	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
-
-	const [actions, communityMembers, communityStages] = await Promise.all([
-		actionsPromise,
-		communityMembersPromise,
-		communityStagesPromise,
-	]);
 	if (!pub) {
 		return null;
 	}
+
+	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+
+	const [actions, communityMembers, communityStages, form, withExtraPubValues] =
+		await Promise.all([
+			actionsPromise,
+			communityMembersPromise,
+			communityStagesPromise,
+			getForm({
+				communityId: community.id,
+				pubTypeId: pub.pubType.id,
+			}).executeTakeFirstOrThrow(
+				() => new Error(`Could not find a form for pubtype ${pub.pubType.name}`)
+			),
+			userCan(
+				Capabilities.seeExtraPubValues,
+				{ type: MembershipType.pub, pubId: pub.id },
+				user.id
+			),
+		]);
+
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
 	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
 	const pageContext = {
@@ -149,6 +163,7 @@ export default async function Page(props: {
 	};
 
 	const { stage, ...slimPub } = pub;
+	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
 	return (
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
@@ -176,7 +191,7 @@ export default async function Page(props: {
 
 			<div className="flex flex-wrap space-x-4">
 				<div className="flex-1">
-					<PubValues pub={pub} />
+					<PubValues pub={pubByForm} />
 				</div>
 				<div className="flex w-96 flex-col gap-4 rounded-lg bg-gray-50 p-4 shadow-inner">
 					{pub.stage ? (

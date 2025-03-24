@@ -283,6 +283,10 @@ export type FormInitializer<
 			slug?: string;
 			pubType: PubType;
 			members?: (keyof U)[];
+			/**
+			 * @default false
+			 */
+			isDefault?: boolean;
 			elements: (
 				| FormElementInitializer<PF>
 				| {
@@ -1060,6 +1064,7 @@ export async function seedCommunity<
 									pubTypeId: createdPubTypes.find(
 										(pubType) => pubType.name === formInput.pubType
 									)!.id,
+									isDefault: formInput.isDefault,
 								}))
 							)
 							.returningAll()
@@ -1082,7 +1087,6 @@ export async function seedCommunity<
 												"=",
 												formInput.slug ?? slugifyString(formTitle)
 											),
-
 										type: elementInput.type,
 										fieldId: createdPubFields.find(
 											(pubField) => pubField.name === elementInput.field
