@@ -34,8 +34,9 @@ const makeSourcesAndDestinations = (props: Props) => {
 	}
 
 	const stagesById = makeStagesById(props.communityStages);
-	const sources = stagesById[props.stageId].moveConstraintSources.map((mc) => stagesById[mc.id]);
-	const destinations = stagesById[props.stageId].moveConstraints.map((mc) => stagesById[mc.id]);
+	const stage = stagesById[props.stageId];
+	const sources = stage ? stage.moveConstraintSources.map((mc) => stagesById[mc.id]) : [];
+	const destinations = stage ? stage.moveConstraints.map((mc) => stagesById[mc.id]) : [];
 
 	return {
 		sources,

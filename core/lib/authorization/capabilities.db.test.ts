@@ -111,6 +111,7 @@ describe("Community membership grants appropriate capabilities", async () => {
 		Capabilities.createRelatedPub,
 		Capabilities.editPubWithForm,
 		Capabilities.runAction,
+		Capabilities.seeExtraPubValues,
 	] as const;
 
 	const editorPubInabilities = pubCapabilities.filter(
@@ -135,11 +136,21 @@ describe("Community membership grants appropriate capabilities", async () => {
 		).toBe(expectation === "can");
 	});
 
+	const editorStageCapabilities = [
+		Capabilities.viewStage,
+		Capabilities.seeExtraPubValues,
+	] as const;
+	const editorStageInabilities = stageCapabilities.filter(
+		(capability) =>
+			// The type of Array.prototype.includes is so strict as to make the function useless here, so we need to do this cast
+			!editorStageCapabilities.includes(
+				capability as (typeof editorStageCapabilities)[number]
+			)
+	);
+
 	test.each([
-		["can", Capabilities.viewStage],
-		...stageCapabilities
-			.filter((capability) => capability !== Capabilities.viewStage)
-			.map((capability) => ["can't", capability] as const),
+		...editorStageCapabilities.map((capability) => ["can", capability] as const),
+		...editorStageInabilities.map((capability) => ["can't", capability] as const),
 	] as const)("Community editor %s %s", async (expectation, capability) => {
 		expect(
 			await userCan(
