@@ -326,8 +326,9 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 			createdStageId = result.stageId;
 		}
 
+		console.log(body.members);
 		if (body.members && Object.keys(body.members).length) {
-			await trx
+			const res = await trx
 				.insertInto("pub_memberships")
 				.values(
 					Object.entries(body.members).map(([userId, role]) => ({
@@ -336,7 +337,11 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						role,
 					}))
 				)
+				// if the user is already a member of the pub, do nothing
+				.onConflict((eb) => eb.columns(["pubId", "userId"]).doNothing())
 				.execute();
+
+			console.log("hey", res);
 		}
 		const rankedValues = await getRankedValues({
 			pubId: newPub.id,

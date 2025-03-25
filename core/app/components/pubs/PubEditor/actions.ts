@@ -2,7 +2,7 @@
 
 import type { JsonValue } from "contracts";
 import type { PubsId, StagesId, UsersId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -14,14 +14,18 @@ import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { addMemberToForm, userHasPermissionToForm } from "~/lib/server/form";
+import { addMemberToForm, getForm, userHasPermissionToForm } from "~/lib/server/form";
 import { deletePub, normalizePubValues } from "~/lib/server/pub";
 import { PubOp } from "~/lib/server/pub-op";
 
 type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
-	props: CreatePubRecursiveProps & { formSlug?: string; addUserToForm?: boolean }
+	props: CreatePubRecursiveProps & {
+		formSlug?: string;
+		addUserToForm?: boolean;
+		addUserToPub?: boolean;
+	}
 ) {
 	const { formSlug, addUserToForm, ...createPubProps } = props;
 	const loginData = await getLoginData();
@@ -31,16 +35,21 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 	const { user } = loginData;
 
-	const canCreatePub = await userCan(
-		Capabilities.createPub,
-		{ type: MembershipType.community, communityId: props.communityId },
-		user.id
-	);
-	const canCreateFromForm = formSlug
-		? await userHasPermissionToForm({ formSlug, userId: loginData.user.id })
-		: false;
+	const [form, canCreatePub, canCreateFromForm] = await Promise.all([
+		formSlug
+			? await getForm({ communityId: props.communityId, slug: formSlug }).executeTakeFirst()
+			: null,
+		userCan(
+			Capabilities.createPub,
+			{ type: MembershipType.community, communityId: props.communityId },
+			user.id
+		),
+		formSlug ? userHasPermissionToForm({ formSlug, userId: loginData.user.id }) : false,
+	]);
 
-	if (!canCreatePub && !canCreateFromForm) {
+	const isPublicForm = form?.access === FormAccessType.public;
+
+	if (!canCreatePub && !canCreateFromForm && !isPublicForm) {
 		return ApiError.UNAUTHORIZED;
 	}
 
@@ -49,20 +58,41 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	});
 
 	try {
-		const createdPub = await createPubRecursiveNew({ ...createPubProps, lastModifiedBy });
+		const trx = db.transaction();
 
-		if (addUserToForm && formSlug) {
-			await addMemberToForm({
-				communityId: props.communityId,
-				userId: user.id,
-				slug: formSlug,
-				pubId: createdPub.id,
+		const result = await trx.execute(async (trx) => {
+			const createdPub = await createPubRecursiveNew({
+				...createPubProps,
+				body: {
+					...createPubProps.body,
+					// adds user to the pub
+					// TODO: this should be configured on the form
+					...(props.addUserToPub
+						? { members: { [user.id]: MemberRole.contributor } }
+						: {}),
+				},
+				lastModifiedBy,
+				trx,
 			});
-		}
-		return {
-			success: true,
-			report: `Successfully created a new Pub`,
-		};
+
+			if (addUserToForm && formSlug) {
+				await addMemberToForm(
+					{
+						communityId: props.communityId,
+						userId: user.id,
+						slug: formSlug,
+						pubId: createdPub.id,
+					},
+					trx
+				);
+			}
+			return {
+				success: true,
+				report: `Successfully created a new Pub`,
+			};
+		});
+
+		return result;
 	} catch (error) {
 		logger.error(error);
 		return {
