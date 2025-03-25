@@ -328,11 +328,11 @@ export const PubEditorClient = ({
 			});
 
 			const newStageId =
-				stageIdFromForm !== stageId
+				(stageIdFromForm !== stageId
 					? stageIdFromForm
 					: stageIdFromButtonConfig !== stageId
 						? stageIdFromButtonConfig
-						: undefined;
+						: undefined) ?? undefined;
 
 			let result;
 			if (isUpdating) {
