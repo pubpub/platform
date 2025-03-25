@@ -10,13 +10,13 @@ import { getColumns } from "./columns";
 
 export const PubsDataTableClient = ({
 	promises,
+	perPage,
 }: {
 	promises: Promise<[number, PubForTable[]]>;
+	perPage: number;
 }) => {
-	const page = 1;
-
-	const [pageCount, data] = React.use(promises);
-
+	const [total, data] = React.use(promises);
+	const pageCount = Math.ceil(total / perPage);
 	const [rowAction, setRowAction] = useState<DataTableRowAction<PubForTable> | null>(null);
 	const columns = useMemo(() => getColumns({ setRowAction }), []);
 
@@ -34,35 +34,5 @@ export const PubsDataTableClient = ({
 		clearOnDefault: true,
 	});
 
-	return (
-		<>
-			<DataTable table={table} floatingBar={null}>
-				{/* {enableAdvancedTable ? (
-              <DataTableAdvancedToolbar
-                table={table}
-                filterFields={advancedFilterFields}
-                shallow={false}
-              >
-                <TasksTableToolbarActions table={table} />
-              </DataTableAdvancedToolbar>
-            ) : (
-              <DataTableToolbar table={table} filterFields={filterFields}>
-                <TasksTableToolbarActions table={table} />
-              </DataTableToolbar>
-            )} */}
-			</DataTable>
-			{/* <UpdateTaskSheet
-            open={rowAction?.type === "update"}
-            onOpenChange={() => setRowAction(null)}
-            task={rowAction?.row.original ?? null}
-          />
-          <DeleteTasksDialog
-            open={rowAction?.type === "delete"}
-            onOpenChange={() => setRowAction(null)}
-            tasks={rowAction?.row.original ? [rowAction?.row.original] : []}
-            showTrigger={false}
-            onSuccess={() => rowAction?.row.toggleSelected(false)}
-          /> */}
-		</>
-	);
+	return <DataTable table={table} floatingBar={null} />;
 };
