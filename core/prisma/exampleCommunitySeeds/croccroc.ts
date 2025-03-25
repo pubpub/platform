@@ -4,6 +4,7 @@ import {
 	CoreSchemaType,
 	ElementType,
 	Event,
+	FormAccessType,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
@@ -117,6 +118,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			],
 			forms: {
 				Review: {
+					access: FormAccessType.public,
 					pubType: "Evaluation",
 					elements: [
 						{

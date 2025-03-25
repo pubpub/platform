@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { ElementType, MemberRole } from "db/public";
+import { ElementType, FormAccessType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -196,7 +196,7 @@ export default async function FormPage(props: {
 	}
 
 	// all other roles always have access to the form
-	if (role === MemberRole.contributor) {
+	if (role === MemberRole.contributor && form.access !== FormAccessType.public) {
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,

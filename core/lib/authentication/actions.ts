@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import type { Communities, CommunitiesId, CommunityMemberships, Users, UsersId } from "db/public";
 import { AuthTokenType, MemberRole } from "db/public";
+import { logger } from "logger";
 
 import type { Prettify, XOR } from "../types";
 import type { SafeUser } from "~/lib/server/user";
@@ -285,6 +286,24 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	role?: MemberRole;
 	communityId: CommunitiesId;
 }) {
+	const [isAllowedSignup, community, { user }] = await Promise.all([
+		publicSignupsAllowed(props.communityId),
+		findCommunityBySlug(),
+		getLoginData(),
+	]);
+
+	if (!community) {
+		return SignupErrors.COMMUNITY_NOT_FOUND({ communityName: "unknown" });
+	}
+
+	if (user) {
+		redirect(`/c/${community.slug}/public/join?redirectTo=${props.redirect}`);
+	}
+
+	if (!isAllowedSignup) {
+		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
+	}
+
 	const trx = db.transaction();
 
 	const newUser = await trx.execute(async (trx) => {
@@ -308,11 +327,14 @@ export const publicSignup = defineServerAction(async function signup(props: {
 			});
 
 			// TODO: add to community
-			await addUserToCommunity({
-				userId: newUser.id,
-				communityId: props.communityId,
-				role: props.role ?? MemberRole.contributor,
-			});
+			const newMember = await insertCommunityMember(
+				{
+					userId: newUser.id,
+					communityId: community.id,
+					role: props.role ?? MemberRole.contributor,
+				},
+				trx
+			).executeTakeFirstOrThrow();
 
 			// TODO: send verification email
 			return { ...newUser, needsVerification: false };
@@ -320,6 +342,8 @@ export const publicSignup = defineServerAction(async function signup(props: {
 			if (isUniqueConstraintError(e) && e.table === "users") {
 				return SignupErrors.EMAIL_ALREADY_EXISTS({ email: props.email });
 			}
+			logger.error({ msg: e });
+			Sentry.captureException(e);
 			throw e;
 		}
 	});
