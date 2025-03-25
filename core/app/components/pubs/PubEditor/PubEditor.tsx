@@ -251,11 +251,9 @@ export async function PubEditor(props: PubEditorProps) {
 		},
 	};
 
-	const renderStageSelect = await userCan(
-		Capabilities.movePub,
-		{ type: MembershipType.pub, pubId },
-		user!.id
-	);
+	const renderStageSelect =
+		pub === undefined ||
+		(await userCan(Capabilities.movePub, { type: MembershipType.pub, pubId }, user!.id));
 
 	const renderWithPubContext = {
 		communityId: community.id,
