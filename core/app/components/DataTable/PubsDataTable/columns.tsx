@@ -9,16 +9,8 @@ import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
 import type { PubForTable } from "./types";
+import { dateFormatOptions } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
-
-// TODO: put this in a common place
-export const createdAtDateOptions = {
-	month: "short",
-	day: "numeric",
-	year: "numeric",
-	hour: "2-digit",
-	minute: "2-digit",
-} satisfies Intl.DateTimeFormatOptions;
 
 interface GetColumnsProps {
 	setRowAction: React.Dispatch<React.SetStateAction<DataTableRowAction<PubForTable> | null>>;
@@ -67,7 +59,7 @@ export function getColumns({ setRowAction }: GetColumnsProps): ColumnDef<PubForT
 			accessorKey: "updatedAt",
 			cell: ({ getValue }) => (
 				<time dateTime={new Date().toString()} suppressHydrationWarning>
-					{new Date(getValue<string>()).toLocaleString(undefined, createdAtDateOptions)}
+					{new Date(getValue<string>()).toLocaleString(undefined, dateFormatOptions)}
 				</time>
 			),
 			enableSorting: true,

@@ -1,7 +1,7 @@
 import type { CommunitiesId, UsersId } from "db/public";
 
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
-import { PubsDataTableClient } from "./table";
+import { PubsDataTableClient } from "./PubsDataTableClient";
 import { searchParamsCache } from "./validations";
 
 type Props = {
