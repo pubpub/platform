@@ -251,8 +251,8 @@ export async function PubEditor(props: PubEditorProps) {
 		},
 	};
 
-	const renderFormButtons = await userCan(
-		Capabilities.editPubWithForm,
+	const renderStageSelect = await userCan(
+		Capabilities.movePub,
 		{ type: MembershipType.pub, pubId },
 		user!.id
 	);
@@ -295,7 +295,7 @@ export async function PubEditor(props: PubEditorProps) {
 					formSlug={form.slug}
 					isUpdating={isUpdating}
 					withAutoSave={false}
-					withButtonElements={renderFormButtons}
+					withButtonElements
 					htmlFormId={props.formId}
 					stageId={currentStageId}
 					relatedPub={
@@ -315,11 +315,13 @@ export async function PubEditor(props: PubEditorProps) {
 								fieldName={relatedPubData.relatedPubField.name}
 							/>
 						) : null}
-						<StageSelectClient
-							fieldLabel="Stage"
-							fieldName="stageId"
-							stages={community.stages}
-						/>
+						{renderStageSelect && (
+							<StageSelectClient
+								fieldLabel="Stage"
+								fieldName="stageId"
+								stages={community.stages}
+							/>
+						)}
 						{formElements}
 						{pubOnlyElementDefinitions.map((formElementDef) => (
 							<FormElement
