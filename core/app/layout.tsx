@@ -1,3 +1,5 @@
+import { NuqsAdapter } from "nuqs/adapters/next/app";
+
 import { Toaster } from "ui/toaster";
 
 import "ui/styles.css";
@@ -18,10 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 		<html lang="en">
 			<body>
 				<ReactQueryProvider>
-					<TooltipProvider>
-						{children}
-						<Toaster />
-					</TooltipProvider>
+					<NuqsAdapter>
+						<TooltipProvider>
+							{children}
+							<Toaster />
+						</TooltipProvider>
+					</NuqsAdapter>
 				</ReactQueryProvider>
 			</body>
 		</html>
