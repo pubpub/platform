@@ -328,9 +328,9 @@ export const PubEditorClient = ({
 			});
 
 			const newStageId =
-				(stageIdFromForm !== stageId
+				(stageIdFromForm !== null && stageIdFromForm !== stageId
 					? stageIdFromForm
-					: stageIdFromButtonConfig !== stageId
+					: stageIdFromButtonConfig !== null && stageIdFromButtonConfig !== stageId
 						? stageIdFromButtonConfig
 						: undefined) ?? undefined;
 
