@@ -327,14 +327,19 @@ export const PubEditorClient = ({
 				buttonElements,
 			});
 
-			const newStageId = stageIdFromForm ?? stageIdFromButtonConfig;
-			const stageIdChanged = newStageId !== stageId;
+			const newStageId =
+				stageIdFromForm !== stageId
+					? stageIdFromForm
+					: stageIdFromButtonConfig !== stageId
+						? stageIdFromButtonConfig
+						: undefined;
+
 			let result;
 			if (isUpdating) {
 				result = await runUpdatePub({
 					pubId: pubId,
 					pubValues,
-					stageId: stageIdChanged ? newStageId : undefined,
+					stageId: newStageId,
 					formSlug,
 					continueOnValidationError: autoSave,
 					deleted,
@@ -367,12 +372,10 @@ export const PubEditorClient = ({
 				// Reset dirty state to prevent the unsaved changes warning from
 				// blocking navigation.
 				// See https://stackoverflow.com/questions/63953501/react-hook-form-resetting-isdirty-without-clearing-form
-				formInstance.reset(
-					{},
-					{
-						keepValues: true,
-					}
-				);
+				formInstance.reset({
+					...formValues,
+					stageId: newStageId ?? stageId,
+				});
 
 				onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
 			}
