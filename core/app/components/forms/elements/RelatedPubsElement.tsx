@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
+import type { ReactNode } from "react";
 import type { FieldErrors } from "react-hook-form";
 
 import { useCallback, useMemo, useState } from "react";
@@ -185,8 +186,10 @@ export const RelatedPubsElement = ({
 	label,
 	config,
 	valueComponentProps,
+	relatedPubsTable,
 }: ElementProps<InputComponent.relationBlock> & {
 	valueComponentProps: PubFieldFormElementProps;
+	relatedPubsTable: ReactNode;
 }) => {
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
@@ -271,6 +274,7 @@ export const RelatedPubsElement = ({
 									onCancel={() => setShowPanel(false)}
 									pubs={linkablePubs}
 									onAdd={handleAddPubs}
+									table={relatedPubsTable}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>
