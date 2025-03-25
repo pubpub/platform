@@ -1,0 +1,8 @@
+# Common issues
+
+## Hard to explain "Foregin key constraints failed" errors
+
+This might be a caching issue. Did you do a `pnpm reset` when the dev server was running?
+Try quitting the dev server, running `pnpm --filter core clear-cache` and then restarting the dev server.
+
+This should be a dev only error, although it might also appear when build previews are deployed (as `pnpm reset` is currently (March 25, 2025) run during the build).
