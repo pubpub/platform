@@ -12,14 +12,25 @@ import { AuthTokenType, MemberRole } from "db/public";
 import type { Prettify, XOR } from "../types";
 import type { SafeUser } from "~/lib/server/user";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { lucia, validateRequest } from "~/lib/authentication/lucia";
 import { createPasswordHash, validatePassword } from "~/lib/authentication/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { addUser, generateUserSlug, getUser, setUserPassword, updateUser } from "~/lib/server/user";
+import {
+	addUser,
+	generateUserSlug,
+	getUser,
+	publicSignupsAllowed,
+	setUserPassword,
+	updateUser,
+} from "~/lib/server/user";
 import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/constants";
+import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
 import { insertCommunityMember, selectCommunityMember } from "../server/member";
 import { invalidateTokensForUser } from "../server/token";
+import { isClientExceptionOptions } from "../serverActions";
+import { SignupErrors } from "./errors";
 import { getLoginData } from "./loginData";
 
 const schema = z.object({
@@ -225,6 +236,45 @@ const addUserToCommunity = defineServerAction(async function addUserToCommunity(
 	};
 });
 
+/**
+ * When a user joins a community by signing up
+ */
+export const publicJoinCommunity = defineServerAction(async function joinCommunity() {
+	const [{ user }, community] = await Promise.all([
+		await getLoginData(),
+		await findCommunityBySlug(),
+	]);
+
+	if (!community) {
+		return SignupErrors.COMMUNITY_NOT_FOUND({ communityName: "unknown" });
+	}
+
+	if (!user) {
+		return SignupErrors.NOT_LOGGED_IN({ communityName: community.name });
+	}
+
+	if (user.memberships.some((m) => m.communityId === community.id)) {
+		return SignupErrors.ALREADY_MEMBER({ communityName: community.name });
+	}
+
+	const isAllowedSignup = await publicSignupsAllowed(community.id);
+
+	if (!isAllowedSignup) {
+		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
+	}
+
+	const member = await insertCommunityMember({
+		userId: user.id,
+		communityId: community.id,
+		role: MemberRole.contributor,
+	}).executeTakeFirstOrThrow();
+
+	return {
+		success: true,
+		report: `You have joined ${community.name}`,
+	};
+});
+
 export const publicSignup = defineServerAction(async function signup(props: {
 	firstName: string;
 	lastName: string;
@@ -238,32 +288,45 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	const trx = db.transaction();
 
 	const newUser = await trx.execute(async (trx) => {
-		const newUser = await addUser(
-			{
-				firstName: props.firstName,
-				lastName: props.lastName,
-				email: props.email,
-				slug:
-					props.slug ??
-					generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
-				passwordHash: await createPasswordHash(props.password),
-			},
-			trx
-		).executeTakeFirstOrThrow((err) => {
-			Sentry.captureException(err);
-			return new Error(`Unable to create user ${props.id}`);
-		});
+		try {
+			const newUser = await addUser(
+				{
+					firstName: props.firstName,
+					lastName: props.lastName,
+					email: props.email,
+					slug:
+						props.slug ??
+						generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
+					passwordHash: await createPasswordHash(props.password),
+				},
+				trx
+			).executeTakeFirstOrThrow((err) => {
+				Sentry.captureException(err);
+				return new Error(
+					`Unable to create user for public signup with email ${props.email}`
+				);
+			});
 
-		// TODO: add to community
-		await addUserToCommunity({
-			userId: newUser.id,
-			communityId: props.communityId,
-			role: props.role ?? MemberRole.contributor,
-		});
+			// TODO: add to community
+			await addUserToCommunity({
+				userId: newUser.id,
+				communityId: props.communityId,
+				role: props.role ?? MemberRole.contributor,
+			});
 
-		// TODO: send verification email
-		return { ...newUser, needsVerification: false };
+			// TODO: send verification email
+			return { ...newUser, needsVerification: false };
+		} catch (e) {
+			if (isUniqueConstraintError(e) && e.table === "users") {
+				return SignupErrors.EMAIL_ALREADY_EXISTS({ email: props.email });
+			}
+			throw e;
+		}
 	});
+
+	if ("error" in newUser) {
+		return newUser;
+	}
 
 	if ("needsVerification" in newUser && newUser.needsVerification) {
 		return {

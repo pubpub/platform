@@ -3,6 +3,7 @@
 import type { Static } from "@sinclair/typebox";
 
 import React, { useCallback, useMemo } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -11,7 +12,7 @@ import { registerFormats } from "schemas";
 
 import type { Users } from "db/public";
 import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
@@ -30,6 +31,7 @@ export const formSchema = Type.Object({
 export function BaseSignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
 	onSubmit: (data: Static<typeof formSchema>) => Promise<void>;
+	redirectTo?: string;
 }) {
 	const resolver = useMemo(() => typeboxResolver(formSchema), []);
 
@@ -119,6 +121,16 @@ export function BaseSignupForm(props: {
 							</Link>
 						</div> */}
 					</CardContent>
+					<CardFooter>
+						Or{" "}
+						<Link
+							href={`/login${props.redirectTo ? `?redirectTo=${props.redirectTo}` : ""}`}
+							className="underline"
+						>
+							sign in
+						</Link>{" "}
+						if you already have an account
+					</CardFooter>
 				</Card>
 			</form>
 		</Form>

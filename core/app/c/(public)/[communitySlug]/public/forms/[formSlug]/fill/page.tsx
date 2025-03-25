@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
 import { ElementType, MemberRole } from "db/public";
@@ -164,6 +164,13 @@ export default async function FormPage(props: {
 	}
 
 	if (!user && !session) {
+		if (form.access === "public") {
+			// redirect user to signup/login
+			redirect(
+				`/c/${params.communitySlug}/public/signup?redirectTo=/c/${params.communitySlug}/public/forms/${params.formSlug}/fill`
+			);
+		}
+
 		const result = await handleFormToken({
 			params,
 			searchParams,
