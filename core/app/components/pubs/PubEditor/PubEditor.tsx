@@ -221,13 +221,7 @@ export async function PubEditor(props: PubEditorProps) {
 	);
 
 	const formElements = form.elements.map((e) => (
-		<FormElement
-			key={e.id}
-			pubId={pubId}
-			element={e}
-			values={pub ? pub.values : []}
-			searchParams={props.searchParams}
-		/>
+		<FormElement key={e.id} pubId={pubId} element={e} values={pub ? pub.values : []} />
 	));
 
 	// These are pub values that are only on the pub, but not on the form. We render them at the end of the form.
@@ -326,7 +320,6 @@ export async function PubEditor(props: PubEditorProps) {
 								element={formElementDef as FormElements}
 								pubId={pubId}
 								values={pub ? pub.values : []}
-								searchParams={props.searchParams}
 							/>
 						))}
 					</>

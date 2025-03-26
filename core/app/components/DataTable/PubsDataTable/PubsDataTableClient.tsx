@@ -7,14 +7,13 @@ import type { ProcessedPub } from "contracts";
 import type { DataTableRowAction } from "ui/data-table-paged";
 import { DataTable, useDataTable } from "ui/data-table-paged";
 
-import type { PubForTable } from "./types";
 import { client } from "~/lib/api";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { getColumns } from "./columns";
 import { dataTableParsers, getFilterParamsFromSearch } from "./validations";
 
 interface WithPromises {
-	promises: Promise<[number, PubForTable[]]>;
+	promises: Promise<[number, ProcessedPub<{ withPubType: true }>[]]>;
 }
 interface WithData {
 	total: number;

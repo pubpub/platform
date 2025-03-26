@@ -1,7 +1,6 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
-import type { ReactNode } from "react";
 import type { FieldErrors } from "react-hook-form";
 
 import { useCallback, useMemo, useState } from "react";

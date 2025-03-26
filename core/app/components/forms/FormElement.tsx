@@ -4,22 +4,15 @@ import { expect } from "utils";
 
 import type { PubFieldFormElementProps } from "./PubFieldFormElement";
 import type { FormElements } from "./types";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { findCommunityBySlug } from "~/lib/server/community";
 import { RelatedPubsElement } from "./elements/RelatedPubsElement";
 import { FormElementToggle } from "./FormElementToggle";
 import { PubFieldFormElement } from "./PubFieldFormElement";
 
 export type FormElementProps = Omit<PubFieldFormElementProps, "element"> & {
 	element: FormElements;
-	searchParams: Record<string, string | string[] | undefined>;
 };
 
-export const FormElement = async ({ pubId, element, values, searchParams }: FormElementProps) => {
-	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
-	if (!user || !community) {
-		return null;
-	}
+export const FormElement = async ({ pubId, element, values }: FormElementProps) => {
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
 			return (

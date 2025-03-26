@@ -291,7 +291,6 @@ export default async function FormPage(props: {
 											pubId={pubId}
 											element={e}
 											values={pub ? pub.values : []}
-											searchParams={searchParams}
 										/>
 									))}
 								</ExternalFormWrapper>
