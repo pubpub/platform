@@ -131,6 +131,7 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
+					{/** TODO: Add suspense */}
 					<PubEditor
 						searchParams={searchParams}
 						pubId={pub.id}
