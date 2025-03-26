@@ -128,7 +128,6 @@ export const addMemberToForm = async (
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
 	const { userId, pubId, ...getFormProps } = props;
 	const form = await getForm(getFormProps, trx).executeTakeFirstOrThrow();
-	console.log(form);
 
 	const existingPermission = await autoCache(
 		trx
@@ -139,7 +138,6 @@ export const addMemberToForm = async (
 			.where("form_memberships.pubId", "=", pubId)
 	).executeTakeFirst();
 
-	console.log(userId, pubId, getFormProps);
 	if (existingPermission === undefined) {
 		await autoRevalidate(
 			trx.insertInto("form_memberships").values({ formId: form.id, userId, pubId })

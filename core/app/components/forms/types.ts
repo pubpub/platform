@@ -63,7 +63,7 @@ export type ButtonElement = {
 	element: null;
 	content: null;
 	required: null;
-	stageId?: StagesId;
+	stageId: StagesId | null;
 	config: null;
 	component: null;
 	schemaName: null;

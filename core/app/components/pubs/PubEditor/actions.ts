@@ -24,7 +24,6 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	props: CreatePubRecursiveProps & {
 		formSlug?: string;
 		addUserToForm?: boolean;
-		addUserToPub?: boolean;
 	}
 ) {
 	const { formSlug, addUserToForm, ...createPubProps } = props;
@@ -67,9 +66,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 					...createPubProps.body,
 					// adds user to the pub
 					// TODO: this should be configured on the form
-					...(props.addUserToPub
-						? { members: { [user.id]: MemberRole.contributor } }
-						: {}),
+					members: { [user.id]: MemberRole.contributor },
 				},
 				lastModifiedBy,
 				trx,
