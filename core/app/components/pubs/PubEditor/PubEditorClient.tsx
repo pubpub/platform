@@ -327,20 +327,15 @@ export const PubEditorClient = ({
 				buttonElements,
 			});
 
-			let newStageId: StagesId | undefined = undefined;
-
-			if (stageIdFromForm && stageIdFromForm !== stageId) {
-				newStageId = stageIdFromForm;
-			} else if (stageIdFromButtonConfig && stageIdFromButtonConfig !== stageId) {
-				newStageId = stageIdFromButtonConfig;
-			}
+			const newStageId = stageIdFromButtonConfig ?? stageIdFromForm ?? undefined;
+			const stageIdChanged = newStageId !== stageId;
 
 			let result;
 			if (isUpdating) {
 				result = await runUpdatePub({
 					pubId: pubId,
 					pubValues,
-					stageId: newStageId,
+					stageId: stageIdChanged ? newStageId : undefined,
 					formSlug,
 					continueOnValidationError: autoSave,
 					deleted,
