@@ -186,10 +186,8 @@ export const RelatedPubsElement = ({
 	label,
 	config,
 	valueComponentProps,
-	relatedPubsTable,
 }: ElementProps<InputComponent.relationBlock> & {
 	valueComponentProps: PubFieldFormElementProps;
-	relatedPubsTable: ReactNode;
 }) => {
 	const { pubs, pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
@@ -274,7 +272,6 @@ export const RelatedPubsElement = ({
 									onCancel={() => setShowPanel(false)}
 									pubs={linkablePubs}
 									onAdd={handleAddPubs}
-									table={relatedPubsTable}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>

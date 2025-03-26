@@ -4,11 +4,29 @@ import { createSearchParamsCache, parseAsInteger } from "nuqs/server";
 
 import { getSortingStateParser } from "ui/data-table-paged";
 
-import type { PubForTable } from "./types";
+import type { DataTableSearchParams, PubForTable } from "./types";
+import type { GetManyParams } from "~/lib/server";
 
 const DEFAULT_PAGE_SIZE = 10;
-export const searchParamsCache = createSearchParamsCache({
+export const dataTableParsers = {
 	page: parseAsInteger.withDefault(1),
 	perPage: parseAsInteger.withDefault(DEFAULT_PAGE_SIZE),
 	sort: getSortingStateParser<PubForTable>().withDefault([{ id: "updatedAt", desc: true }]),
-});
+};
+export const searchParamsCache = createSearchParamsCache(dataTableParsers);
+
+/**
+ * Returns the params we can pass into `getPubsWithRelatedValues` based on
+ * search params
+ */
+export const getFilterParamsFromSearch = (search: DataTableSearchParams): GetManyParams => {
+	// We are only able to sort by one thing right now, so grab the first thing
+	const sort = search.sort[0];
+	const limit = search.perPage;
+	const offset = (search.page - 1) * search.perPage;
+	// The search param parser lets us sort by any key of a pub, but we only support updatedAt and createdAt atm
+	const orderBy = sort.id === "createdAt" ? "createdAt" : "updatedAt";
+	const orderDirection = sort.desc ? "desc" : "asc";
+
+	return { limit, offset, orderBy, orderDirection };
+};

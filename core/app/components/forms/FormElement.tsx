@@ -6,7 +6,6 @@ import type { PubFieldFormElementProps } from "./PubFieldFormElement";
 import type { FormElements } from "./types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { PubsDataTable } from "../DataTable/PubsDataTable/PubsDataTableServer";
 import { RelatedPubsElement } from "./elements/RelatedPubsElement";
 import { FormElementToggle } from "./FormElementToggle";
 import { PubFieldFormElement } from "./PubFieldFormElement";
@@ -63,13 +62,6 @@ export const FormElement = async ({ pubId, element, values, searchParams }: Form
 					element,
 					values,
 				}}
-				relatedPubsTable={
-					<PubsDataTable
-						communityId={community.id}
-						userId={user.id}
-						searchParams={searchParams}
-					/>
-				}
 			/>
 		);
 	}

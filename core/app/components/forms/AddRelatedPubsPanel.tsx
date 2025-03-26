@@ -1,7 +1,6 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import type { ReactNode } from "react";
 
 import { useRef, useState } from "react";
 
@@ -13,6 +12,7 @@ import { DataTableColumnHeader } from "ui/data-table";
 import type { ContextEditorPub } from "../ContextEditor/ContextEditorContext";
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
 import { getPubTitle } from "~/lib/pubs";
+import { PubsDataTableClient } from "../DataTable/PubsDataTable/PubsDataTableClient";
 import { DataTable } from "../DataTable/v2/DataTable";
 
 const getColumns = () =>
@@ -58,13 +58,11 @@ export const AddRelatedPubsPanel = ({
 	onCancel,
 	onAdd,
 	pubs,
-	table,
 }: {
 	title: string;
 	onCancel: () => void;
 	onAdd: (pubs: ContextEditorPub[]) => void;
 	pubs: ContextEditorPub[];
-	table: ReactNode;
 }) => {
 	const sidebarRef = useRef(null);
 	const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -82,7 +80,7 @@ export const AddRelatedPubsPanel = ({
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={title} showCancel onCancel={onCancel} />
-				{table}
+				<PubsDataTableClient />
 				{/* <DataTable
 					columns={getColumns()}
 					data={pubs}

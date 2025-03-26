@@ -4,19 +4,23 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import * as React from "react";
 
+import type { ProcessedPub } from "contracts";
 import type { DataTableRowAction } from "ui/data-table-paged";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-import type { PubForTable } from "./types";
 import { dateFormatOptions } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 
 interface GetColumnsProps {
-	setRowAction: React.Dispatch<React.SetStateAction<DataTableRowAction<PubForTable> | null>>;
+	setRowAction: React.Dispatch<
+		React.SetStateAction<DataTableRowAction<ProcessedPub<{ withPubType: true }>> | null>
+	>;
 }
 
-export function getColumns({ setRowAction }: GetColumnsProps): ColumnDef<PubForTable>[] {
+export function getColumns({
+	setRowAction,
+}: GetColumnsProps): ColumnDef<ProcessedPub<{ withPubType: true }>>[] {
 	return [
 		{
 			id: "select",
@@ -64,5 +68,5 @@ export function getColumns({ setRowAction }: GetColumnsProps): ColumnDef<PubForT
 			),
 			enableSorting: true,
 		},
-	] as const satisfies ColumnDef<PubForTable, unknown>[];
+	] as const satisfies ColumnDef<ProcessedPub<{ withPubType: true }>, unknown>[];
 }
