@@ -246,6 +246,9 @@ export const publicJoinCommunity = defineServerAction(async function joinCommuni
 		await findCommunityBySlug(),
 	]);
 
+	// TODO: base this off the invite token
+	const toBeGrantedRole = MemberRole.contributor;
+
 	if (!community) {
 		return SignupErrors.COMMUNITY_NOT_FOUND({ communityName: "unknown" });
 	}
@@ -267,7 +270,7 @@ export const publicJoinCommunity = defineServerAction(async function joinCommuni
 	const member = await insertCommunityMember({
 		userId: user.id,
 		communityId: community.id,
-		role: MemberRole.contributor,
+		role: toBeGrantedRole,
 	}).executeTakeFirstOrThrow();
 
 	return {
