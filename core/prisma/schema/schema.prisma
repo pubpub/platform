@@ -483,7 +483,6 @@ enum Event {
 
 enum FormAccessType {
   private
-  inviteOnly
   public
 }
 
