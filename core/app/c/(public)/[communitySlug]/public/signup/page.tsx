@@ -65,7 +65,7 @@ export default async function Page({
  */
 const Wrapper = ({ children }: { children: React.ReactNode }) => {
 	return (
-		<div className="m-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center">
+		<div className="m-auto mt-16 flex min-h-[50vh] max-w-lg flex-col items-center justify-center">
 			{children}
 		</div>
 	);
