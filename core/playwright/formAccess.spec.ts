@@ -20,11 +20,13 @@ let page: Page;
 const jimothyId = crypto.randomUUID() as UsersId;
 const crossUserId = crypto.randomUUID() as UsersId;
 
+const communitySlug = `test-community-${new Date().getTime()}`;
+
 const password = "password";
 const seed = createSeed({
 	community: {
 		name: "test community",
-		slug: "test-community",
+		slug: communitySlug,
 	},
 	pubFields: {
 		Title: {
@@ -121,6 +123,12 @@ const seed = createSeed({
 						label: "Email",
 					},
 				},
+				{
+					type: ElementType.button,
+					content: `Go see your pubs [here](/pubs)`,
+					label: "Submit",
+					stage: "Evaluating",
+				},
 			],
 		},
 		"Title Only (default)": {
@@ -199,32 +207,40 @@ test.beforeAll(async ({ browser }) => {
 
 describe("public signup ", () => {
 	describe("single community cases", () => {
-		test("non-users are not able to signup for communities with private forms", async () => {
+		test("non-users are not able to signup for communities with private forms", async ({
+			page,
+		}) => {
 			const response = await page.goto(`/c/${community2.community.slug}/public/signup`);
 			expect(response?.status()).toBe(404);
 		});
 
-		test("non-users are able to access the public signup page for communities with public forms", async () => {
+		test("non-users are able to access the public signup page for communities with public forms", async ({
+			page,
+		}) => {
 			await page.goto(`/c/${community.community.slug}/public/signup`);
 			await expect(page.getByRole("heading", { name: "Sign up" })).toBeVisible();
 		});
 
-		test("signed in community members should be redirected to base community page instead if no redirect is set", async () => {
+		test("non-users are redirected to the signup page for public forms", async ({ page }) => {
+			const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+
+			const res = await page.goto(fillUrl);
+			console.log(res?.url());
+			await page.waitForURL(
+				`/c/${community.community.slug}/public/signup?redirectTo=${fillUrl}`,
+				{ timeout: 10_000 }
+			);
+		});
+
+		test("signed in community members should be redirected to base community page instead if no redirect is set", async ({
+			page,
+		}) => {
 			const loginPage = new LoginPage(page);
 			await loginPage.goto();
 			await loginPage.loginAndWaitForNavigation(community.users.baseMember.email, password);
 
 			const res = await page.goto(`/c/${community.community.slug}/public/signup`);
 			await waitForBaseCommunityPage(page, community.community.slug);
-		});
-
-		test("non-users are redirected to the signup page for public forms", async () => {
-			const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
-
-			const res = await page.goto(fillUrl);
-			await page.waitForURL(
-				`/c/${community.community.slug}/public/signup?redirectTo=${fillUrl}`
-			);
 		});
 	});
 
@@ -254,26 +270,37 @@ describe("public signup ", () => {
 
 describe("public forms", () => {
 	test("non-users are able to signup for communityies and fill out public forms", async () => {
-		test.step("non-users are able to access the public form", async () => {
-			await page.goto(
-				`/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`
+		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		await test.step("non-users are able to access the public form", async () => {
+			await page.goto(fillUrl);
+			await page.waitForURL(
+				`/c/${community.community.slug}/public/signup?redirectTo=${fillUrl}`
 			);
-			await page.waitForURL(`/c/${community.community.slug}/public/signup`);
+			await page.getByRole("heading", { name: "Sign up" }).waitFor({ state: "visible" });
 		});
 
-		test.step("non-users are able to signup for the community", async () => {
-			await page.getByLabel("Email").fill(faker.internet.email());
+		const testEmail = faker.internet.email();
+		await test.step("non-users are able to signup for the community", async () => {
+			await page.getByLabel("Email").fill(testEmail, {
+				timeout: 1_000,
+			});
 			await page.getByLabel("Password").fill(password);
 			await page.getByLabel("First Name").fill(faker.person.firstName());
 			await page.getByLabel("Last Name").fill(faker.person.lastName());
 			await page.getByRole("button", { name: "Sign up" }).click();
-			await page.waitForURL(`/c/${community.community.slug}/stages`);
+			await page.waitForURL(fillUrl, { timeout: 10_000 });
 		});
 
-		test.step("non-users are able to fill out the form", async () => {
+		await test.step("non-users are able to fill out the form", async () => {
 			await page.getByLabel("Title").fill("Test Title");
 			await page.getByLabel("Content").fill("Test Content");
 			await page.getByRole("button", { name: "Submit" }).click();
+			const submissionMessage = await page.getByText("Go see you").textContent({
+				timeout: 1_000,
+			});
+			console.log(submissionMessage);
+			await page.getByRole("link", { name: "here" }).click();
+			await page.waitForTimeout(2_000);
 		});
 	});
 });

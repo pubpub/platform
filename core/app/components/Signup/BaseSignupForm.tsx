@@ -13,7 +13,15 @@ import { registerFormats } from "schemas";
 import type { Users } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { Input } from "ui/input";
 
 registerFormats();
@@ -59,8 +67,9 @@ export function BaseSignupForm(props: {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>First name</FormLabel>
-
-											<Input {...field} placeholder="Max" required />
+											<FormControl>
+												<Input {...field} placeholder="Max" required />
+											</FormControl>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -71,7 +80,9 @@ export function BaseSignupForm(props: {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>Last name</FormLabel>
-											<Input {...field} placeholder="Robinson" required />
+											<FormControl>
+												<Input {...field} placeholder="Robinson" required />
+											</FormControl>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -87,12 +98,14 @@ export function BaseSignupForm(props: {
 											If you change this, we will ask you to confirm your
 											email again.
 										</FormDescription>
-										<Input
-											{...field}
-											type="email"
-											placeholder="m@example.com"
-											required
-										/>
+										<FormControl>
+											<Input
+												{...field}
+												type="email"
+												placeholder="mail@example.com"
+												required
+											/>
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -104,7 +117,9 @@ export function BaseSignupForm(props: {
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Password</FormLabel>
-										<Input {...field} type="password" />
+										<FormControl>
+											<Input {...field} type="password" />
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
