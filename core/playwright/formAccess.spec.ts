@@ -411,13 +411,7 @@ test.describe("public signup error cases", () => {
 			});
 		} finally {
 			// "Rollback"
-			await db
-				.updateTable("forms")
-				.set({
-					access: FormAccessType.private,
-				})
-				.where("id", "=", community2.forms["Simple Private"].id)
-				.execute();
+			await setFormAccess(community2.forms["Simple Private"].id, FormAccessType.public);
 		}
 	});
 
