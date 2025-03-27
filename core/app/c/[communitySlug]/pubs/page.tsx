@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import type { CommunitiesId } from "db/public";
 
+import { PubsDataTable } from "~/app/components/DataTable/PubsDataTable/PubsDataTable";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import PubHeader from "./PubHeader";
@@ -33,6 +34,11 @@ export default async function Page(props: Props) {
 
 	return (
 		<>
+			<PubsDataTable
+				communityId={community.id}
+				userId={user.id}
+				searchParams={searchParams}
+			/>
 			<PubHeader communityId={community.id as CommunitiesId} />
 			<PaginatedPubList
 				communityId={community.id}
