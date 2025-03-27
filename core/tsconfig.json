@@ -5,22 +5,14 @@
 		"allowImportingTsExtensions": true,
 		"noErrorTruncation": true,
 		"allowSyntheticDefaultImports": true,
-		"plugins": [
-			{
-				"name": "next"
-			}
-		],
+		// maybe add back next plugin if it doesnt crash the ts-server all the time
+		"plugins": [],
 		"baseUrl": ".",
 		"paths": {
 			"~/*": ["./*"]
 		},
 		"strictNullChecks": true,
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
-	},
-	"ts-node": {
-		"compilerOptions": {
-			"module": "CommonJS"
-		}
 	},
 	"include": [
 		"next-env.d.ts",
