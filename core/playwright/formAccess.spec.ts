@@ -225,7 +225,6 @@ describe("public signup ", () => {
 			const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
 
 			const res = await page.goto(fillUrl);
-			console.log(res?.url());
 			await page.waitForURL(
 				`/c/${community.community.slug}/public/signup?redirectTo=${fillUrl}`,
 				{ timeout: 10_000 }
