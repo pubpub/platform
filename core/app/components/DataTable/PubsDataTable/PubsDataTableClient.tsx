@@ -5,6 +5,7 @@ import { useQueryStates } from "nuqs";
 
 import type { ProcessedPub } from "contracts";
 import type { DataTableRowAction } from "ui/data-table-paged";
+import { TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import { DataTable, useDataTable } from "ui/data-table-paged";
 
 import { client } from "~/lib/api";
@@ -80,10 +81,12 @@ export const PubsDataTableClient = () => {
 	});
 
 	const pubs = data?.body;
+	const totalFromHeader = data?.headers?.get(TOTAL_PUBS_COUNT_HEADER);
+	const total = totalFromHeader ? parseInt(totalFromHeader) : 0;
 	if (!pubs) {
-		return null; // TODO: empty state
+		return null; // TODO: error state
 	}
 
 	// TODO: figure out how we should get total here
-	return <PubsDataTable perPage={search.perPage} data={pubs} total={100} />;
+	return <PubsDataTable perPage={search.perPage} data={pubs} total={total} />;
 };

@@ -20,7 +20,7 @@ import type {
 	ApiAccessPermissionConstraintsInput,
 	LastModifiedBy,
 } from "db/types";
-import { baseFilterSchema, filterSchema, siteApi } from "contracts";
+import { baseFilterSchema, filterSchema, siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
 import { assert } from "utils";
 
@@ -37,6 +37,7 @@ import {
 	doesPubExist,
 	ForbiddenError,
 	fullTextSearch,
+	getPubsCount,
 	getPubsWithRelatedValues,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
@@ -346,7 +347,7 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async ({ query }, { request }) => {
+			getMany: async ({ query }, { request, responseHeaders }) => {
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					// TODO: figure out capability here
@@ -377,6 +378,14 @@ const handler = createNextHandler(
 						filters: manuallyParsedFilters?.filters,
 					}
 				);
+
+				// TODO: this does not account for permissions
+				const pubCount = await getPubsCount({
+					communityId: community.id,
+					pubTypeId,
+					stageId,
+				});
+				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
 
 				return {
 					status: 200,
