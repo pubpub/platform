@@ -492,6 +492,26 @@ test("Structure Audio", async () => {
 						</tr>
 					</tbody>
 				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Audio</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
+						</tr>
+					</tbody>
+				</table>
 			</body>
 		</html>
 	`;
@@ -502,6 +522,17 @@ test("Structure Audio", async () => {
 				<figure data-figure-type="audio" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<audio controls>
 						<source src="https://resize-v3.pubpub.org/123.mp3" type="audio/mp3">
+					</audio>
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+				<figure data-figure-type="audio" id="n8r4ihxcrly" data-align="full" data-size="50">
+					<audio controls>
+						<source src="https://resize-v3.pubpub.org/123">
 					</audio>
 					<figcaption>
 						<p>
