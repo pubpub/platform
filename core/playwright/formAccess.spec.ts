@@ -1,14 +1,14 @@
-import { describe } from "node:test";
-
 import type { Page } from "@playwright/test";
 
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import type { PubsId, UsersId } from "db/public";
+import type { FormsId, PubsId, UsersId } from "db/public";
 import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { db } from "~/lib/__tests__/db";
+import { beginTransaction } from "~/lib/__tests__/transactions";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
@@ -148,6 +148,8 @@ const seed = createSeed({
 	},
 });
 
+const formIdThatllSneakilyBeSwitchedToPublic = crypto.randomUUID() as FormsId;
+
 const seed2 = createSeed({
 	community: {
 		name: "test community 2",
@@ -169,6 +171,10 @@ const seed2 = createSeed({
 			role: MemberRole.editor,
 			password,
 		},
+		becky: {
+			role: MemberRole.editor,
+			password,
+		},
 		cross: {
 			id: crossUserId,
 			existing: true,
@@ -178,6 +184,7 @@ const seed2 = createSeed({
 	},
 	forms: {
 		"Simple Private": {
+			id: formIdThatllSneakilyBeSwitchedToPublic,
 			slug: "simple-private",
 			pubType: "Submission",
 			access: FormAccessType.private,
@@ -205,8 +212,8 @@ test.beforeAll(async ({ browser }) => {
 	page = await browser.newPage();
 });
 
-describe("public signup ", () => {
-	describe("single community cases", () => {
+test.describe("public signup cases", () => {
+	test.describe("single community cases", () => {
 		test("non-users are not able to signup for communities with private forms", async ({
 			page,
 		}) => {
@@ -244,7 +251,7 @@ describe("public signup ", () => {
 	});
 });
 
-describe("public forms", () => {
+test.describe("public forms", () => {
 	test("non-users are able to signup for communityies and fill out public forms", async ({
 		page,
 	}) => {
@@ -327,6 +334,137 @@ describe("public forms", () => {
 				timeout: 10_000,
 			});
 			await page.waitForURL(fillUrl, { timeout: 10_000 });
+		});
+	});
+});
+
+test.describe("public signup error cases", () => {
+	test("should show error toast when trying to signup with existing email", async ({ page }) => {
+		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		const existingEmail = community.users.baseMember.email;
+
+		await test.step("attempt signup with existing email", async () => {
+			await page.goto(fillUrl);
+			await page.getByLabel("Email").fill(existingEmail);
+			await page.getByLabel("Password").fill(password);
+			await page.getByLabel("First Name").fill(faker.person.firstName());
+			await page.getByLabel("Last Name").fill(faker.person.lastName());
+			await page.getByRole("button", { name: "Sign up" }).click();
+
+			await page.waitForTimeout(1_000);
+			// error should be shown in toast
+			const text = `Email ${existingEmail} is already taken`;
+			await page
+				.getByText(text, { exact: true })
+				.waitFor({ state: "visible", timeout: 2_000 });
+			// should stay on signup page
+			await expect(page).toHaveURL(
+				new RegExp(`/c/${community.community.slug}/public/signup`)
+			);
+		});
+	});
+
+	test("should show error toast when trying to join community that disables public signup", async ({
+		page,
+	}) => {
+		const setFormAccess = async (formId: FormsId, access: FormAccessType) => {
+			await db
+				.updateTable("forms")
+				.set({
+					access,
+				})
+				.where("id", "=", formId)
+				.execute();
+		};
+
+		try {
+			await setFormAccess(community2.forms["Simple Private"].id, FormAccessType.public);
+
+			// try to join community that has disabled public signups
+			const privateFormUrl = `/c/${community2.community.slug}/public/forms/${community2.forms["Simple Private"].slug}/fill`;
+
+			await test.step("attempt to join private community", async () => {
+				await page.goto(privateFormUrl);
+
+				await page.goto(privateFormUrl);
+				await page.getByLabel("Email").fill(faker.internet.email());
+				await page.getByLabel("Password").fill(password);
+				await page.getByLabel("First Name").fill(faker.person.firstName());
+				await page.getByLabel("Last Name").fill(faker.person.lastName());
+
+				// now set form to private again
+				await setFormAccess(community2.forms["Simple Private"].id, FormAccessType.private);
+
+				await page.getByRole("button", { name: "Sign up" }).click();
+
+				// error should be shown in toast
+				await page
+					.getByText(`Public signups are not allowed for ${community2.community.name}`, {
+						exact: true,
+					})
+					.waitFor({ state: "visible", timeout: 2_000 });
+				// should stay on join page
+				await expect(page).toHaveURL(
+					new RegExp(`/c/${community2.community.slug}/public/signup`)
+				);
+			});
+		} finally {
+			// "Rollback"
+			await db
+				.updateTable("forms")
+				.set({
+					access: FormAccessType.private,
+				})
+				.where("id", "=", community2.forms["Simple Private"].id)
+				.execute();
+		}
+	});
+
+	test("should preserve form data when server validation fails", async ({ page }) => {
+		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		const testData = {
+			email: "invalid-email", // invalid email to trigger validation
+			firstName: faker.person.firstName(),
+			lastName: faker.person.lastName(),
+			password: "test",
+		};
+
+		await test.step("fill form with invalid data", async () => {
+			await page.goto(fillUrl);
+			await page.getByLabel("Email").fill(testData.email);
+			await page.getByLabel("Password").fill(testData.password);
+			await page.getByLabel("First Name").fill(testData.firstName);
+			await page.getByLabel("Last Name").fill(testData.lastName);
+			await page.getByRole("button", { name: "Sign up" }).click();
+
+			// error should be shown in toast
+			await page.getByText("Invalid email").waitFor({ state: "visible" });
+
+			// form should preserve valid inputs
+			await expect(page.getByLabel("First Name")).toHaveValue(testData.firstName);
+			await expect(page.getByLabel("Last Name")).toHaveValue(testData.lastName);
+		});
+	});
+
+	test("should handle redirect parameter through error cases", async ({ page }) => {
+		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+
+		await test.step("preserve redirect after failed attempt", async () => {
+			await page.goto(fillUrl);
+
+			// Submit with invalid data first
+			await page.getByLabel("Email").fill("invalid-email");
+			await page.getByRole("button", { name: "Sign up" }).click();
+
+			// After error, fix the data and submit again
+			await page.getByLabel("Email").fill(faker.internet.email());
+			await page.getByLabel("Password").fill(password);
+			await page.getByLabel("First Name").fill(faker.person.firstName());
+			await page.getByLabel("Last Name").fill(faker.person.lastName());
+			await page.getByRole("button", { name: "Sign up" }).click();
+
+			// Should redirect to original form URL
+			await page.waitForURL(fillUrl);
 		});
 	});
 });

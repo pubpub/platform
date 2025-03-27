@@ -44,7 +44,7 @@ export const SignupErrors = {
 	COMMUNITY_NOT_FOUND: (props: { communityName: string }) =>
 		createAndLogError("COMMUNITY_NOT_FOUND", `Community not found`),
 	EMAIL_ALREADY_EXISTS: (props: { email: string }) =>
-		createAndLogError("EMAIL_ALREADY_EXISTS", `Email ${props.email} already exists`),
+		createAndLogError("EMAIL_ALREADY_EXISTS", `Email ${props.email} is already taken`),
 } as const satisfies {
 	[E in SIGNUP_ERROR]:
 		| ((props: { communityName: string }) => {

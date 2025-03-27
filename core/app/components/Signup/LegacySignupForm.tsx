@@ -9,14 +9,14 @@ import type { Users } from "db/public";
 
 import { legacySignup } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { BaseSignupForm, formSchema } from "./BaseSignupForm";
+import { BaseSignupForm, signupFormSchema } from "./BaseSignupForm";
 
 export function LegacySignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id">;
 }) {
 	const signup = useServerAction(legacySignup);
 	const searchParams = useSearchParams();
-	const onSubmit = useCallback(async (data: Static<typeof formSchema>) => {
+	const onSubmit = useCallback(async (data: Static<typeof signupFormSchema>) => {
 		await signup({
 			id: props.user.id,
 			firstName: data.firstName,

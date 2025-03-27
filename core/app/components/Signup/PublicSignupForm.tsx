@@ -6,17 +6,20 @@ import { useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 
 import type { CommunitiesId } from "db/public";
+import { toast } from "ui/use-toast";
 
+import type { SignupFormSchema } from "./schema";
 import { publicSignup } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { BaseSignupForm, formSchema } from "./BaseSignupForm";
+import { BaseSignupForm } from "./BaseSignupForm";
 
 export function PublicSignupForm(props: { communityId: CommunitiesId }) {
 	const runSignup = useServerAction(publicSignup);
 
 	const searchParams = useSearchParams();
 
-	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
+	const handleSubmit = useCallback(async (data: SignupFormSchema) => {
+		// TODO: this is not very nice UX
 		await runSignup({
 			firstName: data.firstName,
 			lastName: data.lastName,

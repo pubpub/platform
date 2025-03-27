@@ -1,12 +1,8 @@
 "use client";
 
-import type { Static } from "@sinclair/typebox";
-
-import React, { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { registerFormats } from "schemas";
 
@@ -24,26 +20,20 @@ import {
 } from "ui/form";
 import { Input } from "ui/input";
 
-registerFormats();
+import type { SignupFormSchema } from "./schema";
+import { FormSubmitButton, SubmitButton } from "../SubmitButton";
+import { compiledSignupFormSchema } from "./schema";
 
-export const formSchema = Type.Object({
-	firstName: Type.String(),
-	lastName: Type.String(),
-	email: Type.String({ format: "email" }),
-	password: Type.String({
-		minLength: 8,
-		maxLength: 72,
-	}),
-});
+registerFormats();
 
 export function BaseSignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
-	onSubmit: (data: Static<typeof formSchema>) => Promise<void>;
+	onSubmit: (data: SignupFormSchema) => Promise<void>;
 	redirectTo?: string;
 }) {
-	const resolver = useMemo(() => typeboxResolver(formSchema), []);
+	const resolver = useMemo(() => typeboxResolver(compiledSignupFormSchema), []);
 
-	const form = useForm<Static<typeof formSchema>>({
+	const form = useForm<SignupFormSchema>({
 		resolver,
 		defaultValues: { ...(props?.user ?? {}), lastName: props.user?.lastName ?? undefined },
 	});
@@ -125,9 +115,11 @@ export function BaseSignupForm(props: {
 								)}
 							/>
 
-							<Button type="submit" className="w-full">
-								Finish sign up
-							</Button>
+							<FormSubmitButton
+								formState={form.formState}
+								className="w-full"
+								idleText="Finish sign up"
+							/>
 						</div>
 						{/* <div className="mt-4 text-center text-sm">
 							Already have an account?{" "}

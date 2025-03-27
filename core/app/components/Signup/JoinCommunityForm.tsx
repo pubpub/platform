@@ -13,6 +13,7 @@ import { toast } from "ui/use-toast";
 
 import { publicJoinCommunity } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
+import { FormSubmitButton } from "../SubmitButton";
 
 export const JoinCommunityForm = ({
 	community,
@@ -53,9 +54,11 @@ export const JoinCommunityForm = ({
 					</CardHeader>
 					<CardContent>
 						<div className="grid gap-4">
-							<Button type="submit" className="w-full">
-								Join {community.name}
-							</Button>
+							<FormSubmitButton
+								formState={form.formState}
+								className="w-full"
+								idleText={`Join ${community.name}`}
+							/>
 						</div>
 					</CardContent>
 				</Card>

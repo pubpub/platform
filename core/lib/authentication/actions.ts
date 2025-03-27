@@ -12,6 +12,7 @@ import { logger } from "logger";
 
 import type { Prettify, XOR } from "../types";
 import type { SafeUser } from "~/lib/server/user";
+import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { lucia, validateRequest } from "~/lib/authentication/lucia";
@@ -308,6 +309,23 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
 	}
 
+	const input = {
+		firstName: props.firstName,
+		lastName: props.lastName,
+		email: props.email,
+		password: props.password,
+	};
+
+	const checked = compiledSignupFormSchema.Errors(input);
+	const firstError = checked.First();
+
+	if (firstError) {
+		return {
+			title: "Invalid signup",
+			error: `${firstError.message} for ${firstError.path}`,
+		};
+	}
+
 	const trx = db.transaction();
 
 	const newUser = await trx.execute(async (trx) => {
@@ -378,7 +396,11 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	if (props.redirect) {
 		redirect(props.redirect);
 	}
+
 	await redirectUser();
+
+	// typescript cannot sense Promise<never> not returning
+	return "" as never;
 });
 
 /**
