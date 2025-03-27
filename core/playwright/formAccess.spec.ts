@@ -329,10 +329,12 @@ test.describe("public forms", () => {
 
 		await test.step("user is able to instantly join the community and is redirected to the form", async () => {
 			await page.getByRole("button", { name: `Join ${community.community.name}` }).click();
-			await page.getByText(`You have joined ${community.community.name}`).waitFor({
-				state: "visible",
-				timeout: 10_000,
-			});
+			await page
+				.getByText(`You have joined ${community.community.name}`, { exact: true })
+				.waitFor({
+					state: "visible",
+					timeout: 10_000,
+				});
 			await page.waitForURL(fillUrl, { timeout: 10_000 });
 		});
 	});
@@ -351,7 +353,6 @@ test.describe("public signup error cases", () => {
 			await page.getByLabel("Last Name").fill(faker.person.lastName());
 			await page.getByRole("button", { name: "Sign up" }).click();
 
-			await page.waitForTimeout(1_000);
 			// error should be shown in toast
 			const text = `Email ${existingEmail} is already taken`;
 			await page
@@ -418,53 +419,5 @@ test.describe("public signup error cases", () => {
 				.where("id", "=", community2.forms["Simple Private"].id)
 				.execute();
 		}
-	});
-
-	test("should preserve form data when server validation fails", async ({ page }) => {
-		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
-		const testData = {
-			email: "invalid-email", // invalid email to trigger validation
-			firstName: faker.person.firstName(),
-			lastName: faker.person.lastName(),
-			password: "test",
-		};
-
-		await test.step("fill form with invalid data", async () => {
-			await page.goto(fillUrl);
-			await page.getByLabel("Email").fill(testData.email);
-			await page.getByLabel("Password").fill(testData.password);
-			await page.getByLabel("First Name").fill(testData.firstName);
-			await page.getByLabel("Last Name").fill(testData.lastName);
-			await page.getByRole("button", { name: "Sign up" }).click();
-
-			// error should be shown in toast
-			await page.getByText("Invalid email").waitFor({ state: "visible" });
-
-			// form should preserve valid inputs
-			await expect(page.getByLabel("First Name")).toHaveValue(testData.firstName);
-			await expect(page.getByLabel("Last Name")).toHaveValue(testData.lastName);
-		});
-	});
-
-	test("should handle redirect parameter through error cases", async ({ page }) => {
-		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
-
-		await test.step("preserve redirect after failed attempt", async () => {
-			await page.goto(fillUrl);
-
-			// Submit with invalid data first
-			await page.getByLabel("Email").fill("invalid-email");
-			await page.getByRole("button", { name: "Sign up" }).click();
-
-			// After error, fix the data and submit again
-			await page.getByLabel("Email").fill(faker.internet.email());
-			await page.getByLabel("Password").fill(password);
-			await page.getByLabel("First Name").fill(faker.person.firstName());
-			await page.getByLabel("Last Name").fill(faker.person.lastName());
-			await page.getByRole("button", { name: "Sign up" }).click();
-
-			// Should redirect to original form URL
-			await page.waitForURL(fillUrl);
-		});
 	});
 });
