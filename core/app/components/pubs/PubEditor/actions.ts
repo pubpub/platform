@@ -15,7 +15,7 @@ import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { addMemberToForm, getForm, userHasPermissionToForm } from "~/lib/server/form";
-import { deletePub, normalizePubValues } from "~/lib/server/pub";
+import { deletePub, maybeWithTrx, normalizePubValues } from "~/lib/server/pub";
 import { PubOp } from "~/lib/server/pub-op";
 
 type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
@@ -57,9 +57,8 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	});
 
 	try {
-		const trx = db.transaction();
-
-		const result = await trx.execute(async (trx) => {
+		// need this in order to test it properly
+		const result = await maybeWithTrx(db, async (trx) => {
 			const createdPub = await createPubRecursiveNew({
 				...createPubProps,
 				body: {
