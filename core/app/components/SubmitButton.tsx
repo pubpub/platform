@@ -147,7 +147,9 @@ export const SubmitButton = ({
 	);
 };
 
-// convenience wrapper specifically for react-hook-form
+/**
+ * Form submit button that automatically handles loading state
+ */
 export const FormSubmitButton = ({
 	formState,
 	idleText = "Submit",
@@ -157,6 +159,11 @@ export const FormSubmitButton = ({
 	className = "",
 }: {
 	formState: FormState<any>;
+	/**
+	 * Default text.
+	 *
+	 * @default "Submit"
+	 */
 	idleText?: string;
 	loadingText?: string;
 	successText?: string;

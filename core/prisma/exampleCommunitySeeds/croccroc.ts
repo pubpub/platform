@@ -155,6 +155,12 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 								help: "Please attach the file for your review here.",
 							},
 						},
+						{
+							type: ElementType.button,
+							content: `Go see your pubs :link{page='currentPub' text='here'}`,
+							label: "Submit",
+							stage: "Under Evaluation",
+						},
 					],
 				},
 			},
