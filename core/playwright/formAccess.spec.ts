@@ -420,4 +420,28 @@ test.describe("public signup error cases", () => {
 				.execute();
 		}
 	});
+
+	test("person should be able to go to login page and then be redirected to the form", async ({
+		page,
+	}) => {
+		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		await test.step("go to form page and be redirected to signup page", async () => {
+			await page.goto(fillUrl);
+			await page.waitForURL(
+				`/c/${community.community.slug}/public/signup?redirectTo=${fillUrl}`
+			);
+		});
+
+		await test.step("click sign in button and be redirected login page", async () => {
+			await page.getByRole("link", { name: "sign in" }).click();
+			await page.waitForURL(`/login?redirectTo=${fillUrl}`);
+		});
+
+		await test.step("sign in and be redirected to the form", async () => {
+			await page.getByLabel("Email").fill(community.users.baseMember.email);
+			await page.getByLabel("Password").fill(password);
+			await page.getByRole("button", { name: "Sign in" }).click();
+			await page.waitForURL(fillUrl);
+		});
+	});
 });
