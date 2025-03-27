@@ -286,7 +286,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	lastName: string;
 	email: string;
 	password: string;
-	redirect: string | null;
+	redirectTo?: string;
 	slug?: string;
 	role?: MemberRole;
 	communityId: CommunitiesId;
@@ -302,7 +302,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	}
 
 	if (user) {
-		redirect(`/c/${community.slug}/public/join?redirectTo=${props.redirect}`);
+		redirect(`/c/${community.slug}/public/join?redirectTo=${props.redirectTo}`);
 	}
 
 	if (!isAllowedSignup) {
@@ -393,8 +393,8 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		newSessionCookie.attributes
 	);
 
-	if (props.redirect) {
-		redirect(props.redirect);
+	if (props.redirectTo) {
+		redirect(props.redirectTo);
 	}
 
 	await redirectUser();

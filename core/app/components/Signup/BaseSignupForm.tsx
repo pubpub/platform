@@ -22,10 +22,8 @@ import {
 import { Input } from "ui/input";
 
 import type { SignupFormSchema } from "./schema";
-import { FormSubmitButton, SubmitButton } from "../SubmitButton";
+import { FormSubmitButton } from "../SubmitButton";
 import { compiledSignupFormSchema } from "./schema";
-
-registerFormats();
 
 export function BaseSignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
