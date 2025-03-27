@@ -46,15 +46,27 @@ export default async function Page({
 		const joinRole = MemberRole.contributor;
 
 		return (
-			<div className="m-auto max-w-lg">
+			<Wrapper>
 				<JoinCommunityForm community={community} role={joinRole} redirectTo={redirectTo} />
-			</div>
+			</Wrapper>
 		);
 	}
 
 	return (
-		<div className="m-auto max-w-lg">
-			<PublicSignupForm communityId={community.id} />
-		</div>
+		<Wrapper>
+			<PublicSignupForm communityId={community.id} redirectTo={redirectTo} />
+		</Wrapper>
 	);
 }
+
+/**
+ * just a wrapper that centers stuff on the page.
+ * could be put in a layout later
+ */
+const Wrapper = ({ children }: { children: React.ReactNode }) => {
+	return (
+		<div className="m-auto flex min-h-[50vh] max-w-lg flex-col items-center justify-center">
+			{children}
+		</div>
+	);
+};
