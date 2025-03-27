@@ -7,16 +7,17 @@ import { useSearchParams } from "next/navigation";
 
 import type { Users } from "db/public";
 
+import type { SignupFormSchema } from "./schema";
 import { legacySignup } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { BaseSignupForm, signupFormSchema } from "./BaseSignupForm";
+import { BaseSignupForm } from "./BaseSignupForm";
 
 export function LegacySignupForm(props: {
 	user: Pick<Users, "firstName" | "lastName" | "email" | "id">;
 }) {
 	const signup = useServerAction(legacySignup);
 	const searchParams = useSearchParams();
-	const onSubmit = useCallback(async (data: Static<typeof signupFormSchema>) => {
+	const onSubmit = useCallback(async (data: SignupFormSchema) => {
 		await signup({
 			id: props.user.id,
 			firstName: data.firstName,
