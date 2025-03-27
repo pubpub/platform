@@ -309,7 +309,7 @@ export function useDataTable<TData>({
 			...state,
 		},
 		enableRowSelection: true,
-		onRowSelectionChange: setRowSelection,
+		onRowSelectionChange: props.onRowSelectionChange ?? setRowSelection,
 		onPaginationChange: props.onPaginationChange ?? onPaginationChange,
 		onSortingChange: props.onSortingChange ?? onSortingChange,
 		onColumnFiltersChange,

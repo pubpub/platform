@@ -1,6 +1,13 @@
 "use client";
 
-import type { ColumnDef, PaginationState, SortingState, Updater } from "@tanstack/react-table";
+import type {
+	ColumnDef,
+	OnChangeFn,
+	PaginationState,
+	RowSelectionState,
+	SortingState,
+	Updater,
+} from "@tanstack/react-table";
 
 import React, { useMemo, useState } from "react";
 
@@ -11,6 +18,7 @@ import { DataTable, useDataTable } from "ui/data-table-paged";
 import { client } from "~/lib/api";
 import { type GetManyParams } from "~/lib/server";
 import { useCommunity } from "../../providers/CommunityProvider";
+import SkeletonTable from "../../skeletons/SkeletonTable";
 import { getColumns } from "./columns";
 
 type PubsDataTableProps = {
@@ -46,7 +54,13 @@ export const PubsDataTable = ({ perPage, ...props }: PubsDataTableProps) => {
  * This means various functions in `useDataTable` are overwritten in favor of controlling
  * state outside of the table.
  */
-export const PubsDataTableClient = () => {
+export const PubsDataTableClient = ({
+	rowSelection,
+	onRowSelectionChange,
+}: {
+	rowSelection?: RowSelectionState;
+	onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+}) => {
 	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
 		limit: 10,
 		offset: 0,
@@ -55,7 +69,7 @@ export const PubsDataTableClient = () => {
 	});
 	const community = useCommunity();
 
-	const { data } = client.pubs.getMany.useQuery({
+	const { data, isLoading } = client.pubs.getMany.useQuery({
 		queryKey: ["getPubs", filterParams],
 		queryData: {
 			query: {
@@ -124,18 +138,26 @@ export const PubsDataTableClient = () => {
 		filterFields: undefined,
 		enableAdvancedFilter: false,
 		initialState: {
+			pagination,
 			sorting: [{ id: "updatedAt", desc: true }],
+			rowSelection,
 		},
 		getRowId: (originalRow) => originalRow.id,
 		shallow: false,
 		clearOnDefault: true,
 		onPaginationChange: handlePaginationChange,
 		onSortingChange: handleSortingChange,
+		onRowSelectionChange,
 		state: {
 			pagination,
 			sorting,
+			rowSelection,
 		},
 	});
+
+	if (isLoading) {
+		return <SkeletonTable />;
+	}
 
 	if (!pubs) {
 		return null; // TODO: error state
