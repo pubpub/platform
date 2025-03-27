@@ -31,7 +31,6 @@ import { useDebouncedCallback } from "./use-debounced-callback";
 interface UseDataTableProps<TData>
 	extends Omit<
 			TableOptions<TData>,
-			| "state"
 			| "pageCount"
 			| "getCoreRowModel"
 			| "manualFiltering"
@@ -143,6 +142,7 @@ export function useDataTable<TData>({
 	clearOnDefault = false,
 	startTransition,
 	initialState,
+	state = {},
 	...props
 }: UseDataTableProps<TData>) {
 	const queryStateOptions = React.useMemo<Omit<UseQueryStateOptions<string>, "parse">>(() => {
@@ -306,11 +306,12 @@ export function useDataTable<TData>({
 			columnVisibility,
 			rowSelection,
 			columnFilters: enableAdvancedFilter ? [] : columnFilters,
+			...state,
 		},
 		enableRowSelection: true,
 		onRowSelectionChange: setRowSelection,
-		onPaginationChange,
-		onSortingChange,
+		onPaginationChange: props.onPaginationChange ?? onPaginationChange,
+		onSortingChange: props.onSortingChange ?? onSortingChange,
 		onColumnFiltersChange,
 		onColumnVisibilityChange: setColumnVisibility,
 		getCoreRowModel: getCoreRowModel(),

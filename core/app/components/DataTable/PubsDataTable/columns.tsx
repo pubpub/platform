@@ -13,7 +13,7 @@ import { dateFormatOptions } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 
 interface GetColumnsProps {
-	setRowAction: React.Dispatch<
+	setRowAction?: React.Dispatch<
 		React.SetStateAction<DataTableRowAction<ProcessedPub<{ withPubType: true }>> | null>
 	>;
 }
@@ -45,6 +45,7 @@ export function getColumns({
 			),
 			enableSorting: false,
 			enableHiding: false,
+			maxSize: 1,
 		},
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
@@ -59,7 +60,7 @@ export function getColumns({
 			enableSorting: false,
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
 			accessorKey: "updatedAt",
 			cell: ({ getValue }) => (
 				<time dateTime={new Date().toString()} suppressHydrationWarning>
