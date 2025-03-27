@@ -191,6 +191,12 @@ export default async function FormPage(props: {
 
 	const role = getCommunityRole(user, { slug: params.communitySlug });
 	if (!role) {
+		// user is not a member of the community, but is logged in, and the form is public
+		if (form.access === "public") {
+			redirect(
+				`/c/${params.communitySlug}/public/signup?redirectTo=/c/${params.communitySlug}/public/forms/${params.formSlug}/fill`
+			);
+		}
 		// TODO: show no access page
 		return notFound();
 	}

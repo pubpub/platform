@@ -273,6 +273,7 @@ export const publicJoinCommunity = defineServerAction(async function joinCommuni
 		role: toBeGrantedRole,
 	}).executeTakeFirstOrThrow();
 
+	// don't redirect, better to do it client side, better ux
 	return {
 		success: true,
 		report: `You have joined ${community.name}`,

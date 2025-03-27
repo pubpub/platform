@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import type { Communities } from "db/public";
@@ -9,6 +9,7 @@ import { MemberRole } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 import { Form } from "ui/form";
+import { toast } from "ui/use-toast";
 
 import { publicJoinCommunity } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
@@ -25,11 +26,20 @@ export const JoinCommunityForm = ({
 	const form = useForm();
 	const runJoin = useServerAction(publicJoinCommunity);
 	const router = useRouter();
+	const searchParams = useSearchParams();
+
+	const redirectPath = redirectTo ?? searchParams.get("redirectTo") ?? `/c/${community.slug}`;
 
 	const onSubmit = useCallback(async () => {
-		await runJoin();
-		router.push(redirectTo ?? `/c/${community.slug}`);
-	}, [redirectTo, runJoin]);
+		const result = await runJoin();
+		if ("success" in result) {
+			toast({
+				title: "Success",
+				description: result.report,
+			});
+			router.push(redirectPath);
+		}
+	}, [redirectPath, runJoin]);
 
 	return (
 		<Form {...form}>

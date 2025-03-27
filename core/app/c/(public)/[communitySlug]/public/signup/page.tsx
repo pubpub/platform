@@ -47,7 +47,7 @@ export default async function Page({
 
 		return (
 			<div className="m-auto max-w-lg">
-				<JoinCommunityForm community={community} role={joinRole} />
+				<JoinCommunityForm community={community} role={joinRole} redirectTo={redirectTo} />
 			</div>
 		);
 	}

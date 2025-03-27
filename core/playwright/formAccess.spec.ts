@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import type { UsersId } from "db/public";
+import type { PubsId, UsersId } from "db/public";
 import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
@@ -125,7 +125,7 @@ const seed = createSeed({
 				},
 				{
 					type: ElementType.button,
-					content: `Go see your pubs [here](/pubs)`,
+					content: `Go see your pubs :link{page='currentPub' text='here'}`,
 					label: "Submit",
 					stage: "Evaluating",
 				},
@@ -269,7 +269,9 @@ describe("public signup ", () => {
 });
 
 describe("public forms", () => {
-	test("non-users are able to signup for communityies and fill out public forms", async () => {
+	test("non-users are able to signup for communityies and fill out public forms", async ({
+		page,
+	}) => {
 		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
 		await test.step("non-users are able to access the public form", async () => {
 			await page.goto(fillUrl);
@@ -291,6 +293,7 @@ describe("public forms", () => {
 			await page.waitForURL(fillUrl, { timeout: 10_000 });
 		});
 
+		let pubId: PubsId;
 		await test.step("non-users are able to fill out the form", async () => {
 			await page.getByLabel("Title").fill("Test Title");
 			await page.getByLabel("Content").fill("Test Content");
@@ -298,9 +301,56 @@ describe("public forms", () => {
 			const submissionMessage = await page.getByText("Go see you").textContent({
 				timeout: 1_000,
 			});
-			console.log(submissionMessage);
+			pubId = new URL(page.url()).searchParams.get("pubId") as PubsId;
+		});
+
+		await test.step("user should be able to access their pub through a link on the post submission message", async () => {
 			await page.getByRole("link", { name: "here" }).click();
-			await page.waitForTimeout(2_000);
+			await page.waitForURL(`**/pubs/${pubId}`, { timeout: 10_000 });
+		});
+
+		await test.step("user should have been added as a contributor to the pub", async () => {
+			const allTestEmails = await page.getByText(testEmail).all();
+			expect(
+				allTestEmails.length,
+				"Expected 2 emails on the page, one for the user thingy and one for the contributor membership"
+			).toBe(2);
+
+			await page
+				.getByText("contributor", {
+					exact: true,
+				})
+				.waitFor({ state: "visible", timeout: 1_000 });
+		});
+	});
+
+	test("users from a different community are able to fill out a public form", async ({
+		page,
+	}) => {
+		await test.step("login as a user from a different community", async () => {
+			const loginPage = new LoginPage(page);
+			await loginPage.goto();
+			await loginPage.loginAndWaitForNavigation(community2.users.jimothy.email, password);
+		});
+
+		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		await test.step("user should be shown the join form", async () => {
+			await page.goto(fillUrl);
+			await page.waitForTimeout(1_000);
+			await page.waitForURL(
+				`/c/${community.community.slug}/public/signup?redirectTo=${fillUrl}`,
+				{ timeout: 10_000 }
+			);
+			await page.getByRole("heading", { name: "Join" }).waitFor({ state: "visible" });
+		});
+
+		await test.step("user is able to instantly join the community and is redirected to the form", async () => {
+			await page.getByRole("button", { name: `Join ${community.community.name}` }).click();
+			await page.getByText(`You have joined ${community.community.name}`).waitFor({
+				state: "visible",
+				timeout: 10_000,
+			});
+			await page.waitForURL(fillUrl, { timeout: 10_000 });
 		});
 	});
 });
