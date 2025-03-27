@@ -350,7 +350,7 @@ const handler = createNextHandler(
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					// TODO: figure out capability here
-					cookies: false,
+					cookies: true,
 				});
 
 				const { pubTypeId, stageId, filters, ...rest } = query ?? {};
