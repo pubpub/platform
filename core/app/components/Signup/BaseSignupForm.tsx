@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
 import { registerFormats } from "schemas";
@@ -31,6 +32,10 @@ export function BaseSignupForm(props: {
 	onSubmit: (data: SignupFormSchema) => Promise<void>;
 	redirectTo?: string;
 }) {
+	const searchParams = useSearchParams();
+
+	const redirectTo = props.redirectTo ?? searchParams.get("redirectTo");
+
 	const resolver = useMemo(() => typeboxResolver(compiledSignupFormSchema), []);
 
 	const form = useForm<SignupFormSchema>({
@@ -131,8 +136,8 @@ export function BaseSignupForm(props: {
 					<CardFooter>
 						Or{" "}
 						<Link
-							href={`/login${props.redirectTo ? `?redirectTo=${props.redirectTo}` : ""}`}
-							className="underline"
+							href={`/login${redirectTo ? `?redirectTo=${redirectTo}` : ""}`}
+							className="mx-1 font-semibold underline"
 						>
 							sign in
 						</Link>{" "}
