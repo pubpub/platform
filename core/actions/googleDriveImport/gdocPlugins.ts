@@ -770,12 +770,13 @@ export const structureReferences = () => (tree: Root) => {
 	/* in certain places, but it's late and brittle, and this is currently working. */
 	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/);
 	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/g);
+	const doiPlainRegexTest = new RegExp(/^(10\.|https?:\/\/doi\.org).*$/);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
 		if (node.tagName === "u" || node.tagName === "a") {
 			const parentText = getTextContent(parent);
 			const nodeText = getTextContent(node);
-			if (doiBracketRegexTest.test(parentText)) {
+			if (doiBracketRegexTest.test(parentText) && doiPlainRegexTest.test(nodeText)) {
 				const elements = [
 					{
 						type: "text",
@@ -1082,7 +1083,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 		if (node.tagName === "table") {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
-			const aggregateFigureTypes = ["image", "audio", "file", "iframe"];
+			const aggregateFigureTypes = ["image", "audio", "iframe"]; // Don't count 'file' figure types
 			const independentFigureTypes = ["video", "table", "math"];
 			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 			if (validFigureTypes.includes(tableType)) {
@@ -1174,7 +1175,7 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	/*
 	 */
 	const figureCount: { [key: string]: number } = {};
-	const aggregateFigureTypes = ["img", "audio", "file", "iframe"];
+	const aggregateFigureTypes = ["img", "audio", "iframe"]; // Don't count 'file' figure types
 	const independentFigureTypes = ["video", "table", "math"];
 	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 	visit(tree, "element", (node: any, index: any, parent: any) => {

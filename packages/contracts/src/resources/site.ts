@@ -5,6 +5,7 @@ import type {
 	ActionInstances,
 	CommunitiesId,
 	CoreSchemaType,
+	FormElementsId,
 	MemberRole,
 	PubFields,
 	PubFieldsId,
@@ -194,20 +195,49 @@ export type MaybePubOptions = {
 	withValues?: boolean;
 };
 
-type ValueBase = {
-	id: PubValuesId;
-	fieldId: PubFieldsId;
-	value: JsonValue;
-	createdAt: Date;
-	updatedAt: Date;
-	/**
-	 * Information about the field that the value belongs to.
-	 */
+/**
+ * Information about the field that the value belongs to.
+ */
+type ValueFieldInfo = {
 	schemaName: CoreSchemaType;
+	fieldId: PubFieldsId;
 	fieldSlug: string;
 	fieldName: string;
 	rank: string | null;
 };
+
+type ValueBase = {
+	id: PubValuesId;
+	value: unknown;
+	createdAt: Date;
+	updatedAt: Date;
+} & ValueFieldInfo;
+
+type ValuesWithFormElements =
+	| // With both values and form elements
+	(ValueBase & {
+			formElementId: FormElementsId;
+			formElementLabel: string | null;
+			formElementConfig:
+				| { label?: string }
+				| { relationshipConfig: { label?: string } }
+				| null;
+	  })
+	// With only value info
+	| ValueBase
+	// With only form info
+	| ({
+			id: null;
+			value: null;
+			createdAt: null;
+			updatedAt: null;
+			formElementId: FormElementsId;
+			formElementLabel: string | null;
+			formElementConfig:
+				| { label?: string }
+				| { relationshipConfig: { label?: string } }
+				| null;
+	  } & ValueFieldInfo);
 
 type ProcessedPubBase = {
 	id: PubsId;
@@ -233,6 +263,15 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	 * Is an empty array if `withValues` is false
 	 */
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
+} & MaybePubStage<Options> &
+	MaybePubPubType<Options> &
+	MaybePubMembers<Options> &
+	MaybePubLegacyAssignee<Options>;
+
+export type ProcessedPubWithForm<
+	Options extends Omit<MaybePubOptions, "withValues" & { withValues: true }> = {},
+> = ProcessedPubBase & {
+	values: (ValuesWithFormElements & MaybePubRelatedPub<Options>)[];
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &

@@ -931,8 +931,8 @@ test("Structure References", async () => {
 						</tr>
 					</tbody>
 				</table>
-				<p>I'd also like to add [10.12341] here.</p>
-				<p>And this should be the same number [10.12341] here. But this diff, [http://doi.org/10.5123/123]. </p>
+				<p>I'd also like to add [<u><a>10.12341</a></u>] here.</p>
+				<p>And this should be the same number [10.12341] here. But <a href="cat">this</a> diff, [http://doi.org/10.5123/123]. </p>
 				<p><span>Two more [</span><u><a href="10.1016/S0167-4781(02)00500-6">10.1016/S0167-4781(02)00500-6</a></u><span>]</span><span>[</span><span>10.abc123</span><span>].</span></p>
 			</body>
 		</html>
@@ -958,7 +958,7 @@ test("Structure References", async () => {
 				<p>And this should be the same number <a
 							 data-type="reference" data-value="10.12341">
 							[3]
-						</a> here. But this diff, <a
+						</a> here. But <a href="cat">this</a> diff, <a
 							 data-type="reference" data-value="http://doi.org/10.5123/123">
 							[4]
 						</a>. </p>
