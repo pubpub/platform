@@ -126,7 +126,7 @@ export const ButtonConfigurationForm = ({
 					e.stopPropagation(); //prevent submission from propagating to parent form
 					form.handleSubmit(onSubmit)(e);
 				}}
-				className="flex h-full flex-col justify-between gap-2 pt-2"
+				className="flex h-full flex-col gap-4 pt-2"
 			>
 				<ButtonOption label={labelValue} readOnly />
 				<FormField

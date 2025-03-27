@@ -327,7 +327,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		}
 
 		if (body.members && Object.keys(body.members).length) {
-			await trx
+			const res = await trx
 				.insertInto("pub_memberships")
 				.values(
 					Object.entries(body.members).map(([userId, role]) => ({
@@ -336,6 +336,8 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						role,
 					}))
 				)
+				// no conflict resolution is needed, as the user cannot be a member of the pub
+				// since we are just now creating the pub
 				.execute();
 		}
 		const rankedValues = await getRankedValues({

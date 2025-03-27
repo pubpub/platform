@@ -5,7 +5,13 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
-import { AuthTokenType, ElementType, InputComponent, StructuralFormElement } from "db/public";
+import {
+	AuthTokenType,
+	ElementType,
+	formsIdSchema,
+	InputComponent,
+	StructuralFormElement,
+} from "db/public";
 
 import type { XOR } from "../types";
 import type { GetPubTypesResult } from "./pubtype";
@@ -116,14 +122,15 @@ export const addMemberToForm = async (
 	props: { communityId: CommunitiesId; userId: UsersId; pubId: PubsId } & XOR<
 		{ slug: string },
 		{ id: FormsId }
-	>
+	>,
+	trx = db
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
 	const { userId, pubId, ...getFormProps } = props;
-	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
+	const form = await getForm(getFormProps, trx).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
-		db
+		trx
 			.selectFrom("form_memberships")
 			.selectAll("form_memberships")
 			.where("form_memberships.formId", "=", form.id)
@@ -133,7 +140,7 @@ export const addMemberToForm = async (
 
 	if (existingPermission === undefined) {
 		await autoRevalidate(
-			db.insertInto("form_memberships").values({ formId: form.id, userId, pubId })
+			trx.insertInto("form_memberships").values({ formId: form.id, userId, pubId })
 		).execute();
 	}
 };

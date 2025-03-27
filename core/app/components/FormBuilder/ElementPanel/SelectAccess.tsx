@@ -8,23 +8,17 @@ import { Contact, Lock, Users } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
 const iconsAndCopy = {
-	[FormAccessType.inviteOnly]: {
-		Icon: Contact,
-		description: "Accessible via URL with tracked submissions",
-		name: "Invite Only",
-		help: "Community members & invited contributors can submit",
-	},
 	[FormAccessType.private]: {
 		Icon: Lock,
 		description: "Only accessible via Pub editor",
 		name: "Private",
-		help: "Only community members can create and edit",
+		help: "Only community members or invitees can create and edit",
 	},
 	[FormAccessType.public]: {
 		Icon: Users,
 		description: "Accessible via URL with untracked submissions",
 		name: "Public",
-		help: "Anyone with the link can submit",
+		help: "Anyone with the link can signup can submit. NOTE: this enables public signups to your community.",
 	},
 };
 

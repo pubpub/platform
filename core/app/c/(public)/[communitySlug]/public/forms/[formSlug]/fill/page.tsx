@@ -3,10 +3,10 @@ import { randomUUID } from "crypto";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { ElementType, MemberRole } from "db/public";
+import { ElementType, FormAccessType, MemberRole } from "db/public";
 import { expect } from "utils";
 
 import type { Form } from "~/lib/server/form";
@@ -164,6 +164,13 @@ export default async function FormPage(props: {
 	}
 
 	if (!user && !session) {
+		if (form.access === "public") {
+			// redirect user to signup/login
+			redirect(
+				`/c/${params.communitySlug}/public/signup?redirectTo=/c/${params.communitySlug}/public/forms/${params.formSlug}/fill`
+			);
+		}
+
 		const result = await handleFormToken({
 			params,
 			searchParams,
@@ -184,12 +191,18 @@ export default async function FormPage(props: {
 
 	const role = getCommunityRole(user, { slug: params.communitySlug });
 	if (!role) {
+		// user is not a member of the community, but is logged in, and the form is public
+		if (form.access === "public") {
+			redirect(
+				`/c/${params.communitySlug}/public/signup?redirectTo=/c/${params.communitySlug}/public/forms/${params.formSlug}/fill`
+			);
+		}
 		// TODO: show no access page
 		return notFound();
 	}
 
 	// all other roles always have access to the form
-	if (role === MemberRole.contributor) {
+	if (role === MemberRole.contributor && form.access !== FormAccessType.public) {
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
