@@ -6,6 +6,9 @@
 */
 -- AlterEnum
 BEGIN;
+
+UPDATE "forms" SET "access" = 'private' WHERE "access" = 'inviteOnly';
+
 CREATE TYPE "FormAccessType_new" AS ENUM ('private', 'public');
 ALTER TABLE "forms" ALTER COLUMN "access" DROP DEFAULT;
 ALTER TABLE "forms" ALTER COLUMN "access" TYPE "FormAccessType_new" USING ("access"::text::"FormAccessType_new");
