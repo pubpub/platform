@@ -1,41 +1,37 @@
 {
-  "extends": "tsconfig/nextjs.json",
-  "compilerOptions": {
-    "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
-    "noErrorTruncation": true,
-    "allowSyntheticDefaultImports": true,
-    // maybe add back next plugin if it doesnt crash the ts-server all the time
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "~/*": [
-        "./*"
-      ]
-    },
-    "strictNullChecks": true,
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
-  },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    "instrumentation.node.mts",
-    "../packages/db/scripts/scripts/generateDatabaseObject.mts",
-    "../packages/db/src/prisma/comment-generator.ts",
-    "cache-handler.js",
-    "prisma/generate-history-table.mts",
-    "prisma/seed.cts",
-    "prisma/scripts/comment-generator.mts",
-    "prisma/seed/stubs/*.js"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next/types/**/*.ts"
-  ]
+	"extends": "tsconfig/nextjs.json",
+	"compilerOptions": {
+		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
+		"noErrorTruncation": true,
+		"allowSyntheticDefaultImports": true,
+		// next just straight up does not let you not use their stupid plugin
+		// see docs/development/common-issues.mdx for more
+		"plugins": [
+			{
+				"name": "next"
+			}
+		],
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./*"]
+		},
+		"strictNullChecks": true,
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+	},
+	"include": [
+		"next-env.d.ts",
+		"**/*.ts",
+		"**/*.tsx",
+		".next/types/**/*.ts",
+		"instrumentation.node.mts",
+		"../packages/db/scripts/scripts/generateDatabaseObject.mts",
+		"../packages/db/src/prisma/comment-generator.ts",
+		"cache-handler.js",
+		"prisma/generate-history-table.mts",
+		"prisma/seed.cts",
+		"prisma/scripts/comment-generator.mts",
+		"prisma/seed/stubs/*.js"
+	],
+	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
