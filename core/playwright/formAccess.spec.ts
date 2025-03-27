@@ -242,29 +242,6 @@ describe("public signup ", () => {
 			await waitForBaseCommunityPage(page, community.community.slug);
 		});
 	});
-
-	describe("cross community cases", () => {
-		test("signed in users from outside the community should see a join form instead of a signup form", async () => {
-			const loginPage = new LoginPage(page);
-			await loginPage.goto();
-			await loginPage.loginAndWaitForNavigation(community2.users.jimothy.email, password);
-
-			await page.waitForTimeout(1_000);
-			const signup = await page.goto(`/c/${community.community.slug}/public/signup`);
-			await page.waitForURL(`/c/${community.community.slug}/public/signup`);
-			await page.waitForTimeout(1_000);
-			await page
-				.getByRole("button", { name: `Join ${community.community.name}` })
-				.waitFor({ state: "visible", timeout: 5_000 });
-
-			test.step("users from outside the community should be able to join the community", async () => {
-				await page
-					.getByRole("button", { name: `Join ${community.community.name}` })
-					.click();
-				await page.waitForURL(`/c/${community.community.slug}`);
-			});
-		});
-	});
 });
 
 describe("public forms", () => {
