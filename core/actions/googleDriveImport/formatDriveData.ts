@@ -7,6 +7,7 @@ import { rehype } from "rehype";
 import { visit } from "unist-util-visit";
 
 import type { PubsId } from "db/public";
+import { logger } from "logger";
 
 import type { DriveData } from "./getGDriveFiles";
 import { uploadFileToS3 } from "~/lib/server";
@@ -55,16 +56,25 @@ const processAssets = async (html: string, pubId: string): Promise<string> => {
 		.use(() => async (tree: Root) => {
 			const assetUrls: { [key: string]: string } = {};
 			visit(tree, "element", (node: any) => {
-				const hasSrc = ["img", "video", "audio", "source"].includes(node.tagName);
+				const hasSrc = ["img", "video", "audio", "source", "iframe"].includes(node.tagName);
 				const isDownload =
 					node.tagName === "a" && node.properties.className === "file-button";
 				if (hasSrc || isDownload) {
 					const propertyKey = hasSrc ? "src" : "href";
 					const originalAssetUrl = node.properties[propertyKey];
+
 					if (originalAssetUrl) {
-						const urlObject = new URL(originalAssetUrl);
-						if (!urlObject.hostname.endsWith(".pubpub.org")) {
-							assetUrls[originalAssetUrl] = "";
+						try {
+							const urlObject = new URL(originalAssetUrl);
+							const isIframe = node.tagName === "iframe";
+							if (!isIframe && !urlObject.hostname.endsWith(".pubpub.org")) {
+								assetUrls[originalAssetUrl] = "";
+							}
+							if (isIframe && urlObject.hostname.endsWith("drive.google.com")) {
+								assetUrls[originalAssetUrl] = "";
+							}
+						} catch (err) {
+							logger.error(err);
 						}
 					}
 				}
