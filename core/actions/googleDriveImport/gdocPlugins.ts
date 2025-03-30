@@ -123,7 +123,8 @@ export const tableToObjectArray = (node: any) => {
 		}
 
 		const isAssetSource =
-			["image", "video", "audio", "file", "iframe"].includes(tableType) && headerVal === "source";
+			["image", "video", "audio", "file", "iframe"].includes(tableType) &&
+			headerVal === "source";
 		const isStaticSource = headerVal === "staticimage";
 		if (isAssetSource || isStaticSource) {
 			const anchor = findAnchor(cell);
