@@ -12,18 +12,18 @@ export const AddRelatedPubsPanel = ({
 	title,
 	relatedPubs,
 	onCancel,
-	onAdd,
+	onChangeRelatedPubs,
 }: {
 	title: string;
 	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
-	onAdd: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
+	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
 }) => {
 	const sidebarRef = useRef(null);
 	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(relatedPubs);
 
-	const handleAdd = () => {
-		onAdd(selected as ProcessedPub<{ withPubType: true }>[]);
+	const handleUpdate = () => {
+		onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[]);
 		onCancel();
 	};
 
@@ -40,10 +40,10 @@ export const AddRelatedPubsPanel = ({
 				<Button
 					type="button"
 					data-testid="add-related-pub-button"
-					onClick={handleAdd}
+					onClick={handleUpdate}
 					className="flex-1 bg-blue-500 hover:bg-blue-600"
 				>
-					Add
+					Update
 				</Button>
 			</div>
 		</SidePanel>

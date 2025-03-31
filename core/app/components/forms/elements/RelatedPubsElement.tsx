@@ -14,12 +14,11 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
-import { skipToken } from "@tanstack/react-query";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
 import type { ProcessedPub } from "contracts";
-import type { InputComponent, PubsId } from "db/public";
+import type { InputComponent, PubsId, PubValuesId } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { GripVertical, Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
@@ -190,16 +189,18 @@ export const RelatedPubsElement = ({
 	valueComponentProps: PubFieldFormElementProps;
 }) => {
 	const [showPanel, setShowPanel] = useState(false);
+
+	// Look through existing related pubs in `values` to get their pub titles
 	const initialRelatedPubs = valueComponentProps.values.flatMap((v) =>
 		v.relatedPub && v.relatedPubId
 			? [{ id: v.relatedPubId, pub: v.relatedPub as ProcessedPub<{ withPubType: true }> }]
 			: []
 	);
-	const initialRelatedPubTitles = Object.fromEntries(
-		initialRelatedPubs.map((p) => [p.id, getPubTitle(p.pub)])
-	);
+	const [relatedPubs, setRelatedPubs] = useState(initialRelatedPubs.map((p) => p.pub));
 
-	const [pubTitles, setPubTitles] = useState<Record<PubsId, string>>(initialRelatedPubTitles);
+	const pubTitles = useMemo(() => {
+		return Object.fromEntries(relatedPubs.map((p) => [p.id, getPubTitle(p)]));
+	}, [relatedPubs]);
 
 	const { control, getValues, setValue } = useFormContext<
 		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
@@ -244,27 +245,50 @@ export const RelatedPubsElement = ({
 				control={control}
 				name={slug}
 				render={({ field }) => {
-					const handleAddPubs = (newPubs: ProcessedPub<{ withPubType: true }>[]) => {
+					const handleRemovePub = (
+						item: { valueId?: PubValuesId; relatedPubId: PubsId },
+						index: number
+					) => {
+						remove(index);
+						if (item.valueId) {
+							setValue("deleted", [
+								...getValues("deleted"),
+								{
+									relatedPubId: item.relatedPubId,
+									slug,
+								},
+							]);
+						}
+						setRelatedPubs(relatedPubs.filter((p) => p.id !== item.relatedPubId));
+					};
+
+					const handleChangeRelatedPubs = (
+						newPubs: ProcessedPub<{ withPubType: true }>[]
+					) => {
+						for (const [index, value] of field.value.entries()) {
+							const removed = !newPubs.find((p) => p.id === value.relatedPubId);
+							if (removed) {
+								handleRemovePub(value, index);
+							}
+						}
+
 						// Only add the pubs that we do not already have
 						const alreadyLinked = field.value.map((v) => v.relatedPubId);
 						const ranks = findRanksBetween({
 							start: field.value[field.value.length - 1]?.rank,
 							numberOfRanks: newPubs.length,
 						});
-						const values = newPubs
-							.filter((p) => !alreadyLinked.includes(p.id))
-							.map((p, i) => ({
-								relatedPubId: p.id,
-								value: null,
-								rank: ranks[i],
-							}));
-						for (const value of values) {
+						// Add new values
+						const newlyAdded = newPubs.filter((p) => !alreadyLinked.includes(p.id));
+						const newValues = newlyAdded.map((p, i) => ({
+							relatedPubId: p.id,
+							value: null,
+							rank: ranks[i],
+						}));
+						for (const value of newValues) {
 							append(value);
 						}
-						const newPubTitles = Object.fromEntries(
-							newPubs.map((p) => [p.id, getPubTitle(p)])
-						);
-						setPubTitles({ ...pubTitles, ...newPubTitles });
+						setRelatedPubs([...relatedPubs, ...newlyAdded]);
 					};
 
 					return (
@@ -273,8 +297,8 @@ export const RelatedPubsElement = ({
 								<AddRelatedPubsPanel
 									title={`Add ${label}`}
 									onCancel={() => setShowPanel(false)}
-									onAdd={handleAddPubs}
-									relatedPubs={initialRelatedPubs.map((rp) => rp.pub)}
+									onChangeRelatedPubs={handleChangeRelatedPubs}
+									relatedPubs={relatedPubs}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>
@@ -300,19 +324,19 @@ export const RelatedPubsElement = ({
 														strategy={verticalListSortingStrategy}
 													>
 														{fields.map(({ id, ...item }, index) => {
-															const handleRemovePub = () => {
-																remove(index);
-																if (item.valueId) {
-																	setValue("deleted", [
-																		...getValues("deleted"),
-																		{
-																			relatedPubId:
-																				item.relatedPubId,
-																			slug,
-																		},
-																	]);
-																}
-															};
+															// const handleRemovePub = () => {
+															// 	remove(index);
+															// 	if (item.valueId) {
+															// 		setValue("deleted", [
+															// 			...getValues("deleted"),
+															// 			{
+															// 				relatedPubId:
+															// 					item.relatedPubId,
+															// 				slug,
+															// 			},
+															// 		]);
+															// 	}
+															// };
 															const innerSlug =
 																`${slug}.${index}.value` as const;
 															return (
@@ -322,7 +346,9 @@ export const RelatedPubsElement = ({
 																	pubTitle={
 																		pubTitles[item.relatedPubId]
 																	}
-																	onRemove={handleRemovePub}
+																	onRemove={() =>
+																		handleRemovePub(item, index)
+																	}
 																	slug={innerSlug}
 																	valueComponentProps={
 																		valueComponentProps
