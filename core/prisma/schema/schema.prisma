@@ -228,6 +228,7 @@ model PubType {
   fields PubFieldToPubType[]
   pubs   Pub[]
   Form   Form[]
+  formElements FormElement[]
 
   @@unique([name, communityId])
   @@map(name: "pub_types")
@@ -559,6 +560,7 @@ model FormElement {
   stageId   String?
   createdAt DateTime               @default(now())
   updatedAt DateTime               @default(now()) @updatedAt
+  relatedPubTypes PubType[]
 
   @@unique([type, label, formId])
   @@unique([fieldId, formId])
