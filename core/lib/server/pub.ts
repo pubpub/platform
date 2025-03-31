@@ -1227,13 +1227,14 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 // filtering wouldn't make sense). We probably need to do that, but we should make it more explicit
 // than just leaving out the userId to avoid accidentally letting certain routes select pubs without
 // authorization checks
-type PubIdOrPubTypeIdOrStageIdOrCommunityId =
+type PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds =
 	| {
 			pubId: PubsId;
 			pubTypeId?: never;
 			stageId?: never;
 			communityId: CommunitiesId;
 			userId?: UsersId;
+			pubIds?: PubsId[];
 	  }
 	| {
 			pubId?: never;
@@ -1241,6 +1242,7 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 			stageId?: StagesId;
 			communityId: CommunitiesId;
 			userId?: UsersId;
+			pubIds?: PubsId[];
 	  };
 
 const DEFAULT_OPTIONS = {
@@ -1255,12 +1257,12 @@ const DEFAULT_OPTIONS = {
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
-	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
+	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds, { pubId: PubsId }>,
 	options?: Options
 	// if only pubId + communityId is provided, we return a single pub
 ): Promise<ProcessedPub<Options>>;
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
-	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
+	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds, { pubId: PubsId }>,
 	options?: Options
 	// if any other props are provided, we return an array of pubs
 ): Promise<ProcessedPub<Options>[]>;
@@ -1268,7 +1270,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
  * Retrieves a pub and all its values and related pubs up to a given depth.
  */
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
-	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
+	props: PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds,
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
 	const opts = {
@@ -1619,6 +1621,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						)
 					)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
+					.$if(Boolean(props.pubIds), (qb) => qb.where("pubs.id", "in", props.pubIds!))
 					.$if(Boolean(props.stageId), (qb) =>
 						qb.where("PubsInStages.stageId", "=", props.stageId!)
 					)

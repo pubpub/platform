@@ -354,7 +354,7 @@ const handler = createNextHandler(
 					cookies: true,
 				});
 
-				const { pubTypeId, stageId, filters, ...rest } = query ?? {};
+				const { pubTypeId, stageId, filters, pubIds, ...rest } = query ?? {};
 
 				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
 
@@ -365,12 +365,13 @@ const handler = createNextHandler(
 						throw new BadRequestError(e.message);
 					}
 				}
-
+				console.log({ query, pubIds }, request.url);
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
 						pubTypeId,
 						stageId,
+						pubIds,
 						userId: user.id,
 					},
 					{

@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
+import { skipToken } from "@tanstack/react-query";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
@@ -39,14 +40,14 @@ import { PubFieldFormElement } from "../PubFieldFormElement";
 
 const RelatedPubBlock = ({
 	id,
-	pubId,
+	pub,
 	onRemove,
 	valueComponentProps,
 	slug,
 	onBlur,
 }: {
 	id: string;
-	pubId: PubsId;
+	pub: ProcessedPub<{ withPubType: true }>;
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: string;
@@ -56,33 +57,11 @@ const RelatedPubBlock = ({
 		id,
 	});
 	const community = useCommunity();
-	const { data, isLoading } = client.pubs.get.useQuery({
-		queryKey: ["getPubs", pubId],
-		queryData: {
-			query: {
-				withPubType: true,
-			},
-			params: {
-				pubId,
-				communitySlug: community.slug,
-			},
-		},
-	});
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
 	};
-
-	if (isLoading) {
-		return <Skeleton className="h-6" />;
-	}
-
-	if (!data) {
-		return null;
-	}
-
-	const pub = data.body as ProcessedPub<{ withPubType: true }>;
 
 	return (
 		<div
@@ -246,10 +225,45 @@ export const RelatedPubsElement = ({
 		},
 		[fields]
 	);
+	const community = useCommunity();
+	const relatedPubIds = fields.map((f) => f.relatedPubId);
+	const { data, isLoading } = client.pubs.getMany.useQuery({
+		queryKey: ["getPubs", relatedPubIds],
+		queryData: relatedPubIds.length
+			? {
+					query: {
+						withPubType: true,
+						pubIds: relatedPubIds,
+						// pubIds: "asdf",
+						test: [1],
+						//				limit: 0
+					},
+					params: {
+						communitySlug: community.slug,
+					},
+				}
+			: skipToken,
+	});
+	const pubsById = useMemo(() => {
+		if (!data) {
+			return {};
+		}
+		return data.body.reduce(
+			(acc, pub) => {
+				acc[pub.id] = pub as ProcessedPub<{ withPubType: true }>;
+				return acc;
+			},
+			{} as Record<string, ProcessedPub<{ withPubType: true }>>
+		);
+	}, [data]);
 
 	Value.Default(relationBlockConfigSchema, config);
 	if (!Value.Check(relationBlockConfigSchema, config)) {
 		return null;
+	}
+
+	if (isLoading) {
+		return <Skeleton className="h-6" />;
 	}
 
 	return (
@@ -325,7 +339,9 @@ export const RelatedPubsElement = ({
 																<RelatedPubBlock
 																	key={id}
 																	id={id}
-																	pubId={item.relatedPubId}
+																	pub={
+																		pubsById[item.relatedPubId]
+																	}
 																	onRemove={handleRemovePub}
 																	slug={innerSlug}
 																	valueComponentProps={
