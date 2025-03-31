@@ -9,7 +9,7 @@ import type {
 	Updater,
 } from "@tanstack/react-table";
 
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 
 import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
 import { TOTAL_PUBS_COUNT_HEADER } from "contracts";
@@ -55,11 +55,11 @@ export const PubsDataTable = ({ perPage, ...props }: PubsDataTableProps) => {
  * state outside of the table.
  */
 export const PubsDataTableClient = ({
-	rowSelection,
-	onRowSelectionChange,
+	selectedPubs,
+	onSelectedPubsChange,
 }: {
-	rowSelection?: RowSelectionState;
-	onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+	selectedPubs?: NonGenericProcessedPub[];
+	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
 }) => {
 	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
 		limit: 10,
@@ -130,6 +130,36 @@ export const PubsDataTableClient = ({
 			});
 		}
 	};
+
+	/**
+	 * Handle the row selection internally so that we can hoist the full pub up
+	 * rather than only the id
+	 */
+	const rowSelection = useMemo(() => {
+		if (!selectedPubs) {
+			return undefined;
+		}
+		return Object.fromEntries(selectedPubs.map((p) => [p.id, true]));
+	}, [selectedPubs]);
+
+	const onRowSelectionChange = useCallback(
+		(updaterOrValue: Updater<RowSelectionState>) => {
+			if (!selectedPubs || !onSelectedPubsChange) {
+				return undefined;
+			}
+			const prevRows = Object.fromEntries(selectedPubs.map((p) => [p.id, true]));
+			const newRows =
+				typeof updaterOrValue === "function" ? updaterOrValue(prevRows) : updaterOrValue;
+			const newPubs = Object.entries(newRows)
+				.filter(([pubId, selected]) => selected)
+				.map(([pubId]) => {
+					return [...pubs, ...selectedPubs].find((p) => p.id === pubId);
+				})
+				.flatMap((p) => (p ? [p] : []));
+			onSelectedPubsChange(newPubs);
+		},
+		[onSelectedPubsChange, selectedPubs, pubs]
+	);
 
 	const { table } = useDataTable({
 		data: pubs,

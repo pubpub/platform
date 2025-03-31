@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-import type { PubsId } from "db/public";
+import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
 import { Button } from "ui/button";
 
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
@@ -10,25 +10,20 @@ import { PubsDataTableClient } from "../DataTable/PubsDataTable/PubsDataTableCli
 
 export const AddRelatedPubsPanel = ({
 	title,
-	relatedPubIds,
+	relatedPubs,
 	onCancel,
 	onAdd,
 }: {
 	title: string;
-	relatedPubIds: PubsId[];
+	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
-	onAdd: (pubs: PubsId[]) => void;
+	onAdd: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
 }) => {
 	const sidebarRef = useRef(null);
-	const [selected, setSelected] = useState<Record<string, boolean>>(
-		Object.fromEntries(relatedPubIds.map((id) => [id, true]))
-	);
+	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(relatedPubs);
 
 	const handleAdd = () => {
-		const selectedPubIds = Object.entries(selected)
-			.filter(([pubId, selected]) => selected)
-			.map((selection) => selection[0] as PubsId);
-		onAdd(selectedPubIds);
+		onAdd(selected as ProcessedPub<{ withPubType: true }>[]);
 		onCancel();
 	};
 
@@ -36,7 +31,7 @@ export const AddRelatedPubsPanel = ({
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={title} showCancel onCancel={onCancel} />
-				<PubsDataTableClient rowSelection={selected} onRowSelectionChange={setSelected} />
+				<PubsDataTableClient selectedPubs={selected} onSelectedPubsChange={setSelected} />
 			</div>
 			<div className="mt-auto flex w-full justify-between gap-2">
 				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>

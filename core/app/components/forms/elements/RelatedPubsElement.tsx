@@ -25,29 +25,26 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { GripVertical, Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
 import { MultiBlock } from "ui/multiblock";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
 import type { ElementProps, RelatedFormValues, SingleFormValues } from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
-import { client } from "~/lib/api";
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
-import { useCommunity } from "../../providers/CommunityProvider";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
 const RelatedPubBlock = ({
 	id,
-	pub,
+	pubTitle,
 	onRemove,
 	valueComponentProps,
 	slug,
 	onBlur,
 }: {
 	id: string;
-	pub: ProcessedPub<{ withPubType: true }>;
+	pubTitle: string;
 	onRemove: () => void;
 	valueComponentProps: PubFieldFormElementProps;
 	slug: string;
@@ -56,7 +53,6 @@ const RelatedPubBlock = ({
 	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
 		id,
 	});
-	const community = useCommunity();
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
@@ -71,7 +67,7 @@ const RelatedPubBlock = ({
 		>
 			{/* Max width to keep long 'value's truncated. 90% to leave room for the trash button */}
 			<div className="flex max-w-[90%] flex-col items-start gap-1 text-sm">
-				<span className="font-semibold">{getPubTitle(pub)}</span>
+				<span className="font-semibold">{pubTitle}</span>
 				<ConfigureRelatedValue {...valueComponentProps} slug={slug} onBlur={onBlur} />
 			</div>
 			<div className="ml-auto">
@@ -194,6 +190,17 @@ export const RelatedPubsElement = ({
 	valueComponentProps: PubFieldFormElementProps;
 }) => {
 	const [showPanel, setShowPanel] = useState(false);
+	const initialRelatedPubs = valueComponentProps.values.flatMap((v) =>
+		v.relatedPub && v.relatedPubId
+			? [{ id: v.relatedPubId, pub: v.relatedPub as ProcessedPub<{ withPubType: true }> }]
+			: []
+	);
+	const initialRelatedPubTitles = Object.fromEntries(
+		initialRelatedPubs.map((p) => [p.id, getPubTitle(p.pub)])
+	);
+
+	const [pubTitles, setPubTitles] = useState<Record<PubsId, string>>(initialRelatedPubTitles);
+
 	const { control, getValues, setValue } = useFormContext<
 		RelatedFormValues & { deleted: { slug: string; relatedPubId: PubsId }[] }
 	>();
@@ -225,45 +232,10 @@ export const RelatedPubsElement = ({
 		},
 		[fields]
 	);
-	const community = useCommunity();
-	const relatedPubIds = fields.map((f) => f.relatedPubId);
-	const { data, isLoading } = client.pubs.getMany.useQuery({
-		queryKey: ["getPubs", relatedPubIds],
-		queryData: relatedPubIds.length
-			? {
-					query: {
-						withPubType: true,
-						pubIds: relatedPubIds,
-						// pubIds: "asdf",
-						test: [1],
-						//				limit: 0
-					},
-					params: {
-						communitySlug: community.slug,
-					},
-				}
-			: skipToken,
-	});
-	const pubsById = useMemo(() => {
-		if (!data) {
-			return {};
-		}
-		return data.body.reduce(
-			(acc, pub) => {
-				acc[pub.id] = pub as ProcessedPub<{ withPubType: true }>;
-				return acc;
-			},
-			{} as Record<string, ProcessedPub<{ withPubType: true }>>
-		);
-	}, [data]);
 
 	Value.Default(relationBlockConfigSchema, config);
 	if (!Value.Check(relationBlockConfigSchema, config)) {
 		return null;
-	}
-
-	if (isLoading) {
-		return <Skeleton className="h-6" />;
 	}
 
 	return (
@@ -272,19 +244,27 @@ export const RelatedPubsElement = ({
 				control={control}
 				name={slug}
 				render={({ field }) => {
-					const handleAddPubs = (newPubIds: PubsId[]) => {
+					const handleAddPubs = (newPubs: ProcessedPub<{ withPubType: true }>[]) => {
+						// Only add the pubs that we do not already have
+						const alreadyLinked = field.value.map((v) => v.relatedPubId);
 						const ranks = findRanksBetween({
 							start: field.value[field.value.length - 1]?.rank,
-							numberOfRanks: newPubIds.length,
+							numberOfRanks: newPubs.length,
 						});
-						const values = newPubIds.map((pubId, i) => ({
-							relatedPubId: pubId,
-							value: null,
-							rank: ranks[i],
-						}));
+						const values = newPubs
+							.filter((p) => !alreadyLinked.includes(p.id))
+							.map((p, i) => ({
+								relatedPubId: p.id,
+								value: null,
+								rank: ranks[i],
+							}));
 						for (const value of values) {
 							append(value);
 						}
+						const newPubTitles = Object.fromEntries(
+							newPubs.map((p) => [p.id, getPubTitle(p)])
+						);
+						setPubTitles({ ...pubTitles, ...newPubTitles });
 					};
 
 					return (
@@ -294,7 +274,7 @@ export const RelatedPubsElement = ({
 									title={`Add ${label}`}
 									onCancel={() => setShowPanel(false)}
 									onAdd={handleAddPubs}
-									relatedPubIds={field.value.map((v) => v.relatedPubId)}
+									relatedPubs={initialRelatedPubs.map((rp) => rp.pub)}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>
@@ -339,8 +319,8 @@ export const RelatedPubsElement = ({
 																<RelatedPubBlock
 																	key={id}
 																	id={id}
-																	pub={
-																		pubsById[item.relatedPubId]
+																	pubTitle={
+																		pubTitles[item.relatedPubId]
 																	}
 																	onRemove={handleRemovePub}
 																	slug={innerSlug}
