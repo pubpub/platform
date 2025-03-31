@@ -6,6 +6,7 @@ import type { LastModifiedBy } from "../types";
 import type { ActionRunsId } from "./ActionRuns";
 import type { CommunitiesId } from "./Communities";
 import type { FormsId } from "./Forms";
+import type { InviteStatus } from "./InviteStatus";
 import type { MemberRole } from "./MemberRole";
 import type { PubsId } from "./Pubs";
 import type { StagesId } from "./Stages";
@@ -13,6 +14,7 @@ import type { UsersId } from "./Users";
 import { actionRunsIdSchema } from "./ActionRuns";
 import { communitiesIdSchema } from "./Communities";
 import { formsIdSchema } from "./Forms";
+import { inviteStatusSchema } from "./InviteStatus";
 import { memberRoleSchema } from "./MemberRole";
 import { modifiedByTypeSchema } from "./ModifiedByType";
 import { pubsIdSchema } from "./Pubs";
@@ -37,8 +39,6 @@ export interface InvitesTable {
 
 	expiresAt: ColumnType<Date, Date | string, Date | string>;
 
-	acceptedAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
-
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -57,21 +57,15 @@ export interface InvitesTable {
 
 	message: ColumnType<string | null, string | null, string | null>;
 
-	sentAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
-
 	lastSentAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
-
-	sendAttempts: ColumnType<number, number | undefined, number>;
-
-	status: ColumnType<string, string | undefined, string>;
-
-	revokedAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
 
 	invitedByUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
 	invitedByActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
 
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
+
+	status: ColumnType<InviteStatus, InviteStatus | undefined, InviteStatus>;
 }
 
 export type Invites = Selectable<InvitesTable>;
@@ -88,7 +82,6 @@ export const invitesSchema = z.object({
 	userId: usersIdSchema.nullable(),
 	token: z.string(),
 	expiresAt: z.date(),
-	acceptedAt: z.date().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	communityId: communitiesIdSchema,
@@ -98,14 +91,11 @@ export const invitesSchema = z.object({
 	stageId: stagesIdSchema.nullable(),
 	otherRole: memberRoleSchema.nullable(),
 	message: z.string().nullable(),
-	sentAt: z.date().nullable(),
 	lastSentAt: z.date().nullable(),
-	sendAttempts: z.number(),
-	status: z.string(),
-	revokedAt: z.date().nullable(),
 	invitedByUserId: usersIdSchema.nullable(),
 	invitedByActionRunId: actionRunsIdSchema.nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
+	status: inviteStatusSchema,
 });
 
 export const invitesInitializerSchema = z.object({
@@ -114,7 +104,6 @@ export const invitesInitializerSchema = z.object({
 	userId: usersIdSchema.optional().nullable(),
 	token: z.string(),
 	expiresAt: z.date(),
-	acceptedAt: z.date().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	communityId: communitiesIdSchema,
@@ -124,14 +113,11 @@ export const invitesInitializerSchema = z.object({
 	stageId: stagesIdSchema.optional().nullable(),
 	otherRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
-	sentAt: z.date().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
-	sendAttempts: z.number().optional(),
-	status: z.string().optional(),
-	revokedAt: z.date().optional().nullable(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
+	status: inviteStatusSchema.optional(),
 });
 
 export const invitesMutatorSchema = z.object({
@@ -140,7 +126,6 @@ export const invitesMutatorSchema = z.object({
 	userId: usersIdSchema.optional().nullable(),
 	token: z.string().optional(),
 	expiresAt: z.date().optional(),
-	acceptedAt: z.date().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	communityId: communitiesIdSchema.optional(),
@@ -150,12 +135,9 @@ export const invitesMutatorSchema = z.object({
 	stageId: stagesIdSchema.optional().nullable(),
 	otherRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
-	sentAt: z.date().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
-	sendAttempts: z.number().optional(),
-	status: z.string().optional(),
-	revokedAt: z.date().optional().nullable(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema.optional(),
+	status: inviteStatusSchema.optional(),
 });

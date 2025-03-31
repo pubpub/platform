@@ -482,7 +482,6 @@ Table invites {
   userId String
   token String [unique, not null]
   expiresAt DateTime [not null]
-  acceptedAt DateTime
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   community communities [not null]
@@ -496,11 +495,8 @@ Table invites {
   stageId String
   otherRole MemberRole
   message String
-  sentAt DateTime
   lastSentAt DateTime
-  sendAttempts Int [not null, default: 0]
-  status String [not null, default: 'active']
-  revokedAt DateTime
+  status InviteStatus [not null, default: 'pending']
   InvitedByUser users
   invitedByUserId String
   InvitedByActionRun action_runs
@@ -664,6 +660,12 @@ Enum MembershipType {
   stage
   pub
   form
+}
+
+Enum InviteStatus {
+  pending
+  accepted
+  rejected
 }
 
 Ref: invites_history.userId > users.id

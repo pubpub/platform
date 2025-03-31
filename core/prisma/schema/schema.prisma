@@ -687,6 +687,12 @@ model MembershipCapabilities {
   @@map(name: "membership_capabilities")
 }
 
+enum InviteStatus {
+  pending
+  accepted
+  rejected
+}
+
 model Invite {
   id             String @id @default(dbgenerated("gen_random_uuid()"))
   /// @type(LastModifiedBy, '../types', true, false, true)
@@ -697,14 +703,15 @@ model Invite {
   InvitedUser User?   @relation("invited_user", fields: [userId], references: [id], onDelete: SetNull)
   userId      String?
 
-  token      String    @unique
-  expiresAt  DateTime
-  acceptedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @default(now()) @updatedAt
+  token     String   @unique
+  expiresAt DateTime
 
-  community     Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId String
+
   communityRole MemberRole @default(contributor)
 
   Pub     Pub?    @relation(fields: [pubId], references: [id], onDelete: SetNull)
@@ -716,13 +723,10 @@ model Invite {
 
   otherRole MemberRole?
 
-  message      String?
-  sentAt       DateTime?
-  lastSentAt   DateTime?
-  sendAttempts Int       @default(0)
+  message    String?
+  lastSentAt DateTime?
 
-  status    String    @default("active")
-  revokedAt DateTime?
+  status InviteStatus @default(pending)
 
   InvitedByUser        User?      @relation("invited_by", fields: [invitedByUserId], references: [id], onDelete: SetNull)
   invitedByUserId      String?
