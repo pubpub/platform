@@ -1234,7 +1234,6 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds =
 			stageId?: never;
 			communityId: CommunitiesId;
 			userId?: UsersId;
-			pubIds?: PubsId[];
 	  }
 	| {
 			pubId?: never;
@@ -1242,7 +1241,6 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds =
 			stageId?: StagesId;
 			communityId: CommunitiesId;
 			userId?: UsersId;
-			pubIds?: PubsId[];
 	  };
 
 const DEFAULT_OPTIONS = {
@@ -1621,7 +1619,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						)
 					)
 					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
-					.$if(Boolean(props.pubIds), (qb) => qb.where("pubs.id", "in", props.pubIds!))
 					.$if(Boolean(props.stageId), (qb) =>
 						qb.where("PubsInStages.stageId", "=", props.stageId!)
 					)

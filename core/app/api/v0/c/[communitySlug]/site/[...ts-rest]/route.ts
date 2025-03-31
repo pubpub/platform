@@ -365,13 +365,11 @@ const handler = createNextHandler(
 						throw new BadRequestError(e.message);
 					}
 				}
-				console.log({ query, pubIds }, request.url);
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
 						pubTypeId,
 						stageId,
-						pubIds,
 						userId: user.id,
 					},
 					{

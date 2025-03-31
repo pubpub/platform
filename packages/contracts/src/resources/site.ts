@@ -715,7 +715,6 @@ export const siteApi = contract.router(
 					.extend({
 						pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
 						stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
-						pubIds: pubsIdSchema.array().optional().describe("Filter by pub ids."),
 						limit: z.number().default(10),
 						offset: z.number().default(0).optional(),
 						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
