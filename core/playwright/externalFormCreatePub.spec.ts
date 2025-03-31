@@ -416,7 +416,7 @@ test.describe("Related pubs", () => {
 		const stringRelated = page.getByTestId("related-pubs-string");
 		await stringRelated.getByRole("button", { name: "Add" }).click();
 		await page
-			.getByRole("button", { name: `Select row ${relatedPubTitle}` })
+			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
 			.getByLabel("Select row")
 			.click();
 		await page.getByTestId("add-related-pub-button").click();
@@ -431,7 +431,7 @@ test.describe("Related pubs", () => {
 		const arrayRelated = page.getByTestId("related-pubs-array");
 		await arrayRelated.getByRole("button", { name: "Add" }).click();
 		await page
-			.getByRole("button", { name: `Select row ${relatedPubTitle}` })
+			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
 			.getByLabel("Select row")
 			.click();
 		await page.getByTestId("add-related-pub-button").click();
@@ -454,7 +454,7 @@ test.describe("Related pubs", () => {
 		const nullRelated = page.getByTestId("related-pubs-null");
 		await nullRelated.getByRole("button", { name: "Add" }).click();
 		await page
-			.getByRole("button", { name: `Select row ${relatedPubTitle}` })
+			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
 			.getByLabel("Select row")
 			.click();
 		await page.getByTestId("add-related-pub-button").click();
