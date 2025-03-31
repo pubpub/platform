@@ -196,6 +196,8 @@ export const RelatedPubsElement = ({
 			? [{ id: v.relatedPubId, pub: v.relatedPub as ProcessedPub<{ withPubType: true }> }]
 			: []
 	);
+	// Keep track of related pubs in state, as we either have 'full' pubs from the initial values,
+	// or from the table when they are added
 	const [relatedPubs, setRelatedPubs] = useState(initialRelatedPubs.map((p) => p.pub));
 
 	const pubTitles = useMemo(() => {
@@ -324,19 +326,6 @@ export const RelatedPubsElement = ({
 														strategy={verticalListSortingStrategy}
 													>
 														{fields.map(({ id, ...item }, index) => {
-															// const handleRemovePub = () => {
-															// 	remove(index);
-															// 	if (item.valueId) {
-															// 		setValue("deleted", [
-															// 			...getValues("deleted"),
-															// 			{
-															// 				relatedPubId:
-															// 					item.relatedPubId,
-															// 				slug,
-															// 			},
-															// 		]);
-															// 	}
-															// };
 															const innerSlug =
 																`${slug}.${index}.value` as const;
 															return (
