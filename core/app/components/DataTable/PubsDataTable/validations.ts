@@ -1,17 +1,28 @@
 /** Based on https://github.com/sadmann7/shadcn-table/blob/main/src/app/_lib/validations.ts */
 
+import type { inferParserType } from "nuqs/server";
+
 import { createSearchParamsCache, parseAsInteger } from "nuqs/server";
 
+import type { ProcessedPub } from "contracts";
 import { getSortingStateParser } from "ui/data-table-paged";
 
-import type { DataTableSearchParams, PubForTable } from "./types";
 import type { GetManyParams } from "~/lib/server";
 
 const DEFAULT_PAGE_SIZE = 10;
+export type DataTableSearchParams = inferParserType<typeof dataTableParsers>;
 export const dataTableParsers = {
 	page: parseAsInteger.withDefault(1),
 	perPage: parseAsInteger.withDefault(DEFAULT_PAGE_SIZE),
-	sort: getSortingStateParser<PubForTable>().withDefault([{ id: "updatedAt", desc: true }]),
+	sort: getSortingStateParser<
+		ProcessedPub<{
+			withPubType: true;
+			withRelatedPubs: false;
+			withStage: true;
+			withValues: false;
+			withLegacyAssignee: true;
+		}>
+	>().withDefault([{ id: "updatedAt", desc: true }]),
 };
 export const searchParamsCache = createSearchParamsCache(dataTableParsers);
 

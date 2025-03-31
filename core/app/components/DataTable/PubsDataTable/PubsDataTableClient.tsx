@@ -189,9 +189,5 @@ export const PubsDataTableClient = ({
 		return <SkeletonTable />;
 	}
 
-	if (!pubs) {
-		return null; // TODO: error state
-	}
-
 	return <DataTable table={table} floatingBar={null} className="table-auto" />;
 };

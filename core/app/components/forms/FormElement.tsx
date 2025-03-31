@@ -12,7 +12,7 @@ export type FormElementProps = Omit<PubFieldFormElementProps, "element"> & {
 	element: FormElements;
 };
 
-export const FormElement = async ({ pubId, element, values }: FormElementProps) => {
+export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
 			return (

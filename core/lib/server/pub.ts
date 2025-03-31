@@ -1227,7 +1227,7 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 // filtering wouldn't make sense). We probably need to do that, but we should make it more explicit
 // than just leaving out the userId to avoid accidentally letting certain routes select pubs without
 // authorization checks
-type PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds =
+type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
 			pubId: PubsId;
 			pubTypeId?: never;
@@ -1255,12 +1255,12 @@ const DEFAULT_OPTIONS = {
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
-	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds, { pubId: PubsId }>,
+	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
 	// if only pubId + communityId is provided, we return a single pub
 ): Promise<ProcessedPub<Options>>;
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
-	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds, { pubId: PubsId }>,
+	props: Exclude<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
 	// if any other props are provided, we return an array of pubs
 ): Promise<ProcessedPub<Options>[]>;
@@ -1268,7 +1268,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
  * Retrieves a pub and all its values and related pubs up to a given depth.
  */
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
-	props: PubIdOrPubTypeIdOrStageIdOrCommunityIdOrIds,
+	props: PubIdOrPubTypeIdOrStageIdOrCommunityId,
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
 	const opts = {
