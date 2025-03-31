@@ -41,8 +41,9 @@ model User {
   stageMemberships     StageMembership[]
   PubValueHistory      PubValueHistory[]
 
-  Invite    Invite[] @relation("invited_user")
-  InvitedBy Invite[] @relation("invited_by")
+  Invite        Invite[]        @relation("invited_user")
+  InvitedBy     Invite[]        @relation("invited_by")
+  InviteHistory InviteHistory[]
 
   @@map(name: "users")
 }
@@ -446,8 +447,9 @@ model ActionRun {
   sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[] @relation("source_action_run")
-  Invite               Invite[]    @relation("invited_by_action_run")
+  sequentialActionRuns ActionRun[]     @relation("source_action_run")
+  Invite               Invite[]        @relation("invited_by_action_run")
+  InviteHistory        InviteHistory[]
 
   @@map(name: "action_runs")
 }
@@ -583,6 +585,7 @@ model ApiAccessToken {
   accessRules     ApiAccessPermission[]
   logs            ApiAccessLog[]
   PubValueHistory PubValueHistory[]
+  InviteHistory   InviteHistory[]
 
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")
@@ -685,7 +688,9 @@ model MembershipCapabilities {
 }
 
 model Invite {
-  id String @id @default(dbgenerated("gen_random_uuid()"))
+  id             String @id @default(dbgenerated("gen_random_uuid()"))
+  /// @type(LastModifiedBy, '../types', true, false, true)
+  lastModifiedBy String
 
   // either one of these is set
   email       String?

@@ -2,6 +2,7 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 
 import { z } from "zod";
 
+import type { LastModifiedBy } from "../types";
 import type { ActionRunsId } from "./ActionRuns";
 import type { CommunitiesId } from "./Communities";
 import type { FormsId } from "./Forms";
@@ -13,6 +14,7 @@ import { actionRunsIdSchema } from "./ActionRuns";
 import { communitiesIdSchema } from "./Communities";
 import { formsIdSchema } from "./Forms";
 import { memberRoleSchema } from "./MemberRole";
+import { modifiedByTypeSchema } from "./ModifiedByType";
 import { pubsIdSchema } from "./Pubs";
 import { stagesIdSchema } from "./Stages";
 import { usersIdSchema } from "./Users";
@@ -68,6 +70,8 @@ export interface InvitesTable {
 	invitedByUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
 	invitedByActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
+
+	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
 }
 
 export type Invites = Selectable<InvitesTable>;
@@ -101,6 +105,7 @@ export const invitesSchema = z.object({
 	revokedAt: z.date().nullable(),
 	invitedByUserId: usersIdSchema.nullable(),
 	invitedByActionRunId: actionRunsIdSchema.nullable(),
+	lastModifiedBy: modifiedByTypeSchema,
 });
 
 export const invitesInitializerSchema = z.object({
@@ -126,6 +131,7 @@ export const invitesInitializerSchema = z.object({
 	revokedAt: z.date().optional().nullable(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
+	lastModifiedBy: modifiedByTypeSchema,
 });
 
 export const invitesMutatorSchema = z.object({
@@ -151,4 +157,5 @@ export const invitesMutatorSchema = z.object({
 	revokedAt: z.date().optional().nullable(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
+	lastModifiedBy: modifiedByTypeSchema.optional(),
 });
