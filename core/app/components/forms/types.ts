@@ -9,6 +9,7 @@ import type {
 	PubFieldsId,
 	PubsId,
 	PubValuesId,
+	StagesId,
 	StructuralFormElement,
 } from "db/public";
 
@@ -62,7 +63,7 @@ export type ButtonElement = {
 	element: null;
 	content: null;
 	required: null;
-	stageId: null;
+	stageId: StagesId | null;
 	config: null;
 	component: null;
 	schemaName: null;
