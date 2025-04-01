@@ -158,6 +158,7 @@ const checkAuthorization = async <
 				capability: Parameters<typeof userCan>[0];
 				target: T;
 		  }
+		| "community-member"
 		| boolean;
 }): Promise<AuthorizationOutput<S, AT>> => {
 	const authorizationTokenWithBearer = (await headers()).get("Authorization");
@@ -208,6 +209,15 @@ const checkAuthorization = async <
 
 	// Handle cases where we only want to check for login but have no specific capability yet
 	if (typeof cookies === "boolean") {
+		return { user, authorization: true as const, community, lastModifiedBy };
+	}
+
+	// Handle when we just want to check the user is part of the community
+	if (cookies === "community-member") {
+		const userCommunityIds = user.memberships.map((m) => m.communityId);
+		if (!userCommunityIds.includes(community.id)) {
+			throw new ForbiddenError(`You are not authorized to perform actions in this community`);
+		}
 		return { user, authorization: true as const, community, lastModifiedBy };
 	}
 
@@ -350,8 +360,7 @@ const handler = createNextHandler(
 			getMany: async ({ query }, { request, responseHeaders }) => {
 				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
-					// TODO: figure out capability here
-					cookies: true,
+					cookies: "community-member",
 				});
 
 				const { pubTypeId, stageId, filters, ...rest } = query ?? {};
