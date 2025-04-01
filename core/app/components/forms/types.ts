@@ -39,6 +39,7 @@ type BasePubFieldElement = {
 	rank: string;
 	slug: string;
 	isRelation: boolean;
+	relatedPubTypes: PubTypesId[] | null;
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {
@@ -51,7 +52,6 @@ export type PubFieldElement = {
 	[I in InputComponent]: BasePubFieldElement & {
 		component: I | null;
 		schemaName: SchemaTypeByInputComponent[I];
-		relatedPubTypes?: PubTypesId[];
 		config: InputComponentConfigSchema<I>;
 	};
 }[InputComponent];
@@ -71,6 +71,7 @@ export type ButtonElement = {
 	schemaName: null;
 	slug: null;
 	isRelation: false;
+	relatedPubTypes: null;
 };
 
 export type StructuralElement = {
@@ -88,6 +89,7 @@ export type StructuralElement = {
 	schemaName: null;
 	slug: null;
 	isRelation: false;
+	relatedPubTypes: null;
 };
 
 export type FormElements = PubFieldElement | StructuralElement | ButtonElement;
