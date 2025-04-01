@@ -4,7 +4,7 @@ import type { VariantProps } from "class-variance-authority";
 
 import * as React from "react";
 import { cva } from "class-variance-authority";
-import { CheckIcon, ChevronDown, WandSparkles, XCircle, XIcon } from "lucide-react";
+import { CheckIcon, ChevronDown, ChevronUp, WandSparkles, XCircle, XIcon } from "lucide-react";
 
 import { cn } from "utils";
 
@@ -21,6 +21,8 @@ import {
 } from "./command";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Separator } from "./separator";
+
+const ICON_CLASSNAME = "mx-2 h-4 cursor-pointer text-muted-foreground";
 
 const multiSelectVariants = cva(
 	"m-1 transition delay-150 duration-300 ease-in-out hover:-translate-y-1 hover:scale-110",
@@ -134,15 +136,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 		return (
 			<Popover
 				open={isPopoverOpen}
-				// open={isPopoverOpen}
-				// onOpenChange={(open) => {
-				// 	console.log("GOING TO", open);
-				// 	setIsPopoverOpen(open);
-				// }}
 				onOpenChange={(open) => {
-					if (isPopoverOpen && !open) {
-						return;
-					}
 					setIsPopoverOpen(open);
 				}}
 			>
@@ -150,7 +144,6 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 					<Button
 						ref={ref}
 						{...props}
-						onClick={handleTogglePopover}
 						className={cn(
 							"flex h-auto min-h-10 w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
 							className
@@ -215,7 +208,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 								</div>
 								<div className="flex items-center justify-between">
 									<XIcon
-										className="mx-2 h-4 cursor-pointer text-muted-foreground"
+										className={ICON_CLASSNAME}
 										onClick={(event) => {
 											event.stopPropagation();
 											handleClear();
@@ -225,7 +218,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 										orientation="vertical"
 										className="flex h-full min-h-6"
 									/>
-									<ChevronDown className="mx-2 h-4 cursor-pointer text-muted-foreground" />
+									{isPopoverOpen ? (
+										<ChevronUp className={ICON_CLASSNAME} />
+									) : (
+										<ChevronDown className={ICON_CLASSNAME} />
+									)}
 								</div>
 							</div>
 						) : (
@@ -233,7 +230,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 								<span className="mx-3 text-sm text-muted-foreground">
 									{placeholder}
 								</span>
-								<ChevronDown className="mx-2 h-4 cursor-pointer text-muted-foreground" />
+								{isPopoverOpen ? (
+									<ChevronUp className={ICON_CLASSNAME} />
+								) : (
+									<ChevronDown className={ICON_CLASSNAME} />
+								)}
 							</div>
 						)}
 					</Button>
