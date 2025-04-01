@@ -66,7 +66,7 @@ export default async function Page(props: {
 			communityId,
 		}).executeTakeFirstOrThrow(),
 		getPubFields({ communityId }).executeTakeFirstOrThrow(),
-		getPubTypesForCommunity(community.id),
+		getPubTypesForCommunity(community.id, { limit: 0 }),
 	]);
 
 	const formBuilderId = "formbuilderform";
