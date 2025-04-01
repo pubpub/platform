@@ -2,6 +2,7 @@
 
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
+import * as Sentry from "@sentry/nextjs";
 
 import { logger } from "logger";
 
@@ -93,46 +94,60 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 				revalidate: duration,
 				tags: ["all", ...revalidateTags],
 			};
-			if (logDataCache) {
-				let dataCacheMiss = false;
-				const audit = new Audit();
-				const data = await unstable_cache(
-					async () => {
-						dataCacheMiss = true;
-						return cb(...args);
-					},
-					cacheKey,
-					nextOpts
-				)();
-				const time = audit!.getSec();
-				const isSame = oldData === data;
-				logger.debug(
-					`Data Cache - ${logID}${cb.name} ${dataCacheMiss ? "MISS" : "HIT"} ${time.toPrecision(3)}s ${dataCacheMiss ? (isSame ? "background-revalidation" : "on-demand revalidation") : ""} `
-				);
-				if (logVerbose)
-					logger.info(
-						` └ Function: ${cb.name || "Anon Func"} | args: ${JSON.stringify(args)} | tags: ${nextOpts.tags} | cacheKey: ${cacheKey}`
+			try {
+				if (logDataCache) {
+					let dataCacheMiss = false;
+					const audit = new Audit();
+					const data = await unstable_cache(
+						async () => {
+							dataCacheMiss = true;
+							return cb(...args);
+						},
+						cacheKey,
+						nextOpts
+					)();
+					const time = audit!.getSec();
+					const isSame = oldData === data;
+					logger.debug(
+						`Data Cache - ${logID}${cb.name} ${dataCacheMiss ? "MISS" : "HIT"} ${time.toPrecision(3)}s ${dataCacheMiss ? (isSame ? "background-revalidation" : "on-demand revalidation") : ""} `
 					);
-				oldData = data;
-				return data;
-			} else {
-				const data = await unstable_cache(
-					async () => {
-						return cb(...args);
-					},
-					[cb.toString(), JSON.stringify(args), ...additionalCacheKey],
-					{
-						revalidate: duration,
-						// we always cache "all"
-						tags: ["all", ...revalidateTags],
-					}
-				)();
-				return data;
+					if (logVerbose)
+						logger.info(
+							` └ Function: ${cb.name || "Anon Func"} | args: ${JSON.stringify(args)} | tags: ${nextOpts.tags} | cacheKey: ${cacheKey}`
+						);
+					oldData = data;
+					return data;
+				} else {
+					const data = await unstable_cache(
+						async () => {
+							return cb(...args);
+						},
+						[cb.toString(), JSON.stringify(args), ...additionalCacheKey],
+						{
+							revalidate: duration,
+							// we always cache "all"
+							tags: ["all", ...revalidateTags],
+						}
+					)();
+					return data;
+				}
+			} catch (error) {
+				const fn = { name: cb.name, body: cb.toString() };
+				logger.error({
+					msg: "⚠️ Memoize: unstable_cache failed, using uncached function",
+					error,
+					args,
+					fn,
+					additionalCacheKey,
+				});
+				Sentry.captureException(error, {
+					extra: { args, fn, additionalCacheKey },
+				});
 			}
-		} else {
-			// return callback directly
-			return cb(...args);
 		}
+
+		// return callback directly
+		return cb(...args);
 	});
 
 	const returnFunc = async (...args: P) => {
