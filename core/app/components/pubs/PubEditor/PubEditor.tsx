@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { Capabilities, CoreSchemaType, MembershipType } from "db/public";
 import { expect } from "utils";
 
 import type { FormElements, PubFieldElement } from "../../forms/types";
@@ -10,6 +10,7 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
@@ -250,6 +251,10 @@ export async function PubEditor(props: PubEditorProps) {
 		},
 	};
 
+	const renderStageSelect =
+		pub === undefined ||
+		(await userCan(Capabilities.movePub, { type: MembershipType.pub, pubId }, user!.id));
+
 	const renderWithPubContext = {
 		communityId: community.id,
 		recipient: memberWithUser as RenderWithPubContext["recipient"],
@@ -288,7 +293,7 @@ export async function PubEditor(props: PubEditorProps) {
 					formSlug={form.slug}
 					isUpdating={isUpdating}
 					withAutoSave={false}
-					withButtonElements={false}
+					withButtonElements
 					htmlFormId={props.formId}
 					stageId={currentStageId}
 					relatedPub={
@@ -308,11 +313,13 @@ export async function PubEditor(props: PubEditorProps) {
 								fieldName={relatedPubData.relatedPubField.name}
 							/>
 						) : null}
-						<StageSelectClient
-							fieldLabel="Stage"
-							fieldName="stageId"
-							stages={community.stages}
-						/>
+						{renderStageSelect && (
+							<StageSelectClient
+								fieldLabel="Stage"
+								fieldName="stageId"
+								stages={community.stages}
+							/>
+						)}
 						{formElements}
 						{pubOnlyElementDefinitions.map((formElementDef) => (
 							<FormElement

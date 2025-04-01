@@ -54,6 +54,22 @@ export const getTextContent = (node: any): string => {
 	}
 	return "";
 };
+
+export const findAnchor = (node: any): any => {
+	if (node.tagName === "a") {
+		return node;
+	}
+	if (node.children) {
+		for (const child of node.children) {
+			const found = findAnchor(child);
+			if (found) {
+				return found;
+			}
+		}
+	}
+	return null;
+};
+
 export const tableToObjectArray = (node: any) => {
 	if (!node) return [{ type: "empty" }];
 
@@ -107,24 +123,10 @@ export const tableToObjectArray = (node: any) => {
 		}
 
 		const isAssetSource =
-			["image", "video", "audio", "file"].includes(tableType) && headerVal === "source";
+			["image", "video", "audio", "file", "iframe"].includes(tableType) &&
+			headerVal === "source";
 		const isStaticSource = headerVal === "staticimage";
 		if (isAssetSource || isStaticSource) {
-			const findAnchor = (node: any): any => {
-				if (node.tagName === "a") {
-					return node;
-				}
-				if (node.children) {
-					for (const child of node.children) {
-						const found = findAnchor(child);
-						if (found) {
-							return found;
-						}
-					}
-				}
-				return null;
-			};
-
 			const anchor = findAnchor(cell);
 			if (anchor && anchor.properties.href) {
 				return anchor.properties.href;
@@ -366,48 +368,52 @@ export const structureVideos = () => (tree: Root) => {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
 			if (tableType === "video") {
-				const elements: Element[] = tableData.map((data: any) => ({
-					type: "element",
-					tagName: "figure",
-					properties: {
-						dataFigureType: "video",
-						id: data.id,
-						dataAlign: data.align,
-						dataSize: data.size,
-						dataHideLabel: data.hidelabel,
-					},
-					children: [
-						{
-							type: "element",
-							tagName: "video",
-							properties: { controls: true, poster: data.staticimage },
-							children: [
-								{
-									type: "element",
-									tagName: "source",
-									properties: {
-										src: data.source,
-										type: `video/${path.extname(data.source).replace(".", "")}`,
-									},
-								},
-								{
-									type: "element",
-									tagName: "img",
-									properties: {
-										src: data.staticimage,
-										alt: "Video fallback image",
-									},
-								},
-							],
+				const elements: Element[] = tableData.map((data: any) => {
+					const extension = path.extname(data.source).replace(".", "");
+					const type = extension ? `video/${extension}` : undefined;
+					return {
+						type: "element",
+						tagName: "figure",
+						properties: {
+							dataFigureType: "video",
+							id: data.id,
+							dataAlign: data.align,
+							dataSize: data.size,
+							dataHideLabel: data.hidelabel,
 						},
-						{
-							type: "element",
-							tagName: "figcaption",
-							properties: {},
-							children: data.caption || [],
-						},
-					],
-				}));
+						children: [
+							{
+								type: "element",
+								tagName: "video",
+								properties: { controls: true, poster: data.staticimage },
+								children: [
+									{
+										type: "element",
+										tagName: "source",
+										properties: {
+											src: data.source,
+											type,
+										},
+									},
+									{
+										type: "element",
+										tagName: "img",
+										properties: {
+											src: data.staticimage,
+											alt: "Video fallback image",
+										},
+									},
+								],
+							},
+							{
+								type: "element",
+								tagName: "figcaption",
+								properties: {},
+								children: data.caption || [],
+							},
+						],
+					};
+				});
 
 				if (parent && typeof index === "number") {
 					parent.children.splice(index, 1, ...elements);
@@ -423,40 +429,44 @@ export const structureAudio = () => (tree: Root) => {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
 			if (tableType === "audio") {
-				const elements: Element[] = tableData.map((data: any) => ({
-					type: "element",
-					tagName: "figure",
-					properties: {
-						dataFigureType: "audio",
-						id: data.id,
-						dataAlign: data.align,
-						dataSize: data.size,
-						dataHideLabel: data.hidelabel,
-					},
-					children: [
-						{
-							type: "element",
-							tagName: "audio",
-							properties: { controls: true },
-							children: [
-								{
-									type: "element",
-									tagName: "source",
-									properties: {
-										src: data.source,
-										type: `audio/${path.extname(data.source).replace(".", "")}`,
+				const elements: Element[] = tableData.map((data: any) => {
+					const extension = path.extname(data.source).replace(".", "");
+					const type = extension ? `audio/${extension}` : undefined;
+					return {
+						type: "element",
+						tagName: "figure",
+						properties: {
+							dataFigureType: "audio",
+							id: data.id,
+							dataAlign: data.align,
+							dataSize: data.size,
+							dataHideLabel: data.hidelabel,
+						},
+						children: [
+							{
+								type: "element",
+								tagName: "audio",
+								properties: { controls: true },
+								children: [
+									{
+										type: "element",
+										tagName: "source",
+										properties: {
+											src: data.source,
+											type,
+										},
 									},
-								},
-							],
-						},
-						{
-							type: "element",
-							tagName: "figcaption",
-							properties: {},
-							children: data.caption || [],
-						},
-					],
-				}));
+								],
+							},
+							{
+								type: "element",
+								tagName: "figcaption",
+								properties: {},
+								children: data.caption || [],
+							},
+						],
+					};
+				});
 
 				if (parent && typeof index === "number") {
 					parent.children.splice(index, 1, ...elements);
@@ -764,14 +774,15 @@ export const structureReferences = () => (tree: Root) => {
 	/* then calling .exec without that /g flag would crash. There may */
 	/* be a cleaner solution where we manually reset regex.lastIndex */
 	/* in certain places, but it's late and brittle, and this is currently working. */
-	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/);
-	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https:\/\/doi\.org\/[^\]]+)\]/g);
+	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/);
+	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/g);
+	const doiPlainRegexTest = new RegExp(/^(10\.|https?:\/\/doi\.org).*$/);
 	visit(tree, (node: any, index: any, parent: any) => {
 		/* Remove all links on [doi.org/12] references. */
 		if (node.tagName === "u" || node.tagName === "a") {
 			const parentText = getTextContent(parent);
 			const nodeText = getTextContent(node);
-			if (doiBracketRegexTest.test(parentText)) {
+			if (doiBracketRegexTest.test(parentText) && doiPlainRegexTest.test(nodeText)) {
 				const elements = [
 					{
 						type: "text",
@@ -1078,7 +1089,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 		if (node.tagName === "table") {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
-			const aggregateFigureTypes = ["image", "audio", "file", "iframe"];
+			const aggregateFigureTypes = ["image", "audio", "iframe"]; // Don't count 'file' figure types
 			const independentFigureTypes = ["video", "table", "math"];
 			const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 			if (validFigureTypes.includes(tableType)) {
@@ -1106,7 +1117,7 @@ export const formatFigureReferences = () => (tree: Root) => {
 
 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
 		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}])/g);
+			const regex = new RegExp(/(?:^|\s|[\(\[\{])@(\S+?)(?=[\s.;,\)\]\}]|$)/g);
 			let match;
 			const elements: any[] = [];
 			let lastIndex = 0;
@@ -1170,11 +1181,11 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	/*
 	 */
 	const figureCount: { [key: string]: number } = {};
-	const aggregateFigureTypes = ["img", "audio", "file", "iframe"];
+	const aggregateFigureTypes = ["img", "audio", "iframe"]; // Don't count 'file' figure types
 	const independentFigureTypes = ["video", "table", "math"];
 	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 	visit(tree, "element", (node: any, index: any, parent: any) => {
-		if (node.tagName === "figure" && node.properties.dataFigureType !== "table") {
+		if (node.tagName === "figure") {
 			const tableType = node.properties.dataFigureType;
 			if (
 				validFigureTypes.includes(tableType) &&

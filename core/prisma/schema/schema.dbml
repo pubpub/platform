@@ -383,7 +383,6 @@ Table form_elements {
   fieldId String
   field pub_fields
   formId String [not null]
-  order Int
   rank String [not null]
   label String
   element StructuralFormElement
@@ -599,6 +598,7 @@ Enum Capabilities {
   archiveForm
   createApiToken
   revokeApiToken
+  seeExtraPubValues
 }
 
 Enum MembershipType {

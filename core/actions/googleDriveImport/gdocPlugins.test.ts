@@ -399,6 +399,28 @@ test("Structure Videos", async () => {
 						</tr>
 					</tbody>
 				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>Static Image</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Video</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td>https://example.com</td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
+						</tr>
+					</tbody>
+				</table>
 			</body>
 		</html>
 	`;
@@ -409,6 +431,18 @@ test("Structure Videos", async () => {
 				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<video controls poster="https://example.com">
 						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
+						<img src="https://example.com" alt="Video fallback image">
+					</video>
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+				<figure data-figure-type="video" id="n8r4ihxcrly" data-align="full" data-size="50">
+					<video controls poster="https://example.com">
+						<source src="https://resize-v3.pubpub.org/123">
 						<img src="https://example.com" alt="Video fallback image">
 					</video>
 					<figcaption>
@@ -458,6 +492,26 @@ test("Structure Audio", async () => {
 						</tr>
 					</tbody>
 				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Caption</span></p></td>
+							<td><p><span>Align</span></p></td>
+							<td><p><span>Size</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Audio</span></p></td>
+							<td><p><span>n8r4ihxcrly</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>With a caption. </span><b>Bold</b></p></td>
+							<td><p>full</p></td>
+							<td><p>50</p></td>
+						</tr>
+					</tbody>
+				</table>
 			</body>
 		</html>
 	`;
@@ -468,6 +522,17 @@ test("Structure Audio", async () => {
 				<figure data-figure-type="audio" id="n8r4ihxcrly" data-align="full" data-size="50">
 					<audio controls>
 						<source src="https://resize-v3.pubpub.org/123.mp3" type="audio/mp3">
+					</audio>
+					<figcaption>
+						<p>
+							<span>With a caption. </span>
+							<b>Bold</b>
+						</p>
+					</figcaption>
+				</figure>
+				<figure data-figure-type="audio" id="n8r4ihxcrly" data-align="full" data-size="50">
+					<audio controls>
+						<source src="https://resize-v3.pubpub.org/123">
 					</audio>
 					<figcaption>
 						<p>
@@ -897,8 +962,8 @@ test("Structure References", async () => {
 						</tr>
 					</tbody>
 				</table>
-				<p>I'd also like to add [10.12341] here.</p>
-				<p>And this should be the same number [10.12341] here. But this diff, [10.5123/123]. </p>
+				<p>I'd also like to add [<u><a>10.12341</a></u>] here.</p>
+				<p>And this should be the same number [10.12341] here. But <a href="cat">this</a> diff, [http://doi.org/10.5123/123]. </p>
 				<p><span>Two more [</span><u><a href="10.1016/S0167-4781(02)00500-6">10.1016/S0167-4781(02)00500-6</a></u><span>]</span><span>[</span><span>10.abc123</span><span>].</span></p>
 			</body>
 		</html>
@@ -924,8 +989,8 @@ test("Structure References", async () => {
 				<p>And this should be the same number <a
 							 data-type="reference" data-value="10.12341">
 							[3]
-						</a> here. But this diff, <a
-							 data-type="reference" data-value="10.5123/123">
+						</a> here. But <a href="cat">this</a> diff, <a
+							 data-type="reference" data-value="http://doi.org/10.5123/123">
 							[4]
 						</a>. </p>
 				<p>Two more <a
@@ -1299,7 +1364,7 @@ test("getDescription", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test.todo("formatFigureReferences", async () => {
+test("formatFigureReferences", async () => {
 	const inputHtml = `
 		<html>
 			<head></head>
@@ -1619,6 +1684,121 @@ test("formatFigureReferencesWithStartOfLine", async () => {
 					<img src="https://resize-v3.pubpub.org/123">
 				</figure>
 				<p>Again, <a href="#test4" data-figure-count="1"></a> shows this.</p>
+				<figure data-figure-type="video" id="test4">
+					<video controls>
+						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">
+						<img alt="Video fallback image">
+					</video>
+				</figure>
+			</body>
+		</html>
+	`;
+
+	const result = await rehype()
+		.use(formatFigureReferences)
+		.use(structureIframes)
+		.use(structureVideos)
+		.use(structureImages)
+		.use(removeEmptyFigCaption)
+		.process(inputHtml)
+		.then((file) => String(file))
+		.catch((error) => {
+			logger.error(error);
+		});
+
+	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+});
+
+test("formatFigureReferencesWithEndOfLine", async () => {
+	const inputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Iframe</span></p></td>
+							<td><p><span>test1</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+							<td><p><span>Hide Label</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Iframe</span></p></td>
+							<td><p><span>abra</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+							<td><p><span>True</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<p>@test1 shows we have more.</p>
+				<p>Also seen <span>in (</span>@test2) we have an image.</p>
+				<p>Again, @test1 shows this.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Image</span></p></td>
+							<td><p><span>test2</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+				<p>Again, @test4<span> shows</span> this.</p>
+				<table>
+					<tbody>
+						<tr>
+							<td><p><span>Type</span></p></td>
+							<td><p><span>Id</span></p></td>
+							<td><p><span>Source</span></p></td>
+						</tr>
+						<tr>
+							<td><p><span>Video</span></p></td>
+							<td><p><span>test4</span></p></td>
+							<td><p><span>https://resize-v3.pubpub.org/123.mp4</span></p></td>
+						</tr>
+					</tbody>
+				</table>
+			</body>
+		</html>
+
+	`;
+	const expectedOutputHtml = `
+		<html>
+			<head></head>
+			<body>
+				<p>Hello.</p>
+				<figure data-figure-type="iframe" id="test1">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
+				</figure>
+				<figure data-figure-type="iframe" id="abra" data-hide-label="True">
+					<iframe src="https://resize-v3.pubpub.org/123" frameborder="0"></iframe>
+				</figure>
+				<p><a href="#test1" data-figure-count="1"></a> shows we have more.</p>
+				<p>Also seen <span>in (</span><a href="#test2" data-figure-count="2"></a>) we have an image.</p>
+				<p>Again, <a href="#test1" data-figure-count="1"></a> shows this.</p>
+				<figure data-figure-type="img" id="test2">
+					<img src="https://resize-v3.pubpub.org/123">
+				</figure>
+				<p>Again, <a href="#test4" data-figure-count="1"></a><span> shows</span> this.</p>
 				<figure data-figure-type="video" id="test4">
 					<video controls>
 						<source src="https://resize-v3.pubpub.org/123.mp4" type="video/mp4">

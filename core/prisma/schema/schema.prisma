@@ -503,6 +503,9 @@ model Form {
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
+  // FIXME: https://github.com/prisma/prisma/issues/6974
+  // Unique index manually set in migration
+  // @@unique([isDefault, pubTypeId], where: { isDefault: true })
   @@map(name: "forms")
 }
 
@@ -543,7 +546,6 @@ model FormElement {
   fieldId   String?
   field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId    String
-  order     Int?
   rank      String // Uses "C" collation
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
   label     String?
@@ -660,6 +662,7 @@ enum Capabilities {
   archiveForm
   createApiToken
   revokeApiToken
+  seeExtraPubValues
 }
 
 enum MembershipType {

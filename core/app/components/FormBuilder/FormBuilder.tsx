@@ -13,7 +13,6 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
-import mudder from "mudder";
 import { useFieldArray, useForm } from "react-hook-form";
 
 import type { Stages } from "db/public";
@@ -27,6 +26,7 @@ import { toast } from "ui/use-toast";
 
 import type { FormBuilderSchema, FormElementData, PanelEvent, PanelState } from "./types";
 import type { Form as PubForm } from "~/lib/server/form";
+import { getRankAndIndexChanges } from "~/lib/rank";
 import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
@@ -115,8 +115,8 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		resolver: zodResolver(formBuilderSchema),
 		values: {
 			elements: pubForm.elements.map((e) => {
-				// Do not include slug here
-				const { slug, id, ...rest } = e;
+				// Do not include extra fields here
+				const { slug, id, fieldName, ...rest } = e;
 				// Rename id to avoid conflict with rhf generated id
 				return { ...rest, elementId: id };
 			}),
@@ -206,33 +206,15 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 	// Update ranks and rhf field array position when elements are dragged
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
-			const { active, over } = event;
-			if (over && active.id !== over?.id) {
-				// activeIndex is the position the element started at and over is where it was dropped
-				const activeIndex = active.data.current?.sortable?.index;
-				const overIndex = over.data.current?.sortable?.index;
-				if (activeIndex !== undefined && overIndex !== undefined) {
-					// "earlier" means towards the beginning of the list, or towards the top of the page
-					const isMovedEarlier = activeIndex > overIndex;
-					const activeElem = elements[activeIndex];
-
-					// When moving an element earlier in the array, find a rank between the rank of the
-					// element at the dropped position and the element before it. When moving an element
-					// later, instead find a rank between that element and the element after it
-					const aboveRank =
-						elements[isMovedEarlier ? overIndex : overIndex + 1]?.rank ?? "";
-					const belowRank =
-						elements[isMovedEarlier ? overIndex - 1 : overIndex]?.rank ?? "";
-					const [rank] = mudder.base62.mudder(belowRank, aboveRank, 1);
-
-					// move doesn't trigger a rerender, so it's safe to chain these calls
-					move(activeIndex, overIndex);
-					update(overIndex, {
-						...activeElem,
-						rank,
-						updated: true,
-					});
-				}
+			const changes = getRankAndIndexChanges(event, elements);
+			if (changes) {
+				// move doesn't trigger a rerender, so it's safe to chain these calls
+				move(changes.activeIndex, changes.overIndex);
+				update(changes.overIndex, {
+					...elements[changes.activeIndex],
+					rank: changes.rank,
+					updated: true,
+				});
 			}
 		},
 		[elements]
