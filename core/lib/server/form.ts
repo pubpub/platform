@@ -69,7 +69,10 @@ export const getForm = (
 							"pub_fields.slug",
 							"pub_fields.isRelation",
 							"pub_fields.name as fieldName",
-							eb.fn.jsonAgg(eb.ref("_FormElementToPubType.B")).as("relatedPubTypes"),
+							eb.fn
+								.jsonAgg(eb.ref("_FormElementToPubType.B"))
+								.filterWhere("_FormElementToPubType.B", "is not", null)
+								.as("relatedPubTypes"),
 						])
 						.groupBy(["form_elements.id", "pub_fields.id"])
 						.$narrowType<FormElements>()

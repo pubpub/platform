@@ -35,10 +35,27 @@ const seed = createSeed({
 		Author: { schemaName: CoreSchemaType.String, relation: true },
 		AuthorNull: { schemaName: CoreSchemaType.Null, relation: true },
 	},
+	pubs: [
+		{
+			pubType: "Submission",
+			values: {
+				Title: "Some title",
+			},
+		},
+		{
+			pubType: "Evaluation",
+			values: {
+				Title: "Another title",
+			},
+		},
+	],
 	pubTypes: {
 		Submission: {
 			Title: { isTitle: true },
 			Content: { isTitle: false },
+		},
+		Evaluation: {
+			Title: { isTitle: true },
 		},
 	},
 	users: {
@@ -243,6 +260,9 @@ test.describe("relationship fields", () => {
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
+		await page.getByRole("button", { name: "Select a pub type" }).click();
+		const pubType = community.pubTypes["Submission"];
+		await page.getByRole("group").getByText(pubType.name).click();
 
 		// Then value config
 		await page.getByTestId("component-textArea").click();
@@ -259,6 +279,7 @@ test.describe("relationship fields", () => {
 					(e: PubFieldElement) => "label" in e.config && e.config.label === "Role"
 				);
 				expect(authorElement.component).toEqual(InputComponent.textArea);
+				expect(authorElement.relatedPubTypes).toEqual([pubType.id]);
 				expect(authorElement.config).toMatchObject({
 					relationshipConfig: {
 						component: InputComponent.relationBlock,
@@ -274,6 +295,18 @@ test.describe("relationship fields", () => {
 
 		await formEditPage.saveFormElementConfiguration();
 		await formEditPage.saveForm();
+
+		// Make sure that the related pub table filters by the desired pubtype
+		await formEditPage.goToExternalForm();
+		const relatedField = page.getByTestId("related-pubs-Authors");
+		await relatedField.getByRole("button", { name: "Add" }).click();
+		// We should see the first pub but not the second, since the second is of a different pub type
+		await expect(
+			page.getByRole("row", { name: `Select row ${community.pubs[0].title}` })
+		).toHaveCount(1);
+		await expect(
+			page.getByRole("row", { name: `Select row ${community.pubs[1].title}` })
+		).toHaveCount(0);
 	});
 
 	test("Create a form with a null relationship field", async () => {
