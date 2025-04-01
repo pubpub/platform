@@ -12,8 +12,9 @@ import type {
 import React, { useCallback, useMemo, useState } from "react";
 
 import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
-import type { PubsId } from "db/public";
+import type { PubsId, PubTypes } from "db/public";
 import { TOTAL_PUBS_COUNT_HEADER } from "contracts";
+import { Badge } from "ui/badge";
 import { DataTable, useDataTable } from "ui/data-table-paged";
 
 import { client } from "~/lib/api";
@@ -59,10 +60,12 @@ export const PubsDataTableClient = ({
 	selectedPubs,
 	onSelectedPubsChange,
 	disabledRows = [],
+	pubTypes,
 }: {
 	selectedPubs?: NonGenericProcessedPub[];
 	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
 	disabledRows?: PubsId[];
+	pubTypes?: Pick<PubTypes, "id" | "name">[];
 }) => {
 	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
 		limit: 10,
@@ -77,6 +80,7 @@ export const PubsDataTableClient = ({
 		queryData: {
 			query: {
 				...filterParams,
+				pubTypeId: pubTypes ? pubTypes.map((p) => p.id) : undefined,
 				withPubType: true,
 				withRelatedPubs: false,
 				withStage: true,
@@ -195,5 +199,26 @@ export const PubsDataTableClient = ({
 		return <SkeletonTable />;
 	}
 
-	return <DataTable table={table} floatingBar={null} className="table-auto" />;
+	return (
+		<div className="flex flex-col gap-2">
+			{pubTypes ? (
+				<Badge variant="outline" className="flex w-fit gap-2 text-sm">
+					<span className="border-r p-1 pr-2 font-medium text-muted-foreground">
+						Pubtype
+					</span>
+					<span className="flex flex-wrap gap-1">
+						{pubTypes.map(({ name, id }, index) => {
+							return (
+								<span key={id} className="font-semibold">
+									{name}
+									{index === pubTypes.length - 1 ? "" : ","}
+								</span>
+							);
+						})}
+					</span>
+				</Badge>
+			) : null}
+			<DataTable table={table} floatingBar={null} className="table-auto" />
+		</div>
+	);
 };

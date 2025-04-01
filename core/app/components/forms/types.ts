@@ -8,6 +8,7 @@ import type {
 	InputComponent,
 	PubFieldsId,
 	PubsId,
+	PubTypesId,
 	PubValuesId,
 	StagesId,
 	StructuralFormElement,
@@ -50,6 +51,7 @@ export type PubFieldElement = {
 	[I in InputComponent]: BasePubFieldElement & {
 		component: I | null;
 		schemaName: SchemaTypeByInputComponent[I];
+		relatedPubTypes?: PubTypesId[];
 		config: InputComponentConfigSchema<I>;
 	};
 }[InputComponent];

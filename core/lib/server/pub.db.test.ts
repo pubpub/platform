@@ -558,7 +558,7 @@ describe("getPubsWithRelatedValues", () => {
 
 		const [minimalPubs, pubsInStage1, basicPubsInStage1] = await Promise.all([
 			getPubsWithRelatedValues(
-				{ pubTypeId: pubTypes["Minimal Pub"].id, communityId: community.id },
+				{ pubTypeId: [pubTypes["Minimal Pub"].id], communityId: community.id },
 				{ withPubType: true, depth: 10 }
 			),
 			getPubsWithRelatedValues(
@@ -567,7 +567,7 @@ describe("getPubsWithRelatedValues", () => {
 			),
 			getPubsWithRelatedValues(
 				{
-					pubTypeId: pubTypes["Basic Pub"].id,
+					pubTypeId: [pubTypes["Basic Pub"].id],
 					stageId: stages["Stage 1"].id,
 					communityId: community.id,
 				},

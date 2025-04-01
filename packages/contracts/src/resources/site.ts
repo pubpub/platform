@@ -713,7 +713,12 @@ export const siteApi = contract.router(
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
 				query: getPubQuerySchema
 					.extend({
-						pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
+						pubTypeId: pubTypesIdSchema
+							.array()
+							// this is necessary bc the query parser doesn't handle single string values as arrays
+							.or(pubTypesIdSchema.transform((id) => [id]))
+							.optional()
+							.describe("Filter by pub type IDs."),
 						stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
 						limit: z.number().default(10),
 						offset: z.number().default(0).optional(),

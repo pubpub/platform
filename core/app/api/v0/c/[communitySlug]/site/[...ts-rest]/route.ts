@@ -363,7 +363,11 @@ const handler = createNextHandler(
 					cookies: "community-member",
 				});
 
-				const { pubTypeId, stageId, filters, ...rest } = query ?? {};
+				const { stageId, filters, ...rest } = query ?? {};
+				// pubTypeId is an array, so needs to be parsed separately since it comes
+				// in from the query as 'pubTypeId[0]', 'pubTypeId[1]'
+				const parsedQuery = qs.parse(request.url);
+				const pubTypeId = parsedQuery.pubTypeId as PubTypesId[] | undefined;
 
 				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
 
