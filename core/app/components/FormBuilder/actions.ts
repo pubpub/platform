@@ -24,7 +24,6 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 const upsertRelatedPubTypes = async (values: NewFormElementToPubType[]) => {
-	console.log({ values });
 	db.transaction().execute(async (trx) => {
 		const formElementIds = values.map((v) => v.A);
 
