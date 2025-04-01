@@ -31,6 +31,7 @@ import type { ElementProps, RelatedFormValues, SingleFormValues } from "../types
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
+import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
@@ -188,6 +189,7 @@ export const RelatedPubsElement = ({
 }: ElementProps<InputComponent.relationBlock> & {
 	valueComponentProps: PubFieldFormElementProps;
 }) => {
+	const { pubId } = useContextEditorContext();
 	const [showPanel, setShowPanel] = useState(false);
 
 	// Look through existing related pubs in `values` to get their pub titles
@@ -301,6 +303,8 @@ export const RelatedPubsElement = ({
 									onCancel={() => setShowPanel(false)}
 									onChangeRelatedPubs={handleChangeRelatedPubs}
 									relatedPubs={relatedPubs}
+									// Do not allow linking to itself
+									disabledPubs={pubId ? [pubId] : undefined}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 
 import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
+import type { PubsId } from "db/public";
 import { Button } from "ui/button";
 
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
@@ -13,11 +14,13 @@ export const AddRelatedPubsPanel = ({
 	relatedPubs,
 	onCancel,
 	onChangeRelatedPubs,
+	disabledPubs,
 }: {
 	title: string;
 	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
 	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
+	disabledPubs?: PubsId[];
 }) => {
 	const sidebarRef = useRef(null);
 	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(relatedPubs);
@@ -31,7 +34,11 @@ export const AddRelatedPubsPanel = ({
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={title} showCancel onCancel={onCancel} />
-				<PubsDataTableClient selectedPubs={selected} onSelectedPubsChange={setSelected} />
+				<PubsDataTableClient
+					selectedPubs={selected}
+					onSelectedPubsChange={setSelected}
+					disabledRows={disabledPubs}
+				/>
 			</div>
 			<div className="mt-auto flex w-full justify-between gap-2">
 				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>

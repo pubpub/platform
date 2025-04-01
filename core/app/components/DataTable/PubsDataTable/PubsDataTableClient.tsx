@@ -12,6 +12,7 @@ import type {
 import React, { useCallback, useMemo, useState } from "react";
 
 import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
+import type { PubsId } from "db/public";
 import { TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import { DataTable, useDataTable } from "ui/data-table-paged";
 
@@ -57,9 +58,11 @@ export const PubsDataTable = ({ perPage, ...props }: PubsDataTableProps) => {
 export const PubsDataTableClient = ({
 	selectedPubs,
 	onSelectedPubsChange,
+	disabledRows = [],
 }: {
 	selectedPubs?: NonGenericProcessedPub[];
 	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
+	disabledRows?: PubsId[];
 }) => {
 	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
 		limit: 10,
@@ -91,7 +94,10 @@ export const PubsDataTableClient = ({
 	const total = totalFromHeader ? parseInt(totalFromHeader) : 0;
 
 	const pageCount = Math.ceil(total / filterParams.limit);
-	const columns = useMemo(() => getColumns({}), []) as ColumnDef<NonGenericProcessedPub>[];
+	const columns = useMemo(
+		() => getColumns({ disabledRows }),
+		[]
+	) as ColumnDef<NonGenericProcessedPub>[];
 
 	const pagination: PaginationState = {
 		pageIndex: filterParams.offset / filterParams.limit,
