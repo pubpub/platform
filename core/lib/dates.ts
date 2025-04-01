@@ -36,3 +36,12 @@ export const getMonthAndDateString = () => {
 export const formatDateAsTime = (date = new Date()) => {
 	return format(date, "h:mm aa");
 };
+
+// Used for createdAt in pub tables
+export const dateFormatOptions = {
+	month: "short",
+	day: "numeric",
+	year: "numeric",
+	hour: "2-digit",
+	minute: "2-digit",
+} satisfies Intl.DateTimeFormatOptions;
