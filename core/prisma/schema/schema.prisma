@@ -41,9 +41,6 @@ model User {
   stageMemberships     StageMembership[]
   PubValueHistory      PubValueHistory[]
 
-  Invite    Invite[] @relation("invited_user")
-  InvitedBy Invite[] @relation("invited_by")
-
   @@map(name: "users")
 }
 
@@ -103,7 +100,6 @@ model Community {
   Form           Form[]
   pubFields      PubField[]
   members        CommunityMembership[]
-  Invite         Invite[]
 
   @@map(name: "communities")
 }
@@ -133,7 +129,6 @@ model Pub {
   formMemberships FormMembership[]
 
   searchVector Unsupported("tsvector")?
-  Invite       Invite[]
 
   @@index([searchVector], type: Gin)
   @@map(name: "pubs")
@@ -266,7 +261,6 @@ model Stage {
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
-  Invite                Invite[]
 
   @@map(name: "stages")
 }
@@ -446,8 +440,7 @@ model ActionRun {
   sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[] @relation("source_action_run")
-  Invite               Invite[]    @relation("invited_by_action_run")
+  sequentialActionRuns ActionRun[]     @relation("source_action_run")
 
   @@map(name: "action_runs")
 }
@@ -502,7 +495,6 @@ model Form {
   updatedAt   DateTime       @default(now()) @updatedAt
 
   members FormMembership[]
-  Invite  Invite[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
@@ -682,47 +674,4 @@ model MembershipCapabilities {
 
   @@id([role, type, capability])
   @@map(name: "membership_capabilities")
-}
-
-model Invite {
-  id String @id @default(dbgenerated("gen_random_uuid()"))
-
-  // either one of these is set
-  email       String?
-  InvitedUser User?   @relation("invited_user", fields: [userId], references: [id], onDelete: SetNull)
-  userId      String?
-
-  token      String    @unique
-  expiresAt  DateTime
-  acceptedAt DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @default(now()) @updatedAt
-
-  community     Community  @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId   String
-  communityRole MemberRole @default(contributor)
-
-  Pub     Pub?    @relation(fields: [pubId], references: [id], onDelete: SetNull)
-  pubId   String?
-  Form    Form?   @relation(fields: [formId], references: [id], onDelete: SetNull)
-  formId  String?
-  Stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId String?
-
-  otherRole MemberRole?
-
-  message      String?
-  sentAt       DateTime?
-  lastSentAt   DateTime?
-  sendAttempts Int       @default(0)
-
-  status    String    @default("active")
-  revokedAt DateTime?
-
-  InvitedByUser        User?      @relation("invited_by", fields: [invitedByUserId], references: [id], onDelete: SetNull)
-  invitedByUserId      String?
-  InvitedByActionRun   ActionRun? @relation("invited_by_action_run", fields: [invitedByActionRunId], references: [id], onDelete: SetNull)
-  invitedByActionRunId String?
-
-  @@map(name: "invites")
 }

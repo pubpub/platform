@@ -116,10 +116,6 @@ COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPerm
 
 
 
--- Model invites comments
-
-
-
 -- Enum AuthTokenType comments
 
 COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This will just authenticate you with a regular session.
