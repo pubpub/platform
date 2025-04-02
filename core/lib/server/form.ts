@@ -74,7 +74,7 @@ export const getForm = (
 									eb.fn
 										.jsonAgg(eb.ref("_FormElementToPubType.B"))
 										.filterWhere("_FormElementToPubType.B", "is not", null),
-									eb.val([])
+									sql`'[]'`
 								)
 								.as("relatedPubTypes"),
 						])
