@@ -14,10 +14,9 @@ const animationHeightMS = 100;
 export interface AttributePanelProps {
 	panelPosition: PanelProps;
 	viewRef: React.RefObject<EditorView | null>;
-	isLink: boolean;
 }
 
-export function AttributePanel({ panelPosition, viewRef, isLink }: AttributePanelProps) {
+export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) {
 	const [position, setPosition] = useState(panelPosition);
 	/* Set as init position and then keep track of state here, while syncing 
 	so the panel doesn't become out of sync with doc (only an issue if values are shown

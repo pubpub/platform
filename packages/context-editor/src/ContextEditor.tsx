@@ -168,12 +168,6 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		/* Doing so in some cases (onChange for the EditorDash) cause an infinite re-render loop */
 		/* Figure out what I actually need to render on, and then clean up any useMemo calls if necessary */
 	}, [props, suggestData, panelPosition]);
-	const isLink = Boolean(
-		baseSchema.marks.link.isInSet([
-			...(view.current?.state.storedMarks || []),
-			...(view.current?.state.selection.$from.marks() || []),
-		])
-	);
 
 	return (
 		<div
@@ -182,7 +176,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		>
 			<div id={MENU_BAR_ID} className="sticky top-0 z-10"></div>
 			<div ref={viewHost} className={cn("font-serif", props.className)} />
-			<AttributePanel panelPosition={panelPosition} viewRef={view} isLink={isLink} />
+			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />
 		</div>
 	);
