@@ -29,14 +29,10 @@ export const toggleMarkExpandEmpty = (options: ToggleOptions<MarkType>) => {
 		return true;
 	}
 	if (empty) {
-		// Handle empty selection with extended mark range
-		let { from, to } = selection;
 		const attrs = $from.marks().find((mark) => mark.type === type)?.attrs;
 		const range = getMarkRange($from, type, attrs);
 
 		if (range) {
-			from = range.from;
-			to = range.to;
 			tr.removeMark(range.from, range.to, type);
 			tr.removeStoredMark(type);
 			dispatch(tr);
