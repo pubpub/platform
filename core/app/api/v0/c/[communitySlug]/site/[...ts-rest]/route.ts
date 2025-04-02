@@ -362,12 +362,15 @@ const handler = createNextHandler(
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: "community-member",
 				});
+				const queryString = new URLSearchParams(query as Record<string, string>).toString();
 
-				const { stageId, filters, ...rest } = query ?? {};
-				// pubTypeId is an array, so needs to be parsed separately since it comes
+				// We still support passing a single pubTypeId for backwards compatability
+				const { stageId, filters, pubTypeId, ...rest } = query ?? {};
+				// pubTypeId is an array, so possibly needs to be parsed separately since it comes
 				// in from the query as 'pubTypeId[0]', 'pubTypeId[1]'
-				const parsedQuery = qs.parse(request.url);
-				const pubTypeId = parsedQuery.pubTypeId as PubTypesId[] | undefined;
+				const parsedQuery = qs.parse(queryString);
+				const pubTypeIds = parsedQuery.pubTypeId as PubTypesId[] | undefined;
+				const resolvedPubTypeId = pubTypeId || pubTypeIds;
 
 				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
 
@@ -381,7 +384,7 @@ const handler = createNextHandler(
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
-						pubTypeId,
+						pubTypeId: resolvedPubTypeId,
 						stageId,
 						userId: user.id,
 					},
