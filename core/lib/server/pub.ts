@@ -37,7 +37,14 @@ import type {
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy, StageConstraint } from "db/types";
-import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
+import {
+	Capabilities,
+	CoreSchemaType,
+	MemberRole,
+	MembershipType,
+	OperationType,
+	pubTypesIdSchema,
+} from "db/public";
 import { NO_STAGE_OPTION } from "db/types";
 import { logger } from "logger";
 import { assert, expect } from "utils";
@@ -1664,14 +1671,29 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(!!props.pubIds && props.pubIds.length > 0, (qb) =>
 						qb.where("pubs.id", "in", props.pubIds!)
 					)
-					.$if(!!topLevelStageFilter.length, (qb) =>
-						qb.where((eb) =>
-							stagesWhere(eb, topLevelStageFilter, "PubsInStages.stageId")
-						)
+					// stage filter
+					// we need to do these checks separately bc just bc you are only allowed to see
+					// some stages, doesn't mean you _want_ to see all stages
+					// props.stageId is the list of stages the user wants to see
+					// allowedStages is the list of stages the user is allowed to see
+					.$if(Boolean(props.stageId?.length), (qb) =>
+						qb.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"))
 					)
-					.$if(!!topLevelPubTypeFilter.length, (qb) =>
-						qb.where("pubs.pubTypeId", "in", topLevelPubTypeFilter)
+					.$if(Boolean(allowedStages?.length), (qb) =>
+						qb.where((eb) => stagesWhere(eb, allowedStages!, "PubsInStages.stageId"))
 					)
+					// pub type filter
+					// we need to do these checks separately bc just bc you are only allowed to see
+					// some pub types, doesn't mean you _want_ to see all pub types
+					// props.pubTypeId is the list of pub types the user wants to see
+					// allowedPubTypes is the list of pub types the user is allowed to see
+					.$if(Boolean(props.pubTypeId?.length), (qb) =>
+						qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
+					)
+					.$if(Boolean(allowedPubTypes?.length), (qb) =>
+						qb.where("pubs.pubTypeId", "in", allowedPubTypes!)
+					)
+					// pub value filter
 					.$if(Boolean(options?.filters), (qb) =>
 						qb.where((eb) => applyFilters(eb, options!.filters!))
 					)

@@ -20,10 +20,11 @@ let page: Page;
 let client: ReturnType<typeof initClient<typeof siteApi, any>>;
 
 const allToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
-const onlyPubTypeToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+const onlyTestPubType1Token = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
 const onlyStageToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
 const bothToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
 const noStageToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
+const testPubType1AndBasicPubTypeToken = `${crypto.randomUUID()}.${crypto.randomUUID()}` as const;
 
 const basicPubTypeId = `${crypto.randomUUID()}` as PubTypesId;
 const testPubTypeId = `${crypto.randomUUID()}` as PubTypesId;
@@ -31,12 +32,18 @@ const testPubType2Id = `${crypto.randomUUID()}` as PubTypesId;
 const testStage1Id = `${crypto.randomUUID()}` as StagesId;
 const testStage2Id = `${crypto.randomUUID()}` as StagesId;
 
-const pubTypeIds = [testPubTypeId, testPubType2Id];
+const testPubTypeIds = [testPubTypeId, testPubType2Id];
+const allPubTypeIds = [basicPubTypeId, ...testPubTypeIds];
 
-const stageIds = [testStage1Id, testStage2Id, "no-stage" as const];
+const testStageIds = [testStage1Id, testStage2Id, "no-stage" as const];
 
-const pubsStagePubTypeCombinations = pubTypeIds.flatMap((pubTypeId, pubTypeIdIdx) =>
-	stageIds.map((stageId, stageIdIdx) => {
+const whatIsUpWorldPubId = `${crypto.randomUUID()}` as PubsId;
+
+/**
+ * We create a pub for each pub type and stage combination
+ */
+const pubsStagePubTypeCombinations = testPubTypeIds.flatMap((pubTypeId, pubTypeIdIdx) =>
+	testStageIds.map((stageId, stageIdIdx) => {
 		const pubName =
 			`pubPubType${pubTypeIdIdx + 1}Stage${stageIdIdx > 1 ? "None" : stageIdIdx + 1}` as const;
 		return {
@@ -62,6 +69,7 @@ const seed = createSeed({
 	},
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
+		Relation: { schemaName: CoreSchemaType.Null, relation: true },
 	},
 	pubTypes: {
 		Basic: {
@@ -93,25 +101,31 @@ const seed = createSeed({
 	},
 	pubs: [
 		{
+			id: whatIsUpWorldPubId,
 			pubType: "Basic",
 			values: {
 				Title: "what is up world",
 			},
+			// make them related pubs so we can test restrictions on related pubs
+			relatedPubs: {
+				Relation: pubsStagePubTypeCombinations.map((pub) => ({
+					value: null,
+					pub,
+				})),
+			},
 		},
-		// @ts-expect-error Yeahyeah
-		...pubsStagePubTypeCombinations,
 	],
 	apiTokens: {
 		allToken: {
 			id: allToken,
 		},
-		onlyPubTypeToken: {
-			id: onlyPubTypeToken,
+		onlyTestPubType1Token: {
+			id: onlyTestPubType1Token,
 			permissions: {
 				pub: {
 					read: {
 						pubTypes: [testPubTypeId],
-						stages: stageIds,
+						stages: testStageIds,
 					},
 				},
 			},
@@ -121,8 +135,20 @@ const seed = createSeed({
 			permissions: {
 				pub: {
 					read: {
-						pubTypes: pubTypeIds,
+						pubTypes: allPubTypeIds,
 						stages: [testStage1Id],
+					},
+				},
+			},
+		},
+
+		testPubType1AndBasicPubTypeToken: {
+			id: testPubType1AndBasicPubTypeToken,
+			permissions: {
+				pub: {
+					read: {
+						pubTypes: [testPubTypeId, basicPubTypeId],
+						stages: testStageIds,
 					},
 				},
 			},
@@ -143,7 +169,7 @@ const seed = createSeed({
 			permissions: {
 				pub: {
 					read: {
-						pubTypes: pubTypeIds,
+						pubTypes: allPubTypeIds,
 						stages: ["no-stage"],
 					},
 				},
@@ -276,7 +302,7 @@ test.describe("Site API", () => {
 
 	test.describe("restrictions", () => {
 		test("if only pub type is restricted, only pubs of that pub type are returned", async () => {
-			const clientOnlyPubTypeClient = createClient(onlyPubTypeToken!);
+			const clientOnlyPubTypeClient = createClient(onlyTestPubType1Token!);
 
 			const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
 				params: {
@@ -348,7 +374,25 @@ test.describe("Site API", () => {
 			);
 		});
 
-		test("if stages are restricted to pubs not in a stage ", async () => {
+		test("if pub types are restricted, we can still further filter by stage", async () => {
+			const clientOnlyPubTypeClient = createClient(onlyTestPubType1Token!);
+
+			const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {
+					stageId: testStage1Id,
+				},
+			});
+
+			expectStatus(pubResponseRestricted, 200);
+			expect(pubResponseRestricted.body).toHaveLength(1);
+			expect(pubResponseRestricted.body[0].stageId).toBe(testStage1Id);
+			expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubTypeId);
+		});
+
+		test("if stages are restricted to pubs not in a stage", async () => {
 			const clientNoStageClient = createClient(noStageToken);
 
 			const pubResponseRestricted = await clientNoStageClient.pubs.getMany({
@@ -359,8 +403,81 @@ test.describe("Site API", () => {
 			});
 
 			expectStatus(pubResponseRestricted, 200);
-			expect(pubResponseRestricted.body).toHaveLength(2);
+			// 2 related, 1 toplevel
+			expect(pubResponseRestricted.body).toHaveLength(3);
 			expect(pubResponseRestricted.body[0].stageId).toBe(null);
+		});
+
+		test.describe("restrictions on related pubs", () => {
+			test("if pub types are unrestricted, related pubs are unrestricted", async () => {
+				const clientAllClient = createClient(allToken);
+
+				const pubResponseRestricted = await clientAllClient.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {
+						pubIds: [whatIsUpWorldPubId],
+					},
+				});
+
+				expectStatus(pubResponseRestricted, 200);
+				expect(pubResponseRestricted.body).toHaveLength(1);
+				expect(pubResponseRestricted.body[0].id).toBe(whatIsUpWorldPubId);
+				expect(
+					pubResponseRestricted.body[0].values?.filter((val) => val.relatedPubId !== null)
+				).toHaveLength(6);
+			});
+
+			test("if pub types are restricted, related pubs are restricted to the allowed pub types", async () => {
+				const clientOnlyPubTypeClient = createClient(testPubType1AndBasicPubTypeToken);
+
+				const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {
+						pubIds: [whatIsUpWorldPubId],
+						withRelatedPubs: true,
+					},
+				});
+
+				expectStatus(pubResponseRestricted, 200);
+				expect(pubResponseRestricted.body).toHaveLength(1);
+				expect(pubResponseRestricted.body[0].stageId).toBe(null);
+
+				const relatedPubs = pubResponseRestricted.body[0].values
+					?.filter((val) => val.relatedPubId !== null)
+					.map((val) => val.relatedPub!);
+				expect(relatedPubs!.every((pub) => pub.pubTypeId === testPubTypeId)).toBe(true);
+				expect(relatedPubs).toHaveLength(3);
+			});
+
+			test("if stages are restricted, related pubs are restricted to the allowed stages", async () => {
+				const clientOnlyStageClient = createClient(noStageToken);
+
+				const pubResponseRestricted = await clientOnlyStageClient.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {
+						pubIds: [whatIsUpWorldPubId],
+						withRelatedPubs: true,
+						withStage: true,
+					},
+				});
+
+				expectStatus(pubResponseRestricted, 200);
+				expect(pubResponseRestricted.body).toHaveLength(1);
+				expect(pubResponseRestricted.body[0].stageId).toBe(null);
+
+				const relatedPubs = pubResponseRestricted.body[0].values
+					?.filter((val) => val.relatedPubId !== null)
+					.map((val) => val.relatedPub!);
+
+				expect(relatedPubs).toHaveLength(2);
+				expect(relatedPubs!.every((pub) => pub.stageId === null)).toBe(true);
+			});
 		});
 	});
 

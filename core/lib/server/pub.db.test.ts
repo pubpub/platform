@@ -1145,6 +1145,63 @@ describe("getPubsWithRelatedValues", () => {
 			)
 		).rejects.toThrow("Pub not found");
 	});
+
+	it("should get pubs with stage null if only no-stage pubs are allowed", async () => {
+		const trx = getTrx();
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { pubs, community, pubFields, pubTypes, stages } = await seedCommunity(
+			seed,
+			undefined,
+			trx
+		);
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		// dummy pub with a stage, all the other have no stage
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				stageId: stages["Stage 1"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		});
+
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		const pubsWithNoStage = await getPubsWithRelatedValues(
+			{
+				communityId: community.id,
+			},
+			{
+				allowedStages: ["no-stage"],
+				trx,
+			}
+		);
+
+		expect(pubsWithNoStage).toHaveLength(2);
+		expect(pubsWithNoStage.every((pub) => pub.stageId === null)).toBe(true);
+
+		// also works with singular pub
+
+		const pubWithNoStage = await getPubsWithRelatedValues(
+			{
+				communityId: community.id,
+				pubIds: [pubs[1].id],
+			},
+			{
+				trx,
+				allowedStages: ["no-stage"],
+			}
+		);
+
+		expect(pubWithNoStage).toBeDefined();
+		expect(pubWithNoStage[0].stageId).toBe(null);
+	});
 });
 
 describe("upsertPubRelations", () => {
