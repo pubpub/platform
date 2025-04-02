@@ -17,15 +17,8 @@ import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDow
 import type { FullProcessedPub } from "~/lib/server/pub";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { DataTable } from "~/app/components/DataTable/DataTable";
+import { dateFormatOptions } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
-
-export const createdAtDateOptions = {
-	month: "short",
-	day: "numeric",
-	year: "numeric",
-	hour: "2-digit",
-	minute: "2-digit",
-} satisfies Intl.DateTimeFormatOptions;
 
 const getRelatedPubsColumns = (relatedPubActionsDropdowns: Record<string, ReactNode>) => {
 	return [
@@ -91,7 +84,7 @@ const getRelatedPubsColumns = (relatedPubActionsDropdowns: Record<string, ReactN
 			accessorKey: "createdAt",
 			cell: ({ getValue }) => (
 				<time dateTime={new Date().toString()} suppressHydrationWarning>
-					{new Date(getValue<string>()).toLocaleString(undefined, createdAtDateOptions)}
+					{new Date(getValue<string>()).toLocaleString(undefined, dateFormatOptions)}
 				</time>
 			),
 		},

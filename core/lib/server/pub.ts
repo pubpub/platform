@@ -1881,18 +1881,20 @@ export const getPubTitle = (pubId: PubsId, trx = db) =>
  */
 export const getPubsCount = async (props: {
 	communityId: CommunitiesId;
-	stageId?: StagesId;
-	pubTypeId?: PubTypesId;
+	stageId?: StagesId[];
+	pubTypeId?: PubTypesId[];
 }): Promise<number> => {
 	const pubs = await db
 		.selectFrom("pubs")
 		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props.stageId), (qb) =>
+		.$if(Boolean(props?.stageId?.length), (qb) =>
 			qb
 				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where("PubsInStages.stageId", "=", props.stageId!)
+				.where("PubsInStages.stageId", "in", props.stageId!)
 		)
-		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "=", props.pubTypeId!))
+		.$if(Boolean(props.pubTypeId?.length), (qb) =>
+			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
+		)
 		.select((eb) => eb.fn.countAll<number>().as("count"))
 		.executeTakeFirstOrThrow();
 

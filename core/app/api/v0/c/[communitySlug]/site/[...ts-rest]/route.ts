@@ -1,6 +1,7 @@
 import type { User } from "lucia";
 
 import { headers } from "next/headers";
+import { queryByTestId } from "@testing-library/react";
 import { createNextHandler, RequestValidationError } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import qs from "qs";
@@ -20,7 +21,7 @@ import type {
 	ApiAccessPermissionConstraintsInput,
 	LastModifiedBy,
 } from "db/types";
-import { baseFilterSchema, filterSchema, siteApi } from "contracts";
+import { baseFilterSchema, filterSchema, siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
 import { assert } from "utils";
 
@@ -37,6 +38,7 @@ import {
 	doesPubExist,
 	ForbiddenError,
 	fullTextSearch,
+	getPubsCount,
 	getPubsWithRelatedValues,
 	NotFoundError,
 	removeAllPubRelationsBySlugs,
@@ -156,6 +158,7 @@ const checkAuthorization = async <
 				capability: Parameters<typeof userCan>[0];
 				target: T;
 		  }
+		| "community-member"
 		| boolean;
 }): Promise<AuthorizationOutput<S, AT>> => {
 	const authorizationTokenWithBearer = (await headers()).get("Authorization");
@@ -206,6 +209,15 @@ const checkAuthorization = async <
 
 	// Handle cases where we only want to check for login but have no specific capability yet
 	if (typeof cookies === "boolean") {
+		return { user, authorization: true as const, community, lastModifiedBy };
+	}
+
+	// Handle when we just want to check the user is part of the community
+	if (cookies === "community-member") {
+		const userCommunityIds = user.memberships.map((m) => m.communityId);
+		if (!userCommunityIds.includes(community.id)) {
+			throw new ForbiddenError(`You are not authorized to perform actions in this community`);
+		}
 		return { user, authorization: true as const, community, lastModifiedBy };
 	}
 
@@ -370,11 +382,10 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async ({ query }, { request }) => {
+			getMany: async ({ query }, { request, responseHeaders }) => {
 				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
-					// TODO: figure out capability here
-					cookies: false,
+					cookies: "community-member",
 				});
 
 				const allowedPubTypes =
@@ -382,7 +393,7 @@ const handler = createNextHandler(
 				const allowedStages =
 					typeof authorization === "object" ? authorization.stages : undefined;
 
-				let { pubTypeId, stageId, pubIds, filters, ...rest } = query;
+				let { pubTypeId, stageId, pubIds, filters, ...rest } = query ?? {};
 
 				const requestedPubTypes = pubTypeId
 					? Array.isArray(pubTypeId)
@@ -421,7 +432,6 @@ const handler = createNextHandler(
 						throw new BadRequestError(e.message);
 					}
 				}
-
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
@@ -435,6 +445,14 @@ const handler = createNextHandler(
 						filters: manuallyParsedFilters?.filters,
 					}
 				);
+
+				// TODO: this does not account for permissions
+				const pubCount = await getPubsCount({
+					communityId: community.id,
+					pubTypeId,
+					stageId,
+				});
+				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
 
 				return {
 					status: 200,

@@ -38,7 +38,7 @@ export default defineConfig({
 		},
 	],
 	// max 30 seconds per test in CI
-	timeout: !process.env.CI ? 30 * 1000 : 10 * 60 * 1000,
+	timeout: process.env.CI ? 30 * 1000 : 60 * 1000,
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: process.env.CI ? "github" : "list",
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
