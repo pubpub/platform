@@ -54,6 +54,22 @@ export const getTextContent = (node: any): string => {
 	}
 	return "";
 };
+
+export const findAnchor = (node: any): any => {
+	if (node.tagName === "a") {
+		return node;
+	}
+	if (node.children) {
+		for (const child of node.children) {
+			const found = findAnchor(child);
+			if (found) {
+				return found;
+			}
+		}
+	}
+	return null;
+};
+
 export const tableToObjectArray = (node: any) => {
 	if (!node) return [{ type: "empty" }];
 
@@ -107,24 +123,10 @@ export const tableToObjectArray = (node: any) => {
 		}
 
 		const isAssetSource =
-			["image", "video", "audio", "file"].includes(tableType) && headerVal === "source";
+			["image", "video", "audio", "file", "iframe"].includes(tableType) &&
+			headerVal === "source";
 		const isStaticSource = headerVal === "staticimage";
 		if (isAssetSource || isStaticSource) {
-			const findAnchor = (node: any): any => {
-				if (node.tagName === "a") {
-					return node;
-				}
-				if (node.children) {
-					for (const child of node.children) {
-						const found = findAnchor(child);
-						if (found) {
-							return found;
-						}
-					}
-				}
-				return null;
-			};
-
 			const anchor = findAnchor(cell);
 			if (anchor && anchor.properties.href) {
 				return anchor.properties.href;
@@ -427,40 +429,44 @@ export const structureAudio = () => (tree: Root) => {
 			const tableData: any = tableToObjectArray(node);
 			const tableType = tableData[0].type;
 			if (tableType === "audio") {
-				const elements: Element[] = tableData.map((data: any) => ({
-					type: "element",
-					tagName: "figure",
-					properties: {
-						dataFigureType: "audio",
-						id: data.id,
-						dataAlign: data.align,
-						dataSize: data.size,
-						dataHideLabel: data.hidelabel,
-					},
-					children: [
-						{
-							type: "element",
-							tagName: "audio",
-							properties: { controls: true },
-							children: [
-								{
-									type: "element",
-									tagName: "source",
-									properties: {
-										src: data.source,
-										type: `audio/${path.extname(data.source).replace(".", "")}`,
+				const elements: Element[] = tableData.map((data: any) => {
+					const extension = path.extname(data.source).replace(".", "");
+					const type = extension ? `audio/${extension}` : undefined;
+					return {
+						type: "element",
+						tagName: "figure",
+						properties: {
+							dataFigureType: "audio",
+							id: data.id,
+							dataAlign: data.align,
+							dataSize: data.size,
+							dataHideLabel: data.hidelabel,
+						},
+						children: [
+							{
+								type: "element",
+								tagName: "audio",
+								properties: { controls: true },
+								children: [
+									{
+										type: "element",
+										tagName: "source",
+										properties: {
+											src: data.source,
+											type,
+										},
 									},
-								},
-							],
-						},
-						{
-							type: "element",
-							tagName: "figcaption",
-							properties: {},
-							children: data.caption || [],
-						},
-					],
-				}));
+								],
+							},
+							{
+								type: "element",
+								tagName: "figcaption",
+								properties: {},
+								children: data.caption || [],
+							},
+						],
+					};
+				});
 
 				if (parent && typeof index === "number") {
 					parent.children.splice(index, 1, ...elements);
@@ -1179,7 +1185,7 @@ export const appendFigureAttributes = () => (tree: Root) => {
 	const independentFigureTypes = ["video", "table", "math"];
 	const validFigureTypes = [...aggregateFigureTypes, ...independentFigureTypes];
 	visit(tree, "element", (node: any, index: any, parent: any) => {
-		if (node.tagName === "figure" && node.properties.dataFigureType !== "table") {
+		if (node.tagName === "figure") {
 			const tableType = node.properties.dataFigureType;
 			if (
 				validFigureTypes.includes(tableType) &&

@@ -1,4 +1,4 @@
-import type { MarkType, NodeType, Schema } from "prosemirror-model";
+import type { MarkType, NodeType } from "prosemirror-model";
 import type { EditorState } from "prosemirror-state";
 
 import {
@@ -7,13 +7,8 @@ import {
 	REGEX_BLOCK_MATH_DOLLARS,
 	REGEX_INLINE_MATH_DOLLARS,
 } from "@benrbray/prosemirror-math";
-import {
-	InputRule,
-	inputRules,
-	textblockTypeInputRule,
-	wrappingInputRule,
-} from "prosemirror-inputrules";
-import { Fragment } from "prosemirror-model";
+import { InputRule, inputRules } from "prosemirror-inputrules";
+import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
 import { createLinkRuleHandler, emailOrUriRegexBase, markdownLinkRegex } from "../utils/links";
@@ -52,12 +47,10 @@ const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 		}
 	);
 };
-const blockQuoteRule = (nodeType: NodeType) => wrappingInputRule(/^\s*>\s$/, nodeType);
 const inlineMathRule = (nodeType: NodeType) =>
 	makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, nodeType);
 const blockMathRule = (nodeType: NodeType) =>
 	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType);
-const codeBlockRule = (nodeType: NodeType) => textblockTypeInputRule(/^```$/, nodeType);
 
 const EMAIL_OR_URI_REGEX_WITH_SPACE = new RegExp(`${emailOrUriRegexBase}(?<whitespace>\\s)$`);
 
@@ -96,10 +89,8 @@ export default (schema: Schema) => {
 		applyMarkRule(schema.marks.strong, boldRegex),
 		applyMarkRule(schema.marks.em, italicsRegex),
 		applyMarkRule(schema.marks.code, codeRegex),
-		blockQuoteRule(schema.nodes.blockquote),
 		inlineMathRule(schema.nodes.math_inline),
 		blockMathRule(schema.nodes.math_display),
-		codeBlockRule(schema.nodes.code_block),
 	];
 	return inputRules({ rules });
 };

@@ -9,6 +9,7 @@ import {
 	splitBlock,
 } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
+import { liftListItem, sinkListItem } from "prosemirror-schema-list";
 import { TextSelection } from "prosemirror-state";
 
 import type { Dispatch } from "../commands/types";
@@ -76,5 +77,7 @@ export default (schema: Schema) => {
 		)
 	);
 
+	bind("Shift-Tab", liftListItem(schema.nodes.list_item));
+	bind("Tab", sinkListItem(schema.nodes.list_item));
 	return keymap(keys);
 };
