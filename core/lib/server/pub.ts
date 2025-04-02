@@ -1221,6 +1221,14 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	onlyTitles?: boolean;
 	trx?: typeof db;
 	filters?: Filter;
+	/**
+	 * Constraints on which pub types the user/token has access to. Will also filter related pubs.
+	 */
+	allowedPubTypes?: PubTypesId[];
+	/**
+	 * Constraints on which stages the user/token has access to. Will also filter related pubs.
+	 */
+	allowedStages?: StageConstraint[];
 }
 
 // TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
@@ -1243,7 +1251,13 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 			 * Multiple pubIds to filter by
 			 */
 			pubIds?: PubsId[];
+			/**
+			 * Requested pub types. Allowed pubtypes the user/token has access to should be put in options
+			 */
 			pubTypeId?: PubTypesId[];
+			/**
+			 * Requested stages. Allowed stages the user/token has access to should be put in options
+			 */
 			stageId?: StageConstraint[];
 			communityId: CommunitiesId;
 			userId?: UsersId;
@@ -1299,11 +1313,21 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		withMembers,
 		trx,
 		withLegacyAssignee,
+		allowedPubTypes,
+		allowedStages,
 	} = opts;
 
 	if (depth < 1) {
 		throw new Error("Depth must be a positive number");
 	}
+
+	const topLevelPubTypeFilter = Array.from(
+		new Set([...(props.pubTypeId ?? []), ...(allowedPubTypes ?? [])])
+	);
+
+	const topLevelStageFilter = Array.from(
+		new Set([...(props.stageId ?? []), ...(allowedStages ?? [])])
+	);
 
 	const result = await autoCache(
 		trx
@@ -1375,6 +1399,30 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									)
 								)
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+								.$if(Boolean(allowedStages?.length), (qb) => {
+									const { noStage, stageIds } = Object.groupBy(
+										allowedStages!,
+										(stage) =>
+											stage === NO_STAGE_OPTION.value ? "noStage" : "stageIds"
+									);
+
+									return qb.where((eb) =>
+										eb.or([
+											...(stageIds && stageIds.length > 0
+												? [
+														eb(
+															"PubsInStages.stageId",
+															"in",
+															stageIds as StagesId[]
+														),
+													]
+												: []),
+											...(noStage
+												? [eb("PubsInStages.stageId", "is", null)]
+												: []),
+										])
+									);
+								})
 								.where((eb) =>
 									eb.exists(
 										eb.selectFrom("capabilities" as any).where((ebb) => {
@@ -1448,6 +1496,13 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 											)
 										)
 										.select("pub_values.relatedPubId")
+								)
+								// filter out pubtypes the user does not have access to
+								// we don't filter by props.pubTypeId here, as when a user looks up say all Submissions and their related values,
+								// we want to show all related values regardless of the pub type of the related pub
+								// TODO: maybe add an option to filter related pubs by pub type?
+								.$if(Boolean(allowedPubTypes), (qb) =>
+									qb.where("pubs.pubTypeId", "in", allowedPubTypes!)
 								)
 								.select([
 									"pubs.id as pubId",
@@ -1628,25 +1683,23 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(!!props.pubIds && props.pubIds.length > 0, (qb) =>
 						qb.where("pubs.id", "in", props.pubIds!)
 					)
-					.$if(!!props.stageId && props.stageId.length > 0, (qb) => {
-						const noStage = props.stageId!.find(
-							(stage) => stage === NO_STAGE_OPTION.value
-						);
-						const stages = props.stageId!.filter(
-							(stage): stage is StagesId => stage !== NO_STAGE_OPTION.value
+					.$if(!!topLevelStageFilter.length, (qb) => {
+						const { noStage, stageIds } = Object.groupBy(
+							topLevelStageFilter,
+							(stage) => (stage === NO_STAGE_OPTION.value ? "noStage" : "stageIds")
 						);
 
 						return qb.where((eb) =>
 							eb.or([
-								...(stages.length > 0
-									? [eb("PubsInStages.stageId", "in", stages)]
+								...(stageIds && stageIds.length > 0
+									? [eb("PubsInStages.stageId", "in", stageIds as StagesId[])]
 									: []),
 								...(noStage ? [eb("PubsInStages.stageId", "is", null)] : []),
 							])
 						);
 					})
-					.$if(!!props.pubTypeId && props.pubTypeId.length > 0, (qb) =>
-						qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
+					.$if(!!topLevelPubTypeFilter.length, (qb) =>
+						qb.where("pubs.pubTypeId", "in", topLevelPubTypeFilter)
 					)
 					.$if(Boolean(options?.filters), (qb) =>
 						qb.where((eb) => applyFilters(eb, options!.filters!))
@@ -1699,6 +1752,53 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
 								"pv.rank",
 							])
+							.$if(Boolean(allowedPubTypes?.length), (qb) =>
+								qb
+									.leftJoin(
+										"pubs as related_pubs",
+										"related_pubs.id",
+										"pv.relatedPubId"
+									)
+									.where((eb) =>
+										eb.or([
+											eb("related_pubs.pubTypeId", "is", null),
+											eb("related_pubs.pubTypeId", "in", allowedPubTypes!),
+										])
+									)
+							)
+							.$if(Boolean(allowedStages?.length), (qb) =>
+								qb
+									.leftJoin(
+										"PubsInStages as related_pubs_in_stages",
+										"related_pubs_in_stages.pubId",
+										"pv.relatedPubId"
+									)
+									.where((eb) => {
+										const { noStage, stageIds } = Object.groupBy(
+											allowedStages!,
+											(stage) =>
+												stage === NO_STAGE_OPTION.value
+													? "noStage"
+													: "stageIds"
+										);
+
+										return eb.or([
+											eb("pv.relatedPubId", "is", null),
+											...(stageIds && stageIds.length > 0
+												? [
+														eb(
+															"related_pubs_in_stages.stageId",
+															"in",
+															stageIds as StagesId[]
+														),
+													]
+												: []),
+											...(noStage
+												? [eb("related_pubs_in_stages.stageId", "is", null)]
+												: []),
+										]);
+									})
+							)
 					).as("values")
 				)
 			)
