@@ -16,6 +16,7 @@ export enum InviteStatus {
 	created = "created",
 	pending = "pending",
 	accepted = "accepted",
+	completed = "completed",
 	rejected = "rejected",
 	revoked = "revoked",
 }
