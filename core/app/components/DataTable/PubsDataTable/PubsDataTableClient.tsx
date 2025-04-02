@@ -201,7 +201,7 @@ export const PubsDataTableClient = ({
 
 	return (
 		<div className="flex flex-col gap-2">
-			{pubTypes ? (
+			{pubTypes && pubTypes.length > 0 ? (
 				<Badge variant="outline" className="flex w-fit gap-2 text-sm">
 					<span className="border-r p-1 pr-2 font-medium text-muted-foreground">
 						Pubtype

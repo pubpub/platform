@@ -68,6 +68,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 							animation={0}
 							badgeClassName="bg-blue-200 text-blue-400 rounded-sm font-mono font-normal border border-blue-400 whitespace-nowrap"
 							defaultValue={field.value ?? []}
+							data-testid="related-pub-type-selector"
 						/>
 						<FormMessage />
 					</FormItem>

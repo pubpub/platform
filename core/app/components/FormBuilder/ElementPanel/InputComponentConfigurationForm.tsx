@@ -285,7 +285,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 		defaultValues: {
 			...fieldInputElement,
 			config: fieldInputElement.config ?? defaultConfig,
-			relatedPubTypes: [],
+			relatedPubTypes: fieldInputElement.relatedPubTypes ?? [],
 		},
 	});
 

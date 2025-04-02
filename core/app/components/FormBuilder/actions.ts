@@ -23,15 +23,20 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
-const upsertRelatedPubTypes = async (values: NewFormElementToPubType[]) => {
+const upsertRelatedPubTypes = async (
+	values: NewFormElementToPubType[],
+	deletedRelatedPubTypes: FormElementsId[]
+) => {
 	db.transaction().execute(async (trx) => {
-		const formElementIds = values.map((v) => v.A);
+		const formElementIds = [...values.map((v) => v.A), ...deletedRelatedPubTypes];
 
 		// Delete old values
 		await trx.deleteFrom("_FormElementToPubType").where("A", "in", formElementIds).execute();
 
 		// Insert new ones
-		await trx.insertInto("_FormElementToPubType").values(values).execute();
+		if (values.length) {
+			await trx.insertInto("_FormElementToPubType").values(values).execute();
+		}
 	});
 };
 
@@ -61,10 +66,11 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 	const { elements, formId, access } = form;
 	//todo: this logic determines what, if any updates to make. that should be determined on the
 	//frontend so we can disable the save button if there are none
-	const { upserts, deletes, relatedPubTypes } = elements.reduce<{
+	const { upserts, deletes, relatedPubTypes, deletedRelatedPubTypes } = elements.reduce<{
 		upserts: NewFormElements[];
 		deletes: FormElementsId[];
 		relatedPubTypes: NewFormElementToPubType[];
+		deletedRelatedPubTypes: FormElementsId[];
 	}>(
 		(acc, element, index) => {
 			if (element.deleted) {
@@ -95,14 +101,19 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 					})
 				); // TODO: only update changed columns
 				if (element.relatedPubTypes) {
-					for (const pubTypeId of element.relatedPubTypes) {
-						acc.relatedPubTypes.push({ A: element.elementId, B: pubTypeId });
+					// If we are updating to an empty array, we should clear out all related pub types
+					if (element.relatedPubTypes.length === 0) {
+						acc.deletedRelatedPubTypes.push(element.elementId);
+					} else {
+						for (const pubTypeId of element.relatedPubTypes) {
+							acc.relatedPubTypes.push({ A: element.elementId, B: pubTypeId });
+						}
 					}
 				}
 			}
 			return acc;
 		},
-		{ upserts: [], deletes: [], relatedPubTypes: [] }
+		{ upserts: [], deletes: [], relatedPubTypes: [], deletedRelatedPubTypes: [] }
 	);
 
 	logger.info({ msg: "saving form", form, upserts, deletes });
@@ -157,7 +168,7 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 			).executeTakeFirstOrThrow();
 		}
 
-		await upsertRelatedPubTypes(relatedPubTypes);
+		await upsertRelatedPubTypes(relatedPubTypes, deletedRelatedPubTypes);
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return { error: `An element with this label already exists. Choose a new name` };

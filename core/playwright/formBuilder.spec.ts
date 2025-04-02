@@ -271,7 +271,7 @@ test.describe("relationship fields", () => {
 		await page.getByLabel("Minimum Length").fill("1");
 
 		// Validate the config that is saved
-		page.on("request", (request) => {
+		page.once("request", (request) => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
 				const { elements } = data[0];
@@ -307,6 +307,25 @@ test.describe("relationship fields", () => {
 		await expect(
 			page.getByRole("row", { name: `Select row ${community.pubs[1].title}` })
 		).toHaveCount(0);
+
+		await test.step("Remove pubtypes from a form", async () => {
+			await formEditPage.goto();
+			await page.getByRole("listitem", { name: "Role" }).getByLabel("Edit field").click();
+			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(pubType.name);
+			await page.getByTestId("related-pub-type-selector").click();
+			await page.getByRole("option", { name: "Clear" }).click();
+			await page.getByRole("option", { name: "Close" }).click();
+			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(
+				"Select a pub type"
+			);
+			await formEditPage.saveFormElementConfiguration();
+			await formEditPage.saveForm();
+
+			// Verify external form
+			await formEditPage.goToExternalForm();
+			await relatedField.getByRole("button", { name: "Add" }).click();
+			await expect(page.getByRole("row", { name: "Select row" })).toHaveCount(2);
+		});
 	});
 
 	test("Create a form with a null relationship field", async () => {
