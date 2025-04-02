@@ -70,8 +70,14 @@ export interface InvitesTable {
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
 }
 
+/**
+ * @deprecated Use {@link Invite} instead
+ */
 export type Invites = Selectable<InvitesTable>;
 
+/**
+ * @deprecated Use {@link InviteInput} instead
+ */
 export type NewInvites = Insertable<InvitesTable>;
 
 export type InvitesUpdate = Updateable<InvitesTable>;
