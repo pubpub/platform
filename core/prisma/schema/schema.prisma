@@ -496,6 +496,12 @@ model Form {
   updatedAt   DateTime       @default(now()) @updatedAt
 
   members FormMembership[]
+<<<<<<< HEAD
+=======
+
+  PubOrStageInvite     Invite[] @relation("pubOrStageInvite")
+  CommunityLevelInvite Invite[] @relation("communityLevelInvite")
+>>>>>>> 3c66a42f0 (feat: properly add invite table)
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
@@ -677,3 +683,84 @@ model MembershipCapabilities {
   @@id([role, type, capability])
   @@map(name: "membership_capabilities")
 }
+<<<<<<< HEAD
+=======
+
+/// Status of an invite
+/// @property created - The invite has been created, but not yet sent
+/// @property pending - The invite has been sent, but not yet accepted
+/// @property accepted - The invite has been accepted
+/// @property rejected - The invite has been rejected
+/// @property revoked - The invite has been revoked by the user who created it, or by a sufficient authority
+enum InviteStatus {
+  created
+  pending
+  accepted
+  rejected
+  revoked
+}
+
+// invites are invitations to join a community
+// invites can be for existing users, or for new users, but not both
+// invites can bestow certain memberships on the user after the user joins the community
+// NOTE: this table has a history table.
+model Invite {
+  id             String @id @default(dbgenerated("gen_random_uuid()"))
+  /// @type(LastModifiedBy, '../types', true, false, true)
+  lastModifiedBy String
+
+  // either one of these is set
+  email       String?
+  InvitedUser User?   @relation("invited_user", fields: [userId], references: [id], onDelete: SetNull)
+  userId      String?
+
+  token     String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // community level permissions
+  // an invite must be for a community, and must have a community membership level set
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId String
+
+  // which community-level form permissions, if any, should be granted to the user
+  // this is used to allow a user to fill out a form 
+  CommunityLevelForm   Form?   @relation("communityLevelInvite", fields: [communityLevelFormId], references: [id], onDelete: SetNull)
+  communityLevelFormId String?
+
+  // which role should be granted to the user after they join the community
+  communityRole MemberRole @default(contributor)
+
+  // you can also directly invite a user to a pub or stage, but not both
+  // you can then also immediately allow them to use a certain form at that level
+  Pub     Pub?    @relation(fields: [pubId], references: [id], onDelete: SetNull)
+  pubId   String?
+  Stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId String?
+
+  PubOrStageForm   Form?   @relation("pubOrStageInvite", fields: [pubOrStageFormId], references: [id], onDelete: SetNull)
+  pubOrStageFormId String?
+
+  // which role should be granted to the membership after the user joins the pub or stage
+  pubOrStageRole MemberRole?
+
+  // the message that is sent in the invite. useful for resending invites
+  message    String?
+  // when is the message last sent. total send count is kept track of by the invite history table
+  lastSentAt DateTime?
+
+  status InviteStatus @default(created)
+
+  // useful to keep track of who invited the user. slightly different from `lastModifiedBy`
+  InvitedByUser        User?      @relation("invited_by", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  invitedByUserId      String?
+  InvitedByActionRun   ActionRun? @relation("invited_by_action_run", fields: [invitedByActionRunId], references: [id], onDelete: SetNull)
+  invitedByActionRunId String?
+
+  // this table has some constraints that make it conform to the type in `db/types/Invite.ts`
+  // see core/prisma/migrations/20250402130740_create_invite_table/migration.sql for details
+  @@map(name: "invites")
+}
+>>>>>>> 3c66a42f0 (feat: properly add invite table)

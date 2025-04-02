@@ -371,6 +371,11 @@ Table forms {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
+<<<<<<< HEAD
+=======
+  PubOrStageInvite invites [not null]
+  CommunityLevelInvite invites [not null]
+>>>>>>> 3c66a42f0 (feat: properly add invite table)
 
   indexes {
     (name, communityId) [unique]
@@ -450,6 +455,40 @@ Table membership_capabilities {
   }
 }
 
+<<<<<<< HEAD
+=======
+Table invites {
+  id String [pk]
+  lastModifiedBy String [not null, note: '@type(LastModifiedBy, \'../types\', true, false, true)']
+  email String
+  InvitedUser users
+  userId String
+  token String [unique, not null]
+  expiresAt DateTime [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  community communities [not null]
+  communityId String [not null]
+  CommunityLevelForm forms
+  communityLevelFormId String
+  communityRole MemberRole [not null, default: 'contributor']
+  Pub pubs
+  pubId String
+  Stage stages
+  stageId String
+  PubOrStageForm forms
+  pubOrStageFormId String
+  pubOrStageRole MemberRole
+  message String
+  lastSentAt DateTime
+  status InviteStatus [not null, default: 'created']
+  InvitedByUser users
+  invitedByUserId String
+  InvitedByActionRun action_runs
+  invitedByActionRunId String
+}
+
+>>>>>>> 3c66a42f0 (feat: properly add invite table)
 Table MemberGroupToUser {
   membergroupsId String [ref: > member_groups.id]
   usersId String [ref: > users.id]
@@ -614,6 +653,23 @@ Enum MembershipType {
   form
 }
 
+<<<<<<< HEAD
+=======
+Enum InviteStatus {
+  created
+  pending
+  accepted
+  rejected
+  revoked
+}
+
+Ref: invites_history.userId > users.id
+
+Ref: invites_history.apiAccessTokenId > api_access_tokens.id
+
+Ref: invites_history.actionRunId > action_runs.id
+
+>>>>>>> 3c66a42f0 (feat: properly add invite table)
 Ref: pub_values_history.userId > users.id
 
 Ref: pub_values_history.apiAccessTokenId > api_access_tokens.id
@@ -714,4 +770,24 @@ Ref: api_access_tokens.issuedById > users.id [delete: Set Null]
 
 Ref: api_access_logs.accessTokenId > api_access_tokens.id [delete: Set Null]
 
+<<<<<<< HEAD
 Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id [delete: Cascade]
+=======
+Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id [delete: Cascade]
+
+Ref: invites.userId > users.id [delete: Set Null]
+
+Ref: invites.communityId > communities.id [delete: Cascade]
+
+Ref: invites.communityLevelFormId > forms.id [delete: Set Null]
+
+Ref: invites.pubId > pubs.id [delete: Set Null]
+
+Ref: invites.stageId > stages.id [delete: Set Null]
+
+Ref: invites.pubOrStageFormId > forms.id [delete: Set Null]
+
+Ref: invites.invitedByUserId > users.id [delete: Set Null]
+
+Ref: invites.invitedByActionRunId > action_runs.id [delete: Set Null]
+>>>>>>> 3c66a42f0 (feat: properly add invite table)
