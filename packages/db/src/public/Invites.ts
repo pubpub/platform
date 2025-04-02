@@ -45,27 +45,29 @@ export interface InvitesTable {
 
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
+	communityLevelFormId: ColumnType<FormsId | null, FormsId | null, FormsId | null>;
+
 	communityRole: ColumnType<MemberRole, MemberRole | undefined, MemberRole>;
 
 	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
-	formId: ColumnType<FormsId | null, FormsId | null, FormsId | null>;
-
 	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 
-	otherRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
+	pubOrStageFormId: ColumnType<FormsId | null, FormsId | null, FormsId | null>;
+
+	pubOrStageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
 
 	message: ColumnType<string | null, string | null, string | null>;
 
 	lastSentAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
+
+	status: ColumnType<InviteStatus, InviteStatus | undefined, InviteStatus>;
 
 	invitedByUserId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
 
 	invitedByActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
 
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
-
-	status: ColumnType<InviteStatus, InviteStatus | undefined, InviteStatus>;
 }
 
 export type Invites = Selectable<InvitesTable>;
@@ -85,17 +87,18 @@ export const invitesSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	communityId: communitiesIdSchema,
+	communityLevelFormId: formsIdSchema.nullable(),
 	communityRole: memberRoleSchema,
 	pubId: pubsIdSchema.nullable(),
-	formId: formsIdSchema.nullable(),
 	stageId: stagesIdSchema.nullable(),
-	otherRole: memberRoleSchema.nullable(),
+	pubOrStageFormId: formsIdSchema.nullable(),
+	pubOrStageRole: memberRoleSchema.nullable(),
 	message: z.string().nullable(),
 	lastSentAt: z.date().nullable(),
+	status: inviteStatusSchema,
 	invitedByUserId: usersIdSchema.nullable(),
 	invitedByActionRunId: actionRunsIdSchema.nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
-	status: inviteStatusSchema,
 });
 
 export const invitesInitializerSchema = z.object({
@@ -107,17 +110,18 @@ export const invitesInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	communityId: communitiesIdSchema,
+	communityLevelFormId: formsIdSchema.optional().nullable(),
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
-	formId: formsIdSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
-	otherRole: memberRoleSchema.optional().nullable(),
+	pubOrStageFormId: formsIdSchema.optional().nullable(),
+	pubOrStageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
+	status: inviteStatusSchema.optional(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
-	status: inviteStatusSchema.optional(),
 });
 
 export const invitesMutatorSchema = z.object({
@@ -129,15 +133,16 @@ export const invitesMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	communityId: communitiesIdSchema.optional(),
+	communityLevelFormId: formsIdSchema.optional().nullable(),
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
-	formId: formsIdSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
-	otherRole: memberRoleSchema.optional().nullable(),
+	pubOrStageFormId: formsIdSchema.optional().nullable(),
+	pubOrStageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
+	status: inviteStatusSchema.optional(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema.optional(),
-	status: inviteStatusSchema.optional(),
 });

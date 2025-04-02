@@ -205,4 +205,9 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 -- Enum InviteStatus comments
 
-
+COMMENT ON TYPE "InviteStatus" IS 'Status of an invite
+@property created - The invite has been created, but not yet sent
+@property pending - The invite has been sent, but not yet accepted
+@property accepted - The invite has been accepted
+@property rejected - The invite has been rejected
+@property revoked - The invite has been revoked by the user who created it, or by a sufficient authority';

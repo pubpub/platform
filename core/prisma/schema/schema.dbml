@@ -394,7 +394,8 @@ Table forms {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
-  Invite invites [not null]
+  PubOrStageInvite invites [not null]
+  CommunityLevelInvite invites [not null]
 
   indexes {
     (name, communityId) [unique]
@@ -486,17 +487,19 @@ Table invites {
   updatedAt DateTime [default: `now()`, not null]
   community communities [not null]
   communityId String [not null]
+  CommunityLevelForm forms
+  communityLevelFormId String
   communityRole MemberRole [not null, default: 'contributor']
   Pub pubs
   pubId String
-  Form forms
-  formId String
   Stage stages
   stageId String
-  otherRole MemberRole
+  PubOrStageForm forms
+  pubOrStageFormId String
+  pubOrStageRole MemberRole
   message String
   lastSentAt DateTime
-  status InviteStatus [not null, default: 'pending']
+  status InviteStatus [not null, default: 'created']
   InvitedByUser users
   invitedByUserId String
   InvitedByActionRun action_runs
@@ -663,9 +666,11 @@ Enum MembershipType {
 }
 
 Enum InviteStatus {
+  created
   pending
   accepted
   rejected
+  revoked
 }
 
 Ref: invites_history.userId > users.id
@@ -780,11 +785,13 @@ Ref: invites.userId > users.id [delete: Set Null]
 
 Ref: invites.communityId > communities.id [delete: Cascade]
 
+Ref: invites.communityLevelFormId > forms.id [delete: Set Null]
+
 Ref: invites.pubId > pubs.id [delete: Set Null]
 
-Ref: invites.formId > forms.id [delete: Set Null]
-
 Ref: invites.stageId > stages.id [delete: Set Null]
+
+Ref: invites.pubOrStageFormId > forms.id [delete: Set Null]
 
 Ref: invites.invitedByUserId > users.id [delete: Set Null]
 
