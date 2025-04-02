@@ -1,3 +1,5 @@
+import type { Mark } from "prosemirror-model";
+
 import React, { useEffect, useState } from "react";
 import { EditorView } from "prosemirror-view";
 
@@ -64,17 +66,18 @@ export function AttributePanel({ panelPosition, viewRef, isLink }: AttributePane
 		);
 	};
 	const updateMarkAttr = (index: number, attrKey: string, value: string) => {
-		// console.log(node);
 		const markToReplace = nodeMarks[index];
-		// const newMarks = [...node.marks];
-		// newMarks[index].attrs[attrKey] = value;
-		// setPosition({
-		// 	...position,
-		// 	node: {
-		// 		...node,
-		// 		marks: newMarks
-		// 	},
-		// });
+		const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
+			...(node?.marks ?? []),
+		];
+		newMarks[index].attrs[attrKey] = value;
+		setPosition({
+			...position,
+			node: {
+				...node,
+				marks: newMarks as Mark[],
+			},
+		});
 		const newMark = viewRef.current?.state.schema.marks[markToReplace.type.name].create({
 			...markToReplace.attrs,
 			[attrKey]: value,
