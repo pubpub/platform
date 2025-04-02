@@ -659,6 +659,7 @@ Enum InviteStatus {
   created
   pending
   accepted
+  completed
   rejected
   revoked
 }

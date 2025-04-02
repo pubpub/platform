@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "InviteStatus" AS ENUM ('created', 'pending', 'accepted', 'rejected', 'revoked');
+CREATE TYPE "InviteStatus" AS ENUM ('created', 'pending', 'accepted', 'completed', 'rejected', 'revoked');
 
 -- CreateTable
 CREATE TABLE "invites" (

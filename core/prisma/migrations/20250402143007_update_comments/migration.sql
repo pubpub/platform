@@ -1,5 +1,9 @@
 -- generator-version: 1.0.0
 
+-- Model invites_history comments
+
+
+
 -- Model pub_values_history comments
 
 
@@ -116,6 +120,11 @@ COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPerm
 
 
 
+-- Model invites comments
+
+COMMENT ON COLUMN "invites"."lastModifiedBy" IS '@type(LastModifiedBy, ''../types'', true, false, true)';
+
+
 -- Enum AuthTokenType comments
 
 COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This will just authenticate you with a regular session.
@@ -192,8 +201,6 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 -- Enum MembershipType comments
 
 
-<<<<<<< HEAD
-=======
 
 
 -- Enum InviteStatus comments
@@ -205,4 +212,3 @@ COMMENT ON TYPE "InviteStatus" IS 'Status of an invite
 @property completed - The invite has been accepted, and the relevant signup step has been completed
 @property rejected - The invite has been rejected
 @property revoked - The invite has been revoked by the user who created it, or by a sufficient authority';
->>>>>>> 3c66a42f0 (feat: properly add invite table)
