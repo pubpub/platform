@@ -1399,30 +1399,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									)
 								)
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-								.$if(Boolean(allowedStages?.length), (qb) => {
-									const { noStage, stageIds } = Object.groupBy(
-										allowedStages!,
-										(stage) =>
-											stage === NO_STAGE_OPTION.value ? "noStage" : "stageIds"
-									);
-
-									return qb.where((eb) =>
-										eb.or([
-											...(stageIds && stageIds.length > 0
-												? [
-														eb(
-															"PubsInStages.stageId",
-															"in",
-															stageIds as StagesId[]
-														),
-													]
-												: []),
-											...(noStage
-												? [eb("PubsInStages.stageId", "is", null)]
-												: []),
-										])
-									);
-								})
+								.$if(Boolean(allowedStages?.length), (qb) =>
+									qb.where((eb) =>
+										stagesWhere(eb, allowedStages!, "PubsInStages.stageId")
+									)
+								)
 								.where((eb) =>
 									eb.exists(
 										eb.selectFrom("capabilities" as any).where((ebb) => {
@@ -1683,21 +1664,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(!!props.pubIds && props.pubIds.length > 0, (qb) =>
 						qb.where("pubs.id", "in", props.pubIds!)
 					)
-					.$if(!!topLevelStageFilter.length, (qb) => {
-						const { noStage, stageIds } = Object.groupBy(
-							topLevelStageFilter,
-							(stage) => (stage === NO_STAGE_OPTION.value ? "noStage" : "stageIds")
-						);
-
-						return qb.where((eb) =>
-							eb.or([
-								...(stageIds && stageIds.length > 0
-									? [eb("PubsInStages.stageId", "in", stageIds as StagesId[])]
-									: []),
-								...(noStage ? [eb("PubsInStages.stageId", "is", null)] : []),
-							])
-						);
-					})
+					.$if(!!topLevelStageFilter.length, (qb) =>
+						qb.where((eb) =>
+							stagesWhere(eb, topLevelStageFilter, "PubsInStages.stageId")
+						)
+					)
 					.$if(!!topLevelPubTypeFilter.length, (qb) =>
 						qb.where("pubs.pubTypeId", "in", topLevelPubTypeFilter)
 					)
@@ -1773,31 +1744,17 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										"related_pubs_in_stages.pubId",
 										"pv.relatedPubId"
 									)
-									.where((eb) => {
-										const { noStage, stageIds } = Object.groupBy(
-											allowedStages!,
-											(stage) =>
-												stage === NO_STAGE_OPTION.value
-													? "noStage"
-													: "stageIds"
-										);
-
-										return eb.or([
+									.where((eb) =>
+										eb.or([
+											// shouldnt check for stages for normal pub values
 											eb("pv.relatedPubId", "is", null),
-											...(stageIds && stageIds.length > 0
-												? [
-														eb(
-															"related_pubs_in_stages.stageId",
-															"in",
-															stageIds as StagesId[]
-														),
-													]
-												: []),
-											...(noStage
-												? [eb("related_pubs_in_stages.stageId", "is", null)]
-												: []),
-										]);
-									})
+											stagesWhere(
+												eb,
+												allowedStages!,
+												"related_pubs_in_stages.stageId"
+											),
+										])
+									)
 							)
 					).as("values")
 				)
@@ -1976,22 +1933,36 @@ export const getPubTitle = (pubId: PubsId, trx = db) =>
 		.select("pub_values.value as title")
 		.$narrowType<{ title: string }>();
 
+export const stagesWhere = <EB extends ExpressionBuilder<any, any>>(
+	eb: EB,
+	stages: StageConstraint[],
+	column: string
+) => {
+	const { noStage, stageIds } = Object.groupBy(stages, (stage) =>
+		stage === NO_STAGE_OPTION.value ? "noStage" : "stageIds"
+	);
+	return eb.or([
+		...(stageIds && stageIds.length > 0 ? [eb(column, "in", stageIds as StagesId[])] : []),
+		...(noStage ? [eb(column, "is", null)] : []),
+	]);
+};
+
 /**
  * Get the number of pubs in a community, optionally additionally filtered by stage and pub type
  */
 export const getPubsCount = async (props: {
 	communityId: CommunitiesId;
-	stageId?: StagesId[];
+	stageId?: StageConstraint[];
 	pubTypeId?: PubTypesId[];
 }): Promise<number> => {
 	const pubs = await db
 		.selectFrom("pubs")
 		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props?.stageId?.length), (qb) =>
-			qb
+		.$if(Boolean(props?.stageId?.length), (qb) => {
+			return qb
 				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where("PubsInStages.stageId", "in", props.stageId!)
-		)
+				.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"));
+		})
 		.$if(Boolean(props.pubTypeId?.length), (qb) =>
 			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
 		)
