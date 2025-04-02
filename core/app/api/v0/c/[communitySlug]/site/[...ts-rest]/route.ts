@@ -397,7 +397,7 @@ const handler = createNextHandler(
 				// TODO: this does not account for permissions
 				const pubCount = await getPubsCount({
 					communityId: community.id,
-					pubTypeId,
+					pubTypeId: resolvedPubTypeId,
 					stageId,
 				});
 				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
