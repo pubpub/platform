@@ -411,18 +411,6 @@ const handler = createNextHandler(
 						: [pubIds]
 					: undefined;
 
-				const pubTypes =
-					requestedPubTypes?.length && allowedPubTypes?.length
-						? requestedPubTypes.filter((pubType) => allowedPubTypes?.includes(pubType))
-						: allowedPubTypes && allowedPubTypes.length > 0
-							? allowedPubTypes
-							: requestedPubTypes;
-
-				const stages =
-					requestedStages?.length && allowedStages?.length
-						? requestedStages.filter((stage) => allowedStages?.includes(stage))
-						: (allowedStages ?? requestedStages);
-
 				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
 
 				if (manuallyParsedFilters?.filters) {
@@ -435,22 +423,24 @@ const handler = createNextHandler(
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
-						pubTypeId: pubTypes,
-						stageId: stages,
+						pubTypeId: requestedPubTypes,
+						stageId: requestedStages,
 						pubIds: requestedPubIds,
 						userId: user.id,
 					},
 					{
 						...rest,
 						filters: manuallyParsedFilters?.filters,
+						allowedPubTypes,
+						allowedStages,
 					}
 				);
 
 				// TODO: this does not account for permissions
 				const pubCount = await getPubsCount({
 					communityId: community.id,
-					pubTypeId,
-					stageId,
+					pubTypeId: requestedPubTypes,
+					stageId: requestedStages,
 				});
 				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
 
