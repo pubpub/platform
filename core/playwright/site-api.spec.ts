@@ -8,6 +8,7 @@ import { initClient } from "@ts-rest/core";
 import type { PubsId, PubTypesId, StagesId } from "db/public";
 import { siteApi } from "contracts";
 import { CoreSchemaType, MemberRole } from "db/public";
+import { sleep } from "utils";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -98,6 +99,7 @@ const seed = createSeed({
 		"Test Stage 2": {
 			id: testStage2Id,
 		},
+		"Other stage": {},
 	},
 	pubs: [
 		{
@@ -118,6 +120,7 @@ const seed = createSeed({
 	apiTokens: {
 		allToken: {
 			id: allToken,
+			permissions: true,
 		},
 		onlyTestPubType1Token: {
 			id: onlyTestPubType1Token,
@@ -259,6 +262,7 @@ test.describe("Site API", () => {
 					communitySlug: COMMUNITY_SLUG,
 				},
 				body: {
+					stageId: community.stages["Other stage"].id,
 					pubTypeId: pubType.id,
 					values: {
 						[`${COMMUNITY_SLUG}:title`]: "Goodbye world",
@@ -298,317 +302,327 @@ test.describe("Site API", () => {
 				// TODO: fix this not really working
 				.rejects.toThrow("Unexpected end of JSON input");
 		});
-	});
 
-	test.describe("restrictions", () => {
-		test("if only pub type is restricted, only pubs of that pub type are returned", async () => {
-			const clientOnlyPubTypeClient = createClient(onlyTestPubType1Token!);
-
-			const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {},
-			});
-
-			expectStatus(pubResponseRestricted, 200);
-			expect(pubResponseRestricted.body).toHaveLength(3);
-			expect(pubResponseRestricted.body.every((pub) => pub.pubTypeId === testPubTypeId)).toBe(
-				true
-			);
-		});
-
-		test("if only stage is restricted, only pubs of that stage are returned", async () => {
-			const clientOnlyStageClient = createClient(onlyStageToken!);
-
-			const pubResponseRestricted = await clientOnlyStageClient.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {},
-			});
-
-			expectStatus(pubResponseRestricted, 200);
-			expect(pubResponseRestricted.body).toHaveLength(2);
-			expect(pubResponseRestricted.body.every((pub) => pub.stageId === testStage1Id)).toBe(
-				true
-			);
-		});
-
-		test("if both pub type and stage are restricted, only pubs of that pub type and stage are returned", async () => {
-			const clientBothClient = createClient(bothToken!);
-
-			const pubResponseRestricted = await clientBothClient.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {},
-			});
-
-			expectStatus(pubResponseRestricted, 200);
-			expect(pubResponseRestricted.body).toHaveLength(1);
-			expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubTypeId);
-			expect(pubResponseRestricted.body[0].stageId).toBe(testStage1Id);
-		});
-
-		test("if stage is restricted, we can still further filter by pub type", async () => {
-			const clientOnlyStageClient = createClient(onlyStageToken!);
-
-			const pubResponseRestrictedToStage1FilteredByPubType1 =
-				await clientOnlyStageClient.pubs.getMany({
+		test.describe("filters", () => {
+			test("should be able to filter pubs", async () => {
+				const response = await client.pubs.getMany({
 					params: {
 						communitySlug: COMMUNITY_SLUG,
 					},
 					query: {
-						pubTypeId: testPubTypeId,
+						filters: {
+							[`${COMMUNITY_SLUG}:title`]: {
+								$containsi: "what",
+							},
+						},
 					},
 				});
 
-			expectStatus(pubResponseRestrictedToStage1FilteredByPubType1, 200);
-			expect(pubResponseRestrictedToStage1FilteredByPubType1.body).toHaveLength(1);
-			expect(pubResponseRestrictedToStage1FilteredByPubType1.body[0].pubTypeId).toBe(
-				testPubTypeId
-			);
-			expect(pubResponseRestrictedToStage1FilteredByPubType1.body[0].stageId).toBe(
-				testStage1Id
-			);
-		});
+				expectStatus(response, 200);
+				expect(response.body).toHaveLength(1);
+				expect(response.body[0].id).toBe(community.pubs[0].id);
 
-		test("if pub types are restricted, we can still further filter by stage", async () => {
-			const clientOnlyPubTypeClient = createClient(onlyTestPubType1Token!);
-
-			const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {
-					stageId: testStage1Id,
-				},
-			});
-
-			expectStatus(pubResponseRestricted, 200);
-			expect(pubResponseRestricted.body).toHaveLength(1);
-			expect(pubResponseRestricted.body[0].stageId).toBe(testStage1Id);
-			expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubTypeId);
-		});
-
-		test("if stages are restricted to pubs not in a stage", async () => {
-			const clientNoStageClient = createClient(noStageToken);
-
-			const pubResponseRestricted = await clientNoStageClient.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {},
-			});
-
-			expectStatus(pubResponseRestricted, 200);
-			// 2 related, 1 toplevel
-			expect(pubResponseRestricted.body).toHaveLength(3);
-			expect(pubResponseRestricted.body[0].stageId).toBe(null);
-		});
-
-		test.describe("restrictions on related pubs", () => {
-			test("if pub types are unrestricted, related pubs are unrestricted", async () => {
-				const clientAllClient = createClient(allToken);
-
-				const pubResponseRestricted = await clientAllClient.pubs.getMany({
+				const response2 = await client.pubs.getMany({
 					params: {
 						communitySlug: COMMUNITY_SLUG,
 					},
 					query: {
-						pubIds: [whatIsUpWorldPubId],
+						filters: {
+							[`${COMMUNITY_SLUG}:title`]: {
+								$containsi: "farewell",
+							},
+						},
 					},
+				});
+
+				expectStatus(response2, 200);
+				expect(response2.body).toHaveLength(0);
+			});
+
+			test("should be able to filter by createdAt", async () => {
+				const response = await client.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {
+						filters: {
+							createdAt: {
+								$gte: firstCreatedAt,
+							},
+						},
+					},
+				});
+
+				expectStatus(response, 200);
+				// FIXME: too depdendent on order of execution
+				expect(response.body).toHaveLength(1);
+				expect(response.body[0].id).not.toBe(newPubId);
+			});
+
+			test("should be able to filter by without jsonQuery", async () => {
+				const client = createClient(allToken, false);
+				const response = await client.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {
+						filters: {
+							createdAt: {
+								$gte: firstCreatedAt,
+							},
+						},
+					},
+				});
+
+				expectStatus(response, 200);
+				// FIXME: too depdendent on order of execution
+				expect(response.body).toHaveLength(1);
+				expect(response.body[0].id).not.toBe(newPubId);
+			});
+
+			test("should be able to filter by updatedAt", async () => {
+				const updatedAtDate = new Date();
+				await sleep(200);
+				const updatedPub = await client.pubs.update({
+					params: {
+						pubId: community.pubs[0].id,
+						communitySlug: COMMUNITY_SLUG,
+					},
+					body: {
+						[`${COMMUNITY_SLUG}:title`]: "Updated title",
+					},
+				});
+
+				expectStatus(updatedPub, 200);
+
+				const response = await client.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {
+						filters: {
+							updatedAt: {
+								$gte: updatedAtDate,
+							},
+						},
+					},
+				});
+				expectStatus(response, 200);
+				// FIXME: too depdendent on order of execution
+				expect(response.body).toHaveLength(1);
+				expect(response.body[0].id).toBe(community.pubs[0].id);
+				const titleValue = response.body[0].values?.find(
+					(val) => val.fieldSlug === `${COMMUNITY_SLUG}:title`
+				);
+				expect(titleValue).toMatchObject({
+					fieldSlug: `${COMMUNITY_SLUG}:title`,
+					value: "Updated title",
+				});
+			});
+
+			/**
+			 * this is to test that ?filters[x][y]=z works
+			 */
+			test("should be able to filter by manually supplying query params", async () => {
+				const response = await fetch(
+					`http://localhost:3000/api/v0/c/${COMMUNITY_SLUG}/site/pubs?filters[createdAt][$gte]=${firstCreatedAt.toISOString()}`,
+					{
+						headers: {
+							Authorization: `Bearer ${allToken}`,
+						},
+					}
+				);
+
+				const responseBody = await response.json();
+
+				expect(response.status).toBe(200);
+				// FIXME: too depdendent on order of execution
+				expect(responseBody).toHaveLength(1);
+				expect(responseBody[0].id).not.toBe(newPubId);
+			});
+		});
+
+		test.describe("restrictions", () => {
+			test("if only pub type is restricted, only pubs of that pub type are returned", async () => {
+				const clientOnlyPubTypeClient = createClient(onlyTestPubType1Token!);
+
+				const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {},
+				});
+
+				expectStatus(pubResponseRestricted, 200);
+				expect(pubResponseRestricted.body).toHaveLength(3);
+				expect(
+					pubResponseRestricted.body.every((pub) => pub.pubTypeId === testPubTypeId)
+				).toBe(true);
+			});
+
+			test("if only stage is restricted, only pubs of that stage are returned", async () => {
+				const clientOnlyStageClient = createClient(onlyStageToken!);
+
+				const pubResponseRestricted = await clientOnlyStageClient.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {},
+				});
+
+				expectStatus(pubResponseRestricted, 200);
+				expect(pubResponseRestricted.body).toHaveLength(2);
+				expect(
+					pubResponseRestricted.body.every((pub) => pub.stageId === testStage1Id)
+				).toBe(true);
+			});
+
+			test("if both pub type and stage are restricted, only pubs of that pub type and stage are returned", async () => {
+				const clientBothClient = createClient(bothToken!);
+
+				const pubResponseRestricted = await clientBothClient.pubs.getMany({
+					params: {
+						communitySlug: COMMUNITY_SLUG,
+					},
+					query: {},
 				});
 
 				expectStatus(pubResponseRestricted, 200);
 				expect(pubResponseRestricted.body).toHaveLength(1);
-				expect(pubResponseRestricted.body[0].id).toBe(whatIsUpWorldPubId);
-				expect(
-					pubResponseRestricted.body[0].values?.filter((val) => val.relatedPubId !== null)
-				).toHaveLength(6);
+				expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubTypeId);
+				expect(pubResponseRestricted.body[0].stageId).toBe(testStage1Id);
 			});
 
-			test("if pub types are restricted, related pubs are restricted to the allowed pub types", async () => {
-				const clientOnlyPubTypeClient = createClient(testPubType1AndBasicPubTypeToken);
+			test("if stage is restricted, we can still further filter by pub type", async () => {
+				const clientOnlyStageClient = createClient(onlyStageToken!);
+
+				const pubResponseRestrictedToStage1FilteredByPubType1 =
+					await clientOnlyStageClient.pubs.getMany({
+						params: {
+							communitySlug: COMMUNITY_SLUG,
+						},
+						query: {
+							pubTypeId: testPubTypeId,
+						},
+					});
+
+				expectStatus(pubResponseRestrictedToStage1FilteredByPubType1, 200);
+				expect(pubResponseRestrictedToStage1FilteredByPubType1.body).toHaveLength(1);
+				expect(pubResponseRestrictedToStage1FilteredByPubType1.body[0].pubTypeId).toBe(
+					testPubTypeId
+				);
+				expect(pubResponseRestrictedToStage1FilteredByPubType1.body[0].stageId).toBe(
+					testStage1Id
+				);
+			});
+
+			test("if pub types are restricted, we can still further filter by stage", async () => {
+				const clientOnlyPubTypeClient = createClient(onlyTestPubType1Token!);
 
 				const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
 					params: {
 						communitySlug: COMMUNITY_SLUG,
 					},
 					query: {
-						pubIds: [whatIsUpWorldPubId],
-						withRelatedPubs: true,
+						stageId: testStage1Id,
 					},
 				});
 
 				expectStatus(pubResponseRestricted, 200);
 				expect(pubResponseRestricted.body).toHaveLength(1);
-				expect(pubResponseRestricted.body[0].stageId).toBe(null);
-
-				const relatedPubs = pubResponseRestricted.body[0].values
-					?.filter((val) => val.relatedPubId !== null)
-					.map((val) => val.relatedPub!);
-				expect(relatedPubs!.every((pub) => pub.pubTypeId === testPubTypeId)).toBe(true);
-				expect(relatedPubs).toHaveLength(3);
+				expect(pubResponseRestricted.body[0].stageId).toBe(testStage1Id);
+				expect(pubResponseRestricted.body[0].pubTypeId).toBe(testPubTypeId);
 			});
 
-			test("if stages are restricted, related pubs are restricted to the allowed stages", async () => {
-				const clientOnlyStageClient = createClient(noStageToken);
+			test("if stages are restricted to pubs not in a stage", async () => {
+				const clientNoStageClient = createClient(noStageToken);
 
-				const pubResponseRestricted = await clientOnlyStageClient.pubs.getMany({
+				const pubResponseRestricted = await clientNoStageClient.pubs.getMany({
 					params: {
 						communitySlug: COMMUNITY_SLUG,
 					},
-					query: {
-						pubIds: [whatIsUpWorldPubId],
-						withRelatedPubs: true,
-						withStage: true,
-					},
+					query: {},
 				});
 
 				expectStatus(pubResponseRestricted, 200);
-				expect(pubResponseRestricted.body).toHaveLength(1);
+				// 2 related, 1 toplevel
+				expect(pubResponseRestricted.body).toHaveLength(3);
 				expect(pubResponseRestricted.body[0].stageId).toBe(null);
-
-				const relatedPubs = pubResponseRestricted.body[0].values
-					?.filter((val) => val.relatedPubId !== null)
-					.map((val) => val.relatedPub!);
-
-				expect(relatedPubs).toHaveLength(2);
-				expect(relatedPubs!.every((pub) => pub.stageId === null)).toBe(true);
 			});
-		});
-	});
 
-	test.describe("filters", () => {
-		test("should be able to filter pubs", async () => {
-			const response = await client.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {
-					filters: {
-						[`${COMMUNITY_SLUG}:title`]: {
-							$containsi: "hello",
+			test.describe("restrictions on related pubs", () => {
+				test("if pub types are unrestricted, related pubs are unrestricted", async () => {
+					const clientAllClient = createClient(allToken);
+
+					const pubResponseRestricted = await clientAllClient.pubs.getMany({
+						params: {
+							communitySlug: COMMUNITY_SLUG,
 						},
-					},
-				},
-			});
-
-			expectStatus(response, 200);
-			expect(response.body).toHaveLength(1);
-			expect(response.body[0].id).toBe(newPubId);
-
-			const response2 = await client.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {
-					filters: {
-						[`${COMMUNITY_SLUG}:title`]: {
-							$containsi: "farewell",
+						query: {
+							pubIds: [whatIsUpWorldPubId],
 						},
-					},
-				},
-			});
+					});
 
-			expectStatus(response2, 200);
-			expect(response2.body).toHaveLength(0);
-		});
+					expectStatus(pubResponseRestricted, 200);
+					expect(pubResponseRestricted.body).toHaveLength(1);
+					expect(pubResponseRestricted.body[0].id).toBe(whatIsUpWorldPubId);
+					expect(
+						pubResponseRestricted.body[0].values?.filter(
+							(val) => val.relatedPubId !== null
+						)
+					).toHaveLength(6);
+				});
 
-		test("should be able to filter by createdAt", async () => {
-			const response = await client.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {
-					filters: {
-						createdAt: {
-							$gte: firstCreatedAt,
+				test("if pub types are restricted, related pubs are restricted to the allowed pub types", async () => {
+					const clientOnlyPubTypeClient = createClient(testPubType1AndBasicPubTypeToken);
+
+					const pubResponseRestricted = await clientOnlyPubTypeClient.pubs.getMany({
+						params: {
+							communitySlug: COMMUNITY_SLUG,
 						},
-					},
-				},
-			});
-
-			expectStatus(response, 200);
-			expect(response.body).toHaveLength(1);
-			expect(response.body[0].id).not.toBe(newPubId);
-		});
-
-		test("should be able to filter by without jsonQuery", async () => {
-			const client = createClient(allToken, false);
-			const response = await client.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {
-					filters: {
-						createdAt: {
-							$gte: firstCreatedAt,
+						query: {
+							pubIds: [whatIsUpWorldPubId],
+							withRelatedPubs: true,
 						},
-					},
-				},
-			});
+					});
 
-			expectStatus(response, 200);
-			expect(response.body).toHaveLength(1);
-			expect(response.body[0].id).not.toBe(newPubId);
-		});
+					expectStatus(pubResponseRestricted, 200);
+					expect(pubResponseRestricted.body).toHaveLength(1);
+					expect(pubResponseRestricted.body[0].stageId).toBe(null);
 
-		test("should be able to filter by updatedAt", async () => {
-			const updatedAtDate = new Date();
-			const updatedPub = await client.pubs.update({
-				params: {
-					pubId: newPubId,
-					communitySlug: COMMUNITY_SLUG,
-				},
-				body: {
-					[`${COMMUNITY_SLUG}:title`]: "Updated title",
-				},
-			});
+					const relatedPubs = pubResponseRestricted.body[0].values
+						?.filter((val) => val.relatedPubId !== null)
+						.map((val) => val.relatedPub!);
+					expect(relatedPubs!.every((pub) => pub.pubTypeId === testPubTypeId)).toBe(true);
+					expect(relatedPubs).toHaveLength(3);
+				});
 
-			const response = await client.pubs.getMany({
-				params: {
-					communitySlug: COMMUNITY_SLUG,
-				},
-				query: {
-					filters: {
-						updatedAt: {
-							$gte: updatedAtDate,
+				test("if stages are restricted, related pubs are restricted to the allowed stages", async () => {
+					const clientOnlyStageClient = createClient(noStageToken);
+
+					const pubResponseRestricted = await clientOnlyStageClient.pubs.getMany({
+						params: {
+							communitySlug: COMMUNITY_SLUG,
 						},
-					},
-				},
+						query: {
+							pubIds: [whatIsUpWorldPubId],
+							withRelatedPubs: true,
+							withStage: true,
+						},
+					});
+
+					expectStatus(pubResponseRestricted, 200);
+					expect(pubResponseRestricted.body).toHaveLength(1);
+					expect(pubResponseRestricted.body[0].stageId).toBe(null);
+
+					const relatedPubs = pubResponseRestricted.body[0].values
+						?.filter((val) => val.relatedPubId !== null)
+						.map((val) => val.relatedPub!);
+
+					expect(relatedPubs).toHaveLength(2);
+					expect(relatedPubs!.every((pub) => pub.stageId === null)).toBe(true);
+				});
 			});
-			expectStatus(response, 200);
-			expect(response.body).toHaveLength(1);
-			expect(response.body[0].id).toBe(newPubId);
-			expect(response.body[0].values).toMatchObject([
-				expect.objectContaining({
-					fieldSlug: `${COMMUNITY_SLUG}:title`,
-					value: "Updated title",
-				}),
-			]);
-		});
-
-		/**
-		 * this is to test that ?filters[x][y]=z works
-		 */
-		test("should be able to filter by manually supplying query params", async () => {
-			const response = await fetch(
-				`http://localhost:3000/api/v0/c/${COMMUNITY_SLUG}/site/pubs?filters[createdAt][$gte]=${firstCreatedAt.toISOString()}`,
-				{
-					headers: {
-						Authorization: `Bearer ${allToken}`,
-					},
-				}
-			);
-
-			const responseBody = await response.json();
-
-			expect(response.status).toBe(200);
-			expect(responseBody).toHaveLength(1);
-			expect(responseBody[0].id).not.toBe(newPubId);
 		});
 	});
 });

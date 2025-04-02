@@ -420,6 +420,7 @@ const handler = createNextHandler(
 						throw new BadRequestError(e.message);
 					}
 				}
+
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
