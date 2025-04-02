@@ -54,6 +54,22 @@ export const getTextContent = (node: any): string => {
 	}
 	return "";
 };
+
+export const findAnchor = (node: any): any => {
+	if (node.tagName === "a") {
+		return node;
+	}
+	if (node.children) {
+		for (const child of node.children) {
+			const found = findAnchor(child);
+			if (found) {
+				return found;
+			}
+		}
+	}
+	return null;
+};
+
 export const tableToObjectArray = (node: any) => {
 	if (!node) return [{ type: "empty" }];
 
@@ -107,24 +123,10 @@ export const tableToObjectArray = (node: any) => {
 		}
 
 		const isAssetSource =
-			["image", "video", "audio", "file"].includes(tableType) && headerVal === "source";
+			["image", "video", "audio", "file", "iframe"].includes(tableType) &&
+			headerVal === "source";
 		const isStaticSource = headerVal === "staticimage";
 		if (isAssetSource || isStaticSource) {
-			const findAnchor = (node: any): any => {
-				if (node.tagName === "a") {
-					return node;
-				}
-				if (node.children) {
-					for (const child of node.children) {
-						const found = findAnchor(child);
-						if (found) {
-							return found;
-						}
-					}
-				}
-				return null;
-			};
-
 			const anchor = findAnchor(cell);
 			if (anchor && anchor.properties.href) {
 				return anchor.properties.href;

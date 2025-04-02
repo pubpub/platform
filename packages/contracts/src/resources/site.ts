@@ -37,6 +37,8 @@ import {
 import type { Json, JsonValue } from "./types";
 import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
+export const TOTAL_PUBS_COUNT_HEADER = "x-total-pubs";
+
 export type CreatePubRequestBodyWithNullsNew = z.infer<typeof CreatePubRequestBodyWithNulls> & {
 	stageId?: StagesId;
 	relatedPubs?: Record<string, { value: Json | Date; pub: CreatePubRequestBodyWithNulls }[]>;
