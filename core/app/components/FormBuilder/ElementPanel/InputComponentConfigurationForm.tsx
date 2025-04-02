@@ -282,7 +282,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
 		},
-		defaultValues: { ...fieldInputElement, config: fieldInputElement.config ?? defaultConfig },
+		defaultValues: {
+			...fieldInputElement,
+			config: fieldInputElement.config ?? defaultConfig,
+			relatedPubTypes: [],
+		},
 	});
 
 	useUnsavedChangesWarning(form.formState.isDirty);
