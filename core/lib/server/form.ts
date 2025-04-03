@@ -152,21 +152,22 @@ export const grantFormAccess = async (
 	props: { communityId: CommunitiesId; userId: UsersId; pubId?: PubsId } & XOR<
 		{ slug: string },
 		{ id: FormsId }
-	>
+	>,
+	trx = db
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
 	const { userId, pubId, ...getFormProps } = props;
-	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
+	const form = await getForm(getFormProps, trx).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
 		pubId
-			? db
+			? trx
 					.selectFrom("pub_memberships")
 					.selectAll("pub_memberships")
 					.where("pub_memberships.formId", "=", form.id)
 					.where("pub_memberships.userId", "=", userId)
 					.where("pub_memberships.pubId", "=", pubId)
-			: db
+			: trx
 					.selectFrom("community_memberships")
 					.selectAll("community_memberships")
 					.where("community_memberships.formId", "=", form.id)
@@ -175,19 +176,25 @@ export const grantFormAccess = async (
 
 	if (existingPermission === undefined) {
 		if (pubId) {
-			await insertPubMemberships({
-				pubId,
-				forms: [form.id],
-				role: MemberRole.contributor,
-				userId,
-			}).execute();
+			await insertPubMemberships(
+				{
+					pubId,
+					forms: [form.id],
+					role: MemberRole.contributor,
+					userId,
+				},
+				trx
+			).execute();
 		} else {
-			await insertCommunityMemberships({
-				communityId: props.communityId,
-				forms: [form.id],
-				role: MemberRole.contributor,
-				userId,
-			}).execute();
+			await insertCommunityMemberships(
+				{
+					communityId: props.communityId,
+					forms: [form.id],
+					role: MemberRole.contributor,
+					userId,
+				},
+				trx
+			).execute();
 		}
 	}
 };

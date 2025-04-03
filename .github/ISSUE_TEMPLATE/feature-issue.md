@@ -1,21 +1,19 @@
 ---
 name: Feature Issue
 about: Suggest a new feature at a high level.
-title: ""
+title: ''
 labels: feature
-assignees: ""
+assignees: ''
+
 ---
 
 ## Motivation
-
 <!-- Why are we building this? -->
 
 ## Requirements
-
 <!-- What does this accomplish? -->
 
 ## Acceptance Criteria
-
 <!-- What technical work must be completed for this to be accepted? -->
 
 <!-- ## Extra work -->

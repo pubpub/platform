@@ -3,6 +3,7 @@ import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
 import { db } from "~/kysely/database";
+import { env } from "~/lib/env/env.mjs";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createFormInviteLink, grantFormAccess } from "../../form";
 
@@ -125,24 +126,38 @@ export const renderMemberFields = async ({
 };
 
 type LinkEmailOptions = {
-	address: string;
+	email: string;
 	rel?: string;
+	text?: string;
 };
 
 type LinkFormOptions = {
 	form: string;
+	text?: string;
 };
 
 type LinkUrlOptions = {
-	url: string;
+	to: string;
+	text?: string;
 };
 
 type LinkFieldOptions = {
 	field: string;
 	rel?: string;
+	text?: string;
 };
 
-type LinkOptions = LinkEmailOptions | LinkFormOptions | LinkUrlOptions | LinkFieldOptions;
+type LinkPageOptions = {
+	page: string;
+	text?: string;
+};
+
+export type LinkOptions =
+	| LinkEmailOptions
+	| LinkFormOptions
+	| LinkUrlOptions
+	| LinkFieldOptions
+	| LinkPageOptions;
 
 const isLinkEmailOptions = (options: LinkOptions): options is LinkEmailOptions => {
 	return "address" in options;
@@ -160,10 +175,20 @@ const isLinkFieldOptions = (options: LinkOptions): options is LinkFieldOptions =
 	return "field" in options;
 };
 
+const isLinkPageOptions = (options: LinkOptions): options is LinkPageOptions => {
+	return "page" in options;
+};
+
+const pageLinkHref = {
+	pubs: () => `/pubs`,
+	currentPub: (context) => `/pubs/${context.pub.id}`,
+	stages: () => `/stages`,
+} as const satisfies Record<string, (context: RenderWithPubContext) => string>;
+
 export const renderLink = (context: RenderWithPubContext, options: LinkOptions) => {
 	let href: string;
 	if (isLinkEmailOptions(options)) {
-		let to = options.address;
+		let to = options.email;
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
 		if (to === "assignee") {
@@ -175,9 +200,21 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 		// Form hrefs are handled by `ensureFormMembershipAndCreateInviteLink`
 		href = "";
 	} else if (isLinkUrlOptions(options)) {
-		href = options.url;
+		href = options.to;
 	} else if (isLinkFieldOptions(options)) {
 		href = getPubValue(context, options.field, options.rel).value as string;
+	} else if (isLinkPageOptions(options)) {
+		const baseUrl = `${env.PUBPUB_URL}/c/${context.communitySlug}`;
+
+		let tempHref = baseUrl;
+
+		if (options.page in pageLinkHref) {
+			tempHref = `${baseUrl}${pageLinkHref[options.page as keyof typeof pageLinkHref](context)}`;
+		} else {
+			tempHref = `${baseUrl}/${options.page}`;
+		}
+
+		href = tempHref;
 	} else {
 		throw new Error("Unexpected link variant");
 	}

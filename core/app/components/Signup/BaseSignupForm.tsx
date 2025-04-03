@@ -1,63 +1,49 @@
 "use client";
 
-import type { Static } from "@sinclair/typebox";
-
-import React, { useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 import { registerFormats } from "schemas";
 
 import type { Users } from "db/public";
 import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
-import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
+import {
+	Form,
+	FormControl,
+	FormDescription,
+	FormField,
+	FormItem,
+	FormLabel,
+	FormMessage,
+} from "ui/form";
 import { Input } from "ui/input";
 
-import { signup } from "~/lib/authentication/actions";
-import { isClientException, useServerAction } from "~/lib/serverActions";
+import type { SignupFormSchema } from "./schema";
+import { FormSubmitButton } from "../SubmitButton";
+import { compiledSignupFormSchema } from "./schema";
 
-registerFormats();
-
-const formSchema = Type.Object({
-	firstName: Type.String(),
-	lastName: Type.String(),
-	email: Type.String({ format: "email" }),
-	password: Type.String({
-		minLength: 8,
-		maxLength: 72,
-	}),
-});
-
-export function SignupForm(props: {
-	user: Pick<Users, "firstName" | "lastName" | "email" | "id">;
+export function BaseSignupForm(props: {
+	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
+	onSubmit: (data: SignupFormSchema) => Promise<void>;
+	redirectTo?: string;
 }) {
-	const runSignup = useServerAction(signup);
-
-	const resolver = useMemo(() => typeboxResolver(formSchema), []);
-
-	const form = useForm<Static<typeof formSchema>>({
-		resolver,
-		defaultValues: { ...props.user, lastName: props.user.lastName ?? undefined },
-	});
-
 	const searchParams = useSearchParams();
 
-	const handleSubmit = useCallback(async (data: Static<typeof formSchema>) => {
-		await runSignup({
-			id: props.user.id,
-			firstName: data.firstName,
-			lastName: data.lastName,
-			email: data.email,
-			password: data.password,
-			redirect: searchParams.get("redirectTo"),
-		});
-	}, []);
+	const redirectTo = props.redirectTo ?? searchParams.get("redirectTo");
+
+	const resolver = useMemo(() => typeboxResolver(compiledSignupFormSchema), []);
+
+	const form = useForm<SignupFormSchema>({
+		resolver,
+		defaultValues: { ...(props?.user ?? {}), lastName: props.user?.lastName ?? undefined },
+	});
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(handleSubmit)}>
+			<form onSubmit={form.handleSubmit(props.onSubmit)}>
 				<Card className="mx-auto max-w-sm">
 					<CardHeader>
 						<CardTitle className="text-xl">Sign Up</CardTitle>
@@ -74,8 +60,9 @@ export function SignupForm(props: {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>First name</FormLabel>
-
-											<Input {...field} placeholder="Max" required />
+											<FormControl>
+												<Input {...field} placeholder="Max" required />
+											</FormControl>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -86,7 +73,9 @@ export function SignupForm(props: {
 									render={({ field }) => (
 										<FormItem>
 											<FormLabel>Last name</FormLabel>
-											<Input {...field} placeholder="Robinson" required />
+											<FormControl>
+												<Input {...field} placeholder="Robinson" required />
+											</FormControl>
 											<FormMessage />
 										</FormItem>
 									)}
@@ -102,12 +91,14 @@ export function SignupForm(props: {
 											If you change this, we will ask you to confirm your
 											email again.
 										</FormDescription>
-										<Input
-											{...field}
-											type="email"
-											placeholder="m@example.com"
-											required
-										/>
+										<FormControl>
+											<Input
+												{...field}
+												type="email"
+												placeholder="mail@example.com"
+												required
+											/>
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -119,15 +110,19 @@ export function SignupForm(props: {
 								render={({ field }) => (
 									<FormItem>
 										<FormLabel>Password</FormLabel>
-										<Input {...field} type="password" />
+										<FormControl>
+											<Input {...field} type="password" />
+										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
 
-							<Button type="submit" className="w-full">
-								Finish sign up
-							</Button>
+							<FormSubmitButton
+								formState={form.formState}
+								className="w-full"
+								idleText="Finish sign up"
+							/>
 						</div>
 						{/* <div className="mt-4 text-center text-sm">
 							Already have an account?{" "}
@@ -136,6 +131,16 @@ export function SignupForm(props: {
 							</Link>
 						</div> */}
 					</CardContent>
+					<CardFooter>
+						Or{" "}
+						<Link
+							href={`/login${redirectTo ? `?redirectTo=${redirectTo}` : ""}`}
+							className="mx-1 font-semibold underline"
+						>
+							sign in
+						</Link>{" "}
+						if you already have an account
+					</CardFooter>
 				</Card>
 			</form>
 		</Form>

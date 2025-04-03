@@ -1,6 +1,7 @@
 import type { SelectExpression, Transaction } from "kysely";
 
 import { cache } from "react";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Database } from "db/Database";
@@ -15,7 +16,7 @@ import type {
 	UsersId,
 	UsersUpdate,
 } from "db/public";
-import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "../authorization/capabilities";
 import type { XOR } from "../types";
@@ -209,6 +210,12 @@ export const addUser = (props: NewUsers, trx = db) =>
 		additionalRevalidateTags: ["all-users"],
 	});
 
+export const generateUserSlug = (props: Pick<NewUsers, "firstName" | "lastName">) => {
+	return `${slugifyString(props.firstName)}${
+		props.lastName ? `-${slugifyString(props.lastName)}` : ""
+	}-${generateHash(4, "0123456789")}`;
+};
+
 export const createUserWithMemberships = async (data: {
 	firstName: string;
 	lastName?: string | null;
@@ -334,9 +341,7 @@ export const createUserWithMemberships = async (data: {
 						email,
 						firstName,
 						lastName,
-						slug: `${slugifyString(firstName)}${
-							lastName ? `-${slugifyString(lastName)}` : ""
-						}-${generateHash(4, "0123456789")}`,
+						slug: generateUserSlug({ firstName, lastName }),
 						isSuperAdmin: isSuperAdmin === true,
 					},
 					trx
@@ -380,4 +385,20 @@ export const createUserWithMemberships = async (data: {
 			cause: error,
 		};
 	}
+};
+
+/**
+ * Public signups are allowed if
+ * - there are >1 forms that are public
+ */
+export const publicSignupsAllowed = async (communityId: CommunitiesId) => {
+	const publicForms = await db
+		.selectFrom("forms")
+		.select(sql<number>`1`.as("count"))
+		.where("access", "=", FormAccessType.public)
+		.where("communityId", "=", communityId)
+		.limit(1)
+		.executeTakeFirst();
+
+	return Boolean(publicForms);
 };

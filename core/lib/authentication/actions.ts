@@ -3,20 +3,36 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { captureException } from "@sentry/nextjs";
+import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, CommunityMemberships, Users, UsersId } from "db/public";
-import { AuthTokenType } from "db/public";
+import type { Communities, CommunitiesId, CommunityMemberships, Users, UsersId } from "db/public";
+import { AuthTokenType, MemberRole } from "db/public";
+import { logger } from "logger";
 
-import type { Prettify } from "../types";
+import type { Prettify, XOR } from "../types";
+import type { SafeUser } from "~/lib/server/user";
+import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
+import { isUniqueConstraintError } from "~/kysely/errors";
 import { lucia, validateRequest } from "~/lib/authentication/lucia";
-import { validatePassword } from "~/lib/authentication/password";
+import { createPasswordHash, validatePassword } from "~/lib/authentication/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { getUser, setUserPassword, updateUser } from "~/lib/server/user";
+import {
+	addUser,
+	generateUserSlug,
+	getUser,
+	publicSignupsAllowed,
+	setUserPassword,
+	updateUser,
+} from "~/lib/server/user";
 import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/constants";
+import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
+import { insertCommunityMember, selectCommunityMember } from "../server/member";
 import { invalidateTokensForUser } from "../server/token";
+import { isClientExceptionOptions } from "../serverActions";
+import { SignupErrors } from "./errors";
 import { getLoginData } from "./loginData";
 
 const schema = z.object({
@@ -191,7 +207,206 @@ export const resetPassword = defineServerAction(async function resetPassword({
 	return { success: true };
 });
 
-export const signup = defineServerAction(async function signup(props: {
+const addUserToCommunity = defineServerAction(async function addUserToCommunity(props: {
+	userId: UsersId;
+	communityId: CommunitiesId;
+	/**
+	 * @default MemberRole.contributor
+	 */
+	role?: MemberRole;
+}) {
+	const existingMembership = await selectCommunityMember({
+		userId: props.userId,
+		communityId: props.communityId,
+	}).executeTakeFirst();
+
+	if (existingMembership) {
+		return {
+			error: "User already in community",
+		};
+	}
+
+	const newMembership = await insertCommunityMember({
+		userId: props.userId,
+		communityId: props.communityId,
+		role: props.role ?? MemberRole.contributor,
+	}).executeTakeFirstOrThrow();
+
+	return {
+		success: true,
+		report: "User added to community",
+	};
+});
+
+/**
+ * When a user joins a community by signing up
+ */
+export const publicJoinCommunity = defineServerAction(async function joinCommunity() {
+	const [{ user }, community] = await Promise.all([
+		await getLoginData(),
+		await findCommunityBySlug(),
+	]);
+
+	// TODO: base this off the invite token
+	const toBeGrantedRole = MemberRole.contributor;
+
+	if (!community) {
+		return SignupErrors.COMMUNITY_NOT_FOUND({ communityName: "unknown" });
+	}
+
+	if (!user) {
+		return SignupErrors.NOT_LOGGED_IN({ communityName: community.name });
+	}
+
+	if (user.memberships.some((m) => m.communityId === community.id)) {
+		return SignupErrors.ALREADY_MEMBER({ communityName: community.name });
+	}
+
+	const isAllowedSignup = await publicSignupsAllowed(community.id);
+
+	if (!isAllowedSignup) {
+		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
+	}
+
+	const member = await insertCommunityMember({
+		userId: user.id,
+		communityId: community.id,
+		role: toBeGrantedRole,
+	}).executeTakeFirstOrThrow();
+
+	// don't redirect, better to do it client side, better ux
+	return {
+		success: true,
+		report: `You have joined ${community.name}`,
+	};
+});
+
+export const publicSignup = defineServerAction(async function signup(props: {
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+	redirectTo?: string;
+	slug?: string;
+	role?: MemberRole;
+	communityId: CommunitiesId;
+}) {
+	const [isAllowedSignup, community, { user }] = await Promise.all([
+		publicSignupsAllowed(props.communityId),
+		findCommunityBySlug(),
+		getLoginData(),
+	]);
+
+	if (!community) {
+		return SignupErrors.COMMUNITY_NOT_FOUND({ communityName: "unknown" });
+	}
+
+	if (user) {
+		redirect(`/c/${community.slug}/public/join?redirectTo=${props.redirectTo}`);
+	}
+
+	if (!isAllowedSignup) {
+		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
+	}
+
+	const input = {
+		firstName: props.firstName,
+		lastName: props.lastName,
+		email: props.email,
+		password: props.password,
+	};
+
+	const checked = compiledSignupFormSchema.Errors(input);
+	const firstError = checked.First();
+
+	if (firstError) {
+		return {
+			title: "Invalid signup",
+			error: `${firstError.message} for ${firstError.path}`,
+		};
+	}
+
+	const trx = db.transaction();
+
+	const newUser = await trx.execute(async (trx) => {
+		try {
+			const newUser = await addUser(
+				{
+					firstName: props.firstName,
+					lastName: props.lastName,
+					email: props.email,
+					slug:
+						props.slug ??
+						generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
+					passwordHash: await createPasswordHash(props.password),
+				},
+				trx
+			).executeTakeFirstOrThrow((err) => {
+				Sentry.captureException(err);
+				return new Error(
+					`Unable to create user for public signup with email ${props.email}`
+				);
+			});
+
+			// TODO: add to community
+			const newMember = await insertCommunityMember(
+				{
+					userId: newUser.id,
+					communityId: community.id,
+					role: props.role ?? MemberRole.contributor,
+				},
+				trx
+			).executeTakeFirstOrThrow();
+
+			// TODO: send verification email
+			return { ...newUser, needsVerification: false };
+		} catch (e) {
+			if (isUniqueConstraintError(e) && e.table === "users") {
+				return SignupErrors.EMAIL_ALREADY_EXISTS({ email: props.email });
+			}
+			logger.error({ msg: e });
+			Sentry.captureException(e);
+			throw e;
+		}
+	});
+
+	if ("error" in newUser) {
+		return newUser;
+	}
+
+	if ("needsVerification" in newUser && newUser.needsVerification) {
+		return {
+			success: true,
+			report: "Please check your email to verify your account!",
+			needsVerification: true,
+		};
+	}
+
+	// log them in
+
+	// lucia authentication
+	const newSession = await lucia.createSession(newUser.id, { type: AuthTokenType.generic });
+	const newSessionCookie = lucia.createSessionCookie(newSession.id);
+	(await cookies()).set(
+		newSessionCookie.name,
+		newSessionCookie.value,
+		newSessionCookie.attributes
+	);
+
+	if (props.redirectTo) {
+		redirect(props.redirectTo);
+	}
+
+	await redirectUser();
+
+	// typescript cannot sense Promise<never> not returning
+	return "" as never;
+});
+
+/**
+ * flow for when a user has been invited to a community already
+ */
+export const legacySignup = defineServerAction(async function signup(props: {
 	id: UsersId;
 	firstName: string;
 	lastName: string;
@@ -233,8 +448,8 @@ export const signup = defineServerAction(async function signup(props: {
 
 	const trx = db.transaction();
 
-	const result = await trx.execute(async (trx) => {
-		const newUser = await updateUser(
+	const updatedUser = await trx.execute(async (trx) => {
+		const updatedUser = await updateUser(
 			{
 				id: props.id,
 				firstName: props.firstName,
@@ -252,15 +467,18 @@ export const signup = defineServerAction(async function signup(props: {
 			trx
 		);
 
-		if (newUser.email !== user.email) {
-			return { ...newUser, needsVerification: true };
+		if (updatedUser.email !== user.email) {
+			return { ...updatedUser, needsVerification: true };
 			// TODO: send email verification
 		}
 
-		return newUser;
+		return {
+			...updatedUser,
+			needsVerification: false,
+		};
 	});
 
-	if ("needsVerification" in result && result.needsVerification) {
+	if ("needsVerification" in updatedUser && updatedUser.needsVerification) {
 		return {
 			success: true,
 			report: "Please check your email to verify your account!",
@@ -268,15 +486,14 @@ export const signup = defineServerAction(async function signup(props: {
 		};
 	}
 
-	// log them in
-
+	// invalidate sessions and tokens
 	const [invalidatedSessions, invalidatedTokens] = await Promise.all([
-		lucia.invalidateUserSessions(user.id),
-		invalidateTokensForUser(user.id, [AuthTokenType.signup]),
+		lucia.invalidateUserSessions(updatedUser.id),
+		invalidateTokensForUser(updatedUser.id, [AuthTokenType.signup]),
 	]);
 
-	// lucia authentication
-	const newSession = await lucia.createSession(user.id, { type: AuthTokenType.generic });
+	// log them in
+	const newSession = await lucia.createSession(updatedUser.id, { type: AuthTokenType.generic });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
 	(await cookies()).set(
 		newSessionCookie.name,
@@ -289,3 +506,12 @@ export const signup = defineServerAction(async function signup(props: {
 	}
 	await redirectUser();
 });
+
+export const invitedSignup = defineServerAction(async function signup(props: {
+	id: UsersId;
+	inviteToken: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
+}) {});
