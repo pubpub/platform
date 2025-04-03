@@ -143,6 +143,7 @@ export const getSuggestedUsers = ({
 					eb
 						.selectFrom("community_memberships")
 						.selectAll("community_memberships")
+						.distinctOn("community_memberships.userId")
 						.whereRef("community_memberships.userId", "=", "users.id")
 						.where("community_memberships.communityId", "=", communityId!)
 				).as("member"),
