@@ -62,3 +62,42 @@ test.describe("strikethrough", () => {
 		await assertMenuItemActiveState({ page, name: "Strikethrough", isActive: true });
 	});
 });
+
+test.describe("sub and superscript", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(BLANK_EDITOR_STORY);
+		const editor = page.locator(".ProseMirror");
+		await editor.click();
+	});
+
+	for (const { name, tag } of [
+		{ name: "Superscript", tag: "sup" },
+		{ name: "Subscript", tag: "sub" },
+	]) {
+		test(`can use menu bar for ${name}`, async ({ page }) => {
+			const text = name.toLowerCase();
+			await page.keyboard.type("hi ");
+			await page.getByRole("button", { name }).click();
+			await page.keyboard.type(text);
+			await page.getByRole("button", { name }).click();
+			await page.keyboard.type(`not ${text}`);
+			await expect(page.locator(tag)).toHaveText(text);
+		});
+	}
+
+	for (const { name, tag } of [
+		{ name: "Superscript", tag: "sup" },
+		{ name: "Subscript", tag: "sub" },
+	]) {
+		test(`can use menu bar to affect selection for ${name}`, async ({ page }) => {
+			await page.keyboard.type("hello world");
+			// Highlight the text
+			for (let i = 0; i < "world".length; i++) {
+				await page.keyboard.press("Shift+ArrowLeft");
+			}
+			await page.getByRole("button", { name }).click();
+			await expect(page.locator(tag)).toHaveText("world");
+			await assertMenuItemActiveState({ page, name, isActive: true });
+		});
+	}
+});
