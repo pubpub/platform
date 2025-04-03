@@ -74,17 +74,18 @@ export default async function Page(props: {
 		} satisfies TableMember;
 	});
 
-	const dedupedMembers = new Map<TableMember["id"], TableMember>();
+	const dedupedMembersMap = new Map<TableMember["id"], TableMember>();
 	for (const member of tableMembers) {
-		if (!dedupedMembers.has(member.id)) {
-			dedupedMembers.set(member.id, member);
+		if (!dedupedMembersMap.has(member.id)) {
+			dedupedMembersMap.set(member.id, member);
 		} else {
-			const m = dedupedMembers.get(member.id);
+			const m = dedupedMembersMap.get(member.id);
 			if (m && firstRoleIsHigher(member.role, m.role)) {
-				dedupedMembers.set(member.id, m);
+				dedupedMembersMap.set(member.id, m);
 			}
 		}
 	}
+	const dedupedMembers = [...dedupedMembersMap.values()];
 
 	return (
 		<>
@@ -93,13 +94,13 @@ export default async function Page(props: {
 				<AddMemberDialog
 					addMember={addMember}
 					addUserMember={createUserWithCommunityMembership}
-					existingMembers={members.map((member) => member.user.id)}
+					existingMembers={dedupedMembers.map((member) => member.id)}
 					isSuperAdmin={user.isSuperAdmin}
 					membershipType={MembershipType.community}
 					availableForms={availableForms}
 				/>
 			</div>
-			<MemberTable members={[...dedupedMembers.values()]} />
+			<MemberTable members={dedupedMembers} />
 		</>
 	);
 }
