@@ -12,6 +12,7 @@ import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStageMembers } from "~/lib/db/queries";
+import { getMembershipForms } from "~/lib/server/form";
 import {
 	addStageMember,
 	addUserWithStageMembership,
@@ -25,12 +26,12 @@ type PropsInner = {
 };
 
 const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
-	const members = await getStageMembers(stageId).execute();
-	const canManage = await userCan(
-		Capabilities.removeStageMember,
-		{ type: MembershipType.stage, stageId },
-		user.id
-	);
+	const [members, canManage, availableForms] = await Promise.all([
+		getStageMembers(stageId).execute(),
+		userCan(Capabilities.removeStageMember, { type: MembershipType.stage, stageId }, user.id),
+		getMembershipForms(),
+	]);
+	console.log(members);
 
 	return (
 		<Card>
@@ -47,6 +48,8 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 						addUserMember={addUserWithStageMembership.bind(null, stageId)}
 						existingMembers={members.map((member) => member.id)}
 						isSuperAdmin={user.isSuperAdmin}
+						membershipType={MembershipType.stage}
+						availableForms={availableForms}
 					/>
 				</div>
 				<MembersList

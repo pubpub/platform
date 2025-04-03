@@ -9,7 +9,8 @@ import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { selectCommunityMembers } from "~/lib/server/member";
+import { getMembershipForms } from "~/lib/server/form";
+import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
 
@@ -50,7 +51,10 @@ export default async function Page(props: {
 	}
 
 	const page = parseInt(searchParams.page ?? "1", 10);
-	const members = await selectCommunityMembers({ communityId: community.id }).execute();
+	const [members, availableForms] = await Promise.all([
+		selectAllCommunityMemberships({ communityId: community.id }).execute(),
+		getMembershipForms(),
+	]);
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -78,6 +82,8 @@ export default async function Page(props: {
 					addUserMember={createUserWithCommunityMembership}
 					existingMembers={members.map((member) => member.user.id)}
 					isSuperAdmin={user.isSuperAdmin}
+					membershipType={MembershipType.community}
+					availableForms={availableForms}
 				/>
 			</div>
 			<MemberTable members={tableMembers} />

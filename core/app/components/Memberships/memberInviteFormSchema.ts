@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { MemberRole } from "db/public";
+import { formsIdSchema, MemberRole } from "db/public";
 
 export const memberInviteFormSchema = z.object({
 	email: z.string().email({
@@ -10,4 +10,5 @@ export const memberInviteFormSchema = z.object({
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
 	isSuperAdmin: z.boolean().default(false).optional(),
+	forms: z.array(formsIdSchema),
 });

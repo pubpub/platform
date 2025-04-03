@@ -7,8 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 
-import type { NewUsers, UsersId } from "db/public";
-import { MemberRole } from "db/public";
+import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Button } from "ui/button";
 import { Card, CardContent } from "ui/card";
@@ -24,13 +23,25 @@ import {
 } from "ui/form";
 import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
+import { MultiValueInput } from "ui/multivalue-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
+import type { DialogProps } from "./types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { client } from "~/lib/api";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
+
+const descriptions: Record<MembershipType, string> = {
+	[MembershipType.pub]:
+		"Select the forms via which this member can edit and view this Pub. If no form is selected, they will only be able to view the Pub, and will only see fields added to the default Pub form for this type.",
+	[MembershipType.stage]:
+		"Select the forms via which this member can edit and view Pubs in this stage. If no form is selected, they will only be able to view Pubs in this stage, and will only see fields added to the default Pub form for a each Pub type.",
+	[MembershipType.community]:
+		"Selecting forms will give the member the ability to create Pubs in the community using the selected forms. If no forms are added, the contributor will not be able to create any Pubs, and will only be able to see Pubs they have access to either directly or at the stage level.",
+	[MembershipType.form]: "",
+};
 
 export const MemberInviteForm = ({
 	existingMembers,
@@ -38,17 +49,9 @@ export const MemberInviteForm = ({
 	addMember,
 	addUserMember,
 	closeForm,
-}: {
-	existingMembers: UsersId[];
-	isSuperAdmin?: boolean;
-	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>;
-	addUserMember: ({
-		email,
-		firstName,
-		lastName,
-		isSuperAdmin,
-		role,
-	}: Omit<NewUsers, "slug"> & { role: MemberRole }) => Promise<unknown>;
+	membershipType,
+	availableForms,
+}: DialogProps & {
 	closeForm: () => void;
 }) => {
 	const community = useCommunity();
@@ -107,6 +110,7 @@ export const MemberInviteForm = ({
 				lastName: data.lastName,
 				role: data.role,
 				isSuperAdmin: data.isSuperAdmin,
+				forms: data.forms,
 			});
 
 			if (didSucceed(result)) {
@@ -123,6 +127,7 @@ export const MemberInviteForm = ({
 		const result = await runAddMember({
 			userId: user.id,
 			role: data.role,
+			forms: data.forms,
 		});
 
 		if (didSucceed(result)) {
@@ -215,41 +220,77 @@ export const MemberInviteForm = ({
 					</>
 				)}
 				{email && !emailState.invalid && (
-					<FormField
-						control={form.control}
-						name="role"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Role</FormLabel>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
-									<FormControl>
-										<SelectTrigger>
-											<SelectValue placeholder="Select a role" />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent>
-										<SelectItem value={MemberRole.admin}>Admin</SelectItem>
-										<SelectItem value={MemberRole.editor}>Editor</SelectItem>
-										<SelectItem value={MemberRole.contributor}>
-											Contributor
-										</SelectItem>
-									</SelectContent>
-								</Select>
-								<FormDescription>
-									Select the role for this user.
-									<ul className="list-inside list-disc">
-										<li>Admins can do anything.</li>
-										<li>Editors are able to edit most things</li>
-										<li>
-											Contributors are only able to see forms and other public
-											facing content that are linked to them
-										</li>
-									</ul>
-								</FormDescription>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					<>
+						<FormField
+							control={form.control}
+							name="role"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Role</FormLabel>
+									<Select
+										onValueChange={field.onChange}
+										defaultValue={field.value}
+									>
+										<FormControl>
+											<SelectTrigger>
+												<SelectValue placeholder="Select a role" />
+											</SelectTrigger>
+										</FormControl>
+										<SelectContent>
+											<SelectItem value={MemberRole.admin}>Admin</SelectItem>
+											<SelectItem value={MemberRole.editor}>
+												Editor
+											</SelectItem>
+											<SelectItem value={MemberRole.contributor}>
+												Contributor
+											</SelectItem>
+										</SelectContent>
+									</Select>
+									<FormDescription>
+										Select the role for this user.
+										<ul className="list-inside list-disc">
+											<li>Admins can do anything.</li>
+											<li>Editors are able to edit most things</li>
+											<li>
+												Contributors are only able to see forms and other
+												public facing content that are linked to them
+											</li>
+										</ul>
+									</FormDescription>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
+							name="forms"
+							render={({ field }) => {
+								const description = descriptions[membershipType];
+								return (
+									<FormItem>
+										<FormLabel>Edit/View Access</FormLabel>
+										<FormControl>
+											<MultiValueInput
+												{...field}
+												value={field.value ?? []}
+												onChange={(newValues) => {
+													field.onChange(newValues);
+												}}
+												options={availableForms.map((f) => ({
+													label: f.name,
+													value: f.id,
+												}))}
+												optionName="forms"
+												sortable={false}
+											/>
+										</FormControl>
+										<FormDescription>{description}</FormDescription>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
+						/>
+					</>
 				)}
 				{user && (
 					<Card>

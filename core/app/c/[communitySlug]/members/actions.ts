@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 
-import type { UsersId } from "db/public";
+import type { FormsId, UsersId } from "db/public";
 import { MemberRole, MembershipType } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
@@ -12,8 +12,8 @@ import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member";
-import { createUserWithMembership } from "~/lib/server/user";
+import { deleteCommunityMemberships, insertCommunityMemberships } from "~/lib/server/member";
+import { createUserWithMemberships } from "~/lib/server/user";
 
 const isCommunityAdmin = cache(async () => {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
@@ -54,9 +54,11 @@ const isCommunityAdmin = cache(async () => {
 export const addMember = defineServerAction(async function addMember({
 	userId,
 	role,
+	forms,
 }: {
 	userId: UsersId;
 	role: MemberRole;
+	forms: FormsId[];
 }) {
 	const result = await isCommunityAdmin();
 	if (result.error !== null) {
@@ -67,12 +69,12 @@ export const addMember = defineServerAction(async function addMember({
 	}
 
 	try {
-		const member = await insertCommunityMember({
+		const member = await insertCommunityMemberships({
 			userId,
 			communityId: result.community.id,
 			role,
+			forms,
 		}).executeTakeFirst();
-
 		// TODO: send email to user confirming their membership,
 		// don't just add them
 
@@ -104,6 +106,7 @@ export const createUserWithCommunityMembership = defineServerAction(
 		email: string;
 		role: MemberRole;
 		isSuperAdmin?: boolean;
+		forms: FormsId[];
 	}) {
 		const parsed = memberInviteFormSchema
 			.required({ firstName: true, lastName: true })
@@ -116,10 +119,24 @@ export const createUserWithCommunityMembership = defineServerAction(
 			};
 		}
 
+		const community = await findCommunityBySlug();
+
+		if (!community) {
+			return {
+				title: "Failed to add member",
+				error: "Community not found",
+			};
+		}
+
 		try {
-			return await createUserWithMembership({
+			return await createUserWithMemberships({
 				...parsed.data,
-				membership: { type: MembershipType.community, role: data.role },
+				membership: {
+					type: MembershipType.community,
+					role: data.role,
+					communityId: community.id,
+					forms: data.forms,
+				},
 			});
 		} catch (error) {
 			return {
@@ -153,7 +170,7 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		const removedMember = await deleteCommunityMember(member.id).executeTakeFirst();
+		const removedMember = await deleteCommunityMemberships(member.id).executeTakeFirst();
 
 		if (!removedMember) {
 			return {

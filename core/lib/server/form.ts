@@ -16,6 +16,7 @@ import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { findCommunityBySlug } from "./community";
 import { getUser } from "./user";
 
 /**
@@ -261,3 +262,23 @@ export const insertForm = (
 };
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
+
+/**
+ * Gets a list of forms for the member add dialog
+ */
+export const getMembershipForms = async (pubTypeId?: PubTypesId, trx = db) => {
+	const community = await findCommunityBySlug();
+	if (!community) {
+		throw new Error("Community not found");
+	}
+
+	return await autoCache(
+		trx
+			.selectFrom("forms")
+			.where("communityId", "=", community.id)
+			.$if(Boolean(pubTypeId), (qb) => qb.where("forms.pubTypeId", "=", pubTypeId!))
+			.select(["forms.name", "forms.isDefault", "forms.id"])
+			.orderBy("isDefault desc")
+			.orderBy("updatedAt desc")
+	).execute();
+};

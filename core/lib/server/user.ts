@@ -7,6 +7,7 @@ import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
 	CommunityMembershipsId,
+	FormsId,
 	NewUsers,
 	PubsId,
 	StagesId,
@@ -27,7 +28,7 @@ import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { findCommunityBySlug } from "./community";
 import { signupInvite } from "./email";
-import { insertCommunityMember, insertPubMember, insertStageMember } from "./member";
+import { insertCommunityMemberships, insertPubMemberships, insertStageMemberships } from "./member";
 import { getPubTitle } from "./pub";
 
 export type SafeUser = Omit<Users, "passwordHash">;
@@ -61,6 +62,7 @@ export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: strin
 						"community_memberships.updatedAt",
 						"community_memberships.role",
 						"community_memberships.communityId",
+						"community_memberships.formId",
 						jsonObjectFrom(
 							eb
 								.selectFrom("communities")
@@ -206,18 +208,19 @@ export const addUser = (props: NewUsers, trx = db) =>
 		additionalRevalidateTags: ["all-users"],
 	});
 
-export const createUserWithMembership = async (data: {
+export const createUserWithMemberships = async (data: {
 	firstName: string;
 	lastName?: string | null;
 	email: string;
 	isSuperAdmin?: boolean;
-	membership:
+	membership: { role: MemberRole; forms: FormsId[] } & (
 		| {
 				type: MembershipType.community;
-				role: MemberRole;
+				communityId: CommunitiesId;
 		  }
-		| { type: MembershipType.stage; role: MemberRole; stageId: StagesId }
-		| { type: MembershipType.pub; role: MemberRole; pubId: PubsId };
+		| { type: MembershipType.stage; stageId: StagesId }
+		| { type: MembershipType.pub; pubId: PubsId }
+	);
 }) => {
 	const { firstName, lastName, email, membership, isSuperAdmin } = data;
 
@@ -280,50 +283,51 @@ export const createUserWithMembership = async (data: {
 		let membershipQuery: (trx: Transaction<Database>, userId: UsersId) => Promise<unknown>;
 		let target: CapabilityTarget;
 		let capability: Capabilities;
-		switch (membership.type) {
-			case MembershipType.stage:
-				capability = Capabilities.addStageMember;
-				target = { stageId: membership.stageId, type: membership.type };
-				nameQuery = async (trx = db) => {
-					const { name } = await autoCache(
-						trx.selectFrom("stages").select("name").where("id", "=", membership.stageId)
-					).executeTakeFirstOrThrow();
-					return name;
-				};
-				membershipQuery = (trx, userId) =>
-					insertStageMember({ ...membership, userId }, trx).execute();
-				break;
-			case MembershipType.community:
-				capability = Capabilities.addCommunityMember;
-				target = { communityId: community.id, type: membership.type };
-				membershipQuery = (trx, userId) =>
-					insertCommunityMember(
-						{
-							...membership,
-							communityId: community.id,
-							userId,
-						},
-						trx
-					).execute();
-				break;
-			case MembershipType.pub:
-				capability = Capabilities.addPubMember;
-				target = { pubId: membership.pubId, type: membership.type };
-				nameQuery = async (trx = db) => {
-					const { title } = await autoCache(
-						getPubTitle(membership.pubId, trx)
-					).executeTakeFirstOrThrow();
-					return title;
-				};
-				membershipQuery = async (trx, userId) =>
-					insertPubMember(
-						{
-							...membership,
-							userId,
-						},
-						trx
-					).execute();
-				break;
+		if (membership.type === MembershipType.stage) {
+			capability = Capabilities.addStageMember;
+			target = { stageId: membership.stageId, type: membership.type };
+			const { type: _, ...membershipWithoutType } = membership;
+			nameQuery = async (trx = db) => {
+				const { name } = await autoCache(
+					trx.selectFrom("stages").select("name").where("id", "=", membership.stageId)
+				).executeTakeFirstOrThrow();
+				return name;
+			};
+			membershipQuery = (trx, userId) =>
+				insertStageMemberships({ ...membershipWithoutType, userId }, trx).execute();
+		} else if (membership.type === MembershipType.community) {
+			capability = Capabilities.addCommunityMember;
+			target = { communityId: community.id, type: membership.type };
+			const { type: _, ...membershipWithoutType } = membership;
+			membershipQuery = (trx, userId) =>
+				insertCommunityMemberships(
+					{
+						...membershipWithoutType,
+						userId,
+					},
+					trx
+				).execute();
+		} else if (membership.type === MembershipType.pub) {
+			capability = Capabilities.addPubMember;
+			target = { pubId: membership.pubId, type: membership.type };
+			const { type: _, ...membershipWithoutType } = membership;
+
+			nameQuery = async (trx = db) => {
+				const { title } = await autoCache(
+					getPubTitle(membership.pubId, trx)
+				).executeTakeFirstOrThrow();
+				return title;
+			};
+			membershipQuery = async (trx, userId) =>
+				insertPubMemberships(
+					{
+						...membershipWithoutType,
+						userId,
+					},
+					trx
+				).execute();
+		} else {
+			return;
 		}
 
 		if (!(await userCan(capability, target, user.id))) {
@@ -356,11 +360,12 @@ export const createUserWithMembership = async (data: {
 			} else {
 				// Add a community contributor membership for any new stage or pub member
 				await Promise.all([
-					insertCommunityMember(
+					insertCommunityMemberships(
 						{
 							role: MemberRole.contributor,
 							communityId: community.id,
 							userId: newUser.id,
+							forms: [],
 						},
 						trx
 					).execute(),
