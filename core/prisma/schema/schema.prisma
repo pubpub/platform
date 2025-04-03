@@ -333,8 +333,9 @@ model CommunityMembership {
   form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
   formId        String?
 
-  @@unique([communityId, userId])
-  @@unique([communityId, memberGroupId])
+  // Indices defined manually in migration to handle null formId case
+  // @@unique([communityId, userId, formId])
+  // @@unique([communityId, memberGroupId, formId])
   @@map(name: "community_memberships")
 }
 
@@ -355,8 +356,9 @@ model PubMembership {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  @@unique([pubId, userId])
-  @@unique([pubId, memberGroupId])
+  // Indices defined manually in migration to handle null formId case
+  // @@unique([pubId, userId, formId])
+  // @@unique([pubId, memberGroupId, formId])
   @@map(name: "pub_memberships")
 }
 
@@ -377,8 +379,9 @@ model StageMembership {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  @@unique([stageId, userId])
-  @@unique([stageId, memberGroupId])
+  // Indices defined manually in migration to handle null formId case
+  // @@unique([stageId, userId, formId])
+  // @@unique([stageId, memberGroupId, formId])
   @@map(name: "stage_memberships")
 }
 

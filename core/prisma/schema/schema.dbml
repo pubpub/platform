@@ -248,11 +248,6 @@ Table community_memberships {
   updatedAt DateTime [default: `now()`, not null]
   form forms
   formId String
-
-  indexes {
-    (communityId, userId) [unique]
-    (communityId, memberGroupId) [unique]
-  }
 }
 
 Table pub_memberships {
@@ -268,11 +263,6 @@ Table pub_memberships {
   formId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-
-  indexes {
-    (pubId, userId) [unique]
-    (pubId, memberGroupId) [unique]
-  }
 }
 
 Table stage_memberships {
@@ -288,11 +278,6 @@ Table stage_memberships {
   formId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-
-  indexes {
-    (stageId, userId) [unique]
-    (stageId, memberGroupId) [unique]
-  }
 }
 
 Table form_memberships {
