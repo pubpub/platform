@@ -13,6 +13,7 @@ import link from "./link";
 import list from "./list";
 import math from "./math";
 import paragraph from "./paragraph";
+import strike from "./strike";
 import strong from "./strong";
 import text from "./text";
 
@@ -38,6 +39,7 @@ export const baseSchema = new Schema({
 		em,
 		code: code.codeInline,
 		link,
+		strike,
 	},
 	topNode: "doc",
 });

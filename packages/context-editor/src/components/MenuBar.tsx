@@ -16,6 +16,7 @@ import {
 	Radical,
 	SeparatorHorizontal,
 	SquareRadical,
+	Strikethrough,
 } from "lucide-react";
 
 import { Button } from "ui/button";
@@ -40,7 +41,13 @@ import {
 } from "../commands/blocks";
 import { insertHorizontalLine } from "../commands/horizontal";
 import { isImageActive } from "../commands/images";
-import { codeToggle, emToggle, linkToggle, strongToggle } from "../commands/marks";
+import {
+	codeToggle,
+	emToggle,
+	linkToggle,
+	strikethroughToggle,
+	strongToggle,
+} from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 import { ImageUploader } from "./ImageUploader";
 
@@ -68,6 +75,12 @@ const menuBlocks: MenuItem[][] = [
 			name: "Italic",
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
+		},
+		{
+			key: "del",
+			name: "Strikethrough",
+			icon: <Strikethrough {...iconProps} />,
+			command: strikethroughToggle,
 		},
 	],
 	[
