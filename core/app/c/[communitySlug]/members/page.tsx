@@ -8,6 +8,7 @@ import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { firstRoleIsHigher } from "~/lib/authorization/rolesRanking";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getMembershipForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
@@ -63,7 +64,7 @@ export default async function Page(props: {
 	const tableMembers = members.map((member) => {
 		const { id, createdAt, user, role } = member;
 		return {
-			id,
+			id: user.id,
 			avatar: user.avatar,
 			firstName: user.firstName,
 			lastName: user.lastName,
@@ -72,6 +73,18 @@ export default async function Page(props: {
 			joined: new Date(createdAt).toLocaleString(),
 		} satisfies TableMember;
 	});
+
+	const dedupedMembers = new Map<TableMember["id"], TableMember>();
+	for (const member of tableMembers) {
+		if (!dedupedMembers.has(member.id)) {
+			dedupedMembers.set(member.id, member);
+		} else {
+			const m = dedupedMembers.get(member.id);
+			if (m && firstRoleIsHigher(member.role, m.role)) {
+				dedupedMembers.set(member.id, m);
+			}
+		}
+	}
 
 	return (
 		<>
@@ -86,7 +99,7 @@ export default async function Page(props: {
 					availableForms={availableForms}
 				/>
 			</div>
-			<MemberTable members={tableMembers} />
+			<MemberTable members={[...dedupedMembers.values()]} />
 		</>
 	);
 }

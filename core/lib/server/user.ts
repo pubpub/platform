@@ -23,6 +23,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { createPasswordHash } from "../authentication/password";
 import { userCan } from "../authorization/capabilities";
+import { firstRoleIsHigher, getHighestRole } from "../authorization/rolesRanking";
 import { generateHash, slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -251,25 +252,11 @@ export const createUserWithMemberships = async (data: {
 		// the new member's. If they're adding a different type of membership, the community
 		// membership is always a contributor, so we can skip this check.
 		if (membership.type === MembershipType.community) {
-			const rolesRanking = {
-				[MemberRole.admin]: 2,
-				[MemberRole.editor]: 1,
-				[MemberRole.contributor]: 0,
-			};
-			const highestRole = user.memberships.reduce(
-				(highestRole, m) => {
-					if (m.communityId === community.id) {
-						if (!highestRole || rolesRanking[m.role] > rolesRanking[highestRole]) {
-							return m.role;
-						}
-					}
-					return highestRole;
-				},
-				undefined as MemberRole | undefined
+			const highestRole = getHighestRole(
+				user.memberships.filter((m) => m.communityId === community.id)
 			);
 
-			const roleIsHighEnough =
-				highestRole && rolesRanking[highestRole] >= rolesRanking[membership.role];
+			const roleIsHighEnough = highestRole && firstRoleIsHigher(highestRole, membership.role);
 
 			if (!roleIsHighEnough) {
 				return {
