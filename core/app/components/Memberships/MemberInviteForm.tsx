@@ -140,6 +140,8 @@ export const MemberInviteForm = ({
 		}
 	}
 
+	const isContributor = form.watch("role") === MemberRole.contributor;
+
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
@@ -261,35 +263,37 @@ export const MemberInviteForm = ({
 								</FormItem>
 							)}
 						/>
-						<FormField
-							control={form.control}
-							name="forms"
-							render={({ field }) => {
-								const description = descriptions[membershipType];
-								return (
-									<FormItem>
-										<FormLabel>Edit/View Access</FormLabel>
-										<FormControl>
-											<MultiValueInput
-												{...field}
-												value={field.value ?? []}
-												onChange={(newValues) => {
-													field.onChange(newValues);
-												}}
-												options={availableForms.map((f) => ({
-													label: f.name,
-													value: f.id,
-												}))}
-												optionName="forms"
-												sortable={false}
-											/>
-										</FormControl>
-										<FormDescription>{description}</FormDescription>
-										<FormMessage />
-									</FormItem>
-								);
-							}}
-						/>
+						{isContributor && (
+							<FormField
+								control={form.control}
+								name="forms"
+								render={({ field }) => {
+									const description = descriptions[membershipType];
+									return (
+										<FormItem>
+											<FormLabel>Edit/View Access</FormLabel>
+											<FormControl>
+												<MultiValueInput
+													{...field}
+													value={field.value ?? []}
+													onChange={(newValues) => {
+														field.onChange(newValues);
+													}}
+													options={availableForms.map((f) => ({
+														label: f.name,
+														value: f.id,
+													}))}
+													optionName="forms"
+													sortable={false}
+												/>
+											</FormControl>
+											<FormDescription>{description}</FormDescription>
+											<FormMessage />
+										</FormItem>
+									);
+								}}
+							/>
+						)}
 					</>
 				)}
 				{user && (

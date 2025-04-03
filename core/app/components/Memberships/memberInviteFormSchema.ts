@@ -10,5 +10,5 @@ export const memberInviteFormSchema = z.object({
 	firstName: z.string().optional(),
 	lastName: z.string().optional(),
 	isSuperAdmin: z.boolean().default(false).optional(),
-	forms: z.array(formsIdSchema),
+	forms: z.array(formsIdSchema).default([]),
 });
