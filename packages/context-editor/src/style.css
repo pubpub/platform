@@ -115,6 +115,8 @@
 .ProseMirror code,
 .ProseMirror strong,
 .ProseMirror s,
+.ProseMirror sup,
+.ProseMirror sub,
 .ProseMirror em {
 	border-top: 1px solid #777;
 	padding-left: 1px;

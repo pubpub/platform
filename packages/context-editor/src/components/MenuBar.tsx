@@ -17,6 +17,8 @@ import {
 	SeparatorHorizontal,
 	SquareRadical,
 	Strikethrough,
+	Subscript,
+	Superscript,
 } from "lucide-react";
 
 import { Button } from "ui/button";
@@ -47,6 +49,8 @@ import {
 	linkToggle,
 	strikethroughToggle,
 	strongToggle,
+	subscriptToggle,
+	superscriptToggle,
 } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 import { ImageUploader } from "./ImageUploader";
@@ -81,6 +85,18 @@ const menuBlocks: MenuItem[][] = [
 			name: "Strikethrough",
 			icon: <Strikethrough {...iconProps} />,
 			command: strikethroughToggle,
+		},
+		{
+			key: "sub",
+			name: "Subscript",
+			icon: <Subscript {...iconProps} />,
+			command: subscriptToggle,
+		},
+		{
+			key: "sup",
+			name: "Superscript",
+			icon: <Superscript {...iconProps} />,
+			command: superscriptToggle,
 		},
 	],
 	[
