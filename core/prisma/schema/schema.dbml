@@ -515,7 +515,6 @@ Enum Event {
 
 Enum FormAccessType {
   private
-  inviteOnly
   public
 }
 
