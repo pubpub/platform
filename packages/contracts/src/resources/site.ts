@@ -22,6 +22,7 @@ import {
 	communitiesIdSchema,
 	communityMembershipsSchema,
 	coreSchemaTypeSchema,
+	formsIdSchema,
 	memberRoleSchema,
 	pubFieldsSchema,
 	pubsIdSchema,
@@ -34,8 +35,8 @@ import {
 	usersSchema,
 } from "db/public";
 
-import type { Json, JsonValue } from "./types";
-import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
+import type { Json } from "./types";
+import { CreatePubRequestBodyWithNulls, formSchema, jsonSchema } from "./types";
 
 export const TOTAL_PUBS_COUNT_HEADER = "x-total-pubs";
 
@@ -678,6 +679,21 @@ export const zodErrorSchema = z.object({
 
 export const siteApi = contract.router(
 	{
+		forms: {
+			get: {
+				method: "GET",
+				path: "/forms/:formId",
+				summary: "Get a form",
+				description: "Get a form by ID",
+				pathParams: z.object({
+					formId: formsIdSchema,
+				}),
+				responses: {
+					200: formSchema,
+					404: z.literal("Form not found"),
+				},
+			},
+		},
 		pubs: {
 			search: {
 				method: "GET",
