@@ -246,6 +246,8 @@ Table community_memberships {
   memberGroupId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  form forms
+  formId String
 
   indexes {
     (communityId, userId) [unique]
@@ -262,6 +264,8 @@ Table pub_memberships {
   userId String
   memberGroup member_groups
   memberGroupId String
+  form forms
+  formId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 
@@ -280,6 +284,8 @@ Table stage_memberships {
   userId String
   memberGroup member_groups
   memberGroupId String
+  form forms
+  formId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 
@@ -370,6 +376,9 @@ Table forms {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
+  StageMembership stage_memberships [not null]
+  CommunityMembership community_memberships [not null]
+  PubMembership pub_memberships [not null]
 
   indexes {
     (name, communityId) [unique]
@@ -658,17 +667,23 @@ Ref: community_memberships.userId > users.id [delete: Cascade]
 
 Ref: community_memberships.memberGroupId > member_groups.id [delete: Cascade]
 
+Ref: community_memberships.formId > forms.id [delete: Cascade]
+
 Ref: pub_memberships.pubId > pubs.id [delete: Cascade]
 
 Ref: pub_memberships.userId > users.id [delete: Cascade]
 
 Ref: pub_memberships.memberGroupId > member_groups.id [delete: Cascade]
 
+Ref: pub_memberships.formId > forms.id [delete: Cascade]
+
 Ref: stage_memberships.stageId > stages.id [delete: Cascade]
 
 Ref: stage_memberships.userId > users.id [delete: Cascade]
 
 Ref: stage_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: stage_memberships.formId > forms.id [delete: Cascade]
 
 Ref: form_memberships.formId > forms.id [delete: Cascade]
 
