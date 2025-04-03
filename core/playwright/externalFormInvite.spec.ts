@@ -9,6 +9,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
+import { MembersPage } from "./fixtures/member-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { inbucketClient } from "./helpers";
@@ -224,11 +225,26 @@ test.describe("Inviting a new user to fill out a form", () => {
 		// Make sure they can't view the pubs page in other communities
 		const unauthorizedPubsPage = new PubsPage(newPage, "croccroc");
 		await unauthorizedPubsPage.goTo();
-		expect(await newPage.url()).toMatch(/\/settings$/);
+		newPage.waitForURL(/\/settings$/);
+		// expect(newPage.url()).toMatch(/\/settings$/);
 
-		// Creating a pub without a pubId should work
-		const createPage = decodedUrl.replace(`pubId%3D${community.pubs[0].id}`, "");
-		await newPage.goto(createPage);
+		// Creating a pub without a pubId should not work
+		const createFormUrl = decodedUrl.replace(`pubId%3D${community.pubs[0].id}`, "");
+
+		// Expect 404 page
+		await newPage.goto(createFormUrl);
+		await expect(newPage.getByText("This page could not be found.")).toHaveCount(1);
+
+		// Switch back to the admin user and grant a community contributor permission to this form,
+		// which should let them access the create pub form
+		const membersPage = new MembersPage(page, community.community.slug);
+		await membersPage.goto();
+		await membersPage.removeMember(email);
+		await membersPage.addExistingUser(email, MemberRole.contributor, [
+			community.forms.Evaluation.name,
+		]);
+
+		await newPage.reload();
 		await newPage.getByLabel("Title").fill("new pub");
 		await newPage.getByRole("button", { name: "Submit", exact: true }).click();
 		await newPage.getByText("Form Successfully Submitted").waitFor();
