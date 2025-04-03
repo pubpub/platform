@@ -21,7 +21,7 @@ export const SaveFormButton = ({ form, className, disabled }: Props) => {
 			form={form}
 			type="submit"
 			data-testid="save-form-button"
-			disabled={!isChanged}
+			disabled={disabled != null ? disabled : !isChanged}
 		>
 			Save
 		</Button>
