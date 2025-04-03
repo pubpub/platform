@@ -1,9 +1,10 @@
 ---
 name: Bug Report
 about: Find something broken or odd? Report it here.
-title: ""
+title: ''
 labels: bug
-assignees: ""
+assignees: ''
+
 ---
 
 <!--
@@ -13,7 +14,6 @@ To fill out the report, please fill out each section below. If a section isn't a
 -->
 
 ### What went wrong, step-by-step?
-
 1.
 2. ...
 
