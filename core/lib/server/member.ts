@@ -64,7 +64,8 @@ export const deleteCommunityMemberships = (
 	autoRevalidate(
 		trx
 			.deleteFrom("community_memberships")
-			.innerJoin("users", "users.id", "community_memberships.userId")
+			.using("users")
+			.whereRef("users.id", "=", "community_memberships.userId")
 			.where("users.id", "=", userId)
 			.where("community_memberships.communityId", "=", communityId)
 			.returningAll()
