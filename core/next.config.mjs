@@ -27,6 +27,7 @@ const nextConfig = {
 	 * for cached fetches.
 	 */
 	cacheHandler: new URL("./cache-handler.mjs", import.meta.url).pathname,
+	cacheMaxMemorySize: 0,
 	images: {
 		remotePatterns: [
 			{

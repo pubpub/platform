@@ -168,6 +168,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		/* Doing so in some cases (onChange for the EditorDash) cause an infinite re-render loop */
 		/* Figure out what I actually need to render on, and then clean up any useMemo calls if necessary */
 	}, [props, suggestData, panelPosition]);
+
 	return (
 		<div
 			id="context-editor-container"

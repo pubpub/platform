@@ -19,6 +19,7 @@ import type { PubsId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
+import type { LinkOptions } from "./renderWithPubUtils";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { getPubTitle } from "~/lib/pubs";
 import { getExclusivelyRelatedPub } from "../../pub";
@@ -161,7 +162,7 @@ const visitRecipientLastNameDirective = (node: Directive, context: utils.RenderW
 
 const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	// `node.attributes` should always be defined for directive nodes
-	const attrs = expect(node.attributes, "Invalid syntax in link directive");
+	const attrs = expect(node.attributes, "Invalid syntax in link directive") as LinkOptions;
 	// All directives are considered parent nodes
 	assert(isParent(node));
 	let href: string;
@@ -170,14 +171,14 @@ const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext
 	if ("email" in attrs) {
 		// The `email` attribute must have a value. For example, :link{email=""}
 		// is invalid.
-		let address = expect(attrs.email, 'Unexpected missing value in ":link{email=?}" directive');
+		let email = expect(attrs.email, 'Unexpected missing value in ":link{email=?}" directive');
 		// If the user defines the recipient as `"assignee"`, the pub must have an
 		// assignee for the email to be sent.
-		href = utils.renderLink(context, { address });
+		href = utils.renderLink(context, { email });
 		// If the email has no label, default to the email address, e.g.
 		// :link{email=all@pubpub.org} -> :link[all@pubpub.org]{email=all@pubpub.org}
-		if (node.children.length === 0) {
-			node.children.push({ type: "text", value: address });
+		if (node.children.length === 0 && attrs.text === undefined) {
+			node.children.push({ type: "text", value: email });
 		}
 	}
 	// :link{form=review}
@@ -189,7 +190,7 @@ const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext
 	// :link{to=https://example.com}
 	else if ("to" in attrs) {
 		href = utils.renderLink(context, {
-			url: expect(attrs.to, 'Unexpected missing value in ":link{to=?}" directive'),
+			to: expect(attrs.to, 'Unexpected missing value in ":link{to=?}" directive'),
 		});
 	}
 	// :link{field=pubpub:url}
@@ -197,6 +198,10 @@ const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext
 		href = utils.renderLink(context, {
 			field: expect(attrs.field, "Unexpected missing value in ':link{field=?}' directive"),
 			rel: attrs.rel,
+		});
+	} else if ("page" in attrs) {
+		href = utils.renderLink(context, {
+			page: expect(attrs.page, "Unexpected missing value in ':link{page=?}' directive"),
 		});
 	} else {
 		throw new Error("Invalid link directive");
@@ -206,7 +211,7 @@ const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext
 	if (node.children.length === 0) {
 		node.children.push({
 			type: "text",
-			value: href,
+			value: attrs.text ?? href,
 		});
 	}
 	node.data = {
