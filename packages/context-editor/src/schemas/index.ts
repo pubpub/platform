@@ -14,6 +14,7 @@ import list from "./list";
 import math from "./math";
 import paragraph from "./paragraph";
 import strong from "./strong";
+import subSuperScript from "./subSuperScript";
 import text from "./text";
 
 export const baseSchema = new Schema({
@@ -38,6 +39,8 @@ export const baseSchema = new Schema({
 		em,
 		code: code.codeInline,
 		link,
+		sub: subSuperScript.sub,
+		sup: subSuperScript.sup,
 	},
 	topNode: "doc",
 });
