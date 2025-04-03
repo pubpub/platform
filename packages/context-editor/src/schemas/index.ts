@@ -16,6 +16,7 @@ import paragraph from "./paragraph";
 import strong from "./strong";
 import subSuperScript from "./subSuperScript";
 import text from "./text";
+import underline from "./underline";
 
 export const baseSchema = new Schema({
 	nodes: {
@@ -41,6 +42,7 @@ export const baseSchema = new Schema({
 		link,
 		sub: subSuperScript.sub,
 		sup: subSuperScript.sup,
+		underline,
 	},
 	topNode: "doc",
 });
