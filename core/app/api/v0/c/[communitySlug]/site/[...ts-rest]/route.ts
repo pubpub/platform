@@ -1,6 +1,7 @@
 import type { User } from "lucia";
 
 import { headers } from "next/headers";
+import { queryByTestId } from "@testing-library/react";
 import { createNextHandler, RequestValidationError } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import qs from "qs";
@@ -120,13 +121,12 @@ const getAuthorization = async () => {
 	return {
 		user,
 		authorization: rules.reduce((acc, curr) => {
-			const { scope, constraints, accessType } = curr;
-			if (!constraints) {
-				acc[scope][accessType] = true;
+			if (!curr.constraints) {
+				acc[curr.scope][curr.accessType] = true;
 				return acc;
 			}
 
-			acc[scope][accessType] = constraints ?? true;
+			acc[curr.scope][curr.accessType] = curr.constraints ?? true;
 			return acc;
 		}, baseAuthorizationObject),
 		apiAccessTokenId: validatedAccessToken.id,
@@ -335,7 +335,7 @@ const handler = createNextHandler(
 			},
 
 			get: async ({ params, query }) => {
-				const { user, community } = await checkAuthorization({
+				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewPub,
@@ -352,18 +352,64 @@ const handler = createNextHandler(
 					query
 				);
 
+				if (typeof authorization === "object") {
+					const allowedStages = authorization.stages;
+					if (
+						pub.stageId &&
+						allowedStages &&
+						allowedStages.length > 0 &&
+						!allowedStages.includes(pub.stageId)
+					) {
+						throw new ForbiddenError(
+							`You are not authorized to view this pub in stage ${pub.stageId}`
+						);
+					}
+
+					const allowedPubTypes = authorization.pubTypes;
+					if (
+						allowedPubTypes &&
+						allowedPubTypes.length > 0 &&
+						!allowedPubTypes.includes(pub.pubTypeId)
+					) {
+						throw new ForbiddenError(
+							`You are not authorized to view this pub in pub type ${pub.pubTypeId}`
+						);
+					}
+				}
+
 				return {
 					status: 200,
 					body: pub,
 				};
 			},
 			getMany: async ({ query }, { request, responseHeaders }) => {
-				const { user, community } = await checkAuthorization({
+				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: "community-member",
 				});
 
-				const { pubTypeId, stageId, filters, ...rest } = query ?? {};
+				const allowedPubTypes =
+					typeof authorization === "object" ? authorization.pubTypes : undefined;
+				const allowedStages =
+					typeof authorization === "object" ? authorization.stages : undefined;
+
+				let { pubTypeId, stageId, pubIds, filters, ...rest } = query ?? {};
+
+				const requestedPubTypes = pubTypeId
+					? Array.isArray(pubTypeId)
+						? pubTypeId
+						: [pubTypeId]
+					: undefined;
+				const requestedStages = stageId
+					? Array.isArray(stageId)
+						? stageId
+						: [stageId]
+					: undefined;
+				const requestedPubIds = pubIds
+					? Array.isArray(pubIds)
+						? pubIds
+						: [pubIds]
+					: undefined;
 
 				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
 
@@ -374,24 +420,28 @@ const handler = createNextHandler(
 						throw new BadRequestError(e.message);
 					}
 				}
+
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
-						pubTypeId,
-						stageId,
+						pubTypeId: requestedPubTypes,
+						stageId: requestedStages,
+						pubIds: requestedPubIds,
 						userId: user.id,
 					},
 					{
 						...rest,
 						filters: manuallyParsedFilters?.filters,
+						allowedPubTypes,
+						allowedStages,
 					}
 				);
 
 				// TODO: this does not account for permissions
 				const pubCount = await getPubsCount({
 					communityId: community.id,
-					pubTypeId,
-					stageId,
+					pubTypeId: requestedPubTypes,
+					stageId: requestedStages,
 				});
 				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
 

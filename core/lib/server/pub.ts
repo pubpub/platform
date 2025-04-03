@@ -36,8 +36,16 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type { LastModifiedBy } from "db/types";
-import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
+import type { LastModifiedBy, StageConstraint } from "db/types";
+import {
+	Capabilities,
+	CoreSchemaType,
+	MemberRole,
+	MembershipType,
+	OperationType,
+	pubTypesIdSchema,
+} from "db/public";
+import { NO_STAGE_OPTION } from "db/types";
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
@@ -1222,6 +1230,14 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	onlyTitles?: boolean;
 	trx?: typeof db;
 	filters?: Filter;
+	/**
+	 * Constraints on which pub types the user/token has access to. Will also filter related pubs.
+	 */
+	allowedPubTypes?: PubTypesId[];
+	/**
+	 * Constraints on which stages the user/token has access to. Will also filter related pubs.
+	 */
+	allowedStages?: StageConstraint[];
 }
 
 // TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
@@ -1232,6 +1248,7 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	| {
 			pubId: PubsId;
+			pubIds?: never;
 			pubTypeId?: never;
 			stageId?: never;
 			communityId: CommunitiesId;
@@ -1239,8 +1256,18 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	  }
 	| {
 			pubId?: never;
-			pubTypeId?: PubTypesId;
-			stageId?: StagesId;
+			/**
+			 * Multiple pubIds to filter by
+			 */
+			pubIds?: PubsId[];
+			/**
+			 * Requested pub types. Allowed pubtypes the user/token has access to should be put in options
+			 */
+			pubTypeId?: PubTypesId[];
+			/**
+			 * Requested stages. Allowed stages the user/token has access to should be put in options
+			 */
+			stageId?: StageConstraint[];
 			communityId: CommunitiesId;
 			userId?: UsersId;
 	  };
@@ -1295,11 +1322,21 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		withMembers,
 		trx,
 		withLegacyAssignee,
+		allowedPubTypes,
+		allowedStages,
 	} = opts;
 
 	if (depth < 1) {
 		throw new Error("Depth must be a positive number");
 	}
+
+	const topLevelPubTypeFilter = Array.from(
+		new Set([...(props.pubTypeId ?? []), ...(allowedPubTypes ?? [])])
+	);
+
+	const topLevelStageFilter = Array.from(
+		new Set([...(props.stageId ?? []), ...(allowedStages ?? [])])
+	);
 
 	const result = await autoCache(
 		trx
@@ -1371,6 +1408,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 									)
 								)
 								.leftJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
+								.$if(Boolean(allowedStages?.length), (qb) =>
+									qb.where((eb) =>
+										stagesWhere(eb, allowedStages!, "PubsInStages.stageId")
+									)
+								)
 								.where((eb) =>
 									eb.exists(
 										eb.selectFrom("capabilities" as any).where((ebb) => {
@@ -1444,6 +1486,13 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 											)
 										)
 										.select("pub_values.relatedPubId")
+								)
+								// filter out pubtypes the user does not have access to
+								// we don't filter by props.pubTypeId here, as when a user looks up say all Submissions and their related values,
+								// we want to show all related values regardless of the pub type of the related pub
+								// TODO: maybe add an option to filter related pubs by pub type?
+								.$if(Boolean(allowedPubTypes), (qb) =>
+									qb.where("pubs.pubTypeId", "in", allowedPubTypes!)
 								)
 								.select([
 									"pubs.id as pubId",
@@ -1620,13 +1669,33 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								)
 						)
 					)
-					.$if(Boolean(props.pubId), (qb) => qb.where("pubs.id", "=", props.pubId!))
-					.$if(Boolean(props.stageId), (qb) =>
-						qb.where("PubsInStages.stageId", "=", props.stageId!)
+					.$if(!!props.pubId, (qb) => qb.where("pubs.id", "=", props.pubId!))
+					.$if(!!props.pubIds && props.pubIds.length > 0, (qb) =>
+						qb.where("pubs.id", "in", props.pubIds!)
 					)
-					.$if(Boolean(props.pubTypeId), (qb) =>
-						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
+					// stage filter
+					// we need to do these checks separately bc just bc you are only allowed to see
+					// some stages, doesn't mean you _want_ to see all stages
+					// props.stageId is the list of stages the user wants to see
+					// allowedStages is the list of stages the user is allowed to see
+					.$if(Boolean(props.stageId?.length), (qb) =>
+						qb.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"))
 					)
+					.$if(Boolean(allowedStages?.length), (qb) =>
+						qb.where((eb) => stagesWhere(eb, allowedStages!, "PubsInStages.stageId"))
+					)
+					// pub type filter
+					// we need to do these checks separately bc just bc you are only allowed to see
+					// some pub types, doesn't mean you _want_ to see all pub types
+					// props.pubTypeId is the list of pub types the user wants to see
+					// allowedPubTypes is the list of pub types the user is allowed to see
+					.$if(Boolean(props.pubTypeId?.length), (qb) =>
+						qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
+					)
+					.$if(Boolean(allowedPubTypes?.length), (qb) =>
+						qb.where("pubs.pubTypeId", "in", allowedPubTypes!)
+					)
+					// pub value filter
 					.$if(Boolean(options?.filters), (qb) =>
 						qb.where((eb) => applyFilters(eb, options!.filters!))
 					)
@@ -1678,6 +1747,39 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
 								"pv.rank",
 							])
+							.$if(Boolean(allowedPubTypes?.length), (qb) =>
+								qb
+									.leftJoin(
+										"pubs as related_pubs",
+										"related_pubs.id",
+										"pv.relatedPubId"
+									)
+									.where((eb) =>
+										eb.or([
+											eb("related_pubs.pubTypeId", "is", null),
+											eb("related_pubs.pubTypeId", "in", allowedPubTypes!),
+										])
+									)
+							)
+							.$if(Boolean(allowedStages?.length), (qb) =>
+								qb
+									.leftJoin(
+										"PubsInStages as related_pubs_in_stages",
+										"related_pubs_in_stages.pubId",
+										"pv.relatedPubId"
+									)
+									.where((eb) =>
+										eb.or([
+											// shouldnt check for stages for normal pub values
+											eb("pv.relatedPubId", "is", null),
+											stagesWhere(
+												eb,
+												allowedStages!,
+												"related_pubs_in_stages.stageId"
+											),
+										])
+									)
+							)
 					).as("values")
 				)
 			)
@@ -1855,23 +1957,39 @@ export const getPubTitle = (pubId: PubsId, trx = db) =>
 		.select("pub_values.value as title")
 		.$narrowType<{ title: string }>();
 
+export const stagesWhere = <EB extends ExpressionBuilder<any, any>>(
+	eb: EB,
+	stages: StageConstraint[],
+	column: string
+) => {
+	const { noStage, stageIds } = Object.groupBy(stages, (stage) =>
+		stage === NO_STAGE_OPTION.value ? "noStage" : "stageIds"
+	);
+	return eb.or([
+		...(stageIds && stageIds.length > 0 ? [eb(column, "in", stageIds as StagesId[])] : []),
+		...(noStage ? [eb(column, "is", null)] : []),
+	]);
+};
+
 /**
  * Get the number of pubs in a community, optionally additionally filtered by stage and pub type
  */
 export const getPubsCount = async (props: {
 	communityId: CommunitiesId;
-	stageId?: StagesId;
-	pubTypeId?: PubTypesId;
+	stageId?: StageConstraint[];
+	pubTypeId?: PubTypesId[];
 }): Promise<number> => {
 	const pubs = await db
 		.selectFrom("pubs")
 		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props.stageId), (qb) =>
-			qb
+		.$if(Boolean(props?.stageId?.length), (qb) => {
+			return qb
 				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where("PubsInStages.stageId", "=", props.stageId!)
+				.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"));
+		})
+		.$if(Boolean(props.pubTypeId?.length), (qb) =>
+			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
 		)
-		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "=", props.pubTypeId!))
 		.select((eb) => eb.fn.countAll<number>().as("count"))
 		.executeTakeFirstOrThrow();
 

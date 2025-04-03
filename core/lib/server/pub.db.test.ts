@@ -46,6 +46,7 @@ const seed = createSeed({
 				stageEditor: MemberRole.editor,
 			},
 		},
+		"Stage 2": {},
 	},
 	pubs: [
 		{
@@ -556,21 +557,27 @@ describe("getPubsWithRelatedValues", () => {
 
 		expect(allPubs.length).toBe(4);
 
-		const [minimalPubs, pubsInStage1, basicPubsInStage1] = await Promise.all([
+		const [minimalPubs, pubsInStage1, basicPubsInStage1, pubsInNoStage] = await Promise.all([
 			getPubsWithRelatedValues(
-				{ pubTypeId: pubTypes["Minimal Pub"].id, communityId: community.id },
+				{ pubTypeId: [pubTypes["Minimal Pub"].id], communityId: community.id },
 				{ withPubType: true, depth: 10 }
 			),
 			getPubsWithRelatedValues(
-				{ stageId: stages["Stage 1"].id, communityId: community.id },
+				{ stageId: [stages["Stage 1"].id], communityId: community.id },
 				{ withStage: true, depth: 10 }
 			),
 			getPubsWithRelatedValues(
 				{
-					pubTypeId: pubTypes["Basic Pub"].id,
-					stageId: stages["Stage 1"].id,
+					pubTypeId: [pubTypes["Basic Pub"].id],
+					stageId: [stages["Stage 1"].id],
 					communityId: community.id,
 				},
+				{ withPubType: true, withStage: true, depth: 10 }
+			),
+			getPubsWithRelatedValues(
+				// passing ['no-stage'] is different from passing null,
+				// as null will just not filter by stage at all
+				{ communityId: community.id, stageId: ["no-stage"] },
 				{ withPubType: true, withStage: true, depth: 10 }
 			),
 		]);
@@ -583,6 +590,12 @@ describe("getPubsWithRelatedValues", () => {
 		expect(basicPubsInStage1.length).toBe(1);
 		expect(basicPubsInStage1[0].pubType?.id).toBe(pubTypes["Basic Pub"].id);
 		expect(basicPubsInStage1[0].stage?.id).toBe(stages["Stage 1"].id);
+
+		const allPubsWithoutStage = allPubs.filter((p) => p.stageId === null);
+		expect(pubsInNoStage.length).toBe(allPubsWithoutStage.length);
+		pubsInNoStage.forEach((p) => {
+			expect(p.stageId).toBeNull();
+		});
 	});
 
 	it("should be able to limit the amount of top-level pubs retrieved while still fetching related pubs", async () => {
@@ -928,6 +941,266 @@ describe("getPubsWithRelatedValues", () => {
 		);
 
 		expect(pub.values.length).toBe(0);
+	});
+
+	it("should be able to filter related pubs by pub type", async () => {
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { community, pubFields, pubTypes } = await seedCommunity(seed);
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "related pub title",
+								},
+							},
+						},
+						{
+							value: "test relation value 2",
+							pub: {
+								pubTypeId: pubTypes["Minimal Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "related pub title 2",
+								},
+							},
+						},
+					],
+				},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		const testGet = await getPubsWithRelatedValues({
+			pubId: pub.id,
+			communityId: community.id,
+		});
+		expect(testGet).toHaveValues([
+			{
+				value: "test title",
+			},
+			{
+				value: "test relation value",
+				relatedPub: {
+					pubTypeId: pubTypes["Basic Pub"].id,
+				},
+			},
+			{
+				value: "test relation value 2",
+				relatedPub: {
+					pubTypeId: pubTypes["Minimal Pub"].id,
+				},
+			},
+		]);
+
+		const pubWithRelatedValues = await getPubsWithRelatedValues(
+			{
+				pubId: pub.id,
+				communityId: community.id,
+			},
+			{
+				allowedPubTypes: [pubTypes["Basic Pub"].id],
+			}
+		);
+
+		expect(pubWithRelatedValues).toHaveValues([
+			{
+				value: "test title",
+			},
+			{
+				value: "test relation value",
+				relatedPub: {
+					pubTypeId: pubTypes["Basic Pub"].id,
+				},
+			},
+		]);
+	});
+
+	it("should be able to filter related pubs by stage", async () => {
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { community, pubFields, pubTypes, stages } = await seedCommunity(seed);
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+				relatedPubs: {
+					[pubFields["Some relation"].slug]: [
+						{
+							value: "test relation value",
+							pub: {
+								stageId: stages["Stage 1"].id,
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "related pub title",
+								},
+							},
+						},
+						{
+							value: "test relation value 2",
+							pub: {
+								stageId: stages["Stage 2"].id,
+								pubTypeId: pubTypes["Basic Pub"].id,
+								values: {
+									[pubFields.Title.slug]: "related pub title 2",
+								},
+							},
+						},
+						{
+							value: "test relation value 3",
+							pub: {
+								pubTypeId: pubTypes["Basic Pub"].id,
+								// no stage
+								values: {
+									[pubFields.Title.slug]: "related pub title 3",
+								},
+							},
+						},
+					],
+				},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		const pubWithRelatedValuesNoStage = await getPubsWithRelatedValues(
+			{
+				pubId: pub.id,
+				communityId: community.id,
+			},
+			{
+				allowedStages: ["no-stage"],
+			}
+		);
+
+		expect(pubWithRelatedValuesNoStage).toHaveValues([
+			{
+				value: "test title",
+			},
+			{
+				value: "test relation value 3",
+				relatedPub: {
+					stageId: null,
+				},
+			},
+		]);
+
+		const pubWithRelatedValuesStage1 = await getPubsWithRelatedValues(
+			{
+				pubId: pub.id,
+				communityId: community.id,
+			},
+			{
+				allowedStages: ["no-stage", stages["Stage 1"].id],
+			}
+		);
+
+		expect(pubWithRelatedValuesStage1).toHaveValues([
+			{
+				value: "test title",
+			},
+			{
+				value: "test relation value",
+				relatedPub: {
+					stageId: stages["Stage 1"].id,
+				},
+			},
+			{
+				value: "test relation value 3",
+				relatedPub: {
+					stageId: null,
+				},
+			},
+		]);
+
+		// should not return anything if no-stage is not allowed, as the top-level pub in not in a stage
+		await expect(
+			getPubsWithRelatedValues(
+				{
+					pubId: pub.id,
+					communityId: community.id,
+				},
+				{
+					allowedStages: [stages["Stage 2"].id],
+				}
+			)
+		).rejects.toThrow("Pub not found");
+	});
+
+	it("should get pubs with stage null if only no-stage pubs are allowed", async () => {
+		const trx = getTrx();
+		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
+		const { pubs, community, pubFields, pubTypes, stages } = await seedCommunity(
+			seed,
+			undefined,
+			trx
+		);
+
+		const { createPubRecursiveNew } = await import("./pub");
+
+		// dummy pub with a stage, all the other have no stage
+		const pub = await createPubRecursiveNew({
+			communityId: community.id,
+			body: {
+				pubTypeId: pubTypes["Basic Pub"].id,
+				stageId: stages["Stage 1"].id,
+				values: {
+					[pubFields.Title.slug]: "test title",
+				},
+			},
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		});
+
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		const pubsWithNoStage = await getPubsWithRelatedValues(
+			{
+				communityId: community.id,
+			},
+			{
+				allowedStages: ["no-stage"],
+				trx,
+			}
+		);
+
+		expect(pubsWithNoStage).toHaveLength(2);
+		expect(pubsWithNoStage.every((pub) => pub.stageId === null)).toBe(true);
+
+		// also works with singular pub
+
+		const pubWithNoStage = await getPubsWithRelatedValues(
+			{
+				communityId: community.id,
+				pubIds: [pubs[1].id],
+			},
+			{
+				trx,
+				allowedStages: ["no-stage"],
+			}
+		);
+
+		expect(pubWithNoStage).toBeDefined();
+		expect(pubWithNoStage[0].stageId).toBe(null);
 	});
 });
 

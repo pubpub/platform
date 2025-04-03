@@ -797,11 +797,16 @@ describe("pub_values_history trigger", () => {
 			const trx = getTrx();
 
 			const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-			const { pubFields, pubs, users, actions, apiToken } = await seedCommunity(
-				multiCommunityTestSeed,
+			const { pubFields, pubs, users, actions } = await seedCommunity(
 				{
-					withApiToken: token,
+					...multiCommunityTestSeed,
+					apiTokens: {
+						allToken: {
+							id: token,
+						},
+					},
 				},
+				undefined,
 				trx
 			);
 
