@@ -53,7 +53,6 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 						<FormLabel>Pub Type</FormLabel>
 						<MultiSelect
 							className="bg-white"
-							value={[]}
 							options={pubTypes.map((pubType) => ({
 								value: pubType.id,
 								label: pubType.name,
