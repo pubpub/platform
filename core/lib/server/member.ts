@@ -2,6 +2,7 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
+	CommunityMembershipsId,
 	FormsId,
 	MemberRole,
 	NewCommunityMemberships,
@@ -10,10 +11,48 @@ import type {
 	UsersId,
 } from "db/public";
 
+import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { SAFE_USER_SELECT } from "./user";
+
+/**
+ * Either get a membership by its community membership id, or all memberships by userId and communityId
+ * TODO: this should probably return a user with the community memberships attached
+ */
+export const selectCommunityMemberships = (
+	props: XOR<{ id: CommunityMembershipsId }, { userId: UsersId; communityId: CommunitiesId }>,
+	trx = db
+) => {
+	return autoCache(
+		trx
+			.selectFrom("community_memberships")
+			.select((eb) => [
+				"community_memberships.id",
+				"community_memberships.userId",
+				"community_memberships.createdAt",
+				"community_memberships.updatedAt",
+				"community_memberships.role",
+				"community_memberships.communityId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "community_memberships.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.$if(Boolean(props.userId), (eb) =>
+				eb.where("community_memberships.userId", "=", props.userId!)
+			)
+			.$if(Boolean(props.communityId), (eb) =>
+				eb.where("community_memberships.communityId", "=", props.communityId!)
+			)
+			.$if(Boolean(props.id), (eb) => eb.where("community_memberships.id", "=", props.id!))
+	);
+};
 
 export const selectAllCommunityMemberships = (
 	{ communityId }: { communityId: CommunitiesId },
