@@ -3,6 +3,8 @@
 import { Button } from "ui/button";
 import { cn } from "utils";
 
+import { useIsChanged } from "./useIsChanged";
+
 type Props = {
 	form: string;
 	className?: string;
@@ -10,6 +12,7 @@ type Props = {
 };
 
 export const SaveFormButton = ({ form, className, disabled }: Props) => {
+	const [isChanged] = useIsChanged();
 	return (
 		<Button
 			variant="default"
@@ -18,7 +21,7 @@ export const SaveFormButton = ({ form, className, disabled }: Props) => {
 			form={form}
 			type="submit"
 			data-testid="save-form-button"
-			disabled={disabled}
+			disabled={!isChanged}
 		>
 			Save
 		</Button>
