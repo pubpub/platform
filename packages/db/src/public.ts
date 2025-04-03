@@ -17,7 +17,6 @@ export * from "./public/ElementType";
 export * from "./public/Event";
 export * from "./public/FormAccessType";
 export * from "./public/FormElements";
-export * from "./public/FormMemberships";
 export * from "./public/Forms";
 export * from "./public/InputComponent";
 export * from "./public/MemberGroups";

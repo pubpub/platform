@@ -36,7 +36,6 @@ Table users {
   actionRuns action_runs [not null]
   ApiAccessToken api_access_tokens [not null]
   Session sessions [not null]
-  formMemberships form_memberships [not null]
   communityMemberships community_memberships [not null]
   pubMemberships pub_memberships [not null]
   stageMemberships stage_memberships [not null]
@@ -99,7 +98,6 @@ Table pubs {
   actionRuns action_runs [not null]
   relatedValues pub_values [not null]
   members pub_memberships [not null]
-  formMemberships form_memberships [not null]
 }
 
 Table pub_fields {
@@ -229,7 +227,6 @@ Table member_groups {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   users users [not null]
-  formMemberships form_memberships [not null]
   communityMemberships community_memberships [not null]
   pubMemberships pub_memberships [not null]
   stageMemberships stage_memberships [not null]
@@ -278,25 +275,6 @@ Table stage_memberships {
   formId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-}
-
-Table form_memberships {
-  id String [pk]
-  form forms [not null]
-  formId String [not null]
-  user users
-  userId String
-  memberGroup member_groups
-  memberGroupId String
-  pub pubs
-  pubId String
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [default: `now()`, not null]
-
-  indexes {
-    (formId, userId, pubId) [unique]
-    (formId, memberGroupId, pubId) [unique]
-  }
 }
 
 Table action_instances {
@@ -360,7 +338,6 @@ Table forms {
   isDefault Boolean [not null, default: false]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-  members form_memberships [not null]
   StageMembership stage_memberships [not null]
   CommunityMembership community_memberships [not null]
   PubMembership pub_memberships [not null]
@@ -599,7 +576,6 @@ Enum MembershipType {
   community
   stage
   pub
-  form
 }
 
 Ref: pub_values_history.userId > users.id
@@ -669,14 +645,6 @@ Ref: stage_memberships.userId > users.id [delete: Cascade]
 Ref: stage_memberships.memberGroupId > member_groups.id [delete: Cascade]
 
 Ref: stage_memberships.formId > forms.id [delete: Cascade]
-
-Ref: form_memberships.formId > forms.id [delete: Cascade]
-
-Ref: form_memberships.userId > users.id [delete: Cascade]
-
-Ref: form_memberships.memberGroupId > member_groups.id [delete: Cascade]
-
-Ref: form_memberships.pubId > pubs.id [delete: Cascade]
 
 Ref: action_instances.stageId > stages.id [delete: Cascade]
 

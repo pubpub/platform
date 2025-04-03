@@ -5,7 +5,13 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
-import { AuthTokenType, ElementType, InputComponent, StructuralFormElement } from "db/public";
+import {
+	AuthTokenType,
+	ElementType,
+	InputComponent,
+	MemberRole,
+	StructuralFormElement,
+} from "db/public";
 
 import type { XOR } from "../types";
 import type { GetPubTypesResult } from "./pubtype";
@@ -14,9 +20,9 @@ import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
 import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
+import { insertCommunityMemberships, insertPubMemberships } from "./member";
 import { getUser } from "./user";
 
 /**
@@ -78,43 +84,72 @@ export const userHasPermissionToForm = async (
 	props: XOR<{ formId: FormsId }, { formSlug: string }> &
 		XOR<{ userId: UsersId }, { email: string }> & { pubId?: PubsId }
 ) => {
-	const formPermission = await autoCache(
-		db
-			.selectFrom("form_memberships")
-			// userId / email split
-			.$if(Boolean(props.email), (eb) =>
-				eb
-					.innerJoin("users", "users.id", "form_memberships.userId")
-					.where("users.email", "=", props.email!)
-			)
-			.$if(Boolean(props.userId), (eb) =>
-				eb.where("form_memberships.userId", "=", props.userId!)
-			)
+	if (props.pubId) {
+		return Boolean(
+			await autoCache(
+				db
+					.selectFrom("pub_memberships")
+					// userId / email split
+					.$if(Boolean(props.email), (eb) =>
+						eb
+							.innerJoin("users", "users.id", "pub_memberships.userId")
+							.where("users.email", "=", props.email!)
+					)
+					.$if(Boolean(props.userId), (eb) =>
+						eb.where("pub_memberships.userId", "=", props.userId!)
+					)
 
-			// formSlug / formId split
-			.$if(Boolean(props.formSlug), (eb) =>
-				eb
-					.innerJoin("forms", "forms.id", "form_memberships.formId")
-					.where("forms.slug", "=", props.formSlug!)
-			)
-			.$if(Boolean(props.formId), (eb) =>
-				eb.where("form_memberships.formId", "=", props.formId!)
-			)
-			// pubId check
-			.$if(Boolean(props.pubId), (eb) =>
-				eb.where("form_memberships.pubId", "=", props.pubId!)
-			)
-			.select(["form_memberships.id"])
-	).executeTakeFirst();
+					// formSlug / formId split
+					.$if(Boolean(props.formSlug), (eb) =>
+						eb
+							.innerJoin("forms", "forms.id", "pub_memberships.formId")
+							.where("forms.slug", "=", props.formSlug!)
+					)
+					.$if(Boolean(props.formId), (eb) =>
+						eb.where("pub_memberships.formId", "=", props.formId!)
+					)
+					// pubId check
+					.$if(Boolean(props.pubId), (eb) =>
+						eb.where("pub_memberships.pubId", "=", props.pubId!)
+					)
+					.select("pub_memberships.id")
+			).executeTakeFirst()
+		);
+	} else {
+		return Boolean(
+			await autoCache(
+				db
+					.selectFrom("community_memberships")
+					// userId / email split
+					.$if(Boolean(props.email), (eb) =>
+						eb
+							.innerJoin("users", "users.id", "community_memberships.userId")
+							.where("users.email", "=", props.email!)
+					)
+					.$if(Boolean(props.userId), (eb) =>
+						eb.where("community_memberships.userId", "=", props.userId!)
+					)
 
-	return Boolean(formPermission);
+					// formSlug / formId split
+					.$if(Boolean(props.formSlug), (eb) =>
+						eb
+							.innerJoin("forms", "forms.id", "community_memberships.formId")
+							.where("forms.slug", "=", props.formSlug!)
+					)
+					.$if(Boolean(props.formId), (eb) =>
+						eb.where("community_memberships.formId", "=", props.formId!)
+					)
+					.select("community_memberships.id")
+			).executeTakeFirst()
+		);
+	}
 };
 
 /**
- * Gives a community member permission to a form
+ * Gives a community member access to a form
  */
-export const addMemberToForm = async (
-	props: { communityId: CommunitiesId; userId: UsersId; pubId: PubsId } & XOR<
+export const grantFormAccess = async (
+	props: { communityId: CommunitiesId; userId: UsersId; pubId?: PubsId } & XOR<
 		{ slug: string },
 		{ id: FormsId }
 	>
@@ -124,18 +159,36 @@ export const addMemberToForm = async (
 	const form = await getForm(getFormProps).executeTakeFirstOrThrow();
 
 	const existingPermission = await autoCache(
-		db
-			.selectFrom("form_memberships")
-			.selectAll("form_memberships")
-			.where("form_memberships.formId", "=", form.id)
-			.where("form_memberships.userId", "=", userId)
-			.where("form_memberships.pubId", "=", pubId)
+		pubId
+			? db
+					.selectFrom("pub_memberships")
+					.selectAll("pub_memberships")
+					.where("pub_memberships.formId", "=", form.id)
+					.where("pub_memberships.userId", "=", userId)
+					.where("pub_memberships.pubId", "=", pubId)
+			: db
+					.selectFrom("community_memberships")
+					.selectAll("community_memberships")
+					.where("community_memberships.formId", "=", form.id)
+					.where("community_memberships.userId", "=", userId)
 	).executeTakeFirst();
 
 	if (existingPermission === undefined) {
-		await autoRevalidate(
-			db.insertInto("form_memberships").values({ formId: form.id, userId, pubId })
-		).execute();
+		if (pubId) {
+			await insertPubMemberships({
+				pubId,
+				forms: [form.id],
+				role: MemberRole.contributor,
+				userId,
+			}).execute();
+		} else {
+			await insertCommunityMemberships({
+				communityId: props.communityId,
+				forms: [form.id],
+				role: MemberRole.contributor,
+				userId,
+			}).execute();
+		}
 	}
 };
 

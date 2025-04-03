@@ -39,7 +39,6 @@ model User {
   actionRuns           ActionRun[]
   ApiAccessToken       ApiAccessToken[]
   Session              Session[]
-  formMemberships      FormMembership[]
   communityMemberships CommunityMembership[]
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
@@ -125,12 +124,11 @@ model Pub {
   // do not attempt to set this manually
   title       String?
 
-  values          PubValue[]       @relation("original_pub")
-  stages          PubsInStages[]
-  actionRuns      ActionRun[]
-  relatedValues   PubValue[]       @relation("related_pub")
-  members         PubMembership[]
-  formMemberships FormMembership[]
+  values        PubValue[]      @relation("original_pub")
+  stages        PubsInStages[]
+  actionRuns    ActionRun[]
+  relatedValues PubValue[]      @relation("related_pub")
+  members       PubMembership[]
 
   searchVector Unsupported("tsvector")?
 
@@ -309,7 +307,6 @@ model MemberGroup {
   updatedAt   DateTime  @default(now()) @updatedAt
 
   users                User[]
-  formMemberships      FormMembership[]
   communityMemberships CommunityMembership[]
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
@@ -383,27 +380,6 @@ model StageMembership {
   // @@unique([stageId, userId, formId])
   // @@unique([stageId, memberGroupId, formId])
   @@map(name: "stage_memberships")
-}
-
-model FormMembership {
-  id            String       @id @default(dbgenerated("gen_random_uuid()"))
-  // Unlike other membership tables, form memberships don't have a role (yet)
-  form          Form         @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId        String
-  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-  memberGroupId String?
-  pub           Pub?         @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId         String?
-  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
-  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @default(now()) @updatedAt
-
-  @@unique([formId, userId, pubId])
-  @@unique([formId, memberGroupId, pubId])
-  @@map(name: "form_memberships")
 }
 
 model ActionInstance {
@@ -510,7 +486,6 @@ model Form {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @default(now()) @updatedAt
 
-  members             FormMembership[]
   StageMembership     StageMembership[]
   CommunityMembership CommunityMembership[]
   PubMembership       PubMembership[]
@@ -683,7 +658,6 @@ enum MembershipType {
   community
   stage
   pub
-  form
 }
 
 model MembershipCapabilities {
