@@ -11,6 +11,7 @@ import { InputRule, inputRules } from "prosemirror-inputrules";
 import { Fragment, Schema } from "prosemirror-model";
 
 import initialDoc from "../stories/initialDoc.json";
+import { createLinkRuleHandler, emailOrUriRegexBase, markdownLinkRegex } from "../utils/links";
 
 const abstract = {
 	type: "doc",
@@ -51,6 +52,26 @@ const inlineMathRule = (nodeType: NodeType) =>
 const blockMathRule = (nodeType: NodeType) =>
 	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType);
 
+const EMAIL_OR_URI_REGEX_WITH_SPACE = new RegExp(`${emailOrUriRegexBase}(?<whitespace>\\s)$`);
+
+// Given a link mark type, returns an input rule that wraps emails and URLs in link marks.
+// Typing www.example.com in the editor will produce <a href="www.example.com">www.example.com</a>
+// and typing email@example.com will produce <a href="mailto:email@example.com">email@example.com</a>
+const linkRule = (markType: MarkType) =>
+	new InputRule(EMAIL_OR_URI_REGEX_WITH_SPACE, createLinkRuleHandler(markType, undefined, true));
+
+// Rule to recognize markdown link syntax and return a link:
+// [text](https://www.example.com) -> <a href="https://www.example.com">text</a>
+const markdownLinkRule = (markType: MarkType) =>
+	new InputRule(markdownLinkRegex, (state, match, start, end) => {
+		const [_, text, url] = match;
+		const fragment = Fragment.fromArray([
+			state.schema.text(text, [state.schema.mark(markType, { href: url })]),
+			state.schema.text(" "),
+		]);
+		return state.tr.replaceWith(start, end, fragment);
+	});
+
 export default (schema: Schema) => {
 	const rules = [
 		new InputRule(/^AI please!$/, (state, match, start, end) => {
@@ -61,6 +82,8 @@ export default (schema: Schema) => {
 			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
 			return state.tr.replaceWith(start - 1, end, contentToInsert);
 		}),
+		markdownLinkRule(schema.marks.link),
+		linkRule(schema.marks.link),
 		// The order is significant here since bold uses a superset of italic (** vs * or __ vs _)
 		// Prosemirror applies the first rule that matches
 		applyMarkRule(schema.marks.strong, boldRegex),
