@@ -32,7 +32,7 @@ const isCommunityAdmin = cache(async () => {
 
 	if (!isAdminOfCommunity(user, community)) {
 		return {
-			error: "You do not have permission to invite members to this community",
+			error: "You do not have permission to manage members in this community",
 		};
 	}
 
@@ -163,14 +163,10 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		if (user?.memberships.find((m) => m.id === member.id)) {
-			return {
-				title: "Failed to remove member",
-				error: "You cannot remove yourself from the community",
-			};
-		}
-
-		const removedMember = await deleteCommunityMemberships(member.id).executeTakeFirst();
+		const removedMember = await deleteCommunityMemberships({
+			userId: member.id,
+			communityId: community.id,
+		}).executeTakeFirst();
 
 		if (!removedMember) {
 			return {

@@ -2,7 +2,6 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
-	CommunityMembershipsId,
 	FormsId,
 	MemberRole,
 	NewCommunityMemberships,
@@ -58,8 +57,18 @@ export const insertCommunityMemberships = (
 		trx.insertInto("community_memberships").values(getMembershipRows(membership)).returningAll()
 	);
 
-export const deleteCommunityMemberships = (props: CommunityMembershipsId, trx = db) =>
-	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
+export const deleteCommunityMemberships = (
+	{ userId, communityId }: { userId: UsersId; communityId: CommunitiesId },
+	trx = db
+) =>
+	autoRevalidate(
+		trx
+			.deleteFrom("community_memberships")
+			.innerJoin("users", "users.id", "community_memberships.userId")
+			.where("users.id", "=", userId)
+			.where("community_memberships.communityId", "=", communityId)
+			.returningAll()
+	);
 
 export const insertStageMemberships = (
 	membership: NewStageMemberships & { userId: UsersId; forms: FormsId[] },

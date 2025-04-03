@@ -31,7 +31,6 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 		userCan(Capabilities.removeStageMember, { type: MembershipType.stage, stageId }, user.id),
 		getMembershipForms(),
 	]);
-	console.log(members);
 
 	return (
 		<Card>
