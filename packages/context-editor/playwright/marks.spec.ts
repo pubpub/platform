@@ -101,3 +101,31 @@ test.describe("sub and superscript", () => {
 		});
 	}
 });
+
+test.describe("underline", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(BLANK_EDITOR_STORY);
+		const editor = page.locator(".ProseMirror");
+		await editor.click();
+	});
+
+	test("can use menu bar", async ({ page }) => {
+		await page.keyboard.type("hi ");
+		await page.getByRole("button", { name: "Underline" }).click();
+		await page.keyboard.type("underline");
+		await page.getByRole("button", { name: "Underline" }).click();
+		await page.keyboard.type("not underline");
+		await expect(page.locator("u")).toHaveText("underline");
+	});
+
+	test("can use menu bar to affect selection", async ({ page }) => {
+		await page.keyboard.type("hello world");
+		// Highlight the text
+		for (let i = 0; i < "world".length; i++) {
+			await page.keyboard.press("Shift+ArrowLeft");
+		}
+		await page.getByRole("button", { name: "Underline" }).click();
+		await expect(page.locator("u")).toHaveText("world");
+		await assertMenuItemActiveState({ page, name: "Underline", isActive: true });
+	});
+});
