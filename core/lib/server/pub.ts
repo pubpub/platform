@@ -1239,7 +1239,7 @@ type PubIdOrPubTypeIdOrStageIdOrCommunityId =
 	  }
 	| {
 			pubId?: never;
-			pubTypeId?: PubTypesId;
+			pubTypeId?: PubTypesId[];
 			stageId?: StagesId;
 			communityId: CommunitiesId;
 			userId?: UsersId;
@@ -1625,7 +1625,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						qb.where("PubsInStages.stageId", "=", props.stageId!)
 					)
 					.$if(Boolean(props.pubTypeId), (qb) =>
-						qb.where("pubs.pubTypeId", "=", props.pubTypeId!)
+						qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
 					)
 					.$if(Boolean(options?.filters), (qb) =>
 						qb.where((eb) => applyFilters(eb, options!.filters!))
@@ -1861,7 +1861,7 @@ export const getPubTitle = (pubId: PubsId, trx = db) =>
 export const getPubsCount = async (props: {
 	communityId: CommunitiesId;
 	stageId?: StagesId;
-	pubTypeId?: PubTypesId;
+	pubTypeId?: PubTypesId[];
 }): Promise<number> => {
 	const pubs = await db
 		.selectFrom("pubs")
@@ -1871,7 +1871,7 @@ export const getPubsCount = async (props: {
 				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
 				.where("PubsInStages.stageId", "=", props.stageId!)
 		)
-		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "=", props.pubTypeId!))
+		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "in", props.pubTypeId!))
 		.select((eb) => eb.fn.countAll<number>().as("count"))
 		.executeTakeFirstOrThrow();
 

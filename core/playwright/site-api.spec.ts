@@ -50,10 +50,15 @@ test.beforeAll(async ({ browser }) => {
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
+				Content: { schemaName: CoreSchemaType.String },
 			},
 			pubTypes: {
 				Basic: {
 					Title: { isTitle: true },
+				},
+				NotSoBasic: {
+					Title: { isTitle: true },
+					Content: { isTitle: false },
 				},
 			},
 			pubs: [
@@ -61,6 +66,13 @@ test.beforeAll(async ({ browser }) => {
 					pubType: "Basic",
 					values: {
 						Title: "what is up world",
+					},
+				},
+				{
+					pubType: "NotSoBasic",
+					values: {
+						Title: "Redwall",
+						Content: "time for a feast",
 					},
 				},
 			],
@@ -112,7 +124,7 @@ test.describe("Site API", () => {
 			});
 
 			expectStatus(pubTypesResponse, 200);
-			expect(pubTypesResponse.body).toHaveLength(1);
+			expect(pubTypesResponse.body).toHaveLength(2);
 
 			const pubType = pubTypesResponse.body[0];
 
@@ -304,6 +316,42 @@ test.describe("Site API", () => {
 			expect(response.status).toBe(200);
 			expect(responseBody).toHaveLength(1);
 			expect(responseBody[0].id).not.toBe(newPubId);
+		});
+
+		test("should be able to filter by pubTypeIds", async () => {
+			const pubTypesResponse = await client.pubTypes.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {},
+			});
+
+			expectStatus(pubTypesResponse, 200);
+			const pubTypes = pubTypesResponse.body;
+			expect(pubTypes).toHaveLength(2);
+			const pubType = pubTypes.find((pt) => pt.name === "NotSoBasic");
+			expect(pubType).toBeDefined();
+
+			const response = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: { pubTypeId: pubType!.id },
+			});
+			expectStatus(response, 200);
+
+			expect(response.body).toHaveLength(1);
+
+			// Query for both pub types
+			const response2 = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: { pubTypeId: pubTypes.map((pt) => pt.id) },
+			});
+			expectStatus(response2, 200);
+			// 2 from seed, 2 created in other tests above
+			expect(response2.body).toHaveLength(4);
 		});
 	});
 });

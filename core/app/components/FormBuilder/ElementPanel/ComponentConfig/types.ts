@@ -2,7 +2,7 @@ import type { Static } from "@sinclair/typebox";
 import type { UseFormReturn } from "react-hook-form";
 import type { componentConfigSchemas } from "schemas";
 
-import type { CoreSchemaType, InputComponent } from "db/public";
+import type { CoreSchemaType, InputComponent, PubTypesId } from "db/public";
 
 export type ComponentConfigFormProps<I extends InputComponent> = {
 	form: UseFormReturn<ConfigFormData<I>>;
@@ -14,6 +14,7 @@ export type ConfigFormData<I extends InputComponent> = {
 	required: boolean | null;
 	component: I;
 	config: Static<(typeof componentConfigSchemas)[I]>;
+	relatedPubTypes?: PubTypesId[];
 };
 
 export type FormType<I extends InputComponent> = UseFormReturn<ConfigFormData<I>>;

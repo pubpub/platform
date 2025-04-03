@@ -54,6 +54,11 @@ export const getForm = (
 						.selectFrom("form_elements")
 						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
 						.whereRef("form_elements.formId", "=", "forms.id")
+						.leftJoin(
+							"_FormElementToPubType",
+							"_FormElementToPubType.A",
+							"form_elements.id"
+						)
 						.select((eb) => [
 							"form_elements.id",
 							"form_elements.type",
@@ -70,7 +75,16 @@ export const getForm = (
 							"pub_fields.slug",
 							"pub_fields.isRelation",
 							"pub_fields.name as fieldName",
+							eb.fn
+								.coalesce(
+									eb.fn
+										.jsonAgg(eb.ref("_FormElementToPubType.B"))
+										.filterWhere("_FormElementToPubType.B", "is not", null),
+									sql`'[]'`
+								)
+								.as("relatedPubTypes"),
 						])
+						.groupBy(["form_elements.id", "pub_fields.id"])
 						.$narrowType<FormElements>()
 						.orderBy("rank")
 				).as("elements")

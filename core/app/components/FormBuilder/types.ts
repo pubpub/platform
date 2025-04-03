@@ -8,6 +8,7 @@ import {
 	formElementsIdSchema,
 	formElementsInitializerSchema,
 	formsIdSchema,
+	pubTypesIdSchema,
 } from "db/public";
 
 const baseElementSchema = z.object({
@@ -20,6 +21,7 @@ const baseElementSchema = z.object({
 	stageId: z.string().nullable().optional(),
 	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),
 	isRelation: z.boolean().nullable().default(false),
+	relatedPubTypes: pubTypesIdSchema.array().nullable().optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
