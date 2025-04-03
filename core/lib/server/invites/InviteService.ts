@@ -14,9 +14,13 @@ import { db } from "~/kysely/database";
 import { autoCache } from "~/prisma/seed/stubs/stubs";
 import { maybeWithTrx } from "..";
 import { getLoginData } from "../../authentication/loginData";
-import { selectCommunityMember } from "../member";
+import {
+	insertCommunityMember,
+	insertPubMember,
+	insertStageMember,
+	selectCommunityMember,
+} from "../member";
 import { InviteBuilderBase } from "./InviteBuilder";
-import { MembershipService } from "./MembershipService";
 
 /**
  * Collection of methods for managing invites
@@ -335,36 +339,38 @@ export namespace InviteService {
 	) {
 		assertUserIsInvitee(invite, user);
 
-		// TODO: override lower level of permissions if the user has already accepted another invite
-		if (isCommunityOnlyInvite(invite)) {
-			await MembershipService.addMemberToCommunity({
-				communityId: invite.communityId,
-				userId: user.id,
-				role: invite.communityRole,
-			}).executeTakeFirstOrThrow();
-		} else if (isPubInvite(invite)) {
-			await MembershipService.addMemberToCommunity({
-				communityId: invite.communityId,
-				userId: user.id,
-				role: invite.communityRole,
-			}).executeTakeFirstOrThrow();
-			await MembershipService.addMemberToPub({
-				pubId: invite.pubId,
-				userId: user.id,
-				role: invite.pubOrStageRole,
-			}).executeTakeFirstOrThrow();
-		} else if (isStageInvite(invite)) {
-			await MembershipService.addMemberToCommunity({
-				communityId: invite.communityId,
-				userId: user.id,
-				role: invite.communityRole,
-			}).executeTakeFirstOrThrow();
-			await MembershipService.addMemberToStage({
-				stageId: invite.stageId,
-				userId: user.id,
-				role: invite.pubOrStageRole,
-			}).executeTakeFirstOrThrow();
-		}
+		const res = await maybeWithTrx(trx, async (trx) => {
+			// TODO: override lower level of permissions if the user has already accepted another invite
+			if (isCommunityOnlyInvite(invite)) {
+				await insertCommunityMember({
+					communityId: invite.communityId,
+					userId: user.id,
+					role: invite.communityRole,
+				}).executeTakeFirstOrThrow();
+			} else if (isPubInvite(invite)) {
+				await insertCommunityMember({
+					communityId: invite.communityId,
+					userId: user.id,
+					role: invite.communityRole,
+				}).executeTakeFirstOrThrow();
+				await insertPubMember({
+					pubId: invite.pubId,
+					userId: user.id,
+					role: invite.pubOrStageRole,
+				}).executeTakeFirstOrThrow();
+			} else if (isStageInvite(invite)) {
+				await insertCommunityMember({
+					communityId: invite.communityId,
+					userId: user.id,
+					role: invite.communityRole,
+				}).executeTakeFirstOrThrow();
+				await insertStageMember({
+					stageId: invite.stageId,
+					userId: user.id,
+					role: invite.pubOrStageRole,
+				}).executeTakeFirstOrThrow();
+			}
+		});
 	}
 }
 
