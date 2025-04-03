@@ -6,6 +6,7 @@ import type {
 	Action,
 	ActionInstancesId,
 	CommunitiesId,
+	FormsId,
 	MemberRole,
 	RulesId,
 	StagesId,
@@ -16,7 +17,6 @@ import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
-import { humanReadableEvent } from "~/actions/api";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -32,8 +32,8 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { insertStageMember } from "~/lib/server/member";
-import { createRule, createRuleWithCycleCheck, removeRule, RuleError } from "~/lib/server/rules";
+import { insertStageMemberships } from "~/lib/server/member";
+import { createRuleWithCycleCheck, removeRule, RuleError } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
@@ -41,7 +41,7 @@ import {
 	removeStages,
 	updateStage,
 } from "~/lib/server/stages";
-import { createUserWithMembership } from "~/lib/server/user";
+import { createUserWithMemberships } from "~/lib/server/user";
 
 async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
 	const loginData = await getLoginData();
@@ -525,9 +525,11 @@ export const addStageMember = defineServerAction(async function addStageMember(
 	{
 		userId,
 		role,
+		forms,
 	}: {
 		userId: UsersId;
 		role: MemberRole;
+		forms: FormsId[];
 	}
 ) {
 	try {
@@ -548,7 +550,7 @@ export const addStageMember = defineServerAction(async function addStageMember(
 			};
 		}
 
-		await insertStageMember({ userId, stageId, role }).execute();
+		await insertStageMemberships({ userId, stageId, role, forms }).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
@@ -568,14 +570,16 @@ export const addUserWithStageMembership = defineServerAction(
 			email: string;
 			role: MemberRole;
 			isSuperAdmin?: boolean;
+			forms: FormsId[];
 		}
 	) {
-		await createUserWithMembership({
+		await createUserWithMemberships({
 			...data,
 			membership: {
 				stageId,
 				role: data.role,
 				type: MembershipType.stage,
+				forms: data.forms,
 			},
 		});
 	}

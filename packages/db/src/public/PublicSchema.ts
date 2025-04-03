@@ -10,7 +10,6 @@ import type { AuthTokensTable } from "./AuthTokens";
 import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
-import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
@@ -33,12 +32,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
 	_MemberGroupToUser: MemberGroupToUserTable;
 
 	auth_tokens: AuthTokensTable;
@@ -71,8 +64,6 @@ export interface PublicSchema {
 
 	stage_memberships: StageMembershipsTable;
 
-	form_memberships: FormMembershipsTable;
-
 	membership_capabilities: MembershipCapabilitiesTable;
 
 	pub_values_history: PubValuesHistoryTable;
@@ -92,4 +83,10 @@ export interface PublicSchema {
 	communities: CommunitiesTable;
 
 	move_constraint: MoveConstraintTable;
+
+	pub_fields: PubFieldsTable;
+
+	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
 }
