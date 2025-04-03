@@ -60,6 +60,7 @@ const Value = ({
 	children,
 	label,
 	onRemove,
+	isActive,
 	...props
 }: ValueProps & SortProps) => {
 	return (
