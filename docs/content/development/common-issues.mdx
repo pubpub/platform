@@ -1,0 +1,43 @@
+# Common issues
+
+## Hard to explain "Foregin key constraints failed" errors
+
+This might be a caching issue. Did you do a `pnpm reset` when the dev server was running?
+Try quitting the dev server, running `pnpm --filter core clear-cache` and then restarting the dev server.
+
+This should be a dev only error, although it might also appear when build previews are deployed (as `pnpm reset` is currently (March 25, 2025) run during the build).
+
+## Typescript dev server keeps crashing
+
+This might be due to extremely large types, but it's likely due to a bug in another VS Code extension or a bug in a Typescript extension.
+
+### `next` typescript plugin
+
+Most often, this is due to the `next` typescript plugin. Sadly, `next` does not want to disable auto adding this plugin to `core/tsconfig.json`, see https://github.com/vercel/next.js/discussions/39942.
+
+So either, we patch `next` to not do this, which can accomplished by doing something like this
+
+```diff filename=node_modules/.pnpm/next@.../node_modules/next/dist/lib/typescript/writeConfigurationDefaults.js:314
+
+      if (suggestedActions.length < 1 && requiredActions.length < 1) {
+          return;
+      }
+-     await _fs.promises.writeFile(tsConfigPath, _commentjson.stringify(userTsConfig, null, 2) + _os.default.EOL);
++    // await _fs.promises.writeFile(tsConfigPath, _commentjson.stringify(userTsConfig, null, 2) + _os.default.EOL);
+      _log.info('');
+      if (isFirstTimeSetup) {
+          _log.info(`We detected TypeScript in your project and created a ${(0, _picocolors.cyan)('tsconfig.json')} file for you.`);
+```
+
+You might also need to do the same in `node_modules/.pnpm/next@.../node_modules/next/dist/esm/lib/typescript/writeConfigurationDefaults.js` (the ESM version).
+
+Another solution is to use the VS Code version of Typescript rather than the workspace version. Do `CMD + SHIFT + P` and then `> Typescript: Select TypeScript version` and then select `Use VS Code Version`. Make sure they are both using the same version.
+
+### Rogue VS Code extensions
+
+Some common VS Code extensions can also cause issues.
+
+Ones I've observed to cause issues are:
+
+- Astro plugin
+- `better-ts-errors`

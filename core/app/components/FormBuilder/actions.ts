@@ -2,7 +2,14 @@
 
 import type { QueryCreator } from "kysely";
 
-import type { FormElementsId, FormsId, NewFormElements, PublicSchema } from "db/public";
+import type {
+	FormElementsId,
+	FormsId,
+	NewFormElements,
+	NewFormElementToPubType,
+	PublicSchema,
+	PubTypesId,
+} from "db/public";
 import { Capabilities, formElementsInitializerSchema, MembershipType } from "db/public";
 import { logger } from "logger";
 
@@ -15,6 +22,23 @@ import { ApiError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
+
+const upsertRelatedPubTypes = async (
+	values: NewFormElementToPubType[],
+	deletedRelatedPubTypes: FormElementsId[]
+) => {
+	db.transaction().execute(async (trx) => {
+		const formElementIds = [...values.map((v) => v.A), ...deletedRelatedPubTypes];
+
+		// Delete old values
+		await trx.deleteFrom("_FormElementToPubType").where("A", "in", formElementIds).execute();
+
+		// Insert new ones
+		if (values.length) {
+			await trx.insertInto("_FormElementToPubType").values(values).execute();
+		}
+	});
+};
 
 export const saveForm = defineServerAction(async function saveForm(form: FormBuilderSchema) {
 	const loginData = await getLoginData();
@@ -42,9 +66,11 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 	const { elements, formId, access } = form;
 	//todo: this logic determines what, if any updates to make. that should be determined on the
 	//frontend so we can disable the save button if there are none
-	const { upserts, deletes } = elements.reduce<{
+	const { upserts, deletes, relatedPubTypes, deletedRelatedPubTypes } = elements.reduce<{
 		upserts: NewFormElements[];
 		deletes: FormElementsId[];
+		relatedPubTypes: NewFormElementToPubType[];
+		deletedRelatedPubTypes: FormElementsId[];
 	}>(
 		(acc, element, index) => {
 			if (element.deleted) {
@@ -52,8 +78,20 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 					acc.deletes.push(element.elementId);
 				}
 			} else if (!element.elementId) {
-				// Newly created elements have no elementId
-				acc.upserts.push(formElementsInitializerSchema.parse({ formId, ...element }));
+				// Newly created elements have no elementId, so generate an id to use
+				const id = crypto.randomUUID() as FormElementsId;
+				acc.upserts.push(
+					formElementsInitializerSchema.parse({
+						formId,
+						...element,
+						id,
+					})
+				);
+				if (element.relatedPubTypes) {
+					for (const pubTypeId of element.relatedPubTypes) {
+						acc.relatedPubTypes.push({ A: id, B: pubTypeId });
+					}
+				}
 			} else if (element.updated) {
 				acc.upserts.push(
 					formElementsInitializerSchema.parse({
@@ -62,10 +100,20 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 						id: element.elementId,
 					})
 				); // TODO: only update changed columns
+				if (element.relatedPubTypes) {
+					// If we are updating to an empty array, we should clear out all related pub types
+					if (element.relatedPubTypes.length === 0) {
+						acc.deletedRelatedPubTypes.push(element.elementId);
+					} else {
+						for (const pubTypeId of element.relatedPubTypes) {
+							acc.relatedPubTypes.push({ A: element.elementId, B: pubTypeId });
+						}
+					}
+				}
 			}
 			return acc;
 		},
-		{ upserts: [], deletes: [] }
+		{ upserts: [], deletes: [], relatedPubTypes: [], deletedRelatedPubTypes: [] }
 	);
 
 	logger.info({ msg: "saving form", form, upserts, deletes });
@@ -119,6 +167,8 @@ export const saveForm = defineServerAction(async function saveForm(form: FormBui
 					.where("forms.id", "=", formId)
 			).executeTakeFirstOrThrow();
 		}
+
+		await upsertRelatedPubTypes(relatedPubTypes, deletedRelatedPubTypes);
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return { error: `An element with this label already exists. Choose a new name` };

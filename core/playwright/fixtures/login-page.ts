@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
 
+import { waitForBaseCommunityPage } from "../helpers";
+
 export class LoginPage {
 	constructor(public readonly page: Page) {}
 
@@ -15,6 +17,7 @@ export class LoginPage {
 
 	async loginAndWaitForNavigation(email: string, password: string) {
 		await this.login(email, password);
-		await this.page.waitForURL(/.*\/c\/.+\/stages.*/);
+		// await this.page.waitForURL(/.*\/c\/.+\/stages.*/);
+		await waitForBaseCommunityPage(this.page);
 	}
 }

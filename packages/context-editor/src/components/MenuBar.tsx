@@ -9,6 +9,7 @@ import {
 	CodeSquare,
 	ImagePlus,
 	Italic,
+	Link,
 	List,
 	ListOrdered,
 	Quote,
@@ -39,7 +40,7 @@ import {
 } from "../commands/blocks";
 import { insertHorizontalLine } from "../commands/horizontal";
 import { isImageActive } from "../commands/images";
-import { codeToggle, emToggle, strongToggle } from "../commands/marks";
+import { codeToggle, emToggle, linkToggle, strongToggle } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 import { ImageUploader } from "./ImageUploader";
 
@@ -90,6 +91,7 @@ const menuBlocks: MenuItem[][] = [
 		},
 	],
 	[
+		{ key: "link", name: "Link", icon: <Link {...iconProps} />, command: linkToggle },
 		{
 			key: "blockquote",
 			name: "Blockquote",

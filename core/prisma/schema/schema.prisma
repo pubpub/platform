@@ -6,14 +6,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "tracing", "omitApi", "prismaSchemaFolder"]
-}
-
 generator dbml {
-  provider = "prisma-dbml-generator"
-  output   = "."
+  provider        = "prisma-dbml-generator"
+  previewFeatures = ["prismaSchemaFolder"]
+  output          = "."
 }
 
 generator comments {
@@ -228,6 +224,7 @@ model PubType {
   fields PubFieldToPubType[]
   pubs   Pub[]
   Form   Form[]
+  formElements FormElement[]
 
   @@unique([name, communityId])
   @@map(name: "pub_types")
@@ -444,7 +441,7 @@ model ActionRun {
   sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[] @relation("source_action_run")
+  sequentialActionRuns ActionRun[]     @relation("source_action_run")
 
   @@map(name: "action_runs")
 }
@@ -480,7 +477,6 @@ enum Event {
 
 enum FormAccessType {
   private
-  inviteOnly
   public
 }
 
@@ -559,6 +555,7 @@ model FormElement {
   stageId   String?
   createdAt DateTime               @default(now())
   updatedAt DateTime               @default(now()) @updatedAt
+  relatedPubTypes PubType[]
 
   @@unique([type, label, formId])
   @@unique([fieldId, formId])

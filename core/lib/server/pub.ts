@@ -335,7 +335,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		}
 
 		if (body.members && Object.keys(body.members).length) {
-			await trx
+			const res = await trx
 				.insertInto("pub_memberships")
 				.values(
 					Object.entries(body.members).map(([userId, role]) => ({
@@ -344,6 +344,8 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 						role,
 					}))
 				)
+				// no conflict resolution is needed, as the user cannot be a member of the pub
+				// since we are just now creating the pub
 				.execute();
 		}
 		const rankedValues = await getRankedValues({
@@ -1988,6 +1990,7 @@ export const getPubsCount = async (props: {
 		.$if(Boolean(props.pubTypeId?.length), (qb) =>
 			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
 		)
+		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "in", props.pubTypeId!))
 		.select((eb) => eb.fn.countAll<number>().as("count"))
 		.executeTakeFirstOrThrow();
 

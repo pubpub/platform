@@ -719,11 +719,15 @@ export const siteApi = contract.router(
 							.optional()
 							.describe("Filter by pub ID."),
 						pubTypeId: pubTypesIdSchema
-							.or(z.array(pubTypesIdSchema))
+							.array()
+							// this is necessary bc the query parser doesn't handle single string values as arrays
+							.or(pubTypesIdSchema.transform((id) => [id]))
 							.optional()
-							.describe("Filter by pub type ID."),
+							.describe("Filter by pub type IDs."),
 						stageId: stageConstraintSchema
-							.or(z.array(stageConstraintSchema))
+							.array()
+							// this is necessary bc the query parser doesn't handle single string values as arrays
+							.or(stagesIdSchema.transform((id) => [id]))
 							.optional()
 							.describe("Filter by stage ID."),
 						limit: z.number().default(10),

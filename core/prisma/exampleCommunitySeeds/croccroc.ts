@@ -4,6 +4,7 @@ import {
 	CoreSchemaType,
 	ElementType,
 	Event,
+	FormAccessType,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
@@ -117,6 +118,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			],
 			forms: {
 				Review: {
+					access: FormAccessType.public,
 					pubType: "Evaluation",
 					elements: [
 						{
@@ -152,6 +154,12 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 								label: "Attachment",
 								help: "Please attach the file for your review here.",
 							},
+						},
+						{
+							type: ElementType.button,
+							content: `Go see your pubs :link{page='currentPub' text='here'}`,
+							label: "Submit",
+							stage: "Under Evaluation",
 						},
 					],
 				},

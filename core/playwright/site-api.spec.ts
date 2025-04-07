@@ -624,5 +624,41 @@ test.describe("Site API", () => {
 				});
 			});
 		});
+
+		test("should be able to filter by pubTypeIds", async () => {
+			const pubTypesResponse = await client.pubTypes.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: {},
+			});
+
+			expectStatus(pubTypesResponse, 200);
+			const pubTypes = pubTypesResponse.body;
+			expect(pubTypes).toHaveLength(2);
+			const pubType = pubTypes.find((pt) => pt.name === "NotSoBasic");
+			expect(pubType).toBeDefined();
+
+			const response = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: { pubTypeId: pubType!.id },
+			});
+			expectStatus(response, 200);
+
+			expect(response.body).toHaveLength(1);
+
+			// Query for both pub types
+			const response2 = await client.pubs.getMany({
+				params: {
+					communitySlug: COMMUNITY_SLUG,
+				},
+				query: { pubTypeId: pubTypes.map((pt) => pt.id) },
+			});
+			expectStatus(response2, 200);
+			// 2 from seed, 2 created in other tests above
+			expect(response2.body).toHaveLength(4);
+		});
 	});
 });
