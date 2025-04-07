@@ -84,6 +84,9 @@ catalogs:
     typescript:
       specifier: 5.7.2
       version: 5.7.2
+    use-debounce:
+      specifier: ^10.0.0
+      version: 10.0.3
     vitest:
       specifier: ^3.0.5
       version: 3.0.5
@@ -512,7 +515,7 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0
       use-debounce:
-        specifier: ^10.0.0
+        specifier: 'catalog:'
         version: 10.0.3(react@19.0.0)
       utils:
         specifier: workspace:*
@@ -844,6 +847,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.36.4
         version: 6.36.4
+      '@hookform/resolvers':
+        specifier: 'catalog:'
+        version: 3.10.0(react-hook-form@7.54.2(react@19.0.0))
       '@lezer/cpp':
         specifier: ^1.1.2
         version: 1.1.2
@@ -880,9 +886,15 @@ importers:
       '@nytimes/react-prosemirror':
         specifier: ^1.0.0
         version: 1.0.0(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.34.3)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@prosemirror-adapter/core':
+        specifier: ^0.4.0
+        version: 0.4.0
       '@prosemirror-adapter/react':
         specifier: ^0.4.0
         version: 0.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@sinclair/typebox':
+        specifier: 'catalog:'
+        version: 0.34.30
       deepmerge:
         specifier: ^4.3.1
         version: 4.3.1
@@ -949,9 +961,15 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.0.0(react@19.0.0)
+      react-hook-form:
+        specifier: 'catalog:'
+        version: 7.54.2(react@19.0.0)
       ui:
         specifier: workspace:*
         version: link:../ui
+      use-debounce:
+        specifier: 'catalog:'
+        version: 10.0.3(react@19.0.0)
       utils:
         specifier: workspace:*
         version: link:../utils
