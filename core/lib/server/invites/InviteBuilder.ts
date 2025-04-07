@@ -1,11 +1,13 @@
 import crypto from "node:crypto";
 
+import type { ExpressionBuilder } from "kysely";
+
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
 import type { Invite } from "db/types";
-import { InviteFormType, InviteStatus, MemberRole } from "db/public";
+import { formsIdSchema, InviteFormType, InviteStatus, MemberRole } from "db/public";
 import { newInviteSchema } from "db/types";
 import { expect } from "utils";
 
@@ -28,27 +30,27 @@ interface InvitedByStep {
 }
 
 interface CommunityStep {
-	forCommunity(communityId: CommunitiesId): CommunityRoleOrTargetStep;
+	forCommunity(communityId: CommunitiesId): WithRoleStep<PubStageStep> & PubStageStep;
 }
+
+type NextStep = OptionalStep | PubStageStep;
 
 // After community, can either set community role or choose a target (pub/stage)
-interface CommunityRoleOrTargetStep extends PubStageStep {
-	withRole(role: MemberRole): WithFormsStep & PubStageStep;
+interface WithRoleStep<Next extends NextStep> {
+	withRole(role: MemberRole): WithFormsStep<Next> & Next;
 }
 
-interface PubStageStep {
-	forPub(pubId: PubsId): PubStageRoleStep;
-	forStage(stageId: StagesId): PubStageRoleStep;
+interface PubStageStep extends OptionalStep {
+	forPub(pubId: PubsId): WithRoleStep<OptionalStep>;
+	forStage(stageId: StagesId): WithRoleStep<OptionalStep>;
 }
 
-interface WithFormsStep extends OptionalStep {
-	withForms(formIds: FormsId[]): OptionalStep;
+interface WithFormsStep<Next extends NextStep> extends OptionalStep {
+	withForms(formIds: FormsId[]): Next;
+	withForms(slugs: string[]): Next;
 }
 
 // If pub/stage is chosen, must set role
-interface PubStageRoleStep {
-	withRole(role: MemberRole): WithFormsStep;
-}
 
 // All optional steps after required steps are complete
 interface OptionalStep {
@@ -63,11 +65,15 @@ export class InviteBuilder
 	implements
 		InvitedByStep,
 		CommunityStep,
-		CommunityRoleOrTargetStep,
-		PubStageRoleStep,
+		WithRoleStep<NextStep>,
+		WithFormsStep<NextStep>,
+		PubStageStep,
 		OptionalStep
 {
-	private data: Partial<Invite> = {
+	private data: Partial<Invite> & {
+		pubOrStageFormSlugs?: string[];
+		communityLevelFormSlugs?: string[];
+	} = {
 		status: InviteStatus.created,
 		expiresAt: DEFAULT_EXPIRES_AT,
 		communityRole: MemberRole.contributor,
@@ -101,43 +107,61 @@ export class InviteBuilder
 		return this;
 	}
 
-	forCommunity(communityId: CommunitiesId): CommunityRoleOrTargetStep {
+	forCommunity(communityId: CommunitiesId): WithRoleStep<PubStageStep> & PubStageStep {
 		this.data.communityId = communityId;
-		return this;
+		return this as WithRoleStep<PubStageStep> & PubStageStep;
 	}
 
-	forPub(pubId: PubsId): PubStageRoleStep {
+	forPub(pubId: PubsId): WithRoleStep<OptionalStep> {
 		this.data.pubId = pubId;
 		this.data.stageId = null;
 		return this;
 	}
 
-	forStage(stageId: StagesId): PubStageRoleStep {
+	forStage(stageId: StagesId): WithRoleStep<OptionalStep> {
 		this.data.stageId = stageId;
 		this.data.pubId = null;
 		return this;
 	}
 
-	withRole(role: MemberRole): WithFormsStep {
+	withRole(role: MemberRole): WithFormsStep<NextStep> & NextStep {
 		if (this.data.pubId || this.data.stageId) {
 			this.data.pubOrStageRole = role;
 		} else {
 			this.data.communityRole = role;
 		}
+
 		return this;
+	}
+
+	withForms(forms: FormsId[] | string[]): NextStep {
+		const uuids = forms.map((form) => formsIdSchema.safeParse(form).data);
+
+		const hasUuids = uuids.some((uuid) => uuid != null);
+		const hasSlugs = uuids.some((slug) => slug == null);
+
+		if (hasUuids && hasSlugs) {
+			throw new Error("Cannot provide both uuids and slugs");
+		}
+
+		if (this.data.pubId || this.data.stageId) {
+			if (hasUuids) {
+				this.data.pubOrStageFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+			} else {
+				this.data.pubOrStageFormSlugs = forms;
+			}
+		} else {
+			if (hasUuids) {
+				this.data.communityLevelFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+			} else {
+				this.data.communityLevelFormSlugs = forms;
+			}
+		}
+		return this as NextStep;
 	}
 
 	withMessage(message: string): OptionalStep {
 		this.data.message = message;
-		return this;
-	}
-
-	withForms(formIds: FormsId[]): OptionalStep {
-		if (this.data.pubId || this.data.stageId) {
-			this.data.pubOrStageFormIds = formIds;
-		} else {
-			this.data.communityLevelFormIds = formIds;
-		}
 		return this;
 	}
 
@@ -170,14 +194,31 @@ export class InviteBuilder
 
 		this.data.lastModifiedBy = lastModifiedBy;
 
+		const {
+			communityLevelFormIds,
+			pubOrStageFormIds,
+			communityLevelFormSlugs,
+			pubOrStageFormSlugs,
+			...preValidatedData
+		} = this.data;
+		const communityFormSlugsOrIds = [
+			...(communityLevelFormSlugs ?? []),
+			...(communityLevelFormIds ?? []),
+		];
+		const pubOrStageFormSlugsOrIds = [
+			...(pubOrStageFormSlugs ?? []),
+			...(pubOrStageFormIds ?? []),
+		];
+
 		const type =
-			this.data.pubId || this.data.stageId
+			pubOrStageFormSlugsOrIds.length > 0
 				? InviteFormType.pubOrStage
-				: this.data.communityLevelFormIds
+				: communityFormSlugsOrIds.length > 0
 					? InviteFormType.communityLevel
 					: null;
 
-		const { communityLevelFormIds, pubOrStageFormIds, ...preValidatedData } = this.data;
+		const pubsOrStageFormIdentifiersAreSlugs = Boolean(pubOrStageFormSlugs?.length);
+		const communityFormIdentifiersAreSlugs = Boolean(communityLevelFormSlugs?.length);
 
 		const data = this.validate(preValidatedData);
 
@@ -192,27 +233,52 @@ export class InviteBuilder
 				.returningAll()
 		);
 
+		const withFormSlugOrId = <EB extends ExpressionBuilder<any, any>>(
+			eb: EB,
+			identifier: string,
+			isSlug: boolean
+		) => {
+			if (!isSlug) {
+				return identifier as FormsId;
+			}
+
+			return eb
+				.selectFrom("forms")
+				.select("id")
+				.where("slug", "=", identifier)
+				.where("communityId", "=", data.communityId)
+				.limit(1);
+		};
+
 		const inviteWithForms = type
 			? inviteBase.with("invite_forms", (db) =>
 					db
 						.insertInto("invite_forms")
 						.values((eb) => [
-							...(pubOrStageFormIds?.map((formId) => ({
+							...(pubOrStageFormSlugsOrIds?.map((form) => ({
 								inviteId: eb
 									.selectFrom("invite")
 									.select("id")
 									.where("token", "=", token)
 									.limit(1),
-								formId,
+								formId: withFormSlugOrId(
+									eb,
+									form,
+									pubsOrStageFormIdentifiersAreSlugs
+								),
 								type: InviteFormType.pubOrStage,
 							})) ?? []),
-							...(communityLevelFormIds?.map((formId) => ({
+							...(communityFormSlugsOrIds?.map((formId) => ({
 								inviteId: eb
 									.selectFrom("invite")
 									.select("id")
 									.where("token", "=", token)
 									.limit(1),
-								formId,
+								formId: withFormSlugOrId(
+									eb,
+									formId,
+									communityFormIdentifiersAreSlugs
+								),
 								type: InviteFormType.communityLevel,
 							})) ?? []),
 						])

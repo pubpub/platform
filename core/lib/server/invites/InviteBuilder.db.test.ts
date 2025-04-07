@@ -155,4 +155,26 @@ describe("InviteBuilder", () => {
 			pubOrStageFormIds: [community.forms.TestForm.id],
 		});
 	});
+
+	it("can create invites with form slugs", async () => {
+		const invite = await InviteBuilder.inviteByEmail("test@test.com")
+			.invitedBy({ userId: community.users.admin.id })
+			.forCommunity(community.community.id)
+			.withRole(MemberRole.admin)
+			.withForms([community.forms.TestForm.slug])
+			.forStage(community.stages["Stage 1"].id)
+			.withRole(MemberRole.editor)
+			.withForms([community.forms.TestForm.slug])
+			.withMessage("Hello")
+			.expiresInDays(1)
+			.create();
+
+		expect(invite).toMatchObject({
+			stageId: community.stages["Stage 1"].id,
+			pubOrStageFormIds: [community.forms.TestForm.id],
+			communityLevelFormIds: [community.forms.TestForm.id],
+			expiresAt: expect.any(Date),
+			message: "Hello",
+		});
+	});
 });
