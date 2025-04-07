@@ -372,10 +372,14 @@ Table forms {
   updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   PubOrStageInvite invites [not null]
   CommunityLevelInvite invites [not null]
 >>>>>>> 3c66a42f0 (feat: properly add invite table)
+=======
+  inviteForms invite_forms [not null]
+>>>>>>> a1c3b8d4f (feat: add support for inviting users to multiple forms)
 
   indexes {
     (name, communityId) [unique]
@@ -469,16 +473,11 @@ Table invites {
   updatedAt DateTime [default: `now()`, not null]
   community communities [not null]
   communityId String [not null]
-  CommunityLevelForm forms
-  communityLevelFormId String
   communityRole MemberRole [not null, default: 'contributor']
   Pub pubs
   pubId String
   Stage stages
   stageId String
-  PubOrStageForm forms
-  pubOrStageFormId String
-  pubOrStageRole MemberRole
   message String
   lastSentAt DateTime
   status InviteStatus [not null, default: 'created']
@@ -486,6 +485,22 @@ Table invites {
   invitedByUserId String
   InvitedByActionRun action_runs
   invitedByActionRunId String
+  forms invite_forms [not null]
+}
+
+Table invite_forms {
+  invite invites [not null]
+  inviteId String [not null]
+  form forms [not null]
+  formId String [not null]
+  type InviteFormType [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (inviteId, formId, type) [pk]
+    (inviteId, formId, type) [unique]
+  }
 }
 
 >>>>>>> 3c66a42f0 (feat: properly add invite table)
@@ -664,6 +679,11 @@ Enum InviteStatus {
   revoked
 }
 
+Enum InviteFormType {
+  communityLevel
+  pubOrStage
+}
+
 Ref: invites_history.userId > users.id
 
 Ref: invites_history.apiAccessTokenId > api_access_tokens.id
@@ -780,15 +800,18 @@ Ref: invites.userId > users.id [delete: Set Null]
 
 Ref: invites.communityId > communities.id [delete: Cascade]
 
-Ref: invites.communityLevelFormId > forms.id [delete: Set Null]
-
 Ref: invites.pubId > pubs.id [delete: Set Null]
 
 Ref: invites.stageId > stages.id [delete: Set Null]
 
-Ref: invites.pubOrStageFormId > forms.id [delete: Set Null]
-
 Ref: invites.invitedByUserId > users.id [delete: Set Null]
 
 Ref: invites.invitedByActionRunId > action_runs.id [delete: Set Null]
+<<<<<<< HEAD
 >>>>>>> 3c66a42f0 (feat: properly add invite table)
+=======
+
+Ref: invite_forms.inviteId > invites.id [delete: Cascade]
+
+Ref: invite_forms.formId > forms.id [delete: Cascade]
+>>>>>>> a1c3b8d4f (feat: add support for inviting users to multiple forms)

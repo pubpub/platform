@@ -40,6 +40,9 @@ model User {
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
   PubValueHistory      PubValueHistory[]
+  Invite               Invite[]
+  Invite               Invite[]
+  InviteHistory        InviteHistory[]
 
   @@map(name: "users")
 }
@@ -100,6 +103,7 @@ model Community {
   Form           Form[]
   pubFields      PubField[]
   members        CommunityMembership[]
+  Invite         Invite[]
 
   @@map(name: "communities")
 }
@@ -129,6 +133,7 @@ model Pub {
   formMemberships FormMembership[]
 
   searchVector Unsupported("tsvector")?
+  Invite       Invite[]
 
   @@index([searchVector], type: Gin)
   @@map(name: "pubs")
@@ -221,9 +226,9 @@ model PubType {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
-  fields PubFieldToPubType[]
-  pubs   Pub[]
-  Form   Form[]
+  fields       PubFieldToPubType[]
+  pubs         Pub[]
+  Form         Form[]
   formElements FormElement[]
 
   @@unique([name, communityId])
@@ -262,6 +267,7 @@ model Stage {
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
+  Invite                Invite[]
 
   @@map(name: "stages")
 }
@@ -442,6 +448,8 @@ model ActionRun {
 
   // action runs that were triggered by this action run
   sequentialActionRuns ActionRun[]     @relation("source_action_run")
+  Invite               Invite[]
+  InviteHistory        InviteHistory[]
 
   @@map(name: "action_runs")
 }
@@ -495,13 +503,10 @@ model Form {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @default(now()) @updatedAt
 
-  members FormMembership[]
-<<<<<<< HEAD
-=======
-
-  PubOrStageInvite     Invite[] @relation("pubOrStageInvite")
-  CommunityLevelInvite Invite[] @relation("communityLevelInvite")
->>>>>>> 3c66a42f0 (feat: properly add invite table)
+  members              FormMembership[]
+  PubOrStageInvite     Invite[]         @relation("pubOrStageInvite")
+  CommunityLevelInvite Invite[]         @relation("communityLevelInvite")
+  inviteForms          InviteForm[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])
@@ -543,24 +548,24 @@ enum InputComponent {
 
 // Either a structural element like a header, hr etc. or a pubfield input
 model FormElement {
-  id        String                 @id @default(dbgenerated("gen_random_uuid()"))
-  type      ElementType
-  fieldId   String?
-  field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  formId    String
-  rank      String // Uses "C" collation
+  id              String                 @id @default(dbgenerated("gen_random_uuid()"))
+  type            ElementType
+  fieldId         String?
+  field           PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  formId          String
+  rank            String // Uses "C" collation
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
-  label     String?
-  element   StructuralFormElement?
-  component InputComponent?
-  config    Json?
-  content   String?
-  required  Boolean?
-  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
-  stage     Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId   String?
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @default(now()) @updatedAt
+  label           String?
+  element         StructuralFormElement?
+  component       InputComponent?
+  config          Json?
+  content         String?
+  required        Boolean?
+  form            Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stage           Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId         String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @default(now()) @updatedAt
   relatedPubTypes PubType[]
 
   @@unique([type, label, formId])
@@ -583,6 +588,7 @@ model ApiAccessToken {
   accessRules     ApiAccessPermission[]
   logs            ApiAccessLog[]
   PubValueHistory PubValueHistory[]
+  InviteHistory   InviteHistory[]
 
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")
@@ -683,8 +689,6 @@ model MembershipCapabilities {
   @@id([role, type, capability])
   @@map(name: "membership_capabilities")
 }
-<<<<<<< HEAD
-=======
 
 /// Status of an invite
 /// @property created - The invite has been created, but not yet sent
@@ -727,11 +731,6 @@ model Invite {
   community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
   communityId String
 
-  // which community-level form permissions, if any, should be granted to the user
-  // this is used to allow a user to fill out a form 
-  CommunityLevelForm   Form?   @relation("communityLevelInvite", fields: [communityLevelFormId], references: [id], onDelete: SetNull)
-  communityLevelFormId String?
-
   // which role should be granted to the user after they join the community
   communityRole MemberRole @default(contributor)
 
@@ -741,12 +740,6 @@ model Invite {
   pubId   String?
   Stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId String?
-
-  PubOrStageForm   Form?   @relation("pubOrStageInvite", fields: [pubOrStageFormId], references: [id], onDelete: SetNull)
-  pubOrStageFormId String?
-
-  // which role should be granted to the membership after the user joins the pub or stage
-  pubOrStageRole MemberRole?
 
   // the message that is sent in the invite. useful for resending invites
   message    String?
@@ -761,8 +754,32 @@ model Invite {
   InvitedByActionRun   ActionRun? @relation("invited_by_action_run", fields: [invitedByActionRunId], references: [id], onDelete: SetNull)
   invitedByActionRunId String?
 
+  forms InviteForm[]
+
   // this table has some constraints that make it conform to the type in `db/types/Invite.ts`
   // see core/prisma/migrations/20250402130740_create_invite_table/migration.sql for details
   @@map(name: "invites")
 }
->>>>>>> 3c66a42f0 (feat: properly add invite table)
+
+enum InviteFormType {
+  communityLevel
+  pubOrStage
+}
+
+model InviteForm {
+  invite    Invite         @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  inviteId  String
+  form      Form           @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId    String
+  type      InviteFormType
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+  // ensure pub/stage forms only exist when pub or stage is set
+
+  // has check constraint to ensure pub/stage forms only exist when pub or stage is set
+  // see core/prisma/migrations/20250407090041_reference_multiple_forms_in_invite/migration.sql for details
+
+  @@id([inviteId, formId, type])
+  @@unique([inviteId, formId, type])
+  @@map(name: "invite_forms")
+}
