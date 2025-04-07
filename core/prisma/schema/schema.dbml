@@ -478,6 +478,7 @@ Table invites {
   pubId String
   Stage stages
   stageId String
+  pubOrStageRole MemberRole
   message String
   lastSentAt DateTime
   status InviteStatus [not null, default: 'created']

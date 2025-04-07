@@ -17,8 +17,7 @@ ALTER TABLE "invites" DROP CONSTRAINT "invites_pubOrStageFormId_fkey";
 
 -- AlterTable
 ALTER TABLE "invites" DROP COLUMN "communityLevelFormId",
-DROP COLUMN "pubOrStageFormId",
-DROP COLUMN "pubOrStageRole";
+DROP COLUMN "pubOrStageFormId";
 
 -- CreateTable
 CREATE TABLE "invite_forms" (

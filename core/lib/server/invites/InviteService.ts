@@ -11,16 +11,18 @@ import { InviteStatus } from "db/public";
 import { compareMemberRoles } from "db/types";
 
 import { db } from "~/kysely/database";
+import { env } from "~/lib/env/env.mjs";
 import { autoCache } from "~/prisma/seed/stubs/stubs";
 import { maybeWithTrx } from "..";
 import { getLoginData } from "../../authentication/loginData";
+import { getCommunitySlug } from "../cache/getCommunitySlug";
 import {
 	insertCommunityMember,
 	insertPubMember,
 	insertStageMember,
 	selectCommunityMember,
 } from "../member";
-import { InviteBuilderBase } from "./InviteBuilder";
+import { InviteBuilder } from "./InviteBuilder";
 
 /**
  * Collection of methods for managing invites
@@ -82,14 +84,14 @@ export namespace InviteService {
 	 * Invite a non-user by email. If the email is already assigned to a user, that specific user will be invited instead.
 	 */
 	export function inviteEmail(email: string) {
-		return InviteBuilderBase.create().forEmail(email);
+		return InviteBuilder.inviteByEmail(email);
 	}
 
 	/**
 	 * Invite a specific user
 	 */
 	export function inviteUser(userId: UsersId) {
-		return InviteBuilderBase.create().forUser(userId);
+		return InviteBuilder.inviteByUser(userId);
 	}
 
 	// The rest of the service methods for managing invites
@@ -199,7 +201,7 @@ export namespace InviteService {
 	/**
 	 * User cannot be invited to a community if they are already a member of the community
 	 */
-	async function canUserBeInvited(userId: UsersId, communityId: CommunitiesId, trx = db) {
+	export async function canUserBeInvited(userId: UsersId, communityId: CommunitiesId, trx = db) {
 		const communityMember = await selectCommunityMember(
 			{ userId, communityId },
 			trx
@@ -371,6 +373,18 @@ export namespace InviteService {
 				}).executeTakeFirstOrThrow();
 			}
 		});
+	}
+
+	export async function createSignupLink(invite: Invite) {
+		const communitySlug = await getCommunitySlug();
+
+		return `${env.PUBPUB_URL}/c/${communitySlug}/public/signup?invite=${invite.token}`;
+	}
+
+	export function createInviteLink(invite: Invite, path: string) {
+		const url = new URL(path, env.PUBPUB_URL);
+		url.searchParams.set("invite", invite.token);
+		return url.toString();
 	}
 }
 

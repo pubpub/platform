@@ -23,6 +23,7 @@ export * from "./public/Forms";
 export * from "./public/InputComponent";
 export * from "./public/Invites";
 export * from "./public/InviteForms";
+export * from "./public/InviteFormType";
 export * from "./public/InviteStatus";
 export * from "./public/MemberGroups";
 export * from "./public/MemberGroupToUser";

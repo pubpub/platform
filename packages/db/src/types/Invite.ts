@@ -1,17 +1,6 @@
 import { z } from "zod";
 
-import type {
-	ActionRunsId,
-	CommunitiesId,
-	FormsId,
-	Invites,
-	InvitesId,
-	NewInvites,
-	PubsId,
-	StagesId,
-	UsersId,
-} from "../public";
-import type { LastModifiedBy } from "./LastModifiedBy";
+import type { Invites, NewInvites } from "../public";
 import {
 	actionRunsIdSchema,
 	communitiesIdSchema,
@@ -25,91 +14,6 @@ import {
 } from "../public";
 import { InviteStatus } from "../public/InviteStatus";
 import { lastModifiedBySchema } from "./LastModifiedBy";
-
-// type EmailOrUserId =
-// 	| {
-// 			email: string;
-// 			userId: null;
-// 	  }
-// 	| {
-// 			email: null;
-// 			userId: UsersId;
-// 	  };
-
-// type PubOrStage =
-// 	| {
-// 			pubId: PubsId;
-// 			pubOrStageFormId: FormsId | null;
-// 			stageId: null;
-// 			pubOrStageRole: MemberRole;
-// 	  }
-// 	| {
-// 			pubId: null;
-// 			pubOrStageFormId: FormsId | null;
-// 			stageId: StagesId;
-// 			pubOrStageRole: MemberRole;
-// 	  }
-// 	| {
-// 			pubId: null;
-// 			pubOrStageFormId: null;
-// 			stageId: null;
-// 			pubOrStageRole: null;
-// 	  };
-
-// type InvitedBy =
-// 	| {
-// 			invitedByUserId: UsersId;
-// 			invitedByActionRunId: null;
-// 	  }
-// 	| {
-// 			invitedByUserId: null;
-// 			invitedByActionRunId: ActionRunsId;
-// 	  };
-
-// type LastSentAtStatus =
-// 	| {
-// 			lastSentAt: Date;
-// 			status:
-// 				| InviteStatus.accepted
-// 				| InviteStatus.pending
-// 				| InviteStatus.rejected
-// 				| InviteStatus.revoked;
-// 	  }
-// 	| {
-// 			lastSentAt: null;
-// 			status: InviteStatus.created;
-// 	  };
-
-// type Prettify<T> = {
-// 	[K in keyof T]: T[K];
-// } & {};
-
-// export type Invite = Prettify<
-// 	{
-// 		id: InvitesId;
-
-// 		token: string;
-
-// 		expiresAt: Date;
-
-// 		createdAt: Date;
-
-// 		updatedAt: Date;
-
-// 		communityId: CommunitiesId;
-
-// 		communityRole: MemberRole;
-
-// 		communityLevelFormId: FormsId | null;
-
-// 		message: string | null;
-
-// 		lastModifiedBy: LastModifiedBy;
-// 	} & EmailOrUserId &
-// 		PubOrStage &
-// 		InvitedBy &
-// 		LastSentAtStatus
-// >;
 
 export const inviteSchema = z
 	.object({
@@ -130,7 +34,7 @@ export const inviteSchema = z
 		 * This is used to allow a user to fill out a form to join the community.
 		 * This is optional because the user may not need access to a form
 		 */
-		communityLevelFormId: formsIdSchema.nullable(),
+		communityLevelFormIds: formsIdSchema.array().nullable(),
 		/**
 		 * The message that is sent in the invite.
 		 * This is optional because the user may not need a message.
@@ -168,19 +72,19 @@ export const inviteSchema = z
 		z.union([
 			z.object({
 				pubId: pubsIdSchema,
-				pubOrStageFormId: formsIdSchema.nullable(),
+				pubOrStageFormIds: formsIdSchema.array().nullable(),
 				stageId: z.null(),
 				pubOrStageRole: memberRoleSchema,
 			}),
 			z.object({
 				pubId: z.null(),
-				pubOrStageFormId: formsIdSchema.nullable(),
+				pubOrStageFormIds: formsIdSchema.array().nullable(),
 				stageId: stagesIdSchema,
 				pubOrStageRole: memberRoleSchema,
 			}),
 			z.object({
 				pubId: z.null(),
-				pubOrStageFormId: z.null(),
+				pubOrStageFormIds: z.null(),
 				stageId: z.null(),
 				pubOrStageRole: z.null(),
 			}),
@@ -236,7 +140,7 @@ const _typeTestFunc = () => {
 
 export const newInviteSchema = z
 	.object({
-		token: z.string(),
+		token: z.string().optional(),
 		expiresAt: z.date(),
 		communityId: communitiesIdSchema,
 
@@ -244,7 +148,7 @@ export const newInviteSchema = z
 		createdAt: z.date().optional(),
 		updatedAt: z.date().optional(),
 		communityRole: memberRoleSchema.default(MemberRole.contributor),
-		communityLevelFormId: formsIdSchema.nullable().optional(),
+		communityLevelFormIds: formsIdSchema.array().nullable().optional(),
 		message: z.string().nullable().optional(),
 		lastModifiedBy: lastModifiedBySchema,
 	})
@@ -266,19 +170,19 @@ export const newInviteSchema = z
 		z.union([
 			z.object({
 				pubId: pubsIdSchema,
-				pubOrStageFormId: formsIdSchema.nullable().optional(),
+				pubOrStageFormIds: formsIdSchema.array().nullable().optional(),
 				stageId: z.null().optional(),
 				pubOrStageRole: memberRoleSchema.optional(),
 			}),
 			z.object({
 				pubId: z.null().optional(),
-				pubOrStageFormId: formsIdSchema.nullable().optional(),
+				pubOrStageFormIds: formsIdSchema.array().nullable().optional(),
 				stageId: stagesIdSchema,
 				pubOrStageRole: memberRoleSchema.optional(),
 			}),
 			z.object({
 				pubId: z.null().optional(),
-				pubOrStageFormId: z.null().optional(),
+				pubOrStageFormIds: z.null().optional(),
 				stageId: z.null().optional(),
 				pubOrStageRole: z.null().optional(),
 			}),

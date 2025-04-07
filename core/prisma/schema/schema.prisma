@@ -741,6 +741,8 @@ model Invite {
   Stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId String?
 
+  pubOrStageRole MemberRole?
+
   // the message that is sent in the invite. useful for resending invites
   message    String?
   // when is the message last sent. total send count is kept track of by the invite history table

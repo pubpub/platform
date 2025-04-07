@@ -1,8 +1,11 @@
 import crypto from "node:crypto";
 
+import { sql } from "kysely";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
+
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
-import type { Invite, LastModifiedBy } from "db/types";
-import { InviteStatus, MemberRole } from "db/public";
+import type { Invite } from "db/types";
+import { InviteFormType, InviteStatus, MemberRole } from "db/public";
 import { newInviteSchema } from "db/types";
 import { expect } from "utils";
 
@@ -12,442 +15,232 @@ import { maybeWithTrx } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import * as Email from "~/lib/server/email";
 import { getUser } from "~/lib/server/user";
+import { autoRevalidate } from "../cache/autoRevalidate";
+import { withInvitedFormIds } from "./helpers";
 
 const BYTES_LENGTH = 16;
 
 const DEFAULT_EXPIRES_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-/**
- * These steps ca be "shortcut" to at different places.
- * It's useful to define them separately to make sure we are implementing them the same
- * and so that the JSDoc stays the same
- */
-
-interface ExpiresStep {
-	/**
-	 * Set the expiration date  to the default
-	 * After this you will need to create and/or send the invite
-	 */
-	expiresDefault(): CreateBuilder;
-
-	/**
-	 * Set the expiration date to a specific date
-	 * After this you will need to create and/or send the invite
-	 */
-	expires(date: Date): CreateBuilder;
-
-	/**
-	 * Set the expiration date to a specific number of days from now
-	 * After this you will need to create and/or send the invite
-	 */
-	expiresInDays(days: number): CreateBuilder;
+// Required initial steps
+interface InvitedByStep {
+	invitedBy(inviter: { userId: UsersId } | { actionRunId: ActionRunsId }): CommunityStep;
 }
 
-interface WithMessageStep {
-	/**
-	 * Specify a custom message to include in the invite. This will overwrite the default text of the invite.
-	 *
-	 * Defaults are (user is not yet member):
-	 * - Community only: "You are invited to join {community} on {platform}." (if memberrole !== contributor) + "as a {memberrole}"
-	 * - Pub: "You are invited to join {community} on {platform} and {MemberRole} to {pub}."
-	 * - Form: "You are invited to join {community} on {platform} and fill out {form}."
-	 * - Stage: "You are invited to join {community} on {platform} and {memberole} to {stage}."
-	 *
-	 * Defaults are (user is already member):
-	 * - Community only: "You are invited to become a {memberrole} of {community} on {platform}."
-	 * - Pub: "You are invited to become a {MemberRole} to {pub}."
-	 * - Form: "You are invited to become a {MemberRole} to fill out {form}."
-	 * - Stage: "You are invited to become a {MemberRole} to {stage}."
-	 *
-	 * If a user is creating the invite directly, instead of "You are invited", it will say "{User} invited you"
-	 */
-	withMessage(message: string): ExpiresBuilder;
+interface CommunityStep {
+	forCommunity(communityId: CommunitiesId): CommunityRoleOrTargetStep;
 }
 
-/**
- * Do not call this class directly. Use the static methods on {@link InviteService} instead.
- */
-export class InviteBuilderBase {
-	static create(): InviteBuilderBase {
-		return new InviteBuilderBase({
-			status: InviteStatus.pending,
-			expiresAt: DEFAULT_EXPIRES_AT,
-		});
-	}
-
-	constructor(private inviteData: Pick<Invite, "status" | "expiresAt">) {}
-
-	forEmail(email: string): InvitedByBuilder {
-		return new InvitedByBuilder({
-			...this.inviteData,
-			email,
-			userId: null,
-		});
-	}
-
-	forUser(userId: UsersId): InvitedByBuilder {
-		return new InvitedByBuilder({
-			...this.inviteData,
-			userId,
-			email: null,
-		});
-	}
+// After community, can either set community role or choose a target (pub/stage)
+interface CommunityRoleOrTargetStep extends PubStageStep {
+	withRole(role: MemberRole): WithFormsStep & PubStageStep;
 }
 
-class InvitedByBuilder {
-	constructor(private inviteData: Pick<Invite, "status" | "expiresAt" | "email" | "userId">) {}
-
-	invitedByUserId(userId: UsersId): InviteBuilderWithUser {
-		return new InviteBuilderWithUser({
-			...this.inviteData,
-			invitedByUserId: userId,
-			invitedByActionRunId: null,
-		});
-	}
-
-	invitedByActionRunId(actionRunId: ActionRunsId): InviteBuilderWithUser {
-		return new InviteBuilderWithUser({
-			...this.inviteData,
-			invitedByActionRunId: actionRunId,
-			invitedByUserId: null,
-		});
-	}
+interface PubStageStep {
+	forPub(pubId: PubsId): PubStageRoleStep;
+	forStage(stageId: StagesId): PubStageRoleStep;
 }
 
-/**
- * After specifying user you must specify a community
- */
-class InviteBuilderWithUser {
-	constructor(
-		private inviteData: Pick<
-			Invite,
-			"email" | "userId" | "status" | "expiresAt" | "invitedByUserId" | "invitedByActionRunId"
-		>
-	) {}
-
-	/**
-	 * The community the user should be invited to
-	 */
-	forCommunity(communityId: CommunitiesId): InviteBuilderWithCommunity {
-		return new InviteBuilderWithCommunity({
-			...this.inviteData,
-			communityId,
-		});
-	}
+interface WithFormsStep extends OptionalStep {
+	withForms(formIds: FormsId[]): OptionalStep;
 }
 
-/**
- * After specifying community you may specify a role
- */
-class InviteBuilderWithCommunity implements ExpiresStep, WithMessageStep {
-	constructor(
-		private inviteData: Pick<
-			Invite,
-			| "email"
-			| "userId"
-			| "communityId"
-			| "status"
-			| "expiresAt"
-			| "invitedByUserId"
-			| "invitedByActionRunId"
-		> & {
-			communityRole?: MemberRole;
-			communityLevelFormId?: FormsId;
+// If pub/stage is chosen, must set role
+interface PubStageRoleStep {
+	withRole(role: MemberRole): WithFormsStep;
+}
+
+// All optional steps after required steps are complete
+interface OptionalStep {
+	withMessage(message: string): OptionalStep;
+	expiresAt(date: Date): OptionalStep;
+	expiresInDays(days: number): OptionalStep;
+	create(trx?: typeof db): Promise<Invite>;
+	createAndSend(trx?: typeof db): Promise<Invite>;
+}
+
+export class InviteBuilder
+	implements
+		InvitedByStep,
+		CommunityStep,
+		CommunityRoleOrTargetStep,
+		PubStageRoleStep,
+		OptionalStep
+{
+	private data: Partial<Invite> = {
+		status: InviteStatus.created,
+		expiresAt: DEFAULT_EXPIRES_AT,
+		communityRole: MemberRole.contributor,
+	};
+
+	// private constructor to force using static methods
+	private constructor() {}
+
+	static inviteByEmail(email: string): InvitedByStep {
+		const builder = new InviteBuilder();
+		builder.data.email = email;
+		builder.data.userId = null;
+		return builder;
+	}
+
+	static inviteByUser(userId: UsersId): InvitedByStep {
+		const builder = new InviteBuilder();
+		builder.data.userId = userId;
+		builder.data.email = null;
+		return builder;
+	}
+
+	invitedBy(inviter: { userId: UsersId } | { actionRunId: ActionRunsId }): CommunityStep {
+		if ("userId" in inviter) {
+			this.data.invitedByUserId = inviter.userId;
+			this.data.invitedByActionRunId = null;
+		} else {
+			this.data.invitedByActionRunId = inviter.actionRunId;
+			this.data.invitedByUserId = null;
 		}
-	) {}
+		return this;
+	}
 
-	/**
-	 * The role the user should gain in the community.
-	 * By default the user will be invited as a contributor.
-	 */
-	as(role: MemberRole): Omit<InviteBuilderWithCommunity, "as"> {
-		// creating a new instance but removing the 'as' method to prevent multiple calls
-		const builder = new InviteBuilderWithCommunity({
-			...this.inviteData,
-			communityRole: role,
-		});
+	forCommunity(communityId: CommunitiesId): CommunityRoleOrTargetStep {
+		this.data.communityId = communityId;
+		return this;
+	}
 
-		// remove the 'as' method
-		delete (builder as any).as;
-		if (this.inviteData.communityLevelFormId) {
-			delete (builder as any).withForm;
+	forPub(pubId: PubsId): PubStageRoleStep {
+		this.data.pubId = pubId;
+		this.data.stageId = null;
+		return this;
+	}
+
+	forStage(stageId: StagesId): PubStageRoleStep {
+		this.data.stageId = stageId;
+		this.data.pubId = null;
+		return this;
+	}
+
+	withRole(role: MemberRole): WithFormsStep {
+		if (this.data.pubId || this.data.stageId) {
+			this.data.pubOrStageRole = role;
+		} else {
+			this.data.communityRole = role;
 		}
-		return builder as Omit<InviteBuilderWithCommunity, "as">;
+		return this;
 	}
 
-	forPub(pubId: PubsId): PubStageAsTargetBuilder {
-		return new PubStageAsTargetBuilder({
-			communityRole: MemberRole.contributor,
-			...this.inviteData,
-			pubId,
-			communityLevelFormId: null,
-			stageId: null,
-		});
+	withMessage(message: string): OptionalStep {
+		this.data.message = message;
+		return this;
 	}
 
-	/**
-	 * The form the user should be invited to
-	 * You don't need to specify a role
-	 */
-	withForm(formId: FormsId) {
-		const builder = new InviteBuilderWithCommunity({
-			...this.inviteData,
-			communityLevelFormId: formId,
-		});
-
-		if (this.inviteData.communityRole) {
-			// remove the 'as' method
-			delete (builder as any).as;
+	withForms(formIds: FormsId[]): OptionalStep {
+		if (this.data.pubId || this.data.stageId) {
+			this.data.pubOrStageFormIds = formIds;
+		} else {
+			this.data.communityLevelFormIds = formIds;
 		}
-
-		delete (builder as any).withForm;
-		return builder as Omit<InviteBuilderWithCommunity, "as">;
+		return this;
 	}
 
-	/**
-	 * The stage the user should be invited to
-	 * You will need to specify a role
-	 */
-	forStage(stageId: StagesId): PubStageAsTargetBuilder {
-		return new PubStageAsTargetBuilder({
-			communityRole: MemberRole.contributor,
-			...this.inviteData,
-			stageId,
-			pubId: null,
-			communityLevelFormId: null,
-		});
+	expiresAt(date: Date): OptionalStep {
+		this.data.expiresAt = date;
+		return this;
 	}
 
-	/**
-	 * Do not invite the user to a specific object, just to the community
-	 */
-	withMessage(message: string): ExpiresBuilder {
-		return new ExpiresBuilder({
-			communityRole: MemberRole.contributor,
-			...this.inviteData,
-			message,
-			pubId: null,
-			communityLevelFormId: null,
-			pubOrStageFormId: null,
-			pubOrStageRole: null,
-			stageId: null,
-		});
+	expiresInDays(days: number): OptionalStep {
+		this.data.expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+		return this;
 	}
 
-	expiresDefault(): CreateBuilder {
-		return new CreateBuilder({
-			communityRole: MemberRole.contributor,
-			...this.inviteData,
-			message: null,
-			pubId: null,
-			communityLevelFormId: null,
-			pubOrStageFormId: null,
-			stageId: null,
-			pubOrStageRole: null,
-			expiresAt: DEFAULT_EXPIRES_AT,
-		});
+	private generateToken(): string {
+		return crypto.randomBytes(BYTES_LENGTH).toString("base64url");
 	}
 
-	expires(date: Date): CreateBuilder {
-		return new CreateBuilder({
-			communityRole: MemberRole.contributor,
-			...this.inviteData,
-			message: null,
-			pubId: null,
-			communityLevelFormId: null,
-			pubOrStageFormId: null,
-			stageId: null,
-			pubOrStageRole: null,
-			expiresAt: date,
-		});
+	private validate(data: Partial<Invite>) {
+		return newInviteSchema.parse(data);
 	}
-
-	expiresInDays(days: number): CreateBuilder {
-		return new CreateBuilder({
-			communityRole: MemberRole.contributor,
-			...this.inviteData,
-			message: null,
-			pubId: null,
-			communityLevelFormId: null,
-			pubOrStageFormId: null,
-			stageId: null,
-			pubOrStageRole: null,
-			expiresAt: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
-		});
-	}
-}
-
-// After specifying pub/stage
-class PubStageAsTargetBuilder {
-	constructor(
-		private inviteData: Pick<
-			Invite,
-			| "email"
-			| "userId"
-			| "communityId"
-			| "pubId"
-			| "stageId"
-			| "communityRole"
-			| "status"
-			| "expiresAt"
-			| "invitedByUserId"
-			| "invitedByActionRunId"
-			| "communityLevelFormId"
-		> & {
-			pubOrStageFormId?: FormsId;
-		}
-	) {}
-
-	withForm(formId: FormsId) {
-		const builder = new PubStageAsTargetBuilder({
-			...this.inviteData,
-			pubOrStageFormId: formId,
-		});
-
-		// remove the 'as' method
-		delete (builder as any).as;
-		return builder as Omit<PubStageAsTargetBuilder, "as">;
-	}
-
-	as(role: MemberRole): WithMessageBuilder {
-		return new WithMessageBuilder({
-			// gets overrden by this.inviteData if set
-			pubOrStageFormId: null,
-			...this.inviteData,
-			pubOrStageRole: role,
-		});
-	}
-}
-
-/**
- * Specify a custom message
- */
-class WithMessageBuilder implements WithMessageStep {
-	constructor(
-		private inviteData: Pick<
-			Invite,
-			| "email"
-			| "userId"
-			| "communityId"
-			| "pubId"
-			| "stageId"
-			| "communityLevelFormId"
-			| "pubOrStageFormId"
-			| "pubOrStageRole"
-			| "communityRole"
-			| "status"
-			| "expiresAt"
-			| "invitedByUserId"
-			| "invitedByActionRunId"
-		>
-	) {}
-
-	withMessage(message: string): ExpiresBuilder {
-		return new ExpiresBuilder({
-			...this.inviteData,
-			message,
-		});
-	}
-}
-
-// After specifying message
-class ExpiresBuilder implements ExpiresStep {
-	constructor(
-		private inviteData: Pick<
-			Invite,
-			| "email"
-			| "userId"
-			| "communityId"
-			| "pubId"
-			| "stageId"
-			| "communityLevelFormId"
-			| "pubOrStageFormId"
-			| "pubOrStageRole"
-			| "communityRole"
-			| "message"
-			| "invitedByUserId"
-			| "invitedByActionRunId"
-			| "status"
-			| "expiresAt"
-		>
-	) {}
-
-	expiresDefault(): CreateBuilder {
-		return new CreateBuilder({
-			...this.inviteData,
-			expiresAt: DEFAULT_EXPIRES_AT,
-		});
-	}
-
-	expires(date: Date): CreateBuilder {
-		return new CreateBuilder({
-			...this.inviteData,
-			expiresAt: date,
-		});
-	}
-
-	expiresInDays(days: number): CreateBuilder {
-		return new CreateBuilder({
-			...this.inviteData,
-			expiresAt: new Date(Date.now() + days * 24 * 60 * 60 * 1000),
-		});
-	}
-}
-
-// Final stage for creation
-class CreateBuilder {
-	constructor(
-		private inviteData: Pick<
-			Invite,
-			| "invitedByUserId"
-			| "invitedByActionRunId"
-			| "communityLevelFormId"
-			| "pubOrStageFormId"
-			| "pubId"
-			| "stageId"
-			| "communityId"
-			| "pubOrStageRole"
-			| "communityRole"
-			| "message"
-			| "expiresAt"
-			| "email"
-			| "userId"
-		>
-	) {}
 
 	async create(trx = db): Promise<Invite> {
-		const data = this.validateInputInviteData();
+		const token = this.generateToken();
 
-		const token = this.generateUniqueToken();
+		this.data.token = token;
 
-		const lastModifiedBy = data.invitedByUserId
-			? createLastModifiedBy({ userId: data.invitedByUserId })
-			: createLastModifiedBy({ actionRunId: expect(data.invitedByActionRunId) });
+		const lastModifiedBy = this.data.invitedByUserId
+			? createLastModifiedBy({ userId: this.data.invitedByUserId })
+			: createLastModifiedBy({ actionRunId: expect(this.data.invitedByActionRunId) });
 
-		const invite = await trx
-			.insertInto("invites")
-			.values({
-				...data,
-				token,
-				lastModifiedBy,
-			})
-			.returningAll()
-			.$narrowType<Invite>()
-			.executeTakeFirstOrThrow();
+		this.data.lastModifiedBy = lastModifiedBy;
 
-		return invite;
+		const type =
+			this.data.pubId || this.data.stageId
+				? InviteFormType.pubOrStage
+				: this.data.communityLevelFormIds
+					? InviteFormType.communityLevel
+					: null;
+
+		const { communityLevelFormIds, pubOrStageFormIds, ...preValidatedData } = this.data;
+
+		const data = this.validate(preValidatedData);
+
+		const inviteBase = trx.with("invite", (db) =>
+			db
+				.insertInto("invites")
+				.values({
+					...data,
+					token,
+					lastModifiedBy,
+				})
+				.returningAll()
+		);
+
+		const inviteWithForms = type
+			? inviteBase.with("invite_forms", (db) =>
+					db
+						.insertInto("invite_forms")
+						.values((eb) => [
+							...(pubOrStageFormIds?.map((formId) => ({
+								inviteId: eb
+									.selectFrom("invite")
+									.select("id")
+									.where("token", "=", token)
+									.limit(1),
+								formId,
+								type: InviteFormType.pubOrStage,
+							})) ?? []),
+							...(communityLevelFormIds?.map((formId) => ({
+								inviteId: eb
+									.selectFrom("invite")
+									.select("id")
+									.where("token", "=", token)
+									.limit(1),
+								formId,
+								type: InviteFormType.communityLevel,
+							})) ?? []),
+						])
+						.returningAll()
+				)
+			: inviteBase;
+
+		// for type safety this cast is necessary
+		const inviteFinal = (inviteWithForms as typeof inviteBase)
+			.selectFrom("invite")
+			.selectAll()
+			.select(withInvitedFormIds);
+
+		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
+
+		return result as Invite;
 	}
 
 	async createAndSend(trx = db): Promise<Invite> {
-		const result = await maybeWithTrx(trx, async (trx) => {
+		return maybeWithTrx(trx, async (trx) => {
 			const invitePromise = this.create(trx);
 
-			const userPromise = this.inviteData.userId
-				? getUser({ id: this.inviteData.userId }, trx).executeTakeFirstOrThrow()
-				: ((await getUser(
-						{ email: expect(this.inviteData.email) },
-						trx
-					).executeTakeFirst()) ?? { email: expect(this.inviteData.email) });
+			const userPromise = this.data.userId
+				? getUser({ id: this.data.userId }, trx).executeTakeFirstOrThrow()
+				: ((await getUser({ email: expect(this.data.email) }, trx).executeTakeFirst()) ?? {
+						email: expect(this.data.email),
+					});
+
 			const communityPromise = findCommunityBySlug();
 
 			const [invite, user, community] = await Promise.all([
@@ -456,7 +249,6 @@ class CreateBuilder {
 				communityPromise,
 			]);
 
-			// Send email
 			await Email.signupInvite(
 				{
 					user,
@@ -475,19 +267,5 @@ class CreateBuilder {
 
 			return invite;
 		});
-
-		return result;
-	}
-
-	/**
-	 * @throws {ZodError} if the invite data is invalid
-	 */
-	private validateInputInviteData() {
-		newInviteSchema.parse(this.inviteData);
-		return this.inviteData;
-	}
-
-	private generateUniqueToken(): string {
-		return crypto.randomBytes(BYTES_LENGTH).toString("base64url");
 	}
 }

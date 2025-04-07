@@ -11,10 +11,8 @@ export type LastModifiedBy = `${
 	| "unknown"
 	| "system"}|${number}`;
 
-export const lastModifiedBySchema = z.union([
-	z.string().regex(new RegExp(`^user:${uuidRegex.source}$`)),
-	z.string().regex(new RegExp(`^action-run:${uuidRegex.source}$`)),
-	z.string().regex(new RegExp(`^api-access-token:${uuidRegex.source}$`)),
-	z.literal("unknown"),
-	z.literal("system"),
-]) as z.ZodType<LastModifiedBy>;
+const regex = `^((user|action-run|api-access-token):${uuidRegex.source.replace(/\^|\$/g, "")}|(?:system|unknown))\|\d{13}$`;
+
+export const lastModifiedBySchema = z
+	.string()
+	.regex(new RegExp(regex)) as z.ZodType<LastModifiedBy>;
