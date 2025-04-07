@@ -19,6 +19,7 @@ import {
 	Strikethrough,
 	Subscript,
 	Superscript,
+	Underline,
 } from "lucide-react";
 
 import { Button } from "ui/button";
@@ -51,6 +52,7 @@ import {
 	strongToggle,
 	subscriptToggle,
 	superscriptToggle,
+	underlineToggle,
 } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 import { ImageUploader } from "./ImageUploader";
@@ -79,6 +81,12 @@ const menuBlocks: MenuItem[][] = [
 			name: "Italic",
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
+		},
+		{
+			key: "underline",
+			name: "Underline",
+			icon: <Underline {...iconProps} />,
+			command: underlineToggle,
 		},
 		{
 			key: "del",
