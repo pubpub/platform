@@ -1,7 +1,7 @@
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
-import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
+import { PasswordReset, RequestLinkToForm, SignupInvite, VerifyEmail } from "emails";
 
 import type { Communities, MemberRole, MembershipType, Users } from "db/public";
 import { AuthTokenType } from "db/public";
@@ -16,6 +16,7 @@ import { createFormInviteLink } from "./form";
 import { getSmtpClient } from "./mailgun";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
+const TWO_HOURS = 2 * 60 * 60 * 1000;
 
 type RequiredOptions = Required<Pick<SendMailOptions, "to" | "subject">> &
 	XOR<{ html: string }, { text: string }>;
@@ -109,6 +110,34 @@ export function passwordReset(
 			to: user.email,
 			html: email,
 			subject: "Reset your PubPub password",
+		};
+	});
+}
+
+export function verifyEmail(
+	user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
+	trx = db
+) {
+	return buildSend(async () => {
+		const magicLink = await createMagicLink(
+			{
+				type: AuthTokenType.generic,
+				expiresAt: new Date(Date.now() + TWO_HOURS),
+				// TODO: add redirect
+				path: "/verify",
+				userId: user.id,
+			},
+			trx
+		);
+
+		const email = await render(
+			<VerifyEmail firstName={user.firstName} verifyEmailLink={magicLink} />
+		);
+
+		return {
+			to: user.email,
+			html: email,
+			subject: "Verify your email",
 		};
 	});
 }

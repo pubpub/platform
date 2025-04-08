@@ -160,6 +160,41 @@ export const sendForgotPasswordMail = defineServerAction(
 	}
 );
 
+const _sendVerifyEmailMail = async (props: { email: string }) => {
+	const user = await getUserWithPasswordHash({ email: props.email });
+
+	if (!user) {
+		return {
+			success: true,
+			report: "Email verification email sent!",
+		};
+	}
+
+	const result = await Email.verifyEmail({
+		id: user.id,
+		email: user.email,
+		firstName: user.firstName,
+		lastName: user.lastName,
+	}).send();
+
+	if ("error" in result) {
+		return {
+			error: result.error,
+		};
+	}
+
+	return {
+		success: true,
+		report: result.report ?? "Email verification email sent!",
+	};
+};
+
+export const sendVerifyEmailMail = defineServerAction(async function sendVerifyEmailMail(props: {
+	email: string;
+}) {
+	_sendVerifyEmailMail(props);
+});
+
 const newPasswordSchema = z.object({
 	password: z.string().min(8),
 });
@@ -339,6 +374,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 						props.slug ??
 						generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
 					passwordHash: await createPasswordHash(props.password),
+					isVerified: false,
 				},
 				trx
 			).executeTakeFirstOrThrow((err) => {
@@ -348,7 +384,6 @@ export const publicSignup = defineServerAction(async function signup(props: {
 				);
 			});
 
-			// TODO: add to community
 			const newMember = await insertCommunityMember(
 				{
 					userId: newUser.id,
@@ -358,8 +393,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 				trx
 			).executeTakeFirstOrThrow();
 
-			// TODO: send verification email
-			return { ...newUser, needsVerification: false };
+			return { ...newUser, needsVerification: true };
 		} catch (e) {
 			if (isUniqueConstraintError(e) && e.table === "users") {
 				return SignupErrors.EMAIL_ALREADY_EXISTS({ email: props.email });
@@ -374,18 +408,16 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		return newUser;
 	}
 
-	if ("needsVerification" in newUser && newUser.needsVerification) {
-		return {
-			success: true,
-			report: "Please check your email to verify your account!",
-			needsVerification: true,
-		};
+	const verifyEmailResult = await _sendVerifyEmailMail({ email: newUser.email });
+
+	if (verifyEmailResult.error) {
+		return verifyEmailResult;
 	}
 
-	// log them in
+	// log them in with a session that requires email verification
 
 	// lucia authentication
-	const newSession = await lucia.createSession(newUser.id, { type: AuthTokenType.generic });
+	const newSession = await lucia.createSession(newUser.id, { type: AuthTokenType.verifyEmail });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
 	(await cookies()).set(
 		newSessionCookie.name,
@@ -397,10 +429,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		redirect(props.redirectTo);
 	}
 
-	await redirectUser();
-
-	// typescript cannot sense Promise<never> not returning
-	return "" as never;
+	redirect("/verify");
 });
 
 /**

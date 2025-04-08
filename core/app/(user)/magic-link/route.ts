@@ -6,6 +6,7 @@ import { NextResponse } from "next/server";
 import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
+import { db } from "~/kysely/database";
 import { lucia } from "~/lib/authentication/lucia";
 import { env } from "~/lib/env/env.mjs";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
@@ -128,6 +129,10 @@ export async function GET(req: NextRequest) {
 	}
 
 	const { user: tokenUser, authTokenType } = tokenSettled.value;
+
+	if (!tokenUser.isVerified) {
+		db.updateTable("users").set({ isVerified: true }).where("id", "=", tokenUser.id).execute();
+	}
 
 	const session = await lucia.createSession(tokenUser.id, {
 		type: authTokenType,
