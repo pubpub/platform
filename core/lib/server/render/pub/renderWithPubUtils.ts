@@ -1,11 +1,23 @@
-import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType } from "db/public";
-import { expect } from "utils";
+import type { Kysely, Transaction } from "kysely";
 
+import type { Database } from "db/Database";
+import type {
+	ActionRunsId,
+	CommunitiesId,
+	CommunityMembershipsId,
+	PubsId,
+	UsersId,
+} from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
+import { assert, expect } from "utils";
+
+import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { findCommunityBySlug } from "../../community";
 import { addMemberToForm, createFormInviteLink } from "../../form";
+import { InviteService } from "../../invites/InviteService";
 
 export type RenderWithPubRel = "self";
 
@@ -29,19 +41,26 @@ export type RenderWithPubPub = {
 	};
 };
 
+export type Recipient =
+	| {
+			id: CommunityMembershipsId;
+			user: {
+				id: UsersId;
+				firstName: string;
+				lastName: string | null;
+				email: string;
+			};
+			email?: never;
+	  }
+	| { email: string; user?: never; id?: never };
+
 export type RenderWithPubContext = {
-	recipient?: {
-		id: CommunityMembershipsId;
-		user: {
-			id: UsersId;
-			firstName: string;
-			lastName: string | null;
-			email: string;
-		};
-	};
+	recipient?: Recipient;
 	communityId: CommunitiesId;
 	communitySlug: string;
 	pub: RenderWithPubPub;
+	inviter?: XOR<{ userId: UsersId }, { actionRunId: ActionRunsId }>;
+	trx: Transaction<Database>;
 };
 
 export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const;
@@ -61,19 +80,52 @@ const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: str
 	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
 };
 
-export const renderFormInviteLink = async ({
-	formSlug,
-	userId,
-	communityId,
-	pubId,
-}: {
-	formSlug: string;
-	userId: UsersId;
-	communityId: CommunitiesId;
-	pubId: PubsId;
-}) => {
-	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
-	return createFormInviteLink({ userId, formSlug, communityId, pubId });
+export const renderFormInviteLink = async (
+	{
+		formSlug,
+		recipient,
+		communityId,
+		pubId,
+		inviter,
+	}: {
+		formSlug: string;
+		recipient: Recipient;
+		communityId: CommunitiesId;
+		pubId: PubsId;
+		inviter: XOR<{ userId: UsersId }, { actionRunId: ActionRunsId }>;
+	},
+	trx = db
+) => {
+	// this feels weird to do here
+	if (recipient.id) {
+		await addMemberToForm({ userId: recipient.user.id, communityId, pubId, slug: formSlug });
+		return createFormInviteLink(
+			{ userId: recipient.user.id, formSlug, communityId, pubId },
+			trx
+		);
+	}
+
+	const baseInvite = InviteService.inviteEmail(recipient.email);
+	const inviteWithInviter = baseInvite.invitedBy(
+		inviter.userId ? { userId: inviter.userId } : { actionRunId: inviter.actionRunId! }
+	);
+
+	const invite = await inviteWithInviter
+		.forCommunity(communityId)
+		.withRole(MemberRole.contributor)
+		.withForms([formSlug])
+		.forPub(pubId)
+		.withRole(MemberRole.contributor)
+		.withForms([formSlug])
+		.expiresInDays(30)
+		.create(trx);
+
+	const inviteLink = await InviteService.createCommunityInviteLink(
+		invite,
+		`/public/forms/${formSlug}?pubId=${pubId}`
+	);
+
+	return inviteLink;
 };
 
 export const renderMemberFields = async ({
@@ -221,16 +273,25 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	return href;
 };
 
+export const contextWithUserRecipient = (context: RenderWithPubContext) => {
+	assert(context.recipient, "Used a recipient token without specifying a recipient");
+
+	assert("user" in context.recipient, "Used a recipient token without a user recipient");
+
+	return context as typeof context & {
+		recipient: {
+			id: CommunityMembershipsId;
+			user: NonNullable<typeof context.recipient>["user"];
+		};
+	};
+};
+
 export const renderRecipientFirstName = (context: RenderWithPubContext) => {
-	return expect(context.recipient, "Used a recipient token without specifying a recipient").user
-		.firstName;
+	return contextWithUserRecipient(context).recipient.user.firstName;
 };
 
 export const renderRecipientLastName = (context: RenderWithPubContext) => {
-	return (
-		expect(context.recipient, "Used a recipient token without specifying a recipient").user
-			.lastName ?? ""
-	);
+	return contextWithUserRecipient(context).recipient.user.lastName ?? "";
 };
 
 export const renderRecipientFullName = (context: RenderWithPubContext) => {

@@ -303,12 +303,16 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 				if (isDirective(node)) {
 					const attrs = expect(node.attributes);
 					if ("form" in attrs) {
-						props.href = await utils.renderFormInviteLink({
-							formSlug: expect(attrs.form),
-							userId: expect(context.recipient, ERR_FORM_MISSING_RECIPIENT).user.id,
-							communityId: context.communityId,
-							pubId: context.pub.id as PubsId,
-						});
+						props.href = await utils.renderFormInviteLink(
+							{
+								formSlug: expect(attrs.form),
+								recipient: expect(context.recipient, ERR_FORM_MISSING_RECIPIENT),
+								communityId: context.communityId,
+								pubId: context.pub.id as PubsId,
+								inviter: expect(context.inviter),
+							},
+							trx
+						);
 					}
 				}
 			})

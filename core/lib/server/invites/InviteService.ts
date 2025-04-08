@@ -1,11 +1,4 @@
-import type {
-	CommunitiesId,
-	CommunityMemberships,
-	InvitesId,
-	PubsId,
-	StagesId,
-	UsersId,
-} from "db/public";
+import type { CommunitiesId, CommunityMemberships, PubsId, StagesId, UsersId } from "db/public";
 import type { Invite, LastModifiedBy } from "db/types";
 import { InviteStatus } from "db/public";
 import { compareMemberRoles } from "db/types";
@@ -381,8 +374,17 @@ export namespace InviteService {
 		return `${env.PUBPUB_URL}/c/${communitySlug}/public/signup?invite=${invite.token}`;
 	}
 
-	export function createInviteLink(invite: Invite, path: string) {
-		const url = new URL(path, env.PUBPUB_URL);
+	/**
+	 * Provide the path after `/c/${communitySlug}`
+	 * You'll get a link like `https://pubpub.com/c/community-slug/path?invite=...`
+	 */
+	export async function createCommunityInviteLink(
+		invite: Invite,
+		path: string,
+		communitySlug?: string
+	) {
+		const slug = communitySlug ?? (await getCommunitySlug());
+		const url = new URL(path, `${env.PUBPUB_URL}/c/${slug}`);
 		url.searchParams.set("invite", invite.token);
 		return url.toString();
 	}

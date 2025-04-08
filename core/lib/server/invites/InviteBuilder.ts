@@ -2,9 +2,6 @@ import crypto from "node:crypto";
 
 import type { ExpressionBuilder } from "kysely";
 
-import { sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
-
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
 import type { Invite } from "db/types";
 import { formsIdSchema, InviteFormType, InviteStatus, MemberRole } from "db/public";
@@ -326,6 +323,7 @@ export class InviteBuilder
 			await trx
 				.updateTable("invites")
 				.set({
+					status: InviteStatus.pending,
 					lastSentAt: new Date(),
 				})
 				.where("id", "=", invite.id)
