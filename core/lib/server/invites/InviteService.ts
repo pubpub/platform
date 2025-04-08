@@ -1,9 +1,20 @@
-import type { CommunitiesId, CommunityMemberships, PubsId, StagesId, UsersId } from "db/public";
+import crypto from "node:crypto";
+
+import type {
+	CommunitiesId,
+	CommunityMemberships,
+	InvitesId,
+	PubsId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import type { Invite, LastModifiedBy } from "db/types";
 import { InviteStatus } from "db/public";
 import { compareMemberRoles } from "db/types";
+import { logger } from "logger";
 
 import { db } from "~/kysely/database";
+import { constructMagicInviteLink } from "~/lib/authentication/createMagicLink";
 import { env } from "~/lib/env/env.mjs";
 import { autoCache } from "~/prisma/seed/stubs/stubs";
 import { maybeWithTrx } from "..";
@@ -27,48 +38,70 @@ export namespace InviteService {
 	// Error classes
 	//==============================================
 
+	export const INVITE_ERRORS = {
+		NOT_FOUND: "Invite not found",
+		NOT_PENDING: "Invite not pending",
+		NOT_FOR_USER: "Invite not for user",
+		INVALID_TOKEN: "Invalid invite token",
+		ALREADY_ACCEPTED: "Invite already accepted",
+		ALREADY_REJECTED: "Invite already rejected",
+		REVOKED: "Invite revoked",
+		EXPIRED: "Invite expired",
+	} as const;
+
+	export type InviteErrorType = keyof typeof INVITE_ERRORS;
+
 	export class InviteError extends Error {
-		constructor(message: string) {
-			super(message);
+		code: InviteErrorType;
+		constructor(
+			code: InviteErrorType,
+			opts?: {
+				additionalMessage?: string;
+				logContext?: Record<string, unknown>;
+			}
+		) {
+			const msg = `${code}: ${INVITE_ERRORS[code]}.${opts?.additionalMessage ?? ""}`;
+			logger.error({
+				msg,
+				...opts?.logContext,
+			});
+			super(msg);
+			this.code = code;
 		}
 	}
 
-	export class InviteNotFoundError extends InviteError {
-		constructor(token: string, communityId: CommunitiesId) {
-			super(`Invite not found: token=${token}, communityId=${communityId}`);
-		}
-	}
-
-	export class InviteNotPendingError extends InviteError {
-		constructor(token: string, communityId: CommunitiesId, status: InviteStatus) {
-			super(
-				`Tried to accept non-pending invite: token=${token}, communityId=${communityId}, status=${status}`
-			);
-		}
-	}
-
-	export class InviteNotForUserError extends InviteError {
-		constructor(token: string, communityId: CommunitiesId, userId: UsersId) {
-			super(
-				`Tried to accept invite for another user: token=${token}, communityId=${communityId}, userId=${userId}`
-			);
-		}
-	}
+	export const InvalidStateError = {
+		[InviteStatus.created]: new InviteError("NOT_PENDING"),
+		[InviteStatus.pending]: new InviteError("NOT_PENDING"),
+		[InviteStatus.accepted]: new InviteError("ALREADY_ACCEPTED"),
+		[InviteStatus.rejected]: new InviteError("ALREADY_REJECTED"),
+		[InviteStatus.revoked]: new InviteError("REVOKED"),
+	};
 
 	export const assertUserIsInvitee = (
 		invite: Invite,
 		user: { id: UsersId; email: string } | null
 	) => {
 		if (!user) {
-			throw new Error("No user found to match to invite");
+			throw new InviteError("NOT_FOR_USER");
 		}
 
 		if (invite.email && user.email !== invite.email) {
-			throw new InviteNotForUserError(invite.token, invite.communityId, user.id);
+			throw new InviteError("NOT_FOR_USER", {
+				logContext: {
+					inviteToken: invite.token,
+					userId: user.id,
+				},
+			});
 		}
 
 		if (invite.userId !== user.id) {
-			throw new InviteNotForUserError(invite.token, invite.communityId, user.id);
+			throw new InviteError("NOT_FOR_USER", {
+				logContext: {
+					inviteToken: invite.token,
+					userId: user.id,
+				},
+			});
 		}
 	};
 	//==============================================
@@ -88,11 +121,10 @@ export namespace InviteService {
 	}
 
 	// The rest of the service methods for managing invites
-	export async function getInviteByToken(token: string, communityId: CommunitiesId, trx = db) {
+	export async function getInviteByToken(token: string, trx = db) {
 		return trx
 			.selectFrom("invites")
 			.where("token", "=", token)
-			.where("communityId", "=", communityId)
 			.selectAll()
 			.executeTakeFirst() as Promise<Invite | null>;
 	}
@@ -112,7 +144,7 @@ export namespace InviteService {
 		trx = db
 	) {
 		const result = await maybeWithTrx(trx, async (trx) => {
-			const invite = await getValidInviteForLoggedInUser(token, communityId);
+			const invite = await getValidInviteForLoggedInUser(token);
 
 			if (isCommunityOnlyInvite(invite)) {
 				// grant user community membership based on the invite data as the highest role
@@ -140,12 +172,8 @@ export namespace InviteService {
 	 *
 	 * @throws {InviteError}
 	 */
-	export async function rejectInvite(
-		token: string,
-		communityId: CommunitiesId,
-		lastModifiedBy: LastModifiedBy
-	) {
-		const invite = await getValidInviteForLoggedInUser(token, communityId);
+	export async function rejectInvite(token: string, lastModifiedBy: LastModifiedBy) {
+		const invite = await getValidInviteForLoggedInUser(token);
 
 		await db
 			.updateTable("invites")
@@ -164,28 +192,30 @@ export namespace InviteService {
 	}
 
 	/**
-	 * @throws {InviteNotFoundError}
-	 * @throws {InviteNotPendingError}
-	 * @throws {InviteNotForUserError}
+	 * @throws {InviteError}
 	 */
-	async function getValidInviteForLoggedInUser(
-		token: string,
-		communityId: CommunitiesId,
-		trx = db
-	) {
+	async function getValidInviteForLoggedInUser(token: string, trx = db) {
 		const [invite, { user }] = await Promise.all([
-			getInviteByToken(token, communityId, trx),
+			getInviteByToken(token, trx),
 			getLoginData(),
 		]);
 
 		if (!invite) {
-			throw new InviteNotFoundError(token, communityId);
+			throw new InviteError("NOT_FOUND", {
+				logContext: {
+					inviteToken: token,
+				},
+			});
 		}
 
 		assertUserIsInvitee(invite, user);
 
 		if (invite.status !== InviteStatus.pending) {
-			throw new InviteNotPendingError(token, communityId, invite.status);
+			throw new InviteError("NOT_PENDING", {
+				logContext: {
+					inviteToken: token,
+				},
+			});
 		}
 
 		return invite;
@@ -374,6 +404,15 @@ export namespace InviteService {
 		return `${env.PUBPUB_URL}/c/${communitySlug}/public/signup?invite=${invite.token}`;
 	}
 
+	export function createInviteToken(invite: Invite) {
+		return `${invite.id}.${invite.token}`;
+	}
+
+	export function parseInviteToken(inviteToken: string) {
+		const [id, token] = inviteToken.split(".");
+		return { id: id as InvitesId, token };
+	}
+
 	/**
 	 * Provide the path after `/c/${communitySlug}/` (no leading slash)
 	 * You'll get a link like `https://pubpub.com/c/community-slug/path?invite=...`
@@ -385,9 +424,58 @@ export namespace InviteService {
 	) {
 		const slug = communitySlug ?? (await getCommunitySlug());
 		const pathWithoutLeadingSlash = path.startsWith("/") ? path.slice(1) : path;
-		const url = new URL(pathWithoutLeadingSlash, `${env.PUBPUB_URL}/c/${slug}/`);
-		url.searchParams.set("invite", invite.token);
-		return url.toString();
+		const redirectTo = `/c/${slug}/${pathWithoutLeadingSlash}` as const;
+
+		const inviteToken = createInviteToken(invite);
+		const inviteLink = constructMagicInviteLink(inviteToken, redirectTo);
+
+		return inviteLink;
+	}
+
+	// similar to validateToken and validateApiAccessToken
+	export async function getValidInvite(inviteToken: string) {
+		const { id, token } = parseInviteToken(inviteToken);
+
+		const dbInvite = await getInviteByToken(id);
+
+		if (!dbInvite) {
+			throw new InviteError("NOT_FOUND", {
+				logContext: {
+					inviteToken,
+				},
+			});
+		}
+
+		if (dbInvite.status !== InviteStatus.pending) {
+			throw new InviteError("NOT_PENDING", {
+				logContext: {
+					inviteToken,
+				},
+			});
+		}
+
+		if (
+			!crypto.timingSafeEqual(
+				new Uint8Array(Buffer.from(dbInvite.token)),
+				new Uint8Array(Buffer.from(token))
+			)
+		) {
+			throw new InviteError("INVALID_TOKEN", {
+				logContext: {
+					inviteToken,
+				},
+			});
+		}
+
+		if (dbInvite.expiresAt < new Date()) {
+			throw new InviteError("EXPIRED", {
+				logContext: {
+					inviteToken,
+				},
+			});
+		}
+
+		return dbInvite;
 	}
 }
 
