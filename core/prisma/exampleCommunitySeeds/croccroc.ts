@@ -117,9 +117,10 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				},
 			],
 			forms: {
-				Review: {
+				"Public Review": {
 					access: FormAccessType.public,
 					pubType: "Evaluation",
+					slug: "public-review",
 					elements: [
 						{
 							type: ElementType.structural,
@@ -163,6 +164,53 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 						},
 					],
 				},
+				"Private Review": {
+					slug: "private-review",
+					access: FormAccessType.private,
+					pubType: "Evaluation",
+					elements: [
+						{
+							type: ElementType.structural,
+							element: StructuralFormElement.p,
+							content: `# Review\n\n Thank you for agreeing to review this Pub, please do not be a meany bobeeny.`,
+						},
+						{
+							field: "Title",
+							type: ElementType.pubfield,
+							component: InputComponent.textInput,
+							config: {
+								label: "Title",
+								maxLength: 255,
+								help: "Give your review a snazzy title.",
+							},
+						},
+						{
+							field: "Content",
+							type: ElementType.pubfield,
+							component: InputComponent.textArea,
+							config: {
+								label: "Content",
+								help: "Enter your review here",
+								minLength: 0,
+							},
+						},
+						{
+							field: "File",
+							type: ElementType.pubfield,
+							component: InputComponent.fileUpload,
+							config: {
+								label: "Attachment",
+								help: "Please attach the file for your review here.",
+							},
+						},
+						{
+							type: ElementType.button,
+							content: `Go see your pubs :link{page='currentPub' text='here'}`,
+							label: "Submit",
+							stage: "Under Evaluation",
+						},
+					],
+				},
 			},
 			stages: {
 				Submitted: {
@@ -172,12 +220,20 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 							action: Action.log,
 							config: {},
 						},
-						"Send Review email": {
+						"Send Public Review email": {
 							action: Action.email,
 							config: {
 								subject: "HELLO :recipientName REVIEW OUR STUFF PLEASE",
 								recipient: memberId,
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="public-review" text="I've never been so excited about a form"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
+							},
+						},
+						"Send Private Review email": {
+							action: Action.email,
+							config: {
+								subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
+								recipientEmail: "james@jimothy.org",
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="private-review" text="Wow, a great form!"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
 							},
 						},
 					},
