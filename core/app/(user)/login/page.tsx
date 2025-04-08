@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { Notice } from "../../components/Notice";
 import LoginForm from "./LoginForm";
-import { Notice } from "./Notice";
 
 export default async function Login({
 	searchParams,
