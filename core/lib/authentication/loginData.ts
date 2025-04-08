@@ -1,42 +1,22 @@
 import "server-only";
 
 import { cache } from "react";
-import { redirect } from "next/navigation";
-import { getPathname } from "@nimpl/getters/get-pathname";
 
+import type { LoginRedirectOpts } from "../server/navigation/redirects";
 import type { ExtraSessionValidationOptions } from "./lucia";
+import { redirectToLogin } from "../server/navigation/redirects";
 import { validateRequest } from "./lucia";
 
+/**
+ * Get the users login data based on the session cookie
+ */
 export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) => {
 	return validateRequest(opts);
 });
 
-const defaultLoginRedirectError = {
-	type: "error",
-	title: "You must be logged in to access this page",
-	body: "Please log in to continue",
-};
-
-type LoginRedirectOpts = {
-	loginNotice?: {
-		type: "error" | "notice";
-		title: string;
-		body?: string;
-	};
-};
-
-export const redirectToLogin = (opts?: LoginRedirectOpts) => {
-	const pathname = getPathname();
-	const notice = opts?.loginNotice ?? defaultLoginRedirectError;
-	const noticeParams = new URLSearchParams();
-	noticeParams.set(notice.type, notice.title);
-	if (notice.body) {
-		noticeParams.set("body", notice.body);
-	}
-
-	const basePath = `/login?${noticeParams.toString()}`;
-	redirect(pathname ? `${basePath}&redirectTo=${encodeURIComponent(pathname)}` : basePath);
-};
+/**
+ * Get the login data for the current page, and redirect to the login page if the user is not logged in.
+ */
 export const getPageLoginData = cache(
 	async (opts?: ExtraSessionValidationOptions & LoginRedirectOpts) => {
 		const loginData = await getLoginData(opts);
