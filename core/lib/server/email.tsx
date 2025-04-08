@@ -1,7 +1,7 @@
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
-import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
+import { Invite, PasswordReset, RequestLinkToForm } from "emails";
 
 import type { Communities, MemberRole, MembershipType, Users } from "db/public";
 import { AuthTokenType } from "db/public";
@@ -25,7 +25,6 @@ export const DEFAULT_OPTIONS = {
 	name: env.MAILGUN_SMTP_FROM_NAME ?? "PubPub Team",
 } as const;
 
-// export class Email {
 function buildSend(emailPromise: () => Promise<RequiredOptions>) {
 	const func = send.bind(null, emailPromise);
 
@@ -117,7 +116,10 @@ function inviteToForm() {
 	// TODO:
 }
 
-export function signupInvite(
+/**
+ * @deprecated use SignupInvite instead
+ */
+export function _legacy_signupInvite(
 	props: {
 		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
 		community: Pick<Communities, "name" | "avatar" | "slug">;
@@ -142,7 +144,7 @@ export function signupInvite(
 		);
 
 		const email = await render(
-			<SignupInvite
+			<Invite
 				community={props.community}
 				signupLink={magicLink}
 				role={props.role}
@@ -155,6 +157,21 @@ export function signupInvite(
 			html: email,
 			subject: "Join PubPub",
 		};
+	});
+}
+
+export function signupInvite(
+	props: {
+		community: Pick<Communities, "name" | "avatar" | "slug">;
+		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug"> | { email: string };
+		inviteLink: string;
+	},
+	trx = db
+) {
+	return buildSend(async () => {
+		const email = await render(
+			<Invite community={props.community} formInviteLink={inviteLink} form={props.form} />
+		);
 	});
 }
 
