@@ -13,8 +13,11 @@ import link from "./link";
 import list from "./list";
 import math from "./math";
 import paragraph from "./paragraph";
+import strike from "./strike";
 import strong from "./strong";
+import subSuperScript from "./subSuperScript";
 import text from "./text";
+import underline from "./underline";
 
 export const baseSchema = new Schema({
 	nodes: {
@@ -38,6 +41,10 @@ export const baseSchema = new Schema({
 		em,
 		code: code.codeInline,
 		link,
+		strike,
+		sub: subSuperScript.sub,
+		sup: subSuperScript.sup,
+		underline,
 	},
 	topNode: "doc",
 });

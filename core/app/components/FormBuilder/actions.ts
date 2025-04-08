@@ -8,7 +8,6 @@ import type {
 	NewFormElements,
 	NewFormElementToPubType,
 	PublicSchema,
-	PubTypesId,
 } from "db/public";
 import { Capabilities, formElementsInitializerSchema, MembershipType } from "db/public";
 import { logger } from "logger";
@@ -30,8 +29,13 @@ const upsertRelatedPubTypes = async (
 	db.transaction().execute(async (trx) => {
 		const formElementIds = [...values.map((v) => v.A), ...deletedRelatedPubTypes];
 
-		// Delete old values
-		await trx.deleteFrom("_FormElementToPubType").where("A", "in", formElementIds).execute();
+		if (formElementIds.length) {
+			// Delete old values
+			await trx
+				.deleteFrom("_FormElementToPubType")
+				.where("A", "in", formElementIds)
+				.execute();
+		}
 
 		// Insert new ones
 		if (values.length) {

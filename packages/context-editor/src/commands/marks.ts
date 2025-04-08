@@ -54,3 +54,7 @@ export const strongToggle = createMarkToggle("strong");
 export const emToggle = createMarkToggle("em");
 export const codeToggle = createMarkToggle("code");
 export const linkToggle = createMarkToggle("link", true);
+export const strikethroughToggle = createMarkToggle("strike");
+export const subscriptToggle = createMarkToggle("sub");
+export const superscriptToggle = createMarkToggle("sup");
+export const underlineToggle = createMarkToggle("underline");
