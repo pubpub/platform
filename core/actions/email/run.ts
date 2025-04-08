@@ -1,7 +1,5 @@
 "use server";
 
-import { jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type { CommunityMembershipsId } from "db/public";
 import { logger } from "logger";
 import { assert, expect } from "utils";
@@ -11,95 +9,101 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import { db } from "~/kysely/database";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
+import { selectCommunityMember } from "~/lib/server/member";
+import { maybeWithTrx } from "~/lib/server/pub";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { isClientException } from "~/lib/serverActions";
 import { defineRun } from "../types";
 
-export const run = defineRun<typeof action>(async ({ pub, config, args, communityId }) => {
-	try {
-		const communitySlug = await getCommunitySlug();
-		const recipientEmail = args?.recipientEmail ?? config.recipientEmail;
-		const recipientMemberId = (args?.recipientMember ?? config.recipientMember) as
-			| CommunityMembershipsId
-			| undefined;
+export const run = defineRun<typeof action>(
+	async ({ pub, config, args, communityId, actionRunId, userId }) => {
+		try {
+			const result = await maybeWithTrx(db, async (trx) => {
+				const communitySlug = await getCommunitySlug();
+				const recipientEmail = args?.recipientEmail ?? config.recipientEmail;
+				const recipientMemberId = (args?.recipientMember ?? config.recipientMember) as
+					| CommunityMembershipsId
+					| undefined;
 
-		assert(
-			recipientEmail !== undefined || recipientMemberId !== undefined,
-			"No email recipient was specified"
-		);
-
-		let recipient: RenderWithPubContext["recipient"] | undefined;
-
-		if (recipientMemberId !== undefined) {
-			recipient = await db
-				.selectFrom("community_memberships")
-				.select((eb) => [
-					"community_memberships.id",
-					jsonObjectFrom(
-						eb
-							.selectFrom("users")
-							.whereRef("users.id", "=", "community_memberships.userId")
-							.selectAll("users")
-					)
-						.$notNull()
-						.as("user"),
-				])
-				.where("id", "=", recipientMemberId)
-				.executeTakeFirstOrThrow(
-					() => new Error(`Could not find member with ID ${recipientMemberId}`)
+				assert(
+					recipientEmail !== undefined || recipientMemberId !== undefined,
+					"No recipient was specified for email"
 				);
-		}
 
-		const renderMarkdownWithPubContext = {
-			communityId,
-			communitySlug,
-			recipient,
-			pub,
-		} as RenderWithPubContext;
+				let recipient: RenderWithPubContext["recipient"] | undefined;
 
-		const html = await renderMarkdownWithPub(
-			args?.body ?? config.body,
-			renderMarkdownWithPubContext
-		);
-		const subject = await renderMarkdownWithPub(
-			args?.subject ?? config.subject,
-			renderMarkdownWithPubContext,
-			true
-		);
+				if (recipientMemberId !== undefined) {
+					recipient = await selectCommunityMember({
+						id: recipientMemberId,
+					}).executeTakeFirstOrThrow(
+						() => new Error(`Could not find member with ID ${recipientMemberId}`)
+					);
+				} else if (recipientEmail !== undefined) {
+					recipient = {
+						email: recipientEmail,
+					};
+				} else {
+					throw new Error("No recipient was specified");
+				}
 
-		const result = await Email.generic({
-			to: expect(recipient?.user.email ?? recipientEmail),
-			subject,
-			html,
-		}).send();
+				const renderMarkdownWithPubContext = {
+					communityId,
+					communitySlug,
+					recipient,
+					pub,
+					inviter: {
+						userId,
+						actionRunId,
+					},
+					trx,
+				} as RenderWithPubContext;
 
-		if (isClientException(result)) {
-			logger.error({
-				msg: "An error occurred while sending an email",
-				error: result.error,
-				pub,
-				config,
-				args,
-				renderMarkdownWithPubContext,
+				const html = await renderMarkdownWithPub(
+					args?.body ?? config.body,
+					renderMarkdownWithPubContext
+				);
+				const subject = await renderMarkdownWithPub(
+					args?.subject ?? config.subject,
+					renderMarkdownWithPubContext,
+					true
+				);
+
+				const result = await Email.generic({
+					to: expect(recipient.email ?? recipient.user.email),
+					subject,
+					html,
+				}).send();
+
+				if (isClientException(result)) {
+					logger.error({
+						msg: "An error occurred while sending an email",
+						error: result.error,
+						pub,
+						config,
+						args,
+						renderMarkdownWithPubContext,
+					});
+				} else {
+					logger.info({
+						msg: "Successfully sent email",
+						pub,
+						config,
+						args,
+						renderMarkdownWithPubContext,
+					});
+				}
+
+				return result;
 			});
-		} else {
-			logger.info({
-				msg: "Successfully sent email",
-				pub,
-				config,
-				args,
-				renderMarkdownWithPubContext,
-			});
+			return result;
+		} catch (error) {
+			logger.error({ msg: "Failed to send email", error });
+
+			return {
+				title: "Failed to Send Email",
+				error: error.message,
+				cause: error,
+			};
 		}
-
-		return result;
-	} catch (error) {
-		logger.error({ msg: "Failed to send email", error });
-
-		return {
-			title: "Failed to Send Email",
-			error: error.message,
-			cause: error,
-		};
 	}
-});
+);

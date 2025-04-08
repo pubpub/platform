@@ -216,6 +216,7 @@ const _runActionInstance = async (
 			communityId: pub.communityId as CommunitiesId,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
+			userId: isActionUserInitiated ? args.userId : undefined,
 		});
 
 		if (isClientExceptionOptions(result)) {
