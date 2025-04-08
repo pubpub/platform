@@ -160,7 +160,7 @@ export const sendForgotPasswordMail = defineServerAction(
 	}
 );
 
-const _sendVerifyEmailMail = async (props: { email: string }) => {
+const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: string }) => {
 	const user = await getUserWithPasswordHash({ email: props.email });
 
 	if (!user) {
@@ -170,12 +170,15 @@ const _sendVerifyEmailMail = async (props: { email: string }) => {
 		};
 	}
 
-	const result = await Email.verifyEmail({
-		id: user.id,
-		email: user.email,
-		firstName: user.firstName,
-		lastName: user.lastName,
-	}).send();
+	const result = await Email.verifyEmail(
+		{
+			id: user.id,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName,
+		},
+		props.redirectTo
+	).send();
 
 	if ("error" in result) {
 		return {
@@ -191,8 +194,9 @@ const _sendVerifyEmailMail = async (props: { email: string }) => {
 
 export const sendVerifyEmailMail = defineServerAction(async function sendVerifyEmailMail(props: {
 	email: string;
+	redirectTo?: string;
 }) {
-	_sendVerifyEmailMail(props);
+	return _sendVerifyEmailMail(props);
 });
 
 const newPasswordSchema = z.object({
@@ -408,7 +412,10 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		return newUser;
 	}
 
-	const verifyEmailResult = await _sendVerifyEmailMail({ email: newUser.email });
+	const verifyEmailResult = await _sendVerifyEmailMail({
+		email: newUser.email,
+		redirectTo: props.redirectTo,
+	});
 
 	if (verifyEmailResult.error) {
 		return verifyEmailResult;
@@ -425,11 +432,8 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		newSessionCookie.attributes
 	);
 
-	if (props.redirectTo) {
-		redirect(props.redirectTo);
-	}
-
-	redirect("/verify");
+	const newUrl = props.redirectTo ? `/verify?redirectTo=${props.redirectTo}` : "/verify";
+	redirect(newUrl);
 });
 
 /**

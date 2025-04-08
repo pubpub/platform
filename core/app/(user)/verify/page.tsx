@@ -1,29 +1,42 @@
+import { redirect } from "next/navigation";
+
+import { AuthTokenType } from "db/public";
 import { Button } from "ui/button";
 
+import { sendVerifyEmailMail } from "~/lib/authentication/actions";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { useServerAction } from "~/lib/serverActions";
 import { Redirect } from "./Redirect";
+import { ResendVerificationButton } from "./ResendVerificationButton";
 
 export default async function Page({
 	searchParams,
 }: {
 	searchParams: Promise<{ redirectTo?: string }>;
 }) {
-	const { user } = await getLoginData();
-	const { redirectTo } = await searchParams;
-	let description = "Check your email and click the link to verify your email address.";
+	const { user, session } = await getLoginData({
+		allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
+	});
 
-	if (user?.isVerified) {
-		description = "Your email has been verified!";
+	const { redirectTo } = await searchParams;
+
+	if (!user || !session) {
+		const verifyUrl = redirectTo ? `/verify?redirectTo=${redirectTo}` : "/verify";
+		redirect(`/login?redirectTo=${encodeURIComponent(verifyUrl)}`);
 	}
 
-	const shouldRedirect = user?.isVerified;
+	let description = "Check your email and click the link to verify your email address.";
+
+	if (user.isVerified) {
+		description = "Your email has been verified!";
+	}
 
 	return (
 		<div className="prose mx-auto max-w-sm">
 			<h1>Verify your email</h1>
 			<p>{description}</p>
-			{shouldRedirect ? <Redirect url={redirectTo ?? "/"} /> : null}
-			<Button>Resend verification email</Button>
+			{user.isVerified ? <Redirect url={redirectTo ?? "/"} /> : null}
+			<ResendVerificationButton email={user.email} redirectTo={redirectTo} />
 		</div>
 	);
 }
