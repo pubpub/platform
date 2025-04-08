@@ -4,13 +4,16 @@ import { redirect } from "next/navigation";
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getLoginData } from "~/lib/authentication/loginData";
 import LoginForm from "./LoginForm";
+import { Notice } from "./Notice";
 
 export default async function Login({
 	searchParams,
 }: {
-	searchParams: {
+	searchParams: Promise<{
 		error?: string;
-	};
+		notice?: string;
+		body?: string;
+	}>;
 }) {
 	const { user } = await getLoginData();
 
@@ -27,9 +30,13 @@ export default async function Login({
 		redirect("/settings");
 	}
 
+	const { notice, error, body } = await searchParams;
+
 	return (
 		<div className="mx-auto max-w-sm">
 			<LoginForm />
+			{notice && <Notice variant="default" title={notice} description={body} />}
+			{error && <Notice variant="destructive" title={error} description={body} />}
 			{/* <div className="text-gray-600 text-center mt-6">
 				Don't have an account?{" "}
 				<Link
