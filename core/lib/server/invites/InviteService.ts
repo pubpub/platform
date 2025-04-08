@@ -375,7 +375,7 @@ export namespace InviteService {
 	}
 
 	/**
-	 * Provide the path after `/c/${communitySlug}`
+	 * Provide the path after `/c/${communitySlug}/` (no leading slash)
 	 * You'll get a link like `https://pubpub.com/c/community-slug/path?invite=...`
 	 */
 	export async function createCommunityInviteLink(
@@ -384,7 +384,8 @@ export namespace InviteService {
 		communitySlug?: string
 	) {
 		const slug = communitySlug ?? (await getCommunitySlug());
-		const url = new URL(path, `${env.PUBPUB_URL}/c/${slug}`);
+		const pathWithoutLeadingSlash = path.startsWith("/") ? path.slice(1) : path;
+		const url = new URL(pathWithoutLeadingSlash, `${env.PUBPUB_URL}/c/${slug}/`);
 		url.searchParams.set("invite", invite.token);
 		return url.toString();
 	}

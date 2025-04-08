@@ -105,7 +105,7 @@ export const renderFormInviteLink = async (
 		);
 	}
 
-	const baseInvite = InviteService.inviteEmail(recipient.email);
+	const baseInvite = InviteService.inviteEmail(recipient.email!);
 	const inviteWithInviter = baseInvite.invitedBy(
 		inviter.userId ? { userId: inviter.userId } : { actionRunId: inviter.actionRunId! }
 	);
@@ -122,7 +122,7 @@ export const renderFormInviteLink = async (
 
 	const inviteLink = await InviteService.createCommunityInviteLink(
 		invite,
-		`/public/forms/${formSlug}?pubId=${pubId}`
+		`public/forms/${formSlug}/fill?pubId=${pubId}`
 	);
 
 	return inviteLink;
@@ -273,10 +273,13 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	return href;
 };
 
-export const contextWithUserRecipient = (context: RenderWithPubContext) => {
-	assert(context.recipient, "Used a recipient token without specifying a recipient");
+export const contextWithUserRecipient = (context: RenderWithPubContext, token: string) => {
+	assert(context.recipient, `Used a recipient token "${token}" without specifying a recipient`);
 
-	assert("user" in context.recipient, "Used a recipient token without a user recipient");
+	assert(
+		"user" in context.recipient,
+		`Used a recipient token "${token}" without a user recipient`
+	);
 
 	return context as typeof context & {
 		recipient: {
@@ -286,17 +289,17 @@ export const contextWithUserRecipient = (context: RenderWithPubContext) => {
 	};
 };
 
-export const renderRecipientFirstName = (context: RenderWithPubContext) => {
-	return contextWithUserRecipient(context).recipient.user.firstName;
+export const renderRecipientFirstName = (context: RenderWithPubContext, token: string) => {
+	return contextWithUserRecipient(context, token).recipient.user.firstName;
 };
 
-export const renderRecipientLastName = (context: RenderWithPubContext) => {
-	return contextWithUserRecipient(context).recipient.user.lastName ?? "";
+export const renderRecipientLastName = (context: RenderWithPubContext, token: string) => {
+	return contextWithUserRecipient(context, token).recipient.user.lastName ?? "";
 };
 
-export const renderRecipientFullName = (context: RenderWithPubContext) => {
-	const lastName = renderRecipientLastName(context);
-	return `${renderRecipientFirstName(context)}${lastName && ` ${lastName}`}`;
+export const renderRecipientFullName = (context: RenderWithPubContext, token: string) => {
+	const lastName = renderRecipientLastName(context, token);
+	return `${renderRecipientFirstName(context, token)}${lastName && ` ${lastName}`}`;
 };
 
 export const renderAssigneeFirstName = (context: RenderWithPubContext, rel?: string) => {
