@@ -49,6 +49,8 @@ export interface InvitesTable {
 
 	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 
+	pubOrStageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
+
 	message: ColumnType<string | null, string | null, string | null>;
 
 	lastSentAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -62,14 +64,8 @@ export interface InvitesTable {
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
 }
 
-/**
- * @deprecated Use {@link Invite} instead
- */
 export type Invites = Selectable<InvitesTable>;
 
-/**
- * @deprecated Use {@link InviteInput} instead
- */
 export type NewInvites = Insertable<InvitesTable>;
 
 export type InvitesUpdate = Updateable<InvitesTable>;
@@ -88,6 +84,7 @@ export const invitesSchema = z.object({
 	communityRole: memberRoleSchema,
 	pubId: pubsIdSchema.nullable(),
 	stageId: stagesIdSchema.nullable(),
+	pubOrStageRole: memberRoleSchema.nullable(),
 	message: z.string().nullable(),
 	lastSentAt: z.date().nullable(),
 	status: inviteStatusSchema,
@@ -108,6 +105,7 @@ export const invitesInitializerSchema = z.object({
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
+	pubOrStageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
@@ -128,6 +126,7 @@ export const invitesMutatorSchema = z.object({
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
+	pubOrStageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),

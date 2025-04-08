@@ -15,23 +15,48 @@ import {
 	Text,
 } from "@react-email/components";
 
-import type { Communities, MembershipType } from "db/public";
+import type { Communities, Forms, MembershipType, Pubs, Stages } from "db/public";
 import { MemberRole } from "db/public";
 
-interface SignupInviteProps {
-	signupLink: string;
+type SignupInvitePropsBase = {
+	inviteLink: string;
 	community: Pick<Communities, "name" | "avatar" | "slug">;
-	role: MemberRole;
+	communityRole: MemberRole;
 	previewText?: string;
-	membership: { type: MembershipType; name: string };
-}
+};
 
-export const SignupInvite = ({
+type SignupInviteCommunity = SignupInvitePropsBase & {
+	type: "community";
+};
+
+type SignupInviteForm = SignupInvitePropsBase & {
+	type: "form";
+	form: Pick<Forms, "name" | "slug">;
+};
+
+type SignupInvitePub = SignupInvitePropsBase & {
+	type: "pub";
+	pub: Pick<Pubs, "title">;
+	otherRole: MemberRole;
+};
+
+type SignupInviteStage = SignupInvitePropsBase & {
+	type: "stage";
+	stage: Pick<Stages, "name">;
+	otherRole: MemberRole;
+};
+
+type SignupInviteProps =
+	| SignupInviteCommunity
+	| SignupInviteForm
+	| SignupInvitePub
+	| SignupInviteStage;
+
+export const Invite = ({
 	community: comm,
-	signupLink,
-	role,
-	membership,
+	inviteLink,
 	previewText = `Join ${comm?.name} on PubPub`,
+	...rest
 }: SignupInviteProps) => {
 	const baseUrl = process.env.PUBPUB_URL ?? "";
 

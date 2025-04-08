@@ -1245,6 +1245,14 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
+				name: "pubOrStageRole",
+				dataType: "MemberRole",
+				dataTypeSchema: "public",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
+			{
 				name: "message",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",

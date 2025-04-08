@@ -40,8 +40,8 @@ model User {
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
   PubValueHistory      PubValueHistory[]
-  Invite               Invite[]
-  Invite               Invite[]
+  InvitedUser          Invite[]              @relation("invited_user")
+  InvitedByUser        Invite[]              @relation("invited_by")
   InviteHistory        InviteHistory[]
 
   @@map(name: "users")
@@ -448,7 +448,7 @@ model ActionRun {
 
   // action runs that were triggered by this action run
   sequentialActionRuns ActionRun[]     @relation("source_action_run")
-  Invite               Invite[]
+  InvitedByActionRun   Invite[]        @relation("invited_by_action_run")
   InviteHistory        InviteHistory[]
 
   @@map(name: "action_runs")
@@ -503,10 +503,8 @@ model Form {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @default(now()) @updatedAt
 
-  members              FormMembership[]
-  PubOrStageInvite     Invite[]         @relation("pubOrStageInvite")
-  CommunityLevelInvite Invite[]         @relation("communityLevelInvite")
-  inviteForms          InviteForm[]
+  members     FormMembership[]
+  inviteForms InviteForm[]
 
   @@unique([name, communityId])
   @@unique([slug, communityId])

@@ -2,6 +2,22 @@
 //// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 //// ------------------------------------------------------
 
+Table invites_history {
+  id String [pk]
+  createdAt DateTime [default: `now()`, not null]
+  operationType OperationType [not null]
+  oldRowData Json
+  newRowData Json
+  inviteId String
+  user users
+  userId String
+  apiAccessToken api_access_tokens
+  apiAccessTokenId String
+  actionRun action_runs
+  actionRunId String
+  other String
+}
+
 Table pub_values_history {
   id String [pk]
   createdAt DateTime [default: `now()`, not null]
@@ -41,6 +57,9 @@ Table users {
   pubMemberships pub_memberships [not null]
   stageMemberships stage_memberships [not null]
   PubValueHistory pub_values_history [not null]
+  InvitedUser invites [not null]
+  InvitedByUser invites [not null]
+  InviteHistory invites_history [not null]
 }
 
 Table sessions {
@@ -80,6 +99,7 @@ Table communities {
   Form forms [not null]
   pubFields pub_fields [not null]
   members community_memberships [not null]
+  Invite invites [not null]
 }
 
 Table pubs {
@@ -100,6 +120,7 @@ Table pubs {
   relatedValues pub_values [not null]
   members pub_memberships [not null]
   formMemberships form_memberships [not null]
+  Invite invites [not null]
 }
 
 Table pub_fields {
@@ -195,6 +216,7 @@ Table stages {
   actionInstances action_instances [not null]
   formElements form_elements [not null]
   members stage_memberships [not null]
+  Invite invites [not null]
 }
 
 Table PubsInStages {
@@ -342,6 +364,8 @@ Table action_runs {
   sourceActionRunId String
   sourceActionRun action_runs
   sequentialActionRuns action_runs [not null]
+  InvitedByActionRun invites [not null]
+  InviteHistory invites_history [not null]
 }
 
 Table rules {
@@ -371,15 +395,7 @@ Table forms {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   members form_memberships [not null]
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-  PubOrStageInvite invites [not null]
-  CommunityLevelInvite invites [not null]
->>>>>>> 3c66a42f0 (feat: properly add invite table)
-=======
   inviteForms invite_forms [not null]
->>>>>>> a1c3b8d4f (feat: add support for inviting users to multiple forms)
 
   indexes {
     (name, communityId) [unique]
@@ -428,6 +444,7 @@ Table api_access_tokens {
   accessRules api_access_permissions [not null]
   logs api_access_logs [not null]
   PubValueHistory pub_values_history [not null]
+  InviteHistory invites_history [not null]
 }
 
 Table api_access_logs {
@@ -459,8 +476,6 @@ Table membership_capabilities {
   }
 }
 
-<<<<<<< HEAD
-=======
 Table invites {
   id String [pk]
   lastModifiedBy String [not null, note: '@type(LastModifiedBy, \'../types\', true, false, true)']
@@ -504,7 +519,6 @@ Table invite_forms {
   }
 }
 
->>>>>>> 3c66a42f0 (feat: properly add invite table)
 Table MemberGroupToUser {
   membergroupsId String [ref: > member_groups.id]
   usersId String [ref: > users.id]
@@ -669,8 +683,6 @@ Enum MembershipType {
   form
 }
 
-<<<<<<< HEAD
-=======
 Enum InviteStatus {
   created
   pending
@@ -691,7 +703,6 @@ Ref: invites_history.apiAccessTokenId > api_access_tokens.id
 
 Ref: invites_history.actionRunId > action_runs.id
 
->>>>>>> 3c66a42f0 (feat: properly add invite table)
 Ref: pub_values_history.userId > users.id
 
 Ref: pub_values_history.apiAccessTokenId > api_access_tokens.id
@@ -792,9 +803,6 @@ Ref: api_access_tokens.issuedById > users.id [delete: Set Null]
 
 Ref: api_access_logs.accessTokenId > api_access_tokens.id [delete: Set Null]
 
-<<<<<<< HEAD
-Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id [delete: Cascade]
-=======
 Ref: api_access_permissions.apiAccessTokenId > api_access_tokens.id [delete: Cascade]
 
 Ref: invites.userId > users.id [delete: Set Null]
@@ -808,11 +816,7 @@ Ref: invites.stageId > stages.id [delete: Set Null]
 Ref: invites.invitedByUserId > users.id [delete: Set Null]
 
 Ref: invites.invitedByActionRunId > action_runs.id [delete: Set Null]
-<<<<<<< HEAD
->>>>>>> 3c66a42f0 (feat: properly add invite table)
-=======
 
 Ref: invite_forms.inviteId > invites.id [delete: Cascade]
 
 Ref: invite_forms.formId > forms.id [delete: Cascade]
->>>>>>> a1c3b8d4f (feat: add support for inviting users to multiple forms)
