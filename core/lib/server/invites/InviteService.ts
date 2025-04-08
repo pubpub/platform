@@ -70,14 +70,6 @@ export namespace InviteService {
 		}
 	}
 
-	export const InvalidStateError = {
-		[InviteStatus.created]: new InviteError("NOT_PENDING"),
-		[InviteStatus.pending]: new InviteError("NOT_PENDING"),
-		[InviteStatus.accepted]: new InviteError("ALREADY_ACCEPTED"),
-		[InviteStatus.rejected]: new InviteError("ALREADY_REJECTED"),
-		[InviteStatus.revoked]: new InviteError("REVOKED"),
-	};
-
 	export const assertUserIsInvitee = (
 		invite: Invite,
 		user: { id: UsersId; email: string } | null
@@ -398,10 +390,26 @@ export namespace InviteService {
 		});
 	}
 
-	export async function createSignupLink(invite: Invite) {
+	export async function createSignupInviteLink(
+		invite: Invite,
+		options?: {
+			redirectTo?: string;
+			/**
+			 * If true, the url will be absolute
+			 * @default true
+			 */
+			absolute?: boolean;
+		}
+	) {
 		const communitySlug = await getCommunitySlug();
 
-		return `${env.PUBPUB_URL}/c/${communitySlug}/public/signup?invite=${invite.token}`;
+		const searchParams = new URLSearchParams();
+		searchParams.set("invite", invite.token);
+		if (options?.redirectTo) {
+			searchParams.set("redirectTo", options.redirectTo);
+		}
+
+		return `${options?.absolute === false ? "" : env.PUBPUB_URL}/c/${communitySlug}/public/signup?${searchParams.toString()}`;
 	}
 
 	export function createInviteToken(invite: Invite) {
