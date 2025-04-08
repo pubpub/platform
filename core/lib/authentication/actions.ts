@@ -101,9 +101,15 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 		};
 	}
 	// lucia authentication
-	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
+	const tokenType = user.isVerified ? AuthTokenType.generic : AuthTokenType.verifyEmail;
+	const session = await lucia.createSession(user.id, { type: tokenType });
 	const sessionCookie = lucia.createSessionCookie(session.id);
 	(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+
+	if (!user.isVerified) {
+		const newUrl = props.redirectTo ? `/verify?redirectTo=${props.redirectTo}` : "/verify";
+		redirect(newUrl);
+	}
 
 	if (props.redirectTo && /^\/\w+/.test(props.redirectTo)) {
 		redirect(props.redirectTo);

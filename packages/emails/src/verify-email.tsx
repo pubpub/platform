@@ -51,9 +51,8 @@ export const VerifyEmail = ({
 						</Text>
 						<Text className="text-[14px] leading-[24px] text-black">
 							You can use the button below to verify your email. If you were not
-							expecting this invitation, you can ignore this email. If you are
-							concerned about your account's safety, please reply to this email to get
-							in touch with us.
+							expecting this invitation, please reply to this email to get in touch
+							with us.
 						</Text>
 						<Section className="mb-[32px] mt-[32px] text-center">
 							<Button
@@ -71,9 +70,8 @@ export const VerifyEmail = ({
 						</Text>
 						<Hr className="mx-0 my-[26px] w-full border border-solid border-[#eaeaea]" />
 						<Text className="text-[12px] leading-[24px] text-[#666666]">
-							If you were not expecting this invitation, you can ignore this email. If
-							you are concerned about your account's safety, please reply to this
-							email to get in touch with us.
+							If you were not expecting this invitation, please reply to this email to
+							get in touch with us.
 						</Text>
 					</Container>
 				</Body>
