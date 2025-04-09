@@ -14,7 +14,10 @@ export function PublicSignupForm(props: { communityId: CommunitiesId; redirectTo
 	const runSignup = useServerAction(publicSignup);
 
 	const searchParams = useSearchParams();
-	const redirectTo = props.redirectTo ?? searchParams.get("redirectTo") ?? undefined;
+	const searchParamsRedirect = searchParams.get("redirectTo")?.startsWith("/")
+		? (searchParams.get("redirectTo") as `/${string}`)
+		: undefined;
+	const redirectTo = props.redirectTo ?? searchParamsRedirect ?? undefined;
 
 	const handleSubmit = useCallback(
 		async (data: SignupFormSchema) => {
