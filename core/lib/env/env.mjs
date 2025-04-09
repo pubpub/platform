@@ -55,7 +55,21 @@ export const env = createEnv({
 		DISABLED_ACTIONS: z
 			.string()
 			.transform((value) => value.split(","))
-			.pipe(z.string().array())
+			.pipe(
+				z
+					// TODO: Figure out how to get `import {actionSchema} from "db/public"` working
+					.enum([
+						"log",
+						"pdf",
+						"email",
+						"pushToV6",
+						"http",
+						"move",
+						"googleDriveImport",
+						"datacite",
+					])
+					.array()
+			)
 			.optional(),
 	},
 	client: {},
