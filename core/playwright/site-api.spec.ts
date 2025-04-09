@@ -1,5 +1,3 @@
-// import { register } from "node:module";
-
 import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
