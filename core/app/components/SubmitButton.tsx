@@ -42,6 +42,9 @@ type SubmitButtonProps = {
 
 export const SubmitButton = ({
 	state,
+	isSubmitting,
+	isSubmitSuccessful,
+	isSubmitError,
 	idleText = "Submit",
 	pendingText = "Submitting...",
 	successText = "Success!",
@@ -71,17 +74,17 @@ export const SubmitButton = ({
 			return;
 		}
 
-		if (props.isSubmitting) {
+		if (isSubmitting) {
 			setButtonState("pending");
-		} else if (props.isSubmitSuccessful) {
+		} else if (isSubmitSuccessful) {
 			setButtonState("success");
-		} else if (props.isSubmitError) {
+		} else if (isSubmitError) {
 			setErrorState();
 		}
 
 		setButtonState("idle");
 		return;
-	}, [state, props.isSubmitting, props.isSubmitSuccessful, props.isSubmitError]);
+	}, [state, isSubmitting, isSubmitSuccessful, isSubmitError]);
 
 	// clean up timeout on unmount
 	useEffect(() => {
