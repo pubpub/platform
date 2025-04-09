@@ -9,6 +9,7 @@ import {
 	MemberRole,
 	memberRoleSchema,
 	pubsIdSchema,
+	pubTypesIdSchema,
 	stagesIdSchema,
 	usersIdSchema,
 } from "../public";
@@ -28,6 +29,11 @@ export const inviteSchema = z
 		createdAt: z.date(),
 		updatedAt: z.date(),
 		communityId: communitiesIdSchema,
+		community: z.object({
+			id: communitiesIdSchema,
+			slug: z.string(),
+			avatar: z.string().nullable(),
+		}),
 		communityRole: memberRoleSchema,
 		/**
 		 * The form that is used to invite the user to the community.
@@ -72,20 +78,36 @@ export const inviteSchema = z
 		z.union([
 			z.object({
 				pubId: pubsIdSchema,
+				pub: z.object({
+					id: pubsIdSchema,
+					title: z.string().nullable(),
+					pubType: z.object({
+						id: pubTypesIdSchema,
+						name: z.string(),
+					}),
+				}),
 				pubOrStageFormIds: formsIdSchema.array().nullable(),
 				stageId: z.null(),
+				stage: z.null(),
 				pubOrStageRole: memberRoleSchema,
 			}),
 			z.object({
 				pubId: z.null(),
+				pub: z.null(),
 				pubOrStageFormIds: formsIdSchema.array().nullable(),
 				stageId: stagesIdSchema,
+				stage: z.object({
+					id: stagesIdSchema,
+					name: z.string(),
+				}),
 				pubOrStageRole: memberRoleSchema,
 			}),
 			z.object({
 				pubId: z.null(),
+				pub: z.null(),
 				pubOrStageFormIds: z.null(),
 				stageId: z.null(),
+				stage: z.null(),
 				pubOrStageRole: z.null(),
 			}),
 		])

@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+
 import type {
 	CommunitiesId,
 	CommunityMemberships,
@@ -14,7 +16,6 @@ import { compareMemberRoles } from "db/types";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
-import { constructMagicInviteLink } from "~/lib/authentication/createMagicLink";
 import { env } from "~/lib/env/env.mjs";
 import { autoCache } from "~/prisma/seed/stubs/stubs";
 import { maybeWithTrx } from "..";
@@ -113,11 +114,43 @@ export namespace InviteService {
 	}
 
 	// The rest of the service methods for managing invites
-	export async function getInviteByToken(token: string, trx = db) {
+	export async function getInvite(token: string, id: InvitesId, trx = db) {
 		return trx
 			.selectFrom("invites")
 			.where("token", "=", token)
+			.where("id", "=", id)
 			.selectAll()
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("communities")
+						.select(["id", "slug", "avatar"])
+						.whereRef("communities.id", "=", "invites.communityId")
+				).as("community"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("pubs")
+						.select((eb) => [
+							"id",
+							"title",
+							jsonObjectFrom(
+								eb
+									.selectFrom("pub_types")
+									.select(["id", "name"])
+									.whereRef("pub_types.id", "=", "pubs.pubTypeId")
+							)
+								.$notNull()
+								.as("pubType"),
+						])
+						.whereRef("pubs.id", "=", "invites.pubId")
+				).as("pub"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name"])
+						.whereRef("stages.id", "=", "invites.stageId")
+				).as("stage"),
+			])
 			.executeTakeFirst() as Promise<Invite | null>;
 	}
 
@@ -130,13 +163,13 @@ export namespace InviteService {
 	 * @throws {InviteError}
 	 */
 	export async function acceptInvite(
-		token: string,
-		communityId: CommunitiesId,
+		inviteToken: string,
 		lastModifiedBy: LastModifiedBy,
 		trx = db
 	) {
 		const result = await maybeWithTrx(trx, async (trx) => {
-			const invite = await getValidInviteForLoggedInUser(token);
+			const { id, token } = parseInviteToken(inviteToken);
+			const invite = await getValidInviteForLoggedInUser(token, id, trx);
 
 			if (isCommunityOnlyInvite(invite)) {
 				// grant user community membership based on the invite data as the highest role
@@ -164,8 +197,14 @@ export namespace InviteService {
 	 *
 	 * @throws {InviteError}
 	 */
-	export async function rejectInvite(token: string, lastModifiedBy: LastModifiedBy) {
-		const invite = await getValidInviteForLoggedInUser(token);
+	export async function rejectInvite(
+		inviteToken: string,
+		lastModifiedBy: LastModifiedBy,
+		trx = db
+	) {
+		const { id, token } = parseInviteToken(inviteToken);
+
+		const invite = await getValidInviteForLoggedInUser(token, id, trx);
 
 		await db
 			.updateTable("invites")
@@ -186,11 +225,8 @@ export namespace InviteService {
 	/**
 	 * @throws {InviteError}
 	 */
-	async function getValidInviteForLoggedInUser(token: string, trx = db) {
-		const [invite, { user }] = await Promise.all([
-			getInviteByToken(token, trx),
-			getLoginData(),
-		]);
+	async function getValidInviteForLoggedInUser(token: string, id: InvitesId, trx = db) {
+		const [invite, { user }] = await Promise.all([getInvite(token, id, trx), getLoginData()]);
 
 		if (!invite) {
 			throw new InviteError("NOT_FOUND", {
@@ -390,10 +426,13 @@ export namespace InviteService {
 		});
 	}
 
-	export async function createSignupInviteLink(
+	/**
+	 * Creates a link to an invite page with an invite token
+	 */
+	export async function createInviteLink(
 		invite: Invite,
-		options?: {
-			redirectTo?: string;
+		options: {
+			redirectTo: string;
 			/**
 			 * If true, the url will be absolute
 			 * @default true
@@ -402,14 +441,13 @@ export namespace InviteService {
 		}
 	) {
 		const communitySlug = await getCommunitySlug();
+		const inviteToken = createInviteToken(invite);
 
 		const searchParams = new URLSearchParams();
-		searchParams.set("invite", invite.token);
-		if (options?.redirectTo) {
-			searchParams.set("redirectTo", options.redirectTo);
-		}
+		searchParams.set("invite", inviteToken);
+		searchParams.set("redirectTo", options.redirectTo);
 
-		return `${options?.absolute === false ? "" : env.PUBPUB_URL}/c/${communitySlug}/public/signup?${searchParams.toString()}`;
+		return `${options?.absolute === false ? "" : env.PUBPUB_URL}/c/${communitySlug}/public/invite?${searchParams.toString()}`;
 	}
 
 	export function createInviteToken(invite: Invite) {
@@ -421,30 +459,11 @@ export namespace InviteService {
 		return { id: id as InvitesId, token };
 	}
 
-	/**
-	 * Provide the path after `/c/${communitySlug}/` (no leading slash)
-	 * You'll get a link like `https://pubpub.com/c/community-slug/path?invite=...`
-	 */
-	export async function createCommunityInviteLink(
-		invite: Invite,
-		path: string,
-		communitySlug?: string
-	) {
-		const slug = communitySlug ?? (await getCommunitySlug());
-		const pathWithoutLeadingSlash = path.startsWith("/") ? path.slice(1) : path;
-		const redirectTo = `/c/${slug}/${pathWithoutLeadingSlash}` as const;
-
-		const inviteToken = createInviteToken(invite);
-		const inviteLink = constructMagicInviteLink(inviteToken, redirectTo);
-
-		return inviteLink;
-	}
-
 	// similar to validateToken and validateApiAccessToken
 	export async function getValidInvite(inviteToken: string) {
 		const { id, token } = parseInviteToken(inviteToken);
 
-		const dbInvite = await getInviteByToken(id);
+		const dbInvite = await getInvite(token, id);
 
 		if (!dbInvite) {
 			throw new InviteError("NOT_FOUND", {
