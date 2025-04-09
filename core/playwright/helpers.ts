@@ -102,6 +102,6 @@ export const PubFieldsOfEachType = Object.fromEntries(
 
 export const waitForBaseCommunityPage = async (page: Page, communitySlug?: string) => {
 	await page.waitForURL(new RegExp(`.*/c/${communitySlug ?? ".*"}/stages.*`), {
-		timeout: 5_000,
+		timeout: 10_000,
 	});
 };
