@@ -52,6 +52,11 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
+		DISABLED_ACTIONS: z
+			.string()
+			.transform((value) => value.split(","))
+			.pipe(z.string().array())
+			.optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {
