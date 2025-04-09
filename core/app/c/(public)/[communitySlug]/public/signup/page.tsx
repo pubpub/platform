@@ -2,13 +2,15 @@ import { notFound, redirect, RedirectType, unstable_rethrow } from "next/navigat
 
 import { MemberRole } from "db/public";
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { NoticeParams } from "~/app/components/Notice";
 import { Notice } from "~/app/components/Notice";
 import { JoinCommunityForm } from "~/app/components/Signup/JoinCommunityForm";
-import { PublicSignupForm } from "~/app/components/Signup/PublicSignupForm";
+import { SignupForm } from "~/app/components/Signup/SignupForm";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { InviteService } from "~/lib/server/invites/InviteService";
 import { publicSignupsAllowed } from "~/lib/server/user";
 
 export default async function Page({
@@ -16,7 +18,13 @@ export default async function Page({
 	searchParams,
 }: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<{ redirectTo?: string; notice?: string; error?: string; body?: string }>;
+	searchParams: Promise<{
+		redirectTo?: string;
+		notice?: string;
+		error?: string;
+		body?: string;
+		inviteToken?: string;
+	}>;
 }) {
 	const [community, { user }] = await Promise.all([findCommunityBySlug(), getLoginData()]);
 
@@ -28,14 +36,28 @@ export default async function Page({
 		notFound();
 	}
 
-	const isAllowedToSignup = await publicSignupsAllowed(community.id);
+	const { redirectTo, notice, error, body, inviteToken } = await searchParams;
+
+	const [allowsPublicSignups, [inviteErr, invite]] = await Promise.all([
+		publicSignupsAllowed(community.id),
+		inviteToken ? tryCatch(InviteService.getValidInvite(inviteToken)) : [null, null],
+	]);
+
+	if (inviteErr) {
+		// do certain things
+		logger.error({
+			msg: "Invite error",
+			inviteErr,
+		});
+		throw new Error("Invite error");
+	}
+
+	const isAllowedToSignup = allowsPublicSignups || invite;
 
 	if (!isAllowedToSignup) {
 		// this community does not allow public signups
 		notFound();
 	}
-
-	const { redirectTo, notice, error, body } = await searchParams;
 
 	const noticeTitle = notice || error;
 	const noticeParams = noticeTitle
@@ -61,7 +83,7 @@ export default async function Page({
 
 	return (
 		<Wrapper notice={noticeParams}>
-			<PublicSignupForm communityId={community.id} redirectTo={redirectTo} />
+			<SignupForm communityId={community.id} redirectTo={redirectTo} />
 		</Wrapper>
 	);
 }
@@ -72,8 +94,8 @@ export default async function Page({
  */
 const Wrapper = ({ children, notice }: { children: React.ReactNode; notice?: NoticeParams }) => {
 	return (
-		<div className="m-auto mt-16 flex min-h-[50vh] max-w-lg flex-col items-center justify-center">
-			{notice && <Notice {...notice} />}
+		<div className="m-auto mt-16 flex min-h-[50vh] max-w-lg flex-col items-center justify-center gap-4">
+			{notice && <Notice {...notice} className="max-w-sm" />}
 			{children}
 		</div>
 	);

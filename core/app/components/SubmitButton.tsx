@@ -3,6 +3,7 @@ import type { FormState } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 
+import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
@@ -19,14 +20,13 @@ type SubmitButtonProps = {
 	formState?: FormState<any>;
 
 	// customization
-	idleText?: string;
-	loadingText?: string;
-	successText?: string;
-	errorText?: string;
+	idleText?: React.ReactNode;
+	loadingText?: React.ReactNode;
+	successText?: React.ReactNode;
+	errorText?: React.ReactNode;
 
 	// button props
 	className?: string;
-	onClick?: () => void;
 	type?: "button" | "submit" | "reset";
 };
 
@@ -43,7 +43,8 @@ export const SubmitButton = ({
 	className = "",
 	onClick,
 	type = "submit",
-}: SubmitButtonProps) => {
+	...props
+}: ButtonProps & SubmitButtonProps) => {
 	const [buttonState, setButtonState] = useState<ButtonState>("idle");
 	const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -140,6 +141,7 @@ export const SubmitButton = ({
 			onClick={onClick}
 			variant={getButtonVariant()}
 			disabled={buttonState === "loading"}
+			{...props}
 		>
 			{getButtonIcon()}
 			{getButtonText()}
@@ -157,19 +159,20 @@ export const FormSubmitButton = ({
 	successText = "Success!",
 	errorText = "Error",
 	className = "",
+	...props
 }: {
-	formState: FormState<any>;
 	/**
 	 * Default text.
 	 *
 	 * @default "Submit"
 	 */
-	idleText?: string;
-	loadingText?: string;
-	successText?: string;
-	errorText?: string;
+	idleText?: React.ReactNode;
+	loadingText?: React.ReactNode;
+	successText?: React.ReactNode;
+	errorText?: React.ReactNode;
 	className?: string;
-}) => {
+	formState: FormState<any>;
+} & ButtonProps) => {
 	return (
 		<SubmitButton
 			formState={formState}
@@ -178,6 +181,7 @@ export const FormSubmitButton = ({
 			successText={successText}
 			errorText={errorText}
 			className={className}
+			{...props}
 		/>
 	);
 };

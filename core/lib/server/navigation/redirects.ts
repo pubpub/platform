@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
+import type { NoticeParams } from "~/app/components/Notice";
+import { getCommunitySlug } from "../cache/getCommunitySlug";
+
 const defaultLoginRedirectError = {
 	type: "error",
 	title: "You must be logged in to access this page",
@@ -16,13 +19,7 @@ export type LoginRedirectOpts = {
 	 *
 	 * @default { type: "error", title: "You must be logged in to access this page", body: "Please log in to continue" }
 	 */
-	loginNotice?:
-		| {
-				type: "error" | "notice";
-				title: string;
-				body?: string;
-		  }
-		| false;
+	loginNotice?: NoticeParams | false;
 
 	/**
 	 * Path to redirect the user to after login.
@@ -33,10 +30,7 @@ export type LoginRedirectOpts = {
 	redirectTo?: string;
 };
 
-/**
- * Redirect the user to the login page, with a notice to display.
- */
-export const redirectToLogin = (opts?: LoginRedirectOpts) => {
+export const constructLoginLink = (opts?: LoginRedirectOpts) => {
 	const searchParams = new URLSearchParams();
 
 	if (opts?.loginNotice !== false) {
@@ -53,5 +47,54 @@ export const redirectToLogin = (opts?: LoginRedirectOpts) => {
 	}
 
 	const basePath = `/login?${searchParams.toString()}`;
+	return basePath;
+};
+
+/**
+ * Redirect the user to the login page, with a notice to display.
+ */
+export const redirectToLogin = (opts?: LoginRedirectOpts): never => {
+	const basePath = constructLoginLink(opts);
+	redirect(basePath);
+};
+
+export const constructCommunitySignupLink = async (opts: {
+	redirectTo: string;
+	notice?: NoticeParams;
+	inviteToken?: string;
+}) => {
+	const communitySlug = await getCommunitySlug();
+
+	const searchParams = new URLSearchParams();
+
+	searchParams.set("redirectTo", opts.redirectTo);
+
+	if (opts.notice) {
+		searchParams.set(opts.notice.type, opts.notice.title);
+		if (opts.notice.body) {
+			searchParams.set("body", opts.notice.body);
+		}
+	}
+
+	if (opts.inviteToken) {
+		searchParams.set("inviteToken", opts.inviteToken);
+	}
+
+	const basePath = `/c/${communitySlug}/public/signup?${searchParams.toString()}`;
+	return basePath;
+};
+
+/**
+ * Redirect the user to the signup page, optionally with a notice.
+ *
+ * Notice will provide a notice at the top of the signup page
+ * NOTE: you need to be inside a community to use this
+ */
+export const redirectToCommunitySignup = async (opts: {
+	redirectTo: string;
+	notice?: NoticeParams;
+	inviteToken?: string;
+}): Promise<never> => {
+	const basePath = await constructCommunitySignupLink(opts);
 	redirect(basePath);
 };

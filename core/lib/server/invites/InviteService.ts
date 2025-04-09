@@ -17,6 +17,7 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { autoCache } from "~/prisma/seed/stubs/stubs";
 import { maybeWithTrx } from "..";
 import { getLoginData } from "../../authentication/loginData";
@@ -48,26 +49,33 @@ export namespace InviteService {
 		ALREADY_REJECTED: "Invite already rejected",
 		REVOKED: "Invite revoked",
 		EXPIRED: "Invite expired",
+		USER_NOT_LOGGED_IN: "User not logged in",
 	} as const;
 
 	export type InviteErrorType = keyof typeof INVITE_ERRORS;
 
 	export class InviteError extends Error {
 		code: InviteErrorType;
+		status?: InviteStatus;
 		constructor(
 			code: InviteErrorType,
 			opts?: {
+				status?: InviteStatus;
 				additionalMessage?: string;
 				logContext?: Record<string, unknown>;
 			}
 		) {
 			const msg = `${code}: ${INVITE_ERRORS[code]}.${opts?.additionalMessage ?? ""}`;
-			logger.error({
-				msg,
-				...opts?.logContext,
-			});
+			if (opts?.logContext) {
+				// these are expected errors, so we don't want to log them as errors
+				logger.debug({
+					msg,
+					...opts.logContext,
+				});
+			}
 			super(msg);
 			this.code = code;
+			this.status = opts?.status;
 		}
 	}
 
@@ -76,7 +84,7 @@ export namespace InviteService {
 		user: { id: UsersId; email: string } | null
 	) => {
 		if (!user) {
-			throw new InviteError("NOT_FOR_USER");
+			return;
 		}
 
 		if (invite.email && user.email !== invite.email) {
@@ -85,6 +93,7 @@ export namespace InviteService {
 					inviteToken: invite.token,
 					userId: user.id,
 				},
+				status: invite.status,
 			});
 		}
 
@@ -94,6 +103,7 @@ export namespace InviteService {
 					inviteToken: invite.token,
 					userId: user.id,
 				},
+				status: invite.status,
 			});
 		}
 	};
@@ -113,8 +123,10 @@ export namespace InviteService {
 		return InviteBuilder.inviteByUser(userId);
 	}
 
-	// The rest of the service methods for managing invites
-	export async function getInvite(token: string, id: InvitesId, trx = db) {
+	/**
+	 * @internal
+	 */
+	async function getInvite(token: string, id: InvitesId, trx = db) {
 		return trx
 			.selectFrom("invites")
 			.where("token", "=", token)
@@ -124,7 +136,7 @@ export namespace InviteService {
 				jsonObjectFrom(
 					eb
 						.selectFrom("communities")
-						.select(["id", "slug", "avatar"])
+						.select(["id", "slug", "avatar", "name"])
 						.whereRef("communities.id", "=", "invites.communityId")
 				).as("community"),
 				jsonObjectFrom(
@@ -154,36 +166,47 @@ export namespace InviteService {
 			.executeTakeFirst() as Promise<Invite | null>;
 	}
 
+	export async function setInviteSent(invite: Invite, lastModifiedBy: LastModifiedBy, trx = db) {
+		await trx
+			.updateTable("invites")
+			.set({
+				status: InviteStatus.pending,
+				lastModifiedBy,
+				lastSentAt: new Date(),
+			})
+			.where("id", "=", invite.id)
+			.execute();
+	}
+
 	/**
 	 * Sets the status of an invite to accepted
 	 * Will check whether the user is allowed to accept the invite: will prevent accepting an invite for another user
 	 *
 	 * Therefore this should never be called as a consequence of a user other than the invitee invoking a server action
 	 *
-	 * @throws {InviteError}
+	 * @throws {InviteError} If user is not logged in, or if user is not the invitee
 	 */
-	export async function acceptInvite(
-		inviteToken: string,
-		lastModifiedBy: LastModifiedBy,
-		trx = db
-	) {
+	export async function acceptInvite(invite: Invite, trx = db) {
 		const result = await maybeWithTrx(trx, async (trx) => {
-			const { id, token } = parseInviteToken(inviteToken);
-			const invite = await getValidInviteForLoggedInUser(token, id, trx);
+			const { user } = await getLoginData();
 
-			if (isCommunityOnlyInvite(invite)) {
-				// grant user community membership based on the invite data as the highest role
-			} else if (isPubInvite(invite)) {
-				// grant user pub membership based on the invite data as the highest role
-			} else if (isStageInvite(invite)) {
-				// grant user stage membership based on the invite data as the highest role
+			if (!user) {
+				throw new InviteError("USER_NOT_LOGGED_IN");
 			}
+
+			assertUserIsInvitee(invite, user);
 
 			await trx
 				.updateTable("invites")
-				.set({ status: InviteStatus.accepted, lastModifiedBy })
+				.set({
+					status: InviteStatus.accepted,
+					lastModifiedBy: createLastModifiedBy({ userId: user.id }),
+				})
 				.where("id", "=", invite.id)
+				.where("userId", "=", user.id)
 				.execute();
+
+			await grantInviteMemberships(invite, user, trx);
 		});
 
 		return result;
@@ -192,23 +215,27 @@ export namespace InviteService {
 	/**
 	 * Sets the status of an invite to reject
 	 * Will check whether the user is allowed to reject the invite: will prevent rejecting an invite for another user
+	 * Although technically anyone can reject an invite if they have it
 	 *
 	 * Therefore this should never be called as a consequence of a user other than the invitee invoking a server action
 	 *
 	 * @throws {InviteError}
 	 */
-	export async function rejectInvite(
-		inviteToken: string,
-		lastModifiedBy: LastModifiedBy,
-		trx = db
-	) {
-		const { id, token } = parseInviteToken(inviteToken);
+	export async function rejectInvite(invite: Invite, trx = db) {
+		const { user } = await getLoginData();
 
-		const invite = await getValidInviteForLoggedInUser(token, id, trx);
+		if (user) {
+			assertUserIsInvitee(invite, user);
+		}
 
-		await db
+		await trx
 			.updateTable("invites")
-			.set({ status: InviteStatus.rejected, lastModifiedBy })
+			.set({
+				status: InviteStatus.rejected,
+				// system here means that the user with the email rejected the invite
+				// but they did not sign up yet (ofc)
+				lastModifiedBy: createLastModifiedBy(user ? { userId: user.id } : "system"),
+			})
 			.where("id", "=", invite.id)
 			.execute();
 	}
@@ -225,28 +252,18 @@ export namespace InviteService {
 	/**
 	 * @throws {InviteError}
 	 */
-	async function getValidInviteForLoggedInUser(token: string, id: InvitesId, trx = db) {
-		const [invite, { user }] = await Promise.all([getInvite(token, id, trx), getLoginData()]);
-
-		if (!invite) {
-			throw new InviteError("NOT_FOUND", {
-				logContext: {
-					inviteToken: token,
-				},
-			});
-		}
+	export async function getValidInviteForLoggedInUser(inviteToken: string, trx = db) {
+		const [invite, { user }] = await Promise.all([
+			getValidInvite(inviteToken, trx),
+			getLoginData(),
+		]);
 
 		assertUserIsInvitee(invite, user);
 
-		if (invite.status !== InviteStatus.pending) {
-			throw new InviteError("NOT_PENDING", {
-				logContext: {
-					inviteToken: token,
-				},
-			});
-		}
-
-		return invite;
+		return {
+			invite,
+			user,
+		};
 	}
 
 	/**
@@ -382,8 +399,7 @@ export namespace InviteService {
 
 	/**
 	 * Adds the user to the community, and possibly the pub or stage, based on the invite data.
-	 * Also grants the form permissions based on the invite data.
-	 * TODO: fix these form permissions once we have reworked them
+	 * TODO: add form permissions once we have reworked them
 	 */
 	export async function grantInviteMemberships(
 		invite: Invite,
@@ -459,17 +475,21 @@ export namespace InviteService {
 		return { id: id as InvitesId, token };
 	}
 
-	// similar to validateToken and validateApiAccessToken
-	export async function getValidInvite(inviteToken: string) {
+	/**
+	 * Get an invite, and throw an error if it is not valid
+	 * @throws {InviteError}
+	 */
+	export async function getValidInvite(inviteToken: string, trx = db) {
 		const { id, token } = parseInviteToken(inviteToken);
 
-		const dbInvite = await getInvite(token, id);
+		const dbInvite = await getInvite(token, id, trx);
 
 		if (!dbInvite) {
 			throw new InviteError("NOT_FOUND", {
 				logContext: {
 					inviteToken,
 				},
+				status: InviteStatus.created,
 			});
 		}
 
@@ -477,7 +497,9 @@ export namespace InviteService {
 			throw new InviteError("NOT_PENDING", {
 				logContext: {
 					inviteToken,
+					invite: dbInvite,
 				},
+				status: dbInvite.status,
 			});
 		}
 
@@ -490,7 +512,9 @@ export namespace InviteService {
 			throw new InviteError("INVALID_TOKEN", {
 				logContext: {
 					inviteToken,
+					invite: dbInvite,
 				},
+				status: dbInvite.status,
 			});
 		}
 
@@ -498,7 +522,9 @@ export namespace InviteService {
 			throw new InviteError("EXPIRED", {
 				logContext: {
 					inviteToken,
+					invite: dbInvite,
 				},
+				status: dbInvite.status,
 			});
 		}
 

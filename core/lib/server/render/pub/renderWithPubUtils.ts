@@ -14,7 +14,9 @@ import { assert, expect } from "utils";
 import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { autoCache } from "~/lib/server/cache/autoCache";
+import { getCommunitySlug } from "../../cache/getCommunitySlug";
 import { findCommunityBySlug } from "../../community";
 import { addMemberToForm, createFormInviteLink } from "../../form";
 import { InviteService } from "../../invites/InviteService";
@@ -110,6 +112,8 @@ export const renderFormInviteLink = async (
 		inviter.userId ? { userId: inviter.userId } : { actionRunId: inviter.actionRunId! }
 	);
 
+	const communitySlug = await getCommunitySlug();
+
 	const invite = await inviteWithInviter
 		.forCommunity(communityId)
 		.withRole(MemberRole.contributor)
@@ -120,9 +124,17 @@ export const renderFormInviteLink = async (
 		.expiresInDays(30)
 		.create(trx);
 
-	const inviteLink = await InviteService.createCommunityInviteLink(
+	const inviteLink = await InviteService.createInviteLink(invite, {
+		redirectTo: `/c/${communitySlug}/public/forms/${formSlug}/fill?pubId=${pubId}`,
+	});
+
+	await InviteService.setInviteSent(
 		invite,
-		`public/forms/${formSlug}/fill?pubId=${pubId}`
+		createLastModifiedBy({
+			userId: inviter.userId,
+			actionRunId: inviter.actionRunId,
+		}),
+		trx
 	);
 
 	return inviteLink;
