@@ -161,7 +161,7 @@ export function AcceptRejectInvite({
 										{modeStyles[mode].button.text}
 									</span>
 								}
-								loadingText={modeStyles[mode].button.loadingText}
+								pendingText={modeStyles[mode].button.loadingText}
 								successText={modeStyles[mode].button.successText}
 								errorText={modeStyles[mode].button.errorText}
 							/>
@@ -209,7 +209,7 @@ export function AcceptRejectInvite({
 														Reject
 													</span>
 												}
-												loadingText="Rejecting Invitation..."
+												pendingText="Rejecting Invitation..."
 												successText="Invitation Rejected"
 												errorText="Error Rejecting Invitation"
 											/>

@@ -1,43 +1,49 @@
+import type { MutationStatus } from "@tanstack/react-query";
 import type { FormState } from "react-hook-form";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 
 import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-type ButtonState = "idle" | "loading" | "success" | "error";
+type Status = MutationStatus;
 
 type SubmitButtonProps = {
-	// direct control props
-	state?: ButtonState;
-	isSubmitting?: boolean;
-	isSubmitSuccessful?: boolean;
-	isSubmitError?: boolean;
-
-	// form integration
-	formState?: FormState<any>;
-
 	// customization
 	idleText?: React.ReactNode;
-	loadingText?: React.ReactNode;
+	pendingText?: React.ReactNode;
 	successText?: React.ReactNode;
 	errorText?: React.ReactNode;
 
 	// button props
 	className?: string;
 	type?: "button" | "submit" | "reset";
-};
+} & (
+	| {
+			state: Status;
+			// direct control props
+			isSubmitting?: never;
+			isSubmitSuccessful?: never;
+			isSubmitError?: never;
+	  }
+	| {
+			/**
+			 * cannot be used together with direct control props
+			 */
+			state?: never;
+			// direct control props
+			isSubmitting?: boolean;
+			isSubmitSuccessful?: boolean;
+			isSubmitError?: boolean;
+	  }
+);
 
 export const SubmitButton = ({
 	state,
-	isSubmitting,
-	isSubmitSuccessful,
-	isSubmitError,
-	formState,
 	idleText = "Submit",
-	loadingText = "Submitting...",
+	pendingText = "Submitting...",
 	successText = "Success!",
 	errorText = "Error",
 	className = "",
@@ -45,57 +51,37 @@ export const SubmitButton = ({
 	type = "submit",
 	...props
 }: ButtonProps & SubmitButtonProps) => {
-	const [buttonState, setButtonState] = useState<ButtonState>("idle");
+	const [buttonState, setButtonState] = useState<Status>("idle");
 	const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
+
+	const setErrorState = useCallback(() => {
+		setButtonState("error");
+		if (errorTimeout) clearTimeout(errorTimeout);
+		const timeout = setTimeout(() => setButtonState("idle"), 2000);
+		setErrorTimeout(timeout);
+	}, [errorTimeout]);
 
 	useEffect(() => {
 		// determine state based on props
 		if (state) {
 			setButtonState(state);
+			if (state === "error") {
+				setErrorState();
+			}
 			return;
 		}
 
-		if (formState) {
-			if (formState.isSubmitting) {
-				setButtonState("loading");
-				return;
-			}
-
-			if (formState.isSubmitSuccessful) {
-				setButtonState("success");
-				return;
-			}
-
-			if (formState.errors && Object.keys(formState.errors).length > 0) {
-				setButtonState("error");
-
-				// reset error state after 2 seconds
-				if (errorTimeout) clearTimeout(errorTimeout);
-				const timeout = setTimeout(() => setButtonState("idle"), 2000);
-				setErrorTimeout(timeout);
-				return;
-			}
-
-			setButtonState("idle");
-			return;
-		}
-
-		// direct prop control
-		if (isSubmitting) {
-			setButtonState("loading");
-		} else if (isSubmitError) {
-			setButtonState("error");
-
-			// reset error state after 2 seconds
-			if (errorTimeout) clearTimeout(errorTimeout);
-			const timeout = setTimeout(() => setButtonState("idle"), 2000);
-			setErrorTimeout(timeout);
-		} else if (isSubmitSuccessful) {
+		if (props.isSubmitting) {
+			setButtonState("pending");
+		} else if (props.isSubmitSuccessful) {
 			setButtonState("success");
-		} else {
-			setButtonState("idle");
+		} else if (props.isSubmitError) {
+			setErrorState();
 		}
-	}, [state, formState, isSubmitting, isSubmitSuccessful, isSubmitError]);
+
+		setButtonState("idle");
+		return;
+	}, [state, props.isSubmitting, props.isSubmitSuccessful, props.isSubmitError]);
 
 	// clean up timeout on unmount
 	useEffect(() => {
@@ -106,8 +92,8 @@ export const SubmitButton = ({
 
 	const getButtonText = () => {
 		switch (buttonState) {
-			case "loading":
-				return loadingText;
+			case "pending":
+				return pendingText;
 			case "success":
 				return successText;
 			case "error":
@@ -123,7 +109,7 @@ export const SubmitButton = ({
 
 	const getButtonIcon = () => {
 		switch (buttonState) {
-			case "loading":
+			case "pending":
 				return <Loader2 className="mr-2 h-4 w-4 animate-spin" />;
 			case "success":
 				return <CheckCircle className="mr-2 h-4 w-4" />;
@@ -140,7 +126,7 @@ export const SubmitButton = ({
 			className={cn(className, "transition-colors duration-500")}
 			onClick={onClick}
 			variant={getButtonVariant()}
-			disabled={buttonState === "loading"}
+			disabled={buttonState === "pending"}
 			{...props}
 		>
 			{getButtonIcon()}
@@ -149,38 +135,15 @@ export const SubmitButton = ({
 	);
 };
 
-/**
- * Form submit button that automatically handles loading state
- */
 export const FormSubmitButton = ({
 	formState,
-	idleText = "Submit",
-	loadingText = "Submitting...",
-	successText = "Success!",
-	errorText = "Error",
-	className = "",
 	...props
-}: {
-	/**
-	 * Default text.
-	 *
-	 * @default "Submit"
-	 */
-	idleText?: React.ReactNode;
-	loadingText?: React.ReactNode;
-	successText?: React.ReactNode;
-	errorText?: React.ReactNode;
-	className?: string;
-	formState: FormState<any>;
-} & ButtonProps) => {
+}: ButtonProps & Omit<SubmitButtonProps, "state"> & { formState: FormState<any> }) => {
 	return (
 		<SubmitButton
-			formState={formState}
-			idleText={idleText}
-			loadingText={loadingText}
-			successText={successText}
-			errorText={errorText}
-			className={className}
+			isSubmitting={Boolean(formState.isSubmitting)}
+			isSubmitSuccessful={Boolean(formState.isSubmitSuccessful)}
+			isSubmitError={Boolean(Object.keys(formState.errors ?? {}).length > 0)}
 			{...props}
 		/>
 	);

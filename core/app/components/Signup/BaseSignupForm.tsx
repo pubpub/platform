@@ -1,14 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { useForm } from "react-hook-form";
-import { registerFormats } from "schemas";
 
-import type { Users } from "db/public";
-import { Button } from "ui/button";
+import type { UsersId } from "db/public";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import {
 	Form,
@@ -22,28 +19,55 @@ import {
 import { Input } from "ui/input";
 
 import type { SignupFormSchema } from "./schema";
+import type { ClientExceptionOptions } from "~/lib/serverActions";
+import { useServerAction } from "~/lib/serverActions";
 import { FormSubmitButton } from "../SubmitButton";
 import { compiledSignupFormSchema } from "./schema";
 
-export function BaseSignupForm(props: {
-	user: Pick<Users, "firstName" | "lastName" | "email" | "id"> | null;
-	onSubmit: (data: SignupFormSchema) => Promise<void>;
+type SignupAction = (input: {
+	id?: UsersId;
+	firstName: string;
+	lastName: string;
+	email: string;
+	password: string;
 	redirectTo?: string;
+	slug?: string;
+}) => Promise<
+	| {
+			success: boolean;
+			report?: string;
+	  }
+	| ClientExceptionOptions
+>;
+
+export function SignupForm(props: {
+	signupAction: SignupAction;
+	redirectTo?: string;
+	defaultValues?: Partial<SignupFormSchema>;
+	mustUseSameEmail?: boolean;
 }) {
-	const searchParams = useSearchParams();
-
-	const redirectTo = props.redirectTo ?? searchParams.get("redirectTo");
-
 	const resolver = useMemo(() => typeboxResolver(compiledSignupFormSchema), []);
 
 	const form = useForm<SignupFormSchema>({
 		resolver,
-		defaultValues: { ...(props?.user ?? {}), lastName: props.user?.lastName ?? undefined },
+		defaultValues: props.defaultValues,
 	});
+
+	const runSignup = useServerAction(props.signupAction);
+
+	const handleSubmit = useCallback(
+		async (data: SignupFormSchema) => {
+			const result = await runSignup({
+				...data,
+				redirectTo: props.redirectTo,
+			});
+		},
+		[runSignup, props.redirectTo]
+	);
 
 	return (
 		<Form {...form}>
-			<form onSubmit={form.handleSubmit(props.onSubmit)}>
+			<form onSubmit={form.handleSubmit(handleSubmit)}>
 				<Card className="mx-auto max-w-sm">
 					<CardHeader>
 						<CardTitle className="text-xl">Sign Up</CardTitle>
@@ -88,8 +112,9 @@ export function BaseSignupForm(props: {
 									<FormItem>
 										<FormLabel>Email</FormLabel>
 										<FormDescription>
-											If you change this, we will ask you to confirm your
-											email again.
+											{props.mustUseSameEmail
+												? "You must enter the same email you were invited with."
+												: "If you change this, we will ask you to confirm your email again."}
 										</FormDescription>
 										<FormControl>
 											<Input
@@ -119,22 +144,16 @@ export function BaseSignupForm(props: {
 							/>
 
 							<FormSubmitButton
-								formState={form.formState}
 								className="w-full"
 								idleText="Finish sign up"
+								formState={form.formState}
 							/>
 						</div>
-						{/* <div className="mt-4 text-center text-sm">
-							Already have an account?{" "}
-							<Link href="#" className="underline">
-								Sign in
-							</Link>
-						</div> */}
 					</CardContent>
 					<CardFooter>
 						Or{" "}
 						<Link
-							href={`/login${redirectTo ? `?redirectTo=${redirectTo}` : ""}`}
+							href={`/login${props.redirectTo ? `?redirectTo=${props.redirectTo}` : ""}`}
 							className="mx-1 font-semibold underline"
 						>
 							sign in
