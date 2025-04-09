@@ -35,8 +35,8 @@ export default async function Login({
 	return (
 		<div className="mx-auto max-w-sm">
 			<LoginForm />
-			{notice && <Notice variant="default" title={notice} description={body} />}
-			{error && <Notice variant="destructive" title={error} description={body} />}
+			{notice && <Notice type="notice" title={notice} body={body} />}
+			{error && <Notice type="error" title={error} body={body} />}
 			{/* <div className="text-gray-600 text-center mt-6">
 				Don't have an account?{" "}
 				<Link

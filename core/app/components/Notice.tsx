@@ -2,27 +2,26 @@ import { Alert, AlertDescription, AlertTitle } from "ui/alert";
 import { AlertCircle } from "ui/icon";
 import { cn } from "utils";
 
+export type NoticeParams = {
+	type: "error" | "notice";
+	title: string;
+	body?: string;
+};
+
 export const Notice = ({
-	variant,
+	type,
 	title,
-	description,
+	body,
 	className,
 }: {
-	variant: "default" | "destructive";
-	title: string | React.ReactNode;
-	description?: string | React.ReactNode;
 	className?: string;
-}) => (
+} & NoticeParams) => (
 	<Alert
-		variant={variant}
-		className={cn(
-			"mt-4",
-			!description && "flex flex-row items-center [&>svg]:static",
-			className
-		)}
+		variant={type === "error" ? "destructive" : "default"}
+		className={cn("mt-4", !body && "flex flex-row items-center [&>svg]:static", className)}
 	>
 		<AlertCircle className="h-4 w-4" />
-		<AlertTitle className={cn("font-semibold", !description && "mb-0")}>{title}</AlertTitle>
-		{description && <AlertDescription>{description}</AlertDescription>}
+		<AlertTitle className={cn("font-semibold", !body && "mb-0")}>{title}</AlertTitle>
+		{body && <AlertDescription>{body}</AlertDescription>}
 	</Alert>
 );
