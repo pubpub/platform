@@ -322,36 +322,6 @@ export type FormInitializer<
 	}[keyof PT];
 };
 
-export type ApiAccessPermissionConstraintsInputWithHumanReadableKeys<
-	PT extends PubTypeInitializer<any>,
-	S extends StagesInitializer<any>,
-	Constraints extends z.infer<typeof permissionsSchema> = z.infer<typeof permissionsSchema>,
-> = {
-	[Scope in keyof Constraints]?: {
-		[AccessType in keyof Constraints[Scope]]?: Constraints[Scope][AccessType] extends
-			| boolean
-			| undefined
-			? boolean | undefined
-			: Exclude<
-						Constraints[Scope][AccessType],
-						boolean | undefined
-				  > extends infer ConstraintObject extends Record<string, any>
-				? {
-						[Key in keyof ConstraintObject]: ConstraintObject[Key] extends (
-							| StagesId
-							| "no-stage"
-						)[]
-							? (keyof S)[]
-							: ConstraintObject[Key] extends PubTypesId[]
-								? (keyof PT)[]
-								: // add additional cases here as we add them
-									//
-									ConstraintObject[Key];
-					}
-				: Constraints[Scope];
-	};
-};
-
 export type ApiTokenInitializer = {
 	[ApiTokenName in string]: {
 		id?: `${string}.${string}`;
