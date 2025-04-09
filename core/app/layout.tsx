@@ -2,6 +2,8 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import "ui/styles.css";
 
+import { Suspense } from "react";
+
 // import "./globals.css";
 
 import { TooltipProvider } from "ui/tooltip";
@@ -22,7 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					<NuqsAdapter>
 						<TooltipProvider>
 							{children}
-							<RootToaster />
+							<Suspense>
+								<RootToaster />
+							</Suspense>
 						</TooltipProvider>
 					</NuqsAdapter>
 				</ReactQueryProvider>
