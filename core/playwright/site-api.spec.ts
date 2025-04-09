@@ -71,6 +71,7 @@ const seed = createSeed({
 	pubFields: {
 		Title: { schemaName: CoreSchemaType.String },
 		Relation: { schemaName: CoreSchemaType.Null, relation: true },
+		Content: { schemaName: CoreSchemaType.String },
 	},
 	pubTypes: {
 		Basic: {
@@ -90,6 +91,10 @@ const seed = createSeed({
 			fields: {
 				Title: { isTitle: true },
 			},
+		},
+		NotSoBasic: {
+			Title: { isTitle: true },
+			Content: { isTitle: false },
 		},
 	},
 	stages: {
@@ -114,6 +119,13 @@ const seed = createSeed({
 					value: null,
 					pub,
 				})),
+			},
+		},
+		{
+			pubType: "NotSoBasic",
+			values: {
+				Title: "Redwall",
+				Content: "time for a feast",
 			},
 		},
 	],
@@ -192,10 +204,20 @@ const createClient = (token: string, jsonQuery = true) =>
 		jsonQuery,
 	});
 
+let totalPubs = 0;
+
 test.beforeAll(async ({ browser }) => {
 	const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 
 	community = await seedCommunity(seed);
+
+	// boo not good
+	// FIXME: REWRITE THESE TESTS TO BE LESS DEPENDENT ON ORDER OF EXECUTION
+	totalPubs =
+		community.pubs.length +
+		(community.pubs
+			.find((pub) => pub.id === whatIsUpWorldPubId)
+			?.values?.filter((val) => val.relatedPubId !== null)?.length ?? 0);
 
 	COMMUNITY_SLUG = community.community.slug;
 
@@ -212,6 +234,7 @@ test.beforeAll(async ({ browser }) => {
 test.describe("Site API", () => {
 	let newPubId: PubsId;
 	let firstCreatedAt: Date;
+
 	test.describe("pubs", () => {
 		test("should be able to create a pub", async () => {
 			const pubTypesResponse = await client.pubTypes.getMany({
@@ -222,7 +245,7 @@ test.describe("Site API", () => {
 			});
 
 			expectStatus(pubTypesResponse, 200);
-			expect(pubTypesResponse.body).toHaveLength(3);
+			expect(pubTypesResponse.body).toHaveLength(4);
 
 			const pubType = pubTypesResponse.body[0];
 
@@ -244,6 +267,8 @@ test.describe("Site API", () => {
 			firstCreatedAt = new Date();
 
 			expectStatus(pubResponse, 201);
+
+			totalPubs++;
 
 			expect(pubResponse.body.values).toEqual(
 				expect.arrayContaining([
@@ -269,6 +294,8 @@ test.describe("Site API", () => {
 					},
 				},
 			});
+
+			totalPubs++;
 
 			newPubId = pubResponse.body.id;
 		});
@@ -301,6 +328,8 @@ test.describe("Site API", () => {
 				// basically  because we don't return a body ts rest freaks out
 				// TODO: fix this not really working
 				.rejects.toThrow("Unexpected end of JSON input");
+
+			totalPubs--;
 		});
 
 		test.describe("filters", () => {
@@ -635,7 +664,7 @@ test.describe("Site API", () => {
 
 			expectStatus(pubTypesResponse, 200);
 			const pubTypes = pubTypesResponse.body;
-			expect(pubTypes).toHaveLength(2);
+			expect(pubTypes).toHaveLength(4);
 			const pubType = pubTypes.find((pt) => pt.name === "NotSoBasic");
 			expect(pubType).toBeDefined();
 
@@ -657,8 +686,8 @@ test.describe("Site API", () => {
 				query: { pubTypeId: pubTypes.map((pt) => pt.id) },
 			});
 			expectStatus(response2, 200);
-			// 2 from seed, 2 created in other tests above
-			expect(response2.body).toHaveLength(4);
+			// 7 from seed, 2 created in other tests above
+			expect(response2.body).toHaveLength(totalPubs);
 		});
 	});
 });
