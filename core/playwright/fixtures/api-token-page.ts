@@ -6,34 +6,8 @@ import { expect } from "@playwright/test";
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
 import type { createTokenFormSchema } from "~/app/c/[communitySlug]/settings/tokens/CreateTokenForm";
-import type { Prettify } from "~/lib/types";
 
 type Permissions = z.infer<typeof createTokenFormSchema>["permissions"];
-
-// this is so we can specify the stage name rather than the stage id
-// type PermissionsButWithStringsInsteadOfIds = {
-// 	[Scope in keyof Permissions]?: {
-// 		[Permission in keyof Permissions[Scope]]: Permissions[Scope][Permission] extends
-// 			| boolean
-// 			| undefined
-// 			? Permissions[Scope][Permission]
-// 			: Exclude<
-// 						Permissions[Scope][Permission],
-// 						boolean | undefined
-// 				  > extends infer Restrictions
-// 				?
-// 						| {
-// 								[Restriction in keyof Restrictions]: any[] extends Restrictions[Restriction]
-// 									? string[]
-// 									: Restrictions[Restriction];
-// 						  }
-// 						| boolean
-// 						| undefined
-// 				: never;
-// 	};
-// };
-
-// declare const x: PermissionsButWithStringsInsteadOfIds;
 
 export class ApiTokenPage {
 	private readonly newTokenNameBox: Locator;
@@ -72,6 +46,7 @@ export class ApiTokenPage {
 		await this.newTokenNameBox.click();
 		await this.newTokenNameBox.fill(input.name);
 		await this.newTokenDescriptionBox.fill(input.description ?? "");
+		// TODO: add this back once we have a way of using the date picker programmatically
 		// await this.newTokenExpiryDatePicker.fill(input.expiration.toISOString());
 
 		for (const scope of Object.values(ApiAccessScope)) {
