@@ -7,13 +7,8 @@ import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { FieldsPage } from "./fixtures/fields-page";
-import { FormsEditPage } from "./fixtures/forms-edit-page";
-import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
-import { PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
-import { createCommunity } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 

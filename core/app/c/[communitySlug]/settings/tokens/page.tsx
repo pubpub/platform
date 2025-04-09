@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
+import { NO_STAGE_OPTION } from "db/types";
+
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { getAllPubTypesForCommunity, getPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
-import { CreateTokenForm } from "./CreateTokenForm";
+import { CreateTokenFormWithContext } from "./CreateTokenForm";
 import { ExistingToken } from "./ExistingToken";
 
 export const metadata: Metadata = {
@@ -21,8 +24,9 @@ export default async function Page(props: { params: { communitySlug: string } })
 		return notFound();
 	}
 
-	const [stages, existingTokens] = await Promise.all([
+	const [stages, pubTypes, existingTokens] = await Promise.all([
 		getStages({ communityId: community.id, userId: user.id }).execute(),
+		getAllPubTypesForCommunity(community.slug).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 
@@ -47,9 +51,22 @@ export default async function Page(props: { params: { communitySlug: string } })
 							</div>
 						</div>
 					)}
-					<CreateTokenForm
-						context={{
+					<CreateTokenFormWithContext
+						stages={{
 							stages,
+							allOptions: [
+								NO_STAGE_OPTION,
+								...stages.map((stage) => ({ label: stage.name, value: stage.id })),
+							],
+							allValues: [NO_STAGE_OPTION.value, ...stages.map((stage) => stage.id)],
+						}}
+						pubTypes={{
+							pubTypes,
+							allOptions: pubTypes.map((pubType) => ({
+								label: pubType.name,
+								value: pubType.id,
+							})),
+							allValues: pubTypes.map((pubType) => pubType.id),
 						}}
 					/>
 				</div>
