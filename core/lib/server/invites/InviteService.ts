@@ -7,6 +7,7 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type {
 	CommunitiesId,
 	CommunityMemberships,
+	FormsId,
 	InvitesId,
 	PubsId,
 	StagesId,
@@ -20,9 +21,10 @@ import { logger } from "logger";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env.mjs";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { autoCache } from "~/prisma/seed/stubs/stubs";
 import { maybeWithTrx } from "..";
 import { getLoginData } from "../../authentication/loginData";
+import { autoCache } from "../cache/autoCache";
+import { autoRevalidate } from "../cache/autoRevalidate";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
 import {
 	insertCommunityMember,
@@ -30,6 +32,7 @@ import {
 	insertStageMember,
 	selectCommunityMember,
 } from "../member";
+import { withInvitedFormIds } from "./helpers";
 import { InviteBuilder } from "./InviteBuilder";
 
 /**
@@ -134,6 +137,7 @@ export namespace InviteService {
 			.where("token", "=", token)
 			.where("id", "=", id)
 			.selectAll()
+			.select((eb) => withInvitedFormIds(eb, "invites.id"))
 			.select((eb) => [
 				jsonObjectFrom(
 					eb
@@ -169,15 +173,16 @@ export namespace InviteService {
 	}
 
 	export async function setInviteSent(invite: Invite, lastModifiedBy: LastModifiedBy, trx = db) {
-		await trx
-			.updateTable("invites")
-			.set({
-				status: InviteStatus.pending,
-				lastModifiedBy,
-				lastSentAt: new Date(),
-			})
-			.where("id", "=", invite.id)
-			.execute();
+		await autoRevalidate(
+			trx
+				.updateTable("invites")
+				.set({
+					status: InviteStatus.pending,
+					lastModifiedBy,
+					lastSentAt: new Date(),
+				})
+				.where("id", "=", invite.id)
+		).execute();
 	}
 
 	/**
@@ -197,8 +202,6 @@ export namespace InviteService {
 	) {
 		const result = await maybeWithTrx(trx, async (trx) => {
 			const { user } = _user ? { user: _user } : await getLoginData();
-			console.log("user", user);
-			console.log("invite", invite);
 
 			if (!user) {
 				throw new InviteError("USER_NOT_LOGGED_IN");
@@ -206,15 +209,16 @@ export namespace InviteService {
 
 			assertUserIsInvitee(invite, user);
 
-			await trx
-				.updateTable("invites")
-				.set({
-					status: InviteStatus.accepted,
-					lastModifiedBy: createLastModifiedBy({ userId: user.id }),
-				})
-				.where("id", "=", invite.id)
-				.where("userId", "=", user.id)
-				.execute();
+			await autoRevalidate(
+				trx
+					.updateTable("invites")
+					.set({
+						status: InviteStatus.accepted,
+						lastModifiedBy: createLastModifiedBy({ userId: user.id }),
+					})
+					.where("id", "=", invite.id)
+					.where("userId", "=", user.id)
+			).execute();
 
 			await grantInviteMemberships(invite, user, trx);
 		});
@@ -348,7 +352,7 @@ export namespace InviteService {
 						.selectAll()
 						.where("userId", "=", user.id)
 						.where("pubId", "=", invite.pubId)
-				),
+				).executeTakeFirst(),
 				communityMembershipPromise,
 			]);
 
@@ -379,7 +383,7 @@ export namespace InviteService {
 						.selectAll()
 						.where("userId", "=", user.id)
 						.where("stageId", "=", invite.stageId)
-				),
+				).executeTakeFirst(),
 				communityMembershipPromise,
 			]);
 
@@ -407,6 +411,25 @@ export namespace InviteService {
 		throw new Error("Invalid invite");
 	}
 
+	async function _tempAddUserToForms(
+		props: { userId: UsersId; communityId: CommunitiesId; formIds: FormsId[]; pubId?: PubsId },
+		trx = db
+	) {
+		const formMemberships = await autoRevalidate(
+			trx
+				.insertInto("form_memberships")
+				.values(
+					props.formIds.map((formId) => ({
+						userId: props.userId,
+						formId,
+						pubId: props.pubId,
+					}))
+				)
+				.returningAll()
+		).execute();
+		return formMemberships;
+	}
+
 	/**
 	 * Adds the user to the community, and possibly the pub or stage, based on the invite data.
 	 * TODO: add form permissions once we have reworked them
@@ -429,8 +452,18 @@ export namespace InviteService {
 					},
 					trx
 				).executeTakeFirstOrThrow();
+				if (invite.communityLevelFormIds?.length) {
+					await _tempAddUserToForms(
+						{
+							communityId: invite.communityId,
+							userId: user.id,
+							formIds: invite.communityLevelFormIds,
+						},
+						trx
+					);
+				}
 			} else if (isPubInvite(invite)) {
-				await insertCommunityMember(
+				const communityMember = await insertCommunityMember(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
@@ -438,7 +471,7 @@ export namespace InviteService {
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				await insertPubMember(
+				const pubMember = await insertPubMember(
 					{
 						pubId: invite.pubId,
 						userId: user.id,
@@ -446,6 +479,27 @@ export namespace InviteService {
 					},
 					trx
 				).executeTakeFirstOrThrow();
+				const [communityLevelForms, pubLevelForms] = await Promise.all([
+					invite.communityLevelFormIds &&
+						_tempAddUserToForms(
+							{
+								communityId: invite.communityId,
+								userId: user.id,
+								formIds: invite.communityLevelFormIds,
+							},
+							trx
+						),
+					invite.pubOrStageFormIds &&
+						_tempAddUserToForms(
+							{
+								communityId: invite.communityId,
+								userId: user.id,
+								formIds: invite.pubOrStageFormIds,
+								pubId: invite.pubId,
+							},
+							trx
+						),
+				]);
 			} else if (isStageInvite(invite)) {
 				await insertCommunityMember(
 					{
@@ -463,6 +517,26 @@ export namespace InviteService {
 					},
 					trx
 				).executeTakeFirstOrThrow();
+				await Promise.all([
+					invite.communityLevelFormIds &&
+						_tempAddUserToForms(
+							{
+								communityId: invite.communityId,
+								userId: user.id,
+								formIds: invite.communityLevelFormIds,
+							},
+							trx
+						),
+					invite.pubOrStageFormIds &&
+						_tempAddUserToForms(
+							{
+								communityId: invite.communityId,
+								userId: user.id,
+								formIds: invite.pubOrStageFormIds,
+							},
+							trx
+						),
+				]);
 			}
 
 			// TODO: change this as soon as Kalil has implemented the form permissions

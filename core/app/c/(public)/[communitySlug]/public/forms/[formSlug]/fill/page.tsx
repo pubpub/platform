@@ -190,6 +190,7 @@ export default async function FormPage(props: {
 	}
 
 	const role = getCommunityRole(user, { slug: params.communitySlug });
+	console.log("role", role);
 	if (!role) {
 		// user is not a member of the community, but is logged in, and the form is public
 		if (form.access === "public") {
@@ -203,11 +204,13 @@ export default async function FormPage(props: {
 
 	// all other roles always have access to the form
 	if (role === MemberRole.contributor && form.access !== FormAccessType.public) {
+		console.log(user);
 		const memberHasAccessToForm = await userHasPermissionToForm({
 			formSlug: params.formSlug,
 			userId: user.id,
 			pubId: pub?.id,
 		});
+		console.log("memberHasAccessToForm", memberHasAccessToForm);
 
 		if (!memberHasAccessToForm) {
 			// TODO: show no access page

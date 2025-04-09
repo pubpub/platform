@@ -287,7 +287,7 @@ export class InviteBuilder
 		const inviteFinal = (inviteWithForms as typeof inviteBase)
 			.selectFrom("invite")
 			.selectAll()
-			.select(withInvitedFormIds);
+			.select((eb) => withInvitedFormIds(eb, "invite.id"));
 
 		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
 
