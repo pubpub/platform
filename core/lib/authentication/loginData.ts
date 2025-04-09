@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { Session, User } from "lucia";
+
 import { cache } from "react";
 
 import type { LoginRedirectOpts } from "../server/navigation/redirects";
@@ -25,7 +27,7 @@ export const getPageLoginData = cache(
 			redirectToLogin(opts);
 		}
 
-		return loginData;
+		return loginData as { user: User; session: Session };
 	}
 );
 
