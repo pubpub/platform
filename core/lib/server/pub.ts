@@ -1747,38 +1747,18 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										.over((ob) => ob.partitionBy("pv.fieldId"))} desc`,
 								"pv.rank",
 							])
-							.$if(Boolean(allowedPubTypes?.length), (qb) =>
-								qb
-									.leftJoin(
-										"pubs as related_pubs",
-										"related_pubs.id",
-										"pv.relatedPubId"
-									)
-									.where((eb) =>
-										eb.or([
-											eb("related_pubs.pubTypeId", "is", null),
-											eb("related_pubs.pubTypeId", "in", allowedPubTypes!),
-										])
-									)
-							)
-							.$if(Boolean(allowedStages?.length), (qb) =>
-								qb
-									.leftJoin(
-										"PubsInStages as related_pubs_in_stages",
-										"related_pubs_in_stages.pubId",
-										"pv.relatedPubId"
-									)
-									.where((eb) =>
-										eb.or([
-											// shouldnt check for stages for normal pub values
-											eb("pv.relatedPubId", "is", null),
-											stagesWhere(
-												eb,
-												allowedStages!,
-												"related_pubs_in_stages.stageId"
-											),
-										])
-									)
+							// filter out relatedPubs with pubTypes/stages that the user does not have access to
+							.$if(Boolean(allowedPubTypes?.length || allowedStages?.length), (qb) =>
+								qb.where((eb) =>
+									eb.or([
+										eb("pv.relatedPubId", "is", null),
+										eb(
+											"pv.relatedPubId",
+											"in",
+											eb.selectFrom("pub_tree").select("pub_tree.pubId")
+										),
+									])
+								)
 							)
 					).as("values")
 				)
