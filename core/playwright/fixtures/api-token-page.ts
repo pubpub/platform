@@ -114,8 +114,10 @@ export class ApiTokenPage {
 	}
 
 	// TODO: delete token
+	// see site.spec for implementation
 
 	// TODO: get token permissions
+	// see site.spec for implementation
 }
 
 export function expectStatus<T extends { status: number }, S extends T["status"]>(
