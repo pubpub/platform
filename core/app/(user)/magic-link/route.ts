@@ -130,8 +130,14 @@ export async function GET(req: NextRequest) {
 
 	const { user: tokenUser, authTokenType } = tokenSettled.value;
 
+	let nowVerified = false;
 	if (!tokenUser.isVerified) {
-		db.updateTable("users").set({ isVerified: true }).where("id", "=", tokenUser.id).execute();
+		await db
+			.updateTable("users")
+			.set({ isVerified: true })
+			.where("id", "=", tokenUser.id)
+			.execute();
+		nowVerified = true;
 	}
 
 	const session = await lucia.createSession(tokenUser.id, {
@@ -144,5 +150,6 @@ export async function GET(req: NextRequest) {
 		...newSessionCookie.attributes,
 	});
 
-	return redirectToURL(redirectTo, req);
+	const opts = nowVerified ? { ...req, searchParams: { verified: "true" } } : req;
+	return redirectToURL(redirectTo, opts);
 }

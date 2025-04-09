@@ -1,7 +1,5 @@
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-import { Toaster } from "ui/toaster";
-
 import "ui/styles.css";
 
 // import "./globals.css";
@@ -9,6 +7,7 @@ import "ui/styles.css";
 import { TooltipProvider } from "ui/tooltip";
 
 import { ReactQueryProvider } from "./components/providers/QueryProvider";
+import { RootToaster } from "./RootToaster";
 
 export const metadata = {
 	title: "PubPub Platform",
@@ -23,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 					<NuqsAdapter>
 						<TooltipProvider>
 							{children}
-							<Toaster />
+							<RootToaster />
 						</TooltipProvider>
 					</NuqsAdapter>
 				</ReactQueryProvider>

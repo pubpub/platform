@@ -10,7 +10,7 @@ import { publicSignup } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 import { BaseSignupForm } from "./BaseSignupForm";
 
-export function PublicSignupForm(props: { communityId: CommunitiesId; redirectTo?: string }) {
+export function PublicSignupForm(props: { communityId: CommunitiesId; redirectTo?: `/${string}` }) {
 	const runSignup = useServerAction(publicSignup);
 
 	const searchParams = useSearchParams();

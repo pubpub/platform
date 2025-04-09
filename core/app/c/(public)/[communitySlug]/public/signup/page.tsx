@@ -33,13 +33,14 @@ export default async function Page({
 		notFound();
 	}
 
-	const { redirectTo } = await searchParams;
+	const { redirectTo: redirectToOriginal } = await searchParams;
+	const redirectTo: `/${string}` | undefined = redirectToOriginal?.startsWith("/")
+		? (redirectToOriginal as `/${string}`)
+		: undefined;
 
 	if (user) {
 		if (user.memberships.some((m) => m.communityId === community.id)) {
 			redirect(redirectTo ?? `/c/${community.slug}/stages`);
-			// TODO: redirect to wherever they were redirected to before signing up
-			throw new Error("User is already member of community");
 		}
 
 		// TODO: figure this out based on the invite

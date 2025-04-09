@@ -290,9 +290,11 @@ test.describe("public forms", () => {
 			}, url!);
 
 			await page.goto(decodedUrl);
-			await page.getByText("Your email has been verified").waitFor();
-			// Larger timeout since there's a wait for the redirect
-			await page.waitForURL(fillUrl, { timeout: 10_000 });
+			await page
+				.getByRole("status")
+				.getByText("Your email is now verified", { exact: true })
+				.waitFor();
+			await page.waitForURL(fillUrl, { timeout: 5_000 });
 		});
 
 		let pubId: PubsId;

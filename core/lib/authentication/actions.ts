@@ -166,7 +166,7 @@ export const sendForgotPasswordMail = defineServerAction(
 	}
 );
 
-const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: string }) => {
+const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: `/${string}` }) => {
 	const user = await getUserWithPasswordHash({ email: props.email });
 
 	if (!user) {
@@ -200,7 +200,7 @@ const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: string 
 
 export const sendVerifyEmailMail = defineServerAction(async function sendVerifyEmailMail(props: {
 	email: string;
-	redirectTo?: string;
+	redirectTo?: `/${string}`;
 }) {
 	return _sendVerifyEmailMail(props);
 });
@@ -331,7 +331,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	lastName: string;
 	email: string;
 	password: string;
-	redirectTo?: string;
+	redirectTo?: `/${string}`;
 	slug?: string;
 	role?: MemberRole;
 	communityId: CommunitiesId;
