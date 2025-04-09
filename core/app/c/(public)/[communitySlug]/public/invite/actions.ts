@@ -172,7 +172,7 @@ export const signupThroughInvite = defineServerAction(async function signupThrou
 		};
 	}
 
-	const [addUserErr, addUserResult] = await tryCatch(
+	const [addUserErr, newUser] = await tryCatch(
 		maybeWithTrx(db, async (trx) => {
 			const newUser = await addUser(
 				{
@@ -193,27 +193,31 @@ export const signupThroughInvite = defineServerAction(async function signupThrou
 				);
 			});
 
-			const newSession = await lucia.createSession(newUser.id, {
-				type: AuthTokenType.generic,
-			});
-			const newSessionCookie = lucia.createSessionCookie(newSession.id);
-			const cookieStore = await cookies();
-			cookieStore.set(
-				newSessionCookie.name,
-				newSessionCookie.value,
-				newSessionCookie.attributes
-			);
+			await InviteService.acceptInvite(invite, trx, newUser);
 
-			redirect(redirectTo);
+			return newUser;
 		})
 	);
 
-	if (addUserErr) {
+	if (addUserErr && addUserErr instanceof InviteService.InviteError) {
 		return {
 			success: false,
 			error: addUserErr.message,
 		};
 	}
+
+	if (addUserErr) {
+		throw addUserErr;
+	}
+
+	const newSession = await lucia.createSession(newUser.id, {
+		type: AuthTokenType.generic,
+	});
+	const newSessionCookie = lucia.createSessionCookie(newSession.id);
+	const cookieStore = await cookies();
+	cookieStore.set(newSessionCookie.name, newSessionCookie.value, newSessionCookie.attributes);
+
+	redirect(redirectTo);
 
 	return {
 		success: true,

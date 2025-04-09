@@ -1,5 +1,7 @@
 import crypto from "node:crypto";
 
+import type { User } from "lucia";
+
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
@@ -97,7 +99,7 @@ export namespace InviteService {
 			});
 		}
 
-		if (invite.userId !== user.id) {
+		if (invite.userId && invite.userId !== user.id) {
 			throw new InviteError("NOT_FOR_USER", {
 				logContext: {
 					inviteToken: invite.token,
@@ -184,11 +186,19 @@ export namespace InviteService {
 	 *
 	 * Therefore this should never be called as a consequence of a user other than the invitee invoking a server action
 	 *
+	 * @param _user {User?} Can technically also be used to accept an invite on behalf of a user who is just now created. This should be a rarer usecase, only really useful inside of a transaction, hence why it's the last option
+	 *
 	 * @throws {InviteError} If user is not logged in, or if user is not the invitee
 	 */
-	export async function acceptInvite(invite: Invite, trx = db) {
+	export async function acceptInvite(
+		invite: Invite,
+		trx = db,
+		_user?: { id: UsersId; email: string }
+	) {
 		const result = await maybeWithTrx(trx, async (trx) => {
-			const { user } = await getLoginData();
+			const { user } = _user ? { user: _user } : await getLoginData();
+			console.log("user", user);
+			console.log("invite", invite);
 
 			if (!user) {
 				throw new InviteError("USER_NOT_LOGGED_IN");
@@ -411,34 +421,51 @@ export namespace InviteService {
 		const res = await maybeWithTrx(trx, async (trx) => {
 			// TODO: override lower level of permissions if the user has already accepted another invite
 			if (isCommunityOnlyInvite(invite)) {
-				await insertCommunityMember({
-					communityId: invite.communityId,
-					userId: user.id,
-					role: invite.communityRole,
-				}).executeTakeFirstOrThrow();
+				await insertCommunityMember(
+					{
+						communityId: invite.communityId,
+						userId: user.id,
+						role: invite.communityRole,
+					},
+					trx
+				).executeTakeFirstOrThrow();
 			} else if (isPubInvite(invite)) {
-				await insertCommunityMember({
-					communityId: invite.communityId,
-					userId: user.id,
-					role: invite.communityRole,
-				}).executeTakeFirstOrThrow();
-				await insertPubMember({
-					pubId: invite.pubId,
-					userId: user.id,
-					role: invite.pubOrStageRole,
-				}).executeTakeFirstOrThrow();
+				await insertCommunityMember(
+					{
+						communityId: invite.communityId,
+						userId: user.id,
+						role: invite.communityRole,
+					},
+					trx
+				).executeTakeFirstOrThrow();
+				await insertPubMember(
+					{
+						pubId: invite.pubId,
+						userId: user.id,
+						role: invite.pubOrStageRole,
+					},
+					trx
+				).executeTakeFirstOrThrow();
 			} else if (isStageInvite(invite)) {
-				await insertCommunityMember({
-					communityId: invite.communityId,
-					userId: user.id,
-					role: invite.communityRole,
-				}).executeTakeFirstOrThrow();
-				await insertStageMember({
-					stageId: invite.stageId,
-					userId: user.id,
-					role: invite.pubOrStageRole,
-				}).executeTakeFirstOrThrow();
+				await insertCommunityMember(
+					{
+						communityId: invite.communityId,
+						userId: user.id,
+						role: invite.communityRole,
+					},
+					trx
+				).executeTakeFirstOrThrow();
+				await insertStageMember(
+					{
+						stageId: invite.stageId,
+						userId: user.id,
+						role: invite.pubOrStageRole,
+					},
+					trx
+				).executeTakeFirstOrThrow();
 			}
+
+			// TODO: change this as soon as Kalil has implemented the form permissions
 		});
 	}
 
