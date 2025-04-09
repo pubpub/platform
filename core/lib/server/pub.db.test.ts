@@ -815,7 +815,6 @@ describe("getPubsWithRelatedValues", () => {
 			{ pubId: pub.id, communityId: community.id },
 			{ depth: 10, withRelatedPubs: false }
 		);
-		console.log(pubWithRelatedValues);
 
 		expect(pubWithRelatedValues).toHaveValues([
 			{
