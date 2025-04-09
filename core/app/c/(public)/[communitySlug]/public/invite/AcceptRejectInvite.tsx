@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X } from "lucide-react";
+import { Check, LogIn, UserPlus, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { Invite } from "db/types";
@@ -57,14 +57,63 @@ const inviteMessage = (invite: Invite) => {
 	);
 };
 
+type AcceptRejectInviteMode = "accept" | "needsSignup" | "needsLogin";
+
+const modeStyles = {
+	accept: {
+		bodyMessage: "To continue, you need to accept this invitation and create an account.",
+		button: {
+			text: "Accept",
+			loadingText: "Accepting Invitation...",
+			successText: "Invitation Accepted",
+			errorText: "Error Accepting Invitation",
+			icon: <Check className="mt-0.5 h-3 w-3" />,
+		},
+	},
+	needsSignup: {
+		bodyMessage: "To continue, you need to create an account.",
+		button: {
+			text: "Create account",
+			loadingText: "Navigating to signup...",
+			successText: "Navigated to signup",
+			errorText: "Error navigating to signup",
+			icon: <UserPlus className="mt-0.5 h-3 w-3" />,
+		},
+	},
+	needsLogin: {
+		bodyMessage: "To continue, you need to log in.",
+		button: {
+			text: "Log in",
+			loadingText: "Navigating to login...",
+			successText: "Navigated to login",
+			errorText: "Error navigating to login",
+			icon: <LogIn className="mt-0.5 h-3 w-3" />,
+		},
+	},
+} satisfies Record<
+	AcceptRejectInviteMode,
+	{
+		bodyMessage: string;
+		button: {
+			text: string;
+			loadingText: string;
+			successText: string;
+			errorText: string;
+			icon: React.ReactNode;
+		};
+	}
+>;
+
 export function AcceptRejectInvite({
 	inviteToken,
 	redirectTo,
 	invite,
+	mode,
 }: {
 	inviteToken: string;
 	invite: Invite;
 	redirectTo: string;
+	mode: AcceptRejectInviteMode;
 }) {
 	// TODO: we should really have useServerAction return some state that keeps track of the status
 	const acceptInvite = useServerAction(acceptInviteAction);
@@ -73,7 +122,6 @@ export function AcceptRejectInvite({
 	const acceptForm = useForm();
 	const rejectForm = useForm();
 
-	// Simplified for now - will need to implement proper acceptance/rejection logic
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
 			<Card className="w-full max-w-md">
@@ -85,11 +133,11 @@ export function AcceptRejectInvite({
 						{inviteMessage(invite)}
 					</CardDescription>
 				</CardHeader>
+
 				<CardContent>
 					<div className="space-y-4">
 						<p className="text-center text-muted-foreground">
-							To continue, you need to accept this invitation and{" "}
-							{invite.userId ? "log in" : "create an account"}.
+							{modeStyles[mode].bodyMessage}
 						</p>
 					</div>
 				</CardContent>
@@ -109,13 +157,13 @@ export function AcceptRejectInvite({
 								className="w-full"
 								idleText={
 									<span className="flex items-center gap-2">
-										<Check className="mt-0.5 h-3 w-3" />
-										Accept
+										{modeStyles[mode].button.icon}
+										{modeStyles[mode].button.text}
 									</span>
 								}
-								loadingText="Accepting Invitation..."
-								successText="Invitation Accepted"
-								errorText="Error Accepting Invitation"
+								loadingText={modeStyles[mode].button.loadingText}
+								successText={modeStyles[mode].button.successText}
+								errorText={modeStyles[mode].button.errorText}
 							/>
 						</form>
 					</Form>

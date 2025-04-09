@@ -33,6 +33,7 @@ export const inviteSchema = z
 			id: communitiesIdSchema,
 			slug: z.string(),
 			avatar: z.string().nullable(),
+			name: z.string(),
 		}),
 		communityRole: memberRoleSchema,
 		/**
@@ -150,7 +151,11 @@ export const inviteSchema = z
 		])
 	) satisfies z.ZodType<Invites>;
 
-export type Invite = z.infer<typeof inviteSchema>;
+type Prettify<T> = {
+	[K in keyof T]: T[K];
+} & {};
+
+export type Invite = Prettify<z.infer<typeof inviteSchema>>;
 
 const _typeTestFunc = () => {
 	let invite = {} as Invite;

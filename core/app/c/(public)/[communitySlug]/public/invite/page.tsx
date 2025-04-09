@@ -44,6 +44,15 @@ export default async function InvitePage(props: {
 
 	const { user, invite } = inviteResult;
 
+	const mode = user ? "accept" : invite.userId ? "needsLogin" : "needsSignup";
+
 	// server will handle the redirect
-	return <AcceptRejectInvite invite={invite} inviteToken={inviteToken} redirectTo={redirectTo} />;
+	return (
+		<AcceptRejectInvite
+			invite={invite}
+			inviteToken={inviteToken}
+			redirectTo={redirectTo}
+			mode={mode}
+		/>
+	);
 }
