@@ -3,6 +3,8 @@ import { notFound, redirect, RedirectType, unstable_rethrow } from "next/navigat
 import { MemberRole } from "db/public";
 import { logger } from "logger";
 
+import type { NoticeParams } from "~/app/components/Notice";
+import { Notice } from "~/app/components/Notice";
 import { JoinCommunityForm } from "~/app/components/Signup/JoinCommunityForm";
 import { PublicSignupForm } from "~/app/components/Signup/PublicSignupForm";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -14,7 +16,7 @@ export default async function Page({
 	searchParams,
 }: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<{ redirectTo?: string }>;
+	searchParams: Promise<{ redirectTo?: string; notice?: string; error?: string; body?: string }>;
 }) {
 	const [community, { user }] = await Promise.all([findCommunityBySlug(), getLoginData()]);
 
@@ -33,7 +35,12 @@ export default async function Page({
 		notFound();
 	}
 
-	const { redirectTo } = await searchParams;
+	const { redirectTo, notice, error, body } = await searchParams;
+
+	const noticeTitle = notice || error;
+	const noticeParams = noticeTitle
+		? ({ type: notice ? "notice" : "error", title: noticeTitle, body } satisfies NoticeParams)
+		: undefined;
 
 	if (user) {
 		if (user.memberships.some((m) => m.communityId === community.id)) {
@@ -46,14 +53,14 @@ export default async function Page({
 		const joinRole = MemberRole.contributor;
 
 		return (
-			<Wrapper>
+			<Wrapper notice={noticeParams}>
 				<JoinCommunityForm community={community} role={joinRole} redirectTo={redirectTo} />
 			</Wrapper>
 		);
 	}
 
 	return (
-		<Wrapper>
+		<Wrapper notice={noticeParams}>
 			<PublicSignupForm communityId={community.id} redirectTo={redirectTo} />
 		</Wrapper>
 	);
@@ -63,9 +70,10 @@ export default async function Page({
  * just a wrapper that centers stuff on the page.
  * could be put in a layout later
  */
-const Wrapper = ({ children }: { children: React.ReactNode }) => {
+const Wrapper = ({ children, notice }: { children: React.ReactNode; notice?: NoticeParams }) => {
 	return (
 		<div className="m-auto mt-16 flex min-h-[50vh] max-w-lg flex-col items-center justify-center">
+			{notice && <Notice {...notice} />}
 			{children}
 		</div>
 	);
