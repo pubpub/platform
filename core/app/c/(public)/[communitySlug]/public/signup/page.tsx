@@ -34,7 +34,7 @@ export default async function Page({
 	}
 
 	const { redirectTo: redirectToOriginal } = await searchParams;
-	const redirectTo: `/${string}` | undefined = redirectToOriginal?.startsWith("/")
+	const redirectTo = redirectToOriginal?.startsWith("/")
 		? (redirectToOriginal as `/${string}`)
 		: undefined;
 

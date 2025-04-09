@@ -1,12 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { AuthTokenType } from "db/public";
-import { Button } from "ui/button";
 
-import { sendVerifyEmailMail } from "~/lib/authentication/actions";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { useServerAction } from "~/lib/serverActions";
-import { Redirect } from "./Redirect";
 import { ResendVerificationButton } from "./ResendVerificationButton";
 
 export default async function Page({
@@ -18,7 +14,10 @@ export default async function Page({
 		allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
 	});
 
-	const { redirectTo } = await searchParams;
+	const { redirectTo: redirectToOriginal } = await searchParams;
+	const redirectTo = redirectToOriginal?.startsWith("/")
+		? (redirectToOriginal as `/${string}`)
+		: undefined;
 
 	if (!user || !session) {
 		const verifyUrl = redirectTo ? `/verify?redirectTo=${redirectTo}` : "/verify";
@@ -35,7 +34,6 @@ export default async function Page({
 		<div className="prose mx-auto max-w-sm">
 			<h1>Verify your email</h1>
 			<p>{description}</p>
-			{user.isVerified ? <Redirect url={redirectTo ?? "/"} /> : null}
 			<ResendVerificationButton email={user.email} redirectTo={redirectTo} />
 		</div>
 	);
