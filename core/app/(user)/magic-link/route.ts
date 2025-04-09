@@ -8,7 +8,7 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { lucia } from "~/lib/authentication/lucia";
-import { env } from "~/lib/env/env.mjs";
+import { createRedirectUrl } from "~/lib/redirect";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
 const redirectToURL = (
@@ -17,30 +17,8 @@ const redirectToURL = (
 		searchParams?: Record<string, string>;
 	}
 ) => {
-	// it's a full url, just redirect them there
-	if (URL.canParse(redirectTo)) {
-		const url = new URL(redirectTo);
-		Object.entries(opts?.searchParams ?? {}).forEach(([key, value]) => {
-			url.searchParams.append(key, value);
-		});
-
-		return NextResponse.redirect(url, opts);
-	}
-
-	if (URL.canParse(redirectTo, env.PUBPUB_URL)) {
-		const url = new URL(redirectTo, env.PUBPUB_URL);
-
-		Object.entries(opts?.searchParams ?? {}).forEach(([key, value]) => {
-			url.searchParams.append(key, value);
-		});
-		return NextResponse.redirect(url, opts);
-	}
-
-	// invalid redirectTo, redirect to not-found
-	return NextResponse.redirect(
-		new URL(`/not-found?from=${encodeURIComponent(redirectTo)}`, env.PUBPUB_URL),
-		opts
-	);
+	const url = createRedirectUrl(redirectTo, opts?.searchParams);
+	return NextResponse.redirect(url, opts);
 };
 
 /**
@@ -130,14 +108,12 @@ export async function GET(req: NextRequest) {
 
 	const { user: tokenUser, authTokenType } = tokenSettled.value;
 
-	let nowVerified = false;
 	if (!tokenUser.isVerified) {
 		await db
 			.updateTable("users")
 			.set({ isVerified: true })
 			.where("id", "=", tokenUser.id)
 			.execute();
-		nowVerified = true;
 	}
 
 	const session = await lucia.createSession(tokenUser.id, {
@@ -150,6 +126,5 @@ export async function GET(req: NextRequest) {
 		...newSessionCookie.attributes,
 	});
 
-	const opts = nowVerified ? { ...req, searchParams: { verified: "true" } } : req;
-	return redirectToURL(redirectTo, opts);
+	return redirectToURL(redirectTo, req);
 }

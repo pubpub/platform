@@ -12,7 +12,7 @@ export const ResendVerificationButton = ({
 	redirectTo,
 }: {
 	email: string;
-	redirectTo?: `/${string}`;
+	redirectTo?: string;
 }) => {
 	const [status, setStatus] = useState<ButtonState>("idle");
 	const sendVerifyEmail = useServerAction(sendVerifyEmailMail);

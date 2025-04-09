@@ -116,7 +116,7 @@ export function passwordReset(
 
 export function verifyEmail(
 	user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
-	redirectTo?: `/${string}`,
+	redirectTo?: string,
 	trx = db
 ) {
 	return buildSend(async () => {
@@ -124,7 +124,9 @@ export function verifyEmail(
 			{
 				type: AuthTokenType.generic,
 				expiresAt: new Date(Date.now() + TWO_HOURS),
-				path: redirectTo ?? "/",
+				path: redirectTo
+					? `/verify?redirectTo=${encodeURIComponent(redirectTo)}`
+					: "/verify",
 				userId: user.id,
 			},
 			trx

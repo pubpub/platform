@@ -10,14 +10,11 @@ import { publicSignup } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 import { BaseSignupForm } from "./BaseSignupForm";
 
-export function PublicSignupForm(props: { communityId: CommunitiesId; redirectTo?: `/${string}` }) {
+export function PublicSignupForm(props: { communityId: CommunitiesId; redirectTo?: string }) {
 	const runSignup = useServerAction(publicSignup);
 
 	const searchParams = useSearchParams();
-	const searchParamsRedirect = searchParams.get("redirectTo")?.startsWith("/")
-		? (searchParams.get("redirectTo") as `/${string}`)
-		: undefined;
-	const redirectTo = props.redirectTo ?? searchParamsRedirect ?? undefined;
+	const redirectTo = props.redirectTo ?? searchParams.get("redirectTo") ?? undefined;
 
 	const handleSubmit = useCallback(
 		async (data: SignupFormSchema) => {

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AuthTokenType } from "db/public";
 
 import { getLoginData } from "~/lib/authentication/loginData";
+import { createRedirectUrl } from "~/lib/redirect";
 import { ResendVerificationButton } from "./ResendVerificationButton";
 
 export default async function Page({
@@ -14,10 +15,7 @@ export default async function Page({
 		allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
 	});
 
-	const { redirectTo: redirectToOriginal } = await searchParams;
-	const redirectTo = redirectToOriginal?.startsWith("/")
-		? (redirectToOriginal as `/${string}`)
-		: undefined;
+	const { redirectTo } = await searchParams;
 
 	if (!user || !session) {
 		const verifyUrl = redirectTo ? `/verify?redirectTo=${redirectTo}` : "/verify";
@@ -28,6 +26,8 @@ export default async function Page({
 
 	if (user.isVerified) {
 		description = "Your email has been verified!";
+		const url = redirectTo ? createRedirectUrl(redirectTo, { verified: "true" }) : "/";
+		redirect(url.toString());
 	}
 
 	return (

@@ -166,7 +166,7 @@ export const sendForgotPasswordMail = defineServerAction(
 	}
 );
 
-const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: `/${string}` }) => {
+const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: string }) => {
 	const user = await getUserWithPasswordHash({ email: props.email });
 
 	if (!user) {
@@ -175,6 +175,9 @@ const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: `/${str
 			report: "Email verification email sent!",
 		};
 	}
+
+	// Invalidate any previous tokens
+	await invalidateTokensForUser(user.id, [AuthTokenType.generic]);
 
 	const result = await Email.verifyEmail(
 		{
@@ -200,7 +203,7 @@ const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: `/${str
 
 export const sendVerifyEmailMail = defineServerAction(async function sendVerifyEmailMail(props: {
 	email: string;
-	redirectTo?: `/${string}`;
+	redirectTo?: string;
 }) {
 	return _sendVerifyEmailMail(props);
 });
@@ -331,7 +334,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	lastName: string;
 	email: string;
 	password: string;
-	redirectTo?: `/${string}`;
+	redirectTo?: string;
 	slug?: string;
 	role?: MemberRole;
 	communityId: CommunitiesId;

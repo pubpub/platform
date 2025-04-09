@@ -33,10 +33,7 @@ export default async function Page({
 		notFound();
 	}
 
-	const { redirectTo: redirectToOriginal } = await searchParams;
-	const redirectTo = redirectToOriginal?.startsWith("/")
-		? (redirectToOriginal as `/${string}`)
-		: undefined;
+	const { redirectTo } = await searchParams;
 
 	if (user) {
 		if (user.memberships.some((m) => m.communityId === community.id)) {
