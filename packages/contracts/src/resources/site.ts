@@ -714,8 +714,9 @@ export const siteApi = contract.router(
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
 				query: getPubQuerySchema
 					.extend({
-						pubIds: pubsIdSchema
-							.or(z.array(pubsIdSchema))
+						pubIds: z
+							.array(pubsIdSchema)
+							.or(pubsIdSchema.transform((id) => [id]))
 							.optional()
 							.describe("Filter by pub ID."),
 						pubTypeId: pubTypesIdSchema
@@ -741,8 +742,7 @@ export const siteApi = contract.router(
 						 * `{ filters['community-slug:fieldName']['$eq']: 'value'}`,
 						 * rather than `{ filters: { 'community-slug:fieldName': { $eq: 'value' } } }`.
 						 */
-						filters: z
-							.record(z.any())
+						filters: filterSchema
 							.optional()
 							.describe(
 								[
