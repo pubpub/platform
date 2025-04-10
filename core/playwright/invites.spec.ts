@@ -561,7 +561,7 @@ test.describe("user invite flow", () => {
 });
 
 test.describe.skip("invite reject flow", () => {
-	test("user can reject a pending invite", async () => {
+	test("user can reject a pending invite", async ({ page }) => {
 		const invite = community.invites.rejectEmailInvite;
 		await test.step("user can access invite page and see reject option", async () => {
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
@@ -591,7 +591,7 @@ test.describe.skip("invite reject flow", () => {
 
 		await test.step("Going back to the invite URL shows the rejected state", async () => {
 			// Reload the page to verify the rejected state persists
-			await expectInvalidInvite(invite.inviteToken).toShow(
+			await expectInvalidInvite(invite.inviteToken, page).toShow(
 				"You have already rejected this invite."
 			);
 		});
