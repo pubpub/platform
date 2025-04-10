@@ -36,7 +36,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<Sea
 	}
 
 	if (user.isVerified) {
-		const url = redirectTo ? createRedirectUrl(redirectTo, { verified: "true" }) : "/";
+		const url = redirectTo
+			? createRedirectUrl(redirectTo, { verified: "true" })
+			: "/?verified=true";
 		redirect(url.toString());
 	}
 

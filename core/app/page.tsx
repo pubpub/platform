@@ -5,18 +5,25 @@ import { AuthTokenType } from "db/public";
 
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { createRedirectUrl } from "~/lib/redirect";
 
-export default async function Page() {
+export default async function Page({
+	searchParams,
+}: {
+	searchParams: Promise<Record<string, string>>;
+}) {
 	const { user, session } = await getPageLoginData({
 		allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
 	});
 
+	const params = await searchParams;
+
 	if (!user) {
-		redirect("/login");
+		redirect(createRedirectUrl("/login", params).toString());
 	}
 
 	if (session.type === AuthTokenType.verifyEmail) {
-		redirect("/verify");
+		redirect(createRedirectUrl("/verify", params).toString());
 	}
 
 	const cookieStore = await cookies();
@@ -24,8 +31,8 @@ export default async function Page() {
 	const communitySlug = lastVisited?.value ?? user.memberships[0]?.community?.slug;
 
 	if (!communitySlug) {
-		redirect("/settings");
+		redirect(createRedirectUrl("/settings", params).toString());
 	}
 
-	redirect(`/c/${communitySlug}/stages`);
+	redirect(createRedirectUrl(`/c/${communitySlug}/stages`, params).toString());
 }
