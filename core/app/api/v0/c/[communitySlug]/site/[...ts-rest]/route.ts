@@ -1,7 +1,9 @@
 import type { User } from "lucia";
+import type { NextRequest } from "next/server";
 
 import { headers } from "next/headers";
-import { createNextHandler, RequestValidationError } from "@ts-rest/serverless/next";
+import { queryByTestId } from "@testing-library/react";
+import { createNextHandler, RequestValidationError, TsRestRequest } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import qs from "qs";
 import { z } from "zod";
@@ -120,13 +122,12 @@ const getAuthorization = async () => {
 	return {
 		user,
 		authorization: rules.reduce((acc, curr) => {
-			const { scope, constraints, accessType } = curr;
-			if (!constraints) {
-				acc[scope][accessType] = true;
+			if (!curr.constraints) {
+				acc[curr.scope][curr.accessType] = true;
 				return acc;
 			}
 
-			acc[scope][accessType] = constraints ?? true;
+			acc[curr.scope][curr.accessType] = curr.constraints ?? true;
 			return acc;
 		}, baseAuthorizationObject),
 		apiAccessTokenId: validatedAccessToken.id,
@@ -241,79 +242,32 @@ const shouldReturnRepresentation = async () => {
 	return false;
 };
 
+type RequestMiddleware = (
+	req: TsRestRequest,
+	platformArgs: {
+		nextRequest: NextRequest;
+	}
+) => void;
+
+// ================
+// Middleware
+// Note: Middleware runs before zod validation
+// ================
+
 /**
- * manually parses the `?filters` query param.
- * necessary because ts-rest only supports parsing object in query params
- * if they're uri encoded.
- *
- * eg this does not fly
- *  ```
- * ?filters[community-slug:fieldName][$eq]=value
- * ```
- * but this does
- *  ```
- * ?filters=%7B%22%7B%22updatedAt%22%3A%20%7B%22%24gte%22%3A%20%222025-01-01%22%7D%2C%22field-slug%22%3A%20%7B%22%24eq%22%3A%20%22some-value%22%7D%7D`
- * ```
- *
- * the latter is what a ts-rest client sends if `json-query: true`. we want to support both syntaxes.
- *
+ * Parse the query string with `qs` instead of itty routers built in parser
+ * This handles objects and arrays better,
+ * eg `?foo[0]=2&bar[foo]=3` -> `{ foo: ["2"], bar: { foo: "3" } }`
+ * instead of
+ * `{ foo[0]: "2", bar[foo]: "3"}`
  */
-const manuallyParsePubFilterQueryParams = (url: string, query?: Record<string, any>) => {
-	if (!query || Object.keys(query).length === 0) {
-		return query;
-	}
-
-	// check if we already have properly structured filters
-	if (query.filters && typeof query.filters === "object") {
-		try {
-			const validatedFilters = filterSchema.parse(query.filters);
-			return {
-				...query,
-				filters: validatedFilters,
-			};
-		} catch (e) {
-			throw new RequestValidationError(null, null, e, null);
-		}
-	}
-
-	// check if we have filter-like keys (using bracket notation)
-	const filterLikeKeys = Object.keys(query).filter((key) => key.startsWith("filters["));
-
-	if (filterLikeKeys.length === 0) {
-		return query;
-	}
-
-	const queryString = url.split("?")[1];
-	if (!queryString) {
-		return query;
-	}
-
-	try {
-		// parse with qs
-		const parsedQuery = qs.parse(queryString, {
-			depth: 10,
-			arrayLimit: 100,
-			allowDots: false, // don't convert dots to objects (use brackets only)
-			ignoreQueryPrefix: true, // remove the leading '?' if present
-		});
-
-		if (!parsedQuery.filters) {
-			return query; // no filters found after parsing
-		}
-
-		const validatedFilters = filterSchema.parse(parsedQuery.filters);
-
-		return {
-			...query,
-			...parsedQuery,
-			filters: validatedFilters,
-		};
-	} catch (e) {
-		if (e instanceof z.ZodError) {
-			throw new RequestValidationError(null, null, e, null);
-		}
-		throw new BadRequestError(`Error parsing filters: ${e.message}`);
-	}
+const parseQueryWithQsMiddleware: RequestMiddleware = (req) => {
+	// parse the queries with `qs`
+	const query = req.url.split("?")[1];
+	// @ts-expect-error - this obviously errors, but it's fine
+	req.query = query
+		? qs.parse(query, { depth: 10, arrayLimit: 1000, allowDots: false })
+		: req.query;
 };
 
 const handler = createNextHandler(
@@ -335,7 +289,7 @@ const handler = createNextHandler(
 			},
 
 			get: async ({ params, query }) => {
-				const { user, community } = await checkAuthorization({
+				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: {
 						capability: Capabilities.viewPub,
@@ -352,53 +306,78 @@ const handler = createNextHandler(
 					query
 				);
 
+				if (typeof authorization === "object") {
+					const allowedStages = authorization.stages;
+					if (
+						pub.stageId &&
+						allowedStages &&
+						allowedStages.length > 0 &&
+						!allowedStages.includes(pub.stageId)
+					) {
+						throw new ForbiddenError(
+							`You are not authorized to view this pub in stage ${pub.stageId}`
+						);
+					}
+
+					const allowedPubTypes = authorization.pubTypes;
+					if (
+						allowedPubTypes &&
+						allowedPubTypes.length > 0 &&
+						!allowedPubTypes.includes(pub.pubTypeId)
+					) {
+						throw new ForbiddenError(
+							`You are not authorized to view this pub in pub type ${pub.pubTypeId}`
+						);
+					}
+				}
+
 				return {
 					status: 200,
 					body: pub,
 				};
 			},
 			getMany: async ({ query }, { request, responseHeaders }) => {
-				const { user, community } = await checkAuthorization({
+				const { user, community, authorization } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: "community-member",
 				});
-				const queryString = new URLSearchParams(query as Record<string, string>).toString();
 
-				// We still support passing a single pubTypeId for backwards compatability
-				const { stageId, filters, pubTypeId, ...rest } = query ?? {};
-				// pubTypeId is an array, so possibly needs to be parsed separately since it comes
-				// in from the query as 'pubTypeId[0]', 'pubTypeId[1]'
-				const parsedQuery = qs.parse(queryString);
-				const pubTypeIds = parsedQuery.pubTypeId as PubTypesId[] | undefined;
-				const resolvedPubTypeId = pubTypeId || pubTypeIds;
+				const allowedPubTypes =
+					typeof authorization === "object" ? authorization.pubTypes : undefined;
+				const allowedStages =
+					typeof authorization === "object" ? authorization.stages : undefined;
 
-				const manuallyParsedFilters = manuallyParsePubFilterQueryParams(request.url, query);
+				let { pubTypeId, stageId, pubIds, filters, ...rest } = query ?? {};
 
-				if (manuallyParsedFilters?.filters) {
+				if (query?.filters) {
 					try {
-						await validateFilter(community.id, manuallyParsedFilters.filters);
+						await validateFilter(community.id, query.filters);
 					} catch (e) {
 						throw new BadRequestError(e.message);
 					}
 				}
+
 				const pubs = await getPubsWithRelatedValues(
 					{
 						communityId: community.id,
-						pubTypeId: resolvedPubTypeId,
-						stageId,
+						pubTypeId: pubTypeId,
+						stageId: stageId,
+						pubIds: pubIds,
 						userId: user.id,
 					},
 					{
 						...rest,
-						filters: manuallyParsedFilters?.filters,
+						filters: query?.filters,
+						allowedPubTypes,
+						allowedStages,
 					}
 				);
 
 				// TODO: this does not account for permissions
 				const pubCount = await getPubsCount({
 					communityId: community.id,
-					pubTypeId: resolvedPubTypeId,
-					stageId,
+					pubTypeId: pubTypeId,
+					stageId: stageId,
 				});
 				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
 
@@ -828,6 +807,7 @@ const handler = createNextHandler(
 			origin: "*",
 			allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
 		},
+		requestMiddleware: [parseQueryWithQsMiddleware],
 	}
 );
 

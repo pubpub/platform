@@ -8,7 +8,6 @@ import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { db } from "~/lib/__tests__/db";
-import { beginTransaction } from "~/lib/__tests__/transactions";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";

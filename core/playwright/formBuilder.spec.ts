@@ -8,7 +8,6 @@ import { expect, test } from "@playwright/test";
 
 import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
 
-import type { BaseSeedOutput } from "./helpers";
 import type { PubFieldElement } from "~/app/components/forms/types";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";

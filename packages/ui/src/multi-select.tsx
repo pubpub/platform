@@ -60,7 +60,36 @@ interface MultiSelectProps
 	asChild?: boolean;
 	className?: string;
 	badgeClassName?: string;
+	showClearAll?: boolean;
 }
+
+const XButton = ({
+	className,
+	onClick,
+	dataTestId,
+}: {
+	className?: string;
+	onClick: () => void;
+	dataTestId: string;
+}) => (
+	<span
+		role="button"
+		tabIndex={0}
+		data-testid={dataTestId}
+		className={cn("h-4 w-4 cursor-pointer rounded-full hover:bg-white/20", className)}
+		onClick={(event) => {
+			event.stopPropagation();
+			onClick();
+		}}
+		onKeyDown={(event) => {
+			if (event.key === "Enter" || event.key === " ") {
+				onClick();
+			}
+		}}
+	>
+		<XCircle />
+	</span>
+);
 
 export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>(
 	(
@@ -75,6 +104,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			asChild = false,
 			className,
 			badgeClassName,
+			showClearAll = true,
 			...props
 		},
 		ref
@@ -164,6 +194,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 														variant,
 														className: badgeClassName,
 													}),
+													"flex items-center gap-2",
 													badgeClassName
 												)}
 												style={{ animationDuration: `${animation}s` }}
@@ -171,13 +202,11 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 												{IconComponent && (
 													<IconComponent className="mr-2 h-4 w-4" />
 												)}
+
 												{option?.label}
-												<XCircle
-													className="ml-2 h-4 w-4 cursor-pointer"
-													onClick={(event) => {
-														event.stopPropagation();
-														toggleOption(value);
-													}}
+												<XButton
+													onClick={() => toggleOption(value)}
+													dataTestId={`multi-select-remove-${value}`}
 												/>
 											</Badge>
 										);
@@ -191,29 +220,31 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 													variant,
 													className: badgeClassName,
 												}),
+												"flex items-center gap-2",
 												badgeClassName
 											)}
 											style={{ animationDuration: `${animation}s` }}
 										>
 											{`+ ${selectedValues.length - maxCount} more`}
-											<XCircle
-												className="ml-2 h-4 w-4 cursor-pointer"
-												onClick={(event) => {
-													event.stopPropagation();
-													clearExtraOptions();
-												}}
+											<XButton
+												onClick={clearExtraOptions}
+												className="hover:bg-black/20"
+												dataTestId={`multi-select-clear-extra`}
 											/>
 										</Badge>
 									)}
 								</div>
 								<div className="flex items-center justify-between">
-									<XIcon
-										className={ICON_CLASSNAME}
-										onClick={(event) => {
-											event.stopPropagation();
-											handleClear();
-										}}
-									/>
+									{showClearAll && (
+										<XIcon
+											className={ICON_CLASSNAME}
+											data-testid={`multi-select-clear-all`}
+											onClick={(event) => {
+												event.stopPropagation();
+												handleClear();
+											}}
+										/>
+									)}
 									<Separator
 										orientation="vertical"
 										className="flex h-full min-h-6"
@@ -253,6 +284,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									key="all"
 									onSelect={toggleAll}
 									className="cursor-pointer"
+									data-testid={`multi-select-toggle-all`}
 								>
 									<div
 										className={cn(
@@ -273,6 +305,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 											key={option.value}
 											onSelect={() => toggleOption(option.value)}
 											className="cursor-pointer"
+											data-testid={`multi-select-option-${option.value}`}
 										>
 											<div
 												className={cn(
@@ -295,11 +328,12 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 							<CommandSeparator />
 							<CommandGroup>
 								<div className="flex items-center justify-between">
-									{selectedValues.length > 0 && (
+									{showClearAll && selectedValues.length > 0 && (
 										<>
 											<CommandItem
 												onSelect={handleClear}
 												className="flex-1 cursor-pointer justify-center"
+												data-testid={`multi-select-clear`}
 											>
 												Clear
 											</CommandItem>
@@ -313,6 +347,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									<CommandItem
 										onSelect={() => setIsPopoverOpen(false)}
 										className="flex-1 cursor-pointer justify-center"
+										data-testid={`multi-select-close`}
 									>
 										Close
 									</CommandItem>

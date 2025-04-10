@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import type { CoreSchemaType, PubFieldsId } from "db/public";
 import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
+import { Card, CardContent, CardHeader } from "ui/card";
 import { Check, ChevronDown, ChevronUp, Pencil } from "ui/icon";
 import { Label } from "ui/label";
 import { usePubFieldContext } from "ui/pubFields";
@@ -90,44 +90,52 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 	};
 	return (
 		<Card>
-			<CardContent className="px-6 py-2">
-				<div className="flex items-center justify-between">
-					<h2 className="flex-grow font-bold">{type.name}</h2>
-					<Button
-						size="icon"
-						variant={"ghost"}
-						aria-label="Expand"
-						onClick={() => {
-							setExpanded(!expanded);
-						}}
+			<CardHeader className="flex flex-row items-center justify-between">
+				<h2 className="flex-grow font-bold">
+					{type.name}{" "}
+					<span
+						className="inline-block whitespace-nowrap rounded-md bg-gray-100 p-0.5 text-xs text-gray-500"
+						data-testid={`pubtype-${type.name}-id`}
 					>
-						{expanded ? <ChevronUp /> : <ChevronDown />}
+						<pre className="font-mono">{type.id}</pre>
+					</span>
+				</h2>
+				<Button
+					size="icon"
+					variant={"ghost"}
+					aria-label="Expand"
+					onClick={() => {
+						setExpanded(!expanded);
+					}}
+				>
+					{expanded ? <ChevronUp /> : <ChevronDown />}
+				</Button>
+				{allowEditing && (
+					<Button
+						className="ml-1"
+						size="icon"
+						variant={editing ? "secondary" : "ghost"}
+						aria-label="Edit"
+						onClick={() => {
+							setEditing(!editing);
+						}}
+						data-testid={`edit-pubtype-${type.name}`}
+					>
+						<span className="sr-only">Edit Pub Type</span>
+						<Pencil size="12" />
 					</Button>
-					{allowEditing && (
-						<Button
-							className="ml-1"
-							size="icon"
-							variant={editing ? "secondary" : "ghost"}
-							aria-label="Edit"
-							onClick={() => {
-								setEditing(!editing);
-							}}
-							data-testid={`edit-pubtype-${type.name}`}
-						>
-							<span className="sr-only">Edit Pub Type</span>
-							<Pencil size="12" />
-						</Button>
-					)}
-				</div>
+				)}
+			</CardHeader>
+			<CardContent>
 				<div className="text-sm">{type.description}</div>
 				{(expanded || editing) && (
-					<div className="ml-2 mt-4">
+					<div>
 						<RadioGroup
 							defaultValue={titleField}
 							onValueChange={handleTitleFieldChange}
 							className="flex"
 						>
-							<table className="border-separate border-spacing-x-2 text-left">
+							<table className="border-separate text-left">
 								<thead>
 									<tr>
 										<th>Fields</th>
@@ -196,7 +204,7 @@ const TypeBlock: React.FC<Props> = function ({ type, allowEditing }) {
 					</div>
 				)}
 				{editing && (
-					<div className="m-4">
+					<div className="">
 						<Label className="my-1 block">
 							Add additional fields to <span className="italic">{type.name}</span>
 						</Label>
