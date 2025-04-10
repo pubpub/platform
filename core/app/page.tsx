@@ -12,9 +12,7 @@ export default async function Page({
 }: {
 	searchParams: Promise<Record<string, string>>;
 }) {
-	const { user, session } = await getPageLoginData({
-		allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
-	});
+	const { user, session } = await getPageLoginData();
 
 	const params = await searchParams;
 
