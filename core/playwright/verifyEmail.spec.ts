@@ -9,13 +9,12 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
+import { PasswordResetPage } from "./fixtures/password-reset-page";
 import { getUrlFromInbucketMessage, inbucketClient, PubFieldsOfEachType } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
-const jimothyId = crypto.randomUUID() as UsersId;
-const joeId = crypto.randomUUID() as UsersId;
 
 const communitySlug = `test-community-${new Date().getTime()}`;
 
@@ -40,13 +39,16 @@ const seed = createSeed({
 			password,
 		},
 		unverifiedJim: {
-			id: jimothyId,
 			role: MemberRole.admin,
 			password,
 			isVerified: false,
 		},
 		unverifiedJoe: {
-			id: joeId,
+			role: MemberRole.admin,
+			password,
+			isVerified: false,
+		},
+		unverifiedBob: {
 			role: MemberRole.admin,
 			password,
 			isVerified: false,
@@ -85,6 +87,19 @@ test.beforeAll(async ({ browser }) => {
 });
 
 test.describe("unverified user", () => {
+	test("cannot see other parts of the app", async ({ page }) => {
+		const loginPage = new LoginPage(page);
+		await loginPage.goto();
+		await loginPage.login(community.users.unverifiedJim.email, password);
+		await page.waitForURL(`/verify`);
+
+		const inaccessiblePages = [`/c/${community.community.slug}/stages`, "/communities"];
+		for (const p of inaccessiblePages) {
+			await page.goto(p);
+			await page.waitForURL(`/verify?redirectTo=${encodeURIComponent(p)}`);
+		}
+	});
+
 	test("can login and request another verification code", async ({ page }) => {
 		await test.step("login", async () => {
 			const loginPage = new LoginPage(page);
@@ -96,18 +111,19 @@ test.describe("unverified user", () => {
 		const firstVerification = await test.step("request another verification code", async () => {
 			await page.getByRole("button", { name: "Resend verification email" }).click();
 			await page.getByRole("button", { name: "Success" }).waitFor();
-			const { message } = await (
+			const result = await (
 				await inbucketClient.getMailbox(community.users.unverifiedJim.email.split("@")[0])
 			).getLatestMessage();
-			const url = await getUrlFromInbucketMessage(message, page);
+			const url = await getUrlFromInbucketMessage(result.message, page);
 			expect(url).toBeTruthy();
+			result.delete();
 			return url;
 		});
 
 		const secondVerification =
 			await test.step("request yet another verification code to invalidate the first", async () => {
 				await page.getByRole("button", { name: "Success" }).click();
-				// Wait so that the email gets a chance to send and we don't grab the original email
+				// Wait so that the email gets a chance to send
 				await page.waitForTimeout(1_000);
 				const { message } = await (
 					await inbucketClient.getMailbox(
@@ -176,5 +192,19 @@ test.describe("unverified user", () => {
 				.getByText("Your email is now verified", { exact: true })
 				.waitFor();
 		});
+	});
+
+	test("going thru forget password flow verifies the user", async ({ page }) => {
+		const passwordResetPage = new PasswordResetPage(page);
+		await passwordResetPage.goTo();
+		const email = community.users.unverifiedBob.email;
+		const newPassword = "new-password";
+		await passwordResetPage.sendResetEmail(email);
+		await passwordResetPage.goToUrlFromEmail(email);
+		await passwordResetPage.setNewPassword(newPassword);
+		await page.waitForURL("/login");
+		const loginPage = new LoginPage(page);
+		// Can now log in and be directed to the base community page, not verify
+		await loginPage.loginAndWaitForNavigation(email, newPassword);
 	});
 });

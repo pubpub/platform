@@ -7,6 +7,7 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
+import { PasswordResetPage } from "./fixtures/password-reset-page";
 import { inbucketClient } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
@@ -106,30 +107,13 @@ test.describe("Auth with lucia", () => {
 
 	test("Password reset flow for lucia user", async ({ page }) => {
 		// through forgot form
-		await page.goto("/forgot");
-		await page.getByRole("textbox").click();
-		await page.getByRole("textbox").fill(community.users["user3"].email);
-		await page.getByRole("button", { name: "Send reset email" }).click();
-		await page.getByRole("button", { name: "Close" }).click();
-
-		const message = await (
-			await inbucketClient.getMailbox(community.users["user3"].email.split("@")[0])
-		).getLatestMessage();
-
-		const url = message.message.body.text?.match(/(http:\/\/.*?reset)\s/)?.[1];
-		await message.delete();
-
-		if (!url) {
-			throw new Error("No url found!");
-		}
-
-		await page.goto(url);
-
-		await page.waitForURL("/reset");
-		await page.getByRole("textbox").click();
-		await page.getByRole("textbox").fill("some-pubpub");
-		await page.getByRole("button", { name: "Set new password" }).click();
-
+		const passwordResetPage = new PasswordResetPage(page);
+		await passwordResetPage.goTo();
+		const email = community.users["user3"].email;
+		const newPassword = "some-pubpub";
+		await passwordResetPage.sendResetEmail(email);
+		await passwordResetPage.goToUrlFromEmail(email);
+		await passwordResetPage.setNewPassword(newPassword);
 		await page.waitForURL("/login");
 
 		// through settings
