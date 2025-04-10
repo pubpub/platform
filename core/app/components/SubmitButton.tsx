@@ -17,6 +17,8 @@ type SubmitButtonProps = {
 	successText?: React.ReactNode;
 	errorText?: React.ReactNode;
 
+	"data-testid"?: string;
+
 	// button props
 	className?: string;
 	type?: "button" | "submit" | "reset";
