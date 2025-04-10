@@ -8,6 +8,7 @@ import { logger } from "logger";
 
 import { lucia } from "~/lib/authentication/lucia";
 import { env } from "~/lib/env/env.mjs";
+import { redirectToLogin } from "~/lib/server/navigation/redirects";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
 const redirectToURL = (
@@ -74,15 +75,7 @@ const handleInvalidToken = ({
 	return redirectToURL(`/invalid-token?redirectTo=${encodeURIComponent(redirectTo)}`);
 };
 
-export async function GET(req: NextRequest) {
-	const searchParams = req.nextUrl.searchParams;
-	const token = searchParams.get("token");
-	const redirectTo = searchParams.get("redirectTo");
-
-	if (!token || !redirectTo) {
-		return NextResponse.redirect(new URL("/login", req.url));
-	}
-
+const handleTokenFlow = async (token: string, redirectTo: string, req: NextRequest) => {
 	const validatedTokenPromise = validateToken(token);
 
 	const currentSessionCookie = (await cookies()).get(lucia.sessionCookieName)?.value;
@@ -98,21 +91,22 @@ export async function GET(req: NextRequest) {
 
 	if (tokenSettled.status === "rejected") {
 		logger.debug({ msg: "Token validation failed", reason: tokenSettled.reason });
-		if (!(tokenSettled.reason instanceof InvalidTokenError)) {
-			logger.error({
-				msg: `Token validation unexpectedly failed with reason: ${tokenSettled.reason}`,
-				reason: tokenSettled.reason,
-			});
 
-			throw tokenSettled.reason;
+		if (tokenSettled.reason instanceof InvalidTokenError) {
+			return handleInvalidToken({
+				redirectTo,
+				tokenType: tokenSettled.reason.tokenType,
+				reason: tokenSettled.reason.reason,
+				token,
+			});
 		}
 
-		return handleInvalidToken({
-			redirectTo,
-			tokenType: tokenSettled.reason.tokenType,
-			reason: tokenSettled.reason.reason,
-			token,
+		logger.error({
+			msg: `Token validation unexpectedly failed with reason: ${tokenSettled.reason}`,
+			reason: tokenSettled.reason,
 		});
+
+		throw tokenSettled.reason;
 	}
 
 	const currentSession =
@@ -140,4 +134,43 @@ export async function GET(req: NextRequest) {
 	});
 
 	return redirectToURL(redirectTo, req);
+};
+
+export async function GET(req: NextRequest) {
+	const searchParams = req.nextUrl.searchParams;
+	const token = searchParams.get("token");
+	const redirectTo = searchParams.get("redirectTo");
+
+	if (!redirectTo) {
+		logger.error({
+			msg: "Magic link did not contain a redirectTo",
+			url: req.nextUrl,
+			cookies: req.cookies.getAll(),
+		});
+		return redirectToLogin({
+			loginNotice: {
+				type: "error",
+				title: "Your magic link is invalid",
+			},
+		});
+	}
+
+	if (token) {
+		return handleTokenFlow(token, redirectTo, req);
+	}
+
+	logger.error({
+		msg: "Magic link did not contain a token",
+		url: req.nextUrl,
+		cookies: req.cookies.getAll(),
+	});
+
+	return redirectToLogin({
+		loginNotice: {
+			type: "error",
+			title: "Your magic link is invalid",
+			// maybe to expressive to users
+			body: "You magic link did not contain a magic link token.",
+		},
+	});
 }

@@ -60,8 +60,9 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
-const arcadiaId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
-const croccrocId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+// uuids need a "4" there to indicate that they are v4 uuids
+const arcadiaId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const croccrocId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
 	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b" as CommunitiesId;

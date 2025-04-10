@@ -40,6 +40,10 @@ const seed = createSeed({
 			role: MemberRole.contributor,
 			password: "xxxx-xxxx",
 		},
+		user3: {
+			role: MemberRole.contributor,
+			password: "xxxx-xxxx",
+		},
 	},
 	pubTypes: {
 		Submission: {
@@ -291,12 +295,6 @@ test.describe("Rich text editor", () => {
 
 test.describe("Member select", async () => {
 	test("Can select a member", async () => {
-		// Add a member (all@pubpub.org is the only member by default)
-		const member1 = "all@pubpub.org";
-		const membersPage = new MembersPage(page, community.community.slug);
-		await membersPage.goto();
-		const { email: member2 } = await membersPage.addNewUser(faker.internet.email());
-
 		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		await fieldsPage.addField("member", CoreSchemaType.MemberId);
@@ -326,15 +324,15 @@ test.describe("Member select", async () => {
 		const title = "member test";
 		await page.getByTestId(`${community.community.slug}:title`).fill(title);
 		await page.getByTestId(`${community.community.slug}:content`).fill("content");
-		await memberInput.fill(member1);
-		await page.getByLabel(member1).click();
-		await expect(memberInput).toHaveValue(member1);
+		await memberInput.fill(community.users.user2.email);
+		await page.getByLabel(community.users.user2.email).click();
+		await expect(memberInput).toHaveValue(community.users.user2.email);
 
 		// Switch to a different user
 		await memberInput.clear();
-		await memberInput.pressSequentially(member2);
-		await page.getByLabel(member2).click();
-		await expect(memberInput).toHaveValue(member2);
+		await memberInput.pressSequentially(community.users.user3.email);
+		await page.getByLabel(community.users.user3.email).click();
+		await expect(memberInput).toHaveValue(community.users.user3.email);
 
 		// Add a new user
 		const newUser = faker.internet.email();

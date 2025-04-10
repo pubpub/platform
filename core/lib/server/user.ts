@@ -27,7 +27,7 @@ import { generateHash, slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { findCommunityBySlug } from "./community";
-import { signupInvite } from "./email";
+import { _legacy_signupInvite } from "./email";
 import { insertCommunityMember, insertPubMember, insertStageMember } from "./member";
 import { getPubTitle } from "./pub";
 
@@ -372,7 +372,7 @@ export const createUserWithMembership = async (data: {
 					membershipQuery(trx, newUser.id),
 				]);
 			}
-			const result = await signupInvite(
+			const result = await _legacy_signupInvite(
 				{
 					user: newUser,
 					community,

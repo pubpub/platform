@@ -3,6 +3,7 @@ import type { CommunitiesId } from "db/public";
 import type {
 	ApiTokenInitializer,
 	FormInitializer,
+	InviteInitializer,
 	PubFieldsInitializer,
 	PubInitializer,
 	PubTypeInitializer,
@@ -24,6 +25,7 @@ export const createSeed = <
 	const PI extends PubInitializer<PF, PT, U, S>[],
 	const F extends FormInitializer<PF, PT, U, S>,
 	const AI extends ApiTokenInitializer,
+	const II extends InviteInitializer<PF, PT, U, S, F>,
 >(props: {
 	community: {
 		id?: CommunitiesId;
@@ -39,6 +41,7 @@ export const createSeed = <
 	pubs?: PI;
 	forms?: F;
 	apiTokens?: AI;
+	invites?: II;
 }) => props;
 
 export type Seed = Parameters<typeof createSeed>[0];
@@ -53,7 +56,8 @@ export type CommunitySeedOutput<S extends Record<string, any>> = Awaited<
 			NonNullable<S["stageConnections"]>,
 			NonNullable<S["pubs"]>,
 			NonNullable<S["forms"]>,
-			NonNullable<S["apiTokens"]>
+			NonNullable<S["apiTokens"]>,
+			NonNullable<S["invites"]>
 		>
 	>
 >;

@@ -11,6 +11,7 @@ import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
 import type { Prettify, XOR } from "../types";
+import type { NoticeParams } from "~/app/components/Notice";
 import type { SafeUser } from "~/lib/server/user";
 import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
@@ -30,6 +31,7 @@ import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/c
 import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
 import { insertCommunityMember, selectCommunityMember } from "../server/member";
+import { redirectToLogin } from "../server/navigation/redirects";
 import { invalidateTokensForUser } from "../server/token";
 import { isClientExceptionOptions } from "../serverActions";
 import { SignupErrors } from "./errors";
@@ -112,8 +114,12 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 	await redirectUser(user.memberships);
 });
 
-export const logout = defineServerAction(async function logout() {
-	const { session } = await validateRequest();
+export const logout = defineServerAction(async function logout(props: {
+	redirectTo?: string;
+	destination?: string;
+	notice?: NoticeParams;
+}) {
+	const { session } = await getLoginData();
 
 	if (!session) {
 		return {
@@ -126,7 +132,27 @@ export const logout = defineServerAction(async function logout() {
 	const sessionCookie = lucia.createBlankSessionCookie();
 	(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-	redirect("/login");
+	const destinationPath = props.destination ?? "/login";
+	const searchParams = new URLSearchParams();
+
+	if (destinationPath) {
+		if (props.notice) {
+			searchParams.set("notice", JSON.stringify(props.notice));
+		}
+
+		if (props.redirectTo) {
+			searchParams.set("redirectTo", props.redirectTo);
+		}
+
+		redirect(`${destinationPath}${searchParams.size ? `?${searchParams.toString()}` : ""}`);
+	}
+
+	redirectToLogin({
+		loginNotice: {
+			type: "notice",
+			title: "You have successfully logged out.",
+		},
+	});
 });
 
 export const sendForgotPasswordMail = defineServerAction(
@@ -288,18 +314,16 @@ export const publicSignup = defineServerAction(async function signup(props: {
 	password: string;
 	redirectTo?: string;
 	slug?: string;
-	role?: MemberRole;
-	communityId: CommunitiesId;
 }) {
-	const [isAllowedSignup, community, { user }] = await Promise.all([
-		publicSignupsAllowed(props.communityId),
-		findCommunityBySlug(),
-		getLoginData(),
-	]);
-
+	const community = await findCommunityBySlug();
 	if (!community) {
 		return SignupErrors.COMMUNITY_NOT_FOUND({ communityName: "unknown" });
 	}
+
+	const [isAllowedSignup, { user }] = await Promise.all([
+		publicSignupsAllowed(community.id),
+		getLoginData(),
+	]);
 
 	if (user) {
 		redirect(`/c/${community.slug}/public/join?redirectTo=${props.redirectTo}`);
@@ -353,7 +377,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 				{
 					userId: newUser.id,
 					communityId: community.id,
-					role: props.role ?? MemberRole.contributor,
+					role: MemberRole.contributor,
 				},
 				trx
 			).executeTakeFirstOrThrow();
@@ -406,14 +430,16 @@ export const publicSignup = defineServerAction(async function signup(props: {
 /**
  * flow for when a user has been invited to a community already
  */
-export const legacySignup = defineServerAction(async function signup(props: {
-	id: UsersId;
-	firstName: string;
-	lastName: string;
-	email: string;
-	password: string;
-	redirect: string | null;
-}) {
+export const legacySignup = defineServerAction(async function signup(
+	userId: UsersId,
+	props: {
+		firstName: string;
+		lastName: string;
+		email: string;
+		password: string;
+		redirectTo?: string | null;
+	}
+) {
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.signup],
 	});
@@ -421,7 +447,7 @@ export const legacySignup = defineServerAction(async function signup(props: {
 	if (!user) {
 		captureException(new Error("User tried to signup without existing"), {
 			user: {
-				id: props.id,
+				id: userId,
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
@@ -432,10 +458,10 @@ export const legacySignup = defineServerAction(async function signup(props: {
 		};
 	}
 
-	if (user.id !== props.id) {
+	if (user.id !== userId) {
 		captureException(new Error("User tried to signup with a different id"), {
 			user: {
-				id: props.id,
+				id: userId,
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
@@ -451,7 +477,7 @@ export const legacySignup = defineServerAction(async function signup(props: {
 	const updatedUser = await trx.execute(async (trx) => {
 		const updatedUser = await updateUser(
 			{
-				id: props.id,
+				id: userId,
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
@@ -461,7 +487,7 @@ export const legacySignup = defineServerAction(async function signup(props: {
 
 		await setUserPassword(
 			{
-				userId: props.id,
+				userId,
 				password: props.password,
 			},
 			trx
@@ -501,17 +527,13 @@ export const legacySignup = defineServerAction(async function signup(props: {
 		newSessionCookie.attributes
 	);
 
-	if (props.redirect) {
-		redirect(props.redirect);
+	if (props.redirectTo) {
+		redirect(props.redirectTo);
 	}
 	await redirectUser();
+
+	// typescript cannot sense Promise<never> not returning
+	return "" as never;
 });
 
-export const invitedSignup = defineServerAction(async function signup(props: {
-	id: UsersId;
-	inviteToken: string;
-	firstName: string;
-	lastName: string;
-	email: string;
-	password: string;
-}) {});
+// for invite signup, see the app/c/(public)/[communitySlug]/public/invite/actions.ts

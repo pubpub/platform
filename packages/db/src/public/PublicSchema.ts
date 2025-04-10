@@ -13,6 +13,9 @@ import type { FormElementsTable } from "./FormElements";
 import type { FormElementToPubTypeTable } from "./FormElementToPubType";
 import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
+import type { InviteFormsTable } from "./InviteForms";
+import type { InvitesTable } from "./Invites";
+import type { InvitesHistoryTable } from "./InvitesHistory";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
 import type { MembershipCapabilitiesTable } from "./MembershipCapabilities";
@@ -93,6 +96,12 @@ export interface PublicSchema {
 	membership_capabilities: MembershipCapabilitiesTable;
 
 	pub_values_history: PubValuesHistoryTable;
+
+	invites: InvitesTable;
+
+	invites_history: InvitesHistoryTable;
+
+	invite_forms: InviteFormsTable;
 
 	_FormElementToPubType: FormElementToPubTypeTable;
 }
