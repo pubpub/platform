@@ -52,9 +52,14 @@ export const acceptInviteAction = defineServerAction(async function acceptInvite
 
 	if (!user) {
 		if (invite.userId) {
-			// redirect to login
-			redirectToLogin({
+			// redirect to login, then back to invite, then to the correct page
+			const inviteUrl = await InviteService.createInviteLink(invite, {
 				redirectTo,
+				absolute: false,
+			});
+
+			redirectToLogin({
+				redirectTo: inviteUrl,
 				loginNotice: {
 					type: "notice",
 					title: "You need to log in in order to accept this invite",

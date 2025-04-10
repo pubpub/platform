@@ -144,6 +144,7 @@ export function SignupForm(props: {
 							/>
 
 							<FormSubmitButton
+								data-testid="signup-submit-button"
 								className="w-full"
 								idleText="Finish sign up"
 								formState={form.formState}

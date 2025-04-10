@@ -19,7 +19,8 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { publicSignupsAllowed } from "~/lib/server/user";
 import { signupThroughInvite } from "../invite/actions";
-import { InvalidInviteError, WrongUserLoggedIn } from "../invite/InvalidInvites";
+import { InvalidInviteError } from "../invite/InvalidInvites";
+import { WrongUserLoggedIn } from "../invite/WrongUserLoggedIn";
 
 export default async function Page({
 	params,
