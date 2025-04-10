@@ -124,12 +124,6 @@ export function BaseSignupForm(props: {
 								idleText="Finish sign up"
 							/>
 						</div>
-						{/* <div className="mt-4 text-center text-sm">
-							Already have an account?{" "}
-							<Link href="#" className="underline">
-								Sign in
-							</Link>
-						</div> */}
 					</CardContent>
 					<CardFooter>
 						Or{" "}

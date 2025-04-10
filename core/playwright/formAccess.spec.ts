@@ -11,7 +11,7 @@ import { db } from "~/lib/__tests__/db";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
-import { PubFieldsOfEachType, waitForBaseCommunityPage } from "./helpers";
+import { inbucketClient, PubFieldsOfEachType, waitForBaseCommunityPage } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -251,7 +251,7 @@ test.describe("public signup cases", () => {
 });
 
 test.describe("public forms", () => {
-	test("non-users are able to signup for communityies and fill out public forms", async ({
+	test("non-users are able to signup for communities and fill out public forms", async ({
 		page,
 	}) => {
 		const fillUrl = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
@@ -272,7 +272,29 @@ test.describe("public forms", () => {
 			await page.getByLabel("First Name").fill(faker.person.firstName());
 			await page.getByLabel("Last Name").fill(faker.person.lastName());
 			await page.getByRole("button", { name: "Sign up" }).click();
-			await page.waitForURL(fillUrl, { timeout: 10_000 });
+		});
+
+		await test.step("non-users can verify their emails", async () => {
+			await page.getByRole("heading", { name: "Verify your email" }).waitFor();
+			const { message } = await (
+				await inbucketClient.getMailbox(testEmail.split("@")[0])
+			).getLatestMessage();
+			const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
+			expect(url).toBeTruthy();
+
+			// Use the browser to decode the html entities in our URL
+			const decodedUrl = await page.evaluate((url) => {
+				const elem = document.createElement("div");
+				elem.innerHTML = url;
+				return elem.textContent!;
+			}, url!);
+
+			await page.goto(decodedUrl);
+			await page
+				.getByRole("status")
+				.getByText("Your email is now verified", { exact: true })
+				.waitFor();
+			await page.waitForURL(fillUrl, { timeout: 5_000 });
 		});
 
 		let pubId: PubsId;
@@ -281,7 +303,7 @@ test.describe("public forms", () => {
 			await page.getByLabel("Content").fill("Test Content");
 			await page.getByRole("button", { name: "Submit" }).click();
 			const submissionMessage = await page.getByText("Go see you").textContent({
-				timeout: 1_000,
+				timeout: 2_000,
 			});
 			pubId = new URL(page.url()).searchParams.get("pubId") as PubsId;
 		});

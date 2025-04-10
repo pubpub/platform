@@ -9,7 +9,7 @@ type MailboxMessage = {
 
 type MailboxResponse = MailboxMessage[];
 
-type MessageResponse = {
+export type MessageResponse = {
 	mailbox: string;
 	id: string;
 	from: string;
