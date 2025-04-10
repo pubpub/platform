@@ -14,7 +14,6 @@ import { inviteSchema } from "db/types";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createSeed } from "~/prisma/seed/createSeed";
-import { InviteBuilder } from "./InviteBuilder";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -120,6 +119,8 @@ beforeAll(async () => {
 
 describe("InviteBuilder", () => {
 	it("should be able to create an invite", async () => {
+		const { InviteBuilder } = await import("./InviteBuilder");
+
 		const invite = await InviteBuilder.inviteByEmail("test@test.com")
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)
@@ -142,6 +143,7 @@ describe("InviteBuilder", () => {
 	});
 
 	it("should be able to create an invite with pubOrStageFormIds", async () => {
+		const { InviteBuilder } = await import("./InviteBuilder");
 		const invite = await InviteBuilder.inviteByEmail("test@test.com")
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)
@@ -157,6 +159,7 @@ describe("InviteBuilder", () => {
 	});
 
 	it("can create invites with form slugs", async () => {
+		const { InviteBuilder } = await import("./InviteBuilder");
 		const invite = await InviteBuilder.inviteByEmail("test@test.com")
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)

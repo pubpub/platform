@@ -5,11 +5,12 @@ import type { ExpressionBuilder } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
-import type { Invite } from "db/types";
+import type { Invite, NewInvite, NewInviteInput } from "db/types";
 import { formsIdSchema, InviteFormType, InviteStatus, MemberRole } from "db/public";
 import { newInviteSchema } from "db/types";
 import { expect } from "utils";
 
+import type { Prettify } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { maybeWithTrx } from "~/lib/server";
@@ -70,10 +71,7 @@ export class InviteBuilder
 		PubStageStep,
 		OptionalStep
 {
-	private data: Partial<Invite> & {
-		pubOrStageFormSlugs?: string[];
-		communityLevelFormSlugs?: string[];
-	} = {
+	private data: Partial<NewInvite> = {
 		status: InviteStatus.created,
 		expiresAt: DEFAULT_EXPIRES_AT,
 		communityRole: MemberRole.contributor,
@@ -179,8 +177,10 @@ export class InviteBuilder
 		return crypto.randomBytes(BYTES_LENGTH).toString("base64url");
 	}
 
-	private validate(data: Partial<Invite>) {
-		return newInviteSchema.parse(data);
+	private validate() {
+		const newData = newInviteSchema.parse(this.data) as NewInvite;
+		this.data = newData;
+		return newData;
 	}
 
 	async create(trx = db): Promise<Invite> {
@@ -194,138 +194,9 @@ export class InviteBuilder
 
 		this.data.lastModifiedBy = lastModifiedBy;
 
-		const {
-			communityLevelFormIds,
-			pubOrStageFormIds,
-			communityLevelFormSlugs,
-			pubOrStageFormSlugs,
-			...preValidatedData
-		} = this.data;
-		const communityFormSlugsOrIds = [
-			...(communityLevelFormSlugs ?? []),
-			...(communityLevelFormIds ?? []),
-		];
-		const pubOrStageFormSlugsOrIds = [
-			...(pubOrStageFormSlugs ?? []),
-			...(pubOrStageFormIds ?? []),
-		];
+		const data = this.validate();
 
-		const type =
-			pubOrStageFormSlugsOrIds.length > 0
-				? InviteFormType.pubOrStage
-				: communityFormSlugsOrIds.length > 0
-					? InviteFormType.communityLevel
-					: null;
-
-		const pubsOrStageFormIdentifiersAreSlugs = Boolean(pubOrStageFormSlugs?.length);
-		const communityFormIdentifiersAreSlugs = Boolean(communityLevelFormSlugs?.length);
-
-		const data = this.validate(preValidatedData);
-
-		const inviteBase = trx.with("invite", (db) =>
-			db
-				.insertInto("invites")
-				.values({
-					...data,
-					token,
-					lastModifiedBy,
-				})
-				.returningAll()
-		);
-
-		const withFormSlugOrId = <EB extends ExpressionBuilder<any, any>>(
-			eb: EB,
-			identifier: string,
-			isSlug: boolean
-		) => {
-			if (!isSlug) {
-				return identifier as FormsId;
-			}
-
-			return eb
-				.selectFrom("forms")
-				.select("id")
-				.where("slug", "=", identifier)
-				.where("communityId", "=", data.communityId)
-				.limit(1);
-		};
-
-		const inviteWithForms = type
-			? inviteBase.with("invite_forms", (db) =>
-					db
-						.insertInto("invite_forms")
-						.values((eb) => [
-							...(pubOrStageFormSlugsOrIds?.map((form) => ({
-								inviteId: eb
-									.selectFrom("invite")
-									.select("id")
-									.where("token", "=", token)
-									.limit(1),
-								formId: withFormSlugOrId(
-									eb,
-									form,
-									pubsOrStageFormIdentifiersAreSlugs
-								),
-								type: InviteFormType.pubOrStage,
-							})) ?? []),
-							...(communityFormSlugsOrIds?.map((formId) => ({
-								inviteId: eb
-									.selectFrom("invite")
-									.select("id")
-									.where("token", "=", token)
-									.limit(1),
-								formId: withFormSlugOrId(
-									eb,
-									formId,
-									communityFormIdentifiersAreSlugs
-								),
-								type: InviteFormType.communityLevel,
-							})) ?? []),
-						])
-						.returningAll()
-				)
-			: inviteBase;
-
-		// for type safety this cast is necessary
-		const inviteFinal = (inviteWithForms as typeof inviteBase)
-			.selectFrom("invite")
-			.selectAll()
-			.select((eb) => [
-				jsonObjectFrom(
-					eb
-						.selectFrom("communities")
-						.select(["id", "slug", "avatar", "name"])
-						.whereRef("communities.id", "=", "invite.communityId")
-				).as("community"),
-				jsonObjectFrom(
-					eb
-						.selectFrom("pubs")
-						.select((eb) => [
-							"id",
-							"title",
-							jsonObjectFrom(
-								eb
-									.selectFrom("pub_types")
-									.select(["id", "name"])
-									.whereRef("pub_types.id", "=", "pubs.pubTypeId")
-							)
-								.$notNull()
-								.as("pubType"),
-						])
-						.whereRef("pubs.id", "=", "invite.pubId")
-				).as("pub"),
-				jsonObjectFrom(
-					eb
-						.selectFrom("stages")
-						.select(["id", "name"])
-						.whereRef("stages.id", "=", "invite.stageId")
-				).as("stage"),
-			])
-			.select((eb) => withInvitedFormIds(eb, "invite.id"));
-
-		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
-
-		return result as Invite;
+		return InviteService._createInvite({ ...data, token: token, lastModifiedBy }, trx);
 	}
 
 	async createAndSend(input: { redirectTo: string }, trx = db): Promise<Invite> {

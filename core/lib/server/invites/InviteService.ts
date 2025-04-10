@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 
+import type { ExpressionBuilder } from "kysely";
 import type { User } from "lucia";
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
@@ -13,9 +14,9 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type { Invite, LastModifiedBy } from "db/types";
-import { InviteStatus } from "db/public";
-import { compareMemberRoles } from "db/types";
+import type { Invite, LastModifiedBy, NewInvite, NewInviteInput } from "db/types";
+import { InviteFormType, InviteStatus } from "db/public";
+import { compareMemberRoles, DEFAULT_INVITE_EXPIRATION_TIME } from "db/types";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -131,7 +132,7 @@ export namespace InviteService {
 	/**
 	 * @internal
 	 */
-	async function getInvite(token: string, id: InvitesId, trx = db) {
+	export async function _getInvite(token: string, id: InvitesId, trx = db) {
 		return trx
 			.selectFrom("invites")
 			.where("token", "=", token)
@@ -144,7 +145,9 @@ export namespace InviteService {
 						.selectFrom("communities")
 						.select(["id", "slug", "avatar", "name"])
 						.whereRef("communities.id", "=", "invites.communityId")
-				).as("community"),
+				)
+					.$notNull()
+					.as("community"),
 				jsonObjectFrom(
 					eb
 						.selectFrom("pubs")
@@ -170,6 +173,143 @@ export namespace InviteService {
 				).as("stage"),
 			])
 			.executeTakeFirst() as Promise<Invite | null>;
+	}
+
+	/**
+	 * @internal
+	 * Do not use directly
+	 */
+	export async function _createInvite(data: NewInvite, trx = db) {
+		const {
+			communityLevelFormIds,
+			pubOrStageFormIds,
+			communityLevelFormSlugs,
+			pubOrStageFormSlugs,
+			...restData
+		} = data;
+		const communityFormSlugsOrIds = [
+			...(communityLevelFormSlugs ?? []),
+			...(communityLevelFormIds ?? []),
+		];
+		const pubOrStageFormSlugsOrIds = [
+			...(pubOrStageFormSlugs ?? []),
+			...(pubOrStageFormIds ?? []),
+		];
+
+		const type =
+			pubOrStageFormSlugsOrIds.length > 0
+				? InviteFormType.pubOrStage
+				: communityFormSlugsOrIds.length > 0
+					? InviteFormType.communityLevel
+					: null;
+
+		const pubsOrStageFormIdentifiersAreSlugs = Boolean(pubOrStageFormSlugs?.length);
+		const communityFormIdentifiersAreSlugs = Boolean(communityLevelFormSlugs?.length);
+
+		const inviteBase = trx.with("invite", (db) =>
+			db.insertInto("invites").values(restData).returningAll()
+		);
+
+		const withFormSlugOrId = <EB extends ExpressionBuilder<any, any>>(
+			eb: EB,
+			identifier: string,
+			isSlug: boolean
+		) => {
+			if (!isSlug) {
+				return identifier as FormsId;
+			}
+
+			return eb
+				.selectFrom("forms")
+				.select("id")
+				.where("slug", "=", identifier)
+				.where("communityId", "=", data.communityId)
+				.limit(1);
+		};
+
+		const inviteWithForms = type
+			? inviteBase.with("invite_forms", (db) =>
+					db
+						.insertInto("invite_forms")
+						.values((eb) => [
+							...(pubOrStageFormSlugsOrIds?.map((form) => ({
+								inviteId: eb
+									.selectFrom("invite")
+									.select("id")
+									.where("token", "=", data.token)
+									.limit(1),
+								formId: withFormSlugOrId(
+									eb,
+									form,
+									pubsOrStageFormIdentifiersAreSlugs
+								),
+								type: InviteFormType.pubOrStage,
+							})) ?? []),
+							...(communityFormSlugsOrIds?.map((formId) => ({
+								inviteId: eb
+									.selectFrom("invite")
+									.select("id")
+									.where("token", "=", data.token)
+									.limit(1),
+								formId: withFormSlugOrId(
+									eb,
+									formId,
+									communityFormIdentifiersAreSlugs
+								),
+								type: InviteFormType.communityLevel,
+							})) ?? []),
+						])
+						.returningAll()
+				)
+			: inviteBase;
+
+		// for type safety this cast is necessary
+		const inviteFinal = (inviteWithForms as typeof inviteBase)
+			.selectFrom("invite")
+			.selectAll()
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("communities")
+						.select([
+							"communities.id",
+							"communities.slug",
+							"communities.avatar",
+							"communities.name",
+						])
+						.whereRef("communities.id", "=", "invite.communityId")
+				)
+					.$notNull()
+					.as("community"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("pubs")
+						.select((eb) => [
+							"pubs.id",
+							"pubs.title",
+							jsonObjectFrom(
+								eb
+									.selectFrom("pub_types")
+									.select(["pub_types.id", "pub_types.name"])
+									.whereRef("pub_types.id", "=", "pubs.pubTypeId")
+							)
+								.$notNull()
+								.as("pubType"),
+						])
+						.whereRef("pubs.id", "=", "invite.pubId")
+				).as("pub"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.select(["stages.id", "stages.name"])
+						.whereRef("stages.id", "=", "invite.stageId")
+				).as("stage"),
+			])
+			.select((eb) => withInvitedFormIds(eb, "invite.id"));
+
+		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
+
+		return result as Invite;
 	}
 
 	export async function setInviteSent(invite: Invite, lastModifiedBy: LastModifiedBy, trx = db) {
@@ -583,7 +723,7 @@ export namespace InviteService {
 	export async function getValidInvite(inviteToken: string, trx = db) {
 		const { id, token } = parseInviteToken(inviteToken);
 
-		const dbInvite = await getInvite(token, id, trx);
+		const dbInvite = await _getInvite(token, id, trx);
 
 		if (!dbInvite) {
 			throw new InviteError("NOT_FOUND", {

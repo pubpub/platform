@@ -165,18 +165,23 @@ const _typeTestFunc = () => {
 	invite2 = invite;
 };
 
+// 30 days
+export const DEFAULT_INVITE_EXPIRATION_TIME = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12);
+
 export const newInviteSchema = z
 	.object({
-		token: z.string().optional(),
-		expiresAt: z.date(),
-		communityId: communitiesIdSchema,
-
 		id: invitesIdSchema.optional(),
+		token: z.string(),
+
+		expiresAt: z.date().default(DEFAULT_INVITE_EXPIRATION_TIME),
 		createdAt: z.date().optional(),
 		updatedAt: z.date().optional(),
+
+		communityId: communitiesIdSchema,
 		communityRole: memberRoleSchema.default(MemberRole.contributor),
-		communityLevelFormIds: formsIdSchema.array().nullable().optional(),
-		message: z.string().nullable().optional(),
+		communityLevelFormIds: formsIdSchema.array().nullish(),
+		communityLevelFormSlugs: z.string().array().nullish(),
+		message: z.string().nullish(),
 		lastModifiedBy: lastModifiedBySchema,
 	})
 	.and(
@@ -197,19 +202,22 @@ export const newInviteSchema = z
 		z.union([
 			z.object({
 				pubId: pubsIdSchema,
-				pubOrStageFormIds: formsIdSchema.array().nullable().optional(),
+				pubOrStageFormIds: formsIdSchema.array().nullish(),
+				pubOrStageFormSlugs: z.string().array().nullish(),
 				stageId: z.null().optional(),
 				pubOrStageRole: memberRoleSchema.optional(),
 			}),
 			z.object({
 				pubId: z.null().optional(),
-				pubOrStageFormIds: formsIdSchema.array().nullable().optional(),
+				pubOrStageFormIds: formsIdSchema.array().nullish(),
+				pubOrStageFormSlugs: z.string().array().nullish(),
 				stageId: stagesIdSchema,
 				pubOrStageRole: memberRoleSchema.optional(),
 			}),
 			z.object({
 				pubId: z.null().optional(),
 				pubOrStageFormIds: z.null().optional(),
+				pubOrStageFormSlugs: z.null().optional(),
 				stageId: z.null().optional(),
 				pubOrStageRole: z.null().optional(),
 			}),
@@ -231,21 +239,20 @@ export const newInviteSchema = z
 	.and(
 		z.union([
 			z.object({
-				lastSentAt: z.coerce.date().optional(),
-				status: z
-					.enum([
-						InviteStatus.accepted,
-						InviteStatus.pending,
-						InviteStatus.rejected,
-						InviteStatus.revoked,
-					])
-					.optional(),
+				lastSentAt: z.coerce.date(),
+				status: z.enum([
+					InviteStatus.accepted,
+					InviteStatus.pending,
+					InviteStatus.rejected,
+					InviteStatus.revoked,
+				]),
 			}),
 			z.object({
 				lastSentAt: z.null().optional(),
-				status: z.literal(InviteStatus.created).optional(),
+				status: z.literal(InviteStatus.created).default(InviteStatus.created),
 			}),
 		])
 	);
 
-export type NewInvite = z.infer<typeof newInviteSchema>;
+export type NewInviteInput = Prettify<z.input<typeof newInviteSchema>>;
+export type NewInvite = Prettify<z.infer<typeof newInviteSchema>>;
