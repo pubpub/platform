@@ -62,7 +62,7 @@ export type RenderWithPubContext = {
 	communitySlug: string;
 	pub: RenderWithPubPub;
 	inviter?: XOR<{ userId: UsersId }, { actionRunId: ActionRunsId }>;
-	trx: Transaction<Database>;
+	trx: Kysely<Database>;
 };
 
 export const ALLOWED_MEMBER_ATTRIBUTES = ["firstName", "lastName", "email"] as const;
