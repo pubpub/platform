@@ -28,9 +28,9 @@ import { autoCache } from "../cache/autoCache";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
 import {
-	insertCommunityMember,
-	insertPubMember,
-	insertStageMember,
+	insertCommunityMemberOverrideRole,
+	insertPubMemberOverrideRole,
+	insertStageMemberOverrideRole,
 	selectCommunityMember,
 } from "../member";
 import { withInvitedFormIds } from "./helpers";
@@ -56,6 +56,7 @@ export namespace InviteService {
 		REVOKED: "Invite revoked",
 		EXPIRED: "Invite expired",
 		USER_NOT_LOGGED_IN: "User not logged in",
+		INVITE_USELESS: "Invite is useless, as it would not grant the user any new permissions",
 	} as const;
 
 	export type InviteErrorType = keyof typeof INVITE_ERRORS;
@@ -481,6 +482,7 @@ export namespace InviteService {
 				useless: false as const,
 			};
 		};
+
 		if (isCommunityOnlyInvite(invite)) {
 			const communityMember = await communityMembershipPromise;
 			return isCommunityMemberUseless(communityMember);
@@ -582,9 +584,20 @@ export namespace InviteService {
 		assertUserIsInvitee(invite, user);
 
 		const res = await maybeWithTrx(trx, async (trx) => {
+			const isInviteUseless = await isInviteUselessForUser(invite, user, trx);
+			if (isInviteUseless.useless) {
+				logger.debug({
+					msg: "For some reason, useless invite was accepted",
+					invite,
+					user,
+					isInviteUseless,
+				});
+				return;
+			}
+
 			// TODO: override lower level of permissions if the user has already accepted another invite
 			if (isCommunityOnlyInvite(invite)) {
-				await insertCommunityMember(
+				await insertCommunityMemberOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
@@ -603,7 +616,7 @@ export namespace InviteService {
 					);
 				}
 			} else if (isPubInvite(invite)) {
-				const communityMember = await insertCommunityMember(
+				const communityMember = await insertCommunityMemberOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
@@ -611,7 +624,7 @@ export namespace InviteService {
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				const pubMember = await insertPubMember(
+				const pubMember = await insertPubMemberOverrideRole(
 					{
 						pubId: invite.pubId,
 						userId: user.id,
@@ -641,7 +654,7 @@ export namespace InviteService {
 						),
 				]);
 			} else if (isStageInvite(invite)) {
-				await insertCommunityMember(
+				await insertCommunityMemberOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
@@ -649,7 +662,7 @@ export namespace InviteService {
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				await insertStageMember(
+				await insertStageMemberOverrideRole(
 					{
 						stageId: invite.stageId,
 						userId: user.id,

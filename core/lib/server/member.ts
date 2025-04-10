@@ -1,3 +1,5 @@
+import type { ExpressionBuilder, InsertQueryBuilder, OnConflictBuilder } from "kysely";
+
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
@@ -8,6 +10,7 @@ import type {
 	NewStageMemberships,
 	UsersId,
 } from "db/public";
+import { MemberRole } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -92,6 +95,36 @@ export const insertCommunityMember = (
 export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
 	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
 
+export const onConflictOverrideRole = (
+	oc: OnConflictBuilder<any, any>,
+	table: "community_memberships" | "pub_memberships" | "stage_memberships"
+) =>
+	oc.columns(["userId", "communityId"]).doUpdateSet((eb) => ({
+		role: eb
+			.case()
+			.when(eb.ref(`${table}.role`), "=", MemberRole.admin)
+			.then(eb.ref(`${table}.role`))
+			.when(
+				eb.and([
+					eb(eb.ref(`${table}.role`), "=", MemberRole.editor),
+					eb(eb.ref("excluded.role"), "!=", MemberRole.admin),
+				])
+			)
+			.then(eb.ref(`${table}.role`))
+			.else(eb.ref("excluded.role"))
+			.end(),
+	}));
+
+export const insertCommunityMemberOverrideRole = (
+	props: NewCommunityMemberships & { userId: UsersId },
+	trx = db
+) =>
+	autoRevalidate(
+		insertCommunityMember(props, trx).qb.onConflict((oc) =>
+			onConflictOverrideRole(oc, "community_memberships")
+		)
+	);
+
 export const insertStageMember = (
 	{
 		userId,
@@ -103,6 +136,16 @@ export const insertStageMember = (
 	trx = db
 ) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }));
 
+export const insertStageMemberOverrideRole = (
+	props: NewStageMemberships & { userId: UsersId },
+	trx = db
+) =>
+	autoRevalidate(
+		insertStageMember(props, trx).qb.onConflict((oc) =>
+			onConflictOverrideRole(oc, "stage_memberships")
+		)
+	);
+
 export const insertPubMember = (
 	{
 		userId,
@@ -113,3 +156,13 @@ export const insertPubMember = (
 	},
 	trx = db
 ) => autoRevalidate(trx.insertInto("pub_memberships").values({ userId, pubId, role }));
+
+export const insertPubMemberOverrideRole = (
+	props: NewPubMemberships & { userId: UsersId },
+	trx = db
+) =>
+	autoRevalidate(
+		insertPubMember(props, trx).qb.onConflict((oc) =>
+			onConflictOverrideRole(oc, "pub_memberships")
+		)
+	);

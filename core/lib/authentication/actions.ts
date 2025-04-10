@@ -11,6 +11,7 @@ import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
 import type { Prettify, XOR } from "../types";
+import type { NoticeParams } from "~/app/components/Notice";
 import type { SafeUser } from "~/lib/server/user";
 import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
@@ -30,6 +31,7 @@ import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/c
 import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
 import { insertCommunityMember, selectCommunityMember } from "../server/member";
+import { redirectToLogin } from "../server/navigation/redirects";
 import { invalidateTokensForUser } from "../server/token";
 import { isClientExceptionOptions } from "../serverActions";
 import { SignupErrors } from "./errors";
@@ -112,8 +114,12 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 	await redirectUser(user.memberships);
 });
 
-export const logout = defineServerAction(async function logout() {
-	const { session } = await validateRequest();
+export const logout = defineServerAction(async function logout(props: {
+	redirectTo?: string;
+	destination?: string;
+	notice?: NoticeParams;
+}) {
+	const { session } = await getLoginData();
 
 	if (!session) {
 		return {
@@ -126,7 +132,27 @@ export const logout = defineServerAction(async function logout() {
 	const sessionCookie = lucia.createBlankSessionCookie();
 	(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
 
-	redirect("/login");
+	const destinationPath = props.destination ?? "/login";
+	const searchParams = new URLSearchParams();
+
+	if (destinationPath) {
+		if (props.notice) {
+			searchParams.set("notice", JSON.stringify(props.notice));
+		}
+
+		if (props.redirectTo) {
+			searchParams.set("redirectTo", props.redirectTo);
+		}
+
+		redirect(`${destinationPath}${searchParams.size ? `?${searchParams.toString()}` : ""}`);
+	}
+
+	redirectToLogin({
+		loginNotice: {
+			type: "notice",
+			title: "You have successfully logged out.",
+		},
+	});
 });
 
 export const sendForgotPasswordMail = defineServerAction(
