@@ -73,10 +73,7 @@ async function send(
 			data: {},
 		};
 	} catch (error) {
-		logger.error({
-			msg: `Failed to send email`,
-			error: error.message,
-		});
+		logger.error({ msg: "Failed to send email", err: error });
 		return {
 			error: error.message,
 		};
