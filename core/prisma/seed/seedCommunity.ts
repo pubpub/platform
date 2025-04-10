@@ -23,6 +23,7 @@ import type {
 	FormElements,
 	Forms,
 	FormsId,
+	InvitesId,
 	NewCommunityMemberships,
 	PubFields,
 	PubsId,
@@ -34,7 +35,12 @@ import type {
 	Users,
 	UsersId,
 } from "db/public";
-import type { ApiAccessPermissionConstraints, permissionsSchema } from "db/types";
+import type {
+	ApiAccessPermissionConstraints,
+	Invite,
+	NewInviteInput,
+	permissionsSchema,
+} from "db/types";
 import {
 	Action as ActionName,
 	CoreSchemaType,
@@ -43,10 +49,12 @@ import {
 	MemberRole,
 	StructuralFormElement,
 } from "db/public";
+import { newInviteSchema } from "db/types";
 import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
+import type { MaybeHas } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -54,6 +62,8 @@ import { findRanksBetween } from "~/lib/rank";
 import { createPubRecursiveNew } from "~/lib/server";
 import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { insertForm } from "~/lib/server/form";
+import { InviteService } from "~/lib/server/invites/InviteService";
+import { generateToken } from "~/lib/server/token";
 import { slugifyString } from "~/lib/string";
 
 export type PubFieldsInitializer = Record<
@@ -330,6 +340,25 @@ export type ApiTokenInitializer = {
 	};
 };
 
+export type InviteInitializer<
+	PF extends PubFieldsInitializer,
+	PT extends PubTypeInitializer<PF>,
+	U extends UsersInitializer,
+	SI extends StagesInitializer<U>,
+	FI extends FormInitializer<PF, PT, U, SI>,
+> = {
+	[InviteName in string]: MaybeHas<
+		Omit<
+			NewInviteInput,
+			"communityId" | "lastModifiedBy" | "pubOrStageFormSlugs" | "communityLevelFormSlugs"
+		>,
+		"token"
+	> & {
+		pubOrStageFormSlugs?: (keyof FI)[];
+		communityLevelFormSlugs?: (keyof FI)[];
+	};
+};
+
 type CreatePubRecursiveInput = Parameters<typeof createPubRecursiveNew>[0];
 
 const makePubInitializerMatchCreatePubRecursiveInput = <
@@ -486,6 +515,11 @@ type FormsByName<F extends FormInitializer<any, any, any, any>> = {
 		elements: (F[K]["elements"][number] & FormElements)[];
 	};
 };
+
+export type InvitesByName<II extends InviteInitializer<any, any, any, any, any>> = {
+	[InviteName in keyof II]: Invite & { inviteToken: string };
+};
+
 // ===================================
 
 /**
@@ -501,6 +535,7 @@ export async function seedCommunity<
 	const PI extends PubInitializer<PF, PT, U, S>[],
 	const F extends FormInitializer<PF, PT, U, S>,
 	const AI extends ApiTokenInitializer,
+	const II extends InviteInitializer<PF, PT, U, S, F>,
 >(
 	props: {
 		/**
@@ -703,6 +738,7 @@ export async function seedCommunity<
 		pubs?: PI;
 		forms?: F;
 		apiTokens?: AI;
+		invites?: II;
 	},
 	options?: {
 		/**
@@ -1171,7 +1207,6 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
-	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const possibleRules = consolidatedStages.flatMap(
 		(stage, idx) =>
 			stage.rules?.map((rule) => ({
@@ -1210,6 +1245,7 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
 
+	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
 		await Promise.all(
 			apiTokens.map(async ([tokenName, tokenInput]) => {
@@ -1266,6 +1302,75 @@ export async function seedCommunity<
 		[TokenName in keyof NonNullable<AI>]: string;
 	};
 
+	const createdInvites = Object.fromEntries(
+		await Promise.all(
+			Object.entries(props.invites ?? {}).map(async ([inviteName, inviteInput]) => {
+				const {
+					token: rawToken,
+					pubOrStageFormSlugs,
+					communityLevelFormSlugs,
+					...rest
+				} = inviteInput;
+
+				let token: string;
+				let id: InvitesId;
+				if (rawToken) {
+					const res = InviteService.parseInviteToken(rawToken);
+					token = res.token;
+					id = res.id;
+				} else {
+					id = crypto.randomUUID() as InvitesId;
+					token = generateToken();
+				}
+
+				const psFormSlugs = pubOrStageFormSlugs
+					? pubOrStageFormSlugs.map((slug) => {
+							const form = formsByName[slug];
+							if (!form) {
+								throw new Error(`Form ${slug as string} not found`);
+							}
+							return form.slug;
+						})
+					: undefined;
+				const cfSlugs = communityLevelFormSlugs
+					? communityLevelFormSlugs.map((slug) => {
+							const form = formsByName[slug];
+							if (!form) {
+								throw new Error(`Form ${slug as string} not found`);
+							}
+							return form.slug;
+						})
+					: undefined;
+
+				const rawInput = {
+					id,
+					token,
+					communityId,
+					lastModifiedBy: createLastModifiedBy("system"),
+					pubOrStageFormSlugs: psFormSlugs,
+					communityLevelFormSlugs: cfSlugs,
+					invitedByUserId: inviteInput.invitedByActionRunId
+						? null
+						: expect(
+								createdMembers.find((member) => member.role === MemberRole.admin)
+									?.userId,
+								"You need to create an admin member in the seed if you dont want to set the invitee manually."
+							),
+					...rest,
+				};
+
+				const input = newInviteSchema.parse(rawInput);
+
+				const invite = await InviteService._createInvite(input, trx);
+
+				return [
+					inviteName,
+					{ ...invite, inviteToken: InviteService.createInviteToken(invite) },
+				];
+			})
+		)
+	) as InvitesByName<II>;
+
 	logger.info(`${createdCommunity.name}: Successfully seeded community`);
 
 	return {
@@ -1280,5 +1385,6 @@ export async function seedCommunity<
 		actions: createdActions,
 		forms: formsByName,
 		apiTokens: createdApiTokens,
+		invites: createdInvites,
 	};
 }
