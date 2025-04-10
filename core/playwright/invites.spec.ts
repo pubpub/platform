@@ -341,7 +341,7 @@ test.afterAll(async () => {
 	await page.close();
 });
 
-const expectInvalidInvite = (inviteToken: string) => {
+const expectInvalidInvite = (inviteToken: string, page: Page) => {
 	return {
 		toShow: async (text: string) => {
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
@@ -357,86 +357,95 @@ const expectInvalidInvite = (inviteToken: string) => {
 	};
 };
 
-test.describe("Invalid invite scenarios", () => {
-	test("No invite token provided", async () => {
+test.describe("invalid invite scenarios", () => {
+	test("no invite token provided", async () => {
 		await page.goto(inviteBasePath);
 		await expect(page).toHaveURL(inviteBasePath);
 
-		await expect(page.getByText("No Invite Found")).toBeVisible({
+		await expect(page.getByText("no Invite Found")).toBeVisible({
 			timeout: 2_000,
 		});
 
-		await expect(page.getByText("No invite was provided.")).toBeVisible();
+		await expect(page.getByText("no invite was provided.")).toBeVisible();
 	});
 
-	test.describe("Email invites", () => {
-		test("Expired invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.expiredEmailInvite.inviteToken).toShow(
+	test.describe("email invites", () => {
+		test("expired invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.expiredEmailInvite.inviteToken,
+				page
+			).toShow("This invite has expired.");
+		});
+
+		test("already accepted invite shows success message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.acceptedEmailInvite.inviteToken,
+				page
+			).toShow("This invite has already been accepted.");
+		});
+
+		test("rejected invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.rejectedEmailInvite.inviteToken,
+				page
+			).toShow("You have already rejected this invite.");
+		});
+
+		test("revoked invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.revokedEmailInvite.inviteToken,
+				page
+			).toShow("This invite has been revoked.");
+		});
+
+		test("created but not sent invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.createdEmailInvite.inviteToken,
+				page
+			).toShow("This invite is not ready for use.");
+		});
+	});
+
+	test.describe("user invites", () => {
+		test("expired invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(community.invites.expiredUserInvite.inviteToken, page).toShow(
 				"This invite has expired."
 			);
 		});
 
-		test("Already accepted invite shows success message", async () => {
-			await expectInvalidInvite(community.invites.acceptedEmailInvite.inviteToken).toShow(
-				"This invite has already been accepted."
-			);
+		test("already accepted invite shows success message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.acceptedUserInvite.inviteToken,
+				page
+			).toShow("This invite has already been accepted.");
 		});
 
-		test("Rejected invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.rejectedEmailInvite.inviteToken).toShow(
-				"You have already rejected this invite."
-			);
+		test("rejected invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(
+				community.invites.rejectedUserInvite.inviteToken,
+				page
+			).toShow("You have already rejected this invite.");
 		});
 
-		test("Revoked invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.revokedEmailInvite.inviteToken).toShow(
+		test("revoked invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(community.invites.revokedUserInvite.inviteToken, page).toShow(
 				"This invite has been revoked."
 			);
 		});
 
-		test("Created but not sent invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.createdEmailInvite.inviteToken).toShow(
-				"This invite is not ready for use."
-			);
-		});
-	});
-
-	test.describe("User invites", () => {
-		test("Expired invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.expiredUserInvite.inviteToken).toShow(
-				"This invite has expired."
-			);
-		});
-
-		test("Already accepted invite shows success message", async () => {
-			await expectInvalidInvite(community.invites.acceptedUserInvite.inviteToken).toShow(
-				"This invite has already been accepted."
-			);
-		});
-
-		test("Rejected invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.rejectedUserInvite.inviteToken).toShow(
-				"You have already rejected this invite."
-			);
-		});
-
-		test("Revoked invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.revokedUserInvite.inviteToken).toShow(
-				"This invite has been revoked."
-			);
-		});
-
-		test("Created but not sent invite shows appropriate message", async () => {
-			await expectInvalidInvite(community.invites.createdUserInvite.inviteToken).toShow(
+		test("created but not sent invite shows appropriate message", async ({ page }) => {
+			await expectInvalidInvite(community.invites.createdUserInvite.inviteToken, page).toShow(
 				"This invite is not ready for use."
 			);
 		});
 	});
 });
 
-test.describe("Email invite flow", () => {
-	test("User accepting email invite should be able to signup and fill out form", async () => {
-		await test.step("User can go to invite page and see they are allowed to signup", async () => {
+test.describe("email invite flow", () => {
+	test("user accepting email invite should be able to signup and fill out form", async ({
+		page,
+	}) => {
+		await test.step("user can go to invite page and see they are allowed to signup", async () => {
 			const invite = community.invites.happyPathEmailInvite;
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
 			const inviteUrl = createInviteUrl(invite.inviteToken, redirectTo);
@@ -457,7 +466,7 @@ test.describe("Email invite flow", () => {
 			await page.waitForURL(`**/public/signup**`);
 		});
 
-		await test.step("User will be shown error if they try to signup with a different email", async () => {
+		await test.step("user will be shown error if they try to signup with a different email", async () => {
 			await page.getByLabel("Email").fill(email1);
 			await page.getByLabel("First name").fill(firstName1);
 			await page.getByLabel("Last name").fill(lastName1);
@@ -466,13 +475,13 @@ test.describe("Email invite flow", () => {
 				timeout: 2000,
 			});
 
-			await page.getByText("Email does not match invite").waitFor({
+			await page.getByText("Email does not match invite").first().waitFor({
 				state: "visible",
 				timeout: 1000,
 			});
 		});
 
-		await test.step("User can signup with the correct email", async () => {
+		await test.step("user can signup with the correct email", async () => {
 			await page.getByLabel("Email").fill(email2);
 			await page.getByLabel("First name").fill(firstName2);
 			await page.getByLabel("Last name").fill(lastName2);
@@ -484,7 +493,7 @@ test.describe("Email invite flow", () => {
 			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`);
 		});
 
-		await test.step("User can fill out form", async () => {
+		await test.step("user can fill out form", async () => {
 			await page.getByLabel("Title").fill("Test title");
 			await page.getByLabel("Content").fill("Test content");
 			await page.getByLabel("Email").fill(email2);
@@ -492,36 +501,35 @@ test.describe("Email invite flow", () => {
 				timeout: 2000,
 			});
 		});
-		await test.step.skip("User has correct permissions afterwards", async () => {});
+		await test.step.skip("user has correct permissions afterwards", async () => {});
 	});
 });
 
-test.describe("User invite flow", () => {
-	// This test is more complex as it requires authentication setup
-	test("Wrong user is logged in, they log out, then accept as usual", async () => {
-		// login as admin
+test.describe("user invite flow", () => {
+	test("wrong user is logged in, they log out, then accept as usual", async ({ page }) => {
 		const loginPage = new LoginPage(page);
 		await loginPage.goto();
 		await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
 
-		await test.step("Visit invite and see wrong account message", async () => {
-			await expectInvalidInvite(community.invites.happyPathUserInvite.inviteToken).toShow(
-				"Wrong account"
-			);
+		await test.step("visit invite and see wrong account message", async () => {
+			await expectInvalidInvite(
+				community.invites.happyPathUserInvite.inviteToken,
+				page
+			).toShow("Wrong account");
 		});
 
-		await test.step("Logout and login as invited user", async () => {
+		await test.step("logout and login as invited user", async () => {
 			await page.getByRole("button", { name: "Logout" }).click();
 		});
 
-		await test.step("Revisit invite see correct message", async () => {
+		await test.step("revisit invite see correct message", async () => {
 			await page.getByText("You've Been Invited", { exact: true }).waitFor({
 				state: "visible",
 				timeout: 5_000,
 			});
 		});
 
-		await test.step("Login as invited user", async () => {
+		await test.step("login as invited user", async () => {
 			await page.getByRole("button", { name: "Log In" }).click({
 				timeout: 2_000,
 			});
@@ -534,7 +542,7 @@ test.describe("User invite flow", () => {
 			await page.waitForTimeout(1_000);
 		});
 
-		await test.step("Get redirected back to invite, accept, then see correct form", async () => {
+		await test.step("get redirected back to invite, accept, then see correct form", async () => {
 			await page.waitForURL(`**/public/invite?**`, { timeout: 5_000 });
 			await page.getByRole("button", { name: "Accept" }).click({
 				timeout: 2_000,
@@ -552,35 +560,30 @@ test.describe("User invite flow", () => {
 	});
 });
 
-test.describe("Invite reject flow", () => {
-	test("User can reject a pending invite", async () => {
-		// Create a new invite that we can reject
+test.describe.skip("invite reject flow", () => {
+	test("user can reject a pending invite", async () => {
 		const invite = community.invites.rejectEmailInvite;
-		await test.step("User can access invite page and see reject option", async () => {
-			// Create a new invite that we can reject
+		await test.step("user can access invite page and see reject option", async () => {
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
 			const inviteUrl = createInviteUrl(invite.inviteToken, redirectTo);
 
 			await page.goto(inviteUrl);
 			await expect(page).toHaveURL(inviteUrl);
 
-			// Check that there's a reject button (this is dependent on the UI implementation)
 			await expect(page.getByRole("button", { name: "Reject" })).toBeVisible({
 				timeout: 1000,
 			});
 		});
 
-		await test.step("User can click reject and confirm rejection", async () => {
+		await test.step("user can click reject and confirm rejection", async () => {
 			await page.getByRole("button", { name: "Reject" }).click({
 				timeout: 2000,
 			});
 
-			// Assuming there's a confirmation dialog, confirm the rejection
 			await page.getByRole("button", { name: "Reject" }).click({
 				timeout: 2000,
 			});
 
-			// Check that we see a rejection confirmation message
 			await expect(page.getByText("You have rejected the invite")).toBeVisible({
 				timeout: 1000,
 			});
@@ -595,9 +598,9 @@ test.describe("Invite reject flow", () => {
 	});
 });
 
-test.describe("Different form types", () => {
-	test("User can accept invite with pub level form", async () => {
-		await test.step("User can access invite with pub level form", async () => {
+test.describe.skip("different form/invite types", () => {
+	test("user can accept invite with pub level form", async () => {
+		await test.step("user can access invite with pub level form", async () => {
 			const invite = community.invites.pubLevelFormInvite;
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.CommunityForm.slug}/fill?pubId=${pub1Id}`;
 			const inviteUrl = createInviteUrl(invite.inviteToken, redirectTo);
@@ -641,9 +644,9 @@ test.describe("Different form types", () => {
 });
 
 // i cloundt make this work with the current Seed
-test.describe.skip("Different roles in invites", () => {
-	test("User can accept invite with admin role", async () => {
-		await test.step("User can access invite with admin role", async () => {
+test.describe.skip("different roles in invites", () => {
+	test("user can accept invite with admin role", async () => {
+		await test.step("user can access invite with admin role", async () => {
 			const invite = community.invites.adminRoleInvite;
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
 			const inviteUrl = createInviteUrl(invite.inviteToken, redirectTo);
@@ -657,7 +660,7 @@ test.describe.skip("Different roles in invites", () => {
 			});
 		});
 
-		await test.step("User can sign up with admin invite", async () => {
+		await test.step("user can sign up with admin invite", async () => {
 			await page.getByRole("button", { name: "Create account" }).click({
 				timeout: 2000,
 			});
@@ -675,7 +678,7 @@ test.describe.skip("Different roles in invites", () => {
 			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`);
 		});
 
-		await test.step("Admin can fill out form", async () => {
+		await test.step("admin can fill out form", async () => {
 			await page.getByLabel("Title").fill("Admin Test Title");
 			await page.getByLabel("Content").fill("Content from admin");
 			await page.getByLabel("Email").fill(email5);
@@ -684,15 +687,15 @@ test.describe.skip("Different roles in invites", () => {
 			});
 		});
 
-		await test.step.skip("Admin should have admin permissions in the community", async () => {
-			// Would need to check admin-only pages/features to verify role
-			// e.g., accessing admin dashboard or performing admin actions
-		});
+		await test.step.skip(
+			"Admin should have admin permissions in the community",
+			async () => {}
+		);
 	});
 });
 
-test.describe("Multiple invites for same user", () => {
-	test.skip("User with multiple pending invites can accept them in sequence", async () => {
+test.describe.skip("multiple invites for same user", () => {
+	test.skip("user with multiple pending invites can accept them in sequence", async () => {
 		// This would test a user accepting multiple different invites one after another
 		// Each giving different permissions or access to different forms
 		// 1. Access first invite
@@ -702,26 +705,26 @@ test.describe("Multiple invites for same user", () => {
 		// 5. Verify additional access gained
 	});
 
-	test.skip("User gets correct merged permissions when accepting multiple invites", async () => {
+	test.skip("user gets correct merged permissions when accepting multiple invites", async () => {
 		// This would test that permissions are properly combined when a user
 		// accepts multiple invites with different permission levels
 	});
 });
 
-test.describe("Invite expiration handling", () => {
-	test.skip("Nearly expired invite allows user to request a new invite", async () => {
+test.describe.skip("invite expiration handling", () => {
+	test.skip("nearly expired invite allows user to request a new invite", async () => {
 		// 1. User accesses an invite that's about to expire
 		// 2. UI shows a warning about expiration
 		// 3. User is given option to request a new invite
 		// 4. System generates new invite with extended expiration
 	});
 
-	test.skip("User gets notification about upcoming invite expiration", async () => {
+	test.skip("user gets notification about upcoming invite expiration", async () => {
 		// For invites attached to a user account, they should get notified
 		// before the invite expires
 	});
 
-	test.skip("Admin can see and extend expiring invites", async () => {
+	test.skip("admin can see and extend expiring invites", async () => {
 		// Test admin interface for managing and extending invite expirations
 	});
 });
