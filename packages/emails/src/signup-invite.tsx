@@ -37,9 +37,10 @@ type SignupInviteForm = SignupInvitePropsBase & {
 
 type SignupInvitePub = SignupInvitePropsBase & {
 	type: "pub";
-	pub: Pick<Pubs, "title">;
+	pub: Pick<Pubs, "title"> & {
+		pubType: Pick<PubTypes, "name">;
+	};
 	pubOrStageRole: MemberRole;
-	pubType: Pick<PubTypes, "name">;
 };
 
 type SignupInviteStage = SignupInvitePropsBase & {
@@ -75,7 +76,9 @@ const inviteMessage = (invite: SignupInviteProps) => {
 	if (invite.type === "pub") {
 		extraText = ` and ${roleToVerb[invite.pubOrStageRole]} ${
 			// todo: proper logic for articles
-			invite.pub.title ? `the Pub "${invite.pub.title}"` : `to a(n) ${invite.pubType.name}`
+			invite.pub.title
+				? `the Pub "${invite.pub.title}"`
+				: `to a(n) ${invite.pub.pubType.name}`
 		}`;
 	}
 

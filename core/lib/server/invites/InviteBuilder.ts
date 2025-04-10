@@ -2,6 +2,8 @@ import crypto from "node:crypto";
 
 import type { ExpressionBuilder } from "kysely";
 
+import { jsonObjectFrom } from "kysely/helpers/postgres";
+
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
 import type { Invite } from "db/types";
 import { formsIdSchema, InviteFormType, InviteStatus, MemberRole } from "db/public";
@@ -288,6 +290,37 @@ export class InviteBuilder
 		const inviteFinal = (inviteWithForms as typeof inviteBase)
 			.selectFrom("invite")
 			.selectAll()
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("communities")
+						.select(["id", "slug", "avatar", "name"])
+						.whereRef("communities.id", "=", "invite.communityId")
+				).as("community"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("pubs")
+						.select((eb) => [
+							"id",
+							"title",
+							jsonObjectFrom(
+								eb
+									.selectFrom("pub_types")
+									.select(["id", "name"])
+									.whereRef("pub_types.id", "=", "pubs.pubTypeId")
+							)
+								.$notNull()
+								.as("pubType"),
+						])
+						.whereRef("pubs.id", "=", "invite.pubId")
+				).as("pub"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("stages")
+						.select(["id", "name"])
+						.whereRef("stages.id", "=", "invite.stageId")
+				).as("stage"),
+			])
 			.select((eb) => withInvitedFormIds(eb, "invite.id"));
 
 		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
@@ -317,11 +350,31 @@ export class InviteBuilder
 				redirectTo: input.redirectTo,
 			});
 
+			const props = invite.pubId
+				? ({
+						type: "pub",
+						pub: expect(invite.pub),
+						pubOrStageRole: invite.pubOrStageRole,
+						communityRole: invite.communityRole,
+					} as const)
+				: invite.stageId
+					? ({
+							type: "stage",
+							stage: expect(invite.stage),
+							pubOrStageRole: invite.pubOrStageRole,
+							communityRole: invite.communityRole,
+						} as const)
+					: ({
+							type: "community",
+							communityRole: invite.communityRole,
+						} as const);
+
 			await Email.signupInvite(
 				{
-					user,
 					community: expect(community),
+					to: user.email,
 					inviteLink,
+					...props,
 				},
 				trx
 			).send();
@@ -331,6 +384,11 @@ export class InviteBuilder
 				.set({
 					status: InviteStatus.pending,
 					lastSentAt: new Date(),
+					lastModifiedBy: createLastModifiedBy(
+						invite.invitedByActionRunId
+							? { actionRunId: invite.invitedByActionRunId }
+							: { userId: expect(invite.invitedByUserId) }
+					),
 				})
 				.where("id", "=", invite.id)
 				.execute();
