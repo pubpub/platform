@@ -97,9 +97,10 @@ export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =
 
 export const onConflictOverrideRole = (
 	oc: OnConflictBuilder<any, any>,
+	columns: ["userId", "communityId"] | ["userId", "pubId"] | ["userId", "stageId"],
 	table: "community_memberships" | "pub_memberships" | "stage_memberships"
 ) =>
-	oc.columns(["userId", "communityId"]).doUpdateSet((eb) => ({
+	oc.columns(columns).doUpdateSet((eb) => ({
 		role: eb
 			.case()
 			.when(eb.ref(`${table}.role`), "=", MemberRole.admin)
@@ -121,7 +122,7 @@ export const insertCommunityMemberOverrideRole = (
 ) =>
 	autoRevalidate(
 		insertCommunityMember(props, trx).qb.onConflict((oc) =>
-			onConflictOverrideRole(oc, "community_memberships")
+			onConflictOverrideRole(oc, ["userId", "communityId"], "community_memberships")
 		)
 	);
 
@@ -142,7 +143,7 @@ export const insertStageMemberOverrideRole = (
 ) =>
 	autoRevalidate(
 		insertStageMember(props, trx).qb.onConflict((oc) =>
-			onConflictOverrideRole(oc, "stage_memberships")
+			onConflictOverrideRole(oc, ["userId", "stageId"], "stage_memberships")
 		)
 	);
 
@@ -163,6 +164,6 @@ export const insertPubMemberOverrideRole = (
 ) =>
 	autoRevalidate(
 		insertPubMember(props, trx).qb.onConflict((oc) =>
-			onConflictOverrideRole(oc, "pub_memberships")
+			onConflictOverrideRole(oc, ["userId", "pubId"], "pub_memberships")
 		)
 	);
