@@ -16,6 +16,7 @@ import * as Email from "~/lib/server/email";
 import { getUser } from "~/lib/server/user";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { withInvitedFormIds } from "./helpers";
+import { InviteService } from "./InviteService";
 
 const BYTES_LENGTH = 16;
 
@@ -55,7 +56,7 @@ interface OptionalStep {
 	expiresAt(date: Date): OptionalStep;
 	expiresInDays(days: number): OptionalStep;
 	create(trx?: typeof db): Promise<Invite>;
-	createAndSend(trx?: typeof db): Promise<Invite>;
+	createAndSend(input: { redirectTo: string }, trx?: typeof db): Promise<Invite>;
 }
 
 export class InviteBuilder
@@ -294,7 +295,7 @@ export class InviteBuilder
 		return result as Invite;
 	}
 
-	async createAndSend(trx = db): Promise<Invite> {
+	async createAndSend(input: { redirectTo: string }, trx = db): Promise<Invite> {
 		return maybeWithTrx(trx, async (trx) => {
 			const invitePromise = this.create(trx);
 
@@ -312,10 +313,15 @@ export class InviteBuilder
 				communityPromise,
 			]);
 
+			const inviteLink = await InviteService.createInviteLink(invite, {
+				redirectTo: input.redirectTo,
+			});
+
 			await Email.signupInvite(
 				{
 					user,
 					community: expect(community),
+					inviteLink,
 				},
 				trx
 			).send();
