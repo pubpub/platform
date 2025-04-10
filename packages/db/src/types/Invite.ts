@@ -229,7 +229,6 @@ export const newInviteSchema = z
 		])
 	)
 	.and(
-		// LastSentAtStatus - status is optional as it might have a default
 		z.union([
 			z.object({
 				lastSentAt: z.coerce.date().optional(),
@@ -247,7 +246,6 @@ export const newInviteSchema = z
 				status: z.literal(InviteStatus.created).optional(),
 			}),
 		])
-	) satisfies z.ZodType<NewInvites>;
+	);
 
-// type helper to see what the input type looks like
 export type NewInvite = z.infer<typeof newInviteSchema>;
