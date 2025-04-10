@@ -3,13 +3,7 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import {
-	CoreSchemaType,
-	ElementType,
-	InputComponent,
-	MemberRole,
-	StructuralFormElement,
-} from "db/public";
+import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -20,7 +14,6 @@ import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
 import { MembersPage } from "./fixtures/member-page";
 import { PubsPage } from "./fixtures/pubs-page";
-import { createCommunity } from "./helpers";
 
 const seed = createSeed({
 	community: {
