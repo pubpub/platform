@@ -97,11 +97,11 @@ export interface PublicSchema {
 
 	pub_values_history: PubValuesHistoryTable;
 
-	_FormElementToPubType: FormElementToPubTypeTable;
-
 	invites: InvitesTable;
 
 	invites_history: InvitesHistoryTable;
 
 	invite_forms: InviteFormsTable;
+
+	_FormElementToPubType: FormElementToPubTypeTable;
 }
