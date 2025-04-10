@@ -1,10 +1,11 @@
+import type { SignupInviteProps } from "emails";
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
 import { Invite, PasswordReset, RequestLinkToForm } from "emails";
 
-import type { Communities, MemberRole, MembershipType, Users } from "db/public";
-import { AuthTokenType } from "db/public";
+import type { Communities, MembershipType, Users } from "db/public";
+import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "../types";
@@ -146,9 +147,18 @@ export function _legacy_signupInvite(
 		const email = await render(
 			<Invite
 				community={props.community}
-				signupLink={magicLink}
-				role={props.role}
-				membership={props.membership}
+				inviteLink={magicLink}
+				communityRole={props.role}
+				type="community"
+				message={
+					<>
+						You have been invited to become{" "}
+						{props.role === MemberRole.contributor ? "a" : "an"}{" "}
+						<strong>{props.role}</strong> of the {props.membership.type}{" "}
+						<em>{props.membership.name}</em> on PubPub. Click the button below to finish
+						your registration and join {props.community.name} on PubPub.
+					</>
+				}
 			/>
 		);
 
@@ -161,17 +171,23 @@ export function _legacy_signupInvite(
 }
 
 export function signupInvite(
-	props: {
-		community: Pick<Communities, "name" | "avatar" | "slug">;
-		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug"> | { email: string };
-		inviteLink: string;
+	props: SignupInviteProps & {
+		to: string | string[];
+		/**
+		 * @default "Join {community.name} on PubPub"
+		 */
+		subject?: string;
 	},
 	trx = db
 ) {
 	return buildSend(async () => {
-		const email = await render(
-			<Invite community={props.community} formInviteLink={inviteLink} form={props.form} />
-		);
+		const email = await render(<Invite {...props} />);
+
+		return {
+			to: props.to,
+			html: email,
+			subject: props.subject ?? `Join ${props.community.name} on PubPub`,
+		};
 	});
 }
 

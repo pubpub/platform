@@ -23,7 +23,7 @@ type SignupInvitePropsBase = {
 	community: Pick<Communities, "name" | "avatar" | "slug">;
 	communityRole: MemberRole;
 	previewText?: string;
-	message?: string | null;
+	message?: string | React.ReactNode | null;
 };
 
 type SignupInviteCommunity = SignupInvitePropsBase & {
@@ -48,7 +48,7 @@ type SignupInviteStage = SignupInvitePropsBase & {
 	pubOrStageRole: MemberRole;
 };
 
-type SignupInviteProps =
+export type SignupInviteProps =
 	| SignupInviteCommunity
 	| SignupInviteForm
 	| SignupInvitePub
