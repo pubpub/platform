@@ -47,7 +47,7 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
-		FLAGS: flagsSchema,
+		FLAGS: flagsSchema.transform(createFlags),
 	},
 	client: {},
 	experimental__runtimeEnv: {
@@ -57,4 +57,4 @@ export const env = createEnv({
 	emptyStringAsUndefined: true,
 });
 
-export const flags = createFlags(env.FLAGS);
+// export const flags = createFlags(env.FLAGS);
