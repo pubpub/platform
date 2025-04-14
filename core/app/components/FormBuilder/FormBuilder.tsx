@@ -121,7 +121,7 @@ const preparePayload = ({
 	formValues,
 	defaultValues,
 }: {
-	defaultValues: Omit<FormBuilderSchema, "id">;
+	defaultValues: FormBuilderSchema;
 	formValues: FormBuilderSchema;
 }) => {
 	const { upserts, deletes, relatedPubTypes, deletedRelatedPubTypes } =
@@ -152,6 +152,17 @@ const preparePayload = ({
 						}
 					}
 				} else if (element.updated) {
+					// check whether the element is reeeaally updated minus the updated field
+					const { updated: _, id: _id, ...elementWithoutUpdated } = element;
+					const { updated, id, ...rest } =
+						defaultValues.elements.find((e) => e.elementId === element.elementId) ?? {};
+
+					const defaultElement = rest as Omit<FormElementData, "updated" | "id">;
+
+					if (JSON.stringify(defaultElement) === JSON.stringify(elementWithoutUpdated)) {
+						return acc;
+					}
+
 					acc.upserts.push(
 						formElementsInitializerSchema.parse({
 							...element,
@@ -160,8 +171,11 @@ const preparePayload = ({
 						})
 					); // TODO: only update changed columns
 					if (element.relatedPubTypes) {
-						// If we are updating to an empty array, we should clear out all related pub types
-						if (element.relatedPubTypes.length === 0) {
+						// If we are updating to an empty array and there were related pub types before, we should clear out all related pub types
+						if (
+							element.relatedPubTypes.length === 0 &&
+							defaultElement.relatedPubTypes?.length
+						) {
 							acc.deletedRelatedPubTypes.push(element.elementId);
 						} else {
 							for (const pubTypeId of element.relatedPubTypes) {
@@ -314,6 +328,8 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
+
+	console.log(payload);
 
 	return (
 		<TokenProvider tokens={tokens}>
