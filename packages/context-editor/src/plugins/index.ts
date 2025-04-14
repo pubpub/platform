@@ -27,10 +27,10 @@ export const basePlugins = (
 		// Example setup includes inputRules for headers, blockquotes, codeblock, lists
 		// https://github.com/ProseMirror/prosemirror-example-setup/blob/master/src/inputrules.ts
 		...exampleSetup({ schema, menuBar: false }),
-		reactProps(props),
-		structureDecorations(),
-		attributePanel(panelPosition, setPanelPosition),
-		onChange(),
+		// reactProps(props),
+		// structureDecorations(),
+		// attributePanel(panelPosition, setPanelPosition),
+		// onChange(),
 		pasteRules(schema),
 		inputRules(schema),
 		mathPlugin,
