@@ -21,6 +21,7 @@ import {
 } from "~/app/components/forms/structural";
 import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
+import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -236,6 +237,7 @@ export default async function FormPage(props: {
 		recipient: memberWithUser,
 		communitySlug: params.communitySlug,
 		pub,
+		trx: db,
 	};
 
 	if (submitId && submitElement) {

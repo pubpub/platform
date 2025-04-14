@@ -1,0 +1,74 @@
+# Signup
+
+```mermaid
+flowchart TD
+    %% Main Auth Flows
+    subgraph "Primary Session-Based Auth"
+        A1[User Visits Page] --> A2[getLoginData called]
+        A2 --> A3{Valid Session Cookie?}
+        A3 -->|Yes| A4[Refresh Cookie & Allow Access]
+        A3 -->|No| A5["Redirect to Login Page with ?redirectTo=${url}"]
+        A4 --> A6[Continue to Requested Resource]
+    end
+```
+
+```mermaid
+flowchart TD
+    subgraph "Auth Token Flow"
+        C0["Email action is run with <code>:link{form={formSlug}}</code> in body"]-->C1
+        C1["User Receives Email with Magic Link like <code>.../magic-link?token={token}&redirectTo={url}</code>"] --> C2[User Clicks Link]
+        C2 --> C3["/magic-link Processes Token"]
+        C3 -->|Token Valid| C4[Create Session for Token User]
+        C3 -->|Token Expired| C5[Redirect w/ token as param]
+        C3 -->|Token Invalid| C6[Redirect to Invalid Token Page]
+        C4 --> C7[Set Session Cookie]
+        C7 --> C8[Redirect to Original Resource]
+        C5 --> C9[UI Shows New Token Request]
+        C9 -->|Request New Token| C1
+    end
+```
+
+```mermaid
+flowchart TD
+    subgraph "Invite Flow (New)"
+        D1[User Receives Email with Invite Link] --> D2[User Clicks Link]
+        D2 --> D3["/magic-link Processes Invite"]
+        D3 --> D4[Accept Invite Page]
+        D4 -->|Accept| D5{Is User Logged In?}
+        D5 -->|Yes| D6[Grant Permissions Based on Invite]
+        D5 -->|No| D7[Redirect to Signup Page]
+        D7 --> D8[User Creates Account]
+        D8 --> D6
+        D6 --> D9[Redirect to Resource]
+    end
+```
+
+```mermaid
+flowchart TD
+    subgraph "Public Form Signup"
+        E1[User Visits Public Form] --> E2{Is User Logged In?}
+        E2 -->|No| E3[Redirect to Signup Page]
+        E3 --> E4[User Creates Account]
+        E4 --> E5[Auto-grant Community Membership]
+        E5 --> E6[Return to Form]
+        E2 -->|Yes| E6
+    end
+```
+
+```
+
+    %% Shortcomings
+    S1[Shortcomings]
+    S1 -->|"Auth Token Flow"| S2[Confusing expired token flow]
+    S1 -->|"Auth Token Flow"| S3[No clear token revocation]
+    S1 -->|"All Flows"| S4[Implicit redirects]
+    S1 -->|"All Flows"| S5[No email verification]
+    S1 -->|"All Flows"| S6[Scattered permission granting]
+
+    %% Historical context
+    H1[Historical Context]
+    H1 --> H2[Auth Tokens: Originally for integrations]
+    H1 --> H3[Auth Tokens: Repurposed for hacky invites]
+    H1 --> H4[Token Flow: Creates users before sending token]
+    H1 --> H5[Invite Flow: Attempting to fix Token Flow issues]
+```

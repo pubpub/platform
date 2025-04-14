@@ -260,6 +260,7 @@ export async function PubEditor(props: PubEditorProps) {
 		recipient: memberWithUser as RenderWithPubContext["recipient"],
 		communitySlug: community.slug,
 		pub: pub as RenderWithPubContext["pub"],
+		trx: db,
 	} satisfies RenderWithPubContext;
 
 	await hydrateMarkdownElements({

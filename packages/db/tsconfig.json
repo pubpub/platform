@@ -2,7 +2,8 @@
 	"extends": "tsconfig/base.json",
 	"compilerOptions": {
 		"noEmit": true,
-		"isolatedModules": true
+		"isolatedModules": true,
+		"moduleResolution": "bundler"
 	},
 	"include": ["./src", "scripts/comment-generator.ts"],
 	"exclude": ["dist", "build", "node_modules"]

@@ -1,22 +1,33 @@
 import type { Page } from "@playwright/test";
 
+import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType, ElementType, InputComponent } from "db/public";
+import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
-import { createBaseSeed, PubFieldsOfEachType } from "./helpers";
+import { PubFieldsOfEachType } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
 let page: Page;
 
 const seed = createSeed({
-	...createBaseSeed(),
+	community: {
+		name: "Test Community",
+		slug: "test-community-x",
+	},
+	users: {
+		admin: {
+			email: faker.internet.email(),
+			role: MemberRole.admin,
+			password: "password",
+		},
+	},
 	pubFields: {
 		Title: {
 			schemaName: CoreSchemaType.String,
