@@ -491,12 +491,16 @@ export const legacySignup = defineServerAction(async function signup(props: {
 	const trx = db.transaction();
 
 	const updatedUser = await trx.execute(async (trx) => {
+		const changedEmail = user.email !== props.email;
 		const updatedUser = await updateUser(
 			{
 				id: props.id,
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
+				// If the user changed the email that they signed up with, make
+				// sure they are not verified (magic-link login will mark them as verified)
+				...(changedEmail ? { isVerified: false } : {}),
 			},
 			trx
 		);
@@ -509,9 +513,8 @@ export const legacySignup = defineServerAction(async function signup(props: {
 			trx
 		);
 
-		if (updatedUser.email !== user.email) {
+		if (changedEmail) {
 			return { ...updatedUser, needsVerification: true };
-			// TODO: send email verification
 		}
 
 		return {
@@ -520,12 +523,18 @@ export const legacySignup = defineServerAction(async function signup(props: {
 		};
 	});
 
+	let sessionType = AuthTokenType.generic;
 	if ("needsVerification" in updatedUser && updatedUser.needsVerification) {
-		return {
-			success: true,
-			report: "Please check your email to verify your account!",
-			needsVerification: true,
-		};
+		const verifyEmailResult = await _sendVerifyEmailMail({
+			email: updatedUser.email,
+			redirectTo: props.redirect ?? undefined,
+		});
+
+		if (verifyEmailResult.error) {
+			return verifyEmailResult;
+		}
+
+		sessionType = AuthTokenType.verifyEmail;
 	}
 
 	// invalidate sessions and tokens
@@ -535,7 +544,7 @@ export const legacySignup = defineServerAction(async function signup(props: {
 	]);
 
 	// log them in
-	const newSession = await lucia.createSession(updatedUser.id, { type: AuthTokenType.generic });
+	const newSession = await lucia.createSession(updatedUser.id, { type: sessionType });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
 	(await cookies()).set(
 		newSessionCookie.name,
