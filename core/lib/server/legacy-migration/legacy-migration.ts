@@ -8,6 +8,7 @@ import { db } from "~/kysely/database";
 import { slugifyString } from "~/lib/string";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { findCommunityBySlug } from "../community";
+import { maybeWithTrx } from "../pub";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
 
@@ -204,7 +205,7 @@ export const createCorrectPubTypes = async (
 	},
 	trx = db
 ) => {
-	const pubTypes = await getAllPubTypesForCommunity(community.id).execute();
+	const pubTypes = await getAllPubTypesForCommunity(community.slug, trx).execute();
 
 	const pubTypeMap = new Map<
 		string,
@@ -241,15 +242,19 @@ export const createCorrectPubTypes = async (
 		const existingPubType = pubTypeMap.get(pubTypeName);
 
 		const pubTypeFields = REQUIRED_LEGACY_PUB_TYPES[pubTypeName].fields;
-		const existingFieldsFiltered = existingPubType?.fields.filter((f) =>
-			Object.keys(pubTypeFields).includes(f.slug)
+		const existingFieldsFiltered = Object.keys(pubTypeFields).filter((slug) =>
+			existingPubType?.fields.some(
+				(f) => f.slug === `${community.slug}:${slugifyString(slug)}`
+			)
 		);
 
-		if (
-			existingPubType &&
-			(existingFieldsFiltered?.length ?? 0) !== Object.keys(pubTypeFields).length
-		) {
-			throw new Error(`Pub type exists, but is missing fields: ${pubTypeName}`);
+		console.log(existingFieldsFiltered);
+		if (existingPubType && existingFieldsFiltered.length) {
+			throw new Error(
+				`Pub type ${pubTypeName}  exists, but is missing fields: ${JSON.stringify(
+					existingFieldsFiltered?.map((f) => f.slug)
+				)}. ${JSON.stringify(existingFieldsFiltered?.map((f) => f.slug))}`
+			);
 		}
 
 		const definedFieldsFiltered = Object.keys(pubTypeFields).filter((name) => {
@@ -326,6 +331,11 @@ export const createLegacyStructure = async (
 							...rest,
 						}))
 					)
+					.onConflict((oc) =>
+						oc.columns(["id"]).doUpdateSet((eb) => ({
+							description: eb.ref("excluded.description"),
+						}))
+					)
 					.returningAll()
 			)
 			.with("created_pub_type_to_fields", (trx) =>
@@ -348,6 +358,7 @@ export const createLegacyStructure = async (
 							}))
 						)
 					)
+					.onConflict((oc) => oc.doNothing())
 					.returningAll()
 			)
 			.selectFrom("created_pub_types")
@@ -366,6 +377,25 @@ export const createLegacyStructure = async (
 				).as("fields"),
 			])
 	).execute();
+
+	return result;
+};
+
+export const importFromLegacy = async (
+	legacyCommunity: { slug: string },
+	currentCommunity: { id: CommunitiesId; slug: string },
+	trx = db
+) => {
+	const result = await maybeWithTrx(trx, async (trx) => {
+		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
+
+		const legacyPubs = await getLegacyPubs(legacyCommunity.slug);
+
+		return {
+			legacyStructure,
+			legacyPubs,
+		};
+	});
 
 	return result;
 };
