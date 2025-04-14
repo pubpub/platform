@@ -21,6 +21,7 @@ async function createUserMembers({
 	isSuperAdmin,
 	role,
 	prismaCommunityIds,
+	isVerified,
 }: {
 	email: string;
 	password: string;
@@ -30,6 +31,7 @@ async function createUserMembers({
 	isSuperAdmin: boolean;
 	role: MemberRole;
 	prismaCommunityIds: string[];
+	isVerified: boolean;
 }) {
 	const values = {
 		slug,
@@ -39,6 +41,7 @@ async function createUserMembers({
 		passwordHash: await createPasswordHash(password),
 		avatar: "/demo/person.png",
 		isSuperAdmin,
+		isVerified,
 	};
 
 	const memberships = prismaCommunityIds.map((id) => ({
@@ -98,6 +101,7 @@ async function main() {
 			isSuperAdmin: true,
 			role: MemberRole.admin,
 			prismaCommunityIds,
+			isVerified: true,
 		}),
 
 		createUserMembers({
@@ -109,6 +113,7 @@ async function main() {
 			isSuperAdmin: false,
 			role: MemberRole.editor,
 			prismaCommunityIds,
+			isVerified: true,
 		}),
 
 		createUserMembers({
@@ -120,6 +125,7 @@ async function main() {
 			isSuperAdmin: false,
 			role: MemberRole.contributor,
 			prismaCommunityIds,
+			isVerified: true,
 		}),
 	]);
 }

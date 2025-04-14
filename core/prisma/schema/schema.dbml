@@ -30,6 +30,7 @@ Table users {
   updatedAt DateTime [default: `now()`, not null]
   isSuperAdmin Boolean [not null, default: false]
   passwordHash String
+  isVerified Boolean [not null, default: false]
   memberGroups member_groups [not null]
   AuthToken auth_tokens [not null]
   assignedPubs pubs [not null]

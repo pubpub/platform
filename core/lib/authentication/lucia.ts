@@ -199,6 +199,7 @@ export const lucia = new Lucia(adapter, {
 		memberships,
 		avatar,
 		orcid,
+		isVerified,
 	}) => {
 		return {
 			email,
@@ -211,6 +212,7 @@ export const lucia = new Lucia(adapter, {
 			memberships,
 			avatar,
 			orcid,
+			isVerified,
 		};
 	},
 });
