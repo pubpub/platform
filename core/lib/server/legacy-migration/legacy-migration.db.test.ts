@@ -81,7 +81,7 @@ describe("getPubByForm", () => {
 		);
 		const { getPubFields } = await import("../pubFields");
 
-		const { createLegacyStructure } = await import(
+		const { createLegacyStructure, REQUIRED_LEGACY_PUB_FIELDS } = await import(
 			"~/lib/server/legacy-migration/legacy-migration"
 		);
 
@@ -89,12 +89,14 @@ describe("getPubByForm", () => {
 			community: community.community,
 		});
 
-		console.log(result);
 		const { fields } = await getPubFields({
 			communityId: community.community.id,
 			trx,
 		}).executeTakeFirstOrThrow();
 		// console.log(fields);
-		expect(Object.keys(fields)).toHaveLength(2);
+		expect(Object.keys(fields)).toHaveLength(
+			// bc Title and Description already exist, but "some relation" does not
+			Object.keys(REQUIRED_LEGACY_PUB_FIELDS).length + 1
+		);
 	});
 });

@@ -211,16 +211,17 @@ export const createCorrectPubTypes = async (
 		{
 			id: PubTypesId;
 			name: string;
-			createdAt: Date;
-			updatedAt: Date;
-			communityId: CommunitiesId;
 			description: string | null;
-			fields: PubFields[];
+			fields: {
+				id: PubFieldsId;
+				isTitle: boolean;
+				slug: string;
+			}[];
 		}
 	>();
 
 	for (const pubType of pubTypes) {
-		pubTypeMap.set(pubType.id, pubType);
+		pubTypeMap.set(pubType.name, pubType);
 	}
 
 	const pubTypesToCreate = [] as {
@@ -237,9 +238,7 @@ export const createCorrectPubTypes = async (
 
 	let pubTypeName: keyof typeof REQUIRED_LEGACY_PUB_TYPES;
 	for (pubTypeName in REQUIRED_LEGACY_PUB_TYPES) {
-		const existingPubType = Array.from(pubTypeMap.values()).find(
-			(pt) => pt.name === pubTypeName
-		);
+		const existingPubType = pubTypeMap.get(pubTypeName);
 
 		const pubTypeFields = REQUIRED_LEGACY_PUB_TYPES[pubTypeName].fields;
 		const existingFieldsFiltered = existingPubType?.fields.filter((f) =>

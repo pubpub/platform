@@ -102,6 +102,7 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 										jsonBuildObject({
 											id: eb.ref("A"),
 											isTitle: eb.ref("isTitle"),
+											slug: eb.ref("slug"),
 										})
 									),
 									sql`json_build_array()`
@@ -111,7 +112,7 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 						.as("fields"),
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
-			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean }[] }>()
+			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean; slug: string }[] }>()
 	);
 };
 
