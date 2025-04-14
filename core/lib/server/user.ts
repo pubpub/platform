@@ -43,6 +43,7 @@ export const SAFE_USER_SELECT = [
 	"users.isSuperAdmin",
 	"users.avatar",
 	"users.orcid",
+	"users.isVerified",
 ] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
 
 export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {

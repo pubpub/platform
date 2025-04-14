@@ -95,6 +95,10 @@ export type UsersInitializer = Record<
 			isSuperAdmin?: boolean;
 			slug?: string;
 			existing?: false;
+			/**
+			 * @default true
+			 */
+			isVerified?: boolean;
 	  }
 	| {
 			id: UsersId;
@@ -883,6 +887,7 @@ export async function seedCommunity<
 			avatar: userInfo.avatar ?? faker.image.avatar(),
 			passwordHash: await createPasswordHash(userInfo.password ?? faker.internet.password()),
 			isSuperAdmin: userInfo.isSuperAdmin ?? false,
+			isVerified: userInfo.isVerified === false ? false : true,
 			// the key of the user initializer
 		}))
 	);

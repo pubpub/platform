@@ -28,6 +28,7 @@ model User {
   updatedAt    DateTime @default(now()) @updatedAt
   isSuperAdmin Boolean  @default(false)
   passwordHash String?
+  isVerified   Boolean  @default(false)
 
   memberGroups         MemberGroup[]
   AuthToken            AuthToken[]
