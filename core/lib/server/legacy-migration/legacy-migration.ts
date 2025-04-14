@@ -78,7 +78,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 } as const;
 
 export const REQUIRED_LEGACY_PUB_TYPES = {
-	Pub: {
+	"Journal Article": {
 		fields: {
 			Title: { isTitle: true },
 			"Legacy Id": { isTitle: false },
@@ -92,14 +92,14 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Versions: { isTitle: false },
 			Slug: { isTitle: false },
 		},
-		description: "A Legacy Pub",
+		description: "A Legacy Journal Article Pub (migrated)",
 	},
 	Contributor: {
 		fields: {
 			"Full Name": { isTitle: true },
 			Affiliation: { isTitle: false },
 		},
-		description: "A Contributor",
+		description: "A Contributor (migrated)",
 	},
 	Version: {
 		fields: {
@@ -108,7 +108,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			"Publication Date": { isTitle: false },
 			"Version Number": { isTitle: false },
 		},
-		description: "A Version of a Pub",
+		description: "A Version of a Pub (migrated)",
 	},
 	Discussion: {
 		fields: {
@@ -118,7 +118,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			"Publication Date": { isTitle: false },
 			Avatar: { isTitle: false },
 		},
-		description: "A Discussion on a pub",
+		description: "A Discussion on a pub (migrated)",
 	},
 } as const satisfies Record<
 	string,
@@ -398,4 +398,72 @@ export const importFromLegacy = async (
 	});
 
 	return result;
+};
+
+export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) => {
+	const legacyPubTypes = await trx
+		.selectFrom("pub_types as pt")
+		.selectAll()
+		.where("communityId", "=", community.id)
+		.where("description", "ilike", "%migrated%")
+		.select((eb) => [
+			jsonArrayFrom(
+				eb
+					.selectFrom("pub_fields")
+					.innerJoin("_PubFieldToPubType", "pub_fields.id", "_PubFieldToPubType.A")
+					.selectAll("pub_fields")
+					.where("_PubFieldToPubType.B", "=", eb.ref("pt.id"))
+			).as("fields"),
+		])
+		.execute();
+
+	if (!legacyPubTypes.length) {
+		return;
+	}
+
+	// delete pubs
+	await trx
+		.deleteFrom("pubs")
+		.where(
+			"pubTypeId",
+			"in",
+			legacyPubTypes.map((pt) => pt.id)
+		)
+		.execute();
+	// first delete forms
+	await trx
+		.deleteFrom("forms")
+		.where("communityId", "=", community.id)
+		.where(
+			"pubTypeId",
+			"in",
+			legacyPubTypes.map((pt) => pt.id)
+		)
+		.execute();
+
+	// delete pub types
+	await trx
+		.deleteFrom("pub_types")
+		.where(
+			"id",
+			"in",
+			legacyPubTypes.map((pt) => pt.id)
+		)
+		.execute();
+	// delete pub fields
+	// this may not work, because they might be used by other pub types
+	for (const pubType of legacyPubTypes) {
+		for (const field of pubType.fields) {
+			try {
+				await trx
+					.deleteFrom("pub_fields")
+					.where("communityId", "=", community.id)
+					.where("slug", "=", field.slug)
+					.execute();
+			} catch (error) {
+				logger.error("Did not delete field", field.slug);
+				logger.error(error);
+			}
+		}
+	}
 };

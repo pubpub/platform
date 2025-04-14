@@ -5,10 +5,12 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { maybeWithTrx } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import {
 	importFromLegacy as _importFromLegacy,
+	cleanUpLegacy,
 	createLegacyStructure,
 } from "~/lib/server/legacy-migration/legacy-migration";
 
@@ -22,13 +24,15 @@ export const importFromLegacy = defineServerAction(
 		}
 
 		try {
-			const legacyStructure = await _importFromLegacy(
-				{
-					slug: legacyCommunity.slug,
-				},
-				community
-			);
-			console.log(legacyStructure);
+			const res = await maybeWithTrx(db, async (trx) => {
+				await cleanUpLegacy(community);
+				const legacyStructure = await _importFromLegacy(
+					{
+						slug: legacyCommunity.slug,
+					},
+					community
+				);
+			});
 		} catch (error) {
 			logger.error(error);
 			return {
