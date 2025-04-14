@@ -16,7 +16,7 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubsWithRelatedValues } from "~/lib/server";

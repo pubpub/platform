@@ -6,7 +6,7 @@ import { unstable_cache } from "next/cache";
 import { logger } from "logger";
 
 import type { CacheTag } from "./cacheTags";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { ONE_YEAR } from "./constants";
 
 type Callback<Parameters extends unknown[], ReturnType> = (

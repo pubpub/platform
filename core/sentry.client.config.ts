@@ -4,7 +4,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 
-import { env } from "./lib/env/env.mjs";
+import { env } from "./lib/env/env";
 
 if (env.NODE_ENV === "production") {
 	Sentry.init({

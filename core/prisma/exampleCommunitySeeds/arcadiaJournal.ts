@@ -8,7 +8,7 @@ import {
 	StructuralFormElement,
 } from "db/public";
 
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { seedCommunity } from "../seed/seedCommunity";
 
 export async function seedArcadiaJournal(communityId?: CommunitiesId) {

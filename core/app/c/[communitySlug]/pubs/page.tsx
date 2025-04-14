@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { CommunitiesId } from "db/public";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { env } from "~/lib/env/env";
 import { findCommunityBySlug } from "~/lib/server/community";
 import PubHeader from "./PubHeader";
 import { PaginatedPubList } from "./PubList";
