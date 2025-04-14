@@ -81,9 +81,9 @@ export const getPubTypesForCommunity = async (
 
 export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>;
 
-export const getAllPubTypesForCommunity = (communitySlug: string) => {
+export const getAllPubTypesForCommunity = (communitySlug: string, trx = db) => {
 	return autoCache(
-		db
+		trx
 			.selectFrom("pub_types")
 			.innerJoin("communities", "communities.id", "pub_types.communityId")
 			.where("communities.slug", "=", communitySlug)
