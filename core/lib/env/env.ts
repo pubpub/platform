@@ -1,65 +1,13 @@
-// @ts-check
 import type { ZodTypeAny } from "zod";
 
 import { createEnv } from "@t3-oss/env-nextjs";
-import { z, ZodError } from "zod";
+import { z } from "zod";
 
-import { actionSchema } from "db/public";
+import { createFlags, flagsSchema } from "./flags";
 
 const selfHostedOptional = (schema: ZodTypeAny) => {
 	return process.env.SELF_HOSTED ? schema.optional() : schema;
 };
-
-const flagStateToBoolean = (flagState: string, ctx: z.RefinementCtx) => {
-	switch (flagState) {
-		case "on":
-		case "true":
-			return true;
-		case "off":
-		case "false":
-			return false;
-	}
-	ctx.addIssue({
-		code: z.ZodIssueCode.custom,
-		message: "Invalid flag state",
-		fatal: true,
-	});
-	return z.NEVER;
-};
-
-const flagSchema = z.union([
-	z.tuple([
-		z.literal("disabled-actions"),
-		z
-			.string()
-			.optional()
-			.transform((s) => (s ? s.split("+").map((a) => a.trim()) : []))
-			.pipe(actionSchema.array()),
-	]),
-	z.tuple([
-		z.literal("invites"),
-		z.string().transform(flagStateToBoolean).optional().default("on"),
-	]),
-	z.tuple([
-		z.literal("uploads"),
-		z.string().transform(flagStateToBoolean).optional().default("on"),
-	]),
-]);
-
-type FlagSchema = z.infer<typeof flagSchema>;
-type FlagName = FlagSchema[0];
-type FlagArgs<F extends FlagName> = Extract<FlagSchema, [F, unknown]>[1];
-
-class Flags {
-	#flags;
-	constructor(flags: z.infer<typeof flagSchema>[]) {
-		this.#flags = new Map(flags as [string, unknown][]);
-	}
-	get<F extends FlagName>(flagName: F): FlagArgs<F> {
-		return (this.#flags.get(flagName) ??
-			flagSchema.parse([flagName, undefined])[1]) as FlagArgs<F>;
-	}
-}
 
 export const env = createEnv({
 	shared: {
@@ -99,28 +47,7 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
-		FLAGS: z
-			.string()
-			.optional()
-			.transform((value) => (value ? value.split(",") : []))
-			.transform((flagStrings, ctx) => {
-				const parsedFlags: z.infer<typeof flagSchema>[] = [];
-				for (const flagString of flagStrings) {
-					if (flagString === "") {
-						continue;
-					}
-					try {
-						const [flagName, flagArgs] = flagString.split(":");
-						const parsedFlag = flagSchema.parse([flagName, flagArgs]);
-						parsedFlags.push(parsedFlag);
-					} catch (error) {
-						if (error instanceof ZodError) {
-							error.issues.forEach(ctx.addIssue);
-						}
-					}
-				}
-				return new Flags(parsedFlags);
-			}),
+		FLAGS: flagsSchema,
 	},
 	client: {},
 	experimental__runtimeEnv: {
@@ -129,3 +56,5 @@ export const env = createEnv({
 	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
 });
+
+export const flags = createFlags(env.FLAGS);
