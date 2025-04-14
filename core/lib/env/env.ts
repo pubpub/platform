@@ -32,10 +32,9 @@ const flagSchema = z.union([
 		z.literal("disabled-actions"),
 		z
 			.string()
-			.transform((s) => (s.length === 0 ? [] : s.split("+").map((a) => a.trim())))
-			.pipe(actionSchema.array())
 			.optional()
-			.default(""),
+			.transform((s) => (s ? s.split("+").map((a) => a.trim()) : []))
+			.pipe(actionSchema.array()),
 	]),
 	z.tuple([
 		z.literal("invites"),
@@ -58,7 +57,7 @@ class Flags {
 	}
 	get<F extends FlagName>(flagName: F): FlagArgs<F> {
 		return (this.#flags.get(flagName) ??
-			flagSchema.parse([flagName, undefined])) as FlagArgs<F>;
+			flagSchema.parse([flagName, undefined])[1]) as FlagArgs<F>;
 	}
 }
 
@@ -102,7 +101,8 @@ export const env = createEnv({
 		SENTRY_AUTH_TOKEN: z.string().optional(),
 		FLAGS: z
 			.string()
-			.transform((value) => value.split(","))
+			.optional()
+			.transform((value) => (value ? value.split(",") : []))
 			.transform((flagStrings, ctx) => {
 				const parsedFlags: z.infer<typeof flagSchema>[] = [];
 				for (const flagString of flagStrings) {
@@ -120,9 +120,7 @@ export const env = createEnv({
 					}
 				}
 				return new Flags(parsedFlags);
-			})
-			.optional()
-			.default(""),
+			}),
 	},
 	client: {},
 	experimental__runtimeEnv: {
