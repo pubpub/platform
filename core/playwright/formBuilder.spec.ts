@@ -6,7 +6,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
+import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
 import type { PubFieldElement } from "~/app/components/forms/types";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
@@ -126,6 +126,12 @@ const seed = createSeed({
 					},
 				},
 			],
+		},
+		AccessForm: {
+			pubType: "Submission",
+			slug: "access-form",
+			elements: [],
+			access: FormAccessType.public,
 		},
 	},
 });
@@ -396,5 +402,41 @@ test.describe("reordering fields", async () => {
 
 		// Make sure the form is returned in the same order it was saved in
 		await expect(elements).toHaveText(changedElements);
+	});
+});
+
+test.describe("changing access", () => {
+	test("can change access", async () => {
+		const formEditPage = new FormsEditPage(
+			page,
+			community.community.slug,
+			community.forms["AccessForm"].slug
+		);
+		await formEditPage.goto();
+
+		await page.getByTestId("select-form-access").click();
+		await page.getByTestId("select-form-access-public").click();
+
+		await test.step("should not be able to save form if nothing has changed", async () => {
+			const disabled = await page.getByTestId("save-form-button").getAttribute("disabled");
+			expect(disabled).toBe("");
+		});
+
+		await test.step("should be able to save form if access is changed", async () => {
+			await page.getByTestId("select-form-access").click();
+			await page.getByTestId("select-form-access-private").click();
+
+			await page.getByTestId("save-form-button").click();
+			await expect(
+				page.getByRole("status").filter({ hasText: "Form Successfully Saved" })
+			).toHaveCount(1);
+		});
+
+		await test.step("changes should be persisted", async () => {
+			await formEditPage.goto();
+			const text = await page.getByTestId("select-form-access").textContent();
+
+			expect(text).toMatch(/private/i);
+		});
 	});
 });
