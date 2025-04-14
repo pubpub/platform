@@ -4,6 +4,7 @@
 export const databaseTableNames = [
 	"PubFieldSchema",
 	"PubsInStages",
+	"_FormElementToPubType",
 	"_MemberGroupToUser",
 	"_PubFieldToPubType",
 	"_prisma_migrations",
@@ -127,6 +128,29 @@ export const databaseTables = [
 				isNullable: false,
 				isAutoIncrementing: false,
 				hasDefaultValue: true,
+			},
+		],
+	},
+	{
+		name: "_FormElementToPubType",
+		isView: false,
+		schema: "public",
+		columns: [
+			{
+				name: "A",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
+			{
+				name: "B",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
 			},
 		],
 	},

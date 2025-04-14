@@ -6,7 +6,6 @@ import { z } from "zod";
 /** Represents the enum public.FormAccessType */
 export enum FormAccessType {
 	private = "private",
-	inviteOnly = "inviteOnly",
 	public = "public",
 }
 

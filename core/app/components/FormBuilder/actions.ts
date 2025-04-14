@@ -1,6 +1,6 @@
 "use server";
 
-import type { FormElementsId, FormsId, NewFormElements } from "db/public";
+import type { FormElementsId, FormsId, NewFormElements, NewFormElementToPubType } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { logger } from "logger";
 
@@ -15,10 +15,34 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
+const upsertRelatedPubTypes = async (
+	values: NewFormElementToPubType[],
+	deletedRelatedPubTypes: FormElementsId[]
+) => {
+	db.transaction().execute(async (trx) => {
+		const formElementIds = [...values.map((v) => v.A), ...deletedRelatedPubTypes];
+
+		if (formElementIds.length) {
+			// Delete old values
+			await trx
+				.deleteFrom("_FormElementToPubType")
+				.where("A", "in", formElementIds)
+				.execute();
+		}
+
+		// Insert new ones
+		if (values.length) {
+			await trx.insertInto("_FormElementToPubType").values(values).execute();
+		}
+	});
+};
+
 export const saveForm = defineServerAction(async function saveForm(form: {
 	formId: FormsId;
 	upserts: NewFormElements[];
 	deletes: FormElementsId[];
+	relatedPubTypes: NewFormElementToPubType[];
+	deletedRelatedPubTypes: FormElementsId[];
 	access?: FormBuilderSchema["access"];
 }) {
 	const loginData = await getLoginData();
@@ -43,7 +67,7 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 		return ApiError.UNAUTHORIZED;
 	}
 
-	const { formId, upserts, deletes, access } = form;
+	const { formId, upserts, deletes, access, relatedPubTypes, deletedRelatedPubTypes } = form;
 
 	logger.info({ msg: "saving form", form, upserts, deletes });
 	if (!upserts.length && !deletes.length && !access) {
@@ -88,6 +112,8 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 			}
 
 			const result = await autoRevalidate(query as QB<any>).executeTakeFirstOrThrow();
+
+			await upsertRelatedPubTypes(relatedPubTypes, deletedRelatedPubTypes);
 
 			return result;
 		});

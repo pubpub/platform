@@ -8,6 +8,7 @@ import type {
 	InputComponent,
 	PubFieldsId,
 	PubsId,
+	PubTypesId,
 	PubValuesId,
 	StagesId,
 	StructuralFormElement,
@@ -38,6 +39,7 @@ type BasePubFieldElement = {
 	rank: string;
 	slug: string;
 	isRelation: boolean;
+	relatedPubTypes: PubTypesId[];
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {
@@ -69,6 +71,7 @@ export type ButtonElement = {
 	schemaName: null;
 	slug: null;
 	isRelation: false;
+	relatedPubTypes: [];
 };
 
 export type StructuralElement = {
@@ -86,6 +89,7 @@ export type StructuralElement = {
 	schemaName: null;
 	slug: null;
 	isRelation: false;
+	relatedPubTypes: [];
 };
 
 export type FormElements = PubFieldElement | StructuralElement | ButtonElement;

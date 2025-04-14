@@ -110,9 +110,14 @@
 	margin-left: -5px;
 }
 
+.ProseMirror a,
 .ProseMirror math-inline,
 .ProseMirror code,
 .ProseMirror strong,
+.ProseMirror s,
+.ProseMirror sup,
+.ProseMirror sub,
+.ProseMirror u,
 .ProseMirror em {
 	border-top: 1px solid #777;
 	padding-left: 1px;

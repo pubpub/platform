@@ -33,6 +33,7 @@ import {
 	usersIdSchema,
 	usersSchema,
 } from "db/public";
+import { stageConstraintSchema } from "db/types";
 
 import type { Json, JsonValue } from "./types";
 import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
@@ -713,8 +714,23 @@ export const siteApi = contract.router(
 					"Get a list of pubs by ID. This endpoint is used by the PubPub site builder to get a list of pubs.",
 				query: getPubQuerySchema
 					.extend({
-						pubTypeId: pubTypesIdSchema.optional().describe("Filter by pub type ID."),
-						stageId: stagesIdSchema.optional().describe("Filter by stage ID."),
+						pubIds: z
+							.array(pubsIdSchema)
+							.or(pubsIdSchema.transform((id) => [id]))
+							.optional()
+							.describe("Filter by pub ID."),
+						pubTypeId: pubTypesIdSchema
+							.array()
+							// this is necessary bc the query parser doesn't handle single string values as arrays
+							.or(pubTypesIdSchema.transform((id) => [id]))
+							.optional()
+							.describe("Filter by pub type IDs."),
+						stageId: stageConstraintSchema
+							.array()
+							// this is necessary bc the query parser doesn't handle single string values as arrays
+							.or(stagesIdSchema.transform((id) => [id]))
+							.optional()
+							.describe("Filter by stage ID."),
 						limit: z.number().default(10),
 						offset: z.number().default(0).optional(),
 						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
@@ -726,8 +742,7 @@ export const siteApi = contract.router(
 						 * `{ filters['community-slug:fieldName']['$eq']: 'value'}`,
 						 * rather than `{ filters: { 'community-slug:fieldName': { $eq: 'value' } } }`.
 						 */
-						filters: z
-							.record(z.any())
+						filters: filterSchema
 							.optional()
 							.describe(
 								[

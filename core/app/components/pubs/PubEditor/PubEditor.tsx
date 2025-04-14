@@ -170,7 +170,7 @@ export async function PubEditor(props: PubEditorProps) {
 				limit: 30,
 			}
 		),
-		getPubTypesForCommunity(community.id),
+		getPubTypesForCommunity(community.id, { limit: 0 }),
 		getRelatedPubData({
 			relatedPubId,
 			slug: relatedFieldSlug,

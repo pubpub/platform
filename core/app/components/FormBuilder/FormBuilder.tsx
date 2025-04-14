@@ -14,7 +14,13 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import type { FormElementsId, NewFormElements, Stages } from "db/public";
+import type {
+	FormElementsId,
+	FormsId,
+	NewFormElements,
+	NewFormElementToPubType,
+	Stages,
+} from "db/public";
 import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
@@ -118,42 +124,56 @@ const preparePayload = ({
 	defaultValues: Omit<FormBuilderSchema, "id">;
 	formValues: FormBuilderSchema;
 }) => {
-	const { upserts, deletes } = formValues.elements.reduce<{
-		upserts: NewFormElements[];
-		deletes: FormElementsId[];
-	}>(
-		(acc, element, index) => {
-			if (element.deleted) {
-				if (element.elementId) {
-					acc.deletes.push(element.elementId);
+	const { upserts, deletes, relatedPubTypes, deletedRelatedPubTypes } =
+		formValues.elements.reduce<{
+			upserts: NewFormElements[];
+			deletes: FormElementsId[];
+			relatedPubTypes: NewFormElementToPubType[];
+			deletedRelatedPubTypes: FormElementsId[];
+		}>(
+			(acc, element, index) => {
+				if (element.deleted) {
+					if (element.elementId) {
+						acc.deletes.push(element.elementId);
+					}
+				} else if (!element.elementId) {
+					// Newly created elements have no elementId, so generate an id to use
+					const id = crypto.randomUUID() as FormElementsId;
+					acc.upserts.push(
+						formElementsInitializerSchema.parse({
+							formId: formValues.formId,
+							...element,
+							id,
+						})
+					);
+					if (element.relatedPubTypes) {
+						for (const pubTypeId of element.relatedPubTypes) {
+							acc.relatedPubTypes.push({ A: id, B: pubTypeId });
+						}
+					}
+				} else if (element.updated) {
+					acc.upserts.push(
+						formElementsInitializerSchema.parse({
+							...element,
+							formId: formValues.formId,
+							id: element.elementId,
+						})
+					); // TODO: only update changed columns
+					if (element.relatedPubTypes) {
+						// If we are updating to an empty array, we should clear out all related pub types
+						if (element.relatedPubTypes.length === 0) {
+							acc.deletedRelatedPubTypes.push(element.elementId);
+						} else {
+							for (const pubTypeId of element.relatedPubTypes) {
+								acc.relatedPubTypes.push({ A: element.elementId, B: pubTypeId });
+							}
+						}
+					}
 				}
-			} else if (!element.elementId) {
-				// Newly created elements have no elementId
-				acc.upserts.push(
-					formElementsInitializerSchema.parse({ formId: formValues.formId, ...element })
-				);
-			} else if (element.updated) {
-				// check whether the element is reeeaally updated minus the updated field
-				const { updated: _, id: _id, ...elementWithoutUpdated } = element;
-				const { updated, id, ...defaultElement } =
-					defaultValues.elements.find((e) => e.elementId === element.elementId) ?? {};
-
-				if (JSON.stringify(defaultElement) === JSON.stringify(elementWithoutUpdated)) {
-					return acc;
-				}
-
-				acc.upserts.push(
-					formElementsInitializerSchema.parse({
-						...element,
-						formId: formValues.formId,
-						id: element.elementId,
-					})
-				); // TODO: only update changed columns
-			}
-			return acc;
-		},
-		{ upserts: [], deletes: [] }
-	);
+				return acc;
+			},
+			{ upserts: [], deletes: [], relatedPubTypes: [], deletedRelatedPubTypes: [] }
+		);
 
 	const access = formValues.access !== defaultValues.access ? formValues.access : undefined;
 
@@ -162,6 +182,8 @@ const preparePayload = ({
 		upserts,
 		deletes,
 		access,
+		relatedPubTypes,
+		deletedRelatedPubTypes,
 	};
 };
 

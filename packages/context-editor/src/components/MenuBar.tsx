@@ -9,12 +9,17 @@ import {
 	CodeSquare,
 	ImagePlus,
 	Italic,
+	Link,
 	List,
 	ListOrdered,
 	Quote,
 	Radical,
 	SeparatorHorizontal,
 	SquareRadical,
+	Strikethrough,
+	Subscript,
+	Superscript,
+	Underline,
 } from "lucide-react";
 
 import { Button } from "ui/button";
@@ -39,7 +44,16 @@ import {
 } from "../commands/blocks";
 import { insertHorizontalLine } from "../commands/horizontal";
 import { isImageActive } from "../commands/images";
-import { codeToggle, emToggle, strongToggle } from "../commands/marks";
+import {
+	codeToggle,
+	emToggle,
+	linkToggle,
+	strikethroughToggle,
+	strongToggle,
+	subscriptToggle,
+	superscriptToggle,
+	underlineToggle,
+} from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 import { ImageUploader } from "./ImageUploader";
 
@@ -68,6 +82,30 @@ const menuBlocks: MenuItem[][] = [
 			icon: <Italic {...iconProps} />,
 			command: emToggle,
 		},
+		{
+			key: "underline",
+			name: "Underline",
+			icon: <Underline {...iconProps} />,
+			command: underlineToggle,
+		},
+		{
+			key: "del",
+			name: "Strikethrough",
+			icon: <Strikethrough {...iconProps} />,
+			command: strikethroughToggle,
+		},
+		{
+			key: "sub",
+			name: "Subscript",
+			icon: <Subscript {...iconProps} />,
+			command: subscriptToggle,
+		},
+		{
+			key: "sup",
+			name: "Superscript",
+			icon: <Superscript {...iconProps} />,
+			command: superscriptToggle,
+		},
 	],
 	[
 		{
@@ -90,6 +128,7 @@ const menuBlocks: MenuItem[][] = [
 		},
 	],
 	[
+		{ key: "link", name: "Link", icon: <Link {...iconProps} />, command: linkToggle },
 		{
 			key: "blockquote",
 			name: "Blockquote",

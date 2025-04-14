@@ -99,3 +99,9 @@ export const PubFieldsOfEachType = Object.fromEntries(
 		},
 	])
 ) as Record<CoreSchemaType, { schemaName: CoreSchemaType }>;
+
+export const waitForBaseCommunityPage = async (page: Page, communitySlug?: string) => {
+	await page.waitForURL(new RegExp(`.*/c/${communitySlug ?? ".*"}/stages.*`), {
+		timeout: 10_000,
+	});
+};
