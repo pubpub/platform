@@ -119,6 +119,10 @@ export function verifyEmail(
 	return buildSend(async () => {
 		const magicLink = await createMagicLink(
 			{
+				/**
+				 * We use 'generic' here because they should be able to sign into their account
+				 * once the link is clicked. Before this, they likely have the AuthTokenType.verifyEmail session
+				 */
 				type: AuthTokenType.generic,
 				expiresAt: new Date(Date.now() + TWO_HOURS),
 				path: redirectTo
