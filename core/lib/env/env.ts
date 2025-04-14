@@ -32,8 +32,10 @@ const flagSchema = z.union([
 		z.literal("disabled-actions"),
 		z
 			.string()
-			.transform((s) => s.split("+"))
-			.pipe(actionSchema.array()),
+			.transform((s) => (s.length === 0 ? [] : s.split("+").map((a) => a.trim())))
+			.pipe(actionSchema.array())
+			.optional()
+			.default(""),
 	]),
 	z.tuple([
 		z.literal("invites"),
@@ -104,6 +106,9 @@ export const env = createEnv({
 			.transform((flagStrings, ctx) => {
 				const parsedFlags: z.infer<typeof flagSchema>[] = [];
 				for (const flagString of flagStrings) {
+					if (flagString === "") {
+						continue;
+					}
 					try {
 						const [flagName, flagArgs] = flagString.split(":");
 						const parsedFlag = flagSchema.parse([flagName, flagArgs]);
