@@ -237,7 +237,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 		};
 	}
 
-	if (env.DISABLED_ACTIONS?.includes(actionInstance.action)) {
+	if (env.FLAGS.get("disabled-actions").includes(actionInstance.action)) {
 		return {
 			error: "Action is disabled",
 			stack: args.stack,
