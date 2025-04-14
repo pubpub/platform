@@ -17,7 +17,7 @@ import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 
 type UserWithMembersShips = Omit<Users, "passwordHash"> & {
 	memberships: (CommunityMemberships & {

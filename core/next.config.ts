@@ -1,17 +1,16 @@
 // @ts-check
 
+import type { NextConfig, normalizeConfig } from "next/dist/server/config";
+
 import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
-import { env } from "./lib/env/env.mjs";
+import { env } from "./lib/env/env";
 
 // import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 
-/**
- * @type {import("next").NextConfig}
- */
-const nextConfig = {
+const nextConfig: NextConfig = {
 	output: "standalone",
 	typescript: {
 		// this gets checked in CI already
@@ -91,6 +90,7 @@ const modifiedConfig = withPreconstruct(
 		// tunnelRoute: "/monitoring",
 
 		// Hides source maps from generated client bundles
+		// @ts-expect-error
 		hideSourceMaps: true,
 
 		// Automatically tree-shake Sentry logger statements to reduce bundle size
@@ -102,7 +102,7 @@ const modifiedConfig = withPreconstruct(
 	})
 );
 
-export default (phase, { defaultConfig }) => {
+const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
 	if (!env.SENTRY_AUTH_TOKEN) {
 		console.warn("⚠️ SENTRY_AUTH_TOKEN is not set");
 	}
@@ -117,3 +117,5 @@ export default (phase, { defaultConfig }) => {
 	}
 	return modifiedConfig;
 };
+
+export default config;

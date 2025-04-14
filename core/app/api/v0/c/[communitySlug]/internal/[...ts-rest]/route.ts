@@ -8,7 +8,7 @@ import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
 import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
 import { runActionInstance } from "~/actions/api/server";
 import { compareAPIKeys, getBearerToken } from "~/lib/authentication/api";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { NotFoundError, tsRestHandleErrors } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
@@ -97,4 +97,4 @@ const handler = createNextHandler(
 	}
 );
 
-export { handler as GET, handler as POST, handler as PUT, handler as PATCH, handler as DELETE };
+export { handler as DELETE, handler as GET, handler as PATCH, handler as POST, handler as PUT };

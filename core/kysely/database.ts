@@ -1,4 +1,4 @@
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { createDatabase } from "./database-init";
 
 export const db = createDatabase({

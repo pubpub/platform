@@ -7,7 +7,7 @@ import type { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import { lucia } from "~/lib/authentication/lucia";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
 const redirectToURL = (
