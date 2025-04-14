@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { CircleCheck } from "lucide-react";
 import { parseAsBoolean, useQueryStates } from "nuqs";
 
-import type { Toast } from "ui/use-toast";
+import type { ToasterToast } from "ui/use-toast";
 import { Toaster } from "ui/toaster";
 import { toast } from "ui/use-toast";
 
@@ -20,7 +20,7 @@ const PERSISTED_TOAST = {
 		),
 		variant: "success",
 	},
-} as const satisfies { [key: string]: Toast };
+} as const satisfies { [key: string]: Omit<ToasterToast, "id"> };
 
 const usePersistedToasts = () => {
 	const toastQueries = fromEntries(
