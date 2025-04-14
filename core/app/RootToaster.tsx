@@ -1,37 +1,53 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CircleCheck } from "lucide-react";
+import { parseAsBoolean, useQueryStates } from "nuqs";
 
+import type { Toast } from "ui/use-toast";
 import { Toaster } from "ui/toaster";
 import { toast } from "ui/use-toast";
 
-const VERIFIED_PARAM = "verified";
+import { entries, fromEntries, keys } from "~/lib/mapping";
 
-export const RootToaster = () => {
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const pathname = usePathname();
+const PERSISTED_TOAST = {
+	verified: {
+		title: "Verified",
+		description: (
+			<span className="flex items-center gap-1">
+				<CircleCheck size="16" /> Your email is now verified
+			</span>
+		),
+		variant: "success",
+	},
+} as const satisfies { [key: string]: Toast };
+
+const usePersistedToasts = () => {
+	const toastQueries = fromEntries(
+		keys(PERSISTED_TOAST).map((key) => [key, parseAsBoolean.withDefault(false)])
+	);
+
+	const [params, setParams] = useQueryStates(toastQueries, {
+		history: "replace",
+		scroll: false,
+	});
+	const activeToasts = entries(params)
+		.filter(([param, active]) => active)
+		.map(([param]) => param);
 
 	useEffect(() => {
-		if (searchParams.has(VERIFIED_PARAM)) {
-			toast({
-				title: "Verified",
-				description: (
-					<span className="flex items-center gap-1">
-						<CircleCheck size="16" /> Your email is now verified
-					</span>
-				),
-				variant: "success",
+		for (const activeToastKey of activeToasts) {
+			const toastData = PERSISTED_TOAST[activeToastKey];
+			toast(toastData);
+			setParams({
+				[activeToastKey]: null,
 			});
-
-			// Remove the param so we don't see the popover again
-			const params = new URLSearchParams(searchParams);
-			params.delete(VERIFIED_PARAM);
-			router.replace(`${pathname}?${params.toString()}`);
 		}
-	}, [searchParams]);
+	}, [activeToasts]);
+};
+
+export const RootToaster = () => {
+	usePersistedToasts();
 
 	return <Toaster />;
 };
