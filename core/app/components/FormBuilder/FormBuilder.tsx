@@ -329,8 +329,6 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		})
 	);
 
-	console.log(payload);
-
 	return (
 		<TokenProvider tokens={tokens}>
 			<FormBuilderProvider
