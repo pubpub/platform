@@ -235,7 +235,7 @@ test.describe("Submission buttons", () => {
 		page.on("request", (request) => {
 			if (request.method() === "POST" && request.url().includes(`forms/${FORM_SLUG}/edit`)) {
 				const data = request.postDataJSON();
-				const buttons = data[0].elements.filter((e: any) => e.type === "button");
+				const buttons = data[0].upserts.filter((e: any) => e.type === "button");
 				const declineButton = buttons.find((b: any) => b.label === newData.label);
 				expect(declineButton.content).toEqual(newData.content);
 			}
@@ -279,12 +279,12 @@ test.describe("relationship fields", () => {
 		page.once("request", (request) => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
-				const { elements } = data[0];
-				const authorElement = elements.find(
+				const { upserts, relatedPubTypes } = data[0];
+				const authorElement = upserts.find(
 					(e: PubFieldElement) => "label" in e.config && e.config.label === "Role"
 				);
 				expect(authorElement.component).toEqual(InputComponent.textArea);
-				expect(authorElement.relatedPubTypes).toEqual([pubType.id]);
+				expect(relatedPubTypes).toEqual([{ A: authorElement.id, B: pubType.id }]);
 				expect(authorElement.config).toMatchObject({
 					relationshipConfig: {
 						component: InputComponent.relationBlock,
@@ -349,8 +349,8 @@ test.describe("relationship fields", () => {
 		page.on("request", (request) => {
 			if (request.method() === "POST" && request.url().includes(`forms/${formSlug}/edit`)) {
 				const data = request.postDataJSON();
-				const { elements } = data[0];
-				const authorElement = elements.find(
+				const { upserts, relatedPubTypes } = data[0];
+				const authorElement = upserts.find(
 					(e: PubFieldElement) =>
 						"relationshipConfig" in e.config &&
 						e.config.relationshipConfig.label === "Authors"
@@ -402,6 +402,30 @@ test.describe("reordering fields", async () => {
 
 		// Make sure the form is returned in the same order it was saved in
 		await expect(elements).toHaveText(changedElements);
+	});
+
+	test("changing the order of fields and changing them back does not allow you to save", async () => {
+		const formEditPage = new FormsEditPage(
+			page,
+			community.community.slug,
+			community.forms["ReorderForm"].slug
+		);
+
+		await formEditPage.goto();
+
+		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.keyboard.press("ArrowDown");
+		await page.keyboard.press(" ");
+
+		const disabled = await page.getByTestId("save-form-button").getAttribute("disabled");
+		expect(disabled).toBe(null);
+
+		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.keyboard.press("ArrowDown");
+		await page.keyboard.press(" ");
+
+		const disabled2 = await page.getByTestId("save-form-button").getAttribute("disabled");
+		expect(disabled2).toBe("");
 	});
 });
 
