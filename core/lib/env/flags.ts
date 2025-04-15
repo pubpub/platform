@@ -9,6 +9,7 @@ type FlagArgs<F extends FlagName> = Extract<FlagSchema, [F, unknown]>[1];
 class Flags {
 	#flags;
 	constructor(flags: FlagSchema[]) {
+		console.log("hello world");
 		this.#flags = new Map(flags as [string, unknown][]);
 	}
 	get<F extends FlagName>(flagName: F): FlagArgs<F> {
