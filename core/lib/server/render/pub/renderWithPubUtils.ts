@@ -3,7 +3,7 @@ import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
 import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { addMemberToForm, createFormInviteLink } from "../../form";
 

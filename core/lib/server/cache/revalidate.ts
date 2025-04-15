@@ -3,7 +3,7 @@ import { revalidateTag } from "next/cache";
 import { logger } from "logger";
 
 import type { CacheScope } from "./cacheTags";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 
