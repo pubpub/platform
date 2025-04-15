@@ -18,10 +18,12 @@ import type { GetPubTypesResult } from "./pubtype";
 import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
+import { defaultFormName, defaultFormSlug } from "../form";
 import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
+import { getPubType } from "./pubtype";
 import { getUser } from "./user";
 
 /**
@@ -282,3 +284,24 @@ export const insertForm = (
 };
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
+
+export const createDefaultForm = async (
+	props: {
+		communityId: CommunitiesId;
+	} & XOR<{ pubTypeId: PubTypesId }, { pubType: GetPubTypesResult[number] }>,
+	trx = db
+) => {
+	const pubType =
+		props.pubType ?? (await getPubType(props.pubTypeId, trx).executeTakeFirstOrThrow());
+
+	return await autoRevalidate(
+		insertForm(
+			pubType,
+			defaultFormName(pubType.name),
+			defaultFormSlug(pubType.name),
+			props.communityId,
+			true,
+			trx
+		)
+	).executeTakeFirstOrThrow();
+};

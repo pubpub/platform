@@ -8,7 +8,7 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defaultFormName, defaultFormSlug } from "~/lib/form";
-import { ApiError, getPubType } from "~/lib/server";
+import { ApiError, createPubTypeWithDefaultForm, getPubType } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -157,41 +157,16 @@ export const createPubType = defineServerAction(async function createPubType(
 	}
 	try {
 		await db.transaction().execute(async (trx) => {
-			const { id: pubTypeId } = await autoRevalidate(
-				trx
-					.with("newType", (db) =>
-						db
-							.insertInto("pub_types")
-							.values({
-								communityId,
-								name,
-								description,
-							})
-							.returning("pub_types.id")
-					)
-					.insertInto("_PubFieldToPubType")
-					.values((eb) =>
-						fields.map((id) => ({
-							A: id,
-							B: eb.selectFrom("newType").select("id"),
-							isTitle: titleField === id,
-						}))
-					)
-					.returning("B as id")
-			).executeTakeFirstOrThrow();
-
-			const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
-
-			await autoRevalidate(
-				insertForm(
-					pubType,
-					defaultFormName(name),
-					defaultFormSlug(name),
+			await createPubTypeWithDefaultForm(
+				{
 					communityId,
-					true,
-					trx
-				)
-			).executeTakeFirstOrThrow();
+					name,
+					description,
+					fields,
+					titleField,
+				},
+				trx
+			);
 		});
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {

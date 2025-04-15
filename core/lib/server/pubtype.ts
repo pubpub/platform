@@ -8,7 +8,10 @@ import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db
 import type { Prettify, XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
+import { defaultFormName, defaultFormSlug } from "../form";
 import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
+import { createDefaultForm, insertForm } from "./form";
 import { GET_MANY_DEFAULT } from "./pub";
 
 export const getPubTypeBase = <DB extends Record<string, any>>(
@@ -137,3 +140,47 @@ export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>)
 						.as("fields"),
 			])
 	);
+
+export const createPubTypeWithDefaultForm = async (
+	props: {
+		communityId: CommunitiesId;
+		name: string;
+		description?: string;
+		fields: PubFieldsId[];
+		titleField?: PubFieldsId;
+	},
+	trx = db
+) => {
+	const { id: pubTypeId } = await autoRevalidate(
+		trx
+			.with("newType", (db) =>
+				db
+					.insertInto("pub_types")
+					.values({
+						communityId: props.communityId,
+						name: props.name,
+						description: props.description,
+					})
+					.returning("pub_types.id")
+			)
+			.insertInto("_PubFieldToPubType")
+			.values((eb) =>
+				props.fields.map((id) => ({
+					A: id,
+					B: eb.selectFrom("newType").select("id"),
+					isTitle: props.titleField === id,
+				}))
+			)
+			.returning("B as id")
+	).executeTakeFirstOrThrow();
+
+	const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
+
+	return createDefaultForm(
+		{
+			communityId: props.communityId,
+			pubType,
+		},
+		trx
+	);
+};
