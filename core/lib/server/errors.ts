@@ -7,6 +7,8 @@ import pg from "pg";
 
 import { logger } from "logger";
 
+import type { ClientExceptionOptions } from "../serverActions";
+
 export class HTTPStatusError<Status extends ErrorHttpStatusCode> extends Error {
 	readonly status: ErrorHttpStatusCode;
 
@@ -151,7 +153,7 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 	);
 };
 
-export const ApiError = {
+export const ApiError: Record<string, ClientExceptionOptions> = {
 	UNAUTHORIZED: { title: "Unauthorized", error: "You are not authorized to perform this action" },
 	NOT_LOGGED_IN: { error: "Not logged in" },
 	COMMUNITY_NOT_FOUND: { error: "Community not found" },

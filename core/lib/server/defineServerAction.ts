@@ -38,7 +38,7 @@ export const defineServerAction = <
 					return isClientExceptionOptions(serverActionResult)
 						? // Create a client exception and send its cause (if any) to Sentry.
 							makeClientException(serverActionResult)
-						: serverActionResult;
+						: (serverActionResult as Exclude<R, ClientExceptionOptions>);
 				} catch (error) {
 					const redirectUrl = getURLFromRedirectError(error);
 					if (redirectUrl) {
