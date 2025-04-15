@@ -40,8 +40,6 @@ export function AttributePanel() {
 		setPosition: setActiveNodePosition,
 	} = useEditorContext();
 
-	console.log({ activeNode });
-
 	/**
 	 * This determination of the 'activeNode' is prone to bugs. We should figure
 	 * out a better way to do it.

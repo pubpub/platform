@@ -1,12 +1,36 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useEditorEffect } from "@handlewithcare/react-prosemirror";
 import { RectangleEllipsis, StickyNote, ToyBrick } from "lucide-react";
 
-import { Card, CardContent } from "ui/card";
-
 import type { SuggestProps } from "../ContextEditor";
+import { reactPropsKey } from "../plugins/reactProps";
 
-export default function SuggestPanel({ isOpen, selectedIndex, items, filter }: SuggestProps) {
+type Props = {
+	suggestData: SuggestProps;
+	setSuggestData: any;
+};
+export default function SuggestPanel({ suggestData, setSuggestData }: Props) {
+	const { isOpen, selectedIndex, items, filter } = suggestData;
 	const [position, setPosition] = useState([0, 0]);
+
+	/**
+	 * In order to get the suggestions to the plugin, we pass props through
+	 * reactPropsKey which the plugin can then access.
+	 */
+	useEditorEffect(
+		(view) => {
+			if (!view) return;
+			const reactPropsOld = reactPropsKey.getState(view.state);
+			const tr = view.state.tr.setMeta(reactPropsKey, {
+				...reactPropsOld,
+				suggestData,
+				setSuggestData,
+			});
+			view.dispatch(tr);
+		},
+		[suggestData]
+	);
+
 	useEffect(() => {
 		const span = document.getElementsByClassName("autocomplete")[0];
 		if (span) {

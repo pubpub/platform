@@ -18,6 +18,7 @@ import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
 import { EditorContextProvider } from "./components/Context";
+import SuggestPanel from "./components/SuggestPanel";
 
 export interface ContextEditorProps {
 	placeholder?: string;
@@ -94,6 +95,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 					<>
 						<ProseMirrorDoc />
 						<AttributePanel />
+						<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
 					</>
 				</EditorContextProvider>
 			</ProseMirror>
