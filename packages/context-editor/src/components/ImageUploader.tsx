@@ -10,7 +10,15 @@ import { insertNodeAfterSelection } from "../utils/nodes";
 
 export type Upload = FileUploadProps["upload"];
 
-export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: () => void }) => {
+export const ImageUploader = ({
+	upload,
+	onInsert,
+	disabled,
+}: {
+	upload: Upload;
+	onInsert: () => void;
+	disabled?: boolean;
+}) => {
 	const { view } = usePluginViewContext();
 
 	const onUpload = (files: FormattedFile[]) => {
@@ -42,6 +50,7 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				restrictions={{
 					allowedFileTypes: ["image/*"],
 				}}
+				disabled={disabled}
 			/>
 		</div>
 	);

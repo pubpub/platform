@@ -2,7 +2,6 @@ import type { ErrorHttpStatusCode } from "@ts-rest/core";
 import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
-import { reactErrorHandler } from "@sentry/nextjs";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
 import pg from "pg";
 
@@ -157,4 +156,8 @@ export const ApiError = {
 	NOT_LOGGED_IN: { error: "Not logged in" },
 	COMMUNITY_NOT_FOUND: { error: "Community not found" },
 	PUB_NOT_FOUND: { error: "Pub not found" },
+	FEATURE_DISABLED: {
+		title: "Feature unavailable",
+		error: "The requested feature is not available in this environment",
+	},
 };
