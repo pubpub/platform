@@ -238,7 +238,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	}
 
 	if (env.FLAGS?.get("disabled-actions").includes(actionInstance.action)) {
-		return ApiError.FEATURE_DISABLED;
+		return { ...ApiError.FEATURE_DISABLED, stack: args.stack };
 	}
 
 	if (!actionInstance.pubInStage) {
