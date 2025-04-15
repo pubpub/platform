@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
@@ -57,12 +56,12 @@ export default async function Page(props: {
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const formId = `create-pub`;
+	const htmlFormId = `create-pub`;
 
 	return (
 		<ContentLayout
 			left={
-				<Button form={formId} type="submit">
+				<Button form={htmlFormId} type="submit">
 					Save
 				</Button>
 			}
@@ -74,7 +73,7 @@ export default async function Page(props: {
 					<PubEditor
 						searchParams={searchParams}
 						communityId={community.id}
-						formId={formId}
+						htmlFormId={htmlFormId}
 						// PubEditor checks for the existence of the stageId prop
 						{...(searchParams["stageId"] ? { stageId: searchParams["stageId"] } : {})}
 					/>
