@@ -42,7 +42,7 @@ const getBlockName = (node: Node) => {
 export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentProps>(
 	function BlockDecoration({ widget, getPos, ...props }, ref) {
 		const state = useEditorState();
-		const { setPosition, setActiveNode, activeNode, position } = useEditorContext();
+		const { setPosition, setActiveNode, activeNode } = useEditorContext();
 		const { disabled } = reactPropsKey.getState(state);
 		const pos = getPos();
 		const node = state.doc.nodeAt(pos);
@@ -69,6 +69,16 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 					{getBlockName(node)}
 				</button>
 			</div>
+		);
+	}
+);
+
+export const InlineDecoration = forwardRef<HTMLSpanElement, WidgetViewComponentProps>(
+	function InlineDecoration({ widget, getPos, ...props }, ref) {
+		return (
+			<span ref={ref} className="inline-wrap-widget" {...props}>
+				<span></span>
+			</span>
 		);
 	}
 );

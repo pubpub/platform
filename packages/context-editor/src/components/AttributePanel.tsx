@@ -1,6 +1,6 @@
 import type { Mark } from "prosemirror-model";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	useEditorEffect,
 	useEditorEventCallback,
@@ -40,7 +40,13 @@ export function AttributePanel() {
 		setPosition: setActiveNodePosition,
 	} = useEditorContext();
 
-	useEditorEffect(() => {
+	console.log({ activeNode });
+
+	/**
+	 * This determination of the 'activeNode' is prone to bugs. We should figure
+	 * out a better way to do it.
+	 **/
+	useEffect(() => {
 		const node = state.selection.$from.nodeAfter;
 
 		if (!node) {
