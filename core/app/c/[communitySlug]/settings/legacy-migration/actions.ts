@@ -25,7 +25,6 @@ export const importFromLegacy = defineServerAction(
 
 		try {
 			const res = await maybeWithTrx(db, async (trx) => {
-				await cleanUpLegacy(community);
 				const legacyStructure = await _importFromLegacy(
 					{
 						slug: legacyCommunity.slug,

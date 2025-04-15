@@ -1,4 +1,7 @@
+import { writeFile } from "fs/promises";
+
 import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { z } from "zod";
 
 import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
@@ -7,18 +10,16 @@ import { logger } from "logger";
 import { db } from "~/kysely/database";
 import { slugifyString } from "~/lib/string";
 import { autoRevalidate } from "../cache/autoRevalidate";
-import { findCommunityBySlug } from "../community";
 import { maybeWithTrx } from "../pub";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
+import { legacyExportSchema, pubSchema } from "./schemas";
 
 const constructLegacyPubsUrl = (legacyCommunitySlug: string) => {
-	return `https://assets.pubpub.org/legacy-archive/27d9a5c8-30f3-44bd-971f-181388d53323/1744633623435/pubs.json`;
-
-	// return `https://assets.pubpub.org/legacy-archive/${legacyCommunitySlug}/pubs.json`;
+	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1744712801853/static.json`;
 };
 
-export const getLegacyPubs = async (legacyCommunitySlug: string) => {
+export const getLegacyCommunity = async (legacyCommunitySlug: string) => {
 	const url = constructLegacyPubsUrl(legacyCommunitySlug);
 	const response = await fetch(url);
 	const data = await response.json();
@@ -60,8 +61,6 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Tag: { schemaName: CoreSchemaType.Null, relation: true },
 	Editors: { schemaName: CoreSchemaType.Null, relation: true },
 
-	MemberId: { schemaName: CoreSchemaType.String },
-
 	Downloads: { schemaName: CoreSchemaType.String, relation: true },
 	Images: { schemaName: CoreSchemaType.Null, relation: true },
 	Tables: { schemaName: CoreSchemaType.Null, relation: true },
@@ -72,7 +71,6 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Discussions: { schemaName: CoreSchemaType.String, relation: true },
 	"Version Number": { schemaName: CoreSchemaType.Number },
 	"Full Name": { schemaName: CoreSchemaType.String },
-	Content: { schemaName: CoreSchemaType.RichText },
 
 	"Legacy Id": { schemaName: CoreSchemaType.String },
 } as const;
@@ -82,7 +80,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 		fields: {
 			Title: { isTitle: true },
 			"Legacy Id": { isTitle: false },
-			Content: { isTitle: false },
+			PubContent: { isTitle: false },
 			DOI: { isTitle: false },
 			Description: { isTitle: false },
 			Discussions: { isTitle: false },
@@ -104,7 +102,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	Version: {
 		fields: {
 			Description: { isTitle: true },
-			Content: { isTitle: false },
+			PubContent: { isTitle: false },
 			"Publication Date": { isTitle: false },
 			"Version Number": { isTitle: false },
 		},
@@ -113,7 +111,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	Discussion: {
 		fields: {
 			"Full Name": { isTitle: true },
-			Content: { isTitle: false },
+			PubContent: { isTitle: false },
 			ORCiD: { isTitle: false },
 			"Publication Date": { isTitle: false },
 			Avatar: { isTitle: false },
@@ -139,7 +137,10 @@ export const createCorrectPubFields = async (
 	},
 	trx = db
 ) => {
-	const { fields } = await getPubFields({ communityId: community.id }).executeTakeFirstOrThrow();
+	const { fields } = await getPubFields({
+		communityId: community.id,
+		trx,
+	}).executeTakeFirstOrThrow();
 
 	const existingFields = Object.values(fields);
 
@@ -240,36 +241,36 @@ export const createCorrectPubTypes = async (
 	let pubTypeName: keyof typeof REQUIRED_LEGACY_PUB_TYPES;
 	for (pubTypeName in REQUIRED_LEGACY_PUB_TYPES) {
 		const existingPubType = pubTypeMap.get(pubTypeName);
+		const desiredPubType = REQUIRED_LEGACY_PUB_TYPES[pubTypeName];
 
-		const pubTypeFields = REQUIRED_LEGACY_PUB_TYPES[pubTypeName].fields;
-		const existingFieldsFiltered = Object.keys(pubTypeFields).filter((slug) =>
-			existingPubType?.fields.some(
-				(f) => f.slug === `${community.slug}:${slugifyString(slug)}`
+		const desiredPubTypeFields = desiredPubType.fields;
+		const existingFieldsFiltered = existingPubType?.fields.filter((f) =>
+			Object.keys(desiredPubTypeFields).some(
+				(slug) => `${community.slug}:${slugifyString(slug)}` === f.slug
 			)
 		);
 
-		console.log(existingFieldsFiltered);
-		if (existingPubType && existingFieldsFiltered.length) {
+		if (existingPubType && existingFieldsFiltered?.length) {
 			throw new Error(
-				`Pub type ${pubTypeName}  exists, but is missing fields: ${JSON.stringify(
-					existingFieldsFiltered?.map((f) => f.slug)
-				)}. ${JSON.stringify(existingFieldsFiltered?.map((f) => f.slug))}`
+				`Pub type ${pubTypeName}  exists, but is missing fields: ${existingFieldsFiltered
+					?.map((f) => f.slug)
+					.join(", ")}`
 			);
 		}
 
-		const definedFieldsFiltered = Object.keys(pubTypeFields).filter((name) => {
+		const desiredFieldsFiltered = Object.keys(desiredPubTypeFields).filter((name) => {
 			return !Object.keys(REQUIRED_LEGACY_PUB_FIELDS).includes(name);
 		});
 
-		if (definedFieldsFiltered.length > 0) {
+		if (desiredFieldsFiltered.length > 0) {
 			throw new Error(
-				`Pub type definition is missing fields: ${pubTypeName} ${JSON.stringify(
-					definedFieldsFiltered.map(([name]) => name)
+				`Pub type definition is missing fields: ${pubTypeName} ${desiredFieldsFiltered.join(
+					", "
 				)}`
 			);
 		}
 
-		const fields = Object.entries(pubTypeFields).map(([slug, field]) => ({
+		const fields = Object.entries(desiredPubTypeFields).map(([slug, field]) => ({
 			id: existingFieldsFiltered?.find((f) => f.slug === slug)?.id,
 			slug: `${community.slug}:${slugifyString(slug)}`,
 			isTitle: field.isTitle,
@@ -305,8 +306,10 @@ export const createLegacyStructure = async (
 	},
 	trx = db
 ) => {
-	const fieldsToCreate = await createCorrectPubFields({ community }, trx);
-	const pubTypesToCreate = await createCorrectPubTypes({ community }, trx);
+	const [fieldsToCreate, pubTypesToCreate] = await Promise.all([
+		createCorrectPubFields({ community }, trx),
+		createCorrectPubTypes({ community }, trx),
+	]);
 
 	const result = await autoRevalidate(
 		trx
@@ -381,25 +384,6 @@ export const createLegacyStructure = async (
 	return result;
 };
 
-export const importFromLegacy = async (
-	legacyCommunity: { slug: string },
-	currentCommunity: { id: CommunitiesId; slug: string },
-	trx = db
-) => {
-	const result = await maybeWithTrx(trx, async (trx) => {
-		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
-
-		const legacyPubs = await getLegacyPubs(legacyCommunity.slug);
-
-		return {
-			legacyStructure,
-			legacyPubs,
-		};
-	});
-
-	return result;
-};
-
 export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) => {
 	const legacyPubTypes = await trx
 		.selectFrom("pub_types as pt")
@@ -459,11 +443,71 @@ export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) 
 					.deleteFrom("pub_fields")
 					.where("communityId", "=", community.id)
 					.where("slug", "=", field.slug)
+					// where field is not used in any value
+					.where((eb) =>
+						eb.not(
+							eb.exists(
+								eb
+									.selectFrom("pub_values")
+									.whereRef("pub_values.fieldId", "=", "pub_fields.id")
+							)
+						)
+					)
 					.execute();
 			} catch (error) {
-				logger.error("Did not delete field", field.slug);
-				logger.error(error);
+				logger.error(`Did not delete field, ${field.slug}`);
+				// rethrow, bc the transaction will be aborted anyway
+				throw error;
 			}
 		}
 	}
+};
+
+export const createPubs = async (
+	{
+		legacyCommunity,
+		community,
+	}: { legacyCommunity: { slug: string }; community: { id: CommunitiesId } },
+	trx = db
+) => {
+	const legacyPubs = await getLegacyCommunity(legacyCommunity.slug);
+
+	// console.log(legacyPubs.collections);
+	await writeFile(
+		"lib/server/legacy-migration/archive.json",
+		JSON.stringify(
+			{
+				community: legacyPubs.community,
+				pages: legacyPubs.pages,
+				collections: legacyPubs.collections,
+			},
+			null,
+			2
+		)
+	);
+	const parsed = legacyExportSchema.parse(legacyPubs);
+
+	// eslint-disable-next-line no-console
+	// console.dir(legacyPubs, { depth: null });
+};
+
+export const importFromLegacy = async (
+	legacyCommunity: { slug: string },
+	currentCommunity: { id: CommunitiesId; slug: string },
+	trx = db
+) => {
+	const result = await maybeWithTrx(trx, async (trx) => {
+		await cleanUpLegacy(currentCommunity, trx);
+
+		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
+
+		const legacyPubs = await createPubs({ legacyCommunity, community: currentCommunity }, trx);
+
+		return {
+			legacyStructure,
+			legacyPubs,
+		};
+	});
+
+	return result;
 };
