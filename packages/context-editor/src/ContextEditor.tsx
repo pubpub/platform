@@ -17,6 +17,8 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
+import { cn } from "utils";
+
 import { EditorContextProvider } from "./components/Context";
 import SuggestPanel from "./components/SuggestPanel";
 
@@ -85,11 +87,16 @@ export default function ContextEditor(props: ContextEditorProps) {
 			<ProseMirror
 				state={editorState}
 				dispatchTransaction={(tr) => {
-					setEditorState((s) => s.apply(tr));
+					setEditorState((s) => {
+						const newState = s.apply(tr);
+						props.onChange(newState);
+						return newState;
+					});
 				}}
 				nodeViews={{
 					contextAtom: Renderer,
 				}}
+				className={cn("font-serif", props.className)}
 			>
 				<EditorContextProvider activeNode={null} position={0}>
 					<>
