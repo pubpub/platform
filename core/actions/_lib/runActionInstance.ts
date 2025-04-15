@@ -16,6 +16,7 @@ import { logger } from "logger";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
+import { env } from "~/lib/env/env";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getPubsWithRelatedValues } from "~/lib/server";
@@ -40,29 +41,10 @@ export type RunActionInstanceArgs = {
 	scheduledActionRunId?: ActionRunsId;
 } & ({ event: Event } | { userId: UsersId });
 
-const _runActionInstance = async (
-	args: RunActionInstanceArgs & { actionRunId: ActionRunsId },
-	trx = db
-): Promise<ActionInstanceRunResult> => {
-	const isActionUserInitiated = "userId" in args;
-
-	const stack = [...args.stack, args.actionRunId];
-
-	const pubPromise = getPubsWithRelatedValues(
-		{
-			pubId: args.pubId,
-			communityId: args.communityId,
-			userId: isActionUserInitiated ? args.userId : undefined,
-		},
-		{
-			withPubType: true,
-			withStage: true,
-		}
-	);
-
-	const actionInstancePromise = trx
+const getActionInstance = (actionInstanceId: ActionInstancesId, pubId: PubsId, trx = db) =>
+	trx
 		.selectFrom("action_instances")
-		.where("action_instances.id", "=", args.actionInstanceId)
+		.where("action_instances.id", "=", actionInstanceId)
 		.select((eb) => [
 			"id",
 			eb.fn.coalesce("config", sql`'{}'`).as("config"),
@@ -76,60 +58,42 @@ const _runActionInstance = async (
 				eb
 					.selectFrom("PubsInStages")
 					.select(["pubId", "stageId"])
-					.where("pubId", "=", args.pubId)
+					.where("pubId", "=", pubId)
 					.whereRef("stageId", "=", "action_instances.stageId")
 			).as("pubInStage"),
 		])
-		.executeTakeFirstOrThrow();
+		.executeTakeFirst();
 
-	const [pubResult, actionInstanceResult] = await Promise.allSettled([
-		pubPromise,
-		actionInstancePromise,
-	]);
+const _runActionInstance = async (
+	args: RunActionInstanceArgs & {
+		actionInstance: Exclude<Awaited<ReturnType<typeof getActionInstance>>, undefined>;
+		actionRunId: ActionRunsId;
+	}
+): Promise<ActionInstanceRunResult> => {
+	const isActionUserInitiated = "userId" in args;
 
-	if (pubResult.status === "rejected") {
+	const stack = [...args.stack, args.actionRunId];
+	const pub = await getPubsWithRelatedValues(
+		{
+			pubId: args.pubId,
+			communityId: args.communityId,
+			userId: isActionUserInitiated ? args.userId : undefined,
+		},
+		{
+			withPubType: true,
+			withStage: true,
+		}
+	);
+
+	if (pub === undefined) {
 		return {
 			error: "Pub not found",
-			cause: pubResult.reason,
 			stack,
 		};
 	}
 
-	if (actionInstanceResult.status === "rejected") {
-		logger.error({ msg: actionInstanceResult.reason });
-		return {
-			error: "Action instance not found",
-			cause: actionInstanceResult.reason,
-			stack,
-		};
-	}
-
-	const actionInstance = actionInstanceResult.value;
-	const pub = pubResult.value;
-
-	if (!actionInstance.pubInStage) {
-		logger.warn({
-			msg: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
-			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
-			pubId: args.pubId,
-			actionInstanceId: args.actionInstanceId,
-		});
-		return {
-			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
-			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
-			stack,
-		};
-	}
-
-	if (!actionInstance.action) {
-		return {
-			error: "Action not found",
-			stack,
-		};
-	}
-
-	const action = getActionByName(actionInstance.action);
-	const actionRun = await getActionRunByName(actionInstance.action);
+	const action = getActionByName(args.actionInstance.action);
+	const actionRun = await getActionRunByName(args.actionInstance.action);
 
 	if (!actionRun || !action) {
 		return {
@@ -138,7 +102,7 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedConfig = action.config.schema.safeParse(actionInstance.config ?? {});
+	const parsedConfig = action.config.schema.safeParse(args.actionInstance.config ?? {});
 
 	if (!parsedConfig.success) {
 		const err = {
@@ -189,7 +153,7 @@ const _runActionInstance = async (
 		argsFieldOverrides
 	);
 	const configWithPubfields = resolveWithPubfields(
-		{ ...(actionInstance.config as {}), ...parsedConfig.data },
+		{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
 		pub.values,
 		configFieldOverrides
 	);
@@ -212,7 +176,7 @@ const _runActionInstance = async (
 			// FIXME: get rid of any
 			args: argsWithPubfields as any,
 			argsFieldOverrides,
-			stageId: actionInstance.stageId,
+			stageId: args.actionInstance.stageId,
 			communityId: pub.communityId as CommunitiesId,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
@@ -221,20 +185,20 @@ const _runActionInstance = async (
 		if (isClientExceptionOptions(result)) {
 			await scheduleActionInstances({
 				pubId: args.pubId,
-				stageId: actionInstance.stageId,
+				stageId: args.actionInstance.stageId,
 				event: Event.actionFailed,
 				stack,
-				sourceActionInstanceId: actionInstance.id,
+				sourceActionInstanceId: args.actionInstance.id,
 			});
 			return { ...result, stack };
 		}
 
 		await scheduleActionInstances({
 			pubId: args.pubId,
-			stageId: actionInstance.stageId,
+			stageId: args.actionInstance.stageId,
 			event: Event.actionSucceeded,
 			stack,
-			sourceActionInstanceId: actionInstance.id,
+			sourceActionInstanceId: args.actionInstance.id,
 		});
 
 		return { ...result, stack };
@@ -244,10 +208,10 @@ const _runActionInstance = async (
 
 		await scheduleActionInstances({
 			pubId: args.pubId,
-			stageId: actionInstance.stageId,
+			stageId: args.actionInstance.stageId,
 			event: Event.actionFailed,
 			stack,
-			sourceActionInstanceId: actionInstance.id,
+			sourceActionInstanceId: args.actionInstance.id,
 		});
 
 		return {
@@ -263,6 +227,42 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 		throw new Error(
 			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
 		);
+	}
+	const actionInstance = await getActionInstance(args.actionInstanceId, args.pubId);
+
+	if (actionInstance === undefined) {
+		return {
+			error: "Action instance not found",
+			stack: args.stack,
+		};
+	}
+
+	if (env.FLAGS?.get("disabled-actions").includes(actionInstance.action)) {
+		return {
+			error: "Action is disabled",
+			stack: args.stack,
+		};
+	}
+
+	if (!actionInstance.pubInStage) {
+		logger.warn({
+			msg: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
+			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+			pubId: args.pubId,
+			actionInstanceId: args.actionInstanceId,
+		});
+		return {
+			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
+			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
+			stack: args.stack,
+		};
+	}
+
+	if (!actionInstance.action) {
+		return {
+			error: "Action not found",
+			stack: args.stack,
+		};
 	}
 
 	const isActionUserInitiated = "userId" in args;
@@ -331,7 +331,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 
 	const actionRun = actionRuns[0];
 
-	const result = await _runActionInstance({ ...args, actionRunId: actionRun.id });
+	const result = await _runActionInstance({ ...args, actionInstance, actionRunId: actionRun.id });
 
 	const status = isClientExceptionOptions(result)
 		? ActionRunStatus.failure

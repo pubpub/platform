@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import { logger } from "logger";
 
-import { env } from "./lib/env/env.mjs";
+import { env } from "./lib/env/env";
 
 logger.info("Running instrumentation hook for edge...");
 

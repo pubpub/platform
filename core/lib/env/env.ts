@@ -1,16 +1,11 @@
-// @ts-check
+import type { ZodTypeAny } from "zod";
 
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-/**
- * Parameters which are optional if the app is self-hosted
- * but we do want checked for our AWS deploys
- *
- * @template {import("zod").ZodTypeAny} Z
- * @param {Z} schema
- */
-const selfHostedOptional = (schema) => {
+import { flagsSchema } from "./flags";
+
+const selfHostedOptional = (schema: ZodTypeAny) => {
 	return process.env.SELF_HOSTED ? schema.optional() : schema;
 };
 
@@ -52,6 +47,7 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
+		FLAGS: flagsSchema,
 	},
 	client: {},
 	experimental__runtimeEnv: {

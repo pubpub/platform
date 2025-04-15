@@ -11,7 +11,7 @@ import type { XOR } from "../types";
 import type { FormInviteLinkProps } from "./form";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/authentication/createMagicLink";
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 import { createFormInviteLink } from "./form";
 import { getSmtpClient } from "./mailgun";
 

@@ -7,7 +7,7 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { env } from "../../lib/env/env.mjs";
+import { env } from "../../lib/env/env";
 import { FileUpload } from "../../lib/fields/fileUpload";
 
 export default async function main(communityUUID: CommunitiesId) {
