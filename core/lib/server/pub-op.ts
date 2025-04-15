@@ -1,4 +1,4 @@
-import type { Transaction } from "kysely";
+import type { Kysely, Transaction } from "kysely";
 
 import { sql } from "kysely";
 
@@ -26,7 +26,7 @@ type PubValue = string | number | boolean | JsonValue | Date;
 type PubOpOptionsBase = {
 	communityId: CommunitiesId;
 	lastModifiedBy: LastModifiedBy;
-	trx?: Transaction<Database>;
+	trx?: Kysely<Database>;
 };
 
 type PubOpOptionsCreateUpsert = PubOpOptionsBase & {
