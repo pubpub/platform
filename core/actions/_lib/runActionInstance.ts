@@ -19,7 +19,7 @@ import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { getPubsWithRelatedValues } from "~/lib/server";
+import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { MAX_STACK_DEPTH } from "~/lib/server/rules";
 import { isClientExceptionOptions } from "~/lib/serverActions";
@@ -238,10 +238,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	}
 
 	if (env.FLAGS?.get("disabled-actions").includes(actionInstance.action)) {
-		return {
-			error: "Action is disabled",
-			stack: args.stack,
-		};
+		return ApiError.FEATURE_DISABLED;
 	}
 
 	if (!actionInstance.pubInStage) {
