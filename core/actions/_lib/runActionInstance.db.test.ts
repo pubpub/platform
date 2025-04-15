@@ -68,9 +68,11 @@ const pubTriggerTestSeed = async () => {
 	});
 };
 
-vitest.mock("~/lib/env/env", () => {
+vitest.mock("~/lib/env/env", async () => {
+	const { env } = await import("~/lib/env/env");
 	return {
 		env: {
+			...env,
 			ENV: new Map([["disabled-actions", []]]),
 		},
 	};
