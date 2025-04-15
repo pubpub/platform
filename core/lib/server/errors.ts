@@ -8,6 +8,7 @@ import pg from "pg";
 import { logger } from "logger";
 
 import type { ClientExceptionOptions } from "../serverActions";
+import { env } from "../env/env";
 
 export class HTTPStatusError<Status extends ErrorHttpStatusCode> extends Error {
 	readonly status: ErrorHttpStatusCode;
@@ -160,6 +161,6 @@ export const ApiError: Record<string, ClientExceptionOptions> = {
 	PUB_NOT_FOUND: { error: "Pub not found" },
 	FEATURE_DISABLED: {
 		title: "Feature unavailable",
-		error: "The requested feature is not available in this environment",
+		error: `The requested feature is not available in ${env.ENV_NAME ? `the ${env.ENV_NAME}` : "this"} environment`,
 	},
 };
