@@ -1,16 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { Node } from "prosemirror-model";
-import { EditorState, Plugin } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
+import { EditorState } from "prosemirror-state";
 
-import { AttributePanel } from "./components/AttributePanel";
-import { MenuBar } from "./components/MenuBar";
+import { AttributePanel } from "./components/AttributePanel2";
 import { basePlugins } from "./plugins";
-import { attributePanelKey } from "./plugins/attributePanel";
-import { reactPropsKey } from "./plugins/reactProps";
 import { baseSchema } from "./schemas";
 
 import "prosemirror-view/style/prosemirror.css";
@@ -19,12 +15,6 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
-import { cn } from "utils";
-
-import { S } from "../playwright-report/trace/assets/defaultSettingsView-DTenqiGw";
-import SuggestPanel from "./components/SuggestPanel";
-
-const MENU_BAR_ID = "context-editor-menu-container";
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string /* classname for the editor view */;
