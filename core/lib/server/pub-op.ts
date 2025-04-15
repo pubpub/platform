@@ -11,11 +11,11 @@ import { isUuid } from "utils/uuid";
 
 import { db } from "~/kysely/database";
 import { autoRevalidate } from "./cache/autoRevalidate";
+import { maybeWithTrx } from "./maybeWithTrx";
 import {
 	deletePub,
 	deletePubValuesByValueId,
 	getPubsWithRelatedValues,
-	maybeWithTrx,
 	upsertPubRelationValues,
 	upsertPubValues,
 	validatePubValues,

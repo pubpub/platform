@@ -7,7 +7,7 @@ import type {
 	StringReference,
 } from "kysely";
 
-import { sql, Transaction } from "kysely";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 import partition from "lodash.partition";
 
@@ -61,8 +61,9 @@ import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
+import { maybeWithTrx } from "./maybeWithTrx";
 import { applyFilters } from "./pub-filters";
-import { getPubFields } from "./pubFields";
+import { _getPubFields, getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";
@@ -214,20 +215,6 @@ export const doesPubExist = async (
 ): Promise<{ exists: false; pub?: undefined } | { exists: true; pub: Pubs }> => {
 	const { exists, pubs } = await doPubsExist([pubId], communitiyId, trx);
 	return exists ? { exists: true as const, pub: pubs[0] } : { exists: false as const };
-};
-
-/**
- * For recursive transactions
- */
-export const maybeWithTrx = async <T>(
-	trx: Transaction<Database> | Kysely<Database>,
-	fn: (trx: Transaction<Database>) => Promise<T>
-): Promise<T> => {
-	// could also use trx.isTransaction()
-	if (trx instanceof Transaction) {
-		return await fn(trx);
-	}
-	return await trx.transaction().execute(fn);
 };
 
 const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
@@ -514,26 +501,29 @@ export const getPlainPub = (pubId: PubsId, trx = db) =>
  * Validates that all provided slugs exist in the community.
  * @throws Error if any slugs don't exist in the community
  */
-export const getFieldInfoForSlugs = async ({
-	slugs,
-	communityId,
-	trx = db,
-}: {
-	slugs: string[];
-	communityId: CommunitiesId;
-	trx?: typeof db;
-}) => {
+export const getFieldInfoForSlugs = async (
+	{
+		slugs,
+		communityId,
+	}: {
+		slugs: string[];
+		communityId: CommunitiesId;
+	},
+	trx = db
+) => {
 	const toBeUpdatedPubFieldSlugs = Array.from(new Set(slugs));
 
 	if (toBeUpdatedPubFieldSlugs.length === 0) {
 		return [];
 	}
 
-	const { fields } = await getPubFields({
-		communityId,
-		slugs: toBeUpdatedPubFieldSlugs,
-		trx,
-	}).executeTakeFirstOrThrow();
+	const { fields } = await _getPubFields(
+		{
+			communityId,
+			slugs: toBeUpdatedPubFieldSlugs,
+		},
+		trx
+	).executeTakeFirstOrThrow();
 
 	const pubFields = Object.values(fields);
 
@@ -577,11 +567,13 @@ export const validatePubValues = async <T extends { slug: string; value: unknown
 	continueOnValidationError?: boolean;
 	trx?: typeof db;
 }) => {
-	const relevantPubFields = await getFieldInfoForSlugs({
-		slugs: pubValues.map(({ slug }) => slug),
-		communityId,
-		trx,
-	});
+	const relevantPubFields = await getFieldInfoForSlugs(
+		{
+			slugs: pubValues.map(({ slug }) => slug),
+			communityId,
+		},
+		trx
+	);
 
 	const mergedPubFields = mergeSlugsWithFields(pubValues, relevantPubFields);
 
@@ -747,10 +739,13 @@ export const removePubRelations = async ({
 	lastModifiedBy: LastModifiedBy;
 	trx?: typeof db;
 }) => {
-	const consolidatedRelations = await getFieldInfoForSlugs({
-		slugs: relations.map(({ slug }) => slug),
-		communityId,
-	});
+	const consolidatedRelations = await getFieldInfoForSlugs(
+		{
+			slugs: relations.map(({ slug }) => slug),
+			communityId,
+		},
+		trx
+	);
 
 	const mergedRelations = mergeSlugsWithFields(relations, consolidatedRelations);
 
@@ -799,10 +794,13 @@ export const removeAllPubRelationsBySlugs = async ({
 		return [];
 	}
 
-	const fields = await getFieldInfoForSlugs({
-		slugs: slugs,
-		communityId,
-	});
+	const fields = await getFieldInfoForSlugs(
+		{
+			slugs: slugs,
+			communityId,
+		},
+		trx
+	);
 	const fieldIds = fields.map(({ fieldId }) => fieldId);
 	if (!fieldIds.length) {
 		throw new Error(`No fields found for slugs: ${slugs.join(", ")}`);

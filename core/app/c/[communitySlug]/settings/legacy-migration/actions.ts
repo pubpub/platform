@@ -5,7 +5,6 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { maybeWithTrx } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import {
@@ -13,6 +12,7 @@ import {
 	cleanUpLegacy,
 	createLegacyStructure,
 } from "~/lib/server/legacy-migration/legacy-migration";
+import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 
 export const importFromLegacy = defineServerAction(
 	async function importFromLegacy(legacyCommunity: { slug: string }) {
@@ -29,7 +29,8 @@ export const importFromLegacy = defineServerAction(
 					{
 						slug: legacyCommunity.slug,
 					},
-					community
+					community,
+					trx
 				);
 			});
 		} catch (error) {

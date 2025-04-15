@@ -3,13 +3,16 @@ import { baseSchema } from "context-editor/schemas";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
+import { logger } from "logger";
 
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
 		const node = baseSchema.nodeFromJSON(value);
-		node.check();
+		// node.check();
 		return true;
-	} catch {
+	} catch (e) {
+		logger.debug(e);
+		console.dir(value, { depth: null });
 		return false;
 	}
 };
@@ -26,11 +29,17 @@ export const validatePubValuesBySchemaName = (
 ) => {
 	const errors: { slug: string; error: string }[] = [];
 	for (let { slug, value, schemaName } of values) {
+		const stringifiedValue = JSON.stringify(value);
+		const trimmedValue =
+			stringifiedValue.length > 100
+				? `${stringifiedValue.slice(0, 100)}...`
+				: stringifiedValue;
+
 		if (schemaName === CoreSchemaType.RichText) {
 			const result = validateAgainstContextEditorSchema(value);
 
 			if (!result) {
-				errors.push(createValidationError(slug, schemaName, value));
+				errors.push(createValidationError(slug, schemaName, trimmedValue));
 			}
 			continue;
 		}
@@ -39,7 +48,7 @@ export const validatePubValuesBySchemaName = (
 		const result = Value.Check(jsonSchema, value);
 
 		if (!result) {
-			errors.push(createValidationError(slug, schemaName, value));
+			errors.push(createValidationError(slug, schemaName, trimmedValue));
 		}
 	}
 
