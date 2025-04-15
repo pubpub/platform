@@ -1,7 +1,7 @@
 import type { Mark, Node } from "prosemirror-model";
 import type { EditorState } from "prosemirror-state";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
 	useEditorEffect,
 	useEditorEventCallback,
@@ -15,20 +15,6 @@ import { useEditorContext } from "./Context";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
-
-function isCursorInsideMark(state: EditorState, nodePos: number) {
-	const { selection, doc } = state;
-	const node = doc.nodeAt(nodePos);
-	if (!node || !node.text) return false;
-
-	const $from = selection.$from;
-	const $to = selection.$to;
-
-	const start = nodePos + 1;
-	const end = start + node.text.length;
-
-	return $from.pos >= start && $to.pos <= end;
-}
 
 interface PanelProps {
 	top: number;
@@ -47,39 +33,39 @@ const initPanelProps: PanelProps = {
 export function AttributePanel() {
 	const [position, setPosition] = useState(initPanelProps);
 	const state = useEditorState();
-	const { activeNode: activeNodeBlock, position: activeNodeBlockPosition } = useEditorContext();
+	const {
+		activeNode,
+		position: activeNodePosition,
+		setActiveNode,
+		setPosition: setActiveNodePosition,
+	} = useEditorContext();
 
-	const activeMark = useMemo(() => {
-		const nodesWithMarks: { node: Node; pos: number }[] = [];
-		state.doc.descendants((node, pos) => {
-			const isInline = !node.type.isBlock;
-			const hasMarks = !!node.marks.length;
-			const isMath = node.type.name === "math_inline";
-			if (isInline && (hasMarks || isMath)) {
-				/* If it's an inline node with marks OR is inline math */
-				if (isCursorInsideMark(state, pos)) {
-					nodesWithMarks.push({ node, pos });
-				}
-			}
-		});
-		return nodesWithMarks.length ? nodesWithMarks[0] : null;
+	useEditorEffect(() => {
+		const node = state.selection.$from.nodeAfter;
+
+		if (!node) {
+			return;
+		}
+
+		// console.log({ node });
+		// if (!node.text || !node.marks.length) {
+		// 	setActiveNode(null);
+		// 	return;
+		// }
+
+		setActiveNode(node);
+		setActiveNodePosition(state.selection.$from.pos);
 	}, [state]);
-
-	const activeNode = useMemo(() => {
-		return activeNodeBlock
-			? { node: activeNodeBlock, pos: activeNodeBlockPosition }
-			: activeMark;
-	}, [activeNodeBlock, activeNodeBlockPosition, activeMark]);
 
 	useEditorEffect(
 		(view) => {
 			if (activeNode) {
-				const coords = view.coordsAtPos(activeNode.pos);
+				const coords = view.coordsAtPos(activeNodePosition);
 				setPosition({
 					...position,
-					top: coords.top,
-					left: coords.left,
-					right: 12,
+					top: coords.top - 17,
+					left: coords.left - 6,
+					right: -250,
 				});
 				setTimeout(() => {
 					setHeight(300);
@@ -88,7 +74,7 @@ export function AttributePanel() {
 				setHeight(0);
 			}
 		},
-		[state.selection.anchor, activeNode]
+		[activeNode, activeNodePosition]
 	);
 
 	const updateMarkAttr = useEditorEventCallback(
@@ -96,7 +82,7 @@ export function AttributePanel() {
 			if (!view || !activeNode) return;
 			const markToReplace = nodeMarks[index];
 			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
-				...(node?.marks ?? []),
+				...(activeNode?.marks ?? []),
 			];
 			newMarks[index].attrs[attrKey] = value;
 
@@ -111,8 +97,8 @@ export function AttributePanel() {
 
 			view.dispatch(
 				view.state.tr.addMark(
-					activeNode.pos,
-					activeNode.pos + (node.nodeSize || 0),
+					activeNodePosition,
+					activeNodePosition + (activeNode.nodeSize || 0),
 					newMark
 				)
 			);
@@ -123,10 +109,10 @@ export function AttributePanel() {
 		if (!view || !activeNode) return;
 		view.dispatch(
 			view.state.tr.setNodeMarkup(
-				activeNode.pos,
-				node.type,
-				{ ...node.attrs, [attrKey]: value },
-				node.marks
+				activeNodePosition,
+				activeNode.type,
+				{ ...activeNode.attrs, [attrKey]: value },
+				activeNode.marks
 			)
 		);
 	});
@@ -135,10 +121,10 @@ export function AttributePanel() {
 		if (!view || !activeNode) return;
 		view.dispatch(
 			view.state.tr.setNodeMarkup(
-				activeNode.pos,
-				node.type,
-				{ ...node.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
-				node.marks
+				activeNodePosition,
+				activeNode.type,
+				{ ...activeNode.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
+				activeNode.marks
 			)
 		);
 	});
@@ -170,13 +156,16 @@ export function AttributePanel() {
 	if (!activeNode) {
 		return null;
 	}
-	const node = activeNode.node;
-	const nodeAttrs = node?.attrs || {};
-	const nodeMarks = node?.marks || [];
+	const nodeAttrs = activeNode.attrs || {};
+	const nodeMarks = activeNode.marks || [];
+
+	if (Object.keys(nodeAttrs).length === 0 && nodeMarks.length === 0) {
+		return null;
+	}
 
 	// Marks will automatically show names, so it is only the 'inline' types
 	// that are not marks that need to be specifically rendered
-	const showName = node?.type?.name === "math_inline";
+	const showName = activeNode?.type?.name === "math_inline";
 
 	return (
 		<>
@@ -204,7 +193,9 @@ export function AttributePanel() {
 				}}
 			>
 				<div className="text-sm">Attributes</div>
-				{showName ? <div className="mt-4 text-sm font-bold">{node.type?.name}</div> : null}
+				{showName ? (
+					<div className="mt-4 text-sm font-bold">{activeNode.type?.name}</div>
+				) : null}
 				{Object.keys(nodeAttrs).map((attrKey) => {
 					if (attrKey === "data") {
 						return null;
@@ -215,7 +206,7 @@ export function AttributePanel() {
 							<Input
 								className={inputClass}
 								type="text"
-								value={nodeAttrs[attrKey] || ""}
+								defaultValue={nodeAttrs[attrKey] || ""}
 								onChange={(evt) => {
 									updateAttr(attrKey, evt.target.value);
 								}}

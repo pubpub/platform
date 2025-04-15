@@ -71,18 +71,23 @@ export default function ContextEditor(props: ContextEditorProps) {
 	);
 
 	return (
-		<ProseMirror
-			state={editorState}
-			dispatchTransaction={(tr) => {
-				setEditorState((s) => s.apply(tr));
-			}}
+		<div
+			id="context-editor-container"
+			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""}`}
 		>
-			<EditorContextProvider activeNode={null} position={0}>
-				<>
-					<ProseMirrorDoc />
-					<AttributePanel />
-				</>
-			</EditorContextProvider>
-		</ProseMirror>
+			<ProseMirror
+				state={editorState}
+				dispatchTransaction={(tr) => {
+					setEditorState((s) => s.apply(tr));
+				}}
+			>
+				<EditorContextProvider activeNode={null} position={0}>
+					<>
+						<ProseMirrorDoc />
+						<AttributePanel />
+					</>
+				</EditorContextProvider>
+			</ProseMirror>
+		</div>
 	);
 }

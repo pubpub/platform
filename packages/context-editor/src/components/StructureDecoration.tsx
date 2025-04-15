@@ -60,7 +60,6 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 		const isBlock = node.isBlock;
 
 		if (!isBlock) {
-			// todo?
 			return null;
 		}
 
