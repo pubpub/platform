@@ -26,6 +26,8 @@ export const env = createEnv({
 		 */
 		CACHE_LOG: z.string().optional(),
 		DATABASE_URL: z.string().url(),
+		ENV_NAME: z.string().optional(),
+		FLAGS: flagsSchema,
 		KYSELY_DEBUG: z.string().optional(),
 		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
 		LOG_LEVEL: z.enum(["benchmark", "debug", "info", "warn", "error"]).optional(),
@@ -47,7 +49,6 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
-		FLAGS: flagsSchema,
 	},
 	client: {},
 	experimental__runtimeEnv: {
