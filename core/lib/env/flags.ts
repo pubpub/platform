@@ -2,6 +2,21 @@ import { z, ZodError } from "zod";
 
 import { actionSchema } from "db/public";
 
+type FlagSchema = z.infer<typeof flagSchema>;
+type FlagName = FlagSchema[0];
+type FlagArgs<F extends FlagName> = Extract<FlagSchema, [F, unknown]>[1];
+
+class Flags {
+	#flags;
+	constructor(flags: FlagSchema[]) {
+		this.#flags = new Map(flags as [string, unknown][]);
+	}
+	get<F extends FlagName>(flagName: F): FlagArgs<F> {
+		return (this.#flags.get(flagName) ??
+			flagSchema.parse([flagName, undefined])[1]) as FlagArgs<F>;
+	}
+}
+
 const flagStateToBoolean = (flagState: string, ctx: z.RefinementCtx) => {
 	switch (flagState) {
 		case "on":
@@ -40,7 +55,6 @@ const flagSchema = z.union([
 
 export const flagsSchema = z
 	.string()
-	.optional()
 	.transform((s) => (s ? s.split(",") : []))
 	.transform((flagStrings, ctx) => {
 		const parsedFlags: FlagSchema[] = [];
@@ -58,22 +72,6 @@ export const flagsSchema = z
 				}
 			}
 		}
-		return parsedFlags;
-	});
-
-type FlagSchema = z.infer<typeof flagSchema>;
-type FlagName = FlagSchema[0];
-type FlagArgs<F extends FlagName> = Extract<FlagSchema, [F, unknown]>[1];
-
-class Flags {
-	#flags;
-	constructor(flags: FlagSchema[]) {
-		this.#flags = new Map(flags as [string, unknown][]);
-	}
-	get<F extends FlagName>(flagName: F): FlagArgs<F> {
-		return (this.#flags.get(flagName) ??
-			flagSchema.parse([flagName, undefined])[1]) as FlagArgs<F>;
-	}
-}
-
-export const createFlags = (flags: FlagSchema[]) => new Flags(flags);
+		return new Flags(parsedFlags);
+	})
+	.optional();

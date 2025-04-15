@@ -3,7 +3,7 @@ import type { ZodTypeAny } from "zod";
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-import { createFlags, flagsSchema } from "./flags";
+import { flagsSchema } from "./flags";
 
 const selfHostedOptional = (schema: ZodTypeAny) => {
 	return process.env.SELF_HOSTED ? schema.optional() : schema;
@@ -47,7 +47,7 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
-		FLAGS: flagsSchema.transform(createFlags),
+		FLAGS: flagsSchema,
 	},
 	client: {},
 	experimental__runtimeEnv: {
