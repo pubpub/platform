@@ -1,4 +1,4 @@
-import { describe, expect, it, vitest } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public";
 
@@ -67,16 +67,6 @@ const pubTriggerTestSeed = async () => {
 		forms: {},
 	});
 };
-
-vitest.mock("~/lib/env/env", async () => {
-	const { env } = await import("~/lib/env/env");
-	return {
-		env: {
-			...env,
-			ENV: new Map([["disabled-actions", []]]),
-		},
-	};
-});
 
 describe("runActionInstance", () => {
 	it("should be able to successfully run the most simple action", async () => {
