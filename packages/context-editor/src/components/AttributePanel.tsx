@@ -1,7 +1,6 @@
-import type { Mark, Node } from "prosemirror-model";
-import type { EditorState } from "prosemirror-state";
+import type { Mark } from "prosemirror-model";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
 	useEditorEffect,
 	useEditorEventCallback,
@@ -32,6 +31,7 @@ const initPanelProps: PanelProps = {
 
 export function AttributePanel() {
 	const [position, setPosition] = useState(initPanelProps);
+	const [height, setHeight] = useState(0);
 	const state = useEditorState();
 	const {
 		activeNode,
@@ -47,12 +47,6 @@ export function AttributePanel() {
 			return;
 		}
 
-		// console.log({ node });
-		// if (!node.text || !node.marks.length) {
-		// 	setActiveNode(null);
-		// 	return;
-		// }
-
 		setActiveNode(node);
 		setActiveNodePosition(state.selection.$from.pos);
 	}, [state]);
@@ -60,12 +54,13 @@ export function AttributePanel() {
 	useEditorEffect(
 		(view) => {
 			if (activeNode) {
+				const viewClientRect = view.dom.getBoundingClientRect();
 				const coords = view.coordsAtPos(activeNodePosition);
 				setPosition({
 					...position,
-					top: coords.top - 17,
-					left: coords.left - 6,
-					right: -250,
+					top: coords.top - 1 - viewClientRect.top,
+					left: coords.left - viewClientRect.left,
+					right: -275,
 				});
 				setTimeout(() => {
 					setHeight(300);
@@ -129,27 +124,6 @@ export function AttributePanel() {
 		);
 	});
 
-	/* Set as init position and then keep track of state here, while syncing 
-	so the panel doesn't become out of sync with doc (only an issue if values are shown
-	and edited elsewhere */
-	const [height, setHeight] = useState(0);
-	// useEffect(() => {
-	// 	if (panelPosition.top === 0) {
-	// 		setPosition(panelPosition);
-	// 		setHeight(0);
-	// 	} else {
-	// 		const newPosition = { ...position };
-	// 		newPosition.top = panelPosition.top;
-	// 		newPosition.left = panelPosition.left;
-	// 		setPosition(newPosition);
-	// 		setTimeout(() => {
-	// 			setPosition({ ...panelPosition });
-	// 		}, 0);
-	// 		setTimeout(() => {
-	// 			setHeight(300);
-	// 		}, animationTimeMS);
-	// 	}
-	// }, [panelPosition]);
 	const labelClass = "font-normal text-xs";
 	const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
 

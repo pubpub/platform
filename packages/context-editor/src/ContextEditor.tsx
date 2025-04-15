@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
+import type { ForwardRefExoticComponent, RefAttributes } from "react";
+
+import React, { forwardRef, memo, useMemo, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
@@ -31,9 +34,9 @@ export interface ContextEditorProps {
 	onChange: (
 		state: any
 	) => void /* Function that passes up editorState so parent can handle onSave, etc */;
-	atomRenderingComponent: React.ComponentType<{
-		nodeProp: any;
-	}> /* A react component that is given the ContextAtom pubtype and renders it accordingly */;
+	atomRenderingComponent: ForwardRefExoticComponent<
+		NodeViewComponentProps & RefAttributes<any>
+	> /* A react component that is given the ContextAtom pubtype and renders it accordingly */;
 	hideMenu?: boolean;
 	upload: (fileName: string) => Promise<string | { error: string }>;
 }
@@ -54,10 +57,13 @@ const initSuggestProps: SuggestProps = {
 
 export default function ContextEditor(props: ContextEditorProps) {
 	const Renderer = useMemo(() => {
-		return () => {
+		return forwardRef<HTMLDivElement, NodeViewComponentProps>(function Paragraph(
+			{ children, nodeProps, ...rest },
+			ref
+		) {
 			const AtomRenderingComponent = props.atomRenderingComponent;
-			return <AtomRenderingComponent nodeProp={undefined} />;
-		};
+			return <AtomRenderingComponent ref={ref} nodeProps={nodeProps} {...rest} />;
+		});
 	}, [props.atomRenderingComponent]);
 
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
@@ -79,6 +85,9 @@ export default function ContextEditor(props: ContextEditorProps) {
 				state={editorState}
 				dispatchTransaction={(tr) => {
 					setEditorState((s) => s.apply(tr));
+				}}
+				nodeViews={{
+					contextAtom: Renderer,
 				}}
 			>
 				<EditorContextProvider activeNode={null} position={0}>
