@@ -38,8 +38,6 @@ export default async function Page({
 	if (user) {
 		if (user.memberships.some((m) => m.communityId === community.id)) {
 			redirect(redirectTo ?? `/c/${community.slug}/stages`);
-			// TODO: redirect to wherever they were redirected to before signing up
-			throw new Error("User is already member of community");
 		}
 
 		// TODO: figure this out based on the invite
