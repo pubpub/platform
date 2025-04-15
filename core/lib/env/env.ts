@@ -56,5 +56,3 @@ export const env = createEnv({
 	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,
 });
-
-// export const flags = createFlags(env.FLAGS);

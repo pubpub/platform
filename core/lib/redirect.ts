@@ -1,4 +1,4 @@
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 
 export const createRedirectUrl = (redirectTo: string, searchParams?: Record<string, string>) => {
 	// it's a full url, just redirect them there
