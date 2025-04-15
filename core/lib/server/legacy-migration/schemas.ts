@@ -455,5 +455,7 @@ export const legacyExportSchema = z.object({
 	collections: z.array(collection),
 	pages: z.array(pageSchema),
 	// probably a good idea to just not parse the pubs, it might be too much
-	pubs: z.custom<z.infer<typeof pubSchema>[]>(),
+	pubs: z.custom<LegacyPub[]>(),
 });
+
+export type LegacyPub = z.infer<typeof pubSchema>;

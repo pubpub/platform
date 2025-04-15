@@ -1,16 +1,22 @@
 import { writeFile } from "fs/promises";
 
+import { baseSchema } from "context-editor/schemas";
+import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
-import { z } from "zod";
+import pMap from "p-map";
 
 import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
+import type { LegacyPub } from "./schemas";
 import { db } from "~/kysely/database";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
 import { autoRevalidate } from "../cache/autoRevalidate";
-import { maybeWithTrx } from "../pub";
+import { createDefaultForm } from "../form";
+import { maybeWithTrx } from "../maybeWithTrx";
+import { PubOp } from "../pub-op";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
 import { legacyExportSchema, pubSchema } from "./schemas";
@@ -38,8 +44,8 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Description: { schemaName: CoreSchemaType.String },
 	Abstract: { schemaName: CoreSchemaType.String },
 	License: { schemaName: CoreSchemaType.String },
-	PubContent: { schemaName: CoreSchemaType.String },
-	DOI: { schemaName: CoreSchemaType.String },
+	PubContent: { schemaName: CoreSchemaType.RichText },
+	DOI: { schemaName: CoreSchemaType.URL },
 	"DOI Suffix": { schemaName: CoreSchemaType.String },
 	URL: { schemaName: CoreSchemaType.URL },
 	"PDF Download Displayname": { schemaName: CoreSchemaType.String },
@@ -67,7 +73,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Citations: { schemaName: CoreSchemaType.String, relation: true },
 
 	ConnectedPubs: { schemaName: CoreSchemaType.String, relation: true },
-	Versions: { schemaName: CoreSchemaType.String, relation: true },
+	Versions: { schemaName: CoreSchemaType.Number, relation: true },
 	Discussions: { schemaName: CoreSchemaType.String, relation: true },
 	"Version Number": { schemaName: CoreSchemaType.Number },
 	"Full Name": { schemaName: CoreSchemaType.String },
@@ -137,10 +143,12 @@ export const createCorrectPubFields = async (
 	},
 	trx = db
 ) => {
-	const { fields } = await getPubFields({
-		communityId: community.id,
-		trx,
-	}).executeTakeFirstOrThrow();
+	const { fields } = await getPubFields(
+		{
+			communityId: community.id,
+		},
+		trx
+	).executeTakeFirstOrThrow();
 
 	const existingFields = Object.values(fields);
 
@@ -295,6 +303,15 @@ export const createCorrectPubTypes = async (
 	return pubTypesToCreate;
 };
 
+type LegacyStructure = {
+	[K in keyof typeof REQUIRED_LEGACY_PUB_TYPES]: PubTypes & {
+		fields: Record<
+			keyof (typeof REQUIRED_LEGACY_PUB_TYPES)[K]["fields"],
+			PubFields & { isTitle: boolean }
+		>;
+	};
+};
+
 export const createLegacyStructure = async (
 	{
 		community,
@@ -305,7 +322,7 @@ export const createLegacyStructure = async (
 		};
 	},
 	trx = db
-) => {
+): Promise<LegacyStructure> => {
 	const [fieldsToCreate, pubTypesToCreate] = await Promise.all([
 		createCorrectPubFields({ community }, trx),
 		createCorrectPubTypes({ community }, trx),
@@ -376,12 +393,34 @@ export const createLegacyStructure = async (
 							"created_fields.id"
 						)
 						.selectAll("created_fields")
+						.select("created_pub_type_to_fields.isTitle as isTitle")
+						.select(sql<null>`null`.as("schema"))
 						.whereRef("created_pub_type_to_fields.B", "=", "created_pub_types.id")
 				).as("fields"),
 			])
 	).execute();
 
-	return result;
+	for (const pubType of result) {
+		await createDefaultForm(
+			{
+				communityId: community.id,
+				pubType,
+			},
+			trx
+		);
+	}
+
+	const output = Object.fromEntries(
+		result.map((r) => [
+			r.name,
+			{
+				...r,
+				fields: Object.fromEntries(r.fields.map(({ schema, ...f }) => [f.name, f])),
+			},
+		])
+	) as LegacyStructure;
+
+	return output;
 };
 
 export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) => {
@@ -406,54 +445,54 @@ export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) 
 	}
 
 	// delete pubs
-	await trx
-		.deleteFrom("pubs")
-		.where(
+	await autoRevalidate(
+		trx.deleteFrom("pubs").where(
 			"pubTypeId",
 			"in",
 			legacyPubTypes.map((pt) => pt.id)
 		)
-		.execute();
+	).execute();
 	// first delete forms
-	await trx
-		.deleteFrom("forms")
-		.where("communityId", "=", community.id)
-		.where(
-			"pubTypeId",
-			"in",
-			legacyPubTypes.map((pt) => pt.id)
-		)
-		.execute();
+	await autoRevalidate(
+		trx
+			.deleteFrom("forms")
+			.where("communityId", "=", community.id)
+			.where(
+				"pubTypeId",
+				"in",
+				legacyPubTypes.map((pt) => pt.id)
+			)
+	).execute();
 
 	// delete pub types
-	await trx
-		.deleteFrom("pub_types")
-		.where(
+	await autoRevalidate(
+		trx.deleteFrom("pub_types").where(
 			"id",
 			"in",
 			legacyPubTypes.map((pt) => pt.id)
 		)
-		.execute();
+	).execute();
 	// delete pub fields
 	// this may not work, because they might be used by other pub types
 	for (const pubType of legacyPubTypes) {
 		for (const field of pubType.fields) {
 			try {
-				await trx
-					.deleteFrom("pub_fields")
-					.where("communityId", "=", community.id)
-					.where("slug", "=", field.slug)
-					// where field is not used in any value
-					.where((eb) =>
-						eb.not(
-							eb.exists(
-								eb
-									.selectFrom("pub_values")
-									.whereRef("pub_values.fieldId", "=", "pub_fields.id")
+				await autoRevalidate(
+					trx
+						.deleteFrom("pub_fields")
+						.where("communityId", "=", community.id)
+						.where("slug", "=", field.slug)
+						// where field is not used in any value
+						.where((eb) =>
+							eb.not(
+								eb.exists(
+									eb
+										.selectFrom("pub_values")
+										.whereRef("pub_values.fieldId", "=", "pub_fields.id")
+								)
 							)
 						)
-					)
-					.execute();
+				).execute();
 			} catch (error) {
 				logger.error(`Did not delete field, ${field.slug}`);
 				// rethrow, bc the transaction will be aborted anyway
@@ -467,7 +506,12 @@ export const createPubs = async (
 	{
 		legacyCommunity,
 		community,
-	}: { legacyCommunity: { slug: string }; community: { id: CommunitiesId } },
+		legacyStructure,
+	}: {
+		legacyCommunity: { slug: string };
+		community: { id: CommunitiesId };
+		legacyStructure: LegacyStructure;
+	},
 	trx = db
 ) => {
 	const legacyPubs = await getLegacyCommunity(legacyCommunity.slug);
@@ -475,20 +519,208 @@ export const createPubs = async (
 	// console.log(legacyPubs.collections);
 	await writeFile(
 		"lib/server/legacy-migration/archive.json",
-		JSON.stringify(
-			{
-				community: legacyPubs.community,
-				pages: legacyPubs.pages,
-				collections: legacyPubs.collections,
-			},
-			null,
-			2
-		)
+		JSON.stringify(legacyPubs, null, 2)
 	);
 	const parsed = legacyExportSchema.parse(legacyPubs);
 
+	const journalArticles = await createJournalArticles(
+		{
+			community: { id: community.id },
+			legacyPubs: parsed.pubs,
+			legacyStructure,
+		},
+		trx
+	);
+
+	// console.log(journalArticles);
+
 	// eslint-disable-next-line no-console
 	// console.dir(legacyPubs, { depth: null });
+};
+
+// const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
+// 	console.dir(doc, { depth: 4 });
+// 	const base = baseSchema.nodeFromJSON(doc);
+
+// 	// create replacement nodes based on whether original was inline or block
+// 	const createReplacementNode = (node: any) => {
+// 		const isInline = node.type.isInline;
+// 		const text = "<unsupported node>";
+
+// 		if (isInline) {
+// 			return baseSchema.text(text);
+// 		}
+
+// 		return baseSchema.nodes.paragraph.create(null, baseSchema.text(text));
+// 	};
+
+// 	let pos = 0;
+// 	// walk through all nodes in document
+// 	base.descendants((node, nodePos) => {
+// 		console.dir(node);
+// 		if (!baseSchema.nodes[node.type.name]) {
+// 			const replacementNode = createReplacementNode(node);
+// 			const slice = new Slice(
+// 				Fragment.from(replacementNode),
+// 				0,
+// 				replacementNode.content.size
+// 			);
+// 			base.replace(nodePos, nodePos + node.nodeSize, slice);
+// 		}
+// 		return true;
+// 	});
+
+// 	return base;
+// };
+
+const unsupportedNodes = {
+	inline: ["citation", "footnote", "hard_break"],
+	block: ["iframe"],
+} as const;
+
+const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
+	// helper to check if node is supported
+	const isNodeSupported = (node: any) => {
+		return node && node.type && baseSchema.nodes[node.type];
+	};
+
+	// create replacement nodes based on whether original was inline or block
+	const createReplacementNode = (node: any) => {
+		// infer if node was inline based on its structure and parent
+		const isInline =
+			unsupportedNodes.inline.includes(node.type) || (node.marks && node.marks.length > 0);
+
+		const base = {
+			type: isInline ? "text" : "paragraph",
+		} as {
+			type: "text" | "paragraph";
+			text?: string;
+			content?: {
+				type: "text";
+				text: string;
+			}[];
+		};
+
+		if (isInline) {
+			base.text = "!unsupported node!";
+		} else {
+			base.content = [
+				{
+					type: "text",
+					text: "!unsupported node!",
+				},
+			];
+		}
+
+		return base;
+	};
+
+	// mutably walk and transform the tree
+	const visitNode = (node: any) => {
+		if (!node) {
+			return;
+		}
+		// handle content array
+		if (node.content && Array.isArray(node.content)) {
+			// mutably replace unsupported nodes in content array
+			for (let i = 0; i < node.content.length; i++) {
+				const child = node.content[i];
+
+				if (!isNodeSupported(child)) {
+					// replace unsupported node with placeholder
+					node.content[i] = createReplacementNode(child);
+				} else {
+					// recursively visit supported nodes
+					visitNode(child);
+				}
+			}
+		}
+
+		// handle marks array if present
+		if (node.marks && Array.isArray(node.marks)) {
+			// filter out unsupported marks
+			node.marks = node.marks.filter((mark) => baseSchema.marks[mark.type]);
+		}
+
+		return node;
+	};
+
+	// start walking from root
+	return visitNode(doc);
+};
+
+const createJournalArticles = async (
+	{
+		community: { id: communityId },
+		legacyPubs,
+		legacyStructure,
+	}: {
+		community: { id: CommunitiesId };
+		legacyPubs: LegacyPub[];
+		legacyStructure: LegacyStructure;
+	},
+	trx = db
+) => {
+	const journalArticleType = legacyStructure["Journal Article"];
+	const jaFields = journalArticleType.fields;
+	const versionType = legacyStructure["Version"];
+	const versionFields = versionType.fields;
+
+	// console.log(journalArticleType, versionType);
+
+	return pMap(
+		legacyPubs,
+		async (pub) => {
+			let op = PubOp.create({
+				communityId,
+				lastModifiedBy: createLastModifiedBy("system"),
+				pubTypeId: legacyStructure["Journal Article"].id,
+				trx,
+			}).set({
+				[jaFields["Legacy Id"].slug]: pub.id,
+				[jaFields.Title.slug]: pub.title,
+				[jaFields.Slug.slug]: pub.slug,
+				[jaFields.PubContent.slug]: filterOutAsOfYetUnsupportedProsemirrorNodes(
+					pub.releases?.at(-1)?.doc?.content!
+				),
+				[jaFields["Publication Date"].slug]:
+					pub.customPublishedAt ?? pub.releases?.[0]?.createdAt,
+			});
+			// .relate(
+			// 	jaFields.Versions.slug,
+			// 	pub.releases.map((r, i) => ({
+			// 		value: i + 1,
+			// 		target: (op) =>
+			// 			op
+			// 				.create({
+			// 					pubTypeId: legacyStructure["Version"].id,
+			// 				})
+			// 				.set({
+			// 					[versionFields["Version Number"].slug]: i + 1,
+			// 					[versionFields.Description.slug]: r.noteText ?? "",
+			// 					[versionFields["PubContent"].slug]: r.doc?.content!,
+			// 					[versionFields["Publication Date"].slug]: r.createdAt,
+			// 				}),
+			// 	}))
+			// )
+
+			if (pub.description) {
+				op = op.set(jaFields.Description.slug, pub.description);
+			}
+
+			if (pub.doi) {
+				op = op.set(
+					jaFields.DOI.slug,
+					URL.canParse(pub.doi) ? pub.doi : `https://doi.org/${pub.doi}`
+				);
+			}
+
+			return op.execute();
+		},
+		{
+			concurrency: 20,
+		}
+	);
 };
 
 export const importFromLegacy = async (
@@ -501,7 +733,10 @@ export const importFromLegacy = async (
 
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
-		const legacyPubs = await createPubs({ legacyCommunity, community: currentCommunity }, trx);
+		const legacyPubs = await createPubs(
+			{ legacyCommunity, community: currentCommunity, legacyStructure },
+			trx
+		);
 
 		return {
 			legacyStructure,
