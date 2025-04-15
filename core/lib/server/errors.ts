@@ -2,11 +2,13 @@ import type { ErrorHttpStatusCode } from "@ts-rest/core";
 import type { TsRestRequest } from "@ts-rest/serverless";
 
 import { NextResponse } from "next/server";
-import { reactErrorHandler } from "@sentry/nextjs";
 import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-rest/serverless";
 import pg from "pg";
 
 import { logger } from "logger";
+
+import type { ClientExceptionOptions } from "../serverActions";
+import { env } from "../env/env";
 
 export class HTTPStatusError<Status extends ErrorHttpStatusCode> extends Error {
 	readonly status: ErrorHttpStatusCode;
@@ -152,9 +154,13 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 	);
 };
 
-export const ApiError = {
+export const ApiError: Record<string, ClientExceptionOptions> = {
 	UNAUTHORIZED: { title: "Unauthorized", error: "You are not authorized to perform this action" },
 	NOT_LOGGED_IN: { error: "Not logged in" },
 	COMMUNITY_NOT_FOUND: { error: "Community not found" },
 	PUB_NOT_FOUND: { error: "Pub not found" },
+	FEATURE_DISABLED: {
+		title: "Feature unavailable",
+		error: `The requested feature is not available in ${env.ENV_NAME ? `the ${env.ENV_NAME}` : "this"} environment`,
+	},
 };

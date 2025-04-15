@@ -65,6 +65,7 @@ jobs:
 
             - uses: pullpreview/action@v5
               with:
+                  dns: preview.pubpub.org
                   label: preview
                   admins: 3mcd
                   compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
