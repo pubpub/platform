@@ -73,10 +73,10 @@ const scopeSummarySchema = z
 
 const collectionMetadataSchema = z.object({
 	doi: z.string().nullish(),
-	url: z.string().nullish(),
 	issue: z.string().nullish(),
 	volume: z.string().nullish(),
 	electronicIssn: z.string().nullish(),
+	url: z.string().nullish(),
 	publicationDate: z.string().nullish(),
 });
 const memberPermissions = ["view", "edit", "manage", "admin"] as const;
@@ -231,37 +231,7 @@ const pageSchema = z.object({
 	communityId: z.string().uuid(),
 });
 
-const collection = z
-	.object({
-		id: z.string(),
-		title: z.string(),
-		slug: z.string(),
-		avatar: z.string().nullable(),
-		isRestricted: z.boolean(),
-		isPublic: z.boolean(),
-		viewHash: z.string(),
-		editHash: z.string(),
-		metadata: collectionMetadataSchema,
-		kind: z.string(),
-		doi: z.string().nullable(),
-		readNextPreviewSize: z.string(),
-		layout: z.object({
-			blocks: layoutBlockSchema.array(),
-			isNarrow: z.boolean(),
-		}),
-		layoutAllowsDuplicatePubs: z.boolean(),
-		pageId: z.string().nullable(),
-		communityId: z.string(),
-		scopeSummaryId: z.string().nullable(),
-		scopeSummary: scopeSummarySchema.nullish(),
-		crossrefDepositRecordId: z.string().nullable(),
-		page: pageSchema.nullish(),
-		members: z.array(memberSchema),
-		attributions: z.array(attributionSchema),
-	})
-	.merge(baseTimestampsSchema);
-
-const collectionPub = z
+const collectionPubSchema = z
 	.object({
 		id: z.string(),
 		pubId: z.string(),
@@ -269,9 +239,75 @@ const collectionPub = z
 		contextHint: z.string().nullable(),
 		rank: z.string(),
 		pubRank: z.string(),
-		collection: collection,
 	})
 	.merge(baseTimestampsSchema);
+
+const collectionSchema = z
+	.discriminatedUnion("kind", [
+		z.object({
+			kind: z.literal("issue"),
+			metadata: z.object({
+				doi: z.string().nullish(),
+				issue: z.string().nullish(),
+				volume: z.string().nullish(),
+				electronicIssn: z.string().nullish(),
+				url: z.string().nullish(),
+				publicationDate: z.string().nullish(),
+			}),
+		}),
+		z.object({
+			kind: z.literal("book"),
+			metadata: z.object({
+				edition: z.string().nullish(),
+				copyrightYear: z.string().nullish(),
+			}),
+		}),
+		z.object({
+			kind: z.literal("conference-proceedings"),
+			metadata: z.object({
+				theme: z.string().nullish(),
+				acronym: z.string().nullish(),
+				location: z.string().nullish(),
+				date: z.string().nullish(),
+			}),
+		}),
+		z.object({
+			kind: z.literal("tag"),
+			metadata: z.object({}).nullish(),
+		}),
+	])
+	.and(
+		z
+			.object({
+				id: z.string(),
+				title: z.string(),
+				slug: z.string(),
+				avatar: z.string().nullable(),
+				isRestricted: z.boolean(),
+				isPublic: z.boolean(),
+				viewHash: z.string(),
+				editHash: z.string(),
+				doi: z.string().nullable(),
+				readNextPreviewSize: z.string(),
+				layout: z.object({
+					blocks: layoutBlockSchema.array(),
+					isNarrow: z.boolean(),
+				}),
+				layoutAllowsDuplicatePubs: z.boolean(),
+				pageId: z.string().nullable(),
+				communityId: z.string(),
+				scopeSummaryId: z.string().nullable(),
+				scopeSummary: scopeSummarySchema.nullish(),
+				crossrefDepositRecordId: z.string().nullable(),
+				page: pageSchema.nullish(),
+				members: z.array(memberSchema),
+				attributions: z.array(attributionSchema),
+				collectionPubs: z.array(collectionPubSchema),
+			})
+			.merge(baseTimestampsSchema)
+	);
+
+export type LegacyCollection = z.infer<typeof collectionSchema>;
 
 export const releaseSchema = z
 	.object({
@@ -321,7 +357,7 @@ export const pubSchema = z
 		outboundEdges: z.array(z.any()),
 		exports: z.array(exportSchema),
 		inboundEdges: z.array(z.any()),
-		collectionPubs: z.array(collectionPub),
+		collectionPubs: z.array(collectionPubSchema),
 	})
 	.merge(baseTimestampsSchema);
 
@@ -452,10 +488,12 @@ export const legacyExportSchema = z.object({
 	community: communitySchema.extend({
 		members: z.array(memberSchema),
 	}),
-	collections: z.array(collection),
+	collections: z.array(collectionSchema),
 	pages: z.array(pageSchema),
 	// probably a good idea to just not parse the pubs, it might be too much
 	pubs: z.custom<LegacyPub[]>(),
 });
 
 export type LegacyPub = z.infer<typeof pubSchema>;
+
+export type LegacyCommunity = z.infer<typeof legacyExportSchema>;

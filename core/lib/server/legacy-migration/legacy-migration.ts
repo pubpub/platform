@@ -1,5 +1,7 @@
 import { writeFile } from "fs/promises";
 
+import type { Node } from "prosemirror-model";
+
 import { baseSchema } from "context-editor/schemas";
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
@@ -9,7 +11,7 @@ import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
-import type { LegacyPub } from "./schemas";
+import type { LegacyCollection, LegacyCommunity, LegacyPub } from "./schemas";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
@@ -22,7 +24,7 @@ import { getAllPubTypesForCommunity } from "../pubtype";
 import { legacyExportSchema, pubSchema } from "./schemas";
 
 const constructLegacyPubsUrl = (legacyCommunitySlug: string) => {
-	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1744712801853/static.json`;
+	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1744820542208/static.json`;
 };
 
 export const getLegacyCommunity = async (legacyCommunitySlug: string) => {
@@ -42,7 +44,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	// should be fileupload
 	Avatar: { schemaName: CoreSchemaType.String },
 	Description: { schemaName: CoreSchemaType.String },
-	Abstract: { schemaName: CoreSchemaType.String },
+	Abstract: { schemaName: CoreSchemaType.RichText },
 	License: { schemaName: CoreSchemaType.String },
 	PubContent: { schemaName: CoreSchemaType.RichText },
 	DOI: { schemaName: CoreSchemaType.URL },
@@ -79,12 +81,42 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	"Full Name": { schemaName: CoreSchemaType.String },
 
 	"Legacy Id": { schemaName: CoreSchemaType.String },
+	"Is Public": { schemaName: CoreSchemaType.Boolean },
+
+	// issue
+	"Issue Number": { schemaName: CoreSchemaType.String },
+	"Issue Volume": { schemaName: CoreSchemaType.String },
+	"E-ISSN": { schemaName: CoreSchemaType.String },
+	"Print Publication Date": { schemaName: CoreSchemaType.DateTime },
+
+	// book
+	ISBN: { schemaName: CoreSchemaType.String },
+	Edition: { schemaName: CoreSchemaType.String },
+	"Copyright Year": { schemaName: CoreSchemaType.String },
+
+	// conference
+	Theme: { schemaName: CoreSchemaType.String },
+	Acronym: { schemaName: CoreSchemaType.String },
+	Location: { schemaName: CoreSchemaType.String },
+	"Held at Date": { schemaName: CoreSchemaType.DateTime },
+
+	// for issues
+	Articles: { schemaName: CoreSchemaType.String, relation: true },
+	// for books
+	Chapters: { schemaName: CoreSchemaType.String, relation: true },
+	// for conference proceedings
+	Presentations: { schemaName: CoreSchemaType.String, relation: true },
+	// for collections
+	Items: { schemaName: CoreSchemaType.String, relation: true },
+
+	Page: { schemaName: CoreSchemaType.Null, relation: true },
 } as const;
 
 export const REQUIRED_LEGACY_PUB_TYPES = {
 	"Journal Article": {
 		fields: {
 			Title: { isTitle: true },
+			Abstract: { isTitle: false },
 			"Legacy Id": { isTitle: false },
 			PubContent: { isTitle: false },
 			DOI: { isTitle: false },
@@ -95,8 +127,16 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			URL: { isTitle: false },
 			Versions: { isTitle: false },
 			Slug: { isTitle: false },
+			ConnectedPubs: { isTitle: false },
 		},
 		description: "A Legacy Journal Article Pub (migrated)",
+	},
+	Page: {
+		fields: {
+			Title: { isTitle: true },
+			"Legacy Id": { isTitle: false },
+		},
+		description: "A Legacy Page Pub (migrated)",
 	},
 	Contributor: {
 		fields: {
@@ -123,6 +163,97 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Avatar: { isTitle: false },
 		},
 		description: "A Discussion on a pub (migrated)",
+	},
+	Issue: {
+		fields: {
+			Title: { isTitle: true },
+			Description: { isTitle: false },
+			"Legacy Id": { isTitle: false },
+			Contributors: { isTitle: false },
+			"Publication Date": { isTitle: false },
+			Avatar: { isTitle: false },
+			Slug: { isTitle: false },
+			"Is Public": { isTitle: false },
+
+			// metadata
+			DOI: { isTitle: false },
+			URL: { isTitle: false },
+			"Issue Number": { isTitle: false },
+			"Issue Volume": { isTitle: false },
+			"E-ISSN": { isTitle: false },
+			"Print Publication Date": { isTitle: false },
+
+			Articles: { isTitle: false },
+
+			Page: { isTitle: false },
+		},
+		description: "An Issue (migrated)",
+	},
+	Book: {
+		fields: {
+			Title: { isTitle: true },
+			Description: { isTitle: false },
+			"Legacy Id": { isTitle: false },
+			Contributors: { isTitle: false },
+			"Publication Date": { isTitle: false },
+			Avatar: { isTitle: false },
+			Slug: { isTitle: false },
+			"Is Public": { isTitle: false },
+
+			// metadata
+			DOI: { isTitle: false },
+			URL: { isTitle: false },
+			ISBN: { isTitle: false },
+			Edition: { isTitle: false },
+			"Copyright Year": { isTitle: false },
+
+			Chapters: { isTitle: false },
+
+			Page: { isTitle: false },
+		},
+		description: "An Issue (migrated)",
+	},
+	"Conference Proceedings": {
+		fields: {
+			Title: { isTitle: true },
+			Description: { isTitle: false },
+			"Legacy Id": { isTitle: false },
+			Contributors: { isTitle: false },
+			"Publication Date": { isTitle: false },
+			Avatar: { isTitle: false },
+			Slug: { isTitle: false },
+			"Is Public": { isTitle: false },
+
+			// metadata
+			DOI: { isTitle: false },
+			URL: { isTitle: false },
+
+			Theme: { isTitle: false },
+			Acronym: { isTitle: false },
+			Location: { isTitle: false },
+			"Held at Date": { isTitle: false },
+
+			Presentations: { isTitle: false },
+
+			Page: { isTitle: false },
+		},
+		description: "An Issue (migrated)",
+	},
+	Collection: {
+		fields: {
+			Title: { isTitle: true },
+			"Legacy Id": { isTitle: false },
+			Contributors: { isTitle: false },
+			"Publication Date": { isTitle: false },
+			Avatar: { isTitle: false },
+			Slug: { isTitle: false },
+			"Is Public": { isTitle: false },
+
+			DOI: { isTitle: false },
+			Items: { isTitle: false },
+			Page: { isTitle: false },
+		},
+		description: "An Issue (migrated)",
 	},
 } as const satisfies Record<
 	string,
@@ -423,7 +554,7 @@ export const createLegacyStructure = async (
 	return output;
 };
 
-export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) => {
+export const cleanUpLegacy = async (community: { id: CommunitiesId; slug: string }, trx = db) => {
 	const legacyPubTypes = await trx
 		.selectFrom("pub_types as pt")
 		.selectAll()
@@ -441,6 +572,7 @@ export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) 
 		.execute();
 
 	if (!legacyPubTypes.length) {
+		logger.debug("No legacy pub types to delete");
 		return;
 	}
 
@@ -474,32 +606,44 @@ export const cleanUpLegacy = async (community: { id: CommunitiesId }, trx = db) 
 	).execute();
 	// delete pub fields
 	// this may not work, because they might be used by other pub types
-	for (const pubType of legacyPubTypes) {
-		for (const field of pubType.fields) {
-			try {
-				await autoRevalidate(
-					trx
-						.deleteFrom("pub_fields")
-						.where("communityId", "=", community.id)
-						.where("slug", "=", field.slug)
-						// where field is not used in any value
-						.where((eb) =>
-							eb.not(
-								eb.exists(
-									eb
-										.selectFrom("pub_values")
-										.whereRef("pub_values.fieldId", "=", "pub_fields.id")
-								)
-							)
-						)
-				).execute();
-			} catch (error) {
-				logger.error(`Did not delete field, ${field.slug}`);
-				// rethrow, bc the transaction will be aborted anyway
-				throw error;
-			}
-		}
-	}
+
+	const fields = await trx
+		.selectFrom("pub_fields")
+		.where("communityId", "=", community.id)
+
+		.selectAll()
+		.where((eb) =>
+			eb.not(
+				eb.exists(
+					eb.selectFrom("pub_values").whereRef("pub_values.fieldId", "=", "pub_fields.id")
+				)
+			)
+		)
+		.execute();
+	console.log("to be deleted", fields);
+
+	await autoRevalidate(
+		trx
+			.deleteFrom("pub_fields")
+			.where("communityId", "=", community.id)
+			.where(
+				"slug",
+				"in",
+				Object.keys(REQUIRED_LEGACY_PUB_FIELDS).map(
+					(slug) => `${community.slug}:${slugifyString(slug)}`
+				)
+			)
+			// where field is not used in any value
+			.where((eb) =>
+				eb.not(
+					eb.exists(
+						eb
+							.selectFrom("pub_values")
+							.whereRef("pub_values.fieldId", "=", "pub_fields.id")
+					)
+				)
+			)
+	).execute();
 };
 
 export const createPubs = async (
@@ -508,34 +652,23 @@ export const createPubs = async (
 		community,
 		legacyStructure,
 	}: {
-		legacyCommunity: { slug: string };
+		legacyCommunity: LegacyCommunity;
 		community: { id: CommunitiesId };
 		legacyStructure: LegacyStructure;
 	},
 	trx = db
 ) => {
-	const legacyPubs = await getLegacyCommunity(legacyCommunity.slug);
-
-	// console.log(legacyPubs.collections);
-	await writeFile(
-		"lib/server/legacy-migration/archive.json",
-		JSON.stringify(legacyPubs, null, 2)
-	);
-	const parsed = legacyExportSchema.parse(legacyPubs);
-
 	const journalArticles = await createJournalArticles(
 		{
 			community: { id: community.id },
-			legacyPubs: parsed.pubs,
+			legacyPubs: legacyCommunity.pubs,
 			legacyStructure,
 		},
 		trx
 	);
+	return journalArticles;
 
 	// console.log(journalArticles);
-
-	// eslint-disable-next-line no-console
-	// console.dir(legacyPubs, { depth: null });
 };
 
 // const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
@@ -574,11 +707,13 @@ export const createPubs = async (
 // };
 
 const unsupportedNodes = {
-	inline: ["citation", "footnote", "hard_break"],
-	block: ["iframe"],
+	citiation: "inline",
+	footnote: "inline",
+	hard_break: "inline",
+	iframe: "block",
 } as const;
 
-const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
+const transformProsemirrorTree = (doc: any) => {
 	// helper to check if node is supported
 	const isNodeSupported = (node: any) => {
 		return node && node.type && baseSchema.nodes[node.type];
@@ -588,7 +723,9 @@ const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
 	const createReplacementNode = (node: any) => {
 		// infer if node was inline based on its structure and parent
 		const isInline =
-			unsupportedNodes.inline.includes(node.type) || (node.marks && node.marks.length > 0);
+			(node.type in unsupportedNodes &&
+				unsupportedNodes[node.type as keyof typeof unsupportedNodes] === "inline") ||
+			(node.marks && node.marks.length > 0);
 
 		const base = {
 			type: isInline ? "text" : "paragraph",
@@ -602,12 +739,12 @@ const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
 		};
 
 		if (isInline) {
-			base.text = "!unsupported node!";
+			base.text = `!unsupported node '${node.type}'!`;
 		} else {
 			base.content = [
 				{
 					type: "text",
-					text: "!unsupported node!",
+					text: `!unsupported node '${node.type}'!`,
 				},
 			];
 		}
@@ -615,39 +752,77 @@ const filterOutAsOfYetUnsupportedProsemirrorNodes = (doc: any) => {
 		return base;
 	};
 
+	let nextParagraphIsAbstract = false;
+	let abstract: Node | undefined;
+
 	// mutably walk and transform the tree
-	const visitNode = (node: any) => {
+	const visitNode = (node: any, depth: number[] = [0]) => {
 		if (!node) {
-			return;
+			return null;
 		}
+
+		if (
+			node.type === "heading" &&
+			depth[1] === 0 &&
+			node.attrs?.level === 1 &&
+			node.content?.[0]?.text === "Abstract" &&
+			node.content?.length === 1
+		) {
+			nextParagraphIsAbstract = true;
+			return null; // delete the heading
+		}
+
 		// handle content array
 		if (node.content && Array.isArray(node.content)) {
-			// mutably replace unsupported nodes in content array
-			for (let i = 0; i < node.content.length; i++) {
-				const child = node.content[i];
+			// filter out null values and transform remaining nodes
+			node.content = node.content
+				.map((child, i) => {
+					if (!isNodeSupported(child)) {
+						return createReplacementNode(child);
+					}
+					return visitNode(child, [...depth, i]);
+				})
+				.filter(Boolean); // remove null values
 
-				if (!isNodeSupported(child)) {
-					// replace unsupported node with placeholder
-					node.content[i] = createReplacementNode(child);
-				} else {
-					// recursively visit supported nodes
-					visitNode(child);
-				}
+			// if content array is empty after filtering, delete the node itself
+			if (node.content.length === 0) {
+				return null;
 			}
 		}
 
 		// handle marks array if present
 		if (node.marks && Array.isArray(node.marks)) {
-			// filter out unsupported marks
 			node.marks = node.marks.filter((mark) => baseSchema.marks[mark.type]);
+		}
+
+		if (nextParagraphIsAbstract && node.type === "paragraph") {
+			nextParagraphIsAbstract = false;
+			if (node.type === "paragraph") {
+				abstract = structuredClone(node);
+				return null; // delete the paragraph after saving it
+			}
 		}
 
 		return node;
 	};
 
 	// start walking from root
-	return visitNode(doc);
+	const result = visitNode(doc);
+
+	return {
+		doc: result,
+		interestingNodes: {
+			abstract,
+		},
+	};
 };
+
+const kindToTypeMap = {
+	issue: "Issue",
+	book: "Book",
+	"conference-proceedings": "Conference Proceedings",
+	tag: "Collection",
+} as const;
 
 const createJournalArticles = async (
 	{
@@ -676,16 +851,34 @@ const createJournalArticles = async (
 				lastModifiedBy: createLastModifiedBy("system"),
 				pubTypeId: legacyStructure["Journal Article"].id,
 				trx,
-			}).set({
-				[jaFields["Legacy Id"].slug]: pub.id,
-				[jaFields.Title.slug]: pub.title,
-				[jaFields.Slug.slug]: pub.slug,
-				[jaFields.PubContent.slug]: filterOutAsOfYetUnsupportedProsemirrorNodes(
-					pub.releases?.at(-1)?.doc?.content!
-				),
-				[jaFields["Publication Date"].slug]:
-					pub.customPublishedAt ?? pub.releases?.[0]?.createdAt,
-			});
+			}).set(
+				{
+					[jaFields["Legacy Id"].slug]: pub.id,
+					[jaFields.Title.slug]: pub.title,
+					[jaFields.Slug.slug]: pub.slug,
+					[jaFields["Publication Date"].slug]:
+						pub.customPublishedAt ?? pub.releases?.[0]?.createdAt,
+				},
+				{
+					ignoreNullish: true,
+				}
+			);
+
+			const content = pub.releases?.at(-1)?.doc?.content!;
+			if (content) {
+				const { doc, interestingNodes } = transformProsemirrorTree(content);
+
+				op = op.set(jaFields.PubContent.slug, doc);
+
+				if (interestingNodes.abstract) {
+					op = op.set(jaFields.Abstract.slug, {
+						type: "doc",
+						content: [interestingNodes.abstract],
+					} as any);
+				}
+
+				// console.log(interestingNodes.abstract);
+			}
 			// .relate(
 			// 	jaFields.Versions.slug,
 			// 	pub.releases.map((r, i) => ({
@@ -722,9 +915,146 @@ const createJournalArticles = async (
 		}
 	);
 };
+const createCollections = async (
+	{
+		community: { id: communityId },
+		legacyCollections,
+		legacyStructure,
+	}: {
+		community: { id: CommunitiesId };
+		legacyCollections: LegacyCollection[];
+		legacyStructure: LegacyStructure;
+	},
+	trx = db
+) => {
+	// console.log(journalArticleType, versionType);
+
+	return pMap(
+		legacyCollections,
+		async (collection) => {
+			const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
+
+			let op = PubOp.create({
+				communityId,
+				lastModifiedBy: createLastModifiedBy("system"),
+				pubTypeId: relevantType.id,
+				trx,
+			}).set(
+				{
+					[relevantType.fields["Legacy Id"].slug]: collection.id,
+					[relevantType.fields.Title.slug]: collection.title,
+					[relevantType.fields.Slug.slug]: collection.slug,
+					[relevantType.fields["DOI"].slug]: collection.doi,
+					[relevantType.fields["Is Public"].slug]: collection.isPublic,
+					[relevantType.fields["Avatar"].slug]: collection.avatar,
+				},
+				{
+					ignoreNullish: true,
+				}
+			);
+
+			if (collection.kind === "issue") {
+				op = op.set(
+					{
+						[legacyStructure["Issue"].fields["Issue Number"].slug]:
+							collection.metadata.issue,
+						[legacyStructure["Issue"].fields["Issue Volume"].slug]:
+							collection.metadata.volume,
+						[legacyStructure["Issue"].fields["E-ISSN"].slug]:
+							collection.metadata.electronicIssn,
+						[legacyStructure["Issue"].fields["Print Publication Date"].slug]:
+							collection.metadata.publicationDate,
+						[legacyStructure["Issue"].fields["URL"].slug]: collection.metadata.url,
+					},
+					{ ignoreNullish: true }
+				);
+
+				op = op.relateByValue(
+					legacyStructure["Issue"].fields["Articles"].slug,
+					collection.collectionPubs.map((cp) => ({
+						value: cp.contextHint ?? "",
+						target: {
+							slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
+							value: cp.pubId,
+						},
+					}))
+				);
+			}
+
+			if (collection.kind === "book") {
+				op = op.set(
+					{
+						[legacyStructure["Book"].fields["Edition"].slug]:
+							collection.metadata.edition,
+						[legacyStructure["Book"].fields["Copyright Year"].slug]:
+							collection.metadata.copyrightYear,
+					},
+					{ ignoreNullish: true }
+				);
+
+				op = op.relateByValue(
+					legacyStructure["Book"].fields["Chapters"].slug,
+					collection.collectionPubs.map((cp) => ({
+						value: cp.contextHint ?? "",
+						target: {
+							slug: legacyStructure["Book"].fields["Legacy Id"].slug,
+							value: cp.pubId,
+						},
+					}))
+				);
+			}
+
+			if (collection.kind === "conference-proceedings") {
+				op = op.set(
+					{
+						[legacyStructure["Conference Proceedings"].fields["Theme"].slug]:
+							collection.metadata.theme,
+						[legacyStructure["Conference Proceedings"].fields["Location"].slug]:
+							collection.metadata.location,
+						[legacyStructure["Conference Proceedings"].fields["Held at Date"].slug]:
+							collection.metadata.date,
+						[legacyStructure["Conference Proceedings"].fields["Acronym"].slug]:
+							collection.metadata.acronym,
+					},
+					{ ignoreNullish: true }
+				);
+
+				op = op.relateByValue(
+					legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
+					collection.collectionPubs.map((cp) => ({
+						value: cp.contextHint ?? "",
+						target: {
+							slug: legacyStructure["Conference Proceedings"].fields["Legacy Id"]
+								.slug,
+							value: cp.pubId,
+						},
+					}))
+				);
+			}
+
+			if (collection.kind === "tag") {
+				op = op.relateByValue(
+					legacyStructure["Collection"].fields["Items"].slug,
+					collection.collectionPubs.map((cp) => ({
+						value: cp.contextHint ?? "",
+						target: {
+							slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
+							value: cp.pubId,
+						},
+					}))
+				);
+			}
+
+			return op.execute();
+		},
+		{
+			concurrency: 20,
+		}
+	);
+};
 
 export const importFromLegacy = async (
-	legacyCommunity: { slug: string },
+	legacyCommunitySlug: string,
 	currentCommunity: { id: CommunitiesId; slug: string },
 	trx = db
 ) => {
@@ -733,14 +1063,38 @@ export const importFromLegacy = async (
 
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
+		const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
+
+		// console.log(legacyPubs.collections);
+		await writeFile(
+			"lib/server/legacy-migration/archive.json",
+			JSON.stringify(legacyCommunity, null, 2)
+		);
+		const parsed = legacyExportSchema.parse(legacyCommunity);
+
 		const legacyPubs = await createPubs(
-			{ legacyCommunity, community: currentCommunity, legacyStructure },
+			{ legacyCommunity: parsed, community: currentCommunity, legacyStructure },
+			trx
+		);
+
+		console.log(
+			"Legacy pub",
+			legacyPubs.find((p) =>
+				p.values.find((v) => v.value === "049a52aa-16cc-4647-9538-cbe4910c9bde")
+			)
+		);
+		const legacyCollections = await createCollections(
+			{
+				community: currentCommunity,
+				legacyCollections: parsed.collections,
+				legacyStructure,
+			},
 			trx
 		);
 
 		return {
 			legacyStructure,
-			legacyPubs,
+			legacyCommunity: parsed,
 		};
 	});
 
