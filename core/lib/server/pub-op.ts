@@ -489,33 +489,70 @@ abstract class BasePubOp {
 	 * Useful for doing imports when you know some other unique value of a Pub other than its Id
 	 */
 	relateByValue(
+		/* The slug on the source pub these pubs should be related by */
 		slug: string,
-		/**
-		 * The value of the relation
-		 */
+		/* The value of the relation */
 		value: PubValue,
+
 		/**
 		 * The target of the relation
 		 *
 		 * The slug is the field of the target pub that has the unique value,
 		 * the value is the value of that field
 		 */
-		target: ValueTarget | ValueTarget[],
+		target: ValueTarget,
 		options?: RelationOptions
+	): this;
+	/**
+	 * Relate to multiple pubs by value instead of PubId
+	 *
+	 * Useful for doing imports when you know some other unique value of a Pub other than its Id
+	 */
+	relateByValue(
+		/* The slug on the source pub these pubs should be related by */
+		slug: string,
+		values: {
+			/* The value of the relation */
+			value: JsonValue;
+			/**
+			 * The target of the relation
+			 *
+			 * The slug is the field of the target pub that has the unique value,
+			 * the value is the value of that field
+			 */
+			target: ValueTarget;
+		}[],
+		options?: RelationOptions
+	): this;
+	relateByValue(
+		slug: string,
+		valueOrValues: PubValue | { value: JsonValue; target: ValueTarget }[],
+		targetOrOptions?: ValueTarget | ValueTarget[] | RelationOptions,
+		maybeOptions?: RelationOptions
 	): this {
 		// for upsert we almost always want to replace existing relations
 		const defaultOptions = this.getMode() === "upsert" ? { replaceExisting: true } : {};
+
+		const isMulti =
+			Array.isArray(valueOrValues) &&
+			valueOrValues.every(
+				(v) => typeof v === "object" && v !== null && "value" in v && "target" in v
+			);
+		const options = isMulti ? maybeOptions : (targetOrOptions as RelationOptions);
+
 		const opts = {
 			...defaultOptions,
 			...options,
 		};
 
-		const targets = Array.isArray(target) ? target : [target];
+		const targets = isMulti
+			? valueOrValues
+			: [{ target: targetOrOptions as ValueTarget, value: valueOrValues as JsonValue }];
 
 		this.commands.push({
 			type: "relateByValue",
 			slug,
-			relations: targets.map((t) => ({ target: { slug: t.slug, value: t.value }, value })),
+			relations: targets as { target: { slug: string; value: PubValue }; value: PubValue }[],
 			options: opts,
 		});
 
