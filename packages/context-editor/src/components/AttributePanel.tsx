@@ -47,13 +47,13 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	 **/
 	useEditorEffect(
 		(view) => {
-			// The attribute panel itself may be focused--don't change the node while it is open
-			if (!view.hasFocus()) {
+			const node = state.selection.$from.nodeAfter;
+			if (!node) {
 				return;
 			}
 
-			const node = state.selection.$from.nodeAfter;
-			if (!node) {
+			// The attribute panel itself may be focused--don't change the node while it is open
+			if (!view.hasFocus() && activeNode && !node.eq(activeNode)) {
 				return;
 			}
 
@@ -124,6 +124,8 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				activeNode.marks
 			)
 		);
+		const updatedNode = view.state.doc.nodeAt(activeNodePosition);
+		setActiveNode(updatedNode);
 	});
 
 	const updateData = useEditorEventCallback((view, attrKey: string, value: string) => {
@@ -136,6 +138,8 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				activeNode.marks
 			)
 		);
+		const updatedNode = view.state.doc.nodeAt(activeNodePosition);
+		setActiveNode(updatedNode);
 	});
 
 	const labelClass = "font-normal text-xs";
@@ -189,7 +193,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 						return null;
 					}
 					return (
-						<div key={attrKey}>
+						<div key={`${attrKey}-${activeNodePosition}`}>
 							<Label className={labelClass}>{attrKey}</Label>
 							<Input
 								className={inputClass}
@@ -205,7 +209,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				{!!nodeMarks.length &&
 					nodeMarks.map((mark, index) => {
 						return (
-							<div key={mark.type.name}>
+							<div key={`${mark.type.name}-${activeNodePosition}`}>
 								<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
 								{Object.keys(mark.attrs).map((attrKey) => {
 									if (attrKey === "data") {
