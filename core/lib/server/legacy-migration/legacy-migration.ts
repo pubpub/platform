@@ -494,7 +494,7 @@ export const createLegacyStructure = async (
 					.insertInto("pub_fields")
 					.values(fieldsToCreate)
 					.onConflict((oc) =>
-						oc.columns(["id"]).doUpdateSet((eb) => ({
+						oc.columns(["slug"]).doUpdateSet((eb) => ({
 							schemaName: eb.ref("excluded.schemaName"),
 							isRelation: eb.ref("excluded.isRelation"),
 							isArchived: false,
@@ -537,7 +537,13 @@ export const createLegacyStructure = async (
 							}))
 						)
 					)
-					.onConflict((oc) => oc.doNothing())
+					.onConflict((oc) =>
+						oc.columns(["A", "B"]).doUpdateSet((eb) => ({
+							A: eb.ref("excluded.A"),
+							B: eb.ref("excluded.B"),
+							isTitle: eb.ref("excluded.isTitle"),
+						}))
+					)
 					.returningAll()
 			)
 			.selectFrom("created_pub_types")
@@ -559,15 +565,35 @@ export const createLegacyStructure = async (
 			])
 	).execute();
 
-	for (const pubType of result) {
+	const existingDefaultForms = await trx
+		.selectFrom("forms")
+		.selectAll()
+		.where("communityId", "=", community.id)
+		.where(
+			"pubTypeId",
+			"in",
+			result.map((r) => r.id)
+		)
+		.where("isDefault", "=", true)
+		.execute();
+
+	pMap(result, async (pubType) => {
+		const existingForm = existingDefaultForms.find((f) => f.pubTypeId === pubType.id);
+
+		if (existingForm) {
+			await autoRevalidate(
+				trx.deleteFrom("forms").where("id", "=", existingForm.id)
+			).executeTakeFirstOrThrow();
+		}
+
 		await createDefaultForm(
 			{
 				communityId: community.id,
 				pubType,
 			},
 			trx
-		);
-	}
+		).executeTakeFirstOrThrow();
+	});
 
 	const output = Object.fromEntries(
 		result.map((r) => [
@@ -874,7 +900,7 @@ const createJournalArticles = async (
 	return pMap(
 		legacyPubs,
 		async (pub) => {
-			let op = PubOp.create({
+			let op = PubOp.upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
 				communityId,
 				lastModifiedBy: createLastModifiedBy("system"),
 				pubTypeId: legacyStructure["Journal Article"].id,
@@ -886,9 +912,17 @@ const createJournalArticles = async (
 					[jaFields.Slug.slug]: pub.slug,
 					[jaFields["Publication Date"].slug]:
 						pub.customPublishedAt ?? pub.releases?.[0]?.createdAt,
+					[jaFields.DOI.slug]: pub.doi
+						? URL.canParse(pub.doi)
+							? pub.doi
+							: `https://doi.org/${pub.doi}`
+						: null,
+
+					[jaFields.Description.slug]: pub.description,
 				},
 				{
 					ignoreNullish: true,
+					deleteExistingValues: true,
 				}
 			);
 
@@ -896,13 +930,23 @@ const createJournalArticles = async (
 			if (content) {
 				const { doc, interestingNodes } = transformProsemirrorTree(content);
 
-				op = op.set(jaFields.PubContent.slug, doc);
+				op = op.set(jaFields.PubContent.slug, doc, {
+					ignoreNullish: true,
+					deleteExistingValues: true,
+				});
 
 				if (interestingNodes.abstract) {
-					op = op.set(jaFields.Abstract.slug, {
-						type: "doc",
-						content: [interestingNodes.abstract],
-					} as any);
+					op = op.set(
+						jaFields.Abstract.slug,
+						{
+							type: "doc",
+							content: [interestingNodes.abstract],
+						} as any,
+						{
+							ignoreNullish: true,
+							deleteExistingValues: true,
+						}
+					);
 				}
 
 				// console.log(interestingNodes.abstract);
@@ -924,17 +968,6 @@ const createJournalArticles = async (
 			// 				}),
 			// 	}))
 			// )
-
-			if (pub.description) {
-				op = op.set(jaFields.Description.slug, pub.description);
-			}
-
-			if (pub.doi) {
-				op = op.set(
-					jaFields.DOI.slug,
-					URL.canParse(pub.doi) ? pub.doi : `https://doi.org/${pub.doi}`
-				);
-			}
 
 			return op.execute();
 		},
@@ -959,12 +992,16 @@ const createPages = async (
 	return pMap(
 		legacyPages,
 		async (page) => {
-			const op = PubOp.create({
-				communityId,
-				lastModifiedBy: createLastModifiedBy("system"),
-				pubTypeId: legacyStructure["Page"].id,
-				trx,
-			}).set(
+			const op = PubOp.upsertByValue(
+				legacyStructure["Page"].fields["Legacy Id"].slug,
+				page.id,
+				{
+					communityId,
+					lastModifiedBy: createLastModifiedBy("system"),
+					pubTypeId: legacyStructure["Page"].id,
+					trx,
+				}
+			).set(
 				{
 					[legacyStructure["Page"].fields["Legacy Id"].slug]: page.id,
 					[legacyStructure["Page"].fields.Title.slug]: page.title,
@@ -1005,7 +1042,7 @@ const createCollections = async (
 		async (collection) => {
 			const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
 
-			let op = PubOp.create({
+			let op = PubOp.upsertByValue(relevantType.fields["Legacy Id"].slug, collection.id, {
 				communityId,
 				lastModifiedBy: createLastModifiedBy("system"),
 				pubTypeId: relevantType.id,
@@ -1025,10 +1062,18 @@ const createCollections = async (
 			);
 
 			if (collection.pageId) {
-				op = op.relateByValue(relevantType.fields["Page"].slug, null, {
-					slug: legacyStructure["Page"].fields["Legacy Id"].slug,
-					value: collection.pageId,
-				});
+				op = op.relateByValue(
+					relevantType.fields["Page"].slug,
+					null,
+					{
+						slug: legacyStructure["Page"].fields["Legacy Id"].slug,
+						value: collection.pageId,
+					},
+					{
+						replaceExisting: true,
+						deleteOrphaned: true,
+					}
+				);
 			}
 
 			if (collection.kind === "issue") {
@@ -1055,7 +1100,11 @@ const createCollections = async (
 							slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
 							value: cp.pubId,
 						},
-					}))
+					})),
+					{
+						replaceExisting: true,
+						deleteOrphaned: true,
+					}
 				);
 			}
 
@@ -1099,14 +1148,20 @@ const createCollections = async (
 
 				op = op.relateByValue(
 					legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
-					collection.collectionPubs.map((cp) => ({
-						value: cp.contextHint ?? "",
-						target: {
-							slug: legacyStructure["Conference Proceedings"].fields["Legacy Id"]
-								.slug,
-							value: cp.pubId,
-						},
-					}))
+					collection.collectionPubs.map(
+						(cp) => ({
+							value: cp.contextHint ?? "",
+							target: {
+								slug: legacyStructure["Conference Proceedings"].fields["Legacy Id"]
+									.slug,
+								value: cp.pubId,
+							},
+						}),
+						{
+							replaceExisting: true,
+							deleteOrphaned: true,
+						}
+					)
 				);
 			}
 
@@ -1119,7 +1174,11 @@ const createCollections = async (
 							slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
 							value: cp.pubId,
 						},
-					}))
+					})),
+					{
+						replaceExisting: true,
+						deleteOrphaned: true,
+					}
 				);
 			}
 
@@ -1137,7 +1196,7 @@ export const importFromLegacy = async (
 	trx = db
 ) => {
 	const result = await maybeWithTrx(trx, async (trx) => {
-		await cleanUpLegacy(currentCommunity, trx);
+		// await cleanUpLegacy(currentCommunity, trx);
 
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
@@ -1153,13 +1212,6 @@ export const importFromLegacy = async (
 		const legacyPubs = await createPubs(
 			{ legacyCommunity: parsed, community: currentCommunity, legacyStructure },
 			trx
-		);
-
-		console.log(
-			"Legacy pub",
-			legacyPubs.find((p) =>
-				p.values.find((v) => v.value === "049a52aa-16cc-4647-9538-cbe4910c9bde")
-			)
 		);
 
 		const legacyPages = await createPages(

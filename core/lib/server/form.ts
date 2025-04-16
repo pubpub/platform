@@ -285,7 +285,7 @@ export const insertForm = (
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
 
-export const createDefaultForm = async (
+export const createDefaultForm = (
 	props: {
 		communityId: CommunitiesId;
 		pubType: GetPubTypesResult[number];
@@ -294,7 +294,7 @@ export const createDefaultForm = async (
 ) => {
 	const pubType = props.pubType;
 
-	return await autoRevalidate(
+	return autoRevalidate(
 		insertForm(
 			pubType,
 			defaultFormName(pubType.name),
@@ -303,5 +303,5 @@ export const createDefaultForm = async (
 			true,
 			trx
 		)
-	).executeTakeFirstOrThrow();
+	);
 };

@@ -181,5 +181,5 @@ export const createPubTypeWithDefaultForm = async (
 			pubType,
 		},
 		trx
-	);
+	).executeTakeFirstOrThrow();
 };
