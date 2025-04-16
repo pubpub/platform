@@ -97,11 +97,12 @@ export default function ContextEditor(props: ContextEditorProps) {
 				nodeViews={{
 					contextAtom: Renderer,
 				}}
+				editable={() => !props.disabled}
 				className={cn("font-serif", props.className)}
 			>
 				<EditorContextProvider activeNode={null} position={0}>
 					<>
-						<MenuBar upload={props.upload} />
+						{props.hideMenu ? null : <MenuBar upload={props.upload} />}
 						<ProseMirrorDoc />
 						<AttributePanel />
 						<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
