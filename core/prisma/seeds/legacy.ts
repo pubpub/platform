@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { defaultMarkdownParser } from "prosemirror-markdown";
 
 import type { CommunitiesId, PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
@@ -7,7 +8,7 @@ import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { seedCommunity } from "../seed/seedCommunity";
 
-export const seedArcadia = async (communityId?: CommunitiesId) => {
+export const seedLegacy = async (communityId?: CommunitiesId) => {
 	const articleSeed = (number = 1_000, asRelation = false) =>
 		Array.from({ length: number }, (_, idx) => {
 			const pub = {
@@ -22,7 +23,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					Description: faker.lorem.paragraph(),
 					Abstract: faker.lorem.paragraphs(2),
 					License: "CC-BY 4.0",
-					PubContent: "Some content",
+					Content: defaultMarkdownParser.parse(faker.lorem.paragraph(1)).toJSON(),
 					URL: "https://www.pubpub.org",
 					"Inline Citation Style": "Author Year",
 					"Citation Style": "APA 7",
@@ -59,7 +60,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 							pub: {
 								pubType: "Table",
 								values: {
-									Caption: "A beautiful table, about things.",
+									Caption: "A beautiful table.",
 									CSV: [],
 								},
 							},
@@ -69,7 +70,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 							pub: {
 								pubType: "Table",
 								values: {
-									Caption: "A table, about things.",
+									Caption: "A glorious table.",
 									CSV: [],
 								},
 							},
@@ -81,7 +82,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 							pub: {
 								pubType: "Pub Image",
 								values: {
-									Caption: "A beautiful image, about things.",
+									Caption: "A beautiful image.",
 								},
 							},
 						},
@@ -93,7 +94,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 								pubType: "ExternalBook",
 								values: {
 									Title: "A Great Book",
-									DOI: "10.82234/arcadia-ad7f-7a6d",
+									DOI: "10.82234/legacy-ad7f-7a6d",
 									Year: "2022",
 								},
 							},
@@ -104,7 +105,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 								pubType: "ExternalJournalArticle",
 								values: {
 									Title: "A Great Journal Article",
-									DOI: "10.82234/arcadia-ad7f-7a6d",
+									DOI: "10.82234/legacy-ad7f-7a6d",
 									Year: "2022",
 								},
 							},
@@ -131,9 +132,9 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 		{
 			community: {
 				id: communityId,
-				slug: "arcadia-research",
-				name: "Arcadia Research",
-				avatar: "https://avatars.githubusercontent.com/u/100431031?s=200&v=4",
+				slug: "legacy",
+				name: "Legacy",
+				avatar: "https://www.pubpub.org/static/logo.png",
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
@@ -146,7 +147,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				Description: { schemaName: CoreSchemaType.String },
 				Abstract: { schemaName: CoreSchemaType.String },
 				License: { schemaName: CoreSchemaType.String },
-				PubContent: { schemaName: CoreSchemaType.String },
+				Content: { schemaName: CoreSchemaType.RichText },
 				DOI: { schemaName: CoreSchemaType.String },
 				"DOI Suffix": { schemaName: CoreSchemaType.String },
 				URL: { schemaName: CoreSchemaType.URL },
@@ -262,7 +263,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					Description: { isTitle: false },
 					Width: { isTitle: false },
 					Privacy: { isTitle: false },
-					PubContent: { isTitle: false },
+					Content: { isTitle: false },
 				},
 				Footer: {
 					Title: { isTitle: true },
@@ -312,7 +313,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					DOI: { isTitle: false },
 					"DOI Suffix": { isTitle: false },
 					URL: { isTitle: false },
-					PubContent: { isTitle: false },
+					Content: { isTitle: false },
 					License: { isTitle: false },
 					Description: { isTitle: false },
 					"Creation Date": { isTitle: false },
@@ -368,15 +369,15 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				},
 			},
 			users: {
-				"arcadia-user-1": {
-					email: "arcadia@pubpub.org",
+				"legacy-user-1": {
+					email: "legacy@pubpub.org",
 					role: MemberRole.admin,
-					password: "pubpub-arcadia",
+					password: "pubpub-legacy",
 				},
 			},
 			stages: {
 				Articles: {
-					members: { "arcadia-user-1": MemberRole.editor },
+					members: { "legacy-user-1": MemberRole.editor },
 				},
 				// these stages are mostly here to provide slightly easier grouping of the relevant pubs
 				Authors: {},
@@ -386,7 +387,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 				Navigations: {},
 				Tags: {},
 				"Stage 2": {
-					members: { "arcadia-user-1": MemberRole.editor },
+					members: { "legacy-user-1": MemberRole.editor },
 				},
 			},
 			stageConnections: {
@@ -399,9 +400,8 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 					pubType: "Site",
 					stage: "Sites",
 					values: {
-						Title: "Arcadia Research",
-						Description:
-							"We’re reimagining scientific publication — welcome to the first draft! Arcadia's research appears here in short pubs and longer project narratives.",
+						Title: "Legacy",
+						Description: "We're reimagining scientific publication.",
 					},
 					relatedPubs: {
 						Header: [
@@ -433,7 +433,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																	values: {
 																		Title: "Home",
 																		"External Link":
-																			"https://arcadia-research.pubpub.org",
+																			"https://legacy-research.pubpub.org",
 																	},
 																},
 															},
@@ -473,7 +473,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																	values: {
 																		Title: "Legal",
 																		"External Link":
-																			"https://arcadia-research.pubpub.org/legal",
+																			"https://legacy-research.pubpub.org/legal",
 																		"Open In New Tab": true,
 																	},
 																},
@@ -494,10 +494,10 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 									pubType: "Journal",
 									stage: "Journals",
 									values: {
-										Title: "Arcadia Research",
-										DOI: "10.82234/arcadia-ad7f-7a6d",
+										Title: "Legacy",
+										DOI: "10.82234/legacy-ad7f-7a6d",
 										ISSN: "2998-4084",
-										Slug: "arcadia-research",
+										Slug: "legacy",
 									},
 									relatedPubs: {
 										Issues: [
@@ -509,8 +509,8 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 													values: {
 														Title: "Issue 1",
 														ISSN: "2998-4084",
-														DOI: "10.82234/arcadia-ad7f-7a6d",
-														Description: "A cool description",
+														DOI: "10.82234/legacy-ad7f-7a6d",
+														Description: "A stimulating description.",
 													},
 													relatedPubs: {
 														Articles: [
@@ -527,13 +527,20 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																			new Date(),
 																		"Creation Date": new Date(),
 																		"Last Edited": new Date(),
-																		Avatar: "https://assets.pubpub.org/yhsu8e81/Arcadia_Pub type_Preview_Result (1)-71721329283073.png",
+																		Avatar: "https://www.pubpub.org/static/logo.png",
 																		Description:
 																			"Inspired by wasps co-opting viral capsids to deliver genes to the caterpillars they parasitize, we looked for capsid-like proteins in other species. We found capsid homologs in ticks and other parasites, suggesting this phenomenon could be wider spread than previously known.",
 																		Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
 																		License: "CC-BY 4.0",
-																		PubContent: "Some content",
-																		DOI: "10.82234/arcadia-14b2-6f27",
+																		Content:
+																			defaultMarkdownParser
+																				.parse(
+																					faker.lorem.paragraph(
+																						6
+																					)
+																				)
+																				.toJSON(),
+																		DOI: "10.82234/legacy-14b2-6f27",
 																		URL: "https://www.pubpub.org",
 																		"Inline Citation Style":
 																			"Author Year",
@@ -618,7 +625,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																						"Table",
 																					values: {
 																						Caption:
-																							"A beautiful table, about things.",
+																							"A beautiful table.",
 																						CSV: [],
 																					},
 																				},
@@ -630,7 +637,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																						"Table",
 																					values: {
 																						Caption:
-																							"A table, about things.",
+																							"A glorious table.",
 																						CSV: [],
 																					},
 																				},
@@ -644,7 +651,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																						"Pub Image",
 																					values: {
 																						Caption:
-																							"A beautiful image, about things.",
+																							"A beautiful image.",
 																					},
 																				},
 																			},
@@ -657,7 +664,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																						"ExternalBook",
 																					values: {
 																						Title: "A Great Book",
-																						DOI: "10.82234/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/legacy-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},
@@ -669,7 +676,7 @@ export const seedArcadia = async (communityId?: CommunitiesId) => {
 																						"ExternalJournalArticle",
 																					values: {
 																						Title: "A Great Journal Article",
-																						DOI: "10.82234/arcadia-ad7f-7a6d",
+																						DOI: "10.82234/legacy-ad7f-7a6d",
 																						Year: "2022",
 																					},
 																				},

@@ -2,8 +2,6 @@
     email someone@example.com # replace with your email
 }
 
-
-
 example.com {
     # keep this if you want your files to be accessible at example.com/assets/*
     handle_path /assets/* {

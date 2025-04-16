@@ -8,7 +8,6 @@ test("PubTitle component includes the pub title", async () => {
 
 	const pub = {
 		id: "b5702ef8-29b9-43ad-866c-4c337f598d88",
-		assigneeId: null,
 		valuesBlob: null,
 		pubTypeId: "e09e894f-b3cf-4e9b-aeaa-48f7cb8c6225",
 		communityId: "03e7a5fd-bdca-4682-9221-3a69992c1f3b",
