@@ -45,16 +45,23 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	 * This determination of the 'activeNode' is prone to bugs. We should figure
 	 * out a better way to do it.
 	 **/
-	useEffect(() => {
-		const node = state.selection.$from.nodeAfter;
+	useEditorEffect(
+		(view) => {
+			// The attribute panel itself may be focused--don't change the node while it is open
+			if (!view.hasFocus()) {
+				return;
+			}
 
-		if (!node) {
-			return;
-		}
+			const node = state.selection.$from.nodeAfter;
+			if (!node) {
+				return;
+			}
 
-		setActiveNode(node);
-		setActiveNodePosition(state.selection.$from.pos);
-	}, [state]);
+			setActiveNode(node);
+			setActiveNodePosition(state.selection.$from.pos);
+		},
+		[state]
+	);
 
 	useEditorEffect(
 		(view) => {
