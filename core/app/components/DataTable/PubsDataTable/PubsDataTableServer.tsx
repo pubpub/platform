@@ -26,7 +26,6 @@ export const PubsDataTableServer = async ({ communityId, userId, searchParams }:
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
-				withLegacyAssignee: true,
 			}
 		),
 	]);

@@ -8,7 +8,6 @@ import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 
-import Assign from "~/app/c/[communitySlug]/stages/components/Assign";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
@@ -246,12 +245,6 @@ export default async function Page(props: {
 							targetId={pubId}
 							readOnly={!canRemoveMember}
 						/>
-					</div>
-					<div>
-						<div className="mb-1 text-lg font-bold">Assignee</div>
-						<div className="ml-4">
-							<Assign members={communityMembers} pub={slimPub} />
-						</div>
 					</div>
 				</div>
 			</div>

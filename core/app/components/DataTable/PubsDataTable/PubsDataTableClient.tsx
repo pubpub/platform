@@ -85,7 +85,6 @@ export const PubsDataTableClient = ({
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
-				withLegacyAssignee: true,
 			},
 			params: {
 				communitySlug: community.slug,
