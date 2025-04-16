@@ -63,7 +63,7 @@ async function createUserMembers({
 }
 
 const legacyId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
-const croccrocId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+const starterId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
 	// do not seed arcadia if the minimal seed flag is set
@@ -73,7 +73,7 @@ async function main() {
 	// eslint-disable-next-line no-restricted-properties
 	const shouldSeedLegacy = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [croccrocId, shouldSeedLegacy ? legacyId : null].filter(
+	const prismaCommunityIds = [starterId, shouldSeedLegacy ? legacyId : null].filter(
 		Boolean
 	) as CommunitiesId[];
 
@@ -85,7 +85,7 @@ async function main() {
 
 	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([seedStarter(croccrocId), legacyPromise]);
+	await Promise.all([seedStarter(starterId), legacyPromise]);
 
 	await Promise.all([
 		createUserMembers({
