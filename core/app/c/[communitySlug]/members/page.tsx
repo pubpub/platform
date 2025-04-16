@@ -10,7 +10,7 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { firstRoleIsHigher } from "~/lib/authorization/rolesRanking";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getMembershipForms } from "~/lib/server/form";
+import { getSimpleForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
@@ -54,7 +54,7 @@ export default async function Page(props: {
 	const page = parseInt(searchParams.page ?? "1", 10);
 	const [members, availableForms] = await Promise.all([
 		selectAllCommunityMemberships({ communityId: community.id }).execute(),
-		getMembershipForms(),
+		getSimpleForms(),
 	]);
 
 	if (!members.length && page !== 1) {

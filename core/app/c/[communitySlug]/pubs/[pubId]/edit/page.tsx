@@ -113,12 +113,12 @@ export default async function Page(props: {
 		return null;
 	}
 
-	const formId = `edit-pub-${pub.id}`;
+	const htmlFormId = `edit-pub-${pub.id}`;
 
 	return (
 		<ContentLayout
 			left={
-				<Button form={formId} type="submit">
+				<Button form={htmlFormId} type="submit">
 					Save
 				</Button>
 			}
@@ -135,7 +135,7 @@ export default async function Page(props: {
 					<PubEditor
 						searchParams={searchParams}
 						pubId={pub.id}
-						formId={formId}
+						htmlFormId={htmlFormId}
 						communityId={community.id}
 					/>
 				</div>

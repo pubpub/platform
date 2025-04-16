@@ -7,9 +7,11 @@ import { defaultComponent } from "schemas";
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
 import {
 	AuthTokenType,
+	Capabilities,
 	ElementType,
 	InputComponent,
 	MemberRole,
+	MembershipType,
 	StructuralFormElement,
 } from "db/public";
 
@@ -337,10 +339,17 @@ export const insertForm = (
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
 
+export type SimpleForm = {
+	id: FormsId;
+	name: string;
+	isDefault: boolean;
+	slug: string;
+};
+
 /**
- * Gets a list of forms for the member add dialog
+ * Gets an array of forms suitable for use in a <select> element (no form_elements included)
  */
-export const getMembershipForms = async (pubTypeId?: PubTypesId, trx = db) => {
+export const getSimpleForms = async (userId?: UsersId, pubTypeId?: PubTypesId, trx = db) => {
 	const community = await findCommunityBySlug();
 	if (!community) {
 		throw new Error("Community not found");
@@ -351,8 +360,101 @@ export const getMembershipForms = async (pubTypeId?: PubTypesId, trx = db) => {
 			.selectFrom("forms")
 			.where("communityId", "=", community.id)
 			.$if(Boolean(pubTypeId), (qb) => qb.where("forms.pubTypeId", "=", pubTypeId!))
-			.select(["forms.name", "forms.isDefault", "forms.id"])
+			.$if(Boolean)
+			.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
 			.orderBy("isDefault desc")
 			.orderBy("updatedAt desc")
 	).execute();
+};
+
+const getAuthorizedUpdateForms = async (userId: UsersId, pubId: PubsId, trx = db) => {
+	trx.with("stage", (db) =>
+		db
+			.selectFrom("PubsInStages")
+			.where("PubsInStages.pubId", "=", pubId)
+			.select("PubsInStages.stageId")
+	)
+		.with("community", (db) =>
+			db.selectFrom("pubs").where("pubs.id", "=", pubId).select("pubs.communityId")
+		)
+		.with("stage_ms", (db) =>
+			db
+				.selectFrom("stage_memberships")
+				.where("stage_memberships.userId", "=", userId)
+				.where((eb) =>
+					eb("stage_memberships.stageId", "in", eb.selectFrom("stage").select("stageId"))
+				)
+				.select(["role", "formId"])
+		)
+		.with("pub_ms", (db) =>
+			db
+				.selectFrom("pub_memberships")
+				.where("pub_memberships.userId", "=", userId)
+				.where("pub_memberships.pubId", "=", pubId)
+				.select(["role", "formId"])
+		)
+		.with("community_ms", (db) =>
+			db
+				.selectFrom("community_memberships")
+				.where("community_memberships.userId", "=", userId)
+				.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
+				.select(["role", "formId"])
+		)
+		.with("capabilities", (db) =>
+			db
+				.selectFrom("membership_capabilities")
+				.where((eb) =>
+					eb.or([
+						eb.and([
+							eb(
+								"membership_capabilities.role",
+								"in",
+								eb.selectFrom("stage_ms").select("role")
+							),
+							eb("membership_capabilities.type", "=", MembershipType.stage),
+						]),
+						eb.and([
+							eb(
+								"membership_capabilities.role",
+								"in",
+								eb.selectFrom("pub_ms").select("role")
+							),
+							eb("membership_capabilities.type", "=", MembershipType.pub),
+						]),
+						eb.and([
+							eb(
+								"membership_capabilities.role",
+								"in",
+								eb.selectFrom("community_ms").select("role")
+							),
+							eb("membership_capabilities.type", "=", MembershipType.community),
+						]),
+					])
+				)
+				// TODO: add editpubwithanyform or editpubwithdefaultform
+				.where((eb) =>
+					eb.or([
+						eb("membership_capabilities.capability", "=", Capabilities.editPubWithForm),
+						eb("membership_capabilities.capability", "=", Capabilities.updatePubValues),
+					])
+				)
+				.select("capability")
+		)
+		.selectFrom("forms")
+		.innerJoin("community", "community.communityId", "forms.communityId")
+		.where((eb) =>
+			eb.or([
+				// Should be withAnyForm
+				eb(
+					eb.val(Capabilities.editPubWithForm),
+					"in",
+					eb.selectFrom("capabilities").select("capability")
+				),
+				eb("forms.id", "in", eb.selectFrom("pub_ms").select("formId")),
+				eb("forms.id", "in", eb.selectFrom("stage_ms").select("formId")),
+			])
+		)
+		.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
+		.orderBy("forms.isDefault desc")
+		.orderBy("forms.updatedAt desc");
 };
