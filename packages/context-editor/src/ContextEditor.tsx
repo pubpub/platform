@@ -60,18 +60,7 @@ const initSuggestProps: SuggestProps = {
 };
 
 export default function ContextEditor(props: ContextEditorProps) {
-	const Renderer = useMemo(() => {
-		return forwardRef<HTMLDivElement, NodeViewComponentProps>(function Paragraph(
-			{ children, nodeProps, ...rest },
-			ref
-		) {
-			const AtomRenderingComponent = props.atomRenderingComponent;
-			return <AtomRenderingComponent ref={ref} nodeProps={nodeProps} {...rest} />;
-		});
-	}, [props.atomRenderingComponent]);
-
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
-
 	const [editorState, setEditorState] = useState(
 		EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
@@ -80,13 +69,13 @@ export default function ContextEditor(props: ContextEditorProps) {
 		})
 	);
 
+	const nodeViews = useMemo(() => {
+		return { contextAtom: props.atomRenderingComponent };
+	}, [props.atomRenderingComponent]);
+
 	useEffect(() => {
 		props.onChange(editorState);
 	}, [editorState]);
-
-	const nodeViews = useMemo(() => {
-		return { contextAtom: Renderer };
-	}, [Renderer]);
 
 	return (
 		<div
