@@ -1,5 +1,5 @@
 import React from "react";
-import { usePluginViewContext } from "@prosemirror-adapter/react";
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
 
 import type { FileUploadProps, FormattedFile } from "ui/customRenderers/fileUpload/fileUpload";
 import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
@@ -11,9 +11,8 @@ import { insertNodeAfterSelection } from "../utils/nodes";
 export type Upload = FileUploadProps["upload"];
 
 export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: () => void }) => {
-	const { view } = usePluginViewContext();
-
-	const onUpload = (files: FormattedFile[]) => {
+	const onUpload = useEditorEventCallback((view, files: FormattedFile[]) => {
+		if (!view) return;
 		// Reverse the files since files are inserted starting at the selection
 		for (const file of files.reverse()) {
 			const attrs: ImageAttrs = {
@@ -30,7 +29,7 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 			insertNodeAfterSelection(view.state, view.dispatch, "image", attrs);
 		}
 		onInsert();
-	};
+	});
 
 	return (
 		<div className="flex flex-col gap-2">
