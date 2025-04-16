@@ -426,7 +426,7 @@ model ActionRun {
   sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[]     @relation("source_action_run")
+  sequentialActionRuns ActionRun[] @relation("source_action_run")
 
   @@map(name: "action_runs")
 }
@@ -612,13 +612,14 @@ enum ApiAccessScope {
 
 enum Capabilities {
   movePub
-  createPub
   viewPub
   deletePub
-  updatePubValues
   createRelatedPub
   createPubWithForm
+  createPubWithAnyForm
   editPubWithForm
+  editPubWithAnyForm
+  editPubWithDefaultForm
   createPubField
   archivePubField
   editPubField
