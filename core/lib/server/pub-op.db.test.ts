@@ -13,6 +13,9 @@ const { createSeed } = await import("~/prisma/seed/createSeed");
 const { createForEachMockedTransaction } = await mockServerCode();
 const { getTrx, rollback, commit } = createForEachMockedTransaction();
 
+const psuedoId1Id = crypto.randomUUID() as PubsId;
+const psuedoId2Id = crypto.randomUUID() as PubsId;
+
 const seed = createSeed({
 	community: {
 		name: "test",
@@ -31,15 +34,18 @@ const seed = createSeed({
 		Description: { schemaName: CoreSchemaType.String },
 		"Some relation": { schemaName: CoreSchemaType.String, relation: true },
 		"Another relation": { schemaName: CoreSchemaType.String, relation: true },
+		PseudoId: { schemaName: CoreSchemaType.String },
 	},
 	pubTypes: {
 		"Basic Pub": {
 			Title: { isTitle: true },
 			"Some relation": { isTitle: false },
 			"Another relation": { isTitle: false },
+			PseudoId: { isTitle: false },
 		},
 		"Minimal Pub": {
 			Title: { isTitle: true },
+			PseudoId: { isTitle: false },
 		},
 	},
 	stages: {
@@ -86,6 +92,35 @@ const seed = createSeed({
 			pubType: "Minimal Pub",
 			values: {
 				Title: "Minimal pub",
+			},
+		},
+		{
+			id: psuedoId1Id,
+			pubType: "Minimal Pub",
+			values: {
+				PseudoId: "1",
+			},
+		},
+
+		{
+			id: psuedoId2Id,
+			pubType: "Minimal Pub",
+			values: {
+				PseudoId: "2",
+			},
+		},
+
+		// uh-oh, these two have the same PseudoId!!!
+		{
+			pubType: "Minimal Pub",
+			values: {
+				PseudoId: "3",
+			},
+		},
+		{
+			pubType: "Minimal Pub",
+			values: {
+				PseudoId: "3",
 			},
 		},
 	],
@@ -1325,5 +1360,66 @@ describe("PubOp stage", () => {
 			.execute();
 
 		expect(updatedPub.stageId).toEqual(seededCommunity.stages["Stage 2"].id);
+	});
+});
+
+describe("By value", () => {
+	it("should be able to upsert a pub by value", async () => {
+		const pubWithPseudoId4 = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.set(seededCommunity.pubFields["PseudoId"].slug, "4")
+			.execute();
+
+		const pub = await PubOp.upsertByValue(seededCommunity.pubFields["PseudoId"].slug, "4", {
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Test")
+			.execute();
+
+		expect(pub.id).toBe(pubWithPseudoId4.id);
+		// the pseudoId is now removed from the pub
+		expect(pub).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Test" },
+		]);
+	});
+
+	it("should freak out if you try to upsert a pub by a non-unique value", async () => {
+		// there are two pubs with the same value for PseudoId
+		await expect(
+			PubOp.upsertByValue(seededCommunity.pubFields["PseudoId"].slug, "3", {
+				communityId: seededCommunity.community.id,
+				pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+				lastModifiedBy: createLastModifiedBy("system"),
+			}).execute()
+		).rejects.toThrow(/Multiple pubs found/);
+	});
+
+	it("should be able to relate a pub by value", async () => {
+		const pub = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.relateByValue(seededCommunity.pubFields["Some relation"].slug, "relation1", {
+				slug: seededCommunity.pubFields["PseudoId"].slug,
+				value: "2",
+			})
+			.execute();
+
+		expect(pub).toHaveValues([
+			{
+				fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+				value: "relation1",
+				relatedPub: {
+					id: psuedoId2Id,
+					values: [{ fieldSlug: seededCommunity.pubFields["PseudoId"].slug, value: "2" }],
+				},
+			},
+		]);
 	});
 });

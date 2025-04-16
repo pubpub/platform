@@ -275,7 +275,7 @@ type PubOpErrorCode =
 	| "AMBIGUOUS_TARGET"
 	| "UNKNOWN";
 
-class PubOpError extends Error {
+export class PubOpError extends Error {
 	readonly code: PubOpErrorCode;
 	constructor(code: PubOpErrorCode, message: string) {
 		super(message);
