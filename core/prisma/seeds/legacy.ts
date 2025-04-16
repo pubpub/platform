@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { defaultMarkdownParser } from "prosemirror-markdown";
 
 import type { CommunitiesId, PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
@@ -22,7 +23,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 					Description: faker.lorem.paragraph(),
 					Abstract: faker.lorem.paragraphs(2),
 					License: "CC-BY 4.0",
-					Content: faker.lorem.paragraphs(6),
+					Content: defaultMarkdownParser.parse(faker.lorem.paragraph(1)).toJSON(),
 					URL: "https://www.pubpub.org",
 					"Inline Citation Style": "Author Year",
 					"Citation Style": "APA 7",
@@ -532,9 +533,13 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 																		Abstract: `<p id="n33ucq2qaha">The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. However, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae <span id="n67l65xpyip" data-node-type="citation" data-value="https://doi.org/10.1016/j.virusres.2006.01.001" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n67l65xpyip-note-popover" contenteditable="false">[1]</span><span id="n2piklt9xg9" data-node-type="citation" data-value="https://doi.org/10.1016/j.tim.2004.10.004" data-unstructured-value="" data-custom-label="" class="citation" tabindex="0" role="link" aria-describedby="n2piklt9xg9-note-popover" contenteditable="false">[2]</span>.&nbsp;</p>`,
 																		License: "CC-BY 4.0",
 																		Content:
-																			faker.lorem.paragraphs(
-																				6
-																			),
+																			defaultMarkdownParser
+																				.parse(
+																					faker.lorem.paragraph(
+																						6
+																					)
+																				)
+																				.toJSON(),
 																		DOI: "10.82234/legacy-14b2-6f27",
 																		URL: "https://www.pubpub.org",
 																		"Inline Citation Style":

@@ -1,4 +1,5 @@
 import { faker } from "@faker-js/faker";
+import { defaultMarkdownParser } from "prosemirror-markdown";
 
 import type { CommunitiesId, UsersId } from "db/public";
 import {
@@ -82,7 +83,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					pubType: "Article",
 					values: {
 						Title: "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present",
-						Content: faker.lorem.paragraph(6),
+						Content: defaultMarkdownParser.parse(faker.lorem.paragraph(1)).toJSON(),
 						Email: "new@pubpub.org",
 						URL: "https://pubpub.org",
 						MemberID: memberId,
@@ -162,7 +163,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						"Send Review email": {
 							action: Action.email,
 							config: {
-								subject: "Hellow, :recipientName! Please review this draft!",
+								subject: "Hello, :recipientName! Please review this draft!",
 								recipient: memberId,
 								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='starter:published-at'}`,
 							},

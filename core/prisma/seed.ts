@@ -66,7 +66,6 @@ const legacyId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
 const croccrocId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
-	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b" as CommunitiesId;
 	// do not seed arcadia if the minimal seed flag is set
 	// this is because it will slow down ci/testing
 	// this flag is set in the `globalSetup.ts` file
@@ -74,7 +73,7 @@ async function main() {
 	// eslint-disable-next-line no-restricted-properties
 	const shouldSeedLegacy = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [unJournalId, croccrocId, shouldSeedLegacy ? legacyId : null].filter(
+	const prismaCommunityIds = [croccrocId, shouldSeedLegacy ? legacyId : null].filter(
 		Boolean
 	) as CommunitiesId[];
 

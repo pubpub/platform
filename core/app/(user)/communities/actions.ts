@@ -37,7 +37,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 			error: "User is not a super admin",
 		};
 	}
-	if (slug === "unjournal" || slug === "croccroc") {
+	if (slug === "legacy" || slug === "starter") {
 		return {
 			title: "Failed to remove community",
 			error: "Cannot update example community",
