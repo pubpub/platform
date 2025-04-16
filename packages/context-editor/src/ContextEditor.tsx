@@ -84,6 +84,10 @@ export default function ContextEditor(props: ContextEditorProps) {
 		props.onChange(editorState);
 	}, [editorState]);
 
+	const nodeViews = useMemo(() => {
+		return { contextAtom: Renderer };
+	}, [Renderer]);
+
 	return (
 		<div
 			id="context-editor-container"
@@ -94,9 +98,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 				dispatchTransaction={(tr) => {
 					setEditorState((s) => s.apply(tr));
 				}}
-				nodeViews={{
-					contextAtom: Renderer,
-				}}
+				nodeViews={nodeViews}
 				editable={() => !props.disabled}
 				className={cn("font-serif", props.className)}
 			>
