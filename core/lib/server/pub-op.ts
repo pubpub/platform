@@ -6,6 +6,7 @@ import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
 import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { LastModifiedBy } from "db/types";
+import { logger } from "logger";
 import { assert, expect } from "utils";
 import { isUuid } from "utils/uuid";
 
@@ -27,6 +28,7 @@ type PubOpOptionsBase = {
 	communityId: CommunitiesId;
 	lastModifiedBy: LastModifiedBy;
 	trx?: Kysely<Database>;
+	target?: PubsId | { slug: string; value: PubValue };
 };
 
 type PubOpOptionsCreateUpsert = PubOpOptionsBase & {
@@ -114,6 +116,11 @@ type SetOptions = {
 	 * ```
 	 */
 	deleteExistingValues?: boolean;
+
+	/**
+	 * If true, nullish values will not be set.
+	 */
+	ignoreNullish?: boolean;
 };
 
 type RelationOptions = {
@@ -145,6 +152,13 @@ type RelateCommand = {
 	relations: Array<{ target: ActivePubOp | PubsId; value: PubValue }>;
 	options: RelationOptions;
 };
+type RelateByValueCommand = {
+	type: "relateByValue";
+	slug: string;
+	relations: Array<{ target: { slug: string; value: PubValue }; value: PubValue }>;
+	options: RelationOptions;
+};
+
 type UnrelateCommand = {
 	type: "unrelate";
 	slug: (string & {}) | "*";
@@ -157,6 +171,12 @@ type UnrelateCommand = {
 		deleteOrphaned?: boolean;
 	};
 };
+type UnrelateByValueCommand = {
+	type: "unrelateByValue";
+	slug: string;
+	relations: Array<{ target: { slug: string; value: PubValue }; value: PubValue }>;
+	options: RelationOptions;
+};
 
 type UnsetCommand = {
 	type: "unset";
@@ -168,7 +188,14 @@ type SetStageCommand = {
 	stage: StagesId | null;
 };
 
-type PubOpCommand = SetCommand | RelateCommand | UnrelateCommand | UnsetCommand | SetStageCommand;
+type PubOpCommand =
+	| SetCommand
+	| RelateCommand
+	| UnrelateCommand
+	| UnsetCommand
+	| SetStageCommand
+	| RelateByValueCommand
+	| UnrelateByValueCommand;
 
 type ClearRelationOperation = {
 	type: "clear";
@@ -198,17 +225,17 @@ type RelationOperation =
 type OperationMode = "create" | "upsert" | "update";
 
 interface CollectedOperationBase {
-	id: PubsId | undefined;
+	target: PubsId | ValueTarget;
 	values: Array<{ slug: string; value: PubValue; options?: SetOptions }>;
 	relationsToAdd: Array<{
 		slug: string;
 		value: PubValue;
-		target: PubsId;
+		target: PubsId | ValueTarget;
 		options: RelationOptions;
 	}>;
 	relationsToRemove: Array<{
 		slug: string;
-		target: PubsId;
+		target: PubsId | ValueTarget;
 		options?: Omit<RelationOptions, "replaceExisting">;
 	}>;
 	relationsToClear: Array<{
@@ -235,7 +262,9 @@ type UpdateOperation = CollectedOperationBase & {
 
 type CollectedOperation = CreateOrUpsertOperation | UpdateOperation;
 
-type OperationsMap = Map<PubsId, CreateOrUpsertOperation | UpdateOperation>;
+type ValueTarget = { slug: string; value: PubValue };
+
+type OperationsMap = Map<PubsId | ValueTarget, CreateOrUpsertOperation | UpdateOperation>;
 
 type PubOpErrorCode =
 	| "RELATION_CYCLE"
@@ -243,6 +272,7 @@ type PubOpErrorCode =
 	| "VALIDATION_ERROR"
 	| "INVALID_TARGET"
 	| "CREATE_EXISTING"
+	| "AMBIGUOUS_TARGET"
 	| "UNKNOWN";
 
 class PubOpError extends Error {
@@ -351,9 +381,7 @@ class NestedPubOpBuilder {
 				...this.parentOptions,
 				...options,
 			},
-			undefined,
-			slug,
-			value
+			{ slug, value }
 		);
 	}
 }
@@ -364,23 +392,52 @@ class NestedPubOpBuilder {
 abstract class BasePubOp {
 	protected readonly options: PubOpOptions;
 	protected readonly commands: PubOpCommand[] = [];
-	readonly id: PubsId;
+	readonly target: PubsId | { slug: string; value: PubValue };
+	/**
+	 * Map of value targets to pub ids
+	 *
+	 * Used to resolve non-id targets to id targets
+	 */
+	private targetMap: Map<ValueTarget, PubsId>;
 
 	constructor(options: PubOpOptions & { id?: PubsId }) {
 		this.options = options;
-		this.id = options.id ?? (crypto.randomUUID() as PubsId);
+		this.target = options.target ?? options.id ?? (crypto.randomUUID() as PubsId);
+		this.targetMap = new Map<ValueTarget, PubsId>();
 	}
 
 	/**
-	 * Set a single value or multiple values
+	 * Set a single value
 	 */
 	set(slug: string, value: PubValue, options?: SetOptions): this;
-	set(values: Record<string, PubValue>, options?: SetOptions): this;
+	/**
+	 * Set a single value, ignoring nullish values
+	 */
 	set(
-		slugOrValues: string | Record<string, PubValue>,
+		slug: string,
+		value: PubValue | null | undefined,
+		options: SetOptions & { ignoreNullish: true }
+	): this;
+	/**
+	 * Set multiple values
+	 */
+	set(values: Record<string, PubValue>, options?: SetOptions): this;
+	/**
+	 * Set multiple values, ignoring nullish values
+	 */
+	set(
+		values: Record<string, PubValue | null | undefined>,
+		options?: SetOptions & { ignoreNullish: true }
+	): this;
+	set(
+		slugOrValues: string | Record<string, PubValue | null | undefined>,
 		valueOrOptions?: PubValue | SetOptions,
 		options?: SetOptions
 	): this {
+		if (valueOrOptions === null && options?.ignoreNullish) {
+			return this;
+		}
+
 		const defaultOptions = this.getMode() === "upsert" ? { deleteExistingValues: true } : {};
 
 		if (typeof slugOrValues === "string") {
@@ -394,12 +451,14 @@ abstract class BasePubOp {
 		}
 
 		this.commands.push(
-			...Object.entries(slugOrValues).map(([slug, value]) => ({
-				type: "set" as const,
-				slug,
-				value,
-				options: (valueOrOptions as SetOptions) ?? defaultOptions,
-			}))
+			...Object.entries(slugOrValues)
+				.filter(([_, value]) => (options?.ignoreNullish ? value != null : true))
+				.map(([slug, value]) => ({
+					type: "set" as const,
+					slug,
+					value,
+					options: (valueOrOptions as SetOptions) ?? defaultOptions,
+				}))
 		);
 		return this;
 	}
@@ -422,6 +481,45 @@ abstract class BasePubOp {
 		return valueOrRelations.every(
 			(r) => typeof r === "object" && r !== null && "target" in r && "value" in r
 		);
+	}
+
+	/**
+	 * Relate to a single pub by value instead of PubId
+	 *
+	 * Useful for doing imports when you know some other unique value of a Pub other than its Id
+	 */
+	relateByValue(
+		slug: string,
+		/**
+		 * The value of the relation
+		 */
+		value: PubValue,
+		/**
+		 * The target of the relation
+		 *
+		 * The slug is the field of the target pub that has the unique value,
+		 * the value is the value of that field
+		 */
+		target: ValueTarget | ValueTarget[],
+		options?: RelationOptions
+	): this {
+		// for upsert we almost always want to replace existing relations
+		const defaultOptions = this.getMode() === "upsert" ? { replaceExisting: true } : {};
+		const opts = {
+			...defaultOptions,
+			...options,
+		};
+
+		const targets = Array.isArray(target) ? target : [target];
+
+		this.commands.push({
+			type: "relateByValue",
+			slug,
+			relations: targets.map((t) => ({ target: { slug: t.slug, value: t.value }, value })),
+			options: opts,
+		});
+
+		return this;
 	}
 
 	/**
@@ -522,18 +620,24 @@ abstract class BasePubOp {
 		return getPubsWithRelatedValues({ pubId, communityId: this.options.communityId }, { trx });
 	}
 
-	private collectOperations(processed = new Set<PubsId>()): OperationsMap {
+	// END OF PUBLIC API
+
+	/**
+	 * Create a big list of operations that will be executed
+	 * The goal is to process all the nested pub ops iteratively rather than recursively
+	 */
+	private collectOperations(processed = new Set<PubsId | ValueTarget>()): OperationsMap {
 		// If we've already processed this PubOp, return empty map to avoid circular recursion
-		if (processed.has(this.id)) {
+		if (processed.has(this.target)) {
 			return new Map();
 		}
 
 		const operations = new Map() as OperationsMap;
-		processed.add(this.id);
+		processed.add(this.target);
 
 		// Add this pub's operations
-		operations.set(this.id, {
-			id: this.id,
+		operations.set(this.target, {
+			target: this.target,
 			mode: this.getMode(),
 			pubTypeId: this.options.pubTypeId,
 			values: this.collectValues(),
@@ -543,7 +647,7 @@ abstract class BasePubOp {
 		} as CollectedOperation);
 
 		for (const cmd of this.commands) {
-			const rootOp = operations.get(this.id);
+			const rootOp = operations.get(this.target);
 			assert(rootOp, "Root operation not found");
 
 			if (cmd.type === "set") continue; // Values already collected
@@ -573,7 +677,6 @@ abstract class BasePubOp {
 			} else if (cmd.type === "setStage") {
 				rootOp.stage = cmd.stage;
 			} else if (cmd.type === "relate") {
-				// Process each relation in the command
 				cmd.relations.forEach((relation) => {
 					// if the target is just a PubId, we can add the relation directly
 
@@ -591,12 +694,12 @@ abstract class BasePubOp {
 					rootOp.relationsToAdd.push({
 						slug: cmd.slug,
 						value: relation.value,
-						target: relation.target.id,
+						target: relation.target.target,
 						options: cmd.options,
 					});
 
 					// if we have already processed this target, we can stop here
-					if (processed.has(relation.target.id)) {
+					if (processed.has(relation.target.target)) {
 						return;
 					}
 
@@ -604,6 +707,23 @@ abstract class BasePubOp {
 					for (const [key, value] of targetOps) {
 						operations.set(key, value);
 					}
+				});
+			} else if (cmd.type === "relateByValue") {
+				cmd.relations.forEach((relation) => {
+					rootOp.relationsToAdd.push({
+						slug: cmd.slug,
+						value: relation.value,
+						target: relation.target,
+						options: cmd.options,
+					});
+				});
+			} else if (cmd.type === "unrelateByValue") {
+				cmd.relations.forEach((relation) => {
+					rootOp.relationsToRemove.push({
+						slug: cmd.slug,
+						target: relation.target,
+						options: cmd.options,
+					});
 				});
 			}
 		}
@@ -614,6 +734,34 @@ abstract class BasePubOp {
 	protected abstract getMode(): OperationMode;
 
 	/**
+	 * resolve a target to a pub id
+	 *
+	 * if no target is provided, the target of the current pub op will be used
+	 *
+	 * if the target is a pub id, it will be returned as is
+	 */
+	private getId(target?: PubsId | ValueTarget): PubsId {
+		if (!target) {
+			return this.getId(this.target);
+		}
+
+		if (typeof target === "string" && isPubId(target)) {
+			return target;
+		}
+
+		const id = this.targetMap.get(target);
+
+		if (!id) {
+			throw new PubOpError(
+				"UNKNOWN",
+				`Target ${target} not found. Did you call resolveTarget before calling resolveNonIdTargets?`
+			);
+		}
+
+		return id;
+	}
+
+	/**
 	 * execute the operations with a transaction
 	 *
 	 * this is where the magic happens, basically
@@ -621,12 +769,14 @@ abstract class BasePubOp {
 	protected async executeWithTrx(trx: Transaction<Database>): Promise<PubsId> {
 		const operations = this.collectOperations();
 
+		await this.resolveNonIdTargets(trx, operations);
+
 		await this.createAllPubs(trx, operations);
 		await this.processStages(trx, operations);
 		await this.processRelations(trx, operations);
 		await this.processValues(trx, operations);
 
-		return this.id;
+		return this.getId();
 	}
 
 	private collectValues(): Array<{ slug: string; value: PubValue; options?: SetOptions }> {
@@ -642,6 +792,85 @@ abstract class BasePubOp {
 			}));
 	}
 
+	/**
+	 * Find the pub that is specified using a slug and value rather than a PubId
+	 *
+	 * @throws if there are multiple pubs that match the target
+	 */
+	private async resolveNonIdTarget(
+		trx: Kysely<Database>,
+		target: { slug: string; value: PubValue }
+	): Promise<ProcessedPub> {
+		const pubs = await getPubsWithRelatedValues(
+			{
+				communityId: this.options.communityId,
+			},
+			{
+				trx,
+				filters: {
+					[target.slug]: {
+						$eq: target.value,
+					},
+				},
+				limit: 2,
+			}
+		);
+
+		if (pubs.length > 1) {
+			logger.error(
+				{ pub1: pubs[0], pub2: pubs[1], msg: "Multiple pubs found for target: %s = %s" },
+				target.slug,
+				target.value
+			);
+			throw new PubOpError(
+				"AMBIGUOUS_TARGET",
+				`Multiple pubs found for target: ${target.slug} = ${target.value}.\n Pub 1: ${pubs[0].id}\n Pub 2: ${pubs[1].id}`
+			);
+		}
+
+		if (pubs.length === 0) {
+			throw new PubOpError(
+				"UNKNOWN",
+				`No pub found for target: ${target.slug} = ${target.value}`
+			);
+		}
+
+		return pubs[0];
+	}
+
+	private async resolveNonIdTargets(
+		trx: Kysely<Database>,
+		operations: OperationsMap
+	): Promise<void> {
+		const targetIdMap = new Map<{ slug: string; value: PubValue }, PubsId>();
+
+		const topLevelPubsToResolve = Array.from(operations.keys()).filter(
+			(key) => typeof key !== "string"
+		);
+
+		const otherPubsToResolve = Array.from(operations.values()).flatMap((op) => {
+			return [...op.relationsToAdd, ...op.relationsToRemove]
+				.filter(({ target }) => typeof target !== "string")
+				.map((r) => r.target);
+		});
+
+		await Promise.all(
+			[...topLevelPubsToResolve, ...otherPubsToResolve].map(async (key) => {
+				if (typeof key === "string") {
+					throw new PubOpError(
+						"UNKNOWN",
+						`Target ${key} is a pub id. Did you call resolveTarget before calling resolveNonIdTargets?`
+					);
+				}
+
+				const pub = await this.resolveNonIdTarget(trx, key);
+				targetIdMap.set(key, pub.id);
+			})
+		);
+
+		this.targetMap = targetIdMap;
+	}
+
 	private async createAllPubs(
 		trx: Transaction<Database>,
 		operations: OperationsMap
@@ -655,7 +884,7 @@ abstract class BasePubOp {
 		}
 
 		const pubsToCreate = createOrUpsertOperations.map(([key, operation]) => ({
-			id: key,
+			id: this.getId(key),
 			communityId: this.options.communityId,
 			pubTypeId: expect(operation.pubTypeId),
 		}));
@@ -692,7 +921,7 @@ abstract class BasePubOp {
 	): Promise<void> {
 		const relationsToCheckForOrphans = new Set<PubsId>();
 
-		for (const [pubId, op] of operations) {
+		for (const [pubTarget, op] of operations) {
 			const allOps = [
 				...op.relationsToAdd
 					.filter((r) => r.options.replaceExisting)
@@ -704,6 +933,8 @@ abstract class BasePubOp {
 			if (allOps.length === 0) {
 				continue;
 			}
+
+			const pubId = this.getId(pubTarget);
 
 			// Find all existing relations that might be affected
 			const existingRelations = await trx
@@ -959,17 +1190,17 @@ abstract class BasePubOp {
 			return [
 				// regular values
 				...op.values.map((v) => ({
-					pubId: key,
+					pubId: this.getId(key),
 					slug: v.slug,
 					value: v.value,
 					options: v.options,
 				})),
 				// relations
 				...op.relationsToAdd.map((r) => ({
-					pubId: key,
+					pubId: this.getId(key),
 					slug: r.slug,
 					value: r.value,
-					relatedPubId: r.target,
+					relatedPubId: this.getId(r.target),
 				})),
 			];
 		});
@@ -996,7 +1227,7 @@ abstract class BasePubOp {
 
 			const nonUpdatingValues = await trx
 				.selectFrom("pub_values")
-				.where("pubId", "=", this.id)
+				.where("pubId", "=", this.getId())
 				.where("relatedPubId", "is", null)
 				.where(
 					"fieldId",
@@ -1007,7 +1238,7 @@ abstract class BasePubOp {
 				.execute();
 
 			await deletePubValuesByValueId({
-				pubId: this.id,
+				pubId: this.getId(),
 				valueIds: nonUpdatingValues.map((v) => v.id),
 				lastModifiedBy: this.options.lastModifiedBy,
 				trx,
@@ -1074,8 +1305,8 @@ abstract class BasePubOp {
 	): Promise<void> {
 		const stagesToUpdate = Array.from(operations.entries())
 			.filter(([_, op]) => op.stage !== undefined)
-			.map(([pubId, op]) => ({
-				pubId,
+			.map(([target, op]) => ({
+				pubId: this.getId(target),
 				stageId: op.stage!,
 			}));
 
@@ -1148,28 +1379,15 @@ class CreatePubOp extends BasePubOp {
 }
 
 class UpsertPubOp extends BasePubOp {
-	private readonly initialId?: PubsId;
-	private readonly initialSlug?: string;
-	private readonly initialValue?: PubValue;
+	private readonly initialTarget?: PubsId | ValueTarget;
 
-	constructor(
-		options: PubOpOptionsCreateUpsert,
-		initialId?: PubsId,
-		initialSlug?: string,
-		initialValue?: PubValue
-	) {
-		super({ ...options, id: initialId });
-		this.initialId = initialId;
-		this.initialSlug = initialSlug;
-		this.initialValue = initialValue;
+	constructor(options: PubOpOptionsCreateUpsert, initialTarget: PubsId | ValueTarget) {
+		super({ ...options, target: initialTarget });
+		this.initialTarget = initialTarget;
 	}
 
 	protected getMode(): OperationMode {
 		return "upsert";
-	}
-
-	protected getInitialId(): PubsId | undefined {
-		return this.initialId;
 	}
 }
 
@@ -1305,7 +1523,7 @@ export class PubOp {
 		value: PubValue,
 		options: PubOpOptionsCreateUpsert
 	): UpsertPubOp {
-		return new UpsertPubOp(options, undefined, slug, value);
+		return new UpsertPubOp(options, { slug, value });
 	}
 }
 
