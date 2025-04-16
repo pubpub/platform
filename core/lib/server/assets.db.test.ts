@@ -3,7 +3,7 @@ import fs from "fs/promises";
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 

@@ -4,6 +4,7 @@ import type {
 	componentsBySchema,
 	InputTypeForCoreSchemaType,
 } from "schemas";
+import type { z } from "zod";
 
 import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
@@ -12,7 +13,9 @@ import type { ProcessedPub } from "contracts";
 import type {
 	ActionInstances,
 	ActionInstancesId,
+	ApiAccessScope,
 	ApiAccessTokensId,
+	ApiAccessType,
 	Communities,
 	CommunitiesId,
 	Event,
@@ -24,12 +27,14 @@ import type {
 	PubFields,
 	PubsId,
 	PubTypes,
+	PubTypesId,
 	Rules,
 	Stages,
 	StagesId,
 	Users,
 	UsersId,
 } from "db/public";
+import type { ApiAccessPermissionConstraints, permissionsSchema } from "db/types";
 import {
 	Action as ActionName,
 	CoreSchemaType,
@@ -61,7 +66,11 @@ export type PubFieldsInitializer = Record<
 
 export type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	string,
-	Partial<Record<keyof PF, { isTitle: boolean }>>
+	| Partial<Record<keyof PF, { isTitle: boolean }>>
+	| {
+			id: PubTypesId;
+			fields: Partial<Record<keyof PF, { isTitle: boolean }>>;
+	  }
 >;
 
 /**
@@ -86,6 +95,10 @@ export type UsersInitializer = Record<
 			isSuperAdmin?: boolean;
 			slug?: string;
 			existing?: false;
+			/**
+			 * @default true
+			 */
+			isVerified?: boolean;
 	  }
 	| {
 			id: UsersId;
@@ -312,6 +325,15 @@ export type FormInitializer<
 		};
 	}[keyof PT];
 };
+
+export type ApiTokenInitializer = {
+	[ApiTokenName in string]: {
+		id?: `${string}.${string}`;
+		description?: string;
+		permissions?: Partial<z.infer<typeof permissionsSchema>> | true;
+	};
+};
+
 type CreatePubRecursiveInput = Parameters<typeof createPubRecursiveNew>[0];
 
 const makePubInitializerMatchCreatePubRecursiveInput = <
@@ -482,7 +504,7 @@ export async function seedCommunity<
 	const SC extends StageConnectionsInitializer<S>,
 	const PI extends PubInitializer<PF, PT, U, S>[],
 	const F extends FormInitializer<PF, PT, U, S>,
-	WithApiToken extends boolean | `${string}.${string}` | undefined = undefined,
+	const AI extends ApiTokenInitializer,
 >(
 	props: {
 		/**
@@ -684,14 +706,9 @@ export async function seedCommunity<
 		 */
 		pubs?: PI;
 		forms?: F;
+		apiTokens?: AI;
 	},
 	options?: {
-		/**
-		 * Whether or not to create an API token for the community.
-		 * If a string is provided, it will be used as the id part of the token.
-		 * @default false
-		 */
-		withApiToken?: WithApiToken;
 		/**
 		 * Whether or not to add a random number to the end of slugs, helps prevent errors during testing.
 		 * @default true
@@ -752,14 +769,34 @@ export async function seedCommunity<
 		])
 	) as PubFieldsByName<PF>;
 
-	const pubTypesList = Object.entries(props.pubTypes ?? {});
+	const pubTypesList = Object.entries(props.pubTypes ?? {}).map(
+		([pubTypeName, fieldsOrMoreInfo]) => {
+			if ("id" in fieldsOrMoreInfo) {
+				return {
+					name: pubTypeName,
+					communityId: communityId,
+					id: fieldsOrMoreInfo.id as PubTypesId,
+					fields: fieldsOrMoreInfo.fields as Partial<
+						Record<keyof PF, { isTitle: boolean }>
+					>,
+				};
+			}
+			return {
+				name: pubTypeName,
+				communityId: communityId,
+				id: undefined,
+				fields: fieldsOrMoreInfo,
+			};
+		}
+	);
 	const createdPubTypes = pubTypesList.length
 		? await trx
 				.insertInto("pub_types")
 				.values(
-					pubTypesList.map(([pubTypeName, fields]) => ({
-						name: pubTypeName,
+					pubTypesList.map(({ name, communityId, id }) => ({
+						name,
 						communityId: communityId,
+						id,
 					}))
 				)
 				.returningAll()
@@ -771,15 +808,15 @@ export async function seedCommunity<
 			? await trx
 					.insertInto("_PubFieldToPubType")
 					.values(
-						pubTypesList.flatMap(([pubTypeName, fields], idx) =>
+						pubTypesList.flatMap(({ name, id, fields }, idx) =>
 							Object.entries(fields).flatMap(([field, meta]) => {
 								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
 								)?.id;
-								const pubTypeId = createdPubTypes.find(
-									(pubType) => pubType.name === pubTypeName
-								)?.id;
+								const pubTypeId =
+									id ??
+									createdPubTypes.find((pubType) => pubType.name === name)?.id;
 								if (!pubTypeId || !fieldId) {
 									return [];
 								}
@@ -850,6 +887,7 @@ export async function seedCommunity<
 			avatar: userInfo.avatar ?? faker.image.avatar(),
 			passwordHash: await createPasswordHash(userInfo.password ?? faker.internet.password()),
 			isSuperAdmin: userInfo.isSuperAdmin ?? false,
+			isVerified: userInfo.isVerified === false ? false : true,
 			// the key of the user initializer
 		}))
 	);
@@ -1138,6 +1176,7 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
+	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const possibleRules = consolidatedStages.flatMap(
 		(stage, idx) =>
 			stage.rules?.map((rule) => ({
@@ -1176,43 +1215,62 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
 
-	let apiToken: string | undefined = undefined;
+	const createdApiTokens = Object.fromEntries(
+		await Promise.all(
+			apiTokens.map(async ([tokenName, tokenInput]) => {
+				const [tokenId, tokenString] = tokenInput.id?.split(".") ?? [crypto.randomUUID()];
 
-	if (options?.withApiToken) {
-		const [tokenId, tokenString] =
-			typeof options.withApiToken === "string"
-				? options.withApiToken.split(".")
-				: [crypto.randomUUID(), undefined];
+				const issuedById = createdMembers.find(
+					(member) => member.role === MemberRole.admin
+				)?.userId;
 
-		const issuedById = createdMembers.find(
-			(member) => member.role === MemberRole.admin
-		)?.userId;
+				if (!issuedById) {
+					throw new Error(
+						"Attempting to create an API token without an admin member. You should create an admin member in the seed if you intend to be able to use the API."
+					);
+				}
 
-		if (!issuedById) {
-			throw new Error(
-				"Attempting to create an API token without an admin member. You should create an admin member in the seed if you intend to be able to use the API."
-			);
-		}
+				const { token } = await createApiAccessToken(
+					{
+						token: {
+							name: tokenName,
+							communityId,
+							expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12),
+							description: tokenInput.description,
+							issuedAt: new Date(),
+							id: tokenId as ApiAccessTokensId,
+							issuedById,
+							...(tokenString ? { token: tokenString } : {}),
+						},
+						permissions:
+							tokenInput.permissions === true || tokenInput.permissions === undefined
+								? allPermissions
+								: Object.entries(tokenInput.permissions).flatMap(
+										([scope, accessType]) =>
+											Object.entries(accessType).flatMap(
+												([accessType, constraints]) => ({
+													scope: scope as ApiAccessScope,
+													accessType: accessType as ApiAccessType,
+													constraints:
+														constraints as ApiAccessPermissionConstraints,
+												})
+											)
+									),
+					},
+					trx
+				).executeTakeFirstOrThrow();
 
-		const { token } = await createApiAccessToken({
-			token: {
-				name: "seed token",
-				communityId,
-				expiration: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30 * 12),
-				description: "Default seed token. Should not be used in production.",
-				issuedAt: new Date(),
-				id: tokenId as ApiAccessTokensId,
-				issuedById,
-				// @ts-expect-error - this is a predefined token
-				token: tokenString,
-			},
-			permissions: allPermissions,
-		}).executeTakeFirstOrThrow();
+				logger.info(
+					`${createdCommunity.name}: Successfully created API token ${tokenName}`
+				);
 
-		apiToken = token;
+				return [tokenName, token];
+			})
+		)
+	) as {
+		[TokenName in keyof NonNullable<AI>]: string;
+	};
 
-		logger.info(`${createdCommunity.name}: Successfully created API token`);
-	}
 	logger.info(`${createdCommunity.name}: Successfully seeded community`);
 
 	return {
@@ -1226,10 +1284,6 @@ export async function seedCommunity<
 		pubs: createdPubs,
 		actions: createdActions,
 		forms: formsByName,
-		apiToken: apiToken as WithApiToken extends string
-			? `${string}.${WithApiToken}`
-			: WithApiToken extends boolean
-				? string
-				: undefined,
+		apiTokens: createdApiTokens,
 	};
 }

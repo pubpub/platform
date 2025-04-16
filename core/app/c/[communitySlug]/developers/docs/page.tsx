@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 
 export const dynamic = "force-dynamic";
 

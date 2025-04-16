@@ -3,7 +3,7 @@ import { CoreSchemaType } from "db/public";
 import { expect } from "utils";
 
 import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { createFormInviteLink, grantFormAccess } from "../../form";
 
@@ -160,7 +160,7 @@ export type LinkOptions =
 	| LinkPageOptions;
 
 const isLinkEmailOptions = (options: LinkOptions): options is LinkEmailOptions => {
-	return "address" in options;
+	return "email" in options;
 };
 
 const isLinkFormOptions = (options: LinkOptions): options is LinkFormOptions => {
@@ -168,7 +168,7 @@ const isLinkFormOptions = (options: LinkOptions): options is LinkFormOptions => 
 };
 
 const isLinkUrlOptions = (options: LinkOptions): options is LinkUrlOptions => {
-	return "url" in options;
+	return "to" in options;
 };
 
 const isLinkFieldOptions = (options: LinkOptions): options is LinkFieldOptions => {

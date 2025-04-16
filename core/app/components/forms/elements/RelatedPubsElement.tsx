@@ -189,7 +189,11 @@ export const RelatedPubsElement = ({
 }: ElementProps<InputComponent.relationBlock> & {
 	valueComponentProps: PubFieldFormElementProps;
 }) => {
-	const { pubId } = useContextEditorContext();
+	const { pubId, element } = valueComponentProps;
+	const { pubTypes } = useContextEditorContext();
+	const { relatedPubTypes: relatedPubTypeIds } = element;
+	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id));
+
 	const [showPanel, setShowPanel] = useState(false);
 
 	// Look through existing related pubs in `values` to get their pub titles
@@ -305,6 +309,7 @@ export const RelatedPubsElement = ({
 									relatedPubs={relatedPubs}
 									// Do not allow linking to itself
 									disabledPubs={pubId ? [pubId] : undefined}
+									pubTypes={relatedPubTypes}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>

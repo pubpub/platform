@@ -66,7 +66,7 @@ export default async function Page(props: {
 			communityId,
 		}).executeTakeFirstOrThrow(),
 		getPubFields({ communityId }).executeTakeFirstOrThrow(),
-		getPubTypesForCommunity(community.id),
+		getPubTypesForCommunity(community.id, { limit: 0 }),
 	]);
 
 	const formBuilderId = "formbuilderform";
@@ -109,7 +109,6 @@ export default async function Page(props: {
 			}
 		>
 			<PubFieldProvider pubFields={fields}>
-				{/* For the future PubType selector in RelationBlocks, implementation deferred */}
 				<PubTypeProvider pubTypes={pubTypes}>
 					<FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} />
 				</PubTypeProvider>

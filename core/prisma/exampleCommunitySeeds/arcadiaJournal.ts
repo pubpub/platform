@@ -8,7 +8,7 @@ import {
 	StructuralFormElement,
 } from "db/public";
 
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { seedCommunity } from "../seed/seedCommunity";
 
 export async function seedArcadiaJournal(communityId?: CommunitiesId) {
@@ -240,11 +240,16 @@ export async function seedArcadiaJournal(communityId?: CommunitiesId) {
 					to: ["Published"],
 				},
 			},
+
+			apiTokens: {
+				allToken: {
+					id: "11111111-1111-1111-1111-111111111111.yyyyyyyyyyyyyyyz",
+				},
+			},
 		},
 		{
 			// this makes sure that the slug is `croccroc`, not `croccroc-${new Date().toISOString()}
 			randomSlug: false,
-			withApiToken: "11111111-1111-1111-1111-111111111111.yyyyyyyyyyyyyyyz",
 		}
 	);
 }

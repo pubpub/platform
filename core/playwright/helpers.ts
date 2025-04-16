@@ -5,6 +5,7 @@ import { faker } from "@faker-js/faker";
 
 import { CoreSchemaType, MemberRole } from "db/public";
 
+import type { MessageResponse } from "./inbucketClient";
 import type { CommunitySeedOutput, Seed } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
@@ -48,6 +49,22 @@ export const createCommunity = async ({
 const INBUCKET_TESTING_URL = process.env.INBUCKET_URL ?? "http://localhost:54324";
 
 export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL);
+
+export const getUrlFromInbucketMessage = async (message: MessageResponse, page: Page) => {
+	const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
+	if (!url) {
+		return undefined;
+	}
+
+	// Use the browser to decode the html entities in our URL
+	const decodedUrl = await page.evaluate((url) => {
+		const elem = document.createElement("div");
+		elem.innerHTML = url;
+		return elem.textContent!;
+	}, url!);
+
+	return decodedUrl;
+};
 
 export const retryAction = async (action: () => Promise<void>, maxAttempts = 3) => {
 	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -102,6 +119,6 @@ export const PubFieldsOfEachType = Object.fromEntries(
 
 export const waitForBaseCommunityPage = async (page: Page, communitySlug?: string) => {
 	await page.waitForURL(new RegExp(`.*/c/${communitySlug ?? ".*"}/stages.*`), {
-		timeout: 5_000,
+		timeout: 10_000,
 	});
 };

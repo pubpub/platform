@@ -156,7 +156,7 @@ export default async function FormPage(props: {
 				withPubType: true,
 			}
 		),
-		getPubTypesForCommunity(community.id),
+		getPubTypesForCommunity(community.id, { limit: 0 }),
 	]);
 
 	if (!form) {

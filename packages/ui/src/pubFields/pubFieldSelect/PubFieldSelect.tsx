@@ -168,7 +168,6 @@ export const PubFieldSelect = () => {
 	return (
 		<MultiSelect
 			className="bg-white"
-			value={[]}
 			options={allowedPubFields.map((pubField) => ({
 				value: pubField.slug,
 				label: pubField.slug,

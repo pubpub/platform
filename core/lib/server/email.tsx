@@ -1,7 +1,7 @@
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
-import { PasswordReset, RequestLinkToForm, SignupInvite } from "emails";
+import { PasswordReset, RequestLinkToForm, SignupInvite, VerifyEmail } from "emails";
 
 import type { Communities, MemberRole, MembershipType, Users } from "db/public";
 import { AuthTokenType } from "db/public";
@@ -11,11 +11,12 @@ import type { XOR } from "../types";
 import type { FormInviteLinkProps } from "./form";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/authentication/createMagicLink";
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 import { createFormInviteLink } from "./form";
 import { getSmtpClient } from "./mailgun";
 
 const FIFTEEN_MINUTES = 1000 * 60 * 15;
+const TWO_HOURS = 2 * 60 * 60 * 1000;
 
 type RequiredOptions = Required<Pick<SendMailOptions, "to" | "subject">> &
 	XOR<{ html: string }, { text: string }>;
@@ -72,10 +73,7 @@ async function send(
 			data: {},
 		};
 	} catch (error) {
-		logger.error({
-			msg: `Failed to send email`,
-			error: error.message,
-		});
+		logger.error({ msg: "Failed to send email", err: error });
 		return {
 			error: error.message,
 		};
@@ -109,6 +107,40 @@ export function passwordReset(
 			to: user.email,
 			html: email,
 			subject: "Reset your PubPub password",
+		};
+	});
+}
+
+export function verifyEmail(
+	user: Pick<Users, "id" | "email" | "firstName" | "lastName">,
+	redirectTo?: string,
+	trx = db
+) {
+	return buildSend(async () => {
+		const magicLink = await createMagicLink(
+			{
+				/**
+				 * We use 'generic' here because they should be able to sign into their account
+				 * once the link is clicked. Before this, they likely have the AuthTokenType.verifyEmail session
+				 */
+				type: AuthTokenType.generic,
+				expiresAt: new Date(Date.now() + TWO_HOURS),
+				path: redirectTo
+					? `/verify?redirectTo=${encodeURIComponent(redirectTo)}`
+					: "/verify",
+				userId: user.id,
+			},
+			trx
+		);
+
+		const email = await render(
+			<VerifyEmail firstName={user.firstName} verifyEmailLink={magicLink} />
+		);
+
+		return {
+			to: user.email,
+			html: email,
+			subject: "Verify your email",
 		};
 	});
 }

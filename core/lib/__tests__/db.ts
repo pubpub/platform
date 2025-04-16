@@ -8,7 +8,7 @@ import { databaseTables } from "db/table-names";
 import { logger } from "logger";
 
 import { UpdatedAtPlugin } from "~/kysely/updated-at-plugin";
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 
 const int8TypeId = 20;
 

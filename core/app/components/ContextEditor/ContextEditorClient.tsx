@@ -13,6 +13,7 @@ import { ContextAtom } from "./AtomRenderer";
 import "context-editor/style.css";
 
 import type { ContextEditorPub } from "./ContextEditorContext";
+import { useServerAction } from "~/lib/serverActions";
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
@@ -39,6 +40,7 @@ export const ContextEditorClient = ({
 	ContextEditorProps,
 	"onChange" | "initialDoc" | "className" | "disabled" | "hideMenu"
 >) => {
+	const runUpload = useServerAction(upload);
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
@@ -48,7 +50,7 @@ export const ContextEditorClient = ({
 		[pubs]
 	);
 	const signedUploadUrl = (fileName: string) => {
-		return upload(pubId, fileName);
+		return runUpload(pubId, fileName);
 	};
 
 	const memoEditor = useMemo(() => {
