@@ -64,7 +64,7 @@ jobs:
             PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
             JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
             MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
-            PUBLIC_URL: "$PUBLIC_URL"
+            PUBLIC_URL: "\$PUBLIC_URL"
             AWS_REGION: "us-east-1"
         secrets:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
