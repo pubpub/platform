@@ -3,7 +3,7 @@
 import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
-import React, { forwardRef, useMemo, useState } from "react";
+import React, { forwardRef, useEffect, useMemo, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
@@ -80,6 +80,10 @@ export default function ContextEditor(props: ContextEditorProps) {
 		})
 	);
 
+	useEffect(() => {
+		props.onChange(editorState);
+	}, [editorState]);
+
 	return (
 		<div
 			id="context-editor-container"
@@ -88,11 +92,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 			<ProseMirror
 				state={editorState}
 				dispatchTransaction={(tr) => {
-					setEditorState((s) => {
-						const newState = s.apply(tr);
-						props.onChange(newState);
-						return newState;
-					});
+					setEditorState((s) => s.apply(tr));
 				}}
 				nodeViews={{
 					contextAtom: Renderer,

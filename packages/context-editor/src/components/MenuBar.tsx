@@ -335,7 +335,7 @@ const Separator = () => {
 export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
 		<div
-			className="flex h-14 items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
+			className="flex items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
 			style={{ height: `${MENU_BAR_HEIGHT}px` }}
