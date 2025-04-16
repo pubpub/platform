@@ -1,10 +1,10 @@
 import type { EditorState } from "prosemirror-state";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { renderToString } from "react-dom/server";
 
-import ContextAtom from "../AtomRenderer";
+import { AtomRenderer } from "../AtomRenderer";
 
 type Props = {
 	editorState: EditorState;
@@ -18,7 +18,7 @@ export default function JsonPanel({ editorState }: Props) {
 	domSerializer.nodes.contextAtom = (node) => {
 		const testdiv = document.createElement("div");
 		// console.log("node", node);
-		testdiv.innerHTML = renderToString(<ContextAtom nodeProp={node} />);
+		testdiv.innerHTML = renderToString(<AtomRenderer nodeProps={{ node } as any} />);
 		return testdiv;
 	};
 	// console.log("domSerializer", domSerializer);

@@ -4,12 +4,11 @@ import React, { forwardRef, useEffect, useState } from "react";
 import { useIsNodeSelected } from "@handlewithcare/react-prosemirror";
 import { CsvToHtmlTable } from "react-csv-to-table";
 
-export default forwardRef<HTMLDivElement, NodeViewComponentProps>(function ContextAtom(
-	{ nodeProps, ...props },
-	ref
-) {
+export const AtomRenderer = forwardRef<
+	HTMLDivElement,
+	NodeViewComponentProps & { selected?: boolean }
+>(function AtomRenderer({ nodeProps, selected, ...props }, ref) {
 	const { node } = nodeProps;
-	const selected = useIsNodeSelected();
 	const [activeData, setActiveData] = useState("");
 	const activeNode = node;
 	if (!activeNode) {
@@ -113,4 +112,17 @@ export default forwardRef<HTMLDivElement, NodeViewComponentProps>(function Conte
 			{/* {JSON.stringify(activeNode, null, 2)} */}
 		</section>
 	);
+});
+
+/**
+ * Wrapper around AtomRenderer which uses a react-prosemirror hook.
+ * This is only so that SitePanel.tsx can still render the component as HTML
+ * without needing the component to be in a Prosemirror context
+ */
+export default forwardRef<HTMLDivElement, NodeViewComponentProps>(function ContextAtom(
+	{ nodeProps, ...props },
+	ref
+) {
+	const selected = useIsNodeSelected();
+	return <AtomRenderer ref={ref} nodeProps={nodeProps} selected={selected} {...props} />;
 });
