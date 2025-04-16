@@ -53,7 +53,7 @@ jobs:
                   sed -i "s|image: JOBS_IMAGE|image: $JOBS_IMAGE|" docker-compose.preview.yml
                   sed -i "s|image: MIGRATIONS_IMAGE|image: $MIGRATIONS_IMAGE|" docker-compose.preview.yml
                   sed -i "s|email someone@example.com|email dev@pubpub.org|" self-host/caddy/Caddyfile
-                  sed -i "s|example.com|{$PUBLIC_URL}|" self-host/caddy/Caddyfile
+                  sed -i "s|example.com|{${{ inputs.PUBLIC_URL }}}|" self-host/caddy/Caddyfile
 
             - name: Get ECR token
               id: ecrtoken
