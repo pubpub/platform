@@ -11,7 +11,6 @@ import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
 import type { FormElementToPubTypeTable } from "./FormElementToPubType";
-import type { FormMembershipsTable } from "./FormMemberships";
 import type { FormsTable } from "./Forms";
 import type { MemberGroupsTable } from "./MemberGroups";
 import type { MemberGroupToUserTable } from "./MemberGroupToUser";
@@ -87,8 +86,6 @@ export interface PublicSchema {
 	pub_memberships: PubMembershipsTable;
 
 	stage_memberships: StageMembershipsTable;
-
-	form_memberships: FormMembershipsTable;
 
 	membership_capabilities: MembershipCapabilitiesTable;
 

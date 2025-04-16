@@ -22,9 +22,8 @@ import type {
 	ApiAccessPermissionConstraintsInput,
 	LastModifiedBy,
 } from "db/types";
-import { baseFilterSchema, filterSchema, siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
+import { filterSchema, siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
-import { assert } from "utils";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";
@@ -53,6 +52,7 @@ import {
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
@@ -273,6 +273,27 @@ const parseQueryWithQsMiddleware: RequestMiddleware = (req) => {
 const handler = createNextHandler(
 	siteApi,
 	{
+		forms: {
+			get: async ({ params }) => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+					cookies: true,
+				});
+
+				const form = await getForm({
+					id: params.formId,
+					communityId: community.id,
+				}).executeTakeFirst();
+
+				if (!form) {
+					return { status: 404, body: "Form not found" };
+				}
+				return {
+					status: 200,
+					body: form,
+				};
+			},
+		},
 		pubs: {
 			search: async ({ query }) => {
 				const { user, community } = await checkAuthorization({

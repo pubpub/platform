@@ -1,4 +1,4 @@
-import type { CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 
 import { db } from "~/kysely/database";
@@ -42,20 +42,11 @@ export const stageCapabilities = [
 	Capabilities.removeStageMember,
 	Capabilities.seeExtraPubValues,
 ] as const;
-export const formCapabilities = [
-	Capabilities.createPubWithForm,
-	Capabilities.editPubWithForm,
-	Capabilities.addFormMember,
-	Capabilities.removeFormMember,
-	Capabilities.editForm,
-	Capabilities.archiveForm,
-] as const;
 
 type CapabilitiesArg = {
 	[MembershipType.pub]: typeof pubCapabilities;
 	[MembershipType.stage]: typeof stageCapabilities;
 	[MembershipType.community]: typeof communityCapabilities;
-	[MembershipType.form]: typeof formCapabilities;
 };
 
 export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
@@ -73,11 +64,6 @@ type StageTarget = {
 type CommunityTarget = {
 	type: MembershipType.community;
 	communityId: CommunitiesId;
-};
-
-type FormTarget = {
-	type: MembershipType.form;
-	formId: FormsId;
 };
 
 export const userCan = async <T extends CapabilityTarget>(

@@ -6,12 +6,12 @@ import type { ProcessedPub } from "contracts";
 import type { CommunitiesId } from "db/public";
 
 import type { MemberWithUser } from "~/lib/types";
-import { selectCommunityMembers } from "~/lib/server/member";
+import { selectAllCommunityMemberships } from "~/lib/server/member";
 import Assign from "./Assign";
 
 // Necessary in order to dedupe this query
 const cachedGetMembers = cache((communityId: CommunitiesId) =>
-	selectCommunityMembers({ communityId: communityId }).execute()
+	selectAllCommunityMemberships({ communityId: communityId }).execute()
 );
 
 export const AssignWrapper = async (props: {

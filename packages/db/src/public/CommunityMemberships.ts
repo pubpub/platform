@@ -3,10 +3,12 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 import { z } from "zod";
 
 import type { CommunitiesId } from "./Communities";
+import type { FormsId } from "./Forms";
 import type { MemberGroupsId } from "./MemberGroups";
 import type { MemberRole } from "./MemberRole";
 import type { UsersId } from "./Users";
 import { communitiesIdSchema } from "./Communities";
+import { formsIdSchema } from "./Forms";
 import { memberGroupsIdSchema } from "./MemberGroups";
 import { memberRoleSchema } from "./MemberRole";
 import { usersIdSchema } from "./Users";
@@ -36,6 +38,8 @@ export interface CommunityMembershipsTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	formId: ColumnType<FormsId | null, FormsId | null, FormsId | null>;
 }
 
 export type CommunityMemberships = Selectable<CommunityMembershipsTable>;
@@ -56,6 +60,7 @@ export const communityMembershipsSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	formId: formsIdSchema.nullable(),
 });
 
 export const communityMembershipsInitializerSchema = z.object({
@@ -66,6 +71,7 @@ export const communityMembershipsInitializerSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	formId: formsIdSchema.optional().nullable(),
 });
 
 export const communityMembershipsMutatorSchema = z.object({
@@ -76,4 +82,5 @@ export const communityMembershipsMutatorSchema = z.object({
 	memberGroupId: memberGroupsIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	formId: formsIdSchema.optional().nullable(),
 });
