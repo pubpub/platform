@@ -102,7 +102,11 @@ export default function ContextEditor(props: ContextEditorProps) {
 			>
 				<EditorContextProvider activeNode={null} position={0}>
 					<>
-						{props.hideMenu ? null : <MenuBar upload={props.upload} />}
+						{props.hideMenu ? null : (
+							<div className="sticky top-0 z-10">
+								<MenuBar upload={props.upload} />
+							</div>
+						)}
 						<ProseMirrorDoc />
 						<AttributePanel menuHidden={!!props.hideMenu} />
 						<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
