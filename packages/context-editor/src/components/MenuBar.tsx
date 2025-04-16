@@ -57,6 +57,8 @@ import {
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
 import { ImageUploader } from "./ImageUploader";
 
+export const MENU_BAR_HEIGHT = 56;
+
 type MenuItem = {
 	key: string;
 	name: string;
@@ -333,9 +335,10 @@ const Separator = () => {
 export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
 		<div
-			className="flex items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
+			className="flex h-14 items-center overflow-x-auto rounded-t border bg-gray-50 p-4"
 			role="toolbar"
 			aria-label="Formatting tools"
+			style={{ height: `${MENU_BAR_HEIGHT}px` }}
 		>
 			<div className="flex pl-2">
 				<ParagraphDropdown />

@@ -11,6 +11,7 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 
 import { useEditorContext } from "./Context";
+import { MENU_BAR_HEIGHT } from "./MenuBar";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
@@ -29,7 +30,7 @@ const initPanelProps: PanelProps = {
 	bottom: 0,
 };
 
-export function AttributePanel() {
+export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	const [position, setPosition] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
@@ -60,9 +61,11 @@ export function AttributePanel() {
 			if (activeNode) {
 				const viewClientRect = view.dom.getBoundingClientRect();
 				const coords = view.coordsAtPos(activeNodePosition);
+				const topBase = coords.top - 1 - viewClientRect.top;
+				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT;
 				setPosition({
 					...position,
-					top: coords.top - 1 - viewClientRect.top,
+					top,
 					left: coords.left - viewClientRect.left,
 					right: -275,
 				});
