@@ -65,7 +65,12 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 
 		return (
 			<div className="wrap-widget">
-				<button disabled={disabled} onClick={handleClick} className={node.type.name}>
+				<button
+					type="button"
+					disabled={disabled}
+					onClick={handleClick}
+					className={node.type.name}
+				>
 					{getBlockName(node)}
 				</button>
 			</div>
