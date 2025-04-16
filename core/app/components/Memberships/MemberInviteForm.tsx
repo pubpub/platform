@@ -23,7 +23,7 @@ import {
 } from "ui/form";
 import { Loader2, Mail, UserPlus } from "ui/icon";
 import { Input } from "ui/input";
-import { MultiValueInput } from "ui/multivalue-input";
+import { MultiSelect } from "ui/multi-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { toast } from "ui/use-toast";
 
@@ -272,18 +272,17 @@ export const MemberInviteForm = ({
 										<FormItem>
 											<FormLabel>Edit/View Access</FormLabel>
 											<FormControl>
-												<MultiValueInput
+												<MultiSelect
 													{...field}
-													value={field.value ?? []}
-													onChange={(newValues) => {
+													defaultValue={field.value ?? []}
+													onValueChange={(newValues) => {
 														field.onChange(newValues);
 													}}
 													options={availableForms.map((f) => ({
 														label: f.name,
 														value: f.id,
 													}))}
-													optionName="forms"
-													sortable={false}
+													placeholder="Select forms"
 												/>
 											</FormControl>
 											<FormDescription>{description}</FormDescription>
