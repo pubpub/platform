@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@handlewithcare/react-prosemirror':
+      specifier: ^2.3.5
+      version: 2.3.5
     '@honeycombio/opentelemetry-node':
       specifier: ^0.6.1
       version: 0.6.1
@@ -272,6 +275,9 @@ importers:
       '@googleapis/drive':
         specifier: ^8.16.0
         version: 8.16.0
+      '@handlewithcare/react-prosemirror':
+        specifier: 'catalog:'
+        version: 2.3.5(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@honeycombio/opentelemetry-node':
         specifier: 'catalog:'
         version: 0.6.1
@@ -293,9 +299,6 @@ importers:
       '@prisma/client':
         specifier: 5.19.1
         version: 5.19.1(prisma@5.19.1)
-      '@prosemirror-adapter/react':
-        specifier: ^0.2.6
-        version: 0.2.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@react-email/render':
         specifier: ^1.0.1
         version: 1.0.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -846,7 +849,7 @@ importers:
         specifier: ^6.36.4
         version: 6.36.4
       '@handlewithcare/react-prosemirror':
-        specifier: ^2.3.5
+        specifier: 'catalog:'
         version: 2.3.5(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       '@lezer/cpp':
         specifier: ^1.1.2
@@ -4832,17 +4835,8 @@ packages:
   '@prisma/schema-files-loader@5.19.1':
     resolution: {integrity: sha512-YYB6Mm7E2YFZAp8GsTCWdqAoehRhiDWQ+M4EwxXwCNfQnciGywGpjDOghJo0ErbGET1v/u0Xszn727cZvdlbPQ==}
 
-  '@prosemirror-adapter/core@0.2.6':
-    resolution: {integrity: sha512-7GXWQBR/bd6ngvek8SgtlEVC0x3KL7LKZ5cxyZl4IBAlRDbITQWsuKLChEXNan9A6+9Ry4a46crbDGTQlzooOg==}
-
   '@prosemirror-adapter/core@0.4.0':
     resolution: {integrity: sha512-feLFTIvbpQDnWspZv+rjTPmqpeJ8++VM/gDnBaDNLsAEvrwmO1IHc0oyrRBl/9x3Er3tU/WXc86TlOidsN1aEg==}
-
-  '@prosemirror-adapter/react@0.2.6':
-    resolution: {integrity: sha512-JdDqAJV7FnRyIlnXPP+E0Iu80BQPvHeB+7c0ZfdcHLfVb2BLTNHk6iOoqJmBJmqqHt/KjxXXTmxRUS4EEsjVlg==}
-    peerDependencies:
-      react: '*'
-      react-dom: '*'
 
   '@prosemirror-adapter/react@0.4.0':
     resolution: {integrity: sha512-SfybFk7VwjlslkDEvxkw4tQphDq7vN3UhUiLJ1sUyT+YVQM23lfugfwX3S/2lZC+eVdGHHa8rEuXQAQ6JRDdDw==}
@@ -10691,11 +10685,6 @@ packages:
   nanoid@3.3.7:
     resolution: {integrity: sha512-eSRppjcPIatRIMC1U6UngP8XFcz8MQWGQdt1MTBQ7NaAmvXDfvNxbvWV3x2y6CdEUciCSsDHDQZbhYaB8QEo2g==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
-  nanoid@4.0.2:
-    resolution: {integrity: sha512-7ZtY5KTCNheRGfEFxnedV5zFiORN1+Y1N6zvPTnHQd8ENUvfaDBeuJDZb2bN/oXwXxu3qkTXDzy57W5vAmDTBw==}
-    engines: {node: ^14 || ^16 || >=18}
     hasBin: true
 
   nanoid@5.0.9:
@@ -17694,20 +17683,8 @@ snapshots:
       '@prisma/prisma-schema-wasm': 5.19.1-2.69d742ee20b815d88e17e54db4a2a7a3b30324e3
       fs-extra: 11.1.1
 
-  '@prosemirror-adapter/core@0.2.6':
-    dependencies:
-      tslib: 2.8.1
-
   '@prosemirror-adapter/core@0.4.0':
     dependencies:
-      tslib: 2.8.1
-
-  '@prosemirror-adapter/react@0.2.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
-    dependencies:
-      '@prosemirror-adapter/core': 0.2.6
-      nanoid: 4.0.2
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
       tslib: 2.8.1
 
   '@prosemirror-adapter/react@0.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
@@ -24843,8 +24820,6 @@ snapshots:
   nanoid@2.1.11: {}
 
   nanoid@3.3.7: {}
-
-  nanoid@4.0.2: {}
 
   nanoid@5.0.9: {}
 

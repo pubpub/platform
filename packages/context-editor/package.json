@@ -76,7 +76,7 @@
 		"@codemirror/search": "^6.5.10",
 		"@codemirror/state": "^6.5.2",
 		"@codemirror/view": "^6.36.4",
-		"@handlewithcare/react-prosemirror": "^2.3.5",
+		"@handlewithcare/react-prosemirror": "catalog:",
 		"@lezer/cpp": "^1.1.2",
 		"@lezer/css": "^1.1.10",
 		"@lezer/html": "^1.3.10",
