@@ -2,7 +2,7 @@ import type { LucideProps } from "lucide-react";
 import type { ReactNode } from "react";
 
 import React, { Fragment, useState } from "react";
-import { usePluginViewContext } from "@prosemirror-adapter/react";
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
 import {
 	Bold,
 	Code,
@@ -43,7 +43,7 @@ import {
 	paragraphToggle,
 } from "../commands/blocks";
 import { insertHorizontalLine } from "../commands/horizontal";
-import { isImageActive } from "../commands/images";
+import { isImageActive as isImageActiveCommand } from "../commands/images";
 import {
 	codeToggle,
 	emToggle,
@@ -208,21 +208,30 @@ const paragraphTypeItems: MenuItem[] = [
 ];
 
 const ParagraphDropdown = () => {
-	const { view } = usePluginViewContext();
-	const activeType = paragraphTypeItems.find((item) => item.command(view)(view.state).isActive);
+	const itemCommand = useEditorEventCallback((view, item: MenuItem) => {
+		if (!view) return;
+		return item.command(view)(view.state);
+	});
+
+	const activeType = paragraphTypeItems.find((item) => itemCommand(item)?.isActive);
+
+	const handleValueChange = useEditorEventCallback((view, value: string) => {
+		if (!view) return;
+		const item = paragraphTypeItems.find((i) => i.key === value);
+		if (!item) {
+			return;
+		}
+
+		const { run } = item.command(view)(view.state);
+		view.focus();
+		run();
+	});
 
 	return (
 		<Select
 			value={activeType?.key}
 			onValueChange={(value) => {
-				const item = paragraphTypeItems.find((i) => i.key === value);
-				if (!item) {
-					return;
-				}
-
-				const { run } = item.command(view)(view.state);
-				view.focus();
-				run();
+				handleValueChange(value);
 			}}
 			disabled={!activeType}
 		>
@@ -245,9 +254,12 @@ const ParagraphDropdown = () => {
 };
 
 const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
-	const { view } = usePluginViewContext();
 	const [isOpen, setIsOpen] = useState(false);
-	const isActive = isImageActive(view.state);
+	const isImageActive = useEditorEventCallback((view) => {
+		if (!view) return false;
+		return isImageActiveCommand(view.state);
+	});
+	const isActive = isImageActive();
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
@@ -275,16 +287,26 @@ const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
 };
 
 const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
-	const { view } = usePluginViewContext();
-	const { key, name, icon, command } = menuItem;
-	const { run, canRun, isActive } = command(view)(view.state);
+	const { key, name, icon } = menuItem;
+
+	const itemCommand = useEditorEventCallback((view) => {
+		if (!view) return;
+		return menuItem.command(view)(view.state);
+	});
+	const cmdResult = itemCommand();
+	const { canRun, isActive } = cmdResult ?? { canRun: false, isActive: false };
+
+	const handleClick = useEditorEventCallback((view) => {
+		if (!view) return;
+		view.focus();
+		const { run } = menuItem.command(view)(view.state);
+		run();
+	});
+
 	return (
 		<Button
 			key={key}
-			onClick={() => {
-				view.focus();
-				run();
-			}}
+			onClick={handleClick}
 			variant="ghost"
 			size="sm"
 			disabled={!canRun}

@@ -3,7 +3,7 @@
 import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
-import React, { forwardRef, memo, useMemo, useState } from "react";
+import React, { forwardRef, useMemo, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
@@ -20,6 +20,7 @@ import "katex/dist/katex.min.css";
 import { cn } from "utils";
 
 import { EditorContextProvider } from "./components/Context";
+import { MenuBar } from "./components/MenuBar";
 import SuggestPanel from "./components/SuggestPanel";
 
 export interface ContextEditorProps {
@@ -100,6 +101,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 			>
 				<EditorContextProvider activeNode={null} position={0}>
 					<>
+						<MenuBar upload={props.upload} />
 						<ProseMirrorDoc />
 						<AttributePanel />
 						<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
