@@ -11,7 +11,7 @@ import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
-import type { LegacyCollection, LegacyCommunity, LegacyPub } from "./schemas";
+import type { LegacyCollection, LegacyCommunity, LegacyPage, LegacyPub } from "./schemas";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
@@ -80,6 +80,11 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	"Version Number": { schemaName: CoreSchemaType.Number },
 	"Full Name": { schemaName: CoreSchemaType.String },
 
+	// page specific
+	Layout: { schemaName: CoreSchemaType.RichText },
+	"Layout Allows Duplicate Pubs": { schemaName: CoreSchemaType.Boolean },
+	"Is Narrow Width": { schemaName: CoreSchemaType.Boolean },
+
 	"Legacy Id": { schemaName: CoreSchemaType.String },
 	"Is Public": { schemaName: CoreSchemaType.Boolean },
 
@@ -135,6 +140,13 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 		fields: {
 			Title: { isTitle: true },
 			"Legacy Id": { isTitle: false },
+			Description: { isTitle: false },
+			Slug: { isTitle: false },
+			Avatar: { isTitle: false },
+			"Is Public": { isTitle: false },
+			Layout: { isTitle: false },
+			"Layout Allows Duplicate Pubs": { isTitle: false },
+			"Is Narrow Width": { isTitle: false },
 		},
 		description: "A Legacy Page Pub (migrated)",
 	},
@@ -175,6 +187,10 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Slug: { isTitle: false },
 			"Is Public": { isTitle: false },
 
+			Layout: { isTitle: false },
+			"Layout Allows Duplicate Pubs": { isTitle: false },
+			"Is Narrow Width": { isTitle: false },
+
 			// metadata
 			DOI: { isTitle: false },
 			URL: { isTitle: false },
@@ -200,6 +216,10 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Slug: { isTitle: false },
 			"Is Public": { isTitle: false },
 
+			Layout: { isTitle: false },
+			"Layout Allows Duplicate Pubs": { isTitle: false },
+			"Is Narrow Width": { isTitle: false },
+
 			// metadata
 			DOI: { isTitle: false },
 			URL: { isTitle: false },
@@ -223,6 +243,10 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Avatar: { isTitle: false },
 			Slug: { isTitle: false },
 			"Is Public": { isTitle: false },
+
+			Layout: { isTitle: false },
+			"Layout Allows Duplicate Pubs": { isTitle: false },
+			"Is Narrow Width": { isTitle: false },
 
 			// metadata
 			DOI: { isTitle: false },
@@ -248,6 +272,10 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Avatar: { isTitle: false },
 			Slug: { isTitle: false },
 			"Is Public": { isTitle: false },
+
+			Layout: { isTitle: false },
+			"Layout Allows Duplicate Pubs": { isTitle: false },
+			"Is Narrow Width": { isTitle: false },
 
 			DOI: { isTitle: false },
 			Items: { isTitle: false },
@@ -915,6 +943,49 @@ const createJournalArticles = async (
 		}
 	);
 };
+
+const createPages = async (
+	{
+		community: { id: communityId },
+		legacyPages,
+		legacyStructure,
+	}: {
+		community: { id: CommunitiesId };
+		legacyPages: LegacyPage[];
+		legacyStructure: LegacyStructure;
+	},
+	trx = db
+) => {
+	return pMap(
+		legacyPages,
+		async (page) => {
+			const op = PubOp.create({
+				communityId,
+				lastModifiedBy: createLastModifiedBy("system"),
+				pubTypeId: legacyStructure["Page"].id,
+				trx,
+			}).set(
+				{
+					[legacyStructure["Page"].fields["Legacy Id"].slug]: page.id,
+					[legacyStructure["Page"].fields.Title.slug]: page.title,
+					[legacyStructure["Page"].fields.Slug.slug]: page.slug,
+					[legacyStructure["Page"].fields["Is Public"].slug]: page.isPublic,
+					[legacyStructure["Page"].fields.Description.slug]: page.description,
+					[legacyStructure["Page"].fields.Avatar.slug]: page.avatar,
+					[legacyStructure["Page"].fields["Is Narrow Width"].slug]: page.isNarrowWidth,
+					// [legacyStructure["Page"].fields.Layout.slug]: page.layout,
+					[legacyStructure["Page"].fields["Layout Allows Duplicate Pubs"].slug]:
+						page.layoutAllowsDuplicatePubs,
+				},
+				{ ignoreNullish: true }
+			);
+
+			return op.execute();
+		},
+		{ concurrency: 20 }
+	);
+};
+
 const createCollections = async (
 	{
 		community: { id: communityId },
@@ -952,6 +1023,13 @@ const createCollections = async (
 					ignoreNullish: true,
 				}
 			);
+
+			if (collection.pageId) {
+				op = op.relateByValue(relevantType.fields["Page"].slug, null, {
+					slug: legacyStructure["Page"].fields["Legacy Id"].slug,
+					value: collection.pageId,
+				});
+			}
 
 			if (collection.kind === "issue") {
 				op = op.set(
@@ -1083,6 +1161,16 @@ export const importFromLegacy = async (
 				p.values.find((v) => v.value === "049a52aa-16cc-4647-9538-cbe4910c9bde")
 			)
 		);
+
+		const legacyPages = await createPages(
+			{
+				community: currentCommunity,
+				legacyPages: parsed.pages,
+				legacyStructure,
+			},
+			trx
+		);
+
 		const legacyCollections = await createCollections(
 			{
 				community: currentCommunity,

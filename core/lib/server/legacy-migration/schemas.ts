@@ -218,18 +218,21 @@ const layoutBlockSchema = z.discriminatedUnion("type", [
 	layoutBlockSubmissionBannerSchema,
 ]);
 
-const pageSchema = z.object({
-	title: z.string(),
-	slug: z.string(),
-	description: z.string().nullable(),
-	avatar: z.string().url().nullable(),
-	isPublic: z.boolean().default(false),
-	isNarrowWidth: z.boolean().nullable(),
-	viewHash: z.string().nullable(),
-	layout: z.array(layoutBlockSchema),
-	layoutAllowsDuplicatePubs: z.boolean().default(false),
-	communityId: z.string().uuid(),
-});
+const pageSchema = z
+	.object({
+		id: z.string(),
+		title: z.string(),
+		slug: z.string(),
+		description: z.string().nullable(),
+		avatar: z.string().url().nullable(),
+		isPublic: z.boolean().default(false),
+		isNarrowWidth: z.boolean().nullable(),
+		viewHash: z.string().nullable(),
+		layout: z.array(layoutBlockSchema),
+		layoutAllowsDuplicatePubs: z.boolean().default(false),
+		communityId: z.string().uuid(),
+	})
+	.merge(baseTimestampsSchema);
 
 const collectionPubSchema = z
 	.object({
@@ -495,5 +498,6 @@ export const legacyExportSchema = z.object({
 });
 
 export type LegacyPub = z.infer<typeof pubSchema>;
+export type LegacyPage = z.infer<typeof pageSchema>;
 
 export type LegacyCommunity = z.infer<typeof legacyExportSchema>;
