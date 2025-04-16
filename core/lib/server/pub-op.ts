@@ -434,32 +434,38 @@ abstract class BasePubOp {
 		valueOrOptions?: PubValue | SetOptions,
 		options?: SetOptions
 	): this {
-		if (valueOrOptions === null && options?.ignoreNullish) {
-			return this;
-		}
+		const mode = typeof slugOrValues === "string" ? "single" : "multiple";
 
 		const defaultOptions = this.getMode() === "upsert" ? { deleteExistingValues: true } : {};
 
-		if (typeof slugOrValues === "string") {
+		const opts = {
+			...defaultOptions,
+			...(mode === "single" ? (options as SetOptions) : (valueOrOptions as SetOptions)),
+		};
+
+		if (mode === "single") {
+			if (valueOrOptions === null && opts?.ignoreNullish) {
+				return this;
+			}
 			this.commands.push({
 				type: "set",
-				slug: slugOrValues,
+				slug: slugOrValues as string,
 				value: valueOrOptions,
-				options: options ?? defaultOptions,
+				options: opts,
 			});
 			return this;
 		}
 
-		this.commands.push(
-			...Object.entries(slugOrValues)
-				.filter(([_, value]) => (options?.ignoreNullish ? value != null : true))
-				.map(([slug, value]) => ({
-					type: "set" as const,
-					slug,
-					value,
-					options: (valueOrOptions as SetOptions) ?? defaultOptions,
-				}))
-		);
+		const commands = Object.entries(slugOrValues)
+			.filter(([_, value]) => (opts?.ignoreNullish ? value != null : true))
+			.map(([slug, value]) => ({
+				type: "set" as const,
+				slug,
+				value,
+				options: opts,
+			}));
+
+		this.commands.push(...commands);
 		return this;
 	}
 
@@ -548,6 +554,10 @@ abstract class BasePubOp {
 		const targets = isMulti
 			? valueOrValues
 			: [{ target: targetOrOptions as ValueTarget, value: valueOrValues as JsonValue }];
+
+		if (!targets?.length) {
+			return this;
+		}
 
 		this.commands.push({
 			type: "relateByValue",
@@ -849,6 +859,9 @@ abstract class BasePubOp {
 						$eq: target.value,
 					},
 				},
+				// withPubs: false,
+				// withRelatedPubs: false,
+				// withStage: false,
 				limit: 2,
 			}
 		);
