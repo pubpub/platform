@@ -65,6 +65,7 @@ export type RunProps<T extends Action> =
 				 */
 				lastModifiedBy: LastModifiedBy;
 				actionRunId: ActionRunsId;
+				actionInstance: ActionInstances;
 			}
 		: never;
 
