@@ -39,7 +39,6 @@ const InitialCreatePubFormWithRelatedPub = async ({
 			{
 				limit: 30,
 				withStage: true,
-				withLegacyAssignee: true,
 				withPubType: true,
 			}
 		),

@@ -36,7 +36,6 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
-				withLegacyAssignee: true,
 			}
 		),
 	]);

@@ -1,4 +1,4 @@
-import type { JsonValue, ProcessedPub, ProcessedPubWithForm } from "contracts";
+import type { ProcessedPub, ProcessedPubWithForm } from "contracts";
 import type { PubFieldsId } from "db/public";
 import { ElementType } from "db/public";
 
@@ -48,7 +48,7 @@ export const getPubTitle = (pub: PubTitleProps): string => {
 	return title ?? fallbackTitle;
 };
 
-type InputPub = ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>;
+type InputPub = ProcessedPub<{ withStage: true; withPubType: true }>;
 
 export const getTitleField = <
 	T extends ProcessedPubWithForm<{
