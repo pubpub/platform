@@ -8,9 +8,8 @@ import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env";
-import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
-import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
-import { default as buildUnjournal } from "./exampleCommunitySeeds/unjournal";
+import { seedLegacy } from "./seeds/legacy";
+import { seedStarter } from "./seeds/starter";
 
 async function createUserMembers({
 	email,
@@ -63,7 +62,7 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
-const arcadiaId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const legacyId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
 const croccrocId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
@@ -73,13 +72,11 @@ async function main() {
 	// this flag is set in the `globalSetup.ts` file
 	// and in e2e.yml
 	// eslint-disable-next-line no-restricted-properties
-	const shouldSeedArcadia = !Boolean(process.env.MINIMAL_SEED);
+	const shouldSeedLegacy = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [
-		unJournalId,
-		croccrocId,
-		shouldSeedArcadia ? arcadiaId : null,
-	].filter(Boolean) as CommunitiesId[];
+	const prismaCommunityIds = [unJournalId, croccrocId, shouldSeedLegacy ? legacyId : null].filter(
+		Boolean
+	) as CommunitiesId[];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -87,9 +84,9 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
-	const arcadiaPromise = shouldSeedArcadia ? seedArcadia(arcadiaId) : null;
+	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([buildUnjournal(unJournalId), seedCroccroc(croccrocId), arcadiaPromise]);
+	await Promise.all([seedStarter(croccrocId), legacyPromise]);
 
 	await Promise.all([
 		createUserMembers({
