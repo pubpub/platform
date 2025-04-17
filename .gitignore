@@ -15,7 +15,8 @@ coverage
 # next.js
 .next
 out
-dist
+**/dist/**/*
+!dist/.gitkeep
 
 # production
 build

@@ -94,7 +94,10 @@ WORKDIR /usr/src/app
 
 COPY --from=prepare-jobs --chown=node:node /tmp/app .
 
+
+
 USER node
+
 
 CMD pnpm start
 

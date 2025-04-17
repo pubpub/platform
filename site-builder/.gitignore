@@ -1,8 +1,11 @@
 # build output
-dist/
+dist/**
+!dist/.gitkeep
 
 # generated types
-.astro/
+.astro/**
+
+!.astro/.gitkeep
 
 # dependencies
 node_modules/
