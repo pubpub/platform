@@ -1,12 +1,54 @@
 import { cache } from "react";
 
+import { logger } from "logger";
+
 import type { autoRevalidate } from "./autoRevalidate";
 import type { AutoCacheOptions, AutoOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types";
+import { env } from "~/lib/env/env.mjs";
 import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { memoize } from "./memoize";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
 import { getTablesWithLinkedTables } from "./specialTables";
+import { getTransactionStore, setTransactionStore } from "./transactionStorage";
+
+const handleTransactionLogicAndDetermineWhetherToSkipCache = (
+	revalidateTags: string[],
+	asOne: string
+) => {
+	const transactionStore = getTransactionStore();
+
+	if (!transactionStore?.isTransaction) {
+		// we can safely use the cache
+		return false;
+	}
+
+	// always do this
+	setTransactionStore({
+		savedTags: revalidateTags,
+		key: asOne,
+	});
+
+	// now we need to do something complex: if
+	// if we are in a transaction and any of the tags we're saving have been invalidated
+	// or if the key we're using has been used before, skip the cache
+	const transactionKeys = transactionStore.keys;
+
+	if (!transactionKeys.has(asOne)) {
+		// we can safely use the cache, as this key has not been used before
+		return false;
+	}
+
+	const toBeSavedTags = new Set(revalidateTags);
+	const toBeRevalidated = transactionStore.revalidateTags;
+
+	if (toBeRevalidated.intersection(toBeSavedTags).size > 0) {
+		// bypass cache and execute directly: we are otherwise likely reusing stale data, as an update has been issued
+		return true;
+	}
+
+	return false;
+};
 
 const executeWithCache = <
 	Q extends SQB<any>,
@@ -25,6 +67,34 @@ const executeWithCache = <
 
 		const allTables = getTablesWithLinkedTables(tables);
 
+		const revalidateTags = [
+			...createCommunityCacheTags(allTables, communitySlug),
+			createCacheTag(`community-all_${communitySlug}`),
+			...(options?.additionalRevalidateTags ?? []),
+		];
+		const additionalCacheKey = [
+			...(compiledQuery.parameters as string[]),
+			...(options?.additionalCacheKey ?? []),
+			communitySlug,
+			// very important, this is really then only thing
+			// that uniquely identifies the query
+			compiledQuery.sql,
+		];
+		const asOne = additionalCacheKey.join("|");
+
+		const shouldSkipCache = handleTransactionLogicAndDetermineWhetherToSkipCache(
+			revalidateTags,
+			asOne
+		);
+
+		if (shouldSkipCache) {
+			if (env.CACHE_LOG) {
+				logger.debug(`AUTOCACHE: Skipping cache for query: ${asOne}`);
+			}
+
+			return qb[method](...args) as ReturnType<Q[M]>;
+		}
+
 		const cachedExecute = memoize(
 			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
 				method: M
@@ -37,19 +107,8 @@ const executeWithCache = <
 			},
 			{
 				...options,
-				revalidateTags: [
-					...createCommunityCacheTags(allTables, communitySlug),
-					createCacheTag(`community-all_${communitySlug}`),
-					...(options?.additionalRevalidateTags ?? []),
-				],
-				additionalCacheKey: [
-					...(compiledQuery.parameters as string[]),
-					...(options?.additionalCacheKey ?? []),
-					communitySlug,
-					// very important, this is really then only thing
-					// that uniquely identifies the query
-					compiledQuery.sql,
-				],
+				revalidateTags,
+				additionalCacheKey,
 			}
 		);
 
