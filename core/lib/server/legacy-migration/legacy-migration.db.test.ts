@@ -91,7 +91,6 @@ describe("getPubByForm", () => {
 
 		const { fields } = await getPubFields({
 			communityId: community.community.id,
-			trx,
 		}).executeTakeFirstOrThrow();
 		// console.log(fields);
 		expect(Object.keys(fields)).toHaveLength(
