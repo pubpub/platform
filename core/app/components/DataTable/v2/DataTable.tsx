@@ -7,7 +7,13 @@ import { DataTable as DataTableV1 } from "../DataTable";
 export function DataTable<TData, TValue>(
 	props: Pick<
 		DataTableProps<TData, TValue>,
-		"columns" | "data" | "onRowClick" | "selectedRows" | "setSelectedRows" | "getRowId"
+		| "columns"
+		| "data"
+		| "onRowClick"
+		| "selectedRows"
+		| "setSelectedRows"
+		| "getRowId"
+		| "pagination"
 	>
 ) {
 	return (
