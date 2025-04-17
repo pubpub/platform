@@ -43,17 +43,16 @@ export const maybeWithTrx = async <T>(
 		}
 	});
 
-	if (error || !res) {
-		for (const tag of savedTags) {
-			if (env.CACHE_LOG === "true") {
-				logger.debug(
-					`MANUAL REVALIDATE: revalidating tag bc of failed transaction: ${tag}`
-				);
-			}
-			revalidateTag(tag);
-		}
-		throw error;
+	if (!error) {
+		return res!;
 	}
 
-	return res;
+	for (const tag of savedTags) {
+		if (env.CACHE_LOG === "true") {
+			logger.debug(`MANUAL REVALIDATE: revalidating tag bc of failed transaction: ${tag}`);
+		}
+		revalidateTag(tag);
+	}
+
+	throw error;
 };
