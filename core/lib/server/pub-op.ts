@@ -393,10 +393,665 @@ class NestedPubOpBuilder {
 	}
 }
 
+interface UpdateOnlyOps {
+	unset(slug: string): this;
+	unrelate(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this;
+}
+
+type ActivePubOp = CreatePubOp | UpdatePubOp | UpsertPubOp;
+
 /**
- * common operations available to all PubOp types
+ * Helper function to access the protected collectOperations method on ActivePubOp
  */
-abstract class BasePubOp {
+function collectOperationsFromPubOp(
+	op: ActivePubOp,
+	processed: Set<PubsId | ValueTarget>
+): OperationsMap {
+	// We need to access the protected method on SinglePubOp
+	// Since TypeScript doesn't allow direct access to protected methods from outside the class hierarchy,
+	// we're using the fact that the method exists on the object
+	return (op as any).collectOperations(processed);
+}
+
+/**
+ * Base class for all pub operations (both single and batch)
+ * Contains shared functionality for executing operations
+ */
+abstract class PubOpBase {
+	/**
+	 * Execute operations with a transaction
+	 */
+	protected abstract executeWithTrx(trx: Transaction<Database>): Promise<PubsId | PubsId[]>;
+
+	/**
+	 * Resolve a target to a pub ID
+	 */
+	protected resolveTargetId(
+		target: PubsId | ValueTarget,
+		targetMap: Map<ValueTarget, PubsId>
+	): PubsId {
+		if (typeof target === "string" && isPubId(target)) {
+			return target;
+		}
+
+		const id = targetMap.get(target as ValueTarget);
+		if (!id) {
+			throw new PubOpError(
+				"UNKNOWN",
+				`Target ${JSON.stringify(target)} not found in target map. This is likely a bug.`
+			);
+		}
+
+		return id;
+	}
+
+	/**
+	 * Find the pub that is specified using a slug and value rather than a PubId
+	 */
+	protected async resolveNonIdTarget(
+		trx: Kysely<Database>,
+		target: { slug: string; value: PubValue },
+		communityId: CommunitiesId
+	): Promise<PubsId[]> {
+		const pubs = await getPubsWithRelatedValues(
+			{
+				communityId,
+			},
+			{
+				trx,
+				filters: {
+					[target.slug]: {
+						$eq: target.value,
+					},
+				},
+				withValues: false,
+				withPubType: false,
+				withStage: false,
+				depth: 1,
+				withRelatedPubs: false,
+				limit: 2,
+			}
+		);
+
+		return pubs.map((p) => p.id);
+	}
+
+	/**
+	 * Resolve all non-ID targets to pub IDs
+	 */
+	protected async resolveAllNonIdTargets(
+		trx: Kysely<Database>,
+		operations: OperationsMap,
+		targetMap: Map<ValueTarget, PubsId>,
+		communityId: CommunitiesId
+	): Promise<void> {
+		const valueTargets = Array.from(operations.keys()).filter(
+			(key) => typeof key !== "string"
+		) as ValueTarget[];
+
+		const relationTargets = Array.from(operations.values()).flatMap((op) =>
+			[...op.relationsToAdd, ...op.relationsToRemove]
+				.filter((r) => typeof r.target !== "string")
+				.map((r) => r.target as ValueTarget)
+		);
+
+		// combine and deduplicate targets
+		const allValueTargets = [...new Set([...valueTargets, ...relationTargets])];
+
+		for (const target of allValueTargets) {
+			const pubIds = await this.resolveNonIdTarget(trx, target, communityId);
+
+			if (pubIds.length > 1) {
+				throw new PubOpError(
+					"AMBIGUOUS_TARGET",
+					`Multiple pubs found for target: ${target.slug} = ${target.value}.\n Pub 1: ${pubIds[0]}\n Pub 2: ${pubIds[1]}`
+				);
+			}
+
+			const fallbackOnNotFound = operations.get(target)?.mode === "upsert";
+
+			if (pubIds.length === 0 && !fallbackOnNotFound) {
+				throw new PubOpError(
+					"UNKNOWN",
+					`No pub found for target: ${target.slug} = ${target.value}`
+				);
+			}
+
+			targetMap.set(target, pubIds[0] || (crypto.randomUUID() as PubsId));
+		}
+	}
+
+	/**
+	 * Create all pubs described in the operations map
+	 */
+	protected async createAllPubs(
+		trx: Transaction<Database>,
+		operations: OperationsMap,
+		targetMap: Map<ValueTarget, PubsId>,
+		communityId: CommunitiesId,
+		isStrict = false
+	): Promise<void> {
+		const createOrUpsertOperations = Array.from(operations.entries()).filter(
+			([_, operation]) => operation.mode === "create" || operation.mode === "upsert"
+		);
+
+		if (createOrUpsertOperations.length === 0) {
+			return;
+		}
+
+		const pubsToCreate = createOrUpsertOperations.map(([key, operation]) => ({
+			id: this.resolveTargetId(key, targetMap),
+			communityId,
+			pubTypeId: expect(operation.pubTypeId),
+		}));
+
+		const createdPubs = await autoRevalidate(
+			trx
+				.insertInto("pubs")
+				.values(pubsToCreate)
+				.onConflict((oc) => oc.columns(["id"]).doNothing())
+				.returningAll()
+		).execute();
+
+		// For strict mode (used in single pub operations), check for create conflicts
+		if (isStrict) {
+			createOrUpsertOperations.forEach(([key, op], index) => {
+				const createdPub = createdPubs[index];
+				const pubToCreate = pubsToCreate[index];
+
+				if (pubToCreate.id && pubToCreate.id !== createdPub?.id && op.mode === "create") {
+					throw new PubOpCreateExistingError(pubToCreate.id);
+				}
+			});
+		}
+	}
+
+	/**
+	 * Process stages for all pubs in the operations map
+	 */
+	protected async processStages(
+		trx: Transaction<Database>,
+		operations: OperationsMap,
+		targetMap: Map<ValueTarget, PubsId>
+	): Promise<void> {
+		const stagesToUpdate = Array.from(operations.entries())
+			.filter(([_, op]) => op.stage !== undefined)
+			.map(([target, op]) => ({
+				pubId: this.resolveTargetId(target, targetMap),
+				stageId: op.stage!,
+			}));
+
+		if (stagesToUpdate.length === 0) {
+			return;
+		}
+
+		const nullStages = stagesToUpdate.filter(({ stageId }) => stageId === null);
+
+		if (nullStages.length > 0) {
+			await autoRevalidate(
+				trx.deleteFrom("PubsInStages").where(
+					"pubId",
+					"in",
+					nullStages.map(({ pubId }) => pubId)
+				)
+			).execute();
+		}
+
+		const nonNullStages = stagesToUpdate.filter(({ stageId }) => stageId !== null);
+
+		if (nonNullStages.length > 0) {
+			await autoRevalidate(
+				trx
+					.with("deletedStages", (db) =>
+						db
+							.deleteFrom("PubsInStages")
+							.where((eb) =>
+								eb.or(
+									nonNullStages.map((stageOp) => eb("pubId", "=", stageOp.pubId))
+								)
+							)
+					)
+					.insertInto("PubsInStages")
+					.values(
+						nonNullStages.map((stageOp) => ({
+							pubId: stageOp.pubId,
+							stageId: stageOp.stageId,
+						}))
+					)
+			).execute();
+		}
+	}
+
+	/**
+	 * Process relations for all pubs in the operations map
+	 */
+	protected async processRelations(
+		trx: Transaction<Database>,
+		operations: OperationsMap,
+		targetMap: Map<ValueTarget, PubsId>,
+		lastModifiedBy: LastModifiedBy,
+		communityId: CommunitiesId
+	): Promise<void> {
+		const relationsToCheckForOrphans = new Set<PubsId>();
+
+		for (const [pubTarget, op] of operations) {
+			const allOps = [
+				...op.relationsToAdd
+					.filter((r) => r.options.replaceExisting)
+					.map((r) => ({ type: "override", ...r })),
+				...op.relationsToClear.map((r) => ({ type: "clear", ...r })),
+				...op.relationsToRemove.map((r) => ({ type: "remove", ...r })),
+			] as RelationOperation[];
+
+			if (allOps.length === 0) {
+				continue;
+			}
+
+			const pubId = this.resolveTargetId(pubTarget, targetMap);
+
+			// Find all existing relations that might be affected
+			const existingRelations = await trx
+				.selectFrom("pub_values")
+				.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+				.select(["pub_values.id", "relatedPubId", "pub_fields.slug"])
+				.where("pubId", "=", pubId)
+				.where("relatedPubId", "is not", null)
+				.where(
+					"slug",
+					"in",
+					allOps.map((op) => op.slug)
+				)
+				.$narrowType<{ relatedPubId: PubsId }>()
+				.execute();
+
+			// Determine which relations to delete
+			const relationsToDelete = existingRelations.filter((relation) => {
+				return allOps.some((relationOp) => {
+					if (relationOp.slug !== relation.slug) {
+						return false;
+					}
+
+					switch (relationOp.type) {
+						case "clear":
+							return true;
+						case "remove":
+							return relationOp.target === relation.relatedPubId;
+						case "override":
+							return true;
+					}
+				});
+			});
+
+			if (relationsToDelete.length === 0) {
+				continue;
+			}
+			// delete the relation values only
+			await deletePubValuesByValueId({
+				pubId,
+				valueIds: relationsToDelete.map((r) => r.id),
+				lastModifiedBy,
+				trx,
+			});
+
+			// check which relations should also be removed due to being orphaned
+			const possiblyOrphanedRelations = relationsToDelete.filter((relation) => {
+				return allOps.some((relationOp) => {
+					if (relationOp.slug !== relation.slug) {
+						return false;
+					}
+
+					if (!relationOp.options?.deleteOrphaned) {
+						return false;
+					}
+
+					switch (relationOp.type) {
+						case "clear":
+							return true;
+						case "remove":
+							return relationOp.target === relation.relatedPubId;
+						case "override":
+							return true;
+					}
+				});
+			});
+
+			if (!possiblyOrphanedRelations.length) {
+				continue;
+			}
+
+			possiblyOrphanedRelations.forEach((r) => {
+				relationsToCheckForOrphans.add(r.relatedPubId);
+			});
+		}
+
+		await this.cleanupOrphanedPubs(
+			trx,
+			Array.from(relationsToCheckForOrphans),
+			lastModifiedBy,
+			communityId
+		);
+	}
+
+	/**
+	 * remove pubs that have been disconnected/their value removed,
+	 * has `deleteOrphaned` set to true for their relevant relation operation,
+	 * AND have no other relations
+	 *
+	 * curently it's not possible to forcibly remove pubs if they are related to other pubs
+	 * perhaps this could be yet another setting
+	 *
+	 * ### Brief explanation
+	 *
+	 * Say we have the following graph of pubs,
+	 * where `A --> C` indicates the existence of a `pub_value`
+	 * ```ts
+	 * {
+	 * 	 pubId: "A",
+	 * 	 relatedPubId: "C",
+	 * }
+	 * ```
+	 *
+	 * ```
+	 *                A               J
+	 *             ┌──┴───┐           │
+	 *             ▼      ▼           ▼
+	 *             B      C ────────► I
+	 *             │    ┌─┴────┐
+	 *             ▼    ▼      ▼
+	 *             G ─► E      D
+	 *                  │      │
+	 *                  ▼      ▼
+	 *                  F      H
+	 *                       ┌─┴──┐
+	 *                       ▼    ▼
+	 *                       K ──► L
+	 * ```
+	 *
+	 * Say we now disconnect `C` from `A`, i.e. we remove the `pub_value` where `pubId = "A"` and `relatedPubId = "C"`
+	 *
+	 *
+	 * Now we disrelate C from A, which should
+	 *  orphan everything from D down,
+	 * but should not orphan I, bc J still points to it
+	 * and should not orphan G, bc B still points to it
+	 * it orphans L, even though K points to it, because K is itself an orphan
+	 * ```
+	 *                A               J
+	 *             ┌──┴               │
+	 *             ▼                  ▼
+	 *             B      C ────────► I
+	 *             │    ┌─┴────┐
+	 *             ▼    ▼      ▼
+	 *             G ─► E      D
+	 *                  │      │
+	 *                  ▼      ▼
+	 *                  F      H
+	 *                       ┌─┴──┐
+	 *                       ▼    ▼
+	 *                       K ──► L
+	 * ```
+	 *
+	 * Then by using the following rules, we can determine which pubs should be deleted:
+	 *
+	 * 1. All pubs down from the disconnected pub
+	 * 2. Which are not reachable from any other pub not in the tree
+	 *
+	 * Using these two rules, we can determine which pubs should be deleted:
+	 * 1. C, as C is disconnected is not the target of any other relation
+	 * 2. D, F, H, K, and L, as they are only reachable from C, which is being deleted
+	 *
+	 * Notably, E and I are not deleted, because
+	 * 1. E is the target of a relation from G, which, while still a relation itself, is not reachable from the C-tree
+	 * 2. I is the target of a relation from J, which, while still a relation itself, is not reachable from the C-tree
+	 *
+	 * So this should be the resulting graph:
+	 *
+	 * ```
+	 *                A               J
+	 *             ┌──┴               │
+	 *             ▼                  ▼
+	 *             B                  I
+	 *             │
+	 *             ▼
+	 *             G ─► E
+	 *                  │
+	 *                  ▼
+	 *                  F
+	 * ```
+	 *
+	 *
+	 */
+	protected async cleanupOrphanedPubs(
+		trx: Transaction<Database>,
+		orphanedPubIds: PubsId[],
+		lastModifiedBy: LastModifiedBy,
+		communityId: CommunitiesId
+	): Promise<void> {
+		if (orphanedPubIds.length === 0) {
+			return;
+		}
+
+		const pubsToDelete = await trx
+			.withRecursive("affected_pubs", (db) => {
+				// Base case: direct connections from the to-be-removed-pubs down
+				const initial = db
+					.selectFrom("pub_values")
+					.select(["pubId as id", sql<string[]>`array["pubId"]`.as("path")])
+					.where("pubId", "in", orphanedPubIds);
+
+				// Recursive case: keep traversing outward
+				const recursive = db
+					.selectFrom("pub_values")
+					.select([
+						"relatedPubId as id",
+						sql<string[]>`affected_pubs.path || array["relatedPubId"]`.as("path"),
+					])
+					.innerJoin("affected_pubs", "pub_values.pubId", "affected_pubs.id")
+					.where((eb) => eb.not(eb("relatedPubId", "=", eb.fn.any("affected_pubs.path")))) // Prevent cycles
+					.$narrowType<{ id: PubsId }>();
+
+				return initial.union(recursive);
+			})
+			// pubs in the affected_pubs table but which should not be deleted because they are still related to other pubs
+			.with("safe_pubs", (db) => {
+				return (
+					db
+						.selectFrom("pub_values")
+						.select(["relatedPubId as id"])
+						.distinct()
+						// crucial part:
+						// find all the pub_values which
+						// - point to a node in the affected_pubs
+						// - but are not themselves affected
+						// these are the "safe" nodes
+						.innerJoin("affected_pubs", "pub_values.relatedPubId", "affected_pubs.id")
+						.where((eb) =>
+							eb.not(
+								eb.exists((eb) =>
+									eb
+										.selectFrom("affected_pubs")
+										.select("id")
+										.whereRef("id", "=", "pub_values.pubId")
+								)
+							)
+						)
+				);
+			})
+			.selectFrom("affected_pubs")
+			.select(["id", "path"])
+			.distinctOn("id")
+			.where((eb) =>
+				eb.not(
+					eb.exists((eb) =>
+						eb
+							.selectFrom("safe_pubs")
+							.select("id")
+							.where(sql<boolean>`safe_pubs.id = any(affected_pubs.path)`)
+					)
+				)
+			)
+			.execute();
+
+		if (pubsToDelete.length > 0) {
+			await deletePub({
+				pubId: pubsToDelete.map((p) => p.id),
+				communityId,
+				lastModifiedBy,
+				trx,
+			});
+		}
+	}
+
+	/**
+	 * Process values for all pubs in the operations map
+	 */
+	protected async processValues(
+		trx: Transaction<Database>,
+		operations: OperationsMap,
+		targetMap: Map<ValueTarget, PubsId>,
+		lastModifiedBy: LastModifiedBy,
+		communityId: CommunitiesId,
+		continueOnValidationError = false
+	): Promise<void> {
+		const toUpsert = Array.from(operations.entries()).flatMap(([key, op]) => {
+			const pubId = this.resolveTargetId(key, targetMap);
+
+			return [
+				// regular values
+				...op.values.map((v) => ({
+					pubId,
+					slug: v.slug,
+					value: v.value,
+					options: v.options,
+				})),
+				// relations
+				...op.relationsToAdd.map((r) => ({
+					pubId,
+					slug: r.slug,
+					value: r.value,
+					relatedPubId: this.resolveTargetId(r.target, targetMap),
+				})),
+			];
+		});
+
+		if (toUpsert.length === 0) {
+			return;
+		}
+
+		const validated = await validatePubValues({
+			pubValues: toUpsert,
+			communityId,
+			continueOnValidationError,
+			trx,
+		});
+
+		const { values, relations } = this.partitionValidatedValues(validated, lastModifiedBy);
+
+		// Group by pubId for deleteExistingValues handling
+		const pubsToDeleteValues = new Set<PubsId>();
+		const pubsToFieldIds = new Map<PubsId, Set<PubFieldsId>>();
+
+		// Track which pubs need to have existing values deleted
+		for (const value of values) {
+			if (value.options?.deleteExistingValues) {
+				pubsToDeleteValues.add(value.pubId);
+			}
+
+			// Track fieldIds for each pub to avoid deleting values we're about to upsert
+			if (!pubsToFieldIds.has(value.pubId)) {
+				pubsToFieldIds.set(value.pubId, new Set());
+			}
+			pubsToFieldIds.get(value.pubId)!.add(value.fieldId);
+		}
+
+		// Delete existing values for pubs that need it
+		if (pubsToDeleteValues.size > 0) {
+			for (const pubId of pubsToDeleteValues) {
+				const fieldIds = Array.from(pubsToFieldIds.get(pubId) || []);
+
+				// Get non-updating values that should be deleted
+				const nonUpdatingValues = await trx
+					.selectFrom("pub_values")
+					.where("pubId", "=", pubId)
+					.where("relatedPubId", "is", null)
+					.where((eb) =>
+						fieldIds.length > 0 ? eb("fieldId", "not in", fieldIds) : eb.eb.val(true)
+					)
+					.select("id")
+					.execute();
+
+				if (nonUpdatingValues.length > 0) {
+					await deletePubValuesByValueId({
+						pubId,
+						valueIds: nonUpdatingValues.map((v) => v.id),
+						lastModifiedBy,
+						trx,
+					});
+				}
+			}
+		}
+
+		// Upsert all values and relations in efficient batches
+		await Promise.all([
+			values.length > 0 &&
+				upsertPubValues({
+					pubId: "xxx" as PubsId, // pubId is set in each value
+					pubValues: values,
+					lastModifiedBy,
+					trx,
+				}),
+			relations.length > 0 &&
+				upsertPubRelationValues({
+					pubId: "xxx" as PubsId, // pubId is set in each relation
+					allRelationsToCreate: relations,
+					lastModifiedBy,
+					trx,
+				}),
+		]);
+	}
+
+	/**
+	 * Split validated values into regular values and relations
+	 */
+	protected partitionValidatedValues<
+		T extends {
+			pubId: PubsId;
+			fieldId: PubFieldsId;
+			value: PubValue;
+			options?: SetOptions;
+		},
+	>(validated: Array<T & { relatedPubId?: PubsId }>, lastModifiedBy: LastModifiedBy) {
+		return {
+			values: validated
+				.filter((v) => !("relatedPubId" in v) || !v.relatedPubId)
+				.map((v) => ({
+					pubId: v.pubId,
+					fieldId: v.fieldId,
+					value: v.value,
+					lastModifiedBy,
+					options: v.options,
+				})),
+			relations: validated
+				.filter(
+					(v): v is T & { relatedPubId: PubsId } =>
+						"relatedPubId" in v && !!v.relatedPubId
+				)
+				.map((v) => ({
+					pubId: v.pubId,
+					fieldId: v.fieldId,
+					value: v.value,
+					relatedPubId: v.relatedPubId,
+					lastModifiedBy,
+					options: v.options,
+				})),
+		};
+	}
+}
+
+/**
+ * common operations available to all single pub op types
+ */
+abstract class SinglePubOp extends PubOpBase {
 	protected readonly options: PubOpOptions;
 	protected readonly commands: PubOpCommand[] = [];
 	readonly target: PubsId | { slug: string; value: PubValue };
@@ -408,6 +1063,7 @@ abstract class BasePubOp {
 	private targetMap: Map<ValueTarget, PubsId>;
 
 	constructor(options: PubOpOptions & { id?: PubsId }) {
+		super();
 		this.options = options;
 		this.target = options.target ?? options.id ?? (crypto.randomUUID() as PubsId);
 		this.targetMap = new Map<ValueTarget, PubsId>();
@@ -480,11 +1136,11 @@ abstract class BasePubOp {
 		valueOrRelations:
 			| PubValue
 			| Array<{
-					target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+					target: PubsId | SinglePubOp | ((builder: NestedPubOpBuilder) => SinglePubOp);
 					value: PubValue;
 			  }>
 	): valueOrRelations is Array<{
-		target: PubsId | BasePubOp | ((builder: NestedPubOpBuilder) => BasePubOp);
+		target: PubsId | SinglePubOp | ((builder: NestedPubOpBuilder) => SinglePubOp);
 		value: PubValue;
 	}> {
 		if (!Array.isArray(valueOrRelations)) {
@@ -692,7 +1348,7 @@ abstract class BasePubOp {
 	 * Create a big list of operations that will be executed
 	 * The goal is to process all the nested pub ops iteratively rather than recursively
 	 */
-	private collectOperations(processed = new Set<PubsId | ValueTarget>()): OperationsMap {
+	protected collectOperations(processed = new Set<PubsId | ValueTarget>()): OperationsMap {
 		// If we've already processed this PubOp, return empty map to avoid circular recursion
 		if (processed.has(this.target)) {
 			return new Map();
@@ -769,7 +1425,7 @@ abstract class BasePubOp {
 						return;
 					}
 
-					const targetOps = relation.target.collectOperations(processed);
+					const targetOps = collectOperationsFromPubOp(relation.target, processed);
 					for (const [key, value] of targetOps) {
 						operations.set(key, value);
 					}
@@ -800,49 +1456,35 @@ abstract class BasePubOp {
 	protected abstract getMode(): OperationMode;
 
 	/**
-	 * resolve a target to a pub id
-	 *
-	 * if no target is provided, the target of the current pub op will be used
-	 *
-	 * if the target is a pub id, it will be returned as is
-	 */
-	private getId(target?: PubsId | ValueTarget): PubsId {
-		if (!target) {
-			return this.getId(this.target);
-		}
-
-		if (typeof target === "string" && isPubId(target)) {
-			return target;
-		}
-
-		const id = this.targetMap.get(target);
-
-		if (!id) {
-			throw new PubOpError(
-				"UNKNOWN",
-				`Target ${target} not found. Did you call resolveTarget before calling resolveNonIdTargets?`
-			);
-		}
-
-		return id;
-	}
-
-	/**
 	 * execute the operations with a transaction
 	 *
 	 * this is where the magic happens, basically
 	 */
 	protected async executeWithTrx(trx: Transaction<Database>): Promise<PubsId> {
 		const operations = this.collectOperations();
+		const targetMap = new Map<ValueTarget, PubsId>();
 
-		await this.resolveNonIdTargets(trx, operations);
+		await this.resolveAllNonIdTargets(trx, operations, targetMap, this.options.communityId);
 
-		await this.createAllPubs(trx, operations);
-		await this.processStages(trx, operations);
-		await this.processRelations(trx, operations);
-		await this.processValues(trx, operations);
+		await this.createAllPubs(trx, operations, targetMap, this.options.communityId, true);
+		await this.processStages(trx, operations, targetMap);
+		await this.processRelations(
+			trx,
+			operations,
+			targetMap,
+			this.options.lastModifiedBy,
+			this.options.communityId
+		);
+		await this.processValues(
+			trx,
+			operations,
+			targetMap,
+			this.options.lastModifiedBy,
+			this.options.communityId,
+			this.options.continueOnValidationError
+		);
 
-		return this.getId();
+		return this.resolveTargetId(this.target, targetMap);
 	}
 
 	private collectValues(): Array<{ slug: string; value: PubValue; options?: SetOptions }> {
@@ -857,608 +1499,10 @@ abstract class BasePubOp {
 				options: cmd.options,
 			}));
 	}
-
-	/**
-	 * Find the pub that is specified using a slug and value rather than a PubId
-	 *
-	 * @throws if there are multiple pubs that match the target
-	 */
-	private async resolveNonIdTarget(
-		trx: Kysely<Database>,
-		target: { slug: string; value: PubValue }
-		/**
-		 * Whether or not to set a random uuid if the pub is not found
-		 * Only really useful for `Upsert.byValue` operations
-		 */
-	): Promise<PubsId[]> {
-		const pubs = await getPubsWithRelatedValues(
-			{
-				communityId: this.options.communityId,
-			},
-			{
-				trx,
-				filters: {
-					[target.slug]: {
-						$eq: target.value,
-					},
-				},
-
-				withValues: false,
-				withPubType: false,
-				withStage: false,
-				depth: 1,
-				withRelatedPubs: false,
-				limit: 2,
-			}
-		);
-
-		return pubs.map((p) => p.id);
-	}
-
-	private async resolveNonIdTargets(
-		trx: Kysely<Database>,
-		operations: OperationsMap
-	): Promise<void> {
-		const targetIdMap = new Map<{ slug: string; value: PubValue }, PubsId>();
-
-		const topLevelPubsToResolve = Array.from(operations.entries())
-			.filter(([key]) => typeof key !== "string")
-			.map(([key, op]) => {
-				return {
-					key,
-					fallbackOnNotFound: op.mode === "upsert",
-				};
-			});
-
-		const otherPubsToResolve = Array.from(operations.entries()).flatMap(([key, op]) => {
-			return [...op.relationsToAdd, ...op.relationsToRemove]
-				.filter(({ target }) => typeof target !== "string")
-				.map((r) => {
-					return {
-						key: r.target,
-						fallbackOnNotFound: false,
-						r,
-						higherKey: key,
-					};
-				});
-		});
-
-		await pMap(
-			[...topLevelPubsToResolve, ...otherPubsToResolve],
-			async ({ key, fallbackOnNotFound, ...rest }) => {
-				if (typeof key === "string") {
-					throw new PubOpError(
-						"UNKNOWN",
-						`Target ${key} is a pub id. Did you call resolveTarget before calling resolveNonIdTargets?`
-					);
-				}
-
-				const pubIds = await this.resolveNonIdTarget(trx, key);
-
-				let pubId = pubIds[0];
-
-				if (pubIds.length > 1) {
-					logger.error(
-						{
-							pub1: pubIds[0],
-							pub2: pubIds[1],
-							msg: "Multiple pubs found for target: %s = %s",
-						},
-						key.slug,
-						key.value
-					);
-					throw new PubOpError(
-						"AMBIGUOUS_TARGET",
-						`Multiple pubs found for target: ${key.slug} = ${key.value}.\n Pub 1: ${pubIds[0]}\n Pub 2: ${pubIds[1]}`
-					);
-				}
-
-				if (pubIds.length === 0) {
-					if (!fallbackOnNotFound) {
-						throw new PubOpError(
-							"UNKNOWN",
-							`No pub found for target: ${key.slug} = ${key.value}`
-						);
-					}
-					pubId = crypto.randomUUID() as PubsId;
-				}
-
-				targetIdMap.set(key, pubId);
-			},
-			{ concurrency: 1 }
-		);
-
-		this.targetMap = targetIdMap;
-	}
-
-	private async createAllPubs(
-		trx: Transaction<Database>,
-		operations: OperationsMap
-	): Promise<void> {
-		const createOrUpsertOperations = Array.from(operations.entries()).filter(
-			([_, operation]) => operation.mode === "create" || operation.mode === "upsert"
-		);
-
-		if (createOrUpsertOperations.length === 0) {
-			return;
-		}
-
-		const pubsToCreate = createOrUpsertOperations.map(([key, operation]) => ({
-			id: this.getId(key),
-			communityId: this.options.communityId,
-			pubTypeId: expect(operation.pubTypeId),
-		}));
-
-		const createdPubs = await autoRevalidate(
-			trx
-				.insertInto("pubs")
-				.values(pubsToCreate)
-				.onConflict((oc) => oc.columns(["id"]).doNothing())
-				.returningAll()
-		).execute();
-
-		/**
-		 * this is a bit of a hack to fill in the holes in the array of created pubs
-		 * because onConflict().doNothing() does not return anything on conflict
-		 * so we have to manually fill in the holes in the array of created pubs
-		 * in order to make looping over the operations and upserting values/relations work
-		 */
-		createOrUpsertOperations.forEach(([key, op], index) => {
-			const createdPub = createdPubs[index];
-			const pubToCreate = pubsToCreate[index];
-
-			if (pubToCreate.id && pubToCreate.id !== createdPub?.id && op.mode === "create") {
-				throw new PubOpCreateExistingError(pubToCreate.id);
-			}
-		});
-
-		return;
-	}
-
-	private async processRelations(
-		trx: Transaction<Database>,
-		operations: OperationsMap
-	): Promise<void> {
-		const relationsToCheckForOrphans = new Set<PubsId>();
-
-		for (const [pubTarget, op] of operations) {
-			const allOps = [
-				...op.relationsToAdd
-					.filter((r) => r.options.replaceExisting)
-					.map((r) => ({ type: "override", ...r })),
-				...op.relationsToClear.map((r) => ({ type: "clear", ...r })),
-				...op.relationsToRemove.map((r) => ({ type: "remove", ...r })),
-			] as RelationOperation[];
-
-			if (allOps.length === 0) {
-				continue;
-			}
-
-			const pubId = this.getId(pubTarget);
-
-			// Find all existing relations that might be affected
-			const existingRelations = await trx
-				.selectFrom("pub_values")
-				.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
-				.select(["pub_values.id", "relatedPubId", "pub_fields.slug"])
-				.where("pubId", "=", pubId)
-				.where("relatedPubId", "is not", null)
-				.where(
-					"slug",
-					"in",
-					allOps.map((op) => op.slug)
-				)
-				.$narrowType<{ relatedPubId: PubsId }>()
-				.execute();
-
-			// Determine which relations to delete
-			const relationsToDelete = existingRelations.filter((relation) => {
-				return allOps.some((relationOp) => {
-					if (relationOp.slug !== relation.slug) {
-						return false;
-					}
-
-					switch (relationOp.type) {
-						case "clear":
-							return true;
-						case "remove":
-							return relationOp.target === relation.relatedPubId;
-						case "override":
-							return true;
-					}
-				});
-			});
-
-			if (relationsToDelete.length === 0) {
-				continue;
-			}
-			// delete the relation values only
-			await deletePubValuesByValueId({
-				pubId,
-				valueIds: relationsToDelete.map((r) => r.id),
-				lastModifiedBy: this.options.lastModifiedBy,
-				trx,
-			});
-
-			// check which relations should also be removed due to being orphaned
-			const possiblyOrphanedRelations = relationsToDelete.filter((relation) => {
-				return allOps.some((relationOp) => {
-					if (relationOp.slug !== relation.slug) {
-						return false;
-					}
-
-					if (!relationOp.options?.deleteOrphaned) {
-						return false;
-					}
-
-					switch (relationOp.type) {
-						case "clear":
-							return true;
-						case "remove":
-							return relationOp.target === relation.relatedPubId;
-						case "override":
-							return true;
-					}
-				});
-			});
-
-			if (!possiblyOrphanedRelations.length) {
-				continue;
-			}
-
-			possiblyOrphanedRelations.forEach((r) => {
-				relationsToCheckForOrphans.add(r.relatedPubId);
-			});
-		}
-
-		await this.cleanupOrphanedPubs(trx, Array.from(relationsToCheckForOrphans));
-	}
-
-	/**
-	 * remove pubs that have been disconnected/their value removed,
-	 * has `deleteOrphaned` set to true for their relevant relation operation,
-	 * AND have no other relations
-	 *
-	 * curently it's not possible to forcibly remove pubs if they are related to other pubs
-	 * perhaps this could be yet another setting
-	 *
-	 * ### Brief explanation
-	 *
-	 * Say we have the following graph of pubs,
-	 * where `A --> C` indicates the existence of a `pub_value`
-	 * ```ts
-	 * {
-	 * 	 pubId: "A",
-	 * 	 relatedPubId: "C",
-	 * }
-	 * ```
-	 *
-	 * ```
-	 *                A               J
-	 *             ┌──┴───┐           │
-	 *             ▼      ▼           ▼
-	 *             B      C ────────► I
-	 *             │    ┌─┴────┐
-	 *             ▼    ▼      ▼
-	 *             G ─► E      D
-	 *                  │      │
-	 *                  ▼      ▼
-	 *                  F      H
-	 *                       ┌─┴──┐
-	 *                       ▼    ▼
-	 *                       K ──► L
-	 * ```
-	 *
-	 * Say we now disconnect `C` from `A`, i.e. we remove the `pub_value` where `pubId = "A"` and `relatedPubId = "C"`
-	 *
-	 *
-	 * Now we disrelate C from A, which should
-	 *  orphan everything from D down,
-	 * but should not orphan I, bc J still points to it
-	 * and should not orphan G, bc B still points to it
-	 * it orphans L, even though K points to it, because K is itself an orphan
-	 * ```
-	 *                A               J
-	 *             ┌──┴               │
-	 *             ▼                  ▼
-	 *             B      C ────────► I
-	 *             │    ┌─┴────┐
-	 *             ▼    ▼      ▼
-	 *             G ─► E      D
-	 *                  │      │
-	 *                  ▼      ▼
-	 *                  F      H
-	 *                       ┌─┴──┐
-	 *                       ▼    ▼
-	 *                       K ──► L
-	 * ```
-	 *
-	 * Then by using the following rules, we can determine which pubs should be deleted:
-	 *
-	 * 1. All pubs down from the disconnected pub
-	 * 2. Which are not reachable from any other pub not in the tree
-	 *
-	 * Using these two rules, we can determine which pubs should be deleted:
-	 * 1. C, as C is disconnected is not the target of any other relation
-	 * 2. D, F, H, K, and L, as they are only reachable from C, which is being deleted
-	 *
-	 * Notably, E and I are not deleted, because
-	 * 1. E is the target of a relation from G, which, while still a relation itself, is not reachable from the C-tree
-	 * 2. I is the target of a relation from J, which, while still a relation itself, is not reachable from the C-tree
-	 *
-	 * So this should be the resulting graph:
-	 *
-	 * ```
-	 *                A               J
-	 *             ┌──┴               │
-	 *             ▼                  ▼
-	 *             B                  I
-	 *             │
-	 *             ▼
-	 *             G ─► E
-	 *                  │
-	 *                  ▼
-	 *                  F
-	 * ```
-	 *
-	 *
-	 */
-	private async cleanupOrphanedPubs(
-		trx: Transaction<Database>,
-		orphanedPubIds: PubsId[]
-	): Promise<void> {
-		if (orphanedPubIds.length === 0) {
-			return;
-		}
-
-		const pubsToDelete = await trx
-			.withRecursive("affected_pubs", (db) => {
-				// Base case: direct connections from the to-be-removed-pubs down
-				const initial = db
-					.selectFrom("pub_values")
-					.select(["pubId as id", sql<string[]>`array["pubId"]`.as("path")])
-					.where("pubId", "in", orphanedPubIds);
-
-				// Recursive case: keep traversing outward
-				const recursive = db
-					.selectFrom("pub_values")
-					.select([
-						"relatedPubId as id",
-						sql<string[]>`affected_pubs.path || array["relatedPubId"]`.as("path"),
-					])
-					.innerJoin("affected_pubs", "pub_values.pubId", "affected_pubs.id")
-					.where((eb) => eb.not(eb("relatedPubId", "=", eb.fn.any("affected_pubs.path")))) // Prevent cycles
-					.$narrowType<{ id: PubsId }>();
-
-				return initial.union(recursive);
-			})
-			// pubs in the affected_pubs table but which should not be deleted because they are still related to other pubs
-			.with("safe_pubs", (db) => {
-				return (
-					db
-						.selectFrom("pub_values")
-						.select(["relatedPubId as id"])
-						.distinct()
-						// crucial part:
-						// find all the pub_values which
-						// - point to a node in the affected_pubs
-						// - but are not themselves affected
-						// these are the "safe" nodes
-						.innerJoin("affected_pubs", "pub_values.relatedPubId", "affected_pubs.id")
-						.where((eb) =>
-							eb.not(
-								eb.exists((eb) =>
-									eb
-										.selectFrom("affected_pubs")
-										.select("id")
-										.whereRef("id", "=", "pub_values.pubId")
-								)
-							)
-						)
-				);
-			})
-			.selectFrom("affected_pubs")
-			.select(["id", "path"])
-			.distinctOn("id")
-			.where((eb) =>
-				eb.not(
-					eb.exists((eb) =>
-						eb
-							.selectFrom("safe_pubs")
-							.select("id")
-							.where(sql<boolean>`safe_pubs.id = any(affected_pubs.path)`)
-					)
-				)
-			)
-			.execute();
-
-		if (pubsToDelete.length > 0) {
-			await deletePub({
-				pubId: pubsToDelete.map((p) => p.id),
-				communityId: this.options.communityId,
-				lastModifiedBy: this.options.lastModifiedBy,
-				trx,
-			});
-		}
-	}
-
-	private async processValues(
-		trx: Transaction<Database>,
-		operations: OperationsMap
-	): Promise<void> {
-		const toUpsert = Array.from(operations.entries()).flatMap(([key, op]) => {
-			return [
-				// regular values
-				...op.values.map((v) => ({
-					pubId: this.getId(key),
-					slug: v.slug,
-					value: v.value,
-					options: v.options,
-				})),
-				// relations
-				...op.relationsToAdd.map((r) => ({
-					pubId: this.getId(key),
-					slug: r.slug,
-					value: r.value,
-					relatedPubId: this.getId(r.target),
-				})),
-			];
-		});
-
-		if (toUpsert.length === 0) {
-			return;
-		}
-
-		const validated = await validatePubValues({
-			pubValues: toUpsert,
-			communityId: this.options.communityId,
-			continueOnValidationError: this.options.continueOnValidationError,
-			trx,
-		});
-
-		const { values, relations } = this.partitionValidatedValues(validated);
-
-		// if some values have `deleteExistingValues` set to true,
-		// we need to delete all the existing values for this pub
-		const shouldDeleteExistingValues = values.some((v) => !!v.options?.deleteExistingValues);
-
-		if (values.length > 0 && shouldDeleteExistingValues) {
-			// get all the values that are not being updated
-
-			const nonUpdatingValues = await trx
-				.selectFrom("pub_values")
-				.where("pubId", "=", this.getId())
-				.where("relatedPubId", "is", null)
-				.where(
-					"fieldId",
-					"not in",
-					values.map((v) => v.fieldId)
-				)
-				.select("id")
-				.execute();
-
-			await deletePubValuesByValueId({
-				pubId: this.getId(),
-				valueIds: nonUpdatingValues.map((v) => v.id),
-				lastModifiedBy: this.options.lastModifiedBy,
-				trx,
-			});
-		}
-
-		await Promise.all([
-			values.length > 0 &&
-				upsertPubValues({
-					pubId: "xxx" as PubsId,
-					pubValues: values,
-					lastModifiedBy: this.options.lastModifiedBy,
-					trx,
-				}),
-			relations.length > 0 &&
-				upsertPubRelationValues({
-					pubId: "xxx" as PubsId,
-					allRelationsToCreate: relations,
-					lastModifiedBy: this.options.lastModifiedBy,
-					trx,
-				}),
-		]);
-	}
-
-	// --- Helper methods ---
-
-	private partitionValidatedValues<
-		T extends {
-			pubId: PubsId;
-			fieldId: PubFieldsId;
-			value: PubValue;
-			options?: SetOptions;
-		},
-	>(validated: Array<T & { relatedPubId?: PubsId }>) {
-		return {
-			values: validated
-				.filter((v) => !("relatedPubId" in v) || !v.relatedPubId)
-				.map((v) => ({
-					pubId: v.pubId,
-					fieldId: v.fieldId,
-					value: v.value,
-					lastModifiedBy: this.options.lastModifiedBy,
-					options: v.options,
-				})),
-			relations: validated
-				.filter(
-					(v): v is T & { relatedPubId: PubsId } =>
-						"relatedPubId" in v && !!v.relatedPubId
-				)
-				.map((v) => ({
-					pubId: v.pubId,
-					fieldId: v.fieldId,
-					value: v.value,
-					relatedPubId: v.relatedPubId,
-					lastModifiedBy: this.options.lastModifiedBy,
-					options: v.options,
-				})),
-		};
-	}
-
-	private async processStages(
-		trx: Transaction<Database>,
-		operations: OperationsMap
-	): Promise<void> {
-		const stagesToUpdate = Array.from(operations.entries())
-			.filter(([_, op]) => op.stage !== undefined)
-			.map(([target, op]) => ({
-				pubId: this.getId(target),
-				stageId: op.stage!,
-			}));
-
-		if (stagesToUpdate.length === 0) {
-			return;
-		}
-
-		const nullStages = stagesToUpdate.filter(({ stageId }) => stageId === null);
-
-		if (nullStages.length > 0) {
-			await autoRevalidate(
-				trx.deleteFrom("PubsInStages").where(
-					"pubId",
-					"in",
-					nullStages.map(({ pubId }) => pubId)
-				)
-			).execute();
-		}
-
-		const nonNullStages = stagesToUpdate.filter(({ stageId }) => stageId !== null);
-
-		if (nonNullStages.length > 0) {
-			await autoRevalidate(
-				trx
-					.with("deletedStages", (db) =>
-						db
-							.deleteFrom("PubsInStages")
-							.where((eb) =>
-								eb.or(
-									nonNullStages.map((stageOp) => eb("pubId", "=", stageOp.pubId))
-								)
-							)
-					)
-					.insertInto("PubsInStages")
-					.values(
-						nonNullStages.map((stageOp) => ({
-							pubId: stageOp.pubId,
-							stageId: stageOp.stageId,
-						}))
-					)
-			).execute();
-		}
-	}
-}
-
-interface UpdateOnlyOps {
-	unset(slug: string): this;
-	unrelate(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this;
 }
 
 // Implementation classes - these are not exported
-class CreatePubOp extends BasePubOp {
+class CreatePubOp extends SinglePubOp {
 	private readonly initialId?: PubsId;
 
 	constructor(options: PubOpOptions, initialId?: PubsId) {
@@ -1478,7 +1522,7 @@ class CreatePubOp extends BasePubOp {
 	}
 }
 
-class UpsertPubOp extends BasePubOp {
+class UpsertPubOp extends SinglePubOp {
 	private readonly initialTarget?: PubsId | ValueTarget;
 
 	constructor(options: PubOpOptionsCreateUpsert, initialTarget: PubsId | ValueTarget) {
@@ -1491,7 +1535,7 @@ class UpsertPubOp extends BasePubOp {
 	}
 }
 
-class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
+class UpdatePubOp extends SinglePubOp implements UpdateOnlyOps {
 	private readonly initialTarget?: PubsId | ValueTarget;
 
 	constructor(
@@ -1567,6 +1611,172 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 }
 
 /**
+ * Class for batching multiple pub operations and executing them efficiently
+ */
+export class BatchPubOp extends PubOpBase {
+	private operations: ActivePubOp[] = [];
+	private readonly sharedOptions: Omit<PubOpOptionsBase, "target">;
+
+	constructor(options: Omit<PubOpOptionsBase, "target">) {
+		super();
+		this.sharedOptions = options;
+	}
+
+	/**
+	 * Add a pub operation to the batch
+	 */
+	add(
+		operationBuilder: (ops: {
+			create: (options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }) => CreatePubOp;
+			createWithId: (
+				id: PubsId,
+				options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }
+			) => CreatePubOp;
+			update: (id: PubsId, options?: Partial<PubOpOptionsBase>) => UpdatePubOp;
+			upsert: (
+				id: PubsId,
+				options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
+			) => UpsertPubOp;
+			upsertByValue: (
+				slug: string,
+				value: PubValue,
+				options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
+			) => UpsertPubOp;
+		}) => ActivePubOp
+	): this {
+		const nestedBuilder = {
+			create: (options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }) =>
+				new CreatePubOp({ ...this.sharedOptions, ...options }),
+
+			createWithId: (
+				id: PubsId,
+				options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }
+			) => new CreatePubOp({ ...this.sharedOptions, ...options }, id),
+
+			update: (id: PubsId, options: Partial<PubOpOptionsBase> = {}) =>
+				new UpdatePubOp({ ...this.sharedOptions, ...options }, id),
+
+			upsert: (
+				id: PubsId,
+				options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
+			) => new UpsertPubOp({ ...this.sharedOptions, ...options }, id),
+
+			upsertByValue: (
+				slug: string,
+				value: PubValue,
+				options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
+			) => new UpsertPubOp({ ...this.sharedOptions, ...options }, { slug, value }),
+		};
+
+		const operation = operationBuilder(nestedBuilder);
+		this.operations.push(operation);
+		return this;
+	}
+
+	/**
+	 * Execute all operations in the batch
+	 * @returns Array of pub IDs in the same order as operations were added
+	 */
+	async execute(): Promise<PubsId[]> {
+		const { trx = db } = this.sharedOptions;
+		return maybeWithTrx(trx, (trx) => this.executeWithTrx(trx));
+	}
+
+	/**
+	 * Execute all operations in the batch and return the updated/created pubs
+	 * @returns Array of processed pubs in the same order as operations were added
+	 */
+	async executeAndReturnPubs(): Promise<ProcessedPub[]> {
+		const { trx = db } = this.sharedOptions;
+		const pubIds = await maybeWithTrx(trx, (trx) => this.executeWithTrx(trx));
+
+		return Promise.all(
+			pubIds.map((pubId) =>
+				getPubsWithRelatedValues(
+					{ pubId, communityId: this.sharedOptions.communityId },
+					{ trx }
+				)
+			)
+		);
+	}
+
+	protected async executeWithTrx(trx: Transaction<Database>): Promise<PubsId[]> {
+		// collect all operations from all pub ops
+		const allOperationsMap = new Map<PubsId | ValueTarget, CollectedOperation>();
+
+		// collect the target mapping for value targets
+		const targetMap = new Map<ValueTarget, PubsId>();
+
+		// track the original order of operations for returning results
+		const originalOperations: Array<PubsId | ValueTarget> = [];
+
+		// Collect operations from all pub ops
+		for (const op of this.operations) {
+			originalOperations.push(op.target);
+
+			// Collect operations from this PubOp
+			const pubOpOperations = collectOperationsFromPubOp(op, new Set());
+
+			// merge the operations
+			for (const [target, operation] of pubOpOperations.entries()) {
+				if (allOperationsMap.has(target)) {
+					const existingOp = allOperationsMap.get(target)!;
+
+					// merge the operations
+					existingOp.values.push(...operation.values);
+					existingOp.relationsToAdd.push(...operation.relationsToAdd);
+					existingOp.relationsToRemove.push(...operation.relationsToRemove);
+					existingOp.relationsToClear.push(...operation.relationsToClear);
+
+					// if the operation sets a stage, use that
+					if (operation.stage !== undefined) {
+						existingOp.stage = operation.stage;
+					}
+				} else {
+					allOperationsMap.set(target, operation);
+				}
+			}
+		}
+
+		// Use shared methods from PubOpBase
+		await this.resolveAllNonIdTargets(
+			trx,
+			allOperationsMap,
+			targetMap,
+			this.sharedOptions.communityId
+		);
+		await this.createAllPubs(trx, allOperationsMap, targetMap, this.sharedOptions.communityId);
+		await this.processStages(trx, allOperationsMap, targetMap);
+		await this.processRelations(
+			trx,
+			allOperationsMap,
+			targetMap,
+			this.sharedOptions.lastModifiedBy,
+			this.sharedOptions.communityId
+		);
+
+		// Determine if any operations allow continuing on validation error
+		const continueOnValidationError = this.operations.some(
+			(op) =>
+				"continueOnValidationError" in (op as any).options &&
+				(op as any).options.continueOnValidationError
+		);
+
+		await this.processValues(
+			trx,
+			allOperationsMap,
+			targetMap,
+			this.sharedOptions.lastModifiedBy,
+			this.sharedOptions.communityId,
+			continueOnValidationError
+		);
+
+		// Return pub IDs in the original order
+		return originalOperations.map((target) => this.resolveTargetId(target, targetMap));
+	}
+}
+
+/**
  * A PubOp is a builder for a pub.
  *
  * It can be used to create, update or upsert a pub.
@@ -1628,6 +1838,20 @@ export class PubOp {
 	): UpsertPubOp {
 		return new UpsertPubOp(options, { slug, value });
 	}
-}
 
-type ActivePubOp = CreatePubOp | UpdatePubOp | UpsertPubOp;
+	/**
+	 * Create a batch operation for efficiently executing multiple pub operations
+	 *
+	 * @example
+	 * ```ts
+	 * await PubOp.batch({ communityId, lastModifiedBy })
+	 *   .add(ops => ops.create({ pubTypeId: "type1" }).set("title", "Title 1"))
+	 *   .add(ops => ops.update(existingId).set("title", "Updated Title"))
+	 *   .add(ops => ops.upsert(maybeExistingId, { pubTypeId: "type2" }).set("title", "Title 3"))
+	 *   .execute()
+	 * ```
+	 */
+	static batch(options: Omit<PubOpOptionsBase, "target">): BatchPubOp {
+		return new BatchPubOp(options);
+	}
+}
