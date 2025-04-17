@@ -50,7 +50,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	const data = await result.json();
 
 	logger.info({ msg: "Journal site built", data });
-	console.log(data);
 
 	return {
 		success: true,
