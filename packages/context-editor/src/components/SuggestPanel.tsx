@@ -65,6 +65,7 @@ export default function SuggestPanel({ suggestData, setSuggestData }: Props) {
 					<div
 						key={item.id}
 						className={`rounded p-1 ${index === selectedIndex ? "bg-neutral-200" : ""}`}
+						data-testid="suggest-item"
 					>
 						{itemIsPub && (
 							<div className="flex items-center space-x-2">
