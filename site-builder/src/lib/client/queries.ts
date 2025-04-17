@@ -12,6 +12,7 @@ export const getPubType = async (name: string) => {
 	});
 
 	if (pubTypeId.status !== 200) {
+		console.error(pubTypeId.body);
 		throw new Error("Failed to fetch pub type");
 	}
 

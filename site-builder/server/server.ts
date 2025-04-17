@@ -60,7 +60,7 @@ const buildSite = async (): Promise<boolean> => {
 		console.log("Starting Astro build process...");
 
 		// Use spawn instead of exec to get streaming output
-		const buildProcess = spawn("pnpm", ["run", "build"], {
+		const buildProcess = spawn("pnpm", ["site:build"], {
 			shell: true,
 			stdio: "pipe",
 			env: process.env,

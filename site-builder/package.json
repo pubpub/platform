@@ -7,12 +7,13 @@
 		"format": "prettier --check . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../.gitignore --ignore-path ./.gitignore",
 		"type-check": "astro check",
-		"dev": "astro dev",
-		"build": "astro build",
-		"preview": "astro preview",
-		"astro": "astro",
+		"site:dev": "astro dev",
+		"site:build": "astro build",
+		"site:preview": "astro preview",
+		"site:astro": "astro",
 		"start": "tsx server/server.ts",
-		"start:dev": "tsx --watch server/server.ts",
+		"server:start": "tsx server/server.ts",
+		"server:dev": "tsx --watch server/server.ts",
 		"docker:build": "docker build -f ../Dockerfile .. -t site-builder:latest --progress=plain --build-arg PACKAGE=site-builder --target jobs"
 	},
 	"dependencies": {
