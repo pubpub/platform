@@ -92,16 +92,14 @@ export default function ContextEditor(props: ContextEditorProps) {
 				className={cn("font-serif", props.className)}
 			>
 				<EditorContextProvider activeNode={null} position={0}>
-					<>
-						{props.hideMenu ? null : (
-							<div className="sticky top-0 z-10">
-								<MenuBar upload={props.upload} />
-							</div>
-						)}
-						<ProseMirrorDoc />
-						<AttributePanel menuHidden={!!props.hideMenu} />
-						<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
-					</>
+					{props.hideMenu ? null : (
+						<div className="sticky top-0 z-10">
+							<MenuBar upload={props.upload} />
+						</div>
+					)}
+					<ProseMirrorDoc />
+					<AttributePanel menuHidden={!!props.hideMenu} />
+					<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
 				</EditorContextProvider>
 			</ProseMirror>
 		</div>
