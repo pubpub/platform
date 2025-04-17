@@ -52,5 +52,8 @@
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19"
 	},
-	"prettier": "@pubpub/prettier-config/astro"
+	"prettier": "@pubpub/prettier-config/astro",
+	"Goverrides": {
+		"@astrojs/react>vite": "npm:rolldown-vite@latest"
+	}
 }

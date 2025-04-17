@@ -38,6 +38,8 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			communitySlug,
 			journalId: pub.id,
 			mapping: config,
+			uploadToS3Folder: true,
+			siteUrl: `http://localhost:4321`,
 		},
 	});
 
@@ -52,11 +54,14 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	logger.info({ msg: "Journal site built", data });
 
+	const s3FolderUrl = data.s3FolderUrl;
+
 	return {
 		success: true as const,
 		report: `<div>
 			<p>Journal site built</p>
 			<a className="font-semibold underline" href="${data.url}">Download</a>
+			${s3FolderUrl ? `<a className="font-semibold underline" href="${s3FolderUrl}">S3 Live site</a>` : ""}
 		</div>`,
 		data,
 	};

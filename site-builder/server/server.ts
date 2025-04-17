@@ -18,6 +18,8 @@ import mime from "mime-types";
 
 import { siteBuilderApi } from "contracts/resources/site-builder";
 
+import { buildAstroSite } from "./astro";
+
 dotenv.config({ path: "./.env.development" });
 
 const env = await import("../env").then((m) => m.BUILD_ENV);
@@ -53,65 +55,6 @@ export const getS3Client = () => {
 	});
 
 	return s3Client;
-};
-
-const BUCKET_NAME = env.S3_BUCKET_NAME || "astro-site";
-const distDir = path.join(process.cwd(), "dist");
-
-// Function to build the Astro site with real-time logging
-const buildSite = async (communitySlug: string): Promise<boolean> => {
-	return new Promise((resolve) => {
-		console.log("Starting Astro build process...");
-
-		// Use spawn instead of exec to get streaming output
-		const buildProcess = spawn("pnpm", ["site:build"], {
-			shell: true,
-			stdio: "pipe",
-			env: {
-				...process.env,
-				AUTH_TOKEN: env.AUTH_TOKEN,
-				COMMUNITY_SLUG: communitySlug,
-			},
-		});
-
-		// Handle stdout - real-time build progress
-		buildProcess.stdout.on("data", (data) => {
-			// Split the data by lines and log each line
-			const output = data.toString().trim();
-			if (output) {
-				output.split("\n").forEach((line: string) => {
-					if (line.trim()) console.log(`[Astro] ${line.trim()}`);
-				});
-			}
-		});
-
-		// Handle stderr - warnings and errors
-		buildProcess.stderr.on("data", (data) => {
-			const output = data.toString().trim();
-			if (output) {
-				output.split("\n").forEach((line: string) => {
-					if (line.trim()) console.error(`[Astro Error] ${line.trim()}`);
-				});
-			}
-		});
-
-		// Handle process completion
-		buildProcess.on("close", (code) => {
-			if (code === 0) {
-				console.log("Astro build completed successfully");
-				resolve(true);
-			} else {
-				console.error(`Astro build failed with code ${code}`);
-				resolve(false);
-			}
-		});
-
-		// Handle unexpected errors
-		buildProcess.on("error", (err) => {
-			console.error("Failed to start Astro build process:", err);
-			resolve(false);
-		});
-	});
 };
 
 /**
@@ -211,7 +154,6 @@ const uploadDirectoryToS3 = async (
 	s3Prefix: string,
 	timestamp?: number
 ): Promise<string> => {
-	const client = getS3Client();
 	const bucket = env.S3_BUCKET_NAME;
 
 	// Use timestamp for versioning if provided
@@ -458,10 +400,21 @@ const router = tsr.router(siteBuilderApi, {
 		console.log("Build request received");
 
 		const communitySlug = body.communitySlug;
+		const siteUrl = body.siteUrl;
 		const uploadToS3Folder = body.uploadToS3Folder || false;
 		const timestamp = Date.now();
 
-		const buildSuccess = await buildSite(communitySlug);
+		const distDir = `./dist/${communitySlug}`;
+
+		const buildSuccess = await buildAstroSite({
+			outDir: distDir,
+			site: siteUrl,
+			vite: {
+				define: {
+					"import.meta.env.COMMUNITY_SLUG": JSON.stringify(communitySlug),
+				},
+			},
+		});
 
 		if (!buildSuccess) {
 			return {

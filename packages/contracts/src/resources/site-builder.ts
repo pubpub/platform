@@ -12,6 +12,8 @@ export const siteBuilderApi = contract.router({
 			communitySlug: z.string(),
 			journalId: z.string().uuid(),
 			mapping: z.object({}).optional(),
+			uploadToS3Folder: z.boolean().optional(),
+			siteUrl: z.string(),
 		}),
 		description: "Build a journal site",
 		responses: {
@@ -22,6 +24,8 @@ export const siteBuilderApi = contract.router({
 				timestamp: z.number(),
 				fileSize: z.number(),
 				fileSizeFormatted: z.string(),
+				s3FolderUrl: z.string().optional(),
+				s3FolderPath: z.string().optional(),
 			}),
 		},
 	},

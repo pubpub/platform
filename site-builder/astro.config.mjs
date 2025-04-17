@@ -17,6 +17,7 @@ export default defineConfig({
 			applyBaseStyles: true,
 			configFile: "./tailwind.config.mjs",
 		}),
+
 		// pdf({
 		// 	baseOptions: {
 		// 		path: "/pdf[pathname].pdf",
