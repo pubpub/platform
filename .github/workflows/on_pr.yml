@@ -83,7 +83,6 @@ jobs:
             PLATFORM_IMAGE: "x" # not used
             JOBS_IMAGE: "x" # not used
             MIGRATIONS_IMAGE: "x" # not used
-            PUBLIC_URL: ${{ github.event.repository.html_url }}
             AWS_REGION: "us-east-1"
         secrets:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
