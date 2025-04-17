@@ -452,37 +452,6 @@ abstract class PubOpBase {
 	}
 
 	/**
-	 * Find the pub that is specified using a slug and value rather than a PubId
-	 */
-	protected async resolveNonIdTarget(
-		trx: Kysely<Database>,
-		target: { slug: string; value: PubValue },
-		communityId: CommunitiesId
-	): Promise<PubsId[]> {
-		const pubs = await getPubsWithRelatedValues(
-			{
-				communityId,
-			},
-			{
-				trx,
-				filters: {
-					[target.slug]: {
-						$eq: target.value,
-					},
-				},
-				withValues: false,
-				withPubType: false,
-				withStage: false,
-				depth: 1,
-				withRelatedPubs: false,
-				limit: 2,
-			}
-		);
-
-		return pubs.map((p) => p.id);
-	}
-
-	/**
 	 * Resolve all non-ID targets to pub IDs
 	 */
 	protected async resolveAllNonIdTargets(
@@ -504,8 +473,66 @@ abstract class PubOpBase {
 		// combine and deduplicate targets
 		const allValueTargets = [...new Set([...valueTargets, ...relationTargets])];
 
+		if (allValueTargets.length === 0) {
+			return;
+		}
+
+		// group targets by slug for a more efficient query
+		const targetsBySlug = new Map<string, { value: PubValue; target: ValueTarget }[]>();
 		for (const target of allValueTargets) {
-			const pubIds = await this.resolveNonIdTarget(trx, target, communityId);
+			const existing = targetsBySlug.get(target.slug) || [];
+			existing.push({ value: target.value, target });
+			targetsBySlug.set(target.slug, existing);
+		}
+
+		// build a single query to fetch all matching pubs
+		// definitely not worth caching this
+		const query = trx
+			.selectFrom("pub_fields")
+			.innerJoin("pub_values", "pub_values.fieldId", "pub_fields.id")
+			.innerJoin("pubs", "pubs.id", "pub_values.pubId")
+			.select((eb) => [
+				"pub_fields.slug as slug",
+				"pub_values.value as value",
+				"pubs.id as pubId",
+				"pubs.communityId as communityId",
+			])
+			.where("pubs.communityId", "=", communityId)
+			.where((eb) =>
+				eb.or(
+					Array.from(targetsBySlug.entries()).map(([slug, values]) =>
+						eb.and([
+							eb("pub_fields.slug", "=", slug),
+							eb(
+								sql`${JSON.stringify(
+									targetsBySlug
+										.values()
+										.toArray()[0]
+										.map((v) => v.value)
+								)}::jsonb`,
+								"@>",
+								eb.ref("pub_values.value")
+							),
+						])
+					)
+				)
+			);
+
+		const results = await query.execute();
+
+		// create a lookup map to match results back to targets
+		const resultMap = new Map<string, PubsId[]>();
+		for (const result of results) {
+			const key = `${result.slug}:${JSON.stringify(result.value)}`;
+			const existing = resultMap.get(key) || [];
+			existing.push(result.pubId as PubsId);
+			resultMap.set(key, existing);
+		}
+
+		// process each original target and populate targetMap
+		for (const target of allValueTargets) {
+			const key = `${target.slug}:${JSON.stringify(target.value)}`;
+			const pubIds = resultMap.get(key) || [];
 
 			if (pubIds.length > 1) {
 				throw new PubOpError(
@@ -518,12 +545,14 @@ abstract class PubOpBase {
 
 			if (pubIds.length === 0 && !fallbackOnNotFound) {
 				throw new PubOpError(
-					"UNKNOWN",
+					"INVALID_TARGET",
 					`No pub found for target: ${target.slug} = ${target.value}`
 				);
 			}
 
-			targetMap.set(target, pubIds[0] || (crypto.randomUUID() as PubsId));
+			if (pubIds.length === 1) {
+				targetMap.set(target, pubIds[0]);
+			}
 		}
 	}
 
