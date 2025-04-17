@@ -1,6 +1,6 @@
 // @ts-check
 
-import baseConfig from "./index.mjs";
+import baseConfig from "./index.js";
 
 /** @typedef {import("prettier").Config} PrettierConfig */
 /** @typedef {import("prettier-plugin-tailwindcss").PluginOptions} TailwindConfig */
