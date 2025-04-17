@@ -72,11 +72,13 @@ export const getPubTypesForCommunity = async (
 		offset = GET_MANY_DEFAULT.offset,
 		orderBy = GET_MANY_DEFAULT.orderBy,
 		orderDirection = GET_MANY_DEFAULT.orderDirection,
-	}: GetManyParams = GET_MANY_DEFAULT
+		name,
+	}: GetManyParams & { name?: string } = GET_MANY_DEFAULT
 ) =>
 	autoCache(
 		getPubTypeBase()
 			.where("pub_types.communityId", "=", communityId)
+			.$if(Boolean(name), (eb) => eb.where("pub_types.name", "=", name!))
 			.orderBy(orderBy, orderDirection)
 			.$if(limit !== 0, (qb) => qb.limit(limit).offset(offset))
 	).execute();
