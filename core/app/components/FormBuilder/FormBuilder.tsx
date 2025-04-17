@@ -3,8 +3,7 @@
 import type { DragEndEvent } from "@dnd-kit/core";
 
 import * as React from "react";
-import { useCallback, useReducer, useRef } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useMemo, useReducer, useRef } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
@@ -15,7 +14,14 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import type { Stages } from "db/public";
+import type {
+	FormElementsId,
+	FormsId,
+	NewFormElements,
+	NewFormElementToPubType,
+	Stages,
+} from "db/public";
+import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
@@ -35,6 +41,7 @@ import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
+import { useIsChanged } from "./useIsChanged";
 
 const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
 	const { eventName } = event;
@@ -107,13 +114,98 @@ type Props = {
 	stages: Stages[];
 };
 
+/**
+ * Only sends the dirty fields to the server
+ */
+const preparePayload = ({
+	formValues,
+	defaultValues,
+}: {
+	defaultValues: FormBuilderSchema;
+	formValues: FormBuilderSchema;
+}) => {
+	const { upserts, deletes, relatedPubTypes, deletedRelatedPubTypes } =
+		formValues.elements.reduce<{
+			upserts: NewFormElements[];
+			deletes: FormElementsId[];
+			relatedPubTypes: NewFormElementToPubType[];
+			deletedRelatedPubTypes: FormElementsId[];
+		}>(
+			(acc, element, index) => {
+				if (element.deleted) {
+					if (element.elementId) {
+						acc.deletes.push(element.elementId);
+					}
+				} else if (!element.elementId) {
+					// Newly created elements have no elementId, so generate an id to use
+					const id = crypto.randomUUID() as FormElementsId;
+					acc.upserts.push(
+						formElementsInitializerSchema.parse({
+							formId: formValues.formId,
+							...element,
+							id,
+						})
+					);
+					if (element.relatedPubTypes) {
+						for (const pubTypeId of element.relatedPubTypes) {
+							acc.relatedPubTypes.push({ A: id, B: pubTypeId });
+						}
+					}
+				} else if (element.updated) {
+					// check whether the element is reeeaally updated minus the updated field
+					const { updated: _, id: _id, ...elementWithoutUpdated } = element;
+					const { updated, id, ...rest } =
+						defaultValues.elements.find((e) => e.elementId === element.elementId) ?? {};
+
+					const defaultElement = rest as Omit<FormElementData, "updated" | "id">;
+
+					if (JSON.stringify(defaultElement) === JSON.stringify(elementWithoutUpdated)) {
+						return acc;
+					}
+
+					acc.upserts.push(
+						formElementsInitializerSchema.parse({
+							...element,
+							formId: formValues.formId,
+							id: element.elementId,
+						})
+					); // TODO: only update changed columns
+					if (element.relatedPubTypes) {
+						// If we are updating to an empty array and there were related pub types before, we should clear out all related pub types
+						if (
+							element.relatedPubTypes.length === 0 &&
+							defaultElement.relatedPubTypes?.length
+						) {
+							acc.deletedRelatedPubTypes.push(element.elementId);
+						} else {
+							for (const pubTypeId of element.relatedPubTypes) {
+								acc.relatedPubTypes.push({ A: element.elementId, B: pubTypeId });
+							}
+						}
+					}
+				}
+				return acc;
+			},
+			{ upserts: [], deletes: [], relatedPubTypes: [], deletedRelatedPubTypes: [] }
+		);
+
+	const access = formValues.access !== defaultValues.access ? formValues.access : undefined;
+
+	return {
+		formId: formValues.formId,
+		upserts,
+		deletes,
+		access,
+		relatedPubTypes,
+		deletedRelatedPubTypes,
+	};
+};
+
 export function FormBuilder({ pubForm, id, stages }: Props) {
-	const router = useRouter();
-	const pathname = usePathname();
-	const params = useSearchParams();
-	const form = useForm<FormBuilderSchema>({
-		resolver: zodResolver(formBuilderSchema),
-		values: {
+	const [isChanged, setIsChanged] = useIsChanged();
+
+	const defaultValues = useMemo(() => {
+		return {
 			elements: pubForm.elements.map((e) => {
 				// Do not include extra fields here
 				const { slug, id, fieldName, ...rest } = e;
@@ -122,7 +214,12 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 			}),
 			access: pubForm.access,
 			formId: pubForm.id,
-		},
+		};
+	}, [pubForm]);
+
+	const form = useForm<FormBuilderSchema>({
+		resolver: zodResolver(formBuilderSchema),
+		values: defaultValues,
 	});
 
 	const sidebarRef = useRef(null);
@@ -145,22 +242,25 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		control: form.control,
 	});
 
+	const formValues = form.getValues();
+
 	useUnsavedChangesWarning(form.formState.isDirty);
 
+	const payload = useMemo(
+		() => preparePayload({ formValues, defaultValues }),
+		[formValues, defaultValues]
+	);
+
 	React.useEffect(() => {
-		const newParams = new URLSearchParams(params);
-		if (form.formState.isDirty) {
-			newParams.set("unsavedChanges", "true");
-		} else {
-			newParams.delete("unsavedChanges");
-		}
-		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
-	}, [form.formState.isDirty, params]);
+		setIsChanged(
+			payload.upserts.length > 0 || payload.deletes.length > 0 || payload.access != null
+		);
+	}, [payload]);
 
 	const runSaveForm = useServerAction(saveForm);
+
 	const onSubmit = async (formData: FormBuilderSchema) => {
-		//TODO: only submit dirty fields
-		const result = await runSaveForm(formData);
+		const result = await runSaveForm(payload);
 		if (didSucceed(result)) {
 			toast({
 				className: "rounded border-emerald-100 bg-emerald-50",
@@ -250,7 +350,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 				dispatch={dispatch}
 				slug={pubForm.slug}
 				stages={stages}
-				isDirty={form.formState.isDirty}
+				isDirty={isChanged}
 			>
 				<Tabs defaultValue="builder" className="pr-[380px]">
 					<div className="px-6">

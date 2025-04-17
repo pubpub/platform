@@ -25,7 +25,7 @@ type FormElementProps = {
 };
 
 export const FormElement = ({ element, index, isEditing, isDisabled }: FormElementProps) => {
-	const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+	const { attributes, listeners, isDragging, setNodeRef, transform, transition } = useSortable({
 		id: element.id,
 		disabled: isDisabled,
 	});
@@ -78,7 +78,8 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
-				element.deleted && "border-l-red-200"
+				element.deleted && "border-l-red-200",
+				isDragging && "z-10 cursor-grabbing"
 			)}
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
@@ -110,7 +111,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							aria-label="Drag handle"
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
-							className="p-1.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+							className={cn(
+								"p-1.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
+								isDragging ? "cursor-grabbing" : "cursor-grab"
+							)}
 							{...listeners}
 							{...attributes}
 							tabIndex={0}
