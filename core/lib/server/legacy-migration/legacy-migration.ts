@@ -1377,7 +1377,6 @@ const createCollections = async (
 
 				return op.execute();
 			} catch (e) {
-				console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 				logger.error({
 					msg: `Failed to create Collection ${collection.title}`,
 					collection,
@@ -1538,14 +1537,14 @@ export const importFromLegacy = async (
 		);
 
 		// create journal pub and link to all content
-		// const journal = await createJournal(
-		// 	{
-		// 		community: currentCommunity,
-		// 		legacyCommunity: parsed,
-		// 		legacyStructure,
-		// 	},
-		// 	trx
-		// );
+		const journal = await createJournal(
+			{
+				community: currentCommunity,
+				legacyCommunity: parsed,
+				legacyStructure,
+			},
+			trx
+		);
 
 		return {
 			legacyStructure,
