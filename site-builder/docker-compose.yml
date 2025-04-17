@@ -3,8 +3,8 @@ version: "3.8"
 services:
     site-builder:
         build:
-            context: .
-            dockerfile: Dockerfile
+            context: ..
+            dockerfile: site-builder/Dockerfile
         container_name: astro-site-builder
         ports:
             - "3000:3000"

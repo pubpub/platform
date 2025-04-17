@@ -12,7 +12,8 @@
 		"preview": "astro preview",
 		"astro": "astro",
 		"start": "tsx server/server.ts",
-		"start:dev": "tsx --watch server/server.ts"
+		"start:dev": "tsx --watch server/server.ts",
+		"docker:build": "docker build -f ../Dockerfile .. -t site-builder:latest --progress=plain --build-arg PACKAGE=site-builder --target jobs"
 	},
 	"dependencies": {
 		"@astrojs/react": "^4.2.4",
@@ -21,6 +22,7 @@
 		"@aws-sdk/lib-storage": "^3.787.0",
 		"@hono/node-server": "^1.14.1",
 		"@t3-oss/env-core": "^0.12.0",
+		"@tailwindcss/typography": "^0.5.16",
 		"@ts-rest/core": "catalog:",
 		"archiver": "^6.0.2",
 		"astro": "^5.7.3",
@@ -31,6 +33,9 @@
 		"mime-types": "^2.1.35",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19",
+		"tailwindcss": "catalog:",
+		"tailwindcss-animate": "^1.0.6",
+		"tsconfig": "workspace:*",
 		"tsx": "^4.19.3",
 		"utils": "workspace:",
 		"zod": "catalog:"
@@ -42,10 +47,7 @@
 		"@types/archiver": "^6.0.2",
 		"@types/mime-types": "^2.1.4",
 		"@types/react": "catalog:react19",
-		"@types/react-dom": "catalog:react19",
-		"tailwindcss": "catalog:",
-		"tsconfig": "workspace:*",
-		"ui": "workspace:*"
+		"@types/react-dom": "catalog:react19"
 	},
 	"prettier": "@pubpub/prettier-config/astro"
 }
