@@ -221,9 +221,9 @@ model PubType {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
-  fields PubFieldToPubType[]
-  pubs   Pub[]
-  Form   Form[]
+  fields       PubFieldToPubType[]
+  pubs         Pub[]
+  Form         Form[]
   formElements FormElement[]
 
   @@unique([name, communityId])
@@ -417,6 +417,7 @@ enum Action {
   move
   googleDriveImport
   datacite
+  buildJournalSite
 }
 
 model ActionRun {
@@ -441,7 +442,7 @@ model ActionRun {
   sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[]     @relation("source_action_run")
+  sequentialActionRuns ActionRun[] @relation("source_action_run")
 
   @@map(name: "action_runs")
 }
@@ -537,24 +538,24 @@ enum InputComponent {
 
 // Either a structural element like a header, hr etc. or a pubfield input
 model FormElement {
-  id        String                 @id @default(dbgenerated("gen_random_uuid()"))
-  type      ElementType
-  fieldId   String?
-  field     PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
-  formId    String
-  rank      String // Uses "C" collation
+  id              String                 @id @default(dbgenerated("gen_random_uuid()"))
+  type            ElementType
+  fieldId         String?
+  field           PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  formId          String
+  rank            String // Uses "C" collation
   // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
-  label     String?
-  element   StructuralFormElement?
-  component InputComponent?
-  config    Json?
-  content   String?
-  required  Boolean?
-  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
-  stage     Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId   String?
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @default(now()) @updatedAt
+  label           String?
+  element         StructuralFormElement?
+  component       InputComponent?
+  config          Json?
+  content         String?
+  required        Boolean?
+  form            Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stage           Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId         String?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @default(now()) @updatedAt
   relatedPubTypes PubType[]
 
   @@unique([type, label, formId])

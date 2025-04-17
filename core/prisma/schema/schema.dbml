@@ -504,6 +504,7 @@ Enum Action {
   move
   googleDriveImport
   datacite
+  buildJournalSite
 }
 
 Enum ActionRunStatus {
