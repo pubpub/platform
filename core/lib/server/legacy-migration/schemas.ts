@@ -312,6 +312,79 @@ const collectionSchema = z
 
 export type LegacyCollection = z.infer<typeof collectionSchema>;
 
+export const relationTypes = [
+	"comment",
+	"commentary",
+	"preprint",
+	"rejoinder",
+	"reply",
+	"review",
+	"supplement",
+	"translation",
+	"version",
+] as const;
+
+export type PubEdge = {
+	id: string;
+	pubId: string;
+	relationType: (typeof relationTypes)[number];
+	rank: string;
+	pubIsParent: boolean;
+	approvedByTarget: boolean;
+} & (
+	| {
+			targetPubId: string;
+			targetPub: LegacyPub;
+			externalPublication: null;
+			externalPublicationId: null;
+	  }
+	| {
+			targetPubId: null;
+			targetPub: null;
+			externalPublication: z.infer<typeof externalPublicationSchema>;
+			externalPublicationId: string;
+	  }
+);
+
+export const pubEdgeSchema = z.lazy(() =>
+	z
+		.object({
+			id: z.string().uuid(),
+			pubId: z.string().uuid(),
+			relationType: z.enum(relationTypes),
+			rank: z.string(),
+			pubIsParent: z.boolean(),
+			approvedByTarget: z.boolean(),
+		})
+		.and(
+			z.discriminatedUnion("targetPubId", [
+				z.object({
+					targetPubId: z.string().uuid().nullable(),
+					targetPub: pubSchema,
+					externalPublication: z.null(),
+					externalPublicationId: z.null(),
+				}),
+				z.object({
+					targetPubId: z.null(),
+					targetPub: z.null(),
+					externalPublication: externalPublicationSchema,
+					externalPublicationId: z.string().uuid(),
+				}),
+			])
+		)
+) as z.ZodType<PubEdge>;
+
+export const externalPublicationSchema = z.object({
+	id: z.string().uuid(),
+	title: z.string(),
+	url: z.string().url(),
+	contributors: z.array(z.string()).nullable(),
+	doi: z.string().nullable(),
+	description: z.string().nullable(),
+	avatar: z.string().nullable(),
+	publicationDate: z.string().nullable(),
+});
+
 export const releaseSchema = z
 	.object({
 		id: z.string().uuid(),
@@ -357,9 +430,9 @@ export const pubSchema = z
 		releases: z.array(releaseSchema),
 		discussions: z.array(z.any()),
 		reviews: z.array(z.any()),
-		outboundEdges: z.array(z.any()),
+		outboundEdges: z.array(pubEdgeSchema),
 		exports: z.array(exportSchema),
-		inboundEdges: z.array(z.any()),
+		inboundEdges: z.array(pubEdgeSchema),
 		collectionPubs: z.array(collectionPubSchema),
 	})
 	.merge(baseTimestampsSchema);
@@ -423,6 +496,7 @@ const analyticsSettingsSchema = z
 
 const communitySchema = z
 	.object({
+		id: z.string().uuid(),
 		subdomain: z
 			.string()
 			.min(1)

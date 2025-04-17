@@ -7,7 +7,14 @@ import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import pMap from "p-map";
 
-import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from "db/public";
+import type {
+	CommunitiesId,
+	PubFields,
+	PubFieldsId,
+	PubsId,
+	PubTypes,
+	PubTypesId,
+} from "db/public";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
@@ -18,6 +25,7 @@ import { slugifyString } from "~/lib/string";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { createDefaultForm } from "../form";
 import { maybeWithTrx } from "../maybeWithTrx";
+import { pubType } from "../pub";
 import { PubOp } from "../pub-op";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
@@ -608,7 +616,11 @@ export const createLegacyStructure = async (
 	return output;
 };
 
-export const cleanUpLegacy = async (community: { id: CommunitiesId; slug: string }, trx = db) => {
+const getToBeDeletedLegacyPubTypes = async (
+	community: { id: CommunitiesId },
+	filter: PubTypesId[] = [],
+	trx = db
+) => {
 	const legacyPubTypes = await trx
 		.selectFrom("pub_types as pt")
 		.selectAll()
@@ -623,72 +635,28 @@ export const cleanUpLegacy = async (community: { id: CommunitiesId; slug: string
 					.where("_PubFieldToPubType.B", "=", eb.ref("pt.id"))
 			).as("fields"),
 		])
+		.$if(filter.length > 0, (eb) => eb.where("id", "not in", filter))
 		.execute();
 
-	if (!legacyPubTypes.length) {
-		logger.debug("No legacy pub types to delete");
-		return;
-	}
+	return legacyPubTypes;
+};
 
-	// delete pubs
-	await autoRevalidate(
-		trx.deleteFrom("pubs").where(
-			"pubTypeId",
-			"in",
-			legacyPubTypes.map((pt) => pt.id)
-		)
-	).execute();
-	// first delete forms
-	await autoRevalidate(
-		trx
-			.deleteFrom("forms")
-			.where("communityId", "=", community.id)
-			.where(
-				"pubTypeId",
-				"in",
-				legacyPubTypes.map((pt) => pt.id)
-			)
-	).execute();
-
-	// delete pub types
-	await autoRevalidate(
-		trx.deleteFrom("pub_types").where(
-			"id",
-			"in",
-			legacyPubTypes.map((pt) => pt.id)
-		)
-	).execute();
-	// delete pub fields
-	// this may not work, because they might be used by other pub types
-
-	const fields = await trx
+const getToBeDeletedLegacyPubFields = async (
+	community: { id: CommunitiesId },
+	pubTypes: PubTypesId[],
+	checkForValues: boolean = true,
+	filter: PubFieldsId[] = [],
+	trx = db
+) => {
+	const legacyPubFields = await trx
 		.selectFrom("pub_fields")
+		.leftJoin("_PubFieldToPubType", "pub_fields.id", "_PubFieldToPubType.A")
+		.distinctOn(["pub_fields.id"])
 		.where("communityId", "=", community.id)
-
+		.where("_PubFieldToPubType.B", "in", pubTypes)
 		.selectAll()
-		.where((eb) =>
-			eb.not(
-				eb.exists(
-					eb.selectFrom("pub_values").whereRef("pub_values.fieldId", "=", "pub_fields.id")
-				)
-			)
-		)
-		.execute();
-	console.log("to be deleted", fields);
-
-	await autoRevalidate(
-		trx
-			.deleteFrom("pub_fields")
-			.where("communityId", "=", community.id)
-			.where(
-				"slug",
-				"in",
-				Object.keys(REQUIRED_LEGACY_PUB_FIELDS).map(
-					(slug) => `${community.slug}:${slugifyString(slug)}`
-				)
-			)
-			// where field is not used in any value
-			.where((eb) =>
+		.$if(checkForValues, (eb) =>
+			eb.where((eb) =>
 				eb.not(
 					eb.exists(
 						eb
@@ -697,7 +665,168 @@ export const cleanUpLegacy = async (community: { id: CommunitiesId; slug: string
 					)
 				)
 			)
+		)
+		.$if(filter.length > 0, (eb) => eb.where("id", "not in", filter))
+		.execute();
+
+	return legacyPubFields;
+};
+
+const getToBeDeletedLegacyPubs = (
+	community: { id: CommunitiesId },
+	pubTypes: PubTypesId[],
+	filter: PubsId[] = [],
+	trx = db
+) => {
+	return trx
+		.selectFrom("pubs")
+		.where("communityId", "=", community.id)
+		.where("pubTypeId", "in", pubTypes)
+		.select(["id", "pubTypeId", "title"])
+		.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
+		.$if(filter.length > 0, (eb) => eb.where("id", "not in", filter));
+};
+
+export const getToBeDeletedStructure = async (
+	community: { id: CommunitiesId },
+	filters?: {
+		pubTypes?: PubTypesId[];
+		pubFields?: PubFieldsId[];
+		pubs?: PubsId[];
+	},
+	trx = db
+) => {
+	const toBeDeletedPubTypes = await getToBeDeletedLegacyPubTypes(
+		community,
+		filters?.pubTypes,
+		trx
+	);
+	if (!toBeDeletedPubTypes.length) {
+		return {
+			pubTypes: [],
+			pubFields: [],
+			pubs: [],
+		};
+	}
+
+	const toBeDeletedPubFields = await getToBeDeletedLegacyPubFields(
+		community,
+		toBeDeletedPubTypes.map((pt) => pt.id),
+		false,
+		filters?.pubFields,
+		trx
+	);
+
+	const toBeDeletedPubs = await getToBeDeletedLegacyPubs(
+		community,
+		toBeDeletedPubTypes.map((pt) => pt.id),
+		filters?.pubs,
+		trx
 	).execute();
+
+	return {
+		pubTypes: toBeDeletedPubTypes,
+		pubFields: toBeDeletedPubFields,
+		pubs: toBeDeletedPubs,
+	};
+};
+
+export const cleanUpLegacy = async (
+	community: { id: CommunitiesId; slug: string },
+	filters?: {
+		pubTypes?: PubTypesId[];
+		pubFields?: PubFieldsId[];
+		pubs?: PubsId[];
+	},
+	trx = db
+) => {
+	const {
+		pubTypes: toBeDeletedPubTypes,
+		pubFields: toBeDeletedPubFields,
+		pubs: toBeDeletedPubs,
+	} = await getToBeDeletedStructure(community, filters, trx);
+
+	logger.info({
+		msg: "Cleaning up legacy",
+		toBeDeletedPubTypes,
+		toBeDeletedPubFields,
+	});
+
+	if (!toBeDeletedPubTypes.length) {
+		logger.debug("No legacy pub types to delete");
+		return;
+	}
+
+	// delete pubs
+	logger.info({
+		msg: "Deleting legacy pubs",
+	});
+
+	const toBeDeletedPubIds = toBeDeletedPubs.map((p) => p.id);
+	const toBeDeletedPubTypeIds = toBeDeletedPubTypes.map((pt) => pt.id);
+
+	if (toBeDeletedPubIds.length) {
+		const result = await autoRevalidate(
+			trx
+				.deleteFrom("pubs")
+				.where("id", "in", toBeDeletedPubIds)
+				.where("pubTypeId", "in", toBeDeletedPubTypeIds)
+		).executeTakeFirstOrThrow();
+
+		logger.info({
+			msg: `Deleted ${result.numDeletedRows} legacy pubs`,
+		});
+	}
+
+	// first delete forms
+	logger.info({
+		msg: "Deleting legacy forms",
+	});
+
+	await autoRevalidate(
+		trx
+			.deleteFrom("forms")
+			.where("communityId", "=", community.id)
+			.where("pubTypeId", "in", toBeDeletedPubTypeIds)
+	).execute();
+
+	if (toBeDeletedPubTypeIds.length) {
+		// delete pub types
+		const result = await autoRevalidate(
+			trx.deleteFrom("pub_types").where("id", "in", toBeDeletedPubTypeIds)
+		).executeTakeFirstOrThrow();
+		logger.info({
+			msg: `Deleted ${result.numDeletedRows} legacy pub types`,
+		});
+	}
+	// delete pub fields
+	// this may not work, because they might be used by other pub types
+	const actualPubFieldsToDelete = await getToBeDeletedLegacyPubFields(
+		community,
+		toBeDeletedPubTypes.map((pt) => pt.id),
+		true,
+		toBeDeletedPubFields.map((f) => f.id),
+		trx
+	);
+	if (actualPubFieldsToDelete.length) {
+		logger.info({
+			msg: "Deleted legacy pub fields",
+		});
+		const result = await autoRevalidate(
+			trx
+				.deleteFrom("pub_fields")
+				.where("communityId", "=", community.id)
+				.where(
+					"slug",
+					"in",
+					actualPubFieldsToDelete.map((f) => f.slug)
+				)
+			// where field is not used in any value
+		).executeTakeFirstOrThrow();
+		logger.info({
+			msg: `Deleted ${result.numDeletedRows} legacy pub fields`,
+		});
+	}
 };
 
 export const createPubs = async (
@@ -715,7 +844,7 @@ export const createPubs = async (
 	const journalArticles = await createJournalArticles(
 		{
 			community: { id: community.id },
-			legacyPubs: legacyCommunity.pubs,
+			legacyCommunity,
 			legacyStructure,
 		},
 		trx
@@ -881,11 +1010,11 @@ const kindToTypeMap = {
 const createJournalArticles = async (
 	{
 		community: { id: communityId },
-		legacyPubs,
+		legacyCommunity,
 		legacyStructure,
 	}: {
 		community: { id: CommunitiesId };
-		legacyPubs: LegacyPub[];
+		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
 	},
 	trx = db
@@ -897,8 +1026,9 @@ const createJournalArticles = async (
 
 	// console.log(journalArticleType, versionType);
 
-	return pMap(
-		legacyPubs,
+	logger.info(`Creating ${legacyCommunity.pubs.length} journal articles`);
+	const createdPubs = await pMap(
+		legacyCommunity.pubs,
 		async (pub) => {
 			let op = PubOp.upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
 				communityId,
@@ -975,6 +1105,40 @@ const createJournalArticles = async (
 			concurrency: 20,
 		}
 	);
+
+	const connectingPubs = legacyCommunity.pubs.filter(
+		(p) =>
+			p.outboundEdges.length > 0 &&
+			p.outboundEdges.some(
+				(e) => !!e.targetPubId && e.targetPub.communityId === legacyCommunity.community.id
+			)
+	);
+
+	logger.info(`Creating ${connectingPubs.length} connected pubs`);
+
+	const connectedPubs = await pMap(connectingPubs, async (pub) => {
+		const outbound = pub.outboundEdges.filter(
+			(e) => !!e.targetPubId && e.targetPub.communityId === legacyCommunity.community.id
+		);
+
+		return PubOp.updateByValue(journalArticleType.fields["Legacy Id"].slug, pub.id, {
+			communityId,
+			lastModifiedBy: createLastModifiedBy("system"),
+			trx,
+		})
+			.relateByValue(
+				journalArticleType.fields["ConnectedPubs"].slug,
+				outbound.map((e) => ({
+					value: e.relationType,
+					target: {
+						slug: legacyStructure["Journal Article"].fields["Legacy Id"].slug,
+						value: e.targetPubId,
+					},
+				}))
+			)
+			.execute();
+	});
+	logger.info(`Finished creating pubs`);
 };
 
 const createPages = async (
@@ -989,7 +1153,8 @@ const createPages = async (
 	},
 	trx = db
 ) => {
-	return pMap(
+	logger.info(`Creating ${legacyPages.length} pages`);
+	const createdPages = await pMap(
 		legacyPages,
 		async (page) => {
 			const op = PubOp.upsertByValue(
@@ -1021,6 +1186,7 @@ const createPages = async (
 		},
 		{ concurrency: 20 }
 	);
+	logger.info(`Finished creating pages`);
 };
 
 const createCollections = async (
@@ -1037,7 +1203,8 @@ const createCollections = async (
 ) => {
 	// console.log(journalArticleType, versionType);
 
-	return pMap(
+	logger.info(`Creating ${legacyCollections.length} collections`);
+	const createdCollections = await pMap(
 		legacyCollections,
 		async (collection) => {
 			const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
@@ -1188,6 +1355,8 @@ const createCollections = async (
 			concurrency: 20,
 		}
 	);
+	logger.info(`Finished creating collections`);
+	return createdCollections;
 };
 
 export const importFromLegacy = async (
@@ -1196,7 +1365,7 @@ export const importFromLegacy = async (
 	trx = db
 ) => {
 	const result = await maybeWithTrx(trx, async (trx) => {
-		// await cleanUpLegacy(currentCommunity, trx);
+		await cleanUpLegacy(currentCommunity, trx);
 
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
