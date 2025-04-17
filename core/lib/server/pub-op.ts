@@ -1,6 +1,7 @@
 import type { Kysely, Transaction } from "kysely";
 
 import { sql } from "kysely";
+import pMap from "p-map";
 
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
@@ -667,9 +668,21 @@ abstract class BasePubOp {
 		return this;
 	}
 
-	async execute(): Promise<ProcessedPub> {
+	/**
+	 * Execute the pub op and return the pub id
+	 */
+	async execute(): Promise<PubsId> {
+		const { trx = db } = this.options;
+		return maybeWithTrx(trx, (trx) => this.executeWithTrx(trx));
+	}
+
+	/**
+	 * Execute the pub op and return the updated/created pub
+	 */
+	async executeAndReturnPub(): Promise<ProcessedPub> {
 		const { trx = db } = this.options;
 		const pubId = await maybeWithTrx(trx, (trx) => this.executeWithTrx(trx));
+
 		return getPubsWithRelatedValues({ pubId, communityId: this.options.communityId }, { trx });
 	}
 
@@ -853,7 +866,11 @@ abstract class BasePubOp {
 	private async resolveNonIdTarget(
 		trx: Kysely<Database>,
 		target: { slug: string; value: PubValue }
-	): Promise<ProcessedPub> {
+		/**
+		 * Whether or not to set a random uuid if the pub is not found
+		 * Only really useful for `Upsert.byValue` operations
+		 */
+	): Promise<PubsId[]> {
 		const pubs = await getPubsWithRelatedValues(
 			{
 				communityId: this.options.communityId,
@@ -865,33 +882,17 @@ abstract class BasePubOp {
 						$eq: target.value,
 					},
 				},
-				// withPubs: false,
-				// withRelatedPubs: false,
-				// withStage: false,
+
+				withValues: false,
+				withPubType: false,
+				withStage: false,
+				depth: 1,
+				withRelatedPubs: false,
 				limit: 2,
 			}
 		);
 
-		if (pubs.length > 1) {
-			logger.error(
-				{ pub1: pubs[0], pub2: pubs[1], msg: "Multiple pubs found for target: %s = %s" },
-				target.slug,
-				target.value
-			);
-			throw new PubOpError(
-				"AMBIGUOUS_TARGET",
-				`Multiple pubs found for target: ${target.slug} = ${target.value}.\n Pub 1: ${pubs[0].id}\n Pub 2: ${pubs[1].id}`
-			);
-		}
-
-		if (pubs.length === 0) {
-			throw new PubOpError(
-				"UNKNOWN",
-				`No pub found for target: ${target.slug} = ${target.value}`
-			);
-		}
-
-		return pubs[0];
+		return pubs.map((p) => p.id);
 	}
 
 	private async resolveNonIdTargets(
@@ -900,18 +901,31 @@ abstract class BasePubOp {
 	): Promise<void> {
 		const targetIdMap = new Map<{ slug: string; value: PubValue }, PubsId>();
 
-		const topLevelPubsToResolve = Array.from(operations.keys()).filter(
-			(key) => typeof key !== "string"
-		);
+		const topLevelPubsToResolve = Array.from(operations.entries())
+			.filter(([key]) => typeof key !== "string")
+			.map(([key, op]) => {
+				return {
+					key,
+					fallbackOnNotFound: op.mode === "upsert",
+				};
+			});
 
-		const otherPubsToResolve = Array.from(operations.values()).flatMap((op) => {
+		const otherPubsToResolve = Array.from(operations.entries()).flatMap(([key, op]) => {
 			return [...op.relationsToAdd, ...op.relationsToRemove]
 				.filter(({ target }) => typeof target !== "string")
-				.map((r) => r.target);
+				.map((r) => {
+					return {
+						key: r.target,
+						fallbackOnNotFound: false,
+						r,
+						higherKey: key,
+					};
+				});
 		});
 
-		await Promise.all(
-			[...topLevelPubsToResolve, ...otherPubsToResolve].map(async (key) => {
+		await pMap(
+			[...topLevelPubsToResolve, ...otherPubsToResolve],
+			async ({ key, fallbackOnNotFound, ...rest }) => {
 				if (typeof key === "string") {
 					throw new PubOpError(
 						"UNKNOWN",
@@ -919,9 +933,39 @@ abstract class BasePubOp {
 					);
 				}
 
-				const pub = await this.resolveNonIdTarget(trx, key);
-				targetIdMap.set(key, pub.id);
-			})
+				const pubIds = await this.resolveNonIdTarget(trx, key);
+
+				let pubId = pubIds[0];
+
+				if (pubIds.length > 1) {
+					logger.error(
+						{
+							pub1: pubIds[0],
+							pub2: pubIds[1],
+							msg: "Multiple pubs found for target: %s = %s",
+						},
+						key.slug,
+						key.value
+					);
+					throw new PubOpError(
+						"AMBIGUOUS_TARGET",
+						`Multiple pubs found for target: ${key.slug} = ${key.value}.\n Pub 1: ${pubIds[0]}\n Pub 2: ${pubIds[1]}`
+					);
+				}
+
+				if (pubIds.length === 0) {
+					if (!fallbackOnNotFound) {
+						throw new PubOpError(
+							"UNKNOWN",
+							`No pub found for target: ${key.slug} = ${key.value}`
+						);
+					}
+					pubId = crypto.randomUUID() as PubsId;
+				}
+
+				targetIdMap.set(key, pubId);
+			},
+			{ concurrency: 1 }
 		);
 
 		this.targetMap = targetIdMap;

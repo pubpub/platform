@@ -142,7 +142,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const pub = await pubOp.execute();
+		const pub = await pubOp.executeAndReturnPub();
 		await expect(pub.id).toExist();
 	});
 
@@ -154,14 +154,14 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const pub = await pubOp.execute();
+		const pub = await pubOp.executeAndReturnPub();
 		await expect(pub.id).toExist();
 
 		const pub2 = await PubOp.upsert(id, {
 			communityId: seededCommunity.community.id,
 			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
 			lastModifiedBy: createLastModifiedBy("system"),
-		}).execute();
+		}).executeAndReturnPub();
 
 		await expect(pub2.id).toExist();
 	});
@@ -178,7 +178,7 @@ describe("PubOp", () => {
 				[seededCommunity.pubFields["Description"].slug]: "Some description",
 			});
 
-		const pub = await pubOp.execute();
+		const pub = await pubOp.executeAndReturnPub();
 		await expect(pub.id).toExist();
 
 		expect(pub).toHaveValues([
@@ -200,7 +200,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		const pub = await pubOp.execute();
+		const pub = await pubOp.executeAndReturnPub();
 
 		await expect(pub.id).toExist();
 
@@ -210,7 +210,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.relate(seededCommunity.pubFields["Some relation"].slug, "test relations value", pub.id)
-			.execute();
+			.executeAndReturnPub();
 
 		await expect(pub2.id).toExist();
 		expect(pub2).toHaveValues([
@@ -248,7 +248,7 @@ describe("PubOp", () => {
 				}).set(seededCommunity.pubFields["Title"].slug, "Related Pub 2")
 			);
 
-		const result = await mainPub.execute();
+		const result = await mainPub.executeAndReturnPub();
 
 		expect(result).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Main Pub" },
@@ -295,7 +295,7 @@ describe("PubOp", () => {
 				relatedPub
 			);
 
-		const result = await mainPub.execute();
+		const result = await mainPub.executeAndReturnPub();
 
 		expect(result).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Root" },
@@ -328,7 +328,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Existing Pub")
-			.execute();
+			.executeAndReturnPub();
 
 		const mainPub = PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -351,7 +351,7 @@ describe("PubOp", () => {
 				}).set(seededCommunity.pubFields["Title"].slug, "New Related Pub")
 			);
 
-		const result = await mainPub.execute();
+		const result = await mainPub.executeAndReturnPub();
 
 		expect(result).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Main Pub" },
@@ -406,7 +406,7 @@ describe("PubOp", () => {
 			pub2
 		);
 
-		const result = await pub1.execute();
+		const result = await pub1.executeAndReturnPub();
 
 		expect(result).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 1" },
@@ -435,7 +435,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		});
 
-		await expect(pubOp.execute()).rejects.toThrow(
+		await expect(pubOp.executeAndReturnPub()).rejects.toThrow(
 			/Cannot create a pub with an id that already exists/
 		);
 	});
@@ -447,7 +447,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Pub 1")
-			.execute();
+			.executeAndReturnPub();
 
 		const pub2 = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -456,7 +456,7 @@ describe("PubOp", () => {
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Pub 2")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "initial value", pub1.id)
-			.execute();
+			.executeAndReturnPub();
 
 		const updatedPub = await PubOp.upsert(pub2.id, {
 			communityId: seededCommunity.community.id,
@@ -464,7 +464,7 @@ describe("PubOp", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.relate(seededCommunity.pubFields["Some relation"].slug, "updated value", pub1.id)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(updatedPub).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 2" },
@@ -493,7 +493,7 @@ describe("PubOp", () => {
 					lastModifiedBy: createLastModifiedBy("system"),
 				}).set(seededCommunity.pubFields["Title"].slug, "Pub 2")
 			)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub1.pubTypeId).toBe(seededCommunity.pubTypes["Basic Pub"].id);
 		expect(pub1).toHaveValues([
@@ -529,7 +529,7 @@ describe("PubOp", () => {
 						})
 						.set(seededCommunity.pubFields["Title"].slug, "Pub 2")
 				)
-				.execute();
+				.executeAndReturnPub();
 
 			const upsertedPub = await PubOp.upsert(pub1.id, {
 				communityId: seededCommunity.community.id,
@@ -537,7 +537,7 @@ describe("PubOp", () => {
 				lastModifiedBy: createLastModifiedBy("system"),
 			})
 				.set(seededCommunity.pubFields["Title"].slug, "Pub 1, updated")
-				.execute();
+				.executeAndReturnPub();
 
 			expect(upsertedPub).toHaveValues([
 				{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 1, updated" },
@@ -562,7 +562,7 @@ describe("PubOp", () => {
 			})
 				.set(seededCommunity.pubFields["Title"].slug, "Pub 1")
 				.set(seededCommunity.pubFields["Description"].slug, "Description 1")
-				.execute();
+				.executeAndReturnPub();
 
 			const upsertedPub = await PubOp.upsert(pub1.id, {
 				communityId: seededCommunity.community.id,
@@ -572,7 +572,7 @@ describe("PubOp", () => {
 				.set(seededCommunity.pubFields["Title"].slug, "Pub 1, updated", {
 					deleteExistingValues: false,
 				})
-				.execute();
+				.executeAndReturnPub();
 
 			expect(upsertedPub).toHaveValues([
 				{
@@ -593,7 +593,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Pub 1")
-			.execute();
+			.executeAndReturnPub();
 
 		const pub2 = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -602,7 +602,7 @@ describe("relation management", () => {
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Pub 2")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "initial value", pub1.id)
-			.execute();
+			.executeAndReturnPub();
 
 		// disrelate the relation
 		const updatedPub = await PubOp.update(pub2.id, {
@@ -610,7 +610,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.unrelate(seededCommunity.pubFields["Some relation"].slug, pub1.id)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(updatedPub).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 2" },
@@ -624,7 +624,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Soon to be orphaned")
-			.execute();
+			.executeAndReturnPub();
 
 		const mainPub = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -637,7 +637,7 @@ describe("relation management", () => {
 				"only relation",
 				orphanedPub.id
 			)
-			.execute();
+			.executeAndReturnPub();
 
 		// disrelate with deleteOrphaned option
 		await PubOp.update(mainPub.id, {
@@ -647,7 +647,7 @@ describe("relation management", () => {
 			.unrelate(seededCommunity.pubFields["Some relation"].slug, orphanedPub.id, {
 				deleteOrphaned: true,
 			})
-			.execute();
+			.executeAndReturnPub();
 
 		await expect(orphanedPub.id).not.toExist();
 	});
@@ -676,7 +676,7 @@ describe("relation management", () => {
 			.set(seededCommunity.pubFields["Title"].slug, "Main pub")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 1", related1)
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 2", related2)
-			.execute();
+			.executeAndReturnPub();
 
 		await expect(related1Id).toExist();
 		await expect(related2Id).toExist();
@@ -689,7 +689,7 @@ describe("relation management", () => {
 			.unrelate(seededCommunity.pubFields["Some relation"].slug, "*", {
 				deleteOrphaned: true,
 			})
-			.execute();
+			.executeAndReturnPub();
 
 		expect(updatedPub).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Main pub" },
@@ -722,7 +722,7 @@ describe("relation management", () => {
 			.set(seededCommunity.pubFields["Title"].slug, "Main pub")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 1", related1)
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 2", related2)
-			.execute();
+			.executeAndReturnPub();
 
 		const relatedPub1 = mainPub.values.find((v) => v.value === "relation 1")?.relatedPubId;
 		const relatedPub2 = mainPub.values.find((v) => v.value === "relation 2")?.relatedPubId;
@@ -737,7 +737,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Related 3")
-			.execute();
+			.executeAndReturnPub();
 
 		// Update with override - only related3 should remain
 		const updatedPub = await PubOp.update(mainPub.id, {
@@ -747,7 +747,7 @@ describe("relation management", () => {
 			.relate(seededCommunity.pubFields["Some relation"].slug, "new relation", related3.id, {
 				replaceExisting: true,
 			})
-			.execute();
+			.executeAndReturnPub();
 
 		expect(updatedPub).toHaveValues([
 			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Main pub" },
@@ -770,7 +770,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Related 1")
-			.execute();
+			.executeAndReturnPub();
 
 		const related2 = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -778,7 +778,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Related 2")
-			.execute();
+			.executeAndReturnPub();
 
 		const mainPub = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -789,7 +789,7 @@ describe("relation management", () => {
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation 1", related1.id, {
 				replaceExisting: true,
 			})
-			.execute();
+			.executeAndReturnPub();
 
 		const updatedMainPub = await PubOp.update(mainPub.id, {
 			communityId: seededCommunity.community.id,
@@ -808,7 +808,7 @@ describe("relation management", () => {
 				}),
 				{ replaceExisting: true }
 			)
-			.execute();
+			.executeAndReturnPub();
 
 		// Should have relation 2 and 3, but not 1
 		expect(updatedMainPub).toHaveValues([
@@ -955,7 +955,7 @@ describe("relation management", () => {
 				.set(seededCommunity.pubFields["Title"].slug, "A")
 				.relate(seededCommunity.pubFields["Some relation"].slug, "to B", pubB_op)
 				.relate(seededCommunity.pubFields["Some relation"].slug, "to C", pubC_op)
-				.execute();
+				.executeAndReturnPub();
 
 			const pubJ_op = await PubOp.createWithId(pubJ, {
 				communityId: seededCommunity.community.id,
@@ -965,7 +965,7 @@ describe("relation management", () => {
 			})
 				.set(seededCommunity.pubFields["Title"].slug, "J")
 				.relate(seededCommunity.pubFields["Some relation"].slug, "to I", pubI)
-				.execute();
+				.executeAndReturnPub();
 
 			const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
 
@@ -1099,7 +1099,7 @@ describe("relation management", () => {
 				.unrelate(seededCommunity.pubFields["Some relation"].slug, pubC, {
 					deleteOrphaned: true,
 				})
-				.execute();
+				.executeAndReturnPub();
 
 			// verify deletions
 			await expect(pubA, "A should exist").toExist(trx);
@@ -1128,7 +1128,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Related 1")
-			.execute();
+			.executeAndReturnPub();
 
 		const related2 = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -1136,7 +1136,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Related 2")
-			.execute();
+			.executeAndReturnPub();
 
 		const mainPub = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -1146,7 +1146,7 @@ describe("relation management", () => {
 			.set(seededCommunity.pubFields["Title"].slug, "Main")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "relation1", related1.id)
 			.relate(seededCommunity.pubFields["Another relation"].slug, "relation2", related2.id)
-			.execute();
+			.executeAndReturnPub();
 
 		// clear one field with deleteOrphaned and one without
 		await PubOp.update(mainPub.id, {
@@ -1157,7 +1157,7 @@ describe("relation management", () => {
 				deleteOrphaned: true,
 			})
 			.unrelate(seededCommunity.pubFields["Another relation"].slug, "*")
-			.execute();
+			.executeAndReturnPub();
 
 		// related1 should be deleted (orphaned with deleteOrphaned: true)
 		await expect(related1.id).not.toExist();
@@ -1173,7 +1173,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Keep Me")
-			.execute();
+			.executeAndReturnPub();
 
 		const toDelete = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -1181,7 +1181,7 @@ describe("relation management", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Delete Me")
-			.execute();
+			.executeAndReturnPub();
 
 		const mainPub = await PubOp.create({
 			communityId: seededCommunity.community.id,
@@ -1191,7 +1191,7 @@ describe("relation management", () => {
 			.set(seededCommunity.pubFields["Title"].slug, "Main")
 			.relate(seededCommunity.pubFields["Some relation"].slug, "keep", toKeep.id)
 			.relate(seededCommunity.pubFields["Another relation"].slug, "delete", toDelete.id)
-			.execute();
+			.executeAndReturnPub();
 
 		// Override relations with different deleteOrphaned flags
 		const newRelation = PubOp.create({
@@ -1211,7 +1211,7 @@ describe("relation management", () => {
 				replaceExisting: true,
 				deleteOrphaned: true,
 			})
-			.execute();
+			.executeAndReturnPub();
 
 		// toKeep should still exist (override without deleteOrphaned)
 		await expect(toKeep.id).toExist();
@@ -1235,7 +1235,7 @@ describe("relation management", () => {
 					.create({ pubTypeId: seededCommunity.pubTypes["Minimal Pub"].id })
 					.set(seededCommunity.pubFields["Title"].slug, "Relation 1")
 			)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub).toHaveValues([
 			{
@@ -1273,7 +1273,7 @@ describe("relation management", () => {
 					value: "relation2",
 				},
 			])
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub).toHaveValues([
 			{
@@ -1309,7 +1309,7 @@ describe("PubOp stage", () => {
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Test")
 			.setStage(seededCommunity.stages["Stage 1"].id)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub.stageId).toEqual(seededCommunity.stages["Stage 1"].id);
 	});
@@ -1323,7 +1323,7 @@ describe("PubOp stage", () => {
 			trx,
 		})
 			.setStage(seededCommunity.stages["Stage 1"].id)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub.stageId).toEqual(seededCommunity.stages["Stage 1"].id);
 
@@ -1333,7 +1333,7 @@ describe("PubOp stage", () => {
 			trx,
 		})
 			.setStage(null)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(updatedPub.stageId).toEqual(null);
 	});
@@ -1348,7 +1348,7 @@ describe("PubOp stage", () => {
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Test")
 			.setStage(seededCommunity.stages["Stage 1"].id)
-			.execute();
+			.executeAndReturnPub();
 
 		const updatedPub = await PubOp.upsert(pub.id, {
 			communityId: seededCommunity.community.id,
@@ -1357,7 +1357,7 @@ describe("PubOp stage", () => {
 			trx,
 		})
 			.setStage(seededCommunity.stages["Stage 2"].id)
-			.execute();
+			.executeAndReturnPub();
 
 		expect(updatedPub.stageId).toEqual(seededCommunity.stages["Stage 2"].id);
 	});
@@ -1371,7 +1371,7 @@ describe("By value", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["PseudoId"].slug, "4")
-			.execute();
+			.executeAndReturnPub();
 
 		const pub = await PubOp.upsertByValue(seededCommunity.pubFields["PseudoId"].slug, "4", {
 			communityId: seededCommunity.community.id,
@@ -1379,7 +1379,7 @@ describe("By value", () => {
 			lastModifiedBy: createLastModifiedBy("system"),
 		})
 			.set(seededCommunity.pubFields["Title"].slug, "Test")
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub.id).toBe(pubWithPseudoId4.id);
 		// the pseudoId is now removed from the pub
@@ -1395,7 +1395,7 @@ describe("By value", () => {
 				communityId: seededCommunity.community.id,
 				pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
 				lastModifiedBy: createLastModifiedBy("system"),
-			}).execute()
+			}).executeAndReturnPub()
 		).rejects.toThrow(/Multiple pubs found/);
 	});
 
@@ -1409,7 +1409,7 @@ describe("By value", () => {
 				slug: seededCommunity.pubFields["PseudoId"].slug,
 				value: "2",
 			})
-			.execute();
+			.executeAndReturnPub();
 
 		expect(pub).toHaveValues([
 			{
