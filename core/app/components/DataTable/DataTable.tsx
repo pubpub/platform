@@ -43,6 +43,7 @@ export interface DataTableProps<TData, TValue> {
 	setSelectedRows?: React.Dispatch<React.SetStateAction<{}>>;
 	getRowId?: (data: TData) => string;
 	pagination?: PaginationState;
+	stickyHeader?: boolean;
 }
 
 const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50";
@@ -60,6 +61,7 @@ export function DataTable<TData, TValue>({
 	setSelectedRows,
 	getRowId,
 	pagination,
+	stickyHeader,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
@@ -128,7 +130,20 @@ export function DataTable<TData, TValue>({
 			)}
 			<div className={cn("mb-2 rounded-md border", className)}>
 				<Table>
-					<TableHeader>
+					<TableHeader
+						className={cn({
+							"sticky top-0 z-10 bg-white": stickyHeader,
+						})}
+						style={
+							stickyHeader
+								? {
+										// you cant put borders on the table header without doing some evil shit
+										// https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
+										boxShadow: `inset 0 -1px 0 hsl(var(--border))`,
+									}
+								: {}
+						}
+					>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
