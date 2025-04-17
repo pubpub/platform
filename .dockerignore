@@ -29,6 +29,5 @@
 **/values.dev.yaml
 **/build
 **/dist
-!**/dist/.gitkeep
 LICENSE
 README.md
