@@ -64,8 +64,8 @@ jobs:
             PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
             JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
             MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
-            PUBLIC_URL: "{\\$PUBLIC_URL}"
             AWS_REGION: "us-east-1"
+            COMPOSE_FILES: docker-compose.preview.pr.yml
         secrets:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

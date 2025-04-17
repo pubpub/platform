@@ -1,0 +1,7 @@
+services:
+    platform:
+        environment:
+            PUBPUB_URL: sandbox.pubpub.org
+    caddy:
+        environment:
+            PUBLIC_URL: sandbox.pubpub.org
