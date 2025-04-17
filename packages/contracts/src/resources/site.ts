@@ -900,7 +900,13 @@ export const siteApi = contract.router(
 						offset: z.number().default(0).optional(),
 						orderBy: z.enum(["createdAt", "updatedAt"]).optional(),
 						orderDirection: z.enum(["asc", "desc"]).optional(),
-						name: z.string().optional().describe("Filter by name."),
+
+						name: z
+							.array(z.string())
+							// this is necessary bc the query parser doesn't handle single string values as arrays
+							.or(z.string().transform((slug) => [slug]))
+							.optional()
+							.describe("Filter by name."),
 					})
 					.optional(),
 				responses: {
