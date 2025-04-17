@@ -543,15 +543,19 @@ abstract class PubOpBase {
 
 			const fallbackOnNotFound = operations.get(target)?.mode === "upsert";
 
-			if (pubIds.length === 0 && !fallbackOnNotFound) {
-				throw new PubOpError(
-					"INVALID_TARGET",
-					`No pub found for target: ${target.slug} = ${target.value}`
-				);
-			}
-
 			if (pubIds.length === 1) {
 				targetMap.set(target, pubIds[0]);
+			}
+
+			if (pubIds.length === 0) {
+				if (!fallbackOnNotFound) {
+					throw new PubOpError(
+						"INVALID_TARGET",
+						`No pub found for target: ${target.slug} = ${target.value}`
+					);
+				}
+
+				targetMap.set(target, crypto.randomUUID() as PubsId);
 			}
 		}
 	}
