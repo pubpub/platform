@@ -175,7 +175,13 @@ type UnrelateByValueCommand = {
 	type: "unrelateByValue";
 	slug: string;
 	relations: Array<{ target: { slug: string; value: PubValue }; value: PubValue }>;
-	options: RelationOptions;
+	options?: {
+		/**
+		 * If true, pubs that have been disconnected and all their descendants that are not otherwise connected
+		 * will be deleted.
+		 */
+		deleteOrphaned?: boolean;
+	};
 };
 
 type UnsetCommand = {
@@ -1442,23 +1448,14 @@ class UpsertPubOp extends BasePubOp {
 }
 
 class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
-	private readonly pubId: PubsId | undefined;
-	private readonly initialSlug?: string;
-	private readonly initialValue?: PubValue;
+	private readonly initialTarget?: PubsId | ValueTarget;
 
 	constructor(
-		options: PubOpOptionsUpdate,
-		id: PubsId | undefined,
-		initialSlug?: string,
-		initialValue?: PubValue
+		options: Omit<PubOpOptionsCreateUpsert, "pubTypeId">,
+		initialTarget: PubsId | ValueTarget
 	) {
-		super({
-			...options,
-			id,
-		});
-		this.pubId = id;
-		this.initialSlug = initialSlug;
-		this.initialValue = initialValue;
+		super({ ...options, target: initialTarget });
+		this.initialTarget = initialTarget;
 	}
 
 	protected getMode(): OperationMode {
@@ -1474,6 +1471,22 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 		this.commands.push({
 			type: "unset",
 			slug,
+		});
+		return this;
+	}
+
+	unrelateByValue(
+		slug: string,
+		target: ValueTarget | ValueTarget[],
+		options?: RelationOptions
+	): this {
+		const targets = Array.isArray(target) ? target : [target];
+
+		this.commands.push({
+			type: "unrelateByValue",
+			slug,
+			relations: targets.map((t) => ({ target: t, value: t.value, options })),
+			options,
 		});
 		return this;
 	}
@@ -1506,10 +1519,6 @@ class UpdatePubOp extends BasePubOp implements UpdateOnlyOps {
 			options: typeof optionsOrTarget === "string" ? options : optionsOrTarget,
 		});
 		return this;
-	}
-
-	protected getInitialId(): PubsId | undefined {
-		return this.pubId;
 	}
 }
 
@@ -1548,7 +1557,7 @@ export class PubOp {
 		value: PubValue,
 		options: Omit<PubOpOptions, "pubTypeId">
 	): UpdatePubOp {
-		return new UpdatePubOp(options, undefined, slug, value);
+		return new UpdatePubOp(options, { slug, value });
 	}
 
 	/**
