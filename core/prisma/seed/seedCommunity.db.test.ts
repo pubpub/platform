@@ -242,7 +242,6 @@ describe("seedCommunity", () => {
 			{ id: authorPubId },
 			{
 				id: submissionPubId,
-				assigneeId: null,
 				values: [
 					{
 						relatedPubId: null,

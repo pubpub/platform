@@ -10,6 +10,8 @@ import { memberInviteFormSchema } from "~/app/components/Memberships/memberInvit
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
+import { env } from "~/lib/env/env";
+import { ApiError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member";
@@ -59,11 +61,16 @@ export const addMember = defineServerAction(async function addMember({
 	role: MemberRole;
 }) {
 	const result = await isCommunityAdmin();
+
 	if (result.error !== null) {
 		return {
 			title: "Failed to add member",
 			error: "You do not have permission to invite members to this community",
 		};
+	}
+
+	if (env.FLAGS?.get("invites") === false) {
+		return ApiError.FEATURE_DISABLED;
 	}
 
 	try {
@@ -105,6 +112,10 @@ export const createUserWithCommunityMembership = defineServerAction(
 		role: MemberRole;
 		isSuperAdmin?: boolean;
 	}) {
+		if (env.FLAGS?.get("invites") === false) {
+			return ApiError.FEATURE_DISABLED;
+		}
+
 		const parsed = memberInviteFormSchema
 			.required({ firstName: true, lastName: true })
 			.safeParse(data);

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
 	ProsemirrorAdapterProvider,
 	useNodeViewFactory,
@@ -27,7 +27,6 @@ import { cn } from "utils";
 
 import SuggestPanel from "./components/SuggestPanel";
 
-const MENU_BAR_ID = "context-editor-menu-container";
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string /* classname for the editor view */;
@@ -103,6 +102,8 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	const [panelPosition, setPanelPosition] = useState<PanelProps>(initPanelProps);
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
 
+	const menuBarId = useId();
+
 	/* This useEffect approach of making the props available to prosemirror  */
 	/* plugins from: https://discuss.prosemirror.net/t/lightweight-react-integration-example/2680 */
 	useEffect(() => {
@@ -126,7 +127,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 								view: pluginViewFactory({
 									component: () => <MenuBar upload={props.upload} />,
 									root: () => {
-										return document.getElementById(MENU_BAR_ID) as HTMLElement;
+										return document.getElementById(menuBarId) as HTMLElement;
 									},
 								}),
 							}),
@@ -174,7 +175,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 			id="context-editor-container"
 			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""}`}
 		>
-			<div id={MENU_BAR_ID} className="sticky top-0 z-10"></div>
+			<div id={menuBarId} className="sticky top-0 z-10"></div>
 			<div ref={viewHost} className={cn("font-serif", props.className)} />
 			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />

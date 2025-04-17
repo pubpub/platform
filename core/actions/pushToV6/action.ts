@@ -11,8 +11,8 @@ export const action = defineAction({
 		schema: z.object({
 			communitySlug: z.string().describe("Community slug"),
 			authToken: z.string().describe("PubPub v6 API auth token"),
-			title: z.string().describe("Title of the pub"),
-			content: z.string().describe("Content of the pub"),
+			title: z.string().describe("Title of the Pub"),
+			content: z.string().describe("Content of the Pub"),
 		}),
 	},
 	description: "Sync a PubPub Platform pub to v6",

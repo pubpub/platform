@@ -32,7 +32,6 @@ model User {
 
   memberGroups         MemberGroup[]
   AuthToken            AuthToken[]
-  assignedPubs         Pub[]
   actionRuns           ActionRun[]
   ApiAccessToken       ApiAccessToken[]
   Session              Session[]
@@ -112,8 +111,6 @@ model Pub {
   pubTypeId   String
   community   Community @relation(fields: [communityId], references: [id])
   communityId String
-  assigneeId  String?
-  assignee    User?     @relation(fields: [assigneeId], references: [id])
   createdAt   DateTime  @default(now())
   // updatedAt is also updated once a value is updated
   updatedAt   DateTime  @default(now()) @updatedAt
