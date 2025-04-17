@@ -55,7 +55,7 @@ export const importFromLegacy = defineServerAction(
 				);
 			});
 		} catch (error) {
-			logger.error(error);
+			logger.error({ err: error });
 			return {
 				error: "Failed to import from legacy",
 			};

@@ -34,12 +34,11 @@ import {
 	FormMessage,
 } from "ui/form";
 import { Input } from "ui/input";
-import { SidebarSeparator } from "ui/sidebar";
+import { FormSubmitButton } from "ui/submit-button";
 import { toast } from "ui/use-toast";
 
 import type { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-migration";
 import { DataTable } from "~/app/components/DataTable/v2/DataTable";
-import { FormSubmitButton } from "~/app/components/SubmitButton";
 import { getPubTitle } from "~/lib/pubs";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { importFromLegacy, undoMigration } from "./actions";

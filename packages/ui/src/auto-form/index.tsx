@@ -11,8 +11,8 @@ import { cn } from "utils";
 
 import type { Dependency, FieldConfig } from "./types";
 import type { ZodObjectOrWrapped } from "./utils";
-import { Button } from "../button";
 import { Form } from "../form";
+import { FormSubmitButton } from "../submit-button";
 import AutoFormObject from "./fields/object";
 import { getDefaultValues, getObjectFormSchema } from "./utils";
 
@@ -27,17 +27,7 @@ export function AutoFormSubmit({
 }) {
 	const form = useFormState();
 
-	const { isSubmitting, isValid } = form;
-
-	return (
-		<Button
-			type="submit"
-			// disabled={disabled && (isSubmitting || !isValid)}
-			className={className}
-		>
-			{children ?? "Submit"}
-		</Button>
-	);
+	return <FormSubmitButton formState={form} idleText={children} className={className} />;
 }
 
 function AutoForm<SchemaType extends ZodObjectOrWrapped>({

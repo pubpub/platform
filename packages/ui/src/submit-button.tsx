@@ -1,6 +1,6 @@
 import type { FormState } from "react-hook-form";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 
 import { Button } from "ui/button";
@@ -19,10 +19,10 @@ type SubmitButtonProps = {
 	formState?: FormState<any>;
 
 	// customization
-	idleText?: string;
-	loadingText?: string;
-	successText?: string;
-	errorText?: string;
+	idleText?: React.ReactNode;
+	loadingText?: React.ReactNode;
+	successText?: React.ReactNode;
+	errorText?: React.ReactNode;
 
 	// button props
 	className?: string;
@@ -164,10 +164,10 @@ export const FormSubmitButton = ({
 	 *
 	 * @default "Submit"
 	 */
-	idleText?: string;
-	loadingText?: string;
-	successText?: string;
-	errorText?: string;
+	idleText?: React.ReactNode;
+	loadingText?: React.ReactNode;
+	successText?: React.ReactNode;
+	errorText?: React.ReactNode;
 	className?: string;
 }) => {
 	return (
