@@ -1,22 +1,24 @@
 "use server";
 
+import { initClient } from "@ts-rest/core";
+
+import { siteBuilderApi } from "contracts/resources/site-builder";
 import { logger } from "logger";
 
 import type { action } from "./action";
 import { env } from "~/lib/env/env.mjs";
 import { getPubsWithRelatedValues } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
 
 // parse Journal
 
-type BuildResponse = {
-	success: true;
-	message: string;
-	url: string;
-	timestamp: number;
-	fileSize: number;
-	fileSizeFormatted: string;
-};
+const siteBuilderClient = initClient(siteBuilderApi, {
+	baseUrl: env.SITE_BUILDER_ENDPOINT!,
+	baseHeaders: {
+		Authorization: `Bearer ${env.SITE_BUILDER_API_KEY}`,
+	},
+});
 
 export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	const journal = await getPubsWithRelatedValues(
@@ -29,34 +31,32 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		}
 	);
 
-	const result = await fetch(`${env.SITE_BUILDER_ENDPOINT}/build`, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${env.SITE_BUILDER_API_KEY}`,
+	const communitySlug = await getCommunitySlug();
+
+	const result = await siteBuilderClient.build({
+		body: {
+			communitySlug,
+			journalId: pub.id,
+			mapping: config,
 		},
-		body: JSON.stringify({
-			// journal,
-			config,
-		}),
 	});
 
-	if (!result.ok) {
+	if (result.status !== 200) {
 		logger.error({ msg: "Failed to build journal site", result, status: result.status });
 		return {
 			error: "Failed to build journal site",
 		};
 	}
 
-	const data = await result.json();
+	const data = result.body;
 
 	logger.info({ msg: "Journal site built", data });
 
 	return {
-		success: true,
+		success: true as const,
 		report: `<div>
 			<p>Journal site built</p>
-			<p>The resulting URL is:</p>
-			<a href="${data.url}">${data.url}</a>
+			<a className="font-semibold underline" href="${data.url}">Download</a>
 		</div>`,
 		data,
 	};

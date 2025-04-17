@@ -1,12 +1,12 @@
 import { expect } from "utils/assert";
 
-import { env } from "../../../env";
+import { SITE_ENV } from "../env/site";
 import { getClient } from "./client";
 
 export const getPubType = async (name: string) => {
 	const pubTypeId = await getClient().pubTypes.getMany({
 		params: {
-			communitySlug: import.meta.env.COMMUNITY_SLUG,
+			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: { name },
 	});
@@ -24,7 +24,7 @@ export const getJournal = async () => {
 
 	const journal = await getClient().pubs.getMany({
 		params: {
-			communitySlug: import.meta.env.COMMUNITY_SLUG,
+			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: {
 			pubTypeId: [expect(journalPubType.id)],
@@ -44,7 +44,7 @@ export const getJournalArticles = async (opts?: { limit?: number }) => {
 
 	const journalArticles = await getClient().pubs.getMany({
 		params: {
-			communitySlug: env.COMMUNITY_SLUG,
+			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: {
 			pubTypeId: [expect(journalArticlePubType.id)],

@@ -1483,6 +1483,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.14.1
         version: 1.14.1(hono@4.7.7)
+      '@hono/zod-validator':
+        specifier: ^0.4.3
+        version: 0.4.3(hono@4.7.7)(zod@3.24.3)
       '@t3-oss/env-core':
         specifier: ^0.12.0
         version: 0.12.0(typescript@5.7.2)(zod@3.24.3)
@@ -1492,6 +1495,9 @@ importers:
       '@ts-rest/core':
         specifier: 'catalog:'
         version: 3.51.0(@types/node@22.14.0)(zod@3.24.3)
+      '@ts-rest/serverless':
+        specifier: ^3.52.1
+        version: 3.52.1(@ts-rest/core@3.51.0(@types/node@22.14.0)(zod@3.24.3))(@types/aws-lambda@8.10.145)(zod@3.24.3)
       archiver:
         specifier: ^6.0.2
         version: 6.0.2
@@ -3537,6 +3543,12 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
+
+  '@hono/zod-validator@0.4.3':
+    resolution: {integrity: sha512-xIgMYXDyJ4Hj6ekm9T9Y27s080Nl9NXHcJkOvkXPhubOLj8hZkOL8pDnnXfvCf5xEE8Q4oMFenQUZZREUY2gqQ==}
+    peerDependencies:
+      hono: '>=3.9.0'
+      zod: ^3.19.1
 
   '@hookform/devtools@4.3.1':
     resolution: {integrity: sha512-CrWxEoHQZaOXJZVQ8KBgOuAa8p2LI8M0DAN5GTRTmdCieRwFVjVDEmuTAVazWVRRkpEQSgSt3KYp7VmmqXdEnw==}
@@ -7287,6 +7299,24 @@ packages:
     peerDependencies:
       '@azure/functions': ^4.0.0
       '@ts-rest/core': ~3.51.0
+      '@types/aws-lambda': ^8.10.115
+      next: ^12.0.0 || ^13.0.0 || ^14.0.0
+      zod: ^3.22.3
+    peerDependenciesMeta:
+      '@azure/functions':
+        optional: true
+      '@types/aws-lambda':
+        optional: true
+      next:
+        optional: true
+      zod:
+        optional: true
+
+  '@ts-rest/serverless@3.52.1':
+    resolution: {integrity: sha512-9lz6SVC/zOjR7Q70Uige1i4fgSLS5cPpei/ocBgdwhc/TJhKWTMQog2IQX3pT2nIA4B4QvZ54YyrBkSiwbrGPw==}
+    peerDependencies:
+      '@azure/functions': ^4.0.0
+      '@ts-rest/core': ~3.52.0
       '@types/aws-lambda': ^8.10.115
       next: ^12.0.0 || ^13.0.0 || ^14.0.0
       zod: ^3.22.3
@@ -17184,6 +17214,11 @@ snapshots:
     dependencies:
       hono: 4.7.7
 
+  '@hono/zod-validator@0.4.3(hono@4.7.7)(zod@3.24.3)':
+    dependencies:
+      hono: 4.7.7
+      zod: 3.24.3
+
   '@hookform/devtools@4.3.1(@types/react@19.0.6)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@emotion/react': 11.13.3(@types/react@19.0.6)(react@19.0.0)
@@ -22395,6 +22430,14 @@ snapshots:
     optionalDependencies:
       '@types/aws-lambda': 8.10.145
       next: 15.2.3(@babel/core@7.26.10)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      zod: 3.24.3
+
+  '@ts-rest/serverless@3.52.1(@ts-rest/core@3.51.0(@types/node@22.14.0)(zod@3.24.3))(@types/aws-lambda@8.10.145)(zod@3.24.3)':
+    dependencies:
+      '@ts-rest/core': 3.51.0(@types/node@22.14.0)(zod@3.24.3)
+      itty-router: 5.0.18
+    optionalDependencies:
+      '@types/aws-lambda': 8.10.145
       zod: 3.24.3
 
   '@tsconfig/node10@1.0.11': {}

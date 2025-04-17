@@ -9,14 +9,17 @@ import { promisify } from "util";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { serve } from "@hono/node-server";
+import { fetchRequestHandler, tsr } from "@ts-rest/serverless/fetch";
 import archiver from "archiver";
 import dotenv from "dotenv";
 import { Hono } from "hono";
 import mime from "mime-types";
 
+import { siteBuilderApi } from "contracts/resources/site-builder";
+
 dotenv.config({ path: "./.env.development" });
 
-const env = await import("../env").then((m) => m.env);
+const env = await import("../env").then((m) => m.BUILD_ENV);
 
 const execPromise = promisify(exec);
 const app = new Hono();
@@ -55,7 +58,7 @@ const BUCKET_NAME = env.S3_BUCKET_NAME || "astro-site";
 const distDir = path.join(process.cwd(), "dist");
 
 // Function to build the Astro site with real-time logging
-const buildSite = async (): Promise<boolean> => {
+const buildSite = async (communitySlug: string): Promise<boolean> => {
 	return new Promise((resolve) => {
 		console.log("Starting Astro build process...");
 
@@ -63,7 +66,11 @@ const buildSite = async (): Promise<boolean> => {
 		const buildProcess = spawn("pnpm", ["site:build"], {
 			shell: true,
 			stdio: "pipe",
-			env: process.env,
+			env: {
+				...process.env,
+				AUTH_TOKEN: env.AUTH_TOKEN,
+				COMMUNITY_SLUG: communitySlug,
+			},
 		});
 
 		// Handle stdout - real-time build progress
@@ -292,15 +299,19 @@ const createZipFromDirectory = async (sourceDir: string, outputPath: string): Pr
 	});
 };
 
-// Endpoint to trigger a build and upload
-app.post("/build", async (c) => {
-	try {
+const router = tsr.router(siteBuilderApi, {
+	build: async ({ body }) => {
 		console.log("Build request received");
 
-		const buildSuccess = await buildSite();
+		const communitySlug = body.communitySlug;
+
+		const buildSuccess = await buildSite(communitySlug);
 
 		if (!buildSuccess) {
-			return c.json({ success: false, message: "Build failed" }, 500);
+			return {
+				status: 500,
+				body: { success: false, message: "Build failed" },
+			};
 		}
 
 		const timestamp = Date.now();
@@ -333,26 +344,42 @@ app.post("/build", async (c) => {
 
 		console.log("Process completed successfully");
 
-		return c.json({
-			success: true,
-			message: "Site built, zipped, and uploaded successfully",
-			url: uploadResult,
-			timestamp: timestamp,
-			fileSize: stats.size,
-			fileSizeFormatted: formatBytes(stats.size),
-		});
-	} catch (error) {
-		console.error("Error:", error);
-		return c.json(
-			{ success: false, message: error instanceof Error ? error.message : "Unknown error" },
-			500
-		);
-	}
+		return {
+			status: 200,
+			body: {
+				success: true,
+				message: "Site built, zipped, and uploaded successfully",
+				url: uploadResult,
+				timestamp: timestamp,
+				fileSize: stats.size,
+				fileSizeFormatted: formatBytes(stats.size),
+			},
+		};
+	},
+	health: async () => {
+		return {
+			status: 200,
+			body: {
+				status: "ok",
+			},
+		};
+	},
 });
 
-// Health check endpoint
-app.get("/health", (c) => {
-	return c.json({ status: "ok" });
+// // Health check endpoint
+// app.get("/health", (c) => {
+// 	return c.json({ status: "ok" });
+// });
+
+app.all("*", async (c) => {
+	return fetchRequestHandler({
+		request: new Request(c.req.url, c.req.raw),
+		contract: siteBuilderApi,
+		router,
+		options: {
+			//
+		},
+	});
 });
 
 // Start the server

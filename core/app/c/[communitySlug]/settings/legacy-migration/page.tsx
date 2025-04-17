@@ -5,10 +5,7 @@ import { Button } from "ui/button";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import {
-	getToBeDeletedStructure,
-	importFromLegacy,
-} from "~/lib/server/legacy-migration/legacy-migration";
+import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/cleanup";
 import { MigrationForm, UndoMigrationForm } from "./MigrationForm";
 
 export default async function Page(props: {

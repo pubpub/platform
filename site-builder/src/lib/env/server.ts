@@ -1,8 +1,7 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
-console.log(import.meta.env);
-export const BUILD_ENV = createEnv({
+export const SERVER_ENV = createEnv({
 	server: {
 		AUTH_TOKEN: z.string(),
 		PUBPUB_URL: z.string().url(),
@@ -13,16 +12,6 @@ export const BUILD_ENV = createEnv({
 		S3_BUCKET_NAME: z.string(),
 		S3_PUBLIC_URL: z.string().url(),
 		PORT: z.coerce.number().gte(1024).lte(65535),
-	},
-	runtimeEnv: process.env,
-	emptyStringAsUndefined: true,
-});
-
-export const SITE_ENV = createEnv({
-	server: {
-		AUTH_TOKEN: z.string(),
-		PUBPUB_URL: z.string().url(),
-		COMMUNITY_SLUG: z.string(),
 	},
 	runtimeEnv: process.env,
 	emptyStringAsUndefined: true,
