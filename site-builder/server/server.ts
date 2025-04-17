@@ -1,9 +1,10 @@
 // @ts-check
 
 import { exec, spawn } from "child_process";
-import { createWriteStream } from "fs";
+import { createReadStream, createWriteStream, ReadStream } from "fs";
 import fs from "fs/promises";
 import path from "path";
+import { PassThrough } from "stream";
 import { promisify } from "util";
 
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -132,14 +133,14 @@ const formatBytes = (bytes: number): string => {
  * Uploads a file to the S3 bucket using the S3 client directly
  * @param id - id under which the file will be stored. eg for a pub, the pubId. for community assets like the logo, the communityId. for user avatars, the userId.
  * @param fileName - name of the file to be stored
- * @param fileData - the file data to upload (Buffer or Uint8Array)
+ * @param fileData - the file data to upload (Buffer, Uint8Array, or ReadStream)
  * @param contentType - MIME type of the file (e.g., 'image/jpeg')
  * @returns the URL of the uploaded file
  */
 export const uploadFileToS3 = async (
 	id: string,
 	fileName: string,
-	fileData: Buffer | Uint8Array,
+	fileData: Buffer | Uint8Array | ReadStream,
 	{
 		contentType,
 		queueSize,
@@ -156,7 +157,9 @@ export const uploadFileToS3 = async (
 	const bucket = env.S3_BUCKET_NAME;
 	const key = `${id}/${fileName}`;
 
-	console.log(`Starting S3 upload of ${fileName} (${formatBytes(fileData.length)})`);
+	console.log(
+		`Starting S3 upload of ${fileName} ${fileData instanceof ReadStream ? "stream" : `(${fileData.length ? formatBytes(fileData.length) : "unknown"})`}`
+	);
 
 	const parallelUploads3 = new Upload({
 		client,
@@ -197,25 +200,138 @@ export const uploadFileToS3 = async (
 };
 
 /**
- * Creates a zip file from a directory
- * @param sourceDir - Directory to zip
- * @param outputPath - Path to save the zip file
- * @returns A promise that resolves when the zip is complete
+ * Upload a directory to S3 recursively using file streams
+ * @param sourceDir - Directory to upload
+ * @param s3Prefix - S3 key prefix (folder path)
+ * @param timestamp - Timestamp to use in the prefix (for versioning)
+ * @returns Base URL of the uploaded content
  */
-const createZipFromDirectory = async (sourceDir: string, outputPath: string): Promise<void> => {
+const uploadDirectoryToS3 = async (
+	sourceDir: string,
+	s3Prefix: string,
+	timestamp?: number
+): Promise<string> => {
+	const client = getS3Client();
+	const bucket = env.S3_BUCKET_NAME;
+
+	// Use timestamp for versioning if provided
+	const prefix = timestamp ? `${s3Prefix}/${timestamp}` : s3Prefix;
+
+	console.log(`Starting directory upload to S3: ${sourceDir} → s3://${bucket}/${prefix}`);
+
+	// Get list of all files recursively
+	const getAllFiles = async (dir: string): Promise<{ path: string; relativePath: string }[]> => {
+		const entries = await fs.readdir(dir, { withFileTypes: true });
+		const files = await Promise.all(
+			entries.map(async (entry) => {
+				const fullPath = path.join(dir, entry.name);
+				const relativePath = path.relative(sourceDir, fullPath);
+
+				if (entry.isDirectory()) {
+					return getAllFiles(fullPath);
+				} else {
+					return [
+						{
+							path: fullPath,
+							relativePath,
+						},
+					];
+				}
+			})
+		);
+
+		return files.flat();
+	};
+
+	// Get all files with their paths
+	const allFiles = await getAllFiles(sourceDir);
+	const totalFiles = allFiles.length;
+
+	console.log(`Found ${totalFiles} files to upload`);
+
+	// Upload files in parallel with max concurrency
+	const concurrencyLimit = 5;
+	const results = [];
+	let completedFiles = 0;
+
+	// Process files in batches for controlled concurrency
+	for (let i = 0; i < allFiles.length; i += concurrencyLimit) {
+		const batch = allFiles.slice(i, i + concurrencyLimit);
+		const batchPromises = batch.map(async (file) => {
+			try {
+				const contentType = mime.lookup(file.path) || "application/octet-stream";
+
+				// Convert Windows paths to forward slashes for S3
+				const s3Key = `${prefix}/${file.relativePath.replace(/\\/g, "/")}`;
+
+				// Create a read stream instead of reading the whole file into memory
+				const fileStream = createReadStream(file.path);
+
+				// Upload the file stream
+				await uploadFileToS3(s3Prefix, file.relativePath.replace(/\\/g, "/"), fileStream, {
+					contentType: contentType,
+				});
+
+				completedFiles++;
+				if (completedFiles % 10 === 0 || completedFiles === totalFiles) {
+					console.log(
+						`Uploaded ${completedFiles}/${totalFiles} files (${Math.round((completedFiles / totalFiles) * 100)}%)`
+					);
+				}
+
+				return s3Key;
+			} catch (error) {
+				console.error(`Error uploading ${file.path}:`, error);
+				throw error;
+			}
+		});
+
+		// Wait for current batch to complete before starting next batch
+		const batchResults = await Promise.all(batchPromises);
+		results.push(...batchResults);
+	}
+
+	console.log(
+		`Directory upload complete. Uploaded ${results.length} files to s3://${bucket}/${prefix}`
+	);
+
+	// Return the base URL of the uploaded content
+	return `${env.S3_PUBLIC_URL || env.S3_ENDPOINT}/${bucket}/${prefix}`;
+};
+
+/**
+ * Creates a zip file from a directory and streams it directly to S3
+ * @param sourceDir - Directory to zip
+ * @param id - S3 folder id/prefix
+ * @param fileName - Name to use for the zip file in S3
+ * @returns A promise that resolves with the S3 URL when complete
+ */
+const createZipAndUploadToS3 = async (
+	sourceDir: string,
+	id: string,
+	fileName: string
+): Promise<string> => {
 	return new Promise((resolve, reject) => {
-		// create a file to stream archive data to
-		const output = createWriteStream(outputPath);
+		const client = getS3Client();
+		const bucket = env.S3_BUCKET_NAME;
+		const key = `${id}/${fileName}`;
+
+		console.log(`Starting to create and stream zip archive directly to S3: ${fileName}`);
+
+		// Create a pass-through stream as an intermediary between archiver and S3
+		const passThrough = new PassThrough();
+
+		// Create archive stream
 		const archive = archiver("zip", {
 			zlib: { level: 9 }, // compression level
 		});
 
-		// Set up progress reporting
-		let lastPercentage = 0;
+		// Set up metrics for reporting
 		let totalBytes = 0;
 		let processedBytes = 0;
+		let lastPercentage = 0;
 
-		// Get total size of files to be added
+		// Get total size of files to be added (in background)
 		const calculateTotalSize = async (dir: string): Promise<number> => {
 			let size = 0;
 			const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -244,6 +360,37 @@ const createZipFromDirectory = async (sourceDir: string, outputPath: string): Pr
 			}
 		})();
 
+		// Pipe archive output to the pass-through stream
+		archive.pipe(passThrough);
+
+		// Configure S3 upload using the pass-through stream as input
+		const upload = new Upload({
+			client,
+			params: {
+				Bucket: bucket,
+				Key: key,
+				Body: passThrough, // Use the pass-through stream instead of archiver directly
+				ContentType: "application/zip",
+			},
+			queueSize: 4,
+			partSize: 1024 * 1024 * 5, // 5MB parts
+			leavePartsOnError: false,
+		});
+
+		// Progress tracking for the upload
+		let uploadLastPercentage = 0;
+		upload.on("httpUploadProgress", (progress) => {
+			if (progress.loaded && progress.total) {
+				const percentage = Math.round((progress.loaded / progress.total) * 100);
+				if (percentage >= uploadLastPercentage + 5 || percentage === 100) {
+					console.log(
+						`Upload progress: ${percentage}% | ${formatBytes(progress.loaded)} of ${formatBytes(progress.total)}`
+					);
+					uploadLastPercentage = percentage;
+				}
+			}
+		});
+
 		// Progress reporting during the compression process
 		archive.on("entry", (entry) => {
 			if (entry.stats && entry.stats.size) {
@@ -263,16 +410,7 @@ const createZipFromDirectory = async (sourceDir: string, outputPath: string): Pr
 			}
 		});
 
-		// listen for all archive data to be written
-		output.on("close", () => {
-			const finalSize = archive.pointer();
-			console.log(
-				`Archive created: ${formatBytes(finalSize)} (compression ratio: ${totalBytes > 0 ? ((finalSize / totalBytes) * 100).toFixed(2) : "unknown"}%)`
-			);
-			resolve();
-		});
-
-		// good practice to catch warnings (ie stat failures and other non-blocking errors)
+		// Handle warnings from archiver
 		archive.on("warning", (err: ArchiverError) => {
 			if (err.code === "ENOENT") {
 				// log warning
@@ -283,18 +421,34 @@ const createZipFromDirectory = async (sourceDir: string, outputPath: string): Pr
 			}
 		});
 
-		// good practice to catch this error explicitly
+		// Handle errors from archiver
 		archive.on("error", (err: Error) => {
+			console.error("Archive error:", err);
 			reject(err);
 		});
 
-		// pipe archive data to the file
-		archive.pipe(output);
+		// Handle errors from the pass-through stream
+		passThrough.on("error", (err) => {
+			console.error("Stream error:", err);
+			reject(err);
+		});
 
-		// append files from a directory, putting its contents at the root of archive
+		// Start the upload process
+		upload
+			.done()
+			.then((result) => {
+				console.log(`Archive upload completed: ${fileName}`);
+				resolve(result.Location!);
+			})
+			.catch((err) => {
+				console.error("Upload error:", err);
+				reject(err);
+			});
+
+		// Append files from the directory to the archive
 		archive.directory(sourceDir, false);
 
-		// finalize the archive (ie we are done appending files but streams have to finish yet)
+		// Finalize the archive - this is when data actually starts flowing
 		archive.finalize();
 	});
 };
@@ -304,6 +458,8 @@ const router = tsr.router(siteBuilderApi, {
 		console.log("Build request received");
 
 		const communitySlug = body.communitySlug;
+		const uploadToS3Folder = body.uploadToS3Folder || false;
+		const timestamp = Date.now();
 
 		const buildSuccess = await buildSite(communitySlug);
 
@@ -314,47 +470,68 @@ const router = tsr.router(siteBuilderApi, {
 			};
 		}
 
-		const timestamp = Date.now();
-		const zipFileName = `site-${timestamp}.zip`;
-		const zipFilePath = path.join(process.cwd(), "builds", zipFileName);
+		let uploadResult: string | undefined;
+		let s3FolderUrl: string | undefined;
+		let s3FolderPath: string | undefined;
+		let error: Error | undefined;
 
-		console.log(`Starting to create zip archive: ${zipFileName}`);
+		try {
+			// Stream zip directly to S3 without saving to disk first
+			const zipFileName = `site-${timestamp}.zip`;
+			const uploadId = "site-archives"; // Folder name in the bucket
 
-		// Create zip archive of the dist directory
-		await createZipFromDirectory(distDir, zipFilePath);
+			console.log("Creating and streaming zip archive directly to S3");
 
-		// Get file size for logging
-		const stats = await fs.stat(zipFilePath);
-		console.log(`Zip file created: ${zipFileName} (${formatBytes(stats.size)})`);
+			// This creates the zip and streams it directly to S3
+			uploadResult = await createZipAndUploadToS3(distDir, uploadId, zipFileName);
 
-		// Read the zip file
-		console.log("Reading zip file into memory");
-		const zipFileData = await fs.readFile(zipFilePath);
+			console.log(`Zip archive uploaded to: ${uploadResult}`);
 
-		// Upload the zip to S3
-		console.log("Uploading zip file to S3");
-		const uploadId = "site-archives"; // Folder name in the bucket
-		const uploadResult = await uploadFileToS3(uploadId, zipFileName, zipFileData, {
-			contentType: "application/zip",
-		});
+			// If requested, also upload dist contents to S3 folder
+			if (uploadToS3Folder) {
+				console.log("Additionally uploading dist contents to S3 folder");
 
-		// Clean up the local zip file
-		console.log("Cleaning up local zip file");
-		await fs.unlink(zipFilePath);
+				// Use community slug as part of the path for better organization
+				const folderPath = `sites/${communitySlug}`;
+				s3FolderUrl = await uploadDirectoryToS3(distDir, folderPath, timestamp);
+				s3FolderPath = `${folderPath}/${timestamp}`;
 
-		console.log("Process completed successfully");
+				console.log(`Dist contents uploaded to: ${s3FolderUrl}`);
+			}
 
-		return {
-			status: 200,
-			body: {
-				success: true,
-				message: "Site built, zipped, and uploaded successfully",
-				url: uploadResult,
-				timestamp: timestamp,
-				fileSize: stats.size,
-				fileSizeFormatted: formatBytes(stats.size),
-			},
-		};
+			console.log("Process completed successfully");
+
+			return {
+				status: 200,
+				body: {
+					success: true,
+					message: "Site built and uploaded successfully",
+					url: uploadResult,
+					timestamp: timestamp,
+					// We can't determine the exact file size without saving to disk
+					// or collecting that data during archiving/upload, so we provide estimated values
+					fileSize: 0, // Required by the API contract, but we don't know the exact size
+					fileSizeFormatted: "Unknown (streaming upload)",
+					...(uploadToS3Folder && {
+						s3FolderUrl,
+						s3FolderPath,
+					}),
+				},
+			};
+		} catch (err) {
+			console.error("Error during build and upload process:", err);
+			error = err as Error;
+
+			return {
+				status: 500,
+				body: {
+					success: false,
+					message: error.message || "An unknown error occurred",
+					...(uploadResult && { url: uploadResult }),
+					...(s3FolderUrl && { s3FolderUrl }),
+				},
+			};
+		}
 	},
 	health: async () => {
 		return {
