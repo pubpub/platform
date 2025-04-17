@@ -9,11 +9,8 @@ import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import {
-	importFromLegacy as _importFromLegacy,
-	cleanUpLegacy,
-	createLegacyStructure,
-} from "~/lib/server/legacy-migration/legacy-migration";
+import { cleanUpLegacy } from "~/lib/server/legacy-migration/cleanup";
+import { importFromLegacy as _importFromLegacy } from "~/lib/server/legacy-migration/legacy-migration";
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 
 export const importFromLegacy = defineServerAction(
