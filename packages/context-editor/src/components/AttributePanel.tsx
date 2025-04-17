@@ -183,6 +183,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 							? ""
 							: `height ${animationHeightMS}ms linear, opacity ${animationHeightMS}ms linear `,
 				}}
+				data-testid="attribute-panel"
 			>
 				<div className="text-sm">Attributes</div>
 				{showName ? (
@@ -192,9 +193,12 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 					if (attrKey === "data") {
 						return null;
 					}
+					const key = `${attrKey}-${activeNodePosition}`;
 					return (
-						<div key={`${attrKey}-${activeNodePosition}`}>
-							<Label className={labelClass}>{attrKey}</Label>
+						<div key={key}>
+							<Label className={labelClass} htmlFor={key}>
+								{attrKey}
+							</Label>
 							<Input
 								className={inputClass}
 								type="text"
@@ -202,6 +206,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 								onChange={(evt) => {
 									updateAttr(attrKey, evt.target.value);
 								}}
+								id={key}
 							/>
 						</div>
 					);
@@ -215,9 +220,12 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 									if (attrKey === "data") {
 										return null;
 									}
+									const key = `${mark.type.name}-${attrKey}`;
 									return (
-										<div key={attrKey}>
-											<Label className={labelClass}>{attrKey}</Label>
+										<div key={key}>
+											<Label className={labelClass} htmlFor={key}>
+												{attrKey}
+											</Label>
 											<Input
 												className={inputClass}
 												type="text"
@@ -229,6 +237,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 														evt.target.value
 													);
 												}}
+												id={key}
 											/>
 										</div>
 									);
@@ -241,9 +250,12 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 					<>
 						<div className="mt-8 text-sm">Data</div>
 						{Object.keys(nodeAttrs.data).map((attrKey) => {
+							const key = `data-${attrKey}`;
 							return (
-								<div key={attrKey}>
-									<Label className={labelClass}>{attrKey}</Label>
+								<div key={key}>
+									<Label className={labelClass} htmlFor={key}>
+										{attrKey}
+									</Label>
 									<Input
 										className={inputClass}
 										type="text"
@@ -251,6 +263,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 										onChange={(evt) => {
 											updateData(attrKey, evt.target.value);
 										}}
+										id={key}
 									/>
 								</div>
 							);
