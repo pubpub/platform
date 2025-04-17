@@ -100,7 +100,7 @@
 .ProseMirror ol,
 .ProseMirror li,
 .ProseMirror section {
-	border-left: 1px solid #777;
+	/* border-left: 1px solid #777; */
 	padding-left: 5px;
 	padding-top: 5px;
 	margin-top: 16px;
@@ -119,9 +119,16 @@
 .ProseMirror sub,
 .ProseMirror u,
 .ProseMirror em {
-	border-top: 1px solid #777;
 	padding-left: 1px;
 	margin-left: -1px;
+	&:hover {
+		background-color: theme(colors.blue.200);
+	}
+}
+
+.ProseMirror a {
+	text-decoration: underline;
+	font-size: 1.1rem;
 }
 
 .ProseMirror h1 {

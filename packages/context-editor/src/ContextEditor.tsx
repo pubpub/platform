@@ -5,12 +5,12 @@ import {
 	ProsemirrorAdapterProvider,
 	useNodeViewFactory,
 	usePluginViewFactory,
+	useWidgetViewFactory,
 } from "@prosemirror-adapter/react";
 import { Node } from "prosemirror-model";
 import { EditorState, Plugin } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 
-import { AttributePanel } from "./components/AttributePanel";
 import { MenuBar } from "./components/MenuBar";
 import { basePlugins } from "./plugins";
 import { attributePanelKey } from "./plugins/attributePanel";
@@ -25,6 +25,7 @@ import "katex/dist/katex.min.css";
 
 import { cn } from "utils";
 
+import { AttributePanelToggleWidget } from "./components/AttributePanelToggleWidget";
 import SuggestPanel from "./components/SuggestPanel";
 
 export interface ContextEditorProps {
@@ -52,19 +53,23 @@ export interface ContextEditorProps {
 export interface PanelProps {
 	top: number;
 	left: number;
-	right: number | string;
+	right: number;
 	bottom: number;
 	pos: number;
+	// isLink: boolean;
+	isOpen: boolean;
 	node?: Partial<Node>;
 }
 
 const initPanelProps: PanelProps = {
 	top: 0,
 	left: 0,
-	right: "100%",
+	right: 0,
 	bottom: 0,
 	pos: 0,
 	node: undefined,
+	isOpen: false,
+	// isLink: false,
 };
 
 export interface SuggestProps {
@@ -95,8 +100,11 @@ function UnwrappedEditor(props: ContextEditorProps) {
 			return <AtomRenderingComponent nodeProp={undefined} />;
 		};
 	}, [props.atomRenderingComponent]);
+
+	const ToggleWidget = useMemo(() => AttributePanelToggleWidget, []);
 	const nodeViewFactory = useNodeViewFactory();
 	const pluginViewFactory = usePluginViewFactory();
+	const widgetViewFactory = useWidgetViewFactory();
 	const viewHost = useRef<HTMLDivElement | null>(null);
 	const view = useRef<EditorView | null>(null);
 	const [panelPosition, setPanelPosition] = useState<PanelProps>(initPanelProps);
@@ -108,18 +116,24 @@ function UnwrappedEditor(props: ContextEditorProps) {
 	/* plugins from: https://discuss.prosemirror.net/t/lightweight-react-integration-example/2680 */
 	useEffect(() => {
 		/* Initial Render */
+		const getToggleWidget = widgetViewFactory({
+			component: ToggleWidget,
+			as: "span",
+		});
 		const state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
 			plugins: [
-				...basePlugins(
-					baseSchema,
+				...basePlugins({
+					schema: baseSchema,
 					props,
 					panelPosition,
 					setPanelPosition,
 					suggestData,
-					setSuggestData
-				),
+					setSuggestData,
+					getToggleWidget,
+					pluginViewFactory,
+				}),
 				...(props.hideMenu
 					? []
 					: [
@@ -145,6 +159,7 @@ function UnwrappedEditor(props: ContextEditorProps) {
 				handleDOMEvents: {
 					focus: () => {
 						/* Reset the panelProps when the editor is focused */
+						const { pos, ...props } = initPanelProps;
 						setPanelPosition(initPanelProps);
 					},
 				},
@@ -156,15 +171,19 @@ function UnwrappedEditor(props: ContextEditorProps) {
 
 	useEffect(() => {
 		/* Every Render */
-		if (view.current) {
-			view.current.setProps({
-				editable: () => !props.disabled,
-			});
-			const tr = view.current.state.tr
-				.setMeta(reactPropsKey, { ...props, suggestData, setSuggestData })
-				.setMeta(attributePanelKey, { panelPosition, setPanelPosition });
-			view.current?.dispatch(tr);
-		}
+
+		setTimeout(() => {
+			if (view.current) {
+				view.current.setProps({
+					editable: () => !props.disabled,
+				});
+				const tr = view.current.state.tr
+					.setMeta(reactPropsKey, { ...props, suggestData, setSuggestData })
+					.setMeta(attributePanelKey, { panelPosition, setPanelPosition });
+				view.current?.dispatch(tr);
+			}
+		}, 0);
+
 		/* It's not clear to me that any of the props need to trigger this to re-render.  */
 		/* Doing so in some cases (onChange for the EditorDash) cause an infinite re-render loop */
 		/* Figure out what I actually need to render on, and then clean up any useMemo calls if necessary */
@@ -177,7 +196,6 @@ function UnwrappedEditor(props: ContextEditorProps) {
 		>
 			<div id={menuBarId} className="sticky top-0 z-10"></div>
 			<div ref={viewHost} className={cn("font-serif", props.className)} />
-			<AttributePanel panelPosition={panelPosition} viewRef={view} />
 			<SuggestPanel {...suggestData} />
 		</div>
 	);

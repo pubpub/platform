@@ -1,110 +1,93 @@
 import type { Mark } from "prosemirror-model";
 
-import React, { useEffect, useState } from "react";
-import { EditorView } from "prosemirror-view";
+import React from "react";
+import { usePluginViewContext } from "@prosemirror-adapter/react";
+import { useDebouncedCallback } from "use-debounce";
 
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
-import type { PanelProps } from "../ContextEditor";
+import { attributePanelKey } from "../plugins/attributePanel";
+import { baseSchema } from "../schemas";
+import { InlineLinkMenu } from "./InlineLinkMenu";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
 
-export interface AttributePanelProps {
-	panelPosition: PanelProps;
-	viewRef: React.RefObject<EditorView | null>;
-}
+export function AttributePanel() {
+	const { view } = usePluginViewContext();
 
-export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) {
-	const [position, setPosition] = useState(panelPosition);
-	/* Set as init position and then keep track of state here, while syncing 
-	so the panel doesn't become out of sync with doc (only an issue if values are shown
-	and edited elsewhere */
-	const [height, setHeight] = useState(0);
-	useEffect(() => {
-		if (panelPosition.top === 0) {
-			setPosition(panelPosition);
-			setHeight(0);
-		} else {
-			const newPosition = { ...position };
-			newPosition.top = panelPosition.top;
-			newPosition.left = panelPosition.left;
-			setPosition(newPosition);
-			setTimeout(() => {
-				setPosition({ ...panelPosition });
-			}, 0);
-			setTimeout(() => {
-				setHeight(300);
-			}, animationTimeMS);
-		}
-	}, [panelPosition]);
+	const attributePanelPluginState = attributePanelKey.getState(view.state);
+	if (!attributePanelPluginState) {
+		return null;
+	}
+	const { panelPosition: panelProps, setPanelPosition: setPanelProps } =
+		attributePanelPluginState;
+
 	const labelClass = "font-normal text-xs";
 	const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
-	const node = position.node;
-	if (!node) {
+	const { node, isOpen } = panelProps;
+
+	const isLink = node?.marks && Boolean(baseSchema.marks.link.isInSet(node.marks));
+
+	if (!node || !isOpen) {
 		return null;
 	}
 	const nodeAttrs = node.attrs || {};
 	const nodeMarks = node.marks || [];
 	const updateAttr = (attrKey: string, value: string) => {
-		setPosition({
-			...position,
+		setPanelProps({
+			...panelProps,
 			node: {
 				...node,
 				attrs: { ...node.attrs, [attrKey]: value },
 			},
 		});
-		viewRef.current?.dispatch(
-			viewRef.current.state.tr.setNodeMarkup(
-				panelPosition.pos,
+		view.dispatch(
+			view.state.tr.setNodeMarkup(
+				panelProps.pos,
 				node.type,
 				{ ...node.attrs, [attrKey]: value },
 				node.marks
 			)
 		);
 	};
-	const updateMarkAttr = (index: number, attrKey: string, value: string) => {
-		const markToReplace = nodeMarks[index];
-		const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
-			...(node?.marks ?? []),
-		];
-		newMarks[index].attrs[attrKey] = value;
-		setPosition({
-			...position,
-			node: {
-				...node,
-				marks: newMarks as Mark[],
-			},
-		});
-		const newMark = viewRef.current?.state.schema.marks[markToReplace.type.name].create({
-			...markToReplace.attrs,
+	const updateMarkAttr = (mark: Mark, attrKey: string, value: string) => {
+		const oldMarks = node.marks || [];
+		const oldMark = oldMarks.find((m) => m.type === mark.type);
+		const newMark = view.state.schema.marks[mark.type.name].create({
+			...mark.attrs,
+			...oldMark?.attrs,
 			[attrKey]: value,
 		});
 
 		if (!newMark) {
 			return null;
 		}
+		setPanelProps({
+			...panelProps,
+			node: {
+				...node,
+				marks: [...oldMarks.filter((m) => m.type !== mark.type), newMark],
+			},
+		});
 
-		viewRef.current?.dispatch(
-			viewRef.current.state.tr.addMark(
-				panelPosition.pos,
-				panelPosition.pos + (node.nodeSize || 0),
-				newMark
-			)
+		//TODO: do we need to delete the mark first?
+		view.dispatch(
+			view.state.tr.addMark(panelProps.pos, panelProps.pos + (node.nodeSize || 0), newMark)
 		);
 	};
 	const updateData = (attrKey: string, value: string) => {
-		setPosition({
-			...position,
+		setPanelProps({
+			...panelProps,
 			node: {
 				...node,
 				attrs: { ...nodeAttrs, data: { ...nodeAttrs.data, [attrKey]: value } },
 			},
 		});
-		viewRef.current?.dispatch(
-			viewRef.current.state.tr.setNodeMarkup(
-				panelPosition.pos,
+		view.dispatch(
+			view.state.tr.setNodeMarkup(
+				panelProps.pos,
 				node.type,
 				{ ...node.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
 				node.marks
@@ -115,119 +98,125 @@ export function AttributePanel({ panelPosition, viewRef }: AttributePanelProps) 
 	// that are not marks that need to be specifically rendered
 	const showName = node.type?.name === "math_inline";
 
+	const attrInputs = Object.keys(nodeAttrs).map((attrKey) => {
+		if (attrKey === "data") {
+			return null;
+		}
+		return (
+			<div key={attrKey}>
+				<Label className={labelClass}>{attrKey}</Label>
+				<Input
+					className={inputClass}
+					type="text"
+					value={nodeAttrs[attrKey] || ""}
+					onChange={useDebouncedCallback((evt) => {
+						updateAttr(attrKey, evt.target.value);
+					}, 200)}
+				/>
+			</div>
+		);
+	});
+	const coords = view.coordsAtPos(panelProps.pos, -1);
+	const container = document.getElementById("context-editor-container");
+	let topOffset = 0;
+	let leftOffset = 0;
+	if (container) {
+		const containerRect = container.getBoundingClientRect();
+		topOffset = -1 * containerRect.top + container.scrollTop;
+		leftOffset = -1 * containerRect.left + container.scrollLeft;
+		console.log({ topOffset, leftOffset, containerRect, coords });
+	}
+
+	if (node.isBlock) {
+		topOffset += 30;
+	}
+
 	return (
 		<>
 			{node && (
 				<div
-					className="z-20 drop-shadow-lg"
+					className="z-20 w-[300px] rounded-md border border-gray-200 bg-white px-4 py-2"
 					style={{
-						// borderTop: "1px solid #777",
 						position: "absolute",
-						background: "#fff",
-						top: position.top,
-						right: position.right,
-						width: 300,
-						padding: "1em",
-						height: height,
-						opacity: height ? 1 : 0,
-						overflow: "scroll",
-						borderLeft: "1px solid #999",
-						borderRight: "1px solid #999",
-						borderBottom: `${height ? 1 : 0}px solid #999`,
-						borderRadius: "0px 0px 4px 4px",
+						top: coords.bottom + topOffset,
+						left: coords.left + leftOffset,
 						transition:
-							panelPosition.top === 0
+							panelProps.top === 0
 								? ""
 								: `height ${animationHeightMS}ms linear, opacity ${animationHeightMS}ms linear `,
 					}}
 				>
-					<div className="text-sm">Attributes</div>
-					{showName ? (
-						<div className="mt-4 text-sm font-bold">{node.type?.name}</div>
-					) : null}
-					{Object.keys(nodeAttrs).map((attrKey) => {
-						if (attrKey === "data") {
-							return null;
-						}
-						return (
-							<div key={attrKey}>
-								<Label className={labelClass}>{attrKey}</Label>
-								<Input
-									className={inputClass}
-									type="text"
-									value={nodeAttrs[attrKey] || ""}
-									onChange={(evt) => {
-										updateAttr(attrKey, evt.target.value);
-									}}
-								/>
-							</div>
-						);
-					})}
-					{!!nodeMarks.length &&
-						nodeMarks.map((mark, index) => {
-							return (
-								<div key={mark.type.name}>
-									<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
-									{Object.keys(mark.attrs).map((attrKey) => {
-										if (attrKey === "data") {
-											return null;
-										}
+					{isLink ? (
+						<InlineLinkMenu panelProps={panelProps}>{attrInputs}</InlineLinkMenu>
+					) : (
+						<>
+							<div className="text-sm">Attributes</div>
+							{showName ? (
+								<div className="mt-4 text-sm font-bold">{node.type?.name}</div>
+							) : null}
+							{attrInputs}
+							{!!nodeMarks.length &&
+								nodeMarks.map((mark, index) => {
+									return (
+										<div key={mark.type.name}>
+											<div className="mt-4 text-sm font-bold">
+												{mark.type.name}
+											</div>
+											{Object.keys(mark.attrs).map((attrKey) => {
+												if (attrKey === "data") {
+													return null;
+												}
+												return (
+													<div key={attrKey}>
+														<Label className={labelClass}>
+															{attrKey}
+														</Label>
+														<Input
+															className={inputClass}
+															type="text"
+															defaultValue={mark.attrs[attrKey] || ""}
+															onChange={useDebouncedCallback(
+																(evt) => {
+																	updateMarkAttr(
+																		nodeMarks[index],
+																		attrKey,
+																		evt.target.value
+																	);
+																},
+																200
+															)}
+														/>
+													</div>
+												);
+											})}
+										</div>
+									);
+								})}
+
+							{nodeAttrs.data && (
+								<>
+									<div className="mt-8 text-sm">Data</div>
+									{Object.keys(nodeAttrs.data).map((attrKey) => {
 										return (
 											<div key={attrKey}>
 												<Label className={labelClass}>{attrKey}</Label>
 												<Input
 													className={inputClass}
 													type="text"
-													defaultValue={mark.attrs[attrKey] || ""}
-													onChange={(evt) => {
-														updateMarkAttr(
-															index,
-															attrKey,
-															evt.target.value
-														);
-													}}
+													value={nodeAttrs.data[attrKey] || ""}
+													onChange={useDebouncedCallback((evt) => {
+														updateData(attrKey, evt.target.value);
+													}, 200)}
 												/>
 											</div>
 										);
 									})}
-								</div>
-							);
-						})}
-
-					{nodeAttrs.data && (
-						<>
-							<div className="mt-8 text-sm">Data</div>
-							{Object.keys(nodeAttrs.data).map((attrKey) => {
-								return (
-									<div key={attrKey}>
-										<Label className={labelClass}>{attrKey}</Label>
-										<Input
-											className={inputClass}
-											type="text"
-											value={nodeAttrs.data[attrKey] || ""}
-											onChange={(evt) => {
-												updateData(attrKey, evt.target.value);
-											}}
-										/>
-									</div>
-								);
-							})}
+								</>
+							)}
 						</>
 					)}
 				</div>
 			)}
-			<div
-				className="z-20"
-				style={{
-					background: "#777",
-					height: "1px",
-					position: "absolute",
-					left: position.left,
-					top: position.top,
-					right: position.right,
-					transition: panelPosition.top === 0 ? "" : `right ${animationTimeMS}ms linear`,
-				}}
-			/>
 		</>
 	);
 }
