@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import type { PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
+import type { PubOpCreate } from "./pub-op";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
@@ -1419,6 +1420,338 @@ describe("By value", () => {
 					id: psuedoId2Id,
 					values: [{ fieldSlug: seededCommunity.pubFields["PseudoId"].slug, value: "2" }],
 				},
+			},
+		]);
+	});
+});
+
+describe("BatchPubOp", () => {
+	it("should create multiple pubs in a batch", async () => {
+		const batch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const pubIds = await batch
+			.add(({ create }) =>
+				create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Batch Pub 1"
+				)
+			)
+			.add(({ create }) =>
+				create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Batch Pub 2"
+				)
+			)
+			.add(({ create }) =>
+				create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Batch Pub 3"
+				)
+			)
+			.execute();
+
+		expect(pubIds.length).toBe(3);
+		await expect(pubIds[0]).toExist();
+		await expect(pubIds[1]).toExist();
+		await expect(pubIds[2]).toExist();
+	});
+
+	it("should update multiple pubs in a batch", async () => {
+		const pub1 = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Original 1")
+			.executeAndReturnPub();
+
+		const pub2 = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Original 2")
+			.executeAndReturnPub();
+
+		const batch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		await batch
+			.add(({ update }) =>
+				update(pub1.id).set(seededCommunity.pubFields["Title"].slug, "Updated 1")
+			)
+			.add(({ update }) =>
+				update(pub2.id).set(seededCommunity.pubFields["Title"].slug, "Updated 2")
+			)
+			.execute();
+
+		const updatedPub1 = await PubOp.upsert(pub1.id, {
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		}).executeAndReturnPub();
+
+		const updatedPub2 = await PubOp.upsert(pub2.id, {
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		}).executeAndReturnPub();
+
+		expect(updatedPub1).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Updated 1" },
+		]);
+
+		expect(updatedPub2).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Updated 2" },
+		]);
+	});
+
+	it("should upsert multiple pubs in a batch", async () => {
+		// create one pub, we'll upsert this and create a new one
+		const existingId = crypto.randomUUID() as PubsId;
+		await PubOp.createWithId(existingId, {
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Existing Pub")
+			.execute();
+
+		const newId = crypto.randomUUID() as PubsId;
+
+		const batch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const pubs = await batch
+			.add(({ upsert }) =>
+				upsert(existingId, { pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Updated Existing"
+				)
+			)
+			.add(({ upsert }) =>
+				upsert(newId, { pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"New Pub"
+				)
+			)
+			.executeAndReturnPubs();
+
+		expect(pubs.length).toBe(2);
+		expect(pubs[0].id).toBe(existingId);
+		expect(pubs[1].id).toBe(newId);
+
+		expect(pubs[0]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Updated Existing" },
+		]);
+
+		expect(pubs[1]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "New Pub" },
+		]);
+	});
+
+	it("should create pubs with relations in a batch", async () => {
+		const batch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const pubs = await batch
+			.add(({ create }) =>
+				create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id })
+					.set(seededCommunity.pubFields["Title"].slug, "Parent 1")
+					.relate(
+						seededCommunity.pubFields["Some relation"].slug,
+						"child relation",
+						(pubOp) =>
+							pubOp
+								.create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id })
+								.set(seededCommunity.pubFields["Title"].slug, "Child 1")
+					)
+			)
+			.add(({ create }) =>
+				create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id })
+					.set(seededCommunity.pubFields["Title"].slug, "Parent 2")
+					.relate(
+						seededCommunity.pubFields["Some relation"].slug,
+						"child relation",
+						(pubOp) =>
+							pubOp
+								.create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id })
+								.set(seededCommunity.pubFields["Title"].slug, "Child 2")
+					)
+			)
+			.executeAndReturnPubs();
+
+		expect(pubs.length).toBe(2);
+
+		expect(pubs[0]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Parent 1" },
+			{
+				fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+				value: "child relation",
+				relatedPubId: expect.any(String),
+				relatedPub: {
+					values: [
+						{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Child 1" },
+					],
+				},
+			},
+		]);
+
+		expect(pubs[1]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Parent 2" },
+			{
+				fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+				value: "child relation",
+				relatedPubId: expect.any(String),
+				relatedPub: {
+					values: [
+						{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Child 2" },
+					],
+				},
+			},
+		]);
+	});
+
+	it("should handle mixed operation types in a batch", async () => {
+		const existingPub = await PubOp.create({
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		})
+			.set(seededCommunity.pubFields["Title"].slug, "Existing")
+			.executeAndReturnPub();
+
+		const newId = crypto.randomUUID() as PubsId;
+
+		const batch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		const pubs = await batch
+			.add(({ update }) =>
+				update(existingPub.id).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Updated Existing"
+				)
+			)
+			.add(({ create }) =>
+				create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"New Creation"
+				)
+			)
+			.add(({ upsert }) =>
+				upsert(newId, { pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"New Upsert"
+				)
+			)
+			.executeAndReturnPubs();
+
+		expect(pubs.length).toBe(3);
+		expect(pubs[0].id).toBe(existingPub.id);
+		expect(pubs[0]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Updated Existing" },
+		]);
+
+		expect(pubs[1].id).not.toBe(existingPub.id);
+		expect(pubs[1].id).not.toBe(newId);
+		expect(pubs[1]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "New Creation" },
+		]);
+
+		expect(pubs[2].id).toBe(newId);
+		expect(pubs[2]).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "New Upsert" },
+		]);
+	});
+
+	it("should handle complex relations between batch items", async () => {
+		const batch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		// Three pubs that all relate to each other
+		let pub1: PubOpCreate;
+		let pub2: PubOpCreate;
+		let pub3: PubOpCreate;
+
+		const pubs = await batch
+			.add(({ create }) => {
+				pub1 = create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Pub 1"
+				);
+				return pub1;
+			})
+			.add(({ create }) => {
+				pub2 = create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Pub 2"
+				);
+				return pub2;
+			})
+			.add(({ create }) => {
+				pub3 = create({ pubTypeId: seededCommunity.pubTypes["Basic Pub"].id }).set(
+					seededCommunity.pubFields["Title"].slug,
+					"Pub 3"
+				);
+				return pub3;
+			})
+			.executeAndReturnPubs();
+
+		const relationBatch = PubOp.batch({
+			communityId: seededCommunity.community.id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		});
+
+		await relationBatch
+			.add(({ update }) =>
+				update(pubs[0].id).relate(
+					seededCommunity.pubFields["Some relation"].slug,
+					"relation to 2",
+					pubs[1].id
+				)
+			)
+			.add(({ update }) =>
+				update(pubs[1].id).relate(
+					seededCommunity.pubFields["Some relation"].slug,
+					"relation to 3",
+					pubs[2].id
+				)
+			)
+			.add(({ update }) =>
+				update(pubs[2].id).relate(
+					seededCommunity.pubFields["Some relation"].slug,
+					"relation to 1",
+					pubs[0].id
+				)
+			)
+			.execute();
+
+		const verifyPub1 = await PubOp.upsert(pubs[0].id, {
+			communityId: seededCommunity.community.id,
+			pubTypeId: seededCommunity.pubTypes["Basic Pub"].id,
+			lastModifiedBy: createLastModifiedBy("system"),
+		}).executeAndReturnPub();
+
+		expect(verifyPub1).toHaveValues([
+			{ fieldSlug: seededCommunity.pubFields["Title"].slug, value: "Pub 1" },
+			{
+				fieldSlug: seededCommunity.pubFields["Some relation"].slug,
+				value: "relation to 2",
+				relatedPubId: pubs[1].id,
 			},
 		]);
 	});

@@ -398,7 +398,13 @@ interface UpdateOnlyOps {
 	unrelate(slug: string, target: PubsId, options?: { deleteOrphaned?: boolean }): this;
 }
 
-type ActivePubOp = CreatePubOp | UpdatePubOp | UpsertPubOp;
+export type PubOpCreate = CreatePubOp;
+export type PubOpUpdate = UpdatePubOp;
+export type PubOpUpsert = UpsertPubOp;
+
+export type PubOpBatch = BatchPubOp;
+
+export type ActivePubOp = PubOpCreate | PubOpUpdate | PubOpUpsert;
 
 /**
  * Helper function to access the protected collectOperations method on ActivePubOp
@@ -1613,7 +1619,7 @@ class UpdatePubOp extends SinglePubOp implements UpdateOnlyOps {
 /**
  * Class for batching multiple pub operations and executing them efficiently
  */
-export class BatchPubOp extends PubOpBase {
+class BatchPubOp extends PubOpBase {
 	private operations: ActivePubOp[] = [];
 	private readonly sharedOptions: Omit<PubOpOptionsBase, "target">;
 
