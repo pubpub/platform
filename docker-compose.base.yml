@@ -31,9 +31,7 @@ services:
             /usr/bin/mc mb --ignore-existing myminio/"$${ASSETS_BUCKET_NAME}";
             /usr/bin/mc anonymous set download myminio/"$${ASSETS_BUCKET_NAME}";
             /usr/bin/mc admin user add myminio "$${ASSETS_UPLOAD_KEY}" "$${ASSETS_UPLOAD_SECRET_KEY}";
-            /usr/bin/mc admin policy attach myminio readwrite --user "$${ASSETS_UPLOAD_KEY}";
-            exit 0;
-            '
+            /usr/bin/mc admin policy attach myminio readwrite --user "$${ASSETS_UPLOAD_KEY}";'
 
     db:
         image: postgres:15
