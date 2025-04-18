@@ -114,38 +114,48 @@ export const createApiAccessToken = (
 	},
 	trx = db
 ) => {
-	const tokenString = generateToken();
+	return autoRevalidate(_createApiAccessToken({ token, permissions }, trx));
+};
 
-	return autoRevalidate(
-		trx
-			.with("new_token", (db) =>
-				db
-					.insertInto("api_access_tokens")
-					.values({
-						token: tokenString,
-						...token,
-					})
-					.returning(["id", "token"])
+const _createApiAccessToken = (
+	{
+		token,
+		permissions,
+	}: {
+		token: Omit<NewApiAccessTokens, "token">;
+		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
+	},
+	trx = db
+) => {
+	const tokenString = generateToken();
+	return trx
+		.with("new_token", (db) =>
+			db
+				.insertInto("api_access_tokens")
+				.values({
+					token: tokenString,
+					...token,
+				})
+				.returning(["id", "token"])
+		)
+		.with("permissions", (db) =>
+			db.insertInto("api_access_permissions").values((eb) =>
+				permissions.map((permission) => ({
+					...permission,
+					apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
+				}))
 			)
-			.with("permissions", (db) =>
-				db.insertInto("api_access_permissions").values((eb) =>
-					permissions.map((permission) => ({
-						...permission,
-						apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
-					}))
-				)
-			)
-			.selectFrom("new_token")
-			.select((eb) => [
-				eb
-					.fn<string>("concat", [
-						eb.selectFrom("new_token").select("new_token.id"),
-						eb.cast<string>(eb.val("."), "text"),
-						eb.selectFrom("new_token").select("new_token.token"),
-					])
-					.as("token"),
-			])
-	);
+		)
+		.selectFrom("new_token")
+		.select((eb) => [
+			eb
+				.fn<string>("concat", [
+					eb.selectFrom("new_token").select("new_token.id"),
+					eb.cast<string>(eb.val("."), "text"),
+					eb.selectFrom("new_token").select("new_token.token"),
+				])
+				.as("token"),
+		]);
 };
 
 export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }, trx = db) =>
@@ -179,7 +189,8 @@ const ONE_HUNDRED_YEARS_MS = 100 * 365 * 24 * 60 * 60 * 1000;
  * Create a new site builder API access token that can access all communities
  */
 export const createSiteBuilderToken = (communityId: CommunitiesId, trx = db) => {
-	return createApiAccessToken(
+	// we don't want autoRevalidate here, bc we are executing this in non-community contexts
+	return _createApiAccessToken(
 		{
 			token: {
 				name: "Site Builder Token",
@@ -192,8 +203,7 @@ export const createSiteBuilderToken = (communityId: CommunitiesId, trx = db) => 
 			permissions: allReadPermissions,
 		},
 		trx
-		// we don't want autoRevalidate here, bc we are executing this in non-community contexts
-	).qb.executeTakeFirstOrThrow(() => new Error("Failed to create site builder token"));
+	).executeTakeFirstOrThrow(() => new Error("Failed to create site builder token"));
 };
 
 /**

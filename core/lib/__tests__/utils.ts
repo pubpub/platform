@@ -19,15 +19,12 @@ export const mockServerCode = async () => {
 
 	vi.mock("~/lib/server/cache/autoRevalidate", () => ({
 		autoRevalidate: (db: any) => {
-			db.qb = db;
 			return db;
 		},
 	}));
 
 	vi.mock("~/lib/server/cache/autoCache", () => ({
 		autoCache: (db: any) => {
-			db.qb = db;
-
 			return db;
 		},
 	}));
