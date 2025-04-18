@@ -29,6 +29,7 @@ catalog:
     "@playwright/test": ^1.49.0
     "@sinclair/typebox": ^0.34.30
     "@types/node": ^20
+    "@handlewithcare/react-prosemirror": "^2.3.5"
     "@honeycombio/opentelemetry-node": ^0.6.1
     "@opentelemetry/auto-instrumentations-node": 0.53.0
     "@sentry/nextjs": "^9.10.1"

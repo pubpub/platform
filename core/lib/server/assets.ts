@@ -5,7 +5,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { PubsId } from "db/public";
 import { logger } from "logger";
 
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 
 let s3Client: S3Client;
 

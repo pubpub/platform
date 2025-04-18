@@ -1,16 +1,11 @@
-// @ts-check
+import type { ZodTypeAny } from "zod";
 
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
-/**
- * Parameters which are optional if the app is self-hosted
- * but we do want checked for our AWS deploys
- *
- * @template {import("zod").ZodTypeAny} Z
- * @param {Z} schema
- */
-const selfHostedOptional = (schema) => {
+import { flagsSchema } from "./flags";
+
+const selfHostedOptional = (schema: ZodTypeAny) => {
 	return process.env.SELF_HOSTED ? schema.optional() : schema;
 };
 
@@ -31,6 +26,8 @@ export const env = createEnv({
 		 */
 		CACHE_LOG: z.string().optional(),
 		DATABASE_URL: z.string().url(),
+		ENV_NAME: z.string().optional(),
+		FLAGS: flagsSchema,
 		KYSELY_DEBUG: z.string().optional(),
 		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
 		LOG_LEVEL: z.enum(["benchmark", "debug", "info", "warn", "error"]).optional(),

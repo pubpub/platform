@@ -10,6 +10,7 @@ import type { InputComponent, PubsId } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
+import { useServerAction } from "~/lib/serverActions";
 import { upload } from "../actions";
 import { FileUploadPreview } from "../FileUpload";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
@@ -29,10 +30,11 @@ export const FileUploadElement = ({
 	label,
 	config,
 }: ElementProps<InputComponent.fileUpload> & { pubId: PubsId }) => {
+	const runUpload = useServerAction(upload);
 	// Cache the pubId which might be coming from a server side generated randomUuid() that changes
 	const [pubId, _] = useState(propsPubId);
 	const signedUploadUrl = (fileName: string) => {
-		return upload(pubId, fileName);
+		return runUpload(pubId, fileName);
 	};
 	const { control, getValues, formState } = useFormContext();
 

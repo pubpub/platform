@@ -5,7 +5,7 @@ import { makeWorkerUtils } from "graphile-worker";
 import { logger } from "logger";
 
 import type { ClientException, ClientExceptionOptions } from "../serverActions";
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 
 import "date-fns";
 

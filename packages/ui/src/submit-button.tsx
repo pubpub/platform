@@ -6,7 +6,7 @@ import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-type ButtonState = "idle" | "loading" | "success" | "error";
+export type ButtonState = "idle" | "loading" | "success" | "error";
 
 type SubmitButtonProps = {
 	// direct control props

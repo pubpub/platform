@@ -35,7 +35,7 @@ import {
 } from "db/public";
 import { stageConstraintSchema } from "db/types";
 
-import type { Json, JsonValue } from "./types";
+import type { Json } from "./types";
 import { CreatePubRequestBodyWithNulls, jsonSchema } from "./types";
 
 export const TOTAL_PUBS_COUNT_HEADER = "x-total-pubs";
@@ -140,13 +140,6 @@ type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedP
 	? { relatedPub?: never; relatedPubId: PubsId | null }
 	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
 
-type MaybePubLegacyAssignee<Options extends MaybePubOptions> =
-	Options["withLegacyAssignee"] extends true
-		? { assignee?: Users | null }
-		: Options["withLegacyAssignee"] extends false
-			? { assignee?: never }
-			: { assignee?: Users | null };
-
 /**
  * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
  *
@@ -184,12 +177,6 @@ export type MaybePubOptions = {
 	 * @default false
 	 */
 	withMembers?: boolean;
-	/**
-	 * Whether to include the legacy assignee.
-	 *
-	 * @default false
-	 */
-	withLegacyAssignee?: boolean;
 	/**
 	 * Whether to include the values.
 	 *
@@ -268,8 +255,7 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
-	MaybePubMembers<Options> &
-	MaybePubLegacyAssignee<Options>;
+	MaybePubMembers<Options>;
 
 export type ProcessedPubWithForm<
 	Options extends Omit<MaybePubOptions, "withValues" & { withValues: true }> = {},
@@ -277,8 +263,7 @@ export type ProcessedPubWithForm<
 	values: (ValuesWithFormElements & MaybePubRelatedPub<Options>)[];
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
-	MaybePubMembers<Options> &
-	MaybePubLegacyAssignee<Options>;
+	MaybePubMembers<Options>;
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages | null;
@@ -316,7 +301,6 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	updatedAt: z.date(),
 	stage: stagesSchema.nullish(),
 	pubType: pubTypeWithFieldsSchema.optional(),
-	assignee: usersSchema.nullish(),
 });
 
 const preferRepresentationHeaderSchema = z.object({
@@ -612,7 +596,6 @@ export type FTSReturn = {
 	createdAt: Date;
 	updatedAt: Date;
 	communityId: CommunitiesId;
-	assigneeId: UsersId | null;
 	title: string | null;
 	searchVector: string | null;
 	stage: {
@@ -642,7 +625,6 @@ export const ftsReturnSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	communityId: communitiesIdSchema,
-	assigneeId: usersIdSchema.nullable(),
 	title: z.string().nullable(),
 	searchVector: z.string().nullable(),
 	stage: z
@@ -783,7 +765,6 @@ export const siteApi = contract.router(
 									"- Date range: `filters[createdAt][$gte]=2023-01-01&filters[createdAt][$lte]=2023-12-31`",
 									"- Logical OR: `filters[$or][0][updatedAt][$gte]=2020-01-01&filters[$or][1][createdAt][$gte]=2020-01-02`",
 									"- Case-insensitive search: `filters[title][$containsi]=search term`",
-									"- Null check: `filters[assigneeId][$null]=true`",
 									"- JSON array filter: `filters[community-slug:jsonField][$jsonPath]='$[2] > 90'`",
 								].join("\n")
 							),

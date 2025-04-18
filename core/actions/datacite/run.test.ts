@@ -20,7 +20,7 @@ import { updatePub } from "~/lib/server";
 import { didSucceed } from "~/lib/serverActions";
 import { run } from "./run";
 
-vitest.mock("~/lib/env/env.mjs", () => {
+vitest.mock("~/lib/env/env", () => {
 	return {
 		env: {
 			DATACITE_API_URL: "https://api.test.datacite.org",

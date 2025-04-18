@@ -5,6 +5,7 @@ import { logger } from "logger";
 
 import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { env } from "~/lib/env/env";
 import { ApiError, generateSignedAssetUploadUrl } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -13,7 +14,12 @@ import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/se
 import { TokenFailureReason, validateTokenSafe } from "~/lib/server/token";
 
 export const upload = defineServerAction(async function upload(pubId: string, fileName: string) {
+	if (env.FLAGS?.get("uploads") === false) {
+		return ApiError.FEATURE_DISABLED;
+	}
+
 	const loginData = await getLoginData();
+
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}

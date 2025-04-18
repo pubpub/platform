@@ -4,7 +4,7 @@ import { logger } from "logger";
 
 import type { autoCache } from "./autoCache";
 import type { AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, QB } from "./types";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { revalidateTagsForCommunity } from "./revalidate";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";

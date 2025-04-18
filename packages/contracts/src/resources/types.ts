@@ -63,7 +63,6 @@ const commonPubFields = z.object({
 export const GetPubResponseBody = commonPubFields.extend({
 	id: z.string(),
 	values: z.record(JsonOutput),
-	assignee: User.nullish(),
 	communityId: z.string(),
 	createdAt: z.date(),
 });
@@ -74,7 +73,6 @@ export type GetPubResponseBody = z.infer<typeof GetPubResponseBody>;
 export const CreatePubRequestBody = commonPubFields.extend({
 	id: z.string().optional(),
 	values: z.record(JsonInput),
-	assigneeId: z.string().optional(),
 });
 export type CreatePubRequestBody = z.infer<typeof CreatePubRequestBody>;
 
@@ -87,7 +85,6 @@ export const CreatePubRequestBodyWithNulls = commonPubFields.extend({
 			z.object({ value: jsonSchema.or(z.date()), relatedPubId: pubsIdSchema }).array(),
 		])
 	),
-	assigneeId: z.string().optional(),
 });
 
 export type CreatePubRequestBodyWithNulls = z.infer<typeof CreatePubRequestBodyWithNulls>;

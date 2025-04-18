@@ -30,9 +30,9 @@ Table users {
   updatedAt DateTime [default: `now()`, not null]
   isSuperAdmin Boolean [not null, default: false]
   passwordHash String
+  isVerified Boolean [not null, default: false]
   memberGroups member_groups [not null]
   AuthToken auth_tokens [not null]
-  assignedPubs pubs [not null]
   actionRuns action_runs [not null]
   ApiAccessToken api_access_tokens [not null]
   Session sessions [not null]
@@ -89,8 +89,6 @@ Table pubs {
   pubTypeId String [not null]
   community communities [not null]
   communityId String [not null]
-  assigneeId String
-  assignee users
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   title String
@@ -628,8 +626,6 @@ Ref: auth_tokens.userId > users.id
 Ref: pubs.pubTypeId > pub_types.id
 
 Ref: pubs.communityId > communities.id
-
-Ref: pubs.assigneeId > users.id
 
 Ref: pub_fields.pubFieldSchemaId > PubFieldSchema.id
 
