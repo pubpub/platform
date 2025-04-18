@@ -1,17 +1,11 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import {
-	Capabilities,
-	CoreSchemaType,
-	ElementType,
-	InputComponent,
-	MemberRole,
-	MembershipType,
-} from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { createSeed } from "~/prisma/seed/createSeed";
+import { maybeWithTrx } from "../maybeWithTrx";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -63,39 +57,34 @@ beforeAll(async () => {
 	community = await seedCommunity(seed);
 });
 
-describe("getPubByForm", () => {
-	const getAllImports = async () => {
-		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { getPubByForm } = await import("~/lib/pubs");
-		const { getPubsWithRelatedValues } = await import("~/lib/server/pub");
-		const { getForm } = await import("~/lib/server/form");
-
-		return { seedCommunity, getPubByForm, getPubsWithRelatedValues, getForm };
-	};
-
+describe("legacy migration", () => {
 	it("should be able to create everything", async () => {
-		const trx = getTrx();
-
-		const { getPubFields } = await import("../pubFields");
-
 		const { createLegacyStructure, REQUIRED_LEGACY_PUB_FIELDS } = await import(
 			"~/lib/server/legacy-migration/legacy-migration"
 		);
+		const { getPubFields } = await import("~/lib/server/pubFields");
 
-		const result = await createLegacyStructure({
-			community: community.community,
-		});
+		const trx = getTrx();
+		try {
+			maybeWithTrx(trx, async () => {
+				const result = await createLegacyStructure({
+					community: community.community,
+				});
 
-		const { fields } = await getPubFields(
-			{
-				communityId: community.community.id,
-			},
-			trx
-		).executeTakeFirstOrThrow();
-		// console.log(fields);
-		expect(Object.keys(fields)).toHaveLength(
-			// bc Title and Description already exist, but "some relation" does not
-			Object.keys(REQUIRED_LEGACY_PUB_FIELDS).length + 1
-		);
+				const { fields } = await getPubFields(
+					{
+						communityId: community.community.id,
+					},
+					trx
+				).executeTakeFirstOrThrow();
+				// console.log(fields);
+				expect(Object.keys(fields)).toHaveLength(
+					// bc Title and Description already exist, but "some relation" does not
+					Object.keys(REQUIRED_LEGACY_PUB_FIELDS).length + 1
+				);
+			});
+		} catch (error) {
+			throw error;
+		}
 	});
 });
