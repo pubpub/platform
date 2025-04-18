@@ -8,6 +8,10 @@ example.com {
         reverse_proxy minio:9000
     }
 
+    handle_path /assets-ui* {
+        reverse_proxy minio:9001
+    }
+
     handle_path /site-builder* {
         reverse_proxy site-builder:4000
     }

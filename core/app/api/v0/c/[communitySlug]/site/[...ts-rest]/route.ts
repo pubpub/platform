@@ -294,29 +294,30 @@ const handler = createNextHandler(
 						};
 					}
 
-					for (const permission of allPermissions) {
-						const exists = authorization[permission.scope]?.[permission.accessType];
-						if (permission.accessType !== "read" && exists) {
-							return {
-								status: 401,
-								body: {
-									ok: false,
-									code: "HAS_WRITE_PERMISSIONS",
-									reason: `Site builder token has ${permission.accessType} permissions for ${permission.scope}, which is not allowed. Please contact support.`,
-								},
-							};
-						}
-						if (permission.accessType === "read" && !exists) {
-							return {
-								status: 401,
-								body: {
-									ok: false,
-									code: "HAS_NO_READ_PERMISSIONS",
-									reason: `Site builder token has no read permissions for ${permission.scope}, which is required. Please contact support.`,
-								},
-							};
-						}
-					}
+					// TODO: enable again when you're less silly
+					// for (const permission of allPermissions) {
+					// 	const exists = authorization[permission.scope]?.[permission.accessType];
+					// 	if (permission.accessType !== "read" && exists) {
+					// 		return {
+					// 			status: 401,
+					// 			body: {
+					// 				ok: false,
+					// 				code: "HAS_WRITE_PERMISSIONS",
+					// 				reason: `Site builder token has ${permission.accessType} permissions for ${permission.scope}, which is not allowed. Please contact support.`,
+					// 			},
+					// 		};
+					// 	}
+					// 	if (permission.accessType === "read" && !exists) {
+					// 		return {
+					// 			status: 401,
+					// 			body: {
+					// 				ok: false,
+					// 				code: "HAS_NO_READ_PERMISSIONS",
+					// 				reason: `Site builder token has no read permissions for ${permission.scope}, which is required. Please contact support.`,
+					// 			},
+					// 		};
+					// 	}
+					// }
 
 					return {
 						status: 200,

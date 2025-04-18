@@ -40,7 +40,7 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     e2e:
-        if: false && (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize')
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize')
         needs:
             - build-all
             # could theoretically be skipped, but in practice is always faster
@@ -61,10 +61,14 @@ jobs:
             pull-requests: write
             statuses: write
         with:
-            PLATFORM_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:2b9a81a279c4e405bbedcdbb697c897ded52fbc0
-            JOBS_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs:c786662f4899de16a621e366a485eca5adda4d6a
-            MIGRATIONS_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7:c786662f4899de16a621e366a485eca5adda4d6a
-            SITE_BUILDER_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-site-builder:c786662f4899de16a621e366a485eca5adda4d6a
+            # PLATFORM_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:2b9a81a279c4e405bbedcdbb697c897ded52fbc0
+            # JOBS_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs:c786662f4899de16a621e366a485eca5adda4d6a
+            # MIGRATIONS_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7:c786662f4899de16a621e366a485eca5adda4d6a
+            # SITE_BUILDER_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-site-builder:c786662f4899de16a621e366a485eca5adda4d6a
+            PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
+            JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
+            MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
+            SITE_BUILDER_IMAGE: ${{ needs.build-all.outputs.site-builder-image }}
             AWS_REGION: "us-east-1"
             COMPOSE_FILES: docker-compose.preview.pr.yml
         secrets:

@@ -301,6 +301,7 @@ const createZipAndUploadToS3 = async (
 		// Pipe archive output to the pass-through stream
 		archive.pipe(passThrough);
 
+		console.log({ msg: `Creating S3 upload`, bucket, key, passThrough, client });
 		// Configure S3 upload using the pass-through stream as input
 		const upload = new Upload({
 			client,
@@ -447,6 +448,8 @@ const router = tsr.router(siteBuilderApi, {
 
 			const distDir = `./dist/${communitySlug}`;
 
+			console.log({ msg: `Building site`, distDir, siteUrl, authToken, communitySlug, env });
+
 			const buildSuccess = await buildAstroSite({
 				outDir: distDir,
 				site: siteUrl,
@@ -491,6 +494,12 @@ const router = tsr.router(siteBuilderApi, {
 
 					// Use community slug as part of the path for better organization
 					const folderPath = `sites/${communitySlug}`;
+					console.log({
+						msg: `Uploading dist contents to S3 folder`,
+						distDir,
+						folderPath,
+						timestamp,
+					});
 					s3FolderUrl = await uploadDirectoryToS3(distDir, folderPath, timestamp);
 					s3FolderPath = `${folderPath}/${timestamp}`;
 

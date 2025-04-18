@@ -47,6 +47,17 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		throw new Error("Site builder server is not healthy");
 	}
 
+	logger.debug({
+		msg: `Initializing site build`,
+		communitySlug,
+		journalId: pub.id,
+		mapping: config,
+		uploadToS3Folder: true,
+		siteUrl: `http://localhost:4321`,
+		headers: {
+			authorization: `Bearer ${siteBuilderToken}`,
+		},
+	});
 	const result = await siteBuilderClient.build({
 		body: {
 			communitySlug,
