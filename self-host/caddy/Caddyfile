@@ -8,9 +8,14 @@ example.com {
         reverse_proxy minio:9000
     }
 
+    handle_path /site-builder/* {
+        reverse_proxy site-builder:4000
+    }
+
     handle {
         reverse_proxy platform:3000
     }
+
 }
 
 # if you want to use a different domain for your files, you can do so here
