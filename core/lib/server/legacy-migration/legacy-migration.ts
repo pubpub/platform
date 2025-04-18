@@ -1293,10 +1293,10 @@ export const importFromLegacy = async (
 		const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
 
 		// console.log(legacyPubs.collections);
-		await writeFile(
-			"lib/server/legacy-migration/archive.json",
-			JSON.stringify(legacyCommunity, null, 2)
-		);
+		// await writeFile(
+		// 	"lib/server/legacy-migration/archive.json",
+		// 	JSON.stringify(legacyCommunity, null, 2)
+		// );
 		const parsed = legacyExportSchema.parse(legacyCommunity);
 
 		const legacyPubs = await createPubs(
