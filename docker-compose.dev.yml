@@ -40,6 +40,12 @@ services:
         env_file:
             - path: .env.docker-compose.dev
               required: true
+        healthcheck:
+            test: ["CMD", "echo", "true"]
+            interval: 1m30s
+            timeout: 30s
+            retries: 5
+            start_period: 30s
         extends:
             file: docker-compose.base.yml
             service: minio-init

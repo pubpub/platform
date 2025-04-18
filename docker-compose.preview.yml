@@ -39,6 +39,7 @@ services:
             - minio
         ports:
             - "4000:4000"
+        restart: on-failure
         networks:
             - app-network
         environment:
@@ -50,6 +51,7 @@ services:
             - S3_SECRET_KEY=preview-different123
             - S3_BUCKET_NAME=assets.v7.pubpub.org
             - S3_PUBLIC_URL=http://minio:9000
+            - PORT=4000
 
     caddy:
         image: caddy:latest
