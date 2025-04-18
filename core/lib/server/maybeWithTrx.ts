@@ -6,7 +6,7 @@ import { Transaction } from "kysely";
 import type { Database } from "db/Database";
 import { logger } from "logger";
 
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 import { transactionStorage } from "./cache/transactionStorage";
 
 /**

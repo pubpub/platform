@@ -4,7 +4,7 @@ import { logger } from "logger";
 
 import type { autoRevalidate } from "./autoRevalidate";
 import type { AutoCacheOptions, AutoOptions, DirectAutoOutput, ExecuteFn, SQB } from "./types";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { createCacheTag, createCommunityCacheTags } from "./cacheTags";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { memoize } from "./memoize";
