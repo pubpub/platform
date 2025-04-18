@@ -103,7 +103,7 @@ jobs:
                   MINIMAL_SEED: true
                   SKIP_VALIDATION: true
 
-            - run: pnpm --filter core exec playwright install chromium --with-deps
+            - run: pnpm --filter core exec playwright install --with-deps
 
             - name: Start up core etc
               run: pnpm integration:setup
