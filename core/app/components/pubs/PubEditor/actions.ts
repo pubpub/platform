@@ -178,7 +178,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			updateQuery.unrelate(slug, relatedPubId);
 		}
 
-		return await updateQuery.execute();
+		return await updateQuery.executeAndReturnPub();
 	} catch (error) {
 		logger.error(error);
 		return {

@@ -76,9 +76,6 @@ describe("getPubByForm", () => {
 	it("should be able to create everything", async () => {
 		const trx = getTrx();
 
-		const { createCorrectPubFields, createCorrectPubTypes } = await import(
-			"~/lib/server/legacy-migration/legacy-migration"
-		);
 		const { getPubFields } = await import("../pubFields");
 
 		const { createLegacyStructure, REQUIRED_LEGACY_PUB_FIELDS } = await import(
@@ -89,9 +86,12 @@ describe("getPubByForm", () => {
 			community: community.community,
 		});
 
-		const { fields } = await getPubFields({
-			communityId: community.community.id,
-		}).executeTakeFirstOrThrow();
+		const { fields } = await getPubFields(
+			{
+				communityId: community.community.id,
+			},
+			trx
+		).executeTakeFirstOrThrow();
 		// console.log(fields);
 		expect(Object.keys(fields)).toHaveLength(
 			// bc Title and Description already exist, but "some relation" does not
