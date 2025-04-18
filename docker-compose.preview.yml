@@ -55,6 +55,7 @@ services:
 
     caddy:
         image: caddy:latest
+        restart: on-failure
         depends_on:
             - platform
             - platform-jobs
