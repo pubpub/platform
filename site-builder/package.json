@@ -49,6 +49,7 @@
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/archiver": "^6.0.2",
 		"@types/mime-types": "^2.1.4",
+		"@types/node": "22",
 		"@types/react": "catalog:react19",
 		"@types/react-dom": "catalog:react19"
 	},

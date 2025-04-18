@@ -1,13 +1,13 @@
 // @ts-check
 
-import { exec, spawn } from "child_process";
-import { createReadStream, createWriteStream, ReadStream } from "fs";
+import { exec } from "child_process";
+import { createReadStream, ReadStream } from "fs";
 import fs from "fs/promises";
 import path from "path";
 import { PassThrough } from "stream";
 import { promisify } from "util";
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { serve } from "@hono/node-server";
 import { fetchRequestHandler, tsr } from "@ts-rest/serverless/fetch";
@@ -22,9 +22,8 @@ import { buildAstroSite } from "./astro";
 
 dotenv.config({ path: "./.env.development" });
 
-const env = await import("../env").then((m) => m.BUILD_ENV);
+const env = await import("../src/lib/env/server").then((m) => m.SERVER_ENV);
 
-const execPromise = promisify(exec);
 const app = new Hono();
 const PORT = env.PORT;
 
