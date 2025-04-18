@@ -7,6 +7,7 @@
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
+		"playwright:test": "turbo run playwright:test --continue",
 		"p:dev": "preconstruct dev",
 		"p:build": "turbo run turbo:p:build",
 		"turbo:p:build": "preconstruct build",

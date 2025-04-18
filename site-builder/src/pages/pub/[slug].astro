@@ -1,0 +1,198 @@
+---
+import { expect } from "utils/assert";
+
+import Layout from "../../layouts/Layout.astro";
+import { getClient } from "../../lib/client/client";
+import { getJournalArticles } from "../../lib/client/queries";
+
+const { slug } = Astro.params;
+
+export async function getStaticPaths() {
+	const pubs = await getJournalArticles();
+
+	const paths = pubs.map((pub) => ({
+		params: {
+			slug: expect(pub.values?.find((value) => value.fieldName === "Slug")?.value),
+		},
+		props: { pub },
+	}));
+
+	return paths;
+}
+
+const { pub } = Astro.props;
+
+const getFieldValue = <T extends unknown = unknown>(fieldName: string) => {
+	return pub.values?.find((value) => value.fieldName === fieldName)?.value as T;
+};
+
+const title = getFieldValue("Title");
+const abstract = getFieldValue("Abstract");
+const publicationDate = getFieldValue<string>("Publication Date");
+const lastEdited = getFieldValue<string>("Last Edited");
+const doi = getFieldValue<string>("DOI");
+const volume = getFieldValue<string>("Issue Volume");
+const issueNumber = getFieldValue<string>("Issue Number");
+
+// Assuming contributors are in the values array
+const contributors = pub.values?.filter((value) => value.fieldName === "Contributors") || [];
+
+// Calculate months since last update
+const getMonthsAgo = (dateString: string) => {
+	if (!dateString) return "";
+	const lastEditDate = new Date(dateString);
+	const now = new Date();
+	const months =
+		(now.getFullYear() - lastEditDate.getFullYear()) * 12 +
+		now.getMonth() -
+		lastEditDate.getMonth();
+	return `${months} months ago`;
+};
+---
+
+<Layout title={title || "Journal Article"}>
+	<div class="bg-slate-900 text-white p-6">
+		<div class="container mx-auto">
+			<nav class="flex items-center justify-between mb-4">
+				<div>Journal Logo</div>
+				<div class="flex space-x-4">
+					<a href="#" class="text-white">Search</a>
+					<a href="#" class="text-white">Dashboard</a>
+					<a href="#" class="text-white">Login or Signup</a>
+				</div>
+			</nav>
+			<div class="flex space-x-4 text-sm">
+				<a href="#" class="text-white">HOME</a>
+				<a href="#" class="text-white">ARTICLES</a>
+				<a href="#" class="text-white">PUBLISH WITH US</a>
+				<a href="#" class="text-white">MASTHEAD</a>
+				<a href="#" class="text-white">WORK WITH US</a>
+				<a href="#" class="text-white">BLOG</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="bg-gradient-to-br from-indigo-500 via-purple-500 to-blue-500 min-h-screen">
+		<div class="container mx-auto px-4 py-8">
+			<div class="flex items-center mb-4">
+				<button
+					class="bg-white text-gray-800 px-3 py-1 rounded-md flex items-center text-sm mr-2"
+				>
+					<span>Volume {volume || "4"} Issue {issueNumber || "2"}</span>
+				</button>
+				<span class="text-white mr-2">Empirical</span>
+				<span class="text-white"
+					>Published on {
+						publicationDate
+							? new Date(publicationDate).toLocaleDateString("en-US", {
+									month: "short",
+									day: "numeric",
+									year: "numeric",
+								})
+							: "Nov 16, 2024"
+					}</span
+				>
+				<button class="ml-auto bg-white text-gray-800 px-3 py-1 rounded-md text-sm">
+					SHOW DETAILS
+				</button>
+			</div>
+
+			<div class="flex flex-col lg:flex-row">
+				<div class="lg:w-3/4 bg-white p-8 rounded-lg shadow-lg">
+					<h1 class="text-4xl font-bold mb-6">{title}</h1>
+
+					<div class="mb-6">
+						<p class="text-gray-800">
+							by {
+								contributors.map((c) => c.value).join(" and ") ||
+									"Helge Giese and Laura M König"
+							}
+						</p>
+					</div>
+
+					<div class="flex items-center text-sm text-gray-600 mb-8">
+						<div class="mr-6">
+							<p>
+								Published on {
+									publicationDate
+										? new Date(publicationDate).toLocaleDateString("en-US", {
+												month: "short",
+												day: "numeric",
+												year: "numeric",
+											})
+										: "Nov 16, 2024"
+								}
+							</p>
+						</div>
+						<div class="flex items-center">
+							<span>last released</span>
+							<span class="ml-2">{getMonthsAgo(lastEdited) || "5 months ago"}</span>
+						</div>
+					</div>
+
+					<div class="mb-8">
+						<h2 class="text-2xl font-bold mb-4">ABSTRACT</h2>
+						<div class="prose max-w-none">
+							{
+								abstract ? (
+									<div set:html={abstract} />
+								) : (
+									<p>
+										Ecological Momentary Assessment (EMA) study participation is
+										usually incentivized using monetary (e.g., fixed or
+										performance-contingent payment) or non-monetary (e.g.,
+										feedback) compensation. This study investigates the impact
+										of this incentivization on recruitment, retention, data
+										quality, and participant characteristics in a sample of 74
+										students. For this purpose, an EMA study (time-based
+										sampling) was conducted in participants' daily life using a
+										2 Payment (fixed/performance-contingent) x 2 Feedback
+										(yes/no) experimental between-subjects design.
+									</p>
+								)
+							}
+						</div>
+					</div>
+				</div>
+
+				<div class="lg:w-1/4 pl-0 lg:pl-4 mt-4 lg:mt-0">
+					<div class="mb-2">
+						<button
+							class="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded shadow flex justify-between items-center"
+						>
+							<span>CITE</span>
+							<span>[+]</span>
+						</button>
+					</div>
+
+					<div class="mb-2">
+						<button
+							class="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded shadow flex justify-between items-center"
+						>
+							<span>SOCIAL</span>
+							<span class="text-lg">↗</span>
+						</button>
+					</div>
+
+					<div class="mb-2">
+						<button
+							class="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded shadow flex justify-between items-center"
+						>
+							<span>DOWNLOAD</span>
+							<span class="text-lg">↓</span>
+						</button>
+					</div>
+
+					<div class="mb-2">
+						<button
+							class="w-full bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded shadow flex justify-between items-center"
+						>
+							<span>CONTENTS</span>
+							<span class="text-lg">☰</span>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</Layout>

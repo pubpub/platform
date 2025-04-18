@@ -20,9 +20,9 @@ import {
 	FormMessage,
 } from "ui/form";
 import { Input } from "ui/input";
+import { FormSubmitButton } from "ui/submit-button";
 
 import type { SignupFormSchema } from "./schema";
-import { FormSubmitButton } from "../SubmitButton";
 import { compiledSignupFormSchema } from "./schema";
 
 export function BaseSignupForm(props: {

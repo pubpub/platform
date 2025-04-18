@@ -1,0 +1,25 @@
+---
+import { expect } from "utils/assert";
+
+import Welcome from "../components/Welcome.astro";
+import Layout from "../layouts/Layout.astro";
+import { getClient } from "../lib/client/client";
+import { getJournal } from "../lib/client/queries";
+
+const journal = await getJournal();
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
+
+<Layout>
+	<Welcome />
+
+	<div id="container">
+		<main>
+			<section class="bg-red-50">
+				<pre>{JSON.stringify(journal, null, 2)}</pre>
+			</section>
+		</main>
+	</div>
+</Layout>

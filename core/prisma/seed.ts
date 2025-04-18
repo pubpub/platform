@@ -62,8 +62,8 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
-const legacyId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
-const starterId = "bbbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const starterId = "bbbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
 	// do not seed arcadia if the minimal seed flag is set

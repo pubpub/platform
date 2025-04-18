@@ -74,11 +74,13 @@ export async function validateFilter(communityId: CommunitiesId, filter: Filter,
 		assertAllowedOperators(field, operators, coreSchemaTypeAllowedOperators.DateTime);
 	}
 
-	const fieldInfos = await getFieldInfoForSlugs({
-		communityId,
-		slugs: Object.keys(actualFields),
-		trx,
-	});
+	const fieldInfos = await getFieldInfoForSlugs(
+		{
+			communityId,
+			slugs: Object.keys(actualFields),
+		},
+		trx
+	);
 
 	const fieldsWithSchemaAndOperators = fieldInfos.map((field) => ({
 		...field,
