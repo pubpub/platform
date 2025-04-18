@@ -8,7 +8,7 @@ import defaultConfig from "../astro.config.mjs";
 
 export const buildAstroSite = async (astroConfig?: Partial<AstroInlineConfig>) => {
 	try {
-		const config = { ...defaultConfig, ...astroConfig };
+		const config = { ...defaultConfig, ...astroConfig } satisfies AstroInlineConfig;
 		await build(config);
 		return true;
 	} catch (error) {

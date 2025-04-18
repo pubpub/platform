@@ -8,6 +8,10 @@ export const siteBuilderApi = contract.router({
 		method: "POST",
 		path: "/build/journal",
 		summary: "Build a journal site",
+		headers: z.object({
+			// Auth header
+			authorization: z.string().startsWith("Bearer "),
+		}),
 		body: z.object({
 			communitySlug: z.string(),
 			journalId: z.string().uuid(),
@@ -18,7 +22,7 @@ export const siteBuilderApi = contract.router({
 		description: "Build a journal site",
 		responses: {
 			200: z.object({
-				success: z.boolean(),
+				success: z.literal(true),
 				message: z.string(),
 				url: z.string(),
 				timestamp: z.number(),
@@ -26,6 +30,10 @@ export const siteBuilderApi = contract.router({
 				fileSizeFormatted: z.string(),
 				s3FolderUrl: z.string().optional(),
 				s3FolderPath: z.string().optional(),
+			}),
+			401: z.object({
+				success: z.literal(false),
+				message: z.string(),
 			}),
 		},
 	},

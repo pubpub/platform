@@ -6,32 +6,46 @@ import { siteBuilderApi } from "contracts/resources/site-builder";
 import { logger } from "logger";
 
 import type { action } from "./action";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { getPubsWithRelatedValues } from "~/lib/server";
+import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
 
 // parse Journal
 
-const siteBuilderClient = initClient(siteBuilderApi, {
-	baseUrl: env.SITE_BUILDER_ENDPOINT!,
-	baseHeaders: {
-		Authorization: `Bearer ${env.SITE_BUILDER_API_KEY}`,
-	},
-});
-
 export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
-	const journal = await getPubsWithRelatedValues(
-		{
-			pubId: pub.id,
-			communityId: pub.communityId,
-		},
-		{
-			depth: 5,
-		}
-	);
+	const [journal, siteBuilderToken] = await Promise.all([
+		getPubsWithRelatedValues(
+			{
+				pubId: pub.id,
+				communityId: pub.communityId,
+			},
+			{
+				depth: 5,
+			}
+		),
+		getSiteBuilderToken(pub.communityId),
+	]);
+
+	if (!siteBuilderToken) {
+		throw new Error("Site builder token not found");
+	}
 
 	const communitySlug = await getCommunitySlug();
+
+	const siteBuilderClient = initClient(siteBuilderApi, {
+		baseUrl: env.SITE_BUILDER_ENDPOINT!,
+		headers: {
+			authorization: `Bearer ${siteBuilderToken}`,
+		},
+	});
+
+	const health = await siteBuilderClient.health();
+	if (health.status !== 200) {
+		logger.error({ msg: "Site builder server is not healthy", health });
+		throw new Error("Site builder server is not healthy");
+	}
 
 	const result = await siteBuilderClient.build({
 		body: {
@@ -40,6 +54,9 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			mapping: config,
 			uploadToS3Folder: true,
 			siteUrl: `http://localhost:4321`,
+		},
+		headers: {
+			authorization: `Bearer ${siteBuilderToken}`,
 		},
 	});
 

@@ -7,6 +7,6 @@ export const SITE_ENV = createEnv({
 		PUBPUB_URL: z.string().url(),
 		COMMUNITY_SLUG: z.string(),
 	},
-	runtimeEnv: process.env,
+	runtimeEnv: import.meta.env,
 	emptyStringAsUndefined: true,
 });

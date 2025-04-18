@@ -1,26 +1,23 @@
 // @ts-check
 
-import { exec } from "child_process";
 import { createReadStream, ReadStream } from "fs";
 import fs from "fs/promises";
 import path from "path";
 import { PassThrough } from "stream";
-import { promisify } from "util";
 
 import { S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { serve } from "@hono/node-server";
+import { initClient } from "@ts-rest/core";
 import { fetchRequestHandler, tsr } from "@ts-rest/serverless/fetch";
 import archiver from "archiver";
-import dotenv from "dotenv";
 import { Hono } from "hono";
 import mime from "mime-types";
 
+import { siteApi } from "contracts";
 import { siteBuilderApi } from "contracts/resources/site-builder";
 
 import { buildAstroSite } from "./astro";
-
-dotenv.config({ path: "./.env.development" });
 
 const env = await import("../src/lib/env/server").then((m) => m.SERVER_ENV);
 
@@ -237,7 +234,7 @@ const uploadDirectoryToS3 = async (
 	);
 
 	// Return the base URL of the uploaded content
-	return `${env.S3_PUBLIC_URL || env.S3_ENDPOINT}/${bucket}/${prefix}`;
+	return `${env.S3_ENDPOINT}/${bucket}/${prefix}`;
 };
 
 /**
@@ -394,93 +391,154 @@ const createZipAndUploadToS3 = async (
 	});
 };
 
+const verifySiteBuilderToken = async (authHeader: string, communitySlug: string) => {
+	if (!authHeader || !authHeader.startsWith("Bearer ")) {
+		throw new Error("Invalid or missing authorization token");
+	}
+
+	const client = initClient(siteApi, {
+		baseUrl: env.PUBPUB_URL,
+		baseHeaders: {
+			Authorization: authHeader,
+		},
+	});
+
+	const response = await client.auth.check.siteBuilder({
+		params: {
+			communitySlug: communitySlug,
+		},
+	});
+
+	if (response.status === 200) {
+		return;
+	}
+
+	if (response.status === 401) {
+		return {
+			status: 401,
+			body: {
+				success: false,
+				message: `${response.body.code}: ${response.body.reason}`,
+			},
+		} as const;
+	}
+
+	throw new Error(`UNKNOWN ERROR: ${response.body}`);
+};
+
 const router = tsr.router(siteBuilderApi, {
-	build: async ({ body }) => {
+	build: async ({ body, headers }, ctx) => {
 		console.log("Build request received");
 
-		const communitySlug = body.communitySlug;
-		const siteUrl = body.siteUrl;
-		const uploadToS3Folder = body.uploadToS3Folder || false;
-		const timestamp = Date.now();
-
-		const distDir = `./dist/${communitySlug}`;
-
-		const buildSuccess = await buildAstroSite({
-			outDir: distDir,
-			site: siteUrl,
-			vite: {
-				define: {
-					"import.meta.env.COMMUNITY_SLUG": JSON.stringify(communitySlug),
-				},
-			},
-		});
-
-		if (!buildSuccess) {
-			return {
-				status: 500,
-				body: { success: false, message: "Build failed" },
-			};
-		}
-
-		let uploadResult: string | undefined;
-		let s3FolderUrl: string | undefined;
-		let s3FolderPath: string | undefined;
-		let error: Error | undefined;
-
 		try {
-			// Stream zip directly to S3 without saving to disk first
-			const zipFileName = `site-${timestamp}.zip`;
-			const uploadId = "site-archives"; // Folder name in the bucket
+			const authHeader = headers.authorization;
+			const authToken = authHeader.replace("Bearer ", "");
+			const communitySlug = body.communitySlug;
 
-			console.log("Creating and streaming zip archive directly to S3");
+			const tokenVerification = await verifySiteBuilderToken(authHeader, communitySlug);
 
-			// This creates the zip and streams it directly to S3
-			uploadResult = await createZipAndUploadToS3(distDir, uploadId, zipFileName);
-
-			console.log(`Zip archive uploaded to: ${uploadResult}`);
-
-			// If requested, also upload dist contents to S3 folder
-			if (uploadToS3Folder) {
-				console.log("Additionally uploading dist contents to S3 folder");
-
-				// Use community slug as part of the path for better organization
-				const folderPath = `sites/${communitySlug}`;
-				s3FolderUrl = await uploadDirectoryToS3(distDir, folderPath, timestamp);
-				s3FolderPath = `${folderPath}/${timestamp}`;
-
-				console.log(`Dist contents uploaded to: ${s3FolderUrl}`);
+			if (tokenVerification) {
+				return tokenVerification;
 			}
 
-			console.log("Process completed successfully");
+			const siteUrl = body.siteUrl;
+			const uploadToS3Folder = body.uploadToS3Folder || false;
+			const timestamp = Date.now();
 
-			return {
-				status: 200,
-				body: {
-					success: true,
-					message: "Site built and uploaded successfully",
-					url: uploadResult,
-					timestamp: timestamp,
-					// We can't determine the exact file size without saving to disk
-					// or collecting that data during archiving/upload, so we provide estimated values
-					fileSize: 0, // Required by the API contract, but we don't know the exact size
-					fileSizeFormatted: "Unknown (streaming upload)",
-					...(uploadToS3Folder && {
-						s3FolderUrl,
-						s3FolderPath,
-					}),
+			const distDir = `./dist/${communitySlug}`;
+
+			const buildSuccess = await buildAstroSite({
+				outDir: distDir,
+				site: siteUrl,
+				vite: {
+					define: {
+						"import.meta.env.COMMUNITY_SLUG": JSON.stringify(communitySlug),
+						"import.meta.env.AUTH_TOKEN": JSON.stringify(authToken),
+						"import.meta.env.PUBPUB_URL": JSON.stringify(env.PUBPUB_URL),
+					},
 				},
-			};
+			});
+
+			if (!buildSuccess) {
+				return {
+					status: 500,
+					body: { success: false, message: "Build failed" },
+				};
+			}
+
+			console.log("Build successful");
+
+			let uploadResult: string | undefined;
+			let s3FolderUrl: string | undefined;
+			let s3FolderPath: string | undefined;
+			let error: Error | undefined;
+
+			try {
+				// Stream zip directly to S3 without saving to disk first
+				const zipFileName = `site-${timestamp}.zip`;
+				const uploadId = "site-archives"; // Folder name in the bucket
+
+				console.log("Creating and streaming zip archive directly to S3");
+
+				// This creates the zip and streams it directly to S3
+				uploadResult = await createZipAndUploadToS3(distDir, uploadId, zipFileName);
+
+				console.log(`Zip archive uploaded to: ${uploadResult}`);
+
+				// If requested, also upload dist contents to S3 folder
+				if (uploadToS3Folder) {
+					console.log("Additionally uploading dist contents to S3 folder");
+
+					// Use community slug as part of the path for better organization
+					const folderPath = `sites/${communitySlug}`;
+					s3FolderUrl = await uploadDirectoryToS3(distDir, folderPath, timestamp);
+					s3FolderPath = `${folderPath}/${timestamp}`;
+
+					console.log(`Dist contents uploaded to: ${s3FolderUrl}`);
+				}
+
+				console.log("Process completed successfully");
+
+				return {
+					status: 200,
+					body: {
+						success: true,
+						message: "Site built and uploaded successfully",
+						url: uploadResult,
+						timestamp: timestamp,
+						// We can't determine the exact file size without saving to disk
+						// or collecting that data during archiving/upload, so we provide estimated values
+						fileSize: 0, // Required by the API contract, but we don't know the exact size
+						fileSizeFormatted: "Unknown (streaming upload)",
+						...(uploadToS3Folder && {
+							s3FolderUrl,
+							s3FolderPath,
+						}),
+					},
+				};
+			} catch (err) {
+				console.error("Error during build and upload process:", err);
+				error = err as Error;
+
+				return {
+					status: 500,
+					body: {
+						success: false,
+						message: error.message || "An unknown error occurred",
+						...(uploadResult && { url: uploadResult }),
+						...(s3FolderUrl && { s3FolderUrl }),
+					},
+				};
+			}
 		} catch (err) {
 			console.error("Error during build and upload process:", err);
-			error = err as Error;
+			const error = err as Error;
 
 			return {
 				status: 500,
 				body: {
 					success: false,
 					message: error.message || "An unknown error occurred",
-					...(uploadResult && { url: uploadResult }),
-					...(s3FolderUrl && { s3FolderUrl }),
 				},
 			};
 		}

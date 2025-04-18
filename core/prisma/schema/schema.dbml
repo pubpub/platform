@@ -417,6 +417,7 @@ Table api_access_tokens {
   accessRules api_access_permissions [not null]
   logs api_access_logs [not null]
   PubValueHistory pub_values_history [not null]
+  isSiteBuilderToken Boolean [not null, default: false]
 }
 
 Table api_access_logs {

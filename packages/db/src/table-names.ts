@@ -641,6 +641,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: true,
 			},
+			{
+				name: "isSiteBuilderToken",
+				dataType: "bool",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: true,
+			},
 		],
 	},
 	{

@@ -52,7 +52,11 @@ import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findRanksBetween } from "~/lib/rank";
 import { createPubRecursiveNew } from "~/lib/server";
-import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
+import {
+	allPermissions,
+	createApiAccessToken,
+	createSiteBuilderToken,
+} from "~/lib/server/apiAccessTokens";
 import { insertForm } from "~/lib/server/form";
 import { slugifyString } from "~/lib/string";
 
@@ -1163,7 +1167,6 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
-	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const possibleRules = consolidatedStages.flatMap(
 		(stage, idx) =>
 			stage.rules?.map((rule) => ({
@@ -1202,9 +1205,11 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
 
+	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
-		await Promise.all(
-			apiTokens.map(async ([tokenName, tokenInput]) => {
+		await Promise.all([
+			["site-builder", createSiteBuilderToken(createdCommunity.id)],
+			...apiTokens.map(async ([tokenName, tokenInput]) => {
 				const [tokenId, tokenString] = tokenInput.id?.split(".") ?? [crypto.randomUUID()];
 
 				const issuedById = createdMembers.find(
@@ -1252,10 +1257,10 @@ export async function seedCommunity<
 				);
 
 				return [tokenName, token];
-			})
-		)
+			}),
+		])
 	) as {
-		[TokenName in keyof NonNullable<AI>]: string;
+		[TokenName in keyof NonNullable<AI> & "site-builder"]: string;
 	};
 
 	logger.info(`${createdCommunity.name}: Successfully seeded community`);

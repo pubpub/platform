@@ -659,8 +659,37 @@ export const zodErrorSchema = z.object({
 	),
 });
 
+const siteBuilderCheckResponseCodeSchema = z.enum([
+	"NON_SITE_BUILDER_TOKEN",
+	"HAS_WRITE_PERMISSIONS",
+	"HAS_NO_READ_PERMISSIONS",
+]);
+
 export const siteApi = contract.router(
 	{
+		auth: {
+			check: {
+				siteBuilder: {
+					method: "GET",
+					path: "/auth/check/site-builder",
+					summary:
+						"Check if the curernt token is a site-builder token with correct permissions",
+					description:
+						"Check if the current token is a site-builder token with correct permissions",
+					responses: {
+						200: z.object({
+							ok: z.literal(true),
+							reason: z.string().optional(),
+						}),
+						401: z.object({
+							ok: z.literal(false),
+							code: siteBuilderCheckResponseCodeSchema,
+							reason: z.string(),
+						}),
+					},
+				},
+			},
+		},
 		pubs: {
 			search: {
 				method: "GET",

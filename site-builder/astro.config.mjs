@@ -1,7 +1,7 @@
 // @ts-check
 import react from "@astrojs/react";
 import tailwind from "@astrojs/tailwind";
-import pdf from "astro-pdf";
+// import pdf from "astro-pdf";
 import { defineConfig } from "astro/config";
 
 // https://astro.build/config
