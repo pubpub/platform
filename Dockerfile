@@ -90,6 +90,8 @@ RUN pnpm --filter $PACKAGE --prod deploy /tmp/app
 
 FROM base as jobs
 
+ARG PACKAGE
+
 WORKDIR /usr/src/app
 
 COPY --from=prepare-jobs --chown=node:node /tmp/app .
