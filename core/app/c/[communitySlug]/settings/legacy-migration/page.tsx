@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 
 import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
-import { Button } from "ui/button";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -22,7 +21,6 @@ export default async function Page(props: {
 	const community = await findCommunityBySlug();
 
 	if (!community) {
-		console.log("community not found");
 		notFound();
 	}
 

@@ -8,11 +8,10 @@ import { logger } from "logger";
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
 		const node = baseSchema.nodeFromJSON(value);
+		// TODO: reenable this
 		// node.check();
 		return true;
 	} catch (e) {
-		logger.debug(e);
-		console.dir(value, { depth: null });
 		return false;
 	}
 };

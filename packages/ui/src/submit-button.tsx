@@ -45,7 +45,7 @@ export const SubmitButton = ({
 	type = "submit",
 }: SubmitButtonProps) => {
 	const [buttonState, setButtonState] = useState<ButtonState>("idle");
-	const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
+	const [errorTimeout, setErrorTimeout] = useState<number | null>(null);
 
 	useEffect(() => {
 		// determine state based on props

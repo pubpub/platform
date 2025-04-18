@@ -1260,7 +1260,7 @@ export async function seedCommunity<
 			}),
 		])
 	) as {
-		[TokenName in keyof NonNullable<AI> & "site-builder"]: string;
+		[TokenName in keyof NonNullable<AI> | "site-builder"]: string;
 	};
 
 	logger.info(`${createdCommunity.name}: Successfully seeded community`);

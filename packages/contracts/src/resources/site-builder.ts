@@ -1,7 +1,7 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-export const contract = initContract();
+const contract = initContract();
 
 export const siteBuilderApi = contract.router({
 	build: {
@@ -9,7 +9,7 @@ export const siteBuilderApi = contract.router({
 		path: "/build/journal",
 		summary: "Build a journal site",
 		headers: z.object({
-			// Auth header
+			// Auth header. For some reason this doesn't work when capitalized.
 			authorization: z.string().startsWith("Bearer "),
 		}),
 		body: z.object({

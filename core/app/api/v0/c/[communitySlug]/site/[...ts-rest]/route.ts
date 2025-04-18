@@ -294,7 +294,6 @@ const handler = createNextHandler(
 						};
 					}
 
-					console.log(authorization);
 					for (const permission of allPermissions) {
 						const exists = authorization[permission.scope]?.[permission.accessType];
 						if (permission.accessType !== "read" && exists) {
