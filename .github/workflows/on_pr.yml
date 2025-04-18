@@ -33,14 +33,14 @@ jobs:
         uses: ./.github/workflows/ci.yml
 
     build-all:
-        if: false && (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview'))
+        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview'))
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     e2e:
-        if: (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize')
+        if: false && (github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize')
         needs:
             - build-all
             # could theoretically be skipped, but in practice is always faster
@@ -53,8 +53,8 @@ jobs:
 
     deploy-preview:
         uses: ./.github/workflows/pull-preview.yml
-        # needs:
-        #     - build-all
+        needs:
+            - build-all
         permissions:
             contents: read
             deployments: write
