@@ -29,18 +29,18 @@ jobs:
                           - 'docs/**'
 
     ci:
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
+        if: false && github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
         uses: ./.github/workflows/ci.yml
 
     build-all:
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
+        if: false && github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize' || (github.event.action == 'labeled' && github.event.label.name == 'preview')
         uses: ./.github/workflows/ecrbuild-all.yml
         secrets:
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
 
     e2e:
-        if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
+        if: false && github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'synchronize'
         needs:
             - build-all
             # could theoretically be skipped, but in practice is always faster
@@ -53,18 +53,22 @@ jobs:
 
     deploy-preview:
         uses: ./.github/workflows/pull-preview.yml
-        needs:
-            - build-all
+        # needs:
+        #     - build-all
         permissions:
             contents: read
             deployments: write
             pull-requests: write
             statuses: write
         with:
-            PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
-            JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
-            MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
-            SITE_BUILDER_IMAGE: ${{ needs.build-all.outputs.site-builder-image }}
+            PLATFORM_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core:c786662f4899de16a621e366a485eca5adda4d6a
+            JOBS_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs:c786662f4899de16a621e366a485eca5adda4d6a
+            MIGRATIONS_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7:c786662f4899de16a621e366a485eca5adda4d6a
+            SITE_BUILDER_IMAGE: 246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-site-builder:c786662f4899de16a621e366a485eca5adda4d6a
+            # PLATFORM_IMAGE: ${{ needs.build-all.outputs.core-image }}
+            # JOBS_IMAGE: ${{ needs.build-all.outputs.jobs-image }}
+            # MIGRATIONS_IMAGE: ${{ needs.build-all.outputs.base-image }}
+            # SITE_BUILDER_IMAGE: ${{ needs.build-all.outputs.site-builder-image }}
             AWS_REGION: "us-east-1"
             COMPOSE_FILES: docker-compose.preview.pr.yml
         secrets:
