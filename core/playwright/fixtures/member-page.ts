@@ -102,7 +102,7 @@ export class MembersPage {
 	}
 
 	async selectForms(forms: string[]) {
-		await this.page.getByRole("combobox", { name: "Search forms", exact: true }).click();
+		await this.page.getByRole("dialog", { name: "Edit/View Access", exact: true }).click();
 		for (const form of forms) {
 			await this.page.getByRole("option", { name: form, exact: true }).click();
 		}
