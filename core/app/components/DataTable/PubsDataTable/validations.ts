@@ -20,7 +20,6 @@ export const dataTableParsers = {
 			withRelatedPubs: false;
 			withStage: true;
 			withValues: false;
-			withLegacyAssignee: true;
 		}>
 	>().withDefault([{ id: "updatedAt", desc: true }]),
 };

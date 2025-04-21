@@ -167,12 +167,6 @@ export type PubInitializer<
 		 */
 		id?: PubsId;
 		/**
-		 * Assignee of the pub.
-		 *
-		 * Users are referenced by their keys in the users object.
-		 */
-		assignee?: keyof U;
-		/**
 		 * The name of the pubType you specified in the pubTypes object.
 		 */
 		pubType: PubTypeName;
@@ -360,12 +354,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				`Pub type ${pub.pubType as string} not found in the output of the created pub types.`
 			);
 		}
-		const assigneeId = findBySlug(users, pub.assignee as string)?.id;
-		if (pub.assignee && !assigneeId) {
-			throw new Error(
-				`Assignee ${pub.assignee as string} not found in the output of the created users.`
-			);
-		}
 
 		const stageId = stages.find((stage) => stage.name === pub.stage)?.id;
 
@@ -424,7 +412,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 			body: {
 				id: rootPubId,
 				pubTypeId: pubType.id,
-				assigneeId: assigneeId,
 				stageId: stageId,
 				values,
 				members,

@@ -8,7 +8,6 @@ import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
-import { AssignWrapper } from "./AssignWrapper";
 import Move from "./Move";
 
 type Props = {
@@ -17,7 +16,6 @@ type Props = {
 		withStage: true;
 		withPubType: true;
 		withRelatedValues: false;
-		withLegacyAssignee: true;
 	}>;
 	stage: CommunityStage;
 	actionInstances: ActionInstances[];
@@ -33,7 +31,6 @@ export const StagePubActions = async (props: Props) => {
 				moveFrom={props.stage.moveConstraintSources}
 				moveTo={props.stage.moveConstraints}
 			/>
-			<AssignWrapper pub={props.pub} members={props.members} />
 			<Suspense fallback={<SkeletonButton className="w-20" />}>
 				<PubsRunActionDropDownMenu
 					pubId={props.pub.id}

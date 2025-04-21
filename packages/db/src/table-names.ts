@@ -1588,14 +1588,6 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
-				name: "assigneeId",
-				dataType: "text",
-				dataTypeSchema: "pg_catalog",
-				isNullable: true,
-				isAutoIncrementing: false,
-				hasDefaultValue: false,
-			},
-			{
 				name: "title",
 				dataType: "text",
 				dataTypeSchema: "pg_catalog",

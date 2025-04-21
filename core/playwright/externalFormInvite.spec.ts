@@ -223,7 +223,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		expect(newPage.url()).toMatch(/\/pubs$/);
 
 		// Make sure they can't view the pubs page in other communities
-		const unauthorizedPubsPage = new PubsPage(newPage, "croccroc");
+		const unauthorizedPubsPage = new PubsPage(newPage, "starter");
 		await unauthorizedPubsPage.goTo();
 		newPage.waitForURL(/\/settings$/);
 		// expect(newPage.url()).toMatch(/\/settings$/);

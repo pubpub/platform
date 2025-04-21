@@ -113,7 +113,6 @@ export async function StagePubs({
 				withValues: false,
 				withStage: true,
 				withPubType: true,
-				withLegacyAssignee: true,
 			}
 		),
 		getStageActions(stage.id).execute(),

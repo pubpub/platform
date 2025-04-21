@@ -1,9 +1,11 @@
+import { faker } from "@faker-js/faker";
+import { defaultMarkdownParser } from "prosemirror-markdown";
+
 import type { CommunitiesId, UsersId } from "db/public";
 import {
 	Action,
 	CoreSchemaType,
 	ElementType,
-	Event,
 	FormAccessType,
 	InputComponent,
 	MemberRole,
@@ -13,20 +15,20 @@ import {
 import { env } from "~/lib/env/env";
 import { seedCommunity } from "../seed/seedCommunity";
 
-export async function seedCroccroc(communityId?: CommunitiesId) {
+export async function seedStarter(communityId?: CommunitiesId) {
 	const memberId = crypto.randomUUID() as UsersId;
 
 	return seedCommunity(
 		{
 			community: {
 				id: communityId,
-				name: "CrocCroc",
-				slug: "croccroc",
+				name: "Starter",
+				slug: "starter",
 				avatar: env.PUBPUB_URL + "/demo/croc.png",
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
-				Content: { schemaName: CoreSchemaType.String },
+				Content: { schemaName: CoreSchemaType.RichText },
 				Email: { schemaName: CoreSchemaType.Email },
 				URL: { schemaName: CoreSchemaType.URL },
 				MemberID: { schemaName: CoreSchemaType.MemberId },
@@ -38,7 +40,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
 			},
 			pubTypes: {
-				Submission: {
+				Article: {
 					Title: { isTitle: true },
 					Content: { isTitle: false },
 					Email: { isTitle: false },
@@ -78,11 +80,10 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			},
 			pubs: [
 				{
-					assignee: "new",
-					pubType: "Submission",
+					pubType: "Article",
 					values: {
 						Title: "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present",
-						Content: "New Pub 1 Content",
+						Content: defaultMarkdownParser.parse(faker.lorem.paragraph(1)).toJSON(),
 						Email: "new@pubpub.org",
 						URL: "https://pubpub.org",
 						MemberID: memberId,
@@ -104,16 +105,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 							},
 						],
 					},
-					stage: "Submitted",
-				},
-				{
-					pubType: "Submission",
-					values: {
-						Title: "Rule Test",
-						Content: "Rule Test Content",
-						"Published At": new Date(),
-					},
-					stage: "Rule Test",
+					stage: "Draft",
 				},
 			],
 			forms: {
@@ -139,7 +131,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 						{
 							field: "Content",
 							type: ElementType.pubfield,
-							component: InputComponent.textArea,
+							component: InputComponent.richText,
 							config: {
 								label: "Content",
 								help: "Enter your review here",
@@ -159,154 +151,27 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 							type: ElementType.button,
 							content: `Go see your pubs :link{page='currentPub' text='here'}`,
 							label: "Submit",
-							stage: "Under Evaluation",
+							stage: "Draft",
 						},
 					],
 				},
 			},
 			stages: {
-				Submitted: {
+				Draft: {
 					members: { new: MemberRole.contributor },
 					actions: {
-						"Log Review": {
-							action: Action.log,
-							config: {},
-						},
 						"Send Review email": {
 							action: Action.email,
 							config: {
-								subject: "HELLO :recipientName REVIEW OUR STUFF PLEASE",
+								subject: "Hello, :recipientName! Please review this draft!",
 								recipient: memberId,
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='croccroc:published-at'}`,
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='starter:published-at'}`,
 							},
 						},
 					},
 				},
-				"Ask Author for Consent": {
+				Published: {
 					members: { new: MemberRole.contributor },
-				},
-				"To Evaluate": {
-					members: { new: MemberRole.contributor },
-				},
-				"Under Evaluation": {},
-				"In Production": {},
-				Published: {},
-				Shelved: {},
-				"Rule Test": {
-					actions: {
-						"Log 1": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 2": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 3": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 4": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 5": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 6": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 7": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 8": {
-							action: Action.log,
-							config: {},
-						},
-						"Log 9": {
-							action: Action.log,
-							config: {},
-						},
-
-						"Email 1": {
-							action: Action.email,
-							config: {
-								body: "test",
-								subject: "Hello",
-							},
-						},
-						"Log X": {
-							action: Action.log,
-							config: {},
-						},
-					},
-					rules: [
-						{
-							actionInstance: "Log 1",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 2",
-						},
-						{
-							actionInstance: "Log 2",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 3",
-						},
-						{
-							actionInstance: "Log 3",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 4",
-						},
-						{
-							actionInstance: "Log 4",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 5",
-						},
-						{
-							actionInstance: "Log 5",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 6",
-						},
-						{
-							actionInstance: "Log 6",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 7",
-						},
-						{
-							actionInstance: "Log 7",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 8",
-						},
-						{
-							actionInstance: "Log 8",
-							event: Event.actionSucceeded,
-							sourceAction: "Log 9",
-						},
-						{
-							actionInstance: "Log 1",
-							event: Event.actionFailed,
-							sourceAction: "Email 1",
-						},
-					],
-				},
-			},
-			stageConnections: {
-				Submitted: {
-					to: ["To Evaluate"],
-				},
-				"To Evaluate": {
-					to: ["Under Evaluation"],
-				},
-				"Under Evaluation": {
-					to: ["Ask Author for Consent"],
-				},
-				"Ask Author for Consent": {
-					to: ["In Production"],
-				},
-				"In Production": {
-					to: ["Published"],
 				},
 			},
 			apiTokens: {
@@ -316,7 +181,7 @@ export async function seedCroccroc(communityId?: CommunitiesId) {
 			},
 		},
 		{
-			// this makes sure that the slug is `croccroc`, not `croccroc-${new Date().toISOString()}
+			// this makes sure that the slug is `starter`, not `starter-${new Date().toISOString()}
 			randomSlug: false,
 		}
 	);

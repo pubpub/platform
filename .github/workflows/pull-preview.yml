@@ -10,13 +10,13 @@ on:
             MIGRATIONS_IMAGE:
                 required: true
                 type: string
-            PUBLIC_URL:
-                required: true
-                type: string
             AWS_REGION:
                 required: true
                 type: string
             ALWAYS_ON:
+                required: false
+                type: string
+            COMPOSE_FILES:
                 required: false
                 type: string
         secrets:
@@ -65,10 +65,9 @@ jobs:
 
             - uses: pullpreview/action@v5
               with:
-                  dns: preview.pubpub.org
                   label: preview
                   admins: 3mcd
-                  compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml
+                  compose_files: ./self-host/docker-compose.yml,docker-compose.preview.yml,${{ inputs.COMPOSE_FILES }}
                   default_port: 443
                   instance_type: small
                   always_on: ${{ inputs.ALWAYS_ON }}

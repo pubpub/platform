@@ -1,13 +1,16 @@
-import type { Node } from "prosemirror-model";
+import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 
-import React, { Suspense, useEffect, useState } from "react";
-import { useNodeViewContext } from "@prosemirror-adapter/react";
+import React, { forwardRef, useEffect, useState } from "react";
+import { useIsNodeSelected } from "@handlewithcare/react-prosemirror";
 import { CsvToHtmlTable } from "react-csv-to-table";
 
-export default function ContextAtom({ nodeProp }: { nodeProp: Node }) {
-	const { contentRef, node, selected } = useNodeViewContext();
+export const AtomRenderer = forwardRef<
+	HTMLDivElement,
+	NodeViewComponentProps & { selected?: boolean }
+>(function AtomRenderer({ nodeProps, selected, ...props }, ref) {
+	const { node } = nodeProps;
 	const [activeData, setActiveData] = useState("");
-	const activeNode = nodeProp || node;
+	const activeNode = node;
 	if (!activeNode) {
 		return null;
 	}
@@ -56,9 +59,10 @@ export default function ContextAtom({ nodeProp }: { nodeProp: Node }) {
 	// console.log(activeNode, activeNode.attrs.data["rd:source"]);
 	return (
 		<section
+			{...props}
 			style={{ outline: selected ? "1px solid #777" : "none" }}
 			role="presentation"
-			ref={contentRef}
+			ref={ref}
 		>
 			{activeNode.attrs.pubTypeId === "9956ccd9-50b5-42b1-a14b-199eb26f2a12" && (
 				<>
@@ -108,4 +112,17 @@ export default function ContextAtom({ nodeProp }: { nodeProp: Node }) {
 			{/* {JSON.stringify(activeNode, null, 2)} */}
 		</section>
 	);
-}
+});
+
+/**
+ * Wrapper around AtomRenderer which uses a react-prosemirror hook.
+ * This is only so that SitePanel.tsx can still render the component as HTML
+ * without needing the component to be in a Prosemirror context
+ */
+export default forwardRef<HTMLDivElement, NodeViewComponentProps>(function ContextAtom(
+	{ nodeProps, ...props },
+	ref
+) {
+	const selected = useIsNodeSelected();
+	return <AtomRenderer ref={ref} nodeProps={nodeProps} selected={selected} {...props} />;
+});
