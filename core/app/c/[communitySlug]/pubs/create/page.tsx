@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { Capabilities, MembershipType } from "db/public";
+import { type PubTypesId } from "db/public";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import { userCanCreatePub } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 export async function generateMetadata(props: {
@@ -29,7 +29,7 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<Record<string, string>>;
+	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
@@ -43,14 +43,13 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const canCreatePub = await userCan(
-		Capabilities.createPub,
-		{
-			type: MembershipType.community,
-			communityId: community.id,
-		},
-		user.id
-	);
+	const canCreatePub = await userCanCreatePub({
+		communityId: community.id,
+		userId: user.id,
+		pubTypeId: searchParams.pubTypeId,
+		// No formSlug because we're just checking if there are any authorized forms
+		// We validate that the user can create a pub with the specified form in the create action
+	});
 
 	if (!canCreatePub) {
 		redirect(`/c/${communitySlug}/unauthorized`);

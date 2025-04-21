@@ -387,7 +387,7 @@ const handler = createNextHandler(
 			create: async ({ body }) => {
 				const { authorization, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
-					// TODO: figure out capability here
+					// TODO: refactor so we call userCanCreatePub here
 					cookies: false,
 				});
 
@@ -423,10 +423,8 @@ const handler = createNextHandler(
 			update: async ({ params, body }) => {
 				const { user, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
-					cookies: {
-						capability: Capabilities.updatePubValues,
-						target: { type: MembershipType.pub, pubId: params.pubId as PubsId },
-					},
+					// TODO: refactor so we call userCanEditPub here
+					cookies: false,
 				});
 
 				const { exists } = await doesPubExist(

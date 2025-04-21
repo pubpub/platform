@@ -1,20 +1,20 @@
 "use server";
 
 import type { JsonValue } from "contracts";
-import type { PubsId, StagesId, UsersId } from "db/public";
+import type { PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin } from "~/lib/authentication/roles";
-import { userCan } from "~/lib/authorization/capabilities";
+import { userCan, userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { getForm, grantFormAccess, userHasPermissionToForm } from "~/lib/server/form";
+import { getForm, grantFormAccess } from "~/lib/server/form";
 import { deletePub, maybeWithTrx, normalizePubValues } from "~/lib/server/pub";
 import { PubOp } from "~/lib/server/pub-op";
 
@@ -34,21 +34,21 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 	const { user } = loginData;
 
-	const [form, canCreatePub, canCreateFromForm] = await Promise.all([
+	const [form, canCreatePub] = await Promise.all([
 		formSlug
 			? await getForm({ communityId: props.communityId, slug: formSlug }).executeTakeFirst()
 			: null,
-		userCan(
-			Capabilities.createPub,
-			{ type: MembershipType.community, communityId: props.communityId },
-			user.id
-		),
-		formSlug ? userHasPermissionToForm({ formSlug, userId: loginData.user.id }) : false,
+		userCanCreatePub({
+			userId: user.id,
+			communityId: props.communityId,
+			formSlug,
+			pubTypeId: createPubProps.body.pubTypeId as PubTypesId,
+		}),
 	]);
 
 	const isPublicForm = form?.access === FormAccessType.public;
 
-	if (!canCreatePub && !canCreateFromForm && !isPublicForm) {
+	if (!canCreatePub && !isPublicForm) {
 		return ApiError.UNAUTHORIZED;
 	}
 
@@ -128,16 +128,7 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	const [canUpdateFromForm, canUpdatePubValues] = await Promise.all([
-		formSlug ? userHasPermissionToForm({ formSlug, userId: loginData.user.id, pubId }) : false,
-		userCan(
-			Capabilities.updatePubValues,
-			{ type: MembershipType.pub, pubId },
-			loginData.user.id
-		),
-	]);
-
-	if (!canUpdatePubValues && !canUpdateFromForm) {
+	if (!userCanEditPub({ pubId, userId: loginData.user.id, formSlug })) {
 		return ApiError.UNAUTHORIZED;
 	}
 
