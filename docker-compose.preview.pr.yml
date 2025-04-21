@@ -5,7 +5,3 @@ services:
     caddy:
         environment:
             PUBLIC_URL: ${PULLPREVIEW_PUBLIC_DNS}
-    site-builder:
-        environment:
-            PUBPUB_URL: ${PULLPREVIEW_URL}
-            S3_ENDPOINT: ${PULLPREVIEW_URL}/assets

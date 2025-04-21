@@ -3,8 +3,9 @@
 }
 
 example.com {
-    # keep this if you want your files to be accessible at example.com/assets/*
-    handle_path /assets* {
+    # keep this if you want your files to be accessible at example.com/a*
+    # this should instead be a subdomain, like assets.example.com
+    handle_path /a* {
         reverse_proxy minio:9000
     }
 
