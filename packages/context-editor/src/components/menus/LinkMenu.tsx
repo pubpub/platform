@@ -1,5 +1,5 @@
 import type { Static } from "@sinclair/typebox";
-import type { Node } from "prosemirror-model";
+import type { Mark } from "prosemirror-model";
 
 import React from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
@@ -23,7 +23,6 @@ import { Switch } from "ui/switch";
 
 import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
-import { getMarkRange } from "../../utils/getMarkRange";
 
 const formSchema = Type.Object({
 	href: Type.String(),
@@ -32,12 +31,12 @@ const formSchema = Type.Object({
 
 type FormSchema = Static<typeof formSchema>;
 
-type InlineLinkMenuProps = {
-	node: Node | null;
-	children?: React.ReactNode;
+type LinkMenuProps = {
+	mark: Mark;
+	onChange: (attrKey: string, value: string | null) => void;
 };
-export const InlineLinkMenu = ({ node, children }: InlineLinkMenuProps) => {
-	if (!node) {
+export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
+	if (!(mark.type.name === "link")) {
 		return null;
 	}
 
@@ -51,50 +50,17 @@ export const InlineLinkMenu = ({ node, children }: InlineLinkMenuProps) => {
 
 	const form = useForm<FormSchema>({
 		resolver: typeboxResolver(formSchema),
-		defaultValues: {
-			href: node?.attrs?.href,
-			openInNewTab: node?.attrs?.target === "_blank",
-		},
+		// defaultValues: {
+		// 	href: node?.attrs?.href ?? "",
+		// 	openInNewTab: node?.attrs?.target === "_blank",
+		// },
 	});
 
-	const updateLinkAttr = (attrKey: "href" | "target", value: string | null) => {
-		// const range = getMarkRange(view.state.doc.resolve(pos), baseSchema.marks.link);
-		// if (!range) {
-		// 	return;
-		// }
-		// const { from: markStart, to: markEnd } = range;
-		// const oldMarks = node.marks || [];
-		// const oldMark = oldMarks.find((m) => m.type === baseSchema.marks.link);
-		// if (!oldMark) {
-		// 	return null;
-		// }
-		// const newMark = baseSchema.marks.link.create({
-		// 	...oldMark.attrs,
-		// 	[attrKey]: value,
-		// });
-		// setPanelProps({
-		// 	...panelProps,
-		// 	node: {
-		// 		...node,
-		// 		marks: [...oldMarks.filter((m) => m.type !== baseSchema.marks.link), newMark],
-		// 	},
-		// });
-		// view.dispatch(
-		// 	view.state.tr
-		// 		.removeMark(markStart, markEnd, oldMark)
-		// 		.addMark(markStart, markEnd, newMark)
-		// );
-	};
+	const url = mark.attrs?.href ?? "";
+	const openInNewTab = mark.attrs?.target === "_blank" ? true : false;
 
 	return (
-		<
-			// div
-			// style={{
-			// 	top: coords.top,
-			// 	left: coords.left,
-			// }}
-			// className="absolute rounded-md border border-gray-200 bg-white p-3"
-		>
+		<>
 			<div>Link Attributes</div>
 			<Form {...form}>
 				<form className="flex flex-col gap-2">
@@ -102,25 +68,34 @@ export const InlineLinkMenu = ({ node, children }: InlineLinkMenuProps) => {
 						name="href"
 						control={form.control}
 						render={({ field }) => (
-							<FormItem className="flex items-center gap-1">
+							<FormItem className="flex items-center gap-2">
 								<FormLabel>URL</FormLabel>
 								<FormDescription></FormDescription>
 								<Input
-									{...field}
+									defaultValue={url}
 									onChange={(event) => {
-										updateLinkAttr(field.name, field.value);
-										return field.onChange(event);
+										onChange(field.name, event.target.value);
 									}}
 									type="url"
 									placeholder="https://example.com"
 								/>
 								<FormMessage />
-								<a href={field.value} target="_blank">
-									<ExternalLink />
-								</a>
-								<Button onClick={removeLink}>
-									<Trash />
-								</Button>
+								<div className="flex items-center">
+									<a
+										href={url}
+										target="_blank"
+										className="cursor-pointer text-gray-500"
+									>
+										<ExternalLink strokeWidth="1px" size="20" />
+									</a>
+									<Button
+										className="px-2 text-gray-500"
+										variant="ghost"
+										onClick={removeLink}
+									>
+										<Trash />
+									</Button>
+								</div>
 							</FormItem>
 						)}
 					/>
@@ -129,14 +104,14 @@ export const InlineLinkMenu = ({ node, children }: InlineLinkMenuProps) => {
 						name="openInNewTab"
 						control={form.control}
 						render={({ field }) => (
-							<FormItem>
+							<FormItem className="flex items-center justify-between">
 								<FormLabel>Open in new tab</FormLabel>
 								<FormControl>
 									<Switch
 										className="data-[state=checked]:bg-emerald-400"
-										checked={field.value ?? undefined}
-										onCheckedChange={(event) => {
-											updateLinkAttr("target", field.value ? "_blank" : null);
+										checked={openInNewTab}
+										onCheckedChange={(checked) => {
+											onChange("target", checked ? "_blank" : null);
 											return field.onChange(event);
 										}}
 									/>
@@ -146,11 +121,8 @@ export const InlineLinkMenu = ({ node, children }: InlineLinkMenuProps) => {
 						)}
 					/>
 					<hr />
-					{children}
 				</form>
 			</Form>
-		</
-			// div
-		>
+		</>
 	);
 };

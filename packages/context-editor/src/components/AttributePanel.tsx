@@ -12,6 +12,7 @@ import { Label } from "ui/label";
 
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
+import { LinkMenu } from "./menus/LinkMenu";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
@@ -96,7 +97,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	);
 
 	const updateMarkAttr = useEditorEventCallback(
-		(view, index: number, attrKey: string, value: string) => {
+		(view, index: number, attrKey: string, value: string | null) => {
 			if (!view || !activeNode) return;
 			const markToReplace = nodeMarks[index];
 			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
@@ -218,8 +219,20 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				})}
 				{!!nodeMarks.length &&
 					nodeMarks.map((mark, index) => {
+						const key = `${mark.type.name}-${activeNodePosition}`;
+						if (mark.type.name === "link") {
+							return (
+								<LinkMenu
+									mark={mark}
+									onChange={(attrKey, value) => {
+										updateMarkAttr(index, attrKey, value);
+									}}
+									key={key}
+								/>
+							);
+						}
 						return (
-							<div key={`${mark.type.name}-${activeNodePosition}`}>
+							<div key={key}>
 								<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
 								{Object.keys(mark.attrs).map((attrKey) => {
 									if (attrKey === "data") {
