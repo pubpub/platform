@@ -268,7 +268,7 @@ export default async function Page(props: {
 						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
 						className="w-fit"
 					/>
-					<RelatedPubsTableWrapper pub={pub} pageContext={pageContext} />
+					<RelatedPubsTableWrapper pub={pubByForm} pageContext={pageContext} />
 				</div>
 			)}
 		</div>

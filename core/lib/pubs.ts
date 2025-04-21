@@ -96,6 +96,7 @@ export const getPubByForm = ({
 	withStage: true;
 	withPubType: true;
 	withMembers: true;
+	withStageActionInstances: true;
 }> => {
 	const { values } = pub;
 	if (!values.length) {
@@ -120,6 +121,7 @@ export const getPubByForm = ({
 		withStage: true;
 		withPubType: true;
 		withMembers: true;
+		withStageActionInstances: true;
 	}>["values"] = [];
 	for (const formElement of pubFieldFormElements) {
 		const values = valuesByFieldSlug[formElement.slug];
@@ -161,6 +163,7 @@ export const getPubByForm = ({
 		withStage: true;
 		withPubType: true;
 		withMembers: true;
+		withStageActionInstances: true;
 	}>["values"] = [];
 	for (const slug of slugsNotInForm) {
 		for (const value of valuesByFieldSlug[slug]) {
