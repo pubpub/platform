@@ -82,15 +82,28 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	logger.info({ msg: "Journal site built", data });
 
-	const s3FolderUrl = data.s3FolderUrl;
+	const s3FolderUrl = data.s3FolderUrl ? new URL(data.s3FolderUrl) : undefined;
+	const dataUrl = new URL(data.url);
+
+	const rewrittenS3FolderUrl = s3FolderUrl
+		? new URL(s3FolderUrl.pathname, env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org")
+		: undefined;
+	const rewrittenDataUrl = new URL(
+		dataUrl.pathname,
+		env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org"
+	);
 
 	return {
 		success: true as const,
 		report: `<div>
 			<p>Journal site built</p>
-			<a className="font-semibold underline" href="${data.url}">Download</a>
-			${s3FolderUrl ? `<a className="font-semibold underline" href="${s3FolderUrl}">S3 Live site</a>` : ""}
+			<a className="font-semibold underline" href="${rewrittenDataUrl.toString()}">Download</a>
+			${rewrittenS3FolderUrl ? `<a className="font-semibold underline" href="${rewrittenS3FolderUrl.toString()}">S3 Live site</a>` : ""}
 		</div>`,
-		data,
+		data: {
+			...data,
+			url: rewrittenDataUrl.toString(),
+			s3FolderUrl: rewrittenS3FolderUrl?.toString(),
+		},
 	};
 });
