@@ -22,7 +22,7 @@ export const action = defineAction({
 	},
 	description: "Build a journal site and receive a zip file",
 	params: {
-		schema,
+		schema: schema.partial(),
 	},
 	icon: Book,
 });

@@ -94,17 +94,25 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	return {
 		success: true as const,
-		report: html`<div>
-			<p>Journal site built</p>
-			<p>
-				<a className="font-bold underline" href="${rewrittenDataUrl}">Download</a>
-			</p>
-			<p>
-				${rewrittenS3FolderUrl
-					? `<a className="font-bold underline" href="${rewrittenS3FolderUrl}">S3 Live site</a>`
-					: ""}
-			</p>
-		</div>`,
+		report: (
+			<div>
+				<p>Journal site built</p>
+				<p>
+					<a className="font-bold underline" href={rewrittenDataUrl}>
+						Download
+					</a>
+				</p>
+				<p>
+					{rewrittenS3FolderUrl ? (
+						<a className="font-bold underline" href={rewrittenS3FolderUrl}>
+							S3 Live site
+						</a>
+					) : (
+						""
+					)}
+				</p>
+			</div>
+		),
 		data: {
 			...data,
 			url: rewrittenDataUrl,
