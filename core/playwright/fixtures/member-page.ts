@@ -106,6 +106,7 @@ export class MembersPage {
 		for (const form of forms) {
 			await this.page.getByRole("option", { name: form, exact: true }).click();
 		}
+		await this.page.getByRole("button", { name: "Close", exact: true }).click();
 	}
 
 	async removeMember(email: string) {
