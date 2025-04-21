@@ -28,6 +28,8 @@ services:
         depends_on:
             platform-migrations:
                 condition: service_completed_successfully
+            minio-init:
+                condition: service_completed_successfully
         platform: linux/amd64
         image: ghcr.io/pubpub/platform-jobs:latest
         env_file: .env
