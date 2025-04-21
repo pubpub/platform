@@ -12,6 +12,8 @@ services:
                 condition: service_started
             platform-migrations:
                 condition: service_completed_successfully
+            minio-init:
+                condition: service_completed_successfully
         platform: linux/amd64
         image: ghcr.io/pubpub/platform:latest
         env_file: .env
@@ -27,8 +29,6 @@ services:
     platform-jobs:
         depends_on:
             platform-migrations:
-                condition: service_completed_successfully
-            minio-init:
                 condition: service_completed_successfully
         platform: linux/amd64
         image: ghcr.io/pubpub/platform-jobs:latest
