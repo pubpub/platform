@@ -655,30 +655,6 @@ export const createLegacyStructure = async (
 
 	return output;
 };
-export const createPubs = async (
-	{
-		legacyCommunity,
-		community,
-		legacyStructure,
-	}: {
-		legacyCommunity: LegacyCommunity;
-		community: { id: CommunitiesId };
-		legacyStructure: LegacyStructure;
-	},
-	trx = db
-) => {
-	const journalArticles = await createJournalArticles(
-		{
-			community: { id: community.id },
-			legacyCommunity,
-			legacyStructure,
-		},
-		trx
-	);
-	return journalArticles;
-
-	// console.log(journalArticles);
-};
 
 const unsupportedNodes = {
 	citiation: "inline",
@@ -1278,7 +1254,7 @@ export const importFromLegacy = async (
 		// );
 		const parsed = legacyExportSchema.parse(legacyCommunity);
 
-		const legacyPubs = await createPubs(
+		const legacyPubs = await createJournalArticles(
 			{ legacyCommunity: parsed, community: currentCommunity, legacyStructure },
 			trx
 		);
