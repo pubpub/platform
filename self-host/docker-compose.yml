@@ -116,19 +116,9 @@ services:
                 condition: service_healthy
         image: minio/mc:latest
         env_file: .env
-        healthcheck:
-            test: ["CMD", "echo", "true"]
-            interval: 1m30s
-            timeout: 30s
-            retries: 5
-            start_period: 30s
-        entrypoint: >
-            /bin/sh -c '
-            /usr/bin/mc config host add myminio http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
-            /usr/bin/mc mb --ignore-existing myminio/"$${ASSETS_BUCKET_NAME}";
-            /usr/bin/mc anonymous set download myminio/"$${ASSETS_BUCKET_NAME}";
-            /usr/bin/mc admin user add myminio "$${ASSETS_UPLOAD_KEY}" "$${ASSETS_UPLOAD_SECRET_KEY}";
-            /usr/bin/mc admin policy attach myminio readwrite --user "$${ASSETS_UPLOAD_KEY}";'
+        entrypoint: ["/bin/sh", "/minio-init.sh"]
+        volumes:
+            - ./minio-init.sh:/minio-init.sh
         networks:
             - app-network
 
