@@ -86,24 +86,29 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 	const dataUrl = new URL(data.url);
 
 	const rewrittenS3FolderUrl = s3FolderUrl
-		? new URL(s3FolderUrl.pathname, env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org")
+		? `${env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org"}${s3FolderUrl.pathname}`
 		: undefined;
-	const rewrittenDataUrl = new URL(
-		dataUrl.pathname,
-		env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org"
-	);
+	const rewrittenDataUrl = `${env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org"}${dataUrl.pathname}`;
+
+	const html = String.raw;
 
 	return {
 		success: true as const,
-		report: `<div>
+		report: html`<div>
 			<p>Journal site built</p>
-			<a className="font-semibold underline" href="${rewrittenDataUrl.toString()}">Download</a>
-			${rewrittenS3FolderUrl ? `<a className="font-semibold underline" href="${rewrittenS3FolderUrl.toString()}">S3 Live site</a>` : ""}
+			<p>
+				<a className="font-bold underline" href="${rewrittenDataUrl}">Download</a>
+			</p>
+			<p>
+				${rewrittenS3FolderUrl
+					? `<a className="font-bold underline" href="${rewrittenS3FolderUrl}">S3 Live site</a>`
+					: ""}
+			</p>
 		</div>`,
 		data: {
 			...data,
-			url: rewrittenDataUrl.toString(),
-			s3FolderUrl: rewrittenS3FolderUrl?.toString(),
+			url: rewrittenDataUrl,
+			s3FolderUrl: rewrittenS3FolderUrl,
 		},
 	};
 });
