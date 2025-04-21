@@ -1,5 +1,6 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Card } from "ui/card";
+import { InfoButton } from "ui/info-button";
 
 import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { RevokeTokenButton } from "./RevokeTokenButton";
@@ -15,7 +16,16 @@ export const ExistingToken = ({ token }: { token: SafeApiAccessToken }) => {
 					)}
 				</div>
 				<div className="flex items-center justify-end">
-					<RevokeTokenButton token={token} />
+					{token.isSiteBuilderToken ? (
+						<InfoButton>
+							<p>
+								This token is a site builder token. It has read-only access to all
+								content in the community. It cannot be revoked.
+							</p>
+						</InfoButton>
+					) : (
+						<RevokeTokenButton token={token} />
+					)}
 				</div>
 			</div>
 			<div className="mt-4 flex flex-col gap-4">
@@ -29,13 +39,17 @@ export const ExistingToken = ({ token }: { token: SafeApiAccessToken }) => {
 						<p className="text-sm">{new Date(token.expiration).toLocaleDateString()}</p>
 					</div>
 					<div>
-						<p className="text-xs text-muted-foreground">Issued by</p>
-						{token.issuedBy ? (
-							<p className="text-sm">
-								{token.issuedBy.firstName} {token.issuedBy.lastName}
-							</p>
-						) : (
-							<p>User account associated with this token has been deleted</p>
+						{!token.isSiteBuilderToken && (
+							<>
+								<p className="text-xs text-muted-foreground">Issued by</p>
+								{token.issuedBy ? (
+									<p className="text-sm">
+										{token.issuedBy.firstName} {token.issuedBy.lastName}
+									</p>
+								) : (
+									<p>User account associated with this token has been deleted</p>
+								)}
+							</>
 						)}
 					</div>
 				</div>
