@@ -103,7 +103,7 @@ const getRelatedPubData = async ({
 };
 
 export type PubEditorProps = {
-	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId };
+	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId; form?: string };
 	htmlFormId?: string;
 	formSlug?: string;
 } & (

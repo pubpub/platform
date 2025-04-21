@@ -17,7 +17,7 @@ import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getAuthorizedUpdateForms, userCan } from "~/lib/authorization/capabilities";
+import { getAuthorizedViewForms, userCan } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
@@ -157,7 +157,7 @@ export default async function Page(props: {
 				{ type: MembershipType.pub, pubId: pub.id },
 				user.id
 			),
-			getAuthorizedUpdateForms(user.id, pub.id).execute(),
+			getAuthorizedViewForms(user.id, pub.id).execute(),
 		]);
 
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);

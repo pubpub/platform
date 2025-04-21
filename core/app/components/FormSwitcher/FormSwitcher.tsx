@@ -13,9 +13,11 @@ export const formSwitcherUrlParam = "form";
 export const FormSwitcher = ({
 	forms,
 	defaultFormSlug,
+	htmlId,
 }: {
 	forms: SimpleForm[];
 	defaultFormSlug?: string;
+	htmlId?: string;
 }) => {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -43,7 +45,7 @@ export const FormSwitcher = ({
 				}}
 				defaultValue={selectedFormSlug}
 			>
-				<SelectTrigger className="">
+				<SelectTrigger id={htmlId}>
 					<SelectValue />
 				</SelectTrigger>
 				<SelectContent>
@@ -54,7 +56,9 @@ export const FormSwitcher = ({
 					))}
 				</SelectContent>
 			</Select>
-			<Button onClick={switchForms}>Switch forms</Button>
+			<Button disabled={forms.length < 2} onClick={switchForms}>
+				Switch forms
+			</Button>
 		</div>
 	);
 };

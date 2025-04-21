@@ -302,7 +302,6 @@ export const getAuthorizedCreateForms = ({
 							eb("membership_capabilities.capability", "in", [
 								Capabilities.createPubWithAnyForm,
 								Capabilities.createPubWithForm,
-								Capabilities.createPubWithDefaultForm,
 							]),
 						])
 					)
@@ -389,7 +388,7 @@ export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 			)
 			.selectFrom("forms")
 			.innerJoin("community", "community.communityId", "forms.communityId")
-			.where("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("pubTypeId"))
+			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
 			.where((eb) =>
 				eb.or([
 					eb(
@@ -421,4 +420,33 @@ export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 			.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
 			.orderBy("forms.isDefault desc")
 			.orderBy("forms.updatedAt desc")
+	);
+
+export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
+	autoCache(
+		getAuthorizedUpdateForms(userId, pubId)
+			.qb.clearWhere()
+			.where((eb) =>
+				eb.or([
+					eb(
+						eb.val(Capabilities.editPubWithAnyForm),
+						"in",
+						eb.selectFrom("capabilities").select("capability")
+					),
+					eb.and([
+						eb(
+							eb.val(Capabilities.editPubWithForm),
+							"in",
+							eb.selectFrom("capabilities").select("capability")
+						),
+						eb.or([
+							eb("forms.id", "in", eb.selectFrom("pub_ms").select("formId")),
+							eb("forms.id", "in", eb.selectFrom("stage_ms").select("formId")),
+						]),
+					]),
+					// Always include the default form (otherwise these conditions are identical to update)
+					eb("forms.isDefault", "is", true),
+				])
+			)
+			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
 	);

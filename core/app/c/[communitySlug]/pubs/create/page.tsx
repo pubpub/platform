@@ -4,12 +4,14 @@ import { notFound, redirect } from "next/navigation";
 
 import { type PubTypesId } from "db/public";
 import { Button } from "ui/button";
+import { Label } from "ui/label";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
 import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCanCreatePub } from "~/lib/authorization/capabilities";
+import { getAuthorizedCreateForms, userCanCreatePub } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 export async function generateMetadata(props: {
@@ -29,7 +31,7 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId }>;
+	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId; form?: string }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
@@ -57,6 +59,12 @@ export default async function Page(props: {
 
 	const htmlFormId = `create-pub`;
 
+	const availableForms = await getAuthorizedCreateForms({
+		userId: user.id,
+		communityId: community.id,
+		pubTypeId: searchParams.pubTypeId,
+	}).execute();
+
 	return (
 		<ContentLayout
 			left={
@@ -69,10 +77,19 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
+					<div className="mb-4 flex flex-col gap-3">
+						<Label htmlFor="create-page-form-switcher">Current form</Label>
+						<FormSwitcher
+							htmlId="create-page-form-switcher"
+							defaultFormSlug={searchParams.form}
+							forms={availableForms}
+						/>
+					</div>
 					<PubEditor
 						searchParams={searchParams}
 						communityId={community.id}
 						htmlFormId={htmlFormId}
+						formSlug={searchParams.form}
 						// PubEditor checks for the existence of the stageId prop
 						{...(searchParams["stageId"] ? { stageId: searchParams["stageId"] } : {})}
 					/>

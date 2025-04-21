@@ -72,7 +72,7 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ pubId: PubsId; communitySlug: string }>;
-	searchParams: Promise<Record<string, string>>;
+	searchParams: Promise<Record<string, string> & { form: string }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
@@ -126,10 +126,11 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
-					<FormSwitcher forms={availableForms} />
+					<FormSwitcher defaultFormSlug={searchParams.form} forms={availableForms} />
 					{/** TODO: Add suspense */}
 					<PubEditor
 						searchParams={searchParams}
+						formSlug={searchParams.form}
 						pubId={pub.id}
 						htmlFormId={htmlFormId}
 						communityId={community.id}
