@@ -49,11 +49,20 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		(view) => {
 			const node = state.selection.$from.nodeAfter;
 			if (!node) {
+				// Allows "clicking out" of a block node attribute panel
+				if (activeNode?.isBlock) {
+					setActiveNode(null);
+				}
 				return;
 			}
 
 			// The attribute panel itself may be focused--don't change the node while it is open
 			if (!view.hasFocus() && activeNode && !node.eq(activeNode)) {
+				return;
+			}
+
+			if (Object.keys(node.attrs).length === 0 && node.marks.length === 0) {
+				setActiveNode(null);
 				return;
 			}
 
@@ -150,10 +159,6 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	}
 	const nodeAttrs = activeNode.attrs || {};
 	const nodeMarks = activeNode.marks || [];
-
-	if (Object.keys(nodeAttrs).length === 0 && nodeMarks.length === 0) {
-		return null;
-	}
 
 	// Marks will automatically show names, so it is only the 'inline' types
 	// that are not marks that need to be specifically rendered
