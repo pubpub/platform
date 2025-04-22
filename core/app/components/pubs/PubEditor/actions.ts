@@ -22,11 +22,16 @@ type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0],
 
 export const createPubRecursive = defineServerAction(async function createPubRecursive(
 	props: CreatePubRecursiveProps & {
-		formSlug?: string;
+		formSlug: string;
 		addUserToForm?: boolean;
 	}
 ) {
-	const { formSlug, addUserToForm, ...createPubProps } = props;
+	const {
+		formSlug,
+		addUserToForm,
+		body: { values, ...body },
+		...createPubProps
+	} = props;
 	const loginData = await getLoginData();
 
 	if (!loginData || !loginData.user) {
@@ -34,6 +39,9 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	}
 	const { user } = loginData;
 
+	if (!formSlug) {
+		return ApiError.UNAUTHORIZED;
+	}
 	const [form, canCreatePub] = await Promise.all([
 		formSlug
 			? await getForm({ communityId: props.communityId, slug: formSlug }).executeTakeFirst()
@@ -42,11 +50,15 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 			userId: user.id,
 			communityId: props.communityId,
 			formSlug,
-			pubTypeId: createPubProps.body.pubTypeId as PubTypesId,
+			pubTypeId: body.pubTypeId as PubTypesId,
 		}),
 	]);
 
-	const isPublicForm = form?.access === FormAccessType.public;
+	if (!form) {
+		return ApiError.UNAUTHORIZED;
+	}
+
+	const isPublicForm = form.access === FormAccessType.public;
 
 	if (!canCreatePub && !isPublicForm) {
 		return ApiError.UNAUTHORIZED;
@@ -62,7 +74,14 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 			const createdPub = await createPubRecursiveNew({
 				...createPubProps,
 				body: {
-					...createPubProps.body,
+					...body,
+					values: values
+						? Object.fromEntries(
+								Object.entries(values).filter(([slug]) =>
+									form.elements.find((element) => element.slug === slug)
+								)
+							)
+						: {},
 					// adds user to the pub
 					// TODO: this should be configured on the form
 					members: { [user.id]: MemberRole.contributor },
@@ -112,7 +131,7 @@ export const updatePub = defineServerAction(async function updatePub({
 		JsonValue | Date | { value: JsonValue | Date; relatedPubId: PubsId }[]
 	>;
 	stageId?: StagesId;
-	formSlug?: string;
+	formSlug: string;
 	continueOnValidationError: boolean;
 	deleted: { slug: string; relatedPubId: PubsId }[];
 }) {
@@ -128,7 +147,14 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	if (!userCanEditPub({ pubId, userId: loginData.user.id, formSlug })) {
+	if (!formSlug) {
+		return ApiError.UNAUTHORIZED;
+	}
+
+	const form = await getForm({ slug: formSlug, communityId: community.id }).executeTakeFirst();
+	const canEdit = await userCanEditPub({ pubId, userId: loginData.user.id, formSlug });
+
+	if (!form || !canEdit) {
 		return ApiError.UNAUTHORIZED;
 	}
 
@@ -154,7 +180,11 @@ export const updatePub = defineServerAction(async function updatePub({
 			});
 
 		const normalizedValues = normalizePubValues(processedVals);
+
 		for (const { slug, value, relatedPubId } of normalizedValues) {
+			if (!form.elements.find((element) => element.slug === slug)) {
+				continue;
+			}
 			if (relatedPubId) {
 				updateQuery.relate(slug, value, relatedPubId, {
 					replaceExisting: false,
