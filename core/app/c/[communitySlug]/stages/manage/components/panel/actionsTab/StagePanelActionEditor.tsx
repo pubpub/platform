@@ -1,9 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useSSE } from "use-next-sse";
+import type { RefObject } from "react";
 
-import type { ActionInstances, ActionInstancesId, ActionRunStatus, StagesId } from "db/public";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { isAfter, parseISO } from "date-fns";
+
+import type {
+	ActionInstances,
+	ActionInstancesId,
+	ActionRuns,
+	ActionRunStatus,
+	StagesId,
+} from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
@@ -17,69 +25,96 @@ import type { ActionRunNotification } from "~/app/api/v0/c/[communitySlug]/sse/r
 import type { ActionRunUpdate } from "~/app/c/[communitySlug]/Notifier";
 import { getActionByName } from "~/actions/api";
 import { useActionInstanceUpdates } from "~/app/c/[communitySlug]/Notifier";
+import { useSSEWithRevalidation } from "~/lib/notify/useSSEWithRevalidation";
 import { useServerAction } from "~/lib/serverActions";
+import { revalidateCurrentPath } from "../../../../../../../../lib/notify/revalidateCurrentPath";
 import * as actions from "../../../actions";
 
 type Props = {
-	actionInstance: ActionInstances;
+	actionInstance: ActionInstances & { lastActionRun: ActionRuns | null };
 	onDelete: (actionInstanceId: ActionInstancesId, stageId: StagesId) => Promise<unknown>;
 	communityId: string;
 	children: React.ReactNode;
 	stageId: StagesId;
 };
 
-export const UpdateCircle = ({ status, timestamp, result, pubId }: ActionRunUpdate) => {
+export const UpdateCircle = (
+	props: ActionRuns & {
+		stale: boolean;
+		setStale: (stale: boolean) => void;
+		setInitTime: (initTime: Date) => void;
+	}
+) => {
 	return (
 		<Tooltip>
-			<TooltipTrigger asChild>
+			<TooltipTrigger
+				onMouseOver={() => {
+					if (props.stale === true) {
+						props.setStale(false);
+						props.setInitTime(new Date());
+					}
+				}}
+				asChild
+			>
 				<div
-					className={cn("h-2 w-2 rounded-full transition-colors duration-200", {
-						"bg-green-500": status === "success",
-						"bg-red-500": status === "failure",
-						"bg-yellow-500": status === "scheduled",
-						"bg-gray-500":
-							status !== "success" && status !== "failure" && status !== "scheduled",
-					})}
-				/>
+					className={cn(
+						"relative m-1 h-3 w-3 rounded-full transition-colors duration-200",
+						{
+							"bg-green-500": props.status === "success",
+							"bg-red-500": props.status === "failure",
+							"bg-yellow-500": props.status === "scheduled",
+							"bg-gray-500":
+								props.status !== "success" &&
+								props.status !== "failure" &&
+								props.status !== "scheduled",
+						}
+					)}
+				>
+					{props.stale && (
+						<span className="absolute -top-0.5 right-0 block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-800"></span>
+					)}
+				</div>
 			</TooltipTrigger>
 			<TooltipContent className="max-w-xs p-3">
 				<div className="space-y-2">
 					<div className="flex items-center gap-2">
 						<div
 							className={cn("h-3 w-3 rounded-full", {
-								"bg-green-500": status === "success",
-								"bg-red-500": status === "failure",
-								"bg-yellow-500": status === "scheduled",
+								"bg-green-500": props.status === "success",
+								"bg-red-500": props.status === "failure",
+								"bg-yellow-500": props.status === "scheduled",
 								"bg-gray-500":
-									status !== "success" &&
-									status !== "failure" &&
-									status !== "scheduled",
+									props.status !== "success" &&
+									props.status !== "failure" &&
+									props.status !== "scheduled",
 							})}
 						/>
-						<span className="font-medium capitalize">{status}</span>
+						<span className="font-medium capitalize">{props.status}</span>
 					</div>
 
 					<div className="text-xs text-gray-600">
-						{timestamp && (
+						{props.createdAt && (
 							<div className="flex items-center justify-between">
 								<span>Timestamp:</span>
-								<span className="font-mono">{timestamp}</span>
+								<span className="font-mono">
+									{props.createdAt.toLocaleString()}
+								</span>
 							</div>
 						)}
 
-						{pubId && (
+						{props.pubId && (
 							<div className="flex items-center justify-between">
 								<span>ID:</span>
-								<span className="truncate font-mono">{pubId}</span>
+								<span className="truncate font-mono">{props.pubId}</span>
 							</div>
 						)}
 					</div>
 
-					{result && (
+					{Boolean(props.result) && (
 						<div className="pt-1">
 							<div className="text-xs font-medium">Result:</div>
 							<pre className="mt-1 max-h-40 overflow-auto rounded bg-gray-100 p-2 font-mono text-xs">
-								{JSON.stringify(result, null, 2)}
+								{JSON.stringify(props.result, null, 2)}
 							</pre>
 						</div>
 					)}
@@ -97,28 +132,29 @@ export const StagePanelActionEditor = (props: Props) => {
 	}, [props.actionInstance, runOnDelete]);
 	const action = getActionByName(props.actionInstance.action);
 
-	const [updates, setUpdates] = useState<ActionRunUpdate[]>([]);
-	const { data, error } = useSSE<ActionRunUpdate>({
-		url: `/api/v0/c/${props.communityId}/sse`,
-		eventName: "action_run_update",
-		withCredentials: true,
-	});
+	const [initTime, setInitTime] = useState(new Date());
+	const [isStale, setIsStale] = useState(false);
 
 	useEffect(() => {
-		if (error) {
-			toast({
-				variant: "destructive",
-				title: "Error fetching action run updates",
-				description: error.message,
-			});
+		if (!props.actionInstance.lastActionRun) return;
+
+		// parse both as UTC to ensure proper comparison regardless of local timezone
+		const lastRunTime = parseISO(`${props.actionInstance.lastActionRun.createdAt.toString()}Z`);
+
+		console.log(
+			props.actionInstance.name,
+			":",
+			props.actionInstance.lastActionRun.createdAt,
+			typeof props.actionInstance.lastActionRun.createdAt,
+			initTime
+		);
+
+		// compare the dates using date-fns isAfter helper
+		if (isAfter(lastRunTime, initTime)) {
+			console.log(props.actionInstance.name, ":", "stale");
+			setIsStale(true);
 		}
-		if (data) {
-			if (data.actionInstanceId === props.actionInstance.id) {
-				setUpdates((old) => [data, ...old]);
-			}
-		}
-	}, [data, error]);
-	const lastUpdate = updates[0];
+	}, [props.actionInstance.lastActionRun]);
 
 	if (!action) {
 		logger.warn(`Invalid action name ${props.actionInstance.action}`);
@@ -155,9 +191,14 @@ export const StagePanelActionEditor = (props: Props) => {
 							{props.actionInstance.name || action.name}
 						</span>
 					)}
-					{lastUpdate && (
+					{props.actionInstance.lastActionRun && (
 						<>
-							<UpdateCircle {...lastUpdate} />
+							<UpdateCircle
+								{...props.actionInstance.lastActionRun}
+								stale={isStale}
+								setStale={setIsStale}
+								setInitTime={setInitTime}
+							/>
 						</>
 					)}
 				</div>

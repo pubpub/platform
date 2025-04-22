@@ -23,8 +23,8 @@ const handleClose = (client?: PoolClient) => {
 	return () => {
 		logger.info("closing sse connection");
 		if (client) {
-			logger.info("unlistening for action run updates");
-			client.query("UNLISTEN action_run_updates").catch(logger.error);
+			logger.info("unlistening for change");
+			client.query("UNLISTEN change").catch(logger.error);
 			logger.info("releasing client");
 			client.release();
 		}
@@ -45,18 +45,20 @@ export const GET = createSSEHandler(async (send, close, { onClose }) => {
 	// onClose(handleClose(client));
 
 	// listen for action run updates
-	await client.query(`LISTEN action_run_updates`);
+	await client.query(`LISTEN change`);
 
 	console.log("POOL LISTENERS", pool.listeners("notification"));
 	console.log("CLIENT LISTENERS", client.listeners("notification"));
 	// handle postgres notifications
 	client.on("notification", async (msg) => {
+		console.log(msg);
 		if (!msg.payload) return;
 
 		try {
 			const notification = JSON.parse(msg.payload) as ActionRunNotification;
 			logger.info({ msg: "notification", notification });
-			send(notification, "action_run_update");
+			console.log(msg);
+			send(notification, "change");
 		} catch (err) {
 			logger.error({ msg: "Failed to parse notification:", err });
 		}

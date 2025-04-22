@@ -8,6 +8,7 @@ import { Suspense } from "react";
 
 import { TooltipProvider } from "ui/tooltip";
 
+import { SSERevalidator } from "~/lib/notify/SSERevalidator";
 import { ReactQueryProvider } from "./components/providers/QueryProvider";
 import { RootToaster } from "./RootToaster";
 
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 							{children}
 							<Suspense>
 								<RootToaster />
+								<SSERevalidator />
 							</Suspense>
 						</TooltipProvider>
 					</NuqsAdapter>
