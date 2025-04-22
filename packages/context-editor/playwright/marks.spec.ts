@@ -153,8 +153,7 @@ test.describe("link", () => {
 		await page.getByRole("textbox", { name: "URL" }).waitFor();
 	});
 
-	test("can paste a link", async ({ page, context }) => {
-		await context.grantPermissions(["clipboard-write"]);
+	test("can paste a link", async ({ page }) => {
 		await page.evaluate(() =>
 			navigator.clipboard.writeText("https://www.knowledgefutures.org")
 		);
