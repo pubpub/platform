@@ -74,16 +74,19 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 								<FormItem className="flex flex-col">
 									<div className="flex items-center gap-2 space-y-0">
 										<FormLabel>URL</FormLabel>
-										<Input
-											defaultValue={url}
-											onChange={(event) => {
-												onChange(field.name, event.target.value);
-												field.onChange(event);
-											}}
-											onBlur={field.onBlur}
-											type="url"
-											placeholder="https://example.com"
-										/>
+										<FormControl>
+											<Input
+												defaultValue={url}
+												onChange={(event) => {
+													onChange(field.name, event.target.value);
+													field.onChange(event);
+												}}
+												onBlur={field.onBlur}
+												type="url"
+												placeholder="https://example.com"
+												autoFocus
+											/>
+										</FormControl>
 										<div className="flex items-center">
 											<a
 												href={url}
@@ -96,6 +99,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 												className="px-2 text-gray-500"
 												variant="ghost"
 												onClick={removeLink}
+												data-testid="remove-link"
 											>
 												<Trash />
 											</Button>

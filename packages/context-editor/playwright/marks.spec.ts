@@ -129,3 +129,70 @@ test.describe("underline", () => {
 		await assertMenuItemActiveState({ page, name: "Underline", isActive: true });
 	});
 });
+
+test.describe("link", () => {
+	const url = "https://www.knowledgefutures.org";
+
+	test.beforeEach(async ({ page }) => {
+		await page.goto(BLANK_EDITOR_STORY);
+		const editor = page.locator(".ProseMirror");
+		await editor.click();
+	});
+
+	test("can use menu bar", async ({ page }) => {
+		const text = "link";
+		await page.keyboard.type(text);
+		// Highlight the text
+		for (let i = 0; i < text.length; i++) {
+			await page.keyboard.press("Shift+ArrowLeft");
+		}
+		await page.getByRole("button", { name: "Link" }).click();
+		await page.getByTestId("attribute-panel").waitFor();
+		await page.getByRole("textbox", { name: "URL" }).waitFor();
+	});
+
+	test("can paste a link", async ({ page, context }) => {
+		await context.grantPermissions(["clipboard-write"]);
+		await page.evaluate(() =>
+			navigator.clipboard.writeText("https://www.knowledgefutures.org")
+		);
+		await page.locator(".ProseMirror").press("Meta+v");
+		await page.getByRole("link", { name: url }).waitFor();
+	});
+
+	test("can add and remove a link by typing and menu bar", async ({ page }) => {
+		const editor = page.locator(".ProseMirror");
+		await test.step("add link by typing one", async () => {
+			await editor.pressSequentially(url);
+			await editor.press("Space");
+			await page.getByRole("link", { name: url }).waitFor();
+		});
+
+		await test.step("remove the link", async () => {
+			await editor.press("ArrowLeft");
+			await editor.press("ArrowLeft");
+			await assertMenuItemActiveState({ page, name: "Link", isActive: true });
+			await page.getByRole("button", { name: "Link" }).click();
+			await expect(page.getByRole("link", { name: url })).toHaveCount(0);
+			await expect(page.getByText(url)).toHaveCount(1);
+		});
+	});
+
+	test("can remove a link by using the attribute panel", async ({ page }) => {
+		const editor = page.locator(".ProseMirror");
+		await test.step("add link by typing one", async () => {
+			await editor.pressSequentially(url);
+			await editor.press("Space");
+			await page.getByRole("link", { name: url }).waitFor();
+		});
+
+		await test.step("remove the link", async () => {
+			await editor.press("ArrowLeft");
+			await editor.press("ArrowLeft");
+			await page.getByTestId("remove-link").click();
+			await expect(page.getByRole("link", { name: url })).toHaveCount(0);
+			await expect(page.getByText(url)).toHaveCount(1);
+			await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
+		});
+	});
+});

@@ -55,7 +55,8 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 			}
 
 			// The attribute panel itself may be focused--don't change the node while it is open
-			if (!view.hasFocus() && activeNode && !node.eq(activeNode)) {
+			// This is primarily for the case where you are editing the id/class of a node.
+			if (!view.hasFocus() && activeNode && activeNode.isBlock && !node.eq(activeNode)) {
 				return;
 			}
 
