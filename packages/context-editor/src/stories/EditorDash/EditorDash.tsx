@@ -11,8 +11,10 @@ import SitePanel from "./SitePanel";
 
 import "./dashStyles.css";
 
+import { EditorState } from "prosemirror-state";
+
 export default function EditorDash(props: ContextEditorProps) {
-	const [editorState, setEditorState] = useState(null);
+	const [editorState, setEditorState] = useState<EditorState | null>(null);
 	const [activeDash, setActiveDash] = useState("");
 	const memoEditor = useMemo(() => {
 		return (

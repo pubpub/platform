@@ -65,7 +65,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		<>
 			<Form {...form}>
 				<form className="flex flex-col gap-4">
-					<h2>Link Attributes</h2>
+					<h2 className="text-md font-medium">Link Attributes</h2>
 					<FormField
 						name="href"
 						control={form.control}
