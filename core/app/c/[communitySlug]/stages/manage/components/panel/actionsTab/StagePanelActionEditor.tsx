@@ -141,17 +141,8 @@ export const StagePanelActionEditor = (props: Props) => {
 		// parse both as UTC to ensure proper comparison regardless of local timezone
 		const lastRunTime = parseISO(`${props.actionInstance.lastActionRun.createdAt.toString()}Z`);
 
-		console.log(
-			props.actionInstance.name,
-			":",
-			props.actionInstance.lastActionRun.createdAt,
-			typeof props.actionInstance.lastActionRun.createdAt,
-			initTime
-		);
-
 		// compare the dates using date-fns isAfter helper
 		if (isAfter(lastRunTime, initTime)) {
-			console.log(props.actionInstance.name, ":", "stale");
 			setIsStale(true);
 		}
 	}, [props.actionInstance.lastActionRun]);

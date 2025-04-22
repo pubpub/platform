@@ -47,17 +47,13 @@ export const GET = createSSEHandler(async (send, close, { onClose }) => {
 	// listen for action run updates
 	await client.query(`LISTEN change`);
 
-	console.log("POOL LISTENERS", pool.listeners("notification"));
-	console.log("CLIENT LISTENERS", client.listeners("notification"));
 	// handle postgres notifications
 	client.on("notification", async (msg) => {
-		console.log(msg);
 		if (!msg.payload) return;
 
 		try {
 			const notification = JSON.parse(msg.payload) as ActionRunNotification;
 			logger.info({ msg: "notification", notification });
-			console.log(msg);
 			send(notification, "change");
 		} catch (err) {
 			logger.error({ msg: "Failed to parse notification:", err });

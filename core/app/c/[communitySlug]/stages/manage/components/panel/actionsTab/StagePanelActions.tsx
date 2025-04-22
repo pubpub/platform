@@ -28,7 +28,6 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 	if (stage === undefined) {
 		return <SkeletonCard />;
 	}
-	console.log("c", actionInstances[0]?.lastActionRun?.createdAt);
 
 	const onAddAction = addAction.bind(null, stage.id);
 	const onDeleteAction = deleteAction;
