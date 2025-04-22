@@ -1,22 +1,27 @@
 import type { PoolClient } from "pg";
 
-import { sql } from "kysely";
 import { createSSEHandler } from "use-next-sse";
 
-import type { ActionInstancesId, ActionRunsId, ActionRunStatus, PubsId } from "db/public";
+import type { PublicSchema } from "db/public";
+import type { databaseTableNames } from "db/table-names";
 import { logger } from "logger";
 
 import { pool } from "~/kysely/database";
-import { client } from "~/lib/api";
 import { getLoginData } from "~/lib/authentication/loginData";
 
+type Tables = (typeof databaseTableNames)[number];
+
+/**
+ * Tables that are currently supported for SSE notifications
+ */
+const notifyTables = ["action_runs"] as const satisfies Tables[];
+export type NotifyTables = (typeof notifyTables)[number];
+
 export const dynamic = "force-dynamic";
-export type ActionRunNotification = {
-	id: ActionRunsId;
-	status: ActionRunStatus;
-	result: any;
-	actionInstanceId: ActionInstancesId | null;
-	pubId: PubsId | null;
+export type ChangeNotification<T extends NotifyTables> = {
+	table: T;
+	operation: "insert" | "update" | "delete";
+	row: PublicSchema[T];
 };
 
 const handleClose = (client?: PoolClient) => {
@@ -52,7 +57,7 @@ export const GET = createSSEHandler(async (send, close, { onClose }) => {
 		if (!msg.payload) return;
 
 		try {
-			const notification = JSON.parse(msg.payload) as ActionRunNotification;
+			const notification = JSON.parse(msg.payload) as ChangeNotification<NotifyTables>;
 			logger.info({ msg: "notification", notification });
 			send(notification, "change");
 		} catch (err) {

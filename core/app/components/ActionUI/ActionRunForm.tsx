@@ -53,7 +53,10 @@ export const ActionRunForm = ({
 
 				if ("success" in result) {
 					toast({
-						title: "title" in result ? result.title : "Action ran successfully!",
+						title:
+							"title" in result && typeof result.title === "string"
+								? result.title
+								: "Action ran successfully!",
 						variant: "default",
 						// TODO: SHOULD ABSOLUTELY BE SANITIZED
 						description: (

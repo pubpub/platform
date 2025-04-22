@@ -11,6 +11,7 @@ import { LocalStorageProvider } from "ui/hooks";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
+import { SSERevalidator } from "~/lib/notify/SSERevalidator";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
@@ -82,23 +83,26 @@ export default async function Page(props: Props) {
 	};
 
 	return (
-		<StagesProvider stages={stages} communityId={community.id}>
-			<StageEditorProvider communitySlug={params.communitySlug}>
-				<LocalStorageProvider timeout={200}>
-					<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
-						<div className="relative h-full select-none">
-							<StageEditor />
-							{searchParams.editingStageId && (
-								<StagePanel
-									stageId={searchParams.editingStageId as StagesId}
-									pageContext={pageContext}
-									user={user}
-								/>
-							)}
+		<>
+			<StagesProvider stages={stages} communityId={community.id}>
+				<StageEditorProvider communitySlug={params.communitySlug}>
+					<LocalStorageProvider timeout={200}>
+						<div className="v-full absolute left-0 top-0 z-50 h-full w-full shadow-[inset_6px_0px_10px_-4px_rgba(0,0,0,0.1)]">
+							<div className="relative h-full select-none">
+								<StageEditor />
+								{searchParams.editingStageId && (
+									<StagePanel
+										stageId={searchParams.editingStageId as StagesId}
+										pageContext={pageContext}
+										user={user}
+									/>
+								)}
+							</div>
 						</div>
-					</div>
-				</LocalStorageProvider>
-			</StageEditorProvider>
-		</StagesProvider>
+					</LocalStorageProvider>
+				</StageEditorProvider>
+			</StagesProvider>
+			<SSERevalidator listen={["action_runs"]} />
+		</>
 	);
 }
