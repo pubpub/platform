@@ -42,10 +42,6 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		setPosition: setActiveNodePosition,
 	} = useEditorContext();
 
-	/**
-	 * This determination of the 'activeNode' is prone to bugs. We should figure
-	 * out a better way to do it.
-	 **/
 	useEditorEffect(
 		(view) => {
 			const node = state.selection.$from.nodeAfter;
