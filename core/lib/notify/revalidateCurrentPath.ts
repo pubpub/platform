@@ -12,7 +12,6 @@ export const revalidateCurrentPath = async () => {
 	}
 
 	const path = getPathname();
-	console.log(path);
 	if (!path) {
 		return;
 	}
