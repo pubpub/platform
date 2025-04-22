@@ -3,6 +3,7 @@ import { afterEach } from "node:test";
 import { describe, expect, it, vitest } from "vitest";
 
 import type {
+	ActionInstancesId,
 	ActionRunsId,
 	CommunitiesId,
 	PubFieldsId,
@@ -11,7 +12,7 @@ import type {
 	PubValuesId,
 	StagesId,
 } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { Action, CoreSchemaType } from "db/public";
 
 import type { ActionPub, RunProps } from "../types";
 import type { action } from "./action";
@@ -133,6 +134,15 @@ const pub = {
 } as ActionPub;
 
 const RUN_OPTIONS: RunProps<typeof action> = {
+	actionInstance: {
+		id: "" as ActionInstancesId,
+		name: "deposit to datacite",
+		stageId: "" as StagesId,
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		action: Action.datacite,
+		config: {},
+	},
 	actionRunId: "" as ActionRunsId,
 	stageId: "" as StagesId,
 	communityId: "" as CommunitiesId,
