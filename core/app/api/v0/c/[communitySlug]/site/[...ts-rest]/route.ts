@@ -2,8 +2,7 @@ import type { User } from "lucia";
 import type { NextRequest } from "next/server";
 
 import { headers } from "next/headers";
-import { queryByTestId } from "@testing-library/react";
-import { createNextHandler, RequestValidationError, TsRestRequest } from "@ts-rest/serverless/next";
+import { createNextHandler, TsRestRequest } from "@ts-rest/serverless/next";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 import qs from "qs";
 import { z } from "zod";
@@ -22,9 +21,8 @@ import type {
 	ApiAccessPermissionConstraintsInput,
 	LastModifiedBy,
 } from "db/types";
-import { baseFilterSchema, filterSchema, siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
+import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
-import { assert } from "utils";
 
 import type { CapabilityTarget } from "~/lib/authorization/capabilities";
 import { db } from "~/kysely/database";

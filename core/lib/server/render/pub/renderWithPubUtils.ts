@@ -5,7 +5,7 @@ import { expect } from "utils";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { addMemberToForm, createFormInviteLink } from "../../form";
+import { createFormInviteLink, grantFormAccess } from "../../form";
 
 export type RenderWithPubRel = "self";
 
@@ -62,7 +62,7 @@ export const renderFormInviteLink = async ({
 	communityId: CommunitiesId;
 	pubId: PubsId;
 }) => {
-	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
+	await grantFormAccess({ userId, communityId, pubId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, communityId, pubId });
 };
 

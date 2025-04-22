@@ -318,8 +318,8 @@ test.describe("relationship fields", () => {
 			await page.getByRole("listitem", { name: "Role" }).getByLabel("Edit field").click();
 			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(pubType.name);
 			await page.getByTestId("related-pub-type-selector").click();
-			await page.getByRole("option", { name: "Clear" }).click();
-			await page.getByRole("option", { name: "Close" }).click();
+			await page.getByRole("button", { name: "Clear" }).click();
+			await page.getByRole("button", { name: "Close" }).click();
 			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(
 				"Select a pub type"
 			);
