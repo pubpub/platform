@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
+import { Label } from "ui/label";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
@@ -126,7 +127,12 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
-					<FormSwitcher defaultFormSlug={searchParams.form} forms={availableForms} />
+					<Label htmlFor="edit-page-form-switcher">Current form</Label>
+					<FormSwitcher
+						htmlId="edit-page-form-switcher"
+						defaultFormSlug={searchParams.form}
+						forms={availableForms}
+					/>
 					{/** TODO: Add suspense */}
 					<PubEditor
 						searchParams={searchParams}
