@@ -122,6 +122,35 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		}
 	);
 
+	/** Bulk update version of updateMarkAttr */
+	const updateMarkAttrs = useEditorEventCallback(
+		(view, index: number, attrs: Record<string, string | null>) => {
+			if (!view || !activeNode) return;
+			const markToReplace = nodeMarks[index];
+			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
+				...(activeNode?.marks ?? []),
+			];
+			newMarks[index].attrs = attrs;
+
+			const newMark = view.state.schema.marks[markToReplace.type.name].create({
+				...markToReplace.attrs,
+				...attrs,
+			});
+
+			if (!newMark) {
+				return null;
+			}
+
+			view.dispatch(
+				view.state.tr.addMark(
+					activeNodePosition,
+					activeNodePosition + (activeNode.nodeSize || 0),
+					newMark
+				)
+			);
+		}
+	);
+
 	const updateAttr = useEditorEventCallback((view, attrKey: string, value: string) => {
 		if (!view || !activeNode) return;
 		view.dispatch(
@@ -222,8 +251,8 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 							return (
 								<LinkMenu
 									mark={mark}
-									onChange={(attrKey, value) => {
-										updateMarkAttr(index, attrKey, value);
+									onChange={(values) => {
+										updateMarkAttrs(index, values);
 									}}
 									key={key}
 								/>

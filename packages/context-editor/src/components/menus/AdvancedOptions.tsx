@@ -9,15 +9,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { ChevronDown, ChevronUp } from "ui/icon";
 import { Input } from "ui/input";
 
-const Option = ({
-	name,
-	defaultValue,
-	onChange,
-}: {
-	name: string;
-	defaultValue: string;
-	onChange: (value: string) => void;
-}) => {
+const Option = ({ name, defaultValue }: { name: string; defaultValue: string }) => {
 	const form = useFormContext();
 	return (
 		<FormField
@@ -29,16 +21,7 @@ const Option = ({
 						<div className="grid grid-cols-4 items-center">
 							<FormLabel>{name}</FormLabel>
 							<FormControl>
-								<Input
-									defaultValue={defaultValue}
-									onChange={(event) => {
-										onChange(event.target.value);
-										field.onChange(event);
-									}}
-									onBlur={field.onBlur}
-									placeholder="None"
-									className="col-span-3"
-								/>
+								<Input {...field} placeholder="None" className="col-span-3" />
 							</FormControl>
 						</div>
 						<FormMessage />
@@ -49,13 +32,7 @@ const Option = ({
 	);
 };
 
-export const AdvancedOptions = ({
-	mark,
-	onChange,
-}: {
-	mark: Mark;
-	onChange: (attrKey: string, value: string | null) => void;
-}) => {
+export const AdvancedOptions = ({ mark }: { mark: Mark }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	return (
 		<Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-4">
@@ -78,16 +55,8 @@ export const AdvancedOptions = ({
 				</CollapsibleTrigger>
 			</div>
 			<CollapsibleContent className="space-y-2">
-				<Option
-					name="id"
-					defaultValue={mark.attrs?.id ?? ""}
-					onChange={(val) => onChange("id", val)}
-				/>
-				<Option
-					name="class"
-					defaultValue={mark.attrs?.class ?? ""}
-					onChange={(val) => onChange("class", val)}
-				/>
+				<Option name="id" defaultValue={mark.attrs?.id ?? ""} />
+				<Option name="class" defaultValue={mark.attrs?.class ?? ""} />
 			</CollapsibleContent>
 		</Collapsible>
 	);

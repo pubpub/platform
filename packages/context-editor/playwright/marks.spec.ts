@@ -224,6 +224,8 @@ test.describe("link", () => {
 			await panel.getByTestId("advanced-options-trigger").click();
 			await panel.getByRole("textbox", { name: "id" }).fill(id);
 			await panel.getByRole("textbox", { name: "class" }).fill(className);
+			// Force blur
+			await page.locator(".ProseMirror").click();
 
 			await test.step("verify state", async () => {
 				const state = await getProsemirrorState(page);

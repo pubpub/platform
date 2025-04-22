@@ -1,5 +1,6 @@
 import type { Static } from "@sinclair/typebox";
 import type { Mark } from "prosemirror-model";
+import type { FieldValues } from "react-hook-form";
 
 import React, { useMemo } from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
@@ -24,6 +25,8 @@ registerFormats();
 const formSchema = Type.Object({
 	href: Type.String({ format: "uri" }),
 	openInNewTab: Type.Boolean({ default: false }),
+	id: Type.String(),
+	class: Type.String(),
 });
 
 const compiledSchema = TypeCompiler.Compile(formSchema);
@@ -32,7 +35,7 @@ type FormSchema = Static<typeof formSchema>;
 
 type LinkMenuProps = {
 	mark: Mark;
-	onChange: (attrKey: string, value: string | null) => void;
+	onChange: (values: Record<string, string | null>) => void;
 };
 export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 	if (!(mark.type.name === "link")) {
@@ -58,13 +61,22 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		defaultValues: {
 			href: url,
 			openInNewTab,
+			id: mark.attrs?.id ?? "",
+			class: mark.attrs?.class ?? "",
 		},
 	});
+
+	const handleSubmit = (values: FormSchema) => {
+		console.log("submitting");
+		const { openInNewTab, ...rest } = values;
+		const attrs = { ...rest, target: values.openInNewTab ? "_blank" : null };
+		onChange(attrs);
+	};
 
 	return (
 		<>
 			<Form {...form}>
-				<form className="flex flex-col gap-4">
+				<form className="flex flex-col gap-4" onBlur={form.handleSubmit(handleSubmit)}>
 					<h2 className="text-md font-medium">Link Attributes</h2>
 					<FormField
 						name="href"
@@ -76,12 +88,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 										<FormLabel>URL</FormLabel>
 										<FormControl>
 											<Input
-												defaultValue={url}
-												onChange={(event) => {
-													onChange(field.name, event.target.value);
-													field.onChange(event);
-												}}
-												onBlur={field.onBlur}
+												{...field}
 												type="url"
 												placeholder="https://example.com"
 												autoFocus={url.length === 0}
@@ -120,12 +127,10 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 								<FormControl>
 									<Switch
 										className="data-[state=checked]:bg-emerald-400"
-										checked={openInNewTab}
+										checked={field.value}
 										onCheckedChange={(checked) => {
-											onChange("target", checked ? "_blank" : null);
 											field.onChange(checked);
 										}}
-										onBlur={field.onBlur}
 									/>
 								</FormControl>
 								<FormMessage />
@@ -133,7 +138,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 						)}
 					/>
 					<hr />
-					<AdvancedOptions mark={mark} onChange={onChange} />
+					<AdvancedOptions mark={mark} />
 				</form>
 			</Form>
 		</>
