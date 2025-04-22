@@ -50,10 +50,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		(view) => {
 			const node = state.selection.$from.nodeAfter;
 			if (!node) {
-				// Allows "clicking out" of a block node attribute panel
-				if (activeNode?.isBlock) {
-					setActiveNode(null);
-				}
+				setActiveNode(null);
 				return;
 			}
 
