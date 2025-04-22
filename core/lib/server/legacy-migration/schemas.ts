@@ -52,11 +52,32 @@ const exportSchema = z
 	})
 	.merge(baseTimestampsSchema);
 
+const docJsonSchema = z.object({
+	type: z.literal("doc"),
+	attrs: z.record(z.any()).optional(),
+	content: z.array(z.any()),
+});
+
 const draftSchema = z
 	.object({
 		id: z.string(),
 		latestKeyAt: z.string(),
 		firebasePath: z.string(),
+		doc: z
+			.object({
+				doc: docJsonSchema,
+				size: z.number(),
+				mostRecentRemoteKey: z.number(),
+				firstTimestamp: z.number(),
+				latestTimestamp: z.number(),
+				historyData: z.object({
+					timestamps: z.record(z.number()),
+					currentKey: z.number(),
+					latestKey: z.number(),
+				}),
+				firebasePath: z.string(),
+			})
+			.nullable(),
 	})
 	.merge(baseTimestampsSchema);
 
@@ -90,11 +111,6 @@ const memberSchema = z.object({
 	user: baseUserSchema,
 });
 
-const docJsonSchema = z.object({
-	type: z.literal("doc"),
-	attrs: z.record(z.any()).optional(),
-	content: z.array(z.any()),
-});
 const textAligns = ["left", "center"] as const;
 
 const pubPreviewTypes = ["minimal", "small", "medium", "large"] as const;
@@ -157,6 +173,206 @@ const pubSortOrders = [
 	"publish-date-reversed",
 	"collection-rank",
 ] as const;
+
+// common schemas
+const scopeSchema = z.discriminatedUnion("kind", [
+	z.object({
+		kind: z.literal("root"),
+	}),
+	z.object({
+		kind: z.literal("community"),
+		id: z.string().uuid(),
+	}),
+	z.object({
+		kind: z.literal("collection"),
+		id: z.string().uuid(),
+	}),
+	z.object({
+		kind: z.literal("pub"),
+		id: z.string().uuid(),
+	}),
+]);
+
+const sourceSchema = <T extends z.ZodTypeAny>(valueSchema: T) =>
+	z.object({
+		scope: scopeSchema,
+		value: valueSchema.nullable(),
+		facetBindingId: z.string().uuid().nullable(),
+	});
+
+// citation style schemas
+const citationStyleSchema = z.object({
+	citationStyle: z.object({
+		sources: z.array(sourceSchema(z.string())),
+		value: z.string(),
+	}),
+	inlineCitationStyle: z.object({
+		sources: z.array(sourceSchema(z.string())),
+		value: z.string(),
+	}),
+});
+
+const citationStyleValueSchema = z.object({
+	citationStyle: z.string(),
+	inlineCitationStyle: z.string(),
+});
+
+// license schemas
+const copyrightSelectionSchema = z.object({
+	choice: z.enum(["infer-from-scope"]),
+	year: z.number().nullable(),
+});
+
+const licenseSchema = z.object({
+	kind: z.object({
+		sources: z.array(sourceSchema(z.string())),
+		value: z.string(),
+	}),
+	copyrightSelection: z.object({
+		sources: z.array(sourceSchema(copyrightSelectionSchema)),
+		value: copyrightSelectionSchema,
+	}),
+});
+
+const licenseValueSchema = z.object({
+	kind: z.string(),
+	copyrightSelection: copyrightSelectionSchema,
+});
+
+// node labels schemas
+const nodeLabelItemSchema = z.object({
+	enabled: z.boolean(),
+	text: z.string(),
+});
+
+const nodeLabelsSchema = z.object({
+	image: z.object({
+		sources: z.array(sourceSchema(nodeLabelItemSchema)),
+		value: nodeLabelItemSchema,
+	}),
+	video: z.object({
+		sources: z.array(sourceSchema(nodeLabelItemSchema)),
+		value: nodeLabelItemSchema,
+	}),
+	audio: z.object({
+		sources: z.array(sourceSchema(nodeLabelItemSchema)),
+		value: nodeLabelItemSchema,
+	}),
+	table: z.object({
+		sources: z.array(sourceSchema(nodeLabelItemSchema)),
+		value: nodeLabelItemSchema,
+	}),
+	math: z.object({
+		sources: z.array(sourceSchema(nodeLabelItemSchema)),
+		value: nodeLabelItemSchema,
+	}),
+	iframe: z.object({
+		sources: z.array(sourceSchema(nodeLabelItemSchema)),
+		value: nodeLabelItemSchema,
+	}),
+});
+
+const nodeLabelsValueSchema = z.object({
+	image: nodeLabelItemSchema,
+	video: nodeLabelItemSchema,
+	audio: nodeLabelItemSchema,
+	table: nodeLabelItemSchema,
+	math: nodeLabelItemSchema,
+	iframe: nodeLabelItemSchema,
+});
+
+// pub edge display schemas
+const pubEdgeDisplaySchema = z.object({
+	defaultsToCarousel: z.object({
+		sources: z.array(sourceSchema(z.boolean())),
+		value: z.boolean(),
+	}),
+	descriptionIsVisible: z.object({
+		sources: z.array(sourceSchema(z.boolean())),
+		value: z.boolean(),
+	}),
+});
+
+const pubEdgeDisplayValueSchema = z.object({
+	defaultsToCarousel: z.boolean(),
+	descriptionIsVisible: z.boolean(),
+});
+
+// pub header theme schemas
+const pubHeaderThemeSchema = z.object({
+	backgroundImage: z.object({
+		sources: z.array(sourceSchema(z.string().nullable())),
+		value: z.string().nullable(),
+	}),
+	backgroundColor: z.object({
+		sources: z.array(sourceSchema(z.string())),
+		value: z.string(),
+	}),
+	textStyle: z.object({
+		sources: z.array(sourceSchema(z.string())),
+		value: z.string(),
+	}),
+});
+
+const pubHeaderThemeValueSchema = z.object({
+	backgroundImage: z.string().nullable(),
+	backgroundColor: z.string(),
+	textStyle: z.string(),
+});
+
+// facet stack item schemas
+const createFacetStackItemSchema = <T extends z.ZodTypeAny>(valueSchema: T) =>
+	z.object({
+		scope: scopeSchema,
+		value: valueSchema,
+		facetBindingId: z.string().uuid(),
+	});
+
+// main facets schema
+const facetsSchema = z.object({
+	CitationStyle: z.object({
+		props: citationStyleSchema,
+		value: citationStyleValueSchema,
+		stack: z.array(createFacetStackItemSchema(citationStyleValueSchema)),
+	}),
+	License: z.object({
+		props: licenseSchema,
+		value: licenseValueSchema,
+		stack: z.array(
+			createFacetStackItemSchema(
+				z.object({
+					kind: z.string().nullable(),
+					copyrightSelection: copyrightSelectionSchema.nullable(),
+				})
+			)
+		),
+	}),
+	NodeLabels: z.object({
+		props: nodeLabelsSchema,
+		value: nodeLabelsValueSchema,
+		stack: z.array(createFacetStackItemSchema(nodeLabelsValueSchema)),
+	}),
+	PubEdgeDisplay: z.object({
+		props: pubEdgeDisplaySchema,
+		value: pubEdgeDisplayValueSchema,
+		stack: z.array(
+			createFacetStackItemSchema(
+				z.object({
+					defaultsToCarousel: z.boolean().nullable(),
+					descriptionIsVisible: z.boolean().nullable(),
+				})
+			)
+		),
+	}),
+	PubHeaderTheme: z.object({
+		props: pubHeaderThemeSchema,
+		value: pubHeaderThemeValueSchema,
+		stack: z.array(createFacetStackItemSchema(pubHeaderThemeValueSchema)),
+	}),
+});
+
+// type definition for TypeScript usage
+export type Facets = z.infer<typeof facetsSchema>;
 
 const layoutBlockPubsSchema = z.object({
 	type: z.literal("pubs"),
@@ -306,6 +522,7 @@ const collectionSchema = z
 				members: z.array(memberSchema),
 				attributions: z.array(attributionSchema),
 				collectionPubs: z.array(collectionPubSchema),
+				facets: facetsSchema,
 			})
 			.merge(baseTimestampsSchema)
 	);
@@ -434,6 +651,7 @@ export const pubSchema = z
 		exports: z.array(exportSchema),
 		inboundEdges: z.array(pubEdgeSchema),
 		collectionPubs: z.array(collectionPubSchema),
+		facets: facetsSchema,
 	})
 	.merge(baseTimestampsSchema);
 
@@ -558,6 +776,7 @@ const communitySchema = z
 		scopeSummary: scopeSummarySchema.nullish(),
 		accentTextColor: z.string().nullish(),
 		analyticsSettings: analyticsSettingsSchema,
+		facets: facetsSchema,
 	})
 	.merge(baseTimestampsSchema);
 

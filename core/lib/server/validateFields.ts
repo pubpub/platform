@@ -30,8 +30,8 @@ export const validatePubValuesBySchemaName = (
 	for (let { slug, value, schemaName } of values) {
 		const stringifiedValue = JSON.stringify(value);
 		const trimmedValue =
-			stringifiedValue.length > 100
-				? `${stringifiedValue.slice(0, 100)}...`
+			stringifiedValue.length > 1000
+				? `${stringifiedValue.slice(0, 1000)}...`
 				: stringifiedValue;
 
 		if (schemaName === CoreSchemaType.RichText) {

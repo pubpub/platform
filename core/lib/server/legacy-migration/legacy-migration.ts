@@ -32,13 +32,15 @@ import { getAllPubTypesForCommunity } from "../pubtype";
 import { legacyExportSchema, pubSchema } from "./schemas";
 
 const constructLegacyPubsUrl = (legacyCommunitySlug: string) => {
-	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1744820542208/static.json`;
+	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1745321964739/static.json`;
 };
 
 export const getLegacyCommunity = async (legacyCommunitySlug: string) => {
 	const url = constructLegacyPubsUrl(legacyCommunitySlug);
 	const response = await fetch(url);
 	const data = await response.json();
+
+	await writeFile("./lib/server/legacy-migration/archive.json", JSON.stringify(data, null, 2));
 
 	return data;
 };
@@ -178,6 +180,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	},
 	Version: {
 		fields: {
+			Abstract: { isTitle: false },
 			Description: { isTitle: true },
 			PubContent: { isTitle: false },
 			"Publication Date": { isTitle: false },
@@ -826,7 +829,7 @@ const createJournalArticles = async (
 				}
 			);
 
-			const content = pub.releases?.at(-1)?.doc?.content!;
+			const content = pub?.draft?.doc?.doc ?? pub.releases?.at(-1)?.doc?.content!;
 			if (content) {
 				const { doc, interestingNodes } = transformProsemirrorTree(content);
 
@@ -851,23 +854,41 @@ const createJournalArticles = async (
 
 				// console.log(interestingNodes.abstract);
 			}
-			// .relate(
-			// 	jaFields.Versions.slug,
-			// 	pub.releases.map((r, i) => ({
-			// 		value: i + 1,
-			// 		target: (op) =>
-			// 			op
-			// 				.create({
-			// 					pubTypeId: legacyStructure["Version"].id,
-			// 				})
-			// 				.set({
-			// 					[versionFields["Version Number"].slug]: i + 1,
-			// 					[versionFields.Description.slug]: r.noteText ?? "",
-			// 					[versionFields["PubContent"].slug]: r.doc?.content!,
-			// 					[versionFields["Publication Date"].slug]: r.createdAt,
-			// 				}),
-			// 	}))
-			// )
+
+			// if (pub.releases) {
+			// 	op = op.relate(
+			// 		jaFields.Versions.slug,
+			// 		pub.releases.map((r, i) => {
+			// 			const doc = r.doc;
+
+			// 			const { doc: doc2, interestingNodes } = doc
+			// 				? transformProsemirrorTree(doc.content)
+			// 				: { doc: null, interestingNodes: {} };
+
+			// 			return {
+			// 				value: i + 1,
+			// 				target: (op) =>
+			// 					op
+			// 						.create({
+			// 							pubTypeId: legacyStructure["Version"].id,
+			// 						})
+			// 						.set(
+			// 							{
+			// 								[versionFields["Abstract"].slug]:
+			// 									interestingNodes.abstract,
+			// 								[versionFields["Version Number"].slug]: i + 1,
+			// 								[versionFields.Description.slug]: r.noteText ?? "",
+			// 								[versionFields["PubContent"].slug]: doc2,
+			// 								[versionFields["Publication Date"].slug]: r.createdAt,
+			// 							},
+			// 							{
+			// 								ignoreNullish: true,
+			// 							}
+			// 						),
+			// 			};
+			// 		})
+			// 	);
+			// }
 
 			return op;
 		});
@@ -965,16 +986,18 @@ const createPages = async (
 const createCollections = async (
 	{
 		community: { id: communityId },
-		legacyCollections,
+		legacyCommunity,
 		legacyStructure,
 	}: {
 		community: { id: CommunitiesId };
-		legacyCollections: LegacyCollection[];
+		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
 	},
 	trx = db
 ) => {
 	logger.info(`Is transaction: ${trx.isTransaction}`);
+
+	const legacyCollections = legacyCommunity.collections;
 
 	const batch = PubOp.batch({
 		communityId,
@@ -984,7 +1007,26 @@ const createCollections = async (
 
 	logger.info(`Creating ${legacyCollections.length} collections`);
 
+	const pubIdMap = new Map<string, string>();
+	for (const pub of legacyCommunity.pubs) {
+		pubIdMap.set(pub.id, pub.id);
+	}
+
 	for (const collection of legacyCollections) {
+		const filteredCollectionPubs = collection.collectionPubs.filter((cp) => {
+			const hasPub = pubIdMap.has(cp.pubId);
+
+			if (!hasPub) {
+				logger.warn(
+					`Collection ${collection.id} has pub ${cp.pubId} that is not in the current community. It will not be imported. ${JSON.stringify(cp)}`
+				);
+			}
+
+			return hasPub;
+		});
+
+		// first check whether the collection has pubs that are not in the current community
+
 		batch.add(({ upsertByValue }) => {
 			const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
 			let op = upsertByValue(relevantType.fields["Legacy Id"].slug, collection.id, {
@@ -1036,7 +1078,7 @@ const createCollections = async (
 
 				op = op.relateByValue(
 					legacyStructure["Issue"].fields["Articles"].slug,
-					collection.collectionPubs.map((cp) => ({
+					filteredCollectionPubs.map((cp) => ({
 						value: cp.contextHint ?? "",
 						target: {
 							slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
@@ -1063,7 +1105,7 @@ const createCollections = async (
 
 				op = op.relateByValue(
 					legacyStructure["Book"].fields["Chapters"].slug,
-					collection.collectionPubs.map((cp) => ({
+					filteredCollectionPubs.map((cp) => ({
 						value: cp.contextHint ?? "",
 						target: {
 							slug: legacyStructure["Book"].fields["Legacy Id"].slug,
@@ -1090,7 +1132,7 @@ const createCollections = async (
 
 				op = op.relateByValue(
 					legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
-					collection.collectionPubs.map(
+					filteredCollectionPubs.map(
 						(cp) => ({
 							value: cp.contextHint ?? "",
 							target: {
@@ -1110,7 +1152,7 @@ const createCollections = async (
 			if (collection.kind === "tag") {
 				op = op.relateByValue(
 					legacyStructure["Collection"].fields["Items"].slug,
-					collection.collectionPubs.map((cp) => ({
+					filteredCollectionPubs.map((cp) => ({
 						value: cp.contextHint ?? "",
 						target: {
 							slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
@@ -1272,7 +1314,7 @@ export const importFromLegacy = async (
 		const legacyCollections = await createCollections(
 			{
 				community: currentCommunity,
-				legacyCollections: parsed.collections,
+				legacyCommunity: parsed,
 				legacyStructure,
 			},
 			trx
