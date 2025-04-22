@@ -34,7 +34,7 @@ export const SelectAccess = () => {
 					<hr />
 					<Select onValueChange={field.onChange} defaultValue={field.value}>
 						<FormControl>
-							<SelectTrigger>
+							<SelectTrigger data-testid="select-form-access">
 								<SelectValue placeholder="Select a type" />
 							</SelectTrigger>
 						</FormControl>
@@ -42,7 +42,11 @@ export const SelectAccess = () => {
 							{Object.values(FormAccessType).map((t) => {
 								const { Icon, description, name } = iconsAndCopy[t];
 								return (
-									<SelectItem key={t} value={t.toString()}>
+									<SelectItem
+										key={t}
+										value={t.toString()}
+										data-testid={`select-form-access-${t}`}
+									>
 										<div className="flex h-auto flex-1 flex-shrink-0 items-center gap-2">
 											<Icon size={16} />
 											<div className="flex flex-col items-start">
