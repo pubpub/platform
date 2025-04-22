@@ -113,6 +113,7 @@
 		"react-csv-to-table": "^0.0.4",
 		"react-dom": "catalog:react19",
 		"react-hook-form": "catalog:",
+		"schemas": "workspace:*",
 		"ui": "workspace:*",
 		"utils": "workspace:*",
 		"uuid": "^11.0.4"

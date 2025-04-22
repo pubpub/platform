@@ -959,6 +959,9 @@ importers:
       react-hook-form:
         specifier: 'catalog:'
         version: 7.54.2(react@19.0.0)
+      schemas:
+        specifier: workspace:*
+        version: link:../schemas
       ui:
         specifier: workspace:*
         version: link:../ui
