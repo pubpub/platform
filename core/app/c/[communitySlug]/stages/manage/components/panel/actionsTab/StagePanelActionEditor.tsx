@@ -1,33 +1,19 @@
 "use client";
 
-import type { RefObject } from "react";
-
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { isAfter, parseISO } from "date-fns";
 
-import type {
-	ActionInstances,
-	ActionInstancesId,
-	ActionRuns,
-	ActionRunStatus,
-	StagesId,
-} from "db/public";
+import type { ActionInstances, ActionInstancesId, ActionRuns, StagesId } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronUp, Pencil, Trash } from "ui/icon";
 import { Input } from "ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
-import type { ActionRunNotification } from "~/app/api/v0/c/[communitySlug]/sse/route";
-import type { ActionRunUpdate } from "~/app/c/[communitySlug]/Notifier";
 import { getActionByName } from "~/actions/api";
-import { useActionInstanceUpdates } from "~/app/c/[communitySlug]/Notifier";
-import { useSSEWithRevalidation } from "~/lib/notify/useSSEWithRevalidation";
 import { useServerAction } from "~/lib/serverActions";
-import { revalidateCurrentPath } from "../../../../../../../../lib/notify/revalidateCurrentPath";
 import * as actions from "../../../actions";
 
 type Props = {

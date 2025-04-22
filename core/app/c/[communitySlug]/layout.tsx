@@ -13,7 +13,6 @@ import { SearchDialog } from "~/app/components/SearchDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { ActionRunNotifierProvider } from "./Notifier";
 import SideNav, { COLLAPSIBLE_TYPE } from "./SideNav";
 
 type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> };

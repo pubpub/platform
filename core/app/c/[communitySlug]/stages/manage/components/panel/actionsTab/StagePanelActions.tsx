@@ -4,7 +4,6 @@ import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import { ActionRunNotifierProvider } from "~/app/c/[communitySlug]/Notifier";
 import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -49,7 +48,6 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 					</p>
 				)}
 				<div className="flex flex-col gap-2">
-					{/* <ActionRunNotifierProvider> */}
 					{actionInstances.map((actionInstance) => (
 						<StagePanelActionEditor
 							key={actionInstance.id}
@@ -67,7 +65,6 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 							</Suspense>
 						</StagePanelActionEditor>
 					))}
-					{/* </ActionRunNotifierProvider> */}
 				</div>
 				<StagePanelActionCreator onAdd={onAddAction} isSuperAdmin={user?.isSuperAdmin} />
 			</CardContent>
