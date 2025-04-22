@@ -7,8 +7,8 @@ import { BLANK_EDITOR_STORY } from "./constants";
 const clickNode = async (page: Page, name: string, nth: number = 0) => {
 	// not sure why, but seem to have to click twice in tests when there
 	// is already text on the page. Only have to click once in the real thing though
-	await page.getByRole("button", { name }).nth(nth).click();
-	await page.getByRole("button", { name }).nth(nth).click();
+	await page.locator(".ProseMirror").getByRole("button", { name }).nth(nth).click();
+	await page.locator(".ProseMirror").getByRole("button", { name }).nth(nth).click();
 };
 
 test.describe("attribute panel", () => {
@@ -47,7 +47,7 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("click on other text", async () => {
-				await page.getByText(text).click();
+				await page.locator(".ProseMirror").getByText(text).click();
 				await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
 			});
 		});
@@ -67,7 +67,10 @@ test.describe("attribute panel", () => {
 
 			await test.step("click on other text", async () => {
 				// Add position to make sure we click inside the text
-				await page.getByText(text).click({ position: { x: 20, y: 0 } });
+				await page
+					.locator(".ProseMirror")
+					.getByText(text)
+					.click({ position: { x: 20, y: 0 } });
 				await expect(page.getByTestId("attribute-panel")).toContainText("strong");
 				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
 			});
@@ -139,9 +142,9 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("click between the two to open and close the panel", async () => {
-				await page.getByText(firstParagraph).click({ position: { x: 20, y: 0 } });
+				await editor.getByText(firstParagraph).click({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor();
-				await page.getByText(secondParagraph).click({ position: { x: 20, y: 0 } });
+				await editor.getByText(secondParagraph).click({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
 			});
 		});
@@ -165,15 +168,15 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("add attrs to bold", async () => {
-				await page.getByText("bold").click({ position: { x: 20, y: 0 } });
+				await editor.getByText("bold").click({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor();
 				await page.getByRole("textbox", { name: "id" }).fill("bold-id");
 			});
 
 			await test.step("click between marks", async () => {
-				await page.getByText("italic").click({ position: { x: 20, y: 0 } });
+				await editor.getByText("italic").click({ position: { x: 20, y: 0 } });
 				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("italic-id");
-				await page.getByText("bold").click({ position: { x: 20, y: 0 } });
+				await editor.getByText("bold").click({ position: { x: 20, y: 0 } });
 				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("bold-id");
 			});
 		});

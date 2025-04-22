@@ -30,7 +30,10 @@ test.describe("suggest panel", () => {
 			await page.keyboard.press("Enter");
 			await page.getByRole("button", { name: "/Review" }).waitFor();
 			// Check for an excerpt from Review 1
-			await page.getByText("presents an intriguing and innovative").waitFor();
+			await page
+				.locator(".ProseMirror")
+				.getByText("presents an intriguing and innovative")
+				.waitFor();
 		});
 	});
 });
