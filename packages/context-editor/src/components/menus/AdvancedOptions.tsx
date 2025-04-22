@@ -9,7 +9,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { ChevronDown, ChevronUp } from "ui/icon";
 import { Input } from "ui/input";
 
-const Option = ({ name, defaultValue }: { name: string; defaultValue: string }) => {
+const Option = ({ name }: { name: string }) => {
 	const form = useFormContext();
 	return (
 		<FormField
@@ -55,8 +55,8 @@ export const AdvancedOptions = ({ mark }: { mark: Mark }) => {
 				</CollapsibleTrigger>
 			</div>
 			<CollapsibleContent className="space-y-2">
-				<Option name="id" defaultValue={mark.attrs?.id ?? ""} />
-				<Option name="class" defaultValue={mark.attrs?.class ?? ""} />
+				<Option name="id" />
+				<Option name="class" />
 			</CollapsibleContent>
 		</Collapsible>
 	);

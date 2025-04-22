@@ -50,24 +50,20 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		})
 	);
 
-	const url: string = mark.attrs?.href ?? "";
-	const openInNewTab = mark.attrs?.target === "_blank" ? true : false;
-
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
 		resolver,
 		mode: "onBlur",
 		defaultValues: {
-			href: url,
-			openInNewTab,
+			href: mark.attrs?.href ?? "",
+			openInNewTab: mark.attrs?.target === "_blank" ? true : false,
 			id: mark.attrs?.id ?? "",
 			class: mark.attrs?.class ?? "",
 		},
 	});
 
 	const handleSubmit = (values: FormSchema) => {
-		console.log("submitting");
 		const { openInNewTab, ...rest } = values;
 		const attrs = { ...rest, target: values.openInNewTab ? "_blank" : null };
 		onChange(attrs);
@@ -91,12 +87,12 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 												{...field}
 												type="url"
 												placeholder="https://example.com"
-												autoFocus={url.length === 0}
+												autoFocus={field.value.length === 0}
 											/>
 										</FormControl>
 										<div className="flex items-center">
 											<a
-												href={url}
+												href={field.value}
 												target="_blank"
 												className="cursor-pointer text-gray-500"
 											>
