@@ -57,7 +57,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.innerJoin("users", "users.id", "stage_memberships.userId")
 			.select(SAFE_USER_SELECT)
 			.select("stage_memberships.role")
-			.orderBy("users.id")
+			.orderBy("stage_memberships.createdAt asc")
 	);
 });
 
