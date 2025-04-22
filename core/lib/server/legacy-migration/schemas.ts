@@ -65,7 +65,7 @@ const draftSchema = z
 		firebasePath: z.string(),
 		doc: z
 			.object({
-				doc: docJsonSchema,
+				content: docJsonSchema,
 				size: z.number(),
 				mostRecentRemoteKey: z.number(),
 				firstTimestamp: z.number(),

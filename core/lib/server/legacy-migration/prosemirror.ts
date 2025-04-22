@@ -1,9 +1,8 @@
 import { baseSchema } from "context-editor/schemas";
 
 const unsupportedNodes = {
-	citiation: "inline",
+	citation: "inline",
 	footnote: "inline",
-	hard_break: "inline",
 	iframe: "block",
 } as const;
 

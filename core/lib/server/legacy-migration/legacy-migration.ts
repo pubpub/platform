@@ -33,7 +33,7 @@ import { transformProsemirrorTree } from "./prosemirror";
 import { legacyExportSchema, pubSchema } from "./schemas";
 
 const constructLegacyPubsUrl = (legacyCommunitySlug: string) => {
-	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1745321964739/static.json`;
+	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1745326244161/static.json`;
 };
 
 export const getLegacyCommunity = async (legacyCommunitySlug: string) => {
@@ -718,7 +718,7 @@ const createJournalArticles = async (
 				}
 			);
 
-			const content = pub?.draft?.doc?.doc ?? pub.releases?.at(-1)?.doc?.content!;
+			const content = pub?.draft?.doc?.content ?? pub.releases?.at(-1)?.doc?.content!;
 			if (content) {
 				const { doc, interestingNodes } = transformProsemirrorTree(content);
 
