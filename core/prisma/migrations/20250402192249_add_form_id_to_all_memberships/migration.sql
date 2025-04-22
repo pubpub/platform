@@ -22,6 +22,25 @@ ADD CONSTRAINT "pub_memberships_formId_fkey" FOREIGN KEY ("formId") REFERENCES "
 ALTER TABLE "stage_memberships"
 ADD CONSTRAINT "stage_memberships_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms" ("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
+-- Only allow formId to be set for contributor memberships
+ALTER TABLE "community_memberships"
+ADD CONSTRAINT "community_memberships_contributor_formId_check" CHECK (
+    "role" = 'contributor'::"MemberRole"
+    OR "formId" IS NULL
+);
+
+ALTER TABLE "stage_memberships"
+ADD CONSTRAINT "stage_memberships_contributor_formId_check" CHECK (
+    "role" = 'contributor'::"MemberRole"
+    OR "formId" IS NULL
+);
+
+ALTER TABLE "pub_memberships"
+ADD CONSTRAINT "pub_memberships_contributor_formId_check" CHECK (
+    "role" = 'contributor'::"MemberRole"
+    OR "formId" IS NULL
+);
+
 /*
 Warnings:
 
