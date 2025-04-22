@@ -1,6 +1,6 @@
 "use server";
 
-import type { JsonValue } from "contracts";
+import type { Json, JsonValue } from "contracts";
 import type { PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
@@ -24,9 +24,16 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	props: CreatePubRecursiveProps & {
 		formSlug: string;
 		addUserToForm?: boolean;
+		relation?: {
+			pubId: PubsId;
+			value: Date | Json;
+			slug: string;
+		};
 	}
 ) {
 	const {
+		communityId,
+		relation,
 		formSlug,
 		addUserToForm,
 		body: { values, ...body },
@@ -42,16 +49,20 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	if (!formSlug) {
 		return ApiError.UNAUTHORIZED;
 	}
-	const [form, canCreatePub] = await Promise.all([
-		formSlug
-			? await getForm({ communityId: props.communityId, slug: formSlug }).executeTakeFirst()
-			: null,
+
+	const [form, canCreatePub, canCreateRelation] = await Promise.all([
+		getForm({ communityId, slug: formSlug }).executeTakeFirst(),
 		userCanCreatePub({
 			userId: user.id,
-			communityId: props.communityId,
+			communityId,
 			formSlug,
 			pubTypeId: body.pubTypeId as PubTypesId,
 		}),
+		relation &&
+			userCanEditPub({
+				pubId: relation.pubId,
+				userId: user.id,
+			}),
 	]);
 
 	if (!form) {
@@ -73,6 +84,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		const result = await maybeWithTrx(db, async (trx) => {
 			const createdPub = await createPubRecursiveNew({
 				...createPubProps,
+				communityId,
 				body: {
 					...body,
 					values: values
@@ -89,6 +101,17 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 				lastModifiedBy,
 				trx,
 			});
+
+			if (relation && canCreateRelation && body.id) {
+				await PubOp.update(relation.pubId, {
+					communityId,
+					lastModifiedBy,
+					continueOnValidationError: false,
+					trx,
+				})
+					.relate(relation.slug, relation.value, body.id)
+					.execute();
+			}
 
 			if (addUserToForm && formSlug) {
 				await grantFormAccess(
