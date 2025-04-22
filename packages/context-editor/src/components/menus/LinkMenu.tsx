@@ -47,7 +47,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		})
 	);
 
-	const url = mark.attrs?.href ?? "";
+	const url: string = mark.attrs?.href ?? "";
 	const openInNewTab = mark.attrs?.target === "_blank" ? true : false;
 
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
@@ -84,7 +84,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 												onBlur={field.onBlur}
 												type="url"
 												placeholder="https://example.com"
-												autoFocus
+												autoFocus={url.length === 0}
 											/>
 										</FormControl>
 										<div className="flex items-center">
