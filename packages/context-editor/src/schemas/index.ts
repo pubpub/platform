@@ -6,6 +6,7 @@ import contextAtom from "./contextAtom";
 import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
+import hard_break from "./hard_break";
 import heading from "./heading";
 import horizontal_rule from "./horizontal";
 import image from "./image";
@@ -24,6 +25,7 @@ export const baseSchema = new Schema({
 		doc,
 		paragraph,
 		text,
+		hard_break,
 		heading,
 		contextDoc,
 		contextAtom,
