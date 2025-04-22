@@ -36,7 +36,7 @@ export interface ContextEditorProps {
 		id: string
 	) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: (
-		state: any
+		state: EditorState
 	) => void /* Function that passes up editorState so parent can handle onSave, etc */;
 	atomRenderingComponent: ForwardRefExoticComponent<
 		NodeViewComponentProps & RefAttributes<any>

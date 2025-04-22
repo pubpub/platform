@@ -6,7 +6,6 @@ export default {
 		id: { default: null },
 		class: { default: null },
 		href: { default: "" },
-		title: { default: null },
 		target: { default: null },
 	},
 	parseDOM: [
@@ -17,7 +16,6 @@ export default {
 					id: dom.getAttribute("id"),
 					class: dom.getAttribute("class"),
 					href: dom.getAttribute("href"),
-					title: dom.getAttribute("title"),
 					target: dom.getAttribute("target"),
 				};
 			},

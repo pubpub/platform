@@ -1,7 +1,9 @@
+import type { Page } from "@playwright/test";
+
 import { expect, test } from "@playwright/test";
 
 import { BLANK_EDITOR_STORY } from "./constants";
-import { assertMenuItemActiveState } from "./utils";
+import { assertMenuItemActiveState, getProsemirrorState } from "./utils";
 
 test.describe("bold", () => {
 	test.beforeEach(async ({ page }) => {
@@ -156,8 +158,22 @@ test.describe("link", () => {
 		await page.evaluate(() =>
 			navigator.clipboard.writeText("https://www.knowledgefutures.org")
 		);
-		await page.locator(".ProseMirror").press("Meta+v");
+		await page.locator(".ProseMirror").press("ControlOrMeta+v");
 		await page.getByRole("link", { name: url }).waitFor();
+	});
+
+	test("can add a link via cmd+k", async ({ page }) => {
+		const editor = page.locator(".ProseMirror");
+		const text = "link";
+		await editor.pressSequentially(text);
+		// Highlight the text
+		for (let i = 0; i < text.length; i++) {
+			await page.keyboard.press("Shift+ArrowLeft");
+		}
+		await editor.press("ControlOrMeta+k");
+		await editor.getByRole("link", { name: text }).waitFor();
+		const panel = page.getByTestId("attribute-panel");
+		await expect(panel.getByRole("textbox", { name: "URL" })).toBeFocused();
 	});
 
 	test("can add and remove a link by typing and menu bar", async ({ page }) => {
@@ -165,7 +181,7 @@ test.describe("link", () => {
 		await test.step("add link by typing one", async () => {
 			await editor.pressSequentially(url);
 			await editor.press("Space");
-			await page.getByRole("link", { name: url }).waitFor();
+			await editor.getByRole("link", { name: url }).waitFor();
 		});
 
 		await test.step("remove the link", async () => {
@@ -173,26 +189,54 @@ test.describe("link", () => {
 			await editor.press("ArrowLeft");
 			await assertMenuItemActiveState({ page, name: "Link", isActive: true });
 			await page.getByRole("button", { name: "Link" }).click();
-			await expect(page.getByRole("link", { name: url })).toHaveCount(0);
-			await expect(page.getByText(url)).toHaveCount(1);
+			await expect(editor.getByRole("link", { name: url })).toHaveCount(0);
+			await expect(editor.getByText(url)).toHaveCount(1);
 		});
 	});
 
-	test("can remove a link by using the attribute panel", async ({ page }) => {
-		const editor = page.locator(".ProseMirror");
-		await test.step("add link by typing one", async () => {
+	test.describe("attribute panel", () => {
+		const addLinkAndOpenMenu = async (page: Page) => {
+			const editor = page.locator(".ProseMirror");
 			await editor.pressSequentially(url);
 			await editor.press("Space");
-			await page.getByRole("link", { name: url }).waitFor();
+			await editor.getByRole("link", { name: url }).waitFor();
+			await editor.press("ArrowLeft");
+			await editor.press("ArrowLeft");
+			await page.getByTestId("attribute-panel").waitFor();
+		};
+		test("can remove a link by using the attribute panel", async ({ page }) => {
+			await addLinkAndOpenMenu(page);
+			await test.step("remove the link", async () => {
+				const editor = page.locator(".ProseMirror");
+				await page.getByTestId("remove-link").click();
+				await expect(editor.getByRole("link", { name: url })).toHaveCount(0);
+				await expect(editor.getByText(url)).toHaveCount(1);
+				await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
+			});
 		});
 
-		await test.step("remove the link", async () => {
-			await editor.press("ArrowLeft");
-			await editor.press("ArrowLeft");
-			await page.getByTestId("remove-link").click();
-			await expect(page.getByRole("link", { name: url })).toHaveCount(0);
-			await expect(page.getByText(url)).toHaveCount(1);
-			await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
+		test("can fill out the panel and persist to state", async ({ page }) => {
+			const id = "id";
+			const className = "className";
+			await addLinkAndOpenMenu(page);
+			const panel = page.getByTestId("attribute-panel");
+			await panel.getByRole("textbox", { name: "URL" }).fill(url);
+			await panel.getByRole("switch", { name: "Open in new tab" }).click();
+			await panel.getByTestId("advanced-options-trigger").click();
+			await panel.getByRole("textbox", { name: "id" }).fill(id);
+			await panel.getByRole("textbox", { name: "class" }).fill(className);
+
+			await test.step("verify state", async () => {
+				const state = await getProsemirrorState(page);
+				const linkState = state?.content[0].content[0].marks[0];
+				expect(linkState.type).toEqual("link");
+				expect(linkState.attrs).toEqual({
+					id,
+					class: className,
+					href: url,
+					target: "_blank",
+				});
+			});
 		});
 	});
 });
