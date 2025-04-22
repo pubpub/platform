@@ -443,7 +443,10 @@ type PubFieldsByName<PF> = {
 };
 
 type PubTypesByName<PT, PF> = {
-	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & { fields: PubFieldsByName<PF> };
+	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & {
+		fields: PubFieldsByName<PF>;
+		defaultForm: { slug: string };
+	};
 };
 
 type UsersBySlug<U extends UsersInitializer> = {
@@ -841,6 +844,9 @@ export async function seedCommunity<
 							] as const;
 						})
 				),
+				defaultForm: {
+					slug: `${slugifyString(pubType.name)}-default-editor`,
+				},
 			},
 		])
 	) as PubTypesByName<PT, PF>;
@@ -850,11 +856,11 @@ export async function seedCommunity<
 			insertForm(
 				{ ...pubType, fields: Object.values(pubType.fields) },
 				`${pubType.name} Editor (Default)`,
-				`${slugifyString(pubType.name)}-default-editor`,
+				pubType.defaultForm.slug,
 				communityId,
 				true,
 				trx
-			).execute()
+			).executeTakeFirst()
 		)
 	);
 
