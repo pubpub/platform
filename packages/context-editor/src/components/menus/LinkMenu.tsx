@@ -17,6 +17,7 @@ import { Switch } from "ui/switch";
 
 import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
+import { AdvancedOptions } from "./AdvancedOptions";
 
 registerFormats();
 
@@ -62,9 +63,9 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 
 	return (
 		<>
-			<div>Link Attributes</div>
 			<Form {...form}>
-				<form className="flex flex-col gap-2">
+				<form className="flex flex-col gap-4">
+					<h2>Link Attributes</h2>
 					<FormField
 						name="href"
 						control={form.control}
@@ -128,6 +129,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 						)}
 					/>
 					<hr />
+					<AdvancedOptions mark={mark} onChange={onChange} />
 				</form>
 			</Form>
 		</>
