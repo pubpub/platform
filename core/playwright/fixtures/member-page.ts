@@ -102,11 +102,12 @@ export class MembersPage {
 	}
 
 	async selectForms(forms: string[]) {
-		await this.page.getByRole("button", { name: "Edit/View Access", exact: true }).click();
+		const button = this.page.getByRole("button", { name: "Edit/View Access", exact: true });
+		await button.click();
 		for (const form of forms) {
 			await this.page.getByRole("option", { name: form, exact: true }).click();
 		}
-		await this.page.getByRole("button", { name: "Close", exact: true }).click();
+		await button.click();
 	}
 
 	async removeMember(email: string) {
