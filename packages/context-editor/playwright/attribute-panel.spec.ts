@@ -180,5 +180,31 @@ test.describe("attribute panel", () => {
 				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("bold-id");
 			});
 		});
+
+		/** This bug has been around for a while. when it is fixed, this test should pass */
+		test.skip("marks of the same type do not have the same attributes", async ({ page }) => {
+			const editor = page.locator(".ProseMirror");
+
+			await test.step("add two separate bold instances", async () => {
+				await page.getByRole("button", { name: "Bold" }).click();
+				await editor.pressSequentially("first");
+				await page.getByRole("button", { name: "Bold" }).click();
+				await editor.pressSequentially(" gap ");
+				await page.getByRole("button", { name: "Bold" }).click();
+				await editor.pressSequentially("second");
+			});
+
+			await test.step("add attrs to second", async () => {
+				await editor.press("ArrowLeft");
+				await page.getByTestId("attribute-panel").waitFor();
+				await page.getByRole("textbox", { name: "id" }).fill("second-id");
+			});
+
+			await test.step("make sure first does not have the same attr", async () => {
+				await editor.getByText("first").click({ position: { x: 20, y: 0 } });
+				await page.getByTestId("attribute-panel").waitFor();
+				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
+			});
+		});
 	});
 });
