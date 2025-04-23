@@ -22,13 +22,15 @@ interface PanelProps {
 	top: number;
 	left: number;
 	right: number | string;
+	panelLeft: number;
 	bottom: number;
 }
 
 const initPanelProps: PanelProps = {
 	top: 0,
 	left: 0,
-	right: "100%",
+	right: 1000,
+	panelLeft: 0,
 	bottom: 0,
 };
 
@@ -54,6 +56,8 @@ export function AttributePanel({
 			const node = state.selection.$from.nodeAfter;
 			if (!node) {
 				setActiveNode(null);
+				// Reset right position so line animation still works when opening the panel again
+				setPosition({ ...position, right: 1000 });
 				return;
 			}
 
@@ -64,6 +68,7 @@ export function AttributePanel({
 			}
 
 			if (Object.keys(node.attrs).length === 0 && node.marks.length === 0) {
+				setPosition({ ...position, right: 1000 });
 				setActiveNode(null);
 				return;
 			}
@@ -88,7 +93,8 @@ export function AttributePanel({
 					top,
 					// +16 for padding
 					left: coords.left - viewClientRect.left + 16,
-					right: -275,
+					panelLeft: container?.clientWidth ?? 0,
+					right: -1,
 				});
 				setTimeout(() => {
 					setHeight(300);
@@ -207,11 +213,10 @@ export function AttributePanel({
 			<div
 				className="drop-shadow-lg"
 				style={{
-					// borderTop: "1px solid #777",
 					position: "absolute",
 					background: "#fff",
 					top: position.top,
-					right: position.right,
+					left: position.panelLeft,
 					width: 300,
 					padding: "1em",
 					height: height,
@@ -219,6 +224,7 @@ export function AttributePanel({
 					overflow: "scroll",
 					borderLeft: "1px solid #999",
 					borderRight: "1px solid #999",
+					borderTop: `${height ? 1 : 0}px solid #999`,
 					borderBottom: `${height ? 1 : 0}px solid #999`,
 					borderRadius: "0px 0px 4px 4px",
 					transition:
