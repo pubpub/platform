@@ -66,6 +66,7 @@ export default {
 				"data-license": license,
 				"data-width": width,
 				"data-align": align,
+				"data-node-type": "image",
 			},
 		] as DOMOutputSpec;
 	},
