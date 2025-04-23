@@ -20,6 +20,11 @@ jobs:
     integration-tests:
         name: Integration tests
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                package:
+                    - core
+                    - context-editor
         env:
             ENV_FILE: .env.docker-compose.test
         steps:
@@ -119,7 +124,7 @@ jobs:
               run: while [ "`docker inspect -f {{.State.Health.Status}} ${{steps.log-container-id.outputs.CONTAINER_ID}}`" != "healthy" ]; do     sleep .2; done
 
             - name: Run integration tests
-              run: pnpm playwright:test
+              run: pnpm playwright:test --filter ${{ matrix.package }}
               env:
                   INTEGRATION_TEST_HOST: localhost
                   DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
@@ -132,7 +137,7 @@ jobs:
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
             - name: Upload core playwright snapshots artifact
-              if: failure()
+              if: failure() && matrix.package == 'core'
               uses: actions/upload-artifact@v4
               with:
                   name: playwright-snapshots
@@ -140,7 +145,7 @@ jobs:
                   retention-days: 10
 
             - name: Upload context-editor playwright snapshots artifact
-              if: failure()
+              if: failure() && matrix.package == 'context-editor'
               uses: actions/upload-artifact@v4
               with:
                   name: playwright-snapshots
