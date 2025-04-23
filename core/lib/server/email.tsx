@@ -1,7 +1,7 @@
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
-import { PasswordReset, RequestLinkToForm, SignupInvite, VerifyEmail } from "emails";
+import { FormLink, PasswordReset, SignupInvite, VerifyEmail } from "emails";
 
 import type { Communities, MemberRole, MembershipType, Users } from "db/public";
 import { AuthTokenType } from "db/public";
@@ -190,7 +190,7 @@ export function signupInvite(
 	});
 }
 
-export function requestAccessToForm(
+export function formLink(
 	props: {
 		community: Pick<Communities, "name" | "avatar" | "slug">;
 		form: { name: string };
@@ -203,11 +203,7 @@ export function requestAccessToForm(
 			"formInviteLink" in props ? props.formInviteLink : await createFormInviteLink(props);
 
 		const email = await render(
-			<RequestLinkToForm
-				community={props.community}
-				formInviteLink={inviteLink}
-				form={props.form}
-			/>
+			<FormLink community={props.community} formInviteLink={inviteLink} form={props.form} />
 		);
 
 		return {

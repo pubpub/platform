@@ -18,13 +18,13 @@ export const RequestLink = ({
 }: {
 	formSlug: string;
 	token: string;
-	pubId: PubsId;
+	pubId?: PubsId;
 }) => {
-	const useRequestLink = useServerAction(actions.inviteUserToForm);
+	const sendNewFormLink = useServerAction(actions.sendNewFormLink);
 	const { id: communityId } = useCommunity();
 
 	const requestLink = useCallback(async () => {
-		const link = await useRequestLink({ slug: formSlug, token, pubId, communityId });
+		const link = await sendNewFormLink({ slug: formSlug, token, pubId, communityId });
 
 		if (link && link.error) {
 			return;

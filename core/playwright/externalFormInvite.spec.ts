@@ -77,18 +77,24 @@ const seed = createSeed({
 	},
 	pubs: [
 		{
-			pubType: "Submission",
+			pubType: "Evaluation",
 			values: {
-				Title: "The Activity of Snails",
+				Title: "Evaluation of The Activity of Snails",
+			},
+			stage: "Evaluating",
+		},
+		{
+			pubType: "Evaluation",
+			values: {
+				Title: "Do not let anyone edit me",
 			},
 			stage: "Evaluating",
 		},
 		{
 			pubType: "Submission",
 			values: {
-				Title: "Do not let anyone edit me",
+				Title: "The Activity of Snails",
 			},
-			stage: "Evaluating",
 		},
 	],
 	forms: {
