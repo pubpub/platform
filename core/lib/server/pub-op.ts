@@ -1,13 +1,11 @@
 import type { Kysely, Transaction } from "kysely";
 
 import { sql } from "kysely";
-import pMap from "p-map";
 
 import type { JsonValue, ProcessedPub } from "contracts";
 import type { Database } from "db/Database";
 import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { LastModifiedBy } from "db/types";
-import { logger } from "logger";
 import { assert, expect } from "utils";
 import { isUuid } from "utils/uuid";
 
