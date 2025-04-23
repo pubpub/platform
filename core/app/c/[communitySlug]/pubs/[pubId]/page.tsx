@@ -22,8 +22,8 @@ import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm } from "~/lib/server/form";
-import { selectCommunityMembers } from "~/lib/server/member";
+import { getForm, getMembershipForms } from "~/lib/server/form";
+import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import {
 	addPubMember,
@@ -111,7 +111,9 @@ export default async function Page(props: {
 		user.id
 	);
 
-	const communityMembersPromise = selectCommunityMembers({ communityId: community.id }).execute();
+	const communityMembersPromise = selectAllCommunityMemberships({
+		communityId: community.id,
+	}).execute();
 	const communityStagesPromise = getStages({
 		communityId: community.id,
 		userId: user.id,
@@ -136,7 +138,7 @@ export default async function Page(props: {
 
 	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
 
-	const [actions, communityMembers, communityStages, form, withExtraPubValues] =
+	const [actions, communityMembers, communityStages, form, withExtraPubValues, availableForms] =
 		await Promise.all([
 			actionsPromise,
 			communityMembersPromise,
@@ -152,6 +154,7 @@ export default async function Page(props: {
 				{ type: MembershipType.pub, pubId: pub.id },
 				user.id
 			),
+			getMembershipForms(pub.pubType.id),
 		]);
 
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
@@ -235,6 +238,8 @@ export default async function Page(props: {
 									addUserMember={addUserWithPubMembership.bind(null, pubId)}
 									existingMembers={pub.members.map((member) => member.id)}
 									isSuperAdmin={user.isSuperAdmin}
+									membershipType={MembershipType.pub}
+									availableForms={availableForms}
 								/>
 							)}
 						</div>

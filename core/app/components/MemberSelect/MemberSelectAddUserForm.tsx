@@ -59,6 +59,7 @@ export const MemberSelectAddUserForm = ({ email, community, onSubmitSuccess }: P
 							firstName,
 							lastName,
 							role: MemberRole.contributor,
+							forms: [],
 						});
 
 						if (didSucceed(result)) {

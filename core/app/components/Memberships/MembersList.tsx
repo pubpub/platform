@@ -1,8 +1,12 @@
 "use client";
 
+import { useMemo } from "react";
+
+import type { UsersId } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { MembersListProps, TargetId } from "./types";
+import { firstRoleIsHigher } from "~/lib/authorization/rolesRanking";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 import { RoleSelect } from "./RoleSelect";
 
@@ -13,9 +17,23 @@ export const MembersList = <T extends TargetId>({
 	targetId,
 	readOnly,
 }: MembersListProps<T>) => {
+	const dedupedMembers = useMemo(() => {
+		const dedupedMembers = new Map<UsersId, MembersListProps<T>["members"][number]>();
+		for (const member of members) {
+			if (!dedupedMembers.has(member.id)) {
+				dedupedMembers.set(member.id, member);
+			} else {
+				const m = dedupedMembers.get(member.id);
+				if (m && firstRoleIsHigher(member.role, m.role)) {
+					dedupedMembers.set(member.id, m);
+				}
+			}
+		}
+		return dedupedMembers;
+	}, [members]);
 	return (
 		<>
-			{members.map((user) => (
+			{[...dedupedMembers.values()].map((user) => (
 				<div key={user.id} className="flex items-center justify-between gap-4">
 					<div className="flex items-center">
 						<Avatar className="mr-2 h-9 w-9">

@@ -14,7 +14,7 @@ import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { addMemberToForm, getForm, userHasPermissionToForm } from "~/lib/server/form";
+import { getForm, grantFormAccess, userHasPermissionToForm } from "~/lib/server/form";
 import { deletePub, maybeWithTrx, normalizePubValues } from "~/lib/server/pub";
 import { PubOp } from "~/lib/server/pub-op";
 
@@ -72,7 +72,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 			});
 
 			if (addUserToForm && formSlug) {
-				await addMemberToForm(
+				await grantFormAccess(
 					{
 						communityId: props.communityId,
 						userId: user.id,
