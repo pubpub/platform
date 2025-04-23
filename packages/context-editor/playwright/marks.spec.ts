@@ -158,7 +158,7 @@ test.describe("link", () => {
 			navigator.clipboard.writeText("https://www.knowledgefutures.org")
 		);
 		await page.locator(".ProseMirror").press("ControlOrMeta+v");
-		await page.getByRole("link", { name: url }).waitFor();
+		await page.getByRole("link", { name: url }).waitFor({ timeout: 1000 });
 	});
 
 	test("can add a link via cmd+k", async ({ page }) => {

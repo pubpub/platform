@@ -185,9 +185,11 @@ test.describe("attribute panel", () => {
 				const clickOptions =
 					browserName === "chromium" ? { position: { x: 20, y: 0 } } : undefined;
 				await editor.getByText("italic").click(clickOptions);
-				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("italic-id");
+				await page.getByTestId("attribute-panel").getByText("em").waitFor();
+				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("italic-id");
 				await editor.getByText("bold").click(clickOptions);
-				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("bold-id");
+				await page.getByTestId("attribute-panel").getByText("strong").waitFor();
+				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("bold-id");
 			});
 		});
 
