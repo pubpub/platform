@@ -1,11 +1,12 @@
 import type { Mark } from "prosemirror-model";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
 	useEditorEffect,
 	useEditorEventCallback,
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
+import { createPortal } from "react-dom";
 
 import { Input } from "ui/input";
 import { Label } from "ui/label";
@@ -31,7 +32,13 @@ const initPanelProps: PanelProps = {
 	bottom: 0,
 };
 
-export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
+export function AttributePanel({
+	menuHidden,
+	containerId,
+}: {
+	menuHidden: boolean;
+	containerId: string;
+}) {
 	const [position, setPosition] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
@@ -66,18 +73,21 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		},
 		[state]
 	);
+	const container = document.getElementById(containerId);
 
 	useEditorEffect(
 		(view) => {
 			if (activeNode) {
 				const viewClientRect = view.dom.getBoundingClientRect();
 				const coords = view.coordsAtPos(activeNodePosition);
-				const topBase = coords.top - 1 - viewClientRect.top;
+				const editorOffsetFromPage = container?.offsetTop ?? 0;
+				const topBase = editorOffsetFromPage + coords.top - 1 - viewClientRect.top;
 				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT;
 				setPosition({
 					...position,
 					top,
-					left: coords.left - viewClientRect.left,
+					// +16 for padding
+					left: coords.left - viewClientRect.left + 16,
 					right: -275,
 				});
 				setTimeout(() => {
@@ -87,7 +97,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				setHeight(0);
 			}
 		},
-		[activeNode, activeNodePosition]
+		[activeNode, activeNodePosition, container]
 	);
 
 	const updateMarkAttr = useEditorEventCallback(
@@ -188,10 +198,14 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	// that are not marks that need to be specifically rendered
 	const showName = activeNode?.type?.name === "math_inline";
 
-	return (
+	if (!container) {
+		return null;
+	}
+
+	return createPortal(
 		<>
 			<div
-				className="z-20 drop-shadow-lg"
+				className="drop-shadow-lg"
 				style={{
 					// borderTop: "1px solid #777",
 					position: "absolute",
@@ -314,7 +328,6 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 			</div>
 
 			<div
-				className="z-20"
 				style={{
 					background: "#777",
 					height: "1px",
@@ -325,6 +338,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 					transition: position.top === 0 ? "" : `right ${animationTimeMS}ms linear`,
 				}}
 			/>
-		</>
+		</>,
+		container
 	);
 }
