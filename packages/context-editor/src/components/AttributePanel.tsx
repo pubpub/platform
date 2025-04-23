@@ -13,6 +13,7 @@ import { Label } from "ui/label";
 
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
+import { DataAttributes, MarkAttribute, NodeAttributes } from "./menus/DefaultAttributesMenu";
 import { LinkMenu } from "./menus/LinkMenu";
 
 const animationTimeMS = 150;
@@ -237,99 +238,29 @@ export function AttributePanel({
 				{showName ? (
 					<div className="mt-4 text-sm font-bold">{activeNode.type?.name}</div>
 				) : null}
-				{Object.keys(nodeAttrs).map((attrKey) => {
-					if (attrKey === "data") {
-						return null;
-					}
-					const key = `${attrKey}-${activeNodePosition}`;
-					return (
-						<div key={key}>
-							<Label className={labelClass} htmlFor={key}>
-								{attrKey}
-							</Label>
-							<Input
-								className={inputClass}
-								type="text"
-								defaultValue={nodeAttrs[attrKey] || ""}
-								onChange={(evt) => {
-									updateAttr(attrKey, evt.target.value);
+				<NodeAttributes nodeAttrs={nodeAttrs} updateAttr={updateAttr} />
+				{nodeMarks.map((mark, index) => {
+					const key = `${mark.type.name}-${activeNodePosition}`;
+					if (mark.type.name === "link") {
+						return (
+							<LinkMenu
+								mark={mark}
+								onChange={(values) => {
+									updateMarkAttrs(index, values);
 								}}
-								id={key}
+								key={key}
 							/>
-						</div>
+						);
+					}
+					return (
+						<MarkAttribute
+							key={key}
+							mark={mark}
+							updateMarkAttr={(attrKey, val) => updateMarkAttr(index, attrKey, val)}
+						/>
 					);
 				})}
-				{!!nodeMarks.length &&
-					nodeMarks.map((mark, index) => {
-						const key = `${mark.type.name}-${activeNodePosition}`;
-						if (mark.type.name === "link") {
-							return (
-								<LinkMenu
-									mark={mark}
-									onChange={(values) => {
-										updateMarkAttrs(index, values);
-									}}
-									key={key}
-								/>
-							);
-						}
-						return (
-							<div key={key}>
-								<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
-								{Object.keys(mark.attrs).map((attrKey) => {
-									if (attrKey === "data") {
-										return null;
-									}
-									const key = `${mark.type.name}-${attrKey}`;
-									return (
-										<div key={key}>
-											<Label className={labelClass} htmlFor={key}>
-												{attrKey}
-											</Label>
-											<Input
-												className={inputClass}
-												type="text"
-												defaultValue={mark.attrs[attrKey] || ""}
-												onChange={(evt) => {
-													updateMarkAttr(
-														index,
-														attrKey,
-														evt.target.value
-													);
-												}}
-												id={key}
-											/>
-										</div>
-									);
-								})}
-							</div>
-						);
-					})}
-
-				{nodeAttrs.data && (
-					<>
-						<div className="mt-8 text-sm">Data</div>
-						{Object.keys(nodeAttrs.data).map((attrKey) => {
-							const key = `data-${attrKey}`;
-							return (
-								<div key={key}>
-									<Label className={labelClass} htmlFor={key}>
-										{attrKey}
-									</Label>
-									<Input
-										className={inputClass}
-										type="text"
-										value={nodeAttrs.data[attrKey] || ""}
-										onChange={(evt) => {
-											updateData(attrKey, evt.target.value);
-										}}
-										id={key}
-									/>
-								</div>
-							);
-						})}
-					</>
-				)}
+				<DataAttributes nodeAttrs={nodeAttrs} updateData={updateData} />
 			</div>
 
 			<div
