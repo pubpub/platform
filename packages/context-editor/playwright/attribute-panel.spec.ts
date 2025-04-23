@@ -52,7 +52,10 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("click on other text", async () => {
-				await page.locator(".ProseMirror").getByText(text).click();
+				// Firefox is finicky about the click position
+				const clickOption =
+					browserName === "firefox" ? { position: { x: 0, y: 0 } } : undefined;
+				await page.locator(".ProseMirror").getByText(text).click(clickOption);
 				await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
 			});
 		});
@@ -154,7 +157,7 @@ test.describe("attribute panel", () => {
 			});
 		});
 
-		test("can click between marks without overwriting attrs", async ({ page }) => {
+		test("can click between marks without overwriting attrs", async ({ page, browserName }) => {
 			const editor = page.locator(".ProseMirror");
 
 			await test.step("add bold mark and italic", async () => {
@@ -179,9 +182,11 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("click between marks", async () => {
-				await editor.getByText("italic").click({ position: { x: 20, y: 0 } });
+				const clickOptions =
+					browserName === "chromium" ? { position: { x: 20, y: 0 } } : undefined;
+				await editor.getByText("italic").click(clickOptions);
 				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("italic-id");
-				await editor.getByText("bold").click({ position: { x: 20, y: 0 } });
+				await editor.getByText("bold").click(clickOptions);
 				expect(page.getByRole("textbox", { name: "id" })).toHaveValue("bold-id");
 			});
 		});
