@@ -131,10 +131,18 @@ jobs:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
-            - name: Upload playwright snapshots artifact
+            - name: Upload core playwright snapshots artifact
               if: failure()
               uses: actions/upload-artifact@v4
               with:
                   name: playwright-snapshots
                   path: core/test-results
+                  retention-days: 10
+
+            - name: Upload context-editor playwright snapshots artifact
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-snapshots
+                  path: packages/context-editor/test-results
                   retention-days: 10

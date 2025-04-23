@@ -28,7 +28,7 @@
 			"persistent": true
 		},
 		"playwright:test": {
-			"outputs": ["playwright-report"]
+			"outputs": ["test-results"]
 		},
 		"clean": {
 			"cache": false
