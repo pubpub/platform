@@ -11,7 +11,7 @@ import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getPubTitle } from "~/lib/pubs";
+import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -130,7 +130,6 @@ export async function PubEditor(props: PubEditorProps) {
 			{
 				pubId: props.pubId,
 				communityId: props.communityId,
-				userId: user?.id,
 			},
 			{
 				withPubType: true,
@@ -264,7 +263,19 @@ export async function PubEditor(props: PubEditorProps) {
 	});
 
 	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const pubForForm = pub
+		? getPubByForm({
+				pub,
+				form,
+				withExtraPubValues: user
+					? await userCan(
+							Capabilities.seeExtraPubValues,
+							{ type: MembershipType.pub, pubId: pub.id },
+							user.id
+						)
+					: false,
+			})
+		: { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
