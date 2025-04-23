@@ -367,20 +367,11 @@ export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 							]),
 						])
 					)
-					.where((eb) =>
-						eb.or([
-							eb(
-								"membership_capabilities.capability",
-								"=",
-								Capabilities.editPubWithAnyForm
-							),
-							eb(
-								"membership_capabilities.capability",
-								"=",
-								Capabilities.editPubWithDefaultForm
-							),
-						])
-					)
+					.where("membership_capabilities.capability", "in", [
+						Capabilities.editPubWithAnyForm,
+						Capabilities.editPubWithDefaultForm,
+						Capabilities.editPubWithForm,
+					])
 					.select("capability")
 			)
 			.with("pubtype", (db) =>
