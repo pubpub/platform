@@ -28,14 +28,7 @@ export default async function Page(props: {
 		formSlug: string;
 		communitySlug: string;
 	}>;
-	searchParams: Promise<{
-		unsavedChanges: boolean;
-	}>;
 }) {
-	const searchParams = await props.searchParams;
-
-	const { unsavedChanges } = searchParams;
-
 	const params = await props.params;
 
 	const { formSlug, communitySlug } = params;
@@ -104,7 +97,7 @@ export default async function Page(props: {
 				<div className="flex items-center gap-2">
 					<FormCopyButton formSlug={formSlug} />
 					{/* <ArchiveFormButton id={form.id} className="border border-gray-950 px-4" />{" "} */}
-					<SaveFormButton form={formBuilderId} disabled={!unsavedChanges} />
+					<SaveFormButton form={formBuilderId} />
 				</div>
 			}
 		>

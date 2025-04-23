@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { pubsIdSchema } from "db/public";
+import { coreSchemaTypeSchema, formElementsSchema, formsSchema, pubsIdSchema } from "db/public";
 
 // Auth types
 
@@ -93,3 +93,16 @@ export const CreatePubResponseBody = commonPubFields.extend({
 	id: z.string(),
 });
 export type CreatePubResponseBody = z.infer<typeof CreatePubResponseBody>;
+
+export const formSchema = formsSchema.extend({
+	elements: z.array(
+		z
+			.object({
+				schemaName: z.nullable(coreSchemaTypeSchema),
+				slug: z.nullable(z.string()),
+				isRelation: z.boolean(),
+				fieldName: z.nullable(z.string()),
+			})
+			.merge(formElementsSchema.omit({ formId: true, createdAt: true, updatedAt: true }))
+	),
+});
