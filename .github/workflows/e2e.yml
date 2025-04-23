@@ -124,7 +124,7 @@ jobs:
               run: while [ "`docker inspect -f {{.State.Health.Status}} ${{steps.log-container-id.outputs.CONTAINER_ID}}`" != "healthy" ]; do     sleep .2; done
 
             - name: Run integration tests
-              run: pnpm playwright:test --filter ${{ matrix.package }}
+              run: pnpm playwright:test --filter ${{ matrix.package }} --env-mode=loose
               env:
                   INTEGRATION_TEST_HOST: localhost
                   DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
