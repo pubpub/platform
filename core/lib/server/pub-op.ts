@@ -1670,6 +1670,11 @@ class BatchPubOp extends PubOpBase {
 				options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }
 			) => CreatePubOp;
 			update: (id: PubsId, options?: Partial<PubOpOptionsBase>) => UpdatePubOp;
+			updateByValue: (
+				slug: string,
+				value: PubValue,
+				options: Omit<PubOpOptions, "pubTypeId">
+			) => UpdatePubOp;
 			upsert: (
 				id: PubsId,
 				options: Omit<PubOpOptionsCreateUpsert, keyof Omit<PubOpOptionsBase, "pubTypeId">>
@@ -1692,6 +1697,12 @@ class BatchPubOp extends PubOpBase {
 
 			update: (id: PubsId, options: Partial<PubOpOptionsBase> = {}) =>
 				new UpdatePubOp({ ...this.sharedOptions, ...options }, id),
+
+			updateByValue: (
+				slug: string,
+				value: PubValue,
+				options: Omit<PubOpOptions, "pubTypeId">
+			) => new UpdatePubOp({ ...this.sharedOptions, ...options }, { slug, value }),
 
 			upsert: (
 				id: PubsId,
