@@ -7,7 +7,6 @@ import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan, userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -252,27 +251,11 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 	const authorized = await userCan(
 		Capabilities.deletePub,
 		{ type: MembershipType.pub, pubId },
-		loginData.user.id
+		user.id
 	);
 
 	if (!authorized) {
 		return ApiError.UNAUTHORIZED;
-	}
-
-	const pub = await db
-		.selectFrom("pubs")
-		.selectAll()
-		.where("pubs.id", "=", pubId)
-		.executeTakeFirst();
-
-	if (!pub) {
-		return ApiError.PUB_NOT_FOUND;
-	}
-
-	if (!isCommunityAdmin(user, { id: pub.communityId })) {
-		return {
-			error: "You need to be an admin of this community to remove this pub.",
-		};
 	}
 
 	try {
