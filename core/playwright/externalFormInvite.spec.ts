@@ -275,8 +275,8 @@ test.describe("Inviting a new user to fill out a form", () => {
 		// which should let them access the create pub form
 		const membersPage = new MembersPage(page, community.community.slug);
 		await membersPage.goto();
-		await membersPage.removeMember(email);
-		await membersPage.addExistingUser(email, MemberRole.contributor, [
+		await membersPage.removeMember(email1);
+		await membersPage.addExistingUser(email1, MemberRole.contributor, [
 			community.forms.Evaluation.name,
 		]);
 
