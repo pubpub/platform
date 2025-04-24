@@ -11,7 +11,7 @@ import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getPubTitle } from "~/lib/pubs";
+import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -126,11 +126,17 @@ export async function PubEditor(props: PubEditorProps) {
 	const { user } = await getLoginData();
 
 	if ("pubId" in props) {
+		// We explicitly do not pass the user here for two reasons:
+		// (1) It's expected that to see the PubEditor component at all, the
+		// user has the capabilities necessary to edit the pub's local values
+		// exposed by the form.
+		// (2) We want to fetch the pub's related pubs' values in order to
+		// render the related pub title/name in the related pubs form element,
+		// even if the user does not have capabilities to view the related pub.
 		pub = await getPubsWithRelatedValues(
 			{
 				pubId: props.pubId,
 				communityId: props.communityId,
-				userId: user?.id,
 			},
 			{
 				withPubType: true,
@@ -264,7 +270,19 @@ export async function PubEditor(props: PubEditorProps) {
 	});
 
 	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const pubForForm = pub
+		? getPubByForm({
+				pub,
+				form,
+				withExtraPubValues: user
+					? await userCan(
+							Capabilities.seeExtraPubValues,
+							{ type: MembershipType.pub, pubId: pub.id },
+							user.id
+						)
+					: false,
+			})
+		: { id: pubId, values: [], pubTypeId: form.pubTypeId };
 
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
