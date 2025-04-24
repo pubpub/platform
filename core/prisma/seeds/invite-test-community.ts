@@ -337,6 +337,7 @@ const seed2 = createSeed({
 			id: invitedUserId,
 			role: MemberRole.admin,
 			password: "password",
+			email: "invited@user.com",
 		},
 	},
 });
