@@ -4,9 +4,9 @@
 
 ```mermaid
 flowchart LR
-    A[Email With Invite Link] ---> B[Invite Page]
+    A((Email With Invite Link)) ---> B[Invite Page]
 
-    B --->|No token| C[Invalid State, no continuation possible]
+    B --->|No token| C((Invalid State View, no continuation possible))
     B --->|Invalid token| C
     B --->|Expired| C
     B --->|Already accepted| C
@@ -14,9 +14,9 @@ flowchart LR
     B --->|Revoked| C
     B --->|Not ready| C
 
-    B -->|Wrong user logged in| J[Wrong User View]
-    B -->|No user, user invite| L[Login/Reject View]
-    B -->|Valid invite, user logged in| M[Accept/Reject View]
+    B -->|Wrong user logged in| J((Wrong User View))
+    B -->|No user, user invite| L((Login/Reject View))
+    B -->|Valid invite, user logged in| M((Accept/Reject View))
     B -->|No user, email invite| M
     M -->|No user, email invite, accept| N[Signup Page]
 
@@ -28,6 +28,6 @@ flowchart LR
     O -->|Login as invited user| B
 
     M -->|Valid user, valid invite, accept| P
-    M -->|Reject| Q[Reject Confirmation]
-    Q -->|Confirm| R[Rejection Completed]
+    M -->|Reject| Q((Reject Confirmation))
+    Q -->|Confirm| R((Rejection Completed))
 ```
