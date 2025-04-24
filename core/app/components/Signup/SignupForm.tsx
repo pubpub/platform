@@ -42,7 +42,7 @@ type SignupAction = (input: {
 
 export function SignupForm(props: {
 	signupAction: SignupAction;
-	redirectTo: string;
+	redirectTo?: string;
 	defaultValues?: Partial<SignupFormSchema>;
 	mustUseSameEmail?: boolean;
 }) {
