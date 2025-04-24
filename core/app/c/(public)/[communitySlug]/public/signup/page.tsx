@@ -11,8 +11,8 @@ import { tryCatch } from "utils/try-catch";
 
 import type { NoticeParams } from "~/app/components/Notice";
 import { Notice } from "~/app/components/Notice";
-import { SignupForm } from "~/app/components/Signup/BaseSignupForm";
 import { JoinCommunityForm } from "~/app/components/Signup/JoinCommunityForm";
+import { SignupForm } from "~/app/components/Signup/SignupForm";
 import { publicSignup } from "~/lib/authentication/actions";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
