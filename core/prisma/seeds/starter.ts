@@ -168,6 +168,15 @@ export async function seedStarter(communityId?: CommunitiesId) {
 								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='starter:published-at'}`,
 							},
 						},
+
+						"Send Other Review email": {
+							action: Action.email,
+							config: {
+								subject: "Hello Please review this draft!",
+								recipient: "yo@pubpub.org",
+								body: `You are invited to fill in a form.\n\n\n\n:link{form="review"}\n\nCurrent time: :value{field='starter:published-at'}`,
+							},
+						},
 					},
 				},
 				Published: {

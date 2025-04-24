@@ -48,6 +48,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 				.executeTakeFirstOrThrow(
 					() => new Error(`Could not find member with ID ${recipientMemberId}`)
 				);
+		} else {
+			recipient = {
+				email: expect(recipientEmail),
+			};
 		}
 
 		const renderMarkdownWithPubContext = {
@@ -68,7 +72,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, communit
 		);
 
 		const result = await Email.generic({
-			to: expect(recipient?.user.email ?? recipientEmail),
+			to: expect(recipient?.user?.email ?? recipientEmail),
 			subject,
 			html,
 		}).send();

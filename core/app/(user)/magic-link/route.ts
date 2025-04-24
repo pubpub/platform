@@ -3,11 +3,12 @@ import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import type { AuthTokenType } from "db/public";
+import { AuthTokenType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { lucia } from "~/lib/authentication/lucia";
+import { env } from "~/lib/env/env";
 import { createRedirectUrl } from "~/lib/redirect";
 import { InvalidTokenError, TokenFailureReason, validateToken } from "~/lib/server/token";
 
@@ -15,8 +16,20 @@ const redirectToURL = (
 	redirectTo: string,
 	opts?: ResponseInit & {
 		searchParams?: Record<string, string>;
+		sessionType?: AuthTokenType;
 	}
 ) => {
+	if (opts?.sessionType === AuthTokenType.signup) {
+		const url = new URL("/signup", env.PUBPUB_URL);
+
+		const searchParams = new URLSearchParams({
+			redirectTo,
+			...(opts?.searchParams ?? {}),
+		});
+
+		return NextResponse.redirect(`${url.toString()}?${searchParams.toString()}`, opts);
+	}
+
 	const url = createRedirectUrl(redirectTo, opts?.searchParams);
 	return NextResponse.redirect(url, opts);
 };
@@ -108,7 +121,7 @@ export async function GET(req: NextRequest) {
 
 	const { user: tokenUser, authTokenType } = tokenSettled.value;
 
-	if (!tokenUser.isVerified) {
+	if (!tokenUser.isVerified && authTokenType !== AuthTokenType.signup) {
 		await db
 			.updateTable("users")
 			.set({ isVerified: true })
@@ -126,5 +139,8 @@ export async function GET(req: NextRequest) {
 		...newSessionCookie.attributes,
 	});
 
-	return redirectToURL(redirectTo, req);
+	return redirectToURL(redirectTo, {
+		...req,
+		sessionType: authTokenType,
+	});
 }

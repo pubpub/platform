@@ -1,5 +1,5 @@
 import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType, MemberRole, MembershipType } from "db/public";
+import { AuthTokenType, CoreSchemaType, MemberRole, MembershipType } from "db/public";
 import { expect } from "utils";
 
 import type { XOR } from "~/lib/types";
@@ -28,15 +28,18 @@ export type RenderWithPubPub = {
 };
 
 export type RenderWithPubContext = {
-	recipient?: {
-		id: CommunityMembershipsId;
-		user: {
-			id: UsersId;
-			firstName: string;
-			lastName: string | null;
-			email: string;
-		};
-	};
+	recipient?:
+		| {
+				id: CommunityMembershipsId;
+				user: {
+					id: UsersId;
+					firstName: string;
+					lastName: string | null;
+					email: string;
+				};
+				email?: never;
+		  }
+		| { id?: never; email: string; user?: never };
 	communityId: CommunitiesId;
 	communitySlug: string;
 	pub: RenderWithPubPub;
@@ -54,27 +57,44 @@ const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: str
 	return expect(pubValue, `Expected pub to have value for field "${fieldSlug}"`);
 };
 
-export const renderFormInviteLink = async ({
-	formSlug,
-	communityId,
-	pubId,
-	...props
-}: {
-	formSlug: string;
-	communityId: CommunitiesId;
-	pubId: PubsId;
-} & XOR<{ userId: UsersId }, { email: string }>) => {
-	let userId = props.userId;
-	if (!userId) {
-		const [form, existingUser] = await Promise.all([
-			getForm({ slug: formSlug, communityId }).executeTakeFirstOrThrow(),
-			// create new member
-			getUser({ email: props.email! }).executeTakeFirstOrThrow(),
-		]);
+export const renderFormInviteLink = async (
+	{
+		formSlug,
+		communityId,
+		pubId,
+		...props
+	}: {
+		formSlug: string;
+		communityId: CommunitiesId;
+		pubId: PubsId;
+	} & XOR<{ userId: UsersId }, { email: string }>,
+	trx = db
+) => {
+	if (props.userId) {
+		await grantFormAccess({ userId: props.userId, communityId, pubId, slug: formSlug }, trx);
 
-		userId =
-			existingUser?.id ??
-			(await createUserWithMemberships({
+		return createFormInviteLink(
+			{
+				userId: props.userId,
+				formSlug,
+				communityId,
+				pubId,
+			},
+			trx
+		);
+	}
+
+	const [form, existingUser] = await Promise.all([
+		getForm({ slug: formSlug, communityId }, trx).executeTakeFirstOrThrow(),
+		// create new member
+		getUser({ email: props.email! }, trx).executeTakeFirst(),
+	]);
+
+	let userId = existingUser?.id;
+
+	if (!userId) {
+		const newUserCreation = await createUserWithMemberships(
+			{
 				email: props.email!,
 				firstName: "",
 				membership: {
@@ -83,12 +103,30 @@ export const renderFormInviteLink = async ({
 					role: MemberRole.contributor,
 					forms: [form.id],
 				},
-			}));
+				sendEmail: false,
+			},
+			trx
+		);
+
+		const newUser = await getUser({ email: props.email! }, trx).executeTakeFirstOrThrow(
+			() => new Error(`Failed to find newly created user with email ${props.email}`)
+		);
+
+		userId = newUser.id;
 	}
 
-	await grantFormAccess({ userId, communityId, pubId, slug: formSlug });
+	await grantFormAccess({ userId, communityId, pubId, slug: formSlug }, trx);
 
-	return createFormInviteLink({ userId, formSlug, communityId, pubId });
+	return createFormInviteLink(
+		{
+			userId,
+			formSlug,
+			communityId,
+			pubId,
+			sessionType: existingUser ? AuthTokenType.generic : AuthTokenType.signup,
+		},
+		trx
+	);
 };
 
 export const renderMemberFields = async ({
@@ -231,14 +269,18 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 };
 
 export const renderRecipientFirstName = (context: RenderWithPubContext) => {
-	return expect(context.recipient, "Used a recipient token without specifying a recipient").user
-		.firstName;
+	return expect(
+		context.recipient?.user,
+		"Used a recipient token without specifying a recipient user"
+	).firstName;
 };
 
 export const renderRecipientLastName = (context: RenderWithPubContext) => {
 	return (
-		expect(context.recipient, "Used a recipient token without specifying a recipient").user
-			.lastName ?? ""
+		expect(
+			context.recipient?.user,
+			"Used a recipient token without specifying a recipient user"
+		).lastName ?? ""
 	);
 };
 

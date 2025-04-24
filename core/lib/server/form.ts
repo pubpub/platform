@@ -240,16 +240,24 @@ export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }>
 		pubId?: PubsId;
 		expiresInDays?: number;
 		communityId: CommunitiesId;
+		/**
+		 * @default AuthTokenType.generic
+		 */
+		sessionType?: AuthTokenType;
 	};
 
-export const createFormInviteLink = async (props: FormInviteLinkProps) => {
-	const formPromise = getForm({
-		communityId: props.communityId,
-		...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
-	}).executeTakeFirstOrThrow();
+export const createFormInviteLink = async (props: FormInviteLinkProps, trx = db) => {
+	const formPromise = getForm(
+		{
+			communityId: props.communityId,
+			...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
+		},
+		trx
+	).executeTakeFirstOrThrow();
 
 	const userPromise = getUser(
-		props.userId !== undefined ? { id: props.userId } : { email: props.email }
+		props.userId !== undefined ? { id: props.userId } : { email: props.email },
+		trx
 	).executeTakeFirstOrThrow();
 
 	const [formSettled, userSettled] = await Promise.allSettled([formPromise, userPromise]);
@@ -273,12 +281,15 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 		pubId: props.pubId,
 	});
 
-	const magicLink = await createMagicLink({
-		userId: user.id,
-		path: formPath,
-		expiresAt: createExpiresAtDate(props.expiresInDays),
-		type: AuthTokenType.generic,
-	});
+	const magicLink = await createMagicLink(
+		{
+			userId: user.id,
+			path: formPath,
+			expiresAt: createExpiresAtDate(props.expiresInDays),
+			type: props.sessionType ?? AuthTokenType.generic,
+		},
+		trx
+	);
 
 	return magicLink;
 };

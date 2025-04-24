@@ -30,6 +30,7 @@ import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { findCommunityBySlug } from "./community";
 import { signupInvite } from "./email";
+import { maybeWithTrx } from "./maybeWithTrx";
 import { insertCommunityMemberships, insertPubMemberships, insertStageMemberships } from "./member";
 import { getPubTitle } from "./pub";
 
@@ -218,21 +219,25 @@ export const generateUserSlug = (props: Pick<NewUsers, "firstName" | "lastName">
 	}-${generateHash(4, "0123456789")}`;
 };
 
-export const createUserWithMemberships = async (data: {
-	firstName: string;
-	lastName?: string | null;
-	email: string;
-	isSuperAdmin?: boolean;
-	membership: { role: MemberRole; forms: FormsId[] } & (
-		| {
-				type: MembershipType.community;
-				communityId: CommunitiesId;
-		  }
-		| { type: MembershipType.stage; stageId: StagesId }
-		| { type: MembershipType.pub; pubId: PubsId }
-	);
-}) => {
-	const { firstName, lastName, email, membership, isSuperAdmin } = data;
+export const createUserWithMemberships = async (
+	data: {
+		firstName: string;
+		lastName?: string | null;
+		email: string;
+		isSuperAdmin?: boolean;
+		membership: { role: MemberRole; forms: FormsId[] } & (
+			| {
+					type: MembershipType.community;
+					communityId: CommunitiesId;
+			  }
+			| { type: MembershipType.stage; stageId: StagesId }
+			| { type: MembershipType.pub; pubId: PubsId }
+		);
+		sendEmail?: boolean;
+	},
+	trx = db
+) => {
+	const { firstName, lastName, email, membership, isSuperAdmin, sendEmail = true } = data;
 
 	try {
 		const { user } = await getLoginData();
@@ -333,9 +338,7 @@ export const createUserWithMemberships = async (data: {
 			};
 		}
 
-		const trx = db.transaction();
-
-		const inviteUserResult = await trx.execute(async (trx) => {
+		const inviteUserResult = await maybeWithTrx(trx, async (trx) => {
 			const [name, newUser] = await Promise.all([
 				nameQuery ? nameQuery(trx) : Promise.resolve(community.name),
 				addUser(
@@ -366,6 +369,14 @@ export const createUserWithMemberships = async (data: {
 					membershipQuery(trx, newUser.id),
 				]);
 			}
+
+			if (!sendEmail) {
+				return {
+					success: true,
+					data: newUser,
+				};
+			}
+
 			const result = await signupInvite(
 				{
 					user: newUser,
