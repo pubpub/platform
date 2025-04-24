@@ -6,12 +6,18 @@ import { captureException } from "@sentry/nextjs";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, CommunitiesId, CommunityMemberships, Users, UsersId } from "db/public";
+import type {
+	Communities,
+	CommunitiesId,
+	CommunityMemberships,
+	FormsId,
+	Users,
+	UsersId,
+} from "db/public";
 import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
-import type { Prettify, XOR } from "../types";
-import type { SafeUser } from "~/lib/server/user";
+import type { Prettify } from "../types";
 import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -29,9 +35,8 @@ import {
 import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/constants";
 import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
-import { insertCommunityMember, selectCommunityMember } from "../server/member";
+import { insertCommunityMemberships, selectCommunityMemberships } from "../server/member";
 import { invalidateTokensForUser } from "../server/token";
-import { isClientExceptionOptions } from "../serverActions";
 import { SignupErrors } from "./errors";
 import { getLoginData } from "./loginData";
 
@@ -262,22 +267,24 @@ const addUserToCommunity = defineServerAction(async function addUserToCommunity(
 	 * @default MemberRole.contributor
 	 */
 	role?: MemberRole;
+	forms: FormsId[];
 }) {
-	const existingMembership = await selectCommunityMember({
+	const existingMemberships = await selectCommunityMemberships({
 		userId: props.userId,
 		communityId: props.communityId,
 	}).executeTakeFirst();
 
-	if (existingMembership) {
+	if (existingMemberships) {
 		return {
 			error: "User already in community",
 		};
 	}
 
-	const newMembership = await insertCommunityMember({
+	const newMembership = await insertCommunityMemberships({
 		userId: props.userId,
 		communityId: props.communityId,
 		role: props.role ?? MemberRole.contributor,
+		forms: props.forms,
 	}).executeTakeFirstOrThrow();
 
 	return {
@@ -316,10 +323,11 @@ export const publicJoinCommunity = defineServerAction(async function joinCommuni
 		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
 	}
 
-	const member = await insertCommunityMember({
+	const member = await insertCommunityMemberships({
 		userId: user.id,
 		communityId: community.id,
 		role: toBeGrantedRole,
+		forms: [], // TODO: fetch these from invite token as well maybe?
 	}).executeTakeFirstOrThrow();
 
 	// don't redirect, better to do it client side, better ux
@@ -397,11 +405,13 @@ export const publicSignup = defineServerAction(async function signup(props: {
 				);
 			});
 
-			const newMember = await insertCommunityMember(
+			// TODO: add to community
+			const newMember = await insertCommunityMemberships(
 				{
 					userId: newUser.id,
 					communityId: community.id,
 					role: props.role ?? MemberRole.contributor,
+					forms: [], //TODO: make these customizable
 				},
 				trx
 			).executeTakeFirstOrThrow();

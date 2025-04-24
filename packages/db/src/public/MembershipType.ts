@@ -8,7 +8,6 @@ export enum MembershipType {
 	community = "community",
 	stage = "stage",
 	pub = "pub",
-	form = "form",
 }
 
 /** Zod schema for MembershipType */

@@ -22,27 +22,9 @@ type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, 
 export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
 export type ActionPub = ProcessedPub<{
-	withAssignee: true;
 	withPubType: true;
 	withRelatedPubs: undefined;
 }>;
-
-// export type ActionPub<T extends ActionPubType> = {
-// 	id: PubsId;
-
-// 	assignee?: {
-// 		id: string;
-// 		firstName: string;
-// 		lastName: string | null;
-// 		email: string;
-// 	};
-// 	communityId: CommunitiesId;
-// 	createdAt: Date;
-// 	title: string | null;
-// 	pubType: {
-// 		name: string;
-// 	};
-// };
 
 export type RunProps<T extends Action> =
 	T extends Action<

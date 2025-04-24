@@ -1,6 +1,6 @@
 "use server";
 
-import type { MemberRole, PubsId, UsersId } from "db/public";
+import type { FormsId, MemberRole, PubsId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 
 import { db } from "~/kysely/database";
@@ -9,8 +9,8 @@ import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { insertPubMember } from "~/lib/server/member";
-import { createUserWithMembership } from "~/lib/server/user";
+import { insertPubMemberships } from "~/lib/server/member";
+import { createUserWithMemberships } from "~/lib/server/user";
 
 export const removePubMember = defineServerAction(async function removePubMember(
 	userId: UsersId,
@@ -43,9 +43,11 @@ export const addPubMember = defineServerAction(async function addPubMember(
 	{
 		userId,
 		role,
+		forms,
 	}: {
 		userId: UsersId;
 		role: MemberRole;
+		forms: FormsId[];
 	}
 ) {
 	try {
@@ -68,7 +70,7 @@ export const addPubMember = defineServerAction(async function addPubMember(
 			};
 		}
 
-		await insertPubMember({ userId, pubId, role }).execute();
+		await insertPubMemberships({ userId, pubId, role, forms }).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
@@ -87,14 +89,16 @@ export const addUserWithPubMembership = defineServerAction(async function addUse
 		email: string;
 		role: MemberRole;
 		isSuperAdmin?: boolean;
+		forms: FormsId[];
 	}
 ) {
-	await createUserWithMembership({
+	await createUserWithMemberships({
 		...data,
 		membership: {
 			pubId,
 			role: data.role,
 			type: MembershipType.pub,
+			forms: data.forms,
 		},
 	});
 });

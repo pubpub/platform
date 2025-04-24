@@ -330,13 +330,14 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 								<div className="flex items-center justify-between">
 									{showClearAll && selectedValues.length > 0 && (
 										<>
-											<CommandItem
-												onSelect={handleClear}
+											<Button
+												onClick={handleClear}
+												variant="ghost"
 												className="flex-1 cursor-pointer justify-center"
 												data-testid={`multi-select-clear`}
 											>
 												Clear
-											</CommandItem>
+											</Button>
 											<Separator
 												orientation="vertical"
 												className="flex h-full min-h-6"
@@ -344,13 +345,14 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 										</>
 									)}
 									<CommandSeparator />
-									<CommandItem
-										onSelect={() => setIsPopoverOpen(false)}
+									<Button
+										onClick={() => setIsPopoverOpen(false)}
+										variant="ghost"
 										className="flex-1 cursor-pointer justify-center"
 										data-testid={`multi-select-close`}
 									>
 										Close
-									</CommandItem>
+									</Button>
 								</div>
 							</CommandGroup>
 						</CommandList>

@@ -36,16 +36,19 @@ export class MembersPage {
 			lastName = faker.person.lastName(),
 			isSuperAdmin = false,
 			role = MemberRole.editor,
+			forms = [],
 		}: {
 			firstName: string;
 			lastName: string;
 			isSuperAdmin: boolean;
 			role: MemberRole;
+			forms: string[];
 		} = {
 			firstName: faker.person.firstName(),
 			lastName: faker.person.lastName(),
 			isSuperAdmin: false,
 			role: MemberRole.editor,
+			forms: [],
 		}
 	) {
 		const addMemberDialog = await this.openAddMemberDialog();
@@ -59,6 +62,10 @@ export class MembersPage {
 
 		await this.page.getByLabel("Role").click();
 		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
+
+		if (role === MemberRole.contributor && forms.length) {
+			await this.selectForms(forms);
+		}
 
 		await this.page.getByRole("button", { name: "Invite" }).click();
 
@@ -74,16 +81,33 @@ export class MembersPage {
 		};
 	}
 
-	async addExistingUser(email: string, role = MemberRole.editor) {
+	/**
+	 * @param forms An array of form names to add to this membership
+	 */
+	async addExistingUser(email: string, role = MemberRole.editor, forms: string[] = []) {
 		const addMemberDialog = await this.openAddMemberDialog();
 		await addMemberDialog.getByLabel("Email").fill(email);
 
 		await this.page.getByLabel("Role").click();
 		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
+
+		if (role === MemberRole.contributor && forms.length) {
+			await this.selectForms(forms);
+		}
+
 		await this.page.getByRole("button", { name: "Add Member" }).click();
 
 		await this.page.getByText("Member added successfully", { exact: true }).waitFor();
 		await addMemberDialog.waitFor({ state: "hidden" });
+	}
+
+	async selectForms(forms: string[]) {
+		const button = this.page.getByRole("button", { name: "Edit/View Access", exact: true });
+		await button.click();
+		for (const form of forms) {
+			await this.page.getByRole("option", { name: form, exact: true }).click();
+		}
+		await button.click();
 	}
 
 	async removeMember(email: string) {

@@ -8,8 +8,10 @@ import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { firstRoleIsHigher } from "~/lib/authorization/rolesRanking";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { selectCommunityMembers } from "~/lib/server/member";
+import { getMembershipForms } from "~/lib/server/form";
+import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
 
@@ -50,7 +52,10 @@ export default async function Page(props: {
 	}
 
 	const page = parseInt(searchParams.page ?? "1", 10);
-	const members = await selectCommunityMembers({ communityId: community.id }).execute();
+	const [members, availableForms] = await Promise.all([
+		selectAllCommunityMemberships({ communityId: community.id }).execute(),
+		getMembershipForms(),
+	]);
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -59,7 +64,7 @@ export default async function Page(props: {
 	const tableMembers = members.map((member) => {
 		const { id, createdAt, user, role } = member;
 		return {
-			id,
+			id: user.id,
 			avatar: user.avatar,
 			firstName: user.firstName,
 			lastName: user.lastName,
@@ -69,6 +74,19 @@ export default async function Page(props: {
 		} satisfies TableMember;
 	});
 
+	const dedupedMembersMap = new Map<TableMember["id"], TableMember>();
+	for (const member of tableMembers) {
+		if (!dedupedMembersMap.has(member.id)) {
+			dedupedMembersMap.set(member.id, member);
+		} else {
+			const m = dedupedMembersMap.get(member.id);
+			if (m && firstRoleIsHigher(member.role, m.role)) {
+				dedupedMembersMap.set(member.id, m);
+			}
+		}
+	}
+	const dedupedMembers = [...dedupedMembersMap.values()];
+
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
@@ -76,11 +94,13 @@ export default async function Page(props: {
 				<AddMemberDialog
 					addMember={addMember}
 					addUserMember={createUserWithCommunityMembership}
-					existingMembers={members.map((member) => member.user.id)}
+					existingMembers={dedupedMembers.map((member) => member.id)}
 					isSuperAdmin={user.isSuperAdmin}
+					membershipType={MembershipType.community}
+					availableForms={availableForms}
 				/>
 			</div>
-			<MemberTable members={tableMembers} />
+			<MemberTable members={dedupedMembers} />
 		</>
 	);
 }

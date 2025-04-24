@@ -149,7 +149,6 @@ const pubColumns = [
 	"createdAt",
 	"pubTypeId",
 	"updatedAt",
-	"assigneeId",
 	"title",
 ] as const satisfies SelectExpression<Database, "pubs">[];
 
@@ -307,7 +306,6 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 					id: body.id as PubsId | undefined,
 					communityId: communityId,
 					pubTypeId: body.pubTypeId as PubTypesId,
-					assigneeId: body.assigneeId as UsersId,
 				})
 				.returningAll()
 		).executeTakeFirstOrThrow();
@@ -1180,7 +1178,6 @@ export type UnprocessedPub = {
 	updatedAt: Date;
 	isCycle?: boolean;
 	title: string | null;
-	assignee?: SafeUser | null;
 	path: PubsId[];
 	values: {
 		id: PubValuesId;
@@ -1314,7 +1311,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		withStageActionInstances,
 		withMembers,
 		trx,
-		withLegacyAssignee,
 		allowedPubTypes,
 		allowedStages,
 	} = opts;
@@ -1379,7 +1375,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 						sql<PubsId[]>`array[p.id]`.as("path"),
 					])
 
-					.$if(Boolean(withLegacyAssignee), (qb) => qb.select("p.assigneeId"))
 					// we don't even need to recurse if we don't want related pubs
 					.$if(withRelatedPubs, (qb) =>
 						qb.union((qb) =>
@@ -1506,9 +1501,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 										"path"
 									),
 								])
-								.$if(Boolean(withLegacyAssignee), (qb) =>
-									qb.select("pubs.assigneeId")
-								)
 								.where("pub_tree.depth", "<", depth)
 								.where("pub_tree.isCycle", "=", false)
 								.$if(cycle === "exclude", (qb) =>
@@ -1756,16 +1748,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					).as("values")
 				)
 			)
-			.$if(Boolean(withLegacyAssignee), (qb) =>
-				qb.select((eb) =>
-					jsonObjectFrom(
-						eb
-							.selectFrom("users")
-							.select(SAFE_USER_SELECT)
-							.whereRef("users.id", "=", "pt.assigneeId")
-					).as("assignee")
-				)
-			)
 			// TODO: is there a more efficient way to do this?
 			.$if(Boolean(withStage), (qb) =>
 				qb.select((eb) =>
@@ -1818,7 +1800,6 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 				"pt.isCycle",
 				"pt.path",
 			])
-			.$if(Boolean(withLegacyAssignee), (qb) => qb.groupBy("assigneeId"))
 	).execute();
 
 	if (options?._debugDontNest) {
@@ -2076,7 +2057,6 @@ export const fullTextSearch = async (
 		.select((eb) => [
 			"pubs.id",
 			"pubs.title",
-			"pubs.assigneeId",
 			"pubs.communityId",
 			"pubs.createdAt",
 			"pubs.updatedAt",

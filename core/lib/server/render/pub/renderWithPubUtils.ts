@@ -5,7 +5,7 @@ import { expect } from "utils";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { addMemberToForm, createFormInviteLink } from "../../form";
+import { createFormInviteLink, grantFormAccess } from "../../form";
 
 export type RenderWithPubRel = "self";
 
@@ -18,11 +18,6 @@ export type RenderWithPubPub = {
 		schemaName: CoreSchemaType;
 	}[];
 	createdAt: Date;
-	assignee?: {
-		firstName: string;
-		lastName: string | null;
-		email: string;
-	} | null;
 	title: string | null;
 	pubType: {
 		name: string;
@@ -50,11 +45,6 @@ const getPub = (context: RenderWithPubContext, rel?: string) => {
 	return context.pub;
 };
 
-const getAssignee = (context: RenderWithPubContext, rel?: string) => {
-	const pub = getPub(context, rel);
-	return expect(pub.assignee, `Expected pub to have assignee`);
-};
-
 const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: string) => {
 	const pub = getPub(context, rel);
 	const pubValue = pub.values.find((value) => value.fieldSlug === fieldSlug);
@@ -72,7 +62,7 @@ export const renderFormInviteLink = async ({
 	communityId: CommunitiesId;
 	pubId: PubsId;
 }) => {
-	await addMemberToForm({ userId, communityId, pubId, slug: formSlug });
+	await grantFormAccess({ userId, communityId, pubId, slug: formSlug });
 	return createFormInviteLink({ userId, formSlug, communityId, pubId });
 };
 
@@ -189,12 +179,6 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	let href: string;
 	if (isLinkEmailOptions(options)) {
 		let to = options.email;
-		// If the user defines the recipient as `"assignee"`, the pub must have an
-		// assignee for the email to be sent.
-		if (to === "assignee") {
-			const assignee = getAssignee(context, options.rel);
-			to = assignee.email;
-		}
 		href = `mailto:${to}`;
 	} else if (isLinkFormOptions(options)) {
 		// Form hrefs are handled by `ensureFormMembershipAndCreateInviteLink`
@@ -236,19 +220,4 @@ export const renderRecipientLastName = (context: RenderWithPubContext) => {
 export const renderRecipientFullName = (context: RenderWithPubContext) => {
 	const lastName = renderRecipientLastName(context);
 	return `${renderRecipientFirstName(context)}${lastName && ` ${lastName}`}`;
-};
-
-export const renderAssigneeFirstName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = getAssignee(context, rel);
-	return assignee.firstName;
-};
-
-export const renderAssigneeLastName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = getAssignee(context, rel);
-	return assignee.lastName ?? "";
-};
-
-export const renderAssigneeFullName = (context: RenderWithPubContext, rel?: string) => {
-	const lastName = renderAssigneeLastName(context);
-	return `${renderAssigneeFirstName(context)}${lastName && ` ${lastName}`}`;
 };
