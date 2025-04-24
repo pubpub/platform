@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 
-import type { UsersId } from "db/public";
+import type { FormsId, UsersId } from "db/public";
 import { MemberRole, MembershipType } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
@@ -10,10 +10,12 @@ import { memberInviteFormSchema } from "~/app/components/Memberships/memberInvit
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
+import { env } from "~/lib/env/env";
+import { ApiError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { deleteCommunityMember, insertCommunityMember } from "~/lib/server/member";
-import { createUserWithMembership } from "~/lib/server/user";
+import { deleteCommunityMemberships, insertCommunityMemberships } from "~/lib/server/member";
+import { createUserWithMemberships } from "~/lib/server/user";
 
 const isCommunityAdmin = cache(async () => {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
@@ -32,7 +34,7 @@ const isCommunityAdmin = cache(async () => {
 
 	if (!isAdminOfCommunity(user, community)) {
 		return {
-			error: "You do not have permission to invite members to this community",
+			error: "You do not have permission to manage members in this community",
 		};
 	}
 
@@ -54,11 +56,14 @@ const isCommunityAdmin = cache(async () => {
 export const addMember = defineServerAction(async function addMember({
 	userId,
 	role,
+	forms,
 }: {
 	userId: UsersId;
 	role: MemberRole;
+	forms: FormsId[];
 }) {
 	const result = await isCommunityAdmin();
+
 	if (result.error !== null) {
 		return {
 			title: "Failed to add member",
@@ -66,13 +71,17 @@ export const addMember = defineServerAction(async function addMember({
 		};
 	}
 
+	if (env.FLAGS?.get("invites") === false) {
+		return ApiError.FEATURE_DISABLED;
+	}
+
 	try {
-		const member = await insertCommunityMember({
+		const member = await insertCommunityMemberships({
 			userId,
 			communityId: result.community.id,
 			role,
+			forms,
 		}).executeTakeFirst();
-
 		// TODO: send email to user confirming their membership,
 		// don't just add them
 
@@ -104,7 +113,12 @@ export const createUserWithCommunityMembership = defineServerAction(
 		email: string;
 		role: MemberRole;
 		isSuperAdmin?: boolean;
+		forms: FormsId[];
 	}) {
+		if (env.FLAGS?.get("invites") === false) {
+			return ApiError.FEATURE_DISABLED;
+		}
+
 		const parsed = memberInviteFormSchema
 			.required({ firstName: true, lastName: true })
 			.safeParse(data);
@@ -116,10 +130,24 @@ export const createUserWithCommunityMembership = defineServerAction(
 			};
 		}
 
+		const community = await findCommunityBySlug();
+
+		if (!community) {
+			return {
+				title: "Failed to add member",
+				error: "Community not found",
+			};
+		}
+
 		try {
-			return await createUserWithMembership({
+			return await createUserWithMemberships({
 				...parsed.data,
-				membership: { type: MembershipType.community, role: data.role },
+				membership: {
+					type: MembershipType.community,
+					role: data.role,
+					communityId: community.id,
+					forms: data.forms,
+				},
 			});
 		} catch (error) {
 			return {
@@ -146,14 +174,10 @@ export const removeMember = defineServerAction(async function removeMember({
 			};
 		}
 
-		if (user?.memberships.find((m) => m.id === member.id)) {
-			return {
-				title: "Failed to remove member",
-				error: "You cannot remove yourself from the community",
-			};
-		}
-
-		const removedMember = await deleteCommunityMember(member.id).executeTakeFirst();
+		const removedMember = await deleteCommunityMemberships({
+			userId: member.id,
+			communityId: community.id,
+		}).executeTakeFirst();
 
 		if (!removedMember) {
 			return {

@@ -23,7 +23,6 @@ const ContextEditorContext = createContext<ContextEditorContext>({
 
 export type ContextEditorPub = ProcessedPub<{
 	withStage: true;
-	withLegacyAssignee: true;
 	withPubType: true;
 }>;
 type Props = PropsWithChildren<

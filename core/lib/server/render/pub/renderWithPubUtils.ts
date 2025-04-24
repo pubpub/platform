@@ -13,12 +13,11 @@ import { assert, expect } from "utils";
 
 import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { getCommunitySlug } from "../../cache/getCommunitySlug";
-import { findCommunityBySlug } from "../../community";
-import { addMemberToForm, createFormInviteLink } from "../../form";
+import { createFormInviteLink, grantFormAccess } from "../../form";
 import { InviteService } from "../../invites/InviteService";
 
 export type RenderWithPubRel = "self";
@@ -32,11 +31,6 @@ export type RenderWithPubPub = {
 		schemaName: CoreSchemaType;
 	}[];
 	createdAt: Date;
-	assignee?: {
-		firstName: string;
-		lastName: string | null;
-		email: string;
-	} | null;
 	title: string | null;
 	pubType: {
 		name: string;
@@ -71,11 +65,6 @@ const getPub = (context: RenderWithPubContext, rel?: string) => {
 	return context.pub;
 };
 
-const getAssignee = (context: RenderWithPubContext, rel?: string) => {
-	const pub = getPub(context, rel);
-	return expect(pub.assignee, `Expected pub to have assignee`);
-};
-
 const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: string) => {
 	const pub = getPub(context, rel);
 	const pubValue = pub.values.find((value) => value.fieldSlug === fieldSlug);
@@ -100,7 +89,7 @@ export const renderFormInviteLink = async (
 ) => {
 	// this feels weird to do here
 	if (recipient.id) {
-		await addMemberToForm({ userId: recipient.user.id, communityId, pubId, slug: formSlug });
+		await grantFormAccess({ userId: recipient.user.id, communityId, pubId, slug: formSlug });
 		return createFormInviteLink(
 			{ userId: recipient.user.id, formSlug, communityId, pubId },
 			trx
@@ -253,12 +242,6 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 	let href: string;
 	if (isLinkEmailOptions(options)) {
 		let to = options.email;
-		// If the user defines the recipient as `"assignee"`, the pub must have an
-		// assignee for the email to be sent.
-		if (to === "assignee") {
-			const assignee = getAssignee(context, options.rel);
-			to = assignee.email;
-		}
 		href = `mailto:${to}`;
 	} else if (isLinkFormOptions(options)) {
 		// Form hrefs are handled by `ensureFormMembershipAndCreateInviteLink`
@@ -312,19 +295,4 @@ export const renderRecipientLastName = (context: RenderWithPubContext, token: st
 export const renderRecipientFullName = (context: RenderWithPubContext, token: string) => {
 	const lastName = renderRecipientLastName(context, token);
 	return `${renderRecipientFirstName(context, token)}${lastName && ` ${lastName}`}`;
-};
-
-export const renderAssigneeFirstName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = getAssignee(context, rel);
-	return assignee.firstName;
-};
-
-export const renderAssigneeLastName = (context: RenderWithPubContext, rel?: string) => {
-	const assignee = getAssignee(context, rel);
-	return assignee.lastName ?? "";
-};
-
-export const renderAssigneeFullName = (context: RenderWithPubContext, rel?: string) => {
-	const lastName = renderAssigneeLastName(context);
-	return `${renderAssigneeFirstName(context)}${lastName && ` ${lastName}`}`;
 };

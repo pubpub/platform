@@ -7,7 +7,7 @@ import { JWT } from "google-auth-library";
 
 import { logger } from "logger";
 
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 
 // Load the service account key JSON file
 // const keyFilePath = path.join(process.cwd(), 'src/utils/google/keyFile.json');

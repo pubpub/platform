@@ -143,6 +143,7 @@ export function MemberSelectClient({
 									const result = await runAddMember({
 										userId: user.id,
 										role: MemberRole.contributor,
+										forms: [],
 									});
 									if (didSucceed(result)) {
 										const member = expect(result.member);

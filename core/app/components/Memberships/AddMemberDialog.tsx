@@ -1,33 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 
-import type { MemberRole, NewUsers, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
 import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
+import type { DialogProps } from "./types";
 import { MemberInviteForm } from "./MemberInviteForm";
 
-export const AddMemberDialog = ({
-	isSuperAdmin,
-	existingMembers,
-	addMember,
-	addUserMember,
-}: {
-	// There's probably a better type for these functions that should be server actions
-	addMember: ({ userId, role }: { userId: UsersId; role: MemberRole }) => Promise<unknown>;
-	addUserMember: ({
-		email,
-		firstName,
-		lastName,
-		isSuperAdmin,
-		role,
-	}: Omit<NewUsers, "slug"> & { role: MemberRole }) => Promise<unknown>;
-	isSuperAdmin: boolean;
-	existingMembers: UsersId[];
-}) => {
+export const AddMemberDialog = (props: DialogProps) => {
 	const [open, setOpen] = useState(false);
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -44,13 +27,7 @@ export const AddMemberDialog = ({
 
 			<DialogContent>
 				<DialogTitle>Add Member</DialogTitle>
-				<MemberInviteForm
-					addMember={addMember}
-					addUserMember={addUserMember}
-					isSuperAdmin={isSuperAdmin}
-					closeForm={() => setOpen(false)}
-					existingMembers={existingMembers}
-				/>
+				<MemberInviteForm closeForm={() => setOpen(false)} {...props} />
 			</DialogContent>
 		</Dialog>
 	);

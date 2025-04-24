@@ -53,10 +53,10 @@ export const constructLoginLink = (opts?: LoginRedirectOpts) => {
 /**
  * Redirect the user to the login page, with a notice to display.
  */
-export const redirectToLogin = (opts?: LoginRedirectOpts): never => {
+export function redirectToLogin(opts?: LoginRedirectOpts): never {
 	const basePath = constructLoginLink(opts);
 	redirect(basePath);
-};
+}
 
 export const constructCommunitySignupLink = async (opts: {
 	redirectTo: string;
@@ -90,11 +90,31 @@ export const constructCommunitySignupLink = async (opts: {
  * Notice will provide a notice at the top of the signup page
  * NOTE: you need to be inside a community to use this
  */
-export const redirectToCommunitySignup = async (opts: {
+export async function redirectToCommunitySignup(opts: {
 	redirectTo: string;
 	notice?: NoticeParams;
 	inviteToken?: string;
-}): Promise<never> => {
+}): Promise<never> {
 	const basePath = await constructCommunitySignupLink(opts);
 	redirect(basePath);
+}
+
+export const constructVerifyLink = (opts?: LoginRedirectOpts) => {
+	const searchParams = new URLSearchParams();
+
+	if (opts?.loginNotice !== false) {
+		const notice = opts?.loginNotice ?? defaultLoginRedirectError;
+		searchParams.set(notice.type, notice.title);
+		if (notice.body) {
+			searchParams.set("body", notice.body);
+		}
+	}
+
+	const basePath = `/verify?${searchParams.toString()}`;
+	return basePath;
 };
+
+export function redirectToVerify(opts?: LoginRedirectOpts): never {
+	const basePath = constructVerifyLink(opts);
+	redirect(basePath);
+}

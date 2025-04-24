@@ -105,6 +105,10 @@ export type UsersInitializer = Record<
 			isSuperAdmin?: boolean;
 			slug?: string;
 			existing?: false;
+			/**
+			 * @default true
+			 */
+			isVerified?: boolean;
 	  }
 	| {
 			id: UsersId;
@@ -172,12 +176,6 @@ export type PubInitializer<
 		 * @default randomUUID
 		 */
 		id?: PubsId;
-		/**
-		 * Assignee of the pub.
-		 *
-		 * Users are referenced by their keys in the users object.
-		 */
-		assignee?: keyof U;
 		/**
 		 * The name of the pubType you specified in the pubTypes object.
 		 */
@@ -385,12 +383,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 				`Pub type ${pub.pubType as string} not found in the output of the created pub types.`
 			);
 		}
-		const assigneeId = findBySlug(users, pub.assignee as string)?.id;
-		if (pub.assignee && !assigneeId) {
-			throw new Error(
-				`Assignee ${pub.assignee as string} not found in the output of the created users.`
-			);
-		}
 
 		const stageId = stages.find((stage) => stage.name === pub.stage)?.id;
 
@@ -449,7 +441,6 @@ const makePubInitializerMatchCreatePubRecursiveInput = <
 			body: {
 				id: rootPubId,
 				pubTypeId: pubType.id,
-				assigneeId: assigneeId,
 				stageId: stageId,
 				values,
 				members,
@@ -919,6 +910,7 @@ export async function seedCommunity<
 			avatar: userInfo.avatar ?? faker.image.avatar(),
 			passwordHash: await createPasswordHash(userInfo.password ?? faker.internet.password()),
 			isSuperAdmin: userInfo.isSuperAdmin ?? false,
+			isVerified: userInfo.isVerified === false ? false : true,
 			// the key of the user initializer
 		}))
 	);

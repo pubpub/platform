@@ -9,7 +9,7 @@ import { assert, AssertionError, expect } from "utils";
 import type { ActionPub } from "../types";
 import type { action } from "./action";
 import type { components } from "./types";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { getPubsWithRelatedValues, updatePub } from "~/lib/server";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import { defineRun } from "../types";

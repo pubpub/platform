@@ -1,7 +1,7 @@
 import type { AuthTokenType, UsersId } from "db/public";
 
 import { db } from "~/kysely/database";
-import { env } from "../env/env.mjs";
+import { env } from "../env/env";
 import { createToken } from "../server/token";
 
 type NativeMagicLinkOptions = {

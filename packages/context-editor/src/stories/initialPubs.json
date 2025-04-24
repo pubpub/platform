@@ -5,7 +5,6 @@
 		"createdAt": "2024-09-17T14:51:09.998",
 		"pubTypeId": "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		"updatedAt": "2024-09-17T14:51:09.998",
-		"assigneeId": null,
 		"values": {
 			"rd:content": "",
 			"rd:title": "Explorations of nano-particle trampolines",
@@ -24,7 +23,6 @@
 		"createdAt": "2024-09-17T14:51:09.998",
 		"pubTypeId": "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		"updatedAt": "2024-09-17T14:51:09.998",
-		"assigneeId": null,
 		"values": {
 			"rd:content": "",
 			"rd:title": "Harnessing the Power of Microbial Communication: Towards Bacterial Wi-Fi Networks",
@@ -43,7 +41,6 @@
 		"createdAt": "2024-09-17T14:51:09.998",
 		"pubTypeId": "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		"updatedAt": "2024-09-17T14:51:09.998",
-		"assigneeId": null,
 		"values": {
 			"rd:content": "",
 			"rd:title": "Temporal Distortion Fields in High-Speed Commuting: A Theoretical Framework for Time Dilation on Trains",
@@ -62,7 +59,6 @@
 		"createdAt": "2024-09-17T14:51:09.998",
 		"pubTypeId": "019f34b4-b666-4cf0-a921-95905edf410c",
 		"updatedAt": "2024-09-17T14:51:09.998",
-		"assigneeId": null,
 		"values": {
 			"rd:title": "Review 1",
 			"rd:content": "{\"type\":\"doc\",\"attrs\":{\"meta\":{}},\"content\":[{\"type\":\"paragraph\",\"attrs\":{\"id\":null,\"class\":null},\"content\":[{\"type\":\"text\",\"text\":\"The paper, \"},{\"type\":\"text\",\"marks\":[{\"type\":\"em\",\"attrs\":{\"id\":null,\"class\":null}}],\"text\":\"\\\"Explorations of Nano-Particle Trampolines\\\"\"},{\"type\":\"text\",\"text\":\", presents an intriguing and innovative investigation into the dynamic behavior of nano-particles when subjected to oscillatory forces on elastic membranes, metaphorically termed \\\"nano-particle trampolines.\\\" The authors provide a thorough theoretical analysis backed by experimental validation, showcasing the potential applications of this phenomenon in fields like nano-sensing and drug delivery. The description of the fabrication process, as well as the precise control of particle motion via external stimuli, is well-documented and clearly articulated. The clarity of data presentation, particularly in the graphs and high-resolution microscopy images, greatly aids in understanding the impact of oscillatory forces on particle motion and stability.\"}]},{\"type\":\"paragraph\",\"attrs\":{\"id\":null,\"class\":null},\"content\":[{\"type\":\"text\",\"text\":\"However, the paper could benefit from a more detailed exploration of potential limitations in practical applications, such as scalability and environmental stability under varying conditions. While the experiments conducted are novel, the discussion section leaves some gaps in addressing how these nano-particle trampolines might perform in complex, real-world environments. Additionally, further comparison with existing technologies would strengthen the paper\u2019s argument for the superiority of this approach. Overall, the research offers valuable insights and contributes meaningfully to the field of nano-materials, though more elaboration on potential challenges would provide a more comprehensive understanding of its future applications.\"}]}]}",
@@ -80,7 +76,6 @@
 		"createdAt": "2024-09-17T14:51:09.998",
 		"pubTypeId": "019f34b4-b666-4cf0-a921-95905edf410c",
 		"updatedAt": "2024-09-17T14:51:09.998",
-		"assigneeId": null,
 		"values": {
 			"rd:title": "Review 2",
 			"rd:content": "{\"type\":\"doc\",\"attrs\":{\"meta\":{}},\"content\":[{\"type\":\"heading\",\"attrs\":{\"level\":3,\"id\":null,\"class\":null},\"content\":[{\"type\":\"text\",\"text\":\"Review on March 23, 2018\"}]},{\"type\":\"paragraph\",\"attrs\":{\"id\":null,\"class\":null},\"content\":[{\"type\":\"text\",\"text\":\"The paper offers a fresh perspective on the behavior of nano-particles when interacting with elastic surfaces under oscillation. The authors present a solid theoretical framework supported by experimental data, making a compelling case for applications in fields like nano-sensing. The paper\u2019s clear presentation of methods and results, particularly the high-quality images and graphs, adds to its accessibility.\"}]},{\"type\":\"paragraph\",\"attrs\":{\"id\":null,\"class\":null},\"content\":[{\"type\":\"text\",\"text\":\"However, the paper would benefit from a more detailed discussion on potential limitations, such as scalability and practical applications. While the experiments are innovative, the lack of real-world scenarios makes it harder to gauge broader impacts. Despite this, the research is a valuable contribution to the study of nano-particles and their potential uses.\"}]}]}",
@@ -98,7 +93,6 @@
 		"createdAt": "2024-09-17T14:51:09.998",
 		"pubTypeId": "6db3e01b-5391-413b-97e2-155e00e396c9",
 		"updatedAt": "2024-09-17T14:51:09.998",
-		"assigneeId": null,
 		"values": {
 			"rd:title": "County Dataset",
 			"rd:source": "/data.csv",

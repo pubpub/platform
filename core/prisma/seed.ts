@@ -7,10 +7,9 @@ import { logger } from "logger";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/authentication/password";
-import { env } from "~/lib/env/env.mjs";
-import { seedArcadia } from "./exampleCommunitySeeds/arcadia";
-import { seedCroccroc } from "./exampleCommunitySeeds/croccroc";
-import { default as buildUnjournal } from "./exampleCommunitySeeds/unjournal";
+import { env } from "~/lib/env/env";
+import { seedLegacy } from "./seeds/legacy";
+import { seedStarter } from "./seeds/starter";
 
 async function createUserMembers({
 	email,
@@ -21,6 +20,7 @@ async function createUserMembers({
 	isSuperAdmin,
 	role,
 	prismaCommunityIds,
+	isVerified,
 }: {
 	email: string;
 	password: string;
@@ -30,6 +30,7 @@ async function createUserMembers({
 	isSuperAdmin: boolean;
 	role: MemberRole;
 	prismaCommunityIds: string[];
+	isVerified: boolean;
 }) {
 	const values = {
 		slug,
@@ -39,6 +40,7 @@ async function createUserMembers({
 		passwordHash: await createPasswordHash(password),
 		avatar: "/demo/person.png",
 		isSuperAdmin,
+		isVerified,
 	};
 
 	const memberships = prismaCommunityIds.map((id) => ({
@@ -60,24 +62,20 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
-// uuids need a "4" there to indicate that they are v4 uuids
-const arcadiaId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
-const croccrocId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const starterId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
-	const unJournalId = "03e7a5fd-bdca-4682-9221-3a69992c1f3b" as CommunitiesId;
 	// do not seed arcadia if the minimal seed flag is set
 	// this is because it will slow down ci/testing
 	// this flag is set in the `globalSetup.ts` file
 	// and in e2e.yml
 	// eslint-disable-next-line no-restricted-properties
-	const shouldSeedArcadia = !Boolean(process.env.MINIMAL_SEED);
+	const shouldSeedLegacy = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [
-		unJournalId,
-		croccrocId,
-		shouldSeedArcadia ? arcadiaId : null,
-	].filter(Boolean) as CommunitiesId[];
+	const prismaCommunityIds = [starterId, shouldSeedLegacy ? legacyId : null].filter(
+		Boolean
+	) as CommunitiesId[];
 
 	logger.info("migrate graphile");
 	const workerUtils = await makeWorkerUtils({
@@ -85,9 +83,9 @@ async function main() {
 	});
 	await workerUtils.migrate();
 
-	const arcadiaPromise = shouldSeedArcadia ? seedArcadia(arcadiaId) : null;
+	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([buildUnjournal(unJournalId), seedCroccroc(croccrocId), arcadiaPromise]);
+	await Promise.all([seedStarter(starterId), legacyPromise]);
 
 	await Promise.all([
 		createUserMembers({
@@ -99,6 +97,7 @@ async function main() {
 			isSuperAdmin: true,
 			role: MemberRole.admin,
 			prismaCommunityIds,
+			isVerified: true,
 		}),
 
 		createUserMembers({
@@ -110,6 +109,7 @@ async function main() {
 			isSuperAdmin: false,
 			role: MemberRole.editor,
 			prismaCommunityIds,
+			isVerified: true,
 		}),
 
 		createUserMembers({
@@ -121,6 +121,7 @@ async function main() {
 			isSuperAdmin: false,
 			role: MemberRole.contributor,
 			prismaCommunityIds,
+			isVerified: true,
 		}),
 	]);
 }

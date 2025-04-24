@@ -82,45 +82,6 @@ const hasRelationRel = (node: Directive) => {
 	return node.attributes?.rel !== undefined && node.attributes.rel !== "parent";
 };
 
-const visitAssigneeNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
-	node.data = {
-		...node.data,
-		hName: "span",
-		hChildren: [
-			{
-				type: "text",
-				value: utils.renderAssigneeFullName(context, node.attributes?.rel),
-			},
-		],
-	};
-};
-
-const visitAssigneeFirstNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
-	node.data = {
-		...node.data,
-		hName: "span",
-		hChildren: [
-			{
-				type: "text",
-				value: utils.renderAssigneeFirstName(context, node.attributes?.rel),
-			},
-		],
-	};
-};
-
-const visitAssigneeLastNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
-	node.data = {
-		...node.data,
-		hName: "span",
-		hChildren: [
-			{
-				type: "text",
-				value: utils.renderAssigneeLastName(context, node.attributes?.rel),
-			},
-		],
-	};
-};
-
 const visitRecipientNameDirective = (node: Directive, context: utils.RenderWithPubContext) => {
 	node.data = {
 		...node.data,
@@ -166,14 +127,11 @@ const visitLinkDirective = (node: Directive, context: utils.RenderWithPubContext
 	// All directives are considered parent nodes
 	assert(isParent(node));
 	let href: string;
-	// :link{email=assignee}
 	// :link{email=all@pubpub.org}
 	if ("email" in attrs) {
 		// The `email` attribute must have a value. For example, :link{email=""}
 		// is invalid.
 		let email = expect(attrs.email, 'Unexpected missing value in ":link{email=?}" directive');
-		// If the user defines the recipient as `"assignee"`, the pub must have an
-		// assignee for the email to be sent.
 		href = utils.renderLink(context, { email });
 		// If the email has no label, default to the email address, e.g.
 		// :link{email=all@pubpub.org} -> :link[all@pubpub.org]{email=all@pubpub.org}
@@ -243,9 +201,6 @@ type DirectiveVisitor = (node: Directive, context: utils.RenderWithPubContext) =
 
 const directiveVisitors: Record<RenderWithPubToken, DirectiveVisitor> = {
 	[RenderWithPubToken.Value]: visitValueDirective,
-	[RenderWithPubToken.AssigneeName]: visitAssigneeNameDirective,
-	[RenderWithPubToken.AssigneeFirstName]: visitAssigneeFirstNameDirective,
-	[RenderWithPubToken.AssigneeLastName]: visitAssigneeLastNameDirective,
 	[RenderWithPubToken.RecipientName]: visitRecipientNameDirective,
 	[RenderWithPubToken.RecipientFirstName]: visitRecipientFirstNameDirective,
 	[RenderWithPubToken.RecipientLastName]: visitRecipientLastNameDirective,

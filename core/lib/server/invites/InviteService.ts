@@ -20,7 +20,7 @@ import { compareMemberRoles, DEFAULT_INVITE_EXPIRATION_TIME } from "db/types";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env.mjs";
+import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { maybeWithTrx } from "..";
 import { getLoginData } from "../../authentication/loginData";
@@ -28,10 +28,10 @@ import { autoCache } from "../cache/autoCache";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
 import {
-	insertCommunityMemberOverrideRole,
-	insertPubMemberOverrideRole,
-	insertStageMemberOverrideRole,
-	selectCommunityMember,
+	insertCommunityMembershipsOverrideRole,
+	insertPubMembershipsOverrideRole,
+	insertStageMembershipsOverrideRole,
+	selectCommunityMemberships,
 } from "../member";
 import { withInvitedFormIds } from "./helpers";
 import { InviteBuilder } from "./InviteBuilder";
@@ -425,10 +425,10 @@ export namespace InviteService {
 	 * User cannot be invited to a community if they are already a member of the community
 	 */
 	export async function canUserBeInvited(userId: UsersId, communityId: CommunitiesId, trx = db) {
-		const communityMember = await selectCommunityMember(
-			{ userId, communityId },
-			trx
-		).executeTakeFirst();
+		const communityMember = await selectCommunityMemberships({
+			userId,
+			communityId,
+		}).executeTakeFirst();
 
 		return Boolean(communityMember);
 	}
@@ -457,7 +457,7 @@ export namespace InviteService {
 			};
 		}
 
-		const communityMembershipPromise = selectCommunityMember({
+		const communityMembershipPromise = selectCommunityMemberships({
 			userId: user.id,
 			communityId: invite.communityId,
 		}).executeTakeFirst();
@@ -487,18 +487,18 @@ export namespace InviteService {
 			const communityMember = await communityMembershipPromise;
 			return isCommunityMemberUseless(communityMember);
 		} else if (isPubInvite(invite)) {
-			const [pubMember, communityMember] = await Promise.all([
+			const [pubMemberships, communityMember] = await Promise.all([
 				autoCache(
 					trx
 						.selectFrom("pub_memberships")
 						.selectAll()
 						.where("userId", "=", user.id)
 						.where("pubId", "=", invite.pubId)
-				).executeTakeFirst(),
+				).execute(),
 				communityMembershipPromise,
 			]);
 
-			if (!pubMember) {
+			if (!pubMemberships.length) {
 				return {
 					useless: false,
 				};
@@ -553,25 +553,6 @@ export namespace InviteService {
 		throw new Error("Invalid invite");
 	}
 
-	async function _tempAddUserToForms(
-		props: { userId: UsersId; communityId: CommunitiesId; formIds: FormsId[]; pubId?: PubsId },
-		trx = db
-	) {
-		const formMemberships = await autoRevalidate(
-			trx
-				.insertInto("form_memberships")
-				.values(
-					props.formIds.map((formId) => ({
-						userId: props.userId,
-						formId,
-						pubId: props.pubId,
-					}))
-				)
-				.returningAll()
-		).execute();
-		return formMemberships;
-	}
-
 	/**
 	 * Adds the user to the community, and possibly the pub or stage, based on the invite data.
 	 * TODO: add form permissions once we have reworked them
@@ -597,99 +578,53 @@ export namespace InviteService {
 
 			// TODO: override lower level of permissions if the user has already accepted another invite
 			if (isCommunityOnlyInvite(invite)) {
-				await insertCommunityMemberOverrideRole(
+				await insertCommunityMembershipsOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
 						role: invite.communityRole,
+						forms: invite.communityLevelFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				if (invite.communityLevelFormIds?.length) {
-					await _tempAddUserToForms(
-						{
-							communityId: invite.communityId,
-							userId: user.id,
-							formIds: invite.communityLevelFormIds,
-						},
-						trx
-					);
-				}
 			} else if (isPubInvite(invite)) {
-				const communityMember = await insertCommunityMemberOverrideRole(
+				const communityMember = await insertCommunityMembershipsOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
 						role: invite.communityRole,
+						forms: invite.communityLevelFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				const pubMember = await insertPubMemberOverrideRole(
+				const pubMember = await insertPubMembershipsOverrideRole(
 					{
 						pubId: invite.pubId,
 						userId: user.id,
 						role: invite.pubOrStageRole,
+						forms: invite.pubOrStageFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				const [communityLevelForms, pubLevelForms] = await Promise.all([
-					invite.communityLevelFormIds &&
-						_tempAddUserToForms(
-							{
-								communityId: invite.communityId,
-								userId: user.id,
-								formIds: invite.communityLevelFormIds,
-							},
-							trx
-						),
-					invite.pubOrStageFormIds &&
-						_tempAddUserToForms(
-							{
-								communityId: invite.communityId,
-								userId: user.id,
-								formIds: invite.pubOrStageFormIds,
-								pubId: invite.pubId,
-							},
-							trx
-						),
-				]);
 			} else if (isStageInvite(invite)) {
-				await insertCommunityMemberOverrideRole(
+				await insertCommunityMembershipsOverrideRole(
 					{
 						communityId: invite.communityId,
 						userId: user.id,
 						role: invite.communityRole,
+						forms: invite.communityLevelFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				await insertStageMemberOverrideRole(
+				await insertStageMembershipsOverrideRole(
 					{
 						stageId: invite.stageId,
 						userId: user.id,
 						role: invite.pubOrStageRole,
+						forms: invite.pubOrStageFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
-				await Promise.all([
-					invite.communityLevelFormIds &&
-						_tempAddUserToForms(
-							{
-								communityId: invite.communityId,
-								userId: user.id,
-								formIds: invite.communityLevelFormIds,
-							},
-							trx
-						),
-					invite.pubOrStageFormIds &&
-						_tempAddUserToForms(
-							{
-								communityId: invite.communityId,
-								userId: user.id,
-								formIds: invite.pubOrStageFormIds,
-							},
-							trx
-						),
-				]);
 			}
 
 			// TODO: change this as soon as Kalil has implemented the form permissions

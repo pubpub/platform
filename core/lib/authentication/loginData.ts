@@ -3,10 +3,14 @@ import "server-only";
 import type { Session, User } from "lucia";
 
 import { cache } from "react";
+import { redirect } from "next/navigation";
+import { getPathname } from "@nimpl/getters/get-pathname";
+
+import { AuthTokenType } from "db/public";
 
 import type { LoginRedirectOpts } from "../server/navigation/redirects";
 import type { ExtraSessionValidationOptions } from "./lucia";
-import { redirectToLogin } from "../server/navigation/redirects";
+import { redirectToLogin, redirectToVerify } from "../server/navigation/redirects";
 import { validateRequest } from "./lucia";
 
 /**
@@ -21,13 +25,23 @@ export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) =
  */
 export const getPageLoginData = cache(
 	async (opts?: ExtraSessionValidationOptions & LoginRedirectOpts) => {
-		const loginData = await getLoginData(opts);
+		const loginData = await getLoginData({
+			...opts,
+			allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
+		});
 
 		if (!loginData.user) {
 			redirectToLogin(opts);
 		}
 
-		return loginData as { user: User; session: Session };
+		if (loginData.session && loginData.session.type === AuthTokenType.verifyEmail) {
+			const pathname = getPathname();
+			redirectToVerify({
+				redirectTo: pathname ?? undefined,
+			});
+		}
+
+		return loginData;
 	}
 );
 

@@ -12,7 +12,7 @@ import { BasicPagination } from "~/app/components/Pagination";
 import PubRow from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
-import { selectCommunityMembers } from "~/lib/server/member";
+import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
@@ -28,7 +28,7 @@ export async function StageList(props: Props) {
 	const { communityId, userId } = props;
 	const [communityStages, communityMembers] = await Promise.all([
 		getStages({ communityId, userId }).execute(),
-		selectCommunityMembers({ communityId }).execute(),
+		selectAllCommunityMemberships({ communityId }).execute(),
 	]);
 
 	const stages = getOrderedStages(communityStages);
@@ -113,7 +113,6 @@ export async function StagePubs({
 				withValues: false,
 				withStage: true,
 				withPubType: true,
-				withLegacyAssignee: true,
 			}
 		),
 		getStageActions(stage.id).execute(),

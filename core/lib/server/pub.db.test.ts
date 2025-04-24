@@ -449,7 +449,6 @@ describe("getPubsWithRelatedValues", () => {
 				withPubType: true,
 				withStage: true,
 				withMembers: true,
-				withLegacyAssignee: true,
 			}
 		);
 
@@ -470,14 +469,12 @@ describe("getPubsWithRelatedValues", () => {
 			order: stages["Stage 1"].order,
 		});
 		expect(pub.members).toEqual([]);
-		expect(pub.assignee).toEqual(null);
 		expect(Object.keys(pub).sort()).toEqual(
 			[
 				"id",
 				"pubType",
 				"stage",
 				"members",
-				"assignee",
 				"values",
 				"stageId",
 				"pubTypeId",

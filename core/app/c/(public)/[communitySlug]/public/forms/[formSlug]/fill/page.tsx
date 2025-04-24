@@ -145,7 +145,7 @@ export default async function FormPage(props: {
 		searchParams.pubId
 			? await getPubsWithRelatedValues(
 					{ pubId: searchParams.pubId, communityId: community.id },
-					{ withStage: true, withLegacyAssignee: true, withPubType: true }
+					{ withStage: true, withPubType: true }
 				)
 			: undefined,
 		getPubsWithRelatedValues(
@@ -153,7 +153,6 @@ export default async function FormPage(props: {
 			{
 				limit: 30,
 				withStage: true,
-				withLegacyAssignee: true,
 				withPubType: true,
 			}
 		),

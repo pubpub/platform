@@ -79,10 +79,6 @@ COMMENT ON COLUMN "pub_values"."lastModifiedBy" IS '@type(LastModifiedBy, ''../t
 
 
 
--- Model form_memberships comments
-
-
-
 -- Model action_instances comments
 
 

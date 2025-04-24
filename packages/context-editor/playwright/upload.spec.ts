@@ -10,6 +10,7 @@ test.describe("image upload", () => {
 	});
 
 	test("can upload an image", async ({ page, browserName }) => {
+		const editor = page.locator(".ProseMirror");
 		await page.getByRole("button", { name: "Image" }).click();
 		await page.getByRole("button", { name: "browse files" }).click();
 		await page
@@ -17,6 +18,7 @@ test.describe("image upload", () => {
 			.first()
 			.setInputFiles("./src/stories/assets/image0.jpg");
 		await page.getByLabel("Upload 1 file").click();
-		await expect(page.getByRole("img", { name: "image0.jpg" })).toHaveCount(1);
+		await page.getByText("Media Upload").waitFor({ state: "hidden" });
+		await expect(editor.getByRole("img", { name: "image0.jpg" })).toHaveCount(1);
 	});
 });

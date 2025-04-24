@@ -6,13 +6,19 @@ import { captureException } from "@sentry/nextjs";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
-import type { Communities, CommunitiesId, CommunityMemberships, Users, UsersId } from "db/public";
+import type {
+	Communities,
+	CommunitiesId,
+	CommunityMemberships,
+	FormsId,
+	Users,
+	UsersId,
+} from "db/public";
 import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
-import type { Prettify, XOR } from "../types";
+import type { Prettify } from "../types";
 import type { NoticeParams } from "~/app/components/Notice";
-import type { SafeUser } from "~/lib/server/user";
 import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -30,10 +36,9 @@ import {
 import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/constants";
 import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
-import { insertCommunityMember, selectCommunityMember } from "../server/member";
+import { insertCommunityMemberships, selectCommunityMemberships } from "../server/member";
 import { redirectToLogin } from "../server/navigation/redirects";
 import { invalidateTokensForUser } from "../server/token";
-import { isClientExceptionOptions } from "../serverActions";
 import { SignupErrors } from "./errors";
 import { getLoginData } from "./loginData";
 
@@ -103,9 +108,15 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 		};
 	}
 	// lucia authentication
-	const session = await lucia.createSession(user.id, { type: AuthTokenType.generic });
+	const tokenType = user.isVerified ? AuthTokenType.generic : AuthTokenType.verifyEmail;
+	const session = await lucia.createSession(user.id, { type: tokenType });
 	const sessionCookie = lucia.createSessionCookie(session.id);
 	(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+
+	if (!user.isVerified) {
+		const newUrl = props.redirectTo ? `/verify?redirectTo=${props.redirectTo}` : "/verify";
+		redirect(newUrl);
+	}
 
 	if (props.redirectTo && /^\/\w+/.test(props.redirectTo)) {
 		redirect(props.redirectTo);
@@ -186,6 +197,48 @@ export const sendForgotPasswordMail = defineServerAction(
 	}
 );
 
+const _sendVerifyEmailMail = async (props: { email: string; redirectTo?: string }) => {
+	const user = await getUserWithPasswordHash({ email: props.email });
+
+	if (!user) {
+		return {
+			success: true,
+			report: "Email verification email sent!",
+		};
+	}
+
+	// Invalidate any previous tokens
+	await invalidateTokensForUser(user.id, [AuthTokenType.generic]);
+
+	const result = await Email.verifyEmail(
+		{
+			id: user.id,
+			email: user.email,
+			firstName: user.firstName,
+			lastName: user.lastName,
+		},
+		props.redirectTo
+	).send();
+
+	if ("error" in result) {
+		return {
+			error: result.error,
+		};
+	}
+
+	return {
+		success: true,
+		report: result.report ?? "Email verification email sent!",
+	};
+};
+
+export const sendVerifyEmailMail = defineServerAction(async function sendVerifyEmailMail(props: {
+	email: string;
+	redirectTo?: string;
+}) {
+	return _sendVerifyEmailMail(props);
+});
+
 const newPasswordSchema = z.object({
 	password: z.string().min(8),
 });
@@ -240,22 +293,24 @@ const addUserToCommunity = defineServerAction(async function addUserToCommunity(
 	 * @default MemberRole.contributor
 	 */
 	role?: MemberRole;
+	forms: FormsId[];
 }) {
-	const existingMembership = await selectCommunityMember({
+	const existingMemberships = await selectCommunityMemberships({
 		userId: props.userId,
 		communityId: props.communityId,
 	}).executeTakeFirst();
 
-	if (existingMembership) {
+	if (existingMemberships) {
 		return {
 			error: "User already in community",
 		};
 	}
 
-	const newMembership = await insertCommunityMember({
+	const newMembership = await insertCommunityMemberships({
 		userId: props.userId,
 		communityId: props.communityId,
 		role: props.role ?? MemberRole.contributor,
+		forms: props.forms,
 	}).executeTakeFirstOrThrow();
 
 	return {
@@ -294,10 +349,11 @@ export const publicJoinCommunity = defineServerAction(async function joinCommuni
 		return SignupErrors.NOT_ALLOWED({ communityName: community.name });
 	}
 
-	const member = await insertCommunityMember({
+	const member = await insertCommunityMemberships({
 		userId: user.id,
 		communityId: community.id,
 		role: toBeGrantedRole,
+		forms: [], // TODO: fetch these from invite token as well maybe?
 	}).executeTakeFirstOrThrow();
 
 	// don't redirect, better to do it client side, better ux
@@ -363,6 +419,7 @@ export const publicSignup = defineServerAction(async function signup(props: {
 						props.slug ??
 						generateUserSlug({ firstName: props.firstName, lastName: props.lastName }),
 					passwordHash: await createPasswordHash(props.password),
+					isVerified: false,
 				},
 				trx
 			).executeTakeFirstOrThrow((err) => {
@@ -373,17 +430,17 @@ export const publicSignup = defineServerAction(async function signup(props: {
 			});
 
 			// TODO: add to community
-			const newMember = await insertCommunityMember(
+			const newMember = await insertCommunityMemberships(
 				{
 					userId: newUser.id,
 					communityId: community.id,
 					role: MemberRole.contributor,
+					forms: [], //TODO: make these customizable
 				},
 				trx
 			).executeTakeFirstOrThrow();
 
-			// TODO: send verification email
-			return { ...newUser, needsVerification: false };
+			return { ...newUser, needsVerification: true };
 		} catch (e) {
 			if (isUniqueConstraintError(e) && e.table === "users") {
 				return SignupErrors.EMAIL_ALREADY_EXISTS({ email: props.email });
@@ -398,18 +455,19 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		return newUser;
 	}
 
-	if ("needsVerification" in newUser && newUser.needsVerification) {
-		return {
-			success: true,
-			report: "Please check your email to verify your account!",
-			needsVerification: true,
-		};
+	const verifyEmailResult = await _sendVerifyEmailMail({
+		email: newUser.email,
+		redirectTo: props.redirectTo,
+	});
+
+	if (verifyEmailResult.error) {
+		return verifyEmailResult;
 	}
 
-	// log them in
+	// log them in with a session that requires email verification
 
 	// lucia authentication
-	const newSession = await lucia.createSession(newUser.id, { type: AuthTokenType.generic });
+	const newSession = await lucia.createSession(newUser.id, { type: AuthTokenType.verifyEmail });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
 	(await cookies()).set(
 		newSessionCookie.name,
@@ -417,14 +475,8 @@ export const publicSignup = defineServerAction(async function signup(props: {
 		newSessionCookie.attributes
 	);
 
-	if (props.redirectTo) {
-		redirect(props.redirectTo);
-	}
-
-	await redirectUser();
-
-	// typescript cannot sense Promise<never> not returning
-	return "" as never;
+	const newUrl = props.redirectTo ? `/verify?redirectTo=${props.redirectTo}` : "/verify";
+	redirect(newUrl);
 });
 
 /**
@@ -475,12 +527,16 @@ export const legacySignup = defineServerAction(async function signup(
 	const trx = db.transaction();
 
 	const updatedUser = await trx.execute(async (trx) => {
+		const changedEmail = user.email !== props.email;
 		const updatedUser = await updateUser(
 			{
 				id: userId,
 				firstName: props.firstName,
 				lastName: props.lastName,
 				email: props.email,
+				// If the user changed the email that they signed up with, make
+				// sure they are not verified (magic-link login will mark them as verified)
+				...(changedEmail ? { isVerified: false } : {}),
 			},
 			trx
 		);
@@ -493,9 +549,8 @@ export const legacySignup = defineServerAction(async function signup(
 			trx
 		);
 
-		if (updatedUser.email !== user.email) {
+		if (changedEmail) {
 			return { ...updatedUser, needsVerification: true };
-			// TODO: send email verification
 		}
 
 		return {
@@ -504,12 +559,18 @@ export const legacySignup = defineServerAction(async function signup(
 		};
 	});
 
+	let sessionType = AuthTokenType.generic;
 	if ("needsVerification" in updatedUser && updatedUser.needsVerification) {
-		return {
-			success: true,
-			report: "Please check your email to verify your account!",
-			needsVerification: true,
-		};
+		const verifyEmailResult = await _sendVerifyEmailMail({
+			email: updatedUser.email,
+			redirectTo: props.redirectTo ?? undefined,
+		});
+
+		if (verifyEmailResult.error) {
+			return verifyEmailResult;
+		}
+
+		sessionType = AuthTokenType.verifyEmail;
 	}
 
 	// invalidate sessions and tokens
@@ -519,7 +580,7 @@ export const legacySignup = defineServerAction(async function signup(
 	]);
 
 	// log them in
-	const newSession = await lucia.createSession(updatedUser.id, { type: AuthTokenType.generic });
+	const newSession = await lucia.createSession(updatedUser.id, { type: sessionType });
 	const newSessionCookie = lucia.createSessionCookie(newSession.id);
 	(await cookies()).set(
 		newSessionCookie.name,

@@ -8,7 +8,7 @@ import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-type Status = MutationStatus;
+export type ButtonState = MutationStatus;
 
 type SubmitButtonProps = {
 	// customization
@@ -24,7 +24,7 @@ type SubmitButtonProps = {
 	type?: "button" | "submit" | "reset";
 } & (
 	| {
-			state: Status;
+			state: ButtonState;
 			// direct control props
 			isSubmitting?: never;
 			isSubmitSuccessful?: never;
@@ -56,7 +56,7 @@ export const SubmitButton = ({
 	type = "submit",
 	...props
 }: ButtonProps & SubmitButtonProps) => {
-	const [buttonState, setButtonState] = useState<Status>("idle");
+	const [buttonState, setButtonState] = useState<ButtonState>("idle");
 	const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
 
 	const setErrorState = useCallback(() => {

@@ -1,10 +1,11 @@
-import type { ExpressionBuilder, InsertQueryBuilder, OnConflictBuilder } from "kysely";
+import type { OnConflictBuilder } from "kysely";
 
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
 	CommunityMembershipsId,
+	FormsId,
 	NewCommunityMemberships,
 	NewPubMemberships,
 	NewStageMemberships,
@@ -19,9 +20,10 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { SAFE_USER_SELECT } from "./user";
 
 /**
- * Either get a member by their community membership id, or by userId and communityId
+ * Either get a membership by its community membership id, or all memberships by userId and communityId
+ * TODO: this should probably return a user with the community memberships attached
  */
-export const selectCommunityMember = (
+export const selectCommunityMemberships = (
 	props: XOR<{ id: CommunityMembershipsId }, { userId: UsersId; communityId: CommunitiesId }>,
 	trx = db
 ) => {
@@ -54,7 +56,10 @@ export const selectCommunityMember = (
 	);
 };
 
-export const selectCommunityMembers = ({ communityId }: { communityId: CommunitiesId }, trx = db) =>
+export const selectAllCommunityMemberships = (
+	{ communityId }: { communityId: CommunitiesId },
+	trx = db
+) =>
 	autoCache(
 		trx
 			.selectFrom("community_memberships")
@@ -65,6 +70,7 @@ export const selectCommunityMembers = ({ communityId }: { communityId: Communiti
 				"community_memberships.updatedAt",
 				"community_memberships.role",
 				"community_memberships.communityId",
+				"community_memberships.formId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
@@ -77,18 +83,32 @@ export const selectCommunityMembers = ({ communityId }: { communityId: Communiti
 			.where("community_memberships.communityId", "=", communityId)
 	);
 
-export const insertCommunityMember = (
-	props: NewCommunityMemberships & { userId: UsersId },
+const getMembershipRows = <T extends { role: MemberRole; forms: FormsId[]; userId: UsersId }>({
+	forms,
+	...membership
+}: T) => {
+	return forms.length ? forms.map((formId) => ({ ...membership, formId })) : [{ ...membership }];
+};
+
+export const insertCommunityMemberships = (
+	membership: Omit<NewCommunityMemberships, "formId"> & { userId: UsersId; forms: FormsId[] },
+	trx = db
+) =>
+	autoRevalidate(
+		trx.insertInto("community_memberships").values(getMembershipRows(membership)).returningAll()
+	);
+
+export const deleteCommunityMemberships = (
+	{ userId, communityId }: { userId: UsersId; communityId: CommunitiesId },
 	trx = db
 ) =>
 	autoRevalidate(
 		trx
-			.insertInto("community_memberships")
-			.values({
-				userId: props.userId,
-				communityId: props.communityId,
-				role: props.role,
-			})
+			.deleteFrom("community_memberships")
+			.using("users")
+			.whereRef("users.id", "=", "community_memberships.userId")
+			.where("users.id", "=", userId)
+			.where("community_memberships.communityId", "=", communityId)
 			.returningAll()
 	);
 
@@ -116,54 +136,42 @@ export const onConflictOverrideRole = (
 			.end(),
 	}));
 
-export const insertCommunityMemberOverrideRole = (
-	props: NewCommunityMemberships & { userId: UsersId },
+export const insertCommunityMembershipsOverrideRole = (
+	props: NewCommunityMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) =>
 	autoRevalidate(
-		insertCommunityMember(props, trx).qb.onConflict((oc) =>
+		insertCommunityMemberships(props, trx).qb.onConflict((oc) =>
 			onConflictOverrideRole(oc, ["userId", "communityId"], "community_memberships")
 		)
 	);
 
-export const insertStageMember = (
-	{
-		userId,
-		stageId,
-		role,
-	}: NewStageMemberships & {
-		userId: UsersId;
-	},
+export const insertStageMemberships = (
+	membership: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
-) => autoRevalidate(trx.insertInto("stage_memberships").values({ userId, stageId, role }));
+) => autoRevalidate(trx.insertInto("stage_memberships").values(getMembershipRows(membership)));
 
-export const insertStageMemberOverrideRole = (
-	props: NewStageMemberships & { userId: UsersId },
+export const insertStageMembershipsOverrideRole = (
+	props: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) =>
 	autoRevalidate(
-		insertStageMember(props, trx).qb.onConflict((oc) =>
+		insertStageMemberships(props, trx).qb.onConflict((oc) =>
 			onConflictOverrideRole(oc, ["userId", "stageId"], "stage_memberships")
 		)
 	);
 
-export const insertPubMember = (
-	{
-		userId,
-		pubId,
-		role,
-	}: NewPubMemberships & {
-		userId: UsersId;
-	},
-	trx = db
-) => autoRevalidate(trx.insertInto("pub_memberships").values({ userId, pubId, role }));
-
-export const insertPubMemberOverrideRole = (
-	props: NewPubMemberships & { userId: UsersId },
+export const insertPubMembershipsOverrideRole = (
+	props: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) =>
 	autoRevalidate(
-		insertPubMember(props, trx).qb.onConflict((oc) =>
+		insertPubMemberships(props, trx).qb.onConflict((oc) =>
 			onConflictOverrideRole(oc, ["userId", "pubId"], "pub_memberships")
 		)
 	);
+
+export const insertPubMemberships = (
+	membership: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
+	trx = db
+) => autoRevalidate(trx.insertInto("pub_memberships").values(getMembershipRows(membership)));

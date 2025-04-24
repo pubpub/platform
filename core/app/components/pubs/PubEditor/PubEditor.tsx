@@ -120,9 +120,7 @@ export type PubEditorProps = {
 );
 
 export async function PubEditor(props: PubEditorProps) {
-	let pub:
-		| ProcessedPub<{ withStage: true; withLegacyAssignee: true; withPubType: true }>
-		| undefined;
+	let pub: ProcessedPub<{ withStage: true; withPubType: true }> | undefined;
 	let community: AutoReturnType<typeof getCommunityById>["executeTakeFirstOrThrow"];
 
 	const { user } = await getLoginData();
@@ -137,7 +135,6 @@ export async function PubEditor(props: PubEditorProps) {
 			{
 				withPubType: true,
 				withStage: true,
-				withLegacyAssignee: true,
 			}
 		);
 		community = await getCommunityById(
@@ -164,7 +161,6 @@ export async function PubEditor(props: PubEditorProps) {
 		getPubsWithRelatedValues(
 			{ communityId: community.id },
 			{
-				withLegacyAssignee: true,
 				withPubType: true,
 				withStage: true,
 				limit: 30,
