@@ -10,6 +10,8 @@ import type {
 	CommunityMemberships,
 	FormsId,
 	InvitesId,
+	MemberRole,
+	MembershipType,
 	PubsId,
 	StagesId,
 	UsersId,
@@ -28,10 +30,13 @@ import { autoCache } from "../cache/autoCache";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
 import {
+	coalesceMemberships,
 	insertCommunityMembershipsOverrideRole,
 	insertPubMembershipsOverrideRole,
 	insertStageMembershipsOverrideRole,
 	selectCommunityMemberships,
+	selectPubMemberships,
+	selectStageMemberships,
 } from "../member";
 import { withInvitedFormIds } from "./helpers";
 import { InviteBuilder } from "./InviteBuilder";
@@ -457,77 +462,51 @@ export namespace InviteService {
 			};
 		}
 
-		const communityMembershipPromise = selectCommunityMemberships({
+		const communityMemberships = await selectCommunityMemberships({
 			userId: user.id,
 			communityId: invite.communityId,
-		}).executeTakeFirst();
+		}).execute();
+		const communityMembership = coalesceMemberships(communityMemberships);
 
-		const isCommunityMemberUseless = (
-			member: Omit<CommunityMemberships, "memberGroupId"> | undefined
-		) => {
-			if (!member) {
-				return {
-					useless: false as const,
-				};
-			}
-
-			if (compareMemberRoles(member.role, "<=", invite.communityRole)) {
-				return {
-					useless: true as const,
-					reason: "Invite would not grant additional roles",
-				};
-			}
-
-			return {
-				useless: false as const,
-			};
-		};
-
+		const isCommunityMemberUseless = isInviteUselessForMembership(
+			{
+				role: invite.communityRole,
+				forms: invite.communityLevelFormIds ?? [],
+			},
+			communityMembership
+		);
 		if (isCommunityOnlyInvite(invite)) {
-			const communityMember = await communityMembershipPromise;
-			return isCommunityMemberUseless(communityMember);
+			return isCommunityMemberUseless;
 		} else if (isPubInvite(invite)) {
-			const [pubMemberships, communityMember] = await Promise.all([
-				autoCache(
-					trx
-						.selectFrom("pub_memberships")
-						.selectAll()
-						.where("userId", "=", user.id)
-						.where("pubId", "=", invite.pubId)
-				).execute(),
-				communityMembershipPromise,
-			]);
+			const pubMemberships = await selectPubMemberships({
+				userId: user.id,
+				pubId: invite.pubId,
+			}).execute();
 
-			if (!pubMemberships.length) {
+			const pubMember = coalesceMemberships(pubMemberships);
+
+			if (!pubMember) {
 				return {
 					useless: false,
 				};
 			}
 
-			const communityMemberUseless = isCommunityMemberUseless(communityMember);
+			const isPubMemberUseless = isInviteUselessForMembership(
+				{
+					role: invite.pubOrStageRole,
+					forms: invite.pubOrStageFormIds ?? [],
+				},
+				pubMember
+			);
 
-			if (
-				compareMemberRoles(pubMember.role, "<=", invite.pubOrStageRole) &&
-				communityMemberUseless.useless
-			) {
-				return {
-					useless: true,
-					reason: "Invite would not grant additional roles",
-				};
-			}
-
-			return communityMemberUseless;
+			return isPubMemberUseless;
 		} else if (isStageInvite(invite)) {
-			const [stageMember, communityMember] = await Promise.all([
-				autoCache(
-					trx
-						.selectFrom("stage_memberships")
-						.selectAll()
-						.where("userId", "=", user.id)
-						.where("stageId", "=", invite.stageId)
-				).executeTakeFirst(),
-				communityMembershipPromise,
-			]);
+			const stageMemberships = await selectStageMemberships({
+				userId: user.id,
+				stageId: invite.stageId,
+			}).execute();
+
+			const stageMember = coalesceMemberships(stageMemberships);
 
 			if (!stageMember) {
 				return {
@@ -535,19 +514,15 @@ export namespace InviteService {
 				};
 			}
 
-			const communityMemberUseless = isCommunityMemberUseless(communityMember);
+			const stageMemberUseless = isInviteUselessForMembership(
+				{
+					role: invite.pubOrStageRole,
+					forms: invite.pubOrStageFormIds ?? [],
+				},
+				stageMember
+			);
 
-			if (
-				compareMemberRoles(stageMember.role, "<=", invite.pubOrStageRole) &&
-				communityMemberUseless.useless
-			) {
-				return {
-					useless: true,
-					reason: `Invite would not grant additional roles`,
-				};
-			}
-
-			return communityMemberUseless;
+			return stageMemberUseless;
 		}
 
 		throw new Error("Invalid invite");
@@ -732,4 +707,35 @@ function isPubInvite(invite: Invite): invite is Invite & { pubId: PubsId } {
 
 function isStageInvite(invite: Invite): invite is Invite & { stageId: StagesId } {
 	return invite.stageId !== null;
+}
+
+function isInviteUselessForMembership(
+	invite: {
+		role: MemberRole;
+		forms: FormsId[];
+	},
+	existingMembership: { role: MemberRole; forms: FormsId[] } | undefined
+) {
+	if (!existingMembership) {
+		return {
+			useless: false as const,
+		};
+	}
+
+	const isLowerOrSameRole = compareMemberRoles(existingMembership.role, "<=", invite.role);
+
+	const inviteHasNoNewForms = invite.forms.some(
+		(formId) => !existingMembership.forms.includes(formId)
+	);
+
+	if (isLowerOrSameRole && inviteHasNoNewForms) {
+		return {
+			useless: true as const,
+			reason: "Invite would not grant additional roles",
+		};
+	}
+
+	return {
+		useless: false as const,
+	};
 }

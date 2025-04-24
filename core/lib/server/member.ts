@@ -9,6 +9,10 @@ import type {
 	NewCommunityMemberships,
 	NewPubMemberships,
 	NewStageMemberships,
+	PubMembershipsId,
+	PubsId,
+	StageMembershipsId,
+	StagesId,
 	UsersId,
 } from "db/public";
 import { MemberRole } from "db/public";
@@ -37,6 +41,7 @@ export const selectCommunityMemberships = (
 				"community_memberships.updatedAt",
 				"community_memberships.role",
 				"community_memberships.communityId",
+				"community_memberships.formId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
@@ -47,7 +52,9 @@ export const selectCommunityMemberships = (
 					.as("user"),
 			])
 			.$if(Boolean(props.userId), (eb) =>
-				eb.where("community_memberships.userId", "=", props.userId!)
+				eb
+					.where("community_memberships.userId", "=", props.userId!)
+					.$narrowType<{ userId: UsersId }>()
 			)
 			.$if(Boolean(props.communityId), (eb) =>
 				eb.where("community_memberships.communityId", "=", props.communityId!)
@@ -82,6 +89,76 @@ export const selectAllCommunityMemberships = (
 			])
 			.where("community_memberships.communityId", "=", communityId)
 	);
+
+export const selectStageMemberships = (
+	props: XOR<{ id: StageMembershipsId }, { userId: UsersId; stageId: StagesId }>,
+	trx = db
+) => {
+	return autoCache(
+		trx
+			.selectFrom("stage_memberships")
+			.select((eb) => [
+				"stage_memberships.id",
+				"stage_memberships.userId",
+				"stage_memberships.createdAt",
+				"stage_memberships.updatedAt",
+				"stage_memberships.role",
+				"stage_memberships.stageId",
+				"stage_memberships.formId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "stage_memberships.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.$if(Boolean(props.userId), (eb) =>
+				eb
+					.where("stage_memberships.userId", "=", props.userId!)
+					.$narrowType<{ userId: UsersId }>()
+			)
+			.$if(Boolean(props.stageId), (eb) =>
+				eb.where("stage_memberships.stageId", "=", props.stageId!)
+			)
+			.$if(Boolean(props.id), (eb) => eb.where("stage_memberships.id", "=", props.id!))
+	);
+};
+
+export const selectPubMemberships = (
+	props: XOR<{ id: PubMembershipsId }, { userId: UsersId; pubId: PubsId }>,
+	trx = db
+) => {
+	return autoCache(
+		trx
+			.selectFrom("pub_memberships")
+			.select((eb) => [
+				"pub_memberships.id",
+				"pub_memberships.userId",
+				"pub_memberships.createdAt",
+				"pub_memberships.updatedAt",
+				"pub_memberships.role",
+				"pub_memberships.pubId",
+				"pub_memberships.formId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "pub_memberships.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.$if(Boolean(props.userId), (eb) =>
+				eb
+					.where("pub_memberships.userId", "=", props.userId!)
+					.$narrowType<{ userId: UsersId }>()
+			)
+			.$if(Boolean(props.pubId), (eb) => eb.where("pub_memberships.pubId", "=", props.pubId!))
+			.$if(Boolean(props.id), (eb) => eb.where("pub_memberships.id", "=", props.id!))
+	);
+};
 
 const getMembershipRows = <T extends { role: MemberRole; forms: FormsId[]; userId: UsersId }>({
 	forms,
@@ -175,3 +252,51 @@ export const insertPubMemberships = (
 	membership: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) => autoRevalidate(trx.insertInto("pub_memberships").values(getMembershipRows(membership)));
+
+export const coalesceMemberships = <
+	T extends {
+		role: MemberRole;
+		formId: FormsId | null;
+		userId: UsersId | null;
+		createdAt?: Date | string;
+		updatedAt?: Date | string;
+	},
+>(
+	memberships: T[]
+) => {
+	const { formId, ...firstMembership } = memberships[0];
+
+	return memberships.reduce(
+		(acc, { updatedAt, createdAt, formId, ...membership }, idx) => {
+			if (idx > 0 || membership.role !== MemberRole.contributor) {
+				if (!formId) {
+					throw new Error("Multiple memberships without formId detected.");
+				}
+
+				if (membership.role !== MemberRole.contributor) {
+					throw new Error("Multiple memberships with non-contributor role detected.");
+				}
+			}
+
+			let key: keyof typeof membership & string;
+			// check if all memberships are similar
+			for (key in membership) {
+				if (membership[key] !== acc[key]) {
+					throw new Error(
+						`Membership ${key} mismatch between ${membership[key]} and ${acc[key]}`
+					);
+				}
+			}
+
+			if (formId) {
+				acc.forms.push(formId);
+			}
+
+			return acc;
+		},
+		{
+			...firstMembership,
+			forms: formId ? [formId] : [],
+		} as Omit<T, "formId"> & { forms: FormsId[] }
+	);
+};
