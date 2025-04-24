@@ -1,11 +1,14 @@
 import type { CommunitiesId, CommunityMembershipsId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType, MemberRole, MembershipType } from "db/public";
 import { expect } from "utils";
 
+import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { autoCache } from "~/lib/server/cache/autoCache";
-import { createFormInviteLink, grantFormAccess } from "../../form";
+import { createFormInviteLink, getForm, grantFormAccess } from "../../form";
+import { insertCommunityMemberships } from "../../member";
+import { createUserWithMemberships, getUser } from "../../user";
 
 export type RenderWithPubRel = "self";
 
@@ -53,16 +56,38 @@ const getPubValue = (context: RenderWithPubContext, fieldSlug: string, rel?: str
 
 export const renderFormInviteLink = async ({
 	formSlug,
-	userId,
 	communityId,
 	pubId,
+	...props
 }: {
 	formSlug: string;
-	userId: UsersId;
 	communityId: CommunitiesId;
 	pubId: PubsId;
-}) => {
+} & XOR<{ userId: UsersId }, { email: string }>) => {
+	let userId = props.userId;
+	if (!userId) {
+		const [form, existingUser] = await Promise.all([
+			getForm({ slug: formSlug, communityId }).executeTakeFirstOrThrow(),
+			// create new member
+			getUser({ email: props.email! }).executeTakeFirstOrThrow(),
+		]);
+
+		userId =
+			existingUser?.id ??
+			(await createUserWithMemberships({
+				email: props.email!,
+				firstName: "",
+				membership: {
+					type: MembershipType.pub,
+					pubId,
+					role: MemberRole.contributor,
+					forms: [form.id],
+				},
+			}));
+	}
+
 	await grantFormAccess({ userId, communityId, pubId, slug: formSlug });
+
 	return createFormInviteLink({ userId, formSlug, communityId, pubId });
 };
 
