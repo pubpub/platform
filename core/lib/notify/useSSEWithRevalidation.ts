@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useDebounce } from "use-debounce";
 import { useSSE } from "use-next-sse";
 
@@ -6,16 +6,16 @@ import { toast } from "ui/use-toast";
 
 import type { ChangeNotification, NotifyTables } from "~/app/api/v0/c/[communitySlug]/sse/route";
 
-export type SSEListen<T extends NotifyTables> =
-	| NotifyTables[]
-	| ((msg: ChangeNotification<T>) => boolean);
-
 export type SSEOptions<T extends NotifyTables> = {
 	url: string;
 	eventName: string;
 	withCredentials?: boolean;
 	debounceMs?: number;
-	listen: SSEListen<T>;
+	listenTables: NotifyTables[];
+	/**
+	 * Can only be passed from a client component
+	 */
+	listenFilter?: (msg: ChangeNotification<T>) => boolean;
 };
 
 export function useSSEWithRevalidation<T extends NotifyTables>({
@@ -24,12 +24,25 @@ export function useSSEWithRevalidation<T extends NotifyTables>({
 	withCredentials = true,
 	debounceMs = 500,
 	onRevalidate,
-	listen,
+	listenTables,
+	listenFilter,
 }: SSEOptions<T> & {
 	onRevalidate: () => void;
 }) {
+	const listenParams = useMemo(() => {
+		const listenParams = new URLSearchParams();
+
+		listenTables.forEach((table) => {
+			listenParams.append("listen", table);
+		});
+
+		return listenParams.toString();
+	}, [listenTables]);
+
+	const urlWithParams = listenParams ? `${url}?${listenParams}` : url;
+
 	const { data, error } = useSSE<ChangeNotification<T>>({
-		url,
+		url: urlWithParams,
 		eventName,
 		withCredentials,
 		reconnect: true,
@@ -50,11 +63,7 @@ export function useSSEWithRevalidation<T extends NotifyTables>({
 
 		if (!debouncedData) return;
 
-		if (Array.isArray(listen) && !listen.includes(debouncedData.table)) {
-			return;
-		}
-
-		if (typeof listen === "function" && !listen(debouncedData)) {
+		if (listenFilter && !listenFilter(debouncedData)) {
 			return;
 		}
 

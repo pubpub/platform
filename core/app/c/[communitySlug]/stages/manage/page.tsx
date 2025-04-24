@@ -102,7 +102,7 @@ export default async function Page(props: Props) {
 					</LocalStorageProvider>
 				</StageEditorProvider>
 			</StagesProvider>
-			<SSERevalidator listen={["action_runs"]} />
+			<SSERevalidator listenTables={["action_runs"]} />
 		</>
 	);
 }

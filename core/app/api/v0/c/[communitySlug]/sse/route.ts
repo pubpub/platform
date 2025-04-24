@@ -1,3 +1,4 @@
+import type { NextRequest } from "next/server";
 import type { PoolClient } from "pg";
 
 import { createSSEHandler } from "use-next-sse";
@@ -36,35 +37,47 @@ const handleClose = (client?: PoolClient) => {
 	};
 };
 
-export const GET = createSSEHandler(async (send, close, { onClose }) => {
-	logger.info("opening sse connection");
-	const { user } = await getLoginData();
+// bit awkward since we want to read the search params here, but the next-use-sse does not expose the request
+export const GET = (req: NextRequest) => {
+	return createSSEHandler(async (send, close, { onClose }) => {
+		const listen = req.nextUrl.searchParams.get("listen");
+		const listenTables = listen && !Array.isArray(listen) ? [listen] : listen;
 
-	if (!user) {
-		logger.info("no user found, closing sse connection");
-		return handleClose();
-	}
+		logger.info("opening sse connection");
+		const { user } = await getLoginData();
 
-	const client = await pool.connect();
-
-	// onClose(handleClose(client));
-
-	// listen for action run updates
-	await client.query(`LISTEN change`);
-
-	// handle postgres notifications
-	client.on("notification", async (msg) => {
-		if (!msg.payload) return;
-
-		try {
-			const notification = JSON.parse(msg.payload) as ChangeNotification<NotifyTables>;
-			logger.info({ msg: "notification", notification });
-			send(notification, "change");
-		} catch (err) {
-			logger.error({ msg: "Failed to parse notification:", err });
+		if (!user) {
+			logger.info("no user found, closing sse connection");
+			return handleClose();
 		}
-	});
 
-	return handleClose(client);
-	// cleanup on close
-});
+		const client = await pool.connect();
+
+		// listen for action run updates
+		await client.query(`LISTEN change`);
+
+		// handle postgres notifications
+		client.on("notification", async (msg) => {
+			if (!msg.payload) return;
+
+			try {
+				const notification = JSON.parse(msg.payload) as ChangeNotification<NotifyTables>;
+
+				if (
+					listenTables &&
+					listenTables.length &&
+					!listenTables.includes(notification.table)
+				) {
+					return;
+				}
+
+				logger.info({ msg: "notification", notification });
+				send(notification, "change");
+			} catch (err) {
+				logger.error({ msg: "Failed to parse notification:", err });
+			}
+		});
+
+		return handleClose(client);
+	})(req);
+};

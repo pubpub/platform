@@ -3,21 +3,22 @@
 import { Suspense } from "react";
 import { useParams } from "next/navigation";
 
-import type { NotifyTables } from "~/app/api/v0/c/[communitySlug]/sse/route";
-import type { SSEListen } from "~/lib/notify/useSSEWithRevalidation";
+import type { ChangeNotification, NotifyTables } from "~/app/api/v0/c/[communitySlug]/sse/route";
 import { useSSEWithRevalidation } from "~/lib/notify/useSSEWithRevalidation";
 import { revalidateCurrentPath } from "./revalidateCurrentPath";
 
 type SSERevalidatorProps<T extends NotifyTables> = {
 	eventName?: string;
 	debounceMs?: number;
-	listen: SSEListen<T>;
+	listenTables: NotifyTables[];
+	listenFilter?: (msg: ChangeNotification<T>) => boolean;
 };
 
 const _SSERevalidator = <T extends NotifyTables>({
 	eventName = "change",
 	debounceMs = 500,
-	listen,
+	listenTables,
+	listenFilter,
 }: SSERevalidatorProps<T>) => {
 	const params = useParams<{ communitySlug: string }>();
 
@@ -26,7 +27,8 @@ const _SSERevalidator = <T extends NotifyTables>({
 		eventName,
 		debounceMs,
 		onRevalidate: revalidateCurrentPath,
-		listen,
+		listenTables,
+		listenFilter,
 	});
 
 	// This component doesn't render anything
@@ -38,10 +40,10 @@ const _SSERevalidator = <T extends NotifyTables>({
  *
  * Note: if you want to pass a function, you need to import this component into another client component, as you cannot pass functions to client components from server components.
  */
-export function SSERevalidator<T extends NotifyTables>({ listen }: SSERevalidatorProps<T>) {
+export function SSERevalidator<T extends NotifyTables>(props: SSERevalidatorProps<T>) {
 	return (
 		<Suspense>
-			<_SSERevalidator listen={listen} />
+			<_SSERevalidator {...props} />
 		</Suspense>
 	);
 }
