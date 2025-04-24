@@ -18,7 +18,7 @@ test.describe("image upload", () => {
 			.first()
 			.setInputFiles("./src/stories/assets/image0.jpg");
 		await page.getByLabel("Upload 1 file").click();
-		await page.getByText("Media Upload").waitFor({ state: "hidden" });
+		await page.getByText("Media Upload").waitFor({ state: "hidden", timeout: 5_000 });
 		await expect(editor.getByRole("img", { name: "image0.jpg" })).toHaveCount(1);
 	});
 });
