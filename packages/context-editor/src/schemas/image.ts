@@ -14,8 +14,9 @@ export type ImageAttrs = {
 	alt: string;
 	src: string;
 	linkTo: string;
-	credit: string | null; // TODO: should be rich text
-	license: string | null; // TODO: should be rich text
+	caption: boolean;
+	credit: boolean;
+	license: boolean;
 	width: number;
 	align: Alignment;
 	fullResolution: boolean;
@@ -24,7 +25,7 @@ export type ImageAttrs = {
 export default {
 	atom: true,
 	inline: false,
-	group: "block",
+	group: "figure",
 	attrs: {
 		id: { default: null },
 		class: { default: null },
@@ -50,12 +51,12 @@ export default {
 					alt: node.getAttribute("alt") || "",
 					src: node.getAttribute("src") || "",
 					linkTo: node.getAttribute("data-link-to") || "",
-					credit: node.getAttribute("data-credit") || null,
-					license: node.getAttribute("data-license") || null,
+					caption: node.getAttribute("data-caption") === "true",
+					credit: node.getAttribute("data-credit") === "true",
+					license: node.getAttribute("data-license") === "true",
 					width: Number(node.getAttribute("data-width")) || 100,
 					align: (node.getAttribute("data-align") as Alignment) || "center",
-					fullResolution:
-						node.getAttribute("data-full-resolution") === "true" ? true : false,
+					fullResolution: node.getAttribute("data-full-resolution") === "true",
 				};
 				return attrs;
 			},

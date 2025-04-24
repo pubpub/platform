@@ -103,33 +103,14 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 											<Trash />
 										</Button>
 									</div>
-									<FormMessage />
 								</div>
+								<FormMessage />
 							</FormItem>
 						);
 					}}
 				/>
 				<hr />
 				<MenuSwitchField name="openInNewTab" label="Open in new tab" />
-				{/* <FormField
-						name="openInNewTab"
-						control={form.control}
-						render={({ field }) => (
-							<FormItem className="flex items-center justify-between">
-								<FormLabel>Open in new tab</FormLabel>
-								<FormControl>
-									<Switch
-										className="data-[state=checked]:bg-emerald-400"
-										checked={field.value}
-										onCheckedChange={(checked) => {
-											field.onChange(checked);
-										}}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/> */}
 				<hr />
 				<AdvancedOptions />
 			</form>

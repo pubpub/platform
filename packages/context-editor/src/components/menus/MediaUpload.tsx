@@ -3,6 +3,7 @@ import type { Attrs } from "prosemirror-model";
 import type { ReactNode } from "react";
 
 import React, { useMemo } from "react";
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
@@ -25,15 +26,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { Alignment } from "../../schemas/image";
+import { useEditorContext } from "../Context";
 import { AdvancedOptions } from "./AdvancedOptions";
 import { MenuInputField, MenuSwitchField } from "./MenuFields";
 
 const formSchema = Type.Object({
 	src: Type.String(),
 	alt: Type.String(),
-	linkTo: Type.String({ format: "uri" }),
-	credit: Type.String(),
-	license: Type.String(),
+	linkTo: Type.String(), //Type.String({ format: "uri" }),
+	caption: Type.Boolean(),
+	credit: Type.Boolean(),
+	license: Type.Boolean(),
 	width: Type.Number(),
 	align: Type.Enum(Alignment),
 	id: Type.String(),
@@ -70,6 +73,7 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 };
 
 export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
+	const { activeNode, position } = useEditorContext();
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
@@ -88,9 +92,20 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		},
 	});
 
+	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
+		if (!activeNode) {
+			return;
+		}
+		if (values.caption) {
+			const { schema, tr, selection } = view.state;
+			const captionNode = schema.nodes.figcaption.create();
+			view.dispatch(tr.insert(selection.to + 2, captionNode));
+		}
+	});
+
 	return (
 		<Form {...form}>
-			<form>
+			<form onBlur={form.handleSubmit(handleSubmit)}>
 				<h2 className="text-md font-medium">Media Attributes</h2>
 				<Tabs defaultValue="info">
 					<TabsList className="grid w-full grid-cols-2 bg-muted">
