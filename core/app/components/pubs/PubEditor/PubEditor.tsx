@@ -126,6 +126,13 @@ export async function PubEditor(props: PubEditorProps) {
 	const { user } = await getLoginData();
 
 	if ("pubId" in props) {
+		// We explicitly do not pass the user here for two reasons:
+		// (1) It's expected that to see the PubEditor component at all, the
+		// user has the capabilities necessary to edit the pub's local values
+		// exposed by the form.
+		// (2) We want to fetch the pub's related pubs' values in order to
+		// render the related pub title/name in the related pubs form element,
+		// even if the user does not have capabilities to view the related pub.
 		pub = await getPubsWithRelatedValues(
 			{
 				pubId: props.pubId,
