@@ -194,24 +194,28 @@ export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =
 
 export const onConflictOverrideRole = (
 	oc: OnConflictBuilder<any, any>,
-	columns: ["userId", "communityId"] | ["userId", "pubId"] | ["userId", "stageId"],
-	table: "community_memberships" | "pub_memberships" | "stage_memberships"
-) =>
-	oc.columns(columns).doUpdateSet((eb) => ({
-		role: eb
-			.case()
-			.when(eb.ref(`${table}.role`), "=", MemberRole.admin)
-			.then(eb.ref(`${table}.role`))
-			.when(
-				eb.and([
-					eb(eb.ref(`${table}.role`), "=", MemberRole.editor),
-					eb(eb.ref("excluded.role"), "!=", MemberRole.admin),
-				])
-			)
-			.then(eb.ref(`${table}.role`))
-			.else(eb.ref("excluded.role"))
-			.end(),
-	}));
+	type: "community" | "pub" | "stage",
+	withForm: boolean
+) => {
+	return oc
+		.columns(["userId", `${type}Id`, "formId"])
+		.where("formId", withForm ? "is not" : "is", null)
+		.doUpdateSet((eb) => ({
+			role: eb
+				.case()
+				.when(eb.ref(`${type}_memberships.role`), "=", MemberRole.admin)
+				.then(eb.ref(`${type}_memberships.role`))
+				.when(
+					eb.and([
+						eb(eb.ref(`${type}_memberships.role`), "=", MemberRole.editor),
+						eb(eb.ref("excluded.role"), "!=", MemberRole.admin),
+					])
+				)
+				.then(eb.ref(`${type}_memberships.role`))
+				.else(eb.ref("excluded.role"))
+				.end(),
+		}));
+};
 
 export const insertCommunityMembershipsOverrideRole = (
 	props: NewCommunityMemberships & { userId: UsersId; forms: FormsId[] },
@@ -219,7 +223,7 @@ export const insertCommunityMembershipsOverrideRole = (
 ) =>
 	autoRevalidate(
 		insertCommunityMemberships(props, trx).qb.onConflict((oc) =>
-			onConflictOverrideRole(oc, ["userId", "communityId"], "community_memberships")
+			onConflictOverrideRole(oc, "community", props.formId !== null)
 		)
 	);
 
@@ -234,7 +238,7 @@ export const insertStageMembershipsOverrideRole = (
 ) =>
 	autoRevalidate(
 		insertStageMemberships(props, trx).qb.onConflict((oc) =>
-			onConflictOverrideRole(oc, ["userId", "stageId"], "stage_memberships")
+			onConflictOverrideRole(oc, "stage", props.formId !== null)
 		)
 	);
 
@@ -244,7 +248,7 @@ export const insertPubMembershipsOverrideRole = (
 ) =>
 	autoRevalidate(
 		insertPubMemberships(props, trx).qb.onConflict((oc) =>
-			onConflictOverrideRole(oc, ["userId", "pubId"], "pub_memberships")
+			onConflictOverrideRole(oc, "pub", props.formId !== null)
 		)
 	);
 

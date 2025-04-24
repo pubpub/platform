@@ -462,10 +462,20 @@ export namespace InviteService {
 			};
 		}
 
-		const communityMemberships = await selectCommunityMemberships({
-			userId: user.id,
-			communityId: invite.communityId,
-		}).execute();
+		const communityMemberships = await selectCommunityMemberships(
+			{
+				userId: user.id,
+				communityId: invite.communityId,
+			},
+			trx
+		).execute();
+
+		if (!communityMemberships?.length) {
+			return {
+				useless: false,
+			};
+		}
+
 		const communityMembership = coalesceMemberships(communityMemberships);
 
 		const isCommunityMemberUseless = isInviteUselessForMembership(
@@ -478,18 +488,20 @@ export namespace InviteService {
 		if (isCommunityOnlyInvite(invite)) {
 			return isCommunityMemberUseless;
 		} else if (isPubInvite(invite)) {
-			const pubMemberships = await selectPubMemberships({
-				userId: user.id,
-				pubId: invite.pubId,
-			}).execute();
+			const pubMemberships = await selectPubMemberships(
+				{
+					userId: user.id,
+					pubId: invite.pubId,
+				},
+				trx
+			).execute();
 
-			const pubMember = coalesceMemberships(pubMemberships);
-
-			if (!pubMember) {
+			if (!pubMemberships?.length) {
 				return {
 					useless: false,
 				};
 			}
+			const pubMember = coalesceMemberships(pubMemberships);
 
 			const isPubMemberUseless = isInviteUselessForMembership(
 				{
@@ -501,18 +513,20 @@ export namespace InviteService {
 
 			return isPubMemberUseless;
 		} else if (isStageInvite(invite)) {
-			const stageMemberships = await selectStageMemberships({
-				userId: user.id,
-				stageId: invite.stageId,
-			}).execute();
+			const stageMemberships = await selectStageMemberships(
+				{
+					userId: user.id,
+					stageId: invite.stageId,
+				},
+				trx
+			).execute();
 
-			const stageMember = coalesceMemberships(stageMemberships);
-
-			if (!stageMember) {
+			if (!stageMemberships?.length) {
 				return {
 					useless: false,
 				};
 			}
+			const stageMember = coalesceMemberships(stageMemberships);
 
 			const stageMemberUseless = isInviteUselessForMembership(
 				{
