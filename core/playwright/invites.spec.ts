@@ -6,7 +6,6 @@ import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
 import type { PubsId, UsersId } from "db/public";
-import type { Invite } from "db/types";
 import {
 	Action,
 	CoreSchemaType,
@@ -20,9 +19,6 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
-import { PubDetailsPage } from "./fixtures/pub-details-page";
-import { PubsPage } from "./fixtures/pubs-page";
-import { inbucketClient } from "./helpers";
 
 const ACTION_NAME_USER = "Invite evaluator (user)";
 const ACTION_NAME_EMAIL = "Invite evaluator (email)";
