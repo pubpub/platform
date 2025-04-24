@@ -115,11 +115,6 @@ type SetOptions = {
 	 * ```
 	 */
 	deleteExistingValues?: boolean;
-
-	/**
-	 * If true, nullish values will not be set.
-	 */
-	ignoreNullish?: boolean;
 };
 
 type RelationOptions = {
@@ -1111,26 +1106,11 @@ abstract class SinglePubOp extends PubOpBase {
 	 */
 	set(slug: string, value: PubValue, options?: SetOptions): this;
 	/**
-	 * Set a single value, ignoring nullish values
-	 */
-	set(
-		slug: string,
-		value: PubValue | null | undefined,
-		options: SetOptions & { ignoreNullish: true }
-	): this;
-	/**
 	 * Set multiple values
 	 */
 	set(values: Record<string, PubValue>, options?: SetOptions): this;
-	/**
-	 * Set multiple values, ignoring nullish values
-	 */
 	set(
-		values: Record<string, PubValue | null | undefined>,
-		options?: SetOptions & { ignoreNullish: true }
-	): this;
-	set(
-		slugOrValues: string | Record<string, PubValue | null | undefined>,
+		slugOrValues: string | Record<string, PubValue>,
 		valueOrOptions?: PubValue | SetOptions,
 		options?: SetOptions
 	): this {
@@ -1144,9 +1124,6 @@ abstract class SinglePubOp extends PubOpBase {
 		};
 
 		if (mode === "single") {
-			if (valueOrOptions === null && opts?.ignoreNullish) {
-				return this;
-			}
 			this.commands.push({
 				type: "set",
 				slug: slugOrValues as string,
@@ -1156,14 +1133,12 @@ abstract class SinglePubOp extends PubOpBase {
 			return this;
 		}
 
-		const commands = Object.entries(slugOrValues)
-			.filter(([_, value]) => (opts?.ignoreNullish ? value != null : true))
-			.map(([slug, value]) => ({
-				type: "set" as const,
-				slug,
-				value,
-				options: opts,
-			}));
+		const commands = Object.entries(slugOrValues).map(([slug, value]) => ({
+			type: "set" as const,
+			slug,
+			value,
+			options: opts,
+		}));
 
 		this.commands.push(...commands);
 		return this;
