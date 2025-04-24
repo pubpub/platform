@@ -19,6 +19,7 @@ export * from "./label";
 export * from "./popover";
 export * from "./select";
 export * from "./separator";
+export * from "./slider";
 export * from "./tabs";
 export * from "./textarea";
 export * from "./toast";

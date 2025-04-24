@@ -7,8 +7,10 @@ import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
 
-import { Form } from "ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ExternalLink, HelpCircle } from "ui/icon";
+import { Input } from "ui/input";
+import { Slider } from "ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
@@ -54,8 +56,8 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		<Form {...form}>
 			<form>
 				<h2 className="text-md font-medium">Media Attributes</h2>
-				<Tabs defaultValue="info" className="bg-muted">
-					<TabsList className="grid w-full grid-cols-2">
+				<Tabs defaultValue="info">
+					<TabsList className="grid w-full grid-cols-2 bg-muted">
 						<TabsTrigger value="info">Info</TabsTrigger>
 						<TabsTrigger value="style">Style</TabsTrigger>
 					</TabsList>
@@ -101,7 +103,49 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 						<hr />
 						<AdvancedOptions />
 					</TabsContent>
-					<TabsContent value="style">2</TabsContent>
+					<TabsContent value="style">
+						<FormField
+							control={form.control}
+							name="width"
+							render={({ field }) => {
+								return (
+									<FormItem>
+										<div className="grid grid-cols-4 items-center gap-2">
+											<FormLabel>Width</FormLabel>
+											<FormControl>
+												<Slider
+													defaultValue={[100]}
+													value={
+														field.value == null
+															? undefined
+															: [field.value]
+													}
+													onValueChange={(value) =>
+														field.onChange(value[0])
+													}
+													min={0}
+													max={100}
+													step={1}
+													className="col-span-2"
+												/>
+											</FormControl>
+											<FormControl>
+												<Input
+													type="number"
+													{...field}
+													onChange={(e) => {
+														field.onChange(e.target.valueAsNumber);
+													}}
+													className="shrink"
+												/>
+											</FormControl>
+										</div>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
+						/>
+					</TabsContent>
 				</Tabs>
 			</form>
 		</Form>
