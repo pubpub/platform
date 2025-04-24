@@ -9,7 +9,7 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import { db } from "~/kysely/database";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
-import { selectCommunityMember } from "~/lib/server/member";
+import { coalesceMemberships, selectCommunityMemberships } from "~/lib/server/member";
 import { maybeWithTrx } from "~/lib/server/pub";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { isClientException } from "~/lib/serverActions";
@@ -33,11 +33,19 @@ export const run = defineRun<typeof action>(
 				let recipient: RenderWithPubContext["recipient"] | undefined;
 
 				if (recipientMemberId !== undefined) {
-					recipient = await selectCommunityMember({
+					const memberships = await selectCommunityMemberships({
 						id: recipientMemberId,
-					}).executeTakeFirstOrThrow(
-						() => new Error(`Could not find member with ID ${recipientMemberId}`)
-					);
+					}).execute();
+					if (!memberships.length) {
+						throw new Error(`Could not find member with ID ${recipientMemberId}`);
+					}
+
+					const membership = coalesceMemberships(memberships);
+
+					recipient = {
+						id: membership.id,
+						user: membership.user,
+					};
 				} else if (recipientEmail !== undefined) {
 					recipient = {
 						email: recipientEmail,
