@@ -7,6 +7,10 @@ import { cn } from "utils";
 export {
 	Activity,
 	AlertCircle,
+	AlignCenter,
+	AlignLeft,
+	AlignRight,
+	AlignVerticalSpaceAround,
 	Archive,
 	ArchiveRestore,
 	ArrowLeft,
@@ -41,6 +45,7 @@ export {
 	CurlyBraces,
 	Download,
 	Ellipsis,
+	Expand,
 	ExternalLink,
 	FileText,
 	FlagTriangleRightIcon,

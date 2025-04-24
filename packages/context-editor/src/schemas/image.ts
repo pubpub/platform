@@ -1,6 +1,13 @@
 import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
 
-export type Alignment = "left" | "center" | "right" | "block";
+export enum Alignment {
+	left = "left",
+	center = "center",
+	right = "right",
+	verticalCenter = "verticalCenter",
+	expand = "expand",
+}
+
 export type ImageAttrs = {
 	id: string | null;
 	class: string | null;

@@ -1,5 +1,6 @@
 import type { Static } from "@sinclair/typebox";
 import type { Attrs } from "prosemirror-model";
+import type { ReactNode } from "react";
 
 import React, { useMemo } from "react";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
@@ -8,12 +9,22 @@ import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { ExternalLink, HelpCircle } from "ui/icon";
+import {
+	AlignCenter,
+	AlignLeft,
+	AlignRight,
+	AlignVerticalSpaceAround,
+	Expand,
+	ExternalLink,
+	HelpCircle,
+} from "ui/icon";
 import { Input } from "ui/input";
+import { RadioGroup, RadioGroupCard } from "ui/radio-group";
 import { Slider } from "ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
+import { Alignment } from "../../schemas/image";
 import { AdvancedOptions } from "./AdvancedOptions";
 import { MenuInputField, MenuSwitchField } from "./MenuFields";
 
@@ -24,7 +35,7 @@ const formSchema = Type.Object({
 	credit: Type.String(),
 	license: Type.String(),
 	width: Type.Number(),
-	align: Type.String(), // make enum?
+	align: Type.Enum(Alignment),
 	id: Type.String(),
 	class: Type.String(),
 });
@@ -32,6 +43,31 @@ const formSchema = Type.Object({
 const compiledSchema = TypeCompiler.Compile(formSchema);
 
 type FormSchema = Static<typeof formSchema>;
+
+const ALIGNMENT_INFO: Record<Alignment, { icon: ReactNode; label: string }> = {
+	[Alignment.left]: { icon: <AlignLeft />, label: "Align left" },
+	[Alignment.center]: { icon: <AlignCenter />, label: "Align center" },
+	[Alignment.right]: { icon: <AlignRight />, label: "Align right" },
+	[Alignment.verticalCenter]: { icon: <AlignVerticalSpaceAround />, label: "Vertically center" },
+	[Alignment.expand]: { icon: <Expand />, label: "Expand" },
+};
+
+const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
+	const { icon, label } = ALIGNMENT_INFO[alignment];
+	return (
+		<FormItem>
+			<FormControl>
+				<RadioGroupCard
+					value={alignment}
+					className="data-[state=checked]:border-ring-0 rounded border-0 data-[state=checked]:bg-gray-200"
+				>
+					{icon}
+				</RadioGroupCard>
+			</FormControl>
+			<FormLabel className="sr-only">{label}</FormLabel>
+		</FormItem>
+	);
+};
 
 export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
@@ -103,7 +139,7 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 						<hr />
 						<AdvancedOptions />
 					</TabsContent>
-					<TabsContent value="style">
+					<TabsContent value="style" className="space-y-4">
 						<FormField
 							control={form.control}
 							name="width"
@@ -150,6 +186,47 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 								);
 							}}
 						/>
+						<FormField
+							control={form.control}
+							name="align"
+							render={({ field }) => {
+								return (
+									<FormItem>
+										<div className="grid grid-cols-4 items-center gap-1">
+											<FormLabel>Alignment</FormLabel>
+											<div className="display col-span-3 flex items-center">
+												<FormControl>
+													<RadioGroup
+														onValueChange={field.onChange}
+														defaultValue={field.value}
+														className="flex w-full items-center justify-end gap-2"
+													>
+														<AlignmentRadioItem
+															alignment={Alignment.left}
+														/>
+														<AlignmentRadioItem
+															alignment={Alignment.center}
+														/>
+														<AlignmentRadioItem
+															alignment={Alignment.right}
+														/>
+														<AlignmentRadioItem
+															alignment={Alignment.verticalCenter}
+														/>
+														<AlignmentRadioItem
+															alignment={Alignment.expand}
+														/>
+													</RadioGroup>
+												</FormControl>
+											</div>
+										</div>
+										<FormMessage />
+									</FormItem>
+								);
+							}}
+						/>
+						<hr />
+						<MenuSwitchField name="fullResolution" label="Always use full resolution" />
 					</TabsContent>
 				</Tabs>
 			</form>
