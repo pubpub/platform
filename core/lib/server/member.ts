@@ -281,9 +281,9 @@ export const coalesceMemberships = <
 			let key: keyof typeof membership & string;
 			// check if all memberships are similar
 			for (key in membership) {
-				if (membership[key] !== acc[key]) {
+				if (membership[key] !== acc[key as keyof typeof acc]) {
 					throw new Error(
-						`Membership ${key} mismatch between ${membership[key]} and ${acc[key]}`
+						`Membership ${key} mismatch between ${membership[key]} and ${acc[key as keyof typeof acc]}`
 					);
 				}
 			}
