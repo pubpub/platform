@@ -7,6 +7,7 @@ import {
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
 import { createPortal } from "react-dom";
+import { registerFormats } from "schemas";
 
 import { Input } from "ui/input";
 import { Label } from "ui/label";
@@ -34,6 +35,8 @@ const initPanelProps: PanelProps = {
 	panelLeft: 0,
 	bottom: 0,
 };
+
+registerFormats();
 
 export function AttributePanel({
 	menuHidden,

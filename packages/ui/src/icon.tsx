@@ -49,6 +49,7 @@ export {
 	GripVertical,
 	Heading2,
 	Heading3,
+	HelpCircle,
 	History,
 	ImagePlus,
 	Info,

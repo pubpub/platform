@@ -1,6 +1,6 @@
 import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
 
-type Alignment = "left" | "center" | "right" | "block";
+export type Alignment = "left" | "center" | "right" | "block";
 export type ImageAttrs = {
 	id: string | null;
 	class: string | null;
@@ -11,6 +11,7 @@ export type ImageAttrs = {
 	license: string | null; // TODO: should be rich text
 	width: number;
 	align: Alignment;
+	fullResolution: boolean;
 };
 
 export default {
@@ -27,6 +28,7 @@ export default {
 		license: { default: null },
 		width: { default: 100 },
 		align: { default: "center" },
+		fullResolution: { default: false },
 	},
 	parseDOM: [
 		{
@@ -45,6 +47,8 @@ export default {
 					license: node.getAttribute("data-license") || null,
 					width: Number(node.getAttribute("data-width")) || 100,
 					align: (node.getAttribute("data-align") as Alignment) || "center",
+					fullResolution:
+						node.getAttribute("data-full-resolution") === "true" ? true : false,
 				};
 				return attrs;
 			},

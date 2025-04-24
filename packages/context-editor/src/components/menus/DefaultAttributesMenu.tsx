@@ -6,6 +6,7 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 
 import { useEditorContext } from "../Context";
+import { MediaUpload } from "./MediaUpload";
 
 const labelClass = "font-normal text-xs";
 const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
@@ -17,15 +18,26 @@ export const NodeAttributes = ({
 	nodeAttrs: Attrs;
 	updateAttr: (attrKey: string, value: string) => void;
 }) => {
-	const { position: activeNodePosition } = useEditorContext();
+	const { activeNode, position } = useEditorContext();
 
+	console.log({ nodeAttrs });
+
+	if (Object.keys(nodeAttrs).length === 0) {
+		return null;
+	}
+
+	if (activeNode?.type.name === "image") {
+		return <MediaUpload attrs={nodeAttrs} />;
+	}
+
+	// Default
 	return (
 		<>
 			{Object.keys(nodeAttrs).map((attrKey) => {
 				if (attrKey === "data") {
 					return null;
 				}
-				const key = `${attrKey}-${activeNodePosition}`;
+				const key = `${attrKey}-${position}`;
 				return (
 					<div key={key}>
 						<Label className={labelClass} htmlFor={key}>
