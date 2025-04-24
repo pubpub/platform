@@ -24,11 +24,11 @@ import { logger } from "logger";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { maybeWithTrx } from "..";
 import { getLoginData } from "../../authentication/loginData";
 import { autoCache } from "../cache/autoCache";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
+import { maybeWithTrx } from "../maybeWithTrx";
 import {
 	coalesceMemberships,
 	insertCommunityMembershipsOverrideRole,

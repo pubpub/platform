@@ -9,8 +9,8 @@ import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPub
 import { db } from "~/kysely/database";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import * as Email from "~/lib/server/email";
+import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 import { coalesceMemberships, selectCommunityMemberships } from "~/lib/server/member";
-import { maybeWithTrx } from "~/lib/server/pub";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
 import { isClientException } from "~/lib/serverActions";
 import { defineRun } from "../types";

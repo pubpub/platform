@@ -10,14 +10,12 @@ import { tryCatch } from "utils/try-catch";
 
 import type { SignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/authentication/loginData";
 import { lucia } from "~/lib/authentication/lucia";
 import { createPasswordHash } from "~/lib/authentication/password";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { maybeWithTrx } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { InviteService } from "~/lib/server/invites/InviteService";
+import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 import { redirectToCommunitySignup, redirectToLogin } from "~/lib/server/navigation/redirects";
 import { addUser, generateUserSlug } from "~/lib/server/user";
 
