@@ -8,7 +8,7 @@ export default async function Page({
 	searchParams,
 }: {
 	searchParams: Promise<{
-		redirectTo?: string;
+		redirectTo: string;
 	}>;
 }) {
 	const { redirectTo } = await searchParams;
