@@ -110,35 +110,40 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 							render={({ field }) => {
 								return (
 									<FormItem>
-										<div className="grid grid-cols-4 items-center gap-2">
+										<div className="grid grid-cols-4 items-center gap-1">
 											<FormLabel>Width</FormLabel>
-											<FormControl>
-												<Slider
-													defaultValue={[100]}
-													value={
-														field.value == null
-															? undefined
-															: [field.value]
-													}
-													onValueChange={(value) =>
-														field.onChange(value[0])
-													}
-													min={0}
-													max={100}
-													step={1}
-													className="col-span-2"
-												/>
-											</FormControl>
-											<FormControl>
-												<Input
-													type="number"
-													{...field}
-													onChange={(e) => {
-														field.onChange(e.target.valueAsNumber);
-													}}
-													className="shrink"
-												/>
-											</FormControl>
+											<div className="display col-span-3 flex items-center gap-1">
+												<FormControl>
+													<Slider
+														defaultValue={[100]}
+														value={
+															field.value == null
+																? undefined
+																: [field.value]
+														}
+														onValueChange={(value) =>
+															field.onChange(value[0])
+														}
+														min={0}
+														max={100}
+														step={1}
+													/>
+												</FormControl>
+												<FormControl>
+													<div className="flex items-center gap-1">
+														<Input
+															type="number"
+															{...field}
+															onChange={(e) => {
+																field.onChange(
+																	e.target.valueAsNumber
+																);
+															}}
+														/>
+														%
+													</div>
+												</FormControl>
+											</div>
 										</div>
 										<FormMessage />
 									</FormItem>
