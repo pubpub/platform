@@ -78,9 +78,16 @@ async function main() {
 	) as CommunitiesId[];
 
 	logger.info("migrate graphile");
+
 	const workerUtils = await makeWorkerUtils({
 		connectionString: env.DATABASE_URL,
 	});
+
+	logger.info("drop existing jobs");
+	await workerUtils.withPgClient(async (client) => {
+		await client.query(`DROP SCHEMA graphile_worker CASCADE`);
+	});
+
 	await workerUtils.migrate();
 
 	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
