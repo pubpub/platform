@@ -65,18 +65,3 @@ export function tryCatch<T, E = Error>(
 		return [error as E, null] as Failure<T, E>;
 	}
 }
-
-async function main() {
-	const [err1, res1] = await tryCatch(() => Promise.resolve("hello"));
-	//            ^?
-	if (!err1) {
-		console.log(res1);
-		//           ^?
-	}
-	const [err2, res2] = await tryCatch(Promise.resolve(999));
-	//            ^?
-	if (!err2) {
-		console.log(res2);
-		//           ^?
-	}
-}
