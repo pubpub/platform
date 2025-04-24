@@ -4,7 +4,14 @@ import { SignupForm } from "~/app/components/Signup/SignupForm";
 import { legacySignup } from "~/lib/authentication/actions";
 import { getLoginData } from "~/lib/authentication/loginData";
 
-export default async function Page() {
+export default async function Page({
+	searchParams,
+}: {
+	searchParams: Promise<{
+		redirectTo?: string;
+	}>;
+}) {
+	const { redirectTo } = await searchParams;
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.signup],
 	});
@@ -27,6 +34,7 @@ export default async function Page() {
 					firstName: user.firstName,
 					lastName: user.lastName ?? "",
 				}}
+				redirectTo={redirectTo}
 				signupAction={signupAction}
 			/>
 		</div>

@@ -61,6 +61,7 @@ async function redirectUser(
 		community: Communities | null;
 	})[]
 ): Promise<never> {
+	console.log("redirecting to", memberships);
 	if (!memberships?.length) {
 		redirect("/settings");
 	}
@@ -117,11 +118,13 @@ export const loginWithPassword = defineServerAction(async function loginWithPass
 		const newUrl = props.redirectTo ? `/verify?redirectTo=${props.redirectTo}` : "/verify";
 		redirect(newUrl);
 	}
+	console.log("redirecting to", props.redirectTo);
+
+	console.log(user.memberships);
 
 	if (props.redirectTo && /^\/\w+/.test(props.redirectTo)) {
 		redirect(props.redirectTo);
 	}
-
 	await redirectUser(user.memberships);
 });
 
@@ -587,6 +590,7 @@ export const legacySignup = defineServerAction(async function signup(
 		newSessionCookie.value,
 		newSessionCookie.attributes
 	);
+	console.log("redirecting to", props.redirectTo);
 
 	if (props.redirectTo) {
 		redirect(props.redirectTo);
