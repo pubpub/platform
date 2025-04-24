@@ -99,22 +99,16 @@ export async function redirectToCommunitySignup(opts: {
 	redirect(basePath);
 }
 
-export const constructVerifyLink = (opts?: LoginRedirectOpts) => {
+export const constructVerifyLink = (opts: { redirectTo: string }) => {
 	const searchParams = new URLSearchParams();
 
-	if (opts?.loginNotice !== false) {
-		const notice = opts?.loginNotice ?? defaultLoginRedirectError;
-		searchParams.set(notice.type, notice.title);
-		if (notice.body) {
-			searchParams.set("body", notice.body);
-		}
-	}
+	searchParams.set("redirectTo", opts.redirectTo);
 
 	const basePath = `/verify?${searchParams.toString()}`;
 	return basePath;
 };
 
-export function redirectToVerify(opts?: LoginRedirectOpts): never {
+export function redirectToVerify(opts: { redirectTo: string }): never {
 	const basePath = constructVerifyLink(opts);
 	redirect(basePath);
 }

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
 import { AuthTokenType } from "db/public";
+import { expect } from "utils";
 
 import type { LoginRedirectOpts } from "../server/navigation/redirects";
 import type { ExtraSessionValidationOptions } from "./lucia";
@@ -37,7 +38,7 @@ export const getPageLoginData = cache(
 		if (loginData.session && loginData.session.type === AuthTokenType.verifyEmail) {
 			const pathname = getPathname();
 			redirectToVerify({
-				redirectTo: pathname ?? undefined,
+				redirectTo: expect(pathname, "pathname is missing for redirectToVerify").toString(),
 			});
 		}
 
