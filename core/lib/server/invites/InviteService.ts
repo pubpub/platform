@@ -723,6 +723,9 @@ function isStageInvite(invite: Invite): invite is Invite & { stageId: StagesId }
 	return invite.stageId !== null;
 }
 
+/**
+ * does the invite grant any new roles or forms
+ */
 function isInviteUselessForMembership(
 	invite: {
 		role: MemberRole;
