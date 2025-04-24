@@ -16,7 +16,9 @@ test.describe("image upload", () => {
 		await page
 			.locator(".uppy-Dashboard-input")
 			.first()
-			.setInputFiles("./src/stories/assets/image0.jpg");
+			.setInputFiles("./src/stories/assets/image0.jpg", {
+				timeout: 5_000,
+			});
 		await page.getByLabel("Upload 1 file").click();
 		await page.getByText("Media Upload").waitFor({ state: "hidden", timeout: 5_000 });
 		await expect(editor.getByRole("img", { name: "image0.jpg" })).toHaveCount(1);

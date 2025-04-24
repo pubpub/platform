@@ -126,6 +126,7 @@ jobs:
             - name: Run integration tests
               run: pnpm playwright:test --filter ${{ matrix.package }} --env-mode=loose
               env:
+                  NODE_ENV: test
                   INTEGRATION_TEST_HOST: localhost
                   DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
 
