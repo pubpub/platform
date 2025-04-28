@@ -64,6 +64,7 @@ export const credit = {
 	attrs: {
 		id: { default: null },
 		class: { default: null },
+		"data-credit": { default: true },
 	},
 	content: "inline*",
 	group: "figure",
@@ -94,6 +95,7 @@ export const license = {
 	attrs: {
 		id: { default: null },
 		class: { default: null },
+		"data-license": { default: true },
 	},
 	content: "inline*",
 	group: "figure",
