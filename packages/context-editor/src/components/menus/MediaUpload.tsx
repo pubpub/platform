@@ -95,20 +95,27 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 	});
 
 	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
-		if (!activeNode) {
+		if (!view || !activeNode) {
 			return;
 		}
-		const { schema, tr } = view.state;
 		const imagePosition = view.state.doc.resolve(position);
 		const figureNode = imagePosition.parent;
 		const figurePosition = imagePosition.before();
 
 		let hasCaption = false;
-		figureNode.content.forEach((child, offset, index) => {
+		figureNode.content.forEach((child) => {
 			if (child.type.name === "figcaption") {
 				hasCaption = true;
 			}
 		});
+		const nodeAttrsTr = view.state.tr.setNodeMarkup(
+			position,
+			activeNode.type,
+			{ ...activeNode.attrs, ...values },
+			activeNode.marks
+		);
+		view.dispatch(nodeAttrsTr);
+		const { schema, tr } = view.state;
 		if (values.caption) {
 			if (hasCaption) {
 				return;
@@ -116,30 +123,21 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 			const captionNode = schema.nodes.figcaption.create(null);
 			const newContent = figureNode.content.append(Fragment.from(captionNode));
 			const newFigureNode = figureNode.copy(newContent);
-			const transaction = tr.replaceWith(
-				figurePosition,
-				figurePosition + figureNode.nodeSize,
-				newFigureNode
-			);
-			view.dispatch(transaction);
+			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
 		} else {
 			if (!hasCaption) {
 				return;
 			}
 			const nonCaptionNodes: Node[] = [];
-			figureNode.content.forEach((child, offset, index) => {
+			figureNode.content.forEach((child) => {
 				if (child.type.name !== "figcaption") {
 					nonCaptionNodes.push(child);
 				}
 			});
 			const newFigureNode = figureNode.copy(Fragment.fromArray(nonCaptionNodes));
-			const transaction = tr.replaceWith(
-				figurePosition,
-				figurePosition + figureNode.nodeSize,
-				newFigureNode
-			);
-			view.dispatch(transaction);
+			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
 		}
+		view.dispatch(tr);
 	});
 
 	return (

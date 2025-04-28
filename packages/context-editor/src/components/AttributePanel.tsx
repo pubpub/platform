@@ -59,6 +59,9 @@ export function AttributePanel({
 		(view) => {
 			const node = state.selection.$from.nodeAfter;
 			if (!node) {
+				if (!view.hasFocus()) {
+					return;
+				}
 				setActiveNode(null);
 				// Reset right position so line animation still works when opening the panel again
 				setPosition({ ...position, right: 1000 });
