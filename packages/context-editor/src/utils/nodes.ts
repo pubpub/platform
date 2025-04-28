@@ -26,7 +26,6 @@ export const insertNodeAfterSelection = (
 ) => {
 	const { schema, tr, selection } = state;
 	const nodeSchema = schema.nodes[nodeType];
-
 	const node = nodeSchema.create(attrs);
 	const insertPos = selection.to;
 	const transaction = tr.insert(insertPos, node);

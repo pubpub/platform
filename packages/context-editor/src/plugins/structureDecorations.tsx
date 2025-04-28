@@ -11,6 +11,14 @@ export default () => {
 			decorations: (state) => {
 				const decorations: Decoration[] = [];
 				state.doc.descendants((node, pos) => {
+					if (
+						node.type.name === "table_row" ||
+						node.type.name === "table_cell" ||
+						node.type.name === "table_header"
+					) {
+						// Don't add decorations to table rows or cells
+						return;
+					}
 					if (node.type.isBlock) {
 						// TODO: is there a better key we can use?
 						decorations.push(
