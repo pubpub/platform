@@ -1,58 +1,121 @@
 import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
 
 export const figure = {
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
 	content: "image figcaption{0,1} credit{0,1} license{0,1}",
 	group: "block",
 	parseDOM: [
 		{
 			tag: "figure",
+			getAttrs: (node) => {
+				return {
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
+				};
+			},
 		},
 	],
 	toDOM: (node) => {
-		return ["figure", 0];
+		return [
+			"figure",
+			{
+				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
 	},
 } satisfies NodeSpec;
 
 export const figcaption = {
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
 	content: "inline*",
 	group: "figure",
-	parseDom: [{ tag: "figcaption" }],
+	parseDOM: [
+		{
+			tag: "figure figcaption",
+			getAttrs: (node) => {
+				return {
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
+				};
+			},
+		},
+	],
 	toDOM: (node) => {
-		return ["figcaption", 0];
+		return [
+			"figcaption",
+			{
+				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
 	},
 } satisfies NodeSpec;
 
 export const credit = {
 	attrs: {
-		credit: { default: true },
+		id: { default: null },
+		class: { default: null },
 	},
 	content: "inline*",
 	group: "figure",
 	parseDOM: [
 		{
-			tag: "p",
-			// getAttrs: (node) => {
-			// 	return {
-			// 		credit: (node as Element).getAttribute("credit"),
-			// 	};
-			// },
+			tag: "figure p[data-credit]",
+			getAttrs: (node) => {
+				return {
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
+				};
+			},
 		},
 	],
 	toDOM: (node) => {
-		return ["p", 0];
+		return [
+			"p",
+			{
+				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
 	},
 } satisfies NodeSpec;
 
 export const license = {
-	attrs: {},
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
 	content: "inline*",
 	group: "figure",
 	parseDOM: [
 		{
-			tag: "p",
+			tag: "figure p[data-license]",
+			getAttrs: (node) => {
+				return {
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
+				};
+			},
 		},
 	],
 	toDOM: (node) => {
-		return ["p", 0];
+		return [
+			"p",
+			{
+				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
 	},
 } satisfies NodeSpec;
