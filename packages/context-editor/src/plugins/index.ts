@@ -1,7 +1,7 @@
 import { mathPlugin } from "@benrbray/prosemirror-math";
 import { exampleSetup } from "prosemirror-example-setup";
 import { Schema } from "prosemirror-model";
-import { tableEditing } from "prosemirror-tables";
+import { columnResizing, tableEditing } from "prosemirror-tables";
 
 import type { ContextEditorProps } from "../ContextEditor";
 import code from "./code";
@@ -30,6 +30,7 @@ export const basePlugins = (
 		inputRules(schema),
 		mathPlugin,
 		...code(schema, {}),
+		columnResizing(),
 		tableEditing(),
 	];
 };
