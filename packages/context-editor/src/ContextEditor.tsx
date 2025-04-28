@@ -17,6 +17,8 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
+import { fixTables } from "prosemirror-tables";
+
 import { cn } from "utils";
 
 import { EditorContextProvider } from "./components/Context";
@@ -61,13 +63,18 @@ const initSuggestProps: SuggestProps = {
 
 export default function ContextEditor(props: ContextEditorProps) {
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
-	const [editorState, setEditorState] = useState(
-		EditorState.create({
+	const [editorState, setEditorState] = useState(() => {
+		let state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
 			plugins: [...basePlugins(baseSchema, props, suggestData, setSuggestData), reactKeys()],
-		})
-	);
+		});
+		const fix = fixTables(state);
+		if (fix) {
+			state = state.apply(fix.setMeta("addToHistory", false));
+		}
+		return state;
+	});
 
 	const nodeViews = useMemo(() => {
 		return { contextAtom: props.atomRenderingComponent };
