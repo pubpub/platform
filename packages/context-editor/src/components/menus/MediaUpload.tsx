@@ -1,5 +1,6 @@
 import type { Static } from "@sinclair/typebox";
 import type { Attrs, Node } from "prosemirror-model";
+import type { EditorView } from "prosemirror-view";
 import type { ReactNode } from "react";
 
 import React, { useMemo } from "react";
@@ -94,10 +95,7 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		},
 	});
 
-	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
-		if (!view || !activeNode) {
-			return;
-		}
+	const toggleNodes = (view: EditorView, values: FormSchema) => {
 		const imagePosition = view.state.doc.resolve(position);
 		const figureNode = imagePosition.parent;
 		const figurePosition = imagePosition.before();
@@ -108,6 +106,42 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 				hasCaption = true;
 			}
 		});
+
+		const { tr, schema } = view.state;
+
+		const toggleNode = () => {
+			if (values.caption) {
+				if (hasCaption) {
+					return;
+				}
+				const captionNode = schema.nodes.figcaption.create(null);
+				const newContent = figureNode.content.append(Fragment.from(captionNode));
+				const newFigureNode = figureNode.copy(newContent);
+				tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
+			} else {
+				if (!hasCaption) {
+					return;
+				}
+				const nonCaptionNodes: Node[] = [];
+				figureNode.content.forEach((child) => {
+					if (child.type.name !== "figcaption") {
+						nonCaptionNodes.push(child);
+					}
+				});
+				const newFigureNode = figureNode.copy(Fragment.fromArray(nonCaptionNodes));
+				tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
+			}
+		};
+
+		toggleNode();
+		return tr;
+	};
+
+	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
+		if (!view || !activeNode) {
+			return;
+		}
+
 		const nodeAttrsTr = view.state.tr.setNodeMarkup(
 			position,
 			activeNode.type,
@@ -115,29 +149,7 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 			activeNode.marks
 		);
 		view.dispatch(nodeAttrsTr);
-		const { schema, tr } = view.state;
-		if (values.caption) {
-			if (hasCaption) {
-				return;
-			}
-			const captionNode = schema.nodes.figcaption.create(null);
-			const newContent = figureNode.content.append(Fragment.from(captionNode));
-			const newFigureNode = figureNode.copy(newContent);
-			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
-		} else {
-			if (!hasCaption) {
-				return;
-			}
-			const nonCaptionNodes: Node[] = [];
-			figureNode.content.forEach((child) => {
-				if (child.type.name !== "figcaption") {
-					nonCaptionNodes.push(child);
-				}
-			});
-			const newFigureNode = figureNode.copy(Fragment.fromArray(nonCaptionNodes));
-			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
-		}
-		view.dispatch(tr);
+		view.dispatch(toggleNodes(view, values));
 	});
 
 	return (
