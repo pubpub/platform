@@ -1,7 +1,18 @@
 import { tableNodes } from "prosemirror-tables";
 
-export default tableNodes({
-	cellContent: "paragraph",
-	cellAttributes: {},
+const nodes = tableNodes({
+	cellContent: "block+",
+	cellAttributes: {
+		id: { default: null },
+		class: { default: null },
+	},
 	tableGroup: "block",
 });
+
+nodes.table.attrs = {
+	...nodes.table.attrs,
+	id: { default: null },
+	class: { default: null },
+};
+
+export default nodes;
