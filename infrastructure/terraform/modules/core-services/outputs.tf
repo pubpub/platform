@@ -34,3 +34,7 @@ output "rds_connection_components" {
     id       = aws_db_instance.core_postgres.id
   }
 }
+
+output "valkey_url" {
+  value = aws_elasticache_replication_group.core_valkey.primary_endpoint_address
+}
