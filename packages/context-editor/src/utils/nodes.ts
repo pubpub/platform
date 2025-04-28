@@ -43,6 +43,12 @@ export const insertMedia = (state: EditorState, dispatch: Dispatch, attrs: Image
 		const captionNode = schema.nodes.figcaption.create(null);
 		nodes.push(captionNode);
 	}
+	if (attrs.credit) {
+		nodes.push(schema.nodes.credit.create(null));
+	}
+	if (attrs.license) {
+		nodes.push(schema.nodes.license.create(null));
+	}
 	const figureNode = schema.nodes.figure.create(null, nodes);
 	const insertPos = selection.to;
 	const transaction = tr.insert(insertPos, figureNode);

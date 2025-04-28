@@ -6,7 +6,7 @@ import contextAtom from "./contextAtom";
 import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
-import { figcaption, figure } from "./figure";
+import { credit, figcaption, figure, license } from "./figure";
 import hard_break from "./hard_break";
 import heading from "./heading";
 import horizontal_rule from "./horizontal";
@@ -40,6 +40,8 @@ export const baseSchema = new Schema({
 		figure,
 		figcaption,
 		image,
+		credit,
+		license,
 	},
 	marks: {
 		strong,

@@ -74,6 +74,60 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 	);
 };
 
+const nodeTypes = ["caption", "credit", "license"] as const;
+type ToggleableNodeType = (typeof nodeTypes)[number];
+const toggleNodesInFigure = (view: EditorView, values: FormSchema, position: number) => {
+	const imagePosition = view.state.doc.resolve(position);
+	const figureNode = imagePosition.parent;
+	const figurePosition = imagePosition.before();
+
+	const nodeExistence: Record<ToggleableNodeType, boolean> = {
+		caption: false,
+		credit: false,
+		license: false,
+	};
+	figureNode.content.forEach((child) => {
+		for (const nodeType of nodeTypes) {
+			const nodeTypeName = nodeType === "caption" ? "figcaption" : nodeType;
+			nodeExistence[nodeType] = child.type.name === nodeTypeName;
+		}
+	});
+	console.log({ nodeExistence });
+
+	const { tr, schema } = view.state;
+
+	const toggleNode = (type: ToggleableNodeType) => {
+		const nodeType = type === "caption" ? "figcaption" : type;
+		if (values[type]) {
+			if (nodeExistence[type]) {
+				return;
+			}
+
+			const subNode = schema.nodes[nodeType].create(null);
+			const newContent = figureNode.content.append(Fragment.from(subNode));
+			const newFigureNode = figureNode.copy(newContent);
+			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
+		} else {
+			if (!nodeExistence[type]) {
+				return;
+			}
+			const otherNodes: Node[] = [];
+			figureNode.content.forEach((child) => {
+				if (child.type.name !== nodeType) {
+					otherNodes.push(child);
+				}
+			});
+			const newFigureNode = figureNode.copy(Fragment.fromArray(otherNodes));
+			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
+		}
+	};
+
+	toggleNode("caption");
+	toggleNode("credit");
+	toggleNode("license");
+	return tr;
+};
+
 export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 	const { activeNode, position, setActiveNode } = useEditorContext();
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
@@ -95,48 +149,6 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		},
 	});
 
-	const toggleNodes = (view: EditorView, values: FormSchema) => {
-		const imagePosition = view.state.doc.resolve(position);
-		const figureNode = imagePosition.parent;
-		const figurePosition = imagePosition.before();
-
-		let hasCaption = false;
-		figureNode.content.forEach((child) => {
-			if (child.type.name === "figcaption") {
-				hasCaption = true;
-			}
-		});
-
-		const { tr, schema } = view.state;
-
-		const toggleNode = () => {
-			if (values.caption) {
-				if (hasCaption) {
-					return;
-				}
-				const captionNode = schema.nodes.figcaption.create(null);
-				const newContent = figureNode.content.append(Fragment.from(captionNode));
-				const newFigureNode = figureNode.copy(newContent);
-				tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
-			} else {
-				if (!hasCaption) {
-					return;
-				}
-				const nonCaptionNodes: Node[] = [];
-				figureNode.content.forEach((child) => {
-					if (child.type.name !== "figcaption") {
-						nonCaptionNodes.push(child);
-					}
-				});
-				const newFigureNode = figureNode.copy(Fragment.fromArray(nonCaptionNodes));
-				tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
-			}
-		};
-
-		toggleNode();
-		return tr;
-	};
-
 	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
 		if (!view || !activeNode) {
 			return;
@@ -149,7 +161,7 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 			activeNode.marks
 		);
 		view.dispatch(nodeAttrsTr);
-		view.dispatch(toggleNodes(view, values));
+		view.dispatch(toggleNodesInFigure(view, values, position));
 	});
 
 	return (
