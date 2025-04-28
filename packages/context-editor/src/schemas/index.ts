@@ -17,6 +17,7 @@ import paragraph from "./paragraph";
 import strike from "./strike";
 import strong from "./strong";
 import subSuperScript from "./subSuperScript";
+import table from "./table";
 import text from "./text";
 import underline from "./underline";
 
@@ -37,6 +38,7 @@ export const baseSchema = new Schema({
 		bullet_list: list.bulletList,
 		ordered_list: list.orderedList,
 		list_item: list.listItem,
+		...table,
 	},
 	marks: {
 		strong,
