@@ -1,5 +1,5 @@
 import type { Static } from "@sinclair/typebox";
-import type { Attrs } from "prosemirror-model";
+import type { Attrs, Node } from "prosemirror-model";
 import type { ReactNode } from "react";
 
 import React, { useMemo } from "react";
@@ -7,6 +7,7 @@ import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
+import { Fragment } from "prosemirror-model";
 import { useForm } from "react-hook-form";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -73,7 +74,7 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 };
 
 export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
-	const { activeNode, position } = useEditorContext();
+	const { activeNode, position, setActiveNode } = useEditorContext();
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
@@ -85,8 +86,9 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 			id: attrs.id ?? "",
 			class: attrs.class ?? "",
 			linkTo: attrs.linkTo ?? "",
-			credit: attrs.credit ?? "",
-			license: attrs.license ?? "",
+			caption: attrs.caption ?? false,
+			credit: attrs.credit ?? false,
+			license: attrs.license ?? false,
 			width: attrs.width ?? 100,
 			align: attrs.align ?? "center",
 		},
@@ -96,16 +98,53 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		if (!activeNode) {
 			return;
 		}
+		const { schema, tr } = view.state;
+		const imagePosition = view.state.doc.resolve(position);
+		const figureNode = imagePosition.parent;
+		const figurePosition = imagePosition.before();
+
+		let hasCaption = false;
+		figureNode.content.forEach((child, offset, index) => {
+			if (child.type.name === "figcaption") {
+				hasCaption = true;
+			}
+		});
 		if (values.caption) {
-			const { schema, tr, selection } = view.state;
-			const captionNode = schema.nodes.figcaption.create();
-			view.dispatch(tr.insert(selection.to + 2, captionNode));
+			if (hasCaption) {
+				return;
+			}
+			const captionNode = schema.nodes.figcaption.create(null);
+			const newContent = figureNode.content.append(Fragment.from(captionNode));
+			const newFigureNode = figureNode.copy(newContent);
+			const transaction = tr.replaceWith(
+				figurePosition,
+				figurePosition + figureNode.nodeSize,
+				newFigureNode
+			);
+			view.dispatch(transaction);
+		} else {
+			if (!hasCaption) {
+				return;
+			}
+			const nonCaptionNodes: Node[] = [];
+			figureNode.content.forEach((child, offset, index) => {
+				if (child.type.name !== "figcaption") {
+					nonCaptionNodes.push(child);
+				}
+			});
+			const newFigureNode = figureNode.copy(Fragment.fromArray(nonCaptionNodes));
+			const transaction = tr.replaceWith(
+				figurePosition,
+				figurePosition + figureNode.nodeSize,
+				newFigureNode
+			);
+			view.dispatch(transaction);
 		}
 	});
 
 	return (
 		<Form {...form}>
-			<form onBlur={form.handleSubmit(handleSubmit)}>
+			<form onChange={form.handleSubmit(handleSubmit)}>
 				<h2 className="text-md font-medium">Media Attributes</h2>
 				<Tabs defaultValue="info">
 					<TabsList className="grid w-full grid-cols-2 bg-muted">
