@@ -7,7 +7,6 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
-	CommunityMemberships,
 	FormsId,
 	InvitesId,
 	MemberRole,
@@ -15,16 +14,18 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type { Invite, LastModifiedBy, NewInvite, NewInviteInput } from "db/types";
+import type { Invite, LastModifiedBy, NewInvite } from "db/types";
 import { InviteStatus, MembershipType } from "db/public";
-import { compareMemberRoles, DEFAULT_INVITE_EXPIRATION_TIME } from "db/types";
+import { compareMemberRoles } from "db/types";
 import { logger } from "logger";
+import { expect } from "utils";
 
+import type { SafeUser } from "../user";
+import type { InvitedByStep, NewUser } from "./InviteBuilder";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getLoginData } from "../../authentication/loginData";
-import { autoCache } from "../cache/autoCache";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
 import { maybeWithTrx } from "../maybeWithTrx";
@@ -37,6 +38,7 @@ import {
 	selectPubMemberships,
 	selectStageMemberships,
 } from "../member";
+import { addUser, generateUserSlug, getUser, SAFE_USER_SELECT } from "../user";
 import { withInvitedFormIds } from "./helpers";
 import { InviteBuilder } from "./InviteBuilder";
 
@@ -61,6 +63,7 @@ export namespace InviteService {
 		EXPIRED: "Invite expired",
 		USER_NOT_LOGGED_IN: "User not logged in",
 		INVITE_USELESS: "Invite is useless, as it would not grant the user any new permissions",
+		UNKNOWN: "Unknown invite error",
 	} as const;
 
 	export type InviteErrorType = keyof typeof INVITE_ERRORS;
@@ -98,16 +101,6 @@ export namespace InviteService {
 			return;
 		}
 
-		if (invite.email && user.email !== invite.email) {
-			throw new InviteError("NOT_FOR_USER", {
-				logContext: {
-					inviteToken: invite.token,
-					userId: user.id,
-				},
-				status: invite.status,
-			});
-		}
-
 		if (invite.userId && invite.userId !== user.id) {
 			throw new InviteError("NOT_FOR_USER", {
 				logContext: {
@@ -121,17 +114,18 @@ export namespace InviteService {
 	//==============================================
 
 	/**
-	 * Invite a non-user by email. If the email is already assigned to a user, that specific user will be invited instead.
+	 * Invite someone and create an account for them
 	 */
-	export function inviteEmail(email: string) {
-		return InviteBuilder.inviteByEmail(email);
-	}
-
+	export function inviteUser(user: NewUser): InvitedByStep;
 	/**
 	 * Invite a specific user
 	 */
-	export function inviteUser(userId: UsersId) {
-		return InviteBuilder.inviteByUser(userId);
+	export function inviteUser(user: UsersId): InvitedByStep;
+	export function inviteUser(user: UsersId | NewUser): InvitedByStep {
+		if (typeof user === "string") {
+			return InviteBuilder.inviteUser(user);
+		}
+		return InviteBuilder.inviteUser(user);
 	}
 
 	/**
@@ -176,6 +170,14 @@ export namespace InviteService {
 						.select(["id", "name"])
 						.whereRef("stages.id", "=", "invites.stageId")
 				).as("stage"),
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "invites.userId")
+				)
+					.$notNull()
+					.as("user"),
 			])
 			.executeTakeFirst() as Promise<Invite | null>;
 	}
@@ -192,6 +194,8 @@ export namespace InviteService {
 			communityFormSlugs,
 			pubFormSlugs,
 			stageFormSlugs,
+			userId,
+			provisionalUser,
 			...restData
 		} = data;
 		const communityFormSlugsOrIds = [
@@ -214,8 +218,42 @@ export namespace InviteService {
 		const stageFormIdentifiersAreSlugs = Boolean(stageFormSlugs?.length);
 		const communityFormIdentifiersAreSlugs = Boolean(communityFormSlugs?.length);
 
+		const toBeInvitedUser = await getUser(
+			userId ? { id: userId } : { email: expect(provisionalUser).email },
+			trx
+		).executeTakeFirst();
+		let toBeInvitedUserId = toBeInvitedUser?.id;
+
+		if (!toBeInvitedUserId) {
+			if (userId) {
+				throw new Error("User not found. No user found with id: " + userId);
+			}
+
+			const provUser = expect(data.provisionalUser);
+			expect(provUser);
+
+			const newUser = await addUser(
+				{
+					firstName: provUser.firstName,
+					lastName: provUser.lastName,
+					email: provUser.email,
+					slug: generateUserSlug({
+						firstName: provUser.firstName,
+						lastName: provUser.lastName,
+					}),
+					isProvisional: true,
+				},
+				trx
+			).executeTakeFirstOrThrow();
+
+			toBeInvitedUserId = newUser.id;
+		}
+
 		const inviteBase = trx.with("invite", (db) =>
-			db.insertInto("invites").values(restData).returningAll()
+			db
+				.insertInto("invites")
+				.values({ ...restData, userId: toBeInvitedUserId })
+				.returningAll()
 		);
 
 		const withFormSlugOrId = <EB extends ExpressionBuilder<any, any>>(
@@ -318,11 +356,21 @@ export namespace InviteService {
 						.whereRef("stages.id", "=", "invite.stageId")
 				).as("stage"),
 			])
-			.select((eb) => withInvitedFormIds(eb, "invite.id"));
+			.select((eb) => withInvitedFormIds(eb, "invite.id"))
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "invite.userId")
+				)
+					.$notNull()
+					.as("user"),
+			]);
 
 		const result = await autoRevalidate(inviteFinal).executeTakeFirstOrThrow();
 
-		return result as Invite;
+		return result as Invite & { user: SafeUser };
 	}
 
 	export async function setInviteSent(invite: Invite, lastModifiedBy: LastModifiedBy, trx = db) {
@@ -429,7 +477,7 @@ export namespace InviteService {
 
 		return {
 			invite,
-			user,
+			user: user!,
 		};
 	}
 

@@ -46,6 +46,7 @@ export const SAFE_USER_SELECT = [
 	"users.avatar",
 	"users.orcid",
 	"users.isVerified",
+	"users.isProvisional",
 ] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
 
 export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {
@@ -161,16 +162,20 @@ export const getSuggestedUsers = ({
 		)
 		.limit(limit);
 
-export const setUserPassword = cache(
-	async (props: { userId: UsersId; password: string }, trx = db) => {
-		const passwordHash = await createPasswordHash(props.password);
-		await trx
-			.updateTable("users")
-			.set({ passwordHash })
-			.where("id", "=", props.userId)
-			.execute();
-	}
-);
+export const setUserPassword = async (props: { userId: UsersId; password: string }, trx = db) => {
+	const passwordHash = await createPasswordHash(props.password);
+	console.log("created password hash");
+	await trx
+		.updateTable("users")
+		.set({ passwordHash })
+		.where("id", "=", props.userId)
+		.executeTakeFirstOrThrow();
+	console.log("--------------------------------");
+	console.log("setUserPassword");
+	console.log("--------------------------------");
+	console.log(props.userId, passwordHash);
+	console.log("--------------------------------");
+};
 
 export const updateUser = async (
 	props: Omit<UsersUpdate, "passwordHash"> & { id: UsersId },

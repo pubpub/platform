@@ -10,6 +10,7 @@
 
 -- Model users comments
 
+COMMENT ON COLUMN "users"."isProvisional" IS 'Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user';
 
 
 -- Model sessions comments

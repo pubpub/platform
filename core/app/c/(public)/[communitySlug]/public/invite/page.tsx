@@ -44,7 +44,7 @@ export default async function InvitePage(props: {
 
 	const { user, invite } = inviteResult;
 
-	const mode = user ? "accept" : invite.userId ? "needsLogin" : "needsSignup";
+	const mode = user ? "accept" : invite.user?.isProvisional ? "needsSignup" : "needsLogin";
 
 	// server will handle the redirect
 	return (

@@ -187,32 +187,56 @@ const seed = createSeed({
 	},
 	invites: {
 		expiredEmailInvite: {
-			email: email1,
+			provisionalUser: {
+				email: email1,
+				firstName: firstName1,
+				lastName: lastName1,
+			},
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
 		},
 		acceptedEmailInvite: {
-			email: email3,
+			provisionalUser: {
+				email: email3,
+				firstName: firstName3,
+				lastName: lastName3,
+			},
 			status: InviteStatus.accepted,
 			lastSentAt: new Date(),
 		},
 		rejectedEmailInvite: {
-			email: `${faker.person.firstName()}@example.com`,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			status: InviteStatus.rejected,
 			lastSentAt: new Date(),
 		},
 		revokedEmailInvite: {
-			email: `${faker.person.firstName()}@example.com`,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			status: InviteStatus.revoked,
 			lastSentAt: new Date(),
 		},
 		createdEmailInvite: {
-			email: `${faker.person.firstName()}@example.com`,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			status: InviteStatus.created,
 		},
 		happyPathEmailInvite: {
-			email: email2,
+			provisionalUser: {
+				email: email2,
+				firstName: firstName2,
+				lastName: lastName2,
+			},
 			communityFormSlugs: ["Evaluation"],
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
@@ -250,7 +274,11 @@ const seed = createSeed({
 			lastSentAt: new Date(),
 		},
 		rejectEmailInvite: {
-			email: email2,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: firstName2,
+				lastName: lastName2,
+			},
 			pubId: pub1Id,
 			pubFormSlugs: ["Evaluation"],
 			pubRole: MemberRole.contributor,
@@ -261,7 +289,11 @@ const seed = createSeed({
 		},
 
 		pubLevelFormInvite: {
-			email: email4,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			pubId: pub1Id,
 			pubFormSlugs: ["CommunityForm"],
 			pubRole: MemberRole.contributor,
@@ -271,28 +303,44 @@ const seed = createSeed({
 			expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
 		},
 		adminRoleInvite: {
-			email: email5,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			communityRole: MemberRole.admin,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
 		},
 		multipleInvite1: {
-			email: email6,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
 		},
 		multipleInvite2: {
-			email: email6,
+			provisionalUser: {
+				email: email6,
+				firstName: firstName6,
+				lastName: lastName6,
+			},
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
 		},
 		nearlyExpiredInvite: {
-			email: email1,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: firstName1,
+				lastName: lastName1,
+			},
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -451,13 +499,13 @@ test.describe("email invite flow", () => {
 
 			await page.getByText("Create account").waitFor({
 				state: "visible",
-				timeout: 1000,
+				timeout: 1_000,
 			});
 		});
 
 		await test.step("User can click create account and be redirected to signup page", async () => {
 			await page.getByRole("button", { name: "Create account" }).click({
-				timeout: 2000,
+				timeout: 2_000,
 			});
 			await page.waitForURL(`**/public/signup**`);
 		});
@@ -475,18 +523,30 @@ test.describe("email invite flow", () => {
 				state: "visible",
 				timeout: 1000,
 			});
+
+			// dismiss notification
+			await page
+				.getByRole("region", { name: "Notifications (F8)" })
+				.getByRole("button")
+				.click();
 		});
 
 		await test.step("user can signup with the correct email", async () => {
-			await page.getByLabel("Email").fill(email2);
-			await page.getByLabel("First name").fill(firstName2);
-			await page.getByLabel("Last name").fill(lastName2);
+			await page.getByLabel("Email").fill(community.invites.happyPathEmailInvite.user.email);
+			await page
+				.getByLabel("First name")
+				.fill(community.invites.happyPathEmailInvite.user.firstName);
+			await page
+				.getByLabel("Last name")
+				.fill(community.invites.happyPathEmailInvite.user.lastName!);
 			await page.getByLabel("Password").fill("password");
 			await page.getByTestId("signup-submit-button").click({
 				timeout: 2000,
 			});
 
-			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`);
+			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`, {
+				timeout: 10_000,
+			});
 		});
 
 		await test.step("user can fill out form", async () => {

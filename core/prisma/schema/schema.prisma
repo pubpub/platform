@@ -17,18 +17,20 @@ generator comments {
 }
 
 model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()"))
-  slug         String   @unique
-  email        String   @unique
-  firstName    String
-  lastName     String?
-  orcid        String?
-  avatar       String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
-  isSuperAdmin Boolean  @default(false)
-  passwordHash String?
-  isVerified   Boolean  @default(false)
+  id            String   @id @default(dbgenerated("gen_random_uuid()"))
+  slug          String   @unique
+  email         String   @unique
+  firstName     String
+  lastName      String?
+  orcid         String?
+  avatar        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  isSuperAdmin  Boolean  @default(false)
+  passwordHash  String?
+  isVerified    Boolean  @default(false)
+  /// Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user
+  isProvisional Boolean  @default(false)
 
   memberGroups         MemberGroup[]
   AuthToken            AuthToken[]
@@ -699,10 +701,8 @@ model Invite {
   /// @type(LastModifiedBy, '../types', true, false, true)
   lastModifiedBy String
 
-  // either one of these is set
-  email       String?
-  InvitedUser User?   @relation("invited_user", fields: [userId], references: [id], onDelete: SetNull)
-  userId      String?
+  InvitedUser User   @relation("invited_user", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
 
   token     String   @unique
   expiresAt DateTime

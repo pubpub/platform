@@ -1,6 +1,7 @@
 import type { User } from "lucia";
 
 import { notFound, redirect } from "next/navigation";
+import * as Sentry from "@sentry/nextjs";
 
 import type { Communities } from "db/public";
 import type { Invite } from "db/types";
@@ -147,13 +148,25 @@ const InviteSignupFlow = async ({
 
 	if (user) {
 		// user is somehow already logged in, lets check if they are the invitee
-		if (user.id === invite.userId || user.email === invite.email) {
+		const [err] = tryCatch(() => InviteService.assertUserIsInvitee(invite, user));
+
+		if (!err) {
 			// they are the correct invitee, so lets redirect them back to the invite page
 			const redirectUrl = await InviteService.createInviteLink(invite, {
 				redirectTo,
 				absolute: false,
 			});
 			redirect(redirectUrl);
+		}
+
+		if (!(err instanceof InviteService.InviteError)) {
+			// not sure how this happened bruh
+			logger.error({
+				msg: "Invite error",
+				err,
+			});
+			Sentry.captureException(err);
+			return <InvalidInviteError error={new InviteService.InviteError("UNKNOWN")} />;
 		}
 
 		// not sure how this happened bruh

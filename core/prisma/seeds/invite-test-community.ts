@@ -11,7 +11,6 @@ import {
 	InviteStatus,
 	MemberRole,
 } from "db/public";
-import { logger } from "logger";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -196,37 +195,61 @@ const seed = createSeed({
 	invites: {
 		expiredEmailInvite: {
 			token: createTokenOfOnly("a", 0),
-			email: email1,
+			provisionalUser: {
+				email: email1,
+				firstName: firstName1,
+				lastName: lastName1,
+			},
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
 		},
 		acceptedEmailInvite: {
 			token: createTokenOfOnly("a", 1),
-			email: email3,
+			provisionalUser: {
+				email: email3,
+				firstName: firstName3,
+				lastName: lastName3,
+			},
 			status: InviteStatus.accepted,
 			lastSentAt: new Date(),
 		},
 		rejectedEmailInvite: {
 			token: createTokenOfOnly("a", 2),
-			email: `${faker.person.firstName()}@example.com`,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			status: InviteStatus.rejected,
 			lastSentAt: new Date(),
 		},
 		revokedEmailInvite: {
 			token: createTokenOfOnly("a", 3),
-			email: `${faker.person.firstName()}@example.com`,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			status: InviteStatus.revoked,
 			lastSentAt: new Date(),
 		},
 		createdEmailInvite: {
 			token: createTokenOfOnly("a", 4),
-			email: `${faker.person.firstName()}@example.com`,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			status: InviteStatus.created,
 		},
 		happyPathEmailInvite: {
 			token: createTokenOfOnly("b", 5),
-			email: email2,
+			provisionalUser: {
+				email: email2,
+				firstName: firstName2,
+				lastName: lastName2,
+			},
 			communityFormSlugs: ["Evaluation"],
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
@@ -271,7 +294,11 @@ const seed = createSeed({
 		},
 		rejectEmailInvite: {
 			token: createTokenOfOnly("b", 3),
-			email: email2,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: firstName2,
+				lastName: lastName2,
+			},
 			pubId: pub1Id,
 			pubFormSlugs: ["Evaluation"],
 			pubRole: MemberRole.contributor,
@@ -283,7 +310,11 @@ const seed = createSeed({
 
 		pubLevelFormInvite: {
 			token: createTokenOfOnly("b", 4),
-			email: email4,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			pubId: pub1Id,
 			pubFormSlugs: ["CommunityForm"],
 			pubRole: MemberRole.contributor,
@@ -294,7 +325,11 @@ const seed = createSeed({
 		},
 		adminRoleInvite: {
 			token: createTokenOfOnly("b", 6),
-			email: email5,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			communityRole: MemberRole.admin,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -302,7 +337,11 @@ const seed = createSeed({
 		},
 		multipleInvite1: {
 			token: createTokenOfOnly("b", 7),
-			email: email6,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: faker.person.firstName(),
+				lastName: faker.person.lastName(),
+			},
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -310,7 +349,11 @@ const seed = createSeed({
 		},
 		multipleInvite2: {
 			token: createTokenOfOnly("b", 8),
-			email: email6,
+			provisionalUser: {
+				email: email6,
+				firstName: firstName6,
+				lastName: lastName6,
+			},
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -318,7 +361,11 @@ const seed = createSeed({
 		},
 		nearlyExpiredInvite: {
 			token: createTokenOfOnly("b", 9),
-			email: email1,
+			provisionalUser: {
+				email: `${faker.person.firstName()}@example.com`,
+				firstName: firstName1,
+				lastName: lastName1,
+			},
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),

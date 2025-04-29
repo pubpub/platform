@@ -121,7 +121,11 @@ describe("InviteBuilder", () => {
 	it("should be able to create an invite", async () => {
 		const { InviteBuilder } = await import("./InviteBuilder");
 
-		const invite = await InviteBuilder.inviteByEmail("test@test.com")
+		const invite = await InviteBuilder.inviteUser({
+			email: "test@test.com",
+			firstName: "Test",
+			lastName: "User",
+		})
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)
 			.withRole(MemberRole.contributor)
@@ -129,7 +133,11 @@ describe("InviteBuilder", () => {
 		expect(invite).toBeDefined();
 
 		expect(invite).toMatchObject({
-			email: "test@test.com",
+			user: {
+				email: "test@test.com",
+				firstName: "Test",
+				lastName: "User",
+			},
 			token: expect.any(String),
 			communityId: community.community.id,
 			communityRole: MemberRole.contributor,
@@ -144,7 +152,11 @@ describe("InviteBuilder", () => {
 
 	it("should be able to create an invite with pubOrStageFormIds", async () => {
 		const { InviteBuilder } = await import("./InviteBuilder");
-		const invite = await InviteBuilder.inviteByEmail("test@test.com")
+		const invite = await InviteBuilder.inviteUser({
+			email: "test@test.com",
+			firstName: "Test",
+			lastName: "User",
+		})
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)
 			.withRole(MemberRole.admin)
@@ -155,12 +167,21 @@ describe("InviteBuilder", () => {
 
 		expect(invite).toMatchObject({
 			pubFormIds: [community.forms.TestForm.id],
+			user: {
+				email: "test@test.com",
+				firstName: "Test",
+				lastName: "User",
+			},
 		});
 	});
 
 	it("can create invites with form slugs", async () => {
 		const { InviteBuilder } = await import("./InviteBuilder");
-		const invite = await InviteBuilder.inviteByEmail("test@test.com")
+		const invite = await InviteBuilder.inviteUser({
+			email: "test@test.com",
+			firstName: "Test",
+			lastName: "User",
+		})
 			.invitedBy({ userId: community.users.admin.id })
 			.forCommunity(community.community.id)
 			.withRole(MemberRole.admin)
@@ -178,6 +199,11 @@ describe("InviteBuilder", () => {
 			communityFormIds: [community.forms.TestForm.id],
 			expiresAt: expect.any(Date),
 			message: "Hello",
+			user: {
+				email: "test@test.com",
+				firstName: "Test",
+				lastName: "User",
+			},
 		});
 	});
 });

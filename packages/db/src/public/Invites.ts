@@ -29,9 +29,7 @@ export type InvitesId = string & { __brand: "InvitesId" };
 export interface InvitesTable {
 	id: ColumnType<InvitesId, InvitesId | undefined, InvitesId>;
 
-	email: ColumnType<string | null, string | null, string | null>;
-
-	userId: ColumnType<UsersId | null, UsersId | null, UsersId | null>;
+	userId: ColumnType<UsersId, UsersId, UsersId>;
 
 	token: ColumnType<string, string, string>;
 
@@ -47,7 +45,11 @@ export interface InvitesTable {
 
 	pubId: ColumnType<PubsId | null, PubsId | null, PubsId | null>;
 
+	pubRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
+
 	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
+
+	stageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
 
 	message: ColumnType<string | null, string | null, string | null>;
 
@@ -60,10 +62,6 @@ export interface InvitesTable {
 	invitedByActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
 
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
-
-	pubRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
-
-	stageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
 }
 
 export type Invites = Selectable<InvitesTable>;
@@ -76,8 +74,7 @@ export const invitesIdSchema = z.string().uuid() as unknown as z.Schema<InvitesI
 
 export const invitesSchema = z.object({
 	id: invitesIdSchema,
-	email: z.string().nullable(),
-	userId: usersIdSchema.nullable(),
+	userId: usersIdSchema,
 	token: z.string(),
 	expiresAt: z.date(),
 	createdAt: z.date(),
@@ -85,21 +82,20 @@ export const invitesSchema = z.object({
 	communityId: communitiesIdSchema,
 	communityRole: memberRoleSchema,
 	pubId: pubsIdSchema.nullable(),
+	pubRole: memberRoleSchema.nullable(),
 	stageId: stagesIdSchema.nullable(),
+	stageRole: memberRoleSchema.nullable(),
 	message: z.string().nullable(),
 	lastSentAt: z.date().nullable(),
 	status: inviteStatusSchema,
 	invitedByUserId: usersIdSchema.nullable(),
 	invitedByActionRunId: actionRunsIdSchema.nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
-	pubRole: memberRoleSchema.nullable(),
-	stageRole: memberRoleSchema.nullable(),
 });
 
 export const invitesInitializerSchema = z.object({
 	id: invitesIdSchema.optional(),
-	email: z.string().optional().nullable(),
-	userId: usersIdSchema.optional().nullable(),
+	userId: usersIdSchema,
 	token: z.string(),
 	expiresAt: z.date(),
 	createdAt: z.date().optional(),
@@ -107,21 +103,20 @@ export const invitesInitializerSchema = z.object({
 	communityId: communitiesIdSchema,
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
+	pubRole: memberRoleSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
+	stageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
-	pubRole: memberRoleSchema.optional().nullable(),
-	stageRole: memberRoleSchema.optional().nullable(),
 });
 
 export const invitesMutatorSchema = z.object({
 	id: invitesIdSchema.optional(),
-	email: z.string().optional().nullable(),
-	userId: usersIdSchema.optional().nullable(),
+	userId: usersIdSchema.optional(),
 	token: z.string().optional(),
 	expiresAt: z.date().optional(),
 	createdAt: z.date().optional(),
@@ -129,13 +124,13 @@ export const invitesMutatorSchema = z.object({
 	communityId: communitiesIdSchema.optional(),
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
+	pubRole: memberRoleSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
+	stageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema.optional(),
-	pubRole: memberRoleSchema.optional().nullable(),
-	stageRole: memberRoleSchema.optional().nullable(),
 });

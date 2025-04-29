@@ -96,7 +96,11 @@ export const renderFormInviteLink = async (
 		);
 	}
 
-	const baseInvite = InviteService.inviteEmail(recipient.email!);
+	const baseInvite = InviteService.inviteUser({
+		email: recipient.email!,
+		firstName: "",
+		lastName: "",
+	});
 	const inviteWithInviter = baseInvite.invitedBy(
 		inviter.userId ? { userId: inviter.userId } : { actionRunId: inviter.actionRunId! }
 	);

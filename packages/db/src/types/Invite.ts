@@ -12,6 +12,7 @@ import {
 	pubTypesIdSchema,
 	stagesIdSchema,
 	usersIdSchema,
+	usersSchema,
 } from "../public";
 import { InviteStatus } from "../public/InviteStatus";
 import { lastModifiedBySchema } from "./LastModifiedBy";
@@ -48,32 +49,15 @@ export const inviteSchema = z
 		 */
 		message: z.string().nullable(),
 		lastModifiedBy: lastModifiedBySchema,
+		/**
+		 * The to-be-invited user
+		 */
+		userId: usersIdSchema,
+		user: usersSchema.omit({
+			passwordHash: true,
+		}),
 	})
-	.and(
-		// EmailOrUserId
-		z.union([
-			z.object({
-				/**
-				 * The email address of the to-be-invited user
-				 */
-				email: z.string().email(),
-				/**
-				 * Cannot set both email and userId
-				 */
-				userId: z.null(),
-			}),
-			z.object({
-				/**
-				 * Cannot set both email and userId
-				 */
-				email: z.null(),
-				/**
-				 * The to-be-invited user
-				 */
-				userId: usersIdSchema,
-			}),
-		])
-	)
+
 	.and(
 		// PubOrStage
 		z.union([
@@ -191,15 +175,19 @@ export const newInviteSchema = z
 		lastModifiedBy: lastModifiedBySchema,
 	})
 	.and(
-		// EmailOrUserId
+		// ProvisionalUser
 		z.union([
 			z.object({
-				email: z.string(),
-				userId: z.null().optional(),
+				provisionalUser: z.null().optional(),
+				userId: usersIdSchema,
 			}),
 			z.object({
-				email: z.null().optional(),
-				userId: usersIdSchema,
+				provisionalUser: z.object({
+					firstName: z.string(),
+					lastName: z.string(),
+					email: z.string(),
+				}),
+				userId: z.null().optional(),
 			}),
 		])
 	)

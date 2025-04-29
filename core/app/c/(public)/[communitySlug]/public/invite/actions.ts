@@ -17,7 +17,7 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 import { redirectToCommunitySignup, redirectToLogin } from "~/lib/server/navigation/redirects";
-import { addUser, generateUserSlug } from "~/lib/server/user";
+import { addUser, generateUserSlug, setUserPassword, updateUser } from "~/lib/server/user";
 
 // Schema for the invite token
 const inviteTokenSchema = z.string().min(1);
@@ -49,7 +49,7 @@ export const acceptInviteAction = defineServerAction(async function acceptInvite
 	const { invite, user } = await InviteService.getValidInviteForLoggedInUser(inviteToken);
 
 	if (!user) {
-		if (invite.userId) {
+		if (!invite.user.isProvisional) {
 			// redirect to login, then back to invite, then to the correct page
 			const inviteUrl = await InviteService.createInviteLink(invite, {
 				redirectTo,
@@ -168,7 +168,7 @@ export const signupThroughInvite = defineServerAction(async function signupThrou
 
 	const { user, invite } = inviteResult;
 
-	if (props.email !== invite.email) {
+	if (props.email !== invite.user.email) {
 		return {
 			success: false,
 			error: "Email does not match invite email. You must use the email you were invited with.",
@@ -177,24 +177,24 @@ export const signupThroughInvite = defineServerAction(async function signupThrou
 
 	const [addUserErr, newUser] = await tryCatch(
 		maybeWithTrx(db, async (trx) => {
-			const newUser = await addUser(
+			const newUser = await updateUser(
 				{
 					firstName: props.firstName,
 					lastName: props.lastName,
-					email: props.email,
-					slug: generateUserSlug({
-						firstName: props.firstName,
-						lastName: props.lastName,
-					}),
-					passwordHash: await createPasswordHash(props.password),
+					id: invite.user.id,
+					isProvisional: false,
+					isVerified: true,
 				},
 				trx
-			).executeTakeFirstOrThrow((err) => {
-				Sentry.captureException(err);
-				return new Error(
-					`Unable to create user for public signup with email ${props.email}`
-				);
-			});
+			);
+
+			await setUserPassword(
+				{
+					userId: newUser.id,
+					password: props.password,
+				},
+				trx
+			);
 
 			await InviteService.acceptInvite(invite, trx, newUser);
 

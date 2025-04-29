@@ -153,7 +153,7 @@ const seed = createSeed({
 	invites: {
 		happyEmailInvite: {
 			email: email2,
-			communityLevelFormSlugs: ["Evaluation"],
+			communityFormSlugs: ["Evaluation"],
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),

@@ -1,17 +1,20 @@
 import crypto from "node:crypto";
 
+import type { UserId } from "lucia";
+
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
 import type { Invite, NewInvite } from "db/types";
 import { formsIdSchema, InviteStatus, MemberRole } from "db/public";
 import { newInviteSchema } from "db/types";
 import { expect } from "utils";
 
+import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findCommunityBySlug } from "~/lib/server/community";
 import * as Email from "~/lib/server/email";
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
-import { getUser } from "~/lib/server/user";
+import { addUser, generateUserSlug, getUser } from "~/lib/server/user";
 import { InviteService } from "./InviteService";
 
 const BYTES_LENGTH = 16;
@@ -19,7 +22,7 @@ const BYTES_LENGTH = 16;
 const DEFAULT_EXPIRES_AT = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
 // Required initial steps
-interface InvitedByStep {
+export interface InvitedByStep {
 	invitedBy(inviter: { userId: UsersId } | { actionRunId: ActionRunsId }): CommunityStep;
 }
 
@@ -55,6 +58,14 @@ interface OptionalStep {
 	createAndSend(input: { redirectTo: string }, trx?: typeof db): Promise<Invite>;
 }
 
+export type NewUser = {
+	firstName: string;
+	lastName: string;
+	email: string;
+};
+
+type InviteBuilderData = XOR<{ userId: UserId }, { provisionalUser: NewUser }>;
+
 export class InviteBuilder
 	implements
 		InvitedByStep,
@@ -64,26 +75,30 @@ export class InviteBuilder
 		PubStageStep,
 		OptionalStep
 {
-	private data: Partial<NewInvite> = {
-		status: InviteStatus.created,
-		expiresAt: DEFAULT_EXPIRES_AT,
-		communityRole: MemberRole.contributor,
-	};
+	private data: Partial<NewInvite>;
 
 	// private constructor to force using static methods
-	private constructor() {}
-
-	static inviteByEmail(email: string): InvitedByStep {
-		const builder = new InviteBuilder();
-		builder.data.email = email;
-		builder.data.userId = null;
-		return builder;
+	private constructor(data: InviteBuilderData) {
+		this.data = {
+			...data,
+			status: InviteStatus.created,
+			expiresAt: DEFAULT_EXPIRES_AT,
+			communityRole: MemberRole.contributor,
+		};
 	}
 
-	static inviteByUser(userId: UsersId): InvitedByStep {
-		const builder = new InviteBuilder();
-		builder.data.userId = userId;
-		builder.data.email = null;
+	/**
+	 * Invite a user and create an account for them
+	 */
+	static inviteUser(user: NewUser): InvitedByStep;
+	/**
+	 * Invite a specific user
+	 */
+	static inviteUser(user: UsersId): InvitedByStep;
+	static inviteUser(user: NewUser | UsersId): InvitedByStep {
+		const data = typeof user === "string" ? { userId: user } : { provisionalUser: user };
+		const builder = new InviteBuilder(data);
+
 		return builder;
 	}
 
@@ -204,19 +219,26 @@ export class InviteBuilder
 		return maybeWithTrx(trx, async (trx) => {
 			const invitePromise = this.create(trx);
 
-			const userPromise = this.data.userId
-				? getUser({ id: this.data.userId }, trx).executeTakeFirstOrThrow()
-				: ((await getUser({ email: expect(this.data.email) }, trx).executeTakeFirst()) ?? {
-						email: expect(this.data.email),
-					});
+			const existingUserPromise = getUser(
+				this.data.userId
+					? { id: this.data.userId }
+					: { email: expect(this.data.provisionalUser).email },
+				trx
+			).executeTakeFirstOrThrow();
 
 			const communityPromise = findCommunityBySlug();
 
 			const [invite, user, community] = await Promise.all([
 				invitePromise,
-				userPromise,
+				existingUserPromise,
 				communityPromise,
 			]);
+
+			let toBeInvitedUserId = user?.id;
+
+			if (!toBeInvitedUserId) {
+				throw new Error("User not found");
+			}
 
 			const inviteLink = await InviteService.createInviteLink(invite, {
 				redirectTo: input.redirectTo,
