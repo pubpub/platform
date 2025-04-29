@@ -28,8 +28,8 @@ type AddTableOptions = {
 };
 
 const defaultOptions = {
-	rowCount: 2,
-	colCount: 2,
+	rowCount: 3,
+	colCount: 3,
 	withHeaderRow: true,
 	cellContent: undefined,
 };
