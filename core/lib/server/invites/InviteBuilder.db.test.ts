@@ -172,7 +172,6 @@ describe("InviteBuilder", () => {
 			.expiresInDays(1)
 			.create();
 
-		console.log(invite);
 		expect(invite).toMatchObject({
 			stageId: community.stages["Stage 1"].id,
 			stageFormIds: [community.forms.TestForm.id],
