@@ -36,10 +36,11 @@ test.describe("Creating a field", () => {
 		await fieldsPage.goto();
 		await fieldsPage.addFieldsOfEachType();
 		for (const [index, schema] of Object.values(CoreSchemaType)
+			.toReversed()
 			.filter((s) => s !== CoreSchemaType.Null)
 			.entries()) {
 			// Need to go to the next page at this point to see the remaining fields...
-			if (index === 8) {
+			if (index === 10) {
 				try {
 					await page.getByRole("button", { name: "Go to next page" }).click({
 						timeout: 100,
