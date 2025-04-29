@@ -7,8 +7,10 @@ module "firehose_failure_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 4.0"
 
-  bucket        = local.failure_logs_bucket_name
-  force_destroy = true
+  bucket                                 = local.failure_logs_bucket_name
+  force_destroy                          = true
+  transition_default_minimum_object_size = "varies_by_storage_class"
+
 
   lifecycle_rule = [{
     id      = "expiration-30-days"
