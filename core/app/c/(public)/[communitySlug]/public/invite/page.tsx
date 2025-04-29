@@ -1,9 +1,4 @@
-import Link from "next/link";
-
 import { logger } from "logger";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { AlertCircle, CheckCircle, XCircle } from "ui/icon";
 import { tryCatch } from "utils/try-catch";
 
 import { InviteService } from "~/lib/server/invites/InviteService";
@@ -39,7 +34,7 @@ export default async function InvitePage(props: {
 	}
 
 	if (err) {
-		return <InvalidInviteError error={err} />;
+		return <InvalidInviteError error={err} redirectTo={redirectTo} />;
 	}
 
 	const { user, invite } = inviteResult;

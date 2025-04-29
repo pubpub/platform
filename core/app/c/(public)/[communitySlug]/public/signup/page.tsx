@@ -143,7 +143,7 @@ const InviteSignupFlow = async ({
 	}
 
 	if (inviteErr) {
-		return <InvalidInviteError error={inviteErr} />;
+		return <InvalidInviteError error={inviteErr} redirectTo={redirectTo} />;
 	}
 
 	if (user) {

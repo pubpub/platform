@@ -2,7 +2,6 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
 import { AuthTokenType } from "db/public";
@@ -11,13 +10,12 @@ import { tryCatch } from "utils/try-catch";
 import type { SignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
 import { lucia } from "~/lib/authentication/lucia";
-import { createPasswordHash } from "~/lib/authentication/password";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 import { redirectToCommunitySignup, redirectToLogin } from "~/lib/server/navigation/redirects";
-import { addUser, generateUserSlug, setUserPassword, updateUser } from "~/lib/server/user";
+import { setUserPassword, updateUser } from "~/lib/server/user";
 
 // Schema for the invite token
 const inviteTokenSchema = z.string().min(1);

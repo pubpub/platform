@@ -1,10 +1,10 @@
-import { AlertCircle, CheckCircle, Link, XCircle } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
 import { InviteStatus } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
 
-import LogoutButton from "~/app/components/LogoutButton";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { WrongUserLoggedIn } from "./WrongUserLoggedIn";
 
@@ -12,6 +12,10 @@ type InvalidInviteProps = {
 	message: string;
 	description?: string;
 	variant?: "error" | "success" | "warning";
+	redirectTo?: {
+		label: string;
+		href: string;
+	};
 };
 
 const defaultProps = {
@@ -68,16 +72,28 @@ export const InvalidInvite = (inputProps: InvalidInviteProps) => {
 					</CardContent>
 				)}
 				<CardFooter className="flex justify-center">
-					<Link href="/">
-						<Button>Return to Home</Button>
-					</Link>
+					{props.redirectTo ? (
+						<Button asChild>
+							<Link href={props.redirectTo.href}>{props.redirectTo.label}</Link>
+						</Button>
+					) : (
+						<Button asChild>
+							<Link href="/">Return Home</Link>
+						</Button>
+					)}
 				</CardFooter>
 			</Card>
 		</div>
 	);
 };
 
-export const InvalidInviteError = ({ error }: { error: InviteService.InviteError }) => {
+export const InvalidInviteError = ({
+	error,
+	redirectTo,
+}: {
+	error: InviteService.InviteError;
+	redirectTo?: string;
+}) => {
 	switch (error.code) {
 		case "NOT_FOUND":
 			return <NoInviteFound />;
@@ -93,6 +109,14 @@ export const InvalidInviteError = ({ error }: { error: InviteService.InviteError
 						<InvalidInvite
 							message="This invite has already been accepted."
 							variant="success"
+							redirectTo={
+								redirectTo
+									? {
+											label: "Login to Continue",
+											href: redirectTo,
+										}
+									: undefined
+							}
 						/>
 					);
 				case InviteStatus.rejected:
