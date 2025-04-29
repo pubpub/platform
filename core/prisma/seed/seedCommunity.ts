@@ -1367,21 +1367,16 @@ export async function seedCommunity<
 								"You need to create an admin member in the seed if you dont want to set the invitee manually."
 							),
 					...rest,
-				} satisfies NewInviteInput;
+				};
 
-				try {
-					const input = newInviteSchema.parse(rawInput);
+				const input = newInviteSchema.parse(rawInput);
 
-					const invite = await InviteService._createInvite(input, trx);
+				const invite = await InviteService._createInvite(input, trx);
 
-					return [
-						inviteName,
-						{ ...invite, inviteToken: InviteService.createInviteToken(invite) },
-					];
-				} catch (e) {
-					console.log(rawInput);
-					throw e;
-				}
+				return [
+					inviteName,
+					{ ...invite, inviteToken: InviteService.createInviteToken(invite) },
+				];
 			})
 		)
 	) as InvitesByName<II>;
