@@ -74,8 +74,8 @@ module "service_core" {
   }]
 
   resources = {
-    cpu = 1024
-    memory = 2048
+    cpu           = 1024
+    memory        = 2048
     desired_count = 1
   }
 
@@ -100,6 +100,7 @@ module "service_core" {
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
+      { name = "VALKEY_URL", value = module.core_dependency_services.valkey_url }
     ]
 
     secrets = [
