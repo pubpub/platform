@@ -14,7 +14,7 @@ export const withInvitedFormIds = <EB extends ExpressionBuilder<any, any>>(
 		.where("inviteId", "=", eb.ref(ref))
 		.where("invite_forms.type", "=", MembershipType.community)
 		.select("formId")
-		.as("communityFormIds")})`.as("communityLevelFormIds"),
+		.as("communityFormIds")})`.as("communityFormIds"),
 	sql<FormsId[]>`(select coalesce(json_agg("formId"), '[]') from ${eb
 		.selectFrom("invite_forms")
 		.where("inviteId", "=", eb.ref(ref))

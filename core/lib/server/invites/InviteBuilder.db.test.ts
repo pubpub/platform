@@ -154,7 +154,7 @@ describe("InviteBuilder", () => {
 			.create();
 
 		expect(invite).toMatchObject({
-			pubOrStageFormIds: [community.forms.TestForm.id],
+			pubFormIds: [community.forms.TestForm.id],
 		});
 	});
 
@@ -172,10 +172,11 @@ describe("InviteBuilder", () => {
 			.expiresInDays(1)
 			.create();
 
+		console.log(invite);
 		expect(invite).toMatchObject({
 			stageId: community.stages["Stage 1"].id,
-			pubOrStageFormIds: [community.forms.TestForm.id],
-			communityLevelFormIds: [community.forms.TestForm.id],
+			stageFormIds: [community.forms.TestForm.id],
+			communityFormIds: [community.forms.TestForm.id],
 			expiresAt: expect.any(Date),
 			message: "Hello",
 		});

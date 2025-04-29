@@ -488,7 +488,7 @@ export namespace InviteService {
 		const isCommunityMemberUseless = isInviteUselessForMembership(
 			{
 				role: invite.communityRole,
-				forms: invite.communityLevelFormIds ?? [],
+				forms: invite.communityFormIds ?? [],
 			},
 			communityMembership
 		);
@@ -579,7 +579,7 @@ export namespace InviteService {
 						communityId: invite.communityId,
 						userId: user.id,
 						role: invite.communityRole,
-						forms: invite.communityLevelFormIds ?? [],
+						forms: invite.communityFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
@@ -589,7 +589,7 @@ export namespace InviteService {
 						communityId: invite.communityId,
 						userId: user.id,
 						role: invite.communityRole,
-						forms: invite.communityLevelFormIds ?? [],
+						forms: invite.communityFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
@@ -608,7 +608,7 @@ export namespace InviteService {
 						communityId: invite.communityId,
 						userId: user.id,
 						role: invite.communityRole,
-						forms: invite.communityLevelFormIds ?? [],
+						forms: invite.communityFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();

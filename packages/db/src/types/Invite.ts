@@ -41,7 +41,7 @@ export const inviteSchema = z
 		 * This is used to allow a user to fill out a form to join the community.
 		 * This is optional because the user may not need access to a form
 		 */
-		communityLevelFormIds: formsIdSchema.array().nullable(),
+		communityFormIds: formsIdSchema.array().nullable(),
 		/**
 		 * The message that is sent in the invite.
 		 * This is optional because the user may not need a message.
