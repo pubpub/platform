@@ -64,8 +64,14 @@ export interface InvitesTable {
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
 }
 
+/**
+ * @deprecated Use `Invite` from `db/types` instead
+ */
 export type Invites = Selectable<InvitesTable>;
 
+/**
+ * @deprecated Use `NewInvite` from `db/types` instead
+ */
 export type NewInvites = Insertable<InvitesTable>;
 
 export type InvitesUpdate = Updateable<InvitesTable>;
