@@ -62,6 +62,7 @@
 		"@dnd-kit/sortable": "^8.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
 		"@faker-js/faker": "^9.0.0",
+		"@fortedigital/nextjs-cache-handler": "^1.2.0",
 		"@googleapis/drive": "^8.16.0",
 		"@handlewithcare/react-prosemirror": "catalog:",
 		"@honeycombio/opentelemetry-node": "catalog:",
