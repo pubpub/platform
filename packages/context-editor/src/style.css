@@ -76,13 +76,21 @@
 .ProseMirror ul,
 .ProseMirror ol,
 .ProseMirror li,
-.ProseMirror section {
+.ProseMirror section,
+.ProseMirror table {
 	border-left: 1px solid #777;
 	padding-left: 5px;
 	padding-top: 5px;
 	margin-top: 16px;
 	margin-bottom: 16px;
 }
+.ProseMirror tr * {
+	border: none;
+}
+.ProseMirror tr p {
+	margin: 0;
+}
+
 .ProseMirror section {
 	margin-left: -5px;
 }
@@ -171,33 +179,53 @@
 	min-height: unset !important; /* Remove the default min-height */
 }
 
+/* Table */
 .ProseMirror table {
-	border-collapse: collapse;
-	margin: 25px 0;
+	border-spacing: 0;
+	border-collapse: separate;
 	font-size: 0.9em;
 	font-family: sans-serif;
 	min-width: 400px;
+	width: 100%;
+	table-layout: fixed;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+	border-top: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+}
+
+.ProseMirror table td:last-child,
+.ProseMirror table th:last-child {
+	border-right: 1px solid #ccc;
+}
+
+.ProseMirror table tr:last-child td {
+	border-bottom: 1px solid #ccc;
+}
+
+.ProseMirror table td {
+	vertical-align: top;
+}
+
+.ProseMirror table {
+	border-left: 1px solid #777;
+}
+
+.wrap-widget + table {
+	position: relative;
+	top: -1px;
+}
+
+.wrap-widget button {
+	z-index: 10;
 }
 
 .ProseMirror thead tr {
-	background-color: #009879;
-	color: #ffffff;
 	text-align: left;
-}
-
-.ProseMirror th,
-.ProseMirror td {
-	padding: 6px 8px;
-}
-
-.ProseMirror tbody tr {
-	border-bottom: 1px solid #dddddd;
 }
 
 .ProseMirror tbody tr:nth-of-type(even) {
 	background-color: #f3f3f3;
-}
-
-.ProseMirror tbody tr:last-of-type {
-	border-bottom: 2px solid #009879;
 }
