@@ -82,7 +82,6 @@ export const _getPubFields = (props: GetPubFieldsInput, trx = db) =>
 					qb.where("pub_fields.isRelation", "=", props.isRelated!)
 				)
 				.where("pub_fields.id", "in", eb.selectFrom("ids").select("id"))
-				.orderBy("pub_fields.updatedAt", "desc")
 		)
 		.selectFrom("f")
 		.select((eb) => [

@@ -41,6 +41,7 @@ export interface DataTableProps<TData, TValue> {
 	selectedRows?: RowSelectionState;
 	setSelectedRows?: React.Dispatch<React.SetStateAction<{}>>;
 	getRowId?: (data: TData) => string;
+	defaultSort?: SortingState;
 }
 
 const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50";
@@ -57,8 +58,9 @@ export function DataTable<TData, TValue>({
 	selectedRows,
 	setSelectedRows,
 	getRowId,
+	defaultSort,
 }: DataTableProps<TData, TValue>) {
-	const [sorting, setSorting] = React.useState<SortingState>([]);
+	const [sorting, setSorting] = React.useState<SortingState>(defaultSort ?? []);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 	const [rowSelection, setRowSelection] = React.useState({});
 
