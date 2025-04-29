@@ -152,7 +152,11 @@ const seed = createSeed({
 	},
 	invites: {
 		happyEmailInvite: {
-			email: email2,
+			provisionalUser: {
+				email: email2,
+				firstName: firstName2,
+				lastName: lastName2,
+			},
 			communityFormSlugs: ["Evaluation"],
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
