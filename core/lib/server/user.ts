@@ -164,17 +164,11 @@ export const getSuggestedUsers = ({
 
 export const setUserPassword = async (props: { userId: UsersId; password: string }, trx = db) => {
 	const passwordHash = await createPasswordHash(props.password);
-	console.log("created password hash");
 	await trx
 		.updateTable("users")
 		.set({ passwordHash })
 		.where("id", "=", props.userId)
 		.executeTakeFirstOrThrow();
-	console.log("--------------------------------");
-	console.log("setUserPassword");
-	console.log("--------------------------------");
-	console.log(props.userId, passwordHash);
-	console.log("--------------------------------");
 };
 
 export const updateUser = async (
