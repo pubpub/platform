@@ -36,10 +36,11 @@ test.describe("Creating a field", () => {
 		await fieldsPage.goto();
 		await fieldsPage.addFieldsOfEachType();
 		for (const [index, schema] of Object.values(CoreSchemaType)
+			.toReversed()
 			.filter((s) => s !== CoreSchemaType.Null)
 			.entries()) {
 			// Need to go to the next page at this point to see the remaining fields...
-			if (index === 8) {
+			if (index === 10) {
 				try {
 					await page.getByRole("button", { name: "Go to next page" }).click({
 						timeout: 100,
@@ -128,17 +129,18 @@ test.describe("Editing a field", () => {
 	test("Can edit a field's name only", async () => {
 		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
-		await page.getByRole("button", { name: "Select row Title String" }).click();
+		await fieldsPage.addField("New Title", CoreSchemaType.String);
+		await page.getByRole("button", { name: "Select row New Title String" }).click();
 		await expect(page.getByRole("dialog").getByRole("combobox")).toBeDisabled();
 		await expect(page.getByRole("textbox", { name: "slug" })).toBeDisabled();
 		await expect(page.getByTestId("isRelation-checkbox")).toBeDisabled();
-		await page.getByRole("textbox", { name: "name" }).fill("New Title");
+		await page.getByRole("textbox", { name: "name" }).fill("Newer Title");
 		await page.getByRole("button", { name: "Update" }).click();
 
 		await page.getByRole("button", { name: "Updated" }).click();
 		await page.getByRole("menuitem", { name: "Desc" }).click();
-		await expect(page.getByRole("button", { name: `Select row New Title String` })).toHaveCount(
-			1
-		);
+		await expect(
+			page.getByRole("button", { name: `Select row Newer Title String` })
+		).toHaveCount(1);
 	});
 });
