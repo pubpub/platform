@@ -116,8 +116,10 @@ export class InviteBuilder
 	}
 
 	withRole(role: MemberRole): WithFormsStep<NextStep> & NextStep {
-		if (this.data.pubId || this.data.stageId) {
-			this.data.pubOrStageRole = role;
+		if (this.data.pubId) {
+			this.data.pubRole = role;
+		} else if (this.data.stageId) {
+			this.data.stageRole = role;
 		} else {
 			this.data.communityRole = role;
 		}
@@ -135,17 +137,23 @@ export class InviteBuilder
 			throw new Error("Cannot provide both uuids and slugs");
 		}
 
-		if (this.data.pubId || this.data.stageId) {
+		if (this.data.pubId) {
 			if (hasUuids) {
-				this.data.pubOrStageFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+				this.data.pubFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
 			} else {
-				this.data.pubOrStageFormSlugs = forms;
+				this.data.pubFormSlugs = forms;
+			}
+		} else if (this.data.stageId) {
+			if (hasUuids) {
+				this.data.stageFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+			} else {
+				this.data.stageFormSlugs = forms;
 			}
 		} else {
 			if (hasUuids) {
-				this.data.communityLevelFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
+				this.data.communityFormIds = uuids.filter((uuid) => uuid != null) as FormsId[];
 			} else {
-				this.data.communityLevelFormSlugs = forms;
+				this.data.communityFormSlugs = forms;
 			}
 		}
 		return this as NextStep;
@@ -218,14 +226,14 @@ export class InviteBuilder
 				? ({
 						type: "pub",
 						pub: expect(invite.pub),
-						pubOrStageRole: invite.pubOrStageRole,
+						pubRole: invite.pubRole,
 						communityRole: invite.communityRole,
 					} as const)
 				: invite.stageId
 					? ({
 							type: "stage",
 							stage: expect(invite.stage),
-							pubOrStageRole: invite.pubOrStageRole,
+							stageRole: invite.stageRole,
 							communityRole: invite.communityRole,
 						} as const)
 					: ({

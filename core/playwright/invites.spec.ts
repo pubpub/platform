@@ -6,7 +6,6 @@ import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
 import type { PubsId, UsersId } from "db/public";
-import type { Invite } from "db/types";
 import {
 	Action,
 	CoreSchemaType,
@@ -20,9 +19,6 @@ import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
-import { PubDetailsPage } from "./fixtures/pub-details-page";
-import { PubsPage } from "./fixtures/pubs-page";
-import { inbucketClient } from "./helpers";
 
 const ACTION_NAME_USER = "Invite evaluator (user)";
 const ACTION_NAME_EMAIL = "Invite evaluator (email)";
@@ -217,7 +213,7 @@ const seed = createSeed({
 		},
 		happyPathEmailInvite: {
 			email: email2,
-			communityLevelFormSlugs: ["Evaluation"],
+			communityFormSlugs: ["Evaluation"],
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -249,15 +245,15 @@ const seed = createSeed({
 		},
 		happyPathUserInvite: {
 			userId: invitedUserId,
-			communityLevelFormSlugs: ["Evaluation"],
+			communityFormSlugs: ["Evaluation"],
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
 		},
 		rejectEmailInvite: {
 			email: email2,
 			pubId: pub1Id,
-			pubOrStageFormSlugs: ["Evaluation"],
-			pubOrStageRole: MemberRole.contributor,
+			pubFormSlugs: ["Evaluation"],
+			pubRole: MemberRole.contributor,
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -267,8 +263,8 @@ const seed = createSeed({
 		pubLevelFormInvite: {
 			email: email4,
 			pubId: pub1Id,
-			pubOrStageFormSlugs: ["CommunityForm"],
-			pubOrStageRole: MemberRole.contributor,
+			pubFormSlugs: ["CommunityForm"],
+			pubRole: MemberRole.contributor,
 			communityRole: MemberRole.contributor,
 			status: InviteStatus.pending,
 			lastSentAt: new Date(),
@@ -338,7 +334,7 @@ const createInviteUrl = (inviteToken: string, redirectTo: string) => {
 };
 
 test.afterAll(async () => {
-	await page.close();
+	await page?.close();
 });
 
 const expectInvalidInvite = (inviteToken: string, page: Page) => {

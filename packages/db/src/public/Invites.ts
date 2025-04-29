@@ -49,8 +49,6 @@ export interface InvitesTable {
 
 	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 
-	pubOrStageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
-
 	message: ColumnType<string | null, string | null, string | null>;
 
 	lastSentAt: ColumnType<Date | null, Date | string | null, Date | string | null>;
@@ -62,16 +60,14 @@ export interface InvitesTable {
 	invitedByActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
 
 	lastModifiedBy: ColumnType<LastModifiedBy, LastModifiedBy, LastModifiedBy>;
+
+	pubRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
+
+	stageRole: ColumnType<MemberRole | null, MemberRole | null, MemberRole | null>;
 }
 
-/**
- * @deprecated Use `Invite` from `db/types` instead
- */
 export type Invites = Selectable<InvitesTable>;
 
-/**
- * @deprecated Use `NewInvite` from `db/types` instead
- */
 export type NewInvites = Insertable<InvitesTable>;
 
 export type InvitesUpdate = Updateable<InvitesTable>;
@@ -90,13 +86,14 @@ export const invitesSchema = z.object({
 	communityRole: memberRoleSchema,
 	pubId: pubsIdSchema.nullable(),
 	stageId: stagesIdSchema.nullable(),
-	pubOrStageRole: memberRoleSchema.nullable(),
 	message: z.string().nullable(),
 	lastSentAt: z.date().nullable(),
 	status: inviteStatusSchema,
 	invitedByUserId: usersIdSchema.nullable(),
 	invitedByActionRunId: actionRunsIdSchema.nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
+	pubRole: memberRoleSchema.nullable(),
+	stageRole: memberRoleSchema.nullable(),
 });
 
 export const invitesInitializerSchema = z.object({
@@ -111,13 +108,14 @@ export const invitesInitializerSchema = z.object({
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
-	pubOrStageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema,
+	pubRole: memberRoleSchema.optional().nullable(),
+	stageRole: memberRoleSchema.optional().nullable(),
 });
 
 export const invitesMutatorSchema = z.object({
@@ -132,11 +130,12 @@ export const invitesMutatorSchema = z.object({
 	communityRole: memberRoleSchema.optional(),
 	pubId: pubsIdSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
-	pubOrStageRole: memberRoleSchema.optional().nullable(),
 	message: z.string().optional().nullable(),
 	lastSentAt: z.date().optional().nullable(),
 	status: inviteStatusSchema.optional(),
 	invitedByUserId: usersIdSchema.optional().nullable(),
 	invitedByActionRunId: actionRunsIdSchema.optional().nullable(),
 	lastModifiedBy: modifiedByTypeSchema.optional(),
+	pubRole: memberRoleSchema.optional().nullable(),
+	stageRole: memberRoleSchema.optional().nullable(),
 });

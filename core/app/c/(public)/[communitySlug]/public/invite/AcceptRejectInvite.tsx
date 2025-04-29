@@ -39,11 +39,11 @@ const communityRoleToVerb = {
 const inviteMessage = (invite: Invite) => {
 	let extraText = "";
 	if (invite.stageId) {
-		extraText = ` and ${roleToVerb[invite.pubOrStageRole]} the stage ${invite.stage.name}`;
+		extraText = ` and ${roleToVerb[invite.stageRole]} the stage ${invite.stage.name}`;
 	}
 
 	if (invite.pubId) {
-		extraText = ` and ${roleToVerb[invite.pubOrStageRole]} ${
+		extraText = ` and ${roleToVerb[invite.pubRole]} ${
 			// todo: proper logic for articles
 			invite.pub.title
 				? `the Pub "${invite.pub.title}"`

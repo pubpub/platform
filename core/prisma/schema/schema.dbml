@@ -460,9 +460,10 @@ Table invites {
   communityRole MemberRole [not null, default: 'contributor']
   Pub pubs
   pubId String
+  pubRole MemberRole
   Stage stages
   stageId String
-  pubOrStageRole MemberRole
+  stageRole MemberRole
   message String
   lastSentAt DateTime
   status InviteStatus [not null, default: 'created']
@@ -478,7 +479,7 @@ Table invite_forms {
   inviteId String [not null]
   form forms [not null]
   formId String [not null]
-  type InviteFormType [not null]
+  type MembershipType [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 
@@ -658,11 +659,6 @@ Enum InviteStatus {
   completed
   rejected
   revoked
-}
-
-Enum InviteFormType {
-  communityLevel
-  pubOrStage
 }
 
 Ref: invites_history.userId > users.id

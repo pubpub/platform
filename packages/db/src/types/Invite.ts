@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { Invites, NewInvites } from "../public";
+import type { Invites } from "../public";
 import {
 	actionRunsIdSchema,
 	communitiesIdSchema,
@@ -87,29 +87,35 @@ export const inviteSchema = z
 						name: z.string(),
 					}),
 				}),
-				pubOrStageFormIds: formsIdSchema.array().nullable(),
+				pubRole: memberRoleSchema,
+				pubFormIds: formsIdSchema.array().nullable(),
 				stageId: z.null(),
 				stage: z.null(),
-				pubOrStageRole: memberRoleSchema,
+				stageRole: z.null(),
+				stageFormIds: formsIdSchema.array().nullable(),
 			}),
 			z.object({
 				pubId: z.null(),
 				pub: z.null(),
-				pubOrStageFormIds: formsIdSchema.array().nullable(),
+				pubRole: z.null(),
+				pubFormIds: formsIdSchema.array().nullable(),
 				stageId: stagesIdSchema,
 				stage: z.object({
 					id: stagesIdSchema,
 					name: z.string(),
 				}),
-				pubOrStageRole: memberRoleSchema,
+				stageRole: memberRoleSchema,
+				stageFormIds: formsIdSchema.array().nullable(),
 			}),
 			z.object({
 				pubId: z.null(),
 				pub: z.null(),
-				pubOrStageFormIds: z.null(),
+				pubRole: z.null(),
+				pubFormIds: formsIdSchema.array().nullable(),
 				stageId: z.null(),
 				stage: z.null(),
-				pubOrStageRole: z.null(),
+				stageRole: z.null(),
+				stageFormIds: formsIdSchema.array().nullable(),
 			}),
 		])
 	)
@@ -179,8 +185,8 @@ export const newInviteSchema = z
 
 		communityId: communitiesIdSchema,
 		communityRole: memberRoleSchema.default(MemberRole.contributor),
-		communityLevelFormIds: formsIdSchema.array().nullish(),
-		communityLevelFormSlugs: z.string().array().nullish(),
+		communityFormIds: formsIdSchema.array().nullish(),
+		communityFormSlugs: z.string().array().nullish(),
 		message: z.string().nullish(),
 		lastModifiedBy: lastModifiedBySchema,
 	})
@@ -202,24 +208,33 @@ export const newInviteSchema = z
 		z.union([
 			z.object({
 				pubId: pubsIdSchema,
-				pubOrStageFormIds: formsIdSchema.array().nullish(),
-				pubOrStageFormSlugs: z.string().array().nullish(),
+				pubFormIds: formsIdSchema.array().optional(),
+				pubFormSlugs: z.string().array().optional(),
+				pubRole: memberRoleSchema,
 				stageId: z.null().optional(),
-				pubOrStageRole: memberRoleSchema.optional(),
+				stageFormIds: z.null().optional(),
+				stageFormSlugs: z.null().optional(),
+				stageRole: z.null().optional(),
 			}),
 			z.object({
 				pubId: z.null().optional(),
-				pubOrStageFormIds: formsIdSchema.array().nullish(),
-				pubOrStageFormSlugs: z.string().array().nullish(),
+				pubFormIds: z.null().optional(),
+				pubFormSlugs: z.null().optional(),
+				pubRole: z.null().optional(),
 				stageId: stagesIdSchema,
-				pubOrStageRole: memberRoleSchema.optional(),
+				stageFormIds: formsIdSchema.array().nullish(),
+				stageFormSlugs: z.string().array().nullish(),
+				stageRole: memberRoleSchema.optional(),
 			}),
 			z.object({
 				pubId: z.null().optional(),
-				pubOrStageFormIds: z.null().optional(),
-				pubOrStageFormSlugs: z.null().optional(),
+				pubFormIds: z.null().optional(),
+				pubFormSlugs: z.null().optional(),
+				pubRole: z.null().optional(),
 				stageId: z.null().optional(),
-				pubOrStageRole: z.null().optional(),
+				stageFormIds: z.null().optional(),
+				stageFormSlugs: z.null().optional(),
+				stageRole: z.null().optional(),
 			}),
 		])
 	)

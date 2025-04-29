@@ -1,14 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `communityLevelFormId` on the `invites` table. All the data in the column will be lost.
-  - You are about to drop the column `pubOrStageFormId` on the `invites` table. All the data in the column will be lost.
-  - You are about to drop the column `pubOrStageRole` on the `invites` table. All the data in the column will be lost.
-
-*/
--- CreateEnum
-CREATE TYPE "InviteFormType" AS ENUM ('communityLevel', 'pubOrStage');
-
 -- DropForeignKey
 ALTER TABLE "invites" DROP CONSTRAINT "invites_communityLevelFormId_fkey";
 
@@ -23,7 +12,7 @@ DROP COLUMN "pubOrStageFormId";
 CREATE TABLE "invite_forms" (
     "inviteId" TEXT NOT NULL,
     "formId" TEXT NOT NULL,
-    "type" "InviteFormType" NOT NULL,
+    "type" "MembershipType" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -41,15 +30,22 @@ ALTER TABLE "invite_forms" ADD CONSTRAINT "invite_forms_formId_fkey" FOREIGN KEY
 
 -- Add check constraint
 -- function because you cannot use subqueries in check constraints
-CREATE OR REPLACE FUNCTION check_invite_has_pub_or_stage(type "InviteFormType", invite_id TEXT) 
+CREATE OR REPLACE FUNCTION check_invite_has_pub_or_stage(type "MembershipType", invite_id TEXT) 
 RETURNS BOOLEAN AS $$
 BEGIN
-  RETURN "type" != 'pubOrStage' OR 
-    EXISTS (
-    SELECT 1 FROM "invites" 
-    WHERE "invites"."id" = invite_id 
-    AND ("invites"."pubId" IS NOT NULL OR "invites"."stageId" IS NOT NULL)
-  );
+  RETURN CASE 
+    WHEN "type" = 'pub'::"MembershipType" THEN EXISTS (
+      SELECT 1 FROM "invites" 
+      WHERE "invites"."id" = invite_id 
+      AND "invites"."pubId" IS NOT NULL
+    )
+    WHEN "type" = 'stage'::"MembershipType" THEN EXISTS (
+      SELECT 1 FROM "invites" 
+      WHERE "invites"."id" = invite_id 
+      AND "invites"."stageId" IS NOT NULL
+    )
+    ELSE TRUE
+  END;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -720,12 +720,13 @@ model Invite {
 
   // you can also directly invite a user to a pub or stage, but not both
   // you can then also immediately allow them to use a certain form at that level
-  Pub     Pub?    @relation(fields: [pubId], references: [id], onDelete: SetNull)
+  Pub     Pub?        @relation(fields: [pubId], references: [id], onDelete: SetNull)
   pubId   String?
-  Stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId String?
+  pubRole MemberRole?
 
-  pubOrStageRole MemberRole?
+  Stage     Stage?      @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId   String?
+  stageRole MemberRole?
 
   // the message that is sent in the invite. useful for resending invites
   message    String?
@@ -747,17 +748,12 @@ model Invite {
   @@map(name: "invites")
 }
 
-enum InviteFormType {
-  communityLevel
-  pubOrStage
-}
-
 model InviteForm {
   invite    Invite         @relation(fields: [inviteId], references: [id], onDelete: Cascade)
   inviteId  String
   form      Form           @relation(fields: [formId], references: [id], onDelete: Cascade)
   formId    String
-  type      InviteFormType
+  type      MembershipType
   createdAt DateTime       @default(now())
   updatedAt DateTime       @default(now()) @updatedAt
   // ensure pub/stage forms only exist when pub or stage is set

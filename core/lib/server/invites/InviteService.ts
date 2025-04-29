@@ -11,13 +11,12 @@ import type {
 	FormsId,
 	InvitesId,
 	MemberRole,
-	MembershipType,
 	PubsId,
 	StagesId,
 	UsersId,
 } from "db/public";
 import type { Invite, LastModifiedBy, NewInvite, NewInviteInput } from "db/types";
-import { InviteFormType, InviteStatus } from "db/public";
+import { InviteStatus, MembershipType } from "db/public";
 import { compareMemberRoles, DEFAULT_INVITE_EXPIRATION_TIME } from "db/types";
 import { logger } from "logger";
 
@@ -187,30 +186,33 @@ export namespace InviteService {
 	 */
 	export async function _createInvite(data: NewInvite, trx = db) {
 		const {
-			communityLevelFormIds,
-			pubOrStageFormIds,
-			communityLevelFormSlugs,
-			pubOrStageFormSlugs,
+			communityFormIds,
+			pubFormIds,
+			stageFormIds,
+			communityFormSlugs,
+			pubFormSlugs,
+			stageFormSlugs,
 			...restData
 		} = data;
 		const communityFormSlugsOrIds = [
-			...(communityLevelFormSlugs ?? []),
-			...(communityLevelFormIds ?? []),
+			...(communityFormSlugs ?? []),
+			...(communityFormIds ?? []),
 		];
-		const pubOrStageFormSlugsOrIds = [
-			...(pubOrStageFormSlugs ?? []),
-			...(pubOrStageFormIds ?? []),
-		];
+		const pubFormSlugsOrIds = [...(pubFormSlugs ?? []), ...(pubFormIds ?? [])];
+		const stageFormSlugsOrIds = [...(stageFormSlugs ?? []), ...(stageFormIds ?? [])];
 
 		const type =
-			pubOrStageFormSlugsOrIds.length > 0
-				? InviteFormType.pubOrStage
-				: communityFormSlugsOrIds.length > 0
-					? InviteFormType.communityLevel
-					: null;
+			pubFormSlugsOrIds.length > 0
+				? MembershipType.pub
+				: stageFormSlugsOrIds.length > 0
+					? MembershipType.stage
+					: communityFormSlugsOrIds.length > 0
+						? MembershipType.community
+						: null;
 
-		const pubsOrStageFormIdentifiersAreSlugs = Boolean(pubOrStageFormSlugs?.length);
-		const communityFormIdentifiersAreSlugs = Boolean(communityLevelFormSlugs?.length);
+		const pubFormIdentifiersAreSlugs = Boolean(pubFormSlugs?.length);
+		const stageFormIdentifiersAreSlugs = Boolean(stageFormSlugs?.length);
+		const communityFormIdentifiersAreSlugs = Boolean(communityFormSlugs?.length);
 
 		const inviteBase = trx.with("invite", (db) =>
 			db.insertInto("invites").values(restData).returningAll()
@@ -238,18 +240,23 @@ export namespace InviteService {
 					db
 						.insertInto("invite_forms")
 						.values((eb) => [
-							...(pubOrStageFormSlugsOrIds?.map((form) => ({
+							...(pubFormSlugsOrIds?.map((form) => ({
 								inviteId: eb
 									.selectFrom("invite")
 									.select("id")
 									.where("token", "=", data.token)
 									.limit(1),
-								formId: withFormSlugOrId(
-									eb,
-									form,
-									pubsOrStageFormIdentifiersAreSlugs
-								),
-								type: InviteFormType.pubOrStage,
+								formId: withFormSlugOrId(eb, form, pubFormIdentifiersAreSlugs),
+								type: type,
+							})) ?? []),
+							...(stageFormSlugsOrIds?.map((form) => ({
+								inviteId: eb
+									.selectFrom("invite")
+									.select("id")
+									.where("token", "=", data.token)
+									.limit(1),
+								formId: withFormSlugOrId(eb, form, stageFormIdentifiersAreSlugs),
+								type: MembershipType.stage,
 							})) ?? []),
 							...(communityFormSlugsOrIds?.map((formId) => ({
 								inviteId: eb
@@ -262,7 +269,7 @@ export namespace InviteService {
 									formId,
 									communityFormIdentifiersAreSlugs
 								),
-								type: InviteFormType.communityLevel,
+								type: MembershipType.community,
 							})) ?? []),
 						])
 						.returningAll()
@@ -505,8 +512,8 @@ export namespace InviteService {
 
 			const isPubMemberUseless = isInviteUselessForMembership(
 				{
-					role: invite.pubOrStageRole,
-					forms: invite.pubOrStageFormIds ?? [],
+					role: invite.pubRole,
+					forms: invite.pubFormIds ?? [],
 				},
 				pubMember
 			);
@@ -530,8 +537,8 @@ export namespace InviteService {
 
 			const stageMemberUseless = isInviteUselessForMembership(
 				{
-					role: invite.pubOrStageRole,
-					forms: invite.pubOrStageFormIds ?? [],
+					role: invite.stageRole,
+					forms: invite.stageFormIds ?? [],
 				},
 				stageMember
 			);
@@ -590,8 +597,8 @@ export namespace InviteService {
 					{
 						pubId: invite.pubId,
 						userId: user.id,
-						role: invite.pubOrStageRole,
-						forms: invite.pubOrStageFormIds ?? [],
+						role: invite.pubRole,
+						forms: invite.pubFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();
@@ -609,8 +616,8 @@ export namespace InviteService {
 					{
 						stageId: invite.stageId,
 						userId: user.id,
-						role: invite.pubOrStageRole,
-						forms: invite.pubOrStageFormIds ?? [],
+						role: invite.stageRole,
+						forms: invite.stageFormIds ?? [],
 					},
 					trx
 				).executeTakeFirstOrThrow();

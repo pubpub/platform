@@ -348,12 +348,17 @@ export type InviteInitializer<
 	[InviteName in string]: MaybeHas<
 		Omit<
 			NewInviteInput,
-			"communityId" | "lastModifiedBy" | "pubOrStageFormSlugs" | "communityLevelFormSlugs"
+			| "communityId"
+			| "lastModifiedBy"
+			| "pubFormSlugs"
+			| "stageFormSlugs"
+			| "communityFormSlugs"
 		>,
 		"token"
 	> & {
-		pubOrStageFormSlugs?: (keyof FI)[];
-		communityLevelFormSlugs?: (keyof FI)[];
+		pubFormSlugs?: (keyof FI)[];
+		stageFormSlugs?: (keyof FI)[];
+		communityFormSlugs?: (keyof FI)[];
 	};
 };
 
@@ -1299,8 +1304,9 @@ export async function seedCommunity<
 			Object.entries(props.invites ?? {}).map(async ([inviteName, inviteInput]) => {
 				const {
 					token: rawToken,
-					pubOrStageFormSlugs,
-					communityLevelFormSlugs,
+					pubFormSlugs,
+					stageFormSlugs,
+					communityFormSlugs,
 					...rest
 				} = inviteInput;
 
@@ -1315,8 +1321,8 @@ export async function seedCommunity<
 					token = generateToken();
 				}
 
-				const psFormSlugs = pubOrStageFormSlugs
-					? pubOrStageFormSlugs.map((slug) => {
+				const pFormSlugs = pubFormSlugs
+					? pubFormSlugs.map((slug) => {
 							const form = formsByName[slug];
 							if (!form) {
 								throw new Error(`Form ${slug as string} not found`);
@@ -1324,8 +1330,19 @@ export async function seedCommunity<
 							return form.slug;
 						})
 					: undefined;
-				const cfSlugs = communityLevelFormSlugs
-					? communityLevelFormSlugs.map((slug) => {
+
+				const sFormSlugs = stageFormSlugs
+					? stageFormSlugs.map((slug) => {
+							const form = formsByName[slug];
+							if (!form) {
+								throw new Error(`Form ${slug as string} not found`);
+							}
+							return form.slug;
+						})
+					: undefined;
+
+				const cfSlugs = communityFormSlugs
+					? communityFormSlugs.map((slug) => {
 							const form = formsByName[slug];
 							if (!form) {
 								throw new Error(`Form ${slug as string} not found`);
@@ -1339,8 +1356,9 @@ export async function seedCommunity<
 					token,
 					communityId,
 					lastModifiedBy: createLastModifiedBy("system"),
-					pubOrStageFormSlugs: psFormSlugs,
-					communityLevelFormSlugs: cfSlugs,
+					pubFormSlugs: pFormSlugs ?? null,
+					stageFormSlugs: sFormSlugs ?? null,
+					communityFormSlugs: cfSlugs ?? null,
 					invitedByUserId: inviteInput.invitedByActionRunId
 						? null
 						: expect(
@@ -1349,16 +1367,21 @@ export async function seedCommunity<
 								"You need to create an admin member in the seed if you dont want to set the invitee manually."
 							),
 					...rest,
-				};
+				} satisfies NewInviteInput;
 
-				const input = newInviteSchema.parse(rawInput);
+				try {
+					const input = newInviteSchema.parse(rawInput);
 
-				const invite = await InviteService._createInvite(input, trx);
+					const invite = await InviteService._createInvite(input, trx);
 
-				return [
-					inviteName,
-					{ ...invite, inviteToken: InviteService.createInviteToken(invite) },
-				];
+					return [
+						inviteName,
+						{ ...invite, inviteToken: InviteService.createInviteToken(invite) },
+					];
+				} catch (e) {
+					console.log(rawInput);
+					throw e;
+				}
 			})
 		)
 	) as InvitesByName<II>;
