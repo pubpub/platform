@@ -1,4 +1,4 @@
-import { PHASE_PRODUCTION_BUILD } from "next/constants";
+import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
 import createBufferStringHandler from "@fortedigital/nextjs-cache-handler/buffer-string-decorator";
 import createCompositeHandler from "@fortedigital/nextjs-cache-handler/composite";
 import { Next15CacheHandler } from "@fortedigital/nextjs-cache-handler/next-15-cache-handler";
