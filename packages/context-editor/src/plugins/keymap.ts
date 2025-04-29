@@ -4,6 +4,7 @@ import type { Command } from "prosemirror-state";
 import { chainCommands, exitCode } from "prosemirror-commands";
 import { keymap } from "prosemirror-keymap";
 import { liftListItem, sinkListItem } from "prosemirror-schema-list";
+import { goToNextCell } from "prosemirror-tables";
 
 import { toggleMarkExpandEmpty } from "../commands/marks";
 
@@ -18,8 +19,9 @@ export default (schema: Schema) => {
 	bind("Mod-k", (state, dispatch) =>
 		toggleMarkExpandEmpty({ state, dispatch, type: schema.marks.link })
 	);
-	bind("Shift-Tab", liftListItem(schema.nodes.list_item));
-	bind("Tab", sinkListItem(schema.nodes.list_item));
+
+	bind("Shift-Tab", chainCommands(liftListItem(schema.nodes.list_item), goToNextCell(-1)));
+	bind("Tab", chainCommands(sinkListItem(schema.nodes.list_item), goToNextCell(1)));
 
 	if (schema.nodes.hard_break) {
 		const cmd = chainCommands(exitCode, (state, dispatch) => {
