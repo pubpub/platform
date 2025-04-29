@@ -1,6 +1,7 @@
+// Based on https://github.com/fortedigital/nextjs-cache-handler#full-example
+
 import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
 import createBufferStringHandler from "@fortedigital/nextjs-cache-handler/buffer-string-decorator";
-import createCompositeHandler from "@fortedigital/nextjs-cache-handler/composite";
 import { Next15CacheHandler } from "@fortedigital/nextjs-cache-handler/next-15-cache-handler";
 import createRedisHandler from "@fortedigital/nextjs-cache-handler/redis-strings";
 import { CacheHandler } from "@neshca/cache-handler";
@@ -21,29 +22,16 @@ CacheHandler.onCreation(() => {
 		return global.cacheHandlerConfigPromise;
 	}
 
-	// You may need to ignore Redis locally, remove this block otherwise
-	// if (process.env.NODE_ENV === "development") {
-	// 	const lruCache = createLruHandler();
-	// 	return { handlers: [lruCache] };
-	// }
-
 	// Main promise initializing the handler
 	global.cacheHandlerConfigPromise = (async () => {
 		/** @type {import("redis").RedisClientType | null} */
 		let redisClient = null;
 		if (PHASE_PRODUCTION_BUILD !== process.env.NEXT_PHASE) {
-			const settings = {
-				url: process.env.VALKEY_URL, // Make sure you configure this variable
-				pingInterval: 10000,
-			};
-
-			// This is optional and needed only if you use access keys
-			//   if (process.env.REDIS_ACCESS_KEY) {
-			//     settings.password = process.env.REDIS_ACCESS_KEY;
-			//   }
-
 			try {
-				redisClient = createClient(settings);
+				redisClient = createClient({
+					url: process.env.VALKEY_URL,
+					pingInterval: 10000,
+				});
 				redisClient.on("error", (e) => {
 					if (typeof process.env.NEXT_PRIVATE_DEBUG_CACHE !== "undefined") {
 						console.warn("Redis error", e);
@@ -82,22 +70,13 @@ CacheHandler.onCreation(() => {
 		const redisCacheHandler = createRedisHandler({
 			client: redisClient,
 			keyPrefix: "nextjs:",
+			keyExpirationStrategy: "EXAT",
 		});
 
 		global.cacheHandlerConfigPromise = null;
 
-		// This example uses composite handler to switch from Redis to LRU cache if tags contains `memory-cache` tag.
-		// You can skip composite and use Redis or LRU only.
 		global.cacheHandlerConfig = {
-			handlers: [
-				createCompositeHandler({
-					handlers: [
-						lruCache,
-						createBufferStringHandler(redisCacheHandler), // Use `createBufferStringHandler` in Next15 and ignore it in Next14 or below
-					],
-					setStrategy: (ctx) => (ctx?.tags.includes("memory-cache") ? 0 : 1), // You can adjust strategy for deciding which cache should the composite use
-				}),
-			],
+			handlers: [createBufferStringHandler(redisCacheHandler)],
 		};
 
 		return global.cacheHandlerConfig;
