@@ -54,6 +54,17 @@ services:
             - test
             - integration
 
+    cache:
+        env_file: ./.env.docker-compose.test
+        extends:
+            file: docker-compose.base.yml
+            service: cache
+        networks:
+            - app-network
+        profiles:
+            - test
+            - integration
+
     jobs:
         container_name: jobs
         image: ${JOBS_IMAGE}
