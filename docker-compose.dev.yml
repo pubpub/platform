@@ -36,6 +36,16 @@ services:
         networks:
             - app-network
 
+    cache:
+        env_file:
+            - path: .env.docker-compose.dev
+              required: true
+        extends:
+            file: docker-compose.base.yml
+            service: cache
+        networks:
+            - app-network
+
     minio-init:
         env_file:
             - path: .env.docker-compose.dev
