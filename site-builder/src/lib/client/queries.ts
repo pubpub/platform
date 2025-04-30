@@ -19,8 +19,8 @@ export const getPubType = async (name: string) => {
 	return expect(pubTypeId.body?.[0]);
 };
 
-export const getJournal = async () => {
-	const journalPubType = await getPubType("Journal Article");
+export const getJournal = async (opts?: { depth?: number; withRelatedPubs?: boolean }) => {
+	const journalPubType = await getPubType("Journal");
 
 	const journal = await getClient().pubs.getMany({
 		params: {
@@ -29,6 +29,8 @@ export const getJournal = async () => {
 		query: {
 			pubTypeId: [expect(journalPubType.id)],
 			limit: 1,
+			depth: opts?.depth ?? 3,
+			withRelatedPubs: opts?.withRelatedPubs ?? true,
 		},
 	});
 

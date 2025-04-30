@@ -53,7 +53,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	"Creation Date": { schemaName: CoreSchemaType.DateTime },
 	"Last Edited": { schemaName: CoreSchemaType.DateTime },
 	// should be fileupload
-	Avatar: { schemaName: CoreSchemaType.String },
+	Avatar: { schemaName: CoreSchemaType.FileUpload },
 	Description: { schemaName: CoreSchemaType.String },
 	Abstract: { schemaName: CoreSchemaType.RichText },
 	License: { schemaName: CoreSchemaType.String },
@@ -126,6 +126,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Items: { schemaName: CoreSchemaType.String, relation: true },
 
 	Page: { schemaName: CoreSchemaType.Null, relation: true },
+	Favicon: { schemaName: CoreSchemaType.FileUpload },
 
 	// journal metadata
 	"Cite As": { schemaName: CoreSchemaType.String },
@@ -137,6 +138,11 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	"Journal Pages": { schemaName: CoreSchemaType.Null, relation: true },
 	"Journal Articles": { schemaName: CoreSchemaType.Null, relation: true },
 	"Journal Collections": { schemaName: CoreSchemaType.Null, relation: true },
+
+	"Navigation Targets": { schemaName: CoreSchemaType.Null, relation: true },
+
+	Footer: { schemaName: CoreSchemaType.Null, relation: true },
+	Header: { schemaName: CoreSchemaType.Null, relation: true },
 } as const;
 
 export const REQUIRED_LEGACY_PUB_TYPES = {
@@ -332,13 +338,85 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			"Journal Pages": { isTitle: false },
 			"Journal Articles": { isTitle: false },
 			"Journal Collections": { isTitle: false },
+			Footer: { isTitle: false },
+			Header: { isTitle: false },
 		},
 		description: "A PubPub Legacy Journal (migrated)",
+	},
+	"Navigation Link": {
+		fields: {
+			Title: { isTitle: true },
+			URL: { isTitle: false },
+		},
+		description: "A Navigation Link for a Journal website (migrated)",
+	},
+	"Navigation Menu": {
+		fields: {
+			"Navigation Targets": {
+				isTitle: false,
+				defaultFormTargets: [
+					"Navigation Link",
+					"Page",
+					"Collection",
+					"Issue",
+					"Book",
+					"Conference Proceedings",
+					"Journal Article",
+					"Navigation Menu",
+				],
+			},
+		},
+		description: "The navigation menu for a Journal website (migrated)",
+	},
+	Header: {
+		fields: {
+			Title: { isTitle: true },
+			"Navigation Targets": {
+				isTitle: false,
+				defaultFormTargets: [
+					"Navigation Link",
+					"Page",
+					"Collection",
+					"Issue",
+					"Book",
+					"Conference Proceedings",
+					"Journal Article",
+					"Navigation Menu",
+				],
+			},
+		},
+		description: "The header for Journal (migrated)",
+	},
+	Footer: {
+		fields: {
+			Title: { isTitle: true },
+			"Navigation Targets": {
+				isTitle: false,
+				defaultFormTargets: [
+					"Navigation Link",
+					"Page",
+					"Collection",
+					"Issue",
+					"Book",
+					"Conference Proceedings",
+					"Journal Article",
+				],
+			},
+		},
+		description: "The footer for a Journal website (migrated)",
 	},
 } as const satisfies Record<
 	string,
 	{
-		fields: Partial<Record<keyof typeof REQUIRED_LEGACY_PUB_FIELDS, { isTitle: boolean }>>;
+		fields: {
+			[K in keyof typeof REQUIRED_LEGACY_PUB_FIELDS]?: {
+				isTitle: boolean;
+			} & ("relation" extends keyof (typeof REQUIRED_LEGACY_PUB_FIELDS)[K]
+				? {
+						defaultFormTargets?: string[]; //(keyof typeof REQUIRED_LEGACY_PUB_TYPES)[];
+					}
+				: {});
+		};
 		description: string;
 	}
 >;
@@ -1234,6 +1312,13 @@ const createJournal = async (
 		op = op.set(legacyStructure.Journal.fields["E-ISSN"].slug, legacyCommunity.community.issn);
 	}
 
+	if (legacyCommunity.community.avatar) {
+		op = op.set(
+			legacyStructure.Journal.fields["Avatar"].slug,
+			legacyCommunity.community.avatar
+		);
+	}
+
 	// relate pages
 	if (legacyCommunity.pages.length > 0) {
 		op.relateByValue(
@@ -1276,6 +1361,37 @@ const createJournal = async (
 		);
 	}
 
+	if (legacyCommunity.community.navigation?.length) {
+		for (const nav of legacyCommunity.community.navigation) {
+			if ("type" in nav) {
+				if (nav.type === "page") {
+					op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
+						{
+							value: null,
+							target: {
+								slug: legacyStructure.Page.fields["Legacy Id"].slug,
+								value: nav.id,
+							},
+						},
+					]);
+					continue;
+				} else if (nav.type === "collection") {
+					op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
+						{
+							value: null,
+							target: {
+								slug: legacyStructure.Collection.fields["Legacy Id"].slug,
+								value: nav.id,
+							},
+						},
+					]);
+					continue;
+				} else {
+					throw new Error(`Unknown navigation type: ${nav.type}`);
+				}
+			}
+		}
+	}
 	const result = await op.execute();
 	logger.info("Journal pub created and linked to all content");
 

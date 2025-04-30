@@ -52,6 +52,7 @@ const EditorFormElement = ({
 		() => (initialHTML ? fromHTMLToNode(initialHTML) : undefined),
 		[initialHTML]
 	);
+	console.log(initialDoc);
 
 	if (!pubId || !pubTypeId) {
 		return null;

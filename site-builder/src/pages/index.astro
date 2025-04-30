@@ -5,20 +5,90 @@ import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
 import { getClient } from "../lib/client/client";
 import { getJournal } from "../lib/client/queries";
+import { getFieldValue } from "../lib/getValue";
 
 const journal = await getJournal();
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// don't want to use any of this? delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+
+const heroText = getFieldValue<string>(journal, "starter:hero-text");
+const description = getFieldValue<string>(journal, "starter:description");
+const publishAs = getFieldValue<string>(journal, "starter:publish-as");
+const publicationDate = getFieldValue<string>(journal, "starter:publication-date");
 ---
 
-<Layout>
-	<Welcome />
-
-	<div id="container">
+<Layout journal={journal}>
+	<div id="container" class="max-w-6xl mx-auto px-4 py-8">
 		<main>
-			<section class="bg-red-50">
-				<pre>{JSON.stringify(journal, null, 2)}</pre>
+			<section class="mb-12">
+				<div class="bg-white p-8 rounded-lg shadow-lg">
+					<h1 class="text-4xl font-bold mb-2">
+						{journal.title}
+					</h1>
+					{heroText && <p class="text-xl text-gray-700 mb-6">{heroText}</p>}
+					{description && <p class="text-gray-600 mb-8">{description}</p>}
+					{publishAs && <p class="text-gray-600 mb-8">Published by: {publishAs}</p>}
+					{
+						publicationDate && (
+							<p class="text-gray-600 mb-8">Publication Date: {publicationDate}</p>
+						)
+					}
+
+					<div class="text-sm text-gray-500">
+						Publication Date: {
+							publicationDate
+								? new Date(publicationDate).toLocaleDateString("en-US", {
+										month: "long",
+										day: "numeric",
+										year: "numeric",
+									})
+								: "Unknown"
+						}
+					</div>
+				</div>
+			</section>
+
+			<section class="mb-8">
+				<h2 class="text-2xl font-bold mb-6">Journal Articles</h2>
+
+				<div class="grid gap-6">
+					{
+						journal.values
+							?.filter(
+								(v) => v.fieldSlug === "starter:journal-articles" && v.relatedPub
+							)
+							.slice(0, 20)
+							.map((article) => {
+								const slug = article.relatedPub?.values?.find(
+									(v) => v.fieldSlug === "starter:slug"
+								)?.value;
+								return (
+									<div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
+										<a href={`/pub/${slug}`} class="block">
+											<h3 class="text-xl font-semibold mb-2 text-blue-800 hover:text-blue-600">
+												{article.relatedPub?.title}
+											</h3>
+											<div class="flex justify-between items-center">
+												<span class="text-sm text-gray-600">
+													{new Date(
+														article.relatedPub?.createdAt
+													).toLocaleDateString("en-US", {
+														month: "short",
+														day: "numeric",
+														year: "numeric",
+													})}
+												</span>
+												<span class="text-sm text-blue-600">
+													Read article →
+												</span>
+											</div>
+										</a>
+									</div>
+								);
+							})
+					}
+				</div>
 			</section>
 		</main>
 	</div>

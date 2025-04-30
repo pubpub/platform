@@ -3,36 +3,37 @@ import { expect } from "utils/assert";
 
 import Layout from "../../layouts/Layout.astro";
 import { getClient } from "../../lib/client/client";
-import { getJournalArticles } from "../../lib/client/queries";
+import { getJournal, getJournalArticles } from "../../lib/client/queries";
+import { getFieldValue } from "../../lib/getValue";
 
 const { slug } = Astro.params;
 
 export async function getStaticPaths() {
-	const pubs = await getJournalArticles();
+	const [journalArticles, journal] = await Promise.all([
+		getJournalArticles(),
+		getJournal({ depth: 1, withRelatedPubs: false }),
+	]);
 
-	const paths = pubs.map((pub) => ({
+	const paths = journalArticles.map((pub) => ({
 		params: {
 			slug: expect(pub.values?.find((value) => value.fieldName === "Slug")?.value),
 		},
-		props: { pub },
+		props: { pub, journal },
 	}));
 
 	return paths;
 }
 
-const { pub } = Astro.props;
+const { pub, journal } = Astro.props;
 
-const getFieldValue = <T extends unknown = unknown>(fieldName: string) => {
-	return pub.values?.find((value) => value.fieldName === fieldName)?.value as T;
-};
-
-const title = getFieldValue("Title");
-const abstract = getFieldValue("Abstract");
-const publicationDate = getFieldValue<string>("Publication Date");
-const lastEdited = getFieldValue<string>("Last Edited");
-const doi = getFieldValue<string>("DOI");
-const volume = getFieldValue<string>("Issue Volume");
-const issueNumber = getFieldValue<string>("Issue Number");
+const title = getFieldValue<string>(pub, "Title");
+const abstract = getFieldValue<string>(pub, "Abstract");
+const publicationDate = getFieldValue<string>(pub, "Publication Date");
+const lastEdited = getFieldValue<string>(pub, "Last Edited");
+const doi = getFieldValue<string>(pub, "DOI");
+const volume = getFieldValue<string>(pub, "Issue Volume");
+const issueNumber = getFieldValue<string>(pub, "Issue Number");
+const content = getFieldValue<string>(pub, "PubContent");
 
 // Assuming contributors are in the values array
 const contributors = pub.values?.filter((value) => value.fieldName === "Contributors") || [];
@@ -50,28 +51,7 @@ const getMonthsAgo = (dateString: string) => {
 };
 ---
 
-<Layout title={title || "Journal Article"}>
-	<div class="bg-slate-900 text-white p-6">
-		<div class="container mx-auto">
-			<nav class="flex items-center justify-between mb-4">
-				<div>Journal Logo</div>
-				<div class="flex space-x-4">
-					<a href="#" class="text-white">Search</a>
-					<a href="#" class="text-white">Dashboard</a>
-					<a href="#" class="text-white">Login or Signup</a>
-				</div>
-			</nav>
-			<div class="flex space-x-4 text-sm">
-				<a href="#" class="text-white">HOME</a>
-				<a href="#" class="text-white">ARTICLES</a>
-				<a href="#" class="text-white">PUBLISH WITH US</a>
-				<a href="#" class="text-white">MASTHEAD</a>
-				<a href="#" class="text-white">WORK WITH US</a>
-				<a href="#" class="text-white">BLOG</a>
-			</div>
-		</div>
-	</div>
-
+<Layout journal={journal} title={title}>
 	<div class="bg-gradient-to-br from-indigo-500 via-purple-500 to-blue-500 min-h-screen">
 		<div class="container mx-auto px-4 py-8">
 			<div class="flex items-center mb-4">
@@ -132,25 +112,14 @@ const getMonthsAgo = (dateString: string) => {
 
 					<div class="mb-8">
 						<h2 class="text-2xl font-bold mb-4">ABSTRACT</h2>
-						<div class="prose max-w-none">
-							{
-								abstract ? (
-									<div set:html={abstract} />
-								) : (
-									<p>
-										Ecological Momentary Assessment (EMA) study participation is
-										usually incentivized using monetary (e.g., fixed or
-										performance-contingent payment) or non-monetary (e.g.,
-										feedback) compensation. This study investigates the impact
-										of this incentivization on recruitment, retention, data
-										quality, and participant characteristics in a sample of 74
-										students. For this purpose, an EMA study (time-based
-										sampling) was conducted in participants' daily life using a
-										2 Payment (fixed/performance-contingent) x 2 Feedback
-										(yes/no) experimental between-subjects design.
-									</p>
-								)
-							}
+						<div class="prose prose-zinc max-w-none">
+							{abstract ? <div set:html={abstract} /> : null}
+						</div>
+					</div>
+
+					<div class="mb-8">
+						<div class="prose max-w-none prose-zinc">
+							{content ? <div set:html={content} /> : ""}
 						</div>
 					</div>
 				</div>
