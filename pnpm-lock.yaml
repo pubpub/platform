@@ -272,9 +272,6 @@ importers:
       '@faker-js/faker':
         specifier: ^9.0.0
         version: 9.0.0
-      '@fortedigital/nextjs-cache-handler':
-        specifier: ^1.2.0
-        version: 1.2.0(next@15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(redis@4.7.0)
       '@googleapis/drive':
         specifier: ^8.16.0
         version: 8.16.0
@@ -290,9 +287,6 @@ importers:
       '@icons-pack/react-simple-icons':
         specifier: ^10.2.0
         version: 10.2.0(react@19.0.0)
-      '@neshca/cache-handler':
-        specifier: ^1.9.0
-        version: 1.9.0(next@15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(redis@4.7.0)
       '@nimpl/getters':
         specifier: ^2.0.0
         version: 2.0.0(next@15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -467,9 +461,6 @@ importers:
       reactflow:
         specifier: ^11.10.4
         version: 11.11.4(@types/react@19.0.6)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      redis:
-        specifier: ^4.7.0
-        version: 4.7.0
       rehype:
         specifier: ^13.0.2
         version: 13.0.2
@@ -3102,12 +3093,6 @@ packages:
   '@formatjs/intl-localematcher@0.6.0':
     resolution: {integrity: sha512-4rB4g+3hESy1bHSBG3tDFaMY2CH67iT7yne1e+0CLTsGLDcmoEWWpJjjpWVaYgYfYuohIRuo0E+N536gd2ZHZA==}
 
-  '@fortedigital/nextjs-cache-handler@1.2.0':
-    resolution: {integrity: sha512-dHu7+D6yVHI5ii1/DgNSZM9wVPk8uKAB0zrRoNNbZq6hggpRRwAExV4J6bSGOd26RN6ZnfYaGLBmdb0gLpeBQg==}
-    peerDependencies:
-      next: '>=13.5.1'
-      redis: '>=4.6'
-
   '@googleapis/drive@8.16.0':
     resolution: {integrity: sha512-Xi2mMrUTQ+gsfyouRGd0pfnL+jjg4n4sjKsJruM1y4DknuRfdSBTk5E//WrL0YJ/CqpcBgyd7L8DvaPRtxZD3Q==}
     engines: {node: '>=12.0.0'}
@@ -3565,12 +3550,6 @@ packages:
 
   '@napi-rs/wasm-runtime@0.2.4':
     resolution: {integrity: sha512-9zESzOO5aDByvhIAsOy9TbpZ0Ur2AJbUI7UT73kcUTS2mxAMHOBaa1st/jAymNoCtvrit99kkzT1FZuXVcgfIQ==}
-
-  '@neshca/cache-handler@1.9.0':
-    resolution: {integrity: sha512-dh0x4pdjDKvPRfZF5DZb8TtOUkbBfeTodOUdQsHDuv0oiuqQ3p7GLx38f6bPn8Sa4he8HsWo+rM4S20ZRqr7pA==}
-    peerDependencies:
-      next: '>= 13.5.1 < 15'
-      redis: '>= 4.6'
 
   '@next/env@15.0.4':
     resolution: {integrity: sha512-WNRvtgnRVDD4oM8gbUcRc27IAhaL4eXQ/2ovGbgLnPGUvdyDr8UdXP4Q/IBDdAdojnD2eScryIDirv0YUCjUVw==}
@@ -5659,35 +5638,6 @@ packages:
       react: '>=17'
       react-dom: '>=17'
 
-  '@redis/bloom@1.2.0':
-    resolution: {integrity: sha512-HG2DFjYKbpNmVXsa0keLHp/3leGJz1mjh09f2RLGGLQZzSHpkmZWuwJbAvo3QcRY8p80m5+ZdXZdYOSBLlp7Cg==}
-    peerDependencies:
-      '@redis/client': ^1.0.0
-
-  '@redis/client@1.6.0':
-    resolution: {integrity: sha512-aR0uffYI700OEEH4gYnitAnv3vzVGXCFvYfdpu/CJKvk4pHfLPEy/JSZyrpQ+15WhXe1yJRXLtfQ84s4mEXnPg==}
-    engines: {node: '>=14'}
-
-  '@redis/graph@1.1.1':
-    resolution: {integrity: sha512-FEMTcTHZozZciLRl6GiiIB4zGm5z5F3F6a6FZCyrfxdKOhFlGkiAqlexWMBzCi4DcRoyiOsuLfW+cjlGWyExOw==}
-    peerDependencies:
-      '@redis/client': ^1.0.0
-
-  '@redis/json@1.0.7':
-    resolution: {integrity: sha512-6UyXfjVaTBTJtKNG4/9Z8PSpKE6XgSyEb8iwaqDcy+uKrd/DGYHTWkUdnQDyzm727V7p21WUMhsqz5oy65kPcQ==}
-    peerDependencies:
-      '@redis/client': ^1.0.0
-
-  '@redis/search@1.2.0':
-    resolution: {integrity: sha512-tYoDBbtqOVigEDMAcTGsRlMycIIjwMCgD8eR2t0NANeQmgK/lvxNAvYyb6bZDD4frHRhIHkJu2TBRvB0ERkOmw==}
-    peerDependencies:
-      '@redis/client': ^1.0.0
-
-  '@redis/time-series@1.1.0':
-    resolution: {integrity: sha512-c1Q99M5ljsIuc4YdaCwfUEXsofakb9c8+Zse2qxTadu8TalLXuAESzLvFAvNVbkmSlvlzIQOLpBCmWI9wTOt+g==}
-    peerDependencies:
-      '@redis/client': ^1.0.0
-
   '@remirror/core-constants@3.0.0':
     resolution: {integrity: sha512-42aWfPrimMfDKDi4YegyS7x+/0tlzaqwPQCULLanv3DMIlu96KTJR0fM5isWX2UViOqlGnX6YFgqWepcX+XMNg==}
 
@@ -5881,11 +5831,6 @@ packages:
 
   '@rollup/rollup-linux-x64-gnu@4.35.0':
     resolution: {integrity: sha512-Pim1T8rXOri+0HmV4CdKSGrqcBWX0d1HoPnQ0uw0bdp1aP5SdQVNBy8LjYncvnLgu3fnnCt17xjWGd4cqh8/hA==}
-    cpu: [x64]
-    os: [linux]
-
-  '@rollup/rollup-linux-x64-gnu@4.40.1':
-    resolution: {integrity: sha512-XiK5z70PEFEFqcNj3/zRSz/qX4bp4QIraTy9QjwJAb/Z8GM7kVUsD0Uk8maIPeTyPCP03ChdI+VVmJriKYbRHQ==}
     cpu: [x64]
     os: [linux]
 
@@ -7974,10 +7919,6 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  cluster-key-slot@1.1.2:
-    resolution: {integrity: sha512-RMr0FhtfXemyinomL4hrWcYJxmX6deFdCxpJzhDttxgO1+bcCnkk+9drydLVDmAMG7NE6aN/fl4F7ucU/90gAA==}
-    engines: {node: '>=0.10.0'}
-
   cmdk@1.0.4:
     resolution: {integrity: sha512-AnsjfHyHpQ/EFeAnG216WY7A5LiYCoZzCSygiLvfXC3H3LFGCprErteUcszaVluGOhuOTbJS3jWHrSDYPBBygg==}
     peerDependencies:
@@ -9120,10 +9061,6 @@ packages:
     resolution: {integrity: sha512-Jh/AIwwgaxan+7ZUUmRLCjtchyDiqh4KjBJ5tW3plBZb5iL/BPcso8A5DlzeD9qlw0duCamnNdpFjxwaT0KyKg==}
     engines: {node: '>=14'}
 
-  generic-pool@3.9.0:
-    resolution: {integrity: sha512-hymDOu5B53XvN4QT9dBmZxPX4CWhBPPLguTZ9MMFeFa/Kg0xWVfylOVNlJji/E7yTZWFd/q9GO5TxDLq156D7g==}
-    engines: {node: '>= 4'}
-
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
@@ -9975,6 +9912,7 @@ packages:
     resolution: {integrity: sha512-t0etAxTUk1w5MYdNOkZBZ8rvYYN5iL+2dHCCx/DpkFm/bW28M6y5nUS83D4XdZiHy35Fpaw6LBb+F88fHZnVCw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@6.1.0:
     resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
@@ -10326,8 +10264,8 @@ packages:
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
-  lru-cache@11.1.0:
-    resolution: {integrity: sha512-QIXZUBJUx+2zHUdQujWejBkcD9+cs94tLn0+YL8UrCh+D5sCXZ4c7LaEH48pNwRY3MLDgqUFyhlCyjJPf1WP0A==}
+  lru-cache@11.0.1:
+    resolution: {integrity: sha512-CgeuL5uom6j/ZVrg7G/+1IXqRY8JXX4Hghfy5YE0EhoYQWvndP1kufu58cmZLNIDKnRhZrXfdS9urVWx98AipQ==}
     engines: {node: 20 || >=22}
 
   lru-cache@5.1.1:
@@ -11875,9 +11813,6 @@ packages:
     resolution: {integrity: sha512-6tDA8g98We0zd0GvVeMT9arEOnTw9qM03L9cJXaCjrip1OO764RDBLBfrB4cwzNGDj5OA5ioymC9GkizgWJDUg==}
     engines: {node: '>=8'}
 
-  redis@4.7.0:
-    resolution: {integrity: sha512-zvmkHEAdGMn+hMRXuMBtu4Vo5P6rHQjLoHftu+lBqq8ZTA3RCVC/WzD790bkKKiNFp7d5/9PcSD19fJyyRvOdQ==}
-
   reflect.getprototypeof@1.0.10:
     resolution: {integrity: sha512-00o4I+DVrefhv+nX0ulyi3biSHCPDe+yLv5o/p6d/UVlirijB8E16FtfwSAi4g3tcqrQ4lRAqQSoFEZJehYEcw==}
     engines: {node: '>= 0.4'}
@@ -13402,9 +13337,6 @@ packages:
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
-
-  yallist@4.0.0:
-    resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
   yaml@1.10.2:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
@@ -15543,16 +15475,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@fortedigital/nextjs-cache-handler@1.2.0(next@15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(redis@4.7.0)':
-    dependencies:
-      '@neshca/cache-handler': 1.9.0(next@15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(redis@4.7.0)
-      cluster-key-slot: 1.1.2
-      lru-cache: 11.1.0
-      next: 15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      redis: 4.7.0
-    optionalDependencies:
-      '@rollup/rollup-linux-x64-gnu': 4.40.1
-
   '@googleapis/drive@8.16.0':
     dependencies:
       googleapis-common: 7.2.0
@@ -16141,13 +16063,6 @@ snapshots:
       '@emnapi/runtime': 1.2.0
       '@tybys/wasm-util': 0.9.0
     optional: true
-
-  '@neshca/cache-handler@1.9.0(next@15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(redis@4.7.0)':
-    dependencies:
-      cluster-key-slot: 1.1.2
-      lru-cache: 10.4.3
-      next: 15.2.3(@babel/core@7.25.2)(@opentelemetry/api@1.9.0)(@playwright/test@1.51.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      redis: 4.7.0
 
   '@next/env@15.0.4': {}
 
@@ -18625,32 +18540,6 @@ snapshots:
       - '@types/react'
       - immer
 
-  '@redis/bloom@1.2.0(@redis/client@1.6.0)':
-    dependencies:
-      '@redis/client': 1.6.0
-
-  '@redis/client@1.6.0':
-    dependencies:
-      cluster-key-slot: 1.1.2
-      generic-pool: 3.9.0
-      yallist: 4.0.0
-
-  '@redis/graph@1.1.1(@redis/client@1.6.0)':
-    dependencies:
-      '@redis/client': 1.6.0
-
-  '@redis/json@1.0.7(@redis/client@1.6.0)':
-    dependencies:
-      '@redis/client': 1.6.0
-
-  '@redis/search@1.2.0(@redis/client@1.6.0)':
-    dependencies:
-      '@redis/client': 1.6.0
-
-  '@redis/time-series@1.1.0(@redis/client@1.6.0)':
-    dependencies:
-      '@redis/client': 1.6.0
-
   '@remirror/core-constants@3.0.0': {}
 
   '@remirror/core-helpers@4.0.0':
@@ -18817,9 +18706,6 @@ snapshots:
     optional: true
 
   '@rollup/rollup-linux-x64-gnu@4.35.0':
-    optional: true
-
-  '@rollup/rollup-linux-x64-gnu@4.40.1':
     optional: true
 
   '@rollup/rollup-linux-x64-musl@4.21.2':
@@ -21421,8 +21307,6 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  cluster-key-slot@1.1.2: {}
-
   cmdk@1.0.4(@types/react-dom@19.0.3(@types/react@19.0.6))(@types/react@19.0.6)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@radix-ui/react-dialog': 1.1.4(@types/react-dom@19.0.3(@types/react@19.0.6))(@types/react@19.0.6)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -22813,8 +22697,6 @@ snapshots:
       - encoding
       - supports-color
 
-  generic-pool@3.9.0: {}
-
   gensync@1.0.0-beta.2: {}
 
   get-caller-file@2.0.5: {}
@@ -24181,7 +24063,7 @@ snapshots:
 
   lru-cache@10.4.3: {}
 
-  lru-cache@11.1.0: {}
+  lru-cache@11.0.1: {}
 
   lru-cache@5.1.1:
     dependencies:
@@ -25448,7 +25330,7 @@ snapshots:
 
   path-scurry@2.0.0:
     dependencies:
-      lru-cache: 11.1.0
+      lru-cache: 11.0.1
       minipass: 7.1.2
 
   path-to-regexp@3.3.0: {}
@@ -26268,15 +26150,6 @@ snapshots:
     dependencies:
       indent-string: 4.0.0
       strip-indent: 3.0.0
-
-  redis@4.7.0:
-    dependencies:
-      '@redis/bloom': 1.2.0(@redis/client@1.6.0)
-      '@redis/client': 1.6.0
-      '@redis/graph': 1.1.1(@redis/client@1.6.0)
-      '@redis/json': 1.0.7(@redis/client@1.6.0)
-      '@redis/search': 1.2.0(@redis/client@1.6.0)
-      '@redis/time-series': 1.1.0(@redis/client@1.6.0)
 
   reflect.getprototypeof@1.0.10:
     dependencies:
@@ -28207,8 +28080,6 @@ snapshots:
   y18n@5.0.8: {}
 
   yallist@3.1.1: {}
-
-  yallist@4.0.0: {}
 
   yaml@1.10.2: {}
 
