@@ -3,7 +3,7 @@
 import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
-import React, { useEffect, useId, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
@@ -77,12 +77,14 @@ export default function ContextEditor(props: ContextEditorProps) {
 		props.onChange(editorState);
 	}, [editorState]);
 
+	const containerRef = useRef<HTMLDivElement>(null);
 	const containerId = useId();
 
 	return (
 		<div
 			id={containerId}
-			className={cn("isolate max-w-screen-sm", {
+			ref={containerRef}
+			className={cn("relative isolate max-w-screen-sm", {
 				"editor-disabled": props.disabled,
 			})}
 		>
@@ -102,10 +104,11 @@ export default function ContextEditor(props: ContextEditorProps) {
 						</div>
 					)}
 					<ProseMirrorDoc />
-					<AttributePanel menuHidden={!!props.hideMenu} containerId={containerId} />
+					<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
 					<SuggestPanel
 						suggestData={suggestData}
 						setSuggestData={setSuggestData}
+						containerRef={containerRef}
 						containerId={containerId}
 					/>
 				</EditorContextProvider>

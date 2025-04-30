@@ -36,10 +36,10 @@ const initPanelProps: PanelProps = {
 
 export function AttributePanel({
 	menuHidden,
-	containerId,
+	containerRef,
 }: {
 	menuHidden: boolean;
-	containerId: string;
+	containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
 	const [position, setPosition] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
@@ -78,22 +78,21 @@ export function AttributePanel({
 		},
 		[state]
 	);
-	const container = document.getElementById(containerId);
+	// const container = document.getElementById(containerId);
 
 	useEditorEffect(
 		(view) => {
 			if (activeNode) {
 				const viewClientRect = view.dom.getBoundingClientRect();
 				const coords = view.coordsAtPos(activeNodePosition);
-				const editorOffsetFromPage = container?.offsetTop ?? 0;
-				const topBase = editorOffsetFromPage + coords.top - 1 - viewClientRect.top;
+				const topBase = coords.top - 1 - viewClientRect.top;
 				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT;
 				setPosition({
 					...position,
 					top,
 					// +16 for padding
 					left: coords.left - viewClientRect.left + 16,
-					panelLeft: container?.clientWidth ?? 0,
+					panelLeft: containerRef.current?.clientWidth ?? 0,
 					right: -1,
 				});
 				setTimeout(() => {
@@ -103,7 +102,7 @@ export function AttributePanel({
 				setHeight(0);
 			}
 		},
-		[activeNode, activeNodePosition, container]
+		[activeNode, activeNodePosition, containerRef]
 	);
 
 	const updateMarkAttr = useEditorEventCallback(
@@ -204,7 +203,7 @@ export function AttributePanel({
 	// that are not marks that need to be specifically rendered
 	const showName = activeNode?.type?.name === "math_inline";
 
-	if (!container) {
+	if (!containerRef.current) {
 		return null;
 	}
 
@@ -345,6 +344,6 @@ export function AttributePanel({
 				}}
 			/>
 		</>,
-		container
+		containerRef.current
 	);
 }

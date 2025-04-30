@@ -8,9 +8,9 @@ import { reactPropsKey } from "../plugins/reactProps";
 type Props = {
 	suggestData: SuggestProps;
 	setSuggestData: any;
-	containerId: string;
+	containerRef: React.RefObject<HTMLDivElement | null>;
 };
-export default function SuggestPanel({ suggestData, setSuggestData, containerId }: Props) {
+export default function SuggestPanel({ suggestData, setSuggestData, containerRef }: Props) {
 	const { isOpen, selectedIndex, items, filter } = suggestData;
 	const [position, setPosition] = useState([0, 0]);
 
@@ -36,7 +36,7 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerId 
 		const span = document.getElementsByClassName("autocomplete")[0];
 		if (span) {
 			const rect = span.getBoundingClientRect();
-			const container = document.getElementById(containerId);
+			const container = containerRef.current;
 			if (container) {
 				const containerBound = container.getBoundingClientRect();
 				const topOffset = -1 * containerBound.top + container.scrollTop + 16;
@@ -44,7 +44,7 @@ export default function SuggestPanel({ suggestData, setSuggestData, containerId 
 				setPosition([rect.top + 20 + topOffset, rect.left + leftOffset]);
 			}
 		}
-	}, [isOpen, filter, containerId]);
+	}, [isOpen, filter, containerRef]);
 	if (!isOpen) {
 		return null;
 	}
