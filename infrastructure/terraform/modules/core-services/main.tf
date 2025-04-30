@@ -101,6 +101,7 @@ resource "aws_elasticache_replication_group" "core_valkey" {
   num_cache_clusters   = 1
   parameter_group_name = "default.valkey8"
   port                 = 6379
+  security_group_ids   = [aws_security_group.core_valkey.id]
 }
 
 # resource "aws_elasticache_parameter_group" "core_valkey" {
