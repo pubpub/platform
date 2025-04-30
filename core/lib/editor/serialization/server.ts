@@ -6,13 +6,11 @@ import rehypeParse from "rehype-parse";
 import rehypeStringify from "rehype-stringify";
 import { unified } from "unified";
 
-export const renderNodeToHTML = (node: Record<string, any>): string => {
-	const base = Node.fromJSON(baseSchema, node);
-
+export const renderNodeToHTML = (node: Node): string => {
 	const dom = new JSDOM();
 	const document = dom.window.document;
 
-	const fragment = DOMSerializer.fromSchema(baseSchema).serializeFragment(base.content, {
+	const fragment = DOMSerializer.fromSchema(baseSchema).serializeFragment(node.content, {
 		document,
 	});
 
