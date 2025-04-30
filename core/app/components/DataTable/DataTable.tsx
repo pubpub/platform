@@ -44,6 +44,7 @@ export interface DataTableProps<TData, TValue> {
 	getRowId?: (data: TData) => string;
 	pagination?: PaginationState;
 	stickyHeader?: boolean;
+	defaultSort?: SortingState;
 }
 
 const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50";
@@ -62,8 +63,9 @@ export function DataTable<TData, TValue>({
 	getRowId,
 	pagination,
 	stickyHeader,
+	defaultSort,
 }: DataTableProps<TData, TValue>) {
-	const [sorting, setSorting] = React.useState<SortingState>([]);
+	const [sorting, setSorting] = React.useState<SortingState>(defaultSort ?? []);
 	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
 	const [rowSelection, setRowSelection] = React.useState({});
 
