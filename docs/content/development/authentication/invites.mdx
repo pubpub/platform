@@ -1,4 +1,13 @@
-# Signup
+# Invites
+
+Users can be invited to join a community, stage, or pub. This corresponds to creating a new row in the `invites` table.
+
+Invites (as of writing 2025-04-30)
+
+- Are for adding either new or existing users to a community
+- Grant users new roles on acceptance
+- Are always coupled to a user. If an invitee does not yet have an account, we will create a new account with `isProvisional` set to true. Once the user has
+  accepted the invite and finished signup, the account will be marked as `isProvisional` set to false.
 
 ## Email invite flow
 
@@ -15,10 +24,10 @@ flowchart LR
     B --->|Not ready| C
 
     B -->|Wrong user logged in| J((Wrong User View))
-    B -->|No user, user invite| L((Login/Reject View))
+    B -->|Not logged in, existing user invite| L((Login/Reject View))
     B -->|Valid invite, user logged in| M((Accept/Reject View))
-    B -->|No user, email invite| M
-    M -->|No user, email invite, accept| N[Signup Page]
+    B -->|Not logged in, new user invite| M
+    M -->|Not logged in, new user invite, accept| N[Signup Page]
 
     J -->|Logout| B
     L -->|Click login| O[Login Page]
