@@ -95,6 +95,7 @@ export const getFieldTableColumns = () =>
 			accessorKey: "schemaName",
 		},
 		{
+			id: "slug",
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Slug" />,
 			accessorKey: "slug",
 			cell: ({ row }) => (
@@ -106,6 +107,7 @@ export const getFieldTableColumns = () =>
 			),
 		},
 		{
+			id: "updated",
 			header: ({ column }) => (
 				<DataTableColumnHeader
 					column={column}

@@ -51,6 +51,14 @@ services:
         networks:
             - app-network
 
+    # cache
+    cache:
+        image: valkey/valkey:8-alpine
+        restart: always
+        env_file: .env
+        networks:
+            - app-network
+
     # database
     # can be removed if you manually set the DATABASE_URL environment variable in .env
     # to another postgres database you have access to

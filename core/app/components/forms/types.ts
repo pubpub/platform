@@ -1,6 +1,6 @@
 import { type InputComponentConfigSchema, type SchemaTypeByInputComponent } from "schemas";
 
-import type { JsonValue, ProcessedPub } from "contracts";
+import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import type {
 	CoreSchemaType,
 	ElementType,
@@ -116,5 +116,6 @@ export type SingleFormValues = {
 };
 
 export const isRelatedValue = (
-	value: ProcessedPub["values"][number]
-): value is ProcessedPub["values"][number] & RelatedFieldValue => Boolean(value.relatedPubId);
+	value: ProcessedPubWithForm["values"][number]
+): value is ProcessedPubWithForm["values"][number] & RelatedFieldValue =>
+	Boolean(value.relatedPubId);

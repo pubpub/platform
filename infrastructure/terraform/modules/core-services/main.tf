@@ -79,6 +79,37 @@ resource "aws_security_group" "ecs_tasks_rds_instances" {
   }
 }
 
+resource "aws_security_group" "core_valkey" {
+  name   = "${var.cluster_info.name}-sg-core-valkey-${var.cluster_info.environment}"
+  vpc_id = var.cluster_info.vpc_id
+
+  ingress {
+    protocol        = "tcp"
+    from_port       = 6379
+    to_port         = 6379
+    security_groups = var.cluster_info.container_security_group_ids
+  }
+}
+
+# cache service for core app
+resource "aws_elasticache_replication_group" "core_valkey" {
+  replication_group_id = "${var.cluster_info.name}-core-valkey-${var.cluster_info.environment}"
+  description          = "Core cache instance"
+  node_type            = "cache.t4g.medium"
+  engine               = "valkey"
+
+  num_cache_clusters   = 1
+  parameter_group_name = "default.valkey8"
+  port                 = 6379
+}
+
+# resource "aws_elasticache_parameter_group" "core_valkey" {
+#   name   = "core-valkey-params"
+#   family = "valkey8"
+#   parameter {
+#   }
+# }
+
 # the actual database instance
 resource "aws_db_instance" "core_postgres" {
   identifier             = "${var.cluster_info.name}-core-postgres-${var.cluster_info.environment}"
