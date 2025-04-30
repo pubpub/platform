@@ -1,16 +1,11 @@
-import type { BrowserContext, Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
 import { BLANK_EDITOR_STORY } from "./constants";
 
-const clickNode = async (page: Page, browserName: string, name: string, nth: number = 0) => {
-	// not sure why, but seem to have to click twice in tests when there
-	// is already text on the page in Chrome. Only have to click once in the real thing though
+const clickNode = async (page: Page, name: string, nth: number = 0) => {
 	await page.locator(".ProseMirror").getByRole("button", { name }).nth(nth).click();
-	if (browserName === "chromium") {
-		await page.locator(".ProseMirror").getByRole("button", { name }).nth(nth).click();
-	}
 };
 
 test.describe("attribute panel", () => {
@@ -40,32 +35,29 @@ test.describe("attribute panel", () => {
 			});
 		});
 
-		test("can close a node panel by clicking on text content", async ({
-			page,
-			browserName,
-		}) => {
+		test("can close a node panel by clicking on text content", async ({ page }) => {
 			const text = "example";
 			await test.step("add a paragraph and open panel", async () => {
 				await page.locator(".ProseMirror").pressSequentially(text);
-				await clickNode(page, browserName, "paragraph");
+				await clickNode(page, "paragraph");
 				await page.getByTestId("attribute-panel").waitFor();
 			});
 
 			await test.step("click on other text", async () => {
-				// Firefox is finicky about the click position
-				const clickOption =
-					browserName === "firefox" ? { position: { x: 0, y: 0 } } : undefined;
-				await page.locator(".ProseMirror").getByText(text).click(clickOption);
+				await page
+					.locator(".ProseMirror")
+					.getByText(text)
+					.click({ position: { x: 0, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor({ state: "hidden" });
 			});
 		});
 
-		test("can switch to a mark attribute panel", async ({ page, browserName }) => {
+		test("can switch to a mark attribute panel", async ({ page }) => {
 			const text = "example";
 			await test.step("add a paragraph fill in node attributes", async () => {
 				await page.getByRole("button", { name: "Bold" }).click();
 				await page.locator(".ProseMirror").pressSequentially(text);
-				await clickNode(page, browserName, "paragraph");
+				await clickNode(page, "paragraph");
 				await page.getByTestId("attribute-panel").waitFor();
 				await expect(page.getByTestId("attribute-panel")).not.toContainText("strong");
 				const id = "paragraph-id";
@@ -84,7 +76,7 @@ test.describe("attribute panel", () => {
 			});
 		});
 
-		test("can switch between paragraph nodes", async ({ page, browserName }) => {
+		test("can switch between paragraph nodes", async ({ page }) => {
 			const editor = page.locator(".ProseMirror");
 
 			await test.step("create two paragraphs", async () => {
@@ -95,7 +87,8 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("set attrs on first paragraph", async () => {
-				await clickNode(page, browserName, "paragraph", 0);
+				await clickNode(page, "paragraph", 0);
+				await page.getByTestId("attribute-panel").waitFor();
 				const id = "id1";
 				const className = "class1";
 				await page.getByRole("textbox", { name: "id" }).fill(id);
@@ -103,7 +96,7 @@ test.describe("attribute panel", () => {
 			});
 
 			await test.step("open panel on second paragraph", async () => {
-				await clickNode(page, browserName, "paragraph", 1);
+				await clickNode(page, "paragraph", 1);
 				// Make sure the second paragraph does not have the same attrs as the first
 				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
 				await expect(page.getByRole("textbox", { name: "class" })).toHaveValue("");

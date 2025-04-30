@@ -70,73 +70,71 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 	};
 
 	return (
-		<>
-			<Form {...form}>
-				<form className="flex flex-col gap-4" onBlur={form.handleSubmit(handleSubmit)}>
-					<h2 className="text-md font-medium">Link Attributes</h2>
-					<FormField
-						name="href"
-						control={form.control}
-						render={({ field }) => {
-							return (
-								<FormItem className="flex flex-col">
-									<div className="flex items-center gap-2 space-y-0">
-										<FormLabel>URL</FormLabel>
-										<FormControl>
-											<Input
-												{...field}
-												type="url"
-												placeholder="https://example.com"
-												autoFocus={field.value.length === 0}
-											/>
-										</FormControl>
-										<div className="flex items-center">
-											<a
-												href={field.value}
-												target="_blank"
-												className="cursor-pointer text-gray-500"
-											>
-												<ExternalLink strokeWidth="1px" size="20" />
-											</a>
-											<Button
-												className="px-2 text-gray-500"
-												variant="ghost"
-												onClick={removeLink}
-												data-testid="remove-link"
-											>
-												<Trash />
-											</Button>
-										</div>
+		<Form {...form}>
+			<form className="flex flex-col gap-4" onBlur={form.handleSubmit(handleSubmit)}>
+				<h2 className="text-md font-medium">Link Attributes</h2>
+				<FormField
+					name="href"
+					control={form.control}
+					render={({ field }) => {
+						return (
+							<FormItem className="flex flex-col">
+								<div className="flex items-center gap-2 space-y-0">
+									<FormLabel>URL</FormLabel>
+									<FormControl>
+										<Input
+											{...field}
+											type="url"
+											placeholder="https://example.com"
+											autoFocus={field.value.length === 0}
+										/>
+									</FormControl>
+									<div className="flex items-center">
+										<a
+											href={field.value}
+											target="_blank"
+											className="cursor-pointer text-gray-500"
+										>
+											<ExternalLink strokeWidth="1px" size="20" />
+										</a>
+										<Button
+											className="px-2 text-gray-500"
+											variant="ghost"
+											onClick={removeLink}
+											data-testid="remove-link"
+										>
+											<Trash />
+										</Button>
 									</div>
-									<FormMessage />
-								</FormItem>
-							);
-						}}
-					/>
-					<hr />
-					<FormField
-						name="openInNewTab"
-						control={form.control}
-						render={({ field }) => (
-							<FormItem className="flex items-center justify-between">
-								<FormLabel>Open in new tab</FormLabel>
-								<FormControl>
-									<Switch
-										className="data-[state=checked]:bg-emerald-400"
-										checked={field.value}
-										onCheckedChange={(checked) => {
-											field.onChange(checked);
-										}}
-									/>
-								</FormControl>
+								</div>
 								<FormMessage />
 							</FormItem>
-						)}
-					/>
-					<hr />
-					<AdvancedOptions mark={mark} />
-				</form>
-			</Form>
-		</>
+						);
+					}}
+				/>
+				<hr />
+				<FormField
+					name="openInNewTab"
+					control={form.control}
+					render={({ field }) => (
+						<FormItem className="flex items-center justify-between">
+							<FormLabel>Open in new tab</FormLabel>
+							<FormControl>
+								<Switch
+									className="data-[state=checked]:bg-emerald-400"
+									checked={field.value}
+									onCheckedChange={(checked) => {
+										field.onChange(checked);
+									}}
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					)}
+				/>
+				<hr />
+				<AdvancedOptions mark={mark} />
+			</form>
+		</Form>
 	);
 };
