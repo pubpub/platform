@@ -77,7 +77,8 @@
 .ProseMirror ol,
 .ProseMirror li,
 .ProseMirror section,
-.ProseMirror table {
+.ProseMirror table,
+.ProseMirror figure {
 	border-left: 1px solid #777;
 	padding-left: 5px;
 	padding-top: 5px;
@@ -224,4 +225,8 @@
 
 .ProseMirror thead tr {
 	text-align: left;
+}
+
+.ProseMirror figure {
+	padding: 1em;
 }

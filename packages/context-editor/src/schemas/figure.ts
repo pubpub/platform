@@ -1,19 +1,19 @@
 import type { NodeSpec } from "prosemirror-model";
 
 export const figure = {
+	content: "title? (table | image) caption?",
+	group: "block",
 	attrs: {
 		id: { default: null },
 		class: { default: null },
 	},
-	content: "image (figcaption | credit | license){0,3}",
-	group: "block",
 	parseDOM: [
 		{
 			tag: "figure",
 			getAttrs: (node) => {
 				return {
-					id: (node as Element).getAttribute("id"),
-					class: (node as Element).getAttribute("class"),
+					id: node.getAttribute("id"),
+					class: node.getAttribute("class"),
 				};
 			},
 		},
