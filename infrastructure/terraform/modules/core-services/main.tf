@@ -79,7 +79,7 @@ resource "aws_security_group" "ecs_tasks_rds_instances" {
   }
 }
 
-resource "aws_db_subnet_group" "core_valkey" {
+resource "aws_elasticache_subnet_group" "core_valkey" {
   name       = "${var.cluster_info.name}_core_valkey_${var.cluster_info.environment}"
   subnet_ids = var.cluster_info.private_subnet_ids
 
@@ -106,7 +106,7 @@ resource "aws_elasticache_replication_group" "core_valkey" {
   description          = "Core cache instance"
   node_type            = "cache.t4g.medium"
   engine               = "valkey"
-  subnet_group_name    = aws_db_subnet_group.core_valkey.name
+  subnet_group_name    = aws_elasticache_subnet_group.core_valkey.name
 
   num_cache_clusters   = 1
   parameter_group_name = "default.valkey8"
