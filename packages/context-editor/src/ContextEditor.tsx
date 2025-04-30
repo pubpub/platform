@@ -109,7 +109,6 @@ export default function ContextEditor(props: ContextEditorProps) {
 						suggestData={suggestData}
 						setSuggestData={setSuggestData}
 						containerRef={containerRef}
-						containerId={containerId}
 					/>
 				</EditorContextProvider>
 			</ProseMirror>
