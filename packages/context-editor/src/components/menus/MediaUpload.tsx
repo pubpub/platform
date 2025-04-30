@@ -92,7 +92,6 @@ const toggleNodesInFigure = (view: EditorView, values: FormSchema, position: num
 			nodeExistence[nodeType] = child.type.name === nodeTypeName;
 		}
 	});
-	console.log({ nodeExistence });
 
 	const { tr, schema } = view.state;
 

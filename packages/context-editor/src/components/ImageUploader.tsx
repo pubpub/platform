@@ -29,9 +29,6 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				align: Alignment.center,
 				fullResolution: false,
 			};
-			const figAttrs = { src: file.fileUploadUrl || "" };
-			// insertNodeAfterSelection(view.state, view.dispatch, "image", attrs);
-			// insertNodeAfterSelection(view.state, view.dispatch, "figure", figAttrs);
 			insertMedia(view.state, view.dispatch, attrs);
 		}
 		onInsert();
