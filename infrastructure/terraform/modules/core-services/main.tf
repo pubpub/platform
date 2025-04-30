@@ -80,7 +80,7 @@ resource "aws_security_group" "ecs_tasks_rds_instances" {
 }
 
 resource "aws_elasticache_subnet_group" "core_valkey" {
-  name       = "${var.cluster_info.name}_core_valkey_${var.cluster_info.environment}"
+  name       = "${var.cluster_info.name}-core-valkey-${var.cluster_info.environment}"
   subnet_ids = var.cluster_info.private_subnet_ids
 
   tags = {
