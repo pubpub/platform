@@ -43,3 +43,8 @@ services:
         ports:
             - "54324:9000"
             - "54325:2500"
+
+    # cache
+    cache:
+        image: valkey/valkey:8-alpine
+        restart: always
