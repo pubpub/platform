@@ -5,12 +5,26 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
+import { fromHTMLToNode, renderNodeToHTML } from "../editor/serialization/server";
+
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
+		if (typeof value === "string") {
+			const node = fromHTMLToNode(value);
+
+			// node.check();
+			// return renderNodeToHTML(node);
+			return value;
+		}
+
 		const node = baseSchema.nodeFromJSON(value);
+
 		// TODO: reenable this
 		// node.check();
-		return true;
+
+		const html = renderNodeToHTML(node);
+
+		return html;
 	} catch (e) {
 		return false;
 	}
@@ -23,35 +37,44 @@ const createValidationError = (slug: string, schemaName: CoreSchemaType, value: 
 	};
 };
 
-export const validatePubValuesBySchemaName = (
-	values: { slug: string; value: unknown; schemaName: CoreSchemaType }[]
+export const validatePubValuesBySchemaName = <
+	T extends { slug: string; value: unknown; schemaName: CoreSchemaType }[],
+>(
+	values: T
 ) => {
-	const errors: { slug: string; error: string }[] = [];
-	for (let { slug, value, schemaName } of values) {
-		const stringifiedValue = JSON.stringify(value);
-		const trimmedValue =
-			stringifiedValue.length > 1000
-				? `${stringifiedValue.slice(0, 1000)}...`
-				: stringifiedValue;
+	return values.reduce(
+		(acc, { slug, value, schemaName, ...rest }) => {
+			const stringifiedValue = JSON.stringify(value);
+			const trimmedValue =
+				stringifiedValue.length > 1000
+					? `${stringifiedValue.slice(0, 500)}...`
+					: stringifiedValue;
 
-		if (schemaName === CoreSchemaType.RichText) {
-			const result = validateAgainstContextEditorSchema(value);
+			if (schemaName === CoreSchemaType.RichText) {
+				const result = validateAgainstContextEditorSchema(value);
+
+				if (!result) {
+					acc.errors.push(createValidationError(slug, schemaName, trimmedValue));
+					return acc;
+				}
+
+				acc.newResults.push({ value: result, slug, schemaName, ...rest });
+				return acc;
+			}
+
+			const jsonSchema = getJsonSchemaByCoreSchemaType(schemaName);
+			const result = Value.Check(jsonSchema, value);
 
 			if (!result) {
-				errors.push(createValidationError(slug, schemaName, trimmedValue));
+				acc.errors.push(createValidationError(slug, schemaName, trimmedValue));
+				return acc;
 			}
-			continue;
-		}
 
-		const jsonSchema = getJsonSchemaByCoreSchemaType(schemaName);
-		const result = Value.Check(jsonSchema, value);
-
-		if (!result) {
-			errors.push(createValidationError(slug, schemaName, trimmedValue));
-		}
-	}
-
-	return errors;
+			acc.newResults.push({ value, slug, schemaName, ...rest });
+			return acc;
+		},
+		{ errors: [] as { slug: string; error: string }[], newResults: [] as T }
+	);
 };
 
 /**
@@ -81,7 +104,7 @@ export const _deprecated_validatePubValuesBySchemaName = ({
 		// Rich text fields are a special case where we use prosemirror to validate
 		// as opposed to typebox
 		if (field.schemaName === CoreSchemaType.RichText) {
-			result = validateAgainstContextEditorSchema(value);
+			result = validateAgainstContextEditorSchema(value) !== false;
 		} else {
 			const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
 			result = Value.Check(jsonSchema, value);
