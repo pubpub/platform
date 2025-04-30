@@ -20,14 +20,12 @@ export const NodeAttributes = ({
 }) => {
 	const { activeNode, position } = useEditorContext();
 
-	console.log({ nodeAttrs });
-
 	if (Object.keys(nodeAttrs).length === 0) {
 		return null;
 	}
 
 	if (activeNode?.type.name === "image") {
-		return <MediaUpload attrs={nodeAttrs} />;
+		return <MediaUpload attrs={nodeAttrs} key={position} />;
 	}
 
 	// Default

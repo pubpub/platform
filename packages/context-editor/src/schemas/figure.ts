@@ -1,11 +1,11 @@
-import type { DOMOutputSpec, NodeSpec } from "prosemirror-model";
+import type { NodeSpec } from "prosemirror-model";
 
 export const figure = {
 	attrs: {
 		id: { default: null },
 		class: { default: null },
 	},
-	content: "image figcaption{0,1} credit{0,1} license{0,1}",
+	content: "image (figcaption | credit | license){0,3}",
 	group: "block",
 	parseDOM: [
 		{

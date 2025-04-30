@@ -162,6 +162,8 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		);
 		view.dispatch(nodeAttrsTr);
 		view.dispatch(toggleNodesInFigure(view, values, position));
+		const updatedNode = view.state.doc.nodeAt(position);
+		setActiveNode(updatedNode);
 	});
 
 	return (
