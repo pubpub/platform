@@ -16,13 +16,13 @@ import type {
 } from "db/public";
 import type { Invite, LastModifiedBy, NewInvite } from "db/types";
 import { InviteStatus, MembershipType } from "db/public";
-import { compareMemberRoles } from "db/types";
 import { logger } from "logger";
 import { expect } from "utils";
 
 import type { SafeUser } from "../user";
 import type { InvitedByStep, NewUser } from "./InviteBuilder";
 import { db } from "~/kysely/database";
+import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
 import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { getLoginData } from "../../authentication/loginData";
@@ -794,13 +794,13 @@ function isInviteUselessForMembership(
 		};
 	}
 
-	const isLowerOrSameRole = compareMemberRoles(existingMembership.role, "<=", invite.role);
+	const hasHigherOrSameRole = compareMemberRoles(existingMembership.role, ">=", invite.role);
 
 	const inviteHasNoNewForms = invite.forms.some(
 		(formId) => !existingMembership.forms.includes(formId)
 	);
 
-	if (isLowerOrSameRole && inviteHasNoNewForms) {
+	if (hasHigherOrSameRole && inviteHasNoNewForms) {
 		return {
 			useless: true as const,
 			reason: "Invite would not grant additional roles",

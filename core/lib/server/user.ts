@@ -21,10 +21,10 @@ import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/pub
 import type { CapabilityTarget } from "../authorization/capabilities";
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
+import { compareMemberRoles, getHighestRole } from "~/lib/authorization/rolesRanking";
 import { getLoginData } from "../authentication/loginData";
 import { createPasswordHash } from "../authentication/password";
 import { userCan } from "../authorization/capabilities";
-import { firstRoleIsHigher, getHighestRole } from "../authorization/rolesRanking";
 import { generateHash, slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -264,7 +264,8 @@ export const createUserWithMemberships = async (data: {
 				user.memberships.filter((m) => m.communityId === community.id)
 			);
 
-			const roleIsHighEnough = highestRole && firstRoleIsHigher(highestRole, membership.role);
+			const roleIsHighEnough =
+				highestRole && compareMemberRoles(highestRole, ">=", membership.role);
 
 			if (!roleIsHighEnough) {
 				return {
