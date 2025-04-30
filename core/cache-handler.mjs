@@ -5,8 +5,16 @@ import createBufferStringHandler from "@fortedigital/nextjs-cache-handler/buffer
 import { Next15CacheHandler } from "@fortedigital/nextjs-cache-handler/next-15-cache-handler";
 import createRedisHandler from "@fortedigital/nextjs-cache-handler/redis-strings";
 import { CacheHandler } from "@neshca/cache-handler";
-import createLruHandler from "@neshca/cache-handler/local-lru";
 import { createClient } from "redis";
+
+// A cache that always misses - intended to let us disable caching when redis is unavailable. Should
+// be replaced if there's a better way to do that.
+const dummyHandler = {
+	name: "no-cache",
+	get: () => undefined,
+	set: () => undefined,
+	revalidateTag: () => undefined,
+};
 
 // Usual onCreation from @neshca/cache-handler
 CacheHandler.onCreation(() => {
@@ -24,6 +32,7 @@ CacheHandler.onCreation(() => {
 
 	// Main promise initializing the handler
 	global.cacheHandlerConfigPromise = (async () => {
+		console.info("Getting cache handler");
 		/** @type {import("redis").RedisClientType | null} */
 		let redisClient = null;
 		if (PHASE_PRODUCTION_BUILD !== process.env.NEXT_PHASE) {
@@ -33,14 +42,14 @@ CacheHandler.onCreation(() => {
 					pingInterval: 10000,
 				});
 				redisClient.on("error", (e) => {
-					if (typeof process.env.NEXT_PRIVATE_DEBUG_CACHE !== "undefined") {
-						console.warn("Redis error", e);
-					}
-					global.cacheHandlerConfig = null;
+					console.warn("Redis error", e);
+					console.warn("Disabling caching");
+					global.cacheHandlerConfig = { handlers: [dummyHandler] };
 					global.cacheHandlerConfigPromise = null;
+					throw e;
 				});
 			} catch (error) {
-				console.warn("Failed to create Redis client:", error);
+				console.error("Failed to create Redis client:", error);
 			}
 		}
 
@@ -58,12 +67,11 @@ CacheHandler.onCreation(() => {
 					);
 			}
 		}
-		const lruCache = createLruHandler();
 
 		if (!redisClient?.isReady) {
 			console.error("Failed to initialize caching layer.");
 			global.cacheHandlerConfigPromise = null;
-			global.cacheHandlerConfig = { handlers: [lruCache] };
+			global.cacheHandlerConfig = { handlers: [dummyHandler] };
 			return global.cacheHandlerConfig;
 		}
 
