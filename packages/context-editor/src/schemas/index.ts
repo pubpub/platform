@@ -1,11 +1,13 @@
 import { Schema } from "prosemirror-model";
 
 import blockquote from "./blockquote";
+import caption from "./caption";
 import code from "./code";
 import contextAtom from "./contextAtom";
 import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
+import figure from "./figure";
 import hard_break from "./hard_break";
 import heading from "./heading";
 import horizontal_rule from "./horizontal";
@@ -19,6 +21,7 @@ import strong from "./strong";
 import subSuperScript from "./subSuperScript";
 import table from "./table";
 import text from "./text";
+import title from "./title";
 import underline from "./underline";
 
 export const baseSchema = new Schema({
@@ -39,6 +42,9 @@ export const baseSchema = new Schema({
 		ordered_list: list.orderedList,
 		list_item: list.listItem,
 		...table,
+		title,
+		figure,
+		caption,
 	},
 	marks: {
 		strong,

@@ -71,7 +71,10 @@ const createTable = (state: EditorState, options?: AddTableOptions) => {
 		);
 	}
 
-	return types.table.createChecked(null, rows);
+	const table = types.table.createChecked(null, rows);
+	const tableFigure = state.schema.nodes.figure.createChecked(null, table);
+
+	return tableFigure;
 };
 
 export const addTable = (state: EditorState, dispatch?: Dispatch, options?: AddTableOptions) => {
