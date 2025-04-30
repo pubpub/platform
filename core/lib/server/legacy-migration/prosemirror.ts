@@ -1,3 +1,5 @@
+import type { Node } from "prosemirror-model";
+
 import { baseSchema } from "context-editor/schemas";
 
 const unsupportedNodes = {

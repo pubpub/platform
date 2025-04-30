@@ -1,11 +1,10 @@
 import { writeFile } from "fs/promises";
 
-import type { Node } from "prosemirror-model";
-
 import { baseSchema } from "context-editor/schemas";
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import pMap from "p-map";
+import { Node } from "prosemirror-model";
 
 import type {
 	CommunitiesId,
@@ -20,6 +19,7 @@ import { logger } from "logger";
 
 import type { LegacyCollection, LegacyCommunity, LegacyPage, LegacyPub } from "./schemas";
 import { db } from "~/kysely/database";
+import { renderNodeToHTML } from "~/lib/editor/serialization/server";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
 import { autoRevalidate } from "../cache/autoRevalidate";
@@ -697,48 +697,44 @@ const createJournalArticles = async (
 		batch.add(({ upsertByValue }) => {
 			let op = upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
 				pubTypeId: legacyStructure["Journal Article"].id,
-			}).set(
-				{
-					[jaFields["Legacy Id"].slug]: pub.id,
-					[jaFields.Title.slug]: pub.title,
-					[jaFields.Slug.slug]: pub.slug,
-					[jaFields["Publication Date"].slug]:
-						pub.customPublishedAt ?? pub.releases?.[0]?.createdAt,
-					[jaFields.DOI.slug]: pub.doi
-						? URL.canParse(pub.doi)
-							? pub.doi
-							: `https://doi.org/${pub.doi}`
-						: null,
+			});
 
-					[jaFields.Description.slug]: pub.description,
-				},
-				{
-					ignoreNullish: true,
-					deleteExistingValues: true,
-				}
-			);
+			op = op.set(jaFields["Legacy Id"].slug, pub.id);
+
+			if (pub.description) {
+				op = op.set(jaFields.Description.slug, pub.description);
+			}
+
+			if (pub.title) {
+				op = op.set(jaFields.Title.slug, pub.title);
+			}
+
+			if (pub.slug) {
+				op = op.set(jaFields.Slug.slug, pub.slug);
+			}
+
+			if (pub.doi) {
+				op = op.set(
+					jaFields.DOI.slug,
+					URL.canParse(pub.doi) ? pub.doi : `https://doi.org/${pub.doi}`
+				);
+			}
+			const publishedAt = pub.customPublishedAt ?? pub.releases?.[0]?.createdAt;
+			if (publishedAt) {
+				op = op.set(jaFields["Publication Date"].slug, publishedAt);
+			}
 
 			const content = pub?.draft?.doc?.content ?? pub.releases?.at(-1)?.doc?.content!;
 			if (content) {
 				const { doc, interestingNodes } = transformProsemirrorTree(content);
 
-				op = op.set(jaFields.PubContent.slug, doc, {
-					ignoreNullish: true,
-					deleteExistingValues: true,
-				});
+				op = op.set(jaFields.PubContent.slug, doc);
 
 				if (interestingNodes.abstract) {
-					op = op.set(
-						jaFields.Abstract.slug,
-						{
-							type: "doc",
-							content: [interestingNodes.abstract],
-						} as any,
-						{
-							ignoreNullish: true,
-							deleteExistingValues: true,
-						}
-					);
+					op = op.set(jaFields.Abstract.slug, {
+						type: "doc",
+						content: [interestingNodes.abstract],
+					} as any);
 				}
 
 				// console.log(interestingNodes.abstract);
@@ -843,23 +839,49 @@ const createPages = async (
 
 	for (const page of legacyPages) {
 		batch.add(({ upsertByValue }) => {
-			const op = upsertByValue(legacyStructure["Page"].fields["Legacy Id"].slug, page.id, {
+			let op = upsertByValue(legacyStructure["Page"].fields["Legacy Id"].slug, page.id, {
 				pubTypeId: legacyStructure["Page"].id,
-			}).set(
-				{
-					[legacyStructure["Page"].fields["Legacy Id"].slug]: page.id,
-					[legacyStructure["Page"].fields.Title.slug]: page.title,
-					[legacyStructure["Page"].fields.Slug.slug]: page.slug,
-					[legacyStructure["Page"].fields["Is Public"].slug]: page.isPublic,
-					[legacyStructure["Page"].fields.Description.slug]: page.description,
-					[legacyStructure["Page"].fields.Avatar.slug]: page.avatar,
-					[legacyStructure["Page"].fields["Is Narrow Width"].slug]: page.isNarrowWidth,
-					// [legacyStructure["Page"].fields.Layout.slug]: page.layout,
-					[legacyStructure["Page"].fields["Layout Allows Duplicate Pubs"].slug]:
-						page.layoutAllowsDuplicatePubs,
-				},
-				{ ignoreNullish: true }
-			);
+			});
+
+			op = op.set(legacyStructure["Page"].fields["Legacy Id"].slug, page.id);
+
+			if (page.title) {
+				op = op.set(legacyStructure["Page"].fields.Title.slug, page.title);
+			}
+
+			if (page.slug) {
+				op = op.set(legacyStructure["Page"].fields.Slug.slug, page.slug);
+			}
+
+			if (page.description) {
+				op = op.set(legacyStructure["Page"].fields.Description.slug, page.description);
+			}
+
+			if (page.avatar) {
+				op = op.set(legacyStructure["Page"].fields.Avatar.slug, page.avatar);
+			}
+
+			if (page.isPublic) {
+				op = op.set(legacyStructure["Page"].fields["Is Public"].slug, page.isPublic);
+			}
+
+			if (page.isNarrowWidth) {
+				op = op.set(
+					legacyStructure["Page"].fields["Is Narrow Width"].slug,
+					page.isNarrowWidth
+				);
+			}
+
+			// if (page.layout) {
+			// 	op = op.set(legacyStructure["Page"].fields.Layout.slug, page.layout);
+			// }
+
+			if (page.layoutAllowsDuplicatePubs) {
+				op = op.set(
+					legacyStructure["Page"].fields["Layout Allows Duplicate Pubs"].slug,
+					page.layoutAllowsDuplicatePubs
+				);
+			}
 
 			return op;
 		});
@@ -920,19 +942,34 @@ const createCollections = async (
 			const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
 			let op = upsertByValue(relevantType.fields["Legacy Id"].slug, collection.id, {
 				pubTypeId: relevantType.id,
-			}).set(
-				{
-					[relevantType.fields["Legacy Id"].slug]: collection.id,
-					[relevantType.fields.Title.slug]: collection.title,
-					[relevantType.fields.Slug.slug]: collection.slug,
-					[relevantType.fields["DOI"].slug]: collection.doi,
-					[relevantType.fields["Is Public"].slug]: collection.isPublic,
-					[relevantType.fields["Avatar"].slug]: collection.avatar,
-				},
-				{
-					ignoreNullish: true,
-				}
-			);
+			});
+
+			op = op.set(relevantType.fields["Legacy Id"].slug, collection.id);
+
+			if (collection.title) {
+				op = op.set(relevantType.fields.Title.slug, collection.title);
+			}
+
+			if (collection.slug) {
+				op = op.set(relevantType.fields.Slug.slug, collection.slug);
+			}
+
+			if (collection.doi) {
+				op = op.set(
+					relevantType.fields["DOI"].slug,
+					URL.canParse(collection.doi)
+						? collection.doi
+						: `https://doi.org/${collection.doi}`
+				);
+			}
+
+			if (collection.isPublic) {
+				op = op.set(relevantType.fields["Is Public"].slug, collection.isPublic);
+			}
+
+			if (collection.avatar) {
+				op = op.set(relevantType.fields["Avatar"].slug, collection.avatar);
+			}
 
 			if (collection.pageId) {
 				op = op.relateByValue(
@@ -950,109 +987,160 @@ const createCollections = async (
 			}
 
 			if (collection.kind === "issue") {
-				op = op.set(
-					{
-						[legacyStructure["Issue"].fields["Issue Number"].slug]:
-							collection.metadata.issue,
-						[legacyStructure["Issue"].fields["Issue Volume"].slug]:
-							collection.metadata.volume,
-						[legacyStructure["Issue"].fields["E-ISSN"].slug]:
-							collection.metadata.electronicIssn,
-						[legacyStructure["Issue"].fields["Print Publication Date"].slug]:
-							collection.metadata.publicationDate,
-						[legacyStructure["Issue"].fields["URL"].slug]: collection.metadata.url,
-					},
-					{ ignoreNullish: true }
-				);
+				if (collection.metadata.issue) {
+					op = op.set(
+						legacyStructure["Issue"].fields["Issue Number"].slug,
+						collection.metadata.issue
+					);
+				}
 
-				op = op.relateByValue(
-					legacyStructure["Issue"].fields["Articles"].slug,
-					filteredCollectionPubs.map((cp) => ({
-						value: cp.contextHint ?? "",
-						target: {
-							slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
-							value: cp.pubId,
-						},
-					})),
-					{
-						replaceExisting: true,
-						deleteOrphaned: true,
-					}
-				);
-			}
+				if (collection.metadata.volume) {
+					op = op.set(
+						legacyStructure["Issue"].fields["Issue Volume"].slug,
+						collection.metadata.volume
+					);
+				}
 
-			if (collection.kind === "book") {
-				op = op.set(
-					{
-						[legacyStructure["Book"].fields["Edition"].slug]:
-							collection.metadata.edition,
-						[legacyStructure["Book"].fields["Copyright Year"].slug]:
-							collection.metadata.copyrightYear,
-					},
-					{ ignoreNullish: true }
-				);
+				if (collection.metadata.electronicIssn) {
+					op = op.set(
+						legacyStructure["Issue"].fields["E-ISSN"].slug,
+						collection.metadata.electronicIssn
+					);
+				}
 
-				op = op.relateByValue(
-					legacyStructure["Book"].fields["Chapters"].slug,
-					filteredCollectionPubs.map((cp) => ({
-						value: cp.contextHint ?? "",
-						target: {
-							slug: legacyStructure["Book"].fields["Legacy Id"].slug,
-							value: cp.pubId,
-						},
-					}))
-				);
-			}
+				if (collection.metadata.publicationDate) {
+					op = op.set(
+						legacyStructure["Issue"].fields["Print Publication Date"].slug,
+						collection.metadata.publicationDate
+					);
+				}
 
-			if (collection.kind === "conference-proceedings") {
-				op = op.set(
-					{
-						[legacyStructure["Conference Proceedings"].fields["Theme"].slug]:
-							collection.metadata.theme,
-						[legacyStructure["Conference Proceedings"].fields["Location"].slug]:
-							collection.metadata.location,
-						[legacyStructure["Conference Proceedings"].fields["Held at Date"].slug]:
-							collection.metadata.date,
-						[legacyStructure["Conference Proceedings"].fields["Acronym"].slug]:
-							collection.metadata.acronym,
-					},
-					{ ignoreNullish: true }
-				);
+				if (collection.metadata.url) {
+					op = op.set(
+						legacyStructure["Issue"].fields["URL"].slug,
+						collection.metadata.url
+					);
+				}
 
-				op = op.relateByValue(
-					legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
-					filteredCollectionPubs.map(
-						(cp) => ({
+				if (filteredCollectionPubs.length > 0) {
+					op = op.relateByValue(
+						legacyStructure["Issue"].fields["Articles"].slug,
+						filteredCollectionPubs.map((cp) => ({
 							value: cp.contextHint ?? "",
 							target: {
-								slug: legacyStructure["Conference Proceedings"].fields["Legacy Id"]
-									.slug,
+								slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
 								value: cp.pubId,
 							},
-						}),
+						})),
 						{
 							replaceExisting: true,
 							deleteOrphaned: true,
 						}
-					)
-				);
+					);
+				}
+			}
+
+			if (collection.kind === "book") {
+				if (collection.metadata.edition) {
+					op = op.set(
+						legacyStructure["Book"].fields["Edition"].slug,
+						collection.metadata.edition
+					);
+				}
+
+				if (collection.metadata.copyrightYear) {
+					op = op.set(
+						legacyStructure["Book"].fields["Copyright Year"].slug,
+						collection.metadata.copyrightYear
+					);
+				}
+
+				if (filteredCollectionPubs.length > 0) {
+					op = op.relateByValue(
+						legacyStructure["Book"].fields["Chapters"].slug,
+						filteredCollectionPubs.map((cp) => ({
+							value: cp.contextHint ?? "",
+							target: {
+								slug: legacyStructure["Book"].fields["Legacy Id"].slug,
+								value: cp.pubId,
+							},
+						})),
+						{
+							replaceExisting: true,
+							deleteOrphaned: true,
+						}
+					);
+				}
+			}
+
+			if (collection.kind === "conference-proceedings") {
+				if (collection.metadata.theme) {
+					op = op.set(
+						legacyStructure["Conference Proceedings"].fields["Theme"].slug,
+						collection.metadata.theme
+					);
+				}
+
+				if (collection.metadata.location) {
+					op = op.set(
+						legacyStructure["Conference Proceedings"].fields["Location"].slug,
+						collection.metadata.location
+					);
+				}
+
+				if (collection.metadata.date) {
+					op = op.set(
+						legacyStructure["Conference Proceedings"].fields["Held at Date"].slug,
+						collection.metadata.date
+					);
+				}
+
+				if (collection.metadata.acronym) {
+					op = op.set(
+						legacyStructure["Conference Proceedings"].fields["Acronym"].slug,
+						collection.metadata.acronym
+					);
+				}
+
+				if (filteredCollectionPubs.length > 0) {
+					op = op.relateByValue(
+						legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
+						filteredCollectionPubs.map(
+							(cp) => ({
+								value: cp.contextHint ?? "",
+								target: {
+									slug: legacyStructure["Conference Proceedings"].fields[
+										"Legacy Id"
+									].slug,
+									value: cp.pubId,
+								},
+							}),
+							{
+								replaceExisting: true,
+								deleteOrphaned: true,
+							}
+						)
+					);
+				}
 			}
 
 			if (collection.kind === "tag") {
-				op = op.relateByValue(
-					legacyStructure["Collection"].fields["Items"].slug,
-					filteredCollectionPubs.map((cp) => ({
-						value: cp.contextHint ?? "",
-						target: {
-							slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
-							value: cp.pubId,
-						},
-					})),
-					{
-						replaceExisting: true,
-						deleteOrphaned: true,
-					}
-				);
+				if (filteredCollectionPubs.length > 0) {
+					op = op.relateByValue(
+						legacyStructure["Collection"].fields["Items"].slug,
+						filteredCollectionPubs.map((cp) => ({
+							value: cp.contextHint ?? "",
+							target: {
+								slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
+								value: cp.pubId,
+							},
+						})),
+						{
+							replaceExisting: true,
+							deleteOrphaned: true,
+						}
+					);
+				}
 			}
 
 			return op;
@@ -1081,7 +1169,7 @@ const createJournal = async (
 	logger.info("Creating main Journal pub");
 
 	// create the journal pub
-	const journalOp = PubOp.upsertByValue(
+	let op = PubOp.upsertByValue(
 		legacyStructure.Journal.fields["Legacy Id"].slug,
 		legacyCommunity.community.id,
 		{
@@ -1090,37 +1178,65 @@ const createJournal = async (
 			pubTypeId: legacyStructure.Journal.id,
 			trx,
 		}
-	).set(
-		{
-			[legacyStructure.Journal.fields["Legacy Id"].slug]: legacyCommunity.community.id,
-			[legacyStructure.Journal.fields.Title.slug]: legacyCommunity.community.title,
-			[legacyStructure.Journal.fields.Slug.slug]: legacyCommunity.community.subdomain,
-			[legacyStructure.Journal.fields.Description.slug]:
-				legacyCommunity.community.description,
-			[legacyStructure.Journal.fields.Avatar.slug]: legacyCommunity.community.avatar,
-			[legacyStructure.Journal.fields["Is Public"].slug]: true,
-			[legacyStructure.Journal.fields["Publication Date"].slug]: new Date(),
-			[legacyStructure.Journal.fields["Cite As"].slug]: legacyCommunity.community.citeAs,
-			[legacyStructure.Journal.fields["Publish As"].slug]:
-				legacyCommunity.community.publishAs,
-			[legacyStructure.Journal.fields["Accent Color Light"].slug]:
-				legacyCommunity.community.accentColorLight,
-			[legacyStructure.Journal.fields["Accent Color Dark"].slug]:
-				legacyCommunity.community.accentColorDark,
-			[legacyStructure.Journal.fields["Hero Title"].slug]:
-				legacyCommunity.community.heroTitle,
-			[legacyStructure.Journal.fields["Hero Text"].slug]: legacyCommunity.community.heroText,
-			[legacyStructure.Journal.fields["E-ISSN"].slug]: legacyCommunity.community.issn,
-		},
-		{
-			ignoreNullish: true,
-			deleteExistingValues: true,
-		}
-	);
+	).set({
+		[legacyStructure.Journal.fields["Legacy Id"].slug]: legacyCommunity.community.id,
+		[legacyStructure.Journal.fields.Title.slug]: legacyCommunity.community.title,
+		[legacyStructure.Journal.fields.Slug.slug]: legacyCommunity.community.subdomain,
+		[legacyStructure.Journal.fields.Description.slug]:
+			legacyCommunity.community.description ?? "",
+		// [legacyStructure.Journal.fields.Avatar.slug]: legacyCommunity.community.avatar,
+		[legacyStructure.Journal.fields["Publication Date"].slug]: new Date(),
+	});
+
+	if (legacyCommunity.community.citeAs) {
+		op = op.set(
+			legacyStructure.Journal.fields["Cite As"].slug,
+			legacyCommunity.community.citeAs
+		);
+	}
+
+	if (legacyCommunity.community.publishAs) {
+		op = op.set(
+			legacyStructure.Journal.fields["Publish As"].slug,
+			legacyCommunity.community.publishAs
+		);
+	}
+
+	if (legacyCommunity.community.accentColorLight) {
+		op = op.set(
+			legacyStructure.Journal.fields["Accent Color Light"].slug,
+			legacyCommunity.community.accentColorLight
+		);
+	}
+
+	if (legacyCommunity.community.accentColorDark) {
+		op = op.set(
+			legacyStructure.Journal.fields["Accent Color Dark"].slug,
+			legacyCommunity.community.accentColorDark
+		);
+	}
+
+	if (legacyCommunity.community.heroTitle) {
+		op = op.set(
+			legacyStructure.Journal.fields["Hero Title"].slug,
+			legacyCommunity.community.heroTitle
+		);
+	}
+
+	if (legacyCommunity.community.heroText) {
+		op = op.set(
+			legacyStructure.Journal.fields["Hero Text"].slug,
+			legacyCommunity.community.heroText
+		);
+	}
+
+	if (legacyCommunity.community.issn) {
+		op = op.set(legacyStructure.Journal.fields["E-ISSN"].slug, legacyCommunity.community.issn);
+	}
 
 	// relate pages
 	if (legacyCommunity.pages.length > 0) {
-		journalOp.relateByValue(
+		op.relateByValue(
 			legacyStructure.Journal.fields["Journal Pages"].slug,
 			legacyCommunity.pages.map((page) => ({
 				value: null,
@@ -1134,7 +1250,7 @@ const createJournal = async (
 
 	// relate articles
 	if (legacyCommunity.pubs.length > 0) {
-		journalOp.relateByValue(
+		op.relateByValue(
 			legacyStructure.Journal.fields["Journal Articles"].slug,
 			legacyCommunity.pubs.map((article) => ({
 				value: null,
@@ -1148,7 +1264,7 @@ const createJournal = async (
 
 	// relate collections
 	if (legacyCommunity.collections.length > 0) {
-		journalOp.relateByValue(
+		op.relateByValue(
 			legacyStructure.Journal.fields["Journal Collections"].slug,
 			legacyCommunity.collections.map((collection) => ({
 				value: null,
@@ -1160,7 +1276,7 @@ const createJournal = async (
 		);
 	}
 
-	const result = await journalOp.execute();
+	const result = await op.execute();
 	logger.info("Journal pub created and linked to all content");
 
 	return result;
@@ -1199,6 +1315,7 @@ export const importFromLegacy = async (
 			},
 			trx
 		);
+		logger.info(`Created ${legacyPages.length} legacy pages`);
 
 		const legacyCollections = await createCollections(
 			{
@@ -1208,6 +1325,7 @@ export const importFromLegacy = async (
 			},
 			trx
 		);
+		logger.info(`Created ${legacyCollections.length} legacy collections`);
 
 		// create journal pub and link to all content
 		const journal = await createJournal(
