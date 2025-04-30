@@ -8,7 +8,7 @@ import type {
 	PubsId,
 	UsersId,
 } from "db/public";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, InviteStatus, MemberRole } from "db/public";
 import { assert, expect } from "utils";
 
 import type { XOR } from "~/lib/types";
@@ -121,8 +121,9 @@ export const renderFormInviteLink = async (
 		redirectTo: `/c/${communitySlug}/public/forms/${formSlug}/fill?pubId=${pubId}`,
 	});
 
-	await InviteService.setInviteSent(
+	await InviteService.setInviteStatus(
 		invite,
+		InviteStatus.pending,
 		createLastModifiedBy({
 			userId: inviter.userId,
 			actionRunId: inviter.actionRunId,

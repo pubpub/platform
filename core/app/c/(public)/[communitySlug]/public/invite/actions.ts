@@ -4,12 +4,13 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { AuthTokenType } from "db/public";
+import { AuthTokenType, InviteStatus } from "db/public";
 import { tryCatch } from "utils/try-catch";
 
 import type { SignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
 import { lucia } from "~/lib/authentication/lucia";
+import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { InviteService } from "~/lib/server/invites/InviteService";
@@ -65,6 +66,14 @@ export const acceptInviteAction = defineServerAction(async function acceptInvite
 		}
 
 		// If user is not logged in, create a signup link and redirect to it
+		// we do mark the invite as accepted, but not completed
+		await InviteService.setInviteStatus(
+			invite,
+			InviteStatus.accepted,
+			createLastModifiedBy({ userId: invite.userId }),
+			db
+		);
+
 		await redirectToCommunitySignup({
 			redirectTo,
 			inviteToken,
@@ -77,7 +86,7 @@ export const acceptInviteAction = defineServerAction(async function acceptInvite
 	}
 
 	// If user is logged in, accept the invite
-	const [err, result] = await tryCatch(InviteService.acceptInvite(invite, db));
+	const [err, result] = await tryCatch(InviteService.completeInvite(invite, db));
 
 	if (err) {
 		return {
@@ -194,7 +203,7 @@ export const signupThroughInvite = defineServerAction(async function signupThrou
 				trx
 			);
 
-			await InviteService.acceptInvite(invite, trx, newUser);
+			await InviteService.completeInvite(invite, trx, newUser);
 
 			return newUser;
 		})

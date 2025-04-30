@@ -373,14 +373,23 @@ export namespace InviteService {
 		return result as Invite & { user: SafeUser };
 	}
 
-	export async function setInviteSent(invite: Invite, lastModifiedBy: LastModifiedBy, trx = db) {
+	/**
+	 * Sets the status of an invite
+	 * If the status is set to `pending`, it will also set the `lastSentAt` date
+	 */
+	export async function setInviteStatus(
+		invite: Invite,
+		status: InviteStatus,
+		lastModifiedBy: LastModifiedBy,
+		trx = db
+	) {
 		await autoRevalidate(
 			trx
 				.updateTable("invites")
 				.set({
-					status: InviteStatus.pending,
+					status,
 					lastModifiedBy,
-					lastSentAt: new Date(),
+					lastSentAt: status === InviteStatus.pending ? new Date() : undefined,
 				})
 				.where("id", "=", invite.id)
 		).execute();
@@ -396,7 +405,7 @@ export namespace InviteService {
 	 *
 	 * @throws {InviteError} If user is not logged in, or if user is not the invitee
 	 */
-	export async function acceptInvite(
+	export async function completeInvite(
 		invite: Invite,
 		trx = db,
 		_user?: { id: UsersId; email: string }
@@ -410,16 +419,12 @@ export namespace InviteService {
 
 			assertUserIsInvitee(invite, user);
 
-			await autoRevalidate(
+			await setInviteStatus(
+				invite,
+				InviteStatus.completed,
+				createLastModifiedBy({ userId: user.id }),
 				trx
-					.updateTable("invites")
-					.set({
-						status: InviteStatus.accepted,
-						lastModifiedBy: createLastModifiedBy({ userId: user.id }),
-					})
-					.where("id", "=", invite.id)
-					.where("userId", "=", user.id)
-			).execute();
+			);
 
 			await grantInviteMemberships(invite, user, trx);
 		});
