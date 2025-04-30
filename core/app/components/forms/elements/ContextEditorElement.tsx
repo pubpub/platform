@@ -2,7 +2,7 @@
 
 import type { Node } from "prosemirror-model";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { docHasChanged } from "context-editor/utils";
 import { useFormContext } from "react-hook-form";
@@ -12,7 +12,7 @@ import { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
+import { fromHTMLToNode, renderNodeToHTML } from "~/lib/editor/serialization/client";
 import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
@@ -43,11 +43,15 @@ const EditorFormElement = ({
 	label: string;
 	help?: string;
 	onChange: (state: any) => void;
-	initialValue?: Node;
+	initialValue?: string;
 	disabled?: boolean;
 }) => {
 	const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
-	const [initialDoc] = useState(initialValue);
+	const [initialHTML] = useState(initialValue);
+	const initialDoc = useMemo(
+		() => (initialHTML ? fromHTMLToNode(initialHTML) : undefined),
+		[initialHTML]
+	);
 
 	if (!pubId || !pubTypeId) {
 		return null;
@@ -108,7 +112,7 @@ export const ContextEditorElement = ({
 						label={label}
 						help={config.help}
 						onChange={(state) => {
-							field.onChange(serializeProseMirrorDoc(state.doc));
+							field.onChange(renderNodeToHTML(state.doc));
 						}}
 						initialValue={field.value}
 						disabled={!isEnabled}

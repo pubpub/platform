@@ -570,19 +570,19 @@ export const validatePubValues = async <T extends { slug: string; value: unknown
 
 	const hydratedPubValues = hydratePubValues(mergedPubFields);
 
-	const validationErrors = validatePubValuesBySchemaName(hydratedPubValues);
+	const { errors, newResults } = validatePubValuesBySchemaName(hydratedPubValues);
 
-	if (!validationErrors.length) {
-		return hydratedPubValues;
+	if (!errors.length) {
+		return newResults;
 	}
 
 	if (continueOnValidationError) {
 		return hydratedPubValues.filter(
-			({ slug }) => !validationErrors.find(({ slug: errorSlug }) => errorSlug === slug)
+			({ slug }) => !errors.find(({ slug: errorSlug }) => errorSlug === slug)
 		);
 	}
 
-	throw new BadRequestError(validationErrors.map(({ error }) => error).join(" "));
+	throw new BadRequestError(errors.map(({ error }) => error).join(" "));
 };
 
 type AddPubRelationsInput = { value: JsonValue | Date; slug: string } & XOR<

@@ -13,6 +13,7 @@ import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ChevronDown, ChevronRight } from "ui/icon";
+import { ShowMore } from "ui/show-more";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
@@ -219,6 +220,17 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		if (date.toString() !== "Invalid Date") {
 			return date.toISOString().split("T")[0];
 		}
+	}
+
+	if (value.schemaName === CoreSchemaType.RichText) {
+		return (
+			<ShowMore animate={false}>
+				<div
+					className="prose prose-sm"
+					dangerouslySetInnerHTML={{ __html: value.value as string }}
+				/>
+			</ShowMore>
+		);
 	}
 
 	const valueAsString = (value.value as JsonValue)?.toString() || "";
