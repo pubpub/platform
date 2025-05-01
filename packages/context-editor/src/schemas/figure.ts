@@ -1,19 +1,19 @@
 import type { NodeSpec } from "prosemirror-model";
 
-export default {
-	content: "title? (table | image) caption?",
-	group: "block",
+export const figure = {
 	attrs: {
 		id: { default: null },
 		class: { default: null },
 	},
+	content: "title{0,1} (image|table) figcaption{0,1}",
+	group: "block",
 	parseDOM: [
 		{
 			tag: "figure",
 			getAttrs: (node) => {
 				return {
-					id: node.getAttribute("id"),
-					class: node.getAttribute("class"),
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
 				};
 			},
 		},
@@ -23,6 +23,55 @@ export default {
 			"figure",
 			{
 				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
+	},
+} satisfies NodeSpec;
+
+export const figcaption = {
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
+	content: "inline*",
+	group: "figure",
+	parseDOM: [
+		{
+			tag: "figure figcaption",
+			getAttrs: (node) => {
+				return {
+					id: (node as Element).getAttribute("id"),
+					class: (node as Element).getAttribute("class"),
+				};
+			},
+		},
+	],
+	toDOM: (node) => {
+		return [
+			"figcaption",
+			{
+				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
+	},
+} satisfies NodeSpec;
+
+export const title = {
+	content: "text*",
+	group: "figure",
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
+	toDOM: (node) => {
+		return [
+			"div",
+			{
+				class: ["title", node.attrs.class].filter(Boolean).join(" "),
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,

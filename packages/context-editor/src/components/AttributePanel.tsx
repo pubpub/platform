@@ -8,9 +8,11 @@ import {
 } from "@handlewithcare/react-prosemirror";
 import { createPortal } from "react-dom";
 
+import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
+import { enableCaption, enableTitle } from "../commands/figures";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { LinkMenu } from "./menus/LinkMenu";
@@ -104,6 +106,15 @@ export function AttributePanel({
 		},
 		[activeNode, activeNodePosition, containerRef]
 	);
+
+	const enableTitle2 = useEditorEventCallback((view) => {
+		enableTitle(view.state, view.dispatch, activeNodePosition + 1);
+	});
+
+	const enableCaption2 = useEditorEventCallback((view) => {
+		if (!activeNode) return;
+		enableCaption(view.state, view.dispatch, activeNodePosition + activeNode.nodeSize);
+	});
 
 	const updateMarkAttr = useEditorEventCallback(
 		(view, index: number, attrKey: string, value: string | null) => {
@@ -305,7 +316,8 @@ export function AttributePanel({
 							</div>
 						);
 					})}
-
+				<Button onClick={() => enableTitle2()}>Enable Title</Button>
+				<Button onClick={() => enableCaption2()}>Enable Caption</Button>
 				{nodeAttrs.data && (
 					<>
 						<div className="mt-8 text-sm">Data</div>

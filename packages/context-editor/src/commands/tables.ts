@@ -80,8 +80,8 @@ const createTable = (state: EditorState, options?: AddTableOptions) => {
 export const addTable = (state: EditorState, dispatch?: Dispatch, options?: AddTableOptions) => {
 	const offset = state.tr.selection.anchor + 1;
 
-	const nodes = createTable(state, options);
-	const tr = state.tr.replaceSelectionWith(nodes).scrollIntoView();
+	const node = createTable(state, options);
+	const tr = state.tr.replaceSelectionWith(node).scrollIntoView();
 	const resolvedPos = tr.doc.resolve(offset);
 
 	tr.setSelection(TextSelection.near(resolvedPos));
