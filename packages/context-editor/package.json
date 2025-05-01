@@ -109,7 +109,7 @@
 		"prosemirror-suggest": "^3.0.0",
 		"prosemirror-tables": "^1.7.1",
 		"prosemirror-transform": "^1.10.0",
-		"prosemirror-view": "1.39.2",
+		"prosemirror-view": "1.37.1",
 		"react": "catalog:react19",
 		"react-csv-to-table": "^0.0.4",
 		"react-dom": "catalog:react19",
