@@ -74,13 +74,24 @@
 .ProseMirror ul,
 .ProseMirror ol,
 .ProseMirror li,
-.ProseMirror section {
+.ProseMirror section,
+.ProseMirror table,
+.ProseMirror figure,
+.ProseMirror figure > div.title,
+.ProseMirror figure > figcaption {
 	border-left: 1px solid #777;
 	padding-left: 5px;
 	padding-top: 5px;
 	margin-top: 16px;
 	margin-bottom: 16px;
 }
+.ProseMirror tr * {
+	border: none;
+}
+.ProseMirror tr p {
+	margin: 0;
+}
+
 .ProseMirror section {
 	margin-left: -5px;
 }
@@ -167,4 +178,55 @@
 .uppy-Dashboard-inner {
 	height: 182px !important; /* Ensure it takes 100% of its parent container's height */
 	min-height: unset !important; /* Remove the default min-height */
+}
+
+/* Table */
+.ProseMirror table {
+	border-spacing: 0;
+	border-collapse: separate;
+	font-size: 0.9em;
+	font-family: sans-serif;
+	min-width: 400px;
+	width: 100%;
+	table-layout: fixed;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+	border-top: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+}
+
+.ProseMirror table td:last-child,
+.ProseMirror table th:last-child {
+	border-right: 1px solid #ccc;
+}
+
+.ProseMirror table tr:last-child td {
+	border-bottom: 1px solid #ccc;
+}
+
+.ProseMirror table td {
+	vertical-align: top;
+}
+
+.ProseMirror table {
+	border-left: 1px solid #777;
+}
+
+.wrap-widget + table {
+	position: relative;
+	top: -1px;
+}
+
+.wrap-widget button {
+	z-index: 10;
+}
+
+.ProseMirror thead tr {
+	text-align: left;
+}
+
+.ProseMirror figure {
+	padding: 1em;
 }

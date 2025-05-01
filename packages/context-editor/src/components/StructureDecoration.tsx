@@ -1,7 +1,7 @@
 import type { WidgetViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { Node } from "prosemirror-model";
 
-import React, { forwardRef } from "react";
+import React, { forwardRef, useLayoutEffect } from "react";
 import { useEditorState } from "@handlewithcare/react-prosemirror";
 
 import { reactPropsKey } from "../plugins/reactProps";
@@ -46,7 +46,7 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 		const { disabled } = reactPropsKey.getState(state);
 		const pos = getPos();
 		const node = state.doc.nodeAt(pos);
-		if (!node) {
+		if (!node?.isBlock) {
 			return null;
 		}
 		const handleClick = () => {
@@ -57,11 +57,6 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 				setActiveNode(node);
 			}
 		};
-		const isBlock = node.isBlock;
-
-		if (!isBlock) {
-			return null;
-		}
 
 		return (
 			<div ref={ref} className="wrap-widget" {...props}>

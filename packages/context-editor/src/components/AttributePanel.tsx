@@ -8,9 +8,11 @@ import {
 } from "@handlewithcare/react-prosemirror";
 import { createPortal } from "react-dom";
 
+import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
+import { toggleFigureNode } from "../commands/figures";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { LinkMenu } from "./menus/LinkMenu";
@@ -104,6 +106,16 @@ export function AttributePanel({
 		},
 		[activeNode, activeNodePosition, containerRef]
 	);
+
+	const toggleTitle = useEditorEventCallback((view) => {
+		if (!activeNode) return;
+		toggleFigureNode(view.state, view.dispatch)(activeNodePosition, "title");
+	});
+
+	const toggleFigcaption = useEditorEventCallback((view) => {
+		if (!activeNode) return;
+		toggleFigureNode(view.state, view.dispatch)(activeNodePosition, "figcaption");
+	});
 
 	const updateMarkAttr = useEditorEventCallback(
 		(view, index: number, attrKey: string, value: string | null) => {
@@ -305,7 +317,8 @@ export function AttributePanel({
 							</div>
 						);
 					})}
-
+				<Button onClick={() => toggleTitle()}>Enable Title</Button>
+				<Button onClick={() => toggleFigcaption()}>Enable Caption</Button>
 				{nodeAttrs.data && (
 					<>
 						<div className="mt-8 text-sm">Data</div>
