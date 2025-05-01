@@ -5,7 +5,7 @@ export const figure = {
 		id: { default: null },
 		class: { default: null },
 	},
-	content: "title{0,1} (image|table) figcaption{0,1}",
+	content: "title? (image|table) figcaption?",
 	group: "block",
 	parseDOM: [
 		{
@@ -39,7 +39,7 @@ export const figcaption = {
 	group: "figure",
 	parseDOM: [
 		{
-			tag: "figure figcaption",
+			tag: "figcaption",
 			getAttrs: (node) => {
 				return {
 					id: (node as Element).getAttribute("id"),
