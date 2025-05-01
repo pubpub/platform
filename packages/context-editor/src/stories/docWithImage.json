@@ -1,0 +1,40 @@
+{
+	"type": "doc",
+	"attrs": {
+		"meta": {}
+	},
+	"content": [
+		{
+			"type": "paragraph",
+			"attrs": {
+				"id": null,
+				"class": null
+			}
+		},
+		{
+			"type": "figure",
+			"attrs": {
+				"id": null,
+				"class": null
+			},
+			"content": [
+				{
+					"type": "image",
+					"attrs": {
+						"id": "",
+						"class": null,
+						"alt": "cat.jpeg",
+						"src": "http://localhost:6006/image0.jpg",
+						"linkTo": "",
+						"caption": false,
+						"credit": false,
+						"license": false,
+						"width": 100,
+						"align": "center",
+						"fullResolution": false
+					}
+				}
+			]
+		}
+	]
+}

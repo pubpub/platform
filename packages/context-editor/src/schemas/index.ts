@@ -6,6 +6,7 @@ import contextAtom from "./contextAtom";
 import contextDoc from "./contextDoc";
 import doc from "./doc";
 import em from "./em";
+import { credit, figcaption, figure, license } from "./figure";
 import hard_break from "./hard_break";
 import heading from "./heading";
 import horizontal_rule from "./horizontal";
@@ -32,11 +33,15 @@ export const baseSchema = new Schema({
 		blockquote,
 		...math,
 		code_block: code.codeBlock,
-		image,
 		horizontal_rule,
 		bullet_list: list.bulletList,
 		ordered_list: list.orderedList,
 		list_item: list.listItem,
+		figure,
+		figcaption,
+		image,
+		credit,
+		license,
 	},
 	marks: {
 		strong,
