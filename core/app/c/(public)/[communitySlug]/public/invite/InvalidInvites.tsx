@@ -101,13 +101,13 @@ export const InvalidInviteError = ({
 			return <InvalidInvite message="This invite link is invalid." />;
 		case "EXPIRED":
 			return <InvalidInvite message="This invite has expired." />;
-		case "NOT_PENDING":
+		case "NOT_ACTIONABLE":
 			// Check the actual status to provide more specific message
 			switch (error.status) {
-				case InviteStatus.accepted:
+				case InviteStatus.completed:
 					return (
 						<InvalidInvite
-							message="This invite has already been accepted."
+							message="This invite has already been completed."
 							variant="success"
 							redirectTo={
 								redirectTo

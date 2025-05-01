@@ -54,10 +54,10 @@ export namespace InviteService {
 
 	export const INVITE_ERRORS = {
 		NOT_FOUND: "Invite not found",
-		NOT_PENDING: "Invite not pending",
+		NOT_ACTIONABLE: "Invite not actionable",
 		NOT_FOR_USER: "Invite not for user",
 		INVALID_TOKEN: "Invalid invite token",
-		ALREADY_ACCEPTED: "Invite already accepted",
+		ALREADY_COMPLETED: "Invite already completed",
 		ALREADY_REJECTED: "Invite already rejected",
 		REVOKED: "Invite revoked",
 		EXPIRED: "Invite expired",
@@ -515,10 +515,10 @@ export namespace InviteService {
 	): Promise<{ useless: false } | { useless: true; reason: string }> {
 		assertUserIsInvitee(invite, user);
 
-		if (invite.status !== InviteStatus.pending) {
+		if (invite.status !== InviteStatus.pending && invite.status !== InviteStatus.accepted) {
 			return {
 				useless: true,
-				reason: "Invite is not pending",
+				reason: "Invite is not pending or accepted",
 			};
 		}
 
@@ -731,8 +731,9 @@ export namespace InviteService {
 			});
 		}
 
-		if (dbInvite.status !== InviteStatus.pending) {
-			throw new InviteError("NOT_PENDING", {
+		// pending and accepted are the only two valid statuses for a user to do something with the invite
+		if (dbInvite.status !== InviteStatus.pending && dbInvite.status !== InviteStatus.accepted) {
+			throw new InviteError("NOT_ACTIONABLE", {
 				logContext: {
 					inviteToken,
 					invite: dbInvite,

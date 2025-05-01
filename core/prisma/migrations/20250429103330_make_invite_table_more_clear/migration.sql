@@ -65,7 +65,7 @@ CHECK (
 -- enforce last sent at and status constraints
 ALTER TABLE "invites" ADD CONSTRAINT "invites_last_sent_status_check"
 CHECK (
-    ("lastSentAt" IS NOT NULL AND "status" IN ('accepted', 'pending', 'rejected', 'revoked')) OR
+    ("lastSentAt" IS NOT NULL AND "status" IN ('accepted', 'pending', 'rejected', 'revoked', 'completed')) OR
     ("lastSentAt" IS NULL AND "status" = 'created')
 );
 
