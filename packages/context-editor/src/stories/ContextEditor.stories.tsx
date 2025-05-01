@@ -7,6 +7,7 @@ import { EditorState } from "prosemirror-state";
 import ContextEditor from "../ContextEditor";
 import { baseSchema } from "../schemas";
 import AtomRenderer from "./AtomRenderer";
+// @ts-ignore
 import exampleHtml from "./doc.html?raw";
 import docWithImage from "./docWithImage.json";
 import initialDoc from "./initialDoc.json";
