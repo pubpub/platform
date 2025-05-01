@@ -87,9 +87,12 @@ const toggleNodesInFigure = (view: EditorView, values: FormSchema, position: num
 		license: false,
 	};
 	figureNode.content.forEach((child) => {
-		for (const nodeType of nodeTypes) {
-			const nodeTypeName = nodeType === "caption" ? "figcaption" : nodeType;
-			nodeExistence[nodeType] = child.type.name === nodeTypeName;
+		const match = nodeTypes.find((nodeType) => {
+			const name = nodeType === "caption" ? "figcaption" : nodeType;
+			return child.type.name === name;
+		});
+		if (match) {
+			nodeExistence[match] = true;
 		}
 	});
 
