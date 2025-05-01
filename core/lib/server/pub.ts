@@ -2038,12 +2038,12 @@ export const createTsQuery = (query: string, config: SearchConfig = {}) => {
 	)`;
 };
 
-export const fullTextSearch = async (
+export const _fullTextSearchQuery = (
 	query: string,
 	communityId: CommunitiesId,
 	userId: UsersId,
 	opts?: SearchConfig
-): Promise<FTSReturn[]> => {
+) => {
 	const options = {
 		...DEFAULT_FULLTEXT_SEARCH_OPTS,
 		...opts,
@@ -2080,6 +2080,7 @@ export const fullTextSearch = async (
 						"pub_values.value",
 						"pub_fields.name",
 						"pub_fields.slug",
+						"pub_fields.schemaName",
 						"_PubFieldToPubType.isTitle",
 						sql<string>`ts_headline(
 							'${sql.raw(options.language)}',
@@ -2123,19 +2124,26 @@ export const fullTextSearch = async (
 		  ${tsQuery}) desc`
 		);
 
-	// for debugging, shows how long the query took
+	return q;
+};
+
+export const fullTextSearch = async (
+	query: string,
+	communityId: CommunitiesId,
+	userId: UsersId,
+	opts?: SearchConfig
+) => {
+	const dbQuery = _fullTextSearchQuery(query, communityId, userId, opts);
+
 	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true") {
-		const explained = await q.explain("json", sql`analyze`);
+		const explained = await dbQuery.explain("json", sql`analyze`);
 		logger.debug({
 			msg: `Full Text Search EXPLAIN`,
 			queryPlan: explained[0]["QUERY PLAN"][0],
-			query,
-			communityId,
-			userId,
 		});
 	}
 
-	return q.execute();
+	return autoCache(dbQuery).execute();
 };
 
 export const getExclusivelyRelatedPub = async (relatedPubId: PubsId, relationFieldSlug: string) => {
