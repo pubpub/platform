@@ -1,11 +1,10 @@
 "use client";
 
 import { Suspense } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 import type { ChangeNotification, NotifyTables } from "~/app/api/v0/c/[communitySlug]/sse/route";
 import { useSSEWithRevalidation } from "~/lib/notify/useSSEWithRevalidation";
-import { revalidateCurrentPath } from "./revalidateCurrentPath";
 
 type SSERevalidatorProps<T extends NotifyTables> = {
 	eventName?: string;
@@ -21,12 +20,13 @@ const _SSERevalidator = <T extends NotifyTables>({
 	listenFilter,
 }: SSERevalidatorProps<T>) => {
 	const params = useParams<{ communitySlug: string }>();
+	const router = useRouter();
 
 	useSSEWithRevalidation({
 		url: `/api/v0/c/${params.communitySlug}/sse`,
 		eventName,
 		debounceMs,
-		onRevalidate: revalidateCurrentPath,
+		onRevalidate: () => router.refresh(),
 		listenTables,
 		listenFilter,
 	});
