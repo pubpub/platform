@@ -43,9 +43,6 @@ export default {
 		{
 			tag: "img[src]",
 			getAttrs: (node) => {
-				if (node.getAttribute("data-node-type") !== "image") {
-					return false;
-				}
 				const attrs: ImageAttrs = {
 					id: node.getAttribute("id") || null,
 					class: node.getAttribute("class") || null,
