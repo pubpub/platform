@@ -3,7 +3,7 @@
 import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
-import React, { forwardRef, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
@@ -38,7 +38,7 @@ export interface ContextEditorProps {
 		id: string
 	) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: (
-		state: any
+		state: EditorState
 	) => void /* Function that passes up editorState so parent can handle onSave, etc */;
 	atomRenderingComponent: ForwardRefExoticComponent<
 		NodeViewComponentProps & RefAttributes<any>
@@ -79,10 +79,16 @@ export default function ContextEditor(props: ContextEditorProps) {
 		props.onChange(editorState);
 	}, [editorState]);
 
+	const containerRef = useRef<HTMLDivElement>(null);
+	const containerId = useId();
+
 	return (
 		<div
-			id="context-editor-container"
-			className={`relative isolate max-w-screen-sm ${props.disabled ? "disabled" : ""}`}
+			id={containerId}
+			ref={containerRef}
+			className={cn("relative isolate max-w-screen-sm", {
+				"editor-disabled": props.disabled,
+			})}
 		>
 			<ProseMirror
 				state={editorState}
@@ -100,8 +106,12 @@ export default function ContextEditor(props: ContextEditorProps) {
 						</div>
 					)}
 					<ProseMirrorDoc />
-					<AttributePanel menuHidden={!!props.hideMenu} />
-					<SuggestPanel suggestData={suggestData} setSuggestData={setSuggestData} />
+					<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
+					<SuggestPanel
+						suggestData={suggestData}
+						setSuggestData={setSuggestData}
+						containerRef={containerRef}
+					/>
 				</EditorContextProvider>
 			</ProseMirror>
 		</div>

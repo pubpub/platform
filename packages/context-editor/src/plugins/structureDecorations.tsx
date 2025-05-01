@@ -13,7 +13,9 @@ export default () => {
 				state.doc.descendants((node, pos) => {
 					if (node.type.isBlock) {
 						// TODO: is there a better key we can use?
-						decorations.push(widget(pos, BlockDecoration, { key: `node-${pos}` }));
+						decorations.push(
+							widget(pos, BlockDecoration, { key: `node-${pos}`, side: -1 })
+						);
 					}
 					const isInline = !node.type.isBlock;
 					const hasMarks = !!node.marks.length;

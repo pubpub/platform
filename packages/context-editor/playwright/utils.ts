@@ -13,3 +13,8 @@ export const assertMenuItemActiveState = async ({
 }) => {
 	await expect(page.getByRole("button", { name })).toHaveAttribute("aria-pressed", `${isActive}`);
 };
+
+export const getProsemirrorState = async (page: Page) => {
+	const text = await page.getByTestId("prosemirror-state").textContent();
+	return text ? JSON.parse(text) : null;
+};
