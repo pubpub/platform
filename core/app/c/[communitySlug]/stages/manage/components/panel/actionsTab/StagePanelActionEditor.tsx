@@ -43,6 +43,8 @@ export const UpdateCircle = (
 				asChild
 			>
 				<div
+					data-testid={`action-instance-${props.actionInstanceId}-update-circle`}
+					data-status={props.status}
 					className={cn(
 						"relative m-1 h-3 w-3 rounded-full transition-colors duration-200",
 						{
@@ -57,7 +59,10 @@ export const UpdateCircle = (
 					)}
 				>
 					{props.stale && (
-						<span className="absolute -top-0.5 right-0 block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-800"></span>
+						<span
+							data-testid={`action-instance-${props.actionInstanceId}-update-circle-stale`}
+							className="absolute -top-0.5 right-0 block h-1.5 w-1.5 animate-pulse rounded-full bg-blue-800"
+						></span>
 					)}
 				</div>
 			</TooltipTrigger>
@@ -81,8 +86,11 @@ export const UpdateCircle = (
 					<div className="text-xs text-gray-600">
 						{props.createdAt && (
 							<div className="flex items-center justify-between">
-								<span>Timestamp:</span>
-								<span className="font-mono">
+								<span>Timestamp: </span>
+								<span
+									className="font-mono"
+									data-testid={`action-instance-${props.actionInstanceId}-update-circle-timestamp`}
+								>
 									{props.createdAt.toLocaleString()}
 								</span>
 							</div>
@@ -99,7 +107,10 @@ export const UpdateCircle = (
 					{Boolean(props.result) && (
 						<div className="pt-1">
 							<div className="text-xs font-medium">Result:</div>
-							<pre className="mt-1 max-h-40 overflow-auto rounded bg-gray-100 p-2 font-mono text-xs">
+							<pre
+								className="mt-1 max-h-40 overflow-auto rounded bg-gray-100 p-2 font-mono text-xs"
+								data-testid={`action-instance-${props.actionInstanceId}-update-circle-result`}
+							>
 								{JSON.stringify(props.result, null, 2)}
 							</pre>
 						</div>
