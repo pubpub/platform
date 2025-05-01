@@ -41,6 +41,7 @@ export {
 	CurlyBraces,
 	Download,
 	Ellipsis,
+	ExternalLink,
 	FileText,
 	FlagTriangleRightIcon,
 	FormInput,

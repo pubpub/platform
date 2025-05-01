@@ -1,17 +1,19 @@
 import type { Mark } from "prosemirror-model";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
 	useEditorEffect,
 	useEditorEventCallback,
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
+import { createPortal } from "react-dom";
 
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
+import { LinkMenu } from "./menus/LinkMenu";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
@@ -20,17 +22,25 @@ interface PanelProps {
 	top: number;
 	left: number;
 	right: number | string;
+	panelLeft: number;
 	bottom: number;
 }
 
 const initPanelProps: PanelProps = {
 	top: 0,
 	left: 0,
-	right: "100%",
+	right: 1000,
+	panelLeft: 0,
 	bottom: 0,
 };
 
-export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
+export function AttributePanel({
+	menuHidden,
+	containerRef,
+}: {
+	menuHidden: boolean;
+	containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
 	const [position, setPosition] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
@@ -41,19 +51,25 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		setPosition: setActiveNodePosition,
 	} = useEditorContext();
 
-	/**
-	 * This determination of the 'activeNode' is prone to bugs. We should figure
-	 * out a better way to do it.
-	 **/
 	useEditorEffect(
 		(view) => {
 			const node = state.selection.$from.nodeAfter;
 			if (!node) {
+				setActiveNode(null);
+				// Reset right position so line animation still works when opening the panel again
+				setPosition({ ...position, right: 1000 });
 				return;
 			}
 
 			// The attribute panel itself may be focused--don't change the node while it is open
-			if (!view.hasFocus() && activeNode && !node.eq(activeNode)) {
+			// This is primarily for the case where you are editing the id/class of a node.
+			if (!view.hasFocus() && activeNode && activeNode.isBlock && !node.eq(activeNode)) {
+				return;
+			}
+
+			if (Object.keys(node.attrs).length === 0 && node.marks.length === 0) {
+				setPosition({ ...position, right: 1000 });
+				setActiveNode(null);
 				return;
 			}
 
@@ -62,6 +78,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 		},
 		[state]
 	);
+	// const container = document.getElementById(containerId);
 
 	useEditorEffect(
 		(view) => {
@@ -73,8 +90,10 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				setPosition({
 					...position,
 					top,
-					left: coords.left - viewClientRect.left,
-					right: -275,
+					// +16 for padding
+					left: coords.left - viewClientRect.left + 16,
+					panelLeft: containerRef.current?.clientWidth ?? 0,
+					right: -1,
 				});
 				setTimeout(() => {
 					setHeight(300);
@@ -83,11 +102,11 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				setHeight(0);
 			}
 		},
-		[activeNode, activeNodePosition]
+		[activeNode, activeNodePosition, containerRef]
 	);
 
 	const updateMarkAttr = useEditorEventCallback(
-		(view, index: number, attrKey: string, value: string) => {
+		(view, index: number, attrKey: string, value: string | null) => {
 			if (!view || !activeNode) return;
 			const markToReplace = nodeMarks[index];
 			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
@@ -98,6 +117,35 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 			const newMark = view.state.schema.marks[markToReplace.type.name].create({
 				...markToReplace.attrs,
 				[attrKey]: value,
+			});
+
+			if (!newMark) {
+				return null;
+			}
+
+			view.dispatch(
+				view.state.tr.addMark(
+					activeNodePosition,
+					activeNodePosition + (activeNode.nodeSize || 0),
+					newMark
+				)
+			);
+		}
+	);
+
+	/** Bulk update version of updateMarkAttr */
+	const updateMarkAttrs = useEditorEventCallback(
+		(view, index: number, attrs: Record<string, string | null>) => {
+			if (!view || !activeNode) return;
+			const markToReplace = nodeMarks[index];
+			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
+				...(activeNode?.marks ?? []),
+			];
+			newMarks[index].attrs = attrs;
+
+			const newMark = view.state.schema.marks[markToReplace.type.name].create({
+				...markToReplace.attrs,
+				...attrs,
 			});
 
 			if (!newMark) {
@@ -151,24 +199,23 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 	const nodeAttrs = activeNode.attrs || {};
 	const nodeMarks = activeNode.marks || [];
 
-	if (Object.keys(nodeAttrs).length === 0 && nodeMarks.length === 0) {
-		return null;
-	}
-
 	// Marks will automatically show names, so it is only the 'inline' types
 	// that are not marks that need to be specifically rendered
 	const showName = activeNode?.type?.name === "math_inline";
 
-	return (
+	if (!containerRef.current) {
+		return null;
+	}
+
+	return createPortal(
 		<>
 			<div
-				className="z-20 drop-shadow-lg"
+				className="drop-shadow-lg"
 				style={{
-					// borderTop: "1px solid #777",
 					position: "absolute",
 					background: "#fff",
 					top: position.top,
-					right: position.right,
+					left: position.panelLeft,
 					width: 300,
 					padding: "1em",
 					height: height,
@@ -176,6 +223,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 					overflow: "scroll",
 					borderLeft: "1px solid #999",
 					borderRight: "1px solid #999",
+					borderTop: `${height ? 1 : 0}px solid #999`,
 					borderBottom: `${height ? 1 : 0}px solid #999`,
 					borderRadius: "0px 0px 4px 4px",
 					transition:
@@ -213,8 +261,20 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 				})}
 				{!!nodeMarks.length &&
 					nodeMarks.map((mark, index) => {
+						const key = `${mark.type.name}-${activeNodePosition}`;
+						if (mark.type.name === "link") {
+							return (
+								<LinkMenu
+									mark={mark}
+									onChange={(values) => {
+										updateMarkAttrs(index, values);
+									}}
+									key={key}
+								/>
+							);
+						}
 						return (
-							<div key={`${mark.type.name}-${activeNodePosition}`}>
+							<div key={key}>
 								<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
 								{Object.keys(mark.attrs).map((attrKey) => {
 									if (attrKey === "data") {
@@ -273,7 +333,6 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 			</div>
 
 			<div
-				className="z-20"
 				style={{
 					background: "#777",
 					height: "1px",
@@ -284,6 +343,7 @@ export function AttributePanel({ menuHidden }: { menuHidden: boolean }) {
 					transition: position.top === 0 ? "" : `right ${animationTimeMS}ms linear`,
 				}}
 			/>
-		</>
+		</>,
+		containerRef.current
 	);
 }

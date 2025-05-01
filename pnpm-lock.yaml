@@ -851,6 +851,9 @@ importers:
       '@handlewithcare/react-prosemirror':
         specifier: 'catalog:'
         version: 2.3.5(prosemirror-model@1.24.1)(prosemirror-state@1.4.3)(prosemirror-view@1.37.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@hookform/resolvers':
+        specifier: 'catalog:'
+        version: 3.10.0(react-hook-form@7.54.2(react@19.0.0))
       '@lezer/cpp':
         specifier: ^1.1.2
         version: 1.1.2
@@ -884,6 +887,9 @@ importers:
       '@lezer/xml':
         specifier: ^1.0.6
         version: 1.0.6
+      '@sinclair/typebox':
+        specifier: 'catalog:'
+        version: 0.34.30
       deepmerge:
         specifier: ^4.3.1
         version: 4.3.1
@@ -950,6 +956,12 @@ importers:
       react-dom:
         specifier: catalog:react19
         version: 19.0.0(react@19.0.0)
+      react-hook-form:
+        specifier: 'catalog:'
+        version: 7.54.2(react@19.0.0)
+      schemas:
+        specifier: workspace:*
+        version: link:../schemas
       ui:
         specifier: workspace:*
         version: link:../ui
