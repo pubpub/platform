@@ -26,6 +26,7 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 
 		return html;
 	} catch (e) {
+		logger.error(e);
 		return false;
 	}
 };
@@ -63,14 +64,15 @@ export const validatePubValuesBySchemaName = <
 			}
 
 			const jsonSchema = getJsonSchemaByCoreSchemaType(schemaName);
-			const result = Value.Check(jsonSchema, value);
-
-			if (!result) {
+			try {
+				const result = Value.Parse(jsonSchema, value);
+				acc.newResults.push({ value: result, slug, schemaName, ...rest });
+			} catch (e) {
+				logger.error(e);
 				acc.errors.push(createValidationError(slug, schemaName, trimmedValue));
 				return acc;
 			}
 
-			acc.newResults.push({ value, slug, schemaName, ...rest });
 			return acc;
 		},
 		{ errors: [] as { slug: string; error: string }[], newResults: [] as T }

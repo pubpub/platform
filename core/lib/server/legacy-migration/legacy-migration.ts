@@ -17,11 +17,13 @@ import type {
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
+import type { FileMetadata } from "../assets";
 import type { LegacyCollection, LegacyCommunity, LegacyPage, LegacyPub } from "./schemas";
 import { db } from "~/kysely/database";
 import { renderNodeToHTML } from "~/lib/editor/serialization/server";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
+import { generateMetadataFromS3 } from "../assets";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { createDefaultForm } from "../form";
 import { maybeWithTrx } from "../maybeWithTrx";
@@ -149,6 +151,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	"Journal Article": {
 		fields: {
 			Title: { isTitle: true },
+			Avatar: { isTitle: false },
 			Abstract: { isTitle: false },
 			"Legacy Id": { isTitle: false },
 			PubContent: { isTitle: false },
@@ -747,11 +750,11 @@ const kindToTypeMap = {
 
 const createJournalArticles = async (
 	{
-		community: { id: communityId },
+		community: { id: communityId, slug: communitySlug },
 		legacyCommunity,
 		legacyStructure,
 	}: {
-		community: { id: CommunitiesId };
+		community: { id: CommunitiesId; slug: string };
 		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
 	},
@@ -771,7 +774,12 @@ const createJournalArticles = async (
 		trx,
 	});
 
-	for (const pub of legacyCommunity.pubs) {
+	await pMap(legacyCommunity.pubs, async (pub) => {
+		let avatar: FileMetadata | undefined;
+		if (pub.avatar) {
+			avatar = await generateMetadataFromS3(pub.avatar, communitySlug);
+		}
+
 		batch.add(({ upsertByValue }) => {
 			let op = upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
 				pubTypeId: legacyStructure["Journal Article"].id,
@@ -800,6 +808,10 @@ const createJournalArticles = async (
 			const publishedAt = pub.customPublishedAt ?? pub.releases?.[0]?.createdAt;
 			if (publishedAt) {
 				op = op.set(jaFields["Publication Date"].slug, publishedAt);
+			}
+
+			if (pub.avatar) {
+				op = op.set(jaFields.Avatar.slug, [avatar]);
 			}
 
 			const content = pub?.draft?.doc?.content ?? pub.releases?.at(-1)?.doc?.content!;
@@ -855,7 +867,7 @@ const createJournalArticles = async (
 
 			return op;
 		});
-	}
+	});
 
 	const createdPubs = await batch.execute();
 

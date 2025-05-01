@@ -1,13 +1,54 @@
+import type { InputTypeForCoreSchemaType } from "schemas";
+
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-import type { PubsId } from "db/public";
+import type { CoreSchemaType, PubsId } from "db/public";
 import { logger } from "logger";
 
 import { env } from "../env/env";
 
 let s3Client: S3Client;
+
+export type FileMetadata = InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number];
+
+/**
+ * Useful for migrating data from other S3 buckets to the new one.
+ */
+export const generateMetadataFromS3 = async (
+	url: string,
+	communitySlug: string
+): Promise<FileMetadata> => {
+	// fetch headers from s3
+	const response = await fetch(url, { method: "HEAD" });
+
+	if (!response.ok) {
+		throw new Error(`failed to fetch metadata from s3: ${response.statusText}`);
+	}
+	const baseId = `dashboard-${communitySlug}:file`;
+
+	const fileName = url.split("/").pop() || "";
+	const fileSize = parseInt(response.headers.get("content-length") || "0", 10);
+	const fileType = response.headers.get("content-type") || "application/octet-stream";
+
+	// generate a deterministic id using the same format as uppy
+	const id = `${baseId}-${fileName.replace(/\./g, "-")}-${fileType.replace("/", "-")}-${fileSize}-${Date.now()}`;
+
+	return {
+		id,
+		fileName,
+		fileSource: baseId,
+		fileType,
+		fileSize,
+		fileMeta: {
+			relativePath: null,
+			name: fileName,
+			type: fileType,
+		},
+		fileUploadUrl: url,
+	};
+};
 
 export const getS3Client = () => {
 	if (s3Client) {
