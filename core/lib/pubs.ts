@@ -1,8 +1,7 @@
-import type { ProcessedPub, ProcessedPubWithForm } from "contracts";
+import type { MaybePubOptions, ProcessedPub, ProcessedPubWithForm } from "contracts";
 import type { PubFieldsId } from "db/public";
 import { ElementType } from "db/public";
 
-import type { FullProcessedPub } from "./server";
 import type { Form } from "./server/form";
 
 export type PubTitleProps = {
@@ -83,44 +82,35 @@ export const valuesWithoutTitle = <
  * corresponding form element. This is a full join, such that we will also have
  * form elements that do not have pub values, and pub values that do not have form elements.
  */
-export const getPubByForm = ({
+export const getPubByForm = <T extends MaybePubOptions>({
 	pub,
 	form,
 	withExtraPubValues,
 }: {
-	pub: FullProcessedPub;
+	pub: ProcessedPub<T>;
 	form: Form;
 	withExtraPubValues: boolean;
-}): ProcessedPubWithForm<{
-	withRelatedPubs: true;
-	withStage: true;
-	withPubType: true;
-	withMembers: true;
-}> => {
+}): ProcessedPubWithForm<T> => {
 	const { values } = pub;
+
 	if (!values.length) {
 		return pub;
 	}
 
-	const valuesByFieldSlug = values.reduce<Record<string, FullProcessedPub["values"][number][]>>(
+	const valuesByFieldSlug = values.reduce(
 		(acc, value) => {
 			if (!acc[value.fieldSlug]) {
-				acc[value.fieldSlug] = [value];
+				acc[value.fieldSlug] = [value] as ProcessedPub<T>["values"];
 			} else {
 				acc[value.fieldSlug].push(value);
 			}
 			return acc;
 		},
-		{}
+		{} as Record<string, ProcessedPub<T>["values"]>
 	);
 
 	const pubFieldFormElements = form.elements.filter((fe) => fe.type === ElementType.pubfield);
-	const valuesWithFormElements: ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
-	}>["values"] = [];
+	const valuesWithFormElements = [] as ProcessedPubWithForm<T>["values"];
 	for (const formElement of pubFieldFormElements) {
 		const values = valuesByFieldSlug[formElement.slug];
 		const formInfo = {
@@ -156,12 +146,7 @@ export const getPubByForm = ({
 	const formElementSlugs = new Set(pubFieldFormElements.map((fe) => fe.slug));
 	const valueFieldSlugs = new Set(Object.keys(valuesByFieldSlug));
 	const slugsNotInForm = Array.from(valueFieldSlugs.difference(formElementSlugs));
-	const valuesNotInForm: ProcessedPubWithForm<{
-		withRelatedPubs: true;
-		withStage: true;
-		withPubType: true;
-		withMembers: true;
-	}>["values"] = [];
+	const valuesNotInForm = [] as ProcessedPubWithForm<T>["values"];
 	for (const slug of slugsNotInForm) {
 		for (const value of valuesByFieldSlug[slug]) {
 			valuesNotInForm.push(value);

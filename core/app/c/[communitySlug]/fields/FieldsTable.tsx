@@ -61,7 +61,12 @@ export const FieldsTable = ({ fields }: { fields: PubField[] }) => {
 
 	return (
 		<>
-			<DataTable columns={columns} data={data} onRowClick={handleRowClick} />
+			<DataTable
+				columns={columns}
+				data={data}
+				onRowClick={handleRowClick}
+				defaultSort={[{ id: "updated", desc: true }]}
+			/>
 			<CreateEditDialog
 				title="Edit Field"
 				open={!!editField}

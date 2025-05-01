@@ -42,10 +42,10 @@ locals {
   pubpub_hostname = "blake.duqduq.org"
   route53_zone_id = "Z059164612717GL8VGM95"
   ecr_repository_urls = {
-    core             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
-    jobs             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
-    nginx            = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
-    root             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
+    core  = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
+    jobs  = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
+    nginx = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
+    root  = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
   }
 
   MAILGUN_SMTP_USERNAME           = "v7@mg.pubpub.org"
@@ -62,22 +62,3 @@ locals {
 ##  Complete generic environment
 ##
 ######
-
-module "deployment" {
-  source = "../../modules/deployment"
-
-  name        = local.name
-  environment = local.environment
-  region      = local.region
-
-  pubpub_hostname     = local.pubpub_hostname
-  route53_zone_id     = local.route53_zone_id
-  ecr_repository_urls = local.ecr_repository_urls
-
-  MAILGUN_SMTP_USERNAME           = local.MAILGUN_SMTP_USERNAME
-  NEXT_PUBLIC_SUPABASE_URL        = local.NEXT_PUBLIC_SUPABASE_URL
-  NEXT_PUBLIC_SUPABASE_PUBLIC_KEY = local.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY
-  ASSETS_BUCKET_NAME              = local.ASSETS_BUCKET_NAME
-  HOSTNAME                        = local.HOSTNAME
-  DATACITE_API_URL                = local.DATACITE_API_URL
-}

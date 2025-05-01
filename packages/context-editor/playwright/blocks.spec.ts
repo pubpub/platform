@@ -160,9 +160,9 @@ test.describe("hard breaks", () => {
 			await page.keyboard.type("hello");
 			await page.keyboard.press("Enter");
 			await page.keyboard.type("world");
-			await expect(page.getByText("helloworld")).not.toBeVisible();
-			await expect(page.getByText("hello")).toBeVisible();
-			await expect(page.getByText("world")).toBeVisible();
+			await expect(editor.getByText("helloworld")).not.toBeVisible();
+			await expect(editor.getByText("hello")).toBeVisible();
+			await expect(editor.getByText("world")).toBeVisible();
 		});
 
 		await page.keyboard.press("Enter");
@@ -172,7 +172,7 @@ test.describe("hard breaks", () => {
 			await page.keyboard.press("Shift+Enter");
 			await page.keyboard.type("earth");
 			// indicates that the hard break worked, rather than creating a new paragraph
-			await expect(page.getByText("welcomeearth")).toBeVisible();
+			await expect(editor.getByText("welcomeearth")).toBeVisible();
 		});
 	});
 });

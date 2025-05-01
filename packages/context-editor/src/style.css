@@ -50,7 +50,8 @@
 		display: block;
 	}
 }
-.context-editor-container .disabled {
+
+.editor-disabled {
 	.wrap-widget,
 	.inline-wrap-widget {
 		button {
