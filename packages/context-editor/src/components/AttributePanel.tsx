@@ -13,7 +13,7 @@ import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
-import { enableCaption, enableTitle } from "../commands/figures";
+import { toggleFigureNode } from "../commands/figures";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { DataAttributes, MarkAttribute, NodeAttributes } from "./menus/DefaultAttributesMenu";
@@ -114,13 +114,14 @@ export function AttributePanel({
 		[activeNode, activeNodePosition, containerRef]
 	);
 
-	const enableTitle2 = useEditorEventCallback((view) => {
-		enableTitle(view.state, view.dispatch, activeNodePosition + 1);
+	const toggleTitle = useEditorEventCallback((view) => {
+		if (!activeNode) return;
+		toggleFigureNode(view.state, view.dispatch)(activeNodePosition, "title");
 	});
 
-	const enableCaption2 = useEditorEventCallback((view) => {
+	const toggleFigcaption = useEditorEventCallback((view) => {
 		if (!activeNode) return;
-		enableCaption(view.state, view.dispatch, activeNodePosition + activeNode.nodeSize);
+		toggleFigureNode(view.state, view.dispatch)(activeNodePosition, "figcaption");
 	});
 
 	const updateMarkAttr = useEditorEventCallback(

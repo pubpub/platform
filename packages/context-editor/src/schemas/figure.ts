@@ -39,7 +39,7 @@ export const figcaption = {
 	group: "figure",
 	parseDOM: [
 		{
-			tag: "figure figcaption",
+			tag: "figcaption",
 			getAttrs: (node) => {
 				return {
 					id: (node as Element).getAttribute("id"),
