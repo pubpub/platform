@@ -18,16 +18,20 @@ export type SSEOptions<T extends NotifyTables> = {
 	listenFilter?: (msg: ChangeNotification<T>) => boolean;
 };
 
-export function useSSEWithRevalidation<T extends NotifyTables>({
+/**
+ * This is a light wrapper around useSSE that debounces the data and calls the onNewData callback
+ * when the data changes.
+ */
+export function useSSEUpdates<T extends NotifyTables>({
 	url,
 	eventName,
 	withCredentials = true,
 	debounceMs = 500,
-	onRevalidate,
+	onNewData,
 	listenTables,
 	listenFilter,
 }: SSEOptions<T> & {
-	onRevalidate: () => void;
+	onNewData: (data?: ChangeNotification<T>) => void;
 }) {
 	const listenParams = useMemo(() => {
 		const listenParams = new URLSearchParams();
@@ -71,8 +75,8 @@ export function useSSEWithRevalidation<T extends NotifyTables>({
 		if (JSON.stringify(debouncedData) === JSON.stringify(lastDataRef.current)) return;
 
 		lastDataRef.current = debouncedData;
-		onRevalidate();
-	}, [debouncedData, error, eventName, onRevalidate]);
+		onNewData(debouncedData);
+	}, [debouncedData, error, eventName, onNewData]);
 
 	return { data, error };
 }
