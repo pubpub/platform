@@ -78,7 +78,9 @@
 .ProseMirror li,
 .ProseMirror section,
 .ProseMirror table,
-.ProseMirror figure {
+.ProseMirror figure,
+.ProseMirror figure > div.title,
+.ProseMirror figure > figcaption {
 	border-left: 1px solid #777;
 	padding-left: 5px;
 	padding-top: 5px;
