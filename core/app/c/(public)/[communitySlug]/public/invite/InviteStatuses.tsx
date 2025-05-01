@@ -1,3 +1,5 @@
+import type { User } from "lucia";
+
 import Link from "next/link";
 import { AlertCircle, CheckCircle, XCircle } from "lucide-react";
 
@@ -6,6 +8,7 @@ import { Button } from "ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
 
 import { InviteService } from "~/lib/server/invites/InviteService";
+import { constructCommunitySignupLink } from "~/lib/server/navigation/redirects";
 import { WrongUserLoggedIn } from "./WrongUserLoggedIn";
 
 type InvalidInviteProps = {
@@ -42,7 +45,7 @@ const styles = {
 	},
 };
 
-export const InvalidInvite = (inputProps: InvalidInviteProps) => {
+export const InviteStatusCard = (inputProps: InvalidInviteProps) => {
 	const props = {
 		...defaultProps,
 		...inputProps,
@@ -87,6 +90,23 @@ export const InvalidInvite = (inputProps: InvalidInviteProps) => {
 	);
 };
 
+// switch (error.status) {
+// 	case InviteStatus.completed:
+// 		return (
+// 			<InvalidInvite
+// 				message="This invite has already been completed."
+// 				variant="success"
+// 				redirectTo={
+// 					redirectTo
+// 						? {
+// 								label: "Login to Continue",
+// 								href: redirectTo,
+// 							}
+// 						: undefined
+// 				}
+// 			/>
+// 		);
+
 export const InvalidInviteError = ({
 	error,
 	redirectTo,
@@ -98,55 +118,34 @@ export const InvalidInviteError = ({
 		case "NOT_FOUND":
 			return <NoInviteFound />;
 		case "INVALID_TOKEN":
-			return <InvalidInvite message="This invite link is invalid." />;
+			return <InviteStatusCard message="This invite link is invalid." />;
 		case "EXPIRED":
-			return <InvalidInvite message="This invite has expired." />;
-		case "NOT_ACTIONABLE":
-			// Check the actual status to provide more specific message
-			switch (error.status) {
-				case InviteStatus.completed:
-					return (
-						<InvalidInvite
-							message="This invite has already been completed."
-							variant="success"
-							redirectTo={
-								redirectTo
-									? {
-											label: "Login to Continue",
-											href: redirectTo,
-										}
-									: undefined
-							}
-						/>
-					);
-				case InviteStatus.rejected:
-					return (
-						<InvalidInvite
-							message="You have already rejected this invite."
-							description="Please contact the sender if you'd like to be invited again."
-						/>
-					);
-				case InviteStatus.revoked:
-					return (
-						<InvalidInvite
-							message="This invite has been revoked."
-							description="Please contact the sender if you'd like to be invited again."
-						/>
-					);
-				case InviteStatus.created:
-					return (
-						<InvalidInvite
-							message="This invite is not ready for use."
-							description="Please contact the sender about this issue."
-						/>
-					);
-				default:
-					return <InvalidInvite message="This invite is not available for use." />;
-			}
+			return <InviteStatusCard message="This invite has expired." />;
+		case "REJECTED":
+			return (
+				<InviteStatusCard
+					message="You have already rejected this invite."
+					description="Please contact the sender if you'd like to be invited again."
+				/>
+			);
+		case "REVOKED":
+			return (
+				<InviteStatusCard
+					message="This invite has been revoked."
+					description="Please contact the sender if you'd like to be invited again."
+				/>
+			);
+		case "NOT_READY":
+			return (
+				<InviteStatusCard
+					message="This invite is not ready for use."
+					description="Please contact the sender about this issue."
+				/>
+			);
 		case "NOT_FOR_USER":
 			return <WrongUserLoggedIn />;
 		default:
-			return <InvalidInvite message="There was a problem with this invite." />;
+			return <InviteStatusCard message="There was a problem with this invite." />;
 	}
 };
 

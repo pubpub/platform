@@ -54,17 +54,26 @@ export namespace InviteService {
 
 	export const INVITE_ERRORS = {
 		NOT_FOUND: "Invite not found",
-		NOT_ACTIONABLE: "Invite not actionable",
+		NOT_VALID: "Invite not actionable",
 		NOT_FOR_USER: "Invite not for user",
 		INVALID_TOKEN: "Invalid invite token",
-		ALREADY_COMPLETED: "Invite already completed",
-		ALREADY_REJECTED: "Invite already rejected",
-		REVOKED: "Invite revoked",
-		EXPIRED: "Invite expired",
+		NOT_READY: "Invite not ready to be used",
+		REJECTED: "Invite has been rejected",
+		REVOKED: "Invite has been revoked",
+		EXPIRED: "Invite has expired",
 		USER_NOT_LOGGED_IN: "User not logged in",
 		INVITE_USELESS: "Invite is useless, as it would not grant the user any new permissions",
 		UNKNOWN: "Unknown invite error",
 	} as const;
+
+	export const invalidInviteMap = {
+		[InviteStatus.rejected]: "REJECTED",
+		[InviteStatus.revoked]: "REVOKED",
+		[InviteStatus.created]: "NOT_READY",
+		[InviteStatus.accepted]: false,
+		[InviteStatus.pending]: false,
+		[InviteStatus.completed]: false,
+	} satisfies Record<InviteStatus, false | InviteErrorType>;
 
 	export type InviteErrorType = keyof typeof INVITE_ERRORS;
 
@@ -731,9 +740,9 @@ export namespace InviteService {
 			});
 		}
 
-		// pending and accepted are the only two valid statuses for a user to do something with the invite
-		if (dbInvite.status !== InviteStatus.pending && dbInvite.status !== InviteStatus.accepted) {
-			throw new InviteError("NOT_ACTIONABLE", {
+		const isInvalidInvite = invalidInviteMap[dbInvite.status];
+		if (isInvalidInvite) {
+			throw new InviteError(isInvalidInvite, {
 				logContext: {
 					inviteToken,
 					invite: dbInvite,

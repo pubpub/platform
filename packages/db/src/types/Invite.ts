@@ -129,6 +129,7 @@ export const inviteSchema = z
 					InviteStatus.pending,
 					InviteStatus.rejected,
 					InviteStatus.revoked,
+					InviteStatus.completed,
 				]),
 			}),
 			z.object({
@@ -248,6 +249,7 @@ export const newInviteSchema = z
 					InviteStatus.pending,
 					InviteStatus.rejected,
 					InviteStatus.revoked,
+					InviteStatus.completed,
 				]),
 			}),
 			z.object({

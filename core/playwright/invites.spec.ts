@@ -47,6 +47,10 @@ const firstName6 = faker.person.firstName();
 const lastName6 = faker.person.lastName();
 const email6 = `${firstName6}@example.com`;
 
+const firstName7 = faker.person.firstName();
+const lastName7 = faker.person.lastName();
+const email7 = `${firstName7}@example.com`;
+
 const evalSlug = "evaluation";
 const communityFormSlug = "community-form";
 
@@ -55,6 +59,7 @@ test.describe.configure({ mode: "serial" });
 let page: Page;
 
 const invitedUserId = crypto.randomUUID() as UsersId;
+const completedInviteUserId = crypto.randomUUID() as UsersId;
 
 const pub1Id = crypto.randomUUID() as PubsId;
 
@@ -82,6 +87,11 @@ const seed = createSeed({
 		user2: {
 			role: MemberRole.contributor,
 			password: "xxxx-xxxx",
+		},
+		completedInviteUser: {
+			id: completedInviteUserId,
+			role: MemberRole.contributor,
+			password: "password",
 		},
 	},
 	pubTypes: {
@@ -196,13 +206,23 @@ const seed = createSeed({
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
 		},
-		acceptedEmailInvite: {
+		completedEmailInvite: {
 			provisionalUser: {
 				email: email3,
 				firstName: firstName3,
 				lastName: lastName3,
 			},
+			status: InviteStatus.completed,
+			lastSentAt: new Date(),
+		},
+		acceptedYetNotCompletedUserInvite: {
+			provisionalUser: {
+				email: email7,
+				firstName: firstName7,
+				lastName: lastName7,
+			},
 			status: InviteStatus.accepted,
+			communityFormSlugs: ["Evaluation"],
 			lastSentAt: new Date(),
 		},
 		rejectedEmailInvite: {
@@ -248,9 +268,9 @@ const seed = createSeed({
 			lastSentAt: new Date(),
 			expiresAt: new Date(Date.now() - 1000 * 60 * 60 * 24),
 		},
-		acceptedUserInvite: {
-			userId: invitedUserId,
-			status: InviteStatus.accepted,
+		completedUserInvite: {
+			userId: completedInviteUserId,
+			status: InviteStatus.completed,
 			lastSentAt: new Date(),
 		},
 		rejectedUserInvite: {
@@ -421,11 +441,11 @@ test.describe("invalid invite scenarios", () => {
 			).toShow("This invite has expired.");
 		});
 
-		test("already accepted invite shows success message", async ({ page }) => {
+		test("already completed invite shows success message", async ({ page }) => {
 			await expectInvalidInvite(
-				community.invites.acceptedEmailInvite.inviteToken,
+				community.invites.completedEmailInvite.inviteToken,
 				page
-			).toShow("This invite has already been accepted.");
+			).toShow("This invite has already been completed.");
 		});
 
 		test("rejected invite shows appropriate message", async ({ page }) => {
@@ -459,9 +479,9 @@ test.describe("invalid invite scenarios", () => {
 
 		test("already accepted invite shows success message", async ({ page }) => {
 			await expectInvalidInvite(
-				community.invites.acceptedUserInvite.inviteToken,
+				community.invites.completedUserInvite.inviteToken,
 				page
-			).toShow("This invite has already been accepted.");
+			).toShow("This invite has already been completed.");
 		});
 
 		test("rejected invite shows appropriate message", async ({ page }) => {
@@ -558,6 +578,83 @@ test.describe("email invite flow", () => {
 			});
 		});
 		await test.step.skip("user has correct permissions afterwards", async () => {});
+	});
+
+	test("user who did not complete signup can return to invite and complete it", async ({
+		page,
+		browser,
+	}) => {
+		const invite = community.invites.acceptedYetNotCompletedUserInvite;
+		const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		const inviteUrl = createInviteUrl(invite.inviteToken, redirectTo);
+
+		await page.goto(inviteUrl);
+
+		await test.step("user can click create account and be redirected to signup page", async () => {
+			await page.getByRole("link", { name: "Complete signup" }).click({
+				timeout: 2_000,
+			});
+			await page.waitForURL(`**/public/signup**`, { timeout: 10_000 });
+		});
+
+		await test.step("user can signup with the correct email", async () => {
+			await page
+				.getByLabel("Email")
+				.fill(community.invites.acceptedYetNotCompletedUserInvite.user.email);
+			await page
+				.getByLabel("First name")
+				.fill(community.invites.acceptedYetNotCompletedUserInvite.user.firstName);
+			await page
+				.getByLabel("Last name")
+				.fill(community.invites.acceptedYetNotCompletedUserInvite.user.lastName!);
+			await page.getByLabel("Password").fill("password");
+			await page.getByTestId("signup-submit-button").click({
+				timeout: 2000,
+			});
+
+			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`);
+		});
+
+		await test.step("user can fill out form", async () => {
+			await page.getByLabel("Title").fill("Test title");
+			await page.getByLabel("Content").fill("Test content");
+			await page.getByLabel("Email").fill(email2);
+			await page.getByRole("button", { name: "Submit" }).click({
+				timeout: 2000,
+			});
+		});
+	});
+
+	test("user can return to completed invite and be redirected to form", async ({ page }) => {
+		const invite = community.invites.completedUserInvite;
+		const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
+		const inviteUrl = createInviteUrl(invite.inviteToken, redirectTo);
+
+		await page.goto(inviteUrl);
+		await expectInvalidInvite(invite.inviteToken, page).toShow(
+			"This invite has already been completed."
+		);
+
+		await test.step("user can click login link and be redirected to form", async () => {
+			await page.getByRole("link", { name: "Login to continue to destination" }).click({
+				timeout: 2_000,
+			});
+			await page.waitForURL(`**/login**`);
+			await page.getByLabel("Email").fill(community.invites.completedUserInvite.user.email);
+			await page.getByLabel("Password").fill("password");
+			await page.getByText("Sign In").click({ timeout: 2_000 });
+
+			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`, {
+				timeout: 10_000,
+			});
+		});
+
+		await test.step("user is automatically redirected when returning to invite", async () => {
+			await page.goto(inviteUrl);
+			await page.waitForURL(`**/public/forms/${community.forms.Evaluation.slug}/fill**`, {
+				timeout: 10_000,
+			});
+		});
 	});
 });
 

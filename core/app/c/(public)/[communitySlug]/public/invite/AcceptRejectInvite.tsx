@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, LogIn, UserPlus, X } from "lucide-react";
+import { ArrowRight, Check, LogIn, UserPlus, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import type { Invite } from "db/types";
@@ -57,7 +57,7 @@ const inviteMessage = (invite: Invite) => {
 	);
 };
 
-type AcceptRejectInviteMode = "accept" | "needsSignup" | "needsLogin";
+type AcceptRejectInviteMode = "accept" | "needsSignup" | "needsLogin" | "complete";
 
 const modeStyles = {
 	accept: {
@@ -90,6 +90,17 @@ const modeStyles = {
 			icon: <LogIn className="mt-0.5 h-3 w-3" />,
 		},
 	},
+	complete: {
+		bodyMessage: "You have already accepted this invitation, but signed up in a different way.",
+		button: {
+			text: "Continue",
+			icon: <ArrowRight className="mt-0.5 h-3 w-3" />,
+			errorText: "Error continuing",
+			loadingText: "Continuing...",
+			successText: "Continued",
+		},
+		hideRejectButton: true,
+	},
 } satisfies Record<
 	AcceptRejectInviteMode,
 	{
@@ -101,6 +112,7 @@ const modeStyles = {
 			errorText: string;
 			icon: React.ReactNode;
 		};
+		hideRejectButton?: boolean;
 	}
 >;
 
@@ -121,6 +133,9 @@ export function AcceptRejectInvite({
 
 	const acceptForm = useForm();
 	const rejectForm = useForm();
+
+	const hideRejectButton =
+		"hideRejectButton" in modeStyles[mode] && modeStyles[mode].hideRejectButton;
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
@@ -167,58 +182,63 @@ export function AcceptRejectInvite({
 							/>
 						</form>
 					</Form>
-					<AlertDialog>
-						<AlertDialogTrigger asChild>
-							<Button variant="outline" className="flex flex-grow items-center gap-2">
-								<X className="mt-0.5 h-3 w-3" />
-								Reject
-							</Button>
-						</AlertDialogTrigger>
-						<AlertDialogContent>
-							<AlertDialogHeader>
-								<AlertDialogTitle>Reject Invitation</AlertDialogTitle>
-							</AlertDialogHeader>
-							<AlertDialogDescription>
-								Are you sure you want to reject this invitation? You will no longer
-								be able to accept it.
-							</AlertDialogDescription>
-							<AlertDialogFooter className="flex w-full items-center">
-								<AlertDialogCancel>Go back</AlertDialogCancel>
+					{hideRejectButton ? null : (
+						<AlertDialog>
+							<AlertDialogTrigger asChild>
+								<Button
+									variant="outline"
+									className="flex flex-grow items-center gap-2"
+								>
+									<X className="mt-0.5 h-3 w-3" />
+									Reject
+								</Button>
+							</AlertDialogTrigger>
+							<AlertDialogContent>
+								<AlertDialogHeader>
+									<AlertDialogTitle>Reject Invitation</AlertDialogTitle>
+								</AlertDialogHeader>
+								<AlertDialogDescription>
+									Are you sure you want to reject this invitation? You will no
+									longer be able to accept it.
+								</AlertDialogDescription>
+								<AlertDialogFooter className="flex w-full items-center">
+									<AlertDialogCancel>Go back</AlertDialogCancel>
 
-								<Form {...rejectForm}>
-									<form
-										onSubmit={rejectForm.handleSubmit(async (data) => {
-											rejectInvite({
-												inviteToken: inviteToken,
-												redirectTo: redirectTo,
-											});
-										})}
-									>
-										<AlertDialogAction
-											asChild
-											variant="destructive"
-											type="submit"
+									<Form {...rejectForm}>
+										<form
+											onSubmit={rejectForm.handleSubmit(async (data) => {
+												rejectInvite({
+													inviteToken: inviteToken,
+													redirectTo: redirectTo,
+												});
+											})}
 										>
-											<FormSubmitButton
-												type="submit"
-												formState={rejectForm.formState}
+											<AlertDialogAction
+												asChild
 												variant="destructive"
-												idleText={
-													<span className="flex items-center gap-2">
-														<X className="mt-0.5 h-3 w-3" />
-														Reject
-													</span>
-												}
-												pendingText="Rejecting Invitation..."
-												successText="Invitation Rejected"
-												errorText="Error Rejecting Invitation"
-											/>
-										</AlertDialogAction>
-									</form>
-								</Form>
-							</AlertDialogFooter>
-						</AlertDialogContent>
-					</AlertDialog>
+												type="submit"
+											>
+												<FormSubmitButton
+													type="submit"
+													formState={rejectForm.formState}
+													variant="destructive"
+													idleText={
+														<span className="flex items-center gap-2">
+															<X className="mt-0.5 h-3 w-3" />
+															Reject
+														</span>
+													}
+													pendingText="Rejecting Invitation..."
+													successText="Invitation Rejected"
+													errorText="Error Rejecting Invitation"
+												/>
+											</AlertDialogAction>
+										</form>
+									</Form>
+								</AlertDialogFooter>
+							</AlertDialogContent>
+						</AlertDialog>
+					)}
 				</CardFooter>
 			</Card>
 		</div>
