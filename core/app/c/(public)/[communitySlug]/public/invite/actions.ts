@@ -126,16 +126,6 @@ export const rejectInviteAction = defineServerAction(async function rejectInvite
 
 	const { user, invite } = inviteResult;
 
-	if (invite.userId && !user) {
-		redirectToLogin({
-			redirectTo,
-			loginNotice: {
-				type: "notice",
-				title: "You need to log in in order to reject this invite",
-			},
-		});
-	}
-
 	const [rejectErr, rejectResult] = await tryCatch(InviteService.rejectInvite(invite));
 
 	if (rejectErr) {

@@ -616,7 +616,7 @@ test.describe("user invite flow", () => {
 	});
 });
 
-test.describe.skip("invite reject flow", () => {
+test.describe("invite reject flow", () => {
 	test("user can reject a pending invite", async ({ page }) => {
 		const invite = community.invites.rejectEmailInvite;
 		await test.step("user can access invite page and see reject option", async () => {
