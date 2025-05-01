@@ -167,6 +167,7 @@ module "service_bastion" {
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "PAGER", value = "less -S" },
+      { name = "VALKEY_URL", value = "redis://${module.core_dependency_services.valkey_url}" }
     ]
 
     secrets = [
