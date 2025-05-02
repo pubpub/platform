@@ -52,7 +52,6 @@ const getActionInstance = (actionInstanceId: ActionInstancesId, pubId: PubsId, t
 			"updatedAt",
 			"stageId",
 			"action",
-			"name",
 			// this is to check whether the pub is still in the stage the actionInstance is in
 			// often happens when an action is scheduled but a pub is moved before the action runs
 			jsonObjectFrom(
@@ -181,7 +180,6 @@ const _runActionInstance = async (
 			communityId: pub.communityId as CommunitiesId,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
-			actionInstance: args.actionInstance,
 		});
 
 		if (isClientExceptionOptions(result)) {
