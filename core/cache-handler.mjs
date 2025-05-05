@@ -5,7 +5,9 @@ import createBufferStringHandler from "@fortedigital/nextjs-cache-handler/buffer
 import { Next15CacheHandler } from "@fortedigital/nextjs-cache-handler/next-15-cache-handler";
 import createRedisHandler from "@fortedigital/nextjs-cache-handler/redis-strings";
 import { CacheHandler } from "@neshca/cache-handler";
-import { createClient } from "redis";
+import { captureException } from "@sentry/nextjs";
+
+import { getRedisClient } from "lib/server/redis";
 
 // A cache that always misses - intended to let us disable caching when redis is unavailable. Should
 // be replaced if there's a better way to do that.
@@ -37,34 +39,19 @@ CacheHandler.onCreation(() => {
 		let redisClient = null;
 		if (PHASE_PRODUCTION_BUILD !== process.env.NEXT_PHASE) {
 			try {
-				redisClient = createClient({
-					url: process.env.VALKEY_URL,
-					pingInterval: 10000,
-				});
-				redisClient.on("error", (e) => {
-					console.warn("Redis error", e);
-					console.warn("Disabling caching");
+				redisClient = await getRedisClient();
+				redisClient.on("error", (err) => {
+					logger.error({
+						msg: "Disabling caching because of redis connection error",
+						err,
+					});
+					captureException(err);
 					global.cacheHandlerConfig = { handlers: [dummyHandler] };
 					global.cacheHandlerConfigPromise = null;
 					throw e;
 				});
-			} catch (error) {
-				console.error("Failed to create Redis client:", error);
-			}
-		}
-
-		if (redisClient) {
-			try {
-				console.info("Connecting Redis client...");
-				await redisClient.connect();
-				console.info("Redis client connected.");
-			} catch (error) {
-				console.warn("Failed to connect Redis client:", error);
-				await redisClient
-					.disconnect()
-					.catch(() =>
-						console.warn("Failed to quit the Redis client after failing to connect.")
-					);
+			} catch (err) {
+				logger.error({ msg: "Failed to create Redis client:", err });
 			}
 		}
 
