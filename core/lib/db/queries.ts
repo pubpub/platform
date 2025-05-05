@@ -30,22 +30,7 @@ export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 });
 
 export const getStageActions = cache((stageId: StagesId) => {
-	return autoCache(
-		db
-			.selectFrom("action_instances")
-			.selectAll()
-			.select((eb) =>
-				jsonObjectFrom(
-					eb
-						.selectFrom("action_runs")
-						.selectAll("action_runs")
-						.whereRef("action_runs.actionInstanceId", "=", "action_instances.id")
-						.orderBy("action_runs.createdAt", "desc")
-						.limit(1)
-				).as("lastActionRun")
-			)
-			.where("stageId", "=", stageId)
-	);
+	return autoCache(db.selectFrom("action_instances").selectAll().where("stageId", "=", stageId));
 });
 
 export type StagePub = Awaited<
