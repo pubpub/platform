@@ -35,6 +35,6 @@ output "rds_connection_components" {
   }
 }
 
-output "valkey_url" {
+output "valkey_host" {
   value = aws_elasticache_replication_group.core_valkey.primary_endpoint_address
 }

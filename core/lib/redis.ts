@@ -1,25 +1,26 @@
-import type { RedisClientType } from "redis";
-
 import { captureException } from "@sentry/nextjs";
-import { createClient } from "redis";
+import Redis from "ioredis";
 
 import { logger } from "logger";
 
 import { env } from "./env/env";
 
-let redisClient: RedisClientType;
+let redisClient: Redis;
 
 export const getRedisClient = async () => {
 	if (!redisClient) {
 		logger.info({ msg: "Creating redis client" });
-		redisClient = createClient({
-			url: env.VALKEY_URL,
-			pingInterval: 10000,
-			disableOfflineQueue: true,
+		redisClient = new Redis({
+			host: env.VALKEY_HOST,
+			lazyConnect: true,
+			commandTimeout: 1000,
+			retryStrategy: (times) => {
+				return (2 ^ times) + Math.random() * 1000;
+			},
 		});
 	}
 
-	if (!redisClient.isReady) {
+	if (redisClient.status !== "ready") {
 		logger.info({ msg: "Connecting redis client" });
 		try {
 			await redisClient.connect();
@@ -27,7 +28,7 @@ export const getRedisClient = async () => {
 		} catch (err) {
 			logger.error("Failed to connect Redis client", err);
 			captureException(err);
-			await redisClient.disconnect();
+			redisClient.disconnect();
 		}
 	}
 
