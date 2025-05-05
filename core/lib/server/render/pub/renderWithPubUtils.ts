@@ -181,7 +181,7 @@ export const renderLink = (context: RenderWithPubContext, options: LinkOptions) 
 		let to = options.email;
 		href = `mailto:${to}`;
 	} else if (isLinkFormOptions(options)) {
-		// Form hrefs are handled by `ensureFormMembershipAndCreateInviteLink`
+		// Form hrefs are handled by `renderFormInviteLink`
 		href = "";
 	} else if (isLinkUrlOptions(options)) {
 		href = options.to;
