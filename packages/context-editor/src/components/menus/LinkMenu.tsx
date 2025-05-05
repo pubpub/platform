@@ -1,6 +1,5 @@
 import type { Static } from "@sinclair/typebox";
 import type { Mark } from "prosemirror-model";
-import type { FieldValues } from "react-hook-form";
 
 import React, { useMemo } from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
@@ -8,7 +7,6 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
-import { registerFormats } from "schemas";
 
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -19,8 +17,7 @@ import { Switch } from "ui/switch";
 import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
 import { AdvancedOptions } from "./AdvancedOptions";
-
-registerFormats();
+import { MenuSwitchField } from "./MenuFields";
 
 const formSchema = Type.Object({
 	href: Type.String({ format: "uri" }),
@@ -113,27 +110,9 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 					}}
 				/>
 				<hr />
-				<FormField
-					name="openInNewTab"
-					control={form.control}
-					render={({ field }) => (
-						<FormItem className="flex items-center justify-between">
-							<FormLabel>Open in new tab</FormLabel>
-							<FormControl>
-								<Switch
-									className="data-[state=checked]:bg-emerald-400"
-									checked={field.value}
-									onCheckedChange={(checked) => {
-										field.onChange(checked);
-									}}
-								/>
-							</FormControl>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				<MenuSwitchField name="openInNewTab" label="Open in new tab" />
 				<hr />
-				<AdvancedOptions mark={mark} />
+				<AdvancedOptions />
 			</form>
 		</Form>
 	);
