@@ -117,6 +117,7 @@ const seed = createSeed({
 			values: {
 				Title: "The Activity of Snails",
 			},
+			stage: "Evaluating",
 		},
 		{
 			pubType: "Evaluation",

@@ -47,9 +47,6 @@ const seed = createSeed({
 			Content: { isTitle: false },
 			Email: { isTitle: false },
 		},
-		"Title Only": {
-			Title: { isTitle: true },
-		},
 	},
 	stages: {
 		Evaluating: {},
@@ -109,9 +106,9 @@ const seed = createSeed({
 				},
 			],
 		},
-		"Title Only (default)": {
-			slug: "title-only-default",
-			pubType: "Title Only",
+		"Title Only": {
+			slug: "title-only",
+			pubType: "Submission",
 			elements: [
 				{
 					type: ElementType.pubfield,
@@ -135,9 +132,6 @@ test.beforeAll(async ({ browser }) => {
 	const loginPage = new LoginPage(page);
 	await loginPage.goto();
 	await loginPage.loginAndWaitForNavigation(community.users.admin.email, "password");
-	await page.goto(
-		`/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill?pubId=${community.pubs[0].id}`
-	);
 });
 
 test.afterAll(async () => {
@@ -146,6 +140,9 @@ test.afterAll(async () => {
 
 test.describe("Rendering the external form", () => {
 	test("Can render the form with validation", async () => {
+		await page.goto(
+			`/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill?pubId=${community.pubs[0].id}`
+		);
 		await expect(page.locator("h1").filter({ hasText: "Evaluation" })).toHaveCount(1);
 		await page.getByTestId(`${community.community.slug}:email`).fill("not an email");
 		await expect(page.locator("p").filter({ hasText: "Invalid email address" })).toHaveCount(1);
@@ -155,7 +152,7 @@ test.describe("Rendering the external form", () => {
 
 	test("Can save a subset of a pub's values", async () => {
 		await page.goto(
-			`/c/${community.community.slug}/public/forms/${community.forms["Title Only (default)"].slug}/fill?pubId=${community.pubs[2].id}`
+			`/c/${community.community.slug}/public/forms/${community.forms["Title Only"].slug}/fill?pubId=${community.pubs[2].id}`
 		);
 
 		// Update the title
