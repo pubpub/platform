@@ -34,18 +34,21 @@ function createRedisHandler({
 	async function revalidateTags(tag) {
 		const tagsMap = /* @__PURE__ */ new Map();
 		let cursor = 0;
+		let remoteTagsPortion;
 		do {
-			const remoteTagsPortion = await client.hscan(
+			[cursor, remoteTagsPortion] = await client.hscan(
 				keyPrefix + sharedTagsKey,
 				cursor,
 				"COUNT",
 				revalidateTagQuerySize
 			);
-			for (const { field, value } of remoteTagsPortion.tuples) {
+
+			for (let i = 0; i < remoteTagsPortion.length; i += 2) {
+				const field = remoteTagsPortion[i];
+				const value = remoteTagsPortion[i + 1];
 				tagsMap.set(field, JSON.parse(value));
 			}
-			cursor = remoteTagsPortion.cursor;
-		} while (cursor !== 0);
+		} while (cursor !== "0");
 		const keysToDelete = [];
 		const tagsToDelete = [];
 		for (const [key, tags] of tagsMap) {
@@ -65,18 +68,21 @@ function createRedisHandler({
 	async function revalidateSharedKeys() {
 		const ttlMap = /* @__PURE__ */ new Map();
 		let cursor = 0;
+		let remoteTagsPortion;
 		do {
-			const remoteTagsPortion = await client.hscan(
+			[cursor, remoteTagsPortion] = await client.hscan(
 				keyPrefix + sharedTagsKey,
 				cursor,
 				"COUNT",
 				revalidateTagQuerySize
 			);
-			for (const { field, value } of remoteTagsPortion.tuples) {
+
+			for (let i = 0; i < remoteTagsPortion.length; i += 2) {
+				const field = remoteTagsPortion[i];
+				const value = remoteTagsPortion[i + 1];
 				ttlMap.set(field, Number(value));
 			}
-			cursor = remoteTagsPortion.cursor;
-		} while (cursor !== 0);
+		} while (cursor !== "0");
 		const tagsAndTtlToDelete = [];
 		const keysToDelete = [];
 		for (const [key, ttlInSeconds] of ttlMap) {
