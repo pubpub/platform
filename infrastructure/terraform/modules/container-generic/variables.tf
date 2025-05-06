@@ -99,3 +99,9 @@ variable "command" {
   default = []
   type    = list(string)
 }
+
+variable "health_check_path" {
+  description = "A path to an endpoint on the container suitable for use as a health check"
+  type        = string
+  default     = null
+}
