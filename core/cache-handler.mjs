@@ -182,8 +182,11 @@ async function getCacheHandlerPromise() {
 				lazyConnect: true,
 				commandTimeout: 1000,
 				retryStrategy: (times) => {
+					if (times >= 15) {
+						return;
+					}
 					console.log("Retrying redis connection attempt:", times);
-					return (2 ^ times) + Math.random() * 1000;
+					return Math.pow(2, times) + Math.random() * 1000;
 				},
 			});
 
