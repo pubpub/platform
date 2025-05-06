@@ -52,8 +52,9 @@ module "service_core" {
   service_name = "core"
   cluster_info = module.cluster.cluster_info
 
-  repository_url = var.ecr_repository_urls.core
-  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
+  repository_url    = var.ecr_repository_urls.core
+  nginx_image       = "${var.ecr_repository_urls.nginx}:latest"
+  health_check_path = "/api/health"
 
   listener = {
     service_name  = "core"

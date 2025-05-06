@@ -49,6 +49,11 @@ module "ecs_service" {
         containerPort = var.listener.to_port
       }] : []
 
+      restartPolicy = {
+        enabled              = true
+        restartAttemptPeriod = 60
+      }
+
       # use concat() to add a computible variable
       environment = concat(
         var.configuration.environment,
@@ -158,13 +163,13 @@ resource "aws_lb_target_group" "this" {
   # when the container does not provide a more meaningful
   # one.
   health_check {
-    path                = "/legacy_healthcheck"
-    interval            = "30"
+    path                = coalesce(var.health_check_path, "/legacy_healthcheck")
+    interval            = "5"
     protocol            = "HTTP"
     matcher             = "200"
     timeout             = "5"
     unhealthy_threshold = "3"
-    healthy_threshold   = "5"
+    healthy_threshold   = "3"
   }
 }
 
