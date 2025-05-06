@@ -18,6 +18,7 @@ import {
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
+import { FieldsPage } from "./fixtures/fields-page";
 import { LoginPage } from "./fixtures/login-page";
 
 const ACTION_NAME_USER = "Invite evaluator (user)";
@@ -310,9 +311,9 @@ const seed = createSeed({
 
 		pubLevelFormInvite: {
 			provisionalUser: {
-				email: `${faker.person.firstName()}@example.com`,
-				firstName: faker.person.firstName(),
-				lastName: faker.person.lastName(),
+				email: email4,
+				firstName: firstName4,
+				lastName: lastName4,
 			},
 			pubId: pub1Id,
 			pubFormSlugs: ["CommunityForm"],
@@ -324,9 +325,9 @@ const seed = createSeed({
 		},
 		adminRoleInvite: {
 			provisionalUser: {
-				email: `${faker.person.firstName()}@example.com`,
-				firstName: faker.person.firstName(),
-				lastName: faker.person.lastName(),
+				email: email5,
+				firstName: firstName5,
+				lastName: lastName5,
 			},
 			communityRole: MemberRole.admin,
 			status: InviteStatus.pending,
@@ -751,7 +752,7 @@ test.describe("invite reject flow", () => {
 	});
 });
 
-test.describe.skip("different form/invite types", () => {
+test.describe("different form/invite types", () => {
 	test("user can accept invite with pub level form", async () => {
 		await test.step("user can access invite with pub level form", async () => {
 			const invite = community.invites.pubLevelFormInvite;
@@ -788,7 +789,6 @@ test.describe.skip("different form/invite types", () => {
 		await test.step("User can fill out community form", async () => {
 			// Fill out the community form, which has different fields
 			await page.getByLabel("Form Title").fill("Community Test Title");
-			await page.getByLabel("Rating (1-10)").fill("8");
 			await page.getByRole("button", { name: "Submit" }).click({
 				timeout: 2000,
 			});
@@ -796,8 +796,7 @@ test.describe.skip("different form/invite types", () => {
 	});
 });
 
-// i cloundt make this work with the current Seed
-test.describe.skip("different roles in invites", () => {
+test.describe("different roles in invites", () => {
 	test("user can accept invite with admin role", async () => {
 		await test.step("user can access invite with admin role", async () => {
 			const invite = community.invites.adminRoleInvite;
@@ -840,10 +839,14 @@ test.describe.skip("different roles in invites", () => {
 			});
 		});
 
-		await test.step.skip(
-			"Admin should have admin permissions in the community",
-			async () => {}
-		);
+		await test.step("Admin should have admin permissions in the community", async () => {
+			const fieldsPage = new FieldsPage(page, community.community.slug);
+			await fieldsPage.goto();
+			await fieldsPage.addField(
+				"Only an admin could have created this",
+				CoreSchemaType.String
+			);
+		});
 	});
 });
 
