@@ -7,15 +7,6 @@ import { CacheHandler } from "@neshca/cache-handler";
 import { isImplicitTag } from "@neshca/cache-handler/helpers";
 import Redis from "ioredis";
 
-// A cache that always misses - intended to let us disable caching when redis is unavailable. Should
-// be replaced if there's a better way to do that.
-const dummyHandler = {
-	name: "no-cache",
-	get: () => undefined,
-	set: () => undefined,
-	revalidateTag: () => undefined,
-};
-
 var REVALIDATED_TAGS_KEY = "__revalidated_tags__";
 
 /**
@@ -31,6 +22,13 @@ function createRedisHandler({
 	sharedTagsTtlKey = "__sharedTagsTtl__",
 	revalidateTagQuerySize = 1e4,
 }) {
+	function assertClientIsReady() {
+		if (!client.status === "ready") {
+			// Throwing here ensures that we immediately fall back to uncached behavior, rather than
+			// waiting for the command timeout
+			throw new Error("Redis client is not ready yet or connection is lost.");
+		}
+	}
 	async function revalidateTags(tag) {
 		const tagsMap = /* @__PURE__ */ new Map();
 		let cursor = 0;
@@ -104,6 +102,7 @@ function createRedisHandler({
 		name: "pubpub-redis-strings",
 		async get(key, { implicitTags }) {
 			try {
+				assertClientIsReady();
 				const result = await client.get(keyPrefix + key);
 				if (!result) {
 					return null;
@@ -139,6 +138,7 @@ function createRedisHandler({
 		},
 		async set(key, cacheHandlerValue) {
 			try {
+				assertClientIsReady();
 				const lifespan = cacheHandlerValue.lifespan;
 				const setTagsOperation =
 					cacheHandlerValue.tags.length > 0
@@ -169,6 +169,7 @@ function createRedisHandler({
 		},
 		async revalidateTag(tag) {
 			try {
+				assertClientIsReady();
 				if (isImplicitTag(tag)) {
 					await client.hset(revalidatedTagsKey, tag, Date.now());
 				}
@@ -216,9 +217,6 @@ async function getCacheHandlerPromise() {
 	}
 	if (redisClient?.status !== "ready") {
 		console.error("Failed to initialize caching layer.");
-		global.cacheHandlerConfigPromise = null;
-		global.cacheHandlerConfig = { handlers: [dummyHandler] };
-		return global.cacheHandlerConfig;
 	}
 
 	const redisCacheHandler = createBufferStringHandler(
