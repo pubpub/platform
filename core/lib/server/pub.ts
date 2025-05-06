@@ -913,6 +913,7 @@ export const updatePub = async ({
 			pubValues: normalizedValues,
 			communityId,
 			continueOnValidationError,
+			trx,
 		});
 
 		if (!pubValuesWithSchemaNameAndFieldId.length) {

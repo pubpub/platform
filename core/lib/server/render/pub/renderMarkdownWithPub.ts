@@ -271,6 +271,14 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 							},
 							context.trx
 						);
+						assert(isParent(node));
+						// Include default text
+						node.children = [
+							{
+								type: "text",
+								value: attrs.text ?? props.href,
+							},
+						];
 					}
 				}
 			})
