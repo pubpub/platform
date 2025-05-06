@@ -115,5 +115,6 @@ export class MembersPage {
 		await this.page.getByRole("button", { name: "Open menu", exact: true }).click();
 		await this.page.getByRole("button", { name: "Remove member", exact: true }).click();
 		await this.page.getByRole("button", { name: "Remove", exact: true }).click();
+		await this.page.getByText("Member successfully removed", { exact: true }).waitFor();
 	}
 }
