@@ -32,25 +32,6 @@ test.afterAll(async () => {
 });
 
 test.describe("Community members", () => {
-	let newUserEmail: string;
-
-	test("Can add a new member", async () => {
-		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
-		await membersPage.goto();
-
-		const { email, firstName, lastName, isSuperAdmin, role } = await membersPage.addNewUser(
-			faker.internet.email()
-		);
-
-		expect(email).toBeTruthy();
-		expect(firstName).toBeTruthy();
-		expect(lastName).toBeTruthy();
-		expect(isSuperAdmin).toBe(false);
-		expect(role).toEqual("editor");
-
-		newUserEmail = email;
-	});
-
 	test("Can add an existing user", async () => {
 		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
 		await membersPage.goto();
@@ -73,44 +54,67 @@ test.describe("Community members", () => {
 		expect(page.getByText("No results.")).toBeVisible();
 	});
 
-	test("New user signup", async ({ page }) => {
+	test("new user signup flow", async ({ browser }) => {
+		let newUserEmail: string;
+
+		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
+		await membersPage.goto();
+
+		const { email, firstName, lastName, isSuperAdmin, role } = await membersPage.addNewUser(
+			faker.internet.email()
+		);
+
+		expect(email).toBeTruthy();
+		expect(firstName).toBeTruthy();
+		expect(lastName).toBeTruthy();
+		expect(isSuperAdmin).toBe(false);
+		expect(role).toEqual("editor");
+
+		newUserEmail = email;
+
 		expect(newUserEmail).toBeTruthy();
-		const firstPartOfEmail = newUserEmail.split("@")[0];
-		const inviteEmail = await (
-			await inbucketClient.getMailbox(firstPartOfEmail)
-		).getLatestMessage(10);
 
-		const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!;
+		await test.step("user can signup", async () => {
+			const page = await browser.newPage();
 
-		expect(joinLink).toBeTruthy();
+			const firstPartOfEmail = newUserEmail.split("@")[0];
+			const inviteEmail = await (
+				await inbucketClient.getMailbox(firstPartOfEmail)
+			).getLatestMessage(10);
 
-		await page.goto(joinLink);
-		await page.waitForURL(/\/signup.*/);
+			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!;
 
-		await page.locator("input[name='password']").fill("password");
+			expect(joinLink).toBeTruthy();
 
-		await page.click("button[type='submit']");
+			await page.goto(joinLink);
+			await page.waitForURL(/\/signup.*/);
 
-		await page.waitForURL(/\/c\/.*?\/stages/);
+			await page.locator("input[name='password']").fill("password");
 
-		await page.close();
-	});
+			await page.click("button[type='submit']");
 
-	//TODO: not sure why the expect fails here
-	test.fixme("User is not able to sign up twice", async ({ page }) => {
-		const inviteEmail = await (
-			await inbucketClient.getMailbox(newUserEmail.split("@")[0])
-		).getLatestMessage(20);
+			await page.waitForURL(/\/c\/.*?\/stages/);
 
-		const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!;
+			await page.close();
+		});
 
-		expect(joinLink).toBeTruthy();
+		//TODO: not sure why the expect fails here
+		await test.step.skip("User is not able to sign up twice", async () => {
+			const page = await browser.newPage();
+			const inviteEmail = await (
+				await inbucketClient.getMailbox(newUserEmail.split("@")[0])
+			).getLatestMessage(20);
 
-		await page.goto(joinLink);
-		await page.waitForURL(/\/signup/);
+			const joinLink = inviteEmail.message.body.text?.match(/(https?:\/\/.*?)\s/)?.[1]!;
 
-		expect(page.getByText("You are not allowed to signup for an account")).toBeAttached();
-		await page.close();
+			expect(joinLink).toBeTruthy();
+
+			await page.goto(joinLink);
+			await page.waitForURL(/\/signup/);
+
+			expect(page.getByText("You are not allowed to signup for an account")).toBeAttached();
+			await page.close();
+		});
 	});
 
 	test.fixme("User is able to change their first and last name on signup", async () => {});

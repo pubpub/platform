@@ -1,0 +1,55 @@
+# Invites
+
+Users can be invited to join a community, stage, or pub. This corresponds to creating a new row in the `invites` table.
+
+Invites (as of writing 2025-04-30)
+
+- Are for adding either new or existing users to a community
+- Grant users new roles on acceptance
+- Are always coupled to a user. If an invitee does not yet have an account, we will create a new account with `isProvisional` set to true. Once the user has
+  accepted the invite and finished signup, the account will be marked as `isProvisional` set to false.
+
+## Statuses
+
+Invites have the following statuses:
+
+| Status      | Description                                               | Can be accepted? |
+| ----------- | --------------------------------------------------------- | ---------------- |
+| `created`   | The invite has been created but not yet sent              | No               |
+| `pending`   | The invite has been sent but not yet accepted or rejected | Yes              |
+| `accepted`  | The invite has been accepted but signup not completed     | Yes              |
+| `completed` | The invite has been accepted and signup completed         | No               |
+| `rejected`  | The invite has been rejected by the invitee               | No               |
+| `revoked`   | The invite has been revoked by the inviter                | No               |
+
+## Email invite flow
+
+```mermaid
+flowchart LR
+    A((Email With Invite Link)) ---> B[Invite Page]
+
+    B --->|No token| C((Invalid State View, no continuation possible))
+    B --->|Invalid token| C
+    B --->|Expired| C
+    B --->|Already accepted| C
+    B --->|Rejected| C
+    B --->|Revoked| C
+    B --->|Not ready| C
+
+    B -->|Wrong user logged in| J((Wrong User View))
+    B -->|Not logged in, existing user invite| L((Login/Reject View))
+    B -->|Valid invite, user logged in| M((Accept/Reject View))
+    B -->|Not logged in, new user invite| M
+    M -->|Not logged in, new user invite, accept| N[Signup Page]
+
+    J -->|Logout| B
+    L -->|Click login| O[Login Page]
+
+    N -->|Submit with wrong email| N
+    N -->|Submit with correct email| P[Form Page]
+    O -->|Login as invited user| B
+
+    M -->|Valid user, valid invite, accept| P
+    M -->|Reject| Q((Reject Confirmation))
+    Q -->|Confirm| R((Rejection Completed))
+```
