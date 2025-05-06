@@ -15,7 +15,10 @@ export const getRedisClient = async () => {
 			lazyConnect: true,
 			commandTimeout: 1000,
 			retryStrategy: (times) => {
-				return (2 ^ times) + Math.random() * 1000;
+				if (times >= 15) {
+					return;
+				}
+				return Math.pow(2, times) + Math.random() * 1000;
 			},
 		});
 	}
