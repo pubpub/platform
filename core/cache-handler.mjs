@@ -103,65 +103,80 @@ function createRedisHandler({
 	return {
 		name: "pubpub-redis-strings",
 		async get(key, { implicitTags }) {
-			const result = await client.get(keyPrefix + key);
-			if (!result) {
-				return null;
-			}
-			const cacheValue = JSON.parse(result);
-			if (!cacheValue) {
-				return null;
-			}
-			const sharedTagKeyExists = await client.hexists(keyPrefix + sharedTagsKey, key);
-			if (!sharedTagKeyExists) {
-				await client.unlink(keyPrefix + key);
-				return null;
-			}
-			const combinedTags = /* @__PURE__ */ new Set([...cacheValue.tags, ...implicitTags]);
-			if (combinedTags.size === 0) {
-				return cacheValue;
-			}
-			const revalidationTimes = await client.hmget(
-				revalidatedTagsKey,
-				Array.from(combinedTags)
-			);
-			for (const timeString of revalidationTimes) {
-				if (timeString && Number.parseInt(timeString, 10) > cacheValue.lastModified) {
+			try {
+				const result = await client.get(keyPrefix + key);
+				if (!result) {
+					return null;
+				}
+				const cacheValue = JSON.parse(result);
+				if (!cacheValue) {
+					return null;
+				}
+				const sharedTagKeyExists = await client.hexists(keyPrefix + sharedTagsKey, key);
+				if (!sharedTagKeyExists) {
 					await client.unlink(keyPrefix + key);
 					return null;
 				}
+				const combinedTags = /* @__PURE__ */ new Set([...cacheValue.tags, ...implicitTags]);
+				if (combinedTags.size === 0) {
+					return cacheValue;
+				}
+				const revalidationTimes = await client.hmget(
+					revalidatedTagsKey,
+					Array.from(combinedTags)
+				);
+				for (const timeString of revalidationTimes) {
+					if (timeString && Number.parseInt(timeString, 10) > cacheValue.lastModified) {
+						await client.unlink(keyPrefix + key);
+						return null;
+					}
+				}
+				return cacheValue;
+			} catch (err) {
+				console.err("Cache get err", err);
+				throw err;
 			}
-			return cacheValue;
 		},
 		async set(key, cacheHandlerValue) {
-			const lifespan = cacheHandlerValue.lifespan;
-			const setTagsOperation =
-				cacheHandlerValue.tags.length > 0
-					? client.hset(
-							keyPrefix + sharedTagsKey,
-							key,
-							JSON.stringify(cacheHandlerValue.tags)
-						)
+			try {
+				const lifespan = cacheHandlerValue.lifespan;
+				const setTagsOperation =
+					cacheHandlerValue.tags.length > 0
+						? client.hset(
+								keyPrefix + sharedTagsKey,
+								key,
+								JSON.stringify(cacheHandlerValue.tags)
+							)
+						: void 0;
+				const setSharedTtlOperation = lifespan
+					? client.hset(keyPrefix + sharedTagsTtlKey, key, lifespan.expireAt)
 					: void 0;
-			const setSharedTtlOperation = lifespan
-				? client.hset(keyPrefix + sharedTagsTtlKey, key, lifespan.expireAt)
-				: void 0;
-			await Promise.all([setTagsOperation, setSharedTtlOperation]);
-			if (typeof lifespan?.expireAt === "number") {
-				await client.set(
-					keyPrefix + key,
-					JSON.stringify(cacheHandlerValue),
-					"EXAT",
-					lifespan.expireAt
-				);
-			} else {
-				await client.set(keyPrefix + key, JSON.stringify(cacheHandlerValue));
+				await Promise.all([setTagsOperation, setSharedTtlOperation]);
+				if (typeof lifespan?.expireAt === "number") {
+					await client.set(
+						keyPrefix + key,
+						JSON.stringify(cacheHandlerValue),
+						"EXAT",
+						lifespan.expireAt
+					);
+				} else {
+					await client.set(keyPrefix + key, JSON.stringify(cacheHandlerValue));
+				}
+			} catch (err) {
+				console.error("Cache set error", err);
+				throw err;
 			}
 		},
 		async revalidateTag(tag) {
-			if (isImplicitTag(tag)) {
-				await client.hset(revalidatedTagsKey, tag, Date.now());
+			try {
+				if (isImplicitTag(tag)) {
+					await client.hset(revalidatedTagsKey, tag, Date.now());
+				}
+				await Promise.all([revalidateTags(tag), revalidateSharedKeys()]);
+			} catch (err) {
+				console.error("Cache revalidate error", err);
+				throw err;
 			}
-			await Promise.all([revalidateTags(tag), revalidateSharedKeys()]);
 		},
 		async delete(key) {
 			await client.unlink(keyPrefix + key);
