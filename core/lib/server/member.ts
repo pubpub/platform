@@ -271,17 +271,7 @@ export const coalesceMemberships = <
 	const { formId, ...firstMembership } = memberships[0];
 
 	return memberships.reduce(
-		(acc, { updatedAt, createdAt, formId, ...membership }, idx) => {
-			if (idx > 0 || membership.role !== MemberRole.contributor) {
-				if (!formId) {
-					throw new Error("Multiple memberships without formId detected.");
-				}
-
-				if (membership.role !== MemberRole.contributor) {
-					throw new Error("Multiple memberships with non-contributor role detected.");
-				}
-			}
-
+		(acc, { updatedAt, createdAt, formId, ...membership }) => {
 			let key: keyof typeof membership & string;
 			// check if all memberships are similar
 			for (key in membership) {
