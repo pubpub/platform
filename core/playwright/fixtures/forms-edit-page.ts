@@ -36,6 +36,5 @@ export class FormsEditPage {
 	async saveForm() {
 		await this.page.getByTestId("save-form-button").click();
 		await this.page.getByText("Form Successfully Saved", { exact: true }).waitFor();
-		await this.page.waitForTimeout(5000);
 	}
 }
