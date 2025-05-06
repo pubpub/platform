@@ -1,7 +1,7 @@
 import type { Node } from "prosemirror-model";
 import type { PropsWithChildren } from "react";
 
-import React, { createContext, useContext, useMemo, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 type ContextProps = {
 	activeNode: Node | null;

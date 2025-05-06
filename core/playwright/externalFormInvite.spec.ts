@@ -3,7 +3,14 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import { Action, CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
+import {
+	Action,
+	CoreSchemaType,
+	ElementType,
+	InputComponent,
+	InviteStatus,
+	MemberRole,
+} from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -14,10 +21,18 @@ import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubsPage } from "./fixtures/pubs-page";
 import { inbucketClient } from "./helpers";
 
-const ACTION_NAME = "Invite evaluator";
-const firstName = faker.person.firstName();
-const lastName = faker.person.lastName();
-const email = `${firstName}@example.com`;
+const ACTION_NAME_USER = "Invite evaluator (user)";
+const ACTION_NAME_EMAIL = "Invite evaluator (email)";
+
+const firstName1 = faker.person.firstName();
+const lastName1 = faker.person.lastName();
+const email1 = `${firstName1}@example.com`;
+
+const firstName2 = faker.person.firstName();
+const lastName2 = faker.person.lastName();
+const email2 = `${firstName2}@example.com`;
+
+const evalSlug = "evaluation";
 
 test.describe.configure({ mode: "serial" });
 
@@ -63,13 +78,20 @@ const seed = createSeed({
 	stages: {
 		Evaluating: {
 			actions: {
-				[ACTION_NAME]: {
+				[ACTION_NAME_USER]: {
 					action: Action.email,
-					name: ACTION_NAME,
 					config: {
 						subject: "Hello",
 						body: "Greetings",
-						recipientEmail: "test@example.com",
+						recipientEmail: email1,
+					},
+				},
+				[ACTION_NAME_EMAIL]: {
+					action: Action.email,
+					config: {
+						subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
+						recipientEmail: email2,
+						body: `You are invited to fill in a form.\n\n\n\n:link{form="${evalSlug}" text="Wow, a great form!"}\n\n`,
 					},
 				},
 			},
@@ -96,10 +118,15 @@ const seed = createSeed({
 				Title: "The Activity of Snails",
 			},
 		},
+		{
+			pubType: "Evaluation",
+			values: {},
+			stage: "Evaluating",
+		},
 	],
 	forms: {
 		Evaluation: {
-			slug: "evaluation",
+			slug: evalSlug,
 			pubType: "Evaluation",
 			elements: [
 				{
@@ -127,6 +154,19 @@ const seed = createSeed({
 					},
 				},
 			],
+		},
+	},
+	invites: {
+		happyEmailInvite: {
+			provisionalUser: {
+				email: email2,
+				firstName: firstName2,
+				lastName: lastName2,
+			},
+			communityFormSlugs: ["Evaluation"],
+			communityRole: MemberRole.contributor,
+			status: InviteStatus.pending,
+			lastSentAt: new Date(),
 		},
 	},
 });
@@ -157,9 +197,9 @@ test.describe("Inviting a new user to fill out a form", () => {
 			community.pubs[0].id
 		);
 		await pubDetailsPage.goTo();
-		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+		await pubDetailsPage.runAction(ACTION_NAME_USER, async (runActionDialog) => {
 			// Invite a new user to fill out the form
-			await runActionDialog.getByRole("combobox").fill(email);
+			await runActionDialog.getByRole("combobox").fill(email1);
 
 			const memberDialog = runActionDialog.getByRole("listbox", {
 				name: "Suggestions",
@@ -172,14 +212,14 @@ test.describe("Inviting a new user to fill out a form", () => {
 				})
 				.click();
 
-			await memberDialog.getByLabel("First Name").fill(firstName);
-			await memberDialog.getByLabel("Last Name").fill(lastName);
+			await memberDialog.getByLabel("First Name").fill(firstName1);
+			await memberDialog.getByLabel("Last Name").fill(lastName1);
 			// TODO: figure out how to remove this timeout without making the test flaky
 			await page.waitForTimeout(2000);
 			await memberDialog.getByRole("button", { name: "Submit", exact: true }).click();
 			await memberDialog
 				.getByRole("option", {
-					name: email,
+					name: email1,
 					exact: true,
 				})
 				.click();
@@ -196,7 +236,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 	});
 	// fails with large number of pubs in the db
 	test("New user can fill out the form from the email link", async ({ browser }) => {
-		const { message } = await (await inbucketClient.getMailbox(firstName)).getLatestMessage();
+		const { message } = await (await inbucketClient.getMailbox(firstName1)).getLatestMessage();
 		const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
 		expect(url).toBeTruthy();
 
@@ -245,8 +285,8 @@ test.describe("Inviting a new user to fill out a form", () => {
 		// which should let them access the create pub form
 		const membersPage = new MembersPage(page, community.community.slug);
 		await membersPage.goto();
-		await membersPage.removeMember(email);
-		await membersPage.addExistingUser(email, MemberRole.contributor, [
+		await membersPage.removeMember(email1);
+		await membersPage.addExistingUser(email1, MemberRole.contributor, [
 			community.forms.Evaluation.name,
 		]);
 
@@ -260,5 +300,38 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await newPage.goto(swappedPubIdUrl);
 		// Expect 404 page
 		await expect(newPage.getByText("This page could not be found.")).toHaveCount(1);
+	});
+
+	// happy path
+	test("Invites without creating a new user", async () => {
+		await test.step("admin sends invite to non-existing user", async () => {
+			const pubDetailsPage = new PubDetailsPage(
+				page,
+				community.community.slug,
+				community.pubs[2].id
+			);
+			await pubDetailsPage.goTo();
+
+			await pubDetailsPage.runAction(ACTION_NAME_EMAIL);
+		});
+
+		await test.step("user clicks link in email", async () => {
+			const { message } = await (
+				await inbucketClient.getMailbox(firstName2)
+			).getLatestMessage();
+			const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
+			expect(url).toBeTruthy();
+
+			// Use the browser to decode the html entities in our URL
+			const decodedUrl = await page.evaluate((url) => {
+				const elem = document.createElement("div");
+				elem.innerHTML = url;
+				return elem.textContent!;
+			}, url!);
+
+			await page.goto(decodedUrl);
+
+			await page.waitForURL(/\/invite/);
+		});
 	});
 });

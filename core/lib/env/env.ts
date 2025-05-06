@@ -25,6 +25,7 @@ export const env = createEnv({
 		 * Whether or not to verbosely log `memoize` cache hits and misses
 		 */
 		CACHE_LOG: z.string().optional(),
+		VALKEY_HOST: z.string(),
 		DATABASE_URL: z.string().url(),
 		ENV_NAME: z.string().optional(),
 		FLAGS: flagsSchema,

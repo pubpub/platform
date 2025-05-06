@@ -50,7 +50,8 @@
 		display: block;
 	}
 }
-.context-editor-container .disabled {
+
+.editor-disabled {
 	.wrap-widget,
 	.inline-wrap-widget {
 		button {
@@ -69,6 +70,8 @@
 .ProseMirror math-display,
 .ProseMirror blockquote,
 .ProseMirror img,
+.ProseMirror figure,
+.ProseMirror figcaption,
 .ProseMirror hr,
 .ProseMirror ul,
 .ProseMirror ol,

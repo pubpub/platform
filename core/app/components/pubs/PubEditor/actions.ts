@@ -14,7 +14,8 @@ import { ApiError, createPubRecursiveNew } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getForm, grantFormAccess } from "~/lib/server/form";
-import { deletePub, maybeWithTrx, normalizePubValues } from "~/lib/server/pub";
+import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
+import { deletePub, normalizePubValues } from "~/lib/server/pub";
 import { PubOp } from "~/lib/server/pub-op";
 
 type CreatePubRecursiveProps = Omit<Parameters<typeof createPubRecursiveNew>[0], "lastModifiedBy">;
@@ -220,7 +221,7 @@ export const updatePub = defineServerAction(async function updatePub({
 			updateQuery.unrelate(slug, relatedPubId);
 		}
 
-		return await updateQuery.execute();
+		return await updateQuery.executeAndReturnPub();
 	} catch (error) {
 		logger.error(error);
 		return {

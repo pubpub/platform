@@ -7,14 +7,27 @@ import { Button } from "ui/button";
 import { LogOut } from "ui/icon";
 import { cn } from "utils";
 
+import type { NoticeParams } from "./Notice";
 import * as actions from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
-const LogoutButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
-	({ className, ...props }, ref) => {
+type LogoutButtonProps = ButtonProps & {
+	/**
+	 * @default "/login"
+	 */
+	destination?: string;
+	/**
+	 * Notice to display after logging out.
+	 */
+	notice?: NoticeParams;
+	redirectTo?: string;
+};
+
+const LogoutButton = React.forwardRef<HTMLButtonElement, LogoutButtonProps>(
+	({ className, redirectTo, destination, notice, ...props }, ref) => {
 		const runLogout = useServerAction(actions.logout);
 		const handleSignout = async () => {
-			await runLogout();
+			await runLogout({ redirectTo, destination, notice });
 		};
 
 		return (

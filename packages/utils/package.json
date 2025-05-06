@@ -11,6 +11,7 @@
 		".": "./dist/utils.js",
 		"./sleep": "./dist/utils-sleep.js",
 		"./assert": "./dist/utils-assert.js",
+		"./try-catch": "./dist/utils-try-catch.js",
 		"./classnames": "./dist/utils-classnames.js",
 		"./package.json": "./package.json"
 	},
@@ -37,7 +38,8 @@
 			"url.ts",
 			"doi.ts",
 			"sleep.ts",
-			"uuid.ts"
+			"uuid.ts",
+			"try-catch.ts"
 		],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {

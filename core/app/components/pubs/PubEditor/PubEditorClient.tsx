@@ -13,7 +13,7 @@ import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { JsonValue, ProcessedPub } from "contracts";
+import type { JsonValue, ProcessedPub, ProcessedPubWithForm } from "contracts";
 import type { PubsId, StagesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
@@ -86,7 +86,10 @@ const preparePayload = ({
  * Set all default values
  * Special case: date pubValues need to be transformed to a Date type to pass validation
  */
-const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedPub["values"]) => {
+const buildDefaultValues = (
+	elements: BasicFormElements[],
+	pubValues: ProcessedPubWithForm["values"]
+) => {
 	const defaultValues: FieldValues = { deleted: [] };
 	// Build a record of the default values for array elements (related pubs) keyed by pub_values.id
 	// for dirty checking in preparePayload
@@ -105,7 +108,7 @@ const buildDefaultValues = (elements: BasicFormElements[], pubValues: ProcessedP
 				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
 				defaultValues[element.slug] = [];
 				relatedPubValues.forEach((pv) => {
-					if (!isRelatedValue(pv)) {
+					if (!isRelatedValue(pv) || pv.id === null) {
 						return;
 					}
 					const relatedVal = {
@@ -227,7 +230,7 @@ export interface PubEditorClientProps {
 	elements: BasicFormElements[];
 	children: ReactNode;
 	isUpdating: boolean;
-	pub: Pick<ProcessedPub, "id" | "values" | "pubTypeId">;
+	pub: Pick<ProcessedPubWithForm, "id" | "values" | "pubTypeId">;
 	onSuccess: (args: {
 		values: FieldValues;
 		submitButtonId?: string;

@@ -6,7 +6,7 @@ import type { UsersId } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { MembersListProps, TargetId } from "./types";
-import { firstRoleIsHigher } from "~/lib/authorization/rolesRanking";
+import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 import { RoleSelect } from "./RoleSelect";
 
@@ -24,7 +24,7 @@ export const MembersList = <T extends TargetId>({
 				dedupedMembers.set(member.id, member);
 			} else {
 				const m = dedupedMembers.get(member.id);
-				if (m && firstRoleIsHigher(member.role, m.role)) {
+				if (m && compareMemberRoles(member.role, ">", m.role)) {
 					dedupedMembers.set(member.id, m);
 				}
 			}
