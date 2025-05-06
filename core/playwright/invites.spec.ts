@@ -753,7 +753,7 @@ test.describe("invite reject flow", () => {
 });
 
 test.describe("different form/invite types", () => {
-	test("user can accept invite with pub level form", async () => {
+	test("user can accept invite with pub level form", async ({ page }) => {
 		await test.step("user can access invite with pub level form", async () => {
 			const invite = community.invites.pubLevelFormInvite;
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.CommunityForm.slug}/fill?pubId=${pub1Id}`;
@@ -797,7 +797,7 @@ test.describe("different form/invite types", () => {
 });
 
 test.describe("different roles in invites", () => {
-	test("user can accept invite with admin role", async () => {
+	test("user can accept invite with admin role", async ({ page }) => {
 		await test.step("user can access invite with admin role", async () => {
 			const invite = community.invites.adminRoleInvite;
 			const redirectTo = `/c/${community.community.slug}/public/forms/${community.forms.Evaluation.slug}/fill`;
