@@ -23,7 +23,7 @@ function createRedisHandler({
 	revalidateTagQuerySize = 1e4,
 }) {
 	function assertClientIsReady() {
-		if (!client.status === "ready") {
+		if (client.status !== "ready") {
 			// Throwing here ensures that we immediately fall back to uncached behavior, rather than
 			// waiting for the command timeout
 			throw new Error("Redis client is not ready yet or connection is lost.");
@@ -191,6 +191,7 @@ function createRedisHandler({
 
 async function getCacheHandlerPromise() {
 	let redisClient = null;
+	console.log("im walkin here");
 	if (PHASE_PRODUCTION_BUILD !== process.env.NEXT_PHASE) {
 		try {
 			redisClient = new Redis({
@@ -237,6 +238,7 @@ async function getCacheHandlerPromise() {
 
 // Usual onCreation from @neshca/cache-handler
 CacheHandler.onCreation(() => {
+	console.log("im walkin here 2");
 	// Important - It's recommended to use global scope to ensure only one Redis connection is made
 	// This ensures only one instance get created
 	if (global.cacheHandlerConfig) {
