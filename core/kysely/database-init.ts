@@ -30,10 +30,12 @@ const tablesWithUpdateAt = databaseTables
 	.map((table) => table.name);
 
 export const createDatabase = (options: DatabaseOptions) => {
+	const pool = new pg.Pool({
+		connectionString: options.url,
+	});
+
 	const dialect = new PostgresDialect({
-		pool: new pg.Pool({
-			connectionString: options.url,
-		}),
+		pool,
 	});
 
 	const kyselyLogger =
@@ -78,9 +80,12 @@ export const createDatabase = (options: DatabaseOptions) => {
 	// knows your database structure.
 	// Dialect is passed to Kysely's constructor, and from now on, Kysely knows how
 	// to communicate with your database.
-	return new Kysely<Database>({
-		dialect,
-		log: kyselyLogger,
-		plugins,
-	});
+	return {
+		db: new Kysely<Database>({
+			dialect,
+			log: kyselyLogger,
+			plugins,
+		}),
+		pool,
+	};
 };
