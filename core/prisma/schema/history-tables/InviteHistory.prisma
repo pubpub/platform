@@ -1,0 +1,27 @@
+model InviteHistory {
+  id            String        @id @default(dbgenerated("gen_random_uuid()"))
+  createdAt     DateTime      @default(now())
+  operationType OperationType
+
+  // has check constraint to ensure that oldRowData and newRowData are not both null
+  // see ./migrations/20241203164958_add_history_table/migration.sql
+  // type is the type of the Table that is being changed, e.g `PubValues` for PubValuesHistory
+  // using a kysely pre-render hook
+  oldRowData Json?
+  newRowData Json?
+
+  // primary key of the row that was changed
+  inviteId String?
+
+  // identifying information
+  user             User?           @relation(fields: [userId], references: [id])
+  userId           String?
+  apiAccessToken   ApiAccessToken? @relation(fields: [apiAccessTokenId], references: [id])
+  apiAccessTokenId String?
+  actionRun        ActionRun?      @relation(fields: [actionRunId], references: [id])
+  actionRunId      String?
+  // set to `system` if the change was made by the system, eg during seeds
+  other            String?
+
+  @@map(name: "invites_history")
+}

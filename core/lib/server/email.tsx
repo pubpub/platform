@@ -1,10 +1,11 @@
+import type { SignupInviteProps } from "emails";
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
-import { PasswordReset, RequestLinkToForm, SignupInvite, VerifyEmail } from "emails";
+import { Invite, PasswordReset, RequestLinkToForm, VerifyEmail } from "emails";
 
-import type { Communities, MemberRole, MembershipType, Users } from "db/public";
-import { AuthTokenType } from "db/public";
+import type { Communities, MembershipType, Users } from "db/public";
+import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
 import type { XOR } from "../types";
@@ -26,7 +27,6 @@ export const DEFAULT_OPTIONS = {
 	name: env.MAILGUN_SMTP_FROM_NAME ?? "PubPub Team",
 } as const;
 
-// export class Email {
 function buildSend(emailPromise: () => Promise<RequiredOptions>) {
 	const func = send.bind(null, emailPromise);
 
@@ -149,7 +149,10 @@ function inviteToForm() {
 	// TODO:
 }
 
-export function signupInvite(
+/**
+ * @deprecated use SignupInvite instead
+ */
+export function _legacy_signupInvite(
 	props: {
 		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
 		community: Pick<Communities, "name" | "avatar" | "slug">;
@@ -174,11 +177,20 @@ export function signupInvite(
 		);
 
 		const email = await render(
-			<SignupInvite
+			<Invite
 				community={props.community}
-				signupLink={magicLink}
-				role={props.role}
-				membership={props.membership}
+				inviteLink={magicLink}
+				communityRole={props.role}
+				type="community"
+				message={
+					<>
+						You have been invited to become{" "}
+						{props.role === MemberRole.contributor ? "a" : "an"}{" "}
+						<strong>{props.role}</strong> of the {props.membership.type}{" "}
+						<em>{props.membership.name}</em> on PubPub. Click the button below to finish
+						your registration and join {props.community.name} on PubPub.
+					</>
+				}
 			/>
 		);
 
@@ -186,6 +198,27 @@ export function signupInvite(
 			to: props.user.email,
 			html: email,
 			subject: "Join PubPub",
+		};
+	});
+}
+
+export function signupInvite(
+	props: SignupInviteProps & {
+		to: string | string[];
+		/**
+		 * @default "Join {community.name} on PubPub"
+		 */
+		subject?: string;
+	},
+	trx = db
+) {
+	return buildSend(async () => {
+		const email = await render(<Invite {...props} />);
+
+		return {
+			to: props.to,
+			html: email,
+			subject: props.subject ?? `Join ${props.community.name} on PubPub`,
 		};
 	});
 }

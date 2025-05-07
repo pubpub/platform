@@ -4,22 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 import { getLoginData } from "~/lib/authentication/loginData";
 import ResetForm from "./ResetForm";
 
-export default async function Page({
-	searchParams,
-}: {
-	searchParams:
-		| {
-				access_token: string;
-				type: string;
-				token_type: string;
-		  }
-		| {
-				error: string;
-				error_code: string;
-				error_description: string;
-		  }
-		| {};
-}) {
+export default async function Page() {
 	// TODO: add reset token validation
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.passwordReset],

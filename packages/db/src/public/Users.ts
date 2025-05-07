@@ -33,6 +33,8 @@ export interface UsersTable {
 	passwordHash: ColumnType<string | null, string | null, string | null>;
 
 	isVerified: ColumnType<boolean, boolean | undefined, boolean>;
+
+	isProvisional: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type Users = Selectable<UsersTable>;
@@ -56,6 +58,7 @@ export const usersSchema = z.object({
 	isSuperAdmin: z.boolean(),
 	passwordHash: z.string().nullable(),
 	isVerified: z.boolean(),
+	isProvisional: z.boolean(),
 });
 
 export const usersInitializerSchema = z.object({
@@ -71,6 +74,7 @@ export const usersInitializerSchema = z.object({
 	isSuperAdmin: z.boolean().optional(),
 	passwordHash: z.string().optional().nullable(),
 	isVerified: z.boolean().optional(),
+	isProvisional: z.boolean().optional(),
 });
 
 export const usersMutatorSchema = z.object({
@@ -86,4 +90,5 @@ export const usersMutatorSchema = z.object({
 	isSuperAdmin: z.boolean().optional(),
 	passwordHash: z.string().optional().nullable(),
 	isVerified: z.boolean().optional(),
+	isProvisional: z.boolean().optional(),
 });

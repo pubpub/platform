@@ -21,15 +21,15 @@ import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/pub
 import type { CapabilityTarget } from "../authorization/capabilities";
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
+import { compareMemberRoles, getHighestRole } from "~/lib/authorization/rolesRanking";
 import { getLoginData } from "../authentication/loginData";
 import { createPasswordHash } from "../authentication/password";
 import { userCan } from "../authorization/capabilities";
-import { firstRoleIsHigher, getHighestRole } from "../authorization/rolesRanking";
 import { generateHash, slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { findCommunityBySlug } from "./community";
-import { signupInvite } from "./email";
+import { _legacy_signupInvite } from "./email";
 import { insertCommunityMemberships, insertPubMemberships, insertStageMemberships } from "./member";
 import { getPubTitle } from "./pub";
 
@@ -46,6 +46,7 @@ export const SAFE_USER_SELECT = [
 	"users.avatar",
 	"users.orcid",
 	"users.isVerified",
+	"users.isProvisional",
 ] as const satisfies ReadonlyArray<SelectExpression<Database, "users">>;
 
 export const getUser = cache((userIdOrEmail: XOR<{ id: UsersId }, { email: string }>, trx = db) => {
@@ -161,16 +162,14 @@ export const getSuggestedUsers = ({
 		)
 		.limit(limit);
 
-export const setUserPassword = cache(
-	async (props: { userId: UsersId; password: string }, trx = db) => {
-		const passwordHash = await createPasswordHash(props.password);
-		await trx
-			.updateTable("users")
-			.set({ passwordHash })
-			.where("id", "=", props.userId)
-			.execute();
-	}
-);
+export const setUserPassword = async (props: { userId: UsersId; password: string }, trx = db) => {
+	const passwordHash = await createPasswordHash(props.password);
+	await trx
+		.updateTable("users")
+		.set({ passwordHash })
+		.where("id", "=", props.userId)
+		.executeTakeFirstOrThrow();
+};
 
 export const updateUser = async (
 	props: Omit<UsersUpdate, "passwordHash"> & { id: UsersId },
@@ -265,7 +264,8 @@ export const createUserWithMemberships = async (data: {
 				user.memberships.filter((m) => m.communityId === community.id)
 			);
 
-			const roleIsHighEnough = highestRole && firstRoleIsHigher(highestRole, membership.role);
+			const roleIsHighEnough =
+				highestRole && compareMemberRoles(highestRole, ">=", membership.role);
 
 			if (!roleIsHighEnough) {
 				return {
@@ -366,7 +366,7 @@ export const createUserWithMemberships = async (data: {
 					membershipQuery(trx, newUser.id),
 				]);
 			}
-			const result = await signupInvite(
+			const result = await _legacy_signupInvite(
 				{
 					user: newUser,
 					community,

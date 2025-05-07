@@ -8,6 +8,7 @@ import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env";
+import { setupInviteTestCommunity } from "./seeds/invite-test-community";
 import { seedLegacy } from "./seeds/legacy";
 import { seedStarter } from "./seeds/starter";
 
@@ -62,8 +63,8 @@ async function createUserMembers({
 		.executeTakeFirstOrThrow();
 }
 
-const legacyId = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
-const starterId = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
+const starterId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
 
 async function main() {
 	// do not seed arcadia if the minimal seed flag is set
@@ -78,14 +79,21 @@ async function main() {
 	) as CommunitiesId[];
 
 	logger.info("migrate graphile");
+
 	const workerUtils = await makeWorkerUtils({
 		connectionString: env.DATABASE_URL,
 	});
+
+	logger.info("drop existing jobs");
+	await workerUtils.withPgClient(async (client) => {
+		await client.query(`DROP SCHEMA graphile_worker CASCADE`);
+	});
+
 	await workerUtils.migrate();
 
 	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([seedStarter(starterId), legacyPromise]);
+	await Promise.all([seedStarter(starterId), legacyPromise, setupInviteTestCommunity()]);
 
 	await Promise.all([
 		createUserMembers({
