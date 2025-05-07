@@ -21,14 +21,16 @@ export const generateMetadataFromS3 = async (
 	communitySlug: string
 ): Promise<FileMetadata> => {
 	// fetch headers from s3
-	const response = await fetch(url, { method: "HEAD" });
+	const encodedUrl = encodeURI(url);
+
+	const response = await fetch(encodedUrl, { method: "HEAD" });
 
 	if (!response.ok) {
 		throw new Error(`failed to fetch metadata from s3: ${response.statusText}`);
 	}
 	const baseId = `dashboard-${communitySlug}:file`;
 
-	const fileName = url.split("/").pop() || "";
+	const fileName = encodedUrl.split("/").pop() || "";
 	const fileSize = parseInt(response.headers.get("content-length") || "0", 10);
 	const fileType = response.headers.get("content-type") || "application/octet-stream";
 
@@ -46,7 +48,7 @@ export const generateMetadataFromS3 = async (
 			name: fileName,
 			type: fileType,
 		},
-		fileUploadUrl: url,
+		fileUploadUrl: encodedUrl,
 	};
 };
 
