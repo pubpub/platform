@@ -1,6 +1,7 @@
-import type { Node } from "prosemirror-model";
-
 import { baseSchema } from "context-editor/schemas";
+import { Node } from "prosemirror-model";
+
+import { fromHTMLToNode } from "~/lib/editor/serialization/server";
 
 const unsupportedNodes = {
 	citation: "inline",
@@ -41,20 +42,49 @@ type NewImageNode = {
 };
 
 const nodeReplacements = {
-	image: (node: OldImageNode): NewImageNode => {
+	image: (node: OldImageNode) => {
+		const caption = node.attrs.caption;
+
+		const captionNode = caption ? fromHTMLToNode(caption) : null;
+
+		// contents of the first node (which is a `p`)
+		const captionContent = captionNode?.content?.content?.[0]?.content;
+		// console.log(captionContent);
+
 		const newNode = {
-			type: "image",
+			type: "figure",
 			attrs: {
 				id: node.attrs.id,
 				class: null,
-				alt: node.attrs.altText,
-				src: node.attrs.url,
-				linkTo: node.attrs.href ?? "",
-				credit: null,
-				license: null,
-				width: node.attrs.size,
-				align: node.attrs.align as Alignment,
 			},
+			content: [
+				{
+					type: "image",
+					attrs: {
+						id: node.attrs.id,
+						class: null,
+						alt: node.attrs.altText,
+						src: node.attrs.url,
+						linkTo: node.attrs.href ?? "",
+						credit: null,
+						license: null,
+						width: node.attrs.size,
+						align: node.attrs.align as Alignment,
+					},
+				},
+				...(captionContent
+					? [
+							{
+								type: "figcaption",
+								attrs: {
+									meta: {},
+								},
+								marks: [],
+								content: captionContent.toJSON(),
+							},
+						]
+					: []),
+			],
 		} as const;
 
 		return newNode;
@@ -80,18 +110,22 @@ export const transformProsemirrorTree = (doc: any) => {
 		} as {
 			type: "text" | "paragraph";
 			text?: string;
+			marks?: { type: string }[];
 			content?: {
 				type: "text";
 				text: string;
+				marks?: { type: string }[];
 			}[];
 		};
 
 		if (isInline) {
 			base.text = `!unsupported node '${node.type}'!`;
+			base.marks = [{ type: "strong" }];
 		} else {
 			base.content = [
 				{
 					type: "text",
+					marks: [{ type: "strong" }],
 					text: `!unsupported node '${node.type}'!`,
 				},
 			];
