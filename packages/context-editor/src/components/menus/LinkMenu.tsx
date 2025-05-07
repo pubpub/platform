@@ -12,11 +12,9 @@ import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ExternalLink, Trash } from "ui/icon";
 import { Input } from "ui/input";
-import { Switch } from "ui/switch";
 
 import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
-import { AdvancedOptions } from "./AdvancedOptions";
 import { MenuSwitchField } from "./MenuFields";
 
 const formSchema = Type.Object({
@@ -55,8 +53,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		defaultValues: {
 			href: mark.attrs?.href ?? "",
 			openInNewTab: mark.attrs?.target === "_blank" ? true : false,
-			id: mark.attrs?.id ?? "",
-			class: mark.attrs?.class ?? "",
 		},
 	});
 
@@ -111,8 +107,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 				/>
 				<hr />
 				<MenuSwitchField name="openInNewTab" label="Open in new tab" />
-				<hr />
-				<AdvancedOptions />
 			</form>
 		</Form>
 	);

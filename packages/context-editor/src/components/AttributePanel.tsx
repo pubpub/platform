@@ -9,15 +9,14 @@ import {
 import { createPortal } from "react-dom";
 import { registerFormats } from "schemas";
 
-import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
-import { toggleFigureNode } from "../commands/figures";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
-import { DataAttributes, MarkAttribute, NodeAttributes } from "./menus/DefaultAttributesMenu";
+import { DataAttributes } from "./menus/DefaultAttributesMenu";
 import { LinkMenu } from "./menus/LinkMenu";
+import { NodeMenu } from "./menus/NodeMenu";
 
 const animationTimeMS = 150;
 const animationHeightMS = 100;
@@ -47,57 +46,58 @@ export function AttributePanel({
 	menuHidden: boolean;
 	containerRef: React.RefObject<HTMLDivElement | null>;
 }) {
-	const [position, setPosition] = useState(initPanelProps);
+	const [offset, setOffset] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
-	const {
-		activeNode,
-		position: activeNodePosition,
-		setActiveNode,
-		setPosition: setActiveNodePosition,
-	} = useEditorContext();
+	const { position } = useEditorContext();
+	const node = position === null ? null : state.doc.nodeAt(position);
 
 	useEditorEffect(
 		(view) => {
-			const node = state.selection.$from.nodeAfter;
+			if (position === null) {
+				setOffset({ ...offset, right: 1000 });
+				return;
+			}
+
+			const node = state.doc.nodeAt(position);
+
 			if (!node) {
 				if (!view.hasFocus()) {
 					return;
 				}
-				setActiveNode(null);
 				// Reset right position so line animation still works when opening the panel again
-				setPosition({ ...position, right: 1000 });
+				setOffset({ ...offset, right: 1000 });
 				return;
 			}
 
 			// The attribute panel itself may be focused--don't change the node while it is open
 			// This is primarily for the case where you are editing the id/class of a node.
-			if (!view.hasFocus() && activeNode && activeNode.isBlock && !node.eq(activeNode)) {
+			if (!view.hasFocus() && node && node.isBlock && !node.eq(node)) {
 				return;
 			}
 
 			if (Object.keys(node.attrs).length === 0 && node.marks.length === 0) {
-				setPosition({ ...position, right: 1000 });
-				setActiveNode(null);
+				setOffset({ ...offset, right: 1000 });
 				return;
 			}
-
-			setActiveNode(node);
-			setActiveNodePosition(state.selection.$from.pos);
 		},
-		[state]
+		[state, position]
 	);
-	// const container = document.getElementById(containerId);
 
 	useEditorEffect(
 		(view) => {
-			if (activeNode) {
+			if (position === null) {
+				setHeight(0);
+				return;
+			}
+			const node = state.doc.nodeAt(position);
+			if (node) {
 				const viewClientRect = view.dom.getBoundingClientRect();
-				const coords = view.coordsAtPos(activeNodePosition);
+				const coords = view.coordsAtPos(position);
 				const topBase = coords.top - 1 - viewClientRect.top;
 				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT;
-				setPosition({
-					...position,
+				setOffset({
+					...offset,
 					top,
 					// +16 for padding
 					left: coords.left - viewClientRect.left + 16,
@@ -111,25 +111,15 @@ export function AttributePanel({
 				setHeight(0);
 			}
 		},
-		[activeNode, activeNodePosition, containerRef]
+		[position, containerRef]
 	);
-
-	const toggleTitle = useEditorEventCallback((view) => {
-		if (!activeNode) return;
-		toggleFigureNode(view.state, view.dispatch)(activeNodePosition, "title");
-	});
-
-	const toggleFigcaption = useEditorEventCallback((view) => {
-		if (!activeNode) return;
-		toggleFigureNode(view.state, view.dispatch)(activeNodePosition, "figcaption");
-	});
 
 	const updateMarkAttr = useEditorEventCallback(
 		(view, index: number, attrKey: string, value: string | null) => {
-			if (!view || !activeNode) return;
+			if (!view || !node || !position) return;
 			const markToReplace = nodeMarks[index];
 			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
-				...(activeNode?.marks ?? []),
+				...(node?.marks ?? []),
 			];
 			newMarks[index].attrs[attrKey] = value;
 
@@ -143,11 +133,7 @@ export function AttributePanel({
 			}
 
 			view.dispatch(
-				view.state.tr.addMark(
-					activeNodePosition,
-					activeNodePosition + (activeNode.nodeSize || 0),
-					newMark
-				)
+				view.state.tr.addMark(position, position + (node.nodeSize || 0), newMark)
 			);
 		}
 	);
@@ -155,10 +141,10 @@ export function AttributePanel({
 	/** Bulk update version of updateMarkAttr */
 	const updateMarkAttrs = useEditorEventCallback(
 		(view, index: number, attrs: Record<string, string | null>) => {
-			if (!view || !activeNode) return;
+			if (!view || !node || !position) return;
 			const markToReplace = nodeMarks[index];
 			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
-				...(activeNode?.marks ?? []),
+				...(node?.marks ?? []),
 			];
 			newMarks[index].attrs = attrs;
 
@@ -172,55 +158,47 @@ export function AttributePanel({
 			}
 
 			view.dispatch(
-				view.state.tr.addMark(
-					activeNodePosition,
-					activeNodePosition + (activeNode.nodeSize || 0),
-					newMark
-				)
+				view.state.tr.addMark(position, position + (node.nodeSize || 0), newMark)
 			);
 		}
 	);
 
-	const updateAttr = useEditorEventCallback((view, attrKey: string, value: string) => {
-		if (!view || !activeNode) return;
+	const updateData = useEditorEventCallback((view, attrKey: string, value: string) => {
+		if (!view || !node || !position) return;
 		view.dispatch(
 			view.state.tr.setNodeMarkup(
-				activeNodePosition,
-				activeNode.type,
-				{ ...activeNode.attrs, [attrKey]: value },
-				activeNode.marks
+				position,
+				node.type,
+				{ ...node.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
+				node.marks
 			)
 		);
-		const updatedNode = view.state.doc.nodeAt(activeNodePosition);
-		setActiveNode(updatedNode);
 	});
 
-	const updateData = useEditorEventCallback((view, attrKey: string, value: string) => {
-		if (!view || !activeNode) return;
-		view.dispatch(
-			view.state.tr.setNodeMarkup(
-				activeNodePosition,
-				activeNode.type,
-				{ ...activeNode.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
-				activeNode.marks
-			)
+	const updateNodeAttrs = useEditorEventCallback((view, attrs: Record<string, unknown>) => {
+		if (!view || !node || !position) return;
+		const tr = view.state.tr.setNodeMarkup(
+			position,
+			node.type,
+			{ ...node.attrs, ...attrs },
+			node.marks
 		);
-		const updatedNode = view.state.doc.nodeAt(activeNodePosition);
-		setActiveNode(updatedNode);
+		view.dispatch(tr);
 	});
+
+	if (!node) {
+		return null;
+	}
 
 	const labelClass = "font-normal text-xs";
 	const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
 
-	if (!activeNode) {
-		return null;
-	}
-	const nodeAttrs = activeNode.attrs || {};
-	const nodeMarks = activeNode.marks || [];
+	const nodeAttrs = node.attrs || {};
+	const nodeMarks = node.marks || [];
 
 	// Marks will automatically show names, so it is only the 'inline' types
 	// that are not marks that need to be specifically rendered
-	const showName = activeNode?.type?.name === "math_inline";
+	const showName = node?.type?.name === "math_inline";
 
 	if (!containerRef.current) {
 		return null;
@@ -233,11 +211,11 @@ export function AttributePanel({
 				style={{
 					position: "absolute",
 					background: "#fff",
-					top: position.top,
-					left: position.panelLeft,
+					top: offset.top,
+					left: offset.panelLeft,
 					width: 300,
 					padding: "1em",
-					height: height,
+					height: "auto",
 					opacity: height ? 1 : 0,
 					overflow: "scroll",
 					borderLeft: "1px solid #999",
@@ -246,38 +224,63 @@ export function AttributePanel({
 					borderBottom: `${height ? 1 : 0}px solid #999`,
 					borderRadius: "0px 0px 4px 4px",
 					transition:
-						position.top === 0
+						offset.top === 0
 							? ""
 							: `height ${animationHeightMS}ms linear, opacity ${animationHeightMS}ms linear `,
 				}}
 				data-testid="attribute-panel"
 			>
 				<div className="text-sm">Attributes</div>
-				{showName ? (
-					<div className="mt-4 text-sm font-bold">{activeNode.type?.name}</div>
-				) : null}
-				<NodeAttributes nodeAttrs={nodeAttrs} updateAttr={updateAttr} />
-				{nodeMarks.map((mark, index) => {
-					const key = `${mark.type.name}-${activeNodePosition}`;
-					if (mark.type.name === "link") {
+				{showName ? <div className="mt-4 text-sm font-bold">{node.type?.name}</div> : null}
+				{nodeMarks.length > 0 ? (
+					nodeMarks.map((mark, index) => {
+						const key = `${mark.type.name}-${position}`;
+						if (mark.type.name === "link") {
+							return (
+								<LinkMenu
+									mark={mark}
+									onChange={(values) => {
+										updateMarkAttrs(index, values);
+									}}
+									key={key}
+								/>
+							);
+						}
 						return (
-							<LinkMenu
-								mark={mark}
-								onChange={(values) => {
-									updateMarkAttrs(index, values);
-								}}
-								key={key}
-							/>
+							<div key={key}>
+								<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
+								{Object.keys(mark.attrs).map((attrKey) => {
+									if (attrKey === "data") {
+										return null;
+									}
+									const key = `${mark.type.name}-${attrKey}`;
+									return (
+										<div key={key}>
+											<Label className={labelClass} htmlFor={key}>
+												{attrKey}
+											</Label>
+											<Input
+												className={inputClass}
+												type="text"
+												defaultValue={mark.attrs[attrKey] || ""}
+												onChange={(evt) => {
+													updateMarkAttr(
+														index,
+														attrKey,
+														evt.target.value
+													);
+												}}
+												id={key}
+											/>
+										</div>
+									);
+								})}
+							</div>
 						);
-					}
-					return (
-						<MarkAttribute
-							key={key}
-							mark={mark}
-							updateMarkAttr={(attrKey, val) => updateMarkAttr(index, attrKey, val)}
-						/>
-					);
-				})}
+					})
+				) : (
+					<NodeMenu node={node} onChange={updateNodeAttrs} />
+				)}
 				<DataAttributes nodeAttrs={nodeAttrs} updateData={updateData} />
 			</div>
 
@@ -286,10 +289,10 @@ export function AttributePanel({
 					background: "#777",
 					height: "1px",
 					position: "absolute",
-					left: position.left,
-					top: position.top,
-					right: position.right,
-					transition: position.top === 0 ? "" : `right ${animationTimeMS}ms linear`,
+					left: offset.left,
+					top: offset.top,
+					right: offset.right,
+					transition: offset.top === 0 ? "" : `right ${animationTimeMS}ms linear`,
 				}}
 			/>
 		</>,

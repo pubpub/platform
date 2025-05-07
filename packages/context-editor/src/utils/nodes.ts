@@ -1,6 +1,6 @@
 import type { EditorState } from "prosemirror-state";
 
-import { Node } from "prosemirror-model";
+import { Mark, Node } from "prosemirror-model";
 
 import type { Dispatch } from "../commands/types";
 import type { ImageAttrs } from "../schemas/image";
@@ -65,6 +65,10 @@ export const insertNodeAtPos = (
 	const node = nodeSchema.create(attrs);
 	const transaction = tr.insert(pos, node);
 	dispatch(transaction);
+};
+
+export const isNode = (node: Node | Mark): node is Node => {
+	return "children" in node;
 };
 
 // export const insertNodeAsFirstChildOfActiveNode = (
