@@ -33,6 +33,9 @@ export const createDatabase = (options: DatabaseOptions) => {
 	const dialect = new PostgresDialect({
 		pool: new pg.Pool({
 			connectionString: options.url,
+			idle_in_transaction_session_timeout: 1000,
+			connectionTimeoutMillis: 10_000,
+			max: 20,
 		}),
 	});
 
