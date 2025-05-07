@@ -9,7 +9,7 @@ import { useEditorContext } from "./Context";
 
 const getBlockName = (node: Node) => {
 	const state = useEditorState();
-	const { pubTypes, pubId, pubTypeId } = reactPropsKey.getState(state);
+	const { pubTypes, pubId } = reactPropsKey.getState(state);
 
 	const buttonName = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`;
 	if (!node.type.name.includes("context")) {
@@ -42,20 +42,17 @@ const getBlockName = (node: Node) => {
 export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentProps>(
 	function BlockDecoration({ widget, getPos, ...props }, ref) {
 		const state = useEditorState();
-		const { setPosition, setActiveNode, activeNode } = useEditorContext();
+		const { setPosition, position } = useEditorContext();
 		const { disabled } = reactPropsKey.getState(state);
-		const pos = getPos();
-		const node = state.doc.nodeAt(pos);
-		if (!node?.isBlock) {
+		const blockPos = getPos();
+		const blockNode = state.doc.nodeAt(blockPos);
+
+		if (!blockNode?.isBlock) {
 			return null;
 		}
+
 		const handleClick = () => {
-			if (activeNode && node.eq(activeNode)) {
-				setActiveNode(null);
-			} else {
-				setPosition(pos);
-				setActiveNode(node);
-			}
+			setPosition(blockPos === position ? null : blockPos);
 		};
 
 		return (
@@ -64,9 +61,9 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 					type="button"
 					disabled={disabled}
 					onClick={handleClick}
-					className={node.type.name}
+					className={blockNode.type.name}
 				>
-					{getBlockName(node)}
+					{getBlockName(blockNode)}
 				</button>
 			</div>
 		);

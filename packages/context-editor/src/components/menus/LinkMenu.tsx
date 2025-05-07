@@ -1,6 +1,5 @@
 import type { Static } from "@sinclair/typebox";
 import type { Mark } from "prosemirror-model";
-import type { FieldValues } from "react-hook-form";
 
 import React, { useMemo } from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
@@ -58,8 +57,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		defaultValues: {
 			href: mark.attrs?.href ?? "",
 			openInNewTab: mark.attrs?.target === "_blank" ? true : false,
-			id: mark.attrs?.id ?? "",
-			class: mark.attrs?.class ?? "",
 		},
 	});
 
@@ -132,8 +129,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 						</FormItem>
 					)}
 				/>
-				<hr />
-				<AdvancedOptions mark={mark} />
 			</form>
 		</Form>
 	);

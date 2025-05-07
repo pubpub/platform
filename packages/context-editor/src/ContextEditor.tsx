@@ -4,19 +4,25 @@ import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
+import {
+	ProseMirror,
+	ProseMirrorDoc,
+	reactKeys,
+	useEditorEffect,
+} from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
 import { AttributePanel } from "./components/AttributePanel";
 import { basePlugins } from "./plugins";
 import { baseSchema } from "./schemas";
 
-import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
+import "prosemirror-view/style/prosemirror.css";
 // For math
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
+import applyDevTools from "prosemirror-dev-tools";
 import { fixTables } from "prosemirror-tables";
 
 import { cn } from "utils";
@@ -117,8 +123,16 @@ export default function ContextEditor(props: ContextEditorProps) {
 						setSuggestData={setSuggestData}
 						containerRef={containerRef}
 					/>
+					<DevTools />
 				</EditorContextProvider>
 			</ProseMirror>
 		</div>
 	);
 }
+
+const DevTools = () => {
+	// useEditorEffect((view) => {
+	// 	applyDevTools(view);
+	// });
+	return null;
+};

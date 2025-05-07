@@ -1,6 +1,7 @@
 import type { EditorState } from "prosemirror-state";
 
 import { Fragment, Node } from "prosemirror-model";
+import { NodeSelection } from "prosemirror-state";
 
 import { assert } from "utils";
 
@@ -59,12 +60,14 @@ export const toggleFigureNode =
 		);
 
 		if (dispatch) {
-			const transaction = state.tr.replaceWith(
-				figurePosition.start(),
-				figureNode.nodeSize,
+			const tr = state.tr.replaceWith(
+				figurePosition.pos,
+				figurePosition.pos + figureNode.nodeSize,
 				newFigureNode
 			);
-			dispatch(transaction);
+			const selection = NodeSelection.create(tr.doc, tr.mapping.map(figurePosition.pos));
+			tr.setSelection(selection);
+			dispatch(tr);
 		}
 
 		return true;
