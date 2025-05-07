@@ -19,7 +19,7 @@ export const ResendVerificationButton = ({
 	const sendVerifyEmail = useServerAction(sendVerifyEmailMail);
 
 	const handleResend = async () => {
-		setStatus("loading");
+		setStatus("pending");
 		const result = await sendVerifyEmail({ email, redirectTo });
 		if ("error" in result) {
 			setStatus("error");
@@ -33,7 +33,7 @@ export const ResendVerificationButton = ({
 			state={status}
 			onClick={handleResend}
 			idleText="Resend verification email"
-			loadingText="Sending..."
+			pendingText="Sending..."
 		/>
 	);
 };

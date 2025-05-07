@@ -45,6 +45,8 @@ services:
             service: cache
         networks:
             - app-network
+        ports:
+            - 6379:6379
 
     minio-init:
         env_file:

@@ -245,7 +245,7 @@ export type FormInviteLinkProps = XOR<{ formSlug: string }, { formId: FormsId }>
 		communityId: CommunitiesId;
 	};
 
-export const createFormInviteLink = async (props: FormInviteLinkProps) => {
+export const createFormInviteLink = async (props: FormInviteLinkProps, trx = db) => {
 	const formPromise = getForm({
 		communityId: props.communityId,
 		...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
@@ -276,12 +276,15 @@ export const createFormInviteLink = async (props: FormInviteLinkProps) => {
 		pubId: props.pubId,
 	});
 
-	const magicLink = await createMagicLink({
-		userId: user.id,
-		path: formPath,
-		expiresAt: createExpiresAtDate(props.expiresInDays),
-		type: AuthTokenType.generic,
-	});
+	const magicLink = await createMagicLink(
+		{
+			userId: user.id,
+			path: formPath,
+			expiresAt: createExpiresAtDate(props.expiresInDays),
+			type: AuthTokenType.generic,
+		},
+		trx
+	);
 
 	return magicLink;
 };

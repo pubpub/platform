@@ -70,6 +70,8 @@
 .ProseMirror math-display,
 .ProseMirror blockquote,
 .ProseMirror img,
+.ProseMirror figure,
+.ProseMirror figcaption,
 .ProseMirror hr,
 .ProseMirror ul,
 .ProseMirror ol,

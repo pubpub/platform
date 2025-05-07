@@ -7,6 +7,7 @@ import type {
 	ActionRunsId,
 	CommunitiesId,
 	StagesId,
+	UsersId,
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
@@ -47,7 +48,10 @@ export type RunProps<T extends Action> =
 				 */
 				lastModifiedBy: LastModifiedBy;
 				actionRunId: ActionRunsId;
-				actionInstance: ActionInstances;
+				/**
+				 * The user ID of the user who initiated the action, if any
+				 */
+				userId?: UsersId;
 			}
 		: never;
 

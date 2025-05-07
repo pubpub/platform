@@ -17,18 +17,20 @@ generator comments {
 }
 
 model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()"))
-  slug         String   @unique
-  email        String   @unique
-  firstName    String
-  lastName     String?
-  orcid        String?
-  avatar       String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
-  isSuperAdmin Boolean  @default(false)
-  passwordHash String?
-  isVerified   Boolean  @default(false)
+  id            String   @id @default(dbgenerated("gen_random_uuid()"))
+  slug          String   @unique
+  email         String   @unique
+  firstName     String
+  lastName      String?
+  orcid         String?
+  avatar        String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+  isSuperAdmin  Boolean  @default(false)
+  passwordHash  String?
+  isVerified    Boolean  @default(false)
+  /// Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user
+  isProvisional Boolean  @default(false)
 
   memberGroups         MemberGroup[]
   AuthToken            AuthToken[]
@@ -39,6 +41,9 @@ model User {
   pubMemberships       PubMembership[]
   stageMemberships     StageMembership[]
   PubValueHistory      PubValueHistory[]
+  InvitedUser          Invite[]              @relation("invited_user")
+  InvitedByUser        Invite[]              @relation("invited_by")
+  InviteHistory        InviteHistory[]
 
   @@map(name: "users")
 }
@@ -99,6 +104,7 @@ model Community {
   Form           Form[]
   pubFields      PubField[]
   members        CommunityMembership[]
+  Invite         Invite[]
 
   @@map(name: "communities")
 }
@@ -125,6 +131,7 @@ model Pub {
   members       PubMembership[]
 
   searchVector Unsupported("tsvector")?
+  Invite       Invite[]
 
   @@index([searchVector], type: Gin)
   @@map(name: "pubs")
@@ -258,6 +265,7 @@ model Stage {
   actionInstances       ActionInstance[]
   formElements          FormElement[]
   members               StageMembership[]
+  Invite                Invite[]
 
   @@map(name: "stages")
 }
@@ -427,7 +435,9 @@ model ActionRun {
   sourceActionRun   ActionRun? @relation("source_action_run", fields: [sourceActionRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
-  sequentialActionRuns ActionRun[] @relation("source_action_run")
+  sequentialActionRuns ActionRun[]     @relation("source_action_run")
+  InvitedByActionRun   Invite[]        @relation("invited_by_action_run")
+  InviteHistory        InviteHistory[]
 
   @@map(name: "action_runs")
 }
@@ -481,6 +491,7 @@ model Form {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @default(now()) @updatedAt
 
+  inviteForms         InviteForm[]
   StageMembership     StageMembership[]
   CommunityMembership CommunityMembership[]
   PubMembership       PubMembership[]
@@ -565,6 +576,7 @@ model ApiAccessToken {
   accessRules     ApiAccessPermission[]
   logs            ApiAccessLog[]
   PubValueHistory PubValueHistory[]
+  InviteHistory   InviteHistory[]
 
   // has unique index with isSiteBuilderToken = true and communityId
   isSiteBuilderToken Boolean @default(false)
@@ -666,4 +678,94 @@ model MembershipCapabilities {
 
   @@id([role, type, capability])
   @@map(name: "membership_capabilities")
+}
+
+/// Status of an invite
+/// @property created - The invite has been created, but not yet sent
+/// @property pending - The invite has been sent, but not yet accepted
+/// @property accepted - The invite has been accepted, but the relevant signup step has not been completed
+/// @property completed - The invite has been accepted, and the relevant signup step has been completed
+/// @property rejected - The invite has been rejected
+/// @property revoked - The invite has been revoked by the user who created it, or by a sufficient authority
+enum InviteStatus {
+  created
+  pending
+  accepted
+  completed
+  rejected
+  revoked
+}
+
+// invites are invitations to join a community
+// invites can be for existing users, or for new users, but not both
+// invites can bestow certain memberships on the user after the user joins the community
+// NOTE: this table has a history table.
+model Invite {
+  id             String @id @default(dbgenerated("gen_random_uuid()"))
+  /// @type(LastModifiedBy, '../types', true, false, true)
+  lastModifiedBy String
+
+  InvitedUser User   @relation("invited_user", fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+
+  token     String   @unique
+  expiresAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // community level permissions
+  // an invite must be for a community, and must have a community membership level set
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId String
+
+  // which role should be granted to the user after they join the community
+  communityRole MemberRole @default(contributor)
+
+  // you can also directly invite a user to a pub or stage, but not both
+  // you can then also immediately allow them to use a certain form at that level
+  Pub     Pub?        @relation(fields: [pubId], references: [id], onDelete: SetNull)
+  pubId   String?
+  pubRole MemberRole?
+
+  Stage     Stage?      @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId   String?
+  stageRole MemberRole?
+
+  // the message that is sent in the invite. useful for resending invites
+  message    String?
+  // when is the message last sent. total send count is kept track of by the invite history table
+  lastSentAt DateTime?
+
+  status InviteStatus @default(created)
+
+  // useful to keep track of who invited the user. slightly different from `lastModifiedBy`
+  InvitedByUser        User?      @relation("invited_by", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  invitedByUserId      String?
+  InvitedByActionRun   ActionRun? @relation("invited_by_action_run", fields: [invitedByActionRunId], references: [id], onDelete: SetNull)
+  invitedByActionRunId String?
+
+  forms InviteForm[]
+
+  // this table has some constraints that make it conform to the type in `db/types/Invite.ts`
+  // see core/prisma/migrations/20250402130740_create_invite_table/migration.sql for details
+  @@map(name: "invites")
+}
+
+model InviteForm {
+  invite    Invite         @relation(fields: [inviteId], references: [id], onDelete: Cascade)
+  inviteId  String
+  form      Form           @relation(fields: [formId], references: [id], onDelete: Cascade)
+  formId    String
+  type      MembershipType
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+  // ensure pub/stage forms only exist when pub or stage is set
+
+  // has check constraint to ensure pub/stage forms only exist when pub or stage is set
+  // see core/prisma/migrations/20250407090041_reference_multiple_forms_in_invite/migration.sql for details
+
+  @@id([inviteId, formId, type])
+  @@unique([inviteId, formId, type])
+  @@map(name: "invite_forms")
 }

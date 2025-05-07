@@ -89,7 +89,7 @@ const visitRecipientNameDirective = (node: Directive, context: utils.RenderWithP
 		hChildren: [
 			{
 				type: "text",
-				value: utils.renderRecipientFullName(context),
+				value: utils.renderRecipientFullName(context, node.name),
 			},
 		],
 	};
@@ -102,7 +102,7 @@ const visitRecipientFirstNameDirective = (node: Directive, context: utils.Render
 		hChildren: [
 			{
 				type: "text",
-				value: utils.renderRecipientFirstName(context),
+				value: utils.renderRecipientFirstName(context, node.name),
 			},
 		],
 	};
@@ -115,7 +115,7 @@ const visitRecipientLastNameDirective = (node: Directive, context: utils.RenderW
 		hChildren: [
 			{
 				type: "text",
-				value: utils.renderRecipientLastName(context),
+				value: utils.renderRecipientLastName(context, node.name),
 			},
 		],
 	};
@@ -217,7 +217,10 @@ const getDirectiveVisitor = (node: Directive) => {
 	) {
 		return visitValueDirectiveWithMemberField;
 	}
-	return expect(directiveVisitors[directiveName], "Invalid directive used in markdown template.");
+	return expect(
+		directiveVisitors[directiveName],
+		`Invalid directive ${directiveName} used in markdown template.`
+	);
 };
 
 const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (context) => {
@@ -258,12 +261,24 @@ const renderMarkdownWithPubPlugin: Plugin<[utils.RenderWithPubContext]> = (conte
 				if (isDirective(node)) {
 					const attrs = expect(node.attributes);
 					if ("form" in attrs) {
-						props.href = await utils.renderFormInviteLink({
-							formSlug: expect(attrs.form),
-							userId: expect(context.recipient, ERR_FORM_MISSING_RECIPIENT).user.id,
-							communityId: context.communityId,
-							pubId: context.pub.id as PubsId,
-						});
+						props.href = await utils.renderFormInviteLink(
+							{
+								formSlug: expect(attrs.form),
+								recipient: expect(context.recipient, ERR_FORM_MISSING_RECIPIENT),
+								communityId: context.communityId,
+								pubId: context.pub.id as PubsId,
+								inviter: expect(context.inviter),
+							},
+							context.trx
+						);
+						assert(isParent(node));
+						// Include default text
+						node.children = [
+							{
+								type: "text",
+								value: attrs.text ?? props.href,
+							},
+						];
 					}
 				}
 			})
