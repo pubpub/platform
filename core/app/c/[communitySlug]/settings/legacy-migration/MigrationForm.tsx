@@ -53,9 +53,17 @@ export function MigrationForm({ community }: { community: { slug: string; id: Co
 	const runImportFromLegacy = useServerAction(importFromLegacy);
 
 	const onSubmit = form.handleSubmit(async (data) => {
-		await runImportFromLegacy({
+		const result = await runImportFromLegacy({
 			slug: data.legacyCommunity,
 		});
+
+		console.log(result);
+		if (didSucceed(result)) {
+			toast({
+				title: "Import successful!",
+				description: "The import has been completed successfully.",
+			});
+		}
 	});
 
 	return (

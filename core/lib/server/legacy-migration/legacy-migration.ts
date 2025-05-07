@@ -910,11 +910,11 @@ const createJournalArticles = async (
 
 const createPages = async (
 	{
-		community: { id: communityId },
+		community: { id: communityId, slug: communitySlug },
 		legacyPages,
 		legacyStructure,
 	}: {
-		community: { id: CommunitiesId };
+		community: { id: CommunitiesId; slug: string };
 		legacyPages: LegacyPage[];
 		legacyStructure: LegacyStructure;
 	},
@@ -927,7 +927,12 @@ const createPages = async (
 		trx,
 	});
 
-	for (const page of legacyPages) {
+	await pMap(legacyPages, async (page) => {
+		let avatar: FileMetadata | undefined;
+		if (page.avatar) {
+			avatar = await generateMetadataFromS3(page.avatar, communitySlug);
+		}
+
 		batch.add(({ upsertByValue }) => {
 			let op = upsertByValue(legacyStructure["Page"].fields["Legacy Id"].slug, page.id, {
 				pubTypeId: legacyStructure["Page"].id,
@@ -947,8 +952,8 @@ const createPages = async (
 				op = op.set(legacyStructure["Page"].fields.Description.slug, page.description);
 			}
 
-			if (page.avatar) {
-				op = op.set(legacyStructure["Page"].fields.Avatar.slug, page.avatar);
+			if (avatar) {
+				op = op.set(legacyStructure["Page"].fields.Avatar.slug, [avatar]);
 			}
 
 			if (page.isPublic) {
@@ -975,7 +980,7 @@ const createPages = async (
 
 			return op;
 		});
-	}
+	});
 
 	const createdPages = await batch.execute();
 
@@ -986,11 +991,11 @@ const createPages = async (
 
 const createCollections = async (
 	{
-		community: { id: communityId },
+		community: { id: communityId, slug: communitySlug },
 		legacyCommunity,
 		legacyStructure,
 	}: {
-		community: { id: CommunitiesId };
+		community: { id: CommunitiesId; slug: string };
 		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
 	},
@@ -1013,7 +1018,12 @@ const createCollections = async (
 		pubIdMap.set(pub.id, pub.id);
 	}
 
-	for (const collection of legacyCollections) {
+	await pMap(legacyCollections, async (collection) => {
+		let avatar: FileMetadata | undefined;
+		if (collection.avatar) {
+			avatar = await generateMetadataFromS3(collection.avatar, communitySlug);
+		}
+
 		const filteredCollectionPubs = collection.collectionPubs.filter((cp) => {
 			const hasPub = pubIdMap.has(cp.pubId);
 
@@ -1057,8 +1067,8 @@ const createCollections = async (
 				op = op.set(relevantType.fields["Is Public"].slug, collection.isPublic);
 			}
 
-			if (collection.avatar) {
-				op = op.set(relevantType.fields["Avatar"].slug, collection.avatar);
+			if (avatar) {
+				op = op.set(relevantType.fields["Avatar"].slug, [avatar]);
 			}
 
 			if (collection.pageId) {
@@ -1235,7 +1245,7 @@ const createCollections = async (
 
 			return op;
 		});
-	}
+	});
 
 	const createdCollections = await batch.execute();
 
@@ -1246,11 +1256,11 @@ const createCollections = async (
 
 const createJournal = async (
 	{
-		community: { id: communityId },
+		community: { id: communityId, slug: communitySlug },
 		legacyCommunity,
 		legacyStructure,
 	}: {
-		community: { id: CommunitiesId };
+		community: { id: CommunitiesId; slug: string };
 		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
 	},
@@ -1323,12 +1333,12 @@ const createJournal = async (
 	if (legacyCommunity.community.issn) {
 		op = op.set(legacyStructure.Journal.fields["E-ISSN"].slug, legacyCommunity.community.issn);
 	}
-
 	if (legacyCommunity.community.avatar) {
-		op = op.set(
-			legacyStructure.Journal.fields["Avatar"].slug,
-			legacyCommunity.community.avatar
+		const avatar = await generateMetadataFromS3(
+			legacyCommunity.community.avatar,
+			communitySlug
 		);
+		op = op.set(legacyStructure.Journal.fields["Avatar"].slug, [avatar]);
 	}
 
 	// relate pages
@@ -1373,37 +1383,37 @@ const createJournal = async (
 		);
 	}
 
-	if (legacyCommunity.community.navigation?.length) {
-		for (const nav of legacyCommunity.community.navigation) {
-			if ("type" in nav) {
-				if (nav.type === "page") {
-					op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
-						{
-							value: null,
-							target: {
-								slug: legacyStructure.Page.fields["Legacy Id"].slug,
-								value: nav.id,
-							},
-						},
-					]);
-					continue;
-				} else if (nav.type === "collection") {
-					op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
-						{
-							value: null,
-							target: {
-								slug: legacyStructure.Collection.fields["Legacy Id"].slug,
-								value: nav.id,
-							},
-						},
-					]);
-					continue;
-				} else {
-					throw new Error(`Unknown navigation type: ${nav.type}`);
-				}
-			}
-		}
-	}
+	// if (legacyCommunity.community.navigation?.length) {
+	// 	for (const nav of legacyCommunity.community.navigation) {
+	// 		if ("type" in nav) {
+	// 			if (nav.type === "page") {
+	// 				op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
+	// 					{
+	// 						value: null,
+	// 						target: {
+	// 							slug: legacyStructure.Page.fields["Legacy Id"].slug,
+	// 							value: nav.id,
+	// 						},
+	// 					},
+	// 				]);
+	// 				continue;
+	// 			} else if (nav.type === "collection") {
+	// 				op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
+	// 					{
+	// 						value: null,
+	// 						target: {
+	// 							slug: legacyStructure.Collection.fields["Legacy Id"].slug,
+	// 							value: nav.id,
+	// 						},
+	// 					},
+	// 				]);
+	// 				continue;
+	// 			} else {
+	// 				throw new Error(`Unknown navigation type: ${nav.type}`);
+	// 			}
+	// 		}
+	// 	}
+	// }
 	const result = await op.execute();
 	logger.info("Journal pub created and linked to all content");
 
