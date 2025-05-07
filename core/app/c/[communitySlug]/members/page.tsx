@@ -8,7 +8,7 @@ import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { firstRoleIsHigher } from "~/lib/authorization/rolesRanking";
+import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getMembershipForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
@@ -80,7 +80,7 @@ export default async function Page(props: {
 			dedupedMembersMap.set(member.id, member);
 		} else {
 			const m = dedupedMembersMap.get(member.id);
-			if (m && firstRoleIsHigher(member.role, m.role)) {
+			if (m && compareMemberRoles(member.role, ">", m.role)) {
 				dedupedMembersMap.set(member.id, m);
 			}
 		}

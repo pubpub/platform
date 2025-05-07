@@ -1,9 +1,17 @@
 import { AuthTokenType } from "db/public";
 
+import { SignupForm } from "~/app/components/Signup/SignupForm";
+import { legacySignup } from "~/lib/authentication/actions";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { LegacySignupForm } from "../../components/Signup/LegacySignupForm";
 
-export default async function Page() {
+export default async function Page({
+	searchParams,
+}: {
+	searchParams: Promise<{
+		redirectTo: string;
+	}>;
+}) {
+	const { redirectTo } = await searchParams;
 	const { user, session } = await getLoginData({
 		allowedSessions: [AuthTokenType.signup],
 	});
@@ -16,10 +24,19 @@ export default async function Page() {
 			</div>
 		);
 	}
+	const signupAction = legacySignup.bind(null, user.id);
 
 	return (
 		<div className="m-auto max-w-lg">
-			<LegacySignupForm user={user} />
+			<SignupForm
+				defaultValues={{
+					email: user.email,
+					firstName: user.firstName,
+					lastName: user.lastName ?? "",
+				}}
+				redirectTo={redirectTo}
+				signupAction={signupAction}
+			/>
 		</div>
 	);
 }

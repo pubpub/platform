@@ -6,7 +6,8 @@ import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
 import { Label } from "ui/label";
 
 import type { ImageAttrs } from "../schemas/image";
-import { insertNodeAfterSelection } from "../utils/nodes";
+import { Alignment } from "../schemas/image";
+import { insertMedia, insertNodeAfterSelection } from "../utils/nodes";
 
 export type Upload = FileUploadProps["upload"];
 
@@ -21,12 +22,14 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				class: null,
 				alt: file.fileName,
 				linkTo: "",
-				credit: null,
-				license: null,
+				caption: false,
+				credit: false,
+				license: false,
 				width: 100,
-				align: "center",
+				align: Alignment.center,
+				fullResolution: false,
 			};
-			insertNodeAfterSelection(view.state, view.dispatch, "image", attrs);
+			insertMedia(view.state, view.dispatch, attrs);
 		}
 		onInsert();
 	});

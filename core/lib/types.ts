@@ -25,7 +25,7 @@ export type MemberWithUser = Omit<CommunityMemberships, "memberGroupId"> & {
 
 export type UserPostBody = Pick<Users, "firstName" | "lastName" | "email">;
 export type UserPutBody = Pick<Users, "firstName" | "lastName">;
-export type UserLoginData = Omit<Users, "passwordHash">;
+export type UserLoginData = Omit<Users, "passwordHash" | "isProvisional">;
 export type UserSetting = Pick<Users, "firstName" | "lastName" | "email" | "slug"> & {
 	communities: Communities[];
 };

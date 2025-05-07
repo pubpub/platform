@@ -52,8 +52,9 @@ module "service_core" {
   service_name = "core"
   cluster_info = module.cluster.cluster_info
 
-  repository_url = var.ecr_repository_urls.core
-  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
+  repository_url    = var.ecr_repository_urls.core
+  nginx_image       = "${var.ecr_repository_urls.nginx}:latest"
+  health_check_path = "/api/health"
 
   listener = {
     service_name  = "core"
@@ -100,7 +101,7 @@ module "service_core" {
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
-      { name = "VALKEY_URL", value = module.core_dependency_services.valkey_url }
+      { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host }
     ]
 
     secrets = [
@@ -167,6 +168,7 @@ module "service_bastion" {
       { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "PAGER", value = "less -S" },
+      { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host }
     ]
 
     secrets = [

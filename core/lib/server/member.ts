@@ -1,15 +1,21 @@
+import type { OnConflictBuilder } from "kysely";
+
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
 	CommunityMembershipsId,
 	FormsId,
-	MemberRole,
 	NewCommunityMemberships,
 	NewPubMemberships,
 	NewStageMemberships,
+	PubMembershipsId,
+	PubsId,
+	StageMembershipsId,
+	StagesId,
 	UsersId,
 } from "db/public";
+import { MemberRole } from "db/public";
 
 import type { XOR } from "../types";
 import { db } from "~/kysely/database";
@@ -35,6 +41,7 @@ export const selectCommunityMemberships = (
 				"community_memberships.updatedAt",
 				"community_memberships.role",
 				"community_memberships.communityId",
+				"community_memberships.formId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("users")
@@ -45,7 +52,9 @@ export const selectCommunityMemberships = (
 					.as("user"),
 			])
 			.$if(Boolean(props.userId), (eb) =>
-				eb.where("community_memberships.userId", "=", props.userId!)
+				eb
+					.where("community_memberships.userId", "=", props.userId!)
+					.$narrowType<{ userId: UsersId }>()
 			)
 			.$if(Boolean(props.communityId), (eb) =>
 				eb.where("community_memberships.communityId", "=", props.communityId!)
@@ -81,6 +90,76 @@ export const selectAllCommunityMemberships = (
 			.where("community_memberships.communityId", "=", communityId)
 	);
 
+export const selectStageMemberships = (
+	props: XOR<{ id: StageMembershipsId }, { userId: UsersId; stageId: StagesId }>,
+	trx = db
+) => {
+	return autoCache(
+		trx
+			.selectFrom("stage_memberships")
+			.select((eb) => [
+				"stage_memberships.id",
+				"stage_memberships.userId",
+				"stage_memberships.createdAt",
+				"stage_memberships.updatedAt",
+				"stage_memberships.role",
+				"stage_memberships.stageId",
+				"stage_memberships.formId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "stage_memberships.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.$if(Boolean(props.userId), (eb) =>
+				eb
+					.where("stage_memberships.userId", "=", props.userId!)
+					.$narrowType<{ userId: UsersId }>()
+			)
+			.$if(Boolean(props.stageId), (eb) =>
+				eb.where("stage_memberships.stageId", "=", props.stageId!)
+			)
+			.$if(Boolean(props.id), (eb) => eb.where("stage_memberships.id", "=", props.id!))
+	);
+};
+
+export const selectPubMemberships = (
+	props: XOR<{ id: PubMembershipsId }, { userId: UsersId; pubId: PubsId }>,
+	trx = db
+) => {
+	return autoCache(
+		trx
+			.selectFrom("pub_memberships")
+			.select((eb) => [
+				"pub_memberships.id",
+				"pub_memberships.userId",
+				"pub_memberships.createdAt",
+				"pub_memberships.updatedAt",
+				"pub_memberships.role",
+				"pub_memberships.pubId",
+				"pub_memberships.formId",
+				jsonObjectFrom(
+					eb
+						.selectFrom("users")
+						.select(SAFE_USER_SELECT)
+						.whereRef("users.id", "=", "pub_memberships.userId")
+				)
+					.$notNull()
+					.as("user"),
+			])
+			.$if(Boolean(props.userId), (eb) =>
+				eb
+					.where("pub_memberships.userId", "=", props.userId!)
+					.$narrowType<{ userId: UsersId }>()
+			)
+			.$if(Boolean(props.pubId), (eb) => eb.where("pub_memberships.pubId", "=", props.pubId!))
+			.$if(Boolean(props.id), (eb) => eb.where("pub_memberships.id", "=", props.id!))
+	);
+};
+
 const getMembershipRows = <T extends { role: MemberRole; forms: FormsId[]; userId: UsersId }>({
 	forms,
 	...membership
@@ -110,12 +189,108 @@ export const deleteCommunityMemberships = (
 			.returningAll()
 	);
 
+export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
+	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
+
+export const onConflictOverrideRole = (
+	oc: OnConflictBuilder<any, any>,
+	type: "community" | "pub" | "stage",
+	withForm: boolean
+) => {
+	return oc
+		.columns(["userId", `${type}Id`, "formId"])
+		.where("formId", withForm ? "is not" : "is", null)
+		.doUpdateSet((eb) => ({
+			role: eb
+				.case()
+				.when(eb.ref(`${type}_memberships.role`), "=", MemberRole.admin)
+				.then(eb.ref(`${type}_memberships.role`))
+				.when(
+					eb.and([
+						eb(eb.ref(`${type}_memberships.role`), "=", MemberRole.editor),
+						eb(eb.ref("excluded.role"), "!=", MemberRole.admin),
+					])
+				)
+				.then(eb.ref(`${type}_memberships.role`))
+				.else(eb.ref("excluded.role"))
+				.end(),
+		}));
+};
+
+export const insertCommunityMembershipsOverrideRole = (
+	props: NewCommunityMemberships & { userId: UsersId; forms: FormsId[] },
+	trx = db
+) =>
+	autoRevalidate(
+		insertCommunityMemberships(props, trx).qb.onConflict((oc) =>
+			onConflictOverrideRole(oc, "community", props.formId !== null)
+		)
+	);
+
 export const insertStageMemberships = (
 	membership: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) => autoRevalidate(trx.insertInto("stage_memberships").values(getMembershipRows(membership)));
 
+export const insertStageMembershipsOverrideRole = (
+	props: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
+	trx = db
+) =>
+	autoRevalidate(
+		insertStageMemberships(props, trx).qb.onConflict((oc) =>
+			onConflictOverrideRole(oc, "stage", props.formId !== null)
+		)
+	);
+
+export const insertPubMembershipsOverrideRole = (
+	props: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
+	trx = db
+) =>
+	autoRevalidate(
+		insertPubMemberships(props, trx).qb.onConflict((oc) =>
+			onConflictOverrideRole(oc, "pub", props.formId !== null)
+		)
+	);
+
 export const insertPubMemberships = (
 	membership: NewPubMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) => autoRevalidate(trx.insertInto("pub_memberships").values(getMembershipRows(membership)));
+
+export const coalesceMemberships = <
+	T extends {
+		role: MemberRole;
+		formId: FormsId | null;
+		userId: UsersId | null;
+		createdAt?: Date | string;
+		updatedAt?: Date | string;
+	},
+>(
+	memberships: T[]
+) => {
+	const { formId, ...firstMembership } = memberships[0];
+
+	return memberships.reduce(
+		(acc, { updatedAt, createdAt, formId, ...membership }) => {
+			let key: keyof typeof membership & string;
+			// check if all memberships are similar
+			for (key in membership) {
+				if (membership[key] !== acc[key as keyof typeof acc]) {
+					throw new Error(
+						`Membership ${key} mismatch between ${membership[key]} and ${acc[key as keyof typeof acc]}`
+					);
+				}
+			}
+
+			if (formId) {
+				acc.forms.push(formId);
+			}
+
+			return acc;
+		},
+		{
+			...firstMembership,
+			forms: formId ? [formId] : [],
+		} as Omit<T, "formId"> & { forms: FormsId[] }
+	);
+};

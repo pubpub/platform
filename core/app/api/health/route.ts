@@ -5,26 +5,22 @@ import { NextResponse } from "next/server";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
+import { getRedisClient } from "~/lib/redis";
 import { handleErrors } from "~/lib/server";
 
 export async function GET(req: NextRequest) {
 	return await handleErrors(async () => {
-		const errors: string[] = [];
 		try {
-			const dbQuery = await db
+			const dbQuery = db
 				.selectFrom("communities")
-				.selectAll()
+				.select("id")
 				.limit(1)
 				.executeTakeFirstOrThrow();
+			const cacheQuery = (await getRedisClient()).ping();
+			await Promise.all([dbQuery, cacheQuery]);
 		} catch (err) {
-			logger.error(err);
-			if (err instanceof Error) {
-				errors.push(err.message);
-			}
-		}
-
-		if (errors.length > 0) {
-			return NextResponse.json({ errors }, { status: 500 });
+			logger.error({ msg: "error in health check", err });
+			return NextResponse.json({}, { status: 500 });
 		}
 
 		return NextResponse.json({});

@@ -15,7 +15,7 @@ ARG PNPM_VERSION=9.10.0
 
 ################################################################################
 # Use node image for base image for all stages.
-FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} as base
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS base
 
 # these are necessary to be able to use them inside of `base`
 ARG BASE_IMAGE
@@ -39,22 +39,22 @@ RUN --mount=type=cache,target=/root/.npm \
   npm install -g pnpm@${PNPM_VERSION}
 
 
-FROM base as fetch-deps
+FROM base AS fetch-deps
 
 
 # Copy pnpm-lock.yaml so that we can use pnpm to install dependencies
 COPY pnpm-lock.yaml ./
 
-# Could possibly be sped up using `turbo prune` 
+# Could possibly be sped up using `turbo prune`
 # https://turbo.build/repo/docs/guides/tools/docker
 RUN pnpm fetch
 
 # Install dependencies we only need to run pnpm install
-RUN apk add g++ make py3-pip 
+RUN apk add g++ make py3-pip
 
 ################################################################################
 # Create a stage for building the application.
-FROM fetch-deps as monorepo
+FROM fetch-deps AS monorepo
 
 # Copy over the rest of the files
 ADD . ./
@@ -76,19 +76,19 @@ RUN test -n "$PACKAGE" || (echo "PACKAGE  not set, required for this target" && 
 ENV DOCKERBUILD=1
 
 ARG CI
-ENV CI $CI
+ENV CI=$CI
 
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN,env=SENTRY_AUTH_TOKEN \
-  pnpm --filter $PACKAGE build 
+  pnpm --filter $PACKAGE build
 
-FROM withpackage as prepare-jobs
+FROM withpackage AS prepare-jobs
 
 ARG PACKAGE
 
 RUN pnpm --filter $PACKAGE --prod deploy /tmp/app
 
 
-FROM base as jobs
+FROM base AS jobs
 
 WORKDIR /usr/src/app
 
@@ -96,19 +96,19 @@ COPY --from=prepare-jobs --chown=node:node /tmp/app .
 
 USER node
 
-CMD pnpm start
+CMD ["pnpm", "start"]
 
 ################################################################################
 # Create a new stage to run the application with minimal runtime dependencies
 # where the necessary files are copied from the build stage.
 # this is separated by package to make it slightly more clear what happens
 # and because you cannot conditionally copy from a different folder
-# based on the argument 
-FROM base as prod-setup
+# based on the argument
+FROM base AS prod-setup
 ARG PORT
 
 # Use production node environment by default.
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # Run the application as a non-root user.
 USER node
@@ -117,10 +117,10 @@ USER node
 EXPOSE $PORT
 
 # Use production node environment by default.
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # otherwise it will use the strange default docker hostname
-ENV HOSTNAME "0.0.0.0"
+ENV HOSTNAME="0.0.0.0"
 
 ### Core
 
@@ -134,4 +134,4 @@ COPY --from=withpackage --chown=node:node /usr/src/app/core/.env.docker ./core/.
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 CMD curl -f http://localhost:3000/api/health || exit 1
 
-CMD node core/server.js
+CMD ["node", "core/server.js"]

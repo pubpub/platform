@@ -1,11 +1,16 @@
 -- generator-version: 1.0.0
 
+-- Model invites_history comments
+
+
+
 -- Model pub_values_history comments
 
 
 
 -- Model users comments
 
+COMMENT ON COLUMN "users"."isProvisional" IS 'Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user';
 
 
 -- Model sessions comments
@@ -112,6 +117,15 @@ COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPerm
 
 
 
+-- Model invites comments
+
+COMMENT ON COLUMN "invites"."lastModifiedBy" IS '@type(LastModifiedBy, ''../types'', true, false, true)';
+
+
+-- Model invite_forms comments
+
+
+
 -- Enum AuthTokenType comments
 
 COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This will just authenticate you with a regular session.
@@ -188,3 +202,14 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 -- Enum MembershipType comments
 
 
+
+
+-- Enum InviteStatus comments
+
+COMMENT ON TYPE "InviteStatus" IS 'Status of an invite
+@property created - The invite has been created, but not yet sent
+@property pending - The invite has been sent, but not yet accepted
+@property accepted - The invite has been accepted, but the relevant signup step has not been completed
+@property completed - The invite has been accepted, and the relevant signup step has been completed
+@property rejected - The invite has been rejected
+@property revoked - The invite has been revoked by the user who created it, or by a sufficient authority';

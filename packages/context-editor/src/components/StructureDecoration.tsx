@@ -64,7 +64,7 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 		}
 
 		return (
-			<div className="wrap-widget">
+			<div ref={ref} className="wrap-widget" {...props}>
 				<button
 					type="button"
 					disabled={disabled}

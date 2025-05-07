@@ -20,6 +20,11 @@ jobs:
     integration-tests:
         name: Integration tests
         runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                package:
+                    - core
+                    - context-editor
         env:
             ENV_FILE: .env.docker-compose.test
         steps:
@@ -103,7 +108,7 @@ jobs:
                   MINIMAL_SEED: true
                   SKIP_VALIDATION: true
 
-            - run: pnpm --filter core exec playwright install chromium --with-deps
+            - run: pnpm --filter core exec playwright install --with-deps
 
             - name: Start up core etc
               run: pnpm integration:setup
@@ -119,22 +124,31 @@ jobs:
               run: while [ "`docker inspect -f {{.State.Health.Status}} ${{steps.log-container-id.outputs.CONTAINER_ID}}`" != "healthy" ]; do     sleep .2; done
 
             - name: Run integration tests
-              run: pnpm --filter core playwright:test
+              run: pnpm playwright:test --filter ${{ matrix.package }} --env-mode=loose
               env:
+                  NODE_ENV: test
                   INTEGRATION_TEST_HOST: localhost
                   DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
 
             - name: Print container logs
               if: ${{failure() || cancelled()}}
-              run: docker compose -f docker-compose.test.yml --profile integration logs
+              run: docker compose -f docker-compose.test.yml --profile integration logs -t
               env:
                   INTEGRATION_TESTS_IMAGE: ${{steps.label.outputs.core_label}}
                   JOBS_IMAGE: ${{steps.label.outputs.jobs_label}}
 
-            - name: Upload playwright snapshots artifact
-              if: failure()
+            - name: Upload core playwright snapshots artifact
+              if: failure() && matrix.package == 'core'
               uses: actions/upload-artifact@v4
               with:
                   name: playwright-snapshots
                   path: core/test-results
+                  retention-days: 10
+
+            - name: Upload context-editor playwright snapshots artifact
+              if: failure() && matrix.package == 'context-editor'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: playwright-snapshots
+                  path: packages/context-editor/test-results
                   retention-days: 10
