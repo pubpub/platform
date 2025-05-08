@@ -17,15 +17,12 @@ import { Switch } from "ui/switch";
 
 import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
-import { AdvancedOptions } from "./AdvancedOptions";
 
 registerFormats();
 
 const formSchema = Type.Object({
 	href: Type.String({ format: "uri" }),
 	openInNewTab: Type.Boolean({ default: false }),
-	id: Type.String(),
-	class: Type.String(),
 });
 
 const compiledSchema = TypeCompiler.Compile(formSchema);
