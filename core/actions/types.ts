@@ -52,6 +52,7 @@ export type RunProps<T extends Action> =
 				 * The user ID of the user who initiated the action, if any
 				 */
 				userId?: UsersId;
+				actionInstance: ActionInstances;
 			}
 		: never;
 
