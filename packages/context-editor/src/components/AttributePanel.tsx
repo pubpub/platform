@@ -119,14 +119,8 @@ export function AttributePanel({
 
 	const updateMarkAttr = useEditorEventCallback(
 		(view, index: number, attrKey: string, value: string | null) => {
-			if (!view) return;
-
 			const mark = nodeMarks[index];
-			const markAttrs = {
-				...mark.attrs,
-				[attrKey]: value,
-			};
-
+			const markAttrs = { ...mark.attrs, [attrKey]: value };
 			replaceMark(mark, markAttrs)(view.state, view.dispatch);
 		}
 	);
@@ -134,14 +128,8 @@ export function AttributePanel({
 	/** Bulk update version of updateMarkAttr */
 	const updateMarkAttrs = useEditorEventCallback(
 		(view, index: number, attrs: Record<string, string | null>) => {
-			if (!view) return;
-
 			const mark = nodeMarks[index];
-			const markAttrs = {
-				...mark.attrs,
-				...attrs,
-			};
-
+			const markAttrs = { ...mark.attrs, ...attrs };
 			replaceMark(mark, markAttrs)(view.state, view.dispatch);
 		}
 	);
