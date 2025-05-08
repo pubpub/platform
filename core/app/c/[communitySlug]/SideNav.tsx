@@ -1,12 +1,9 @@
-import { link } from "fs";
-
 import type { User } from "lucia";
 
 import { cache, Suspense } from "react";
 
 import type { Communities, CommunitiesId, UsersId } from "db/public";
-import { Capabilities, MemberRole, MembershipType } from "db/public";
-import { logger } from "logger";
+import { Capabilities, MembershipType } from "db/public";
 import {
 	Activity,
 	BookOpen,
@@ -246,9 +243,6 @@ const Link = async ({
 		if (!userCan) {
 			return null;
 		}
-	}
-	if (link.href?.includes("legacy")) {
-		logger.info({ link, groupName });
 	}
 
 	return (
