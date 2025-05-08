@@ -28,14 +28,14 @@ export const upload = defineServerAction(async function upload(pubId: string, fi
 	return await generateSignedAssetUploadUrl(pubId as PubsId, fileName);
 });
 
-export const inviteUserToForm = defineServerAction(async function inviteUserToForm({
+export const sendNewFormLink = defineServerAction(async function sendNewFormLink({
 	token,
 	pubId,
 	communityId,
 	...formSlugOrId
 }: {
 	token: string;
-	pubId: PubsId;
+	pubId?: PubsId;
 	communityId: CommunitiesId;
 } & XOR<{ slug: string }, { id: FormsId }>) {
 	const community = await findCommunityBySlug();
@@ -73,7 +73,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		pubId,
 	});
 
-	await Email.requestAccessToForm({
+	await Email.formLink({
 		community,
 		form,
 		formInviteLink,

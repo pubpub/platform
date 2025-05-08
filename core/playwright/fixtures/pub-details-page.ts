@@ -15,7 +15,8 @@ export class PubDetailsPage {
 
 	async runAction(
 		actionName: string,
-		configureCallback?: (runActionDialog: Locator) => Promise<void>
+		configureCallback?: (runActionDialog: Locator) => Promise<void>,
+		waitForSuccess = true
 	) {
 		await this.page.getByTestId("run-action-primary").click();
 		await this.page.getByRole("button", { name: actionName }).click();
@@ -26,11 +27,13 @@ export class PubDetailsPage {
 		await configureCallback?.(runActionDialog);
 
 		await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
-		await this.page
-			.getByRole("status")
-			.filter({ hasText: "Action ran successfully!" })
-			.waitFor();
-		await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
-		await runActionDialog.waitFor({ state: "hidden" });
+		if (waitForSuccess) {
+			await this.page
+				.getByRole("status")
+				.filter({ hasText: "Action ran successfully!" })
+				.waitFor();
+			await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
+			await runActionDialog.waitFor({ state: "hidden" });
+		}
 	}
 }

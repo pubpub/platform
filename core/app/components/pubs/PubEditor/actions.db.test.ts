@@ -86,6 +86,7 @@ describe("createPubRecursive", () => {
 					[`${community.slug}:title`]: "test title",
 				},
 			},
+			formSlug: pubTypes["Minimal Pub"].defaultForm.slug,
 			trx,
 		});
 		expect(result).toMatchObject(expected);
@@ -124,7 +125,7 @@ describe("updatePub", () => {
 		},
 	])("$name", async ({ loginUser, userRole, expected }) => {
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
-		const { community, pubs, users } = await seedCommunity({
+		const { community, pubs, users, pubTypes } = await seedCommunity({
 			community: {
 				name: "test",
 				slug: "test-actions-create-pub",
@@ -176,6 +177,7 @@ describe("updatePub", () => {
 			},
 			continueOnValidationError: false,
 			deleted: [],
+			formSlug: pubTypes["Minimal Pub"].defaultForm.slug,
 		});
 		expect(result).toMatchObject(expected);
 	});

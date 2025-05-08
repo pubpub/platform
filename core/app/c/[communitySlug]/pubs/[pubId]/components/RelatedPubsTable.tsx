@@ -3,19 +3,17 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import type { ReactNode } from "react";
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import type { ActionInstances, PubTypes, Stages } from "db/public";
+import type { ProcessedPubWithForm } from "contracts";
+import type { PubTypes, Stages } from "db/public";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
 import { DataTableColumnHeader } from "ui/data-table";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { FullProcessedPub } from "~/lib/server/pub";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { dateFormatOptions } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
@@ -95,14 +93,29 @@ const getRelatedPubsColumns = (relatedPubActionsDropdowns: Record<string, ReactN
 				return relatedPubActionsDropdowns[row.original.id];
 			},
 		},
-	] as const satisfies ColumnDef<FullProcessedPub, unknown>[];
+	] as const satisfies ColumnDef<
+		ProcessedPubWithForm<{
+			withRelatedPubs: true;
+			withStage: true;
+			withPubType: true;
+			withMembers: true;
+			withStageActionInstances: true;
+		}>,
+		unknown
+	>[];
 };
 
 const Table = ({
 	pubs,
 	relatedPubActionsDropdowns,
 }: {
-	pubs: FullProcessedPub[];
+	pubs: ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+		withStageActionInstances: true;
+	}>[];
 	relatedPubActionsDropdowns: Record<string, ReactNode>;
 }) => {
 	const columns = getRelatedPubsColumns(relatedPubActionsDropdowns);
@@ -114,11 +127,29 @@ export const RelatedPubsTable = ({
 	pub,
 	relatedPubActionsDropdowns,
 }: {
-	pub: FullProcessedPub;
+	pub: ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+		withStageActionInstances: true;
+	}>;
 	relatedPubActionsDropdowns: Record<string, ReactNode>;
 }) => {
 	const groupedBySlug = useMemo(() => {
-		const grouped: Record<string, { pub: FullProcessedPub; fieldName: string }[]> = {};
+		const grouped: Record<
+			string,
+			{
+				pub: ProcessedPubWithForm<{
+					withRelatedPubs: true;
+					withStage: true;
+					withPubType: true;
+					withMembers: true;
+					withStageActionInstances: true;
+				}>;
+				fieldName: string;
+			}[]
+		> = {};
 		for (const value of pub.values) {
 			const { relatedPub, fieldSlug, fieldName } = value;
 			if (relatedPub) {
