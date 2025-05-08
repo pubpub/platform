@@ -1,3 +1,5 @@
+import { readFile } from "fs/promises";
+
 import { faker } from "@faker-js/faker";
 import { defaultMarkdownParser } from "prosemirror-markdown";
 
@@ -11,6 +13,8 @@ import { seedCommunity } from "../seed/seedCommunity";
 const abstract = `<p>The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. <em>However</em>, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae</p>`;
 
 export const seedLegacy = async (communityId?: CommunitiesId) => {
+	const poniesText = await readFile(new URL("./ponies.snippet.html", import.meta.url), "utf-8");
+
 	const articleSeed = (number = 1_000, asRelation = false) =>
 		Array.from({ length: number }, (_, idx) => {
 			const pub = {
@@ -524,17 +528,17 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 																	pubType: "Journal Article",
 																	stage: "Articles",
 																	values: {
-																		Title: "Identification of capsid-like proteins in venomous and parasitic animals",
+																		Title: "The Complexity of Joint Regeneration: How an Advanced Implant Could Fail by Its In Vivo Proven Bone Component",
 																		"Publication Date":
 																			new Date(),
 																		"Creation Date": new Date(),
 																		"Last Edited": new Date(),
 																		Avatar: "https://www.pubpub.org/static/logo.png",
 																		Description:
-																			"Inspired by wasps co-opting viral capsids to deliver genes to the caterpillars they parasitize, we looked for capsid-like proteins in other species. We found capsid homologs in ticks and other parasites, suggesting this phenomenon could be wider spread than previously known.",
+																			"Orginal article by Paweena Diloksumpan, Florencia Abinzano, Mylène de Ruijter, Anneloes Mensinga, Saskia Plomp, Ilyas Khan, Harold Brommer, Ineke Smit, Miguel Dias Castilho, P. René van Weeren, Jos Malda, and Riccardo Levato, published in the Journal of Trial and Error 2021, https://doi.org/10.36850/e3 ",
 																		Abstract: abstract,
 																		License: "CC-BY 4.0",
-																		Content: abstract,
+																		Content: poniesText,
 																		DOI: "10.82234/legacy-14b2-6f27",
 																		URL: "https://www.pubpub.org",
 																		"Inline Citation Style":
