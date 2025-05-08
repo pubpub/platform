@@ -10,12 +10,17 @@ export const renderNodeToHTML = (node: Node): string => {
 	const dom = new JSDOM();
 	const document = dom.window.document;
 
+	// necessary for rendering math, see `context-editor/schemas/math.ts`
+	global.document = document;
 	const fragment = DOMSerializer.fromSchema(baseSchema).serializeFragment(node.content, {
 		document,
 	});
 
 	const container = document.createElement("div");
 	container.appendChild(fragment);
+
+	// @ts-expect-error "Operand of delete must be optional" shut up man
+	delete global.document;
 
 	return container.innerHTML;
 };
@@ -50,7 +55,10 @@ export const processEditorHTML = (
 	}
 
 	return {
-		html: async () => String(await processor.use(rehypeStringify).process(html)),
+		html: async () => {
+			const file = await processor.use(rehypeStringify).process(html);
+			return String(file);
+		},
 		processor,
 	};
 };

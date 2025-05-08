@@ -1,4 +1,32 @@
-import type { DOMOutputSpec, MarkSpec, NodeSpec } from "prosemirror-model";
+import type { Node, NodeSpec } from "prosemirror-model";
+
+import { renderToString } from "katex";
+
+import { tryCatch } from "utils/try-catch";
+
+const renderMath = (node: Node, type: "math-inline" | "math-display") => {
+	const [err, renderedKatex] = tryCatch(() =>
+		renderToString(node.textContent, { output: "mathml" })
+	);
+
+	const content = err ? `<span class="parse-error">(math error)</span>` : renderedKatex;
+
+	// this is not nice, i would like to avoid manually calling `document.createElement`
+	// as we now need to keep track of setting `global.document` when this is called.
+	const element =
+		type === "math-inline"
+			? global.document.createElement("span")
+			: global.document.createElement("div");
+	element.innerHTML = content;
+
+	return [
+		type,
+		{
+			className: type,
+		},
+		element.childNodes[0],
+	] as const;
+};
 
 const mathInline = {
 	attrs: {
@@ -12,15 +40,16 @@ const mathInline = {
 	parseDOM: [
 		{
 			tag: "math-inline",
+			contentElement: "annotation",
 			getAttrs: (node) => {
 				return {
 					id: (node as Element).getAttribute("id"),
-					class: (node as Element).getAttribute("class"),
+					class: "math-inline", // need to set manually bc `annotation` does not have `math-inline` class
 				};
 			},
 		},
 	],
-	toDOM: () => ["math-inline", { class: "math-node" }, 0],
+	toDOM: (node: Node) => renderMath(node, "math-inline"),
 } satisfies NodeSpec;
 
 const mathDisplay = {
@@ -34,16 +63,17 @@ const mathDisplay = {
 	code: true,
 	parseDOM: [
 		{
-			tag: "math-display",
+			tag: "math-display.math-display",
+			contentElement: "annotation",
 			getAttrs: (node) => {
 				return {
 					id: (node as Element).getAttribute("id"),
-					class: (node as Element).getAttribute("class"),
+					class: "math-display", // need to set manually bc `annotation` does not have `math-display` class
 				};
 			},
 		},
 	],
-	toDOM: () => ["math-display", { class: "math-node" }, 0],
+	toDOM: (node: Node) => renderMath(node, "math-display"),
 } satisfies NodeSpec;
 
 export default {
