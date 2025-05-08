@@ -51,14 +51,8 @@ export const createMarkToggle = (typeName: string, expandEmpty = false) => {
 	});
 };
 
-export const replaceMark = (pos: number, mark: Mark, attrs: Attrs): Command => {
+export const replaceMark = (mark: Mark, attrs: Attrs): Command => {
 	return (state, dispatch) => {
-		const node = state.doc.nodeAt(pos);
-
-		if (!node) {
-			return false;
-		}
-
 		const range = getMarkRange(state.selection.$from, mark.type, mark.attrs);
 
 		if (!range) {
