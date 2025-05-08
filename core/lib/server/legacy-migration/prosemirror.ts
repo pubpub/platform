@@ -40,6 +40,15 @@ type NewImageNode = {
 		align: Alignment;
 	};
 };
+interface OldEquationNode {
+	type: string;
+	attrs: {
+		id: string;
+		html: string;
+		value: string;
+		renderForPandoc: boolean;
+	};
+}
 
 const nodeReplacements = {
 	image: (node: OldImageNode) => {
@@ -88,6 +97,21 @@ const nodeReplacements = {
 		} as const;
 
 		return newNode;
+	},
+	equation: (node: OldEquationNode) => {
+		return {
+			type: "math_inline",
+			attrs: {
+				id: node.attrs.id,
+				class: "math-inline",
+			},
+			content: [
+				{
+					type: "text",
+					text: node.attrs.value,
+				},
+			],
+		};
 	},
 } as const;
 
@@ -170,12 +194,12 @@ export const transformProsemirrorTree = (doc: any) => {
 			}
 		}
 
-		if (!isNodeSupported(node)) {
-			return createReplacementNode(node);
-		}
-
 		if (node.type in nodeReplacements) {
 			return nodeReplacements[node.type as keyof typeof nodeReplacements](node);
+		}
+
+		if (!isNodeSupported(node)) {
+			return createReplacementNode(node);
 		}
 
 		// handle marks array if present
