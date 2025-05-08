@@ -7,6 +7,7 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
+import { registerFormats } from "schemas";
 
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -17,11 +18,11 @@ import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
 import { MenuSwitchField } from "./MenuFields";
 
+registerFormats();
+
 const formSchema = Type.Object({
 	href: Type.String({ format: "uri" }),
 	openInNewTab: Type.Boolean({ default: false }),
-	id: Type.String(),
-	class: Type.String(),
 });
 
 const compiledSchema = TypeCompiler.Compile(formSchema);

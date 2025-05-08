@@ -1,5 +1,3 @@
-import type { Mark } from "prosemirror-model";
-
 import React, { useState } from "react";
 import {
 	useEditorEffect,
@@ -7,11 +5,11 @@ import {
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
 import { createPortal } from "react-dom";
-import { registerFormats } from "schemas";
 
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 
+import { replaceMark } from "../commands/marks";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { DataAttributes } from "./menus/DefaultAttributesMenu";
@@ -37,8 +35,6 @@ const initPanelProps: PanelProps = {
 	bottom: 0,
 };
 
-registerFormats();
-
 export function AttributePanel({
 	menuHidden,
 	containerRef,
@@ -49,8 +45,15 @@ export function AttributePanel({
 	const [offset, setOffset] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
-	const { position } = useEditorContext();
+	const { position, setPosition } = useEditorContext();
 	const node = position === null ? null : state.doc.nodeAt(position);
+
+	useEditorEffect(() => {
+		const p = state.selection.$from;
+		if (p.marks().length > 0) {
+			setPosition(p.pos);
+		}
+	}, [state]);
 
 	useEditorEffect(
 		(view) => {
@@ -116,50 +119,30 @@ export function AttributePanel({
 
 	const updateMarkAttr = useEditorEventCallback(
 		(view, index: number, attrKey: string, value: string | null) => {
-			if (!view || !node || !position) return;
-			const markToReplace = nodeMarks[index];
-			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
-				...(node?.marks ?? []),
-			];
-			newMarks[index].attrs[attrKey] = value;
+			if (!view || !position) return;
 
-			const newMark = view.state.schema.marks[markToReplace.type.name].create({
-				...markToReplace.attrs,
+			const mark = nodeMarks[index];
+			const markAttrs = {
+				...mark.attrs,
 				[attrKey]: value,
-			});
+			};
 
-			if (!newMark) {
-				return null;
-			}
-
-			view.dispatch(
-				view.state.tr.addMark(position, position + (node.nodeSize || 0), newMark)
-			);
+			replaceMark(position, mark, markAttrs)(view.state, view.dispatch);
 		}
 	);
 
 	/** Bulk update version of updateMarkAttr */
 	const updateMarkAttrs = useEditorEventCallback(
 		(view, index: number, attrs: Record<string, string | null>) => {
-			if (!view || !node || !position) return;
-			const markToReplace = nodeMarks[index];
-			const newMarks: Array<Omit<Mark, "attrs"> & { [attr: string]: any }> = [
-				...(node?.marks ?? []),
-			];
-			newMarks[index].attrs = attrs;
+			if (!view || !position) return;
 
-			const newMark = view.state.schema.marks[markToReplace.type.name].create({
-				...markToReplace.attrs,
+			const mark = nodeMarks[index];
+			const markAttrs = {
+				...mark.attrs,
 				...attrs,
-			});
+			};
 
-			if (!newMark) {
-				return null;
-			}
-
-			view.dispatch(
-				view.state.tr.addMark(position, position + (node.nodeSize || 0), newMark)
-			);
+			replaceMark(position, mark, markAttrs)(view.state, view.dispatch);
 		}
 	);
 
