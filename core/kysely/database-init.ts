@@ -32,6 +32,9 @@ const tablesWithUpdateAt = databaseTables
 export const createDatabase = (options: DatabaseOptions) => {
 	const pool = new pg.Pool({
 		connectionString: options.url,
+    idle_in_transaction_session_timeout: 1000,
+		connectionTimeoutMillis: 10_000,
+		max: 20,
 	});
 
 	const dialect = new PostgresDialect({
