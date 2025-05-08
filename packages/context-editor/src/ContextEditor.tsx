@@ -17,6 +17,8 @@ import "prosemirror-gapcursor/style/gapcursor.css";
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
+import type { Node } from "prosemirror-model";
+
 import { cn } from "utils";
 
 import { EditorContextProvider } from "./components/Context";
@@ -27,7 +29,7 @@ export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string /* classname for the editor view */;
 	disabled?: boolean;
-	initialDoc?: object;
+	initialDoc?: Node;
 	pubId: string /* id of the current pub whose field is being directly edited */;
 	pubTypeId: string /* id of the current pubType of the pub whose field is being directly edited */;
 	pubTypes: object /* pub types in given context */;
@@ -63,7 +65,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
 	const [editorState, setEditorState] = useState(
 		EditorState.create({
-			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
+			doc: props.initialDoc ?? undefined,
 			schema: baseSchema,
 			plugins: [...basePlugins(baseSchema, props, suggestData, setSuggestData), reactKeys()],
 		})

@@ -152,7 +152,7 @@ export type ActionSuccess = {
 	/**
 	 * Optionally provide a report to be displayed to the user
 	 */
-	report?: string;
+	report?: React.ReactNode;
 	data: unknown;
 };
 

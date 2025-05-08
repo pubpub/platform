@@ -103,6 +103,7 @@ const buildDefaultValues = (
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
 				defaultValues[element.slug] = new Date(pubValue as string);
 			}
+
 			// There can be multiple relations for a single slug
 			if (element.isRelation) {
 				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
@@ -163,9 +164,13 @@ const createSchemaFromElements = (
 						return [slug, undefined];
 					}
 
-					const schema = getJsonSchemaByCoreSchemaType(schemaName, config);
+					let schema = getJsonSchemaByCoreSchemaType(schemaName, config);
 					if (!schema) {
 						return [slug, undefined];
+					}
+
+					if (schemaName === CoreSchemaType.RichText) {
+						schema = Type.Any();
 					}
 
 					// Allow fields to be empty or optional. Special case for empty strings,

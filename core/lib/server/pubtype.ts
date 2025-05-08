@@ -9,6 +9,8 @@ import type { Prettify, XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
+import { createDefaultForm } from "./form";
 import { GET_MANY_DEFAULT } from "./pub";
 
 export const getPubTypeBase = <DB extends Record<string, any>>(
@@ -70,20 +72,22 @@ export const getPubTypesForCommunity = async (
 		offset = GET_MANY_DEFAULT.offset,
 		orderBy = GET_MANY_DEFAULT.orderBy,
 		orderDirection = GET_MANY_DEFAULT.orderDirection,
-	}: GetManyParams = GET_MANY_DEFAULT
+		name,
+	}: GetManyParams & { name?: string[] } = GET_MANY_DEFAULT
 ) =>
 	autoCache(
 		getPubTypeBase()
 			.where("pub_types.communityId", "=", communityId)
+			.$if(Boolean(name), (eb) => eb.where("pub_types.name", "in", name!))
 			.orderBy(orderBy, orderDirection)
 			.$if(limit !== 0, (qb) => qb.limit(limit).offset(offset))
 	).execute();
 
 export type GetPubTypesResult = Prettify<Awaited<ReturnType<typeof getPubTypesForCommunity>>>;
 
-export const getAllPubTypesForCommunity = (communitySlug: string) => {
+export const getAllPubTypesForCommunity = (communitySlug: string, trx = db) => {
 	return autoCache(
-		db
+		trx
 			.selectFrom("pub_types")
 			.innerJoin("communities", "communities.id", "pub_types.communityId")
 			.where("communities.slug", "=", communitySlug)
@@ -102,6 +106,7 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 										jsonBuildObject({
 											id: eb.ref("A"),
 											isTitle: eb.ref("isTitle"),
+											slug: eb.ref("slug"),
 										})
 									),
 									sql`json_build_array()`
@@ -111,7 +116,7 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 						.as("fields"),
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
-			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean }[] }>()
+			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean; slug: string }[] }>()
 	);
 };
 
@@ -136,3 +141,47 @@ export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>)
 						.as("fields"),
 			])
 	);
+
+export const createPubTypeWithDefaultForm = async (
+	props: {
+		communityId: CommunitiesId;
+		name: string;
+		description?: string;
+		fields: PubFieldsId[];
+		titleField?: PubFieldsId;
+	},
+	trx = db
+) => {
+	const { id: pubTypeId } = await autoRevalidate(
+		trx
+			.with("newType", (db) =>
+				db
+					.insertInto("pub_types")
+					.values({
+						communityId: props.communityId,
+						name: props.name,
+						description: props.description,
+					})
+					.returning("pub_types.id")
+			)
+			.insertInto("_PubFieldToPubType")
+			.values((eb) =>
+				props.fields.map((id) => ({
+					A: id,
+					B: eb.selectFrom("newType").select("id"),
+					isTitle: props.titleField === id,
+				}))
+			)
+			.returning("B as id")
+	).executeTakeFirstOrThrow();
+
+	const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
+
+	return createDefaultForm(
+		{
+			communityId: props.communityId,
+			pubType,
+		},
+		trx
+	).executeTakeFirstOrThrow();
+};
