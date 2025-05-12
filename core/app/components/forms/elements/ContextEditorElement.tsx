@@ -85,8 +85,6 @@ export const ContextEditorElement = ({
 	config,
 }: ElementProps<InputComponent.richText>) => {
 	const { control } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
 
 	Value.Default(richTextInputConfigSchema, config);
 	if (!Value.Check(richTextInputConfigSchema, config)) {

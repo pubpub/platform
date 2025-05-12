@@ -170,6 +170,8 @@ const createSchemaFromElements = (
 					}
 
 					if (schemaName === CoreSchemaType.RichText) {
+						// TODO: find a better solution for this
+						// @ts-expect-error Cant assign any to the schema, but it's fine
 						schema = Type.Any();
 					}
 

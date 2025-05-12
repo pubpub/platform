@@ -15,7 +15,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsi
 import { ChevronDown, ChevronRight } from "ui/icon";
 import { ShowMore } from "ui/show-more";
 
-import type { FileUpload } from "~/lib/fields/fileUpload";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
 
@@ -208,11 +207,9 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		);
 	}
 
-	// Currently, we are only rendering string versions of fields, except for file uploads
-	// For file uploads, because Unjournal doesn't have schemaNames yet, we check the value structure
 	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 	if (Value.Check(fileUploadSchema, value.value)) {
-		return <FileUploadPreview files={value.value as FileUpload} />;
+		return <FileUploadPreview files={value.value} />;
 	}
 
 	if (value.schemaName === CoreSchemaType.DateTime) {
