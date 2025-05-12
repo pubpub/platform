@@ -2091,6 +2091,8 @@ export const _fullTextSearchQuery = (
 					])
 					.$narrowType<{
 						value: JsonValue;
+						// still typed as null in db
+						schemaName: CoreSchemaType;
 					}>()
 					.whereRef("pub_values.pubId", "=", "pubs.id")
 					.where(
