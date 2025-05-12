@@ -36,4 +36,11 @@ export class PubDetailsPage {
 			await runActionDialog.waitFor({ state: "hidden" });
 		}
 	}
+
+	async openAddMemberDialog() {
+		await this.page.getByText("Add Member", { exact: true }).click();
+		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
+		await addMemberDialog.waitFor();
+		return addMemberDialog;
+	}
 }
