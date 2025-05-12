@@ -4,10 +4,14 @@ import React, { createContext, useContext, useState } from "react";
 
 type Props = PropsWithChildren<{
 	position: number | null;
-	setPosition: (pos: number | null) => void;
 }>;
 
-const EditorContext = createContext<Props>({
+type EditorContext = {
+	position: number | null;
+	setPosition: (pos: number | null) => void;
+};
+
+const EditorContext = createContext<EditorContext>({
 	setPosition: () => {},
 	position: 0,
 });

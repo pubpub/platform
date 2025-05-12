@@ -55,7 +55,7 @@ export const AdvancedOptions = (props: Props) => {
 
 	return (
 		<Form {...form}>
-			<form className="flex flex-col gap-4" onBlur={form.handleSubmit(props.onChange)}>
+			<form className="mt-2 flex flex-col gap-4" onBlur={form.handleSubmit(props.onChange)}>
 				<Collapsible open={isOpen} onOpenChange={setIsOpen} className="space-y-4">
 					<div className="flex items-center justify-between">
 						<h3 className="text-sm font-medium">Advanced Options</h3>

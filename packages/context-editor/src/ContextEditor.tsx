@@ -4,12 +4,7 @@ import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import {
-	ProseMirror,
-	ProseMirrorDoc,
-	reactKeys,
-	useEditorEffect,
-} from "@handlewithcare/react-prosemirror";
+import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
 import { AttributePanel } from "./components/AttributePanel";
@@ -22,7 +17,6 @@ import "prosemirror-view/style/prosemirror.css";
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
-import applyDevTools from "prosemirror-dev-tools";
 import { fixTables } from "prosemirror-tables";
 
 import { cn } from "utils";
@@ -110,7 +104,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 				editable={() => !props.disabled}
 				className={cn("font-serif", props.className)}
 			>
-				<EditorContextProvider activeNode={null} position={0}>
+				<EditorContextProvider position={0}>
 					{props.hideMenu ? null : (
 						<div className="sticky top-0 z-10">
 							<MenuBar upload={props.upload} />
@@ -123,16 +117,8 @@ export default function ContextEditor(props: ContextEditorProps) {
 						setSuggestData={setSuggestData}
 						containerRef={containerRef}
 					/>
-					<DevTools />
 				</EditorContextProvider>
 			</ProseMirror>
 		</div>
 	);
 }
-
-const DevTools = () => {
-	// useEditorEffect((view) => {
-	// 	applyDevTools(view);
-	// });
-	return null;
-};

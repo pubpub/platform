@@ -1,7 +1,6 @@
 import React from "react";
 import { Node } from "prosemirror-model";
 
-import { AdvancedOptions } from "./AdvancedOptions";
 import { FigureMenu } from "./FigureMenu";
 
 type NodeMenuProps = {
@@ -20,11 +19,9 @@ export const NodeMenu = (props: NodeMenuProps) => {
 	}
 
 	return (
-		<>
-			<h2 className="text-md font-medium">{props.node.type.name}</h2>
+		<div className="my-2 flex flex-col gap-2">
+			<h2 className="text-md font-serif font-medium">{props.node.type.name}</h2>
 			{menu}
-			<hr />
-			<AdvancedOptions node={props.node} onChange={props.onChange} />
-		</>
+		</div>
 	);
 };

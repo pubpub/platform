@@ -12,6 +12,7 @@ import { Label } from "ui/label";
 import { replaceMark } from "../commands/marks";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
+import { AdvancedOptions } from "./menus/AdvancedOptions";
 import { DataAttributes } from "./menus/DefaultAttributesMenu";
 import { LinkMenu } from "./menus/LinkMenu";
 import { NodeMenu } from "./menus/NodeMenu";
@@ -167,10 +168,6 @@ export function AttributePanel({
 	const nodeAttrs = node.attrs || {};
 	const nodeMarks = node.marks || [];
 
-	// Marks will automatically show names, so it is only the 'inline' types
-	// that are not marks that need to be specifically rendered
-	const showName = node?.type?.name === "math_inline";
-
 	if (!containerRef.current) {
 		return null;
 	}
@@ -201,8 +198,6 @@ export function AttributePanel({
 				}}
 				data-testid="attribute-panel"
 			>
-				<div className="text-sm">Attributes</div>
-				{showName ? <div className="mt-4 text-sm font-bold">{node.type?.name}</div> : null}
 				{nodeMarks.length > 0 ? (
 					nodeMarks.map((mark, index) => {
 						const key = `${mark.type.name}-${position}`;
@@ -253,6 +248,8 @@ export function AttributePanel({
 					<NodeMenu node={node} onChange={updateNodeAttrs} />
 				)}
 				<DataAttributes nodeAttrs={nodeAttrs} updateData={updateData} />
+				<hr />
+				<AdvancedOptions node={node} onChange={updateNodeAttrs} />
 			</div>
 
 			<div
