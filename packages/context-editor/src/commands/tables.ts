@@ -92,32 +92,3 @@ export const addTable = (state: EditorState, dispatch?: Dispatch, options?: AddT
 
 	return true;
 };
-
-// add table to a new paragraph
-export const addTableToEnd = (
-	state: EditorState,
-	dispatch?: Dispatch,
-	options?: AddTableOptions
-) => {
-	let tr = state.tr;
-
-	// get block end position
-	const end = tr.selection.$head.end(1); // param 1 is node deep
-	const resolvedEnd = tr.doc.resolve(end);
-
-	// move cursor to the end, then insert table
-	const nodes = createTable(state, options);
-	tr.setSelection(TextSelection.near(resolvedEnd));
-	tr = tr.replaceSelectionWith(nodes).scrollIntoView();
-
-	// move cursor into table
-	const offset = end + 1;
-	const resolvedPos = tr.doc.resolve(offset);
-	tr.setSelection(TextSelection.near(resolvedPos));
-
-	if (dispatch) {
-		dispatch(tr);
-	}
-
-	return true;
-};
