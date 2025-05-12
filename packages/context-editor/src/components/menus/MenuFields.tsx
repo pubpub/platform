@@ -40,12 +40,19 @@ export const MenuInputField = ({
 	);
 };
 
-export const MenuSwitchField = ({ name, label: labelProp }: { name: string; label?: string }) => {
-	const label = labelProp ?? name;
+type MenuSwitchFieldProps = {
+	name: string;
+	label?: string;
+	value?: boolean;
+	onChange?: (value: boolean) => void;
+};
+
+export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
+	const label = props.label ?? props.name;
 	const form = useFormContext();
 	return (
 		<FormField
-			name={name}
+			name={props.name}
 			control={form.control}
 			render={({ field }) => {
 				return (
@@ -53,8 +60,8 @@ export const MenuSwitchField = ({ name, label: labelProp }: { name: string; labe
 						<FormLabel>{label}</FormLabel>
 						<FormControl>
 							<Switch
-								checked={field.value}
-								onCheckedChange={field.onChange}
+								checked={props.value ?? field.value}
+								onCheckedChange={props.onChange ?? field.onChange}
 								className="data-[state=checked]:bg-emerald-400"
 							/>
 						</FormControl>

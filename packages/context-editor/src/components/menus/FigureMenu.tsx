@@ -1,5 +1,6 @@
 import type { Static } from "@sinclair/typebox";
 import type { Node } from "prosemirror-model";
+import type { EditorView } from "prosemirror-view";
 
 import React, { useMemo } from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
@@ -14,12 +15,15 @@ import { Switch } from "ui/switch";
 
 import { toggleFigureNode } from "../../commands/figures";
 import { useEditorContext } from "../Context";
+import { MenuSwitchField } from "./MenuFields";
 
 registerFormats();
 
 const formSchema = Type.Object({
-	enableTitle: Type.Boolean(),
-	enableCaption: Type.Boolean(),
+	title: Type.Boolean(),
+	caption: Type.Boolean(),
+	credit: Type.Boolean(),
+	license: Type.Boolean(),
 	id: Type.String(),
 	class: Type.String(),
 });
@@ -35,16 +39,22 @@ type LinkMenuProps = {
 export const FigureMenu = ({ node, onChange }: LinkMenuProps) => {
 	const { position } = useEditorContext();
 
-	const hasCaption = node.children.some((child) => child.type.name === "figcaption");
-	const hasTitle = node.children.some((child) => child.type.name === "title");
+	const title = node.children.some((child) => child.type.name === "title");
+	const caption = node.children.some((child) => child.type.name === "figcaption");
+	const credit = node.children.some((child) => child.type.name === "credit");
+	const license = node.children.some((child) => child.type.name === "license");
+	const isMedia = node.children.some((child) => child.type.name === "image");
+
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
 		resolver,
 		mode: "onBlur",
 		defaultValues: {
-			enableCaption: hasCaption,
-			enableTitle: hasTitle,
+			license,
+			credit,
+			caption,
+			title,
 			id: node.attrs?.id ?? "",
 			class: node.attrs?.class ?? "",
 		},
@@ -54,69 +64,52 @@ export const FigureMenu = ({ node, onChange }: LinkMenuProps) => {
 		if (position === null) {
 			return;
 		}
-		// omit enableCaption and enableTitle, as they are controlled by the
+		// omit caption and title, as they are controlled by the
 		// prosemirror doc state
-		const { enableCaption, enableTitle, ...rest } = values;
+		const { caption, title, credit, license, ...rest } = values;
 		onChange(rest);
 	};
 
-	const toggleTitle = useEditorEventCallback((view) => {
-		if (position === null) {
-			return;
-		}
-		toggleFigureNode(view.state, view.dispatch)(position, "title");
-	});
+	const makeNodeToggle = (name: "title" | "figcaption" | "credit" | "license") => {
+		return (view: EditorView) => {
+			if (position === null) {
+				return;
+			}
+			toggleFigureNode(view.state, view.dispatch)(position, name);
+		};
+	};
 
-	const toggleFigcaption = useEditorEventCallback((view) => {
-		if (position === null) {
-			return;
-		}
-		toggleFigureNode(view.state, view.dispatch)(position, "figcaption");
-	});
+	const toggleTitle = useEditorEventCallback(makeNodeToggle("title"));
+	const toggleCaption = useEditorEventCallback(makeNodeToggle("figcaption"));
+	const toggleCredit = useEditorEventCallback(makeNodeToggle("credit"));
+	const toggleLicense = useEditorEventCallback(makeNodeToggle("license"));
 
 	return (
 		<Form {...form}>
 			<form className="flex flex-col gap-4" onBlur={form.handleSubmit(handleSubmit)}>
-				<FormField
-					name="enableTitle"
-					control={form.control}
-					render={() => {
-						return (
-							<FormItem className="flex flex-col">
-								<div className="flex items-center gap-2 space-y-0">
-									<FormLabel>Title</FormLabel>
-									<FormControl>
-										<Switch
-											className="mr-2 data-[state=checked]:bg-emerald-400"
-											checked={hasTitle}
-											onCheckedChange={toggleTitle}
-										/>
-									</FormControl>
-								</div>
-								<FormMessage />
-							</FormItem>
-						);
-					}}
+				<MenuSwitchField name="title" label="Title" value={title} onChange={toggleTitle} />
+				<MenuSwitchField
+					name="caption"
+					label="Caption"
+					value={caption}
+					onChange={toggleCaption}
 				/>
-				<FormField
-					name="enableCaption"
-					control={form.control}
-					render={() => (
-						<FormItem className="flex flex-col">
-							<div className="flex items-center gap-2 space-y-0">
-								<FormLabel>Caption</FormLabel>
-								<FormControl>
-									<Switch
-										className="data-[state=checked]:bg-emerald-400"
-										checked={hasCaption}
-										onCheckedChange={toggleFigcaption}
-									/>
-								</FormControl>
-							</div>
-							<FormMessage />
-						</FormItem>
-					)}
-				/>
+				{isMedia && (
+					<>
+						<MenuSwitchField
+							name="credit"
+							label="Credit"
+							value={credit}
+							onChange={toggleCredit}
+						/>
+						<MenuSwitchField
+							name="license"
+							label="License"
+							value={license}
+							onChange={toggleLicense}
+						/>
+					</>
+				)}
 			</form>
 		</Form>
 	);
