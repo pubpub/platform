@@ -17,7 +17,7 @@
 		"db:prisma": "pnpm prisma",
 		"db:studio": "pnpm prisma studio",
 		"db:generate-history-table": "pnpm exec tsx prisma/scripts/history-tables/generate-history-table.mts",
-		"clear-cache": "rm -rf .next/cache/fetch-cache",
+		"clear-cache": "echo 'FLUSHALL' | nc $(dotenv -e .env.local -e .env.development -p VALKEY_HOST) 6379",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true NODE_OPTIONS=\"--max-old-space-size=8192\" next build",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
