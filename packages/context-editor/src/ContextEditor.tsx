@@ -16,6 +16,7 @@ import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-pr
 import { EditorState } from "prosemirror-state";
 
 import { cn } from "utils";
+import { tryCatch } from "utils/try-catch";
 
 import { AttributePanel } from "./components/AttributePanel";
 import { EditorContextProvider } from "./components/Context";
@@ -65,19 +66,22 @@ const initSuggestProps: SuggestProps = {
 	filter: "",
 };
 
+const parseHtmlToDoc = (html: string) => {
+	const [err, prosemirrorNode] = tryCatch(() => htmlToProsemirror(html));
+	return [err, prosemirrorNode ?? getEmptyDoc()] as const;
+};
+
+const getEmptyDoc = () => baseSchema.nodeFromJSON(EMPTY_DOC);
+
 const ContextEditor = memo(function ContextEditor(props: ContextEditorProps) {
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
 
-	const initialDoc = useMemo(() => {
-		let doc: Node | undefined;
-		if (props.initialHtml) {
-			doc = htmlToProsemirror(props.initialHtml);
+	const [parseError, initialDoc] = useMemo(() => {
+		if (!props.initialHtml) {
+			return [undefined, getEmptyDoc()];
 		}
 
-		if (!doc) {
-			doc = baseSchema.nodeFromJSON(EMPTY_DOC);
-		}
-		return doc;
+		return parseHtmlToDoc(props.initialHtml);
 	}, [props.initialHtml]);
 
 	const [editorState, setEditorState] = useState(
@@ -98,6 +102,15 @@ const ContextEditor = memo(function ContextEditor(props: ContextEditorProps) {
 
 	const containerRef = useRef<HTMLDivElement>(null);
 	const containerId = useId();
+
+	if (parseError) {
+		return (
+			<div className="rounded-md border border-red-300 bg-red-50 p-4 text-red-800">
+				<p className="font-medium">unable to parse document</p>
+				<p className="mt-1 text-sm text-red-600">{parseError.message}</p>
+			</div>
+		);
+	}
 
 	return (
 		<div

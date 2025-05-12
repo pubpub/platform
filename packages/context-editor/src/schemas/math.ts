@@ -14,6 +14,14 @@ const renderMath = (node: Node, type: "math-inline" | "math-display") => {
 	// this is not nice, i would like to avoid manually calling `document.createElement`
 	// as we now need to keep track of setting `global.document` when this is called on the server
 	// forturnately, we only really server render the HTML when importing Legacy text content
+	// could be easily solved if `toDOM` was passed the document object, but ProseMirror does not seem to intend providing this
+	// https://discuss.prosemirror.net/t/getting-a-hold-of-the-document-used-by-prosemirror-from-todom/8392
+	if (!global.document) {
+		throw new Error(
+			"document not found. Trying to serialize math in a non-browser environment. To do this, set `global.document` to eg a `JSDOM` document before serializing."
+		);
+	}
+
 	const element =
 		type === "math-inline"
 			? global.document.createElement("span")

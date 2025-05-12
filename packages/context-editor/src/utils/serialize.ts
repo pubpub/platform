@@ -20,22 +20,21 @@ export const prosemirrorToHTML = (node: Node): string => {
  * Deserialize HTML to a ProseMirror node
  *
  * Only works in a valid browser environment
+ *
+ * @throws {Error} If the HTML is invalid. Use `tryCatch` to catch the error.
  */
 export const htmlToProsemirror = (html: string) => {
 	let temp: HTMLDivElement | undefined;
-	console.log("hello");
 	try {
 		// create temp element
 		temp = window.document.createElement("div");
-		console.log(temp);
 		temp.innerHTML = html;
 		const node = DOMParser.fromSchema(baseSchema).parse(temp);
 
 		return node;
 	} catch (e) {
-		console.error("Something went wrong during the rendering from HTML to ProseMirror");
-		// console.error(e);
-		throw new Error(e);
+		console.error("Something went wrong during the rendering from HTML to ProseMirror", e);
+		throw e;
 	} finally {
 		if (temp) {
 			temp.remove();

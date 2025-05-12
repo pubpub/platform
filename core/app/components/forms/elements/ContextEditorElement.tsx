@@ -19,7 +19,15 @@ import { useContextEditorContext } from "../../ContextEditor/ContextEditorContex
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const EditorFormElement = memo(
-	function EditorFormElement({ field }: { field: ControllerRenderProps<FieldValues, string> }) {
+	function EditorFormElement({
+		field,
+		label,
+		help,
+	}: {
+		field: ControllerRenderProps<FieldValues, string>;
+		label: string;
+		help?: string;
+	}) {
 		const formElementToggle = useFormElementToggleContext();
 		const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
 
@@ -32,7 +40,6 @@ const EditorFormElement = memo(
 		if (!pubId || !pubTypeId) {
 			return <></>;
 		}
-		const label = f.name;
 		const disabled = !formElementToggle.isEnabled(f.name);
 
 		return (
@@ -60,7 +67,7 @@ const EditorFormElement = memo(
 						/>
 					</FormControl>
 				</div>
-				{/* <FormDescription>{help}</FormDescription> */}
+				<FormDescription>{help}</FormDescription>
 				<FormMessage />
 			</FormItem>
 		);
@@ -90,7 +97,9 @@ export const ContextEditorElement = ({
 		<FormField
 			control={control}
 			name={slug}
-			render={({ field }) => <EditorFormElement field={field} />}
+			render={({ field }) => (
+				<EditorFormElement field={field} label={label} help={config.help} />
+			)}
 		/>
 	);
 };
