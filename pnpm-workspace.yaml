@@ -37,6 +37,8 @@ catalog:
     "@ts-rest/open-api": 3.51.0
     "@ts-rest/serverless": 3.51.0
     "@ts-rest/react-query": 3.51.0
+    "prosemirror-model": 1.24.1
+    "prosemirror-state": 1.4.3
 
 catalogs:
     react18:

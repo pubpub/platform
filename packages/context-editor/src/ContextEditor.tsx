@@ -1,15 +1,6 @@
 "use client";
 
 import type { NodeViewComponentProps } from "@handlewithcare/react-prosemirror";
-import type { ForwardRefExoticComponent, RefAttributes } from "react";
-
-import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
-import { EditorState } from "prosemirror-state";
-
-import { AttributePanel } from "./components/AttributePanel";
-import { basePlugins } from "./plugins";
-import { baseSchema } from "./schemas";
 
 import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
@@ -18,18 +9,29 @@ import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
 import type { Node } from "prosemirror-model";
+import type { ForwardRefExoticComponent, RefAttributes } from "react";
+
+import React, { memo, useEffect, useId, useMemo, useRef, useState } from "react";
+import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
+import { EditorState } from "prosemirror-state";
 
 import { cn } from "utils";
 
+import { AttributePanel } from "./components/AttributePanel";
 import { EditorContextProvider } from "./components/Context";
 import { MenuBar } from "./components/MenuBar";
 import SuggestPanel from "./components/SuggestPanel";
+import { basePlugins } from "./plugins";
+import { baseSchema } from "./schemas";
+import { EMPTY_DOC } from "./utils/emptyDoc";
+import { htmlToProsemirror } from "./utils/serialize";
 
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string /* classname for the editor view */;
 	disabled?: boolean;
-	initialDoc?: Node;
+	// initialDoc?: Node;
+	initialHtml?: string;
 	pubId: string /* id of the current pub whose field is being directly edited */;
 	pubTypeId: string /* id of the current pubType of the pub whose field is being directly edited */;
 	pubTypes: object /* pub types in given context */;
@@ -38,7 +40,9 @@ export interface ContextEditorProps {
 		id: string
 	) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
 	onChange: (
-		state: EditorState
+		state: EditorState,
+		initialDoc: Node,
+		initialHtml?: string
 	) => void /* Function that passes up editorState so parent can handle onSave, etc */;
 	atomRenderingComponent: ForwardRefExoticComponent<
 		NodeViewComponentProps & RefAttributes<any>
@@ -61,11 +65,24 @@ const initSuggestProps: SuggestProps = {
 	filter: "",
 };
 
-export default function ContextEditor(props: ContextEditorProps) {
+const ContextEditor = memo(function ContextEditor(props: ContextEditorProps) {
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
+
+	const initialDoc = useMemo(() => {
+		let doc: Node | undefined;
+		if (props.initialHtml) {
+			doc = htmlToProsemirror(props.initialHtml);
+		}
+
+		if (!doc) {
+			doc = baseSchema.nodeFromJSON(EMPTY_DOC);
+		}
+		return doc;
+	}, [props.initialHtml]);
+
 	const [editorState, setEditorState] = useState(
 		EditorState.create({
-			doc: props.initialDoc ?? undefined,
+			doc: initialDoc,
 			schema: baseSchema,
 			plugins: [...basePlugins(baseSchema, props, suggestData, setSuggestData), reactKeys()],
 		})
@@ -76,7 +93,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 	}, [props.atomRenderingComponent]);
 
 	useEffect(() => {
-		props.onChange(editorState);
+		props.onChange(editorState, initialDoc, props.initialHtml);
 	}, [editorState]);
 
 	const containerRef = useRef<HTMLDivElement>(null);
@@ -116,4 +133,6 @@ export default function ContextEditor(props: ContextEditorProps) {
 			</ProseMirror>
 		</div>
 	);
-}
+});
+
+export default ContextEditor;

@@ -12,7 +12,8 @@ const renderMath = (node: Node, type: "math-inline" | "math-display") => {
 	const content = err ? `<span class="parse-error">(math error)</span>` : renderedKatex;
 
 	// this is not nice, i would like to avoid manually calling `document.createElement`
-	// as we now need to keep track of setting `global.document` when this is called.
+	// as we now need to keep track of setting `global.document` when this is called on the server
+	// forturnately, we only really server render the HTML when importing Legacy text content
 	const element =
 		type === "math-inline"
 			? global.document.createElement("span")

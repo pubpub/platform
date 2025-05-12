@@ -382,6 +382,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 				},
 			},
 			stages: {
+				"Test Pubs": {},
 				Articles: {
 					members: { "legacy-user-1": MemberRole.editor },
 				},
@@ -526,7 +527,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 																	value: "",
 																	id: articleId,
 																	pubType: "Journal Article",
-																	stage: "Articles",
+																	stage: "Test Pubs",
 																	values: {
 																		Title: "The Complexity of Joint Regeneration: How an Advanced Implant Could Fail by Its In Vivo Proven Bone Component",
 																		"Publication Date":

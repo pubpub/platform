@@ -4,28 +4,28 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
 
-import { fromHTMLToNode, renderNodeToHTML } from "../editor/serialization/server";
+import { htmlToProsemirror, prosemirrorToHTML } from "../editor/serialize-server";
 
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
 		if (typeof value === "string") {
-			const node = fromHTMLToNode(value);
+			const node = htmlToProsemirror(value);
 
-			// node.check();
+			node.check();
 			// return renderNodeToHTML(node);
-			return value;
+			return { success: true, value };
 		}
 
 		const node = baseSchema.nodeFromJSON(value);
 
 		// TODO: reenable this
-		// node.check();
+		node.check();
 
-		const html = renderNodeToHTML(node);
+		const html = prosemirrorToHTML(node);
 
-		return html;
+		return { success: true, value: html };
 	} catch (e) {
-		return false;
+		return { success: false, error: e };
 	}
 };
 
@@ -46,25 +46,28 @@ export const validatePubValuesBySchemaName = <
 			const stringifiedValue = JSON.stringify(value);
 			const trimmedValue =
 				stringifiedValue.length > 1000
-					? `${stringifiedValue.slice(0, 500)}...`
+					? `${stringifiedValue.slice(0, 100)}...`
 					: stringifiedValue;
 
 			if (schemaName === CoreSchemaType.RichText) {
 				const result = validateAgainstContextEditorSchema(value);
 
-				if (!result) {
-					acc.errors.push(createValidationError(slug, schemaName, trimmedValue));
+				if (!result.success) {
+					acc.errors.push({
+						slug,
+						error: `Field "${slug}" of type "${schemaName}" failed schema validation. ${result.error}`,
+					});
 					return acc;
 				}
 
-				acc.newResults.push({ value: result, slug, schemaName, ...rest });
+				acc.newResults.push({ value: result.value, slug, schemaName, ...rest });
 				return acc;
 			}
 
 			const jsonSchema = getJsonSchemaByCoreSchemaType(schemaName);
 			const result = Value.Check(jsonSchema, value);
 
-			if (!result) {
+			if (result === false) {
 				acc.errors.push(createValidationError(slug, schemaName, trimmedValue));
 				return acc;
 			}
@@ -72,7 +75,7 @@ export const validatePubValuesBySchemaName = <
 			acc.newResults.push({ value, slug, schemaName, ...rest });
 			return acc;
 		},
-		{ errors: [] as { slug: string; error: string }[], newResults: [] as T }
+		{ errors: [] as { slug: string; error: string }[], newResults: [] as unknown as T }
 	);
 };
 
