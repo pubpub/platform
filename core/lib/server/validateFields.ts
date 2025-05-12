@@ -60,7 +60,7 @@ export const validatePubValuesBySchemaName = <
 					return acc;
 				}
 
-				acc.newResults.push({ value: result.value, slug, schemaName, ...rest });
+				acc.results.push({ value: result.value, slug, schemaName, ...rest });
 				return acc;
 			}
 
@@ -72,49 +72,9 @@ export const validatePubValuesBySchemaName = <
 				return acc;
 			}
 
-			acc.newResults.push({ value, slug, schemaName, ...rest });
+			acc.results.push({ value, slug, schemaName, ...rest });
 			return acc;
 		},
-		{ errors: [] as { slug: string; error: string }[], newResults: [] as unknown as T }
+		{ errors: [] as { slug: string; error: string }[], results: [] as unknown as T }
 	);
-};
-
-/**
- * Validate all `values` against their corresponding field's `schemaName`.
- * @deprecated Use `validatePubValuesBySchemaName` instead.
- */
-export const _deprecated_validatePubValuesBySchemaName = ({
-	fields,
-	values,
-}: {
-	fields: { name: string; slug: string; schemaName?: CoreSchemaType | null }[];
-	values: Record<string, unknown>;
-}) => {
-	const errors: Record<string, string> = {};
-	for (const [slug, value] of Object.entries(values)) {
-		const field = fields.find((f) => f.slug === slug);
-		if (!field) {
-			errors[slug] = `Field ${slug} does not exist on pub.`;
-			continue;
-		}
-		if (!field.schemaName) {
-			errors[slug] = `Field ${field.slug} does not have a schemaName, cannot validate.`;
-			continue;
-		}
-
-		let result = false;
-		// Rich text fields are a special case where we use prosemirror to validate
-		// as opposed to typebox
-		if (field.schemaName === CoreSchemaType.RichText) {
-			result = validateAgainstContextEditorSchema(value) !== false;
-		} else {
-			const jsonSchema = getJsonSchemaByCoreSchemaType(field.schemaName);
-			result = Value.Check(jsonSchema, value);
-		}
-		if (!result) {
-			errors[slug] =
-				`Field ${field.slug} failed schema validation. Field "${field.name}" of type "${field.slug}" cannot be assigned to value: ${value} of type ${typeof value}.`;
-		}
-	}
-	return errors;
 };
