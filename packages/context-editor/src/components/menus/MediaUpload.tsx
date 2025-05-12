@@ -131,7 +131,7 @@ const toggleNodesInFigure = (view: EditorView, values: FormSchema, position: num
 };
 
 export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
-	const { activeNode, position, setActiveNode } = useEditorContext();
+	const { position } = useEditorContext();
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
@@ -152,20 +152,24 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 	});
 
 	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
-		if (!view || !activeNode) {
+		if (!view || !position) {
+			return;
+		}
+
+		const node = view.state.doc.nodeAt(position);
+
+		if (!node) {
 			return;
 		}
 
 		const nodeAttrsTr = view.state.tr.setNodeMarkup(
 			position,
-			activeNode.type,
-			{ ...activeNode.attrs, ...values },
-			activeNode.marks
+			node.type,
+			{ ...node.attrs, ...values },
+			node.marks
 		);
 		view.dispatch(nodeAttrsTr);
 		view.dispatch(toggleNodesInFigure(view, values, position));
-		const updatedNode = view.state.doc.nodeAt(position);
-		setActiveNode(updatedNode);
 	});
 
 	return (
@@ -216,8 +220,6 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 						<MenuSwitchField name="caption" label="Caption" />
 						<MenuSwitchField name="credit" label="Credit" />
 						<MenuSwitchField name="license" label="License" />
-						<hr />
-						<AdvancedOptions />
 					</TabsContent>
 					<TabsContent value="style" className="space-y-4">
 						<FormField
