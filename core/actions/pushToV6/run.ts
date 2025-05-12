@@ -11,7 +11,6 @@ import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { isClientExceptionOptions } from "~/lib/serverActions";
-import * as corePubFields from "../corePubFields";
 import { defineRun } from "../types";
 
 const authError = {
@@ -159,14 +158,16 @@ const updateV6PubText = async (
 	}
 };
 
-const updateV6PubId = async (pubId: PubsId, v6PubId: string, lastModifiedBy: LastModifiedBy) => {
+const updateV6PubId = async (
+	pubId: PubsId,
+	v6PubId: string,
+	lastModifiedBy: LastModifiedBy,
+	idField: string
+) => {
 	await autoRevalidate(
 		db
 			.with("field", (db) =>
-				db
-					.selectFrom("pub_fields")
-					.select("id")
-					.where("slug", "=", corePubFields.v6PubId.slug)
+				db.selectFrom("pub_fields").select("id").where("slug", "=", idField)
 			)
 			.insertInto("pub_values")
 			.values((eb) => ({
@@ -188,7 +189,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 		let v6Pub: { id: string };
 
-		const v6PubId = pub.values.find((value) => value.fieldSlug === corePubFields.v6PubId.slug)
+		const v6PubId = pub.values.find((value) => value.fieldSlug === config.idField)
 			?.value as string;
 		// Fetch the pub if the v7 pub already had a v6 pub id
 		if (v6PubId) {
@@ -220,7 +221,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 			v6Pub = createV6PubResponse;
 
 			// Update the v6 pub id in the v7 pub
-			await updateV6PubId(pub.id, v6Pub.id, lastModifiedBy);
+			await updateV6PubId(pub.id, v6Pub.id, lastModifiedBy, config.idField);
 		}
 
 		// Update the v6 pub content
