@@ -2,6 +2,7 @@ import type { CommunitiesId, FormsId, PubsId, PubTypesId, StagesId, UsersId } fr
 import { Capabilities, MembershipType } from "db/public";
 
 import { db } from "~/kysely/database";
+import { getLoginData } from "../authentication/loginData";
 import { autoCache } from "../server/cache/autoCache";
 
 export const pubCapabilities = [
@@ -125,6 +126,10 @@ export const userCan = async <T extends CapabilityTarget>(
 	target: T,
 	userId: UsersId
 ) => {
+	const { user } = await getLoginData();
+	if (user?.isSuperAdmin) {
+		return true;
+	}
 	if (target.type === MembershipType.pub) {
 		const capabilitiesQuery = pubMemberships({ userId, pubId: target.pubId })
 			.selectFrom("membership_capabilities")
