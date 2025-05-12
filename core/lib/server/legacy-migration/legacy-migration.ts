@@ -811,7 +811,7 @@ const createJournalArticles = async (
 			}
 
 			if (pub.avatar) {
-				op = op.set(jaFields.Avatar.slug, [avatar]);
+				op = op.set(jaFields.Avatar.slug, [avatar!]);
 			}
 
 			const content = pub?.draft?.doc?.content ?? pub.releases?.at(-1)?.doc?.content!;
