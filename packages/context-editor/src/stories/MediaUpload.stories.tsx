@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import React, { useState } from "react";
+import { ProseMirror } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 
+import { EditorContextProvider } from "../components/Context";
 import { MediaUpload } from "../components/menus/MediaUpload";
 import AtomRenderer from "./AtomRenderer";
 import initialDoc from "./initialDoc.json";
@@ -45,7 +47,11 @@ export const Primary: Story = {
 	render: function Render(args) {
 		return (
 			<div className="w-[300px]">
-				<MediaUpload {...args} />
+				<ProseMirror>
+					<EditorContextProvider activeNode={null} position={0}>
+						<MediaUpload {...args} />
+					</EditorContextProvider>
+				</ProseMirror>
 			</div>
 		);
 	},
