@@ -73,7 +73,7 @@ describe("createPubRecursive", () => {
 			},
 		});
 		getLoginData.mockImplementation(() => {
-			return { user: loginUser ? { id: users.john.id } : undefined };
+			return { user: loginUser ? { id: users.john.id, isSuperAdmin: false } : null };
 		});
 
 		const { createPubRecursive } = await import("./actions");
@@ -162,7 +162,7 @@ describe("updatePub", () => {
 			},
 		});
 		getLoginData.mockImplementation(() => {
-			return { user: loginUser ? { id: users.john.id } : undefined };
+			return { user: loginUser ? { id: users.john.id, isSuperAdmin: false } : null };
 		});
 		findCommunityBySlug.mockImplementation(() => {
 			return community;
