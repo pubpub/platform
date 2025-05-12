@@ -570,7 +570,7 @@ export const validatePubValues = async <T extends { slug: string; value: unknown
 
 	const hydratedPubValues = hydratePubValues(mergedPubFields);
 
-	const { errors, newResults } = validatePubValuesBySchemaName(hydratedPubValues);
+	const { errors, results: newResults } = validatePubValuesBySchemaName(hydratedPubValues);
 
 	if (!errors.length) {
 		return newResults;

@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
+import React from "react";
+
+import { baseSchema } from "../schemas";
+import { prosemirrorToHTML } from "../utils/serialize";
 import AtomRenderer from "./AtomRenderer";
 import EditorDash from "./EditorDash/EditorDash";
 import initialDoc from "./initialDoc.json";
@@ -23,11 +27,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 const pubId = "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70";
 
+// const initialHtml = prosemirrorToHTML(baseSchema.nodeFromJSON(initialDoc));
+
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary: Story = {
 	args: {
 		placeholder: "Helloooo",
-		initialDoc: initialDoc,
+		// initialHtml,
 		pubTypes: initialTypes,
 		pubId,
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -38,5 +44,13 @@ export const Primary: Story = {
 		getPubById: () => undefined,
 		atomRenderingComponent: AtomRenderer,
 		upload: (filename) => generateSignedAssetUploadUrl(`${pubId}/${filename}`),
+	},
+	render: (args) => {
+		return (
+			<EditorDash
+				{...args}
+				initialHtml={prosemirrorToHTML(baseSchema.nodeFromJSON(initialDoc))}
+			/>
+		);
 	},
 };
