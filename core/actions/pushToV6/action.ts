@@ -13,6 +13,10 @@ export const action = defineAction({
 			authToken: z.string().describe("PubPub v6 API auth token"),
 			title: z.string().describe("Title of the Pub"),
 			content: z.string().describe("Content of the Pub"),
+			idField: z
+				.string()
+				.regex(/\w+:\w+/)
+				.describe("Field on this pub to write to id to|ID Field"),
 		}),
 	},
 	description: "Sync a PubPub Platform pub to v6",

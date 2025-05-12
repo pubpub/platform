@@ -14,10 +14,7 @@ import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 import { Event } from "db/public";
 
-import type { CorePubField } from "./corePubFields";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
-
-export type ActionPubType = CorePubField[];
 
 type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
 export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
@@ -28,11 +25,7 @@ export type ActionPub = ProcessedPub<{
 }>;
 
 export type RunProps<T extends Action> =
-	T extends Action<
-		infer P extends ActionPubType,
-		infer C,
-		infer A extends ZodObjectOrWrappedOrOptional
-	>
+	T extends Action<infer C, infer A extends ZodObjectOrWrappedOrOptional>
 		? {
 				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
 				configFieldOverrides: Set<string>;
@@ -52,6 +45,7 @@ export type RunProps<T extends Action> =
 				 * The user ID of the user who initiated the action, if any
 				 */
 				userId?: UsersId;
+				actionInstance: ActionInstances;
 			}
 		: never;
 
@@ -66,7 +60,6 @@ export type TokenDef = {
 };
 
 export type Action<
-	P extends ActionPubType = ActionPubType,
 	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
 	N extends ActionName = ActionName,
@@ -138,12 +131,11 @@ export type Action<
 };
 
 export const defineAction = <
-	T extends ActionPubType,
 	C extends ZodObjectOrWrapped,
 	A extends ZodObjectOrWrappedOrOptional,
 	N extends ActionName,
 >(
-	action: Action<T, C, A, N>
+	action: Action<C, A, N>
 ) => action;
 
 export type ActionSuccess = {
