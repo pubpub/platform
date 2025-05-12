@@ -30,7 +30,6 @@ export const basePlugins = (
 		inputRules(schema),
 		mathPlugin,
 		...code(schema, {}),
-		// columnResizing(),
 		tableEditing(),
 	];
 };

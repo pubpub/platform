@@ -104,7 +104,7 @@ export default function ContextEditor(props: ContextEditorProps) {
 				editable={() => !props.disabled}
 				className={cn("font-serif", props.className)}
 			>
-				<EditorContextProvider position={0}>
+				<EditorContextProvider position={null}>
 					{props.hideMenu ? null : (
 						<div className="sticky top-0 z-10">
 							<MenuBar upload={props.upload} />
