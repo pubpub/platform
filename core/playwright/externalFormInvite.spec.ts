@@ -338,7 +338,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			const pubDetailsPage = new PubDetailsPage(
 				page,
 				community.community.slug,
-				community.pubs[2].id
+				community.pubs[0].id
 			);
 			await pubDetailsPage.goTo();
 
