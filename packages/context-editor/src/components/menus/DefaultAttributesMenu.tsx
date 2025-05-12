@@ -1,6 +1,7 @@
 import type { Attrs, Mark } from "prosemirror-model";
 
 import React from "react";
+import { useEditorState } from "@handlewithcare/react-prosemirror";
 
 import { Input } from "ui/input";
 import { Label } from "ui/label";
@@ -18,13 +19,20 @@ export const NodeAttributes = ({
 	nodeAttrs: Attrs;
 	updateAttr: (attrKey: string, value: string) => void;
 }) => {
-	const { activeNode, position } = useEditorContext();
+	const { position } = useEditorContext();
+	const state = useEditorState();
+
+	if (position === null) {
+		return null;
+	}
+
+	const node = state.doc.nodeAt(position);
 
 	if (Object.keys(nodeAttrs).length === 0) {
 		return null;
 	}
 
-	if (activeNode?.type.name === "image") {
+	if (node?.type.name === "image") {
 		return <MediaUpload attrs={nodeAttrs} key={position} />;
 	}
 
