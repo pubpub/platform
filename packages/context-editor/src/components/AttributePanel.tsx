@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
 	useEditorEffect,
 	useEditorEventCallback,
@@ -42,24 +42,18 @@ export function AttributePanel({
 	const [offset, setOffset] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
-	const { position, setPosition } = useEditorContext();
-	const node = position === null ? null : state.doc.nodeAt(position);
-
-	useEditorEffect(() => {
-		const p = state.selection.$from;
-		if (p.marks().length > 0) {
-			setPosition(p.pos);
-		}
-	}, [state]);
+	const { position } = useEditorContext();
+	const node = useMemo(
+		() => (position === null ? null : state.doc.nodeAt(position)),
+		[position, state]
+	);
 
 	useEditorEffect(
 		(view) => {
-			if (position === null) {
+			if (node === null) {
 				setOffset({ ...offset, right: 1000 });
 				return;
 			}
-
-			const node = state.doc.nodeAt(position);
 
 			if (!node) {
 				if (!view.hasFocus()) {
@@ -81,7 +75,7 @@ export function AttributePanel({
 				return;
 			}
 		},
-		[state, position]
+		[state, node]
 	);
 
 	useEditorEffect(
@@ -90,7 +84,7 @@ export function AttributePanel({
 				setHeight(0);
 				return;
 			}
-			const node = state.doc.nodeAt(position);
+
 			if (node) {
 				const viewClientRect = view.dom.getBoundingClientRect();
 				const coords = view.coordsAtPos(position);
@@ -111,7 +105,7 @@ export function AttributePanel({
 				setHeight(0);
 			}
 		},
-		[position, containerRef]
+		[position, node, containerRef]
 	);
 
 	const updateMarkAttrs = useEditorEventCallback(
@@ -154,7 +148,7 @@ export function AttributePanel({
 					left: offset.panelLeft,
 					width: 300,
 					padding: "1em",
-					height: "auto",
+					height: height,
 					opacity: height ? 1 : 0,
 					overflow: "scroll",
 					borderLeft: "1px solid #999",

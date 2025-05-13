@@ -1,7 +1,7 @@
 import type { WidgetViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { Node } from "prosemirror-model";
 
-import React, { forwardRef, useLayoutEffect } from "react";
+import React, { forwardRef, useLayoutEffect, useMemo } from "react";
 import { useEditorState } from "@handlewithcare/react-prosemirror";
 
 import { reactPropsKey } from "../plugins/reactProps";
@@ -45,7 +45,7 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 		const { setPosition, position } = useEditorContext();
 		const { disabled } = reactPropsKey.getState(state);
 		const blockPos = getPos();
-		const blockNode = state.doc.nodeAt(blockPos);
+		const blockNode = useMemo(() => state.doc.nodeAt(blockPos), [blockPos, state]);
 
 		if (!blockNode?.isBlock) {
 			return null;
