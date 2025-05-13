@@ -30,6 +30,7 @@ type FormSchema = Static<typeof formSchema>;
 type Props = {
 	node: Node;
 	nodePos: number;
+	index?: number;
 	onChange: (values: Record<string, unknown>) => void;
 };
 

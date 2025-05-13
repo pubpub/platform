@@ -1,6 +1,7 @@
 import React from "react";
 import { Node } from "prosemirror-model";
 
+import { AdvancedOptions } from "./AdvancedOptions";
 import { FigureMenu } from "./FigureMenu";
 import { MediaUpload } from "./MediaUpload";
 
@@ -24,10 +25,11 @@ export const NodeMenu = (props: NodeMenuProps) => {
 		}
 	}
 
-	return menu ? (
+	return (
 		<>
 			{menu}
 			<hr />
+			<AdvancedOptions {...props} />
 		</>
-	) : null;
+	);
 };

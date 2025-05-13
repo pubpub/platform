@@ -135,6 +135,8 @@ export function AttributePanel({
 		return null;
 	}
 
+	const isMark = node.marks.length > 0;
+
 	return createPortal(
 		<>
 			<div
@@ -168,16 +170,13 @@ export function AttributePanel({
 			>
 				<h2 className="text-md font-serif font-medium">
 					{node.type.name}
-					{node.marks.length > 0 ? (
-						<> + {node.marks.map((mark) => mark.type.name).join(", ")}</>
-					) : null}
+					{isMark ? <> + {node.marks.map((mark) => mark.type.name).join(", ")}</> : null}
 				</h2>
-				{node.marks.length > 0 ? (
+				{isMark ? (
 					<MarkMenu node={node} nodePos={nodePos} onChange={updateMarkAttrs} />
 				) : (
 					<NodeMenu node={node} nodePos={nodePos} onChange={updateNodeAttrs} />
 				)}
-				<AdvancedOptions node={node} nodePos={nodePos} onChange={updateNodeAttrs} />
 			</div>
 
 			<div

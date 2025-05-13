@@ -3,7 +3,7 @@ import type { Node } from "prosemirror-model";
 
 import React, { forwardRef, useMemo } from "react";
 import { useEditorEventCallback, useEditorState } from "@handlewithcare/react-prosemirror";
-import { TextSelection } from "prosemirror-state";
+import { TextSelection, Transaction } from "prosemirror-state";
 
 import { reactPropsKey } from "../plugins/reactProps";
 
@@ -43,15 +43,20 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 	function BlockDecoration({ widget, getPos, ...props }, ref) {
 		const state = useEditorState();
 		const { disabled } = reactPropsKey.getState(state);
-		const blockPos = getPos();
-		const blockNode = useMemo(() => state.doc.nodeAt(blockPos), [blockPos, state]);
+		const pos = getPos();
+		const node = useMemo(() => state.doc.nodeAt(pos), [pos, state]);
 
-		const handleClick = useEditorEventCallback((view) => {
-			const tr = state.tr.setSelection(TextSelection.create(state.doc, blockPos));
+		const onClick = useEditorEventCallback((view) => {
+			let tr = state.tr;
+			if (state.selection.$anchor.nodeAfter === node) {
+				tr = tr.setSelection(TextSelection.atStart(tr.doc));
+			} else {
+				tr = tr.setSelection(TextSelection.create(tr.doc, pos));
+			}
 			view.dispatch(tr);
 		});
 
-		if (!blockNode?.isBlock) {
+		if (!node?.isBlock) {
 			return null;
 		}
 
@@ -60,10 +65,10 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 				<button
 					type="button"
 					disabled={disabled}
-					onClick={handleClick}
-					className={blockNode.type.name}
+					onClick={onClick}
+					className={node.type.name}
 				>
-					{getBlockName(blockNode)}
+					{getBlockName(node)}
 				</button>
 			</div>
 		);
