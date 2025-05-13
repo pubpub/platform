@@ -9,8 +9,6 @@ import { createPortal } from "react-dom";
 
 import { replaceMark } from "../commands/marks";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
-import { AdvancedOptions } from "./menus/AdvancedOptions";
-import { LinkMenu } from "./menus/LinkMenu";
 import { MarkMenu } from "./menus/MarkMenu";
 import { NodeMenu } from "./menus/NodeMenu";
 
