@@ -63,7 +63,6 @@ export const ContextEditorClient = ({
 				getPubById={() => {
 					return {};
 				}}
-				// @ts-expect-error
 				atomRenderingComponent={ContextAtom}
 				onChange={onChange}
 				initialDoc={initialDoc}
