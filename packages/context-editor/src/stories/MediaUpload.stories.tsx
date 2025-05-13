@@ -39,6 +39,7 @@ const node = {
 export const Primary: Story = {
 	args: {
 		node,
+		nodePos: 0,
 	},
 	render: function Render(args) {
 		return (
