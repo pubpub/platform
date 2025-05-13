@@ -7,7 +7,7 @@ import { Label } from "ui/label";
 
 import type { ImageAttrs } from "../schemas/image";
 import { Alignment } from "../schemas/image";
-import { insertMedia, insertNodeAfterSelection } from "../utils/nodes";
+import { insertMedia } from "../utils/nodes";
 
 export type Upload = FileUploadProps["upload"];
 
@@ -22,9 +22,6 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				class: null,
 				alt: file.fileName,
 				linkTo: "",
-				caption: false,
-				credit: false,
-				license: false,
 				width: 100,
 				align: Alignment.center,
 				fullResolution: false,
