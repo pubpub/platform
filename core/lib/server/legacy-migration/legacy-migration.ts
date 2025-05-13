@@ -130,6 +130,10 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Page: { schemaName: CoreSchemaType.Null, relation: true },
 	Favicon: { schemaName: CoreSchemaType.FileUpload },
 
+	HeaderBackgroundImage: { schemaName: CoreSchemaType.FileUpload },
+	HeaderTextStyle: { schemaName: CoreSchemaType.String },
+	HeaderTheme: { schemaName: CoreSchemaType.String },
+
 	// journal metadata
 	"Cite As": { schemaName: CoreSchemaType.String },
 	"Publish As": { schemaName: CoreSchemaType.String },
@@ -152,6 +156,9 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 		fields: {
 			Title: { isTitle: true },
 			Avatar: { isTitle: false },
+			HeaderBackgroundImage: { isTitle: false },
+			HeaderTextStyle: { isTitle: false },
+			HeaderTheme: { isTitle: false },
 			Abstract: { isTitle: false },
 			"Legacy Id": { isTitle: false },
 			PubContent: { isTitle: false },
@@ -748,15 +755,36 @@ const kindToTypeMap = {
 	tag: "Collection",
 } as const;
 
+const getOrGenerateMetadata = async (
+	imageUrl: string | undefined | null,
+	communitySlug: string,
+	imageMap: Map<string, FileMetadata>
+) => {
+	if (!imageUrl) {
+		return { image: undefined, imageMap };
+	}
+
+	const existing = imageMap.get(imageUrl);
+	if (existing) {
+		return { image: existing, imageMap };
+	}
+
+	const metadata = await generateMetadataFromS3(imageUrl, communitySlug);
+	imageMap.set(imageUrl, metadata);
+	return { image: metadata, imageMap };
+};
+
 const createJournalArticles = async (
 	{
 		community: { id: communityId, slug: communitySlug },
 		legacyCommunity,
 		legacyStructure,
+		imageMap,
 	}: {
 		community: { id: CommunitiesId; slug: string };
 		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
+		imageMap: Map<string, FileMetadata>;
 	},
 	trx = db
 ) => {
@@ -775,9 +803,20 @@ const createJournalArticles = async (
 	});
 
 	await pMap(legacyCommunity.pubs, async (pub) => {
-		let avatar: FileMetadata | undefined;
-		if (pub.avatar) {
-			avatar = await generateMetadataFromS3(pub.avatar, communitySlug);
+		const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
+			pub.avatar,
+			communitySlug,
+			imageMap
+		);
+
+		const pubHeaderImageId = pub.facets?.PubHeaderTheme?.props?.backgroundImage?.value;
+		const { image: pubHeaderImage, imageMap: pubHeaderImageMap } = await getOrGenerateMetadata(
+			pubHeaderImageId,
+			communitySlug,
+			imageMap
+		);
+		if (!pub.facets) {
+			console.log(pub);
 		}
 
 		batch.add(({ upsertByValue }) => {
@@ -830,6 +869,25 @@ const createJournalArticles = async (
 				// console.log(interestingNodes.abstract);
 			}
 
+			if (pubHeaderImage) {
+				op = op.set(jaFields.HeaderBackgroundImage.slug, [pubHeaderImage]);
+			}
+
+			if (pub.facets?.PubHeaderTheme?.props?.textStyle) {
+				op = op.set(
+					jaFields.HeaderTextStyle.slug,
+					pub.facets.PubHeaderTheme.props.textStyle
+				);
+			}
+
+			if (pub.facets?.PubHeaderTheme?.props?.backgroundColor) {
+				op = op.set(
+					jaFields.HeaderTheme.slug,
+					pub.facets.PubHeaderTheme.props.backgroundColor
+				);
+			}
+
+			// if (pub.releases) {
 			// if (pub.releases) {
 			// 	op = op.relate(
 			// 		jaFields.Versions.slug,
@@ -913,10 +971,12 @@ const createPages = async (
 		community: { id: communityId, slug: communitySlug },
 		legacyPages,
 		legacyStructure,
+		imageMap,
 	}: {
 		community: { id: CommunitiesId; slug: string };
 		legacyPages: LegacyPage[];
 		legacyStructure: LegacyStructure;
+		imageMap: Map<string, FileMetadata>;
 	},
 	trx = db
 ) => {
@@ -928,10 +988,11 @@ const createPages = async (
 	});
 
 	await pMap(legacyPages, async (page) => {
-		let avatar: FileMetadata | undefined;
-		if (page.avatar) {
-			avatar = await generateMetadataFromS3(page.avatar, communitySlug);
-		}
+		const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
+			page.avatar,
+			communitySlug,
+			imageMap
+		);
 
 		batch.add(({ upsertByValue }) => {
 			let op = upsertByValue(legacyStructure["Page"].fields["Legacy Id"].slug, page.id, {
@@ -994,10 +1055,12 @@ const createCollections = async (
 		community: { id: communityId, slug: communitySlug },
 		legacyCommunity,
 		legacyStructure,
+		imageMap,
 	}: {
 		community: { id: CommunitiesId; slug: string };
 		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
+		imageMap: Map<string, FileMetadata>;
 	},
 	trx = db
 ) => {
@@ -1019,10 +1082,11 @@ const createCollections = async (
 	}
 
 	await pMap(legacyCollections, async (collection) => {
-		let avatar: FileMetadata | undefined;
-		if (collection.avatar) {
-			avatar = await generateMetadataFromS3(collection.avatar, communitySlug);
-		}
+		const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
+			collection.avatar,
+			communitySlug,
+			imageMap
+		);
 
 		const filteredCollectionPubs = collection.collectionPubs.filter((cp) => {
 			const hasPub = pubIdMap.has(cp.pubId);
@@ -1259,10 +1323,12 @@ const createJournal = async (
 		community: { id: communityId, slug: communitySlug },
 		legacyCommunity,
 		legacyStructure,
+		imageMap,
 	}: {
 		community: { id: CommunitiesId; slug: string };
 		legacyCommunity: LegacyCommunity;
 		legacyStructure: LegacyStructure;
+		imageMap: Map<string, FileMetadata>;
 	},
 	trx = db
 ) => {
@@ -1333,11 +1399,12 @@ const createJournal = async (
 	if (legacyCommunity.community.issn) {
 		op = op.set(legacyStructure.Journal.fields["E-ISSN"].slug, legacyCommunity.community.issn);
 	}
-	if (legacyCommunity.community.avatar) {
-		const avatar = await generateMetadataFromS3(
-			legacyCommunity.community.avatar,
-			communitySlug
-		);
+	const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
+		legacyCommunity.community.avatar,
+		communitySlug,
+		imageMap
+	);
+	if (avatar) {
 		op = op.set(legacyStructure.Journal.fields["Avatar"].slug, [avatar]);
 	}
 
@@ -1439,8 +1506,10 @@ export const importFromLegacy = async (
 		// );
 		const parsed = legacyExportSchema.parse(legacyCommunity);
 
+		const imageMap = new Map<string, FileMetadata>();
+
 		const legacyPubs = await createJournalArticles(
-			{ legacyCommunity: parsed, community: currentCommunity, legacyStructure },
+			{ legacyCommunity: parsed, community: currentCommunity, legacyStructure, imageMap },
 			trx
 		);
 		logger.info(`Created ${legacyPubs.length} legacy pubs`);
@@ -1450,6 +1519,7 @@ export const importFromLegacy = async (
 				community: currentCommunity,
 				legacyPages: parsed.pages,
 				legacyStructure,
+				imageMap,
 			},
 			trx
 		);
@@ -1460,6 +1530,7 @@ export const importFromLegacy = async (
 				community: currentCommunity,
 				legacyCommunity: parsed,
 				legacyStructure,
+				imageMap,
 			},
 			trx
 		);
@@ -1471,6 +1542,7 @@ export const importFromLegacy = async (
 				community: currentCommunity,
 				legacyCommunity: parsed,
 				legacyStructure,
+				imageMap,
 			},
 			trx
 		);
