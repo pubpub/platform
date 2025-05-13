@@ -1,5 +1,4 @@
 import { baseSchema } from "context-editor/schemas";
-import { Node } from "prosemirror-model";
 
 import { fromHTMLToNode } from "~/lib/editor/serialization/server";
 
@@ -7,6 +6,7 @@ const unsupportedNodes = {
 	citation: "inline",
 	footnote: "inline",
 	iframe: "block",
+	reference: "inline",
 } as const;
 
 type OldImageNode = {
@@ -40,6 +40,24 @@ type NewImageNode = {
 		align: Alignment;
 	};
 };
+
+type SerializedNode = {
+	type: string;
+	attrs: Record<string, any>;
+	content?: (SerializedNode | SerializedText)[];
+};
+
+type SerializedText = {
+	type: "text";
+	text: string;
+	marks?: SerializedMark[];
+};
+
+type SerializedMark = {
+	type: string;
+	attrs: Record<string, any>;
+};
+
 interface OldEquationNode {
 	type: string;
 	attrs: {
@@ -111,6 +129,41 @@ const nodeReplacements = {
 					text: node.attrs.value,
 				},
 			],
+		};
+	},
+	// no empty table cells
+	table_cell: (node: SerializedNode) => {
+		if (node.content?.length && node.content.length > 0) {
+			return node;
+		}
+		return {
+			...node,
+			content: [{ type: "paragraph", content: [] }],
+		};
+	},
+	// no empty table headers
+	table_header: (node: SerializedNode) => {
+		if (node.content?.length && node.content.length > 0) {
+			return node;
+		}
+		return {
+			...node,
+			content: [
+				{
+					type: "paragraph",
+					content: [],
+				},
+			],
+		};
+	},
+	table: (node: SerializedNode) => {
+		return {
+			type: "figure",
+			attrs: {
+				id: node.attrs.id,
+				class: null,
+			},
+			content: [node],
 		};
 	},
 } as const;
