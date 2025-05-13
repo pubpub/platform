@@ -35,7 +35,7 @@ import { transformProsemirrorTree } from "./prosemirror";
 import { legacyExportSchema, pubSchema } from "./schemas";
 
 const constructLegacyPubsUrl = (legacyCommunitySlug: string) => {
-	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1745326244161/static.json`;
+	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1747149675025/static.json`;
 };
 
 export const getLegacyCommunity = async (legacyCommunitySlug: string) => {
@@ -815,9 +815,6 @@ const createJournalArticles = async (
 			communitySlug,
 			imageMap
 		);
-		if (!pub.facets) {
-			console.log(pub);
-		}
 
 		batch.add(({ upsertByValue }) => {
 			let op = upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
@@ -853,7 +850,13 @@ const createJournalArticles = async (
 				op = op.set(jaFields.Avatar.slug, [avatar!]);
 			}
 
-			const content = pub?.draft?.doc?.content ?? pub.releases?.at(-1)?.doc?.content!;
+			const draftContent = pub?.draft?.doc?.content;
+			const latestContent = pub?.releases?.at(-1)?.doc?.content;
+			const content =
+				draftContent && draftContent.content.length > 1
+					? draftContent
+					: (latestContent ?? draftContent);
+
 			if (content) {
 				const { doc, interestingNodes } = transformProsemirrorTree(content);
 
@@ -873,17 +876,17 @@ const createJournalArticles = async (
 				op = op.set(jaFields.HeaderBackgroundImage.slug, [pubHeaderImage]);
 			}
 
-			if (pub.facets?.PubHeaderTheme?.props?.textStyle) {
+			if (pub.facets?.PubHeaderTheme?.props?.textStyle?.value) {
 				op = op.set(
 					jaFields.HeaderTextStyle.slug,
-					pub.facets.PubHeaderTheme.props.textStyle
+					pub.facets.PubHeaderTheme.props.textStyle.value
 				);
 			}
 
-			if (pub.facets?.PubHeaderTheme?.props?.backgroundColor) {
+			if (pub.facets?.PubHeaderTheme?.props?.backgroundColor?.value) {
 				op = op.set(
 					jaFields.HeaderTheme.slug,
-					pub.facets.PubHeaderTheme.props.backgroundColor
+					pub.facets.PubHeaderTheme.props.backgroundColor.value
 				);
 			}
 
@@ -1500,10 +1503,10 @@ export const importFromLegacy = async (
 		const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
 
 		// console.log(legacyPubs.collections);
-		// await writeFile(
-		// 	"lib/server/legacy-migration/archive.json",
-		// 	JSON.stringify(legacyCommunity, null, 2)
-		// );
+		await writeFile(
+			"lib/server/legacy-migration/archive.json",
+			JSON.stringify(legacyCommunity, null, 2)
+		);
 		const parsed = legacyExportSchema.parse(legacyCommunity);
 
 		const imageMap = new Map<string, FileMetadata>();
