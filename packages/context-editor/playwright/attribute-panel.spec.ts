@@ -191,9 +191,11 @@ test.describe("attribute panel", () => {
 					browserName === "chromium" ? { position: { x: 20, y: 0 } } : undefined;
 				await editor.getByText("italic").click(clickOptions);
 				await page.getByTestId("attribute-panel").getByText("em").waitFor();
+				await page.getByTestId("advanced-options-trigger").click();
 				await expect(page.getByTestId("id-input")).toHaveValue("italic-id");
 				await editor.getByText("bold").click(clickOptions);
 				await page.getByTestId("attribute-panel").getByText("strong").waitFor();
+				await page.getByTestId("advanced-options-trigger").click();
 				await expect(page.getByTestId("id-input")).toHaveValue("bold-id");
 			});
 		});
@@ -214,12 +216,14 @@ test.describe("attribute panel", () => {
 			await test.step("add attrs to second", async () => {
 				await editor.press("ArrowLeft");
 				await page.getByTestId("attribute-panel").waitFor();
+				await page.getByTestId("advanced-options-trigger").click();
 				await page.getByTestId("id-input").fill("second-id");
 			});
 
 			await test.step("make sure first does not have the same attr", async () => {
 				await editor.getByText("first").click({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor();
+				await page.getByTestId("advanced-options-trigger").click();
 				await expect(page.getByTestId("id-input")).toHaveValue("");
 			});
 		});
