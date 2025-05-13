@@ -191,6 +191,7 @@
 	min-width: 400px;
 	width: 100%;
 	table-layout: fixed;
+	overflow: hidden;
 }
 
 .ProseMirror table td,
@@ -231,4 +232,45 @@
 
 .ProseMirror figure {
 	padding: 1em;
+}
+
+.ProseMirror .tableWrapper {
+	overflow-x: auto;
+}
+
+/*
+The columnResizing plugin inserts an extra .tableWrapper element immediately
+before the actual table. I'm unsure why this happens, but this code hides it:
+*/
+.ProseMirror .tableWrapper:has(+ .tableWrapper) {
+	display: none;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+	vertical-align: top;
+	box-sizing: border-box;
+	position: relative;
+}
+
+.ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),
+.ProseMirror th:not([data-colwidth]):not(.column-resize-dragging) {
+	/* if there's no explicit width set and the column is not being resized, set a default width */
+	min-width: var(--default-cell-min-width);
+}
+
+.ProseMirror .column-resize-handle {
+	position: absolute;
+	right: -2px;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	z-index: 20;
+	background-color: #adf;
+	pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+	cursor: ew-resize;
+	cursor: col-resize;
 }
