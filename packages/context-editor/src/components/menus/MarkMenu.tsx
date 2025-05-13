@@ -20,14 +20,14 @@ export const MarkMenu = (props: Props) => {
 		let menu = null;
 		switch (mark.type.name) {
 			case "link":
-				menu = <LinkMenu mark={mark} onChange={onChange} key={key} />;
+				menu = <LinkMenu mark={mark} onChange={onChange} />;
 				break;
 		}
 		return (
-			<>
+			<React.Fragment key={key}>
 				{menu}
 				<AdvancedOptions node={props.node} nodePos={props.nodePos} onChange={onChange} />
-			</>
+			</React.Fragment>
 		);
 	});
 };
