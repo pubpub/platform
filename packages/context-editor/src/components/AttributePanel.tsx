@@ -4,7 +4,7 @@ import {
 	useEditorEventCallback,
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
-import { TextSelection } from "prosemirror-state";
+import { NodeSelection, TextSelection } from "prosemirror-state";
 import { createPortal } from "react-dom";
 
 import { replaceMark } from "../commands/marks";
@@ -42,7 +42,10 @@ export function AttributePanel({
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
 	const nodePos = state.selection.$anchor.pos;
-	const node = useMemo(() => state.selection.$anchor.nodeAfter, [state]);
+	const node = useMemo(
+		() => state.selection.$anchor.nodeAfter ?? state.selection.$anchor.nodeBefore,
+		[state]
+	);
 
 	useEditorEffect(
 		(view) => {
