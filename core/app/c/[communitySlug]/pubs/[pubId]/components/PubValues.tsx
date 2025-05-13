@@ -221,6 +221,18 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		}
 	}
 
+	if (value.schemaName === CoreSchemaType.Color) {
+		return (
+			<div className="flex items-center gap-2">
+				<span
+					className="h-4 w-4 rounded-full"
+					style={{ backgroundColor: value.value as string }}
+				/>
+				<span className="font-mono text-sm">{value.value as string}</span>
+			</div>
+		);
+	}
+
 	const valueAsString = (value.value as JsonValue)?.toString() || "";
 
 	let renderedField: ReactNode = valueAsString;

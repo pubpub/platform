@@ -190,6 +190,17 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 			);
 		},
 	},
+	[InputComponent.colorPicker]: {
+		name: "Color Picker",
+		demoComponent: () => {
+			return (
+				<div className="flex w-full flex-col gap-1 text-left text-sm">
+					<div className="text-gray-500">Label</div>
+					<div className="h-10 w-10 rounded-full bg-red-500" />
+				</div>
+			);
+		},
+	},
 } as const;
 
 const ComponentSelect = ({

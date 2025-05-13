@@ -155,6 +155,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 				PDF: { schemaName: CoreSchemaType.FileUpload },
 				"Pub Image": { schemaName: CoreSchemaType.FileUpload },
 
+				Color: { schemaName: CoreSchemaType.Color },
 				Caption: { schemaName: CoreSchemaType.String },
 				// a contributor is a relation to an Author
 				Contributors: {

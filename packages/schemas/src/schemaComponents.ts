@@ -31,6 +31,7 @@ export const componentsBySchema = {
 	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
 	[CoreSchemaType.Null]: [],
 	[CoreSchemaType.RichText]: [InputComponent.richText],
+	[CoreSchemaType.Color]: [InputComponent.colorPicker],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
 
 export type ComponentsBySchemaType = typeof componentsBySchema;
@@ -132,6 +133,20 @@ export const relationBlockConfigSchema = Type.Object(
 	{ additionalProperties: true }
 );
 
+export enum ColorPickerType {
+	Hex = "hex",
+	RGB = "rgb",
+	RGBA = "rgba",
+	HSL = "hsl",
+	HSLA = "hsla",
+}
+
+export const colorPickerConfigSchema = Type.Object({
+	label: Type.Optional(Type.String()),
+	help: Type.Optional(Type.String()),
+	// type: Type.Enum(ColorPickerType, { default: ColorPickerType.Hex }),
+});
+
 export const componentConfigSchemas = {
 	[InputComponent.checkbox]: checkboxConfigSchema,
 	[InputComponent.textArea]: textAreaConfigSchema,
@@ -146,6 +161,7 @@ export const componentConfigSchemas = {
 	[InputComponent.selectDropdown]: selectDropdownConfigSchema,
 	[InputComponent.multivalueInput]: multivalueInputConfigSchema,
 	[InputComponent.relationBlock]: relationBlockConfigSchema,
+	[InputComponent.colorPicker]: colorPickerConfigSchema,
 } as const satisfies Record<InputComponent, TObject>;
 
 export type InputComponentConfigSchema<T extends InputComponent> = Static<
