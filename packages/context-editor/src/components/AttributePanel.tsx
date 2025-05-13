@@ -4,13 +4,14 @@ import {
 	useEditorEventCallback,
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
+import { TextSelection } from "prosemirror-state";
 import { createPortal } from "react-dom";
 
 import { replaceMark } from "../commands/marks";
-import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { AdvancedOptions } from "./menus/AdvancedOptions";
 import { LinkMenu } from "./menus/LinkMenu";
+import { MarkMenu } from "./menus/MarkMenu";
 import { NodeMenu } from "./menus/NodeMenu";
 
 const animationTimeMS = 150;
@@ -42,11 +43,8 @@ export function AttributePanel({
 	const [offset, setOffset] = useState(initPanelProps);
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
-	const { position } = useEditorContext();
-	const node = useMemo(
-		() => (position === null ? null : state.doc.nodeAt(position)),
-		[position, state]
-	);
+	const nodePos = state.selection.$anchor.pos;
+	const node = useMemo(() => state.selection.$anchor.nodeAfter, [state]);
 
 	useEditorEffect(
 		(view) => {
@@ -80,14 +78,14 @@ export function AttributePanel({
 
 	useEditorEffect(
 		(view) => {
-			if (position === null) {
+			if (node === null) {
 				setHeight(0);
 				return;
 			}
 
 			if (node) {
 				const viewClientRect = view.dom.getBoundingClientRect();
-				const coords = view.coordsAtPos(position);
+				const coords = view.coordsAtPos(nodePos);
 				const topBase = coords.top - 1 - viewClientRect.top;
 				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT;
 				setOffset({
@@ -105,35 +103,35 @@ export function AttributePanel({
 				setHeight(0);
 			}
 		},
-		[position, node, containerRef]
+		[node, nodePos, containerRef]
 	);
 
 	const updateMarkAttrs = useEditorEventCallback(
-		(view, index: number, attrs: Record<string, string | null>) => {
-			const mark = nodeMarks[index];
+		(view, index: number, attrs: Record<string, unknown>) => {
+			if (!node) return;
+			const mark = node.marks[index];
 			const markAttrs = { ...mark.attrs, ...attrs };
 			replaceMark(mark, markAttrs)(view.state, view.dispatch);
 		}
 	);
 
 	const updateNodeAttrs = useEditorEventCallback((view, attrs: Record<string, unknown>) => {
-		if (!view || !node || !position) return;
-		const tr = view.state.tr.setNodeMarkup(
-			position,
+		if (!view || !node) return;
+		let tr = view.state.tr.setNodeMarkup(
+			nodePos,
 			node.type,
 			{ ...node.attrs, ...attrs },
 			node.marks
 		);
+		tr = tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(nodePos)));
 		view.dispatch(tr);
 	});
 
-	if (!node) {
+	if (!(node && containerRef.current)) {
 		return null;
 	}
 
-	const nodeMarks = node.marks || [];
-
-	if (!containerRef.current) {
+	if (node.type.name === "text" && node.marks.length === 0) {
 		return null;
 	}
 
@@ -170,35 +168,16 @@ export function AttributePanel({
 			>
 				<h2 className="text-md font-serif font-medium">
 					{node.type.name}
-					{nodeMarks.length > 0 ? (
-						<> + {nodeMarks.map((mark) => mark.type.name).join(", ")}</>
+					{node.marks.length > 0 ? (
+						<> + {node.marks.map((mark) => mark.type.name).join(", ")}</>
 					) : null}
 				</h2>
-				{nodeMarks.length > 0 ? (
-					nodeMarks.map((mark, index) => {
-						const key = `${mark.type.name}-${position}`;
-						let menu = null;
-						switch (mark.type.name) {
-							case "link":
-								menu = (
-									<LinkMenu
-										mark={mark}
-										onChange={(values) => {
-											updateMarkAttrs(index, values);
-										}}
-										key={key}
-									/>
-								);
-								break;
-							default:
-								break;
-						}
-						return menu;
-					})
+				{node.marks.length > 0 ? (
+					<MarkMenu node={node} nodePos={nodePos} onChange={updateMarkAttrs} />
 				) : (
-					<NodeMenu node={node} onChange={updateNodeAttrs} />
+					<NodeMenu node={node} nodePos={nodePos} onChange={updateNodeAttrs} />
 				)}
-				<AdvancedOptions node={node} onChange={updateNodeAttrs} />
+				<AdvancedOptions node={node} nodePos={nodePos} onChange={updateNodeAttrs} />
 			</div>
 
 			<div

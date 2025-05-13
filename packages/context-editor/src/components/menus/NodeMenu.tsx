@@ -6,7 +6,8 @@ import { MediaUpload } from "./MediaUpload";
 
 type NodeMenuProps = {
 	node: Node;
-	onChange: (values: Record<string, unknown>) => void;
+	nodePos: number;
+	onChange: (attrs: Record<string, unknown>) => void;
 };
 
 export const NodeMenu = (props: NodeMenuProps) => {
@@ -14,11 +15,11 @@ export const NodeMenu = (props: NodeMenuProps) => {
 
 	switch (props.node.type.name) {
 		case "figure": {
-			menu = <FigureMenu node={props.node} onChange={props.onChange} />;
+			menu = <FigureMenu {...props} />;
 			break;
 		}
 		case "image": {
-			menu = <MediaUpload node={props.node} />;
+			menu = <MediaUpload {...props} />;
 			break;
 		}
 	}

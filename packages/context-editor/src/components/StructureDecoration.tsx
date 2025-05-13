@@ -1,11 +1,11 @@
 import type { WidgetViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { Node } from "prosemirror-model";
 
-import React, { forwardRef, useLayoutEffect, useMemo } from "react";
-import { useEditorState } from "@handlewithcare/react-prosemirror";
+import React, { forwardRef, useMemo } from "react";
+import { useEditorEventCallback, useEditorState } from "@handlewithcare/react-prosemirror";
+import { TextSelection } from "prosemirror-state";
 
 import { reactPropsKey } from "../plugins/reactProps";
-import { useEditorContext } from "./Context";
 
 const getBlockName = (node: Node) => {
 	const state = useEditorState();
@@ -42,18 +42,18 @@ const getBlockName = (node: Node) => {
 export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentProps>(
 	function BlockDecoration({ widget, getPos, ...props }, ref) {
 		const state = useEditorState();
-		const { setPosition, position } = useEditorContext();
 		const { disabled } = reactPropsKey.getState(state);
 		const blockPos = getPos();
 		const blockNode = useMemo(() => state.doc.nodeAt(blockPos), [blockPos, state]);
 
+		const handleClick = useEditorEventCallback((view) => {
+			const tr = state.tr.setSelection(TextSelection.create(state.doc, blockPos));
+			view.dispatch(tr);
+		});
+
 		if (!blockNode?.isBlock) {
 			return null;
 		}
-
-		const handleClick = () => {
-			setPosition(blockPos === position ? null : blockPos);
-		};
 
 		return (
 			<div ref={ref} className="wrap-widget" {...props}>

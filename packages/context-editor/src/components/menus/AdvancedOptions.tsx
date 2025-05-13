@@ -29,6 +29,7 @@ type FormSchema = Static<typeof formSchema>;
 
 type Props = {
 	node: Node;
+	nodePos: number;
 	onChange: (values: Record<string, unknown>) => void;
 };
 
@@ -51,7 +52,7 @@ export const AdvancedOptions = (props: Props) => {
 			class: props.node.attrs?.class ?? "",
 		});
 		setIsOpen(false);
-	}, [props.node]);
+	}, [props.nodePos]);
 
 	return (
 		<Form {...form}>

@@ -21,7 +21,6 @@ import { fixTables } from "prosemirror-tables";
 
 import { cn } from "utils";
 
-import { EditorContextProvider } from "./components/Context";
 import { MenuBar } from "./components/MenuBar";
 import SuggestPanel from "./components/SuggestPanel";
 
@@ -104,20 +103,18 @@ export default function ContextEditor(props: ContextEditorProps) {
 				editable={() => !props.disabled}
 				className={cn("font-serif", props.className)}
 			>
-				<EditorContextProvider position={null}>
-					{props.hideMenu ? null : (
-						<div className="sticky top-0 z-10">
-							<MenuBar upload={props.upload} />
-						</div>
-					)}
-					<ProseMirrorDoc />
-					<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
-					<SuggestPanel
-						suggestData={suggestData}
-						setSuggestData={setSuggestData}
-						containerRef={containerRef}
-					/>
-				</EditorContextProvider>
+				{props.hideMenu ? null : (
+					<div className="sticky top-0 z-10">
+						<MenuBar upload={props.upload} />
+					</div>
+				)}
+				<ProseMirrorDoc />
+				<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
+				<SuggestPanel
+					suggestData={suggestData}
+					setSuggestData={setSuggestData}
+					containerRef={containerRef}
+				/>
 			</ProseMirror>
 		</div>
 	);

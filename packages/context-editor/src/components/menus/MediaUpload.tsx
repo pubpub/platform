@@ -26,7 +26,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { Alignment } from "../../schemas/image";
-import { useEditorContext } from "../Context";
 import { MenuInputField, MenuSwitchField } from "./MenuFields";
 
 const formSchema = Type.Object({
@@ -70,11 +69,11 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 
 type Props = {
 	node: Node;
+	nodePos: number;
 };
 
 export const MediaUpload = (props: Props) => {
 	const { attrs } = props.node;
-	const { position } = useEditorContext();
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
@@ -92,23 +91,23 @@ export const MediaUpload = (props: Props) => {
 	});
 
 	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
-		if (!view || !position) {
+		if (!view) {
 			return;
 		}
 
-		const node = view.state.doc.nodeAt(position);
+		const node = view.state.doc.nodeAt(props.nodePos);
 
 		if (!node) {
 			return;
 		}
 
-		const nodeAttrsTr = view.state.tr.setNodeMarkup(
-			position,
+		const tr = view.state.tr.setNodeMarkup(
+			props.nodePos,
 			node.type,
 			{ ...node.attrs, ...values },
 			node.marks
 		);
-		view.dispatch(nodeAttrsTr);
+		view.dispatch(tr);
 	});
 
 	return (
