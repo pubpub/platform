@@ -59,13 +59,17 @@ test.describe("attribute panel", () => {
 				await page.getByRole("button", { name: "Bold" }).click();
 				await page.locator(".ProseMirror").pressSequentially(text);
 				await clickNode(page, "paragraph");
-				await page.getByTestId("attribute-panel").waitFor();
-				await expect(page.getByTestId("attribute-panel")).not.toContainText("strong");
+				const panel = page.getByTestId("attribute-panel");
+				await panel.waitFor();
+				await expect(panel).not.toContainText("strong");
 
 				await page.getByTestId("advanced-options-trigger").click();
 				const id = "paragraph-id";
-				await page.getByTestId("id-input").fill(id);
-				await expect(page.getByTestId("id-input")).toHaveValue(id);
+				const idInput = page.getByTestId("id-input");
+				await idInput.fill(id);
+				await expect(idInput).toHaveValue(id);
+				// click on the panel to blur the id input
+				await panel.click();
 			});
 
 			await test.step("click on other text", async () => {

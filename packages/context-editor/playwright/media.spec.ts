@@ -6,7 +6,6 @@ import { EDITOR_WITH_IMAGE_STORY } from "./constants";
 import { getProsemirrorState } from "./utils";
 
 const clickImageNode = async (page: Page) => {
-	// await page.getByRole("button", { name: "image", exact: true }).click();
 	await page.getByRole("button", { name: "image", exact: true }).click();
 };
 
