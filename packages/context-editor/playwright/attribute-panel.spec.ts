@@ -175,12 +175,14 @@ test.describe("attribute panel", () => {
 			await test.step("add attrs to italic", async () => {
 				await editor.press("ArrowLeft");
 				await page.getByTestId("attribute-panel").waitFor();
+				await page.getByTestId("advanced-options-trigger").click();
 				await page.getByTestId("id-input").fill("italic-id");
 			});
 
 			await test.step("add attrs to bold", async () => {
 				await editor.getByText("bold").click({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor();
+				await page.getByTestId("advanced-options-trigger").click();
 				await page.getByTestId("id-input").fill("bold-id");
 			});
 
