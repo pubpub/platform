@@ -27,7 +27,11 @@ export const MenuInputField = ({
 							<FormLabel>{label}</FormLabel>
 							<div className="col-span-3 flex items-center gap-4">
 								<FormControl>
-									<Input {...field} placeholder="None" />
+									<Input
+										{...field}
+										placeholder="None"
+										data-testid={`${name}-input`}
+									/>
 								</FormControl>
 								{right ? right(field.value) : null}
 							</div>
@@ -60,6 +64,7 @@ export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
 						<FormLabel>{label}</FormLabel>
 						<FormControl>
 							<Switch
+								data-testid={`${props.name}-switch`}
 								checked={props.value ?? field.value}
 								onCheckedChange={props.onChange ?? field.onChange}
 								className="data-[state=checked]:bg-emerald-400"

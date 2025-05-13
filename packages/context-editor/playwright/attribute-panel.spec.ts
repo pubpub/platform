@@ -25,8 +25,9 @@ test.describe("attribute panel", () => {
 			await test.step("fill out panel while keeping it open", async () => {
 				const id = "test id";
 				const className = "test class";
-				await page.getByRole("textbox", { name: "id" }).fill(id);
-				await page.getByRole("textbox", { name: "class" }).fill(className);
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill(id);
+				await page.getByTestId("class-input").fill(className);
 			});
 
 			await test.step("can close the panel by clicking the button again", async () => {
@@ -60,9 +61,11 @@ test.describe("attribute panel", () => {
 				await clickNode(page, "paragraph");
 				await page.getByTestId("attribute-panel").waitFor();
 				await expect(page.getByTestId("attribute-panel")).not.toContainText("strong");
+
+				await page.getByTestId("advanced-options-trigger").click();
 				const id = "paragraph-id";
-				await page.getByRole("textbox", { name: "id" }).fill(id);
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue(id);
+				await page.getByTestId("id-input").fill(id);
+				await expect(page.getByTestId("id-input")).toHaveValue(id);
 			});
 
 			await test.step("click on other text", async () => {
@@ -72,7 +75,8 @@ test.describe("attribute panel", () => {
 					.getByText(text)
 					.click({ position: { x: 20, y: 0 } });
 				await expect(page.getByTestId("attribute-panel")).toContainText("strong");
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("");
 			});
 		});
 
@@ -91,15 +95,17 @@ test.describe("attribute panel", () => {
 				await page.getByTestId("attribute-panel").waitFor();
 				const id = "id1";
 				const className = "class1";
-				await page.getByRole("textbox", { name: "id" }).fill(id);
-				await page.getByRole("textbox", { name: "class" }).fill(className);
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill(id);
+				await page.getByTestId("class-input").fill(className);
 			});
 
 			await test.step("open panel on second paragraph", async () => {
 				await clickNode(page, "paragraph", 1);
 				// Make sure the second paragraph does not have the same attrs as the first
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
-				await expect(page.getByRole("textbox", { name: "class" })).toHaveValue("");
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("");
+				await expect(page.getByTestId("class-input")).toHaveValue("");
 			});
 		});
 	});
