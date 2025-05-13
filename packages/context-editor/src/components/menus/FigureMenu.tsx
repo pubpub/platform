@@ -10,8 +10,7 @@ import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
 import { registerFormats } from "schemas";
 
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Switch } from "ui/switch";
+import { Form } from "ui/form";
 
 import { toggleFigureNode } from "../../commands/figures";
 import { useEditorContext } from "../Context";

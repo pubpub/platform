@@ -2,6 +2,7 @@ import React from "react";
 import { Node } from "prosemirror-model";
 
 import { FigureMenu } from "./FigureMenu";
+import { MediaUpload } from "./MediaUpload";
 
 type NodeMenuProps = {
 	node: Node;
@@ -16,12 +17,16 @@ export const NodeMenu = (props: NodeMenuProps) => {
 			menu = <FigureMenu node={props.node} onChange={props.onChange} />;
 			break;
 		}
+		case "image": {
+			menu = <MediaUpload node={props.node} />;
+			break;
+		}
 	}
 
-	return (
-		<div className="my-2 flex flex-col gap-2">
-			<h2 className="text-md font-serif font-medium">{props.node.type.name}</h2>
+	return menu ? (
+		<>
 			{menu}
-		</div>
-	);
+			<hr />
+		</>
+	) : null;
 };

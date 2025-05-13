@@ -6,14 +6,10 @@ import {
 } from "@handlewithcare/react-prosemirror";
 import { createPortal } from "react-dom";
 
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-
 import { replaceMark } from "../commands/marks";
 import { useEditorContext } from "./Context";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { AdvancedOptions } from "./menus/AdvancedOptions";
-import { DataAttributes } from "./menus/DefaultAttributesMenu";
 import { LinkMenu } from "./menus/LinkMenu";
 import { NodeMenu } from "./menus/NodeMenu";
 
@@ -118,15 +114,6 @@ export function AttributePanel({
 		[position, containerRef]
 	);
 
-	const updateMarkAttr = useEditorEventCallback(
-		(view, index: number, attrKey: string, value: string | null) => {
-			const mark = nodeMarks[index];
-			const markAttrs = { ...mark.attrs, [attrKey]: value };
-			replaceMark(mark, markAttrs)(view.state, view.dispatch);
-		}
-	);
-
-	/** Bulk update version of updateMarkAttr */
 	const updateMarkAttrs = useEditorEventCallback(
 		(view, index: number, attrs: Record<string, string | null>) => {
 			const mark = nodeMarks[index];
@@ -134,18 +121,6 @@ export function AttributePanel({
 			replaceMark(mark, markAttrs)(view.state, view.dispatch);
 		}
 	);
-
-	const updateData = useEditorEventCallback((view, attrKey: string, value: string) => {
-		if (!view || !node || !position) return;
-		view.dispatch(
-			view.state.tr.setNodeMarkup(
-				position,
-				node.type,
-				{ ...node.attrs, data: { ...nodeAttrs.data, [attrKey]: value } },
-				node.marks
-			)
-		);
-	});
 
 	const updateNodeAttrs = useEditorEventCallback((view, attrs: Record<string, unknown>) => {
 		if (!view || !node || !position) return;
@@ -162,10 +137,6 @@ export function AttributePanel({
 		return null;
 	}
 
-	const labelClass = "font-normal text-xs";
-	const inputClass = "h-8 text-xs rounded-sm border-neutral-300";
-
-	const nodeAttrs = node.attrs || {};
 	const nodeMarks = node.marks || [];
 
 	if (!containerRef.current) {
@@ -195,60 +166,44 @@ export function AttributePanel({
 						offset.top === 0
 							? ""
 							: `height ${animationHeightMS}ms linear, opacity ${animationHeightMS}ms linear `,
+					marginTop: 2,
+					marginBottom: 2,
+					display: "flex",
+					flexDirection: "column",
+					gap: "0.5em",
 				}}
 				data-testid="attribute-panel"
 			>
+				<h2 className="text-md font-serif font-medium">
+					{node.type.name}
+					{nodeMarks.length > 0 ? (
+						<> + {nodeMarks.map((mark) => mark.type.name).join(", ")}</>
+					) : null}
+				</h2>
 				{nodeMarks.length > 0 ? (
 					nodeMarks.map((mark, index) => {
 						const key = `${mark.type.name}-${position}`;
-						if (mark.type.name === "link") {
-							return (
-								<LinkMenu
-									mark={mark}
-									onChange={(values) => {
-										updateMarkAttrs(index, values);
-									}}
-									key={key}
-								/>
-							);
+						let menu = null;
+						switch (mark.type.name) {
+							case "link":
+								menu = (
+									<LinkMenu
+										mark={mark}
+										onChange={(values) => {
+											updateMarkAttrs(index, values);
+										}}
+										key={key}
+									/>
+								);
+								break;
+							default:
+								break;
 						}
-						return (
-							<div key={key}>
-								<div className="mt-4 text-sm font-bold">{mark.type.name}</div>
-								{Object.keys(mark.attrs).map((attrKey) => {
-									if (attrKey === "data") {
-										return null;
-									}
-									const key = `${mark.type.name}-${attrKey}`;
-									return (
-										<div key={key}>
-											<Label className={labelClass} htmlFor={key}>
-												{attrKey}
-											</Label>
-											<Input
-												className={inputClass}
-												type="text"
-												defaultValue={mark.attrs[attrKey] || ""}
-												onChange={(evt) => {
-													updateMarkAttr(
-														index,
-														attrKey,
-														evt.target.value
-													);
-												}}
-												id={key}
-											/>
-										</div>
-									);
-								})}
-							</div>
-						);
+						return menu;
 					})
 				) : (
 					<NodeMenu node={node} onChange={updateNodeAttrs} />
 				)}
-				<DataAttributes nodeAttrs={nodeAttrs} updateData={updateData} />
-				<hr />
 				<AdvancedOptions node={node} onChange={updateNodeAttrs} />
 			</div>
 

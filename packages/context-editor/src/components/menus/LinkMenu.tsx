@@ -66,7 +66,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 	return (
 		<Form {...form}>
 			<form className="my-2 flex flex-col gap-2" onBlur={form.handleSubmit(handleSubmit)}>
-				<h2 className="text-md font-serif font-medium">link</h2>
 				<FormField
 					name="href"
 					control={form.control}
