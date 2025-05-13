@@ -121,7 +121,7 @@
 		"oslo": "^1.2.1",
 		"pg": "^8.11.3",
 		"prosemirror-markdown": "^1.12.0",
-		"prosemirror-model": "^1.24.1",
+		"prosemirror-model": "catalog:",
 		"qs": "^6.14.0",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19",
