@@ -1,5 +1,5 @@
 import type { Static } from "@sinclair/typebox";
-import type { Node } from "prosemirror-model";
+import type { Mark, Node } from "prosemirror-model";
 
 import React, { useMemo, useState } from "react";
 import { useEditorEffect } from "@handlewithcare/react-prosemirror";
@@ -28,7 +28,7 @@ const compiledSchema = TypeCompiler.Compile(formSchema);
 type FormSchema = Static<typeof formSchema>;
 
 type Props = {
-	node: Node;
+	node: Node | Mark;
 	nodePos: number;
 	index?: number;
 	onChange: (values: Record<string, unknown>) => void;

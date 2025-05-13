@@ -26,7 +26,7 @@ export const MarkMenu = (props: Props) => {
 		return (
 			<React.Fragment key={key}>
 				{menu}
-				<AdvancedOptions node={props.node} nodePos={props.nodePos} onChange={onChange} />
+				<AdvancedOptions node={mark} nodePos={props.nodePos} onChange={onChange} />
 			</React.Fragment>
 		);
 	});
