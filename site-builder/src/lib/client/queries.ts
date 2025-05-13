@@ -19,7 +19,11 @@ export const getPubType = async (name: string) => {
 	return expect(pubTypeId.body?.[0]);
 };
 
-export const getJournal = async (opts?: { depth?: number; withRelatedPubs?: boolean }) => {
+export const getJournal = async (opts?: {
+	depth?: number;
+	withRelatedPubs?: boolean;
+	fieldSlugs?: string[];
+}) => {
 	const journalPubType = await getPubType("Journal");
 
 	const journal = await getClient().pubs.getMany({
@@ -39,6 +43,29 @@ export const getJournal = async (opts?: { depth?: number; withRelatedPubs?: bool
 	}
 
 	return expect(journal.body?.[0]);
+};
+
+export const getHeader = async () => {
+	const headerPubType = await getPubType("Header");
+
+	const header = await getClient().pubs.getMany({
+		params: {
+			communitySlug: SITE_ENV.COMMUNITY_SLUG,
+		},
+		query: {
+			pubTypeId: [expect(headerPubType.id)],
+			limit: 1,
+			depth: 3,
+			withRelatedPubs: true,
+			withPubType: true,
+		},
+	});
+
+	if (header.status !== 200) {
+		throw new Error("Failed to fetch header");
+	}
+
+	return expect(header.body?.[0]);
 };
 
 export const getJournalArticles = async (opts?: { limit?: number }) => {

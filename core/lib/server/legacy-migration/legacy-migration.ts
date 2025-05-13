@@ -18,7 +18,17 @@ import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
 import type { FileMetadata } from "../assets";
-import type { LegacyCollection, LegacyCommunity, LegacyPage, LegacyPub } from "./schemas";
+import type { NestedBuilder } from "../pub-op";
+import type {
+	CollectionNavigationChild,
+	LegacyCollection,
+	LegacyCommunity,
+	LegacyPage,
+	LegacyPub,
+	LinkNavigationChild,
+	MenuNavigationChild,
+	PageNavigationChild,
+} from "./schemas";
 import { db } from "~/kysely/database";
 import { renderNodeToHTML } from "~/lib/editor/serialization/server";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -128,11 +138,12 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	Items: { schemaName: CoreSchemaType.String, relation: true },
 
 	Page: { schemaName: CoreSchemaType.Null, relation: true },
+
 	Favicon: { schemaName: CoreSchemaType.FileUpload },
 
-	HeaderBackgroundImage: { schemaName: CoreSchemaType.FileUpload },
-	HeaderTextStyle: { schemaName: CoreSchemaType.String },
-	HeaderTheme: { schemaName: CoreSchemaType.String },
+	"Header Background Image": { schemaName: CoreSchemaType.FileUpload },
+	"Header Text Style": { schemaName: CoreSchemaType.String },
+	"Header Theme": { schemaName: CoreSchemaType.String },
 
 	// journal metadata
 	"Cite As": { schemaName: CoreSchemaType.String },
@@ -146,6 +157,7 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 	"Journal Collections": { schemaName: CoreSchemaType.Null, relation: true },
 
 	"Navigation Targets": { schemaName: CoreSchemaType.Null, relation: true },
+	"Navigation Id": { schemaName: CoreSchemaType.String, relation: true },
 
 	Footer: { schemaName: CoreSchemaType.Null, relation: true },
 	Header: { schemaName: CoreSchemaType.Null, relation: true },
@@ -156,9 +168,9 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 		fields: {
 			Title: { isTitle: true },
 			Avatar: { isTitle: false },
-			HeaderBackgroundImage: { isTitle: false },
-			HeaderTextStyle: { isTitle: false },
-			HeaderTheme: { isTitle: false },
+			"Header Background Image": { isTitle: false },
+			"Header Text Style": { isTitle: false },
+			"Header Theme": { isTitle: false },
 			Abstract: { isTitle: false },
 			"Legacy Id": { isTitle: false },
 			PubContent: { isTitle: false },
@@ -333,6 +345,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 			Slug: { isTitle: false },
 			"Publication Date": { isTitle: false },
 			Avatar: { isTitle: false },
+			Favicon: { isTitle: false },
 			URL: { isTitle: false },
 			"E-ISSN": { isTitle: false },
 			"Full Name": { isTitle: false },
@@ -355,6 +368,7 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	},
 	"Navigation Link": {
 		fields: {
+			"Navigation Id": { isTitle: false },
 			Title: { isTitle: true },
 			URL: { isTitle: false },
 		},
@@ -362,6 +376,8 @@ export const REQUIRED_LEGACY_PUB_TYPES = {
 	},
 	"Navigation Menu": {
 		fields: {
+			"Navigation Id": { isTitle: false },
+			Title: { isTitle: true },
 			"Navigation Targets": {
 				isTitle: false,
 				defaultFormTargets: [
@@ -873,19 +889,19 @@ const createJournalArticles = async (
 			}
 
 			if (pubHeaderImage) {
-				op = op.set(jaFields.HeaderBackgroundImage.slug, [pubHeaderImage]);
+				op = op.set(jaFields["Header Background Image"].slug, [pubHeaderImage]);
 			}
 
 			if (pub.facets?.PubHeaderTheme?.props?.textStyle?.value) {
 				op = op.set(
-					jaFields.HeaderTextStyle.slug,
+					jaFields["Header Text Style"].slug,
 					pub.facets.PubHeaderTheme.props.textStyle.value
 				);
 			}
 
 			if (pub.facets?.PubHeaderTheme?.props?.backgroundColor?.value) {
 				op = op.set(
-					jaFields.HeaderTheme.slug,
+					jaFields["Header Theme"].slug,
 					pub.facets.PubHeaderTheme.props.backgroundColor.value
 				);
 			}
@@ -1411,6 +1427,16 @@ const createJournal = async (
 		op = op.set(legacyStructure.Journal.fields["Avatar"].slug, [avatar]);
 	}
 
+	const { image: favicon, imageMap: faviconMap } = await getOrGenerateMetadata(
+		legacyCommunity.community.favicon,
+		communitySlug,
+		avatarMap
+	);
+
+	if (favicon) {
+		op = op.set(legacyStructure.Journal.fields["Favicon"].slug, [favicon]);
+	}
+
 	// relate pages
 	if (legacyCommunity.pages.length > 0) {
 		op.relateByValue(
@@ -1453,6 +1479,126 @@ const createJournal = async (
 		);
 	}
 
+	if (legacyCommunity.community.navigation) {
+		op = op.relate(legacyStructure.Journal.fields["Header"].slug, null, (op) => {
+			let opp = op.create({
+				pubTypeId: legacyStructure.Header.id,
+				communityId,
+				lastModifiedBy: createLastModifiedBy("system"),
+				trx,
+			});
+
+			const relateNavigation = (
+				nav: (typeof legacyCommunity.community.navigation)[number],
+				op: typeof opp
+			) => {
+				if ("children" in nav) {
+					const navv = nav as MenuNavigationChild;
+
+					return op.relate(
+						legacyStructure.Header.fields["Navigation Targets"].slug,
+						null,
+						(op) => {
+							let menuOp = op
+								.create({
+									pubTypeId: legacyStructure["Navigation Menu"].id,
+								})
+								.set(
+									legacyStructure["Navigation Menu"].fields["Navigation Id"].slug,
+									navv.id
+								)
+								.set(
+									legacyStructure["Navigation Menu"].fields["Title"].slug,
+									navv.title
+								);
+
+							for (const child of navv.children) {
+								const newOp = relateNavigation(child, menuOp);
+								if (!newOp) continue;
+
+								menuOp = newOp;
+							}
+							return menuOp;
+						}
+					);
+				}
+
+				if ("href" in nav) {
+					return op.relate(
+						legacyStructure.Header.fields["Navigation Targets"].slug,
+						null,
+						(op) =>
+							op
+								.create({
+									pubTypeId: legacyStructure["Navigation Link"].id,
+								})
+								.set(
+									legacyStructure["Navigation Link"].fields["Title"].slug,
+									nav.title
+								)
+								.set(
+									legacyStructure["Navigation Link"].fields["URL"].slug,
+									nav.href
+								)
+					);
+				}
+
+				if ("type" in nav) {
+					console.log("lmao", nav);
+					if (nav.type === "page") {
+						return op.relateByValue(
+							legacyStructure.Header.fields["Navigation Targets"].slug,
+							null,
+							{
+								slug: legacyStructure.Page.fields["Legacy Id"].slug,
+								value: nav.id,
+							}
+						);
+					} else if (nav.type === "collection") {
+						return op.relateByValue(
+							legacyStructure.Header.fields["Navigation Targets"].slug,
+							null,
+							{
+								slug: legacyStructure.Collection.fields["Legacy Id"].slug,
+								value: nav.id,
+							}
+						);
+					}
+				}
+				return null;
+			};
+			for (const nav of legacyCommunity.community.navigation!) {
+				const newOp = relateNavigation(nav, opp);
+				if (!newOp) continue;
+
+				opp = newOp;
+				// 	if ("type" in nav) {
+				// 		if (nav.type === "page") {
+				// 			opp = opp.relateByValue(
+				// 				legacyStructure.Header.fields["Navigation Targets"].slug,
+				// 				null,
+				// 				{
+				// 					target: legacyStructure.Page.fields["Legacy Id"].slug,
+				// 					value: nav.id,
+				// 				}
+				// 			);
+				// 		}
+				// 		if (nav.type === "collection") {
+				// 			opp = opp.relateByValue(
+				// 				legacyStructure.Header.fields["Navigation Targets"].slug,
+				// 				null,
+				// 				{
+				// 					target: legacyStructure.Collection.fields["Legacy Id"].slug,
+				// 					value: nav.id,
+				// 				}
+				// 			);
+				// 		}
+				// 	}
+			}
+
+			return opp;
+		});
+	}
 	// if (legacyCommunity.community.navigation?.length) {
 	// 	for (const nav of legacyCommunity.community.navigation) {
 	// 		if ("type" in nav) {

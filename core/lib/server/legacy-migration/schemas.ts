@@ -684,6 +684,13 @@ const communityNavigationMenuSchema = z.object({
 	children: z.array(communityNavigationChildSchema),
 });
 
+export type PageNavigationChild = z.infer<typeof communityNavigationChildSchema> & { type: "page" };
+export type CollectionNavigationChild = z.infer<typeof communityNavigationChildSchema> & {
+	type: "collection";
+};
+export type LinkNavigationChild = z.infer<typeof communityNavigationChildSchema> & { type: "href" };
+export type MenuNavigationChild = z.infer<typeof communityNavigationMenuSchema>;
+
 const communityNavigationEntrySchema = z.union([
 	communityNavigationChildSchema,
 	communityNavigationMenuSchema,

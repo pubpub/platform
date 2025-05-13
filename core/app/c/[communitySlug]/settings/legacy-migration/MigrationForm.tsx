@@ -53,11 +53,12 @@ export function MigrationForm({ community }: { community: { slug: string; id: Co
 	const runImportFromLegacy = useServerAction(importFromLegacy);
 
 	const onSubmit = form.handleSubmit(async (data) => {
+		console.log("submiting");
 		const result = await runImportFromLegacy({
 			slug: data.legacyCommunity,
 		});
-
 		console.log(result);
+
 		if (didSucceed(result)) {
 			toast({
 				title: "Import successful!",
@@ -133,6 +134,7 @@ export function UndoMigrationForm({
 	const runUndoMigration = useServerAction(undoMigration);
 
 	const onSubmit = form.handleSubmit(async (data) => {
+		console.log("submiting");
 		const pubTypesNotToDelete = Object.keys(data.pubTypes).filter(
 			(key) => !data.pubTypes[key]
 		) as PubTypesId[];
@@ -430,12 +432,12 @@ export function UndoMigrationForm({
 
 						<AlertDialogFooter>
 							<AlertDialogCancel type="button">Cancel</AlertDialogCancel>
-							<AlertDialogAction asChild>
-								<FormSubmitButton
-									formState={form.formState}
-									idleText="Undo Migration"
-								/>
-							</AlertDialogAction>
+							{/* <AlertDialogAction asChild> */}
+							<FormSubmitButton
+								formState={form.formState}
+								idleText="Undo Migration"
+							/>
+							{/* </AlertDialogAction> */}
 						</AlertDialogFooter>
 					</form>
 				</Form>

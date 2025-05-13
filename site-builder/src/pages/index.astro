@@ -4,10 +4,11 @@ import { expect } from "utils/assert";
 import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
 import { getClient } from "../lib/client/client";
-import { getJournal } from "../lib/client/queries";
+import { getHeader, getJournal } from "../lib/client/queries";
 import { getFieldValue } from "../lib/getValue";
 
 const journal = await getJournal();
+const header = await getHeader();
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // don't want to use any of this? delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
@@ -18,7 +19,7 @@ const publishAs = getFieldValue<string>(journal, "starter:publish-as");
 const publicationDate = getFieldValue<string>(journal, "starter:publication-date");
 ---
 
-<Layout journal={journal}>
+<Layout journal={journal} header={header}>
 	<div id="container" class="max-w-6xl mx-auto px-4 py-8">
 		<main>
 			<section class="mb-12">
