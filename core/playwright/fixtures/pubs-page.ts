@@ -56,6 +56,8 @@ export class PubsPage {
 		await this.page.getByRole("button", { name: "Create", exact: true }).click();
 		await this.choosePubType(pubType);
 
+		// weird race condition introduced by renavigation whichmakes the field toggle selection not work
+		await this.page.waitForTimeout(500);
 		// disable all toggles
 		const fieldToggles = this.page.getByRole("button", {
 			name: "Toggle field",
