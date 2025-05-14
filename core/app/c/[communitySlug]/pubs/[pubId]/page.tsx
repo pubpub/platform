@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Eye } from "lucide-react";
 
 import type { PubsId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
@@ -173,11 +174,17 @@ export default async function Page(props: {
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
 				<div>
-					<div className="flex items-center gap-2">
+					<div className="flex items-baseline gap-2">
 						<span className="text-lg font-semibold text-muted-foreground">
 							{pub.pubType.name}
 						</span>
-						<FormSwitcher defaultFormSlug={formSlug} forms={availableForms} />
+						<FormSwitcher
+							defaultFormSlug={formSlug}
+							forms={availableForms}
+							className="ml-4 p-1 text-xs text-muted-foreground"
+						>
+							<Eye size={14} />
+						</FormSwitcher>
 					</div>
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
