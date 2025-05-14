@@ -57,7 +57,8 @@ export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
 	return (
 		<FormField
 			name={props.name}
-			control={form.control}
+			// `form` may be undefined if this is used outside of a form context
+			control={form?.control}
 			render={({ field }) => {
 				return (
 					<FormItem className="flex items-center justify-between">

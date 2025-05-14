@@ -4,10 +4,11 @@ import {
 	useEditorEventCallback,
 	useEditorState,
 } from "@handlewithcare/react-prosemirror";
-import { NodeSelection, TextSelection } from "prosemirror-state";
+import { TextSelection } from "prosemirror-state";
 import { createPortal } from "react-dom";
 
 import { replaceMark } from "../commands/marks";
+import { AtomDataMenu } from "./AtomDataMenu";
 import { MENU_BAR_HEIGHT } from "./MenuBar";
 import { MarkMenu } from "./menus/MarkMenu";
 import { NodeMenu } from "./menus/NodeMenu";
@@ -113,6 +114,18 @@ export function AttributePanel({
 		}
 	);
 
+	const updateAtomData = useEditorEventCallback((view, key: string, value: unknown) => {
+		if (!view || !node) return;
+		view.dispatch(
+			view.state.tr.setNodeMarkup(
+				nodePos,
+				node.type,
+				{ ...node.attrs, data: { ...node.attrs.data, [key]: value } },
+				node.marks
+			)
+		);
+	});
+
 	const updateNodeAttrs = useEditorEventCallback((view, attrs: Record<string, unknown>) => {
 		if (!view || !node) return;
 		let tr = view.state.tr.setNodeMarkup(
@@ -175,6 +188,7 @@ export function AttributePanel({
 				) : (
 					<NodeMenu node={node} nodePos={nodePos} onChange={updateNodeAttrs} />
 				)}
+				<AtomDataMenu node={node} onChange={updateAtomData} />
 			</div>
 
 			<div
