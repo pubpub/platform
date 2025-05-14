@@ -1,5 +1,4 @@
 import type { InputComponent } from "db/public";
-import { ColorPicker } from "ui/color-picker";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
@@ -28,11 +27,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 					<FormItem>
 						<FormLabel>Help Text</FormLabel>
 						<FormControl>
-							{/* <Input placeholder="Optional guidance for color selection" {...field} /> */}
-							<ColorPicker
-								value={field.value || "#000000"}
-								onChange={field.onChange}
-							/>
+							<Input placeholder="Optional guidance for color selection" {...field} />
 						</FormControl>
 						<FormDescription>Appears below the color picker</FormDescription>
 						<FormMessage />

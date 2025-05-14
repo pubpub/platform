@@ -2,7 +2,7 @@
 
 import type { TSchema } from "@sinclair/typebox";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -14,6 +14,7 @@ import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
+import { ColorCircle, ColorPicker, ColorValue } from "ui/color";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
@@ -22,6 +23,7 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { MultiBlock } from "ui/multiblock";
 import { MultiValueInput } from "ui/multivalue-input";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import {
 	Select,
@@ -193,11 +195,29 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.colorPicker]: {
 		name: "Color Picker",
 		demoComponent: () => {
+			const [color, setColor] = useState("#000000");
 			return (
-				<div className="flex w-full flex-col gap-1 text-left text-sm">
-					<div className="text-gray-500">Label</div>
-					<div className="h-10 w-10 rounded-full bg-red-500" />
-				</div>
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button
+							variant="outline"
+							className="flex h-8 items-center gap-2"
+							aria-label={`Select color: currently ${color || "#000000"}`}
+						>
+							<span className="sr-only">Pick a color</span>
+							<ColorCircle color={color || "#000000"} size="sm" />
+							<ColorValue color={color || "#000000"} />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
+						<ColorPicker
+							color={color || "#000000"}
+							onChange={(value) => {
+								setColor(value);
+							}}
+						/>
+					</PopoverContent>
+				</Popover>
 			);
 		},
 	},
