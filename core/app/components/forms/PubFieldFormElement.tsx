@@ -8,6 +8,7 @@ import { logger } from "logger";
 import type { PubFieldElement } from "./types";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
+import { ColorPickerElement } from "./elements/ColorPickerElement";
 import { ConfidenceElement } from "./elements/ConfidenceElement";
 import { ContextEditorElement } from "./elements/ContextEditorElement";
 import { DateElement } from "./elements/DateElement";
@@ -148,6 +149,15 @@ export const PubFieldFormElement = ({
 	if (element.component === InputComponent.richText) {
 		return (
 			<ContextEditorElement
+				{...basicProps}
+				config={element.config}
+				schemaName={element.schemaName}
+			/>
+		);
+	}
+	if (element.component === InputComponent.colorPicker) {
+		return (
+			<ColorPickerElement
 				{...basicProps}
 				config={element.config}
 				schemaName={element.schemaName}

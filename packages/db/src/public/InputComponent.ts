@@ -18,6 +18,7 @@ export enum InputComponent {
 	multivalueInput = "multivalueInput",
 	richText = "richText",
 	relationBlock = "relationBlock",
+	colorPicker = "colorPicker",
 }
 
 /** Zod schema for InputComponent */

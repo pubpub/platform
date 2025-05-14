@@ -104,6 +104,7 @@ export const coreSchemaTypeAllowedOperators = {
 		"$exists",
 	],
 	[CoreSchemaType.Null]: ["$null", "$exists"],
+	[CoreSchemaType.Color]: ["$eq", "$ne", "$null", "$notNull", "$exists"],
 } as const satisfies Record<CoreSchemaType, FilterOperator[]>;
 
 const filterMap = {

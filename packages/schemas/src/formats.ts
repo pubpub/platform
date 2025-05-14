@@ -36,8 +36,28 @@ export function IsUuid(value: string): boolean {
 	return Uuid.test(value);
 }
 
+const Hex = /[\#]([a-fA-F\d]{6}|[a-fA-F\d]{3})/;
+
+const RGB = /rbg[\(](((([\d]{1,3})[\,]{0,1})[\s]*){3})[\)]/;
+
+const RGBA = /rgba[\(](((([\d]{1,3}|[\d\.]{1,3})[\,]{0,1})[\s]*){4})[\)]/;
+
+const HSL = /hsl[\(](((([\d]{1,3}|[\d\%]{2,4})[\,]{0,1})[\s]*){3})[\)]/;
+
+const HSLA = /hsla[\(](((([\d]{1,3}|[\d\%]{2,4}|[\d\.]{1,3})[\,]{0,1})[\s]*){4})[\)]/;
+
+const Color = new RegExp(
+	`^(${Hex.source}|${RGB.source}|${RGBA.source}|${HSL.source}|${HSLA.source})$`,
+	"i"
+);
+
+export function IsColor(value: string): boolean {
+	return Color.test(value);
+}
+
 export const registerFormats = () => {
 	FormatRegistry.Set("email", IsEmail);
 	FormatRegistry.Set("uri", IsUrl);
 	FormatRegistry.Set("uuid", IsUuid);
+	FormatRegistry.Set("color", IsColor);
 };

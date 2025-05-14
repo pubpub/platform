@@ -5,6 +5,7 @@ import {
 	BoxSelect,
 	CalendarClock,
 	CheckSquare,
+	Circle,
 	CircleSlash,
 	Hash,
 	ImagePlus,
@@ -74,5 +75,9 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	[CoreSchemaType.RichText]: {
 		description: "Rich text of any length",
 		icon: BookType,
+	},
+	[CoreSchemaType.Color]: {
+		description: "A color",
+		icon: Circle,
 	},
 } as const;

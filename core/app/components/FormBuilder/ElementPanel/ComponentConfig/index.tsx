@@ -32,7 +32,8 @@ const InputComponentMap = {
 	[InputComponent.textInput]: toDynamic("TextInput"),
 	[InputComponent.richText]: toDynamic("RichText"),
 	[InputComponent.relationBlock]: toDynamic("RelationBlock"),
-};
+	[InputComponent.colorPicker]: toDynamic("ColorPicker"),
+} satisfies Record<InputComponent, React.ComponentType>;
 
 export const ComponentConfig = <I extends InputComponent>(props: ComponentConfigFormProps<I>) => {
 	// ideally the compenent would be selected through some (generic) function, but for `dynamic`

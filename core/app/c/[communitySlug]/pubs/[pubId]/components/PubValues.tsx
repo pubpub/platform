@@ -12,6 +12,7 @@ import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
+import { ColorCircle, ColorLabel, ColorValue } from "ui/color";
 import { ChevronDown, ChevronRight } from "ui/icon";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
@@ -211,7 +212,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 	// For file uploads, because Unjournal doesn't have schemaNames yet, we check the value structure
 	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 	if (Value.Check(fileUploadSchema, value.value)) {
-		return <FileUploadPreview files={value.value as FileUpload} />;
+		return <FileUploadPreview files={value.value} />;
 	}
 
 	if (value.schemaName === CoreSchemaType.DateTime) {
@@ -219,6 +220,15 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		if (date.toString() !== "Invalid Date") {
 			return date.toISOString().split("T")[0];
 		}
+	}
+
+	if (value.schemaName === CoreSchemaType.Color) {
+		return (
+			<ColorLabel>
+				<ColorCircle color={value.value as string} size="sm" />
+				<ColorValue color={value.value as string} />
+			</ColorLabel>
+		);
 	}
 
 	const valueAsString = (value.value as JsonValue)?.toString() || "";

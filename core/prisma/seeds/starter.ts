@@ -38,6 +38,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				"Published At": { schemaName: CoreSchemaType.DateTime },
 				"File Upload": { schemaName: CoreSchemaType.FileUpload },
 				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
+				Color: { schemaName: CoreSchemaType.Color },
 			},
 			pubTypes: {
 				Article: {
@@ -52,6 +53,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					"Published At": { isTitle: false },
 					"File Upload": { isTitle: false },
 					Evaluations: { isTitle: false },
+					Color: { isTitle: false },
 				},
 				Evaluation: {
 					Title: { isTitle: true },
@@ -63,6 +65,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					File: { isTitle: false },
 					Confidence: { isTitle: false },
 					"Published At": { isTitle: false },
+					Color: { isTitle: false },
 				},
 			},
 			users: {
