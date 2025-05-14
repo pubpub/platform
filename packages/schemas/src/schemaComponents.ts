@@ -144,7 +144,14 @@ export enum ColorPickerType {
 export const colorPickerConfigSchema = Type.Object({
 	label: Type.Optional(Type.String()),
 	help: Type.Optional(Type.String()),
-	// type: Type.Enum(ColorPickerType, { default: ColorPickerType.Hex }),
+	presets: Type.Optional(
+		Type.Array(
+			Type.String({
+				format: "color",
+			})
+		)
+	),
+	presetsOnly: Type.Optional(Type.Boolean({ default: false })),
 });
 
 export const componentConfigSchemas = {

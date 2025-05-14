@@ -14,6 +14,44 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
+export const ColorPickerPopover = ({
+	color,
+	onChange,
+	presets,
+	presetsOnly,
+}: {
+	color: string;
+	onChange: (value: string) => void;
+	presets?: string[];
+	presetsOnly?: boolean;
+}) => {
+	return (
+		<Popover>
+			<PopoverTrigger asChild>
+				<Button
+					variant="outline"
+					className="flex h-full items-center gap-2"
+					aria-label={`Select color: currently ${color || "#000000"}`}
+				>
+					<span className="sr-only">Pick a color</span>
+					<ColorCircle color={color || "#000000"} size="sm" />
+					<ColorValue color={color || "#000000"} />
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
+				<ColorPicker
+					presets={presets}
+					presetsOnly={presetsOnly}
+					color={color}
+					onChange={(value) => {
+						onChange(value);
+					}}
+				/>
+			</PopoverContent>
+		</Popover>
+	);
+};
+
 export const ColorPickerElement = ({
 	slug,
 	label,
@@ -36,30 +74,14 @@ export const ColorPickerElement = ({
 				<FormItem>
 					<FormLabel>{label || config.label}</FormLabel>
 					<FormControl>
-						<Popover>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									className="flex h-full items-center gap-2"
-									aria-label={`Select color: currently ${field.value || "#000000"}`}
-								>
-									<span className="sr-only">Pick a color</span>
-									<ColorCircle color={field.value || "#000000"} size="sm" />
-									<ColorValue color={field.value || "#000000"} />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent
-								className="w-auto overflow-clip p-0"
-								aria-label="Color picker"
-							>
-								<ColorPicker
-									color={field.value || "#000000"}
-									onChange={(value) => {
-										field.onChange(value);
-									}}
-								/>
-							</PopoverContent>
-						</Popover>
+						<ColorPickerPopover
+							color={field.value || "#000000"}
+							onChange={(value) => {
+								field.onChange(value);
+							}}
+							presets={config.presets}
+							presetsOnly={config.presetsOnly}
+						/>
 					</FormControl>
 					{config.help && <FormDescription>{config.help}</FormDescription>}
 					<FormMessage />

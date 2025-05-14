@@ -1,10 +1,15 @@
 import * as React from "react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 
+import { Button } from "ui/button";
 import { cn } from "utils";
 import { isColorDark } from "utils/color";
 
-export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexColorPicker>;
+export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexColorPicker> & {
+	onChange: (color: string) => void;
+	presets?: string[];
+	presetsOnly?: boolean;
+};
 
 export function ColorBackground(props: {
 	color: string;
@@ -14,7 +19,7 @@ export function ColorBackground(props: {
 	const isDark = isColorDark(props.color);
 	return (
 		<div
-			className={cn("h-4 w-4 rounded-full", props.className)}
+			className={cn("flex items-center justify-center", props.className)}
 			style={{ backgroundColor: props.color, color: isDark ? "white" : "black" }}
 		>
 			{props.children}
@@ -60,29 +65,51 @@ export function ColorValue(props: { color: string; className?: string }) {
 	);
 }
 
-export function ColorPicker(props: ColorPickerProps) {
+export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps) {
 	const isDark = isColorDark(props.color || "#000000");
 
 	return (
 		<div>
-			<HexColorPicker
-				className="[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-none"
-				aria-label="Color picker"
-				{...props}
-			/>
-			<HexColorInput
-				className={cn(
-					"w-[200px] rounded-b-md border-none text-center font-mono",
-					isDark ? "text-white" : "text-black",
-					"font-md uppercase tracking-wider"
-				)}
-				prefixed
-				style={{
-					background: props.color,
-				}}
-				aria-label="Hex color value"
-				{...props}
-			/>
+			{!presetsOnly && (
+				<>
+					<HexColorPicker
+						className="[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-none"
+						aria-label="Color picker"
+						{...props}
+					/>
+					<HexColorInput
+						className={cn(
+							"w-[200px] border-none text-center font-mono",
+							isDark ? "text-white" : "text-black",
+							"font-md uppercase tracking-wider",
+							presets?.length ? "rounded-none" : "rounded-b-md"
+						)}
+						prefixed
+						style={{
+							background: props.color,
+						}}
+						aria-label="Hex color value"
+						{...props}
+					/>
+				</>
+			)}
+			{presets && (
+				<div className="flex flex-wrap">
+					{presets.map((preset, idx) => (
+						<Button
+							key={`preset-${preset}-${idx}`}
+							variant="ghost"
+							onClick={() => props.onChange(preset)}
+							className="m-0 flex flex-grow items-center justify-center rounded-none p-0"
+						>
+							<span className="sr-only">Select preset {preset}</span>
+							<ColorBackground color={preset} className="h-full w-full min-w-24">
+								<ColorValue color={preset} />
+							</ColorBackground>
+						</Button>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }
