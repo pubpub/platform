@@ -6,7 +6,7 @@ import { EDITOR_WITH_IMAGE_STORY } from "./constants";
 import { getProsemirrorState } from "./utils";
 
 const clickImageNode = async (page: Page) => {
-	await page.getByRole("button", { name: "image", exact: true }).click();
+	await page.getByRole("button", { name: "image", exact: true }).dblclick();
 };
 
 test.describe("images", () => {
@@ -48,7 +48,7 @@ test.describe("images", () => {
 
 	test("can add and remove caption, credit, license fields", async ({ page }) => {
 		// await clickImageNode(page);
-		await page.getByRole("button", { name: "figure", exact: true }).first().click();
+		await page.getByRole("button", { name: "figure", exact: true }).first().dblclick();
 		await page.getByTestId("attribute-panel").waitFor();
 		await expect(page.getByRole("button", { name: "figcaption" })).toHaveCount(0);
 		const figureParts = [
