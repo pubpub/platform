@@ -189,11 +189,11 @@ test.describe("attribute panel", () => {
 			await test.step("click between marks", async () => {
 				const clickOptions =
 					browserName === "chromium" ? { position: { x: 20, y: 0 } } : undefined;
-				await editor.getByText("italic").click(clickOptions);
+				await editor.getByText("italic").dblclick(clickOptions);
 				await page.getByTestId("attribute-panel").getByText("em").waitFor();
 				await page.getByTestId("advanced-options-trigger").click();
 				await expect(page.getByTestId("id-input")).toHaveValue("italic-id");
-				await editor.getByText("bold").click(clickOptions);
+				await editor.getByText("bold").dblclick(clickOptions);
 				await page.getByTestId("attribute-panel").getByText("strong").waitFor();
 				await page.getByTestId("advanced-options-trigger").click();
 				await expect(page.getByTestId("id-input")).toHaveValue("bold-id");
