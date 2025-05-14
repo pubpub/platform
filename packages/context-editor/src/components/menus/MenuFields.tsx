@@ -19,7 +19,7 @@ export const MenuInputField = ({
 	return (
 		<FormField
 			name={name}
-			control={form.control}
+			control={form?.control}
 			render={({ field }) => {
 				return (
 					<FormItem className="flex flex-col">
