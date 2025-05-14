@@ -39,7 +39,6 @@ import { Textarea } from "ui/textarea";
 
 import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
-import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
 import { ComponentConfig } from "./ComponentConfig";
@@ -54,6 +53,17 @@ const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.Date
 	ssr: false,
 	loading: () => <Skeleton className="h-9 w-full" />,
 });
+
+const ContextEditorClient = dynamic(
+	() =>
+		import("~/app/components/ContextEditor/ContextEditorClient").then(
+			(mod) => mod.ContextEditorClient
+		),
+	{
+		ssr: false,
+		loading: () => <Skeleton className="h-9 w-full" />,
+	}
+);
 
 const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textArea]: {
