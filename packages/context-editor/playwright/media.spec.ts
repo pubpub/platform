@@ -12,8 +12,8 @@ const clickImageNode = async (page: Page) => {
 test.describe("images", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(EDITOR_WITH_IMAGE_STORY);
-		const editor = page.locator(".ProseMirror");
-		await editor.click();
+		// const editor = page.locator(".ProseMirror");
+		// await editor.click();
 	});
 
 	test("can set image attributes", async ({ page }) => {
