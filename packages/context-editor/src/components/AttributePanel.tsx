@@ -42,10 +42,7 @@ export function AttributePanel({
 	const [height, setHeight] = useState(0);
 	const state = useEditorState();
 	const nodePos = state.selection.$anchor.pos;
-	const node = useMemo(
-		() => state.selection.$anchor.nodeAfter ?? state.selection.$anchor.nodeBefore,
-		[state]
-	);
+	const node = useMemo(() => state.selection.$anchor.nodeAfter, [state]);
 
 	useEditorEffect(
 		(view) => {
