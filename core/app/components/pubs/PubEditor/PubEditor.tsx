@@ -103,7 +103,14 @@ const getRelatedPubData = async ({
 };
 
 export type PubEditorProps = {
-	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId; form?: string };
+	searchParams: {
+		relatedPubId?: PubsId;
+		slug?: string;
+		pubTypeId?: PubTypesId;
+		form?: string;
+		// used when creating a new pub
+		pubId?: PubsId;
+	};
 	htmlFormId?: string;
 	formSlug?: string;
 } & (
@@ -189,7 +196,7 @@ export async function PubEditor(props: PubEditorProps) {
 	// Create the pubId before inserting into the DB if one doesn't exist.
 	// FileUpload needs the pubId when uploading the file before the pub exists
 	const isUpdating = !!pub?.id;
-	const pubId = pub?.id ?? (randomUUID() as PubsId);
+	const pubId = pub?.id ?? props.searchParams.pubId ?? (randomUUID() as PubsId);
 
 	if (pub === undefined) {
 		if (props.searchParams.pubTypeId) {

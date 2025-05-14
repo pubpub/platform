@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { type PubTypesId } from "db/public";
+import { type PubsId, type PubTypesId } from "db/public";
 import { Button } from "ui/button";
 import { Label } from "ui/label";
 
@@ -31,11 +31,19 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId; form?: string }>;
+	searchParams: Promise<
+		Record<string, string> & { pubTypeId: PubTypesId; form?: string; pubId?: PubsId }
+	>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
 	const { communitySlug } = params;
+
+	if (!searchParams.pubId) {
+		const sparams = new URLSearchParams(searchParams);
+		sparams.set("pubId", crypto.randomUUID());
+		redirect(`/c/${communitySlug}/pubs/create?${sparams.toString()}`);
+	}
 
 	const { user } = await getPageLoginData();
 
