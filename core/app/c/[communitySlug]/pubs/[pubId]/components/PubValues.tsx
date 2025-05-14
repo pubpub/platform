@@ -12,6 +12,7 @@ import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
+import { ColorCircle, ColorLabel, ColorValue } from "ui/color";
 import { ChevronDown, ChevronRight } from "ui/icon";
 
 import type { FileUpload } from "~/lib/fields/fileUpload";
@@ -223,13 +224,10 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 
 	if (value.schemaName === CoreSchemaType.Color) {
 		return (
-			<div className="flex items-center gap-2">
-				<span
-					className="h-4 w-4 rounded-full"
-					style={{ backgroundColor: value.value as string }}
-				/>
-				<span className="font-mono text-sm">{value.value as string}</span>
-			</div>
+			<ColorLabel>
+				<ColorCircle color={value.value as string} size="sm" />
+				<ColorValue color={value.value as string} />
+			</ColorLabel>
 		);
 	}
 

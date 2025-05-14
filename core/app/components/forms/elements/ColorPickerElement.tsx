@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { useFormContext } from "react-hook-form";
 import { colorPickerConfigSchema } from "schemas";
 
 import type { InputComponent } from "db/public";
 import { Button } from "ui/button";
-import { ColorPicker } from "ui/color";
+import { ColorCircle, ColorPicker, ColorValue } from "ui/color";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
@@ -40,20 +41,21 @@ export const ColorPickerElement = ({
 								<Button
 									variant="outline"
 									className="flex h-full items-center gap-2"
+									aria-label={`Select color: currently ${field.value || "#000000"}`}
 								>
-									<div
-										className="block h-4 w-4 rounded-full"
-										style={{ backgroundColor: field.value || "#000000" }}
-									></div>
-									<span className="font-mono">{field.value || "#000000"}</span>
+									<span className="sr-only">Pick a color</span>
+									<ColorCircle color={field.value || "#000000"} size="sm" />
+									<ColorValue color={field.value || "#000000"} />
 								</Button>
 							</PopoverTrigger>
-							<PopoverContent>
+							<PopoverContent
+								className="w-auto overflow-clip p-0"
+								aria-label="Color picker"
+							>
 								<ColorPicker
 									color={field.value || "#000000"}
 									onChange={(value) => {
 										field.onChange(value);
-										// formElementToggle.toggle(slug);
 									}}
 								/>
 							</PopoverContent>
