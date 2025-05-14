@@ -3,6 +3,9 @@ import type { EditorView } from "prosemirror-view";
 
 import React, { useMemo } from "react";
 import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
+import { useForm } from "react-hook-form";
+
+import { Form } from "ui/form";
 
 import { toggleFigureNode } from "../../commands/figures";
 import { MenuSwitchField } from "./MenuFields";
@@ -12,6 +15,7 @@ type LinkMenuProps = {
 	nodePos: number;
 	onChange: (attrs: Record<string, unknown>) => void;
 };
+
 export const FigureMenu = (props: LinkMenuProps) => {
 	const childNodeTypes = useMemo(() => {
 		const set = new Set<string>();
@@ -35,36 +39,40 @@ export const FigureMenu = (props: LinkMenuProps) => {
 	const toggleCredit = useEditorEventCallback(makeNodeToggle("credit"));
 	const toggleLicense = useEditorEventCallback(makeNodeToggle("license"));
 
+	const form = useForm();
+
 	return (
-		<div className="flex flex-col gap-4">
-			<MenuSwitchField
-				name="title"
-				label="Title"
-				value={childNodeTypes.has("title")}
-				onChange={toggleTitle}
-			/>
-			<MenuSwitchField
-				name="caption"
-				label="Caption"
-				value={childNodeTypes.has("figcaption")}
-				onChange={toggleCaption}
-			/>
-			{childNodeTypes.has("image") && (
-				<>
-					<MenuSwitchField
-						name="credit"
-						label="Credit"
-						value={childNodeTypes.has("credit")}
-						onChange={toggleCredit}
-					/>
-					<MenuSwitchField
-						name="license"
-						label="License"
-						value={childNodeTypes.has("license")}
-						onChange={toggleLicense}
-					/>
-				</>
-			)}
-		</div>
+		<Form {...form}>
+			<form>
+				<MenuSwitchField
+					name="title"
+					label="Title"
+					value={childNodeTypes.has("title")}
+					onChange={toggleTitle}
+				/>
+				<MenuSwitchField
+					name="caption"
+					label="Caption"
+					value={childNodeTypes.has("figcaption")}
+					onChange={toggleCaption}
+				/>
+				{childNodeTypes.has("image") && (
+					<>
+						<MenuSwitchField
+							name="credit"
+							label="Credit"
+							value={childNodeTypes.has("credit")}
+							onChange={toggleCredit}
+						/>
+						<MenuSwitchField
+							name="license"
+							label="License"
+							value={childNodeTypes.has("license")}
+							onChange={toggleLicense}
+						/>
+					</>
+				)}
+			</form>
+		</Form>
 	);
 };
