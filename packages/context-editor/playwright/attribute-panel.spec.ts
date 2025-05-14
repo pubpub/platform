@@ -181,7 +181,8 @@ test.describe("attribute panel", () => {
 
 			await test.step("add attrs to bold", async () => {
 				await editor.getByText("bold").click({ position: { x: 20, y: 0 } });
-				await page.getByTestId("attribute-panel").waitFor();
+				const panel = page.getByTestId("attribute-panel");
+				await panel.getByText("text + strong").waitFor();
 				await page.getByTestId("advanced-options-trigger").click();
 				await page.getByTestId("id-input").fill("bold-id");
 			});
