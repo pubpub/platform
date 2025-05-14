@@ -34,8 +34,6 @@ const formSchema = Type.Object({
 	linkTo: Type.String(),
 	width: Type.Number(),
 	align: Type.Enum(Alignment),
-	id: Type.String(),
-	class: Type.String(),
 });
 
 const compiledSchema = TypeCompiler.Compile(formSchema);
@@ -82,8 +80,6 @@ export const MediaUpload = (props: Props) => {
 		defaultValues: {
 			src: attrs.src ?? "",
 			alt: attrs.alt ?? "",
-			id: attrs.id ?? "",
-			class: attrs.class ?? "",
 			linkTo: attrs.linkTo ?? "",
 			width: attrs.width ?? 100,
 			align: attrs.align ?? "center",
