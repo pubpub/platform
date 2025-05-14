@@ -212,7 +212,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 	// For file uploads, because Unjournal doesn't have schemaNames yet, we check the value structure
 	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 	if (Value.Check(fileUploadSchema, value.value)) {
-		return <FileUploadPreview files={value.value as FileUpload} />;
+		return <FileUploadPreview files={value.value} />;
 	}
 
 	if (value.schemaName === CoreSchemaType.DateTime) {
