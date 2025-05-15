@@ -330,7 +330,9 @@ class NestedPubOpBuilder {
 
 	create(options: Partial<PubOpOptionsBase> & { pubTypeId: PubTypesId }): CreatePubOp {
 		return new CreatePubOp({
-			...this.parentOptions,
+			communityId: this.parentOptions.communityId,
+			lastModifiedBy: this.parentOptions.lastModifiedBy,
+			trx: this.parentOptions.trx,
 			...options,
 		});
 	}
@@ -341,7 +343,9 @@ class NestedPubOpBuilder {
 	): CreatePubOp {
 		return new CreatePubOp(
 			{
-				...this.parentOptions,
+				communityId: this.parentOptions.communityId,
+				lastModifiedBy: this.parentOptions.lastModifiedBy,
+				trx: this.parentOptions.trx,
 				...options,
 			},
 			id
@@ -351,7 +355,9 @@ class NestedPubOpBuilder {
 	update(id: PubsId, options: Partial<PubOpOptionsBase> = {}): UpdatePubOp {
 		return new UpdatePubOp(
 			{
-				...this.parentOptions,
+				communityId: this.parentOptions.communityId,
+				lastModifiedBy: this.parentOptions.lastModifiedBy,
+				trx: this.parentOptions.trx,
 				...options,
 			},
 			id
@@ -364,7 +370,9 @@ class NestedPubOpBuilder {
 	): UpsertPubOp {
 		return new UpsertPubOp(
 			{
-				...this.parentOptions,
+				communityId: this.parentOptions.communityId,
+				lastModifiedBy: this.parentOptions.lastModifiedBy,
+				trx: this.parentOptions.trx,
 				...options,
 			},
 			id
@@ -378,13 +386,16 @@ class NestedPubOpBuilder {
 	): UpsertPubOp {
 		return new UpsertPubOp(
 			{
-				...this.parentOptions,
+				communityId: this.parentOptions.communityId,
+				lastModifiedBy: this.parentOptions.lastModifiedBy,
+				trx: this.parentOptions.trx,
 				...options,
 			},
 			{ slug, value }
 		);
 	}
 }
+export type NestedBuilder = NestedPubOpBuilder;
 
 interface UpdateOnlyOps {
 	unset(slug: string): this;
@@ -1023,6 +1034,34 @@ abstract class PubOpBase {
 			}
 		}
 
+		console.log("----------------------");
+		console.log(
+			"duplicate values",
+			values.filter((v, idx) =>
+				values.find(
+					(vv, idx2) => idx2 !== idx && vv.pubId === v.pubId && vv.fieldId === v.fieldId
+				)
+			)
+		);
+		console.log(
+			"duplicate relations",
+			relations.filter((r, idx) =>
+				relations.find(
+					(rr, idx2) =>
+						idx2 !== idx &&
+						rr.pubId === r.pubId &&
+						rr.fieldId === r.fieldId &&
+						rr.relatedPubId === r.relatedPubId
+				)
+			)
+		);
+
+		console.log(
+			"values that are also relations?",
+			values.filter((v) =>
+				relations.find((r) => r.pubId === v.pubId && r.fieldId === v.fieldId)
+			)
+		);
 		// Upsert all values and relations in efficient batches
 		await Promise.all([
 			values.length > 0 &&

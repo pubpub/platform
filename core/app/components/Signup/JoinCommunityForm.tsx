@@ -9,11 +9,11 @@ import { MemberRole } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 import { Form } from "ui/form";
+import { FormSubmitButton } from "ui/submit-button";
 import { toast } from "ui/use-toast";
 
 import { publicJoinCommunity } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { FormSubmitButton } from "../SubmitButton";
 
 export const JoinCommunityForm = ({
 	community,

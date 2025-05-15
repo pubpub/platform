@@ -19,8 +19,8 @@ import {
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
 import { Form } from "ui/form";
+import { FormSubmitButton } from "ui/submit-button";
 
-import { FormSubmitButton } from "~/app/components/SubmitButton";
 import { useServerAction } from "~/lib/serverActions";
 import { acceptInviteAction, rejectInviteAction } from "./actions";
 

@@ -36,6 +36,20 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
+	forms: FormsTable;
+
+	api_access_tokens: ApiAccessTokensTable;
+
+	api_access_logs: ApiAccessLogsTable;
+
+	api_access_permissions: ApiAccessPermissionsTable;
+
+	form_elements: FormElementsTable;
+
+	sessions: SessionsTable;
+
+	community_memberships: CommunityMembershipsTable;
+
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -71,20 +85,6 @@ export interface PublicSchema {
 	rules: RulesTable;
 
 	action_runs: ActionRunsTable;
-
-	forms: FormsTable;
-
-	api_access_tokens: ApiAccessTokensTable;
-
-	api_access_logs: ApiAccessLogsTable;
-
-	api_access_permissions: ApiAccessPermissionsTable;
-
-	form_elements: FormElementsTable;
-
-	sessions: SessionsTable;
-
-	community_memberships: CommunityMembershipsTable;
 
 	pub_memberships: PubMembershipsTable;
 

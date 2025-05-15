@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 
-import type { ButtonState } from "~/app/components/SubmitButton";
-import { SubmitButton } from "~/app/components/SubmitButton";
+import type { ButtonState } from "ui/submit-button";
+import { SubmitButton } from "ui/submit-button";
+
 import { sendVerifyEmailMail } from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
 
