@@ -14,9 +14,6 @@ export type ImageAttrs = {
 	alt: string;
 	src: string;
 	linkTo: string;
-	caption: boolean;
-	credit: boolean;
-	license: boolean;
 	width: number;
 	align: Alignment;
 	fullResolution: boolean;
@@ -32,9 +29,6 @@ export default {
 		alt: { default: "" },
 		src: { default: "" },
 		linkTo: { default: "" },
-		caption: { default: false },
-		credit: { default: false },
-		license: { default: false },
 		width: { default: 100 },
 		align: { default: "center" },
 		fullResolution: { default: false },
@@ -49,9 +43,6 @@ export default {
 					alt: node.getAttribute("alt") || "",
 					src: node.getAttribute("src") || "",
 					linkTo: node.getAttribute("data-link-to") || "",
-					caption: node.getAttribute("data-caption") === "true",
-					credit: node.getAttribute("data-credit") === "true",
-					license: node.getAttribute("data-license") === "true",
 					width: Number(node.getAttribute("data-width")) || 100,
 					align: (node.getAttribute("data-align") as Alignment) || "center",
 					fullResolution: node.getAttribute("data-full-resolution") === "true",
@@ -62,7 +53,7 @@ export default {
 	],
 	toDOM: (node) => {
 		const attrs = node.attrs as ImageAttrs;
-		const { id, class: className, alt, src, credit, linkTo, license, width, align } = attrs;
+		const { id, class: className, alt, src, linkTo, width, align } = attrs;
 
 		return [
 			"img",
@@ -72,8 +63,6 @@ export default {
 				alt,
 				src,
 				"data-link-to": linkTo,
-				"data-credit": credit,
-				"data-license": license,
 				"data-width": width,
 				"data-align": align,
 				"data-node-type": "image",

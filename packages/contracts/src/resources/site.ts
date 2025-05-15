@@ -4,7 +4,6 @@ import { z } from "zod";
 import type {
 	ActionInstances,
 	CommunitiesId,
-	CoreSchemaType,
 	FormElementsId,
 	MemberRole,
 	PubFields,
@@ -21,6 +20,7 @@ import type {
 import {
 	communitiesIdSchema,
 	communityMembershipsSchema,
+	CoreSchemaType,
 	coreSchemaTypeSchema,
 	memberRoleSchema,
 	pubFieldsSchema,
@@ -642,6 +642,7 @@ export const ftsReturnSchema = z.object({
 			value: jsonSchema,
 			isTitle: z.boolean(),
 			highlights: z.string(),
+			schemaName: coreSchemaTypeSchema,
 		})
 	),
 }) satisfies z.ZodType<FTSReturn>;

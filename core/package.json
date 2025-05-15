@@ -123,8 +123,6 @@
 		"pg": "^8.11.3",
 		"prosemirror-markdown": "^1.12.0",
 		"prosemirror-model": "catalog:",
-		"prosemirror-remark": "^0.6.1",
-		"prosemirror-unified": "^0.8.3",
 		"qs": "^6.14.0",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19",
