@@ -130,16 +130,7 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 				creators,
 				publisher: config.publisher,
 				publicationYear,
-				dates: [
-					{
-						date: pub.createdAt.toString(),
-						dateType: "Created",
-					},
-					{
-						date: pub.updatedAt.toString(),
-						dateType: "Updated",
-					},
-				],
+				dates: [],
 				types: {
 					resourceTypeGeneral: "Preprint",
 				},
