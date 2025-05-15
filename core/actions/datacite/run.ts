@@ -2,7 +2,6 @@
 
 import * as z from "zod";
 
-import type { ProcessedPub } from "contracts";
 import type { PubsId } from "db/public";
 import { assert, AssertionError, expect } from "utils";
 
@@ -23,26 +22,40 @@ type RelatedPubs = Awaited<ReturnType<typeof getPubsWithRelatedValues<{}>>>[numb
 const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
 
-const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, creatorNameFieldSlug: string) => {
-	const name = pub.values.find((value) => value.fieldSlug === creatorNameFieldSlug)?.value;
-	assert(typeof name === "string");
-	return {
-		name,
-		// TODO: author/creator affiliations
-		affiliation: [],
-		nameIdentifiers: [],
-	};
-};
-
 const deriveCreatorsFromRelatedPubs = (
 	relatedPubs: RelatedPubs,
-	creatorFieldSlug: string,
-	creatorNameFieldSlug: string
+	contributorFieldSlug: string,
+	contributorPersonFieldSlug: string,
+	contributorPersonNameFieldSlug: string,
+	contributorPersonOrcidFieldSlug?: string
 ) =>
 	relatedPubs
-		.filter((v) => v.fieldSlug === creatorFieldSlug)
-		.map((v) => v.relatedPub!)
-		.map((pub) => makeDataciteCreatorFromAuthorPub(pub, creatorNameFieldSlug));
+		.filter((v) => v.fieldSlug === contributorFieldSlug)
+		.map((v) => {
+			const contributor = expect(v.relatedPub);
+			const contributoPerson = expect(
+				contributor.values.find((v) => v.fieldSlug === contributorPersonFieldSlug)
+					?.relatedPub
+			);
+			const contributorPersonName = expect(
+				contributoPerson.values.find((v) => v.fieldSlug === contributorPersonNameFieldSlug)
+					?.value
+			) as string;
+			const contributorPersonORCID = contributoPerson.values.find(
+				(v) => v.fieldSlug === contributorPersonOrcidFieldSlug
+			)?.value as string | undefined;
+			return {
+				name: contributorPersonName,
+				affiliation: [],
+				nameIdentifiers: [
+					{
+						nameIdentifierScheme: "ORCID",
+						nameIdentifier: contributorPersonORCID,
+						nameIdentifierSchemeURI: "https://orcid.org/",
+					},
+				],
+			};
+		});
 
 const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
 	const doiFieldSlug = config.pubFields.doi?.[0];
@@ -51,14 +64,19 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 		config.pubFields.url?.[0],
 		"The DataCite action is missing a URL field override."
 	);
-	const creatorFieldSlug = expect(
-		config.pubFields.creator?.[0],
-		"The DataCite action is missing a creator field override."
+	const contributorFieldSlug = expect(
+		config.pubFields.contributor?.[0],
+		"The DataCite action is missing a contributor field override."
 	);
-	const creatorNameFieldSlug = expect(
-		config.pubFields.creatorName?.[0],
-		"The DataCite action is missing a creator name field override."
+	const contributorPersonFieldSlug = expect(
+		config.pubFields.contributorPerson?.[0],
+		"The DataCite action is missing a contributor person field override."
 	);
+	const contributorPersonNameSlug = expect(
+		config.pubFields.contributorPersonName?.[0],
+		"The DataCite action is missing a contributor person name field override."
+	);
+	const contributorPersonOrcidSlug = config.pubFields.contributorPersonName?.[0];
 	const publicationDateFieldSlug = expect(
 		config.pubFields.publicationDate?.[0],
 		"The DataCite action is missing a publication date field override."
@@ -73,8 +91,10 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 
 	const creators = deriveCreatorsFromRelatedPubs(
 		relatedPubs,
-		creatorFieldSlug,
-		creatorNameFieldSlug
+		contributorFieldSlug,
+		contributorPersonFieldSlug,
+		contributorPersonNameSlug,
+		contributorPersonOrcidSlug
 	);
 
 	let title: string;

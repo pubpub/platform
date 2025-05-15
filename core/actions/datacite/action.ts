@@ -16,8 +16,10 @@ export const action = defineAction({
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.coerce.date(),
-			creator: z.string(),
-			creatorName: z.string(),
+			contributor: z.string(),
+			contributorPerson: z.string(),
+			contributorPersonName: z.string(),
+			contributorPersonORCID: z.string().optional(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -38,10 +40,16 @@ export const action = defineAction({
 			publicationDate: {
 				allowedSchemas: true,
 			},
-			creator: {
+			contributor: {
 				allowedSchemas: true,
 			},
-			creatorName: {
+			contributorPerson: {
+				allowedSchemas: true,
+			},
+			contributorPersonName: {
+				allowedSchemas: true,
+			},
+			contributorPersonORCID: {
 				allowedSchemas: true,
 			},
 		},
@@ -55,8 +63,10 @@ export const action = defineAction({
 			url: z.string(),
 			publisher: z.string(),
 			publicationDate: z.coerce.date(),
-			creator: z.string(),
-			creatorName: z.string(),
+			contributor: z.string(),
+			contributorPerson: z.string(),
+			contributorPersonName: z.string(),
+			contributorPersonORCID: z.string().optional(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -77,10 +87,16 @@ export const action = defineAction({
 			publicationDate: {
 				allowedSchemas: true,
 			},
-			creator: {
+			contributor: {
 				allowedSchemas: true,
 			},
-			creatorName: {
+			contributorPerson: {
+				allowedSchemas: true,
+			},
+			contributorPersonName: {
+				allowedSchemas: true,
+			},
+			contributorPersonORCID: {
 				allowedSchemas: true,
 			},
 		},
