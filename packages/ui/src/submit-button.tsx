@@ -142,7 +142,10 @@ export const SubmitButton = ({
 export const FormSubmitButton = ({
 	formState,
 	...props
-}: ButtonProps & Omit<SubmitButtonProps, "state"> & { formState: FormState<any> }) => {
+}: ButtonProps &
+	Omit<SubmitButtonProps, "state" | "isSubmitting" | "isSubmitSuccessful" | "isSubmitError"> & {
+		formState: FormState<any>;
+	}) => {
 	return (
 		<SubmitButton
 			state={
