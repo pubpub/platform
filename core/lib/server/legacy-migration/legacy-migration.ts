@@ -21,6 +21,7 @@ import type { FileMetadata } from "../assets";
 import type { NestedBuilder } from "../pub-op";
 import type {
 	CollectionNavigationChild,
+	LayoutBlock,
 	LegacyCollection,
 	LegacyCommunity,
 	LegacyPage,
@@ -41,6 +42,7 @@ import { pubType } from "../pub";
 import { PubOp } from "../pub-op";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
+import { transformLayoutBlocks } from "./layouts";
 import { transformProsemirrorTree } from "./prosemirror";
 import { legacyExportSchema, pubSchema } from "./schemas";
 
@@ -618,7 +620,7 @@ export const createCorrectPubTypes = async (
 	return pubTypesToCreate;
 };
 
-type LegacyStructure = {
+export type LegacyStructure = {
 	[K in keyof typeof REQUIRED_LEGACY_PUB_TYPES]: PubTypes & {
 		fields: Record<
 			keyof (typeof REQUIRED_LEGACY_PUB_TYPES)[K]["fields"],
@@ -1047,9 +1049,16 @@ const createPages = async (
 				);
 			}
 
-			// if (page.layout) {
-			// 	op = op.set(legacyStructure["Page"].fields.Layout.slug, page.layout);
-			// }
+			if (page.layout) {
+				const prosemirrorBody = transformLayoutBlocks(
+					page.id,
+					page.layout,
+					legacyStructure
+				);
+				if (prosemirrorBody) {
+					op = op.set(legacyStructure["Page"].fields.Layout.slug, prosemirrorBody);
+				}
+			}
 
 			if (page.layoutAllowsDuplicatePubs) {
 				op = op.set(
@@ -1544,7 +1553,6 @@ const createJournal = async (
 				}
 
 				if ("type" in nav) {
-					console.log("lmao", nav);
 					if (nav.type === "page") {
 						return op.relateByValue(
 							legacyStructure.Header.fields["Navigation Targets"].slug,

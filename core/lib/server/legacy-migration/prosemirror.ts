@@ -7,6 +7,7 @@ const unsupportedNodes = {
 	footnote: "inline",
 	iframe: "block",
 	reference: "inline",
+	file: "block",
 } as const;
 
 type OldImageNode = {

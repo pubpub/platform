@@ -434,6 +434,8 @@ const layoutBlockSchema = z.discriminatedUnion("type", [
 	layoutBlockSubmissionBannerSchema,
 ]);
 
+export type LayoutBlock = z.infer<typeof layoutBlockSchema>;
+
 const pageSchema = z
 	.object({
 		id: z.string(),
