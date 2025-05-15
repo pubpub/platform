@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { notFound, redirect } from "next/navigation";
 
 import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
@@ -6,6 +8,10 @@ import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/cleanup";
 import { MigrationForm, UndoMigrationForm } from "./MigrationForm";
+
+export const metadata: Metadata = {
+	title: "Import Legacy Community",
+};
 
 export default async function Page(props: {
 	searchParams: Promise<{
