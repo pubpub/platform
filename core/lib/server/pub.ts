@@ -56,7 +56,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
 import { maybeWithTrx } from "./maybeWithTrx";
 import { applyFilters } from "./pub-filters";
-import { _getPubFields, getPubFields } from "./pubFields";
+import { _getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";

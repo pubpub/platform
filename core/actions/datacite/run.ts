@@ -2,7 +2,7 @@
 
 import * as z from "zod";
 
-import type { PubsId } from "db/public";
+import { logger } from "logger";
 import { assert, AssertionError, expect } from "utils";
 
 import type { ActionPub } from "../types";
@@ -33,27 +33,32 @@ const deriveCreatorsFromRelatedPubs = (
 		.filter((v) => v.fieldSlug === contributorFieldSlug)
 		.map((v) => {
 			const contributor = expect(v.relatedPub);
-			const contributoPerson = expect(
+			const contributorPerson = expect(
 				contributor.values.find((v) => v.fieldSlug === contributorPersonFieldSlug)
-					?.relatedPub
+					?.relatedPub,
+				"A contributor does not have a related person."
 			);
 			const contributorPersonName = expect(
-				contributoPerson.values.find((v) => v.fieldSlug === contributorPersonNameFieldSlug)
-					?.value
+				contributorPerson.values.find((v) => v.fieldSlug === contributorPersonNameFieldSlug)
+					?.value,
+				"A contributor person does not have a name."
 			) as string;
-			const contributorPersonORCID = contributoPerson.values.find(
-				(v) => v.fieldSlug === contributorPersonOrcidFieldSlug
+			const contributorPersonORCID = contributorPerson.values.find(
+				(v) => v.fieldSlug === contributorPersonOrcidFieldSlug,
+				"A contributor person does not have an ORCID."
 			)?.value as string | undefined;
 			return {
 				name: contributorPersonName,
 				affiliation: [],
-				nameIdentifiers: [
-					{
-						nameIdentifierScheme: "ORCID",
-						nameIdentifier: contributorPersonORCID,
-						nameIdentifierSchemeURI: "https://orcid.org/",
-					},
-				],
+				nameIdentifiers: contributorPersonORCID
+					? [
+							{
+								schemeUri: "https://orcid.org",
+								nameIdentifier: contributorPersonORCID,
+								nameIdentifierScheme: "ORCID",
+							},
+						]
+					: [],
 			};
 		});
 
@@ -82,12 +87,7 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 		"The DataCite action is missing a publication date field override."
 	);
 
-	const { values } = await getPubsWithRelatedValues({
-		pubId: pub.id as PubsId,
-		communityId: pub.communityId,
-	});
-
-	const relatedPubs = values.filter((v) => v.relatedPub != null);
+	const relatedPubs = pub.values.filter((v) => v.relatedPub != null);
 
 	const creators = deriveCreatorsFromRelatedPubs(
 		relatedPubs,
@@ -183,6 +183,16 @@ const checkDoi = async (doi: string) => {
 };
 
 const createPubDeposit = async (depositPayload: Payload) => {
+	logger.debug({
+		msg: "DataCite deposit payload",
+		payload: {
+			...depositPayload.data,
+			attributes: {
+				...depositPayload.data?.attributes,
+				event: "publish",
+			},
+		},
+	});
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: makeRequestHeaders(),
@@ -199,6 +209,15 @@ const createPubDeposit = async (depositPayload: Payload) => {
 	});
 
 	if (!response.ok) {
+		logger.error({
+			ms: "DataCite deposit error",
+			response: {
+				status: response.status,
+				statusText: response.statusText,
+				url: response.url,
+				body: await response.text(),
+			},
+		});
 		return {
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
