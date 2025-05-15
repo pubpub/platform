@@ -12,6 +12,7 @@ services:
             ASSETS_STORAGE_ENDPOINT: https://${PULLPREVIEW_PUBLIC_DNS}/assets
             FLAGS: uploads:off,invites:off,disabled-actions:http+email
             ENV_NAME: sandbox
+            DATACITE_API_URL: https://api.test.datacite.org
             DATACITE_REPOSITORY_ID: DATACITE_REPOSITORY_ID
             DATACITE_PASSWORD: DATACITE_PASSWORD
     # minio-init:
