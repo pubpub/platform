@@ -45,6 +45,7 @@ const deriveCreatorsFromRelatedPubs = (
 		.map((pub) => makeDataciteCreatorFromAuthorPub(pub, creatorNameFieldSlug));
 
 const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
+	const doiFieldSlug = config.pubFields.doi?.[0];
 	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
 		config.pubFields.url?.[0],
@@ -101,7 +102,9 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 
 	const publicationYear = new Date(publicationDate).getFullYear();
 
-	let doi = config.doi;
+	let doi =
+		config.doi ||
+		(pub.values.find((v) => v.fieldSlug === doiFieldSlug)?.value as string | undefined);
 
 	if (!doi) {
 		assert(
