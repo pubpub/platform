@@ -1,50 +1,28 @@
 import { writeFile } from "fs/promises";
 
-import { baseSchema } from "context-editor/schemas";
 import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import pMap from "p-map";
-import { Node } from "prosemirror-model";
 
-import type {
-	CommunitiesId,
-	PubFields,
-	PubFieldsId,
-	PubsId,
-	PubTypes,
-	PubTypesId,
-} from "db/public";
+import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 
 import type { FileMetadata } from "../assets";
-import type { NestedBuilder } from "../pub-op";
-import type {
-	CollectionNavigationChild,
-	LayoutBlock,
-	LegacyCollection,
-	LegacyCommunity,
-	LegacyPage,
-	LegacyPub,
-	LinkNavigationChild,
-	MenuNavigationChild,
-	PageNavigationChild,
-} from "./schemas";
+import type { LegacyCommunity, LegacyPage, MenuNavigationChild } from "./schemas";
 import { db } from "~/kysely/database";
-import { renderNodeToHTML } from "~/lib/editor/serialization/server";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { slugifyString } from "~/lib/string";
 import { generateMetadataFromS3 } from "../assets";
 import { autoRevalidate } from "../cache/autoRevalidate";
 import { createDefaultForm } from "../form";
 import { maybeWithTrx } from "../maybeWithTrx";
-import { pubType } from "../pub";
 import { PubOp } from "../pub-op";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
 import { transformLayoutBlocks } from "./layouts";
 import { transformProsemirrorTree } from "./prosemirror";
-import { legacyExportSchema, pubSchema } from "./schemas";
+import { legacyExportSchema } from "./schemas";
 
 const constructLegacyPubsUrl = (legacyCommunitySlug: string) => {
 	return `https://assets.pubpub.org/legacy-archive/jtrialerror/1747149675025/static.json`;
