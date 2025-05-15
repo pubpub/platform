@@ -183,7 +183,7 @@ const checkDoi = async (doi: string) => {
 };
 
 const createPubDeposit = async (depositPayload: Payload) => {
-	logger.debug({
+	logger.info({
 		msg: "DataCite deposit payload",
 		payload: {
 			...depositPayload.data,
