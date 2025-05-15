@@ -4,7 +4,7 @@ import { expect } from "utils/assert";
 import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
 import { getClient } from "../lib/client/client";
-import { getHeader, getJournal } from "../lib/client/queries";
+import { getHeader, getJournal, getPages } from "../lib/client/queries";
 import { getFieldValue } from "../lib/getValue";
 
 const journal = await getJournal();
@@ -17,6 +17,12 @@ const heroText = getFieldValue<string>(journal, "starter:hero-text");
 const description = getFieldValue<string>(journal, "starter:description");
 const publishAs = getFieldValue<string>(journal, "starter:publish-as");
 const publicationDate = getFieldValue<string>(journal, "starter:publication-date");
+
+const page = await getPages({
+	slugs: ["/"],
+});
+
+const layout = page[0].values?.find((v) => v.fieldSlug === "starter:layout")?.value;
 ---
 
 <Layout journal={journal} header={header}>
@@ -50,6 +56,10 @@ const publicationDate = getFieldValue<string>(journal, "starter:publication-date
 				</div>
 			</section>
 
+			<div class="prose">
+				<div set:html={layout} />
+			</div>
+
 			<section class="mb-8">
 				<h2 class="text-2xl font-bold mb-6">Journal Articles</h2>
 
@@ -73,7 +83,7 @@ const publicationDate = getFieldValue<string>(journal, "starter:publication-date
 											<div class="flex justify-between items-center">
 												<span class="text-sm text-gray-600">
 													{new Date(
-														article.relatedPub?.createdAt
+														article.relatedPub?.createdAt ?? new Date()
 													).toLocaleDateString("en-US", {
 														month: "short",
 														day: "numeric",

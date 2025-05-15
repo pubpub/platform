@@ -1026,8 +1026,13 @@ const createPages = async (
 				op = op.set(legacyStructure["Page"].fields.Title.slug, page.title);
 			}
 
-			if (page.slug) {
-				op = op.set(legacyStructure["Page"].fields.Slug.slug, page.slug);
+			if (page.slug || page.title === "Home") {
+				let slug = page.slug;
+				if (page.title === "Home") {
+					slug = "/";
+				}
+
+				op = op.set(legacyStructure["Page"].fields.Slug.slug, slug);
 			}
 
 			if (page.description) {
@@ -1161,6 +1166,17 @@ const createCollections = async (
 
 			if (avatar) {
 				op = op.set(relevantType.fields["Avatar"].slug, [avatar]);
+			}
+
+			if (collection.layout) {
+				const prosemirrorBody = transformLayoutBlocks(
+					collection.id,
+					collection.layout.blocks,
+					legacyStructure
+				);
+				if (prosemirrorBody) {
+					op = op.set(relevantType.fields.Layout.slug, prosemirrorBody);
+				}
 			}
 
 			if (collection.pageId) {

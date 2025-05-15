@@ -3,12 +3,14 @@ import { expect } from "utils/assert";
 import { SITE_ENV } from "../env/site";
 import { getClient } from "./client";
 
-export const getPubType = async (name: string) => {
+export const getPubType = async (name: string | string[]) => {
+	const nameArray = Array.isArray(name) ? name : [name];
+
 	const pubTypeId = await getClient().pubTypes.getMany({
 		params: {
 			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
-		query: { name },
+		query: { name: nameArray },
 	});
 
 	if (pubTypeId.status !== 200) {
@@ -16,7 +18,7 @@ export const getPubType = async (name: string) => {
 		throw new Error("Failed to fetch pub type");
 	}
 
-	return expect(pubTypeId.body?.[0]);
+	return expect(pubTypeId.body?.filter((pubType) => nameArray.includes(pubType.name)));
 };
 
 export const getJournal = async (opts?: {
@@ -31,7 +33,7 @@ export const getJournal = async (opts?: {
 			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: {
-			pubTypeId: [expect(journalPubType.id)],
+			pubTypeId: [expect(journalPubType[0].id)],
 			limit: 1,
 			depth: opts?.depth ?? 3,
 			withRelatedPubs: opts?.withRelatedPubs ?? true,
@@ -45,6 +47,40 @@ export const getJournal = async (opts?: {
 	return expect(journal.body?.[0]);
 };
 
+export const getPages = async ({ slugs }: { slugs?: string[] } = {}) => {
+	const pagePubType = await getPubType([
+		"Page",
+		"Collection",
+		"Issue",
+		"Conference Proceedings",
+		"Book",
+	]);
+
+	const pages = await getClient().pubs.getMany({
+		params: {
+			communitySlug: SITE_ENV.COMMUNITY_SLUG,
+		},
+		query: {
+			pubTypeId: pagePubType.map((pubType) => pubType.id),
+			depth: 1,
+			limit: 200,
+			...(slugs && {
+				filters: {
+					[`${SITE_ENV.COMMUNITY_SLUG}:slug`]: {
+						$in: slugs,
+					},
+				},
+			}),
+		},
+	});
+
+	if (pages.status !== 200) {
+		throw new Error("Failed to fetch pages");
+	}
+
+	return expect(pages.body);
+};
+
 export const getHeader = async () => {
 	const headerPubType = await getPubType("Header");
 
@@ -53,7 +89,7 @@ export const getHeader = async () => {
 			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: {
-			pubTypeId: [expect(headerPubType.id)],
+			pubTypeId: [expect(headerPubType[0].id)],
 			limit: 1,
 			depth: 3,
 			withRelatedPubs: true,
@@ -76,7 +112,7 @@ export const getJournalArticles = async (opts?: { limit?: number }) => {
 			communitySlug: SITE_ENV.COMMUNITY_SLUG,
 		},
 		query: {
-			pubTypeId: [expect(journalArticlePubType.id)],
+			pubTypeId: [expect(journalArticlePubType[0].id)],
 			limit: opts?.limit ?? 500,
 		},
 	});
