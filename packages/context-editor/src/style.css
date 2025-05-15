@@ -218,10 +218,6 @@
 	top: -1px;
 }
 
-.wrap-widget button {
-	z-index: 10;
-}
-
 .ProseMirror thead tr {
 	text-align: left;
 }
