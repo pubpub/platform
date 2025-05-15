@@ -5,7 +5,7 @@ export const figure = {
 		id: { default: null },
 		class: { default: null },
 	},
-	content: "image (figcaption | credit | license){0,3}",
+	content: "title{0,1} (image|table) figcaption{0,1} credit{0,1} license{0,1}",
 	group: "block",
 	parseDOM: [
 		{
@@ -39,7 +39,7 @@ export const figcaption = {
 	group: "figure",
 	parseDOM: [
 		{
-			tag: "figure figcaption",
+			tag: "figcaption",
 			getAttrs: (node) => {
 				return {
 					id: (node as Element).getAttribute("id"),
@@ -115,6 +115,25 @@ export const license = {
 			"p",
 			{
 				class: node.attrs.class,
+				...(node.attrs.id && { id: node.attrs.id }),
+			},
+			0,
+		];
+	},
+} satisfies NodeSpec;
+
+export const title = {
+	content: "text*",
+	group: "figure",
+	attrs: {
+		id: { default: null },
+		class: { default: null },
+	},
+	toDOM: (node) => {
+		return [
+			"div",
+			{
+				class: ["title", node.attrs.class].filter(Boolean).join(" "),
 				...(node.attrs.id && { id: node.attrs.id }),
 			},
 			0,

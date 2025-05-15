@@ -25,8 +25,9 @@ test.describe("attribute panel", () => {
 			await test.step("fill out panel while keeping it open", async () => {
 				const id = "test id";
 				const className = "test class";
-				await page.getByRole("textbox", { name: "id" }).fill(id);
-				await page.getByRole("textbox", { name: "class" }).fill(className);
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill(id);
+				await page.getByTestId("class-input").fill(className);
 			});
 
 			await test.step("can close the panel by clicking the button again", async () => {
@@ -58,11 +59,17 @@ test.describe("attribute panel", () => {
 				await page.getByRole("button", { name: "Bold" }).click();
 				await page.locator(".ProseMirror").pressSequentially(text);
 				await clickNode(page, "paragraph");
-				await page.getByTestId("attribute-panel").waitFor();
-				await expect(page.getByTestId("attribute-panel")).not.toContainText("strong");
+				const panel = page.getByTestId("attribute-panel");
+				await panel.waitFor();
+				await expect(panel).not.toContainText("strong");
+
+				await page.getByTestId("advanced-options-trigger").click();
 				const id = "paragraph-id";
-				await page.getByRole("textbox", { name: "id" }).fill(id);
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue(id);
+				const idInput = page.getByTestId("id-input");
+				await idInput.fill(id);
+				await expect(idInput).toHaveValue(id);
+				// click on the panel to blur the id input
+				await panel.click();
 			});
 
 			await test.step("click on other text", async () => {
@@ -72,7 +79,8 @@ test.describe("attribute panel", () => {
 					.getByText(text)
 					.click({ position: { x: 20, y: 0 } });
 				await expect(page.getByTestId("attribute-panel")).toContainText("strong");
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("");
 			});
 		});
 
@@ -91,15 +99,17 @@ test.describe("attribute panel", () => {
 				await page.getByTestId("attribute-panel").waitFor();
 				const id = "id1";
 				const className = "class1";
-				await page.getByRole("textbox", { name: "id" }).fill(id);
-				await page.getByRole("textbox", { name: "class" }).fill(className);
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill(id);
+				await page.getByTestId("class-input").fill(className);
 			});
 
 			await test.step("open panel on second paragraph", async () => {
 				await clickNode(page, "paragraph", 1);
 				// Make sure the second paragraph does not have the same attrs as the first
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
-				await expect(page.getByRole("textbox", { name: "class" })).toHaveValue("");
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("");
+				await expect(page.getByTestId("class-input")).toHaveValue("");
 			});
 		});
 	});
@@ -165,24 +175,28 @@ test.describe("attribute panel", () => {
 			await test.step("add attrs to italic", async () => {
 				await editor.press("ArrowLeft");
 				await page.getByTestId("attribute-panel").waitFor();
-				await page.getByRole("textbox", { name: "id" }).fill("italic-id");
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill("italic-id");
 			});
 
 			await test.step("add attrs to bold", async () => {
-				await editor.getByText("bold").click({ position: { x: 20, y: 0 } });
+				await editor.getByText("bold").dblclick({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor();
-				await page.getByRole("textbox", { name: "id" }).fill("bold-id");
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill("bold-id");
 			});
 
 			await test.step("click between marks", async () => {
 				const clickOptions =
 					browserName === "chromium" ? { position: { x: 20, y: 0 } } : undefined;
-				await editor.getByText("italic").click(clickOptions);
+				await editor.getByText("italic").dblclick(clickOptions);
 				await page.getByTestId("attribute-panel").getByText("em").waitFor();
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("italic-id");
-				await editor.getByText("bold").click(clickOptions);
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("italic-id");
+				await editor.getByText("bold").dblclick(clickOptions);
 				await page.getByTestId("attribute-panel").getByText("strong").waitFor();
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("bold-id");
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("bold-id");
 			});
 		});
 
@@ -202,13 +216,15 @@ test.describe("attribute panel", () => {
 			await test.step("add attrs to second", async () => {
 				await editor.press("ArrowLeft");
 				await page.getByTestId("attribute-panel").waitFor();
-				await page.getByRole("textbox", { name: "id" }).fill("second-id");
+				await page.getByTestId("advanced-options-trigger").click();
+				await page.getByTestId("id-input").fill("second-id");
 			});
 
 			await test.step("make sure first does not have the same attr", async () => {
 				await editor.getByText("first").click({ position: { x: 20, y: 0 } });
 				await page.getByTestId("attribute-panel").waitFor();
-				await expect(page.getByRole("textbox", { name: "id" })).toHaveValue("");
+				await page.getByTestId("advanced-options-trigger").click();
+				await expect(page.getByTestId("id-input")).toHaveValue("");
 			});
 		});
 	});

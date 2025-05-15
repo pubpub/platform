@@ -1,15 +1,15 @@
 import type { WidgetViewComponentProps } from "@handlewithcare/react-prosemirror";
 import type { Node } from "prosemirror-model";
 
-import React, { forwardRef } from "react";
-import { useEditorState } from "@handlewithcare/react-prosemirror";
+import React, { forwardRef, useMemo } from "react";
+import { useEditorEventCallback, useEditorState } from "@handlewithcare/react-prosemirror";
+import { TextSelection, Transaction } from "prosemirror-state";
 
 import { reactPropsKey } from "../plugins/reactProps";
-import { useEditorContext } from "./Context";
 
 const getBlockName = (node: Node) => {
 	const state = useEditorState();
-	const { pubTypes, pubId, pubTypeId } = reactPropsKey.getState(state);
+	const { pubTypes, pubId } = reactPropsKey.getState(state);
 
 	const buttonName = `${node.type.name}${node.type.name === "heading" ? ` ${node.attrs.level}` : ""}`;
 	if (!node.type.name.includes("context")) {
@@ -42,24 +42,21 @@ const getBlockName = (node: Node) => {
 export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentProps>(
 	function BlockDecoration({ widget, getPos, ...props }, ref) {
 		const state = useEditorState();
-		const { setPosition, setActiveNode, activeNode } = useEditorContext();
 		const { disabled } = reactPropsKey.getState(state);
 		const pos = getPos();
-		const node = state.doc.nodeAt(pos);
-		if (!node) {
-			return null;
-		}
-		const handleClick = () => {
-			if (activeNode && node.eq(activeNode)) {
-				setActiveNode(null);
-			} else {
-				setPosition(pos);
-				setActiveNode(node);
-			}
-		};
-		const isBlock = node.isBlock;
+		const node = useMemo(() => state.doc.nodeAt(pos), [pos, state]);
 
-		if (!isBlock) {
+		const onClick = useEditorEventCallback((view) => {
+			let tr = state.tr;
+			if (state.selection.$anchor.nodeAfter === node) {
+				tr = tr.setSelection(TextSelection.atStart(tr.doc));
+			} else {
+				tr = tr.setSelection(TextSelection.create(tr.doc, pos));
+			}
+			view.dispatch(tr);
+		});
+
+		if (!node?.isBlock) {
 			return null;
 		}
 
@@ -68,7 +65,7 @@ export const BlockDecoration = forwardRef<HTMLDivElement, WidgetViewComponentPro
 				<button
 					type="button"
 					disabled={disabled}
-					onClick={handleClick}
+					onClick={onClick}
 					className={node.type.name}
 				>
 					{getBlockName(node)}

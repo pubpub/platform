@@ -11,15 +11,16 @@ import { AttributePanel } from "./components/AttributePanel";
 import { basePlugins } from "./plugins";
 import { baseSchema } from "./schemas";
 
-import "prosemirror-view/style/prosemirror.css";
 import "prosemirror-gapcursor/style/gapcursor.css";
+import "prosemirror-view/style/prosemirror.css";
 // For math
 import "@benrbray/prosemirror-math/dist/prosemirror-math.css";
 import "katex/dist/katex.min.css";
 
+import { fixTables } from "prosemirror-tables";
+
 import { cn } from "utils";
 
-import { EditorContextProvider } from "./components/Context";
 import { MenuBar } from "./components/MenuBar";
 import SuggestPanel from "./components/SuggestPanel";
 
@@ -61,13 +62,18 @@ const initSuggestProps: SuggestProps = {
 
 export default function ContextEditor(props: ContextEditorProps) {
 	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
-	const [editorState, setEditorState] = useState(
-		EditorState.create({
+	const [editorState, setEditorState] = useState(() => {
+		let state = EditorState.create({
 			doc: props.initialDoc ? baseSchema.nodeFromJSON(props.initialDoc) : undefined,
 			schema: baseSchema,
 			plugins: [...basePlugins(baseSchema, props, suggestData, setSuggestData), reactKeys()],
-		})
-	);
+		});
+		const fix = fixTables(state);
+		if (fix) {
+			state = state.apply(fix.setMeta("addToHistory", false));
+		}
+		return state;
+	});
 
 	const nodeViews = useMemo(() => {
 		return { contextAtom: props.atomRenderingComponent };
@@ -97,20 +103,18 @@ export default function ContextEditor(props: ContextEditorProps) {
 				editable={() => !props.disabled}
 				className={cn("font-serif", props.className)}
 			>
-				<EditorContextProvider activeNode={null} position={0}>
-					{props.hideMenu ? null : (
-						<div className="sticky top-0 z-10">
-							<MenuBar upload={props.upload} />
-						</div>
-					)}
-					<ProseMirrorDoc />
-					<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
-					<SuggestPanel
-						suggestData={suggestData}
-						setSuggestData={setSuggestData}
-						containerRef={containerRef}
-					/>
-				</EditorContextProvider>
+				{props.hideMenu ? null : (
+					<div className="sticky top-0 z-10">
+						<MenuBar upload={props.upload} />
+					</div>
+				)}
+				<ProseMirrorDoc />
+				<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
+				<SuggestPanel
+					suggestData={suggestData}
+					setSuggestData={setSuggestData}
+					containerRef={containerRef}
+				/>
 			</ProseMirror>
 		</div>
 	);

@@ -1,6 +1,5 @@
 import type { Static } from "@sinclair/typebox";
-import type { Attrs, Node } from "prosemirror-model";
-import type { EditorView } from "prosemirror-view";
+import type { Node } from "prosemirror-model";
 import type { ReactNode } from "react";
 
 import React, { useMemo } from "react";
@@ -8,7 +7,6 @@ import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
-import { Fragment } from "prosemirror-model";
 import { useForm } from "react-hook-form";
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
@@ -28,21 +26,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import { Alignment } from "../../schemas/image";
-import { useEditorContext } from "../Context";
-import { AdvancedOptions } from "./AdvancedOptions";
 import { MenuInputField, MenuSwitchField } from "./MenuFields";
 
 const formSchema = Type.Object({
 	src: Type.String(),
 	alt: Type.String(),
-	linkTo: Type.String(), //Type.String({ format: "uri" }),
-	caption: Type.Boolean(),
-	credit: Type.Boolean(),
-	license: Type.Boolean(),
+	linkTo: Type.String(),
 	width: Type.Number(),
 	align: Type.Enum(Alignment),
-	id: Type.String(),
-	class: Type.String(),
 });
 
 const compiledSchema = TypeCompiler.Compile(formSchema);
@@ -74,64 +65,13 @@ const AlignmentRadioItem = ({ alignment }: { alignment: Alignment }) => {
 	);
 };
 
-const nodeTypes = ["caption", "credit", "license"] as const;
-type ToggleableNodeType = (typeof nodeTypes)[number];
-const toggleNodesInFigure = (view: EditorView, values: FormSchema, position: number) => {
-	const imagePosition = view.state.doc.resolve(position);
-	const figureNode = imagePosition.parent;
-	const figurePosition = imagePosition.before();
-
-	const nodeExistence: Record<ToggleableNodeType, boolean> = {
-		caption: false,
-		credit: false,
-		license: false,
-	};
-	figureNode.content.forEach((child) => {
-		const match = nodeTypes.find((nodeType) => {
-			const name = nodeType === "caption" ? "figcaption" : nodeType;
-			return child.type.name === name;
-		});
-		if (match) {
-			nodeExistence[match] = true;
-		}
-	});
-
-	const { tr, schema } = view.state;
-
-	const toggleNode = (type: ToggleableNodeType) => {
-		const nodeType = type === "caption" ? "figcaption" : type;
-		if (values[type]) {
-			if (nodeExistence[type]) {
-				return;
-			}
-
-			const subNode = schema.nodes[nodeType].create(null);
-			const newContent = figureNode.content.append(Fragment.from(subNode));
-			const newFigureNode = figureNode.copy(newContent);
-			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
-		} else {
-			if (!nodeExistence[type]) {
-				return;
-			}
-			const otherNodes: Node[] = [];
-			figureNode.content.forEach((child) => {
-				if (child.type.name !== nodeType) {
-					otherNodes.push(child);
-				}
-			});
-			const newFigureNode = figureNode.copy(Fragment.fromArray(otherNodes));
-			tr.replaceWith(figurePosition, figurePosition + figureNode.nodeSize, newFigureNode);
-		}
-	};
-
-	toggleNode("caption");
-	toggleNode("credit");
-	toggleNode("license");
-	return tr;
+type Props = {
+	node: Node;
+	nodePos: number;
 };
 
-export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
-	const { activeNode, position, setActiveNode } = useEditorContext();
+export const MediaUpload = (props: Props) => {
+	const { attrs } = props.node;
 	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
 
 	const form = useForm<FormSchema>({
@@ -140,32 +80,30 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 		defaultValues: {
 			src: attrs.src ?? "",
 			alt: attrs.alt ?? "",
-			id: attrs.id ?? "",
-			class: attrs.class ?? "",
 			linkTo: attrs.linkTo ?? "",
-			caption: attrs.caption ?? false,
-			credit: attrs.credit ?? false,
-			license: attrs.license ?? false,
 			width: attrs.width ?? 100,
 			align: attrs.align ?? "center",
 		},
 	});
 
 	const handleSubmit = useEditorEventCallback((view, values: FormSchema) => {
-		if (!view || !activeNode) {
+		if (!view) {
 			return;
 		}
 
-		const nodeAttrsTr = view.state.tr.setNodeMarkup(
-			position,
-			activeNode.type,
-			{ ...activeNode.attrs, ...values },
-			activeNode.marks
+		const node = view.state.doc.nodeAt(props.nodePos);
+
+		if (!node) {
+			return;
+		}
+
+		const tr = view.state.tr.setNodeMarkup(
+			props.nodePos,
+			node.type,
+			{ ...node.attrs, ...values },
+			node.marks
 		);
-		view.dispatch(nodeAttrsTr);
-		view.dispatch(toggleNodesInFigure(view, values, position));
-		const updatedNode = view.state.doc.nodeAt(position);
-		setActiveNode(updatedNode);
+		view.dispatch(tr);
 	});
 
 	return (
@@ -212,12 +150,6 @@ export const MediaUpload = ({ attrs }: { attrs: Attrs }) => {
 								)
 							}
 						/>
-						<hr />
-						<MenuSwitchField name="caption" label="Caption" />
-						<MenuSwitchField name="credit" label="Credit" />
-						<MenuSwitchField name="license" label="License" />
-						<hr />
-						<AdvancedOptions />
 					</TabsContent>
 					<TabsContent value="style" className="space-y-4">
 						<FormField

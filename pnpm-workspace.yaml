@@ -28,7 +28,7 @@ catalog:
     "@playwright/test": ^1.49.0
     "@sinclair/typebox": ^0.34.30
     "@types/node": ^20
-    "@handlewithcare/react-prosemirror": "^2.3.5"
+    "@handlewithcare/react-prosemirror": "^2.4.2"
     "@honeycombio/opentelemetry-node": ^0.6.1
     "@opentelemetry/auto-instrumentations-node": 0.53.0
     "@sentry/nextjs": "^9.10.1"
@@ -37,6 +37,9 @@ catalog:
     "@ts-rest/open-api": 3.51.0
     "@ts-rest/serverless": 3.51.0
     "@ts-rest/react-query": 3.51.0
+    "prosemirror-model": "1.25.1"
+    "prosemirror-view": "1.39.2"
+    "prosemirror-state": "1.4.3"
 
 catalogs:
     react18:
@@ -45,7 +48,8 @@ catalogs:
         "@types/react": ^18.3.5
         "@types/react-dom": ^18.3.0
     react19:
-        react: ^19.0.0
-        react-dom: ^19.0.0
-        "@types/react": ^19.0.0
-        "@types/react-dom": ^19.0.0
+        react: ^19.1.0
+        react-dom: ^19.1.0
+        "@types/react": ^19.1.0
+        "@types/react-dom": ^19.1.0
+        react-reconciler: "0.32.0"
