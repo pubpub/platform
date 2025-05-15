@@ -70,6 +70,8 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             GH_PAT_PR_PREVIEW_CLEANUP: ${{ secrets.GH_PAT_PR_PREVIEW_CLEANUP }}
+            PREVIEW_DATACITE_REPOSITORY_ID: ${{ secrets.PREVIEW_DATACITE_REPOSITORY_ID }}
+            PREVIEW_DATACITE_PASSWORD: ${{ secrets.PREVIEW_DATACITE_PASSWORD }}
 
     close-preview:
         uses: ./.github/workflows/pull-preview.yml

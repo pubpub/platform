@@ -12,6 +12,8 @@ services:
             ASSETS_STORAGE_ENDPOINT: https://${PULLPREVIEW_PUBLIC_DNS}/assets
             FLAGS: uploads:off,invites:off,disabled-actions:http+email
             ENV_NAME: sandbox
+            DATACITE_REPOSITORY_ID: PREVIEW_DATACITE_REPOSITORY_ID
+            DATACITE_PASSWORD: PREVIEW_DATACITE_PASSWORD
     # minio-init:
     #     restart: on-failure
     #     environment:
