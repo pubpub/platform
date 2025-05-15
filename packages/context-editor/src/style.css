@@ -213,10 +213,6 @@
 	vertical-align: top;
 }
 
-.ProseMirror table {
-	border-left: 1px solid #777;
-}
-
 .wrap-widget + table {
 	position: relative;
 	top: -1px;
