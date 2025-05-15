@@ -76,13 +76,24 @@
 .ProseMirror ul,
 .ProseMirror ol,
 .ProseMirror li,
-.ProseMirror section {
+.ProseMirror section,
+.ProseMirror .tableWrapper,
+.ProseMirror figure,
+.ProseMirror figure > div.title,
+.ProseMirror figure > figcaption {
 	border-left: 1px solid #777;
 	padding-left: 5px;
 	padding-top: 5px;
 	margin-top: 16px;
 	margin-bottom: 16px;
 }
+.ProseMirror tr * {
+	border: none;
+}
+.ProseMirror tr p {
+	margin: 0;
+}
+
 .ProseMirror section {
 	margin-left: -5px;
 }
@@ -169,4 +180,89 @@
 .uppy-Dashboard-inner {
 	height: 182px !important; /* Ensure it takes 100% of its parent container's height */
 	min-height: unset !important; /* Remove the default min-height */
+}
+
+/* Table */
+.ProseMirror table {
+	border-spacing: 0;
+	border-collapse: separate;
+	font-size: 0.9em;
+	font-family: sans-serif;
+	min-width: 400px;
+	width: 100%;
+	table-layout: fixed;
+	overflow: hidden;
+}
+
+.ProseMirror table td,
+.ProseMirror table th {
+	border-top: 1px solid #ccc;
+	border-left: 1px solid #ccc;
+}
+
+.ProseMirror table td:last-child,
+.ProseMirror table th:last-child {
+	border-right: 1px solid #ccc;
+}
+
+.ProseMirror table tr:last-child td {
+	border-bottom: 1px solid #ccc;
+}
+
+.ProseMirror table td {
+	vertical-align: top;
+}
+
+.wrap-widget + table {
+	position: relative;
+	top: -1px;
+}
+
+.ProseMirror thead tr {
+	text-align: left;
+}
+
+.ProseMirror figure {
+	padding: 1em;
+}
+
+.ProseMirror .tableWrapper {
+	overflow-x: auto;
+}
+
+/*
+The columnResizing plugin inserts an extra .tableWrapper element immediately
+before the actual table. I'm unsure why this happens, but this code hides it:
+*/
+.ProseMirror .tableWrapper:has(+ .tableWrapper) {
+	display: none;
+}
+
+.ProseMirror td,
+.ProseMirror th {
+	vertical-align: top;
+	box-sizing: border-box;
+	position: relative;
+}
+
+.ProseMirror td:not([data-colwidth]):not(.column-resize-dragging),
+.ProseMirror th:not([data-colwidth]):not(.column-resize-dragging) {
+	/* if there's no explicit width set and the column is not being resized, set a default width */
+	min-width: var(--default-cell-min-width);
+}
+
+.ProseMirror .column-resize-handle {
+	position: absolute;
+	right: -2px;
+	top: 0;
+	bottom: 0;
+	width: 4px;
+	z-index: 20;
+	background-color: #adf;
+	pointer-events: none;
+}
+
+.ProseMirror.resize-cursor {
+	cursor: ew-resize;
+	cursor: col-resize;
 }
