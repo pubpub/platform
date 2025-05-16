@@ -1,9 +1,16 @@
 import { Button } from "ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
-import type { FileUpload } from "~/lib/fields/fileUpload";
-
-export function FileUploadPreview({ files }: { files: FileUpload }) {
+export function FileUploadPreview({
+	files,
+}: {
+	files: {
+		fileName: string;
+		fileSize: number;
+		fileType: string;
+		fileUploadUrl: string;
+	}[];
+}) {
 	return (
 		<ul>
 			{files.map((file) => {

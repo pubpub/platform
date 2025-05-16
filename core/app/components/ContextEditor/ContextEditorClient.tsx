@@ -26,7 +26,7 @@ export const ContextEditorClient = ({
 	pubId,
 	pubTypeId,
 	className,
-	initialDoc,
+	initialHtml,
 	onChange,
 	disabled,
 	hideMenu,
@@ -38,9 +38,10 @@ export const ContextEditorClient = ({
 	// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
 } & Pick<
 	ContextEditorProps,
-	"onChange" | "initialDoc" | "className" | "disabled" | "hideMenu"
+	"onChange" | "initialHtml" | "className" | "disabled" | "hideMenu"
 >) => {
 	const runUpload = useServerAction(upload);
+
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
@@ -65,7 +66,7 @@ export const ContextEditorClient = ({
 				}}
 				atomRenderingComponent={ContextAtom}
 				onChange={onChange}
-				initialDoc={initialDoc}
+				initialHtml={initialHtml}
 				disabled={disabled}
 				className={className}
 				hideMenu={hideMenu}

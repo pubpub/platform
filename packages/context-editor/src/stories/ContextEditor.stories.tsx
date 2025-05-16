@@ -6,6 +6,7 @@ import { EditorState } from "prosemirror-state";
 
 import ContextEditor from "../ContextEditor";
 import { baseSchema } from "../schemas";
+import { prosemirrorToHTML } from "../utils/serialize";
 import AtomRenderer from "./AtomRenderer";
 // @ts-ignore
 import exampleHtml from "./doc.html?raw";
@@ -32,11 +33,14 @@ type Story = StoryObj<typeof meta>;
 const pubId = "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70";
 const upload = (filename: string) => generateSignedAssetUploadUrl(`${pubId}/${filename}`);
 
+const initialHtml = prosemirrorToHTML(baseSchema.nodeFromJSON(initialDoc));
+console.log(initialHtml);
+
 // More on writing stories with args: https://storybook.js.org/docs/writing-stories/args
 export const Primary: Story = {
 	args: {
 		placeholder: "Helloooo",
-		initialDoc: initialDoc,
+		initialHtml,
 		pubTypes: initialTypes,
 		pubId,
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -52,7 +56,7 @@ export const Primary: Story = {
 
 export const Blank: Story = {
 	args: {
-		initialDoc: undefined,
+		initialHtml: undefined,
 		pubTypes: initialTypes,
 		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -79,7 +83,7 @@ export const Blank: Story = {
 
 export const WithImage: Story = {
 	args: {
-		initialDoc: docWithImage,
+		initialHtml: prosemirrorToHTML(baseSchema.nodeFromJSON(docWithImage)),
 		pubTypes: initialTypes,
 		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -118,18 +122,9 @@ export const ParseDOM: Story = {
 	// Render the prosemirror doc on the screen for testing
 	render: function Render(args) {
 		const [state, setState] = useState<EditorState | undefined>(undefined);
-		const template = document.createElement("template");
-		template.innerHTML = exampleHtml;
-		const content = template.content.firstElementChild;
-		const doc = content ? DOMParser.fromSchema(baseSchema).parse(content).toJSON() : undefined;
 		return (
 			<>
-				<ContextEditor {...args} initialDoc={doc} onChange={setState} />
-				{/* {doc ? (
-					<ContextEditor {...args} initialDoc={doc} onChange={setState} />
-				) : (
-					"Loading..."
-				)} */}
+				<ContextEditor {...args} initialHtml={exampleHtml} onChange={setState} />
 				<pre className="text-xs" data-testid="prosemirror-state">
 					{state ? JSON.stringify(state?.doc.toJSON(), null, 2) : "{}"}
 				</pre>
