@@ -81,7 +81,7 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 		config.pubFields.contributorPersonName?.[0],
 		"The DataCite action is missing a contributor person name field override."
 	);
-	const contributorPersonOrcidSlug = config.pubFields.contributorPersonName?.[0];
+	const contributorPersonOrcidSlug = config.pubFields.contributorPersonORCID?.[0];
 	const publicationDateFieldSlug = expect(
 		config.pubFields.publicationDate?.[0],
 		"The DataCite action is missing a publication date field override."
@@ -184,7 +184,7 @@ const checkDoi = async (doi: string) => {
 
 const createPubDeposit = async (depositPayload: Payload) => {
 	logger.info({
-		msg: "DataCite deposit payload",
+		msg: "Datacite deposit publish",
 		payload: {
 			...depositPayload.data,
 			attributes: {
@@ -210,7 +210,7 @@ const createPubDeposit = async (depositPayload: Payload) => {
 
 	if (!response.ok) {
 		logger.error({
-			ms: "DataCite deposit error",
+			ms: "DataCite deposit publish error",
 			response: {
 				status: response.status,
 				statusText: response.statusText,
@@ -228,6 +228,10 @@ const createPubDeposit = async (depositPayload: Payload) => {
 };
 
 const updatePubDeposit = async (depositPayload: Payload) => {
+	logger.info({
+		msg: "Datacite deposit update",
+		payload: depositPayload,
+	});
 	const doi = expect(depositPayload?.data?.attributes?.doi);
 	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "PUT",
@@ -236,6 +240,15 @@ const updatePubDeposit = async (depositPayload: Payload) => {
 	});
 
 	if (!response.ok) {
+		logger.error({
+			ms: "DataCite deposit update error",
+			response: {
+				status: response.status,
+				statusText: response.statusText,
+				url: response.url,
+				body: await response.text(),
+			},
+		});
 		return {
 			title: "Failed to update DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
