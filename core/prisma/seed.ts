@@ -8,7 +8,6 @@ import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env";
-import { setupInviteTestCommunity } from "./seeds/invite-test-community";
 import { seedLegacy } from "./seeds/legacy";
 import { seedStarter } from "./seeds/starter";
 
@@ -93,7 +92,7 @@ async function main() {
 
 	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([seedStarter(starterId), legacyPromise, setupInviteTestCommunity()]);
+	await Promise.all([seedStarter(starterId), legacyPromise]);
 
 	await Promise.all([
 		createUserMembers({

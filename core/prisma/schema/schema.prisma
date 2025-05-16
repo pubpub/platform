@@ -624,13 +624,14 @@ enum ApiAccessScope {
 
 enum Capabilities {
   movePub
-  createPub
   viewPub
   deletePub
-  updatePubValues
   createRelatedPub
   createPubWithForm
+  createPubWithAnyForm
   editPubWithForm
+  editPubWithAnyForm
+  editPubWithDefaultForm
   createPubField
   archivePubField
   editPubField

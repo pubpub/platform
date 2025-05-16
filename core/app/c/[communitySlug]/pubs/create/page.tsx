@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+import { type PubTypesId } from "db/public";
 import { Button } from "ui/button";
+import { Label } from "ui/label";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
 import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import { getAuthorizedCreateForms, userCanCreatePub } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 export async function generateMetadata(props: {
@@ -30,7 +31,7 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<Record<string, string>>;
+	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId; form?: string }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
@@ -44,25 +45,30 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const canCreatePub = await userCan(
-		Capabilities.createPub,
-		{
-			type: MembershipType.community,
-			communityId: community.id,
-		},
-		user.id
-	);
+	const canCreatePub = await userCanCreatePub({
+		communityId: community.id,
+		userId: user.id,
+		pubTypeId: searchParams.pubTypeId,
+		// No formSlug because we're just checking if there are any authorized forms
+		// We validate that the user can create a pub with the specified form in the create action
+	});
 
 	if (!canCreatePub) {
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const formId = `create-pub`;
+	const htmlFormId = `create-pub`;
+
+	const availableForms = await getAuthorizedCreateForms({
+		userId: user.id,
+		communityId: community.id,
+		pubTypeId: searchParams.pubTypeId,
+	}).execute();
 
 	return (
 		<ContentLayout
 			left={
-				<Button form={formId} type="submit">
+				<Button form={htmlFormId} type="submit">
 					Save
 				</Button>
 			}
@@ -71,10 +77,19 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
+					<div className="mb-4 flex flex-col gap-3">
+						<Label htmlFor="create-page-form-switcher">Current form</Label>
+						<FormSwitcher
+							htmlId="create-page-form-switcher"
+							defaultFormSlug={searchParams.form}
+							forms={availableForms}
+						/>
+					</div>
 					<PubEditor
 						searchParams={searchParams}
 						communityId={community.id}
-						formId={formId}
+						htmlFormId={htmlFormId}
+						formSlug={searchParams.form}
 						// PubEditor checks for the existence of the stageId prop
 						{...(searchParams["stageId"] ? { stageId: searchParams["stageId"] } : {})}
 					/>

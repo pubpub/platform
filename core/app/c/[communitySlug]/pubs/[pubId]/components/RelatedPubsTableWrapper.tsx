@@ -1,8 +1,8 @@
+import type { ProcessedPubWithForm } from "contracts";
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
 import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { FullProcessedPub } from "~/lib/server";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { RelatedPubsTable } from "./RelatedPubsTable";
 
@@ -24,7 +24,16 @@ const NoActions = () => {
 	);
 };
 
-const getRelatedPubRunActionsDropdowns = (row: FullProcessedPub, pageContext: PageContext) => {
+const getRelatedPubRunActionsDropdowns = (
+	row: ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+		withStageActionInstances: true;
+	}>,
+	pageContext: PageContext
+) => {
 	return row.stage && row.stage?.actionInstances.length > 0 ? (
 		<PubsRunActionDropDownMenu
 			actionInstances={row.stage.actionInstances}
@@ -38,7 +47,13 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPub, pageContext: Pa
 };
 
 type Props = {
-	pub: FullProcessedPub;
+	pub: ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+		withStageActionInstances: true;
+	}>;
 	pageContext: PageContext;
 };
 
