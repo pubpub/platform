@@ -2,6 +2,7 @@ import type { ControllerRenderProps } from "react-hook-form";
 
 import { useEffect, useState } from "react";
 import { Pencil, PlusIcon, TrashIcon } from "lucide-react";
+import { useFormContext } from "react-hook-form";
 
 import type { InputComponent } from "db/public";
 import { Button } from "ui/button";
@@ -108,11 +109,7 @@ export const FormBuilderColorPickerPopover = ({
 					size="icon"
 					className="ml-1 h-7 w-7 p-0 hover:bg-gray-200 hover:text-red-500"
 					onClick={() => {
-						parentField.onChange(
-							parentField.value?.filter(
-								(val, i) => val.value !== color && val.label !== label && i !== idx
-							)
-						);
+						parentField.onChange(parentField.value?.filter((_, i) => i !== idx));
 					}}
 					aria-label={`Remove color preset ${label}`}
 				>
@@ -123,23 +120,25 @@ export const FormBuilderColorPickerPopover = ({
 	);
 };
 
-export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) => {
-	const presets = form.watch("config.presets");
-	const presetsOnly = form.watch("config.presetsOnly");
+export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => {
+	// for some reason if i use `props.form` the watched values don't update when the form values change
+	const reactiveForm = useFormContext<ConfigFormData<InputComponent.colorPicker>>();
+	const presets = reactiveForm.watch("config.presets");
+	const presetsOnly = reactiveForm.watch("config.presetsOnly");
+
+	const presetsOnlyEnabled = Boolean(presets?.length);
 
 	// doesn't make sense to set presets only if there are no presets
 	useEffect(() => {
-		if (presetsOnly && presets?.length === 0) {
-			form.setValue("config.presetsOnly", false);
+		if (presetsOnly && !presetsOnlyEnabled) {
+			reactiveForm.setValue("config.presetsOnly", false);
 		}
-	}, [presets, presetsOnly, form]);
-
-	const presetsOnlyEnabled = Boolean(presets?.length);
+	}, [presets, presetsOnly]);
 
 	return (
 		<>
 			<FormField
-				control={form.control}
+				control={reactiveForm.control}
 				name="config.label"
 				render={({ field }) => (
 					<FormItem>
@@ -156,7 +155,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 				)}
 			/>
 			<FormField
-				control={form.control}
+				control={reactiveForm.control}
 				name="config.help"
 				render={({ field }) => (
 					<FormItem>
@@ -174,15 +173,15 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 				)}
 			/>
 			<FormField
-				control={form.control}
+				control={reactiveForm.control}
 				name="config.presets"
 				render={({ field }) => (
 					<FormItem className="flex flex-col gap-2">
 						<FormLabel>Color Presets</FormLabel>
-						{presets?.map((preset, idx) => (
+						{field.value?.map((preset, idx) => (
 							<FormField
 								key={idx}
-								control={form.control}
+								control={reactiveForm.control}
 								name={`config.presets.${idx}`}
 								render={({ field: subField }) => (
 									<FormBuilderColorPickerPopover
@@ -222,9 +221,9 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 				)}
 			/>
 			<FormField
-				control={form.control}
+				control={reactiveForm.control}
 				name="config.presetsOnly"
-				disabled={!presetsOnlyEnabled}
+				defaultValue={false}
 				render={({ field }) => (
 					<FormItem
 						className={cn(
