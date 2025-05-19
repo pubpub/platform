@@ -65,6 +65,7 @@ export const mockServerCode = async () => {
 
 	vi.mock("next/cache", () => {
 		return {
+			revalidateTag: vi.fn(),
 			unstable_cache: (fn: any) => fn,
 		};
 	});

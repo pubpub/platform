@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { unstable_cache } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 
 import { type PubsId, type PubTypesId } from "db/public";
@@ -31,21 +32,22 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<
-		Record<string, string> & { pubTypeId: PubTypesId; form?: string; pubId?: PubsId }
-	>;
+	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId; form?: string }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
 	const { communitySlug } = params;
 
-	if (!searchParams.pubId) {
-		const sparams = new URLSearchParams(searchParams);
-		sparams.set("pubId", crypto.randomUUID());
-		redirect(`/c/${communitySlug}/pubs/create?${sparams.toString()}`);
-	}
-
 	const { user } = await getPageLoginData();
+
+	const getNextPubId = unstable_cache(
+		async (_: string) => crypto.randomUUID() as PubsId,
+		undefined,
+		{
+			tags: [`create-pub-id-${user.id}`],
+		}
+	);
+	const pubId = await getNextPubId(user.id);
 
 	const community = await findCommunityBySlug(communitySlug);
 
@@ -94,6 +96,8 @@ export default async function Page(props: {
 						/>
 					</div>
 					<PubEditor
+						pubId={pubId}
+						create
 						searchParams={searchParams}
 						communityId={community.id}
 						htmlFormId={htmlFormId}

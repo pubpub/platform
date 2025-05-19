@@ -108,8 +108,6 @@ export type PubEditorProps = {
 		slug?: string;
 		pubTypeId?: PubTypesId;
 		form?: string;
-		// used when creating a new pub
-		pubId?: PubsId;
 	};
 	htmlFormId?: string;
 	formSlug?: string;
@@ -119,7 +117,9 @@ export type PubEditorProps = {
 			communityId: CommunitiesId;
 	  }
 	| {
+			pubId: PubsId;
 			communityId: CommunitiesId;
+			create: true;
 	  }
 	| {
 			communityId: CommunitiesId;
@@ -133,7 +133,7 @@ export async function PubEditor(props: PubEditorProps) {
 
 	const { user } = await getLoginData();
 
-	if ("pubId" in props) {
+	if ("pubId" in props && !("create" in props)) {
 		// We explicitly do not pass the user here for two reasons:
 		// (1) It's expected that to see the PubEditor component at all, the
 		// user has the capabilities necessary to edit the pub's local values
@@ -196,7 +196,7 @@ export async function PubEditor(props: PubEditorProps) {
 	// Create the pubId before inserting into the DB if one doesn't exist.
 	// FileUpload needs the pubId when uploading the file before the pub exists
 	const isUpdating = !!pub?.id;
-	const pubId = pub?.id ?? props.searchParams.pubId ?? (randomUUID() as PubsId);
+	const pubId = pub?.id ?? (("pubId" in props && props.pubId) || (randomUUID() as PubsId));
 
 	if (pub === undefined) {
 		if (props.searchParams.pubTypeId) {

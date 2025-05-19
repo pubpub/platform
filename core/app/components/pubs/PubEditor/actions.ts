@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
+
 import type { Json, JsonValue } from "contracts";
 import type { PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
@@ -129,6 +131,8 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 				report: `Successfully created a new Pub`,
 			};
 		});
+
+		revalidateTag(`create-pub-id-${user.id}`);
 
 		return result;
 	} catch (error) {
