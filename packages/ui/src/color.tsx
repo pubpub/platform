@@ -70,9 +70,9 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 	const isDark = isColorDark(props.color || "#000000");
 
 	return (
-		<div className="grid grid-cols-[1fr,auto] gap-2 bg-transparent p-10">
+		<div className="flex gap-2 bg-transparent p-10">
 			{!presetsOnly && (
-				<div className="flex flex-col overflow-clip rounded-md bg-transparent shadow-lg">
+				<div className="flex h-fit flex-col overflow-clip rounded-md bg-transparent shadow-lg">
 					<HexColorPicker
 						className="[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-none"
 						aria-label="Color picker"
@@ -94,15 +94,16 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 			)}
 			{presets && (
 				<div
-					className={cn(
-						"grid grid-flow-col grid-rows-6 gap-1 rounded-lg border bg-white px-1.5 py-1.5 shadow-md",
-						presetsOnly ? "grid-cols-[repeat(auto-fit,32px)]" : "grid-cols-1"
-					)}
+					className={cn("grid gap-1.5 rounded-lg border bg-white px-2 py-2 shadow-md", {
+						"h-fit max-h-60 grid-flow-col grid-rows-[repeat(auto-fit,32px)]":
+							!presetsOnly,
+						"max-w-60 grid-flow-row grid-cols-[repeat(auto-fit,32px)]": presetsOnly,
+					})}
 				>
 					{presets.map((preset, idx) => (
 						<Tooltip key={`preset-${preset.label}-${idx}`}>
 							<TooltipTrigger asChild>
-								<div className="flex items-center">
+								<div className="flex h-8 w-8 items-center">
 									<input
 										type="radio"
 										id={`preset-${preset.label}-${idx}`}

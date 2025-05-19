@@ -50,7 +50,7 @@ export const FormBuilderColorPickerPopover = ({
 			<Popover>
 				<PopoverTrigger
 					disabled={isEditingLabel}
-					className="flex w-full min-w-0 cursor-pointer items-center gap-2 py-3 pl-3 focus:outline-none"
+					className="flex h-10 w-full min-w-0 cursor-pointer items-center gap-2 pl-3 focus:outline-none"
 					aria-label={`Select color: currently ${label || color}`}
 				>
 					<ColorCircle color={color} size="sm" className="flex-shrink-0" />
@@ -58,12 +58,14 @@ export const FormBuilderColorPickerPopover = ({
 					{isEditingLabel ? (
 						<Input
 							type="text"
-							className="ml-3 mr-2 h-7 px-2 py-1 text-sm"
+							className="my-0 mr-2 h-7 px-2 py-0 text-sm"
+							aria-label={`Change label for color preset ${label}`}
 							defaultValue={label || color}
 							onBlur={(e) => saveLabelChange(e.target.value)}
 							onKeyDown={(e) =>
 								e.key === "Enter" && saveLabelChange(e.currentTarget.value)
 							}
+							autoFocus
 						/>
 					) : (
 						<div className="flex max-w-full grow items-center justify-between gap-2">
@@ -97,6 +99,7 @@ export const FormBuilderColorPickerPopover = ({
 						className="h-7 w-7 p-0 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100"
 						onClick={() => setIsEditingLabel(true)}
 						tabIndex={-1}
+						aria-label={`Edit label for color preset ${label}`}
 					>
 						<Pencil className="h-3.5 w-3.5" />
 						<span className="sr-only">Edit label</span>
