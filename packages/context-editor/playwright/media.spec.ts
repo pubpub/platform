@@ -6,16 +6,14 @@ import { EDITOR_WITH_IMAGE_STORY } from "./constants";
 import { getProsemirrorState } from "./utils";
 
 const clickImageNode = async (page: Page) => {
-	// Have to click twice in playwright for some reason
-	await page.getByRole("button", { name: "image", exact: true }).click();
 	await page.getByRole("button", { name: "image", exact: true }).click();
 };
 
 test.describe("images", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(EDITOR_WITH_IMAGE_STORY);
-		const editor = page.locator(".ProseMirror");
-		await editor.click();
+		// const editor = page.locator(".ProseMirror");
+		// await editor.click();
 	});
 
 	test("can set image attributes", async ({ page }) => {
@@ -31,6 +29,7 @@ test.describe("images", () => {
 			align: "right",
 			fullResolution: true,
 		};
+
 		await page.getByRole("textbox", { name: "Source" }).fill(expected.src);
 		await page.getByRole("textbox", { name: "Alt text" }).fill(expected.alt);
 		await page.getByRole("textbox", { name: "Link to" }).fill(expected.linkTo);
@@ -48,7 +47,8 @@ test.describe("images", () => {
 	});
 
 	test("can add and remove caption, credit, license fields", async ({ page }) => {
-		await clickImageNode(page);
+		// await clickImageNode(page);
+		await page.getByRole("button", { name: "figure", exact: true }).first().click();
 		await page.getByTestId("attribute-panel").waitFor();
 		await expect(page.getByRole("button", { name: "figcaption" })).toHaveCount(0);
 		const figureParts = [

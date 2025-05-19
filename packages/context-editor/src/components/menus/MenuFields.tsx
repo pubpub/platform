@@ -19,7 +19,7 @@ export const MenuInputField = ({
 	return (
 		<FormField
 			name={name}
-			control={form.control}
+			control={form?.control}
 			render={({ field }) => {
 				return (
 					<FormItem className="flex flex-col">
@@ -27,7 +27,11 @@ export const MenuInputField = ({
 							<FormLabel>{label}</FormLabel>
 							<div className="col-span-3 flex items-center gap-4">
 								<FormControl>
-									<Input {...field} placeholder="None" />
+									<Input
+										{...field}
+										placeholder="None"
+										data-testid={`${name}-input`}
+									/>
 								</FormControl>
 								{right ? right(field.value) : null}
 							</div>
@@ -40,12 +44,20 @@ export const MenuInputField = ({
 	);
 };
 
-export const MenuSwitchField = ({ name, label: labelProp }: { name: string; label?: string }) => {
-	const label = labelProp ?? name;
+type MenuSwitchFieldProps = {
+	name: string;
+	label?: string;
+	value?: boolean;
+	onChange?: (value: boolean) => void;
+};
+
+export const MenuSwitchField = (props: MenuSwitchFieldProps) => {
+	const label = props.label ?? props.name;
 	const form = useFormContext();
 	return (
 		<FormField
-			name={name}
+			name={props.name}
+			// `form` may be undefined if this is used outside of a form context
 			control={form.control}
 			render={({ field }) => {
 				return (
@@ -53,8 +65,9 @@ export const MenuSwitchField = ({ name, label: labelProp }: { name: string; labe
 						<FormLabel>{label}</FormLabel>
 						<FormControl>
 							<Switch
-								checked={field.value}
-								onCheckedChange={field.onChange}
+								data-testid={`${props.name}-switch`}
+								checked={props.value ?? field.value}
+								onCheckedChange={props.onChange ?? field.onChange}
 								className="data-[state=checked]:bg-emerald-400"
 							/>
 						</FormControl>

@@ -19,6 +19,7 @@ import {
 	Strikethrough,
 	Subscript,
 	Superscript,
+	Table,
 	Underline,
 } from "lucide-react";
 
@@ -55,6 +56,7 @@ import {
 	underlineToggle,
 } from "../commands/marks";
 import { mathToggleBlock, mathToggleInline } from "../commands/math";
+import { insertTable } from "../commands/tables";
 import { ImageUploader } from "./ImageUploader";
 
 export const MENU_BAR_HEIGHT = 56;
@@ -131,6 +133,12 @@ const menuBlocks: MenuItem[][] = [
 	],
 	[
 		{ key: "link", name: "Link", icon: <Link {...iconProps} />, command: linkToggle },
+		{
+			key: "table",
+			name: "Table",
+			icon: <Table {...iconProps} />,
+			command: insertTable,
+		},
 		{
 			key: "blockquote",
 			name: "Blockquote",

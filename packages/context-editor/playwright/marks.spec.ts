@@ -223,6 +223,7 @@ test.describe("link", () => {
 			const className = "className";
 			await addLinkAndOpenMenu(page);
 			const panel = page.getByTestId("attribute-panel");
+			await panel.waitFor({ state: "visible" });
 			await panel.getByRole("textbox", { name: "URL" }).fill(url);
 			await panel.getByRole("switch", { name: "Open in new tab" }).click();
 			await panel.getByTestId("advanced-options-trigger").click();

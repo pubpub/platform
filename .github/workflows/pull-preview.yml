@@ -26,6 +26,10 @@ on:
                 required: true
             GH_PAT_PR_PREVIEW_CLEANUP:
                 required: true
+            PREVIEW_DATACITE_REPOSITORY_ID:
+                required: true
+            PREVIEW_DATACITE_PASSWORD:
+                required: true
 
 permissions:
     contents: read
@@ -52,6 +56,8 @@ jobs:
                   sed -i "s|image: PLATFORM_IMAGE|image: $PLATFORM_IMAGE|" docker-compose.preview.yml
                   sed -i "s|image: JOBS_IMAGE|image: $JOBS_IMAGE|" docker-compose.preview.yml
                   sed -i "s|image: MIGRATIONS_IMAGE|image: $MIGRATIONS_IMAGE|" docker-compose.preview.yml
+                  sed -i "s|DATACITE_REPOSITORY_ID: DATACITE_REPOSITORY_ID|DATACITE_REPOSITORY_ID: ${{ secrets.PREVIEW_DATACITE_REPOSITORY_ID }}|" docker-compose.preview.yml
+                  sed -i "s|DATACITE_PASSWORD: DATACITE_PASSWORD|DATACITE_PASSWORD: ${{ secrets.PREVIEW_DATACITE_PASSWORD }}|" docker-compose.preview.yml
                   sed -i "s|email someone@example.com|email dev@pubpub.org|" self-host/caddy/Caddyfile
                   sed -i "s|example.com|{\$PUBLIC_URL}|" self-host/caddy/Caddyfile
 
