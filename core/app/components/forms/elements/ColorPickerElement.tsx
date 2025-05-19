@@ -9,6 +9,7 @@ import type { InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { ColorCircle, ColorPicker, ColorValue } from "ui/color";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Input } from "ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
 import type { ElementProps } from "../types";
@@ -19,10 +20,12 @@ export const ColorPickerPopover = ({
 	onChange,
 	presets,
 	presetsOnly,
+	label,
 }: {
 	color: string;
+	label?: string;
 	onChange: (value: string) => void;
-	presets?: string[];
+	presets?: { label: string; value: string }[];
 	presetsOnly?: boolean;
 }) => {
 	return (
@@ -35,7 +38,7 @@ export const ColorPickerPopover = ({
 				>
 					<span className="sr-only">Pick a color</span>
 					<ColorCircle color={color || "#000000"} size="sm" />
-					<ColorValue color={color || "#000000"} />
+					{label || <ColorValue color={color || "#000000"} />}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
@@ -43,9 +46,7 @@ export const ColorPickerPopover = ({
 					presets={presets}
 					presetsOnly={presetsOnly}
 					color={color}
-					onChange={(value) => {
-						onChange(value);
-					}}
+					onChange={onChange}
 				/>
 			</PopoverContent>
 		</Popover>

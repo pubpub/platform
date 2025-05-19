@@ -1,15 +1,141 @@
-import { PlusIcon, TrashIcon } from "lucide-react";
+import type { ControllerRenderProps } from "react-hook-form";
+
+import { useEffect, useState } from "react";
+import { Pencil, PlusIcon, TrashIcon } from "lucide-react";
 
 import type { InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
+import { ColorCircle, ColorPicker } from "ui/color";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
+import { cn } from "utils";
 
-import type { ComponentConfigFormProps } from "./types";
-import { ColorPickerPopover } from "~/app/components/forms/elements/ColorPickerElement";
+import type { ComponentConfigFormProps, ConfigFormData } from "./types";
+
+export const FormBuilderColorPickerPopover = ({
+	color,
+	onChange,
+	presets,
+	presetsOnly,
+	label,
+	parentField,
+	idx,
+}: {
+	color: string;
+	label: string;
+	onChange: (value: { label: string; value: string }) => void;
+	presets?: { label: string; value: string }[];
+	presetsOnly?: boolean;
+	parentField: ControllerRenderProps<
+		ConfigFormData<InputComponent.colorPicker>,
+		"config.presets"
+	>;
+	idx: number;
+}) => {
+	const [isEditingLabel, setIsEditingLabel] = useState(false);
+
+	const saveLabelChange = (newLabel: string) => {
+		onChange({
+			label: newLabel,
+			value: color,
+		});
+		setIsEditingLabel(false);
+	};
+
+	return (
+		<div className="group flex w-full min-w-0 items-center rounded-md border bg-white shadow-sm hover:bg-gray-100">
+			<Popover>
+				<PopoverTrigger
+					disabled={isEditingLabel}
+					className="flex w-full min-w-0 cursor-pointer items-center gap-2 py-3 pl-3 focus:outline-none"
+					aria-label={`Select color: currently ${color || "#000000"}`}
+				>
+					<ColorCircle color={color || "#000000"} size="sm" className="flex-shrink-0" />
+
+					{isEditingLabel ? (
+						<Input
+							type="text"
+							className="ml-3 mr-2 h-7 px-2 py-1 text-sm"
+							defaultValue={label || color}
+							onBlur={(e) => saveLabelChange(e.target.value)}
+							onKeyDown={(e) =>
+								e.key === "Enter" && saveLabelChange(e.currentTarget.value)
+							}
+						/>
+					) : (
+						<div className="flex max-w-full grow items-center justify-between gap-2">
+							<span className="max-w-40 truncate text-sm font-medium">
+								{label || color}
+							</span>
+							<span className="font-mono text-xs text-gray-500">{color}</span>
+						</div>
+					)}
+				</PopoverTrigger>
+				<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
+					<ColorPicker
+						presets={presets}
+						presetsOnly={presetsOnly}
+						color={color}
+						onChange={(newColor) => {
+							onChange({
+								label: label || newColor,
+								value: newColor,
+							});
+						}}
+					/>
+				</PopoverContent>
+			</Popover>
+
+			<div className="ml-auto flex items-center gap-0 px-2">
+				{!isEditingLabel && (
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-7 w-7 p-0 opacity-0 transition-opacity hover:bg-gray-200 group-hover:opacity-100"
+						onClick={() => setIsEditingLabel(true)}
+						tabIndex={-1}
+					>
+						<Pencil className="h-3.5 w-3.5" />
+						<span className="sr-only">Edit label</span>
+					</Button>
+				)}
+
+				<Button
+					type="button"
+					variant="ghost"
+					size="icon"
+					className="ml-1 h-7 w-7 p-0 hover:bg-gray-200 hover:text-red-500"
+					onClick={() => {
+						parentField.onChange(
+							parentField.value?.filter(
+								(val, i) => val.value !== color && val.label !== label && i !== idx
+							)
+						);
+					}}
+					aria-label={`Remove color preset ${label}`}
+				>
+					<TrashIcon className="h-4 w-4" />
+				</Button>
+			</div>
+		</div>
+	);
+};
 
 export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) => {
+	const presets = form.watch("config.presets");
+	const presetsOnly = form.watch("config.presetsOnly");
+
+	// doesn't make sense to set presets only if there are no presets
+	useEffect(() => {
+		if (presetsOnly && presets?.length === 0) {
+			form.setValue("config.presetsOnly", false);
+		}
+	}, [presets, presetsOnly, form]);
+
+	const presetsOnlyEnabled = Boolean(presets?.length);
+
 	return (
 		<>
 			<FormField
@@ -19,7 +145,11 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 					<FormItem>
 						<FormLabel>Label</FormLabel>
 						<FormControl>
-							<Input placeholder="Color selection label" {...field} />
+							<Input
+								className="bg-white"
+								placeholder="Color selection label"
+								{...field}
+							/>
 						</FormControl>
 						<FormMessage />
 					</FormItem>
@@ -32,7 +162,11 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 					<FormItem>
 						<FormLabel>Help Text</FormLabel>
 						<FormControl>
-							<Input placeholder="Optional guidance for color selection" {...field} />
+							<Input
+								className="bg-white"
+								placeholder="Optional guidance for color selection"
+								{...field}
+							/>
 						</FormControl>
 						<FormDescription>Appears below the color picker</FormDescription>
 						<FormMessage />
@@ -45,31 +179,22 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 				render={({ field }) => (
 					<FormItem className="flex flex-col gap-2">
 						<FormLabel>Color Presets</FormLabel>
-						{field.value?.map((preset, idx) => (
+						{presets?.map((preset, idx) => (
 							<FormField
 								key={idx}
 								control={form.control}
 								name={`config.presets.${idx}`}
 								render={({ field: subField }) => (
-									<div className="flex flex-row items-center gap-2">
-										<ColorPickerPopover
-											color={subField.value}
-											onChange={(value) => {
-												subField.onChange(value);
-											}}
-										/>
-										<Button
-											type="button"
-											variant="outline"
-											onClick={() => {
-												field.onChange(
-													field.value?.filter((_, i) => i !== idx)
-												);
-											}}
-										>
-											<TrashIcon className="h-4 w-4" />
-										</Button>
-									</div>
+									<FormBuilderColorPickerPopover
+										key={idx}
+										idx={idx}
+										parentField={field}
+										color={subField.value.value}
+										label={subField.value.label}
+										onChange={(value) => {
+											subField.onChange(value);
+										}}
+									/>
 								)}
 							/>
 						))}
@@ -80,7 +205,10 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 							className="mt-2"
 							onClick={() => {
 								const currentPresets = field.value ?? [];
-								field.onChange([...currentPresets, "#000000"]);
+								field.onChange([
+									...currentPresets,
+									{ label: "New preset", value: "#000000" },
+								]);
 							}}
 						>
 							<PlusIcon className="mr-2 h-4 w-4" />
@@ -96,10 +224,20 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.colorPicker>) 
 			<FormField
 				control={form.control}
 				name="config.presetsOnly"
+				disabled={!presetsOnlyEnabled}
 				render={({ field }) => (
-					<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+					<FormItem
+						className={cn(
+							"flex flex-row items-start space-x-3 space-y-0 rounded-md border bg-white p-4",
+							!presetsOnlyEnabled && "opacity-60"
+						)}
+					>
 						<FormControl>
-							<Checkbox checked={field.value} onCheckedChange={field.onChange} />
+							<Checkbox
+								disabled={!presetsOnlyEnabled}
+								checked={field.value}
+								onCheckedChange={field.onChange}
+							/>
 						</FormControl>
 						<div className="space-y-1 leading-none">
 							<FormLabel>Presets Only</FormLabel>

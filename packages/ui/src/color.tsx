@@ -7,7 +7,7 @@ import { isColorDark } from "utils/color";
 
 export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexColorPicker> & {
 	onChange: (color: string) => void;
-	presets?: string[];
+	presets?: { label: string; value: string }[];
 	presetsOnly?: boolean;
 };
 
@@ -94,19 +94,33 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 				</>
 			)}
 			{presets && (
-				<div className="flex flex-wrap">
+				<div className="flex flex-wrap gap-2 p-2">
 					{presets.map((preset, idx) => (
-						<Button
-							key={`preset-${preset}-${idx}`}
-							variant="ghost"
-							onClick={() => props.onChange(preset)}
-							className="m-0 flex flex-grow items-center justify-center rounded-none p-0"
-						>
-							<span className="sr-only">Select preset {preset}</span>
-							<ColorBackground color={preset} className="h-full w-full min-w-24">
-								<ColorValue color={preset} />
-							</ColorBackground>
-						</Button>
+						<div key={`preset-${preset.label}-${idx}`} className="flex items-center">
+							<input
+								type="radio"
+								id={`preset-${preset.label}-${idx}`}
+								name="color-preset"
+								className="sr-only"
+								checked={props.color === preset.value}
+								onChange={() => props.onChange(preset.value)}
+							/>
+							<label
+								htmlFor={`preset-${preset}-${idx}`}
+								className={cn(
+									"flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-2",
+									props.color === preset.value
+										? "border-primary"
+										: "border-transparent"
+								)}
+							>
+								<span className="sr-only">Select preset {preset.label}</span>
+								<ColorBackground
+									color={preset.value}
+									className="h-full w-full rounded-sm"
+								/>
+							</label>
+						</div>
 					))}
 				</div>
 			)}

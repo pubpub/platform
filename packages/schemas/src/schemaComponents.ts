@@ -146,8 +146,13 @@ export const colorPickerConfigSchema = Type.Object({
 	help: Type.Optional(Type.String()),
 	presets: Type.Optional(
 		Type.Array(
-			Type.String({
-				format: "color",
+			Type.Object({
+				label: Type.String({
+					description: "Label of the preset. Necessary for accessibility.",
+				}),
+				value: Type.String({
+					format: "color",
+				}),
 			})
 		)
 	),
