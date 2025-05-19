@@ -51,9 +51,9 @@ export const FormBuilderColorPickerPopover = ({
 				<PopoverTrigger
 					disabled={isEditingLabel}
 					className="flex w-full min-w-0 cursor-pointer items-center gap-2 py-3 pl-3 focus:outline-none"
-					aria-label={`Select color: currently ${color || "#000000"}`}
+					aria-label={`Select color: currently ${label || color}`}
 				>
-					<ColorCircle color={color || "#000000"} size="sm" className="flex-shrink-0" />
+					<ColorCircle color={color} size="sm" className="flex-shrink-0" />
 
 					{isEditingLabel ? (
 						<Input

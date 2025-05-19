@@ -77,7 +77,7 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 		case CoreSchemaType.Vector3:
 			return [0, 50, 100];
 		case CoreSchemaType.Color:
-			return "#000000";
+			return undefined;
 		default:
 			const _exhaustiveCheck: never = coreSchemaType;
 			return _exhaustiveCheck;
