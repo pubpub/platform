@@ -65,6 +65,8 @@ export const FormBuilderColorPickerPopover = ({
 							onKeyDown={(e) =>
 								e.key === "Enter" && saveLabelChange(e.currentTarget.value)
 							}
+							// the autofocus kinda nice tho
+							// eslint-disable-next-line jsx-a11y/no-autofocus
 							autoFocus
 						/>
 					) : (
