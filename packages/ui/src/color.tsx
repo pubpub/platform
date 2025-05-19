@@ -1,9 +1,10 @@
 import * as React from "react";
 import { HexColorInput, HexColorPicker } from "react-colorful";
 
-import { Button } from "ui/button";
 import { cn } from "utils";
 import { isColorDark } from "utils/color";
+
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexColorPicker> & {
 	onChange: (color: string) => void;
@@ -69,9 +70,9 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 	const isDark = isColorDark(props.color || "#000000");
 
 	return (
-		<div>
+		<div className="grid grid-cols-[1fr,auto] gap-2 bg-transparent p-10">
 			{!presetsOnly && (
-				<>
+				<div className="flex flex-col overflow-clip rounded-md bg-transparent shadow-lg">
 					<HexColorPicker
 						className="[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-none"
 						aria-label="Color picker"
@@ -79,10 +80,8 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 					/>
 					<HexColorInput
 						className={cn(
-							"w-[200px] border-none text-center font-mono",
-							isDark ? "text-white" : "text-black",
-							"font-md uppercase tracking-wider",
-							presets?.length ? "rounded-none" : "rounded-b-md"
+							"w-[200px] border-none text-center font-mono font-medium uppercase tracking-wider",
+							isDark ? "text-white" : "text-black"
 						)}
 						prefixed
 						style={{
@@ -91,36 +90,59 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 						aria-label="Hex color value"
 						{...props}
 					/>
-				</>
+				</div>
 			)}
 			{presets && (
-				<div className="flex flex-wrap gap-2 p-2">
+				<div
+					className={cn(
+						"grid grid-flow-col grid-rows-6 gap-1 rounded-lg border bg-white px-1.5 py-1.5 shadow-md",
+						presetsOnly ? "grid-cols-[repeat(auto-fit,32px)]" : "grid-cols-1"
+					)}
+				>
 					{presets.map((preset, idx) => (
-						<div key={`preset-${preset.label}-${idx}`} className="flex items-center">
-							<input
-								type="radio"
-								id={`preset-${preset.label}-${idx}`}
-								name="color-preset"
-								className="sr-only"
-								checked={props.color === preset.value}
-								onChange={() => props.onChange(preset.value)}
-							/>
-							<label
-								htmlFor={`preset-${preset}-${idx}`}
-								className={cn(
-									"flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border-2",
-									props.color === preset.value
-										? "border-primary"
-										: "border-transparent"
-								)}
+						<Tooltip key={`preset-${preset.label}-${idx}`}>
+							<TooltipTrigger asChild>
+								<div className="flex items-center">
+									<input
+										type="radio"
+										id={`preset-${preset.label}-${idx}`}
+										name="color-preset"
+										className="sr-only"
+										checked={props.color === preset.value}
+										onChange={() => props.onChange(preset.value)}
+									/>
+									<label
+										htmlFor={`preset-${preset.label}-${idx}`}
+										className={cn(
+											"flex h-8 w-8 cursor-pointer items-center justify-center"
+										)}
+									>
+										<span className="sr-only">
+											Select preset {preset.label}
+										</span>
+										<ColorBackground
+											color={preset.value}
+											className={cn(
+												"h-full w-full rounded-md border-2",
+												props.color === preset.value
+													? "border-primary"
+													: "border-transparent"
+											)}
+										/>
+									</label>
+								</div>
+							</TooltipTrigger>
+							<TooltipContent
+								side={presetsOnly ? "top" : "right"}
+								sideOffset={10}
+								className="flex items-center gap-2"
 							>
-								<span className="sr-only">Select preset {preset.label}</span>
-								<ColorBackground
-									color={preset.value}
-									className="h-full w-full rounded-sm"
-								/>
-							</label>
-						</div>
+								<span className="font-mono">{preset.label}</span>
+								<span className="font-mono text-muted-foreground">
+									{preset.value}
+								</span>
+							</TooltipContent>
+						</Tooltip>
 					))}
 				</div>
 			)}

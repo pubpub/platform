@@ -41,7 +41,10 @@ export const ColorPickerPopover = ({
 					{label || <ColorValue color={color || "#000000"} />}
 				</Button>
 			</PopoverTrigger>
-			<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
+			<PopoverContent
+				className="w-auto overflow-clip border-none bg-transparent p-0 shadow-none"
+				aria-label="Color picker"
+			>
 				<ColorPicker
 					presets={presets}
 					presetsOnly={presetsOnly}
