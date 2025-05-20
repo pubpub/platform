@@ -179,6 +179,17 @@ const checkDoi = async (doi: string) => {
 		headers: makeRequestHeaders(),
 	});
 
+	logger.info({
+		msg: "Datacite DOI check",
+		doi,
+		response: {
+			status: response.status,
+			statusText: response.statusText,
+			url: response.url,
+			body: await response.text(),
+		},
+	});
+
 	return response.ok;
 };
 
@@ -275,9 +286,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 		throw error;
 	}
 
+	const depositPayloadDoi = depositPayload?.data?.attributes?.doi;
 	const depositResult =
 		// If the pub already has a DOI, and DataCite recognizes it,
-		depositConfig.doi && (await checkDoi(depositConfig.doi))
+		depositPayloadDoi && (await checkDoi(depositPayloadDoi))
 			? // Update the pub metadata in DataCite
 				await updatePubDeposit(depositPayload)
 			: // Otherwise, deposit the pub to DataCite
