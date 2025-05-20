@@ -302,7 +302,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 	// If the pub does not have a DOI, persist the newly generated DOI from
 	// DataCite
 	if (!depositConfig.doi) {
-		const doiFieldSlug = expect(config.pubFields.doi?.[0]);
+		const doiFieldSlug = expect(config.pubFields.doi?.[0], "Missing DOI field slug");
 
 		try {
 			await updatePub({
@@ -318,7 +318,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 			return {
 				title: "Failed to save DOI",
 				error: "The pub was deposited to DataCite, but we were unable to update the pub's DOI in PubPub",
-				cause: error,
+				cause: error.message,
 			};
 		}
 	}
