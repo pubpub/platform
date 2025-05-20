@@ -219,9 +219,20 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 							<ColorValue color={color || "#000000"} />
 						</Button>
 					</PopoverTrigger>
-					<PopoverContent className="w-auto overflow-clip p-0" aria-label="Color picker">
+					<PopoverContent
+						className="h-fit w-fit overflow-clip bg-transparent p-0"
+						aria-label="Color picker"
+					>
 						<ColorPicker
 							color={color || "#000000"}
+							presets={[
+								{
+									label: "red",
+									value: "#ff0000",
+								},
+								{ label: "green", value: "#00ff00" },
+								{ label: "blue", value: "#0000ff" },
+							]}
 							onChange={(value) => {
 								setColor(value);
 							}}
