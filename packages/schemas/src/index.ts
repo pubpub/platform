@@ -5,6 +5,7 @@ import { CoreSchemaType } from "db/public";
 import * as Schemas from "./schemas";
 import {
 	Boolean,
+	Color,
 	DateTime,
 	Email,
 	FileUpload,
@@ -33,6 +34,7 @@ const schemaMap = {
 	[CoreSchemaType.StringArray]: (config) => getStringArrayWithMinMax(config),
 	[CoreSchemaType.URL]: () => URL,
 	[CoreSchemaType.Vector3]: () => Vector3,
+	[CoreSchemaType.Color]: () => Color,
 } as const satisfies Record<CoreSchemaType, (config?: unknown) => (typeof Schemas)[CoreSchemaType]>;
 
 export function getJsonSchemaByCoreSchemaType<C extends CoreSchemaType>(
@@ -74,6 +76,8 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 			return "";
 		case CoreSchemaType.Vector3:
 			return [0, 50, 100];
+		case CoreSchemaType.Color:
+			return undefined;
 		default:
 			const _exhaustiveCheck: never = coreSchemaType;
 			return _exhaustiveCheck;

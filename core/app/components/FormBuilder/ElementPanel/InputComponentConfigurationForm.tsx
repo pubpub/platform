@@ -2,7 +2,7 @@
 
 import type { TSchema } from "@sinclair/typebox";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
@@ -14,6 +14,7 @@ import type { PubsId, PubTypesId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
+import { ColorCircle, ColorPicker, ColorValue } from "ui/color";
 import { Confidence } from "ui/customRenderers/confidence/confidence";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
@@ -22,6 +23,7 @@ import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { MultiBlock } from "ui/multiblock";
 import { MultiValueInput } from "ui/multivalue-input";
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 import {
 	Select,
@@ -37,7 +39,6 @@ import { Textarea } from "ui/textarea";
 
 import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
-import { ContextEditorClient } from "~/app/components/ContextEditor/ContextEditorClient";
 import { useFormBuilder } from "../FormBuilderContext";
 import { FieldInputElement } from "../FormElement";
 import { ComponentConfig } from "./ComponentConfig";
@@ -52,6 +53,17 @@ const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.Date
 	ssr: false,
 	loading: () => <Skeleton className="h-9 w-full" />,
 });
+
+const ContextEditorClient = dynamic(
+	() =>
+		import("~/app/components/ContextEditor/ContextEditorClient").then(
+			(mod) => mod.ContextEditorClient
+		),
+	{
+		ssr: false,
+		loading: () => <Skeleton className="h-9 w-full" />,
+	}
+);
 
 const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	[InputComponent.textArea]: {
@@ -187,6 +199,46 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 					<div className="text-gray-500">Label</div>
 					<MultiBlock title="Pub Relation" disabled compact onAdd={() => {}} />
 				</div>
+			);
+		},
+	},
+	[InputComponent.colorPicker]: {
+		name: "Color Picker",
+		demoComponent: () => {
+			const [color, setColor] = useState("#000000");
+			return (
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button
+							variant="outline"
+							className="flex h-8 items-center gap-2"
+							aria-label={`Select color: currently ${color || "#000000"}`}
+						>
+							<span className="sr-only">Pick a color</span>
+							<ColorCircle color={color || "#000000"} size="sm" />
+							<ColorValue color={color || "#000000"} />
+						</Button>
+					</PopoverTrigger>
+					<PopoverContent
+						className="h-fit w-fit overflow-clip bg-transparent p-0"
+						aria-label="Color picker"
+					>
+						<ColorPicker
+							color={color || "#000000"}
+							presets={[
+								{
+									label: "red",
+									value: "#ff0000",
+								},
+								{ label: "green", value: "#00ff00" },
+								{ label: "blue", value: "#0000ff" },
+							]}
+							onChange={(value) => {
+								setColor(value);
+							}}
+						/>
+					</PopoverContent>
+				</Popover>
 			);
 		},
 	},

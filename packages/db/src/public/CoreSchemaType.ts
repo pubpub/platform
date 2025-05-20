@@ -18,6 +18,7 @@ export enum CoreSchemaType {
 	NumericArray = "NumericArray",
 	StringArray = "StringArray",
 	RichText = "RichText",
+	Color = "Color",
 }
 
 /** Zod schema for CoreSchemaType */
