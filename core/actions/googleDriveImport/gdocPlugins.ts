@@ -95,6 +95,12 @@ export const tableToObjectArray = (node: any) => {
 	const headersVert: string[] = rows.map((row: any) =>
 		getTextContent(row.children[0]).toLowerCase().replace(/\s+/g, "")
 	);
+
+	const hasTypeAtZero = headersHoriz[0]?.toLowerCase() === "type";
+	if (!hasTypeAtZero) {
+		return [{ type: "empty" }];
+	}
+
 	const validTypes = [
 		"image",
 		"video",
@@ -117,8 +123,9 @@ export const tableToObjectArray = (node: any) => {
 	const getCellContent = (tableType: string, headerVal: string, cell: any): any => {
 		const isTypeWithHtmlValue =
 			!["math", "reference"].includes(tableType) && headerVal === "value";
+		const isRefUnstructured = tableType === "reference" && headerVal === "unstructuredvalue";
 		const isCaption = headerVal === "caption";
-		if (isTypeWithHtmlValue || isCaption) {
+		if (isTypeWithHtmlValue || isCaption || isRefUnstructured) {
 			return cell.children;
 		}
 
