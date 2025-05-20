@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "ui/button";
@@ -24,6 +24,14 @@ export const FormSwitcher = ({
 	const params = useSearchParams();
 
 	const [selectedFormSlug, setSelectedFormSlug] = useState(defaultFormSlug ?? forms[0].slug);
+	useEffect(() => {
+		if (!params.get(formSwitcherUrlParam)) {
+			const newParams = new URLSearchParams(params);
+			newParams.set(formSwitcherUrlParam, selectedFormSlug);
+			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+		}
+	}, []);
+
 	if (!forms.length) {
 		return null;
 	}

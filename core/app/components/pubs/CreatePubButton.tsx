@@ -1,5 +1,6 @@
 import type { CommunitiesId, PubsId, PubTypes, PubTypesId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
+import { logger } from "logger";
 import { Plus } from "ui/icon";
 
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -106,6 +107,9 @@ export const CreatePubButton = async (props: Props) => {
 	}
 
 	const pubTypes = await getCreatablePubTypes(user.id, community.id).execute();
+
+	logger.debug({ msg: "Creatable pub types", pubTypes });
+
 	const stageId = "stageId" in props ? props.stageId : undefined;
 
 	return (

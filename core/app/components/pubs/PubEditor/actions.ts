@@ -47,7 +47,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	const { user } = loginData;
 
 	if (!formSlug) {
-		logger.info({ msg: "Pub creation error: form slug not sent to action", user, props });
+		logger.debug({ msg: "Pub creation error: form slug not sent to action", user, props });
 		return ApiError.UNAUTHORIZED;
 	}
 
