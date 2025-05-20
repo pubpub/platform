@@ -12,6 +12,10 @@ services:
             ASSETS_STORAGE_ENDPOINT: https://${PULLPREVIEW_PUBLIC_DNS}/a
             FLAGS: uploads:off,invites:off,disabled-actions:http+email
             ENV_NAME: sandbox
+            DATACITE_API_URL: https://api.test.datacite.org
+            DATACITE_REPOSITORY_ID: DATACITE_REPOSITORY_ID
+            DATACITE_PASSWORD: DATACITE_PASSWORD
+
     minio-init:
         restart: on-failure
         environment:
@@ -19,6 +23,7 @@ services:
             MINIO_ROOT_PASSWORD: minioadmin
             ASSETS_UPLOAD_KEY: preview-different
             ASSETS_UPLOAD_SECRET_KEY: preview-different123
+
     minio:
         environment:
             MINIO_ROOT_USER: minioadmin

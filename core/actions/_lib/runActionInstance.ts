@@ -81,6 +81,9 @@ const _runActionInstance = async (
 			userId: isActionUserInitiated ? args.userId : undefined,
 		},
 		{
+			// depth 3 is necessary for the DataCite action to fetch related
+			// contributors and their people
+			depth: 3,
 			withPubType: true,
 			withStage: true,
 		}
