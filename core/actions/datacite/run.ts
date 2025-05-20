@@ -62,7 +62,7 @@ const deriveCreatorsFromRelatedPubs = (
 			};
 		});
 
-const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
+const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 	const doiFieldSlug = config.pubFields.doi?.[0];
 	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
@@ -274,7 +274,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 	let depositPayload: Payload;
 	try {
-		depositPayload = await makeDatacitePayload(pub, depositConfig);
+		depositPayload = makeDatacitePayload(pub, depositConfig);
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
