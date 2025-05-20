@@ -1,5 +1,6 @@
 import type { CommunitiesId, FormsId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
+import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
@@ -248,6 +249,13 @@ export const userCanEditPub = async ({
 	formSlug?: string;
 }) => {
 	const forms = await getAuthorizedUpdateForms(userId, pubId).execute();
+	logger.debug({
+		msg: "Authorized update forms for user",
+		userId,
+		pubId,
+		formId,
+		formSlug,
+	});
 	if (formId) {
 		return Boolean(forms.find((form) => form.id === formId));
 	}
@@ -272,6 +280,15 @@ export const userCanCreatePub = async ({
 	formSlug?: string;
 }) => {
 	const forms = await getAuthorizedCreateForms({ userId, communityId, pubTypeId }).execute();
+	logger.debug({
+		msg: "Authorized create forms for user",
+		userId,
+		communityId,
+		pubTypeId,
+		formId,
+		formSlug,
+		forms,
+	});
 	if (formId) {
 		return Boolean(forms.find((form) => form.id === formId));
 	}
@@ -282,14 +299,12 @@ export const userCanCreatePub = async ({
 	return forms.length !== 0;
 };
 
-export const getAuthorizedCreateForms = ({
+const authorizedCreateFormsBase = ({
 	userId,
 	communityId,
-	pubTypeId,
 }: {
 	userId: UsersId;
 	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
 }) =>
 	autoCache(
 		communityMemberships({ userId, communityId })
@@ -313,7 +328,6 @@ export const getAuthorizedCreateForms = ({
 					.select("capability")
 			)
 			.selectFrom("forms")
-			.where("forms.pubTypeId", "=", pubTypeId)
 			.where((eb) =>
 				eb.or([
 					eb(
@@ -337,6 +351,17 @@ export const getAuthorizedCreateForms = ({
 			.orderBy("forms.isDefault desc")
 			.orderBy("forms.updatedAt desc")
 	);
+
+export const getAuthorizedCreateForms = ({
+	userId,
+	communityId,
+	pubTypeId,
+}: {
+	userId: UsersId;
+	communityId: CommunitiesId;
+	pubTypeId: PubTypesId;
+}) =>
+	authorizedCreateFormsBase({ userId, communityId }).qb.where("forms.pubTypeId", "=", pubTypeId);
 
 export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 	autoCache(
@@ -446,3 +471,12 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 			)
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
 	);
+
+export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId) => {
+	return authorizedCreateFormsBase({ userId, communityId })
+		.qb.innerJoin("pub_types", "forms.pubTypeId", "pub_types.id")
+		.clearSelect()
+		.clearOrderBy()
+		.select(["pub_types.id", "pub_types.name"])
+		.distinct();
+};

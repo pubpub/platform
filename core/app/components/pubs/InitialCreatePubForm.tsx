@@ -56,7 +56,7 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">
 							))}
 						</SelectContent>
 					</Select>
-					<FormDescription>Choose a pub type to the pub</FormDescription>
+					<FormDescription>Choose a pub type for the pub</FormDescription>
 					<FormMessage />
 				</FormItem>
 			)}

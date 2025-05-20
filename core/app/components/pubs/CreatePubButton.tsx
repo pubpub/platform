@@ -1,10 +1,10 @@
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypes, PubTypesId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Plus } from "ui/icon";
 
-import type { GetPubTypesResult } from "~/lib/server";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getPubsWithRelatedValues, getPubTypesForCommunity } from "~/lib/server";
+import { getCreatablePubTypes } from "~/lib/authorization/capabilities";
+import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -28,7 +28,7 @@ const InitialCreatePubFormWithRelatedPub = async ({
 	stageId,
 }: {
 	relatedPub: RelatedPubData;
-	pubTypes: GetPubTypesResult;
+	pubTypes: Pick<PubTypes, "id" | "name">[];
 	communityId: CommunitiesId;
 	stageId?: StagesId;
 }) => {
@@ -42,6 +42,9 @@ const InitialCreatePubFormWithRelatedPub = async ({
 				withPubType: true,
 			}
 		),
+		//TODO: this includes all relationship fields on the pub type, but it should be limited to
+		//relationship pub fields in the forms the user is allowed to use to create pubs of the
+		//given type
 		getPubFields({
 			pubTypeId: relatedPub.pubTypeId,
 			communityId: communityId,
@@ -96,7 +99,13 @@ export const CreatePubButton = async (props: Props) => {
 		return null;
 	}
 
-	const pubTypes = await getPubTypesForCommunity(community.id, { limit: 0 });
+	const { user } = await getLoginData();
+
+	if (!user) {
+		return null;
+	}
+
+	const pubTypes = await getCreatablePubTypes(user.id, community.id).execute();
 	const stageId = "stageId" in props ? props.stageId : undefined;
 
 	return (
