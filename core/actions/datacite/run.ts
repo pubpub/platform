@@ -2,8 +2,7 @@
 
 import * as z from "zod";
 
-import type { ProcessedPub } from "contracts";
-import type { PubsId } from "db/public";
+import { logger } from "logger";
 import { assert, AssertionError, expect } from "utils";
 
 import type { ActionPub } from "../types";
@@ -23,57 +22,79 @@ type RelatedPubs = Awaited<ReturnType<typeof getPubsWithRelatedValues<{}>>>[numb
 const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
 
-const makeDataciteCreatorFromAuthorPub = (pub: ProcessedPub, creatorNameFieldSlug: string) => {
-	const name = pub.values.find((value) => value.fieldSlug === creatorNameFieldSlug)?.value;
-	assert(typeof name === "string");
-	return {
-		name,
-		// TODO: author/creator affiliations
-		affiliation: [],
-		nameIdentifiers: [],
-	};
-};
-
 const deriveCreatorsFromRelatedPubs = (
 	relatedPubs: RelatedPubs,
-	creatorFieldSlug: string,
-	creatorNameFieldSlug: string
+	contributorFieldSlug: string,
+	contributorPersonFieldSlug: string,
+	contributorPersonNameFieldSlug: string,
+	contributorPersonOrcidFieldSlug?: string
 ) =>
 	relatedPubs
-		.filter((v) => v.fieldSlug === creatorFieldSlug)
-		.map((v) => v.relatedPub!)
-		.map((pub) => makeDataciteCreatorFromAuthorPub(pub, creatorNameFieldSlug));
+		.filter((v) => v.fieldSlug === contributorFieldSlug)
+		.map((v) => {
+			const contributor = expect(v.relatedPub);
+			const contributorPerson = expect(
+				contributor.values.find((v) => v.fieldSlug === contributorPersonFieldSlug)
+					?.relatedPub,
+				"A contributor does not have a related person."
+			);
+			const contributorPersonName = expect(
+				contributorPerson.values.find((v) => v.fieldSlug === contributorPersonNameFieldSlug)
+					?.value,
+				"A contributor person does not have a name."
+			) as string;
+			const contributorPersonORCID = contributorPerson.values.find(
+				(v) => v.fieldSlug === contributorPersonOrcidFieldSlug,
+				"A contributor person does not have an ORCID."
+			)?.value as string | undefined;
+			return {
+				name: contributorPersonName,
+				affiliation: [],
+				nameIdentifiers: contributorPersonORCID
+					? [
+							{
+								schemeUri: "https://orcid.org",
+								nameIdentifier: contributorPersonORCID,
+								nameIdentifierScheme: "ORCID",
+							},
+						]
+					: [],
+			};
+		});
 
-const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
+const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
+	const doiFieldSlug = config.pubFields.doi?.[0];
 	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
 		config.pubFields.url?.[0],
 		"The DataCite action is missing a URL field override."
 	);
-	const creatorFieldSlug = expect(
-		config.pubFields.creator?.[0],
-		"The DataCite action is missing a creator field override."
+	const contributorFieldSlug = expect(
+		config.pubFields.contributor?.[0],
+		"The DataCite action is missing a contributor field override."
 	);
-	const creatorNameFieldSlug = expect(
-		config.pubFields.creatorName?.[0],
-		"The DataCite action is missing a creator name field override."
+	const contributorPersonFieldSlug = expect(
+		config.pubFields.contributorPerson?.[0],
+		"The DataCite action is missing a contributor person field override."
 	);
+	const contributorPersonNameSlug = expect(
+		config.pubFields.contributorPersonName?.[0],
+		"The DataCite action is missing a contributor person name field override."
+	);
+	const contributorPersonOrcidSlug = config.pubFields.contributorPersonORCID?.[0];
 	const publicationDateFieldSlug = expect(
 		config.pubFields.publicationDate?.[0],
 		"The DataCite action is missing a publication date field override."
 	);
 
-	const { values } = await getPubsWithRelatedValues({
-		pubId: pub.id as PubsId,
-		communityId: pub.communityId,
-	});
-
-	const relatedPubs = values.filter((v) => v.relatedPub != null);
+	const relatedPubs = pub.values.filter((v) => v.relatedPub != null);
 
 	const creators = deriveCreatorsFromRelatedPubs(
 		relatedPubs,
-		creatorFieldSlug,
-		creatorNameFieldSlug
+		contributorFieldSlug,
+		contributorPersonFieldSlug,
+		contributorPersonNameSlug,
+		contributorPersonOrcidSlug
 	);
 
 	let title: string;
@@ -101,7 +122,9 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 
 	const publicationYear = new Date(publicationDate).getFullYear();
 
-	let doi = config.doi;
+	let doi =
+		config.doi ||
+		(pub.values.find((v) => v.fieldSlug === doiFieldSlug)?.value as string | undefined);
 
 	if (!doi) {
 		assert(
@@ -127,16 +150,7 @@ const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payl
 				creators,
 				publisher: config.publisher,
 				publicationYear,
-				dates: [
-					{
-						date: pub.createdAt.toString(),
-						dateType: "Created",
-					},
-					{
-						date: pub.updatedAt.toString(),
-						dateType: "Updated",
-					},
-				],
+				dates: [],
 				types: {
 					resourceTypeGeneral: "Preprint",
 				},
@@ -165,10 +179,31 @@ const checkDoi = async (doi: string) => {
 		headers: makeRequestHeaders(),
 	});
 
+	logger.info({
+		msg: "Datacite DOI check",
+		doi,
+		response: {
+			status: response.status,
+			statusText: response.statusText,
+			url: response.url,
+			body: await response.text(),
+		},
+	});
+
 	return response.ok;
 };
 
 const createPubDeposit = async (depositPayload: Payload) => {
+	logger.info({
+		msg: "Datacite deposit publish",
+		payload: {
+			...depositPayload.data,
+			attributes: {
+				...depositPayload.data?.attributes,
+				event: "publish",
+			},
+		},
+	});
 	const response = await fetch(`${env.DATACITE_API_URL}/dois`, {
 		method: "POST",
 		headers: makeRequestHeaders(),
@@ -185,6 +220,15 @@ const createPubDeposit = async (depositPayload: Payload) => {
 	});
 
 	if (!response.ok) {
+		logger.error({
+			ms: "DataCite deposit publish error",
+			response: {
+				status: response.status,
+				statusText: response.statusText,
+				url: response.url,
+				body: await response.text(),
+			},
+		});
 		return {
 			title: "Failed to create DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
@@ -195,6 +239,10 @@ const createPubDeposit = async (depositPayload: Payload) => {
 };
 
 const updatePubDeposit = async (depositPayload: Payload) => {
+	logger.info({
+		msg: "Datacite deposit update",
+		payload: depositPayload,
+	});
 	const doi = expect(depositPayload?.data?.attributes?.doi);
 	const response = await fetch(`${env.DATACITE_API_URL}/dois/${doi}`, {
 		method: "PUT",
@@ -203,6 +251,15 @@ const updatePubDeposit = async (depositPayload: Payload) => {
 	});
 
 	if (!response.ok) {
+		logger.error({
+			ms: "DataCite deposit update error",
+			response: {
+				status: response.status,
+				statusText: response.statusText,
+				url: response.url,
+				body: await response.text(),
+			},
+		});
 		return {
 			title: "Failed to update DOI",
 			error: "An error occurred while depositing the pub to DataCite.",
@@ -217,7 +274,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 	let depositPayload: Payload;
 	try {
-		depositPayload = await makeDatacitePayload(pub, depositConfig);
+		depositPayload = makeDatacitePayload(pub, depositConfig);
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
@@ -229,9 +286,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 		throw error;
 	}
 
+	const depositPayloadDoi = depositPayload?.data?.attributes?.doi;
 	const depositResult =
 		// If the pub already has a DOI, and DataCite recognizes it,
-		depositConfig.doi && (await checkDoi(depositConfig.doi))
+		depositPayloadDoi && (await checkDoi(depositPayloadDoi))
 			? // Update the pub metadata in DataCite
 				await updatePubDeposit(depositPayload)
 			: // Otherwise, deposit the pub to DataCite

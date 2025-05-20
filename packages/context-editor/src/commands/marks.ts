@@ -1,4 +1,5 @@
-import type { MarkType } from "prosemirror-model";
+import type { Attrs, Mark, MarkType } from "prosemirror-model";
+import type { Command } from "prosemirror-state";
 
 import { toggleMark as pmToggleMark } from "prosemirror-commands";
 
@@ -48,6 +49,31 @@ export const createMarkToggle = (typeName: string, expandEmpty = false) => {
 		commandFn: expandEmpty ? toggleMarkExpandEmpty : toggleMark,
 		isActiveFn: markIsActive,
 	});
+};
+
+export const replaceMark = (mark: Mark, attrs: Attrs): Command => {
+	return (state, dispatch) => {
+		const range = getMarkRange(state.selection.$from, mark.type, mark.attrs);
+
+		if (!range) {
+			return false;
+		}
+
+		if (dispatch) {
+			dispatch(
+				state.tr.removeMark(range.from, range.to, mark.type).addMark(
+					range.from,
+					range.to,
+					state.schema.marks[mark.type.name].create({
+						...mark.attrs,
+						...attrs,
+					})
+				)
+			);
+		}
+
+		return true;
+	};
 };
 
 export const strongToggle = createMarkToggle("strong");

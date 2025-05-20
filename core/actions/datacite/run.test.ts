@@ -150,16 +150,20 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 		url: "placeholder",
 		publisher: "Knowledge Futures",
 		publicationDate: new Date(),
-		creator: "placeholder",
-		creatorName: "placeholder",
+		contributor: "placeholder",
+		contributorPerson: "placeholder",
+		contributorPersonName: "placeholder",
+		contributorPersonORCID: "placeholder",
 		doiPrefix: undefined,
 		doi: "",
 		doiSuffix: "placeholder",
 		title: "placeholder",
 		pubFields: {
 			url: ["pubpub:url"],
-			creator: ["pubpub:author"],
-			creatorName: ["pubpub:name"],
+			contributor: ["pubpub:contributor"],
+			contributorPerson: ["pubpub:person"],
+			contributorPersonName: ["pubpub:name"],
+			contributorPersonORCID: ["pubpub:orcid"],
 			publicationDate: ["pubpub:publication-date"],
 			doi: ["pubpub:doi"],
 			doiSuffix: ["pubpub:doi-suffix"],
@@ -193,10 +197,13 @@ describe("DataCite action", () => {
 
 	it("creates a deposit if the pub does not have a DOI and a DOI prefix is configured", async () => {
 		const doi = "10.100/a-preprint";
-		const fetch = mockFetch(async () => makeStubDataciteResponse(doi));
+		const fetch = mockFetch(
+			async () => new Response(undefined, { status: 404 }),
+			async () => makeStubDataciteResponse(doi)
+		);
 		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doiPrefix: "10.100" } });
 
-		expect(fetch).toHaveBeenCalledOnce();
+		expect(fetch).toHaveBeenCalledTimes(2);
 		expect(fetch.mock.lastCall![1]!.method).toBe("POST");
 		expect(updatePub).toHaveBeenCalledWith(
 			expect.objectContaining({
@@ -240,7 +247,10 @@ describe("DataCite action", () => {
 		vitest.mocked(updatePub).mockImplementationOnce(() => {
 			throw error;
 		});
-		mockFetch(async () => makeStubDataciteResponse());
+		mockFetch(
+			async () => new Response(undefined, { status: 200 }),
+			async () => makeStubDataciteResponse()
+		);
 		const result = await run({
 			...RUN_OPTIONS,
 			config: { ...RUN_OPTIONS.config, doiPrefix: "10.100" },
@@ -256,7 +266,7 @@ describe("DataCite action", () => {
 		const doi = `${doiPrefix}/${doiSuffix}`;
 
 		const fetch = mockFetch(
-			async () => new Response("{}"),
+			async () => new Response(undefined, { status: 404 }),
 			async () => makeStubDataciteResponse(doi)
 		);
 
