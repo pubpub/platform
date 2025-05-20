@@ -973,7 +973,7 @@ test("Structure Anchors", async () => {
 // 			<body>
 // 				<div>
 // 					<p>
-// 						Here is some text <a 
+// 						Here is some text <a
 // 							data-type="reference" data-value="https://doi.org/10.1038/s41586-020-2983-4" data-unstructured-value="">
 // 							[1]
 // 						</a><a
