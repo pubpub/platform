@@ -180,6 +180,13 @@ export const FileUpload = Type.Array(
 	)
 );
 
+export const Color = Type.String({
+	format: "color",
+	description: "A color",
+	examples: ["#000000", "rgb(0, 0, 0)", "hsl(0, 0%, 0%)", "rgba(0, 0, 0, 0.5)"],
+	error: "Invalid color",
+});
+
 export const Null = Type.Null({ description: "An empty value" });
 
 // Rich text is validated via prosemirror on submit, so we allow Any here
