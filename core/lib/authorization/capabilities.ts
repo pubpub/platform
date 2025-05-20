@@ -306,51 +306,47 @@ const authorizedCreateFormsBase = ({
 	userId: UsersId;
 	communityId: CommunitiesId;
 }) =>
-	autoCache(
-		communityMemberships({ userId, communityId })
-			.with("capabilities", (db) =>
-				db
-					.selectFrom("membership_capabilities")
-					.where((eb) =>
-						eb.and([
-							eb(
-								"membership_capabilities.role",
-								"in",
-								eb.selectFrom("community_ms").select("role")
-							),
-							eb("membership_capabilities.type", "=", MembershipType.community),
-							eb("membership_capabilities.capability", "in", [
-								Capabilities.createPubWithAnyForm,
-								Capabilities.createPubWithForm,
-							]),
-						])
-					)
-					.select("capability")
-			)
-			.selectFrom("forms")
-			.where((eb) =>
-				eb.or([
+	communityMemberships({ userId, communityId })
+		.with("capabilities", (db) =>
+			db
+				.selectFrom("membership_capabilities")
+				.where((eb) =>
+					eb.and([
+						eb(
+							"membership_capabilities.role",
+							"in",
+							eb.selectFrom("community_ms").select("role")
+						),
+						eb("membership_capabilities.type", "=", MembershipType.community),
+						eb("membership_capabilities.capability", "in", [
+							Capabilities.createPubWithAnyForm,
+							Capabilities.createPubWithForm,
+						]),
+					])
+				)
+				.select("capability")
+		)
+		.selectFrom("forms")
+		.where((eb) =>
+			eb.or([
+				eb(
+					eb.val(Capabilities.createPubWithAnyForm),
+					"in",
+					eb.selectFrom("capabilities").select("capability")
+				),
+				eb.and([
 					eb(
-						eb.val(Capabilities.createPubWithAnyForm),
+						eb.val(Capabilities.createPubWithForm),
 						"in",
 						eb.selectFrom("capabilities").select("capability")
 					),
-					eb.and([
-						eb(
-							eb.val(Capabilities.createPubWithForm),
-							"in",
-							eb.selectFrom("capabilities").select("capability")
-						),
-						eb.or([
-							eb("forms.id", "in", eb.selectFrom("community_ms").select("formId")),
-						]),
-					]),
-				])
-			)
-			.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
-			.orderBy("forms.isDefault desc")
-			.orderBy("forms.updatedAt desc")
-	);
+					eb.or([eb("forms.id", "in", eb.selectFrom("community_ms").select("formId"))]),
+				]),
+			])
+		)
+		.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
+		.orderBy("forms.isDefault desc")
+		.orderBy("forms.updatedAt desc");
 
 export const getAuthorizedCreateForms = ({
 	userId,
@@ -361,7 +357,9 @@ export const getAuthorizedCreateForms = ({
 	communityId: CommunitiesId;
 	pubTypeId: PubTypesId;
 }) =>
-	authorizedCreateFormsBase({ userId, communityId }).qb.where("forms.pubTypeId", "=", pubTypeId);
+	autoCache(
+		authorizedCreateFormsBase({ userId, communityId }).where("forms.pubTypeId", "=", pubTypeId)
+	);
 
 export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 	autoCache(
@@ -473,10 +471,12 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 	);
 
 export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId) => {
-	return authorizedCreateFormsBase({ userId, communityId })
-		.qb.innerJoin("pub_types", "forms.pubTypeId", "pub_types.id")
-		.clearSelect()
-		.clearOrderBy()
-		.select(["pub_types.id", "pub_types.name"])
-		.distinct();
+	return autoCache(
+		authorizedCreateFormsBase({ userId, communityId })
+			.innerJoin("pub_types", "forms.pubTypeId", "pub_types.id")
+			.clearSelect()
+			.clearOrderBy()
+			.select(["pub_types.id", "pub_types.name"])
+			.distinct()
+	);
 };
