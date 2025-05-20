@@ -40,7 +40,7 @@ console.log(initialHtml);
 export const Primary: Story = {
 	args: {
 		placeholder: "Helloooo",
-		initialHtml,
+		initialDoc: baseSchema.nodeFromJSON(initialDoc),
 		pubTypes: initialTypes,
 		pubId,
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -56,7 +56,7 @@ export const Primary: Story = {
 
 export const Blank: Story = {
 	args: {
-		initialHtml: undefined,
+		initialDoc: undefined,
 		pubTypes: initialTypes,
 		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -83,7 +83,7 @@ export const Blank: Story = {
 
 export const WithImage: Story = {
 	args: {
-		initialHtml: prosemirrorToHTML(baseSchema.nodeFromJSON(docWithImage)),
+		initialDoc: baseSchema.nodeFromJSON(docWithImage),
 		pubTypes: initialTypes,
 		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -124,7 +124,11 @@ export const ParseDOM: Story = {
 		const [state, setState] = useState<EditorState | undefined>(undefined);
 		return (
 			<>
-				<ContextEditor {...args} initialHtml={exampleHtml} onChange={setState} />
+				<ContextEditor
+					{...args}
+					initialDoc={baseSchema.nodeFromJSON(exampleHtml)}
+					onChange={setState}
+				/>
 				<pre className="text-xs" data-testid="prosemirror-state">
 					{state ? JSON.stringify(state?.doc.toJSON(), null, 2) : "{}"}
 				</pre>

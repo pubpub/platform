@@ -46,11 +46,6 @@ export const Primary: Story = {
 		upload: (filename) => generateSignedAssetUploadUrl(`${pubId}/${filename}`),
 	},
 	render: (args) => {
-		return (
-			<EditorDash
-				{...args}
-				initialHtml={prosemirrorToHTML(baseSchema.nodeFromJSON(initialDoc))}
-			/>
-		);
+		return <EditorDash {...args} initialDoc={baseSchema.nodeFromJSON(initialDoc)} />;
 	},
 };

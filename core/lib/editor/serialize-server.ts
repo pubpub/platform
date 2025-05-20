@@ -2,6 +2,10 @@ import { baseSchema } from "context-editor/schemas";
 import { JSDOM } from "jsdom";
 import { DOMParser, DOMSerializer, Node } from "prosemirror-model";
 
+import { CoreSchemaType } from "db/public";
+
+import { serializeProseMirrorDoc } from "../fields/richText";
+
 export const prosemirrorToHTML = (node: Node | { type: "doc"; content: any[] }): string => {
 	const dom = new JSDOM();
 	const document = dom.window.document;
@@ -31,4 +35,39 @@ export const htmlToProsemirror = (html: string) => {
 	const node = DOMParser.fromSchema(baseSchema).parse(dom.window.document);
 
 	return node;
+};
+
+/**
+ * transforms all richtext values in a pub from html to prosemirror trees
+ *
+ * only up to depth 1
+ */
+export const transformRichTextValuesToProsemirror = <
+	T extends {
+		values: Array<{
+			value: unknown;
+			schemaName: CoreSchemaType;
+		}>;
+	},
+>(
+	pub: T,
+	opts?: {
+		toJson?: boolean;
+	}
+): T => {
+	return {
+		...pub,
+		values: pub.values.map((value) => {
+			if (value.schemaName === CoreSchemaType.RichText && typeof value.value === "string") {
+				const node = htmlToProsemirror(value.value);
+
+				const maybeJSON = opts?.toJson ? serializeProseMirrorDoc(node) : node;
+				return {
+					...value,
+					value: maybeJSON,
+				};
+			}
+			return value;
+		}),
+	};
 };

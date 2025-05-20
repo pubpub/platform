@@ -11,13 +11,12 @@ import "katex/dist/katex.min.css";
 import type { Node } from "prosemirror-model";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 
-import React, { memo, useEffect, useId, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { ProseMirror, ProseMirrorDoc, reactKeys } from "@handlewithcare/react-prosemirror";
 import { EditorState } from "prosemirror-state";
 import { fixTables } from "prosemirror-tables";
 
 import { cn } from "utils";
-import { tryCatch } from "utils/try-catch";
 
 import { AttributePanel } from "./components/AttributePanel";
 import { MenuBar } from "./components/MenuBar";
@@ -25,14 +24,17 @@ import SuggestPanel from "./components/SuggestPanel";
 import { basePlugins } from "./plugins";
 import { baseSchema } from "./schemas";
 import { EMPTY_DOC } from "./utils/emptyDoc";
-import { htmlToProsemirror } from "./utils/serialize";
+
+export interface ContextEditorRef {
+	getCurrentState: () => EditorState | null;
+}
 
 export interface ContextEditorProps {
 	placeholder?: string;
 	className?: string /* classname for the editor view */;
 	disabled?: boolean;
-	// initialDoc?: Node;
-	initialHtml?: string;
+	initialDoc?: Node;
+	// initialHtml?: string;
 	pubId: string /* id of the current pub whose field is being directly edited */;
 	pubTypeId: string /* id of the current pubType of the pub whose field is being directly edited */;
 	pubTypes: object /* pub types in given context */;
@@ -40,10 +42,10 @@ export interface ContextEditorProps {
 	getPubById: (
 		id: string
 	) => {} | undefined /* function to get a pub, both for autocomplete, and for id? */;
-	onChange: (
+	onChange?: (
 		state: EditorState,
-		initialDoc: Node,
-		initialHtml?: string
+		initialDoc: Node
+		// initialHtml?: string
 	) => void /* Function that passes up editorState so parent can handle onSave, etc */;
 	atomRenderingComponent: ForwardRefExoticComponent<
 		NodeViewComponentProps & RefAttributes<any>
@@ -66,89 +68,91 @@ const initSuggestProps: SuggestProps = {
 	filter: "",
 };
 
-const parseHtmlToDoc = (html: string) => {
-	const [err, prosemirrorNode] = tryCatch(() => htmlToProsemirror(html));
-	return [err, prosemirrorNode ?? getEmptyDoc()] as const;
-};
-
 const getEmptyDoc = () => baseSchema.nodeFromJSON(EMPTY_DOC);
 
-const ContextEditor = memo(function ContextEditor(props: ContextEditorProps) {
-	const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
+const ContextEditor = React.forwardRef<ContextEditorRef, ContextEditorProps>(
+	function ContextEditor(props, ref) {
+		const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
 
-	const [parseError, initialDoc] = useMemo(() => {
-		if (!props.initialHtml) {
-			return [undefined, getEmptyDoc()];
-		}
+		const doc = props.initialDoc ?? getEmptyDoc();
 
-		return parseHtmlToDoc(props.initialHtml);
-	}, [props.initialHtml]);
-
-	const [editorState, setEditorState] = useState(() => {
-		let state = EditorState.create({
-			doc: initialDoc,
-			schema: baseSchema,
-			plugins: [...basePlugins(baseSchema, props, suggestData, setSuggestData), reactKeys()],
+		const [editorState, setEditorState] = useState(() => {
+			let state = EditorState.create({
+				doc,
+				schema: baseSchema,
+				plugins: [
+					...basePlugins(baseSchema, props, suggestData, setSuggestData),
+					reactKeys(),
+				],
+			});
+			const fix = fixTables(state);
+			if (fix) {
+				state = state.apply(fix.setMeta("addToHistory", false));
+			}
+			return state;
 		});
-		const fix = fixTables(state);
-		if (fix) {
-			state = state.apply(fix.setMeta("addToHistory", false));
-		}
-		return state;
-	});
 
-	const nodeViews = useMemo(() => {
-		return { contextAtom: props.atomRenderingComponent };
-	}, [props.atomRenderingComponent]);
+		// this is slightly evil and should not be taken as an example of good api design
+		useImperativeHandle(
+			ref,
+			() => ({
+				getCurrentState: () => editorState,
+			}),
+			[editorState]
+		);
 
-	useEffect(() => {
-		props.onChange(editorState, initialDoc, props.initialHtml);
-	}, [editorState]);
+		const nodeViews = useMemo(() => {
+			return { contextAtom: props.atomRenderingComponent };
+		}, [props.atomRenderingComponent]);
 
-	const containerRef = useRef<HTMLDivElement>(null);
-	const containerId = useId();
+		useEffect(() => {
+			console.log("useEffect");
+			if (!props.onChange) {
+				return;
+			}
+			console.log("onChange");
+			props.onChange(editorState, doc);
+		}, [editorState]);
 
-	if (parseError) {
+		const containerRef = useRef<HTMLDivElement>(null);
+		const containerId = useId();
+
 		return (
-			<div className="rounded-md border border-red-300 bg-red-50 p-4 text-red-800">
-				<p className="font-medium">unable to parse document</p>
-				<p className="mt-1 text-sm text-red-600">{parseError.message}</p>
+			<div
+				id={containerId}
+				ref={containerRef}
+				className={cn("relative isolate max-w-screen-sm", {
+					"editor-disabled": props.disabled,
+				})}
+			>
+				<ProseMirror
+					state={editorState}
+					dispatchTransaction={(tr) => {
+						setEditorState((s) => s.apply(tr));
+					}}
+					nodeViews={nodeViews}
+					editable={() => !props.disabled}
+					className={cn("font-serif", props.className)}
+				>
+					{props.hideMenu ? null : (
+						<div className="sticky top-0 z-10">
+							<MenuBar upload={props.upload} />
+						</div>
+					)}
+					<ProseMirrorDoc />
+					<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
+					<SuggestPanel
+						suggestData={suggestData}
+						setSuggestData={setSuggestData}
+						containerRef={containerRef}
+					/>
+				</ProseMirror>
 			</div>
 		);
 	}
+);
 
-	return (
-		<div
-			id={containerId}
-			ref={containerRef}
-			className={cn("relative isolate max-w-screen-sm", {
-				"editor-disabled": props.disabled,
-			})}
-		>
-			<ProseMirror
-				state={editorState}
-				dispatchTransaction={(tr) => {
-					setEditorState((s) => s.apply(tr));
-				}}
-				nodeViews={nodeViews}
-				editable={() => !props.disabled}
-				className={cn("font-serif", props.className)}
-			>
-				{props.hideMenu ? null : (
-					<div className="sticky top-0 z-10">
-						<MenuBar upload={props.upload} />
-					</div>
-				)}
-				<ProseMirrorDoc />
-				<AttributePanel menuHidden={!!props.hideMenu} containerRef={containerRef} />
-				<SuggestPanel
-					suggestData={suggestData}
-					setSuggestData={setSuggestData}
-					containerRef={containerRef}
-				/>
-			</ProseMirror>
-		</div>
-	);
-});
+// to be sure
+ContextEditor.displayName = "ContextEditor";
 
 export default ContextEditor;

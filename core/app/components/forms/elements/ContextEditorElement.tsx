@@ -1,11 +1,12 @@
 "use client";
 
+import type { ContextEditorRef } from "context-editor";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import { Value } from "@sinclair/typebox/value";
-import { EMPTY_DOC } from "context-editor";
-import { docHasChanged } from "context-editor/utils";
+import { baseSchema } from "context-editor/schemas";
+import { Node } from "prosemirror-model";
 import { useFormContext } from "react-hook-form";
 import { richTextInputConfigSchema } from "schemas";
 
@@ -13,7 +14,6 @@ import { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import type { ElementProps } from "../types";
-import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
@@ -29,13 +29,35 @@ const EditorFormElement = memo(
 		help?: string;
 	}) {
 		const formElementToggle = useFormElementToggleContext();
-		const { pubs, pubTypes, pubId, pubTypeId } = useContextEditorContext();
+		const { pubs, pubTypes, pubId, pubTypeId, registerGetter } = useContextEditorContext();
 
 		const f = useMemo(() => {
 			return field;
 		}, []);
 
-		const [initialHtml] = useState(f.value);
+		const contextEditorRef = useRef<ContextEditorRef>(null);
+
+		useEffect(() => {
+			registerGetter(f.name, contextEditorRef);
+		}, []);
+
+		const initialDoc = useMemo(() => {
+			if (f.value instanceof Node) {
+				return f.value;
+			}
+
+			return baseSchema.nodeFromJSON(f.value);
+		}, []);
+
+		const form = useFormContext();
+
+		const handleChange = useCallback(() => {
+			// we are simply manually setting the value to _something_ to make the field dirty
+			form.setValue(f.name, "some stupid value that really should be handled manually", {
+				shouldDirty: true,
+				shouldTouch: true,
+			});
+		}, []);
 
 		if (!pubId || !pubTypeId) {
 			return <></>;
@@ -48,22 +70,15 @@ const EditorFormElement = memo(
 				<div className="w-full">
 					<FormControl>
 						<ContextEditorClient
+							ref={contextEditorRef}
 							pubId={pubId}
 							pubs={pubs}
 							pubTypes={pubTypes}
 							pubTypeId={pubTypeId}
-							onChange={(state, initialDoc, initialHtml) => {
-								// Control changing the state more granularly or else the dirty field will trigger on load
-								// Since we can't control the dirty state directly, even this workaround does not handle the case of
-								// if someone changes the doc but then reverts it--that will still count as dirty since react-hook-form is tracking that
-								const hasChanged = docHasChanged(initialDoc ?? EMPTY_DOC, state);
-								if (hasChanged) {
-									f.onChange(serializeProseMirrorDoc(state.doc));
-								}
-							}}
-							initialHtml={initialHtml}
+							initialDoc={initialDoc}
 							disabled={disabled}
 							className="max-h-96 overflow-scroll"
+							onChange={handleChange}
 						/>
 					</FormControl>
 				</div>

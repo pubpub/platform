@@ -33,7 +33,9 @@ import { useFormElementToggleContext } from "~/app/components/forms/FormElementT
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { isRelatedValue } from "../../forms/types";
 import { RELATED_PUB_SLUG } from "./constants";
 
@@ -309,6 +311,8 @@ export const PubEditorClient = ({
 		reValidateMode: "onBlur",
 	});
 
+	const { registeredGetters } = useContextEditorContext();
+
 	const handleSubmit = useCallback(
 		async (
 			formValues: FieldValues & StaticSchema,
@@ -330,6 +334,13 @@ export const PubEditorClient = ({
 				defaultValues,
 				arrayDefaults,
 			});
+
+			// this is evil, dont try this at home
+			for (const [slug, getter] of Object.entries(registeredGetters)) {
+				const value = getter.current?.getCurrentState();
+
+				newValues[slug] = value && serializeProseMirrorDoc(value.doc);
+			}
 
 			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({
 				evt,
