@@ -163,7 +163,8 @@ export const updatePub = defineServerAction(async function updatePub({
 				values: pubValues as Record<string, JsonValue>,
 			});
 
-		const normalizedValues = normalizePubValues(processedVals);
+		const normalizedValues = await normalizePubValues(processedVals, community.id);
+
 		for (const { slug, value, relatedPubId } of normalizedValues) {
 			if (relatedPubId) {
 				updateQuery.relate(slug, value, relatedPubId, {
