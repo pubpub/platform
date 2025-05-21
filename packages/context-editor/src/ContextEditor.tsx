@@ -58,7 +58,7 @@ export interface ContextEditorProps {
 	 * Allows you to retrieve the current state of the editor from the parent component,
 	 * rather than having to do it through `onChange` (which usually causes more re-renders)
 	 */
-	getterRef: RefObject<ContextEditorGetter | null>;
+	getterRef?: RefObject<ContextEditorGetter | null>;
 }
 
 export interface SuggestProps {
