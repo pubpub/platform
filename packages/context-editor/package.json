@@ -8,6 +8,7 @@
 		".": "./dist/context-editor.js",
 		"./utils": "./dist/context-editor-utils.js",
 		"./schemas": "./dist/context-editor-schemas.js",
+		"./utils/serialize": "./dist/context-editor-utils-serialize.js",
 		"./package.json": "./package.json",
 		"./style.css": {
 			"module": "./src/style.css",
@@ -134,7 +135,8 @@
 		"entrypoints": [
 			"index.ts",
 			"schemas/index.ts",
-			"utils/index.ts"
+			"utils/index.ts",
+			"utils/serialize.ts"
 		]
 	},
 	"prettier": "@pubpub/prettier-config"

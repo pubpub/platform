@@ -4,12 +4,12 @@ import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
 
-import { htmlToProsemirror, prosemirrorToHTML } from "../editor/serialize-server";
+import { htmlToProsemirrorServer, prosemirrorToHTMLServer } from "../editor/serialize-server";
 
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
 		if (typeof value === "string") {
-			const node = htmlToProsemirror(value);
+			const node = htmlToProsemirrorServer(value);
 
 			node.check();
 			// return renderNodeToHTML(node);
@@ -21,7 +21,7 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 		// TODO: reenable this
 		node.check();
 
-		const html = prosemirrorToHTML(node);
+		const html = prosemirrorToHTMLServer(node);
 
 		return { success: true, value: html };
 	} catch (e) {
