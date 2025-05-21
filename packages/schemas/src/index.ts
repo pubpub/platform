@@ -5,6 +5,7 @@ import { CoreSchemaType } from "db/public";
 import * as Schemas from "./schemas";
 import {
 	Boolean,
+	Color,
 	DateTime,
 	Email,
 	FileUpload,
@@ -19,38 +20,28 @@ import {
 	Vector3,
 } from "./schemas";
 
-export function getJsonSchemaByCoreSchemaType(coreSchemaType: CoreSchemaType, config?: unknown) {
-	switch (coreSchemaType) {
-		case CoreSchemaType.Boolean:
-			return Boolean;
-		case CoreSchemaType.DateTime:
-			return DateTime;
-		case CoreSchemaType.Email:
-			return Email;
-		case CoreSchemaType.FileUpload:
-			return FileUpload;
-		case CoreSchemaType.MemberId:
-			return MemberId;
-		case CoreSchemaType.Null:
-			return Null;
-		case CoreSchemaType.Number:
-			return Number;
-		case CoreSchemaType.NumericArray:
-			return getNumericArrayWithMinMax(config);
-		case CoreSchemaType.RichText:
-			return RichText;
-		case CoreSchemaType.String:
-			return String;
-		case CoreSchemaType.StringArray:
-			return getStringArrayWithMinMax(config);
-		case CoreSchemaType.URL:
-			return URL;
-		case CoreSchemaType.Vector3:
-			return Vector3;
-		default:
-			const _exhaustiveCheck: never = coreSchemaType;
-			return _exhaustiveCheck;
-	}
+const schemaMap = {
+	[CoreSchemaType.Boolean]: () => Boolean,
+	[CoreSchemaType.DateTime]: () => DateTime,
+	[CoreSchemaType.Email]: () => Email,
+	[CoreSchemaType.FileUpload]: () => FileUpload,
+	[CoreSchemaType.MemberId]: () => MemberId,
+	[CoreSchemaType.Null]: () => Null,
+	[CoreSchemaType.Number]: () => Number,
+	[CoreSchemaType.NumericArray]: (config) => getNumericArrayWithMinMax(config),
+	[CoreSchemaType.RichText]: () => RichText,
+	[CoreSchemaType.String]: () => String,
+	[CoreSchemaType.StringArray]: (config) => getStringArrayWithMinMax(config),
+	[CoreSchemaType.URL]: () => URL,
+	[CoreSchemaType.Vector3]: () => Vector3,
+	[CoreSchemaType.Color]: () => Color,
+} as const satisfies Record<CoreSchemaType, (config?: unknown) => (typeof Schemas)[CoreSchemaType]>;
+
+export function getJsonSchemaByCoreSchemaType<C extends CoreSchemaType>(
+	coreSchemaType: C,
+	config?: unknown
+) {
+	return schemaMap[coreSchemaType](config) as ReturnType<(typeof schemaMap)[C]>;
 }
 
 export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = (typeof Schemas)[C];
@@ -85,6 +76,8 @@ export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) 
 			return "";
 		case CoreSchemaType.Vector3:
 			return [0, 50, 100];
+		case CoreSchemaType.Color:
+			return undefined;
 		default:
 			const _exhaustiveCheck: never = coreSchemaType;
 			return _exhaustiveCheck;

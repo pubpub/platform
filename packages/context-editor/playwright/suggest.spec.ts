@@ -55,7 +55,7 @@ test.describe("atom renderer", () => {
 		await test.step("set image", async () => {
 			const imageName = "test image";
 			await page.getByTestId("attribute-panel").waitFor();
-			await page.getByText("Attribute").waitFor();
+			await page.getByText("Atom Data").waitFor();
 			await page.getByRole("textbox", { name: "rd:source" }).fill("/image1.jpeg");
 			await page.getByRole("textbox", { name: "rd:alt" }).fill(imageName);
 			await page.locator(".ProseMirror").getByRole("img", { name: imageName }).waitFor();

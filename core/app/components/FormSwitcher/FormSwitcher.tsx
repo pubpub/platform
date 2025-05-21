@@ -1,6 +1,7 @@
 "use client";
 
-import { useQueryState } from "nuqs";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import {
 	Select,
@@ -31,14 +32,16 @@ export const FormSwitcher = ({
 }) => {
 	const defaultForm = forms.find((form) => form.isDefault);
 
-	const [currentFormSlug, setCurrentFormSlug] = useQueryState(formSwitcherUrlParam, {
-		shallow: false,
-		defaultValue: defaultForm?.slug ?? forms[0].slug,
-	});
+	const [selectedFormSlug, setSelectedFormSlug] = useState(defaultFormSlug ?? forms[0].slug);
+	useEffect(() => {
+		if (!params.get(formSwitcherUrlParam)) {
+			const newParams = new URLSearchParams(params);
+			newParams.set(formSwitcherUrlParam, selectedFormSlug);
+			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
+		}
+	}, []);
 
-	const currentForm = forms.find((form) => form.slug === currentFormSlug);
-
-	if (!forms.length || forms.length === 1 || !currentForm) {
+	if (!forms.length) {
 		return null;
 	}
 

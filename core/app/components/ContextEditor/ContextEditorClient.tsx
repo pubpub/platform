@@ -3,10 +3,9 @@ import type { ContextEditorProps } from "context-editor";
 import { useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 
-import type { PubsId, PubTypesId } from "db/public";
+import type { PubsId, PubTypes, PubTypesId } from "db/public";
 import { Skeleton } from "ui/skeleton";
 
-import type { GetPubTypesResult } from "~/lib/server";
 import { upload } from "../forms/actions";
 import { ContextAtom } from "./AtomRenderer";
 
@@ -32,7 +31,7 @@ export const ContextEditorClient = ({
 	hideMenu,
 }: {
 	pubs: ContextEditorPub[];
-	pubTypes: GetPubTypesResult;
+	pubTypes: Pick<PubTypes, "id" | "name">[];
 	pubId: PubsId;
 	pubTypeId: PubTypesId;
 	// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor

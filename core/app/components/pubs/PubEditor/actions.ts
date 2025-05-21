@@ -47,6 +47,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	const { user } = loginData;
 
 	if (!formSlug) {
+		logger.debug({ msg: "Pub creation error: form slug not sent to action", user, props });
 		return ApiError.UNAUTHORIZED;
 	}
 
@@ -66,12 +67,21 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 	]);
 
 	if (!form) {
+		logger.debug({ msg: "Pub creation error: form not found", user, props });
 		return ApiError.UNAUTHORIZED;
 	}
 
 	const isPublicForm = form.access === FormAccessType.public;
 
 	if (!canCreatePub && !isPublicForm) {
+		logger.debug({
+			msg: "Pub creation error: user not authorized",
+			canCreatePub,
+			isPublicForm,
+			form,
+			user,
+			props,
+		});
 		return ApiError.UNAUTHORIZED;
 	}
 

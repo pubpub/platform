@@ -437,6 +437,66 @@
 					"text": " was assessed using high-resolution time-lapse microscopy and by quantifying mitotic activity."
 				}
 			]
+		},
+		{
+			"type": "table",
+			"attrs": {
+				"id": null,
+				"class": null,
+				"colwidths": [100, 100, 100],
+				"colgroups": [1, 1, 1],
+				"cellspacing": 0,
+				"cellpadding": 0
+			},
+			"content": [
+				{
+					"type": "table_row",
+					"content": [
+						{
+							"type": "table_cell",
+							"content": [
+								{
+									"type": "paragraph",
+									"content": [
+										{
+											"type": "text",
+											"text": "Control Group"
+										}
+									]
+								}
+							]
+						},
+						{
+							"type": "table_cell",
+							"content": [
+								{
+									"type": "paragraph",
+									"content": [
+										{
+											"type": "text",
+											"text": "Experimental Group"
+										}
+									]
+								}
+							]
+						},
+						{
+							"type": "table_cell",
+							"content": [
+								{
+									"type": "paragraph",
+									"content": [
+										{
+											"type": "text",
+											"text": "Significance"
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
 		}
 	]
 }

@@ -10,6 +10,7 @@ import {
 	ImagePlus,
 	Link,
 	Mail,
+	Palette,
 	Type,
 	User,
 } from "lucide-react";
@@ -74,5 +75,9 @@ export const SCHEMA_TYPES_WITH_ICONS: Record<
 	[CoreSchemaType.RichText]: {
 		description: "Rich text of any length",
 		icon: BookType,
+	},
+	[CoreSchemaType.Color]: {
+		description: "A color",
+		icon: Palette,
 	},
 } as const;
