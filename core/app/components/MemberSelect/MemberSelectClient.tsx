@@ -95,6 +95,9 @@ export function MemberSelectClient({
 	}, 400);
 
 	const onInputValueChange = (value: string) => {
+		if (value === "") {
+			setSelectedUser(undefined);
+		}
 		setInputValue(value);
 		updateSearch(value);
 	};
@@ -130,7 +133,12 @@ export function MemberSelectClient({
 									onUserAdded={onUserAdded}
 								/>
 							}
-							onInputValueChange={onInputValueChange}
+							onInputValueChange={(val) => {
+								onInputValueChange(val);
+								if (val === "") {
+									field.onChange(undefined);
+								}
+							}}
 							onValueChange={async (option) => {
 								const user = users.find((user) => user.id === option.value);
 								if (!user) {

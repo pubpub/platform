@@ -42,7 +42,7 @@ export const AutoComplete = ({
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	const [isOpen, setOpen] = useState(false);
-	const [selected, setSelected] = useState<Option>(value as Option);
+	const [selected, setSelected] = useState<Option|undefined>(value as Option);
 	const [inputValue, setInputValue] = useState<string>(value?.label || "");
 
 	const _setInputValue = useCallback(
@@ -79,6 +79,10 @@ export const AutoComplete = ({
 				}
 			}
 
+			if (input.value === "") {
+				setSelected(undefined);
+			}
+
 			if (event.key === "Escape") {
 				close();
 			}
@@ -108,7 +112,7 @@ export const AutoComplete = ({
 		const handler = (event: MouseEvent) => {
 			if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
 				close();
-				if (selected) {
+				if (selected && inputValue !== "") {
 					_setInputValue(selected.label);
 				}
 			}
@@ -119,7 +123,7 @@ export const AutoComplete = ({
 		return () => {
 			document.removeEventListener("click", handler);
 		};
-	}, [selected, _setInputValue, close]);
+	}, [selected, _setInputValue, close, inputValue]);
 
 	return (
 		<CommandPrimitive onKeyDown={handleKeyDown} ref={commandRef}>
