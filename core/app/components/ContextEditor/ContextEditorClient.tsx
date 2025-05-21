@@ -12,8 +12,6 @@ import { ContextAtom } from "./AtomRenderer";
 
 import "context-editor/style.css";
 
-import type { ContextEditorGetter } from "context-editor";
-
 import React from "react";
 
 import type { ContextEditorPub } from "./ContextEditorContext";
@@ -24,57 +22,54 @@ const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.C
 	loading: () => <Skeleton className="h-16 w-full" />,
 });
 
-export const ContextEditorClient = React.forwardRef<
-	ContextEditorGetter,
-	{
+export const ContextEditorClient = (
+	props: {
 		pubs: ContextEditorPub[];
 		pubTypes: GetPubTypesResult;
 		pubId: PubsId;
 		pubTypeId: PubTypesId;
 		// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
-	} & Pick<ContextEditorProps, "onChange" | "initialDoc" | "className" | "disabled" | "hideMenu">
->(
-	(
-		{ pubs, pubTypes, pubId, pubTypeId, className, initialDoc, onChange, disabled, hideMenu },
-		ref
-	) => {
-		const runUpload = useServerAction(upload);
+	} & Pick<
+		ContextEditorProps,
+		"onChange" | "initialDoc" | "className" | "disabled" | "hideMenu" | "getterRef"
+	>
+) => {
+	const runUpload = useServerAction(upload);
 
-		const getPubs = useCallback(
-			(filter: string) => {
-				return new Promise<any[]>((resolve, reject) => {
-					resolve(pubs);
-				});
-			},
-			[pubs]
+	const getPubs = useCallback(
+		(filter: string) => {
+			return new Promise<any[]>((resolve, reject) => {
+				resolve(props.pubs);
+			});
+		},
+		[props.pubs]
+	);
+
+	const signedUploadUrl = (fileName: string) => {
+		return runUpload(props.pubId, fileName);
+	};
+
+	const memoEditor = useMemo(() => {
+		return (
+			<ContextEditor
+				pubId={props.pubId}
+				pubTypeId={props.pubTypeId}
+				pubTypes={props.pubTypes}
+				getPubs={getPubs}
+				getPubById={() => {
+					return {};
+				}}
+				atomRenderingComponent={ContextAtom}
+				onChange={props.onChange}
+				initialDoc={props.initialDoc}
+				disabled={props.disabled}
+				className={props.className}
+				hideMenu={props.hideMenu}
+				upload={signedUploadUrl}
+				getterRef={props.getterRef}
+			/>
 		);
+	}, [props.pubs, props.pubTypes, props.disabled]);
 
-		const signedUploadUrl = (fileName: string) => {
-			return runUpload(pubId, fileName);
-		};
-
-		const memoEditor = useMemo(() => {
-			return (
-				<ContextEditor
-					pubId={pubId}
-					pubTypeId={pubTypeId}
-					pubTypes={pubTypes}
-					getPubs={getPubs}
-					getPubById={() => {
-						return {};
-					}}
-					atomRenderingComponent={ContextAtom}
-					onChange={onChange}
-					initialDoc={initialDoc}
-					disabled={disabled}
-					className={className}
-					hideMenu={hideMenu}
-					upload={signedUploadUrl}
-					ref={ref}
-				/>
-			);
-		}, [pubs, pubTypes, disabled]);
-
-		return memoEditor;
-	}
-);
+	return memoEditor;
+};

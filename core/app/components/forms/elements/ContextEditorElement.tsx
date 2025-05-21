@@ -92,7 +92,7 @@ const EditorFormElement = memo(
 				<div className="w-full">
 					<FormControl>
 						<ContextEditorClient
-							ref={contextEditorRef}
+							getterRef={contextEditorRef}
 							pubId={pubId}
 							pubs={pubs}
 							pubTypes={pubTypes}
