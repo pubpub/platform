@@ -88,19 +88,13 @@ export const renderFormInviteLink = async (
 	},
 	trx = db
 ) => {
-	const existingUserInput = recipient.id
-		? { id: recipient.user.id }
-		: { email: recipient.email! };
-
-	const existingUser = await getUser(existingUserInput, trx).executeTakeFirst();
-
-	if (recipient.id && !existingUser) {
-		throw new Error(`User ${existingUserInput.id} not found`);
-	}
-
-	if (existingUser) {
-		await grantFormAccess({ userId: existingUser.id, communityId, pubId, slug: formSlug });
-		return createFormInviteLink({ userId: existingUser.id, formSlug, communityId, pubId }, trx);
+	// a member is being invited
+	if (recipient.id) {
+		await grantFormAccess({ userId: recipient.user.id, communityId, pubId, slug: formSlug });
+		return createFormInviteLink(
+			{ userId: recipient.user.id, formSlug, communityId, pubId },
+			trx
+		);
 	}
 
 	const baseInvite = InviteService.inviteUser({
