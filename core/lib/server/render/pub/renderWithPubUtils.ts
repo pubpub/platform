@@ -19,6 +19,7 @@ import { autoCache } from "~/lib/server/cache/autoCache";
 import { getCommunitySlug } from "../../cache/getCommunitySlug";
 import { createFormInviteLink, grantFormAccess } from "../../form";
 import { InviteService } from "../../invites/InviteService";
+import { getUser } from "../../user";
 
 export type RenderWithPubRel = "self";
 
@@ -87,13 +88,19 @@ export const renderFormInviteLink = async (
 	},
 	trx = db
 ) => {
-	// this feels weird to do here
-	if (recipient.id) {
-		await grantFormAccess({ userId: recipient.user.id, communityId, pubId, slug: formSlug });
-		return createFormInviteLink(
-			{ userId: recipient.user.id, formSlug, communityId, pubId },
-			trx
-		);
+	const existingUserInput = recipient.id
+		? { id: recipient.user.id }
+		: { email: recipient.email! };
+
+	const existingUser = await getUser(existingUserInput, trx).executeTakeFirst();
+
+	if (recipient.id && !existingUser) {
+		throw new Error(`User ${existingUserInput.id} not found`);
+	}
+
+	if (existingUser) {
+		await grantFormAccess({ userId: existingUser.id, communityId, pubId, slug: formSlug });
+		return createFormInviteLink({ userId: existingUser.id, formSlug, communityId, pubId }, trx);
 	}
 
 	const baseInvite = InviteService.inviteUser({
