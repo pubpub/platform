@@ -297,7 +297,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 	});
 
 	// happy path
-	test("Invites without creating a new user", async () => {
+	test("Invites can be sent to existing users and they should be redirected to the form immediately, not to the invite page", async () => {
 		await test.step("admin sends invite to non-existing user", async () => {
 			const pubDetailsPage = new PubDetailsPage(
 				page,
@@ -325,7 +325,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 
 			await page.goto(decodedUrl);
 
-			await page.waitForURL(/\/invite/);
+			await page.waitForURL(/\/forms/);
 		});
 	});
 });
