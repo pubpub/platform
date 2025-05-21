@@ -327,6 +327,7 @@ const authorizedCreateFormsBase = ({
 				.select("capability")
 		)
 		.selectFrom("forms")
+		.where("forms.communityId", "=", communityId)
 		.where((eb) =>
 			eb.or([
 				eb(
