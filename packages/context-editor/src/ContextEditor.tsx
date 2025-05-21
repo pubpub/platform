@@ -25,7 +25,7 @@ import { basePlugins } from "./plugins";
 import { baseSchema } from "./schemas";
 import { EMPTY_DOC } from "./utils/emptyDoc";
 
-export interface ContextEditorRef {
+export interface ContextEditorGetter {
 	getCurrentState: () => EditorState | null;
 }
 
@@ -70,7 +70,7 @@ const initSuggestProps: SuggestProps = {
 
 const getEmptyDoc = () => baseSchema.nodeFromJSON(EMPTY_DOC);
 
-const ContextEditor = React.forwardRef<ContextEditorRef, ContextEditorProps>(
+const ContextEditor = React.forwardRef<ContextEditorGetter, ContextEditorProps>(
 	function ContextEditor(props, ref) {
 		const [suggestData, setSuggestData] = useState<SuggestProps>(initSuggestProps);
 
@@ -93,6 +93,10 @@ const ContextEditor = React.forwardRef<ContextEditorRef, ContextEditorProps>(
 		});
 
 		// this is slightly evil and should not be taken as an example of good api design
+		// it basically allows you to retrieve the value of the editor from the parent component
+		// whenever you want, rather than having to do it through `onChange` (which would also cause a re-render)
+		// this makes (some) sense in this case bc the editor is almost fully uncontrolled:
+		// you cannot pass in an `EditorState` that holds the actual value
 		useImperativeHandle(
 			ref,
 			() => ({
@@ -106,11 +110,9 @@ const ContextEditor = React.forwardRef<ContextEditorRef, ContextEditorProps>(
 		}, [props.atomRenderingComponent]);
 
 		useEffect(() => {
-			console.log("useEffect");
 			if (!props.onChange) {
 				return;
 			}
-			console.log("onChange");
 			props.onChange(editorState, doc);
 		}, [editorState]);
 

@@ -12,7 +12,7 @@ import { ContextAtom } from "./AtomRenderer";
 
 import "context-editor/style.css";
 
-import type { ContextEditorRef } from "context-editor";
+import type { ContextEditorGetter } from "context-editor";
 
 import React from "react";
 
@@ -25,7 +25,7 @@ const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.C
 });
 
 export const ContextEditorClient = React.forwardRef<
-	ContextEditorRef,
+	ContextEditorGetter,
 	{
 		pubs: ContextEditorPub[];
 		pubTypes: GetPubTypesResult;

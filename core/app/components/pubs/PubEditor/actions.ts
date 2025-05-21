@@ -49,6 +49,8 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 
 	const isPublicForm = form?.access === FormAccessType.public;
 
+	console.dir(createPubProps.body.values, { depth: 5 });
+
 	if (!canCreatePub && !canCreateFromForm && !isPublicForm) {
 		return ApiError.UNAUTHORIZED;
 	}

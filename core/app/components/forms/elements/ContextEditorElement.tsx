@@ -1,6 +1,6 @@
 "use client";
 
-import type { ContextEditorRef } from "context-editor";
+import type { ContextEditorGetter } from "context-editor";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
 import { memo, useCallback, useEffect, useMemo, useRef } from "react";
@@ -18,6 +18,24 @@ import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
+/**
+ * Symbol to use in lieu of the real value for the context editor, to signal that this value should not be used
+ * and should be manually read instead
+ */
+export const EvilContextEditorSymbol = Symbol("EvilContextEditor");
+
+/**
+ * Brief explanation of what's going on here:
+ *
+ * Contraints:
+ * - Constantly doing `field.onChange(giganticProsemirrorDoc)` is quite slow
+ * - We still want to be able to use `formState.isDirty` to determine if the form has been changed
+ *
+ * Solution:
+ * - Don't use `field.onChange`, instead manually read the value from the context editor using the `contextEditorRef`,
+ * see the body of `packages/context-editor/src/ContextEditor.tsx` for how this is implemented (using `useImperativeHandle`)
+ * - To force `react-hook-form` to see the field as dirty, we set the value to a custom symbol. this way, it can never be equal to the default value, and any change will count as "dirty" (even if you revert it, which is fine)
+ */
 const EditorFormElement = memo(
 	function EditorFormElement({
 		field,
@@ -35,7 +53,7 @@ const EditorFormElement = memo(
 			return field;
 		}, []);
 
-		const contextEditorRef = useRef<ContextEditorRef>(null);
+		const contextEditorRef = useRef<ContextEditorGetter>(null);
 
 		useEffect(() => {
 			registerGetter(f.name, contextEditorRef);
@@ -57,7 +75,7 @@ const EditorFormElement = memo(
 
 		const handleChange = useCallback(() => {
 			// we are simply manually setting the value to _something_ to make the field dirty
-			form.setValue(f.name, "some stupid value that really should be handled manually", {
+			form.setValue(f.name, EvilContextEditorSymbol, {
 				shouldDirty: true,
 				shouldTouch: true,
 			});
