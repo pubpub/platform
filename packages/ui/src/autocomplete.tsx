@@ -42,7 +42,7 @@ export const AutoComplete = ({
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	const [isOpen, setOpen] = useState(false);
-	const [selected, setSelected] = useState<Option|undefined>(value as Option);
+	const [selected, setSelected] = useState<Option | undefined>(value as Option);
 	const [inputValue, setInputValue] = useState<string>(value?.label || "");
 
 	const _setInputValue = useCallback(
