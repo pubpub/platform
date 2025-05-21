@@ -46,6 +46,10 @@ const EditorFormElement = memo(
 				return f.value;
 			}
 
+			if (!f.value) {
+				return;
+			}
+
 			return baseSchema.nodeFromJSON(f.value);
 		}, []);
 
