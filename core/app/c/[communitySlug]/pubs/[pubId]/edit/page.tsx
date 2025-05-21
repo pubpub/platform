@@ -6,11 +6,9 @@ import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
-import { Label } from "ui/label";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
-import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
-import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
+import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getAuthorizedUpdateForms, userCanEditPub } from "~/lib/authorization/capabilities";
@@ -79,35 +77,36 @@ export default async function Page(props: {
 	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
-	const { user } = await getPageLoginData();
-
 	if (!pubId || !communitySlug) {
-		return null;
+		return notFound();
 	}
 
-	const canUpdatePub = await userCanEditPub({ userId: user.id, pubId });
-
-	if (!canUpdatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
-
-	const community = await findCommunityBySlug(communitySlug);
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
 
 	if (!community) {
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesCached({
-		pubId: params.pubId as PubsId,
-		communityId: community.id,
-		userId: user.id,
-	});
+	const [canUpdatePub, pub, availableForms] = await Promise.all([
+		userCanEditPub({ userId: user.id, pubId }),
+		getPubsWithRelatedValuesCached({
+			pubId: params.pubId as PubsId,
+			communityId: community.id,
+			userId: user.id,
+		}),
+		getAuthorizedUpdateForms(user.id, params.pubId).execute(),
+	]);
 
-	if (!pub) {
-		return null;
+	if (!canUpdatePub) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const availableForms = await getAuthorizedUpdateForms(user.id, pub.id).execute();
+	if (!pub) {
+		return notFound();
+	}
 
 	const htmlFormId = `edit-pub-${pub.id}`;
 
@@ -118,7 +117,13 @@ export default async function Page(props: {
 					Save
 				</Button>
 			}
-			title={<PageTitleWithStatus title="Edit pub" />}
+			title={
+				<PubPageTitleWithStatus
+					title="Edit pub"
+					defaultFormSlug={searchParams.form}
+					forms={availableForms}
+				/>
+			}
 			right={
 				<Button variant="link" asChild>
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
@@ -127,12 +132,6 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
-					<Label htmlFor="edit-page-form-switcher">Current form</Label>
-					<FormSwitcher
-						htmlId="edit-page-form-switcher"
-						defaultFormSlug={searchParams.form}
-						forms={availableForms}
-					/>
 					{/** TODO: Add suspense */}
 					<PubEditor
 						searchParams={searchParams}

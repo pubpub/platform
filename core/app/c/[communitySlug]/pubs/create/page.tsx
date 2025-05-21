@@ -7,8 +7,7 @@ import { Button } from "ui/button";
 import { Label } from "ui/label";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
-import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
-import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
+import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getAuthorizedCreateForms, userCanCreatePub } from "~/lib/authorization/capabilities";
@@ -72,19 +71,17 @@ export default async function Page(props: {
 					Save
 				</Button>
 			}
-			title={<PageTitleWithStatus title="Create pub" />}
+			title={
+				<PubPageTitleWithStatus
+					title="Create pub"
+					forms={availableForms}
+					defaultFormSlug={searchParams.form}
+				/>
+			}
 			right={<div />}
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
-					<div className="mb-4 flex flex-col gap-3">
-						<Label htmlFor="create-page-form-switcher">Current form</Label>
-						<FormSwitcher
-							htmlId="create-page-form-switcher"
-							defaultFormSlug={searchParams.form}
-							forms={availableForms}
-						/>
-					</div>
 					<PubEditor
 						searchParams={searchParams}
 						communityId={community.id}
