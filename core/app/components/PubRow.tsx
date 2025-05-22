@@ -34,7 +34,7 @@ const PubRow: React.FC<Props> = async (props: Props) => {
 	if (!pub) {
 		return null;
 	}
-	const communitySlug = await await getCommunitySlug();
+	const communitySlug = await getCommunitySlug();
 
 	return (
 		<>
