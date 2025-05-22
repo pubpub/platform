@@ -117,8 +117,8 @@ export const tableToObjectArray = (node: any) => {
 		"table",
 	];
 
-	const isHoriz = validTypes.includes(headersVert[1].toLowerCase());
-	const isVert = validTypes.includes(headersHoriz[1].toLowerCase());
+	const isHoriz = validTypes.includes(headersVert[1]?.toLowerCase());
+	const isVert = validTypes.includes(headersHoriz[1]?.toLowerCase());
 
 	const getCellContent = (tableType: string, headerVal: string, cell: any): any => {
 		const isTypeWithHtmlValue =
