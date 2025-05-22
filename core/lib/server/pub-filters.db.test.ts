@@ -157,9 +157,9 @@ const seed = createSeed({
 			id: relationId,
 			pubType: "Basic Pub",
 			values: {
+				Relation: null,
 				Number: 50,
 			},
-			relatedPubs: {},
 		},
 		{
 			id: testTitleId,
