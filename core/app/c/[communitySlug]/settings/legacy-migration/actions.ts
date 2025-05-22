@@ -54,7 +54,8 @@ export const importFromLegacy = defineServerAction(
 		} catch (error) {
 			logger.error({ err: error });
 			return {
-				error: "Failed to import from legacy",
+				title: "Failed to import from legacy",
+				error: error.message,
 			};
 		}
 

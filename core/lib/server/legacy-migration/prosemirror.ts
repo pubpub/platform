@@ -1,6 +1,6 @@
 import { baseSchema } from "context-editor/schemas";
 
-import { fromHTMLToNode } from "~/lib/editor/serialization/server";
+import { htmlToProsemirrorServer } from "~/lib/editor/serialize-server";
 
 const unsupportedNodes = {
 	citation: "inline",
@@ -73,7 +73,7 @@ const nodeReplacements = {
 	image: (node: OldImageNode) => {
 		const caption = node.attrs.caption;
 
-		const captionNode = caption ? fromHTMLToNode(caption) : null;
+		const captionNode = caption ? htmlToProsemirrorServer(caption) : null;
 
 		// contents of the first node (which is a `p`)
 		const captionContent = captionNode?.content?.content?.[0]?.content;

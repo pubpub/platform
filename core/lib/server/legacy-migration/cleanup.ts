@@ -199,6 +199,12 @@ export const cleanUpLegacy = async (
 		toBeDeletedPubFields.map((f) => f.id),
 		trx
 	);
+
+	logger.info({
+		msg: "Deleting legacy pub fields",
+		actualPubFieldsToDelete,
+	});
+
 	if (actualPubFieldsToDelete.length) {
 		logger.info({
 			msg: "Deleted legacy pub fields",

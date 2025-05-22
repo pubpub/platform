@@ -123,13 +123,13 @@ export const REQUIRED_LEGACY_PUB_FIELDS = {
 
 	"Header Background Image": { schemaName: CoreSchemaType.FileUpload },
 	"Header Text Style": { schemaName: CoreSchemaType.String },
-	"Header Theme": { schemaName: CoreSchemaType.String },
+	"Header Theme": { schemaName: CoreSchemaType.Color },
 
 	// journal metadata
 	"Cite As": { schemaName: CoreSchemaType.String },
 	"Publish As": { schemaName: CoreSchemaType.String },
-	"Accent Color Light": { schemaName: CoreSchemaType.String },
-	"Accent Color Dark": { schemaName: CoreSchemaType.String },
+	"Accent Color Light": { schemaName: CoreSchemaType.Color },
+	"Accent Color Dark": { schemaName: CoreSchemaType.Color },
 	"Hero Title": { schemaName: CoreSchemaType.String },
 	"Hero Text": { schemaName: CoreSchemaType.String },
 	"Journal Pages": { schemaName: CoreSchemaType.Null, relation: true },
@@ -880,6 +880,23 @@ const createJournalArticles = async (
 			}
 
 			if (pub.facets?.PubHeaderTheme?.props?.backgroundColor?.value) {
+				let color = pub.facets.PubHeaderTheme.props.backgroundColor.value;
+				const rgbaToHex = (rgba: string) => {
+					const [r, g, b, a] =
+						rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)?.slice(1) ?? [];
+					return `#${r}${g}${b}${a ? a.slice(0, 2) : ""}`;
+				};
+
+				if (color === "light") {
+					color = rgbaToHex("rgba(0, 0, 0, 0.028)");
+				}
+				if (color === "dark") {
+					color = rgbaToHex("rgba(0, 0, 0, 0.65)");
+				}
+				if (color === "community") {
+					color = legacyCommunity.community.accentColorDark;
+				}
+
 				op = op.set(
 					jaFields["Header Theme"].slug,
 					pub.facets.PubHeaderTheme.props.backgroundColor.value
