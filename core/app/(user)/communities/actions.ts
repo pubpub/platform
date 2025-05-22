@@ -9,6 +9,7 @@ import type { TableCommunity } from "./getCommunityTableColumns";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { createSiteBuilderToken } from "~/lib/server/apiAccessTokens";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { slugifyString } from "~/lib/string";
@@ -44,7 +45,7 @@ export const createCommunity = defineServerAction(async function createCommunity
 		};
 	}
 	try {
-		await autoRevalidate(
+		const { communityId } = await autoRevalidate(
 			db
 				.with("new_community", (db) =>
 					db
@@ -62,9 +63,12 @@ export const createCommunity = defineServerAction(async function createCommunity
 					communityId: eb.selectFrom("new_community").select("new_community.id"),
 					role: MemberRole.admin,
 				}))
-				.returning("community_memberships.id"),
+				.returning(["community_memberships.id", "community_memberships.communityId"]),
 			{ communitySlug: slug }
 		).executeTakeFirstOrThrow();
+
+		await createSiteBuilderToken(communityId);
+
 		revalidatePath("/");
 	} catch (error) {
 		if (isUniqueConstraintError(error) && error.constraint === "communities_slug_key") {
