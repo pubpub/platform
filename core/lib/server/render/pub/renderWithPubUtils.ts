@@ -19,6 +19,7 @@ import { autoCache } from "~/lib/server/cache/autoCache";
 import { getCommunitySlug } from "../../cache/getCommunitySlug";
 import { createFormInviteLink, grantFormAccess } from "../../form";
 import { InviteService } from "../../invites/InviteService";
+import { getUser } from "../../user";
 
 export type RenderWithPubRel = "self";
 
@@ -87,7 +88,7 @@ export const renderFormInviteLink = async (
 	},
 	trx = db
 ) => {
-	// this feels weird to do here
+	// a member is being invited
 	if (recipient.id) {
 		await grantFormAccess({ userId: recipient.user.id, communityId, pubId, slug: formSlug });
 		return createFormInviteLink(
