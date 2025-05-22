@@ -1415,6 +1415,9 @@ importers:
       cmdk:
         specifier: ^1.0.4
         version: 1.0.4(@types/react-dom@19.1.5(@types/react@19.1.4))(@types/react@19.1.4)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      contracts:
+        specifier: 'workspace:'
+        version: link:../contracts
       date-fns:
         specifier: 'catalog:'
         version: 4.1.0
