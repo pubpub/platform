@@ -209,6 +209,10 @@ export const doesPubExist = async (
 	return exists ? { exists: true as const, pub: pubs[0] } : { exists: false as const };
 };
 
+const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
+	Array.isArray(value) &&
+	value.every((v) => typeof v === "object" && v && "value" in v && "relatedPubId" in v);
+
 /**
  * Transform pub values which can either be
  * {
@@ -221,36 +225,18 @@ export const doesPubExist = async (
  * to a more standardized
  * [ { slug, value, relatedPubId } ]
  */
-export const normalizePubValues = async <T extends JsonValue | Date>(
-	pubValues: Record<string, T | { value: T; relatedPubId: PubsId }[]>,
-	communityId: CommunitiesId,
-	trx = db
+export const normalizePubValues = <T extends JsonValue | Date>(
+	pubValues: Record<string, T | { value: T; relatedPubId: PubsId }[]>
 ) => {
-	const fields = await getFieldInfoForSlugs(
-		{
-			slugs: Object.keys(pubValues),
-			communityId,
-		},
-		trx
+	return Object.entries(pubValues).flatMap(([slug, value]) =>
+		isRelatedPubInit(value)
+			? value.map((v) => ({ slug, value: v.value, relatedPubId: v.relatedPubId }))
+			: ([{ slug, value, relatedPubId: undefined }] as {
+					slug: string;
+					value: T;
+					relatedPubId: PubsId | undefined;
+				}[])
 	);
-	const relatedSlugs = fields.filter((f) => f.isRelation).map((f) => f.slug);
-
-	return Object.entries(pubValues).flatMap(([slug, value]) => {
-		if (relatedSlugs.find((s) => s === slug)) {
-			const relatedValue = value as { value: T; relatedPubId: PubsId }[];
-			return relatedValue.map((v) => ({
-				slug,
-				value: v.value,
-				relatedPubId: v.relatedPubId,
-			}));
-		}
-
-		return [{ slug, value, relatedPubId: undefined }] as {
-			slug: string;
-			value: T;
-			relatedPubId: PubsId | undefined;
-		}[];
-	});
 };
 
 /**
@@ -292,7 +278,7 @@ export const createPubRecursiveNew = async <Body extends CreatePubRequestBodyWit
 		});
 		values = processedVals;
 	}
-	const normalizedValues = await normalizePubValues(values, communityId, trx);
+	const normalizedValues = normalizePubValues(values);
 
 	const valuesWithFieldIds = await validatePubValues({
 		pubValues: normalizedValues,
@@ -558,7 +544,6 @@ export const getFieldInfoForSlugs = async (
 		fieldId: field.id,
 		schemaName: expect(field.schemaName),
 		fieldName: field.name,
-		isRelation: field.isRelation,
 	}));
 };
 
@@ -922,7 +907,7 @@ export const updatePub = async ({
 			values: pubValues,
 		});
 
-		const normalizedValues = await normalizePubValues(processedVals, communityId, trx);
+		const normalizedValues = normalizePubValues(processedVals);
 
 		const pubValuesWithSchemaNameAndFieldId = await validatePubValues({
 			pubValues: normalizedValues,
