@@ -5,13 +5,11 @@ import type { PropsWithChildren } from "react";
 import { createContext, useContext, useState } from "react";
 
 import type { ProcessedPub } from "contracts";
-import type { PubsId, PubTypesId } from "db/public";
-
-import type { GetPubTypesResult } from "~/lib/server";
+import type { PubsId, PubTypes, PubTypesId } from "db/public";
 
 export type ContextEditorContext = {
 	pubs: ContextEditorPub[];
-	pubTypes: GetPubTypesResult;
+	pubTypes: Pick<PubTypes, "id" | "name">[];
 	pubId?: PubsId;
 	pubTypeId?: PubTypesId;
 };

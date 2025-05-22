@@ -6,13 +6,14 @@ import { z } from "zod";
 /** Represents the enum public.Capabilities */
 export enum Capabilities {
 	movePub = "movePub",
-	createPub = "createPub",
 	viewPub = "viewPub",
 	deletePub = "deletePub",
-	updatePubValues = "updatePubValues",
 	createRelatedPub = "createRelatedPub",
 	createPubWithForm = "createPubWithForm",
+	createPubWithAnyForm = "createPubWithAnyForm",
 	editPubWithForm = "editPubWithForm",
+	editPubWithAnyForm = "editPubWithAnyForm",
+	editPubWithDefaultForm = "editPubWithDefaultForm",
 	createPubField = "createPubField",
 	archivePubField = "archivePubField",
 	editPubField = "editPubField",

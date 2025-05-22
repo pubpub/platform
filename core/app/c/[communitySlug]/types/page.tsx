@@ -6,7 +6,6 @@ import { Capabilities, MembershipType } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin } from "~/lib/authentication/roles";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
@@ -35,6 +34,7 @@ export default async function Page(props: {
 		return notFound();
 	}
 
+	//TODO: Add capability to allow non-admins to view this page
 	if (
 		!(await userCan(
 			Capabilities.editCommunity,
@@ -44,8 +44,6 @@ export default async function Page(props: {
 	) {
 		redirect(`/c/${communitySlug}/unauthorized`);
 	}
-
-	const allowEditing = isCommunityAdmin(user, { slug: communitySlug });
 
 	const [types, { fields }] = await Promise.all([
 		getAllPubTypesForCommunity(communitySlug).execute(),
@@ -66,7 +64,7 @@ export default async function Page(props: {
 					<CreatePubType />
 				</div>
 			</div>
-			<TypeList types={types} allowEditing={allowEditing} />
+			<TypeList types={types} allowEditing={true} />
 		</PubFieldProvider>
 	);
 }

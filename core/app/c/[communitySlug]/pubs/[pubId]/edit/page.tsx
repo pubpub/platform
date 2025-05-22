@@ -5,14 +5,15 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
+import { Label } from "ui/label";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
+import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
 import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import { getAuthorizedUpdateForms, userCanEditPub } from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -72,7 +73,7 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ pubId: PubsId; communitySlug: string }>;
-	searchParams: Promise<Record<string, string>>;
+	searchParams: Promise<Record<string, string> & { form: string }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
@@ -80,18 +81,11 @@ export default async function Page(props: {
 
 	const { user } = await getPageLoginData();
 
-	const canUpdatePub = await userCan(
-		Capabilities.updatePubValues,
-		{
-			type: MembershipType.pub,
-			pubId,
-		},
-		user.id
-	);
-
 	if (!pubId || !communitySlug) {
 		return null;
 	}
+
+	const canUpdatePub = await userCanEditPub({ userId: user.id, pubId });
 
 	if (!canUpdatePub) {
 		redirect(`/c/${communitySlug}/unauthorized`);
@@ -113,12 +107,14 @@ export default async function Page(props: {
 		return null;
 	}
 
-	const formId = `edit-pub-${pub.id}`;
+	const availableForms = await getAuthorizedUpdateForms(user.id, pub.id).execute();
+
+	const htmlFormId = `edit-pub-${pub.id}`;
 
 	return (
 		<ContentLayout
 			left={
-				<Button form={formId} type="submit">
+				<Button form={htmlFormId} type="submit">
 					Save
 				</Button>
 			}
@@ -131,11 +127,18 @@ export default async function Page(props: {
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
+					<Label htmlFor="edit-page-form-switcher">Current form</Label>
+					<FormSwitcher
+						htmlId="edit-page-form-switcher"
+						defaultFormSlug={searchParams.form}
+						forms={availableForms}
+					/>
 					{/** TODO: Add suspense */}
 					<PubEditor
 						searchParams={searchParams}
+						formSlug={searchParams.form}
 						pubId={pub.id}
-						formId={formId}
+						htmlFormId={htmlFormId}
 						communityId={community.id}
 					/>
 				</div>
