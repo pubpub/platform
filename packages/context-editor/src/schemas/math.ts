@@ -72,7 +72,7 @@ const mathDisplay = {
 	code: true,
 	parseDOM: [
 		{
-			tag: "math-display.math-display",
+			tag: "math-display",
 			contentElement: "annotation",
 			getAttrs: (node) => {
 				return {

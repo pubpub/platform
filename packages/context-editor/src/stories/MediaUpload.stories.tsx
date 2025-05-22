@@ -42,7 +42,7 @@ export const Primary: Story = {
 		node,
 		nodePos: 0,
 	},
-	render: function Render(args) {
+	render: (args) => {
 		return (
 			<div className="w-[300px]">
 				<ProseMirror>

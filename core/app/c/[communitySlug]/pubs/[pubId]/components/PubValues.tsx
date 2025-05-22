@@ -12,6 +12,7 @@ import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
+import { ColorCircle, ColorLabel, ColorValue } from "ui/color";
 import { ChevronDown, ChevronRight } from "ui/icon";
 import { ShowMore } from "ui/show-more";
 
@@ -227,6 +228,15 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 					dangerouslySetInnerHTML={{ __html: value.value as string }}
 				/>
 			</ShowMore>
+		);
+	}
+
+	if (value.schemaName === CoreSchemaType.Color) {
+		return (
+			<ColorLabel>
+				<ColorCircle color={value.value as string} size="sm" />
+				<ColorValue color={value.value as string} />
+			</ColorLabel>
 		);
 	}
 

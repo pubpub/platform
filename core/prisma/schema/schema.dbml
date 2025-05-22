@@ -521,6 +521,7 @@ Enum CoreSchemaType {
   StringArray
   URL
   Vector3
+  Color
 }
 
 Enum OperationType {
@@ -593,6 +594,7 @@ Enum InputComponent {
   selectDropdown
   multivalueInput
   relationBlock
+  colorPicker
 }
 
 Enum ApiAccessType {

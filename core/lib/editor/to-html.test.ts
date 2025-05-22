@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 // @ts-expect-error
 import ponies from "../../prisma/seeds/ponies.snippet.html?raw";
 import { processEditorHTML } from "./process-editor-html";
-import { htmlToProsemirror, prosemirrorToHTML } from "./serialize-server";
+import { htmlToProsemirrorServer, prosemirrorToHTMLServer } from "./serialize-server";
 
 describe("renderNodeToHTML", () => {
 	it("should be able to round trip a node and not lose any information", async () => {
@@ -21,10 +21,10 @@ describe("renderNodeToHTML", () => {
 
 		const htmlProcessed = await processed.html();
 
-		const node2 = htmlToProsemirror(htmlProcessed);
+		const node2 = htmlToProsemirrorServer(htmlProcessed);
 		const node2Json = node2.toJSON();
 
-		const html2 = prosemirrorToHTML(node2Json);
+		const html2 = prosemirrorToHTMLServer(node2Json);
 
 		const html2Processed = await processEditorHTML(html2, {
 			settings: {
@@ -36,10 +36,10 @@ describe("renderNodeToHTML", () => {
 		// FIXME: this is not strictly equal due to some space insertion
 		// expect(html2Processed).toEqual(htmlProcessed);
 
-		const node3 = htmlToProsemirror(html2Processed);
+		const node3 = htmlToProsemirrorServer(html2Processed);
 		const node3Json = node3.toJSON();
 
-		const html3Processed = await processEditorHTML(prosemirrorToHTML(node3Json), {
+		const html3Processed = await processEditorHTML(prosemirrorToHTMLServer(node3Json), {
 			settings: {
 				fragment: true,
 				pretty: true,
@@ -48,5 +48,30 @@ describe("renderNodeToHTML", () => {
 
 		expect(html2Processed).toEqual(html3Processed);
 		expect(node3Json).toEqual(node2Json);
+	});
+});
+
+describe("math", () => {
+	it("should convert block math back and forth correctly", async () => {
+		const html = `<math-display classname="math-display"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo>∫</mo><mi>a</mi><mi>b</mi></msubsup><mi>d</mi><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\\int_a^b dx^2
+
+</annotation></semantics></math></span></math-display>`;
+
+		const processed = processEditorHTML(html, {
+			settings: {
+				fragment: true,
+			},
+		});
+
+		const htmlProcessed = await processed.html();
+
+		const node = htmlToProsemirrorServer(htmlProcessed);
+
+		expect(node.content.content[0].type.name).toEqual("math_display");
+		const nodeJson = node.toJSON();
+
+		const html2 = prosemirrorToHTMLServer(nodeJson);
+
+		expect(html2).toEqual(html);
 	});
 });

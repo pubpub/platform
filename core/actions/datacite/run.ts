@@ -62,7 +62,7 @@ const deriveCreatorsFromRelatedPubs = (
 			};
 		});
 
-const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
+const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 	const doiFieldSlug = config.pubFields.doi?.[0];
 	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
@@ -179,6 +179,17 @@ const checkDoi = async (doi: string) => {
 		headers: makeRequestHeaders(),
 	});
 
+	logger.info({
+		msg: "Datacite DOI check",
+		doi,
+		response: {
+			status: response.status,
+			statusText: response.statusText,
+			url: response.url,
+			body: await response.text(),
+		},
+	});
+
 	return response.ok;
 };
 
@@ -263,7 +274,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 	let depositPayload: Payload;
 	try {
-		depositPayload = await makeDatacitePayload(pub, depositConfig);
+		depositPayload = makeDatacitePayload(pub, depositConfig);
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
@@ -275,9 +286,10 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 		throw error;
 	}
 
+	const depositPayloadDoi = depositPayload?.data?.attributes?.doi;
 	const depositResult =
 		// If the pub already has a DOI, and DataCite recognizes it,
-		depositConfig.doi && (await checkDoi(depositConfig.doi))
+		depositPayloadDoi && (await checkDoi(depositPayloadDoi))
 			? // Update the pub metadata in DataCite
 				await updatePubDeposit(depositPayload)
 			: // Otherwise, deposit the pub to DataCite
@@ -290,7 +302,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 	// If the pub does not have a DOI, persist the newly generated DOI from
 	// DataCite
 	if (!depositConfig.doi) {
-		const doiFieldSlug = expect(config.pubFields.doi?.[0]);
+		const doiFieldSlug = expect(config.pubFields.doi?.[0], "Missing DOI field slug");
 
 		try {
 			await updatePub({
@@ -306,7 +318,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 			return {
 				title: "Failed to save DOI",
 				error: "The pub was deposited to DataCite, but we were unable to update the pub's DOI in PubPub",
-				cause: error,
+				cause: error.message,
 			};
 		}
 	}

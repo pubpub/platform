@@ -3,27 +3,24 @@ import { baseSchema } from "context-editor/schemas";
 import { getJsonSchemaByCoreSchemaType } from "schemas";
 
 import { CoreSchemaType } from "db/public";
-import { logger } from "logger";
 
-import { fromHTMLToNode, renderNodeToHTML } from "../editor/serialization/server";
-import { htmlToProsemirror, prosemirrorToHTML } from "../editor/serialize-server";
+import { htmlToProsemirrorServer, prosemirrorToHTMLServer } from "../editor/serialize-server";
 
 const validateAgainstContextEditorSchema = (value: unknown) => {
 	try {
 		if (typeof value === "string") {
-			const node = htmlToProsemirror(value);
+			const node = htmlToProsemirrorServer(value);
 
 			node.check();
-			// return renderNodeToHTML(node);
+
 			return { success: true, value };
 		}
 
 		const node = baseSchema.nodeFromJSON(value);
 
-		// TODO: reenable this
 		node.check();
 
-		const html = prosemirrorToHTML(node);
+		const html = prosemirrorToHTMLServer(node);
 
 		return { success: true, value: html };
 	} catch (e) {

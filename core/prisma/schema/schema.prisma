@@ -172,6 +172,7 @@ enum CoreSchemaType {
   StringArray
   URL
   Vector3
+  Color
 }
 
 model PubFieldSchema {
@@ -532,6 +533,7 @@ enum InputComponent {
   selectDropdown
   multivalueInput
   relationBlock
+  colorPicker
 }
 
 // Either a structural element like a header, hr etc. or a pubfield input
