@@ -243,7 +243,7 @@ describe("DataCite action", () => {
 	});
 
 	it("reports an error when the DOI fails to persist", async () => {
-		const error = new Error();
+		const error = new Error("Failed to persist DOI");
 		vitest.mocked(updatePub).mockImplementationOnce(() => {
 			throw error;
 		});
@@ -257,7 +257,7 @@ describe("DataCite action", () => {
 		});
 
 		expect(didSucceed(result)).toBe(false);
-		expect((result as ClientExceptionOptions).cause).toBe(error);
+		expect((result as ClientExceptionOptions).cause).toBe(error.message);
 	});
 
 	it("uses the DOI suffix field if provided", async () => {

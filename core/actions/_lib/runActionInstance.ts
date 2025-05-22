@@ -340,6 +340,14 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 		? ActionRunStatus.failure
 		: ActionRunStatus.success;
 
+	logger[status === ActionRunStatus.failure ? "error" : "info"]({
+		msg: "Action run finished",
+		pubId: args.pubId,
+		actionInstanceId: args.actionInstanceId,
+		status,
+		result,
+	});
+
 	// update the action run with the result
 	await autoRevalidate(
 		trx
