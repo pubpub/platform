@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
 import React, { useState } from "react";
-import { DOMParser } from "prosemirror-model";
 import { EditorState } from "prosemirror-state";
 
 import ContextEditor from "../ContextEditor";
@@ -11,7 +10,6 @@ import AtomRenderer from "./AtomRenderer";
 import exampleHtml from "./doc.html?raw";
 import docWithImage from "./docWithImage.json";
 import initialDoc from "./initialDoc.json";
-import initialPubs from "./initialPubs.json";
 import initialTypes from "./initialTypes.json";
 import { generateSignedAssetUploadUrl, getPubs } from "./mockUtils";
 
@@ -36,7 +34,7 @@ const upload = (filename: string) => generateSignedAssetUploadUrl(`${pubId}/${fi
 export const Primary: Story = {
 	args: {
 		placeholder: "Helloooo",
-		initialDoc: initialDoc,
+		initialDoc: baseSchema.nodeFromJSON(initialDoc),
 		pubTypes: initialTypes,
 		pubId,
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -79,7 +77,7 @@ export const Blank: Story = {
 
 export const WithImage: Story = {
 	args: {
-		initialDoc: docWithImage,
+		initialDoc: baseSchema.nodeFromJSON(docWithImage),
 		pubTypes: initialTypes,
 		pubId: "a85b4157-4a7f-40d8-bb40-d9c17a6c7a70",
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
@@ -118,18 +116,13 @@ export const ParseDOM: Story = {
 	// Render the prosemirror doc on the screen for testing
 	render: function Render(args) {
 		const [state, setState] = useState<EditorState | undefined>(undefined);
-		const template = document.createElement("template");
-		template.innerHTML = exampleHtml;
-		const content = template.content.firstElementChild;
-		const doc = content ? DOMParser.fromSchema(baseSchema).parse(content).toJSON() : undefined;
 		return (
 			<>
-				<ContextEditor {...args} initialDoc={doc} onChange={setState} />
-				{/* {doc ? (
-					<ContextEditor {...args} initialDoc={doc} onChange={setState} />
-				) : (
-					"Loading..."
-				)} */}
+				<ContextEditor
+					{...args}
+					initialDoc={baseSchema.nodeFromJSON(exampleHtml)}
+					onChange={setState}
+				/>
 				<pre className="text-xs" data-testid="prosemirror-state">
 					{state ? JSON.stringify(state?.doc.toJSON(), null, 2) : "{}"}
 				</pre>

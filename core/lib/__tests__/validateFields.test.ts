@@ -2,7 +2,7 @@ import { expect, test } from "vitest";
 
 import { CoreSchemaType } from "db/public";
 
-import { _deprecated_validatePubValuesBySchemaName } from "~/lib/server/validateFields";
+import { validatePubValuesBySchemaName } from "~/lib/server/validateFields";
 
 const JSON_EXAMPLE = {
 	content: [
@@ -20,19 +20,17 @@ const JSON_EXAMPLE = {
 };
 
 test.each([
-	{ value: "", expected: false },
 	{ value: 1, expected: false },
 	{ value: {}, expected: false },
-	{ value: JSON_EXAMPLE, expected: true },
+	{ value: JSON_EXAMPLE, expected: `<p>Example document</p>` },
+	// "" is a valid html value
+	{ value: "", expected: "" },
 ])("validating rich text field", ({ value, expected }) => {
-	const fields = [
-		{ name: "Rich Text", slug: "community:richtext", schemaName: CoreSchemaType.RichText },
-	];
-	const values = { "community:richtext": value };
-	const result = _deprecated_validatePubValuesBySchemaName({ fields, values });
-	if (expected) {
-		expect(result).toStrictEqual({});
+	const values = [{ slug: "community:richtext", value, schemaName: CoreSchemaType.RichText }];
+	const result = validatePubValuesBySchemaName(values);
+	if (expected !== false) {
+		expect(result.results[0].value).toStrictEqual(expected);
 	} else {
-		expect(result[fields[0].slug]).toBeTruthy();
+		expect(result.errors.length).toBeGreaterThan(0);
 	}
 });

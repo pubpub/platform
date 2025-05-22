@@ -3,7 +3,7 @@
 import type { DragEndEvent } from "@dnd-kit/core";
 import type { FieldErrors } from "react-hook-form";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
@@ -225,6 +225,8 @@ export const RelatedPubsElement = ({
 		})
 	);
 
+	const id = useId();
+
 	// Update ranks and rhf field array position when elements are dragged
 	const handleDragEnd = useCallback(
 		(event: DragEndEvent) => {
@@ -323,6 +325,7 @@ export const RelatedPubsElement = ({
 										{fields.length ? (
 											<div className="flex flex-col gap-2">
 												<DndContext
+													id={id}
 													modifiers={[
 														restrictToVerticalAxis,
 														restrictToParentElement,

@@ -1,0 +1,7 @@
+# Rich Text Fields
+
+- `RichText` fields are stored as html in the database. not as prosemirror trees anymore.
+- The `ContextEditor` only know about ProseMirror trees.
+- The "boundary" where HTML gets converted to a ProseMirror tree is in `PubEditor.tsx`, on the server. The `PubEditor` form handles `ProseMirror` trees, and sends that up to the server as well (this could be changed to send html instead, but that would require extra conversion logic on the server).
+- Most clients (like the site-building api) just work with html. they never need to know about ProseMirror. only the main app really needs to care about ProseMirror, and only for editing.
+- If you want to create new content, you can just send html. the server will check that it converts to a valid ProseMirror tree, and if so, it'll store it as-is.

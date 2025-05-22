@@ -1,10 +1,8 @@
+import type { Node } from "prosemirror-model";
+
 import { EditorState } from "prosemirror-state";
 
-import { baseSchema } from "../schemas";
-
-export const docHasChanged = (initialDoc: object, currentEditorState: EditorState) => {
-	const initialDocNode = baseSchema.nodeFromJSON(initialDoc);
-	const hasChanged =
-		currentEditorState.doc.content.findDiffStart(initialDocNode.content) !== null;
+export const docHasChanged = (initialDoc: Node, currentEditorState: EditorState) => {
+	const hasChanged = currentEditorState.doc.content.findDiffStart(initialDoc.content) !== null;
 	return hasChanged;
 };
