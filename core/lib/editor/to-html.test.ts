@@ -50,3 +50,28 @@ describe("renderNodeToHTML", () => {
 		expect(node3Json).toEqual(node2Json);
 	});
 });
+
+describe("math", () => {
+	it("should convert block math back and forth correctly", async () => {
+		const html = `<math-display classname="math-display"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mo>∫</mo><mi>a</mi><mi>b</mi></msubsup><mi>d</mi><msup><mi>x</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\\int_a^b dx^2
+
+</annotation></semantics></math></span></math-display>`;
+
+		const processed = processEditorHTML(html, {
+			settings: {
+				fragment: true,
+			},
+		});
+
+		const htmlProcessed = await processed.html();
+
+		const node = htmlToProsemirrorServer(htmlProcessed);
+
+		expect(node.content.content[0].type.name).toEqual("math_display");
+		const nodeJson = node.toJSON();
+
+		const html2 = prosemirrorToHTMLServer(nodeJson);
+
+		expect(html2).toEqual(html);
+	});
+});
