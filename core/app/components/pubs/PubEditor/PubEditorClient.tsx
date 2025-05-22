@@ -46,6 +46,7 @@ const preparePayload = ({
 	toggleContext,
 	defaultValues,
 	arrayDefaults,
+	deleted,
 }: {
 	formElements: BasicFormElements[];
 	formValues: FieldValues;
@@ -56,9 +57,15 @@ const preparePayload = ({
 		HydratedRelatedFieldValue | SingleFormValues | undefined | StagesId
 	>;
 	arrayDefaults: Record<string, HydratedRelatedFieldValue>;
+	deleted: Static<typeof deletedValuesSchema>;
 }) => {
 	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {};
-	for (const { slug } of formElements) {
+	// Since we send deleted related pubs via `deleted`, remove them from the actual `pubValues` payload
+	const deletedRelatedFieldSlugs = deleted.map((d) => d.slug);
+	const formElementsWithoutDeletedRelatedFields = formElements.filter(
+		(fe) => !deletedRelatedFieldSlugs.find((s) => s === fe.slug)
+	);
+	for (const { slug } of formElementsWithoutDeletedRelatedFields) {
 		if (
 			slug &&
 			toggleContext.isEnabled(slug) &&
@@ -322,6 +329,7 @@ export const PubEditorClient = ({
 				toggleContext,
 				defaultValues,
 				arrayDefaults,
+				deleted,
 			});
 
 			const { stageId: stageIdFromButtonConfig, submitButtonId } = getButtonConfig({

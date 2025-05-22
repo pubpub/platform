@@ -211,6 +211,7 @@ export const doesPubExist = async (
 
 const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
 	Array.isArray(value) &&
+	!!value.length &&
 	value.every((v) => typeof v === "object" && v && "value" in v && "relatedPubId" in v);
 
 /**
