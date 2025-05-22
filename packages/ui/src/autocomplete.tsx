@@ -3,10 +3,11 @@ import type { KeyboardEvent } from "react";
 import * as React from "react";
 import { useCallback, useRef, useState } from "react";
 import { Command as CommandPrimitive } from "cmdk";
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 import { cn } from "utils";
 
+import { Button } from "./button";
 import { CommandGroup, CommandInput, CommandItem, CommandList } from "./command";
 import { Skeleton } from "./skeleton";
 
@@ -24,6 +25,8 @@ type AutoCompleteProps = {
 	placeholder?: string;
 	icon?: React.ReactNode;
 	name?: string;
+	// If included, will render a clear button in the input
+	onClear?: () => void;
 };
 
 export const AutoComplete = ({
@@ -38,6 +41,7 @@ export const AutoComplete = ({
 	isLoading = false,
 	icon,
 	name,
+	onClear,
 }: AutoCompleteProps) => {
 	const inputRef = useRef<HTMLInputElement>(null);
 
@@ -108,7 +112,7 @@ export const AutoComplete = ({
 		const handler = (event: MouseEvent) => {
 			if (commandRef.current && !commandRef.current.contains(event.target as Node)) {
 				close();
-				if (selected) {
+				if (selected && inputValue !== "") {
 					_setInputValue(selected.label);
 				}
 			}
@@ -119,10 +123,10 @@ export const AutoComplete = ({
 		return () => {
 			document.removeEventListener("click", handler);
 		};
-	}, [selected, _setInputValue, close]);
+	}, [selected, _setInputValue, close, inputValue]);
 
 	return (
-		<CommandPrimitive onKeyDown={handleKeyDown} ref={commandRef}>
+		<CommandPrimitive onKeyDown={handleKeyDown} ref={commandRef} className="relative">
 			<CommandInput
 				name={name}
 				ref={inputRef}
@@ -134,7 +138,21 @@ export const AutoComplete = ({
 				icon={icon}
 				data-testid={`autocomplete-${name}`}
 			/>
-			<div className="relative mt-1">
+			{onClear ? (
+				<Button
+					variant="ghost"
+					size="icon"
+					className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+					onClick={() => {
+						setInputValue("");
+						onClear();
+					}}
+				>
+					<X />
+					<span className="sr-only">Clear</span>
+				</Button>
+			) : null}
+			<div className="relative mt-1 flex">
 				<div
 					className={cn(
 						"absolute top-0 z-10 w-full rounded-xl bg-background shadow-lg outline-none animate-in fade-in-0 zoom-in-95",
