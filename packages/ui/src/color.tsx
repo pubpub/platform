@@ -1,12 +1,12 @@
 import * as React from "react";
-import { HexColorInput, HexColorPicker } from "react-colorful";
+import { HexAlphaColorPicker, HexColorInput } from "react-colorful";
 
 import { cn } from "utils";
 import { isColorDark } from "utils/color";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
-export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexColorPicker> & {
+export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexAlphaColorPicker> & {
 	onChange: (color: string) => void;
 	presets?: { label: string; value: string }[];
 	presetsOnly?: boolean;
@@ -73,12 +73,13 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 		<div className="flex gap-2 bg-transparent p-10">
 			{!presetsOnly && (
 				<div className="flex h-fit flex-col overflow-clip rounded-md bg-transparent shadow-lg">
-					<HexColorPicker
+					<HexAlphaColorPicker
 						className="[&>*:first-child]:rounded-t-md [&>*:last-child]:rounded-none"
 						aria-label="Color picker"
 						{...props}
 					/>
 					<HexColorInput
+						alpha={true}
 						className={cn(
 							"w-[200px] border-none text-center font-mono font-medium uppercase tracking-wider",
 							isDark ? "text-white" : "text-black"
