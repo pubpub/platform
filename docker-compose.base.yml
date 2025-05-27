@@ -27,7 +27,7 @@ services:
         # this sadly can't be done by just configuring some env vars for minio itself, very annoying, you need to use their mc client. I'm not sure this is the best way to go about doing this.
         entrypoint: >
             /bin/sh -c '
-            /usr/bin/mc config host add myminio http://localhost:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
+            /usr/bin/mc alias set myminio http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}";
             /usr/bin/mc mb --ignore-existing myminio/"$${ASSETS_BUCKET_NAME}";
             /usr/bin/mc anonymous set download myminio/"$${ASSETS_BUCKET_NAME}";
             /usr/bin/mc admin user add myminio "$${ASSETS_UPLOAD_KEY}" "$${ASSETS_UPLOAD_SECRET_KEY}";
