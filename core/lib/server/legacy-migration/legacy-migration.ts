@@ -369,6 +369,24 @@ const getOrGenerateMetadata = async (
 	return { image: metadata, imageMap };
 };
 
+/**
+ * TODO: move this to some shared location, do not use a custom function here
+ */
+const rgbaToHex = (rgba: string) => {
+	const match = rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+	if (!match) return rgba;
+
+	const [_, r, g, b, a] = match;
+	const hex = [r, g, b].map((n) => Number(n).toString(16).padStart(2, "0")).join("");
+	const alpha = a
+		? Math.round(Number(a) * 255)
+				.toString(16)
+				.padStart(2, "0")
+		: "";
+
+	return `#${hex}${alpha}`;
+};
+
 const createJournalArticles = async (
 	{
 		community: { id: communityId, slug: communitySlug },
@@ -397,150 +415,148 @@ const createJournalArticles = async (
 		trx,
 	});
 
-	await pMap(legacyCommunity.pubs, async (pub) => {
-		const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
-			pub.avatar,
-			communitySlug,
-			imageMap
-		);
+	await pMap(
+		legacyCommunity.pubs,
+		async (pub) => {
+			const pubHeaderImageId = pub.facets?.PubHeaderTheme?.props?.backgroundImage?.value;
+			const [
+				{ image: avatar, imageMap: avatarMap },
+				{ image: pubHeaderImage, imageMap: pubHeaderImageMap },
+			] = await Promise.all([
+				getOrGenerateMetadata(pub.avatar, communitySlug, imageMap),
 
-		const pubHeaderImageId = pub.facets?.PubHeaderTheme?.props?.backgroundImage?.value;
-		const { image: pubHeaderImage, imageMap: pubHeaderImageMap } = await getOrGenerateMetadata(
-			pubHeaderImageId,
-			communitySlug,
-			imageMap
-		);
+				getOrGenerateMetadata(pubHeaderImageId, communitySlug, imageMap),
+			]);
 
-		batch.add(({ upsertByValue }) => {
-			let op = upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
-				pubTypeId: legacyStructure["Journal Article"].id,
+			batch.add(({ upsertByValue }) => {
+				let op = upsertByValue(jaFields["Legacy Id"].slug, pub.id, {
+					pubTypeId: legacyStructure["Journal Article"].id,
+				});
+
+				op = op.set(jaFields["Legacy Id"].slug, pub.id);
+
+				if (pub.description) {
+					op = op.set(jaFields.Description.slug, pub.description);
+				}
+
+				if (pub.title) {
+					op = op.set(jaFields.Title.slug, pub.title);
+				}
+
+				if (pub.slug) {
+					op = op.set(jaFields.Slug.slug, pub.slug);
+				}
+
+				if (pub.doi) {
+					op = op.set(
+						jaFields.DOI.slug,
+						URL.canParse(pub.doi) ? pub.doi : `https://doi.org/${pub.doi}`
+					);
+				}
+				const publishedAt = pub.customPublishedAt ?? pub.releases?.[0]?.createdAt;
+				if (publishedAt) {
+					op = op.set(jaFields["Publication Date"].slug, publishedAt);
+				}
+
+				if (pub.avatar) {
+					op = op.set(jaFields.Avatar.slug, [avatar!]);
+				}
+
+				const draftContent = pub?.draft?.doc?.content;
+				const latestContent = pub?.releases?.at(-1)?.doc?.content;
+				const content =
+					draftContent && draftContent.content.length > 1
+						? draftContent
+						: (latestContent ?? draftContent);
+
+				if (content) {
+					const { doc, interestingNodes } = transformProsemirrorTree(content);
+
+					op = op.set(jaFields.PubContent.slug, doc);
+
+					if (interestingNodes.abstract) {
+						op = op.set(jaFields.Abstract.slug, {
+							type: "doc",
+							content: [interestingNodes.abstract],
+						} as any);
+					}
+
+					// console.log(interestingNodes.abstract);
+				}
+
+				if (pubHeaderImage) {
+					op = op.set(jaFields["Header Background Image"].slug, [pubHeaderImage]);
+				}
+
+				if (pub.facets?.PubHeaderTheme?.props?.textStyle?.value) {
+					op = op.set(
+						jaFields["Header Text Style"].slug,
+						pub.facets.PubHeaderTheme.props.textStyle.value
+					);
+				}
+
+				if (pub.facets?.PubHeaderTheme?.props?.backgroundColor?.value) {
+					let color = pub.facets.PubHeaderTheme.props.backgroundColor.value;
+
+					if (color === "light") {
+						color = rgbaToHex("rgba(0, 0, 0, 0.028)");
+					}
+					if (color === "dark") {
+						color = rgbaToHex("rgba(0, 0, 0, 0.65)");
+					}
+					if (color === "community") {
+						color = legacyCommunity.community.accentColorDark;
+					}
+					if (color.startsWith("rgba")) {
+						color = rgbaToHex(color);
+					}
+
+					op = op.set(jaFields["Header Theme"].slug, color);
+				}
+
+				// if (pub.releases) {
+				// if (pub.releases) {
+				// 	op = op.relate(
+				// 		jaFields.Versions.slug,
+				// 		pub.releases.map((r, i) => {
+				// 			const doc = r.doc;
+
+				// 			const { doc: doc2, interestingNodes } = doc
+				// 				? transformProsemirrorTree(doc.content)
+				// 				: { doc: null, interestingNodes: {} };
+
+				// 			return {
+				// 				value: i + 1,
+				// 				target: (op) =>
+				// 					op
+				// 						.create({
+				// 							pubTypeId: legacyStructure["Version"].id,
+				// 						})
+				// 						.set(
+				// 							{
+				// 								[versionFields["Abstract"].slug]:
+				// 									interestingNodes.abstract,
+				// 								[versionFields["Version Number"].slug]: i + 1,
+				// 								[versionFields.Description.slug]: r.noteText ?? "",
+				// 								[versionFields["PubContent"].slug]: doc2,
+				// 								[versionFields["Publication Date"].slug]: r.createdAt,
+				// 							},
+				// 							{
+				// 								ignoreNullish: true,
+				// 							}
+				// 						),
+				// 			};
+				// 		})
+				// 	);
+				// }
+
+				return op;
 			});
-
-			op = op.set(jaFields["Legacy Id"].slug, pub.id);
-
-			if (pub.description) {
-				op = op.set(jaFields.Description.slug, pub.description);
-			}
-
-			if (pub.title) {
-				op = op.set(jaFields.Title.slug, pub.title);
-			}
-
-			if (pub.slug) {
-				op = op.set(jaFields.Slug.slug, pub.slug);
-			}
-
-			if (pub.doi) {
-				op = op.set(
-					jaFields.DOI.slug,
-					URL.canParse(pub.doi) ? pub.doi : `https://doi.org/${pub.doi}`
-				);
-			}
-			const publishedAt = pub.customPublishedAt ?? pub.releases?.[0]?.createdAt;
-			if (publishedAt) {
-				op = op.set(jaFields["Publication Date"].slug, publishedAt);
-			}
-
-			if (pub.avatar) {
-				op = op.set(jaFields.Avatar.slug, [avatar!]);
-			}
-
-			const draftContent = pub?.draft?.doc?.content;
-			const latestContent = pub?.releases?.at(-1)?.doc?.content;
-			const content =
-				draftContent && draftContent.content.length > 1
-					? draftContent
-					: (latestContent ?? draftContent);
-
-			if (content) {
-				const { doc, interestingNodes } = transformProsemirrorTree(content);
-
-				op = op.set(jaFields.PubContent.slug, doc);
-
-				if (interestingNodes.abstract) {
-					op = op.set(jaFields.Abstract.slug, {
-						type: "doc",
-						content: [interestingNodes.abstract],
-					} as any);
-				}
-
-				// console.log(interestingNodes.abstract);
-			}
-
-			if (pubHeaderImage) {
-				op = op.set(jaFields["Header Background Image"].slug, [pubHeaderImage]);
-			}
-
-			if (pub.facets?.PubHeaderTheme?.props?.textStyle?.value) {
-				op = op.set(
-					jaFields["Header Text Style"].slug,
-					pub.facets.PubHeaderTheme.props.textStyle.value
-				);
-			}
-
-			if (pub.facets?.PubHeaderTheme?.props?.backgroundColor?.value) {
-				let color = pub.facets.PubHeaderTheme.props.backgroundColor.value;
-				const rgbaToHex = (rgba: string) => {
-					const [r, g, b, a] =
-						rgba.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)?.slice(1) ?? [];
-					return `#${r}${g}${b}${a ? a.slice(0, 2) : ""}`;
-				};
-
-				if (color === "light") {
-					color = rgbaToHex("rgba(0, 0, 0, 0.028)");
-				}
-				if (color === "dark") {
-					color = rgbaToHex("rgba(0, 0, 0, 0.65)");
-				}
-				if (color === "community") {
-					color = legacyCommunity.community.accentColorDark;
-				}
-
-				op = op.set(
-					jaFields["Header Theme"].slug,
-					pub.facets.PubHeaderTheme.props.backgroundColor.value
-				);
-			}
-
-			// if (pub.releases) {
-			// if (pub.releases) {
-			// 	op = op.relate(
-			// 		jaFields.Versions.slug,
-			// 		pub.releases.map((r, i) => {
-			// 			const doc = r.doc;
-
-			// 			const { doc: doc2, interestingNodes } = doc
-			// 				? transformProsemirrorTree(doc.content)
-			// 				: { doc: null, interestingNodes: {} };
-
-			// 			return {
-			// 				value: i + 1,
-			// 				target: (op) =>
-			// 					op
-			// 						.create({
-			// 							pubTypeId: legacyStructure["Version"].id,
-			// 						})
-			// 						.set(
-			// 							{
-			// 								[versionFields["Abstract"].slug]:
-			// 									interestingNodes.abstract,
-			// 								[versionFields["Version Number"].slug]: i + 1,
-			// 								[versionFields.Description.slug]: r.noteText ?? "",
-			// 								[versionFields["PubContent"].slug]: doc2,
-			// 								[versionFields["Publication Date"].slug]: r.createdAt,
-			// 							},
-			// 							{
-			// 								ignoreNullish: true,
-			// 							}
-			// 						),
-			// 			};
-			// 		})
-			// 	);
-			// }
-
-			return op;
-		});
-	});
+		},
+		{
+			concurrency: 20,
+		}
+	);
 
 	const createdPubs = await batch.execute();
 
