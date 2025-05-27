@@ -42,11 +42,11 @@ export const formatDateAsTime = (date = new Date()) => {
 	return format(date, "h:mm aa");
 };
 
-/** Format a date as ex: "Apr 28, 2025" OR if it is less than a day away, as "1 hour ago" */
+/** Format a date as ex: "Apr 28, 2025" OR if it is less than a week away, as "4 days ago" */
 export const formatDateAsPossiblyDistance = (date: Date) => {
 	const now = new Date();
 	const daysDiff = differenceInDays(now, date);
-	if (daysDiff < 1) {
+	if (daysDiff <= 7) {
 		return formatDistance(date, new Date(), { addSuffix: true });
 	}
 	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
