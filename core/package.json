@@ -73,6 +73,7 @@
     "@neshca/cache-handler": "^1.9.0",
     "@nimpl/getters": "^2.0.0",
     "@node-rs/argon2": "^1.8.3",
+    "@node-rs/argon2-wasm32-wasi": "^2.0.2",
     "@opentelemetry/auto-instrumentations-node": "catalog:",
     "@prisma/client": "5.19.1",
     "@react-email/render": "^1.0.1",

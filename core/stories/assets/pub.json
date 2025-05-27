@@ -1,0 +1,237 @@
+{
+	"id": "1e93ec09-7015-4922-a3db-6860e01b287f",
+	"pubTypeId": "797b8b64-c882-484e-be83-cbf3ef35a010",
+	"depth": 1,
+	"stageId": "f8bea11b-b6c7-43cb-86c3-05319bb0b4df",
+	"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+	"isCycle": false,
+	"createdAt": "2025-04-23T17:55:57.426Z",
+	"updatedAt": "2025-04-23T17:55:57.426Z",
+	"title": "Fugiat ventus textor vetus vaco appono cunae.",
+	"stage": {
+		"id": "f8bea11b-b6c7-43cb-86c3-05319bb0b4df",
+		"createdAt": "2025-04-23T13:55:57.418",
+		"updatedAt": "2025-04-23T13:55:57.418",
+		"name": "Articles",
+		"order": "aa",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	"pubType": {
+		"id": "797b8b64-c882-484e-be83-cbf3ef35a010",
+		"description": null,
+		"name": "Journal Article",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+		"createdAt": "2025-04-23T13:55:57.346",
+		"updatedAt": "2025-04-23T13:55:57.346",
+		"fields": [
+			{
+				"id": "0467db42-aae5-4430-8971-adb34b9bd96f",
+				"name": "Title",
+				"slug": "legacy:title",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": true,
+				"schema": null
+			},
+			{
+				"id": "6088350d-df68-4979-8e03-d05962d23b00",
+				"name": "Slug",
+				"slug": "legacy:slug",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "5e811708-87ce-4ed7-9cd9-f4010bed3d52",
+				"name": "Publication Date",
+				"slug": "legacy:publication-date",
+				"schemaName": "DateTime",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "7dcf2767-230d-497f-b0ce-ee003c8b217e",
+				"name": "Creation Date",
+				"slug": "legacy:creation-date",
+				"schemaName": "DateTime",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "5755a1bb-d1e3-4c9b-8e98-3394e172a029",
+				"name": "Last Edited",
+				"slug": "legacy:last-edited",
+				"schemaName": "DateTime",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "efeaaf59-2e6f-4558-98d2-c0402c5edc77",
+				"name": "Avatar",
+				"slug": "legacy:avatar",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "6cacc6df-f29a-488c-9559-4bdd23aa2760",
+				"name": "Description",
+				"slug": "legacy:description",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "96504fe3-eacd-4192-867a-595dd67ca76a",
+				"name": "Abstract",
+				"slug": "legacy:abstract",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "b582bd60-0e63-479b-9738-17c1da0e7f37",
+				"name": "License",
+				"slug": "legacy:license",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "725aec37-1494-47bc-a34a-8dc818a7138f",
+				"name": "Content",
+				"slug": "legacy:content",
+				"schemaName": "RichText",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "8642daa6-74b2-4324-88b7-c461ba80022d",
+				"name": "DOI",
+				"slug": "legacy:doi",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "b1519306-8dde-4e6d-93cd-793b85502dc6",
+				"name": "DOI Suffix",
+				"slug": "legacy:doi-suffix",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "d21eabef-721f-4f00-9d45-851525aaa398",
+				"name": "URL",
+				"slug": "legacy:url",
+				"schemaName": "URL",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "96e70770-9e3e-44bc-9a87-4be900a30a80",
+				"name": "Contributors",
+				"slug": "legacy:contributors",
+				"schemaName": "String",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "c0d8a35d-95aa-4b0e-8565-cc72f7cdc907",
+				"name": "Tag",
+				"slug": "legacy:tag",
+				"schemaName": "Null",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "812b5a11-e910-4ac0-bb0b-ce0f2aa6b699",
+				"name": "Editors",
+				"slug": "legacy:editors",
+				"schemaName": "Null",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "fca3bb43-6681-45ca-a062-9a948f674f4a",
+				"name": "Downloads",
+				"slug": "legacy:downloads",
+				"schemaName": "String",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "646cba77-10d0-4e6b-a64a-1beebe86885c",
+				"name": "Images",
+				"slug": "legacy:images",
+				"schemaName": "Null",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "333ab6c4-8ba4-45a0-95b5-4bd2299627de",
+				"name": "Tables",
+				"slug": "legacy:tables",
+				"schemaName": "Null",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "e3c008ca-5cb1-44b1-8d57-b269850d400a",
+				"name": "Citations",
+				"slug": "legacy:citations",
+				"schemaName": "String",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "e413128c-a98d-4a93-830a-b6991a401a11",
+				"name": "ConnectedPubs",
+				"slug": "legacy:connectedpubs",
+				"schemaName": "String",
+				"isRelation": true,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "008c4148-e385-4b5c-9876-add9eec4a394",
+				"name": "Citation Style",
+				"slug": "legacy:citation-style",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			},
+			{
+				"id": "de4e8692-70c6-483c-9bd2-4693bf4f3e4f",
+				"name": "Inline Citation Style",
+				"slug": "legacy:inline-citation-style",
+				"schemaName": "String",
+				"isRelation": false,
+				"isTitle": false,
+				"schema": null
+			}
+		]
+	},
+	"values": []
+}
