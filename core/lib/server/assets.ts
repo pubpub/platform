@@ -28,6 +28,14 @@ export const getS3Client = () => {
 		forcePathStyle: !!env.ASSETS_STORAGE_ENDPOINT, // Required for MinIO
 	});
 
+	logger.info({
+		message: "Initialized S3 client",
+		endpoint: env.ASSETS_STORAGE_ENDPOINT,
+		region,
+		key,
+		secret,
+	});
+
 	return s3Client;
 };
 
