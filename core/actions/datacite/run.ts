@@ -325,9 +325,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 	return {
 		data: {
-			depositConfig,
-			depositPayload,
-			depositResult,
+			doi: depositResult.data.attributes.doi,
 		},
 		success: true,
 	};
