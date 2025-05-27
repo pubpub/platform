@@ -6,7 +6,7 @@ import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/cleanup";
+import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-cleanup";
 import { MigrationForm, UndoMigrationForm } from "./MigrationForm";
 
 export const metadata: Metadata = {

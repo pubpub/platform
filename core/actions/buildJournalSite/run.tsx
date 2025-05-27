@@ -7,26 +7,12 @@ import { logger } from "logger";
 
 import type { action } from "./action";
 import { env } from "~/lib/env/env";
-import { getPubsWithRelatedValues } from "~/lib/server";
 import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
 
-// parse Journal
-
 export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
-	const [journal, siteBuilderToken] = await Promise.all([
-		getPubsWithRelatedValues(
-			{
-				pubId: pub.id,
-				communityId: pub.communityId,
-			},
-			{
-				depth: 5,
-			}
-		),
-		getSiteBuilderToken(pub.communityId),
-	]);
+	const siteBuilderToken = await getSiteBuilderToken(pub.communityId);
 
 	if (!siteBuilderToken) {
 		throw new Error("Site builder token not found");
