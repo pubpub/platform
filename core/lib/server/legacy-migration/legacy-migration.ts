@@ -480,8 +480,6 @@ const createJournalArticles = async (
 							content: [interestingNodes.abstract],
 						} as any);
 					}
-
-					// console.log(interestingNodes.abstract);
 				}
 
 				if (pubHeaderImage) {
@@ -618,73 +616,79 @@ const createPages = async (
 		trx,
 	});
 
-	await pMap(legacyPages, async (page) => {
-		const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
-			page.avatar,
-			communitySlug,
-			imageMap
-		);
+	await pMap(
+		legacyPages,
+		async (page) => {
+			const { image: avatar } = await getOrGenerateMetadata(
+				page.avatar,
+				communitySlug,
+				imageMap
+			);
 
-		batch.add(({ upsertByValue }) => {
-			let op = upsertByValue(legacyStructure["Page"].fields["Legacy Id"].slug, page.id, {
-				pubTypeId: legacyStructure["Page"].id,
+			batch.add(({ upsertByValue }) => {
+				let op = upsertByValue(legacyStructure["Page"].fields["Legacy Id"].slug, page.id, {
+					pubTypeId: legacyStructure["Page"].id,
+				});
+
+				op = op.set(legacyStructure["Page"].fields["Legacy Id"].slug, page.id);
+
+				if (page.title) {
+					op = op.set(legacyStructure["Page"].fields.Title.slug, page.title);
+				}
+
+				if (page.slug || page.title === "Home") {
+					let slug = page.slug;
+					if (page.title === "Home") {
+						slug = "/";
+					}
+
+					op = op.set(legacyStructure["Page"].fields.Slug.slug, slug);
+				}
+
+				if (page.description) {
+					op = op.set(legacyStructure["Page"].fields.Description.slug, page.description);
+				}
+
+				if (avatar) {
+					op = op.set(legacyStructure["Page"].fields.Avatar.slug, [avatar]);
+				}
+
+				if (page.isPublic) {
+					op = op.set(legacyStructure["Page"].fields["Is Public"].slug, page.isPublic);
+				}
+
+				if (page.isNarrowWidth) {
+					op = op.set(
+						legacyStructure["Page"].fields["Is Narrow Width"].slug,
+						page.isNarrowWidth
+					);
+				}
+
+				if (page.layout) {
+					const prosemirrorBody = transformLayoutBlocks(
+						page.id,
+						page.layout,
+						legacyStructure
+					);
+					if (prosemirrorBody) {
+						op = op.set(legacyStructure["Page"].fields.Layout.slug, prosemirrorBody);
+					}
+				}
+
+				if (page.layoutAllowsDuplicatePubs) {
+					op = op.set(
+						legacyStructure["Page"].fields["Layout Allows Duplicate Pubs"].slug,
+						page.layoutAllowsDuplicatePubs
+					);
+				}
+
+				return op;
 			});
-
-			op = op.set(legacyStructure["Page"].fields["Legacy Id"].slug, page.id);
-
-			if (page.title) {
-				op = op.set(legacyStructure["Page"].fields.Title.slug, page.title);
-			}
-
-			if (page.slug || page.title === "Home") {
-				let slug = page.slug;
-				if (page.title === "Home") {
-					slug = "/";
-				}
-
-				op = op.set(legacyStructure["Page"].fields.Slug.slug, slug);
-			}
-
-			if (page.description) {
-				op = op.set(legacyStructure["Page"].fields.Description.slug, page.description);
-			}
-
-			if (avatar) {
-				op = op.set(legacyStructure["Page"].fields.Avatar.slug, [avatar]);
-			}
-
-			if (page.isPublic) {
-				op = op.set(legacyStructure["Page"].fields["Is Public"].slug, page.isPublic);
-			}
-
-			if (page.isNarrowWidth) {
-				op = op.set(
-					legacyStructure["Page"].fields["Is Narrow Width"].slug,
-					page.isNarrowWidth
-				);
-			}
-
-			if (page.layout) {
-				const prosemirrorBody = transformLayoutBlocks(
-					page.id,
-					page.layout,
-					legacyStructure
-				);
-				if (prosemirrorBody) {
-					op = op.set(legacyStructure["Page"].fields.Layout.slug, prosemirrorBody);
-				}
-			}
-
-			if (page.layoutAllowsDuplicatePubs) {
-				op = op.set(
-					legacyStructure["Page"].fields["Layout Allows Duplicate Pubs"].slug,
-					page.layoutAllowsDuplicatePubs
-				);
-			}
-
-			return op;
-		});
-	});
+		},
+		{
+			concurrency: 20,
+		}
+	);
 
 	const createdPages = await batch.execute();
 
@@ -724,246 +728,252 @@ const createCollections = async (
 		pubIdMap.set(pub.id, pub.id);
 	}
 
-	await pMap(legacyCollections, async (collection) => {
-		const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
-			collection.avatar,
-			communitySlug,
-			imageMap
-		);
+	await pMap(
+		legacyCollections,
+		async (collection) => {
+			const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
+				collection.avatar,
+				communitySlug,
+				imageMap
+			);
 
-		const filteredCollectionPubs = collection.collectionPubs.filter((cp) => {
-			const hasPub = pubIdMap.has(cp.pubId);
+			const filteredCollectionPubs = collection.collectionPubs.filter((cp) => {
+				const hasPub = pubIdMap.has(cp.pubId);
 
-			if (!hasPub) {
-				logger.warn(
-					`Collection ${collection.id} has pub ${cp.pubId} that is not in the current community. It will not be imported. ${JSON.stringify(cp)}`
-				);
-			}
+				if (!hasPub) {
+					logger.warn(
+						`Collection ${collection.id} has pub ${cp.pubId} that is not in the current community. It will not be imported. ${JSON.stringify(cp)}`
+					);
+				}
 
-			return hasPub;
-		});
-
-		// first check whether the collection has pubs that are not in the current community
-
-		batch.add(({ upsertByValue }) => {
-			const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
-			let op = upsertByValue(relevantType.fields["Legacy Id"].slug, collection.id, {
-				pubTypeId: relevantType.id,
+				return hasPub;
 			});
 
-			op = op.set(relevantType.fields["Legacy Id"].slug, collection.id);
+			// first check whether the collection has pubs that are not in the current community
 
-			if (collection.title) {
-				op = op.set(relevantType.fields.Title.slug, collection.title);
-			}
+			batch.add(({ upsertByValue }) => {
+				const relevantType = legacyStructure[kindToTypeMap[collection.kind]];
+				let op = upsertByValue(relevantType.fields["Legacy Id"].slug, collection.id, {
+					pubTypeId: relevantType.id,
+				});
 
-			if (collection.slug) {
-				op = op.set(relevantType.fields.Slug.slug, collection.slug);
-			}
+				op = op.set(relevantType.fields["Legacy Id"].slug, collection.id);
 
-			if (collection.doi) {
-				op = op.set(
-					relevantType.fields["DOI"].slug,
-					URL.canParse(collection.doi)
-						? collection.doi
-						: `https://doi.org/${collection.doi}`
-				);
-			}
-
-			if (collection.isPublic) {
-				op = op.set(relevantType.fields["Is Public"].slug, collection.isPublic);
-			}
-
-			if (avatar) {
-				op = op.set(relevantType.fields["Avatar"].slug, [avatar]);
-			}
-
-			if (collection.layout) {
-				const prosemirrorBody = transformLayoutBlocks(
-					collection.id,
-					collection.layout.blocks,
-					legacyStructure
-				);
-				if (prosemirrorBody) {
-					op = op.set(relevantType.fields.Layout.slug, prosemirrorBody);
+				if (collection.title) {
+					op = op.set(relevantType.fields.Title.slug, collection.title);
 				}
-			}
 
-			if (collection.pageId) {
-				op = op.relateByValue(
-					relevantType.fields["Page"].slug,
-					null,
-					{
-						slug: legacyStructure["Page"].fields["Legacy Id"].slug,
-						value: collection.pageId,
-					},
-					{
-						replaceExisting: true,
-						deleteOrphaned: true,
+				if (collection.slug) {
+					op = op.set(relevantType.fields.Slug.slug, collection.slug);
+				}
+
+				if (collection.doi) {
+					op = op.set(
+						relevantType.fields["DOI"].slug,
+						URL.canParse(collection.doi)
+							? collection.doi
+							: `https://doi.org/${collection.doi}`
+					);
+				}
+
+				if (collection.isPublic) {
+					op = op.set(relevantType.fields["Is Public"].slug, collection.isPublic);
+				}
+
+				if (avatar) {
+					op = op.set(relevantType.fields["Avatar"].slug, [avatar]);
+				}
+
+				if (collection.layout) {
+					const prosemirrorBody = transformLayoutBlocks(
+						collection.id,
+						collection.layout.blocks,
+						legacyStructure
+					);
+					if (prosemirrorBody) {
+						op = op.set(relevantType.fields.Layout.slug, prosemirrorBody);
 					}
-				);
-			}
-
-			if (collection.kind === "issue") {
-				if (collection.metadata.issue) {
-					op = op.set(
-						legacyStructure["Issue"].fields["Issue Number"].slug,
-						collection.metadata.issue
-					);
 				}
 
-				if (collection.metadata.volume) {
-					op = op.set(
-						legacyStructure["Issue"].fields["Issue Volume"].slug,
-						collection.metadata.volume
-					);
-				}
-
-				if (collection.metadata.electronicIssn) {
-					op = op.set(
-						legacyStructure["Issue"].fields["E-ISSN"].slug,
-						collection.metadata.electronicIssn
-					);
-				}
-
-				if (collection.metadata.publicationDate) {
-					op = op.set(
-						legacyStructure["Issue"].fields["Print Publication Date"].slug,
-						collection.metadata.publicationDate
-					);
-				}
-
-				if (collection.metadata.url) {
-					op = op.set(
-						legacyStructure["Issue"].fields["URL"].slug,
-						collection.metadata.url
-					);
-				}
-
-				if (filteredCollectionPubs.length > 0) {
+				if (collection.pageId) {
 					op = op.relateByValue(
-						legacyStructure["Issue"].fields["Articles"].slug,
-						filteredCollectionPubs.map((cp) => ({
-							value: cp.contextHint ?? "",
-							target: {
-								slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
-								value: cp.pubId,
-							},
-						})),
+						relevantType.fields["Page"].slug,
+						null,
+						{
+							slug: legacyStructure["Page"].fields["Legacy Id"].slug,
+							value: collection.pageId,
+						},
 						{
 							replaceExisting: true,
 							deleteOrphaned: true,
 						}
 					);
 				}
-			}
 
-			if (collection.kind === "book") {
-				if (collection.metadata.edition) {
-					op = op.set(
-						legacyStructure["Book"].fields["Edition"].slug,
-						collection.metadata.edition
-					);
-				}
+				if (collection.kind === "issue") {
+					if (collection.metadata.issue) {
+						op = op.set(
+							legacyStructure["Issue"].fields["Issue Number"].slug,
+							collection.metadata.issue
+						);
+					}
 
-				if (collection.metadata.copyrightYear) {
-					op = op.set(
-						legacyStructure["Book"].fields["Copyright Year"].slug,
-						collection.metadata.copyrightYear
-					);
-				}
+					if (collection.metadata.volume) {
+						op = op.set(
+							legacyStructure["Issue"].fields["Issue Volume"].slug,
+							collection.metadata.volume
+						);
+					}
 
-				if (filteredCollectionPubs.length > 0) {
-					op = op.relateByValue(
-						legacyStructure["Book"].fields["Chapters"].slug,
-						filteredCollectionPubs.map((cp) => ({
-							value: cp.contextHint ?? "",
-							target: {
-								slug: legacyStructure["Book"].fields["Legacy Id"].slug,
-								value: cp.pubId,
-							},
-						})),
-						{
-							replaceExisting: true,
-							deleteOrphaned: true,
-						}
-					);
-				}
-			}
+					if (collection.metadata.electronicIssn) {
+						op = op.set(
+							legacyStructure["Issue"].fields["E-ISSN"].slug,
+							collection.metadata.electronicIssn
+						);
+					}
 
-			if (collection.kind === "conference-proceedings") {
-				if (collection.metadata.theme) {
-					op = op.set(
-						legacyStructure["Conference Proceedings"].fields["Theme"].slug,
-						collection.metadata.theme
-					);
-				}
+					if (collection.metadata.publicationDate) {
+						op = op.set(
+							legacyStructure["Issue"].fields["Print Publication Date"].slug,
+							collection.metadata.publicationDate
+						);
+					}
 
-				if (collection.metadata.location) {
-					op = op.set(
-						legacyStructure["Conference Proceedings"].fields["Location"].slug,
-						collection.metadata.location
-					);
-				}
+					if (collection.metadata.url) {
+						op = op.set(
+							legacyStructure["Issue"].fields["URL"].slug,
+							collection.metadata.url
+						);
+					}
 
-				if (collection.metadata.date) {
-					op = op.set(
-						legacyStructure["Conference Proceedings"].fields["Held at Date"].slug,
-						collection.metadata.date
-					);
-				}
-
-				if (collection.metadata.acronym) {
-					op = op.set(
-						legacyStructure["Conference Proceedings"].fields["Acronym"].slug,
-						collection.metadata.acronym
-					);
-				}
-
-				if (filteredCollectionPubs.length > 0) {
-					op = op.relateByValue(
-						legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
-						filteredCollectionPubs.map(
-							(cp) => ({
+					if (filteredCollectionPubs.length > 0) {
+						op = op.relateByValue(
+							legacyStructure["Issue"].fields["Articles"].slug,
+							filteredCollectionPubs.map((cp) => ({
 								value: cp.contextHint ?? "",
 								target: {
-									slug: legacyStructure["Conference Proceedings"].fields[
-										"Legacy Id"
-									].slug,
+									slug: legacyStructure["Issue"].fields["Legacy Id"].slug,
 									value: cp.pubId,
 								},
-							}),
+							})),
 							{
 								replaceExisting: true,
 								deleteOrphaned: true,
 							}
-						)
-					);
+						);
+					}
 				}
-			}
 
-			if (collection.kind === "tag") {
-				if (filteredCollectionPubs.length > 0) {
-					op = op.relateByValue(
-						legacyStructure["Collection"].fields["Items"].slug,
-						filteredCollectionPubs.map((cp) => ({
-							value: cp.contextHint ?? "",
-							target: {
-								slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
-								value: cp.pubId,
-							},
-						})),
-						{
-							replaceExisting: true,
-							deleteOrphaned: true,
-						}
-					);
+				if (collection.kind === "book") {
+					if (collection.metadata.edition) {
+						op = op.set(
+							legacyStructure["Book"].fields["Edition"].slug,
+							collection.metadata.edition
+						);
+					}
+
+					if (collection.metadata.copyrightYear) {
+						op = op.set(
+							legacyStructure["Book"].fields["Copyright Year"].slug,
+							collection.metadata.copyrightYear
+						);
+					}
+
+					if (filteredCollectionPubs.length > 0) {
+						op = op.relateByValue(
+							legacyStructure["Book"].fields["Chapters"].slug,
+							filteredCollectionPubs.map((cp) => ({
+								value: cp.contextHint ?? "",
+								target: {
+									slug: legacyStructure["Book"].fields["Legacy Id"].slug,
+									value: cp.pubId,
+								},
+							})),
+							{
+								replaceExisting: true,
+								deleteOrphaned: true,
+							}
+						);
+					}
 				}
-			}
 
-			return op;
-		});
-	});
+				if (collection.kind === "conference-proceedings") {
+					if (collection.metadata.theme) {
+						op = op.set(
+							legacyStructure["Conference Proceedings"].fields["Theme"].slug,
+							collection.metadata.theme
+						);
+					}
+
+					if (collection.metadata.location) {
+						op = op.set(
+							legacyStructure["Conference Proceedings"].fields["Location"].slug,
+							collection.metadata.location
+						);
+					}
+
+					if (collection.metadata.date) {
+						op = op.set(
+							legacyStructure["Conference Proceedings"].fields["Held at Date"].slug,
+							collection.metadata.date
+						);
+					}
+
+					if (collection.metadata.acronym) {
+						op = op.set(
+							legacyStructure["Conference Proceedings"].fields["Acronym"].slug,
+							collection.metadata.acronym
+						);
+					}
+
+					if (filteredCollectionPubs.length > 0) {
+						op = op.relateByValue(
+							legacyStructure["Conference Proceedings"].fields["Presentations"].slug,
+							filteredCollectionPubs.map(
+								(cp) => ({
+									value: cp.contextHint ?? "",
+									target: {
+										slug: legacyStructure["Conference Proceedings"].fields[
+											"Legacy Id"
+										].slug,
+										value: cp.pubId,
+									},
+								}),
+								{
+									replaceExisting: true,
+									deleteOrphaned: true,
+								}
+							)
+						);
+					}
+				}
+
+				if (collection.kind === "tag") {
+					if (filteredCollectionPubs.length > 0) {
+						op = op.relateByValue(
+							legacyStructure["Collection"].fields["Items"].slug,
+							filteredCollectionPubs.map((cp) => ({
+								value: cp.contextHint ?? "",
+								target: {
+									slug: legacyStructure["Collection"].fields["Legacy Id"].slug,
+									value: cp.pubId,
+								},
+							})),
+							{
+								replaceExisting: true,
+								deleteOrphaned: true,
+							}
+						);
+					}
+				}
+
+				return op;
+			});
+		},
+		{
+			concurrency: 20,
+		}
+	);
 
 	const createdCollections = await batch.execute();
 
@@ -1004,7 +1014,6 @@ const createJournal = async (
 		[legacyStructure.Journal.fields.Slug.slug]: legacyCommunity.community.subdomain,
 		[legacyStructure.Journal.fields.Description.slug]:
 			legacyCommunity.community.description ?? "",
-		// [legacyStructure.Journal.fields.Avatar.slug]: legacyCommunity.community.avatar,
 		[legacyStructure.Journal.fields["Publication Date"].slug]: new Date(),
 	});
 
@@ -1229,13 +1238,10 @@ export const importFromLegacy = async (
 	trx = db
 ) => {
 	const result = await maybeWithTrx(trx, async (trx) => {
-		// await cleanUpLegacy(currentCommunity, trx);
-
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
 		const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
 
-		// console.log(legacyPubs.collections);
 		await writeFile(
 			"lib/server/legacy-migration/archive.json",
 			JSON.stringify(legacyCommunity, null, 2)
