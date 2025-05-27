@@ -1123,6 +1123,11 @@ const createJournal = async (
 				trx,
 			});
 
+			opp.set(
+				legacyStructure.Header.fields["Title"].slug,
+				`Header for ${legacyCommunity.community.title} site`
+			);
+
 			const relateNavigation = (
 				nav: (typeof legacyCommunity.community.navigation)[number],
 				op: typeof opp
@@ -1206,64 +1211,12 @@ const createJournal = async (
 				if (!newOp) continue;
 
 				opp = newOp;
-				// 	if ("type" in nav) {
-				// 		if (nav.type === "page") {
-				// 			opp = opp.relateByValue(
-				// 				legacyStructure.Header.fields["Navigation Targets"].slug,
-				// 				null,
-				// 				{
-				// 					target: legacyStructure.Page.fields["Legacy Id"].slug,
-				// 					value: nav.id,
-				// 				}
-				// 			);
-				// 		}
-				// 		if (nav.type === "collection") {
-				// 			opp = opp.relateByValue(
-				// 				legacyStructure.Header.fields["Navigation Targets"].slug,
-				// 				null,
-				// 				{
-				// 					target: legacyStructure.Collection.fields["Legacy Id"].slug,
-				// 					value: nav.id,
-				// 				}
-				// 			);
-				// 		}
-				// 	}
 			}
 
 			return opp;
 		});
 	}
-	// if (legacyCommunity.community.navigation?.length) {
-	// 	for (const nav of legacyCommunity.community.navigation) {
-	// 		if ("type" in nav) {
-	// 			if (nav.type === "page") {
-	// 				op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
-	// 					{
-	// 						value: null,
-	// 						target: {
-	// 							slug: legacyStructure.Page.fields["Legacy Id"].slug,
-	// 							value: nav.id,
-	// 						},
-	// 					},
-	// 				]);
-	// 				continue;
-	// 			} else if (nav.type === "collection") {
-	// 				op.relateByValue(legacyStructure.Journal.fields["Navigation Targets"].slug, [
-	// 					{
-	// 						value: null,
-	// 						target: {
-	// 							slug: legacyStructure.Collection.fields["Legacy Id"].slug,
-	// 							value: nav.id,
-	// 						},
-	// 					},
-	// 				]);
-	// 				continue;
-	// 			} else {
-	// 				throw new Error(`Unknown navigation type: ${nav.type}`);
-	// 			}
-	// 		}
-	// 	}
-	// }
+
 	const result = await op.execute();
 	logger.info("Journal pub created and linked to all content");
 
