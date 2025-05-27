@@ -190,22 +190,13 @@ export const cleanUpLegacy = async (
 			msg: `Deleted ${result.numDeletedRows} legacy pub types`,
 		});
 	}
-	// delete pub fields
-	// this may not work, because they might be used by other pub types
-	const actualPubFieldsToDelete = await getToBeDeletedLegacyPubFields(
-		community,
-		toBeDeletedPubTypes.map((pt) => pt.id),
-		true,
-		toBeDeletedPubFields.map((f) => f.id),
-		trx
-	);
 
 	logger.info({
 		msg: "Deleting legacy pub fields",
-		actualPubFieldsToDelete,
+		toBeDeletedPubFields,
 	});
 
-	if (actualPubFieldsToDelete.length) {
+	if (toBeDeletedPubFields.length) {
 		logger.info({
 			msg: "Deleted legacy pub fields",
 		});
@@ -216,7 +207,7 @@ export const cleanUpLegacy = async (
 				.where(
 					"slug",
 					"in",
-					actualPubFieldsToDelete.map((f) => f.slug)
+					toBeDeletedPubFields.map((f) => f.slug)
 				)
 			// where field is not used in any value
 		).executeTakeFirstOrThrow();
