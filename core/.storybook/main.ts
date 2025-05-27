@@ -17,20 +17,6 @@ const config: StorybookConfig = {
 		getAbsolutePath("@chromatic-com/storybook"),
 		getAbsolutePath("@storybook/experimental-addon-test"),
 	],
-	viteFinal: (config) => {
-		if (!config.build) {
-			config.build = {};
-		}
-
-		if (!config.optimizeDeps) {
-			config.optimizeDeps = {};
-		}
-
-		config.build.target = "esnext";
-		config.optimizeDeps.include = ["@node-rs/argon2-wasm32-wasi"];
-
-		return config;
-	},
 	framework: {
 		name: getAbsolutePath("@storybook/experimental-nextjs-vite"),
 		options: {},

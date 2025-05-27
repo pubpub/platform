@@ -1,4 +1,13 @@
-import { addDays, addHours, addMinutes, addMonths, addWeeks, addYears, format } from "date-fns";
+import {
+	addDays,
+	addHours,
+	addMinutes,
+	addMonths,
+	addWeeks,
+	addYears,
+	format,
+	formatDistance,
+} from "date-fns";
 
 import type { PubInStageForDuration, RuleConfig } from "~/actions/_lib/rules";
 
@@ -25,16 +34,19 @@ export const addDuration = (duration: RuleConfig<PubInStageForDuration>, date = 
 	}
 };
 
-export const getMonthAndDateString = () => {
-	const date = new Date();
-	return date.toLocaleString("default", { month: "short", day: "numeric" });
-};
-
 /**
  * Format a date object as ex: "3:24 PM"
  */
 export const formatDateAsTime = (date = new Date()) => {
 	return format(date, "h:mm aa");
+};
+
+export const formatDateAsMonthDayYear = (date: Date) => {
+	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
+};
+
+export const distanceFromNow = (date: Date) => {
+	return formatDistance(date, new Date(), { addSuffix: true });
 };
 
 // Used for createdAt in pub tables
