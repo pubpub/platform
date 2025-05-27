@@ -312,7 +312,7 @@ export const createLegacyStructure = async (
 		.where("isDefault", "=", true)
 		.execute();
 
-	pMap(result, async (pubType) => {
+	await pMap(result, async (pubType) => {
 		const existingForm = existingDefaultForms.find((f) => f.pubTypeId === pubType.id);
 
 		if (existingForm) {
@@ -419,12 +419,8 @@ const createJournalArticles = async (
 		legacyCommunity.pubs,
 		async (pub) => {
 			const pubHeaderImageId = pub.facets?.PubHeaderTheme?.props?.backgroundImage?.value;
-			const [
-				{ image: avatar, imageMap: avatarMap },
-				{ image: pubHeaderImage, imageMap: pubHeaderImageMap },
-			] = await Promise.all([
+			const [{ image: avatar }, { image: pubHeaderImage }] = await Promise.all([
 				getOrGenerateMetadata(pub.avatar, communitySlug, imageMap),
-
 				getOrGenerateMetadata(pubHeaderImageId, communitySlug, imageMap),
 			]);
 
@@ -731,7 +727,7 @@ const createCollections = async (
 	await pMap(
 		legacyCollections,
 		async (collection) => {
-			const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
+			const { image: avatar } = await getOrGenerateMetadata(
 				collection.avatar,
 				communitySlug,
 				imageMap
@@ -1062,11 +1058,13 @@ const createJournal = async (
 	if (legacyCommunity.community.issn) {
 		op = op.set(legacyStructure.Journal.fields["E-ISSN"].slug, legacyCommunity.community.issn);
 	}
+
 	const { image: avatar, imageMap: avatarMap } = await getOrGenerateMetadata(
 		legacyCommunity.community.avatar,
 		communitySlug,
 		imageMap
 	);
+
 	if (avatar) {
 		op = op.set(legacyStructure.Journal.fields["Avatar"].slug, [avatar]);
 	}
