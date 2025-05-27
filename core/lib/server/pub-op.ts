@@ -1034,34 +1034,6 @@ abstract class PubOpBase {
 			}
 		}
 
-		console.log("----------------------");
-		console.log(
-			"duplicate values",
-			values.filter((v, idx) =>
-				values.find(
-					(vv, idx2) => idx2 !== idx && vv.pubId === v.pubId && vv.fieldId === v.fieldId
-				)
-			)
-		);
-		console.log(
-			"duplicate relations",
-			relations.filter((r, idx) =>
-				relations.find(
-					(rr, idx2) =>
-						idx2 !== idx &&
-						rr.pubId === r.pubId &&
-						rr.fieldId === r.fieldId &&
-						rr.relatedPubId === r.relatedPubId
-				)
-			)
-		);
-
-		console.log(
-			"values that are also relations?",
-			values.filter((v) =>
-				relations.find((r) => r.pubId === v.pubId && r.fieldId === v.fieldId)
-			)
-		);
 		// Upsert all values and relations in efficient batches
 		await Promise.all([
 			values.length > 0 &&
