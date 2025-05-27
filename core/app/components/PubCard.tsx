@@ -2,35 +2,40 @@ import React from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import { Badge } from "ui/badge";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Checkbox } from "ui/checkbox";
-import { Calendar, History, Pencil, Play, Trash } from "ui/icon";
+import {
+	Calendar,
+	ChevronDown,
+	FlagTriangleRightIcon,
+	History,
+	Pencil,
+	Play,
+	Trash,
+} from "ui/icon";
 
 import { formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
+import { RemovePubButton } from "./pubs/RemovePubButton";
 
 // TODO: https://github.com/pubpub/platform/issues/1200
 const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
 	return null;
 };
 
-const HoverActions = () => {
+const Action = ({ icon, title, link }: { icon: React.ReactNode; title: string; link?: string }) => {
+	const iconWithTitle = (
+		<>
+			{icon}
+			<span className="sr-only">{title}</span>
+		</>
+	);
+	const inner = link ? <Link href={link}>{iconWithTitle}</Link> : iconWithTitle;
 	return (
-		<div className="flex items-center gap-3 text-neutral-500">
-			<Button variant="ghost" className="w-6 [&_svg]:size-6">
-				<Trash strokeWidth="1px" />
-				<span className="sr-only">Delete</span>
-			</Button>
-			<Button variant="ghost" className="w-6 [&_svg]:size-6">
-				<Play strokeWidth="1px" />
-			</Button>
-			<Button variant="ghost" className="w-6 [&_svg]:size-6">
-				<Pencil strokeWidth="1px" />
-			</Button>
-			<Checkbox className="ml-2 box-content h-4 w-4 border-neutral-500" />
-		</div>
+		<Button variant="ghost" className="w-6 [&_svg]:size-6">
+			{inner}
+		</Button>
 	);
 };
 
@@ -47,15 +52,18 @@ export const PubCard = async ({
 			data-testid={`pub-row-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-col space-y-[6px]">
-				<div className="flex flex-row gap-2 p-0 text-xs font-semibold leading-4">
-					<Badge variant="outline" className="h-[22px] rounded">
+				<div className="flex flex-row gap-2 p-0 font-semibold leading-4">
+					<Button variant="outline" className="h-[22px] rounded text-xs">
 						Submission
-					</Badge>
-					<Button variant="outline" className="h-[22px] rounded-[104px] text-xs">
-						Stage
 					</Button>
-					<Button variant="outline" className="h-[22px] text-xs">
+					<Button variant="outline" className="h-[22px] rounded-[104px] px-2 text-xs">
+						<FlagTriangleRightIcon strokeWidth="1px" />
+						Stage
+						<ChevronDown strokeWidth="1px" />
+					</Button>
+					<Button variant="outline" className="h-[22px] px-2 text-xs">
 						Relations
+						<ChevronDown strokeWidth="1px" />
 					</Button>
 				</div>
 				<CardTitle className="text-[15px] font-bold">
@@ -83,7 +91,17 @@ export const PubCard = async ({
 				</CardFooter>
 			</div>
 			<div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-				<HoverActions />
+				<div className="flex items-center gap-3 text-neutral-500">
+					{/* <RemovePubButton pubId={pub.id} /> */}
+					<Action icon={<Trash strokeWidth="1px" />} title="Archive" />
+					<Action icon={<Play strokeWidth="1px" />} title="Take an action" />
+					<Action
+						link={`/c/${communitySlug}/pubs/${pub.id}/edit`}
+						icon={<Pencil strokeWidth="1px" />}
+						title="Update"
+					/>
+					<Checkbox className="ml-2 box-content h-4 w-4 border-neutral-500" />
+				</div>
 			</div>
 		</Card>
 	);
