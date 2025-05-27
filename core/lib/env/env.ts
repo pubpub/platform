@@ -51,7 +51,6 @@ export const env = createEnv({
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
 		SITE_BUILDER_ENDPOINT: selfHostedOptional(z.string().url()),
-		SITE_BUILDER_API_KEY: selfHostedOptional(z.string()),
 	},
 	client: {},
 	experimental__runtimeEnv: {
