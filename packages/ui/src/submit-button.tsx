@@ -62,7 +62,8 @@ export const SubmitButton = ({
 		setButtonState("error");
 		if (errorTimeout) clearTimeout(errorTimeout);
 		const timeout = setTimeout(() => setButtonState("idle"), 2000);
-		setErrorTimeout(timeout);
+		// cast necessary bc typescript sometimes gets confused and uses a NodeJS.Timeout instead of a number
+		setErrorTimeout(timeout as unknown as number);
 	}, [errorTimeout]);
 
 	useEffect(() => {
