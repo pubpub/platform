@@ -7,7 +7,7 @@ import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Calendar, History } from "ui/icon";
 
-import { distanceFromNow, formatDateAsMonthDayYear } from "~/lib/dates";
+import { formatDateAsPossiblyDistance } from "~/lib/dates";
 import { PubTitle } from "./PubTitle";
 
 const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
@@ -53,13 +53,13 @@ export const PubCard = async ({
 				<PubDescription pub={pub} />
 			</CardDescription>
 			<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
-				<div className="flex gap-1">
+				<div className="flex gap-1" title="Created at">
 					<Calendar size="16px" strokeWidth="1px" />
-					<span>{formatDateAsMonthDayYear(pub.createdAt)}</span>
+					<span>{formatDateAsPossiblyDistance(pub.createdAt)}</span>
 				</div>
-				<div className="flex gap-1">
+				<div className="flex gap-1" title="Updated at">
 					<History size="16px" strokeWidth="1px" />
-					<span>{distanceFromNow(pub.updatedAt)}</span>
+					<span>{formatDateAsPossiblyDistance(pub.updatedAt)}</span>
 				</div>
 			</CardFooter>
 		</Card>

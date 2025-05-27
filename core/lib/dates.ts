@@ -5,6 +5,7 @@ import {
 	addMonths,
 	addWeeks,
 	addYears,
+	differenceInDays,
 	format,
 	formatDistance,
 } from "date-fns";
@@ -41,12 +42,14 @@ export const formatDateAsTime = (date = new Date()) => {
 	return format(date, "h:mm aa");
 };
 
-export const formatDateAsMonthDayYear = (date: Date) => {
+/** Format a date as ex: "Apr 28, 2025" OR if it is less than a day away, as "1 hour ago" */
+export const formatDateAsPossiblyDistance = (date: Date) => {
+	const now = new Date();
+	const daysDiff = differenceInDays(now, date);
+	if (daysDiff < 1) {
+		return formatDistance(date, new Date(), { addSuffix: true });
+	}
 	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
-};
-
-export const distanceFromNow = (date: Date) => {
-	return formatDistance(date, new Date(), { addSuffix: true });
 };
 
 // Used for createdAt in pub tables
