@@ -8,6 +8,7 @@ import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env";
+import { seedBlank } from "./seeds/blank";
 import { setupInviteTestCommunity } from "./seeds/invite-test-community";
 import { seedLegacy } from "./seeds/legacy";
 import { seedStarter } from "./seeds/starter";
@@ -65,6 +66,7 @@ async function createUserMembers({
 
 const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
 const starterId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
+const blankId = "cccccccc-cccc-4ccc-cccc-cccccccccccc" as CommunitiesId;
 
 async function main() {
 	// do not seed arcadia if the minimal seed flag is set
@@ -74,7 +76,7 @@ async function main() {
 	// eslint-disable-next-line no-restricted-properties
 	const shouldSeedLegacy = !Boolean(process.env.MINIMAL_SEED);
 
-	const prismaCommunityIds = [starterId, shouldSeedLegacy ? legacyId : null].filter(
+	const prismaCommunityIds = [starterId, blankId, shouldSeedLegacy ? legacyId : null].filter(
 		Boolean
 	) as CommunitiesId[];
 
@@ -93,7 +95,12 @@ async function main() {
 
 	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([seedStarter(starterId), legacyPromise, setupInviteTestCommunity()]);
+	await Promise.all([
+		seedStarter(starterId),
+		seedBlank(blankId),
+		legacyPromise,
+		setupInviteTestCommunity(),
+	]);
 
 	await Promise.all([
 		createUserMembers({
