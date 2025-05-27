@@ -36,6 +36,12 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
+	invites: InvitesTable;
+
+	invite_forms: InviteFormsTable;
+
+	invites_history: InvitesHistoryTable;
+
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -95,10 +101,4 @@ export interface PublicSchema {
 	pub_values_history: PubValuesHistoryTable;
 
 	_FormElementToPubType: FormElementToPubTypeTable;
-
-	invites: InvitesTable;
-
-	invite_forms: InviteFormsTable;
-
-	invites_history: InvitesHistoryTable;
 }
