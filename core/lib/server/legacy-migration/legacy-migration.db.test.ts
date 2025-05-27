@@ -59,8 +59,11 @@ beforeAll(async () => {
 
 describe("legacy migration", () => {
 	it("should be able to create everything", async () => {
-		const { createLegacyStructure, REQUIRED_LEGACY_PUB_FIELDS } = await import(
+		const { createLegacyStructure } = await import(
 			"~/lib/server/legacy-migration/legacy-migration"
+		);
+		const { REQUIRED_LEGACY_PUB_FIELDS } = await import(
+			"~/lib/server/legacy-migration/legacy-structure"
 		);
 		const { getPubFields } = await import("~/lib/server/pubFields");
 
