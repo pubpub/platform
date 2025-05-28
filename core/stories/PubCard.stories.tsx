@@ -24,6 +24,11 @@ const meta: Meta<typeof PubCard> = {
 	tags: ["autodocs"],
 	argTypes: {},
 	args: { pub: pub, communitySlug: "test-community", actions: <Button>Actions</Button> },
+	parameters: {
+		nextjs: {
+			appDirectory: true,
+		},
+	},
 };
 export default meta;
 

@@ -1,4 +1,4 @@
-import { dirname, join } from "path";
+import path, { dirname, join } from "path";
 
 import type { StorybookConfig } from "@storybook/experimental-nextjs-vite";
 
@@ -27,6 +27,21 @@ const config: StorybookConfig = {
 	staticDirs: ["../public"],
 	typescript: {
 		reactDocgen: "react-docgen-typescript",
+	},
+	viteFinal: (config) => {
+		if (!config.resolve) {
+			return config;
+		}
+
+		config.resolve.alias = {
+			...config.resolve.alias,
+			"~/app/components/pubs/PubEditor/actions": path.resolve(
+				__dirname,
+				"./__mocks__/PubEditor.actions.mock.ts"
+			),
+		};
+
+		return config;
 	},
 };
 export default config;
