@@ -102,6 +102,7 @@ export const makeFileUploadPermanent = async (
 	await trx
 		.updateTable("pub_values")
 		.where("pub_values.pubId", "=", pubId)
+		//@ts-expect-error
 		.where((eb) => eb.ref("value", "->>").at(0).key("fileUploadUrl"), "=", tempUrl)
 		.set((eb) => ({
 			value: eb.fn("jsonb_set", [
