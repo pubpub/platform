@@ -280,12 +280,13 @@ export const updatePub = defineServerAction(async function updatePub({
 			updateQuery.unrelate(slug, relatedPubId);
 		}
 
-		return await Promise.all([
+		const [pub] = await Promise.all([
 			updateQuery.executeAndReturnPub(),
 			...fileUploads.map(({ fileName, tempUrl }) =>
 				makeFileUploadPermanent({ pubId, tempUrl, fileName, userId: loginData.user.id })
 			),
 		]);
+		return pub;
 	} catch (error) {
 		logger.error(error);
 		return {
