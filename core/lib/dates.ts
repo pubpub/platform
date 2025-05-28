@@ -7,7 +7,7 @@ import {
 	addYears,
 	differenceInDays,
 	format,
-	formatDistance,
+	formatDistanceToNow,
 } from "date-fns";
 
 import type { PubInStageForDuration, RuleConfig } from "~/actions/_lib/rules";
@@ -47,7 +47,7 @@ export const formatDateAsPossiblyDistance = (date: Date) => {
 	const now = new Date();
 	const daysDiff = differenceInDays(now, date);
 	if (daysDiff <= 7) {
-		return formatDistance(date, new Date(), { addSuffix: true });
+		return formatDistanceToNow(date, { addSuffix: true });
 	}
 	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
 };

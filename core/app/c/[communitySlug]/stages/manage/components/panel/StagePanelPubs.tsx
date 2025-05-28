@@ -22,7 +22,7 @@ type PropsInner = {
 const StagePanelPubsInner = async (props: PropsInner) => {
 	const [stagePubs, stageActionInstances, stage] = await Promise.all([
 		getStagePubs(props.stageId).execute(),
-		getStageActions(props.stageId).execute(),
+		getStageActions({ stageId: props.stageId }).execute(),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 	]);
 	const communitySlug = await getCommunitySlug();

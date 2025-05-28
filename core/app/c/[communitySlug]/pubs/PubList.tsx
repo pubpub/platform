@@ -4,9 +4,12 @@ import type { CommunitiesId, UsersId } from "db/public";
 import { cn } from "utils";
 
 import { BasicPagination } from "~/app/components/Pagination";
-import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
+import { PubCard } from "~/app/components/PubCard";
+import { PubRowSkeleton } from "~/app/components/PubRow";
+import { getStageActions } from "~/lib/db/queries";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { getStages } from "~/lib/server/stages";
 
 const PAGE_SIZE = 10;
 
@@ -24,7 +27,7 @@ type PaginatedPubListProps = {
 };
 
 const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
-	const [count, pubs] = await Promise.all([
+	const [count, pubs, stages, actions] = await Promise.all([
 		getPubsCount({ communityId: props.communityId }),
 		getPubsWithRelatedValues(
 			{ communityId: props.communityId, userId: props.userId },
@@ -38,6 +41,8 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				withValues: false,
 			}
 		),
+		getStages({ communityId: props.communityId, userId: props.userId }).execute(),
+		getStageActions({ communityId: props.communityId }).execute(),
 	]);
 
 	const totalPages = Math.ceil(count / PAGE_SIZE);
@@ -46,14 +51,16 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
 
 	return (
-		<div className={cn("flex flex-col gap-8")}>
+		<div className={cn("flex flex-col gap-3")}>
 			{pubs.map((pub) => {
+				const actionsForThisStage = actions.filter((a) => a.stageId === pub.stageId);
 				return (
-					<PubRow
+					<PubCard
 						key={pub.id}
-						userId={props.userId}
 						pub={pub}
-						searchParams={props.searchParams}
+						communitySlug={communitySlug}
+						stages={stages}
+						actionInstances={actionsForThisStage}
 					/>
 				);
 			})}

@@ -115,7 +115,7 @@ export async function StagePubs({
 				withPubType: true,
 			}
 		),
-		getStageActions(stage.id).execute(),
+		getStageActions({ stageId: stage.id }).execute(),
 	]);
 
 	const totalPages =

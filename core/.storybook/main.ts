@@ -39,6 +39,10 @@ const config: StorybookConfig = {
 				__dirname,
 				"./__mocks__/PubEditor.actions.mock.ts"
 			),
+			"~/app/c/[communitySlug]/stages/components/lib/actions": path.resolve(
+				__dirname,
+				"./__mocks__/Stages.actions.mock.ts"
+			),
 		};
 
 		return config;

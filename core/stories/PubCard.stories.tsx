@@ -5,8 +5,10 @@ import { fn } from "@storybook/test";
 import type { ProcessedPub } from "contracts";
 import { Button } from "ui/button";
 
+import type { CommunityStage } from "~/lib/server/stages";
 import { PubCard } from "~/app/components/PubCard";
 import pubJson from "./assets/pub.json";
+import stagesJson from "./assets/stages.json";
 
 const pub = {
 	...pubJson,
@@ -18,12 +20,14 @@ const pub = {
 	withStage: true;
 }>;
 
+const stages = stagesJson as unknown as CommunityStage[];
+
 const meta: Meta<typeof PubCard> = {
 	title: "PubCard",
 	component: PubCard,
 	tags: ["autodocs"],
 	argTypes: {},
-	args: { pub: pub, communitySlug: "test-community", actions: <Button>Actions</Button> },
+	args: { pub: pub, communitySlug: "test-community", stages },
 	parameters: {
 		nextjs: {
 			appDirectory: true,
