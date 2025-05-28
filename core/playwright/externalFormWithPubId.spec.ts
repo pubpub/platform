@@ -35,12 +35,21 @@ const seed = createSeed({
 		Content: {
 			schemaName: CoreSchemaType.String,
 		},
+		Related: {
+			schemaName: CoreSchemaType.String,
+			relation: true,
+		},
+		Animals: {
+			schemaName: CoreSchemaType.StringArray,
+		},
 		...PubFieldsOfEachType,
 	},
 	pubTypes: {
 		Submission: {
 			Title: { isTitle: true },
 			Content: { isTitle: false },
+			StringArray: { isTitle: false },
+			Related: { isTitle: false },
 		},
 		Evaluation: {
 			Title: { isTitle: true },
@@ -73,6 +82,23 @@ const seed = createSeed({
 				Content: "My content",
 			},
 			stage: "Evaluating",
+		},
+		{
+			pubType: "Submission",
+			values: { Title: "Array fields", Animals: ["penguin"] },
+			relatedPubs: {
+				Related: [
+					{
+						value: "test relation value",
+						pub: {
+							pubType: "Submission",
+							values: {
+								Title: "A pub related to another Pub",
+							},
+						},
+					},
+				],
+			},
 		},
 	],
 	forms: {
@@ -116,6 +142,30 @@ const seed = createSeed({
 					component: InputComponent.textInput,
 					config: {
 						label: "Title",
+					},
+				},
+			],
+		},
+		"Array fields": {
+			slug: "array-fields",
+			pubType: "Submission",
+			elements: [
+				{
+					type: ElementType.pubfield,
+					field: "Animals",
+					component: InputComponent.multivalueInput,
+					config: {},
+				},
+				{
+					type: ElementType.pubfield,
+					field: "Related",
+					component: InputComponent.relationBlock,
+					config: {
+						relationshipConfig: {
+							label: "related",
+							help: "help",
+							component: InputComponent.textInput,
+						},
 					},
 				},
 			],
@@ -169,4 +219,18 @@ test.describe("Rendering the external form", () => {
 		await expect(page.getByTestId(`Content-value`)).toHaveText("My content");
 		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1);
 	});
+});
+
+test("Removing array fields", async () => {
+	const formUrl = `/c/${community.community.slug}/public/forms/${community.forms["Array fields"].slug}/fill?pubId=${community.pubs[3].id}`;
+	await page.goto(formUrl);
+	await page.getByRole("button", { name: "penguin" }).getByTestId("remove-button").click();
+	await page.getByRole("button", { name: "Delete link to related pub" }).click();
+	await page.getByRole("button", { name: "Submit" }).click();
+	await expect(page.getByTestId("completed")).toHaveCount(1);
+
+	// Visit the form again and make sure the values were removed
+	await page.goto(formUrl);
+	await expect(page.getByRole("button", { name: "penguin" })).toHaveCount(0);
+	await expect(page.getByRole("button", { name: "Delete link to related pub" })).toHaveCount(0);
 });

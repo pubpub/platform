@@ -103,6 +103,10 @@ export function MemberSelectClient({
 		<FormField
 			name={fieldName}
 			render={({ field }) => {
+				const unsetUser = () => {
+					setSelectedUser(undefined);
+					field.onChange(undefined);
+				};
 				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
 				const formItem = (
 					<FormItem className="flex flex-col gap-y-1">
@@ -130,7 +134,12 @@ export function MemberSelectClient({
 									onUserAdded={onUserAdded}
 								/>
 							}
-							onInputValueChange={onInputValueChange}
+							onInputValueChange={(val) => {
+								if (val === "") {
+									unsetUser();
+								}
+								onInputValueChange(val);
+							}}
 							onValueChange={async (option) => {
 								const user = users.find((user) => user.id === option.value);
 								if (!user) {
@@ -154,6 +163,7 @@ export function MemberSelectClient({
 							}}
 							onClose={resetAddUserButton}
 							icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
+							onClear={selectedUser ? unsetUser : undefined}
 						/>
 						<FormMessage />
 						{helpText && <FormDescription>{helpText}</FormDescription>}
