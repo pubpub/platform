@@ -92,8 +92,14 @@ export const PubCard = async ({
 			</div>
 			<div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				<div className="flex items-center gap-3 text-neutral-500">
-					<RemovePubButton pubId={pub.id} />
-					<Action icon={<Trash strokeWidth="1px" />} title="Archive" />
+					<RemovePubButton
+						pubId={pub.id}
+						iconOnly
+						buttonText="Archive"
+						variant="ghost"
+						className="w-6 [&_svg]:size-6"
+						icon={<Trash strokeWidth="1px" />}
+					/>
 					<Action icon={<Play strokeWidth="1px" />} title="Take an action" />
 					<Action
 						link={`/c/${communitySlug}/pubs/${pub.id}/edit`}
