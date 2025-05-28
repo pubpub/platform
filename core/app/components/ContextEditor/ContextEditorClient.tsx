@@ -49,7 +49,7 @@ export const ContextEditorClient = ({
 		[pubs]
 	);
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(pubId, fileName);
+		return runUpload(fileName, pubId);
 	};
 
 	const memoEditor = useMemo(() => {
