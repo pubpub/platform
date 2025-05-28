@@ -13,7 +13,7 @@ import * as Email from "~/lib/server/email";
 import { createFormInviteLink, getForm, userHasPermissionToForm } from "~/lib/server/form";
 import { TokenFailureReason, validateTokenSafe } from "~/lib/server/token";
 
-export const upload = defineServerAction(async function upload(pubId: string, fileName: string) {
+export const upload = defineServerAction(async function upload(fileName: string, pubId?: PubsId) {
 	if (env.FLAGS?.get("uploads") === false) {
 		return ApiError.FEATURE_DISABLED;
 	}
@@ -25,7 +25,9 @@ export const upload = defineServerAction(async function upload(pubId: string, fi
 	}
 	// TODO: authorization check?
 
-	return await generateSignedAssetUploadUrl(pubId as PubsId, fileName);
+	const signedUrl = await generateSignedAssetUploadUrl(loginData.user.id, fileName, pubId);
+	logger.debug({ msg: "generated signed url for asset upload", fileName, signedUrl, pubId });
+	return signedUrl;
 });
 
 export const sendNewFormLink = defineServerAction(async function sendNewFormLink({

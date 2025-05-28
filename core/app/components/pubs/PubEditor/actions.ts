@@ -1,8 +1,17 @@
 "use server";
 
+import { Value } from "@sinclair/typebox/value";
+import { getJsonSchemaByCoreSchemaType } from "schemas";
+
 import type { Json, JsonValue } from "contracts";
 import type { PubsId, PubTypesId, StagesId, UsersId } from "db/public";
-import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
+import {
+	Capabilities,
+	CoreSchemaType,
+	FormAccessType,
+	MemberRole,
+	MembershipType,
+} from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -10,7 +19,7 @@ import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan, userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
 import { parseRichTextForPubFieldsAndRelatedPubs } from "~/lib/fields/richText";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { ApiError, createPubRecursiveNew } from "~/lib/server";
+import { ApiError, createPubRecursiveNew, makeFileUploadPermanent } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { getForm, grantFormAccess } from "~/lib/server/form";
@@ -89,6 +98,29 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		userId: user.id as UsersId,
 	});
 
+	const fileUploads: { fileName: string; tempUrl: string }[] = [];
+	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
+	const filteredValues = values
+		? Object.fromEntries(
+				Object.entries(values).filter(([slug, value]) => {
+					const element = form.elements.find((element) => element.slug === slug);
+					if (!element) {
+						return false;
+					}
+					if (
+						element.schemaName === CoreSchemaType.FileUpload &&
+						Value.Check(fileUploadSchema, value)
+					) {
+						fileUploads.push({
+							tempUrl: value[0].fileUploadUrl,
+							fileName: value[0].fileName,
+						});
+					}
+					return true;
+				})
+			)
+		: {};
+	logger.debug({ msg: "creating pub", filteredValues, fileUploads });
 	try {
 		// need this in order to test it properly
 		const result = await maybeWithTrx(db, async (trx) => {
@@ -97,13 +129,7 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 				communityId,
 				body: {
 					...body,
-					values: values
-						? Object.fromEntries(
-								Object.entries(values).filter(([slug]) =>
-									form.elements.find((element) => element.slug === slug)
-								)
-							)
-						: {},
+					values: filteredValues,
 					// adds user to the pub
 					// TODO: this should be configured on the form
 					members: { [user.id]: MemberRole.contributor },
@@ -111,6 +137,15 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 				lastModifiedBy,
 				trx,
 			});
+
+			await Promise.all(
+				fileUploads.map(({ fileName, tempUrl }) =>
+					makeFileUploadPermanent(
+						{ pubId: createdPub.id, tempUrl, fileName, userId: user.id },
+						trx
+					)
+				)
+			);
 
 			if (relation && canCreateRelation && body.id) {
 				await PubOp.update(relation.pubId, {
@@ -213,11 +248,25 @@ export const updatePub = defineServerAction(async function updatePub({
 			});
 
 		const normalizedValues = normalizePubValues(processedVals);
+		const fileUploads: { fileName: string; tempUrl: string }[] = [];
+		const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 
 		for (const { slug, value, relatedPubId } of normalizedValues) {
-			if (!form.elements.find((element) => element.slug === slug)) {
+			const element = form.elements.find((element) => element.slug === slug);
+			if (!element) {
 				continue;
 			}
+
+			if (
+				element.schemaName === CoreSchemaType.FileUpload &&
+				Value.Check(fileUploadSchema, value)
+			) {
+				fileUploads.push({
+					tempUrl: value[0].fileUploadUrl,
+					fileName: value[0].fileName,
+				});
+			}
+
 			if (relatedPubId) {
 				updateQuery.relate(slug, value, relatedPubId, {
 					replaceExisting: false,
@@ -231,7 +280,12 @@ export const updatePub = defineServerAction(async function updatePub({
 			updateQuery.unrelate(slug, relatedPubId);
 		}
 
-		return await updateQuery.executeAndReturnPub();
+		return await Promise.all([
+			updateQuery.executeAndReturnPub(),
+			...fileUploads.map(({ fileName, tempUrl }) =>
+				makeFileUploadPermanent({ pubId, tempUrl, fileName, userId: loginData.user.id })
+			),
+		]);
 	} catch (error) {
 		logger.error(error);
 		return {

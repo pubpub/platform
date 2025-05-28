@@ -1,11 +1,20 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+	CopyObjectCommand,
+	PutObjectCommand,
+	S3Client,
+	waitUntilObjectExists,
+} from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { sql } from "kysely";
 
-import type { PubsId } from "db/public";
+import type { PubsId, UsersId } from "db/public";
 import { logger } from "logger";
 
+import { db } from "~/kysely/database";
 import { env } from "../env/env";
+import { createLastModifiedBy } from "../lastModifiedBy";
+import { getCommunitySlug } from "./cache/getCommunitySlug";
 
 let s3Client: S3Client;
 
@@ -31,16 +40,78 @@ export const getS3Client = () => {
 	return s3Client;
 };
 
-export const generateSignedAssetUploadUrl = async (pubId: PubsId, fileName: string) => {
+export const generateSignedAssetUploadUrl = async (
+	userId: UsersId,
+	fileName: string,
+	pubId?: PubsId
+) => {
+	const communitySlug = await getCommunitySlug();
+	const key = `temporary/${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`;
+
 	const client = getS3Client();
 
 	const bucket = env.ASSETS_BUCKET_NAME;
 	const command = new PutObjectCommand({
 		Bucket: bucket,
-		Key: `${pubId}/${fileName}`,
+		Key: key,
 	});
 
 	return await getSignedUrl(client, command, { expiresIn: 3600 });
+};
+
+export const makeFileUploadPermanent = async (
+	{
+		pubId,
+		tempUrl,
+		fileName,
+		userId,
+	}: {
+		pubId: PubsId;
+		tempUrl: string;
+		fileName: string;
+		userId: UsersId;
+	},
+	trx = db
+) => {
+	const matches = tempUrl.match(`(^.+${env.ASSETS_BUCKET_NAME}/)(temporary/.+)`);
+	const prefix = matches?.[1];
+	const source = matches?.[2];
+	if (!source || !fileName || !prefix) {
+		logger.error({ msg: "Unable to parse URL of uploaded file", pubId, tempUrl });
+		throw new Error("Unable to parse URL of uploaded file");
+	}
+	const newKey = `${pubId}/${fileName}`;
+	const s3Client = getS3Client();
+
+	const copyCommand = new CopyObjectCommand({
+		CopySource: `${env.ASSETS_BUCKET_NAME}/${source}`,
+		Bucket: env.ASSETS_BUCKET_NAME,
+		Key: newKey,
+	});
+
+	await s3Client.send(copyCommand);
+	await waitUntilObjectExists(
+		{
+			client: s3Client,
+			maxWaitTime: 10,
+			minDelay: 1,
+		},
+		{ Bucket: env.ASSETS_BUCKET_NAME, Key: newKey }
+	);
+	logger.debug({ msg: "successfully copied temp file to permanent directory", newKey, tempUrl });
+	await trx
+		.updateTable("pub_values")
+		.where("pub_values.pubId", "=", pubId)
+		.where((eb) => eb.ref("value", "->>").at(0).key("fileUploadUrl"), "=", tempUrl)
+		.set((eb) => ({
+			value: eb.fn("jsonb_set", [
+				"value",
+				sql.raw("'{0,fileUploadUrl}'"),
+				eb.val(JSON.stringify(prefix + newKey)),
+			]),
+			lastModifiedBy: createLastModifiedBy({ userId }),
+		}))
+		.execute();
 };
 
 /**
