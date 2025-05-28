@@ -16,15 +16,17 @@ export default defineWorkspace([
 			// See options at: https://storybook.js.org/docs/writing-tests/test-addon#storybooktest
 			storybookTest({ configDir: path.join(dirname, ".storybook") }),
 		],
-		test: {
-			name: "storybook",
-			browser: {
-				enabled: true,
-				headless: true,
-				provider: "playwright",
-				instances: [{ browser: "chromium" }],
-			},
-			setupFiles: [".storybook/vitest.setup.ts"],
-		},
+		// TODO: currently throws an error
+		// Cannot define a nested project for a chromium browser. The project name "storybook (chromium)" was already defined.
+		// test: {
+		// 	name: "storybook",
+		// 	browser: {
+		// 		enabled: true,
+		// 		headless: true,
+		// 		provider: "playwright",
+		// 		instances: [{ browser: "chromium" }],
+		// 	},
+		// 	setupFiles: [".storybook/vitest.setup.ts"],
+		// },
 	},
 ]);
