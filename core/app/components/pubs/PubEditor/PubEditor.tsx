@@ -11,6 +11,7 @@ import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
@@ -227,12 +228,21 @@ export async function PubEditor(props: PubEditorProps) {
 		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
 	);
 
+	const pubWithProsemirrorRichText = pub
+		? transformRichTextValuesToProsemirror(pub, { toJson: true })
+		: undefined;
+
 	const formElements = form.elements.map((e) => (
-		<FormElement key={e.id} pubId={pubId} element={e} values={pub ? pub.values : []} />
+		<FormElement
+			key={e.id}
+			pubId={pubId}
+			element={e}
+			values={pubWithProsemirrorRichText ? pubWithProsemirrorRichText.values : []}
+		/>
 	));
 
 	// These are pub values that are only on the pub, but not on the form. We render them at the end of the form.
-	const pubOnlyElementDefinitions = pub
+	const pubOnlyElementDefinitions = pubWithProsemirrorRichText
 		? makeFormElementDefFromPubFields(
 				pubFields.filter((pubField) => {
 					return !form.elements.find((e) => e.slug === pubField.slug);
@@ -258,31 +268,32 @@ export async function PubEditor(props: PubEditorProps) {
 	};
 
 	const renderStageSelect =
-		pub === undefined ||
+		pubWithProsemirrorRichText === undefined ||
 		(await userCan(Capabilities.movePub, { type: MembershipType.pub, pubId }, user!.id));
 
 	const renderWithPubContext = {
 		communityId: community.id,
 		recipient: memberWithUser as RenderWithPubContext["recipient"],
 		communitySlug: community.slug,
-		pub: pub as RenderWithPubContext["pub"],
+		pub: pubWithProsemirrorRichText as RenderWithPubContext["pub"],
 		trx: db,
 	} satisfies RenderWithPubContext;
 
 	await hydrateMarkdownElements({
 		elements: form.elements,
-		renderWithPubContext: pub ? renderWithPubContext : undefined,
+		renderWithPubContext: pubWithProsemirrorRichText ? renderWithPubContext : undefined,
 	});
 
-	const currentStageId = pub?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
-	const pubForForm = pub
+	const currentStageId =
+		pubWithProsemirrorRichText?.stage?.id ?? ("stageId" in props ? props.stageId : undefined);
+	const pubForForm = pubWithProsemirrorRichText
 		? getPubByForm({
-				pub,
+				pub: pubWithProsemirrorRichText,
 				form,
 				withExtraPubValues: user
 					? await userCan(
 							Capabilities.seeExtraPubValues,
-							{ type: MembershipType.pub, pubId: pub.id },
+							{ type: MembershipType.pub, pubId: pubWithProsemirrorRichText.id },
 							user.id
 						)
 					: false,
@@ -291,7 +302,9 @@ export async function PubEditor(props: PubEditorProps) {
 
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
-	const relatedPubs = pub ? pub.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) : [];
+	const relatedPubs = pubWithProsemirrorRichText
+		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
+		: [];
 	const pubsForContext = [...pubs, ...relatedPubs];
 
 	return (
@@ -345,7 +358,11 @@ export async function PubEditor(props: PubEditorProps) {
 								key={formElementDef.slug}
 								element={formElementDef as FormElements}
 								pubId={pubId}
-								values={pub ? pub.values : []}
+								values={
+									pubWithProsemirrorRichText
+										? pubWithProsemirrorRichText.values
+										: []
+								}
 							/>
 						))}
 					</>

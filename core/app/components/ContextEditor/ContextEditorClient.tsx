@@ -19,59 +19,54 @@ const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.C
 	loading: () => <Skeleton className="h-16 w-full" />,
 });
 
-export const ContextEditorClient = ({
-	pubs,
-	pubTypes,
-	pubId,
-	pubTypeId,
-	className,
-	initialDoc,
-	onChange,
-	disabled,
-	hideMenu,
-}: {
-	pubs: ContextEditorPub[];
-	pubTypes: Pick<PubTypes, "id" | "name">[];
-	pubId: PubsId;
-	pubTypeId: PubTypesId;
-	// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
-} & Pick<
-	ContextEditorProps,
-	"onChange" | "initialDoc" | "className" | "disabled" | "hideMenu"
->) => {
+export const ContextEditorClient = (
+	props: {
+		pubs: ContextEditorPub[];
+		pubTypes: Pick<PubTypes, "id" | "name">[];
+		pubId: PubsId;
+		pubTypeId: PubTypesId;
+		// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
+	} & Pick<
+		ContextEditorProps,
+		"onChange" | "initialDoc" | "className" | "disabled" | "hideMenu" | "getterRef"
+	>
+) => {
 	const runUpload = useServerAction(upload);
+
 	const getPubs = useCallback(
 		(filter: string) => {
 			return new Promise<any[]>((resolve, reject) => {
-				resolve(pubs);
+				resolve(props.pubs);
 			});
 		},
-		[pubs]
+		[props.pubs]
 	);
+
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(fileName, pubId);
+		return runUpload(fileName, props.pubId);
 	};
 
 	const memoEditor = useMemo(() => {
 		return (
 			<ContextEditor
-				pubId={pubId}
-				pubTypeId={pubTypeId}
-				pubTypes={pubTypes}
+				pubId={props.pubId}
+				pubTypeId={props.pubTypeId}
+				pubTypes={props.pubTypes}
 				getPubs={getPubs}
 				getPubById={() => {
 					return {};
 				}}
 				atomRenderingComponent={ContextAtom}
-				onChange={onChange}
-				initialDoc={initialDoc}
-				disabled={disabled}
-				className={className}
-				hideMenu={hideMenu}
+				onChange={props.onChange}
+				initialDoc={props.initialDoc}
+				disabled={props.disabled}
+				className={props.className}
+				hideMenu={props.hideMenu}
 				upload={signedUploadUrl}
+				getterRef={props.getterRef}
 			/>
 		);
-	}, [pubs, pubTypes, disabled]);
+	}, [props.pubs, props.pubTypes, props.disabled]);
 
 	return memoEditor;
 };

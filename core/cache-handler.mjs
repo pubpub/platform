@@ -23,7 +23,7 @@ function createRedisHandler({
 	revalidateTagQuerySize = 1e4,
 }) {
 	function assertClientIsReady() {
-		if (!client.status === "ready") {
+		if (client.status !== "ready") {
 			// Throwing here ensures that we immediately fall back to uncached behavior, rather than
 			// waiting for the command timeout
 			throw new Error("Redis client is not ready yet or connection is lost.");

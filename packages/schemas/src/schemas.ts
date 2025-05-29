@@ -190,7 +190,7 @@ export const Color = Type.String({
 export const Null = Type.Null({ description: "An empty value" });
 
 // Rich text is validated via prosemirror on submit, so we allow Any here
-export const RichText = Type.Not(Type.Null(), {
+export const RichText = Type.String({
 	description: "A rich text document",
-	error: "Value cannot be null",
+	error: "Incorrect value",
 });
