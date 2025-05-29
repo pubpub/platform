@@ -32,7 +32,7 @@
 		"prisma/seed.cts",
 		"prisma/scripts/comment-generator.mts",
 		"prisma/seed/stubs/*.js",
-		"./storybook/*.ts"
+		".storybook/**/*.ts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
