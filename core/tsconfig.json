@@ -31,7 +31,8 @@
 		"prisma/generate-history-table.mts",
 		"prisma/seed.cts",
 		"prisma/scripts/comment-generator.mts",
-		"prisma/seed/stubs/*.js"
+		"prisma/seed/stubs/*.js",
+		"./storybook/*.ts"
 	],
 	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }
