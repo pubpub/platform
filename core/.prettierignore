@@ -1,2 +1,3 @@
 app/c/\[communitySlug\]/developers/docs/stoplight.styles.css
 vitest-bench.local.json
+**/*.html

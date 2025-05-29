@@ -10,13 +10,20 @@ import { env } from "../env/env";
 let s3Client: S3Client;
 
 export const getS3Client = () => {
-	if (s3Client) {
-		return s3Client;
-	}
-
 	const region = env.ASSETS_REGION;
 	const key = env.ASSETS_UPLOAD_KEY;
 	const secret = env.ASSETS_UPLOAD_SECRET_KEY;
+
+	logger.info({
+		message: "Initialized S3 client",
+		endpoint: env.ASSETS_STORAGE_ENDPOINT,
+		region,
+		key,
+		secret,
+	});
+	if (s3Client) {
+		return s3Client;
+	}
 
 	s3Client = new S3Client({
 		endpoint: env.ASSETS_STORAGE_ENDPOINT,

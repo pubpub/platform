@@ -26,6 +26,9 @@ export default {
 					id: (node as Element).getAttribute("id"),
 					class: (node as Element).getAttribute("class"),
 					pubId: (node as Element).getAttribute("data-pub-id"),
+					parentPubId: (node as Element).getAttribute("data-parent-pub-id"),
+					fieldSlug: (node as Element).getAttribute("data-field-slug"),
+					pubTypeId: (node as Element).getAttribute("data-pub-type-id"),
 				};
 			},
 		},
@@ -36,7 +39,10 @@ export default {
 			{
 				class: node.attrs.class,
 				...(node.attrs.id && { id: node.attrs.id }),
-				"data-pub-id": node.attrs.pubId.toString(),
+				"data-pub-id": node.attrs.pubId?.toString(),
+				"data-parent-pub-id": node.attrs.parentPubId?.toString(),
+				"data-field-slug": node.attrs.fieldSlug?.toString(),
+				"data-pub-type-id": node.attrs.pubTypeId?.toString(),
 			},
 			0,
 		] as DOMOutputSpec;
