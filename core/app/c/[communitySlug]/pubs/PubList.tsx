@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 
 import type { CommunitiesId, UsersId } from "db/public";
+import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import { BasicPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/PubCard";
-import { PubRowSkeleton } from "~/app/components/PubRow";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -83,7 +83,10 @@ export const PubListSkeleton = ({
 }) => (
 	<div className={cn(["flex flex-col gap-8", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
-			<PubRowSkeleton key={index} />
+			<Skeleton key={index} className="flex h-[90px] w-full flex-col gap-2 px-4 py-3">
+				<Skeleton className="mt-3 h-6 w-24 space-y-1.5" />
+				<Skeleton className="h-8 w-1/2 space-y-1.5" />
+			</Skeleton>
 		))}
 	</div>
 );

@@ -9,14 +9,14 @@ import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDow
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
-import PubRow from "~/app/components/PubRow";
+import { PubCard } from "~/app/components/PubCard";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
-import { StagePubActions } from "./StagePubActions";
 
 type Props = {
 	userId: UsersId;
@@ -101,7 +101,9 @@ export async function StagePubs({
 	basePath: string;
 	userId: UsersId;
 }) {
-	const [stagePubs, actionInstances] = await Promise.all([
+	const [communitySlug, stages, stagePubs, actionInstances] = await Promise.all([
+		getCommunitySlug(),
+		getStages({ communityId: stage.communityId, userId }).execute(),
 		getPubsWithRelatedValues(
 			{ stageId: [stage.id], communityId: stage.communityId },
 			{
@@ -129,9 +131,8 @@ export async function StagePubs({
 				}
 				// this way we don't pass unecessary data to the client
 				return (
-					<PubRow
+					<PubCard
 						key={pub.id}
-						userId={userId}
 						pub={
 							pub as ProcessedPub<{
 								withStage: true;
@@ -139,17 +140,9 @@ export async function StagePubs({
 								withRelatedPubs: false;
 							}>
 						}
-						actions={
-							<StagePubActions
-								key={stage.id}
-								pub={pub}
-								stage={stage}
-								actionInstances={actionInstances}
-								pageContext={pageContext}
-								members={members}
-							/>
-						}
-						searchParams={pageContext.searchParams}
+						stages={stages}
+						actionInstances={actionInstances}
+						communitySlug={communitySlug}
 					/>
 				);
 			})}
