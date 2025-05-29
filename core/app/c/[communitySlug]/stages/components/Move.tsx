@@ -93,10 +93,6 @@ export default function Move(props: Props) {
 		setPopoverIsOpen(false);
 	};
 
-	if (destinations.length === 0 && sources.length === 0) {
-		return null;
-	}
-
 	return (
 		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
