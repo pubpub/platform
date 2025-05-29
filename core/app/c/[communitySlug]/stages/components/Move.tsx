@@ -22,6 +22,11 @@ type Props = {
 	pubId: PubsId;
 	stageId: StagesId;
 	button?: ReactNode;
+	/**
+	 * If there are no source or destinations from the current stage, hide this component.
+	 * @default true
+	 */
+	hideIfNowhereToMove?: boolean;
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
@@ -30,7 +35,7 @@ type Props = {
 	}
 >;
 
-const makeSourcesAndDestinations = (props: Props) => {
+const makeSourcesAndDestinations = ({ ...props }: Props) => {
 	if (!props.communityStages) {
 		return {
 			sources: props.moveFrom,
@@ -49,7 +54,7 @@ const makeSourcesAndDestinations = (props: Props) => {
 	};
 };
 
-export default function Move(props: Props) {
+export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
 	const { sources, destinations } = makeSourcesAndDestinations(props);
 
 	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
@@ -92,6 +97,10 @@ export default function Move(props: Props) {
 		});
 		setPopoverIsOpen(false);
 	};
+
+	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
+		return null;
+	}
 
 	return (
 		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>

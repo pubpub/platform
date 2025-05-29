@@ -80,6 +80,7 @@ export const PubCard = async ({
 									<ChevronDown strokeWidth="1px" />
 								</Button>
 							}
+							hideIfNowhereToMove={false}
 						/>
 					) : null}
 					<Button variant="outline" className="h-[22px] px-2 text-xs">
