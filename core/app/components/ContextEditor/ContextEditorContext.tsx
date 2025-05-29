@@ -8,11 +8,11 @@ import { createContext, useCallback, useContext, useMemo, useState } from "react
 import type { ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId } from "db/public";
 
-import type { GetPubTypesResult } from "~/lib/server";
+import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
 
 export type ContextEditorContext = {
 	pubs: ContextEditorPub[];
-	pubTypes: GetPubTypesResult;
+	pubTypes: PubTypeWithForm;
 	pubId?: PubsId;
 	pubTypeId?: PubTypesId;
 	/**
