@@ -1,4 +1,13 @@
-import type { CommunitiesId, FormsId, PubsId, PubTypesId, StagesId, UsersId } from "db/public";
+import type {
+	CommunitiesId,
+	Forms,
+	FormsId,
+	PubsId,
+	PubTypes,
+	PubTypesId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { logger } from "logger";
 
@@ -471,13 +480,16 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
 	);
 
+export type PubTypeWithForm = (Pick<PubTypes, "id" | "name"> & Pick<Forms, "slug" | "isDefault">)[];
+
 export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId) => {
 	return autoCache(
 		authorizedCreateFormsBase({ userId, communityId })
 			.innerJoin("pub_types", "forms.pubTypeId", "pub_types.id")
 			.clearSelect()
 			.clearOrderBy()
-			.select(["pub_types.id", "pub_types.name"])
-			.distinct()
+			.select(["pub_types.id", "pub_types.name", "forms.slug", "forms.isDefault"])
+			.distinctOn(["pub_types.id"])
+			.orderBy(["pub_types.id", "forms.isDefault desc"])
 	);
 };

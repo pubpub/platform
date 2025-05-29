@@ -16,7 +16,6 @@ export const PubPageTitleWithStatus = ({
 	defaultFormSlug?: string;
 }) => {
 	const status = useSaveStatus({ defaultMessage: "Form will save when you click save" });
-	const hasMultipleForms = forms?.length > 1;
 	return (
 		<div className="flex flex-col items-center">
 			{title}
@@ -25,18 +24,17 @@ export const PubPageTitleWithStatus = ({
 				data-testid="save-status"
 			>
 				{status}
-				{hasMultipleForms && (
-					<>
-						<div className="mx-1 h-4 border-r border-gray-300"></div>
-						<FormSwitcher
-							forms={forms}
-							defaultFormSlug={defaultFormSlug}
-							className="m-0 h-6 bg-none p-0 text-sm shadow-none focus-visible:ring-2 focus-visible:ring-offset-1"
-						>
-							<Pencil size={14} />
-						</FormSwitcher>
-					</>
-				)}
+
+				<>
+					<div className="mx-1 h-4 border-r border-gray-300"></div>
+					<FormSwitcher
+						forms={forms}
+						defaultFormSlug={defaultFormSlug}
+						className="m-0 h-6 bg-none p-0 text-sm shadow-none focus-visible:ring-2 focus-visible:ring-offset-1"
+					>
+						<Pencil size={14} />
+					</FormSwitcher>
+				</>
 			</div>
 		</div>
 	);

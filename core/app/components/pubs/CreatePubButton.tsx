@@ -1,8 +1,9 @@
-import type { CommunitiesId, PubsId, PubTypes, PubTypesId, StagesId } from "db/public";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { logger } from "logger";
 import { Plus } from "ui/icon";
 
+import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCreatablePubTypes } from "~/lib/authorization/capabilities";
 import { getPubsWithRelatedValues } from "~/lib/server";
@@ -29,7 +30,7 @@ const InitialCreatePubFormWithRelatedPub = async ({
 	stageId,
 }: {
 	relatedPub: RelatedPubData;
-	pubTypes: Pick<PubTypes, "id" | "name">[];
+	pubTypes: PubTypeWithForm;
 	communityId: CommunitiesId;
 	stageId?: StagesId;
 }) => {
@@ -122,6 +123,7 @@ export const CreatePubButton = async (props: Props) => {
 			id={id}
 			param="create-pub-form"
 			title="Create Pub"
+			disabled={pubTypes.length === 0}
 		>
 			{props.relatedPub ? (
 				<InitialCreatePubFormWithRelatedPub

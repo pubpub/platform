@@ -8,7 +8,7 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
 
-import type { PubsId, PubTypes, StagesId } from "db/public";
+import type { PubsId, StagesId } from "db/public";
 import { Button } from "ui/button";
 import {
 	Form,
@@ -22,10 +22,12 @@ import {
 import { Loader2 } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
+import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
 import type { PubField } from "~/lib/types";
+import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher";
 import { useCommunity } from "../providers/CommunityProvider";
 
-const PubTypeSelector = ({ pubTypes }: { pubTypes: Pick<PubTypes, "id" | "name">[] }) => {
+const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 	return (
 		<FormField
 			name="pubTypeId"
@@ -120,7 +122,7 @@ const schemaWithRelatedPub = Type.Object({
 });
 
 interface Props {
-	pubTypes: Pick<PubTypes, "id" | "name">[];
+	pubTypes: PubTypeWithForm;
 	relatedPubFields: Pick<PubField, "id" | "slug" | "name" | "schemaName">[];
 	stageId?: StagesId;
 	relatedPubId?: PubsId;
@@ -174,6 +176,8 @@ export const InitialCreatePubForm = ({
 			pubTypeId: values.pubTypeId,
 			...(stageId ? { stageId } : {}),
 			...(values.relatedPub ?? {}),
+			[formSwitcherUrlParam]: pubTypes.find((pubType) => pubType.id === values.pubTypeId)
+				?.slug,
 		});
 		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
 		router.push(createPubPath);
