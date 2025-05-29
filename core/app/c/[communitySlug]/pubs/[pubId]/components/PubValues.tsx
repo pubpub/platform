@@ -14,8 +14,8 @@ import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
 import { ColorCircle, ColorLabel, ColorValue } from "ui/color";
 import { ChevronDown, ChevronRight } from "ui/icon";
+import { ShowMore } from "ui/show-more";
 
-import type { FileUpload } from "~/lib/fields/fileUpload";
 import { FileUploadPreview } from "~/app/components/forms/FileUpload";
 import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
 
@@ -208,8 +208,6 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		);
 	}
 
-	// Currently, we are only rendering string versions of fields, except for file uploads
-	// For file uploads, because Unjournal doesn't have schemaNames yet, we check the value structure
 	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
 	if (Value.Check(fileUploadSchema, value.value)) {
 		return <FileUploadPreview files={value.value} />;
@@ -220,6 +218,17 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		if (date.toString() !== "Invalid Date") {
 			return date.toISOString().split("T")[0];
 		}
+	}
+
+	if (value.schemaName === CoreSchemaType.RichText) {
+		return (
+			<ShowMore animate={false}>
+				<div
+					className="prose prose-sm"
+					dangerouslySetInnerHTML={{ __html: value.value as string }}
+				/>
+			</ShowMore>
+		);
 	}
 
 	if (value.schemaName === CoreSchemaType.Color) {

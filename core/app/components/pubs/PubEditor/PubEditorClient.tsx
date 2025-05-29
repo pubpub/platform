@@ -13,28 +13,32 @@ import partition from "lodash.partition";
 import { useForm } from "react-hook-form";
 import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "schemas";
 
-import type { JsonValue, ProcessedPub, ProcessedPubWithForm } from "contracts";
+import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import type { PubsId, StagesId } from "db/public";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 import { cn } from "utils";
 
+import type { ContextEditorGetters } from "~/app/components/ContextEditor/ContextEditorContext";
+import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type {
 	BasicFormElements,
 	FormElements,
 	HydratedRelatedFieldValue,
 	RelatedFieldValue,
 	SingleFormValues,
-} from "../../forms/types";
-import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
+} from "~/app/components/forms/types";
 import type { DefinitelyHas } from "~/lib/types";
+import { useContextEditorContext } from "~/app/components/ContextEditor/ContextEditorContext";
+import { EvilContextEditorSymbol } from "~/app/components/forms/elements/ContextEditorElement";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
+import { isRelatedValue } from "~/app/components/forms/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
+import { serializeProseMirrorDoc } from "~/lib/fields/richText";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { isRelatedValue } from "../../forms/types";
 import { RELATED_PUB_SLUG } from "./constants";
 
 const SAVE_WAIT_MS = 5000;
@@ -46,6 +50,7 @@ const preparePayload = ({
 	toggleContext,
 	defaultValues,
 	arrayDefaults,
+	contextEditorGetters,
 	deleted,
 }: {
 	formElements: BasicFormElements[];
@@ -57,6 +62,7 @@ const preparePayload = ({
 		HydratedRelatedFieldValue | SingleFormValues | undefined | StagesId
 	>;
 	arrayDefaults: Record<string, HydratedRelatedFieldValue>;
+	contextEditorGetters: ContextEditorGetters;
 	deleted: Static<typeof deletedValuesSchema>;
 }) => {
 	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {};
@@ -65,26 +71,45 @@ const preparePayload = ({
 	const formElementsWithoutDeletedRelatedFields = formElements.filter(
 		(fe) => !deletedRelatedFieldSlugs.find((s) => s === fe.slug)
 	);
-	for (const { slug } of formElementsWithoutDeletedRelatedFields) {
-		if (
-			slug &&
-			toggleContext.isEnabled(slug) &&
-			// Only send fields that were changed. RHF erroneously reports fields as changed (dirty)
-			// sometimes even when the default value is the same, so we do the check ourselves
-			!isEqualWith(formValues[slug], defaultValues[slug])
-		) {
-			const val = formValues[slug];
-			if (Array.isArray(val)) {
-				const filteredVal = val.filter((v: RelatedFieldValue) => {
-					const isNew = !v.valueId;
-					const isChanged = v.valueId && !isEqualWith(arrayDefaults[v.valueId], v);
-					return isNew || isChanged;
-				});
-				valuesPayload[slug] = filteredVal;
-			} else {
-				valuesPayload[slug] = val;
-			}
+	for (const { slug, schemaName } of formElementsWithoutDeletedRelatedFields) {
+		if (!slug) {
+			continue;
 		}
+
+		if (!toggleContext.isEnabled(slug)) {
+			continue;
+		}
+
+		if (isEqualWith(formValues[slug], defaultValues[slug])) {
+			continue;
+		}
+
+		const val = formValues[slug];
+
+		// we manually retrieve the value from the context editor here instead of having RHF set it
+		// bc this is much faster for very large documents
+		if (schemaName === CoreSchemaType.RichText && val === EvilContextEditorSymbol) {
+			const getter = contextEditorGetters[slug];
+			if (!getter) {
+				throw new Error(`No getter found for slug ${slug}`);
+			}
+			const value = getter.current?.getCurrentState();
+
+			valuesPayload[slug] = value && serializeProseMirrorDoc(value.doc);
+			continue;
+		}
+
+		if (!Array.isArray(val)) {
+			valuesPayload[slug] = val;
+			continue;
+		}
+
+		const filteredVal = val.filter((v: RelatedFieldValue) => {
+			const isNew = !v.valueId;
+			const isChanged = v.valueId && !isEqualWith(arrayDefaults[v.valueId], v);
+			return isNew || isChanged;
+		});
+		valuesPayload[slug] = filteredVal;
 	}
 	return valuesPayload;
 };
@@ -110,6 +135,7 @@ const buildDefaultValues = (
 			if (element.schemaName === CoreSchemaType.DateTime && pubValue) {
 				defaultValues[element.slug] = new Date(pubValue as string);
 			}
+
 			// There can be multiple relations for a single slug
 			if (element.isRelation) {
 				const relatedPubValues = pubValues.filter((v) => v.fieldSlug === element.slug);
@@ -170,9 +196,15 @@ const createSchemaFromElements = (
 						return [slug, undefined];
 					}
 
-					const schema = getJsonSchemaByCoreSchemaType(schemaName, config);
+					let schema = getJsonSchemaByCoreSchemaType(schemaName, config);
 					if (!schema) {
 						return [slug, undefined];
+					}
+
+					if (schemaName === CoreSchemaType.RichText) {
+						// TODO: find a better solution for this
+						// @ts-expect-error Cant assign any to the schema, but it's fine
+						schema = Type.Any();
 					}
 
 					// Allow fields to be empty or optional. Special case for empty strings,
@@ -309,6 +341,8 @@ export const PubEditorClient = ({
 		reValidateMode: "onBlur",
 	});
 
+	const { contextEditorGetters } = useContextEditorContext();
+
 	const handleSubmit = useCallback(
 		async (
 			formValues: FieldValues & StaticSchema,
@@ -329,6 +363,7 @@ export const PubEditorClient = ({
 				toggleContext,
 				defaultValues,
 				arrayDefaults,
+				contextEditorGetters,
 				deleted,
 			});
 
