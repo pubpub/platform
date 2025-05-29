@@ -57,7 +57,7 @@ export const PubCard = async ({
 	return (
 		<Card
 			className="group flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
-			data-testid={`pub-row-${pub.id}`}
+			data-testid={`pub-card-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-col space-y-[6px]">
 				<div className="flex flex-row gap-2 p-0 font-semibold leading-4">
