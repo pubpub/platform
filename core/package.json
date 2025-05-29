@@ -42,7 +42,9 @@
 		"test-run-with-jobs": "pnpm exec concurrently \"pnpm --filter jobs dev\" \"pnpm --filter core test-run\" --success=first -k",
 		"type-check": "tsc --noEmit",
 		"type-check-watch": "tsc --watch",
-		"start-standalone": "node server.js"
+		"start-standalone": "node server.js",
+		"storybook": "storybook dev -p 6006",
+		"build-storybook": "storybook build"
 	},
 	"files": [
 		".next",
@@ -153,6 +155,7 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
+		"@chromatic-com/storybook": "^3",
 		"@hookform/devtools": "^4.3.1",
 		"@playwright/test": "catalog:",
 		"@preconstruct/next": "^4.0.0",
@@ -160,6 +163,13 @@
 		"@prisma/internals": "^5.14.0",
 		"@pubpub/eslint-config": "workspace:*",
 		"@pubpub/prettier-config": "workspace:*",
+		"@storybook/addon-essentials": "^8.6.14",
+		"@storybook/addon-onboarding": "^8.6.14",
+		"@storybook/blocks": "^8.6.14",
+		"@storybook/experimental-addon-test": "^8.6.14",
+		"@storybook/experimental-nextjs-vite": "8.6.14",
+		"@storybook/react": "^8.6.14",
+		"@storybook/test": "^8.6.14",
 		"@tailwindcss/forms": "^0.5.6",
 		"@tanstack/react-query-devtools": "^5.61.3",
 		"@testing-library/jest-dom": "^6.6.3",
@@ -182,6 +192,8 @@
 		"@types/unist": "^3.0.2",
 		"@types/uuid": "^9.0.2",
 		"@vitejs/plugin-react": "^4.2.1",
+		"@vitest/browser": "3.0.5",
+		"@vitest/coverage-v8": "3.0.5",
 		"@vitest/utils": "^3.1.2",
 		"autoprefixer": "catalog:",
 		"csv-parse": "^5.5.2",
@@ -196,6 +208,7 @@
 		"prisma-dbml-generator": "^0.12.0",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19",
+		"storybook": "^8.6.14",
 		"tailwindcss": "catalog:",
 		"ts-node": "^10.9.1",
 		"tsconfig": "workspace:*",

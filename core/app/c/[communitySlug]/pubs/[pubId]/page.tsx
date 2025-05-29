@@ -136,7 +136,7 @@ export default async function Page(props: {
 		return null;
 	}
 
-	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+	const actionsPromise = pub.stage ? getStageActions({ stageId: pub.stage.id }).execute() : null;
 
 	const [actions, communityMembers, communityStages, form, withExtraPubValues, availableForms] =
 		await Promise.all([

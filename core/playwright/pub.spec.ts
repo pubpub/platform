@@ -101,8 +101,7 @@ test.describe("Moving a pub", () => {
 	test("No move button if pub is not in a linked stage", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		await pubsPage.goTo();
-		await page.getByTestId("pub-dropdown-button").first().click();
-		await page.getByRole("link", { name: "Update Pub" }).click();
+		await page.getByRole("link", { name: "Update" }).click();
 		await page.getByLabel("Stage").click();
 		// Shelved is its own node in stages
 		await page.getByRole("option", { name: "Shelved" }).click();
@@ -236,8 +235,7 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
 
 		// Now update
-		await page.getByTestId("pub-dropdown-button").first().click();
-		await page.getByRole("link", { name: "Update Pub" }).click();
+		await page.getByRole("link", { name: "Update" }).first().click();
 		await page.locator(".ProseMirror").click();
 		// move the cursor to the beginning of the editor
 		await page.keyboard.press("Home");
@@ -337,10 +335,9 @@ test.describe("Updating a pub", () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		pubsPage.goTo();
 		await page
-			.getByTestId(`pub-row-${community.pubs[0].id}`)
-			.getByTestId("pub-dropdown-button")
+			.getByTestId(`pub-card-${community.pubs[0].id}`)
+			.getByRole("link", { name: "Update" })
 			.click();
-		await page.getByRole("link", { name: "Update Pub" }).click();
 		await expect(page.getByTestId("save-status")).toHaveText(
 			"Form will save when you click save"
 		);

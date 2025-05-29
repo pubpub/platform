@@ -47,7 +47,9 @@ export const JoinCommunityForm = ({
 			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<Card className="mx-auto max-w-sm">
 					<CardHeader>
-						<CardTitle className="text-xl">Join {community.name}</CardTitle>
+						<CardTitle className="text-xl">
+							<h3>Join {community.name}</h3>
+						</CardTitle>
 						<CardDescription>
 							Join {community.name} as a {role}
 						</CardDescription>

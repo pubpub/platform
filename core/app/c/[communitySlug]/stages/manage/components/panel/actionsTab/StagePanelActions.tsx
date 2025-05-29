@@ -21,7 +21,7 @@ type PropsInner = {
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const [stage, actionInstances] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageActions(props.stageId).execute(),
+		getStageActions({ stageId: props.stageId }).execute(),
 	]);
 
 	if (stage === undefined) {
