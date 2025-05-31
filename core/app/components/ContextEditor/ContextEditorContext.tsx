@@ -6,13 +6,11 @@ import type { PropsWithChildren, RefObject } from "react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
 import type { ProcessedPub } from "contracts";
-import type { PubsId, PubTypesId } from "db/public";
-
-import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
+import type { PubsId, PubTypes, PubTypesId } from "db/public";
 
 export type ContextEditorContext = {
 	pubs: ContextEditorPub[];
-	pubTypes: PubTypeWithForm;
+	pubTypes: Pick<PubTypes, "id" | "name">[];
 	pubId?: PubsId;
 	pubTypeId?: PubTypesId;
 	/**
