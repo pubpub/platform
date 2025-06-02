@@ -28,6 +28,9 @@ services:
         profiles:
             - test
             - integration
+        ports:
+            - 9000:9000
+            - 9001:9001
 
     minio-init:
         depends_on:
