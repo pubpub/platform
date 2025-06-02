@@ -24,7 +24,7 @@ export const getS3Client = () => {
 	const secret = env.ASSETS_UPLOAD_SECRET_KEY;
 
 	logger.info({
-		message: "Initialized S3 client",
+		message: "Initializing S3 client",
 		endpoint: env.ASSETS_STORAGE_ENDPOINT,
 		region,
 		key,
@@ -42,6 +42,10 @@ export const getS3Client = () => {
 			secretAccessKey: secret,
 		},
 		forcePathStyle: !!env.ASSETS_STORAGE_ENDPOINT, // Required for MinIO
+	});
+
+	logger.info({
+		message: "S3 client initialized",
 	});
 
 	return s3Client;
@@ -88,7 +92,20 @@ export const makeFileUploadPermanent = async (
 		throw new Error("Unable to parse URL of uploaded file");
 	}
 	const newKey = `${pubId}/${fileName}`;
+
+	logger.info({
+		message: "Retrieving S3 clients for makeFileUploadPermanent",
+		source,
+		newKey,
+	});
+
 	const s3Client = getS3Client();
+
+	logger.info({
+		message: "S3 client retrieved for makeFileUploadPermanent. Creating copy command",
+		source,
+		newKey,
+	});
 
 	const copyCommand = new CopyObjectCommand({
 		CopySource: `${env.ASSETS_BUCKET_NAME}/${source}`,
@@ -96,7 +113,18 @@ export const makeFileUploadPermanent = async (
 		Key: newKey,
 	});
 
+	logger.info({
+		message: "Sending copy command",
+		copyCommand,
+	});
+
 	await s3Client.send(copyCommand);
+
+	logger.info({
+		message: "Waiting for object to exist",
+		newKey,
+	});
+
 	await waitUntilObjectExists(
 		{
 			client: s3Client,
@@ -120,6 +148,11 @@ export const makeFileUploadPermanent = async (
 			lastModifiedBy: createLastModifiedBy({ userId }),
 		}))
 		.execute();
+
+	logger.info({
+		message: "File uploaded permanently",
+		newKey,
+	});
 };
 
 /**
