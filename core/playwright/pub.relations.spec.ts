@@ -2,6 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
+import type { PubsId } from "db/public";
 import { CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
@@ -12,7 +13,7 @@ import { PubsPage } from "./fixtures/pubs-page";
 
 test.describe.configure({ mode: "serial" });
 
-const relatedPubId = crypto.randomUUID();
+const relatedPubId = crypto.randomUUID() as PubsId;
 
 let page: Page;
 const seed = createSeed({
@@ -28,6 +29,8 @@ const seed = createSeed({
 		Submission: {
 			Title: { isTitle: true },
 			Content: { isTitle: false },
+			Author: { isTitle: false },
+			Citation: { isTitle: false },
 		},
 		Author: {
 			Name: { isTitle: true },
