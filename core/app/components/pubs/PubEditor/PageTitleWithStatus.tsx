@@ -19,11 +19,8 @@ export const PubPageTitleWithStatus = ({
 	return (
 		<div className="flex flex-col items-center">
 			{title}
-			<div
-				className="flex items-center gap-2 text-sm font-normal text-muted-foreground"
-				data-testid="save-status"
-			>
-				{status}
+			<div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
+				<span data-testid="save-status-text">{status}</span>
 
 				<>
 					<div className="mx-1 h-4 border-r border-gray-300"></div>
