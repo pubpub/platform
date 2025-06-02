@@ -1,5 +1,10 @@
 "use server";
 
+import rehypeRetext from "rehype-retext";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import retextStringify from "retext-stringify";
+import { unified } from "unified";
 import * as z from "zod";
 
 import { logger } from "logger";
@@ -27,13 +32,23 @@ type Contributor = Always<
 	Always<Always<components["schemas"]["Doi"]["data"]>["attributes"]>["creators"]
 >[number];
 
+const formatTitle = async (title: string) => {
+	const processor = unified()
+		.use(remarkParse)
+		.use(remarkRehype)
+		.use(rehypeRetext, true)
+		.use(retextStringify);
+	const result = await processor.process(title);
+	return result.toString().trim();
+};
+
 const deriveCreatorsFromRelatedPubs = (
 	relatedPubs: RelatedPubs,
 	contributorFieldSlug: string,
 	contributorPersonFieldSlug: string,
 	contributorPersonNameFieldSlug: string,
-	bylineContributorFlagSlug?: string,
-	contributorPersonOrcidFieldSlug?: string
+	contributorPersonOrcidFieldSlug?: string,
+	bylineContributorFlagSlug?: string
 ) =>
 	relatedPubs
 		.filter((v) => v.fieldSlug === contributorFieldSlug)
@@ -62,6 +77,7 @@ const deriveCreatorsFromRelatedPubs = (
 
 				const contributor = {
 					name: contributorPersonName,
+					nameType: "Personal" as const,
 					givenName,
 					familyName,
 					nameIdentifiers: contributorPersonORCID
@@ -98,7 +114,7 @@ const deriveCreatorsFromRelatedPubs = (
 			}
 		);
 
-const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
+const makeDatacitePayload = async (pub: ActionPub, config: Config): Promise<Payload> => {
 	const doiFieldSlug = config.pubFields.doi?.[0];
 	const titleFieldSlug = config.pubFields.title?.[0];
 	const urlFieldSlug = expect(
@@ -131,8 +147,8 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 		contributorFieldSlug,
 		contributorPersonFieldSlug,
 		contributorPersonNameSlug,
-		bylineContributorFlagSlug,
-		contributorPersonOrcidSlug
+		contributorPersonOrcidSlug,
+		bylineContributorFlagSlug
 	);
 
 	let title: string;
@@ -146,6 +162,8 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 		title = expect(pub.title, "The pub has no title.");
 	}
 
+	title = await formatTitle(title);
+
 	const url = pub.values.find((v) => v.fieldSlug === urlFieldSlug)?.value;
 	assert(
 		typeof url === "string",
@@ -158,7 +176,8 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 		"The pub is missing a value corresponding to the configured publication date field override."
 	);
 
-	const publicationYear = new Date(publicationDate).getFullYear();
+	const publicationDateNormalized = new Date(publicationDate);
+	const publicationYear = publicationDateNormalized.getFullYear();
 
 	let doi =
 		config.doi ||
@@ -189,7 +208,12 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 				contributors,
 				publisher: config.publisher,
 				publicationYear,
-				dates: [],
+				dates: [
+					{
+						dateType: "Issued",
+						date: publicationDateNormalized.toISOString(),
+					},
+				],
 				types: {
 					resourceTypeGeneral: "Preprint",
 				},
@@ -313,7 +337,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args, lastModi
 
 	let depositPayload: Payload;
 	try {
-		depositPayload = makeDatacitePayload(pub, depositConfig);
+		depositPayload = await makeDatacitePayload(pub, depositConfig);
 	} catch (error) {
 		if (error instanceof AssertionError) {
 			return {
