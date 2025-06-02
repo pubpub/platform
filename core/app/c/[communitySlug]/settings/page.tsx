@@ -49,6 +49,16 @@ export default async function Page(props: { params: Promise<{ communitySlug: str
 							API Docs
 						</Link>
 					</li>
+					{user.isSuperAdmin && (
+						<li>
+							<Link
+								className="underline"
+								href={`/c/${communitySlug}/settings/legacy-migration`}
+							>
+								Legacy Migration
+							</Link>
+						</li>
+					)}
 				</ul>
 			</div>
 		</main>

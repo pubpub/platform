@@ -1,12 +1,9 @@
-import { link } from "fs";
-
 import type { User } from "lucia";
 
 import { cache, Suspense } from "react";
 
 import type { Communities, CommunitiesId, UsersId } from "db/public";
-import { Capabilities, MemberRole, MembershipType } from "db/public";
-import { logger } from "logger";
+import { Capabilities, MembershipType } from "db/public";
 import {
 	Activity,
 	BookOpen,
@@ -169,6 +166,11 @@ const adminLinks: LinkGroupDefinition = {
 					text: "API Tokens",
 					authorization: userCanEditCommunityCached,
 				},
+				{
+					href: "/settings/legacy-migration",
+					text: "Imports",
+					authorization: userCanEditCommunityCached,
+				},
 			],
 		},
 		{
@@ -206,6 +208,7 @@ const Links = ({
 					return (
 						<Suspense fallback={<SidebarMenuSkeleton />} key={link.href || link.text}>
 							<Link
+								key={link.href || link.text}
 								user={user}
 								community={community}
 								link={link}
@@ -231,7 +234,7 @@ const Link = async ({
 }: {
 	user: User;
 	community: Communities;
-	link: TopLevelLinkDefinition | SubLevelLinkDefinition;
+	link: TopLevelLinkDefinition | SubLevelLinkDefinition | SubMenuLinkDefinition;
 	groupName?: string;
 }) => {
 	if (link.authorization) {
@@ -291,7 +294,7 @@ const SubMenuLinks = async ({
 		>
 			{link.children.map((child) => (
 				<SidebarMenuSubItem key={child.href}>
-					<Links user={user} community={community} links={link.children} />
+					<Link user={user} community={community} link={child} />
 				</SidebarMenuSubItem>
 			))}
 		</NavLinkSubMenu>
