@@ -39,6 +39,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
+				withRelatedCounts: true,
 			}
 		),
 		getStages({ communityId: props.communityId, userId: props.userId }).execute(),

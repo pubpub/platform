@@ -1270,6 +1270,7 @@ const DEFAULT_OPTIONS = {
 	withMembers: false,
 	cycle: "include",
 	withValues: true,
+	withRelatedCounts: true,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
@@ -1313,6 +1314,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		trx,
 		allowedPubTypes,
 		allowedStages,
+		withRelatedCounts,
 	} = opts;
 
 	if (depth < 1) {
@@ -1746,6 +1748,34 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								)
 							)
 					).as("values")
+				)
+			)
+			.$if(Boolean(withRelatedCounts), (qb) =>
+				qb.select((eb) =>
+					eb
+						.selectFrom("pub_values as pv")
+						.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+						.$if(Boolean(fieldSlugs), (qb) =>
+							qb.where("pub_fields.slug", "in", fieldSlugs!)
+						)
+						.select((eb) =>
+							eb.fn.count<number>("pv.relatedPubId").as("relatedPubsCount")
+						)
+						.whereRef("pv.pubId", "=", "pt.pubId")
+						// filter out relatedPubs with pubTypes/stages that the user does not have access to
+						.$if(Boolean(allowedPubTypes?.length || allowedStages?.length), (qb) =>
+							qb.where((eb) =>
+								eb.or([
+									eb("pv.relatedPubId", "is", null),
+									eb(
+										"pv.relatedPubId",
+										"in",
+										eb.selectFrom("pub_tree").select("pub_tree.pubId")
+									),
+								])
+							)
+						)
+						.as("relatedPubsCount")
 				)
 			)
 			// TODO: is there a more efficient way to do this?
