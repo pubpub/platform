@@ -478,6 +478,7 @@ describe("getPubsWithRelatedValues", () => {
 				"values",
 				"stageId",
 				"pubTypeId",
+				"relatedPubsCount",
 				"createdAt",
 				"updatedAt",
 				"title",
