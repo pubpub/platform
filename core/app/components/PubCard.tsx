@@ -93,7 +93,7 @@ export const PubCard = async ({
 						<RelationsDropDown pubId={pub.id} numRelations={pub.relatedPubsCount} />
 					) : null}
 				</div>
-				<CardTitle className="text-[15px] font-bold">
+				<CardTitle className="text-sm font-bold">
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${communitySlug}/pubs/${pub.id}`}

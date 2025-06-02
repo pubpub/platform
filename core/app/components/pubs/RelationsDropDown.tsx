@@ -67,16 +67,19 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 				) : (
 					relatedPubs.map((relatedPub) => {
 						return (
-							<DropdownMenuItem key={relatedPub.id} className="grid grid-cols-5">
+							<DropdownMenuItem key={relatedPub.id}>
 								<Badge
 									variant="secondary"
-									className="col-span-2 rounded border-gray-300"
+									className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold"
 								>
-									<span className="truncate">{relatedPub.pubType.name}</span>
+									{relatedPub.pubType.name}
 								</Badge>
-								<div className="col-span-3 truncate">
-									<Link href={`/c/${community.slug}/pubs/${relatedPub.id}`}>
-										<span>{getPubTitle(relatedPub)}</span>
+								<div className="truncate">
+									<Link
+										href={`/c/${community.slug}/pubs/${relatedPub.id}`}
+										className="text-xs font-bold"
+									>
+										{getPubTitle(relatedPub)}
 									</Link>
 									{/* TODO: pub description */}
 								</div>
