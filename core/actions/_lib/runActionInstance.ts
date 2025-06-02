@@ -81,6 +81,9 @@ const _runActionInstance = async (
 			userId: isActionUserInitiated ? args.userId : undefined,
 		},
 		{
+			// depth 3 is necessary for the DataCite action to fetch related
+			// contributors and their people
+			depth: 3,
 			withPubType: true,
 			withStage: true,
 		}
@@ -336,6 +339,14 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 	const status = isClientExceptionOptions(result)
 		? ActionRunStatus.failure
 		: ActionRunStatus.success;
+
+	logger[status === ActionRunStatus.failure ? "error" : "info"]({
+		msg: "Action run finished",
+		pubId: args.pubId,
+		actionInstanceId: args.actionInstanceId,
+		status,
+		result,
+	});
 
 	// update the action run with the result
 	await autoRevalidate(

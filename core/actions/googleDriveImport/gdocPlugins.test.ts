@@ -27,7 +27,7 @@ import {
 	structureImages,
 	structureInlineCode,
 	structureInlineMath,
-	structureReferences,
+	// structureReferences,
 	structureTables,
 	structureVideos,
 	tableToObjectArray,
@@ -922,99 +922,99 @@ test("Structure Anchors", async () => {
 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
 });
 
-test("Structure References", async () => {
-	const inputHtml = `
-		<html>
-			<head></head>
-			<body>
-				<div><p>Here is some text {ref2}{ref1}, {ref38}</p></div>
-				<table>
-					<tbody>
-						<tr>
-							<td><p><span>Type</span></p></td>
-							<td><p><span>Id</span></p></td>
-							<td><p><span>Value</span></p></td>
-							<td><p><span>Unstructured Value</span></p></td>
-						</tr>
-						<tr>
-							<td><p><span>Reference</span></p></td>
-							<td><p><span>ref1</span></p></td>
-							<td><p><span>https://doi.org/10.57844/arcadia-0zvp-xz86</span></p></td>
-							<td><p><span></span></p></td>
-						</tr>
-						<tr>
-							<td><p><span>Reference</span></p></td>
-							<td><p><span>ref2</span></p></td>
-							<td><p><span>https://doi.org/10.1038/s41586-020-2983-4</span></p></td>
-							<td><p><span></span></p></td>
-						</tr>
-						<tr>
-							<td><p><span>Reference</span></p></td>
-							<td><p><span>ref3</span></p></td>
-							<td><p><span>https://doi.org/10.1016/j.cell.2014.05.041</span></p></td>
-							<td><p><span></span></p></td>
-						</tr>
-						<tr>
-							<td><p><span>Reference</span></p></td>
-							<td><p><span>ref4</span></p></td>
-							<td><p><span>https://doi.org/10.7554/eLife.37072</span></p></td>
-							<td><p><span></span></p></td>
-						</tr>
-					</tbody>
-				</table>
-				<p>I'd also like to add [<u><a>10.12341</a></u>] here.</p>
-				<p>And this should be the same number [10.12341] here. But <a href="cat">this</a> diff, [http://doi.org/10.5123/123]. </p>
-				<p><span>Two more [</span><u><a href="10.1016/S0167-4781(02)00500-6">10.1016/S0167-4781(02)00500-6</a></u><span>]</span><span>[</span><span>10.abc123</span><span>].</span></p>
-			</body>
-		</html>
-	`;
-	const expectedOutputHtml = `<html>
-			<head></head>
-			<body>
-				<div>
-					<p>
-						Here is some text <a 
-							data-type="reference" data-value="https://doi.org/10.1038/s41586-020-2983-4" data-unstructured-value="">
-							[1]
-						</a><a
-							 data-type="reference" data-value="https://doi.org/10.57844/arcadia-0zvp-xz86" data-unstructured-value="">
-							[2]
-						</a>, {ref38}
-					</p>
-				</div>
-				<p>I'd also like to add <a
-							 data-type="reference" data-value="10.12341">
-							[3]
-						</a> here.</p>
-				<p>And this should be the same number <a
-							 data-type="reference" data-value="10.12341">
-							[3]
-						</a> here. But <a href="cat">this</a> diff, <a
-							 data-type="reference" data-value="http://doi.org/10.5123/123">
-							[4]
-						</a>. </p>
-				<p>Two more <a
-							 data-type="reference" data-value="10.1016/S0167-4781(02)00500-6">
-							[5]
-						</a><a
-							 data-type="reference" data-value="10.abc123">
-							[6]
-						</a>.</p>
-			</body>
-		</html>
-	`;
+// test("Structure References", async () => {
+// 	const inputHtml = `
+// 		<html>
+// 			<head></head>
+// 			<body>
+// 				<div><p>Here is some text {ref2}{ref1}, {ref38}</p></div>
+// 				<table>
+// 					<tbody>
+// 						<tr>
+// 							<td><p><span>Type</span></p></td>
+// 							<td><p><span>Id</span></p></td>
+// 							<td><p><span>Value</span></p></td>
+// 							<td><p><span>Unstructured Value</span></p></td>
+// 						</tr>
+// 						<tr>
+// 							<td><p><span>Reference</span></p></td>
+// 							<td><p><span>ref1</span></p></td>
+// 							<td><p><span>https://doi.org/10.57844/arcadia-0zvp-xz86</span></p></td>
+// 							<td><p><span></span></p></td>
+// 						</tr>
+// 						<tr>
+// 							<td><p><span>Reference</span></p></td>
+// 							<td><p><span>ref2</span></p></td>
+// 							<td><p><span>https://doi.org/10.1038/s41586-020-2983-4</span></p></td>
+// 							<td><p><span></span></p></td>
+// 						</tr>
+// 						<tr>
+// 							<td><p><span>Reference</span></p></td>
+// 							<td><p><span>ref3</span></p></td>
+// 							<td><p><span>https://doi.org/10.1016/j.cell.2014.05.041</span></p></td>
+// 							<td><p><span></span></p></td>
+// 						</tr>
+// 						<tr>
+// 							<td><p><span>Reference</span></p></td>
+// 							<td><p><span>ref4</span></p></td>
+// 							<td><p><span>https://doi.org/10.7554/eLife.37072</span></p></td>
+// 							<td><p><span></span></p></td>
+// 						</tr>
+// 					</tbody>
+// 				</table>
+// 				<p>I'd also like to add [<u><a>10.12341</a></u>] here.</p>
+// 				<p>And this should be the same number [10.12341] here. But <a href="cat">this</a> diff, [http://doi.org/10.5123/123]. </p>
+// 				<p><span>Two more [</span><u><a href="10.1016/S0167-4781(02)00500-6">10.1016/S0167-4781(02)00500-6</a></u><span>]</span><span>[</span><span>10.abc123</span><span>].</span></p>
+// 			</body>
+// 		</html>
+// 	`;
+// 	const expectedOutputHtml = `<html>
+// 			<head></head>
+// 			<body>
+// 				<div>
+// 					<p>
+// 						Here is some text <a
+// 							data-type="reference" data-value="https://doi.org/10.1038/s41586-020-2983-4" data-unstructured-value="">
+// 							[1]
+// 						</a><a
+// 							 data-type="reference" data-value="https://doi.org/10.57844/arcadia-0zvp-xz86" data-unstructured-value="">
+// 							[2]
+// 						</a>, {ref38}
+// 					</p>
+// 				</div>
+// 				<p>I'd also like to add <a
+// 							 data-type="reference" data-value="10.12341">
+// 							[3]
+// 						</a> here.</p>
+// 				<p>And this should be the same number <a
+// 							 data-type="reference" data-value="10.12341">
+// 							[3]
+// 						</a> here. But <a href="cat">this</a> diff, <a
+// 							 data-type="reference" data-value="http://doi.org/10.5123/123">
+// 							[4]
+// 						</a>. </p>
+// 				<p>Two more <a
+// 							 data-type="reference" data-value="10.1016/S0167-4781(02)00500-6">
+// 							[5]
+// 						</a><a
+// 							 data-type="reference" data-value="10.abc123">
+// 							[6]
+// 						</a>.</p>
+// 			</body>
+// 		</html>
+// 	`;
 
-	const result = await rehype()
-		.use(cleanUnusedSpans)
-		.use(structureReferences)
-		.process(inputHtml)
-		.then((file) => String(file))
-		.catch((error) => {
-			logger.error(error);
-		});
+// 	const result = await rehype()
+// 		.use(cleanUnusedSpans)
+// 		.use(structureReferences)
+// 		.process(inputHtml)
+// 		.then((file) => String(file))
+// 		.catch((error) => {
+// 			logger.error(error);
+// 		});
 
-	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
-});
+// 	expect(trimAll(result)).toBe(trimAll(expectedOutputHtml));
+// });
 
 test("cleanUnusedSpans", async () => {
 	const inputHtml = `

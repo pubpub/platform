@@ -7,23 +7,22 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { TypeCompiler } from "@sinclair/typebox/compiler";
 import { useForm } from "react-hook-form";
+import { registerFormats } from "schemas";
 
 import { Button } from "ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { ExternalLink, Trash } from "ui/icon";
 import { Input } from "ui/input";
-import { Switch } from "ui/switch";
 
 import { toggleMarkExpandEmpty } from "../../commands/marks";
 import { baseSchema } from "../../schemas";
-import { AdvancedOptions } from "./AdvancedOptions";
 import { MenuSwitchField } from "./MenuFields";
+
+registerFormats();
 
 const formSchema = Type.Object({
 	href: Type.String({ format: "uri" }),
 	openInNewTab: Type.Boolean({ default: false }),
-	id: Type.String(),
-	class: Type.String(),
 });
 
 const compiledSchema = TypeCompiler.Compile(formSchema);
@@ -55,8 +54,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		defaultValues: {
 			href: mark.attrs?.href ?? "",
 			openInNewTab: mark.attrs?.target === "_blank" ? true : false,
-			id: mark.attrs?.id ?? "",
-			class: mark.attrs?.class ?? "",
 		},
 	});
 
@@ -68,8 +65,7 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 
 	return (
 		<Form {...form}>
-			<form className="flex flex-col gap-4" onBlur={form.handleSubmit(handleSubmit)}>
-				<h2 className="text-md font-medium">Link Attributes</h2>
+			<form className="my-2 flex flex-col gap-2" onBlur={form.handleSubmit(handleSubmit)}>
 				<FormField
 					name="href"
 					control={form.control}
@@ -111,8 +107,6 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 				/>
 				<hr />
 				<MenuSwitchField name="openInNewTab" label="Open in new tab" />
-				<hr />
-				<AdvancedOptions />
 			</form>
 		</Form>
 	);

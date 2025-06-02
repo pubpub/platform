@@ -1,9 +1,14 @@
+import type { InputTypeForCoreSchemaType } from "schemas";
+
+import type { CoreSchemaType } from "db/public";
 import { Button } from "ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
-import type { FileUpload } from "~/lib/fields/fileUpload";
-
-export function FileUploadPreview({ files }: { files: FileUpload }) {
+export function FileUploadPreview({
+	files,
+}: {
+	files: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>;
+}) {
 	return (
 		<ul>
 			{files.map((file) => {

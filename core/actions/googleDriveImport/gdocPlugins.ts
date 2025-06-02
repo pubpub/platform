@@ -95,6 +95,12 @@ export const tableToObjectArray = (node: any) => {
 	const headersVert: string[] = rows.map((row: any) =>
 		getTextContent(row.children[0]).toLowerCase().replace(/\s+/g, "")
 	);
+
+	const hasTypeAtZero = headersHoriz[0]?.toLowerCase() === "type";
+	if (!hasTypeAtZero) {
+		return [{ type: "empty" }];
+	}
+
 	const validTypes = [
 		"image",
 		"video",
@@ -117,8 +123,9 @@ export const tableToObjectArray = (node: any) => {
 	const getCellContent = (tableType: string, headerVal: string, cell: any): any => {
 		const isTypeWithHtmlValue =
 			!["math", "reference"].includes(tableType) && headerVal === "value";
+		const isRefUnstructured = tableType === "reference" && headerVal === "unstructuredvalue";
 		const isCaption = headerVal === "caption";
-		if (isTypeWithHtmlValue || isCaption) {
+		if (isTypeWithHtmlValue || isCaption || isRefUnstructured) {
 			return cell.children;
 		}
 
@@ -767,147 +774,147 @@ export const cleanUnusedSpans = () => (tree: Root) => {
 	});
 };
 
-export const structureReferences = () => (tree: Root) => {
-	const allReference: any[] = [];
-	/* This regex business casued a lot of headache tracking down. */
-	/* The use of .test with the /g flag caused inconsistencies. But */
-	/* then calling .exec without that /g flag would crash. There may */
-	/* be a cleaner solution where we manually reset regex.lastIndex */
-	/* in certain places, but it's late and brittle, and this is currently working. */
-	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/);
-	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/g);
-	const doiPlainRegexTest = new RegExp(/^(10\.|https?:\/\/doi\.org).*$/);
-	visit(tree, (node: any, index: any, parent: any) => {
-		/* Remove all links on [doi.org/12] references. */
-		if (node.tagName === "u" || node.tagName === "a") {
-			const parentText = getTextContent(parent);
-			const nodeText = getTextContent(node);
-			if (doiBracketRegexTest.test(parentText) && doiPlainRegexTest.test(nodeText)) {
-				const elements = [
-					{
-						type: "text",
-						value: `[${nodeText}]`,
-					},
-				];
+// export const structureReferences = () => (tree: Root) => {
+// 	const allReference: any[] = [];
+// 	/* This regex business casued a lot of headache tracking down. */
+// 	/* The use of .test with the /g flag caused inconsistencies. But */
+// 	/* then calling .exec without that /g flag would crash. There may */
+// 	/* be a cleaner solution where we manually reset regex.lastIndex */
+// 	/* in certain places, but it's late and brittle, and this is currently working. */
+// 	const doiBracketRegexTest = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/);
+// 	const doiBracketRegex = new RegExp(/\[(10\.[^\]]+|https?:\/\/doi\.org\/[^\]]+)\]/g);
+// 	const doiPlainRegexTest = new RegExp(/^(10\.|https?:\/\/doi\.org).*$/);
+// 	visit(tree, (node: any, index: any, parent: any) => {
+// 		/* Remove all links on [doi.org/12] references. */
+// 		if (node.tagName === "u" || node.tagName === "a") {
+// 			const parentText = getTextContent(parent);
+// 			const nodeText = getTextContent(node);
+// 			if (doiBracketRegexTest.test(parentText) && doiPlainRegexTest.test(nodeText)) {
+// 				const elements = [
+// 					{
+// 						type: "text",
+// 						value: `[${nodeText}]`,
+// 					},
+// 				];
 
-				if (parent && typeof index === "number") {
-					if (elements.length > 0) {
-						const prevChild = parent.children[index - 1];
-						const nextChild = parent.children[index + 1];
+// 				if (parent && typeof index === "number") {
+// 					if (elements.length > 0) {
+// 						const prevChild = parent.children[index - 1];
+// 						const nextChild = parent.children[index + 1];
 
-						if (prevChild && prevChild.type === "text") {
-							prevChild.value = prevChild.value.slice(0, -1);
-						}
+// 						if (prevChild && prevChild.type === "text") {
+// 							prevChild.value = prevChild.value.slice(0, -1);
+// 						}
 
-						if (nextChild && nextChild.type === "text") {
-							nextChild.value = nextChild.value.slice(1);
-						}
-					}
-					parent.children.splice(index, 1, ...elements);
-				}
-			}
-		}
-	});
+// 						if (nextChild && nextChild.type === "text") {
+// 							nextChild.value = nextChild.value.slice(1);
+// 						}
+// 					}
+// 					parent.children.splice(index, 1, ...elements);
+// 				}
+// 			}
+// 		}
+// 	});
 
-	const doiReferenceCounts: { [key: string]: number } = {};
-	visit(tree, (node: any, index: any, parent: any) => {
-		if (node.tagName === "table") {
-			const tableData: any = tableToObjectArray(node);
-			const tableType = tableData[0].type;
-			if (tableType === "reference") {
-				allReference.push(...tableData);
-				if (parent && typeof index === "number") {
-					parent.children.splice(index, 1);
-				}
-			}
-		}
-		if (typeof node.value === "string") {
-			let match;
-			const elements: any[] = [];
-			let lastIndex = 0;
+// 	const doiReferenceCounts: { [key: string]: number } = {};
+// 	visit(tree, (node: any, index: any, parent: any) => {
+// 		if (node.tagName === "table") {
+// 			const tableData: any = tableToObjectArray(node);
+// 			const tableType = tableData[0].type;
+// 			if (tableType === "reference") {
+// 				allReference.push(...tableData);
+// 				if (parent && typeof index === "number") {
+// 					parent.children.splice(index, 1);
+// 				}
+// 			}
+// 		}
+// 		if (typeof node.value === "string") {
+// 			let match;
+// 			const elements: any[] = [];
+// 			let lastIndex = 0;
 
-			while ((match = doiBracketRegex.exec(node.value)) !== null) {
-				const [_fullMatch, referenceDoi] = match;
-				let currentRefId;
-				if (!doiReferenceCounts[referenceDoi]) {
-					doiReferenceCounts[referenceDoi] = Object.values(doiReferenceCounts).length + 1;
-					currentRefId = `doiRef${doiReferenceCounts[referenceDoi]}`;
-					allReference.push({
-						type: "Reference",
-						id: currentRefId,
-						value: referenceDoi,
-						unstructuredValue: "",
-					});
-				} else {
-					currentRefId = `doiRef${doiReferenceCounts[referenceDoi]}`;
-				}
+// 			while ((match = doiBracketRegex.exec(node.value)) !== null) {
+// 				const [_fullMatch, referenceDoi] = match;
+// 				let currentRefId;
+// 				if (!doiReferenceCounts[referenceDoi]) {
+// 					doiReferenceCounts[referenceDoi] = Object.values(doiReferenceCounts).length + 1;
+// 					currentRefId = `doiRef${doiReferenceCounts[referenceDoi]}`;
+// 					allReference.push({
+// 						type: "Reference",
+// 						id: currentRefId,
+// 						value: referenceDoi,
+// 						unstructuredValue: "",
+// 					});
+// 				} else {
+// 					currentRefId = `doiRef${doiReferenceCounts[referenceDoi]}`;
+// 				}
 
-				const startIndex = match.index;
-				const endIndex = doiBracketRegex.lastIndex;
+// 				const startIndex = match.index;
+// 				const endIndex = doiBracketRegex.lastIndex;
 
-				if (startIndex > lastIndex) {
-					elements.push({
-						type: "text",
-						value: node.value.slice(lastIndex, startIndex),
-					});
-				}
-				elements.push({ type: "text", value: `{${currentRefId}}` });
+// 				if (startIndex > lastIndex) {
+// 					elements.push({
+// 						type: "text",
+// 						value: node.value.slice(lastIndex, startIndex),
+// 					});
+// 				}
+// 				elements.push({ type: "text", value: `{${currentRefId}}` });
 
-				lastIndex = endIndex;
-			}
+// 				lastIndex = endIndex;
+// 			}
 
-			if (lastIndex < node.value.length) {
-				elements.push({
-					type: "text",
-					value: node.value.slice(lastIndex),
-				});
-			}
+// 			if (lastIndex < node.value.length) {
+// 				elements.push({
+// 					type: "text",
+// 					value: node.value.slice(lastIndex),
+// 				});
+// 			}
 
-			if (elements.length > 0 && parent && typeof index === "number") {
-				parent.children.splice(index, 1, ...elements);
-			}
-		}
-	});
-	const referenceIds = allReference.map((ref) => ref.id);
-	const referenceVarOrder: string[] = [];
+// 			if (elements.length > 0 && parent && typeof index === "number") {
+// 				parent.children.splice(index, 1, ...elements);
+// 			}
+// 		}
+// 	});
+// 	const referenceIds = allReference.map((ref) => ref.id);
+// 	const referenceVarOrder: string[] = [];
 
-	visit(tree, "text", (textNode: any, index: any, parent: any) => {
-		if (typeof textNode.value === "string") {
-			const regex = new RegExp(/\{([^\{\}]+?)\}/g);
-			let match;
+// 	visit(tree, "text", (textNode: any, index: any, parent: any) => {
+// 		if (typeof textNode.value === "string") {
+// 			const regex = new RegExp(/\{([^\{\}]+?)\}/g);
+// 			let match;
 
-			while ((match = regex.exec(textNode.value)) !== null) {
-				const [_fullMatch, varName] = match;
+// 			while ((match = regex.exec(textNode.value)) !== null) {
+// 				const [_fullMatch, varName] = match;
 
-				if (referenceIds.includes(varName) && !referenceVarOrder.includes(varName)) {
-					referenceVarOrder.push(varName);
-				}
-			}
-		}
-	});
-	allReference
-		.filter((ref) => {
-			return referenceVarOrder.includes(ref.id);
-		})
-		.sort((foo, bar) => {
-			return referenceVarOrder.indexOf(foo.id) - referenceVarOrder.indexOf(bar.id);
-		})
-		.forEach((referenceData, index) => {
-			/* TODO: This just orders references by the order they are presented in tables. */
-			/* We'll likely want more sophisticated reference things at some point */
-			const newNode: Element = {
-				type: "element",
-				tagName: "a",
-				properties: {
-					"data-type": "reference",
-					"data-value": referenceData.value,
-					"data-unstructured-value": referenceData.unstructuredvalue,
-				},
-				children: [{ type: "text", value: `[${index + 1}]` }],
-			};
-			insertVariables(tree, referenceData.id, newNode);
-		});
-};
+// 				if (referenceIds.includes(varName) && !referenceVarOrder.includes(varName)) {
+// 					referenceVarOrder.push(varName);
+// 				}
+// 			}
+// 		}
+// 	});
+// 	allReference
+// 		.filter((ref) => {
+// 			return referenceVarOrder.includes(ref.id);
+// 		})
+// 		.sort((foo, bar) => {
+// 			return referenceVarOrder.indexOf(foo.id) - referenceVarOrder.indexOf(bar.id);
+// 		})
+// 		.forEach((referenceData, index) => {
+// 			/* TODO: This just orders references by the order they are presented in tables. */
+// 			/* We'll likely want more sophisticated reference things at some point */
+// 			const newNode: Element = {
+// 				type: "element",
+// 				tagName: "a",
+// 				properties: {
+// 					"data-type": "reference",
+// 					"data-value": referenceData.value,
+// 					"data-unstructured-value": referenceData.unstructuredvalue,
+// 				},
+// 				children: [{ type: "text", value: `[${index + 1}]` }],
+// 			};
+// 			insertVariables(tree, referenceData.id, newNode);
+// 		});
+// };
 
 export const structureFootnotes = () => (tree: Root) => {
 	const allFootnotes: any[] = [];

@@ -56,7 +56,7 @@ import { autoRevalidate } from "./cache/autoRevalidate";
 import { BadRequestError, NotFoundError } from "./errors";
 import { maybeWithTrx } from "./maybeWithTrx";
 import { applyFilters } from "./pub-filters";
-import { _getPubFields, getPubFields } from "./pubFields";
+import { _getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
 import { movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";
@@ -211,6 +211,7 @@ export const doesPubExist = async (
 
 const isRelatedPubInit = (value: unknown): value is { value: unknown; relatedPubId: PubsId }[] =>
 	Array.isArray(value) &&
+	!!value.length &&
 	value.every((v) => typeof v === "object" && v && "value" in v && "relatedPubId" in v);
 
 /**
@@ -570,19 +571,19 @@ export const validatePubValues = async <T extends { slug: string; value: unknown
 
 	const hydratedPubValues = hydratePubValues(mergedPubFields);
 
-	const validationErrors = validatePubValuesBySchemaName(hydratedPubValues);
+	const { errors, results: newResults } = validatePubValuesBySchemaName(hydratedPubValues);
 
-	if (!validationErrors.length) {
-		return hydratedPubValues;
+	if (!errors.length) {
+		return newResults;
 	}
 
 	if (continueOnValidationError) {
 		return hydratedPubValues.filter(
-			({ slug }) => !validationErrors.find(({ slug: errorSlug }) => errorSlug === slug)
+			({ slug }) => !errors.find(({ slug: errorSlug }) => errorSlug === slug)
 		);
 	}
 
-	throw new BadRequestError(validationErrors.map(({ error }) => error).join(" "));
+	throw new BadRequestError(errors.map(({ error }) => error).join(" "));
 };
 
 type AddPubRelationsInput = { value: JsonValue | Date; slug: string } & XOR<
@@ -2038,12 +2039,12 @@ export const createTsQuery = (query: string, config: SearchConfig = {}) => {
 	)`;
 };
 
-export const fullTextSearch = async (
+export const _fullTextSearchQuery = (
 	query: string,
 	communityId: CommunitiesId,
 	userId: UsersId,
 	opts?: SearchConfig
-): Promise<FTSReturn[]> => {
+) => {
 	const options = {
 		...DEFAULT_FULLTEXT_SEARCH_OPTS,
 		...opts,
@@ -2080,6 +2081,7 @@ export const fullTextSearch = async (
 						"pub_values.value",
 						"pub_fields.name",
 						"pub_fields.slug",
+						"pub_fields.schemaName",
 						"_PubFieldToPubType.isTitle",
 						sql<string>`ts_headline(
 							'${sql.raw(options.language)}',
@@ -2090,6 +2092,8 @@ export const fullTextSearch = async (
 					])
 					.$narrowType<{
 						value: JsonValue;
+						// still typed as null in db
+						schemaName: CoreSchemaType;
 					}>()
 					.whereRef("pub_values.pubId", "=", "pubs.id")
 					.where(
@@ -2123,19 +2127,26 @@ export const fullTextSearch = async (
 		  ${tsQuery}) desc`
 		);
 
-	// for debugging, shows how long the query took
+	return q;
+};
+
+export const fullTextSearch = async (
+	query: string,
+	communityId: CommunitiesId,
+	userId: UsersId,
+	opts?: SearchConfig
+) => {
+	const dbQuery = _fullTextSearchQuery(query, communityId, userId, opts);
+
 	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true") {
-		const explained = await q.explain("json", sql`analyze`);
+		const explained = await dbQuery.explain("json", sql`analyze`);
 		logger.debug({
 			msg: `Full Text Search EXPLAIN`,
 			queryPlan: explained[0]["QUERY PLAN"][0],
-			query,
-			communityId,
-			userId,
 		});
 	}
 
-	return q.execute();
+	return autoCache(dbQuery).execute();
 };
 
 export const getExclusivelyRelatedPub = async (relatedPubId: PubsId, relationFieldSlug: string) => {
