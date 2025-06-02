@@ -119,6 +119,7 @@
 		"nuqs": "catalog:",
 		"openapi3-ts": "^4.1.2",
 		"oslo": "^1.2.1",
+		"parse-english": "^7.0.0",
 		"pg": "^8.11.3",
 		"prosemirror-markdown": "^1.12.0",
 		"prosemirror-model": "catalog:",

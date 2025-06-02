@@ -135,7 +135,6 @@ export const PubFieldSelectToggleButton = () => {
 
 export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode }) => {
 	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectContext();
-
 	if (!shouldReadFromPubField || allowedPubFields.length === 0) {
 		return null;
 	}

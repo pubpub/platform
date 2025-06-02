@@ -1,5 +1,6 @@
 "use server";
 
+import { ParseEnglish } from "parse-english";
 import rehypeRetext from "rehype-retext";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
@@ -28,15 +29,15 @@ const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
 
 type Always<T> = T extends null | undefined ? never : T;
-type Contributor = Always<
-	Always<Always<components["schemas"]["Doi"]["data"]>["attributes"]>["creators"]
->[number];
+type Attributes = Always<Always<components["schemas"]["Doi"]["data"]>["attributes"]>;
+type Creator = Always<Attributes["creators"]>[number];
+type Contributor = Always<Attributes["contributors"]>[number];
 
 const formatTitle = async (title: string) => {
 	const processor = unified()
 		.use(remarkParse)
 		.use(remarkRehype)
-		.use(rehypeRetext, true)
+		.use(rehypeRetext, ParseEnglish)
 		.use(retextStringify);
 	const result = await processor.process(title);
 	return result.toString().trim();
@@ -75,7 +76,7 @@ const deriveCreatorsFromRelatedPubs = (
 				const givenName = contributorPersonName.slice(0, givenNameSeparatorIndex).trim();
 				const familyName = contributorPersonName.slice(givenNameSeparatorIndex + 1).trim();
 
-				const contributor = {
+				const entity = {
 					name: contributorPersonName,
 					nameType: "Personal" as const,
 					givenName,
@@ -101,15 +102,15 @@ const deriveCreatorsFromRelatedPubs = (
 					: false;
 
 				if (isCreator) {
-					a.creators.push(contributor);
+					a.creators.push(entity);
 				} else {
-					a.contributors.push(contributor);
+					a.contributors.push({ ...entity, contributorType: "Other" });
 				}
 
 				return a;
 			},
 			{
-				creators: [] as Contributor[],
+				creators: [] as Creator[],
 				contributors: [] as Contributor[],
 			}
 		);
