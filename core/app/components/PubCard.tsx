@@ -21,6 +21,7 @@ import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu";
+import { RelationsDropDown } from "./pubs/RelationsDropDown";
 import { RemovePubButton } from "./pubs/RemovePubButton";
 
 // TODO: https://github.com/pubpub/platform/issues/1200
@@ -49,7 +50,12 @@ export const PubCard = async ({
 	stages,
 	actionInstances,
 }: {
-	pub: ProcessedPub<{ withPubType: true; withRelatedPubs: false; withStage: true }>;
+	pub: ProcessedPub<{
+		withPubType: true;
+		withRelatedPubs: false;
+		withStage: true;
+		withRelatedCounts: true;
+	}>;
 	communitySlug: string;
 	stages: CommunityStage[];
 	actionInstances: ActionInstances[];
@@ -83,10 +89,9 @@ export const PubCard = async ({
 							hideIfNowhereToMove={false}
 						/>
 					) : null}
-					<Button variant="outline" className="h-[22px] px-2 text-xs">
-						Relations
-						<ChevronDown strokeWidth="1px" />
-					</Button>
+					{pub.relatedPubsCount ? (
+						<RelationsDropDown pubId={pub.id} numRelations={pub.relatedPubsCount} />
+					) : null}
 				</div>
 				<CardTitle className="text-[15px] font-bold">
 					<h3 className="min-w-0 truncate">
