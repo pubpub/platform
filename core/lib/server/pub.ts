@@ -1270,7 +1270,7 @@ const DEFAULT_OPTIONS = {
 	withMembers: false,
 	cycle: "include",
 	withValues: true,
-	withRelatedCounts: true,
+	withRelatedCounts: false,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
