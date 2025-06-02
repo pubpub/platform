@@ -6,7 +6,12 @@ import { CoreSchemaType } from "db/public";
 
 import { serializeProseMirrorDoc } from "../fields/richText";
 
-export const prosemirrorToHTMLServer = (node: Node | { type: "doc"; content: any[] }): string => {
+/**
+ * JSON version of a Prosemirror node
+ */
+type NodeLike = { type: "doc"; content: any[] };
+
+export const prosemirrorToHTMLServer = (node: Node | NodeLike): string => {
 	const dom = new JSDOM();
 	const document = dom.window.document;
 
@@ -30,23 +35,19 @@ export const htmlToProsemirrorServer = (html: string) => {
 	return node;
 };
 
+type PubLike = { values: { value: unknown; schemaName: CoreSchemaType }[] };
+type RichTextToProsemirrorOpts = {
+	toJson?: boolean;
+};
+
 /**
  * transforms all richtext values in a pub from html to prosemirror trees
  *
  * only up to depth 1
  */
-export const transformRichTextValuesToProsemirror = <
-	T extends {
-		values: Array<{
-			value: unknown;
-			schemaName: CoreSchemaType;
-		}>;
-	},
->(
+export const transformRichTextValuesToProsemirror = <T extends PubLike>(
 	pub: T,
-	opts?: {
-		toJson?: boolean;
-	}
+	opts?: RichTextToProsemirrorOpts
 ): T => {
 	return {
 		...pub,

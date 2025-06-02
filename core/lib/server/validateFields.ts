@@ -12,7 +12,6 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 			const node = htmlToProsemirrorServer(value);
 
 			node.check();
-
 			return { success: true, value };
 		}
 
