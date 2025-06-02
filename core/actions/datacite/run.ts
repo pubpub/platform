@@ -22,45 +22,81 @@ type RelatedPubs = Awaited<ReturnType<typeof getPubsWithRelatedValues<{}>>>[numb
 const encodeDataciteCredentials = (username: string, password: string) =>
 	Buffer.from(`${username}:${password}`).toString("base64");
 
+type Always<T> = T extends null | undefined ? never : T;
+type Contributor = Always<
+	Always<Always<components["schemas"]["Doi"]["data"]>["attributes"]>["creators"]
+>[number];
+
 const deriveCreatorsFromRelatedPubs = (
 	relatedPubs: RelatedPubs,
 	contributorFieldSlug: string,
 	contributorPersonFieldSlug: string,
 	contributorPersonNameFieldSlug: string,
+	bylineContributorFlagSlug?: string,
 	contributorPersonOrcidFieldSlug?: string
 ) =>
 	relatedPubs
 		.filter((v) => v.fieldSlug === contributorFieldSlug)
-		.map((v) => {
-			const contributor = expect(v.relatedPub);
-			const contributorPerson = expect(
-				contributor.values.find((v) => v.fieldSlug === contributorPersonFieldSlug)
-					?.relatedPub,
-				"A contributor does not have a related person."
-			);
-			const contributorPersonName = expect(
-				contributorPerson.values.find((v) => v.fieldSlug === contributorPersonNameFieldSlug)
-					?.value,
-				"A contributor person does not have a name."
-			) as string;
-			const contributorPersonORCID = contributorPerson.values.find(
-				(v) => v.fieldSlug === contributorPersonOrcidFieldSlug,
-				"A contributor person does not have an ORCID."
-			)?.value as string | undefined;
-			return {
-				name: contributorPersonName,
-				affiliation: [],
-				nameIdentifiers: contributorPersonORCID
-					? [
-							{
-								schemeUri: "https://orcid.org",
-								nameIdentifier: contributorPersonORCID,
-								nameIdentifierScheme: "ORCID",
-							},
-						]
-					: [],
-			};
-		});
+		.reduce(
+			(a, v) => {
+				const contributorPub = expect(v.relatedPub);
+				const contributorPerson = expect(
+					contributorPub.values.find((v) => v.fieldSlug === contributorPersonFieldSlug)
+						?.relatedPub,
+					"A contributor does not have a related person."
+				);
+				const contributorPersonName = expect(
+					contributorPerson.values.find(
+						(v) => v.fieldSlug === contributorPersonNameFieldSlug
+					)?.value,
+					"A contributor person does not have a name."
+				) as string;
+				const contributorPersonORCID = contributorPerson.values.find(
+					(v) => v.fieldSlug === contributorPersonOrcidFieldSlug,
+					"A contributor person does not have an ORCID."
+				)?.value as string | undefined;
+
+				const givenNameSeparatorIndex = contributorPersonName.lastIndexOf(" ");
+				const givenName = contributorPersonName.slice(0, givenNameSeparatorIndex).trim();
+				const familyName = contributorPersonName.slice(givenNameSeparatorIndex + 1).trim();
+
+				const contributor = {
+					name: contributorPersonName,
+					givenName,
+					familyName,
+					nameIdentifiers: contributorPersonORCID
+						? [
+								{
+									schemeUri: "https://orcid.org",
+									nameIdentifier: contributorPersonORCID,
+									nameIdentifierScheme: "ORCID",
+								},
+							]
+						: [],
+					affiliation: [],
+				};
+
+				const isCreator = bylineContributorFlagSlug
+					? Boolean(
+							contributorPub.values.find(
+								(v) => v.fieldSlug === bylineContributorFlagSlug
+							)?.value
+						)
+					: false;
+
+				if (isCreator) {
+					a.creators.push(contributor);
+				} else {
+					a.contributors.push(contributor);
+				}
+
+				return a;
+			},
+			{
+				creators: [] as Contributor[],
+				contributors: [] as Contributor[],
+			}
+		);
 
 const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 	const doiFieldSlug = config.pubFields.doi?.[0];
@@ -82,6 +118,7 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 		"The DataCite action is missing a contributor person name field override."
 	);
 	const contributorPersonOrcidSlug = config.pubFields.contributorPersonORCID?.[0];
+	const bylineContributorFlagSlug = config.pubFields.bylineContributorFlag?.[0];
 	const publicationDateFieldSlug = expect(
 		config.pubFields.publicationDate?.[0],
 		"The DataCite action is missing a publication date field override."
@@ -89,11 +126,12 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 
 	const relatedPubs = pub.values.filter((v) => v.relatedPub != null);
 
-	const creators = deriveCreatorsFromRelatedPubs(
+	const { contributors, creators } = deriveCreatorsFromRelatedPubs(
 		relatedPubs,
 		contributorFieldSlug,
 		contributorPersonFieldSlug,
 		contributorPersonNameSlug,
+		bylineContributorFlagSlug,
 		contributorPersonOrcidSlug
 	);
 
@@ -148,6 +186,7 @@ const makeDatacitePayload = (pub: ActionPub, config: Config): Payload => {
 				prefix: config.doiPrefix,
 				titles: [{ title }],
 				creators,
+				contributors,
 				publisher: config.publisher,
 				publicationYear,
 				dates: [],
