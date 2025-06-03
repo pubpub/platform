@@ -2138,7 +2138,7 @@ export const fullTextSearch = async (
 ) => {
 	const dbQuery = _fullTextSearchQuery(query, communityId, userId, opts);
 
-	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true") {
+	if (env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG) {
 		const explained = await dbQuery.explain("json", sql`analyze`);
 		logger.debug({
 			msg: `Full Text Search EXPLAIN`,

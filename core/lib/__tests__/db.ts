@@ -19,7 +19,7 @@ Pg.types.setTypeParser(int8TypeId, (val: any) => {
 });
 
 const kyselyLogger =
-	env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG === "true"
+	env.LOG_LEVEL === "debug" && env.KYSELY_DEBUG
 		? ({ query: { sql, parameters }, ...event }: LogEvent) =>
 				logger.debug({ event }, "Kysely query:\n%s; --Parameters: %o", sql, parameters)
 		: undefined;

@@ -65,9 +65,9 @@ export function memoize<P extends unknown[], R>(cb: Callback<P, R>, opts?: Memoi
 		revalidateTags: revalidateTagsFn,
 		additionalCacheKey: additionalCacheKeyFn,
 	} = opts ?? {};
-	const logDataCache = log.includes("datacache") || env.CACHE_LOG === "true";
-	const logDedupe = log.includes("dedupe") || env.CACHE_LOG === "true";
-	const logVerbose = log.includes("verbose") || env.CACHE_LOG === "true";
+	const logDataCache = log.includes("datacache") || env.CACHE_LOG;
+	const logDedupe = log.includes("dedupe") || env.CACHE_LOG;
+	const logVerbose = log.includes("verbose") || env.CACHE_LOG;
 	const logID = opts?.logid ? `${opts.logid} ` : "";
 
 	let oldData: any;
