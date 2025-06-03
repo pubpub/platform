@@ -85,8 +85,8 @@ catalogs:
       specifier: 1.39.2
       version: 1.39.2
     react-hook-form:
-      specifier: ^7.54.2
-      version: 7.54.2
+      specifier: ^7.57.0
+      version: 7.57.0
     tailwind-merge:
       specifier: ^2.5.2
       version: 2.5.2
@@ -313,7 +313,7 @@ importers:
         version: 0.6.1
       '@hookform/resolvers':
         specifier: 'catalog:'
-        version: 3.10.0(react-hook-form@7.54.2(react@19.1.0))
+        version: 3.10.0(react-hook-form@7.57.0(react@19.1.0))
       '@icons-pack/react-simple-icons':
         specifier: ^10.2.0
         version: 10.2.0(react@19.1.0)
@@ -493,7 +493,7 @@ importers:
         version: 19.1.0(react@19.1.0)
       react-hook-form:
         specifier: 'catalog:'
-        version: 7.54.2(react@19.1.0)
+        version: 7.57.0(react@19.1.0)
       react-markdown:
         specifier: ^9.0.1
         version: 9.0.1(@types/react@19.1.4)(react@19.1.0)
@@ -910,7 +910,7 @@ importers:
         version: 2.4.2(prosemirror-model@1.25.1)(prosemirror-state@1.4.3)(prosemirror-view@1.39.2)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@hookform/resolvers':
         specifier: 'catalog:'
-        version: 3.10.0(react-hook-form@7.54.2(react@19.1.0))
+        version: 3.10.0(react-hook-form@7.57.0(react@19.1.0))
       '@lezer/cpp':
         specifier: ^1.1.2
         version: 1.1.2
@@ -1021,7 +1021,7 @@ importers:
         version: 19.1.0(react@19.1.0)
       react-hook-form:
         specifier: 'catalog:'
-        version: 7.54.2(react@19.1.0)
+        version: 7.57.0(react@19.1.0)
       react-reconciler:
         specifier: catalog:react19
         version: 0.32.0(react@19.1.0)
@@ -1324,7 +1324,7 @@ importers:
         version: 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
       '@hookform/resolvers':
         specifier: 'catalog:'
-        version: 3.10.0(react-hook-form@7.54.2(react@19.1.0))
+        version: 3.10.0(react-hook-form@7.57.0(react@19.1.0))
       '@lexical/code':
         specifier: ^0.23.0
         version: 0.23.1
@@ -1486,7 +1486,7 @@ importers:
         version: 9.5.0(react@19.1.0)
       react-hook-form:
         specifier: 'catalog:'
-        version: 7.54.2(react@19.1.0)
+        version: 7.57.0(react@19.1.0)
       schemas:
         specifier: workspace:*
         version: link:../schemas
@@ -1554,10 +1554,10 @@ importers:
     dependencies:
       '@hookform/resolvers':
         specifier: 'catalog:'
-        version: 3.10.0(react-hook-form@7.54.2(react@19.1.0))
+        version: 3.10.0(react-hook-form@7.57.0(react@19.1.0))
       react-hook-form:
         specifier: 'catalog:'
-        version: 7.54.2(react@19.1.0)
+        version: 7.57.0(react@19.1.0)
       ui:
         specifier: 'workspace:'
         version: link:../packages/ui
@@ -12303,8 +12303,8 @@ packages:
     peerDependencies:
       react: '>=16.13.1'
 
-  react-hook-form@7.54.2:
-    resolution: {integrity: sha512-eHpAUgUjWbZocoQYUHposymRb4ZP6d0uwUnooL2uOybA9/3tPUvoAKqEWK1WaSiTxxOfTpffNZP7QwlnM3/gEg==}
+  react-hook-form@7.57.0:
+    resolution: {integrity: sha512-RbEks3+cbvTP84l/VXGUZ+JMrKOS8ykQCRYdm5aYsxnDquL0vspsyNhGRO7pcH6hsZqWlPOjLye7rJqdtdAmlg==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
@@ -16800,9 +16800,9 @@ snapshots:
       - '@types/react'
       - supports-color
 
-  '@hookform/resolvers@3.10.0(react-hook-form@7.54.2(react@19.1.0))':
+  '@hookform/resolvers@3.10.0(react-hook-form@7.57.0(react@19.1.0))':
     dependencies:
-      react-hook-form: 7.54.2(react@19.1.0)
+      react-hook-form: 7.57.0(react@19.1.0)
 
   '@humanwhocodes/module-importer@1.0.1': {}
 
@@ -27705,7 +27705,7 @@ snapshots:
       '@babel/runtime': 7.25.6
       react: 19.1.0
 
-  react-hook-form@7.54.2(react@19.1.0):
+  react-hook-form@7.57.0(react@19.1.0):
     dependencies:
       react: 19.1.0
 

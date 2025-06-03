@@ -7,7 +7,7 @@ import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import {
 	checkboxGroupConfigSchema,
 	radioGroupConfigSchema,
@@ -49,7 +49,7 @@ const FormWrapper = ({
 		resolver: typeboxResolver(schema),
 		reValidateMode: "onBlur",
 	});
-	const values = form.watch("example");
+	const values = useWatch({ control: form.control, name: "example" });
 
 	return (
 		<Form {...form}>

@@ -5,7 +5,7 @@ import type { z } from "zod";
 
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFormState } from "react-hook-form";
+import { useForm, useFormState, useWatch } from "react-hook-form";
 
 import { cn } from "utils";
 
@@ -79,8 +79,8 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		shouldFocusError: true,
 	});
 
-	const values = form.watch();
-	// valuesString is needed because form.watch() returns a new object every time
+	const values = useWatch({ control: form.control });
+	// valuesString is needed because useWatch() returns a new object every time
 	const valuesString = JSON.stringify(values);
 
 	function onSubmit(submittedValues: z.infer<typeof formSchema>) {

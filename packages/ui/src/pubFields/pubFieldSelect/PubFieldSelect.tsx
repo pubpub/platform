@@ -4,7 +4,7 @@ import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
 import * as React from "react";
 import { TooltipPortal } from "@radix-ui/react-tooltip";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 
 import type { PubField } from "../PubFieldContext";
 import type { AllowedSchemasOrZodItem } from "./determinePubFields";
@@ -50,7 +50,7 @@ export const PubFieldSelectProvider = ({
 	const form = useFormContext();
 	const allPubFields = usePubFieldContext();
 
-	const pubFields = form.watch("pubFields")?.[field.name];
+	const pubFields = useWatch({ control: form.control, name: "pubFields" })?.[field.name];
 
 	const hasPubFields = pubFields !== undefined && pubFields.length > 0;
 

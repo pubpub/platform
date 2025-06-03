@@ -117,7 +117,8 @@ export const ButtonConfigurationForm = ({
 		});
 		dispatch({ eventName: "save" });
 	};
-	const labelValue = form.watch("label");
+
+	const labelValue = useWatch({ control: form.control, name: "label" });
 
 	return (
 		<Form {...form}>

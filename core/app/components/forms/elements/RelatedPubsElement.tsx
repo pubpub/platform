@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
 import type { ProcessedPub } from "contracts";
@@ -130,9 +130,10 @@ export const ConfigureRelatedValue = ({
 			: element.config.label;
 	const label = configLabel || element.label || element.slug;
 
-	const { watch, formState } = useFormContext<RelatedFormValues | SingleFormValues>();
+	const { formState, control } = useFormContext<RelatedFormValues | SingleFormValues>();
 	const [isPopoverOpen, setPopoverIsOpen] = useState(false);
-	const value = watch(slug);
+	const value = useWatch({ control: control, name: slug });
+
 	const showValue = value != null && value !== "";
 
 	const valueError = parseRelatedPubValuesSlugError(slug, formState.errors);

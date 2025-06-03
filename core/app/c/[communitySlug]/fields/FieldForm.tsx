@@ -3,7 +3,7 @@ import type { UseFormReturn } from "react-hook-form";
 
 import { useCallback, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 import { z } from "zod";
 
@@ -146,9 +146,8 @@ const SlugField = ({
 	communitySlug: string;
 	readOnly?: boolean;
 }) => {
-	const { watch, setValue } = form;
-
-	const watchName = watch("name");
+	const { setValue } = form;
+	const watchName = useWatch({ control: form.control, name: "name" });
 
 	useEffect(() => {
 		if (!readOnly) {

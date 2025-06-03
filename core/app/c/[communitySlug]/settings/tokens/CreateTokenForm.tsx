@@ -2,7 +2,7 @@
 
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
@@ -81,7 +81,7 @@ export const CreateTokenForm = () => {
 		}
 	};
 	// this `as const` should not be necessary, not sure why it is
-	const token = form.watch("token" as const);
+	const token = useWatch({ control: form.control, name: "token" });
 
 	return (
 		<Form {...form}>

@@ -2,8 +2,19 @@ import react from "@vitejs/plugin-react";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
+const ReactCompilerConfig = {
+	/* ... */
+};
+
 export default defineConfig({
-	plugins: [react(), tsconfigPaths()],
+	plugins: [
+		react({
+			babel: {
+				plugins: ["babel-plugin-react-compiler", {}],
+			},
+		}),
+		tsconfigPaths(),
+	],
 	test: {
 		globalSetup: ["./lib/__tests__/globalSetup.ts"],
 		setupFiles: ["./lib/__tests__/matchers.ts"],
