@@ -20,6 +20,7 @@
 		"clear-cache": "echo 'FLUSHALL' | nc $(dotenv -e .env.local -e .env.development -p VALKEY_HOST) 6379",
 		"dev": "next dev -p 3000 --turbo | pino-pretty",
 		"build": "SKIP_VALIDATION=true NODE_OPTIONS=\"--max-old-space-size=8192\" next build",
+		"build:turbo": "SKIP_VALIDATION=true NODE_OPTIONS=\"--max-old-space-size=8192\" next build --turbo",
 		"invite-users": "dotenv -e .env.local -e .env.development  tsx scripts/invite.ts",
 		"load-test": "dotenv -e .env.local -e .env.development artillery run load-test.yaml",
 		"lint": "eslint",

@@ -75,6 +75,7 @@ export function DemoComponent() {
 	);
 }
 export default function Demo() {
+	const [color, setColor] = useState("#ffffff");
 	return (
 		<div className="flex min-h-screen flex-col">
 			<h1 className="py-8 text-center text-2xl font-bold">React Compiler Demo</h1>
@@ -87,6 +88,7 @@ export default function Demo() {
 
 			<div className={`flex flex-grow items-center justify-center`}>
 				<DemoComponent />
+				<ColorPicker value={color} onChange={(e) => setColor(e)} />
 			</div>
 		</div>
 	);
