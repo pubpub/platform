@@ -71,7 +71,7 @@ const DEFAULT_VALUES = {
 	isRelation: false,
 } as unknown as DefaultFieldFormValues;
 
-type FormType = UseFormReturn<FormValues, any, undefined>;
+type FormType = UseFormReturn<FormValues, any, FormValues>;
 
 const SchemaSelectField = ({ form, isDisabled }: { form: FormType; isDisabled?: boolean }) => {
 	const schemaTypes = Object.values(CoreSchemaType).filter((v) => v !== CoreSchemaType.Null);

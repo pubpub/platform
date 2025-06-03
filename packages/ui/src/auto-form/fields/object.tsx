@@ -185,7 +185,7 @@ function FormFieldObject({
 	description,
 	isRequired,
 }: {
-	form: ReturnType<typeof useForm>;
+	form: ReturnType<typeof useForm<any, any, any>>;
 	k: string;
 	fieldConfigItem: FieldConfigItem;
 	zodBaseType: string;
