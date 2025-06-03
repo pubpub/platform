@@ -48,6 +48,18 @@ jobs:
                   echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
 
             - name: Setup pnpm cache
+              # only one task can write to cache at the same time, we make format do that
+              if: ${{matrix.task}} !== 'format'
+              uses: actions/cache@v4/restore
+              with:
+                  path: ${{ steps.get-store-path.outputs.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+
+            - name: Setup pnpm cache (and write to it)
+              # only one task can write to cache at the same time, we make format do that
+              if: ${{matrix.task}} == 'format'
               uses: actions/cache@v4
               with:
                   path: ${{ steps.get-store-path.outputs.STORE_PATH }}
@@ -56,13 +68,15 @@ jobs:
                       ${{ runner.os }}-pnpm-store-
 
             # to cache p:build, format, lint, type-check and test-run
+            # we need to use the task name to avoid conflicts between different tasks
+            # that use the same cache key
             - name: Setup turbo cache
               uses: actions/cache@v4
               with:
                   path: .turbo
-                  key: ${{ runner.os }}-turbo-${{ github.sha }}
+                  key: ${{ runner.os }}-turbo-${{ matrix.task }}-${{ github.sha }}
                   restore-keys: |
-                      ${{ runner.os }}-turbo-
+                      ${{ runner.os }}-turbo-${{ matrix.task }}-
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --prefer-offline
