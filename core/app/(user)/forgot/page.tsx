@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
+
 import React from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 
 import { ForgotForm } from "./ForgotForm";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+	title: "Forgot password",
+	description:
+		"Enter your account's email address below to receive a secure link for resetting your password.",
+};
 
 export default async function Page() {
 	return (
