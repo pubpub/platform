@@ -20,6 +20,7 @@ export const action = defineAction({
 			contributorPerson: z.string(),
 			contributorPersonName: z.string(),
 			contributorPersonORCID: z.string().optional(),
+			bylineContributorFlag: z.boolean().optional(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -50,6 +51,9 @@ export const action = defineAction({
 				allowedSchemas: true,
 			},
 			contributorPersonORCID: {
+				allowedSchemas: true,
+			},
+			bylineContributorFlag: {
 				allowedSchemas: true,
 			},
 		},
@@ -67,6 +71,7 @@ export const action = defineAction({
 			contributorPerson: z.string(),
 			contributorPersonName: z.string(),
 			contributorPersonORCID: z.string().optional(),
+			bylineContributorFlag: z.boolean().optional(),
 		}),
 		fieldConfig: {
 			doi: {
@@ -97,6 +102,9 @@ export const action = defineAction({
 				allowedSchemas: true,
 			},
 			contributorPersonORCID: {
+				allowedSchemas: true,
+			},
+			bylineContributorFlag: {
 				allowedSchemas: true,
 			},
 		},
