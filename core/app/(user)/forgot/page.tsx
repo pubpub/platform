@@ -1,6 +1,8 @@
+import React from "react";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
 
-import ForgotForm from "./ForgotForm";
+import { ForgotForm } from "./ForgotForm";
 
 export default async function Page() {
 	return (
