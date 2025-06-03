@@ -101,7 +101,6 @@ export default (
 			let isAtom;
 			let pubId;
 			let fieldSlug;
-			console.log("selectedItem", selectedItem);
 			if (selectedItemIsField) {
 				/* Eventually, we will check that selectedItem.schemaName !== JSONContent or whatever we name that structured type */
 				isAtom = selectedItem.schemaName !== "String";

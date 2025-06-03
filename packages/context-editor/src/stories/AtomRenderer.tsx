@@ -11,9 +11,6 @@ export const AtomRenderer = forwardRef<
 	const { node } = nodeProps;
 	const [activeData, setActiveData] = useState("");
 	const activeNode = node;
-	if (!activeNode) {
-		return null;
-	}
 
 	const isImageUrl = (url: string) => {
 		// Regular expression to match common image file extensions
@@ -56,7 +53,10 @@ export const AtomRenderer = forwardRef<
 		}
 	}, [node]);
 
-	// console.log(activeNode, activeNode.attrs.data["rd:source"]);
+	if (!activeNode) {
+		return null;
+	}
+
 	return (
 		<section
 			{...props}
@@ -81,12 +81,14 @@ export const AtomRenderer = forwardRef<
 					{activeNode.attrs.data["rd:source"] &&
 						isVideoUrl(activeNode.attrs.data["rd:source"]) && (
 							<video width="640" height="360" controls>
+								<track kind="captions" />
 								<source src={activeNode.attrs.data["rd:source"]} />
 							</video>
 						)}
 					{activeNode.attrs.data["rd:source"] &&
 						isAudioUrl(activeNode.attrs.data["rd:source"]) && (
 							<audio controls>
+								<track kind="captions" />
 								<source src={activeNode.attrs.data["rd:source"]} />
 							</audio>
 						)}

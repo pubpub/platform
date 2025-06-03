@@ -7,10 +7,13 @@ import reactConfig from "@pubpub/eslint-config/react";
 export default [
 	{
 		ignores: ["dist/**", ".storybook/**"],
+	},
+	{
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
 				tsconfigRootDir: import.meta.dirname,
+				projectFolderIgnoreList: ["dist", ".storybook"],
 			},
 		},
 	},
