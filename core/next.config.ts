@@ -54,6 +54,10 @@ const nextConfig: NextConfig = {
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
 		webpackBuildWorker: true,
 		parallelServerBuildTraces: true,
+<<<<<<< Updated upstream
+=======
+		// reactCompiler: true,
+>>>>>>> Stashed changes
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
@@ -67,6 +71,21 @@ const nextConfig: NextConfig = {
 			config.ignoreWarnings = [{ module: /opentelemetry/ }];
 		}
 		return config;
+	},
+	async headers() {
+		// otherwise SSE doesn't work
+		// also recommended by Next: https://nextjs.org/docs/app/guides/self-hosting#streaming-and-suspense
+		return [
+			{
+				source: "/:path*{/}?",
+				headers: [
+					{
+						key: "X-Accel-Buffering",
+						value: "no",
+					},
+				],
+			},
+		];
 	},
 };
 
