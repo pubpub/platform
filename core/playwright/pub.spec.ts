@@ -341,7 +341,7 @@ test.describe("Updating a pub", () => {
 			.getByTestId("pub-dropdown-button")
 			.click();
 		await page.getByRole("link", { name: "Update Pub" }).click();
-		await expect(page.getByTestId("save-status")).toHaveText(
+		await expect(page.getByTestId("save-status-text")).toHaveText(
 			"Form will save when you click save"
 		);
 
@@ -351,7 +351,7 @@ test.describe("Updating a pub", () => {
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
-		await expect(page.getByTestId("save-status")).toContainText("Last saved at");
+		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at");
 
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1);

@@ -16,7 +16,7 @@ export const updateForm = defineServerAction(async function updateForm({
 	formId: FormsId;
 	name: string;
 }) {
-	const user = await getLoginData();
+	const { user } = await getLoginData();
 
 	if (!user) {
 		return {

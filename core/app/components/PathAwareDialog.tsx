@@ -26,6 +26,7 @@ export type PathAwareDialogProps = {
 	buttonIcon?: LucideIcon;
 	buttonVariant?: ButtonProps["variant"];
 	buttonSize?: ButtonProps["size"];
+	disabled?: boolean;
 	icon: React.ReactElement;
 	param: string;
 };
@@ -65,6 +66,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => 
 					variant={props.buttonVariant ?? "outline"}
 					size={props.buttonSize ?? "sm"}
 					className={cn("flex items-center gap-x-2 py-4", props.className)}
+					disabled={props.disabled}
 				>
 					{props.icon}
 					<span>{props.buttonText}</span>

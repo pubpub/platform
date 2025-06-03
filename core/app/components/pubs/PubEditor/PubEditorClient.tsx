@@ -397,18 +397,12 @@ export const PubEditorClient = ({
 					},
 					communityId: community.id,
 					addUserToForm: isExternalForm,
-				});
-				// TODO: this currently overwrites existing pub values of the same field
-				if (relatedPub) {
-					await runUpdatePub({
+					relation: relatedPub && {
+						slug: relatedPub.slug,
 						pubId: relatedPub.id,
-						pubValues: {
-							[relatedPub.slug]: [{ value: relatedPubValue, relatedPubId: pubId }],
-						},
-						continueOnValidationError: true,
-						deleted: [],
-					});
-				}
+						value: relatedPubValue,
+					},
+				});
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from

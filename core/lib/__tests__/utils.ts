@@ -12,7 +12,9 @@ export const mockServerCode = async () => {
 
 		return {
 			testDb,
-			getLoginData: vi.fn(),
+			getLoginData: vi.fn((): { user: { isSuperAdmin: boolean } | null } => ({
+				user: { isSuperAdmin: false },
+			})),
 			findCommunityBySlug: vi.fn(),
 		};
 	});
