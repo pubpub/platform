@@ -185,7 +185,7 @@
 		"@types/react-dom": "catalog:react19",
 		"@types/unist": "^3.0.2",
 		"@types/uuid": "^9.0.2",
-		"@vitejs/plugin-react": "^4.2.1",
+		"@vitejs/plugin-react": "catalog:",
 		"@vitest/utils": "^3.1.2",
 		"autoprefixer": "catalog:",
 		"csv-parse": "^5.5.2",
@@ -205,7 +205,7 @@
 		"tsconfig": "workspace:*",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
-		"vite-tsconfig-paths": "^5.0.1",
+		"vite-tsconfig-paths": "catalog:",
 		"vitest": "catalog:",
 		"yargs": "^17.7.2"
 	},
