@@ -58,7 +58,8 @@
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
-		"vitest": "catalog:"
+		"vitest": "catalog:",
+		"vite": "catalog:"
 	},
 	"dependencies": {
 		"@benrbray/prosemirror-math": "^1.0.0",
