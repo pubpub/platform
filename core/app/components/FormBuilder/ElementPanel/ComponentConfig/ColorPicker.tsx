@@ -2,7 +2,7 @@ import type { ControllerRenderProps } from "react-hook-form";
 
 import { useEffect, useState } from "react";
 import { Pencil, PlusIcon, TrashIcon } from "lucide-react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext, useWatch } from "react-hook-form";
 
 import type { InputComponent } from "db/public";
 import { Button } from "ui/button";
@@ -128,8 +128,8 @@ export const FormBuilderColorPickerPopover = ({
 export default (props: ComponentConfigFormProps<InputComponent.colorPicker>) => {
 	// for some reason if i use `props.form` the watched values don't update when the form values change
 	const reactiveForm = useFormContext<ConfigFormData<InputComponent.colorPicker>>();
-	const presets = reactiveForm.watch("config.presets");
-	const presetsOnly = reactiveForm.watch("config.presetsOnly");
+	const presets = useWatch({ control: reactiveForm.control, name: "config.presets" });
+	const presetsOnly = useWatch({ control: reactiveForm.control, name: "config.presetsOnly" });
 
 	const presetsOnlyEnabled = Boolean(presets?.length);
 

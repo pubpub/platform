@@ -4,7 +4,7 @@ import type { ControllerRenderProps, FieldValue, UseFormReturn } from "react-hoo
 
 import { useCallback, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import type {
@@ -199,9 +199,12 @@ export const StagePanelRuleCreator = (props: Props) => {
 		},
 	});
 
-	const event = form.watch("event");
-	const selectedActionInstanceId = form.watch("actionInstanceId");
-	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
+	const event = useWatch({ control: form.control, name: "event" });
+	const selectedActionInstanceId = useWatch({ control: form.control, name: "actionInstanceId" });
+	const sourceActionInstanceId = useWatch({
+		control: form.control,
+		name: "sourceActionInstanceId",
+	});
 
 	// for action chaining events, filter out self-references
 	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;

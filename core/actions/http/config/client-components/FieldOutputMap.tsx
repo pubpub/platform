@@ -1,6 +1,6 @@
 "use client";
 
-import { useFieldArray } from "react-hook-form";
+import { useFieldArray, useWatch } from "react-hook-form";
 
 import type { PubFieldSchemaId, PubFieldsId } from "db/public";
 import { AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
@@ -121,7 +121,7 @@ export const FieldOutputMap = defineCustomFormField(
 	"outputMap",
 	function FieldOutputMap({ form, fieldName }) {
 		const pubFields = Object.values(usePubFieldContext());
-		const values = form.watch();
+		const values = useWatch({ control: form.control, name: fieldName });
 
 		const { fields, append, remove } = useFieldArray({
 			control: form.control,
@@ -131,7 +131,7 @@ export const FieldOutputMap = defineCustomFormField(
 
 		const [title] = itemName.split("|");
 
-		const alreadySelectedPubFields = values[fieldName] ?? [];
+		const alreadySelectedPubFields = values ?? [];
 		const unselectedPubFields = pubFields.filter(
 			(pubField) =>
 				!alreadySelectedPubFields.some((field) => field.pubField === pubField.slug)
