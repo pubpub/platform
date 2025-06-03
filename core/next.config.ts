@@ -54,10 +54,7 @@ const nextConfig: NextConfig = {
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
 		webpackBuildWorker: true,
 		parallelServerBuildTraces: true,
-<<<<<<< Updated upstream
-=======
-		// reactCompiler: true,
->>>>>>> Stashed changes
+		reactCompiler: true,
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
