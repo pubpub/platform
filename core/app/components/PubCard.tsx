@@ -33,7 +33,7 @@ export const PubCard = async ({
 	communitySlug: string;
 	stages: CommunityStage[];
 	actionInstances: ActionInstances[];
-	withSelection: boolean;
+	withSelection?: boolean;
 }) => {
 	return (
 		<Card
