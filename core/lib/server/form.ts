@@ -310,15 +310,14 @@ export const insertForm = (
 				.returning(["slug", "id"])
 		)
 		.with("title_element", (db) =>
-			db.insertInto("form_elements").values((eb) => ({
+			db.insertInto("form_structural_elements").values((eb) => ({
 				formId: eb.selectFrom("form").select("form.id"),
-				type: ElementType.structural,
 				element: StructuralFormElement.p,
 				content: '# :value{field="title"}',
 				rank: ranks[0],
 			}))
 		)
-		.insertInto("form_elements")
+		.insertInto("form_inputs")
 		.values((eb) =>
 			pubType.fields.map((field, i) => ({
 				fieldId: field.id,
@@ -330,7 +329,6 @@ export const insertForm = (
 							},
 						}
 					: { label: field.name },
-				type: ElementType.pubfield,
 				component: defaultComponent(field.schemaName!),
 				rank: ranks[i + 1],
 				formId: eb.selectFrom("form").select("form.id"),

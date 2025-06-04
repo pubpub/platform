@@ -266,6 +266,7 @@ export type FormElementInitializer<PF extends PubFieldsInitializer> = {
 				content?: never;
 				element?: never;
 				label?: never;
+				required?: boolean;
 				config: Static<(typeof componentConfigSchemas)[Component]> &
 					(PF[FieldName]["relation"] extends true
 						? {
@@ -321,7 +322,7 @@ export type FormInitializer<
 						component?: never;
 						label: string;
 						content: string;
-						stage: keyof SI;
+						stage?: keyof SI;
 						config?: never;
 						field?: never;
 				  }
@@ -1114,76 +1115,121 @@ export async function seedCommunity<
 	logger.info(`${createdCommunity.name}: Successfully created pubs`);
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
+
+	// first create the forms
 	const createdForms =
 		formList.length > 0
 			? await trx
-					.with("form", (eb) =>
-						eb
-							.insertInto("forms")
-							.values(
-								formList.map(([formTitle, formInput]) => ({
-									id: formInput.id,
-									access: formInput.access,
-									isArchived: formInput.isArchived,
-									name: formTitle,
-									slug: formInput.slug ?? slugifyString(formTitle),
-									communityId: communityId,
-									pubTypeId: createdPubTypes.find(
-										(pubType) => pubType.name === formInput.pubType
-									)!.id,
-									isDefault: formInput.isDefault,
-								}))
-							)
-							.returningAll()
+					.insertInto("forms")
+					.values(
+						formList.map(([formTitle, formInput]) => ({
+							id: formInput.id,
+							access: formInput.access,
+							isArchived: formInput.isArchived,
+							name: formTitle,
+							slug: formInput.slug ?? slugifyString(formTitle),
+							communityId: communityId,
+							pubTypeId: createdPubTypes.find(
+								(pubType) => pubType.name === formInput.pubType
+							)!.id,
+							isDefault: formInput.isDefault,
+						}))
 					)
-					.with("form-elements", (db) =>
-						db
-							.insertInto("form_elements")
-							.values((eb) =>
-								formList.flatMap(([formTitle, formInput], idx) => {
-									const ranks = findRanksBetween({
-										numberOfRanks: formInput.elements.length,
-									});
-									return formInput.elements.map((elementInput, elementIndex) => ({
-										formId: eb
-											.selectFrom("form")
-											.select("form.id")
-											.limit(1)
-											.where(
-												"form.slug",
-												"=",
-												formInput.slug ?? slugifyString(formTitle)
-											),
-										type: elementInput.type,
-										fieldId: createdPubFields.find(
-											(pubField) => pubField.name === elementInput.field
-										)?.id,
-										content: elementInput.content,
-										label: elementInput.label,
-										element: elementInput.element,
-										component: elementInput.component,
-										rank: ranks[elementIndex],
-										config: elementInput.config,
-									}));
-								})
-							)
-							.returningAll()
-					)
-					.selectFrom("form")
-					.selectAll("form")
-					.select((eb) =>
-						jsonArrayFrom(
-							eb
-								.selectFrom("form-elements")
-								.selectAll("form-elements")
-								.whereRef("form-elements.formId", "=", "form.id")
-						).as("elements")
-					)
+					.returningAll()
 					.execute()
 			: [];
 
+	// then create form inputs
+	const formInputValues = formList.flatMap(([formTitle, formInput]) => {
+		const form = createdForms.find((f) => f.name === formTitle);
+		if (!form) return [];
+
+		const ranks = findRanksBetween({
+			numberOfRanks: formInput.elements.length,
+		});
+
+		return formInput.elements
+			.filter((elementInput) => elementInput.type === "pubfield")
+			.map((elementInput, elementIndex) => ({
+				formId: form.id,
+				fieldId: createdPubFields.find((pubField) => pubField.name === elementInput.field)
+					?.id,
+				component: elementInput.component,
+				rank: ranks[elementIndex],
+				config: elementInput.config,
+				required: elementInput.required,
+			}));
+	});
+
+	const createdFormInputs =
+		formInputValues.length > 0
+			? await trx.insertInto("form_inputs").values(formInputValues).returningAll().execute()
+			: [];
+
+	// then create structural elements
+	const structuralElementValues = formList.flatMap(([formTitle, formInput]) => {
+		const form = createdForms.find((f) => f.name === formTitle);
+		if (!form) return [];
+
+		const ranks = findRanksBetween({
+			numberOfRanks: formInput.elements.length,
+		});
+
+		return formInput.elements
+			.filter((elementInput) => elementInput.type === "structural")
+			.map((elementInput, elementIndex) => ({
+				formId: form.id,
+				element: elementInput.element,
+				content: elementInput.content,
+				rank: ranks[elementIndex],
+			}));
+	});
+
+	const createdStructuralElements =
+		structuralElementValues.length > 0
+			? await trx
+					.insertInto("form_structural_elements")
+					.values(structuralElementValues)
+					.returningAll()
+					.execute()
+			: [];
+
+	// then create buttons
+	const buttonValues = formList.flatMap(([formTitle, formInput]) => {
+		const form = createdForms.find((f) => f.name === formTitle);
+		if (!form) return [];
+
+		const ranks = findRanksBetween({
+			numberOfRanks: formInput.elements.length,
+		});
+
+		return formInput.elements
+			.filter((elementInput) => elementInput.type === "button")
+			.map((elementInput, elementIndex) => ({
+				formId: form.id,
+				label: elementInput.label,
+				rank: ranks[elementIndex],
+				stageId: createdStages.find((stage) => stage.name === elementInput.stage)?.id,
+			}));
+	});
+
+	const createdButtons =
+		buttonValues.length > 0
+			? await trx.insertInto("form_buttons").values(buttonValues).returningAll().execute()
+			: [];
+
+	// finally, combine everything for the return value
+	const formsWithElements = createdForms.map((form) => ({
+		...form,
+		inputs: createdFormInputs.filter((input) => input.formId === form.id),
+		structuralElements: createdStructuralElements.filter(
+			(element) => element.formId === form.id
+		),
+		buttons: createdButtons.filter((button) => button.formId === form.id),
+	}));
+
 	const formsByName = Object.fromEntries(
-		createdForms.map((form) => [form.name, form])
+		formsWithElements.map((form) => [form.name, form])
 	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's
