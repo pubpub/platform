@@ -6,6 +6,7 @@ import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Checkbox } from "ui/checkbox";
 import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 } from "ui/icon";
+import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
@@ -19,20 +20,7 @@ const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
 	return null;
 };
 
-const Action = ({ icon, title, link }: { icon: React.ReactNode; title: string; link?: string }) => {
-	const iconWithTitle = (
-		<>
-			{icon}
-			<span className="sr-only">{title}</span>
-		</>
-	);
-	const inner = link ? <Link href={link}>{iconWithTitle}</Link> : iconWithTitle;
-	return (
-		<Button variant="ghost" className="w-6 [&_svg]:size-6" asChild={!!link}>
-			{inner}
-		</Button>
-	);
-};
+const HOVER_CLASS = "opacity-0 group-hover:opacity-100 transition-opacity duration-200";
 
 export const PubCard = async ({
 	pub,
@@ -109,16 +97,12 @@ export const PubCard = async ({
 					</div>
 				</CardFooter>
 			</div>
-			<div className="mr-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-				<div className="flex items-center gap-3 text-neutral-500">
-					<RemovePubButton
-						pubId={pub.id}
-						iconOnly
-						buttonText="Archive"
-						variant="ghost"
-						className="w-8 px-4 py-2 [&_svg]:size-6"
-						icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
-					/>
+			<div className="mr-4">
+				{/* We use grid and order-[x] to place items according to the design, but 
+				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other
+				buttons check if the `peer` is open, and if it is, it does not lose opacity.
+				Otherwise, when the dropdown menu opens, the buttons all fade away */}
+				<div className="grid grid-cols-4 items-center gap-3 text-neutral-500">
 					{pub.stage ? (
 						<PubsRunActionDropDownMenu
 							actionInstances={actionInstances}
@@ -126,15 +110,43 @@ export const PubCard = async ({
 							pubId={pub.id}
 							iconOnly
 							variant="ghost"
-							className="w-6 px-4 py-2 [&_svg]:size-6"
+							className={cn(
+								"peer order-2 w-6 px-4 py-2 data-[state=open]:opacity-100 [&_svg]:size-6",
+								HOVER_CLASS
+							)}
 						/>
 					) : null}
-					<Action
-						link={`/c/${communitySlug}/pubs/${pub.id}/edit`}
-						icon={<Pencil strokeWidth="1px" className="text-neutral-500" />}
-						title="Update"
+					<RemovePubButton
+						pubId={pub.id}
+						iconOnly
+						buttonText="Archive"
+						variant="ghost"
+						className={cn(
+							"order-1 w-8 px-4 py-2 opacity-0 group-hover:opacity-100 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+							HOVER_CLASS
+						)}
+						icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
 					/>
-					<Checkbox className="ml-2 box-content h-4 w-4 border-neutral-500" />
+
+					<Button
+						variant="ghost"
+						className={cn(
+							"order-3 w-6 opacity-0 group-hover:opacity-100 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+							HOVER_CLASS
+						)}
+						asChild
+					>
+						<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+							<Pencil strokeWidth="1px" className="text-neutral-500" />
+							<span className="sr-only">Update</span>
+						</Link>
+					</Button>
+					<Checkbox
+						className={cn(
+							"order-4 ml-2 box-content h-4 w-4 border-neutral-500 opacity-0 group-hover:opacity-100 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
+							HOVER_CLASS
+						)}
+					/>
 				</div>
 			</div>
 		</Card>
