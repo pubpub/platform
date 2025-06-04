@@ -143,6 +143,7 @@ export async function StagePubs({
 						stages={stages}
 						actionInstances={actionInstances}
 						communitySlug={communitySlug}
+						withSelection={false}
 					/>
 				);
 			})}

@@ -10,7 +10,7 @@ import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { formatDateAsPossiblyDistance } from "~/lib/dates";
+import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu";
 import { RemovePubButton } from "./pubs/RemovePubButton";
@@ -27,11 +27,13 @@ export const PubCard = async ({
 	communitySlug,
 	stages,
 	actionInstances,
+	withSelection = true,
 }: {
 	pub: ProcessedPub<{ withPubType: true; withRelatedPubs: false; withStage: true }>;
 	communitySlug: string;
 	stages: CommunityStage[];
 	actionInstances: ActionInstances[];
+	withSelection: boolean;
 }) => {
 	return (
 		<Card
@@ -89,7 +91,7 @@ export const PubCard = async ({
 				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
 					<div className="flex gap-1" title="Created at">
 						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
-						<span>{formatDateAsPossiblyDistance(new Date(pub.createdAt))}</span>
+						<span>{formatDateAsMonthDayYear(new Date(pub.createdAt))}</span>
 					</div>
 					<div className="flex gap-1" title="Updated at">
 						<History size="16px" strokeWidth="1px" className="text-neutral-500" />
@@ -103,7 +105,8 @@ export const PubCard = async ({
 				buttons check if the `peer` is open, and if it is, it does not lose opacity.
 				Otherwise, when the dropdown menu opens, the buttons all fade away */}
 				<div className="grid grid-cols-4 items-center gap-3 text-neutral-500">
-					{pub.stage ? (
+					{!withSelection ? <div className="col-span-1" /> : null}
+					{pub.stage && actionInstances.length > 0 ? (
 						<PubsRunActionDropDownMenu
 							actionInstances={actionInstances}
 							stage={pub.stage}
@@ -115,23 +118,24 @@ export const PubCard = async ({
 								HOVER_CLASS
 							)}
 						/>
-					) : null}
+					) : (
+						<div className="col-span-1" />
+					)}
 					<RemovePubButton
 						pubId={pub.id}
 						iconOnly
 						buttonText="Archive"
 						variant="ghost"
 						className={cn(
-							"order-1 w-8 px-4 py-2 opacity-0 group-hover:opacity-100 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+							"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
 							HOVER_CLASS
 						)}
 						icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
 					/>
-
 					<Button
 						variant="ghost"
 						className={cn(
-							"order-3 w-6 opacity-0 group-hover:opacity-100 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+							"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
 							HOVER_CLASS
 						)}
 						asChild
@@ -141,12 +145,14 @@ export const PubCard = async ({
 							<span className="sr-only">Update</span>
 						</Link>
 					</Button>
-					<Checkbox
-						className={cn(
-							"order-4 ml-2 box-content h-4 w-4 border-neutral-500 opacity-0 group-hover:opacity-100 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
-							HOVER_CLASS
-						)}
-					/>
+					{withSelection ? (
+						<Checkbox
+							className={cn(
+								"order-4 ml-2 box-content h-4 w-4 border-neutral-500 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
+								HOVER_CLASS
+							)}
+						/>
+					) : null}
 				</div>
 			</div>
 		</Card>
