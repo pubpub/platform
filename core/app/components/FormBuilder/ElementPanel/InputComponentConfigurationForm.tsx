@@ -37,16 +37,16 @@ import { Skeleton } from "ui/skeleton";
 import { Switch } from "ui/switch";
 import { Textarea } from "ui/textarea";
 
-import type { InputElement } from "../types";
+import type { FormBuilderInputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
 import { useFormBuilder } from "../FormBuilderContext";
-import { FieldInputElement } from "../FormElement";
+import { FieldInputElement } from "../FormBuilderElement";
 import { ComponentConfig } from "./ComponentConfig";
 
 type SchemaComponentData = {
 	name?: string;
 	placeholder?: string;
-	demoComponent?: (props: { element: InputElement }) => React.ReactNode;
+	demoComponent?: (props: { element: FormBuilderInputElement }) => React.ReactNode;
 };
 
 const DatePicker = dynamic(() => import("ui/date-picker").then((mod) => mod.DatePicker), {
@@ -254,7 +254,7 @@ const ComponentSelect = ({
 	components: InputComponent[];
 	value: InputComponent;
 	onChange: (component: InputComponent) => void;
-	element: InputElement;
+	element: FormBuilderInputElement;
 	radioName?: string;
 }) => {
 	return (
@@ -307,7 +307,7 @@ const Nullable = <T extends TSchema>(schema: T) => Type.Union([schema, Type.Null
 
 type Props = {
 	index: number;
-	fieldInputElement: InputElement;
+	fieldInputElement: FormBuilderInputElement;
 };
 
 export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Props) => {

@@ -525,17 +525,17 @@ enum InputComponent {
 
 // form input elements for pub fields
 model FormInput {
-  id              String          @id @default(dbgenerated("gen_random_uuid()"))
+  id              String         @id @default(dbgenerated("gen_random_uuid()"))
   fieldId         String?
-  field           PubField?       @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  field           PubField?      @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId          String
   rank            String // Uses "C" collation
-  component       InputComponent?
+  component       InputComponent
   config          Json?
   required        Boolean?
-  form            Form            @relation(fields: [formId], references: [id], onDelete: Cascade)
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @default(now()) @updatedAt
+  form            Form           @relation(fields: [formId], references: [id], onDelete: Cascade)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @default(now()) @updatedAt
   relatedPubTypes PubType[]
 
   @@unique([fieldId, formId])
@@ -552,14 +552,14 @@ enum StructuralFormElement {
 
 // structural elements like headers, paragraphs, etc.
 model FormStructuralElement {
-  id        String                 @id @default(dbgenerated("gen_random_uuid()"))
+  id        String                @id @default(dbgenerated("gen_random_uuid()"))
   formId    String
-  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  form      Form                  @relation(fields: [formId], references: [id], onDelete: Cascade)
   rank      String // Uses "C" collation
-  element   StructuralFormElement?
+  element   StructuralFormElement
   content   String?
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @default(now()) @updatedAt
+  createdAt DateTime              @default(now())
+  updatedAt DateTime              @default(now()) @updatedAt
 
   @@map(name: "form_structural_elements")
 }
@@ -570,6 +570,7 @@ model FormButton {
   formId    String
   rank      String // Uses "C" collation
   label     String?
+  content   String?
   form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
   stage     Stage?   @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId   String?

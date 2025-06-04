@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { describe, expect, test } from "vitest";
 
@@ -5,7 +6,6 @@ import type { ApiAccessTokensId, PubsId, PubTypesId, StagesId, UsersId } from "d
 import {
 	Action,
 	CoreSchemaType,
-	ElementType,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
@@ -32,6 +32,8 @@ describe("seedCommunity", () => {
 		const stage1Id = crypto.randomUUID() as StagesId;
 		const AuthorPubTypeId = crypto.randomUUID() as PubTypesId;
 
+		const testEmail = faker.internet.email();
+
 		const seededCommunity = await seedCommunity({
 			community: {
 				name: "test",
@@ -57,7 +59,7 @@ describe("seedCommunity", () => {
 				test: {
 					id: testUserId,
 					firstName: "Testy",
-					email: "test@test.com",
+					email: testEmail,
 					lastName: "McTestFace",
 					role: MemberRole.admin,
 				},
@@ -136,12 +138,10 @@ describe("seedCommunity", () => {
 					pubType: "Submission",
 					elements: [
 						{
-							type: ElementType.structural,
 							element: StructuralFormElement.p,
 							content: "# Hey, what is up.",
 						},
 						{
-							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							field: "Title",
 							config: {
@@ -149,7 +149,6 @@ describe("seedCommunity", () => {
 							},
 						},
 						{
-							type: ElementType.button,
 							label: "Submit",
 							content: "Submit",
 							stage: "Stage 1",
@@ -160,7 +159,6 @@ describe("seedCommunity", () => {
 					pubType: "Author",
 					elements: [
 						{
-							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							field: "Title",
 							config: { label: "Name" },
@@ -289,41 +287,17 @@ describe("seedCommunity", () => {
 				access: "private",
 				elements: [
 					{
-						component: null,
-						config: null,
 						content: "# Hey, what is up.",
 						element: "p",
-						fieldId: null,
-						label: null,
-						rank: "F",
-						required: null,
-						stageId: null,
-						type: "structural",
+						rank: "K",
 					},
 					{
 						component: "textInput",
 						config: {
 							label: "Title hihihi",
 						},
-						content: null,
-						element: null,
-						label: null,
-						rank: "U",
+						rank: "f",
 						required: null,
-						stageId: null,
-						type: "pubfield",
-					},
-					{
-						component: null,
-						config: null,
-						content: "Submit",
-						element: null,
-						fieldId: null,
-						label: "Submit",
-						rank: "k",
-						required: null,
-						stageId: null,
-						type: "button",
 					},
 				],
 				isArchived: false,
@@ -338,13 +312,8 @@ describe("seedCommunity", () => {
 						config: {
 							label: "Name",
 						},
-						content: null,
-						element: null,
-						label: null,
 						rank: "U",
 						required: null,
-						stageId: null,
-						type: "pubfield",
 					},
 				],
 				isArchived: false,

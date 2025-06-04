@@ -1,79 +1,80 @@
 import { z } from "zod";
 
-import type { InputComponent, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	CoreSchemaType,
-	ElementType,
 	FormAccessType,
-	formElementsIdSchema,
-	formElementsInitializerSchema,
+	formButtonsIdSchema,
+	formButtonsInitializerSchema,
+	formInputsIdSchema,
+	formInputsInitializerSchema,
 	formsIdSchema,
+	formStructuralElementsIdSchema,
+	formStructuralElementsInitializerSchema,
 	pubTypesIdSchema,
 } from "db/public";
 
 const baseElementSchema = z.object({
-	id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
-	elementId: formElementsIdSchema.optional(),
+	// id: z.string().optional(), // react-hook-form assigned ID, meaningless in our DB
 	rank: z.string(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
 	configured: z.boolean().default(true),
-	stageId: z.string().nullable().optional(),
-	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),
-	isRelation: z.boolean().nullable().default(false),
-	relatedPubTypes: pubTypesIdSchema.array().nullable().optional(),
 });
 
 type baseElement = z.input<typeof baseElementSchema>;
 
-export type InputElement = baseElement & {
-	type: ElementType.pubfield;
-	fieldId: PubFieldsId;
-	required: boolean | null;
-	// label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
-	label: never;
-	placeholder?: string | null;
-	help?: string | null;
-	element: never;
-	content: never;
-	schemaName: CoreSchemaType;
-	component: InputComponent;
-	config?: unknown;
-};
-
-export type StructuralElement = baseElement & {
-	type: ElementType.structural;
-	element: StructuralFormElement;
-	content: string;
-	fieldId: never;
-	required: never;
-	label: never;
-	placeholder: never;
-};
-
-export type ButtonElement = baseElement & {
-	type: ElementType.button;
-	label: string;
-	content: string;
-	stageId?: StagesId;
-	fieldId: never;
-	required: never;
-	placeholder: never;
-};
-
-const formElementSchema = formElementsInitializerSchema
-	.omit({ formId: true })
+const formBuilderInputElementSchema = formInputsInitializerSchema
+	// .omit({ formId: true })
 	.extend(baseElementSchema.shape)
+	.extend({
+		elementId: formInputsIdSchema.optional(),
+		schemaName: z.nativeEnum(CoreSchemaType),
+		relatedPubTypes: z.array(pubTypesIdSchema).optional(),
+		isRelation: z.boolean().default(false),
+	})
 	.strict();
 
-export type FormElementData = z.input<typeof formElementSchema>;
+export type FormBuilderInputElement = z.infer<typeof formBuilderInputElementSchema>;
 
-export const isFieldInput = (element: FormElementData): element is InputElement =>
-	element.type === ElementType.pubfield;
-export const isStructuralElement = (element: FormElementData): element is StructuralElement =>
-	element.type === ElementType.structural;
-export const isButtonElement = (element: FormElementData): element is ButtonElement =>
-	element.type === ElementType.button;
+export const isFormBuilderInputElement = (
+	element: FormElementData
+): element is FormBuilderInputElement => "component" in element;
+
+const formBuilderStructuralElementSchema = formStructuralElementsInitializerSchema
+	// .omit({ formId: true })
+	.extend(baseElementSchema.shape)
+	.extend({
+		elementId: formStructuralElementsIdSchema.optional(),
+	})
+	.strict();
+
+export type FormBuilderStructuralElement = z.infer<typeof formBuilderStructuralElementSchema>;
+
+export const isFormBuilderStructuralElement = (
+	element: FormElementData
+): element is FormBuilderStructuralElement => "element" in element;
+
+const formBuilderButtonElementSchema = formButtonsInitializerSchema
+	// .omit({ formId: true })
+	.extend(baseElementSchema.shape)
+	.extend({
+		elementId: formButtonsIdSchema.optional(),
+	})
+	.strict();
+
+export type FormBuilderButtonElement = z.infer<typeof formBuilderButtonElementSchema>;
+
+const formElementSchema = z.union([
+	formBuilderInputElementSchema,
+	formBuilderStructuralElementSchema,
+	formBuilderButtonElementSchema,
+]);
+
+export const isFormBuilderButtonElement = (
+	element: FormElementData
+): element is FormBuilderButtonElement => !("element" in element) && !("component" in element);
+
+export type FormElementData = z.input<typeof formElementSchema>;
 
 export const formBuilderSchema = z.object({
 	access: z.nativeEnum(FormAccessType),
@@ -82,6 +83,7 @@ export const formBuilderSchema = z.object({
 });
 
 export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
+
 export type PanelState = {
 	state: "initial" | "selecting" | "editing" | "editingButton";
 	backButton: PanelState["state"] | null;

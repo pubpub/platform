@@ -1,15 +1,12 @@
 import { beforeAll, describe, expect, expectTypeOf, it } from "vitest";
 
-import type { PubsId, PubTypes, Stages } from "db/public";
 import {
 	CoreSchemaType,
-	ElementType,
 	InputComponent,
 	InviteStatus,
 	MemberRole,
 	StructuralFormElement,
 } from "db/public";
-import { inviteSchema } from "db/types";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
@@ -93,12 +90,10 @@ const seed = createSeed({
 			pubType: "Basic Pub",
 			elements: [
 				{
-					type: ElementType.structural,
 					content: "hello",
 					element: StructuralFormElement.p,
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {

@@ -3,98 +3,78 @@ import { type InputComponentConfigSchema, type SchemaTypeByInputComponent } from
 import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import type {
 	CoreSchemaType,
-	ElementType,
-	FormElementsId,
+	FormButtons,
+	FormInputsId,
+	FormStructuralElements,
 	InputComponent,
 	PubFieldsId,
 	PubsId,
 	PubTypesId,
 	PubValuesId,
-	StagesId,
 	StructuralFormElement,
 } from "db/public";
 
-export type ElementProps<T extends InputComponent> = T extends T
-	? {
-			/**
-			 * label ?? slug
-			 */
-			label: string;
-			slug: string;
-			config: InputComponentConfigSchema<T>;
-			schemaName: SchemaTypeByInputComponent[T];
-		}
-	: never;
+import type { Prettify } from "~/lib/types";
 
-type BasePubFieldElement = {
-	id: FormElementsId;
-	type: ElementType.pubfield;
-	fieldId: PubFieldsId | null;
+// export type InputElementProps<T extends InputComponent> = T extends T
+// 	? {
+// 			slug: string;
+// 			fieldName: string;
+// 			config: InputComponentConfigSchema<T>;
+// 			schemaName: SchemaTypeByInputComponent[T];
+// 		}
+// 	: never;
+
+type BaseInputElement = {
+	id: FormInputsId;
+	fieldId: PubFieldsId;
 	fieldName: string;
-	label: string | null;
-	content: null;
 	required: boolean | null;
-	stageId: null;
-	element: null;
 	rank: string;
 	slug: string;
 	isRelation: boolean;
 	relatedPubTypes: PubTypesId[];
 };
 
-export type BasicPubFieldElement = BasePubFieldElement & {
-	component: InputComponent | null;
+export type BasicInputElement = BaseInputElement & {
+	component: InputComponent;
 	schemaName: CoreSchemaType;
 	config: Record<string, unknown>;
 };
 
-export type PubFieldElement = {
-	[I in InputComponent]: BasePubFieldElement & {
-		component: I | null;
-		schemaName: SchemaTypeByInputComponent[I];
-		config: InputComponentConfigSchema<I>;
-	};
+export type InputElementForComponent<I extends InputComponent> = BaseInputElement & {
+	component: I;
+	schemaName: SchemaTypeByInputComponent[I];
+	config: InputComponentConfigSchema<I>;
+};
+
+export type InputElement = {
+	[I in InputComponent]: InputElementForComponent<I>;
 }[InputComponent];
 
-export type ButtonElement = {
-	id: FormElementsId;
-	type: ElementType.button;
-	fieldId: null;
-	rank: string;
-	label: string | null;
-	element: null;
-	content: null;
-	required: null;
-	stageId: StagesId | null;
-	config: null;
-	component: null;
-	schemaName: null;
-	slug: null;
-	isRelation: false;
-	relatedPubTypes: [];
-};
+export type InputElementProps<T extends InputComponent> = Extract<InputElement, { component: T }>;
 
-export type StructuralElement = {
-	id: FormElementsId;
-	type: ElementType.structural;
-	fieldId: null;
-	rank: string;
-	label: string | null;
-	element: StructuralFormElement | null;
-	content: string | null;
-	required: null;
-	stageId: null;
-	config: null;
-	component: null;
-	schemaName: null;
-	slug: null;
-	isRelation: false;
-	relatedPubTypes: [];
-};
+export type StructuralElement = Prettify<Omit<FormStructuralElements, "createdAt" | "updatedAt">>;
 
-export type FormElements = PubFieldElement | StructuralElement | ButtonElement;
+export type ButtonElement = Prettify<Omit<FormButtons, "createdAt" | "updatedAt">>;
 
-export type BasicFormElements = ButtonElement | StructuralElement | BasicPubFieldElement;
+export type FormElements = InputElement | StructuralElement | ButtonElement;
+
+type Filterables =
+	| { element: StructuralFormElement }
+	| { component: InputComponent }
+	| { label: string | null; content: string | null };
+
+export const isInputElement = (element: Filterables): element is InputElement =>
+	"fieldId" in element && element.fieldId !== null;
+
+export const isStructuralElement = (element: Filterables): element is StructuralElement =>
+	"element" in element && element.element !== null && "content" in element;
+
+export const isButtonElement = (element: Filterables): element is ButtonElement =>
+	"label" in element && !("element" in element) && !("component" in element);
+
+export type BasicFormElements = ButtonElement | StructuralElement | BasicInputElement;
 
 export type RelatedFieldValue = {
 	value: JsonValue;

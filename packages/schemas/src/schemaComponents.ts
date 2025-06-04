@@ -8,30 +8,38 @@ export const defaultComponent = <T extends CoreSchemaType>(schemaName: T) =>
 	componentsBySchema[schemaName][0] ?? null;
 
 export const componentsBySchema = {
-	[CoreSchemaType.Boolean]: [InputComponent.checkbox],
-	[CoreSchemaType.String]: [InputComponent.textInput, InputComponent.textArea],
-	[CoreSchemaType.DateTime]: [InputComponent.datePicker],
-	[CoreSchemaType.Number]: [InputComponent.textInput],
+	[CoreSchemaType.Boolean]: [InputComponent.checkbox, InputComponent.relationBlock],
+	[CoreSchemaType.String]: [
+		InputComponent.textInput,
+		InputComponent.textArea,
+		InputComponent.relationBlock,
+	],
+	[CoreSchemaType.DateTime]: [InputComponent.datePicker, InputComponent.relationBlock],
+	[CoreSchemaType.Number]: [InputComponent.textInput, InputComponent.relationBlock],
 	[CoreSchemaType.NumericArray]: [
 		InputComponent.multivalueInput,
 		InputComponent.checkboxGroup,
 		InputComponent.radioGroup,
 		InputComponent.selectDropdown,
+		InputComponent.relationBlock,
 	],
 	[CoreSchemaType.StringArray]: [
 		InputComponent.multivalueInput,
 		InputComponent.checkboxGroup,
 		InputComponent.radioGroup,
 		InputComponent.selectDropdown,
+		InputComponent.relationBlock,
 	],
-	[CoreSchemaType.Email]: [InputComponent.textInput],
-	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload],
-	[CoreSchemaType.URL]: [InputComponent.textInput],
-	[CoreSchemaType.MemberId]: [InputComponent.memberSelect],
-	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval],
-	[CoreSchemaType.Null]: [],
-	[CoreSchemaType.RichText]: [InputComponent.richText],
-	[CoreSchemaType.Color]: [InputComponent.colorPicker],
+	[CoreSchemaType.Email]: [InputComponent.textInput, InputComponent.relationBlock],
+	[CoreSchemaType.FileUpload]: [InputComponent.fileUpload, InputComponent.relationBlock],
+	[CoreSchemaType.URL]: [InputComponent.textInput, InputComponent.relationBlock],
+	[CoreSchemaType.MemberId]: [InputComponent.memberSelect, InputComponent.relationBlock],
+	[CoreSchemaType.Vector3]: [InputComponent.confidenceInterval, InputComponent.relationBlock],
+	// Null is assumed to always be for relations, does not make
+	// sense to have a null field otherwise
+	[CoreSchemaType.Null]: [InputComponent.relationBlock],
+	[CoreSchemaType.RichText]: [InputComponent.richText, InputComponent.relationBlock],
+	[CoreSchemaType.Color]: [InputComponent.colorPicker, InputComponent.relationBlock],
 } as const satisfies Record<CoreSchemaType, InputComponent[]>;
 
 export type ComponentsBySchemaType = typeof componentsBySchema;

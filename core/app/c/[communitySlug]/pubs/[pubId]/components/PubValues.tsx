@@ -26,27 +26,6 @@ type FullProcessedPubWithForm = ProcessedPubWithForm<{
 	withMembers: true;
 }>;
 
-/**
- * Get the label a form/pub value combo might have. In preference order:
- * 1. "label" on a FormElement
- * 2. "config.label" on a FormElement
- * 3. the name of the PubField
- **/
-const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
-	// Default to the field name
-	const defaultLabel = value.fieldName;
-	let configLabel;
-	let formElementLabel;
-	if ("formElementId" in value) {
-		const config = value.formElementConfig;
-		if (config) {
-			configLabel = "label" in config ? config.label : undefined;
-		}
-		formElementLabel = value.formElementLabel;
-	}
-	return formElementLabel || configLabel || defaultLabel;
-};
-
 const PubValueHeading = ({
 	depth,
 	children,

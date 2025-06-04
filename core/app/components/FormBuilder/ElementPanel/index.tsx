@@ -8,7 +8,7 @@ import { Input } from "ui/input";
 import type { PanelState } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
-import { isFieldInput, isStructuralElement } from "../types";
+import { isFormBuilderInputElement, isFormBuilderStructuralElement } from "../types";
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
 import { InputComponentConfigurationForm } from "./InputComponentConfigurationForm";
 import { SelectAccess } from "./SelectAccess";
@@ -56,7 +56,7 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 				return <div>No selected element</div>;
 			}
 
-			if (isStructuralElement(selectedElement)) {
+			if (isFormBuilderStructuralElement(selectedElement)) {
 				return (
 					<StructuralElementConfigurationForm
 						index={panelState.selectedElementIndex}
@@ -65,7 +65,7 @@ export const ElementPanel = ({ panelState }: ElementPanelProps) => {
 				);
 			}
 
-			if (isFieldInput(selectedElement)) {
+			if (isFormBuilderInputElement(selectedElement)) {
 				return (
 					<InputComponentConfigurationForm
 						fieldInputElement={selectedElement}

@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import type { BasicFormElements } from "~/app/components/forms/types";
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
+import { isInputElement } from "~/app/components/forms/types";
 import {
 	SAVE_STATUS_QUERY_PARAM,
 	SUBMIT_ID_QUERY_PARAM,
@@ -14,7 +15,9 @@ import {
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
 
 const isComplete = (formElements: BasicFormElements[], values: FieldValues) => {
-	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
+	const requiredElements = formElements
+		.filter(isInputElement)
+		.filter((fe) => fe.required && fe.slug);
 	requiredElements.forEach((element) => {
 		const value = values[element.slug!];
 		if (value == null) {

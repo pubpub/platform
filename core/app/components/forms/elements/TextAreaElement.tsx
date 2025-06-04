@@ -5,30 +5,25 @@ import { useFormContext } from "react-hook-form";
 import { textAreaConfigSchema } from "schemas";
 
 import type { InputComponent } from "db/public";
-import type { TextareaProps } from "ui/textarea";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Textarea } from "ui/textarea";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
-export const TextAreaElement = ({
-	slug,
-	label,
-	config,
-	schemaName,
-	...rest
-}: ElementProps<InputComponent.textArea> & TextareaProps) => {
+export const TextAreaElement = (props: InputElementProps<InputComponent.textArea>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	if (!Value.Check(textAreaConfigSchema, config)) {
+	const label = getLabel(props);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
+	if (!Value.Check(textAreaConfigSchema, props.config)) {
 		return null;
 	}
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => {
 				const { value, ...fieldRest } = field;
 				return (
@@ -36,17 +31,16 @@ export const TextAreaElement = ({
 						<FormLabel disabled={!isEnabled}>{label}</FormLabel>{" "}
 						<FormControl>
 							<Textarea
-								maxLength={config.maxLength}
-								minLength={config.minLength}
-								placeholder={config.placeholder}
-								data-testid={slug}
+								maxLength={props.config.maxLength}
+								minLength={props.config.minLength}
+								placeholder={props.config.placeholder}
+								data-testid={props.slug}
 								value={value ?? ""}
 								{...fieldRest}
-								{...rest}
 								disabled={!isEnabled}
 							/>
 						</FormControl>
-						<FormDescription>{config.help}</FormDescription>
+						<FormDescription>{props.config.help}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				);

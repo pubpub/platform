@@ -13,10 +13,11 @@ import { richTextInputConfigSchema } from "schemas";
 import { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
 /**
  * Symbol to use in lieu of the real value for the context editor, to signal that this value should not be used
@@ -109,24 +110,21 @@ const EditorFormElement = function EditorFormElement({
 	);
 };
 
-export const ContextEditorElement = ({
-	slug,
-	label,
-	config,
-}: ElementProps<InputComponent.richText>) => {
+export const ContextEditorElement = (props: InputElementProps<InputComponent.richText>) => {
+	const label = getLabel(props);
 	const { control } = useFormContext();
 
-	Value.Default(richTextInputConfigSchema, config);
-	if (!Value.Check(richTextInputConfigSchema, config)) {
+	Value.Default(richTextInputConfigSchema, props.config);
+	if (!Value.Check(richTextInputConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => (
-				<EditorFormElement field={field} label={label} help={config.help} />
+				<EditorFormElement field={field} label={label} help={props.config.help} />
 			)}
 		/>
 	);

@@ -1,10 +1,22 @@
 "use server";
 
-import type { FormElementsId, FormsId, NewFormElements, NewFormElementToPubType } from "db/public";
+import type {
+	FormButtonsId,
+	FormInputsId,
+	FormsId,
+	FormStructuralElementsId,
+	NewFormInputToPubType,
+} from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { logger } from "logger";
 
-import type { FormBuilderSchema } from "./types";
+import type {
+	FormBuilderButtonElement,
+	FormBuilderInputElement,
+	FormBuilderSchema,
+	FormBuilderStructuralElement,
+	FormElementData,
+} from "./types";
 import type { QB } from "~/lib/server/cache/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -16,29 +28,37 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 
 const upsertRelatedPubTypes = async (
-	values: NewFormElementToPubType[],
-	deletedRelatedPubTypes: FormElementsId[],
+	values: NewFormInputToPubType[],
+	deletedRelatedPubTypes: FormInputsId[],
 	trx = db
 ) => {
 	const formElementIds = [...values.map((v) => v.A), ...deletedRelatedPubTypes];
 
 	if (formElementIds.length) {
 		// Delete old values
-		await trx.deleteFrom("_FormElementToPubType").where("A", "in", formElementIds).execute();
+		await trx.deleteFrom("_FormInputToPubType").where("A", "in", formElementIds).execute();
 	}
 
 	// Insert new ones
 	if (values.length) {
-		await trx.insertInto("_FormElementToPubType").values(values).execute();
+		await trx.insertInto("_FormInputToPubType").values(values).execute();
 	}
 };
 
 export const saveForm = defineServerAction(async function saveForm(form: {
 	formId: FormsId;
-	upserts: NewFormElements[];
-	deletes: FormElementsId[];
-	relatedPubTypes: NewFormElementToPubType[];
-	deletedRelatedPubTypes: FormElementsId[];
+	upserts: {
+		inputs: FormBuilderInputElement[];
+		structure: FormBuilderStructuralElement[];
+		buttons: FormBuilderButtonElement[];
+	};
+	deletes: {
+		inputs: FormInputsId[];
+		structure: FormStructuralElementsId[];
+		buttons: FormButtonsId[];
+	};
+	relatedPubTypes: NewFormInputToPubType[];
+	deletedRelatedPubTypes: FormInputsId[];
 	access?: FormBuilderSchema["access"];
 }) {
 	const loginData = await getLoginData();
@@ -66,21 +86,30 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 	const { formId, upserts, deletes, access, relatedPubTypes, deletedRelatedPubTypes } = form;
 
 	logger.info({ msg: "saving form", form, upserts, deletes });
-	if (!upserts.length && !deletes.length && !access) {
+	if (!Object.values(upserts).flat().length && !Object.values(deletes).flat().length && !access) {
 		return;
 	}
 	try {
 		const result = await db.transaction().execute(async (trx) => {
 			let query = trx as unknown;
 
-			if (upserts.length) {
+			if (upserts?.inputs.length) {
 				query = (query as typeof trx).with("upserts", (db) =>
 					db
-						.insertInto("form_elements")
-						.values(upserts)
+						.insertInto("form_inputs")
+						.values(
+							upserts.inputs.map(({ elementId, ...input }) => ({
+								...input,
+								id: elementId,
+							}))
+						)
 						.onConflict((oc) =>
 							oc.column("id").doUpdateSet((eb) => {
-								const keys = Object.keys(upserts[0]) as (keyof NewFormElements)[];
+								const keys = Object.keys(upserts.inputs[0]) as (keyof Omit<
+									FormBuilderInputElement,
+									"deleted" | "updated" | "configured" | "schemaName"
+								>)[];
+
 								return Object.fromEntries(
 									keys.map((key) => [key, eb.ref(`excluded.${key}`)])
 								);
@@ -89,9 +118,71 @@ export const saveForm = defineServerAction(async function saveForm(form: {
 				);
 			}
 
-			if (deletes.length) {
+			if (upserts?.structure.length) {
+				query = (query as typeof trx).with("upserts", (db) =>
+					db
+						.insertInto("form_structural_elements")
+						.values(
+							upserts.structure.map(({ elementId, ...input }) => ({
+								...input,
+								id: elementId,
+							}))
+						)
+						.onConflict((oc) =>
+							oc.column("id").doUpdateSet((eb) => {
+								const keys = Object.keys(
+									upserts.structure[0]
+								) as (keyof FormBuilderStructuralElement)[];
+
+								return Object.fromEntries(
+									keys.map((key) => [key, eb.ref(`excluded.${key}`)])
+								);
+							})
+						)
+				);
+			}
+
+			if (upserts?.buttons.length) {
+				query = (query as typeof trx).with("upserts", (db) =>
+					db
+						.insertInto("form_buttons")
+						.values(
+							upserts.buttons.map(({ elementId, ...input }) => ({
+								...input,
+								id: elementId,
+							}))
+						)
+						.onConflict((oc) =>
+							oc.column("id").doUpdateSet((eb) => {
+								const keys = Object.keys(
+									upserts.buttons[0]
+								) as (keyof FormBuilderButtonElement)[];
+
+								return Object.fromEntries(
+									keys.map((key) => [key, eb.ref(`excluded.${key}`)])
+								);
+							})
+						)
+				);
+			}
+
+			if (deletes?.inputs.length) {
 				query = (query as typeof trx).with("deletes", (db) =>
-					db.deleteFrom("form_elements").where("form_elements.id", "in", deletes)
+					db.deleteFrom("form_inputs").where("form_inputs.id", "in", deletes.inputs)
+				);
+			}
+
+			if (deletes?.structure.length) {
+				query = (query as typeof trx).with("deletes", (db) =>
+					db
+						.deleteFrom("form_structural_elements")
+						.where("form_structural_elements.id", "in", deletes.structure)
+				);
+			}
+
+			if (deletes?.buttons.length) {
+				query = (query as typeof trx).with("deletes", (db) =>
+					db.deleteFrom("form_buttons").where("form_buttons.id", "in", deletes.buttons)
 				);
 			}
 

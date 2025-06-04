@@ -6,9 +6,10 @@ import type { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import type { Communities, PubsId } from "db/public";
-import { ElementType, FormAccessType, MemberRole } from "db/public";
+import { FormAccessType, MemberRole } from "db/public";
 import { expect } from "utils";
 
+import type { ButtonElement } from "~/app/components/forms/types";
 import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
@@ -19,6 +20,7 @@ import {
 	hydrateMarkdownElements,
 	renderElementMarkdownContent,
 } from "~/app/components/forms/structural";
+import { isButtonElement, isInputElement, isStructuralElement } from "~/app/components/forms/types";
 import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { db } from "~/kysely/database";
@@ -37,7 +39,7 @@ const NotFound = ({ children }: { children: ReactNode }) => {
 	return <div className="w-full pt-8 text-center">{children}</div>;
 };
 
-const Completed = ({ element }: { element: Form["elements"][number] | undefined }) => {
+const Completed = ({ element }: { element: ButtonElement | undefined }) => {
 	return (
 		<div data-testid="completed" className="flex w-full flex-col gap-2 pt-32 text-center">
 			{element ? (
@@ -113,7 +115,7 @@ export async function generateMetadata(props: {
 	const form = await getForm({
 		slug: params.formSlug,
 		communityId: community.id,
-	}).executeTakeFirst();
+	});
 
 	if (!form) {
 		return { title: "Form Not Found" };
@@ -141,7 +143,7 @@ export default async function FormPage(props: {
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
-		}).executeTakeFirst(),
+		}),
 		searchParams.pubId
 			? await getPubsWithRelatedValues(
 					{ pubId: searchParams.pubId, communityId: community.id },
@@ -227,9 +229,9 @@ export default async function FormPage(props: {
 	};
 
 	const submitId: string | undefined = searchParams[SUBMIT_ID_QUERY_PARAM];
-	const submitElement = form.elements.find(
-		(e) => e.type === ElementType.button && e.id === submitId
-	);
+	const submitElement = form.elements
+		.filter((e) => isButtonElement(e))
+		.find((e) => e.id === submitId) as ButtonElement | undefined;
 
 	const renderWithPubContext = {
 		communityId: community.id,
@@ -249,7 +251,7 @@ export default async function FormPage(props: {
 		}
 	} else {
 		await hydrateMarkdownElements({
-			elements: form.elements,
+			elements: form.elements.filter((e) => isStructuralElement(e)),
 			renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
 		});
 	}
@@ -278,7 +280,7 @@ export default async function FormPage(props: {
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
 						<FormElementToggleProvider
-							fieldSlugs={form.elements.reduce(
+							fieldSlugs={form.elements.filter(isInputElement).reduce(
 								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
 								[] as string[]
 							)}

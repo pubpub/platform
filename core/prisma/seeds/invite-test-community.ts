@@ -3,14 +3,7 @@ import crypto from "crypto";
 import { faker } from "@faker-js/faker";
 
 import type { InvitesId, PubsId, UsersId } from "db/public";
-import {
-	Action,
-	CoreSchemaType,
-	ElementType,
-	InputComponent,
-	InviteStatus,
-	MemberRole,
-} from "db/public";
+import { Action, CoreSchemaType, InputComponent, InviteStatus, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -152,7 +145,6 @@ const seed = createSeed({
 			pubType: "Evaluation",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -160,7 +152,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Content",
 					component: InputComponent.textArea,
 					config: {
@@ -168,7 +159,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Email",
 					component: InputComponent.textInput,
 					config: {
@@ -182,7 +172,6 @@ const seed = createSeed({
 			pubType: "Submission",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {

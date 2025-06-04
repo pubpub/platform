@@ -1,6 +1,6 @@
-import type { FormElements } from "db/public";
 import { StructuralFormElement } from "db/public";
 
+import type { ButtonElement, StructuralElement } from "./types";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import {
 	renderMarkdownAsHtml,
@@ -12,7 +12,7 @@ import {
  * Can also render with pub context.
  */
 export const renderElementMarkdownContent = async (
-	element: Pick<FormElements, "content">,
+	element: StructuralElement | ButtonElement,
 	renderWithPubContext: RenderWithPubContext | undefined
 ) => {
 	if (element.content === null) {
@@ -35,7 +35,7 @@ export const hydrateMarkdownElements = async ({
 	elements,
 	renderWithPubContext,
 }: {
-	elements: Pick<FormElements, "element" | "content">[];
+	elements: StructuralElement[];
 	renderWithPubContext: RenderWithPubContext | undefined;
 }) => {
 	const elementsWithMarkdownContent = elements.filter(

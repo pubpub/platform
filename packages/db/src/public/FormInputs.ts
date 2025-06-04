@@ -25,7 +25,7 @@ export interface FormInputsTable {
 
 	rank: ColumnType<string, string, string>;
 
-	component: ColumnType<InputComponent | null, InputComponent | null, InputComponent | null>;
+	component: ColumnType<InputComponent, InputComponent, InputComponent>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 
@@ -49,7 +49,7 @@ export const formInputsSchema = z.object({
 	fieldId: pubFieldsIdSchema.nullable(),
 	formId: formsIdSchema,
 	rank: z.string(),
-	component: inputComponentSchema.nullable(),
+	component: inputComponentSchema,
 	config: z.unknown().nullable(),
 	required: z.boolean().nullable(),
 	createdAt: z.date(),
@@ -61,7 +61,7 @@ export const formInputsInitializerSchema = z.object({
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema,
 	rank: z.string(),
-	component: inputComponentSchema.optional().nullable(),
+	component: inputComponentSchema,
 	config: z.unknown().optional().nullable(),
 	required: z.boolean().optional().nullable(),
 	createdAt: z.date().optional(),
@@ -73,7 +73,7 @@ export const formInputsMutatorSchema = z.object({
 	fieldId: pubFieldsIdSchema.optional().nullable(),
 	formId: formsIdSchema.optional(),
 	rank: z.string().optional(),
-	component: inputComponentSchema.optional().nullable(),
+	component: inputComponentSchema.optional(),
 	config: z.unknown().optional().nullable(),
 	required: z.boolean().optional().nullable(),
 	createdAt: z.date().optional(),

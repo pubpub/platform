@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
 	Capabilities,
 	CoreSchemaType,
-	ElementType,
 	InputComponent,
 	MemberRole,
 	MembershipType,
@@ -36,6 +35,7 @@ const seed = createSeed({
 		Title: { schemaName: CoreSchemaType.String },
 		Description: { schemaName: CoreSchemaType.String },
 		"Some relation": { schemaName: CoreSchemaType.String, relation: true },
+		"Another One": { schemaName: CoreSchemaType.String },
 	},
 	pubTypes: {
 		"Basic Pub": {
@@ -86,15 +86,21 @@ const seed = createSeed({
 			pubType: "Basic Pub",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Description",
 					component: InputComponent.textInput,
 					config: {
 						label: "Description",
 					},
 				},
+				// {
+				// 	.pubfield,
+				// 	field: "Another One",
+				// 	component: InputComponent.textInput,
+				// 	config: {
+				// 		label: "Another One",
+				// 	},
+				// },
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -107,7 +113,6 @@ const seed = createSeed({
 			pubType: "Basic Pub",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -115,7 +120,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Some relation",
 					component: InputComponent.relationBlock,
 					config: {
@@ -161,10 +165,11 @@ describe("getPubByForm", () => {
 			getForm({
 				pubTypeId: pubs[0].pubTypeId,
 				communityId: community.id,
-			}).executeTakeFirstOrThrow(),
+			}),
 		]);
 
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
+		console.log(pubWithForm);
 
 		expect(pubWithForm).toMatchObject({
 			values: [
@@ -211,7 +216,7 @@ describe("getPubByForm", () => {
 			getForm({
 				pubTypeId: pubs[0].pubTypeId,
 				communityId: community.id,
-			}).executeTakeFirstOrThrow(),
+			}),
 		]);
 
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: false });
@@ -255,7 +260,7 @@ describe("getPubByForm", () => {
 			getForm({
 				pubTypeId: pubs[0].pubTypeId,
 				communityId: community.id,
-			}).executeTakeFirstOrThrow(),
+			}),
 			userCan(
 				Capabilities.seeExtraPubValues,
 				{ type: MembershipType.community, communityId: community.id },
@@ -303,7 +308,7 @@ describe("getPubByForm", () => {
 			getForm({
 				id: forms["basic-pub-form"].id,
 				communityId: community.id,
-			}).executeTakeFirstOrThrow(),
+			}),
 		]);
 
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
@@ -365,7 +370,6 @@ describe("getPubByForm", () => {
 					pubType: "Basic Pub",
 					elements: [
 						{
-							type: ElementType.pubfield,
 							field: "Title",
 							component: InputComponent.textInput,
 							config: {
@@ -396,7 +400,7 @@ describe("getPubByForm", () => {
 			getForm({
 				id: forms["basic-pub-form"].id,
 				communityId: community.id,
-			}).executeTakeFirstOrThrow(),
+			}),
 		]);
 
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
@@ -432,7 +436,7 @@ describe("getPubByForm", () => {
 			getForm({
 				id: forms["second-form"].id,
 				communityId,
-			}).executeTakeFirstOrThrow(),
+			}),
 		]);
 
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
@@ -490,7 +494,7 @@ describe("getPubByForm", () => {
 			getForm({
 				id: forms["basic-pub-form"].id,
 				communityId,
-			}).executeTakeFirstOrThrow(),
+			}),
 		]);
 		const pubWithForm = getPubByForm({ pub, form, withExtraPubValues: true });
 		expect(pubWithForm).toMatchObject({

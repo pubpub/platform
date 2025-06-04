@@ -1,8 +1,8 @@
 import type { MaybePubOptions, ProcessedPub, ProcessedPubWithForm } from "contracts";
 import type { PubFieldsId } from "db/public";
-import { ElementType } from "db/public";
 
 import type { Form } from "./server/form";
+import { isInputElement } from "~/app/components/forms/types";
 
 export type PubTitleProps = {
 	title?: string | null;
@@ -109,13 +109,13 @@ export const getPubByForm = <T extends MaybePubOptions>({
 		{} as Record<string, ProcessedPub<T>["values"]>
 	);
 
-	const pubFieldFormElements = form.elements.filter((fe) => fe.type === ElementType.pubfield);
+	const pubFieldFormElements = form.elements.filter(isInputElement);
+
 	const valuesWithFormElements = [] as ProcessedPubWithForm<T>["values"];
 	for (const formElement of pubFieldFormElements) {
 		const values = valuesByFieldSlug[formElement.slug];
 		const formInfo = {
 			formElementId: formElement.id,
-			formElementLabel: formElement.label,
 			formElementConfig: formElement.config,
 		};
 		if (!values) {

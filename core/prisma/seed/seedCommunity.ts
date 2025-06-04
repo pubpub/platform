@@ -20,9 +20,11 @@ import type {
 	CommunitiesId,
 	Event,
 	FormAccessType,
-	FormElements,
+	FormButtons,
+	FormInputs,
 	Forms,
 	FormsId,
+	FormStructuralElements,
 	InvitesId,
 	NewCommunityMemberships,
 	PubFields,
@@ -44,7 +46,6 @@ import type {
 import {
 	Action as ActionName,
 	CoreSchemaType,
-	ElementType,
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
@@ -55,13 +56,14 @@ import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
 import type { MaybeHas } from "~/lib/types";
+import { isButtonElement, isInputElement, isStructuralElement } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findRanksBetween } from "~/lib/rank";
 import { createPubRecursiveNew } from "~/lib/server";
 import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
-import { insertForm } from "~/lib/server/form";
+import { getForm, insertForm } from "~/lib/server/form";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { generateToken } from "~/lib/server/token";
 import { slugifyString } from "~/lib/string";
@@ -258,14 +260,10 @@ export type FormElementInitializer<PF extends PubFieldsInitializer> = {
 	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
 		InputComponent
 		? {
-				type: ElementType.pubfield;
 				field: FieldName;
 				component: PF[FieldName]["relation"] extends true
 					? InputComponent.relationBlock
 					: Component;
-				content?: never;
-				element?: never;
-				label?: never;
 				required?: boolean;
 				config: Static<(typeof componentConfigSchemas)[Component]> &
 					(PF[FieldName]["relation"] extends true
@@ -308,23 +306,13 @@ export type FormInitializer<
 			elements: (
 				| FormElementInitializer<PF>
 				| {
-						type: ElementType.structural;
 						element: StructuralFormElement;
 						content: string;
-						component?: never;
-						label?: never;
-						config?: never;
-						field?: never;
 				  }
 				| {
-						type: ElementType.button;
-						element?: never;
-						component?: never;
 						label: string;
 						content: string;
 						stage?: keyof SI;
-						config?: never;
-						field?: never;
 				  }
 			)[];
 		};
@@ -509,7 +497,8 @@ type StagesWithPermissionsAndActionsAndRulesByName<
 
 type FormsByName<F extends FormInitializer<any, any, any, any>> = {
 	[K in keyof F]: Omit<Forms, "name" | "pubType" | ""> & { name: K } & {
-		elements: (F[K]["elements"][number] & FormElements)[];
+		elements: (FormInputs | FormStructuralElements)[];
+		buttons: FormButtons[];
 	};
 };
 
@@ -1139,23 +1128,56 @@ export async function seedCommunity<
 					.execute()
 			: [];
 
-	// then create form inputs
-	const formInputValues = formList.flatMap(([formTitle, formInput]) => {
+	const rankedFormInputValues = formList.map(([formTitle, formInput]) => {
 		const form = createdForms.find((f) => f.name === formTitle);
 		if (!form) return [];
 
-		const ranks = findRanksBetween({
-			numberOfRanks: formInput.elements.length,
-		});
+		const inputAndStructuralElements = formInput.elements.filter(
+			(element) => "component" in element || "element" in element
+		);
 
-		return formInput.elements
-			.filter((elementInput) => elementInput.type === "pubfield")
-			.map((elementInput, elementIndex) => ({
+		const ranks = findRanksBetween({
+			numberOfRanks: inputAndStructuralElements.length,
+		});
+		const inputAndStructuralElementsWithRanks = inputAndStructuralElements.map(
+			(element, index) => ({
+				...element,
+				rank: ranks[index],
+			})
+		);
+
+		const buttons = formInput.elements.filter((element) => "label" in element);
+		const buttonRanks = findRanksBetween({
+			numberOfRanks: buttons.length,
+		});
+		const buttonsWithRanks = buttons.map((button, index) => ({
+			...button,
+			rank: buttonRanks[index],
+		}));
+
+		return [
+			formTitle,
+			{
+				...formInput,
+				orderedElements: inputAndStructuralElementsWithRanks,
+				buttons: buttonsWithRanks,
+			},
+		] as const;
+	});
+
+	// then create form inputs
+	const formInputValues = rankedFormInputValues.flatMap(([formTitle, formInput]) => {
+		const form = createdForms.find((f) => f.name === formTitle);
+		if (!form) return [];
+
+		return formInput.orderedElements
+			.filter((elementInput) => "component" in elementInput)
+			.map((elementInput) => ({
 				formId: form.id,
 				fieldId: createdPubFields.find((pubField) => pubField.name === elementInput.field)
 					?.id,
 				component: elementInput.component,
-				rank: ranks[elementIndex],
+				rank: elementInput.rank,
 				config: elementInput.config,
 				required: elementInput.required,
 			}));
@@ -1167,21 +1189,17 @@ export async function seedCommunity<
 			: [];
 
 	// then create structural elements
-	const structuralElementValues = formList.flatMap(([formTitle, formInput]) => {
+	const structuralElementValues = rankedFormInputValues.flatMap(([formTitle, formInput]) => {
 		const form = createdForms.find((f) => f.name === formTitle);
 		if (!form) return [];
 
-		const ranks = findRanksBetween({
-			numberOfRanks: formInput.elements.length,
-		});
-
-		return formInput.elements
-			.filter((elementInput) => elementInput.type === "structural")
-			.map((elementInput, elementIndex) => ({
+		return formInput.orderedElements
+			.filter((elementInput) => "element" in elementInput)
+			.map((elementInput) => ({
 				formId: form.id,
 				element: elementInput.element,
 				content: elementInput.content,
-				rank: ranks[elementIndex],
+				rank: elementInput.rank,
 			}));
 	});
 
@@ -1195,22 +1213,16 @@ export async function seedCommunity<
 			: [];
 
 	// then create buttons
-	const buttonValues = formList.flatMap(([formTitle, formInput]) => {
+	const buttonValues = rankedFormInputValues.flatMap(([formTitle, formInput]) => {
 		const form = createdForms.find((f) => f.name === formTitle);
 		if (!form) return [];
 
-		const ranks = findRanksBetween({
-			numberOfRanks: formInput.elements.length,
-		});
-
-		return formInput.elements
-			.filter((elementInput) => elementInput.type === "button")
-			.map((elementInput, elementIndex) => ({
-				formId: form.id,
-				label: elementInput.label,
-				rank: ranks[elementIndex],
-				stageId: createdStages.find((stage) => stage.name === elementInput.stage)?.id,
-			}));
+		return formInput.buttons.map((elementInput) => ({
+			formId: form.id,
+			label: elementInput.label,
+			rank: elementInput.rank,
+			stageId: createdStages.find((stage) => stage.name === elementInput.stage)?.id,
+		}));
 	});
 
 	const createdButtons =
@@ -1228,8 +1240,17 @@ export async function seedCommunity<
 		buttons: createdButtons.filter((button) => button.formId === form.id),
 	}));
 
+	const formsWithElementsFinal = await Promise.all(
+		formsWithElements.map((form) =>
+			getForm({
+				id: form.id,
+				communityId,
+			})
+		)
+	);
+
 	const formsByName = Object.fromEntries(
-		formsWithElements.map((form) => [form.name, form])
+		formsWithElementsFinal.map((form) => [form.name, form])
 	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's

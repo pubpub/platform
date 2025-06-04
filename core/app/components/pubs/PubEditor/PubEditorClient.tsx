@@ -15,7 +15,7 @@ import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "
 
 import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import type { PubsId, StagesId } from "db/public";
-import { CoreSchemaType, ElementType } from "db/public";
+import { CoreSchemaType } from "db/public";
 import { Form } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 import { cn } from "utils";
@@ -24,8 +24,10 @@ import type { ContextEditorGetters } from "~/app/components/ContextEditor/Contex
 import type { FormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
 import type {
 	BasicFormElements,
+	ButtonElement,
 	FormElements,
 	HydratedRelatedFieldValue,
+	InputElement,
 	RelatedFieldValue,
 	SingleFormValues,
 } from "~/app/components/forms/types";
@@ -33,7 +35,7 @@ import type { DefinitelyHas } from "~/lib/types";
 import { useContextEditorContext } from "~/app/components/ContextEditor/ContextEditorContext";
 import { EvilContextEditorSymbol } from "~/app/components/forms/elements/ContextEditorElement";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";
-import { isRelatedValue } from "~/app/components/forms/types";
+import { isButtonElement, isInputElement, isRelatedValue } from "~/app/components/forms/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { SubmitButtons } from "~/app/components/pubs/PubEditor/SubmitButtons";
@@ -44,7 +46,7 @@ import { RELATED_PUB_SLUG } from "./constants";
 const SAVE_WAIT_MS = 5000;
 
 const preparePayload = ({
-	formElements,
+	inputElements,
 	formValues,
 	formState,
 	toggleContext,
@@ -53,7 +55,7 @@ const preparePayload = ({
 	contextEditorGetters,
 	deleted,
 }: {
-	formElements: BasicFormElements[];
+	inputElements: InputElement[];
 	formValues: FieldValues;
 	formState: FormState<FieldValues>;
 	toggleContext: FormElementToggleContext;
@@ -68,10 +70,10 @@ const preparePayload = ({
 	const valuesPayload: Record<string, HydratedRelatedFieldValue[] | JsonValue | Date> = {};
 	// Since we send deleted related pubs via `deleted`, remove them from the actual `pubValues` payload
 	const deletedRelatedFieldSlugs = deleted.map((d) => d.slug);
-	const formElementsWithoutDeletedRelatedFields = formElements.filter(
+	const inputElementsWithoutDeletedRelatedFields = inputElements.filter(
 		(fe) => !deletedRelatedFieldSlugs.find((s) => s === fe.slug)
 	);
-	for (const { slug, schemaName } of formElementsWithoutDeletedRelatedFields) {
+	for (const { slug, schemaName } of inputElementsWithoutDeletedRelatedFields) {
 		if (!slug) {
 			continue;
 		}
@@ -127,7 +129,7 @@ const buildDefaultValues = (
 	// for dirty checking in preparePayload
 	const arrayDefaults: Record<string, HydratedRelatedFieldValue> = {};
 	for (const element of elements) {
-		if (element.slug && element.schemaName) {
+		if (isInputElement(element)) {
 			const pubValue = pubValues.find((v) => v.fieldSlug === element.slug)?.value;
 
 			defaultValues[element.slug] =
@@ -187,10 +189,8 @@ const createSchemaFromElements = (
 		...Object.fromEntries(
 			elements
 				// only add enabled pubfields to the schema
-				.filter(
-					(e) =>
-						e.type === ElementType.pubfield && e.slug && toggleContext.isEnabled(e.slug)
-				)
+				.filter(isInputElement)
+				.filter((e) => toggleContext.isEnabled(e.slug))
 				.map(({ slug, schemaName, config, isRelation }) => {
 					if (!schemaName) {
 						return [slug, undefined];
@@ -252,11 +252,12 @@ const getButtonConfig = ({
 }: {
 	evt: React.BaseSyntheticEvent | undefined;
 	withButtonElements?: boolean;
-	buttonElements: FormElements[];
+	buttonElements: ButtonElement[];
 }) => {
 	if (!withButtonElements) {
 		return { stageId: undefined, submitButtonId: undefined };
 	}
+
 	const submitButtonId = isSubmitEvent(evt) ? evt.nativeEvent.submitter.id : undefined;
 	const submitButtonConfig = submitButtonId
 		? buttonElements.find((b) => b.id === submitButtonId)
@@ -315,9 +316,15 @@ export const PubEditorClient = ({
 	const [pubId, _] = useState<PubsId>(pub.id as PubsId);
 
 	const [buttonElements, formElements] = useMemo(
-		() => partition(elements, (e) => e.type === ElementType.button),
+		() => partition(elements, isButtonElement),
 		[elements]
 	);
+
+	const [inputElements, structuralElements] = useMemo(
+		() => partition(elements, isInputElement),
+		[elements]
+	);
+
 	const toggleContext = useFormElementToggleContext();
 
 	const schema = useMemo(
@@ -357,7 +364,7 @@ export const PubEditorClient = ({
 			} = formValues;
 
 			const pubValues = preparePayload({
-				formElements,
+				inputElements,
 				formValues: newValues,
 				formState: formInstance.formState,
 				toggleContext,

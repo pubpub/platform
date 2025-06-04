@@ -34,3 +34,9 @@ export const getRankAndIndexChanges = <T extends { rank: string }[]>(
 		}
 	}
 };
+
+export const compareRanks = (a: string, b: string) =>
+	mudder.base62.stringToNumber(a) - mudder.base62.stringToNumber(b);
+
+export const sortByRank = <T extends { rank: string }[]>(elements: T) =>
+	elements.sort((a, b) => compareRanks(a.rank, b.rank));

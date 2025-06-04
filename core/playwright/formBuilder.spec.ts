@@ -6,9 +6,9 @@ import type { Page } from "@playwright/test";
 
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
+import { CoreSchemaType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
-import type { PubFieldElement } from "~/app/components/forms/types";
+import type { InputElement } from "~/app/components/forms/types";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
@@ -69,7 +69,6 @@ const seed = createSeed({
 			slug: "relationship-form",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -83,7 +82,6 @@ const seed = createSeed({
 			slug: "relationship-with-null-form",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -97,7 +95,6 @@ const seed = createSeed({
 			slug: "reorder-form-slug",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -105,7 +102,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Content",
 					component: InputComponent.textArea,
 					config: {
@@ -113,7 +109,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Author",
 					component: InputComponent.relationBlock,
 					config: {
@@ -281,7 +276,7 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { upserts, relatedPubTypes } = data[0];
 				const authorElement = upserts.find(
-					(e: PubFieldElement) => "label" in e.config && e.config.label === "Role"
+					(e: InputElement) => "label" in e.config && e.config.label === "Role"
 				);
 				expect(authorElement.component).toEqual(InputComponent.textArea);
 				expect(relatedPubTypes).toEqual([{ A: authorElement.id, B: pubType.id }]);
@@ -351,7 +346,7 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { upserts, relatedPubTypes } = data[0];
 				const authorElement = upserts.find(
-					(e: PubFieldElement) =>
+					(e: InputElement) =>
 						"relationshipConfig" in e.config &&
 						e.config.relationshipConfig.label === "Authors"
 				);

@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { defaultComponent } from "schemas";
 
-import { ElementType, InputComponent, StructuralFormElement } from "db/public";
+import { InputComponent, StructuralFormElement } from "db/public";
 import { Button } from "ui/button";
 import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
@@ -12,16 +12,17 @@ import { findRanksBetween } from "~/lib/rank";
 import { FieldIcon } from "../FieldIcon";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
+import { isFormBuilderInputElement } from "../types";
 
 export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();
 
-	const { elementsCount, dispatch, addElement } = useFormBuilder();
+	const { elementsCount, dispatch, addElement, formId } = useFormBuilder();
 	const { getValues } = useFormContext();
 	const elements: FormElementData[] = getValues()["elements"];
 
 	const fieldButtons = Object.values(fields).map((field) => {
-		const usedFields = elements.map((e) => e.fieldId);
+		const usedFields = elements.filter(isFormBuilderInputElement).map((e) => e.fieldId);
 		if (
 			usedFields.includes(field.id) ||
 			field.isArchived ||
@@ -48,7 +49,6 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 					addElement({
 						fieldId: field.id,
 						required: true,
-						type: ElementType.pubfield,
 						rank: findRanksBetween({ start: elements[elementsCount - 1]?.rank })[0],
 						configured: false,
 						config: field.isRelation
@@ -62,6 +62,7 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 						component,
 						schemaName,
 						isRelation: field.isRelation,
+						formId,
 					});
 					dispatch({
 						eventName: "edit",
@@ -136,11 +137,11 @@ export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 								onClick={() => {
 									addElement({
 										element: elementType,
-										type: ElementType.structural,
 										rank: findRanksBetween({
 											start: elements[elementsCount - 1]?.rank,
 										})[0],
 										configured: false,
+										formId,
 									});
 									dispatch({
 										eventName: "edit",

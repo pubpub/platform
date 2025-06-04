@@ -8,23 +8,25 @@ import type { InputComponent } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
-export const CheckboxElement = ({ slug, label, config }: ElementProps<InputComponent.checkbox>) => {
+export const CheckboxElement = (props: InputElementProps<InputComponent.checkbox>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
+	const label = getLabel(props);
 
-	Value.Default(checkboxConfigSchema, config);
-	if (!Value.Check(checkboxConfigSchema, config)) {
+	Value.Default(checkboxConfigSchema, props.config);
+	if (!Value.Check(checkboxConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => {
 				return (
 					<FormItem>
@@ -35,7 +37,7 @@ export const CheckboxElement = ({ slug, label, config }: ElementProps<InputCompo
 									checked={
 										field.value != undefined
 											? Boolean(field.value)
-											: config.defaultValue
+											: props.config.defaultValue
 									}
 									disabled={!isEnabled}
 									onCheckedChange={(change) => {
@@ -46,9 +48,9 @@ export const CheckboxElement = ({ slug, label, config }: ElementProps<InputCompo
 									className="rounded"
 								/>
 							</FormControl>
-							<FormLabel>{config.checkboxLabel}</FormLabel>
+							<FormLabel>{props.config.checkboxLabel}</FormLabel>
 						</div>
-						<FormDescription>{config.help}</FormDescription>
+						<FormDescription>{props.config.help}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				);

@@ -11,11 +11,15 @@ import { ArchiveRestore, GripVertical, Pencil, Trash } from "ui/icon";
 import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
 
-import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
+import type {
+	FormBuilderInputElement,
+	FormBuilderSchema,
+	FormBuilderStructuralElement,
+} from "./types";
 import { FieldIcon } from "./FieldIcon";
 import { useFormBuilder } from "./FormBuilderContext";
 import { structuralElements } from "./StructuralElements";
-import { isFieldInput, isStructuralElement } from "./types";
+import { isFormBuilderInputElement, isFormBuilderStructuralElement } from "./types";
 
 type FormElementProps = {
 	element: FieldArrayWithId<FormBuilderSchema, "elements", "id">;
@@ -24,7 +28,7 @@ type FormElementProps = {
 	isDisabled: boolean;
 };
 
-export const FormElement = ({ element, index, isEditing, isDisabled }: FormElementProps) => {
+export const FormBuilderElement = ({ element, index, isEditing, isDisabled }: FormElementProps) => {
 	const { attributes, listeners, isDragging, setNodeRef, transform, transition } = useSortable({
 		id: element.id,
 		disabled: isDisabled,
@@ -83,10 +87,10 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			)}
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
-				{isFieldInput(element) && (
+				{isFormBuilderInputElement(element) && (
 					<FieldInputElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
-				{isStructuralElement(element) && (
+				{isFormBuilderStructuralElement(element) && (
 					<StructuralElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
 				{isEditing ? (
@@ -129,7 +133,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 };
 
 type FieldInputElementProps = {
-	element: InputElement;
+	element: FormBuilderInputElement;
 	isEditing: boolean;
 	labelId?: string;
 };
@@ -161,7 +165,7 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 };
 
 type StructuralElementProps = {
-	element: StructuralElement;
+	element: FormBuilderStructuralElement;
 	isEditing: boolean;
 	labelId?: string;
 };

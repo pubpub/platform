@@ -2,8 +2,8 @@ CREATE TABLE "form_inputs"(
     "id" text NOT NULL DEFAULT gen_random_uuid(),
     "fieldId" text,
     "formId" text NOT NULL,
-    "rank" text NOT NULL,
-    "component" "InputComponent",
+    "rank" text NOT NULL COLLATE "C",
+    "component" "InputComponent" NOT NULL,
     "config" jsonb,
     "required" boolean,
     "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -14,8 +14,8 @@ CREATE TABLE "form_inputs"(
 CREATE TABLE "form_structural_elements"(
     "id" text NOT NULL DEFAULT gen_random_uuid(),
     "formId" text NOT NULL,
-    "rank" text NOT NULL,
-    "element" "StructuralFormElement",
+    "rank" text NOT NULL COLLATE "C",
+    "element" "StructuralFormElement" NOT NULL,
     "content" text,
     "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,8 +25,9 @@ CREATE TABLE "form_structural_elements"(
 CREATE TABLE "form_buttons"(
     "id" text NOT NULL DEFAULT gen_random_uuid(),
     "formId" text NOT NULL,
-    "rank" text NOT NULL,
+    "rank" text NOT NULL COLLATE "C",
     "label" text,
+    "content" text,
     "stageId" text,
     "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -72,12 +73,13 @@ WHERE
     "type" = 'structural';
 
 -- Migrate button elements to form_buttons
-INSERT INTO "form_buttons"("id", "formId", "rank", "label", "stageId", "createdAt", "updatedAt")
+INSERT INTO "form_buttons"("id", "formId", "rank", "label", "content", "stageId", "createdAt", "updatedAt")
 SELECT
     "id",
     "formId",
     "rank",
     "label",
+    "content",
     "stageId",
     "createdAt",
     "updatedAt"

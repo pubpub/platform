@@ -8,8 +8,9 @@ import { datePickerConfigSchema } from "schemas";
 import type { InputComponent } from "db/public";
 import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
 const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mod.DatePicker), {
 	ssr: false,
@@ -17,18 +18,19 @@ const DatePicker = dynamic(async () => import("ui/date-picker").then((mod) => mo
 	loading: () => <div>Loading...</div>,
 });
 
-export const DateElement = ({ slug, label, config }: ElementProps<InputComponent.datePicker>) => {
+export const DateElement = (props: InputElementProps<InputComponent.datePicker>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
 
-	if (!Value.Check(datePickerConfigSchema, config)) {
+	const label = getLabel(props);
+	if (!Value.Check(datePickerConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<FormField
-			name={slug}
+			name={props.slug}
 			control={control}
 			render={({ field }) => (
 				<FormItem className="grid gap-2">
@@ -38,7 +40,7 @@ export const DateElement = ({ slug, label, config }: ElementProps<InputComponent
 						date={field.value}
 						setDate={(date) => field.onChange(date)}
 					/>
-					<FormDescription>{config.help}</FormDescription>
+					<FormDescription>{props.config.help}</FormDescription>
 					<FormMessage />
 				</FormItem>
 			)}

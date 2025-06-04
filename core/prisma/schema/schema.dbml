@@ -381,7 +381,7 @@ Table form_inputs {
   field pub_fields
   formId String [not null]
   rank String [not null]
-  component InputComponent
+  component InputComponent [not null]
   config Json
   required Boolean
   form forms [not null]
@@ -399,7 +399,7 @@ Table form_structural_elements {
   formId String [not null]
   form forms [not null]
   rank String [not null]
-  element StructuralFormElement
+  element StructuralFormElement [not null]
   content String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
@@ -410,6 +410,7 @@ Table form_buttons {
   formId String [not null]
   rank String [not null]
   label String
+  content String
   form forms [not null]
   stage stages
   stageId String

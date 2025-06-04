@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import { CoreSchemaType, ElementType, InputComponent, MemberRole } from "db/public";
+import { CoreSchemaType, InputComponent, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -110,7 +110,6 @@ const seed = createSeed({
 			pubType: "Evaluation",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -118,7 +117,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Content",
 					component: InputComponent.textArea,
 					config: {
@@ -126,7 +124,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: CoreSchemaType.Email,
 					component: InputComponent.textInput,
 					config: {
@@ -140,7 +137,6 @@ const seed = createSeed({
 			pubType: "Title Only",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -154,13 +150,11 @@ const seed = createSeed({
 			pubType: "Submission",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Animals",
 					component: InputComponent.multivalueInput,
 					config: {},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Related",
 					component: InputComponent.relationBlock,
 					config: {

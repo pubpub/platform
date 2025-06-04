@@ -14,40 +14,37 @@ import { Checkbox } from "ui/checkbox";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
-export const CheckboxGroupElement = ({
-	label,
-	slug,
-	config,
-	schemaName,
-}: ElementProps<InputComponent.checkboxGroup>) => {
+export const CheckboxGroupElement = (props: InputElementProps<InputComponent.checkboxGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+	const isEnabled = formElementToggle.isEnabled(props.slug);
+	const isNumeric = props.schemaName === CoreSchemaType.NumericArray;
+	const label = getLabel(props);
 
 	// Keep track of what was checked via checkboxes so as not to duplicate with Other field
 	const { initialChecked, initialOther } = useMemo(() => {
-		const initialValues: (string | number)[] = getValues()[slug];
+		const initialValues: (string | number)[] = getValues()[props.slug];
 		const [initialChecked, initialOther] = partition(initialValues, (v) => {
-			return config.values.some((cv) => cv === v);
+			return props.config.values.some((cv) => cv === v);
 		});
 		return { initialChecked, initialOther: initialOther[0] ?? "" };
 	}, []);
 	const [checked, setChecked] = useState<(string | number)[]>(initialChecked);
 	const [other, setOther] = useState<string | number>(initialOther);
 
-	Value.Default(checkboxGroupConfigSchema, config);
-	if (!Value.Check(checkboxGroupConfigSchema, config)) {
+	Value.Default(checkboxGroupConfigSchema, props.config);
+	if (!Value.Check(checkboxGroupConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => {
 				const handleOtherField = (e: ChangeEvent<HTMLInputElement>) => {
 					const value = isNumeric ? e.target.valueAsNumber : e.target.value;
@@ -67,12 +64,12 @@ export const CheckboxGroupElement = ({
 				return (
 					<FormItem>
 						<FormLabel>{label}</FormLabel>
-						{config.values.map((v) => {
+						{props.config.values.map((v) => {
 							return (
 								<FormField
 									key={v}
 									control={control}
-									name={`${slug}`}
+									name={`${props.slug}`}
 									render={() => {
 										return (
 											<FormItem
@@ -106,7 +103,7 @@ export const CheckboxGroupElement = ({
 								/>
 							);
 						})}
-						{config.includeOther ? (
+						{props.config.includeOther ? (
 							<FormItem className="flex items-center gap-2 space-y-0">
 								<FormLabel>Other</FormLabel>
 								<FormControl>
@@ -121,7 +118,7 @@ export const CheckboxGroupElement = ({
 								</FormControl>
 							</FormItem>
 						) : null}
-						<FormDescription>{config.help}</FormDescription>
+						<FormDescription>{props.config.help}</FormDescription>
 						<FormMessage data-testid="error-message" />
 					</FormItem>
 				);

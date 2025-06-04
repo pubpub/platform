@@ -2,6 +2,7 @@
 
 import type { CommunitiesId, FormsId, PubsId } from "db/public";
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -43,7 +44,7 @@ export const inviteUserToForm = defineServerAction(async function inviteUserToFo
 		throw new Error("Invite user to form failed because community not found");
 	}
 
-	const form = await getForm({ ...formSlugOrId, communityId }).executeTakeFirst();
+	const [err, form] = await tryCatch(getForm({ ...formSlugOrId, communityId }));
 
 	if (!form) {
 		return { error: `No form found with ${formSlugOrId}` };

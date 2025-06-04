@@ -8,29 +8,26 @@ import { CoreSchemaType, InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
-export const SelectDropdownElement = ({
-	slug,
-	label,
-	config,
-	schemaName,
-}: ElementProps<InputComponent.selectDropdown>) => {
+export const SelectDropdownElement = (props: InputElementProps<InputComponent.selectDropdown>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+	const label = getLabel(props);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
+	const isNumeric = props.schemaName === CoreSchemaType.NumericArray;
 
-	Value.Default(selectDropdownConfigSchema, config);
-	if (!Value.Check(selectDropdownConfigSchema, config)) {
+	Value.Default(selectDropdownConfigSchema, props.config);
+	if (!Value.Check(selectDropdownConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => {
 				const handleChange = (value: string) => {
 					field.onChange([isNumeric ? +value : value]);
@@ -51,7 +48,7 @@ export const SelectDropdownElement = ({
 								</SelectTrigger>
 							</FormControl>
 							<SelectContent>
-								{config.values.map((value) => {
+								{props.config.values.map((value) => {
 									return (
 										<SelectItem value={`${value}`} key={value}>
 											{value}
@@ -60,7 +57,7 @@ export const SelectDropdownElement = ({
 								})}
 							</SelectContent>
 						</Select>
-						<FormDescription>{config.help}</FormDescription>
+						<FormDescription>{props.config.help}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				);

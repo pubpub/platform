@@ -5,20 +5,14 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
-import {
-	AuthTokenType,
-	ElementType,
-	InputComponent,
-	MemberRole,
-	StructuralFormElement,
-} from "db/public";
+import { AuthTokenType, InputComponent, MemberRole, StructuralFormElement } from "db/public";
 
 import type { XOR } from "../types";
 import type { GetPubTypesResult } from "./pubtype";
-import type { FormElements } from "~/app/components/forms/types";
+import type { ButtonElement, InputElement, StructuralElement } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
-import { findRanksBetween } from "../rank";
+import { compareRanks, findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
@@ -49,29 +43,21 @@ export const getForm = (
 				)
 			)
 			.selectAll("forms")
-			.select((eb) =>
+			.select((eb) => [
+				// form inputs
 				jsonArrayFrom(
 					eb
-						.selectFrom("form_elements")
-						.leftJoin("pub_fields", "pub_fields.id", "form_elements.fieldId")
-						.whereRef("form_elements.formId", "=", "forms.id")
-						.leftJoin(
-							"_FormElementToPubType",
-							"_FormElementToPubType.A",
-							"form_elements.id"
-						)
+						.selectFrom("form_inputs")
+						.innerJoin("pub_fields", "pub_fields.id", "form_inputs.fieldId")
+						.leftJoin("_FormInputToPubType", "_FormInputToPubType.A", "form_inputs.id")
+						.whereRef("form_inputs.formId", "=", "forms.id")
 						.select((eb) => [
-							"form_elements.id",
-							"form_elements.type",
-							"form_elements.fieldId",
-							"form_elements.component",
-							eb.fn.coalesce("form_elements.config", sql`'{}'`).as("config"),
-							"form_elements.rank",
-							"form_elements.label",
-							"form_elements.content",
-							"form_elements.element",
-							"form_elements.required",
-							"form_elements.stageId",
+							"form_inputs.id",
+							"form_inputs.fieldId",
+							"form_inputs.component",
+							eb.fn.coalesce("form_inputs.config", sql`'{}'`).as("config"),
+							"form_inputs.rank",
+							"form_inputs.required",
 							"pub_fields.schemaName",
 							"pub_fields.slug",
 							"pub_fields.isRelation",
@@ -79,20 +65,50 @@ export const getForm = (
 							eb.fn
 								.coalesce(
 									eb.fn
-										.jsonAgg(eb.ref("_FormElementToPubType.B"))
-										.filterWhere("_FormElementToPubType.B", "is not", null),
+										.jsonAgg(eb.ref("_FormInputToPubType.B"))
+										.filterWhere("_FormInputToPubType.B", "is not", null),
 									sql`'[]'`
 								)
 								.as("relatedPubTypes"),
 						])
-						.groupBy(["form_elements.id", "pub_fields.id"])
-						.$narrowType<FormElements>()
+						.groupBy(["form_inputs.id", "pub_fields.id"])
 						.orderBy("rank")
-				).as("elements")
-			)
-	);
+						.$narrowType<InputElement>()
+				).as("inputs"),
+				// structural elements
+				jsonArrayFrom(
+					eb
+						.selectFrom("form_structural_elements")
+						.whereRef("form_structural_elements.formId", "=", "forms.id")
+						.selectAll("form_structural_elements")
+						.orderBy("rank")
+						.$narrowType<StructuralElement>()
+				).as("structuralElements"),
+				// buttons
+				jsonArrayFrom(
+					eb
+						.selectFrom("form_buttons")
+						.whereRef("form_buttons.formId", "=", "forms.id")
+						.selectAll("form_buttons")
+						.orderBy("rank")
+						.$narrowType<ButtonElement>()
+				).as("buttons"),
+			])
+	)
+		.executeTakeFirstOrThrow()
+		.then(async (form) => {
+			// combine inputs and structural elements, preserving order by rank
+			const elements = [...form.inputs, ...form.structuralElements].sort((a, b) =>
+				compareRanks(a.rank, b.rank)
+			);
 
-export type Form = Awaited<ReturnType<ReturnType<typeof getForm>["executeTakeFirstOrThrow"]>>;
+			return {
+				...form,
+				elements,
+			};
+		});
+
+export type Form = Awaited<ReturnType<typeof getForm>>;
 
 export const userHasPermissionToForm = async (
 	props: XOR<{ formId: FormsId }, { formSlug: string }> &
@@ -171,7 +187,7 @@ export const grantFormAccess = async (
 ) => {
 	// TODO: Rewrite as single, `autoRevalidate`-d query with CTEs
 	const { userId, pubId, ...getFormProps } = props;
-	const form = await getForm(getFormProps, trx).executeTakeFirstOrThrow();
+	const form = await getForm(getFormProps, trx);
 
 	const existingPermission = await autoCache(
 		pubId
@@ -246,7 +262,7 @@ export const createFormInviteLink = async (props: FormInviteLinkProps, trx = db)
 	const formPromise = getForm({
 		communityId: props.communityId,
 		...(props.formId !== undefined ? { id: props.formId } : { slug: props.formSlug }),
-	}).executeTakeFirstOrThrow();
+	});
 
 	const userPromise = getUser(
 		props.userId !== undefined ? { id: props.userId } : { email: props.email }

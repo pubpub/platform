@@ -5,7 +5,7 @@ import type { PropsWithChildren } from "react";
 import * as React from "react";
 import { createContext, useContext } from "react";
 
-import type { Stages } from "db/public";
+import type { FormsId, Stages } from "db/public";
 
 import type { FormElementData, PanelEvent } from "./types";
 
@@ -24,6 +24,7 @@ type FormBuilderContext = {
 	slug: string;
 	stages: Stages[];
 	isDirty: boolean;
+	formId: FormsId;
 };
 
 const FormBuilderContext = createContext<FormBuilderContext | undefined>(undefined);

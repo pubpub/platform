@@ -6,35 +6,32 @@ import { memberSelectConfigSchema } from "schemas";
 import type { CommunityMembershipsId } from "db/public";
 import { InputComponent } from "db/public";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { MemberSelectClientFetch } from "../../MemberSelect/MemberSelectClientFetch";
 import { useCommunity } from "../../providers/CommunityProvider";
 
-export const MemberSelectElement = ({
-	slug,
-	label,
-	value,
-	config,
-}: {
-	value?: CommunityMembershipsId;
-} & ElementProps<InputComponent.memberSelect>) => {
+export const MemberSelectElement = (
+	props: InputElementProps<InputComponent.memberSelect> & {
+		value: CommunityMembershipsId | undefined;
+	}
+) => {
 	const community = useCommunity();
 	if (!community) {
 		return null;
 	}
 
-	if (!Value.Check(memberSelectConfigSchema, config)) {
+	if (!Value.Check(memberSelectConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<MemberSelectClientFetch
 			community={community}
-			fieldLabel={label}
-			fieldName={slug}
-			value={value}
+			fieldLabel={props.config.label ?? ""}
+			fieldName={props.slug}
+			value={props.value}
 			allowPubFieldSubstitution={false}
-			helpText={config.help}
+			helpText={props.config.help}
 		/>
 	);
 };

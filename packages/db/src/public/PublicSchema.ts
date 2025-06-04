@@ -38,8 +38,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -59,6 +57,8 @@ export interface PublicSchema {
 	pub_fields: PubFieldsTable;
 
 	pub_values: PubValuesTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
 
 	_MemberGroupToUser: MemberGroupToUserTable;
 

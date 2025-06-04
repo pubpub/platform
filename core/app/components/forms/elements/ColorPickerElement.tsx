@@ -11,7 +11,7 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 export const ColorPickerPopover = ({
@@ -61,40 +61,36 @@ export const ColorPickerPopover = ({
 	);
 };
 
-export const ColorPickerElement = ({
-	slug,
-	label,
-	config,
-}: ElementProps<InputComponent.colorPicker>) => {
+export const ColorPickerElement = (props: InputElementProps<InputComponent.colorPicker>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
 
-	Value.Default(colorPickerConfigSchema, config);
-	if (!Value.Check(colorPickerConfigSchema, config)) {
+	Value.Default(colorPickerConfigSchema, props.config);
+	if (!Value.Check(colorPickerConfigSchema, props.config)) {
 		return null;
 	}
 
-	const defaultColor = config.presets?.length ? config.presets[0].value : "#000000";
+	const defaultColor = props.config.presets?.length ? props.config.presets[0].value : "#000000";
 
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => (
 				<FormItem>
-					<FormLabel>{label || config.label}</FormLabel>
+					<FormLabel>{props.config.label}</FormLabel>
 					<FormControl>
 						<ColorPickerPopover
 							color={field.value || defaultColor}
 							onChange={(value) => {
 								field.onChange(value);
 							}}
-							presets={config.presets}
-							presetsOnly={config.presetsOnly}
+							presets={props.config.presets}
+							presetsOnly={props.config.presetsOnly}
 						/>
 					</FormControl>
-					{config.help && <FormDescription>{config.help}</FormDescription>}
+					{props.config.help && <FormDescription>{props.config.help}</FormDescription>}
 					<FormMessage />
 				</FormItem>
 			)}

@@ -5,10 +5,10 @@ import type { PropsWithChildren } from "react";
 import type { InputComponent } from "db/public";
 import { Toggle } from "ui/toggle";
 
-import type { ElementProps } from "./types";
+import type { InputElementProps } from "./types";
 import { useFormElementToggleContext } from "./FormElementToggleContext";
 
-type Props<I extends InputComponent> = PropsWithChildren<ElementProps<I>>;
+type Props<I extends InputComponent> = PropsWithChildren<InputElementProps<I>>;
 
 export const FormElementToggle = <I extends InputComponent>(props: Props<I>) => {
 	const formElementToggle = useFormElementToggleContext();

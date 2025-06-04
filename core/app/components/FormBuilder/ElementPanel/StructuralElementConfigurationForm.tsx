@@ -12,13 +12,13 @@ import { MarkdownEditor } from "ui/editors";
 import { Form, FormField } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 
+import type { FormBuilderStructuralElement } from "../types";
 import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
-import { type StructuralElement } from "../types";
 
 type Props = {
 	index: number;
-	structuralElement: StructuralElement;
+	structuralElement: FormBuilderStructuralElement;
 };
 
 export const StructuralElementConfigurationForm = ({ index, structuralElement }: Props) => {

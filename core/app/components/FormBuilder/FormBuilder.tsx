@@ -39,7 +39,7 @@ import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
 import { saveForm } from "./actions";
 import { ElementPanel } from "./ElementPanel";
 import { FormBuilderProvider } from "./FormBuilderContext";
-import { FormElement } from "./FormElement";
+import { FormBuilderElement } from "./FormBuilderElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 import { useIsChanged } from "./useIsChanged";
 
@@ -393,7 +393,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 															{elements.map(
 																(element, index) =>
 																	!isButtonElement(element) && (
-																		<FormElement
+																		<FormBuilderElement
 																			key={element.id}
 																			element={element}
 																			index={index}

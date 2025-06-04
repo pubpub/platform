@@ -4,7 +4,7 @@ import { z } from "zod";
 import type {
 	ActionInstances,
 	CommunitiesId,
-	FormElementsId,
+	FormInputsId,
 	MemberRole,
 	PubFields,
 	PubFieldsId,
@@ -206,8 +206,7 @@ type ValueBase = {
 type ValuesWithFormElements =
 	| // With both values and form elements
 	(ValueBase & {
-			formElementId: FormElementsId;
-			formElementLabel: string | null;
+			formElementId: FormInputsId;
 			formElementConfig:
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }
@@ -221,8 +220,7 @@ type ValuesWithFormElements =
 			value: null;
 			createdAt: null;
 			updatedAt: null;
-			formElementId: FormElementsId;
-			formElementLabel: string | null;
+			formElementId: FormInputsId;
 			formElementConfig:
 				| { label?: string }
 				| { relationshipConfig: { label?: string } }

@@ -11,36 +11,33 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Input } from "ui/input";
 import { RadioGroup, RadioGroupItem } from "ui/radio-group";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { getLabel } from "../utils";
 
-export const RadioGroupElement = ({
-	slug,
-	label,
-	config,
-	schemaName,
-}: ElementProps<InputComponent.radioGroup>) => {
+export const RadioGroupElement = (props: InputElementProps<InputComponent.radioGroup>) => {
 	const { control, getValues } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
-	const isNumeric = schemaName === CoreSchemaType.NumericArray;
+	const label = getLabel(props);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
+	const isNumeric = props.schemaName === CoreSchemaType.NumericArray;
 
 	const initialOther = useMemo(() => {
-		const initialValues: string[] | number[] = getValues()[slug];
-		const other = initialValues.filter((iv) => !config.values.some((cv) => cv === iv));
+		const initialValues: string[] | number[] = getValues()[props.slug];
+		const other = initialValues.filter((iv) => !props.config.values.some((cv) => cv === iv));
 		return other[0] ?? "";
 	}, []);
 	const [other, setOther] = useState<string | number>(initialOther);
 
-	Value.Default(radioGroupConfigSchema, config);
-	if (!Value.Check(radioGroupConfigSchema, config)) {
+	Value.Default(radioGroupConfigSchema, props.config);
+	if (!Value.Check(radioGroupConfigSchema, props.config)) {
 		return null;
 	}
 
 	return (
 		<FormField
 			control={control}
-			name={slug}
+			name={props.slug}
 			render={({ field }) => {
 				const handleRadioChange = (value: string) => {
 					field.onChange([isNumeric ? +value : value]);
@@ -58,7 +55,7 @@ export const RadioGroupElement = ({
 								disabled={!isEnabled}
 								className="space-y-1"
 							>
-								{config.values.map((v) => {
+								{props.config.values.map((v) => {
 									return (
 										<FormItem
 											className="flex items-center gap-2 space-y-0"
@@ -79,7 +76,7 @@ export const RadioGroupElement = ({
 										</FormItem>
 									);
 								})}
-								{config.includeOther ? (
+								{props.config.includeOther ? (
 									<FormItem className="flex items-center gap-2 space-y-0">
 										<FormLabel>Other</FormLabel>
 										<FormControl>
@@ -110,7 +107,7 @@ export const RadioGroupElement = ({
 								) : null}
 							</RadioGroup>
 						</FormControl>
-						<FormDescription>{config.help}</FormDescription>
+						<FormDescription>{props.config.help}</FormDescription>
 						<FormMessage />
 					</FormItem>
 				);

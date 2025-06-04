@@ -25,11 +25,7 @@ export interface FormStructuralElementsTable {
 
 	rank: ColumnType<string, string, string>;
 
-	element: ColumnType<
-		StructuralFormElement | null,
-		StructuralFormElement | null,
-		StructuralFormElement | null
-	>;
+	element: ColumnType<StructuralFormElement, StructuralFormElement, StructuralFormElement>;
 
 	content: ColumnType<string | null, string | null, string | null>;
 
@@ -52,7 +48,7 @@ export const formStructuralElementsSchema = z.object({
 	id: formStructuralElementsIdSchema,
 	formId: formsIdSchema,
 	rank: z.string(),
-	element: structuralFormElementSchema.nullable(),
+	element: structuralFormElementSchema,
 	content: z.string().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
@@ -62,7 +58,7 @@ export const formStructuralElementsInitializerSchema = z.object({
 	id: formStructuralElementsIdSchema.optional(),
 	formId: formsIdSchema,
 	rank: z.string(),
-	element: structuralFormElementSchema.optional().nullable(),
+	element: structuralFormElementSchema,
 	content: z.string().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
@@ -72,7 +68,7 @@ export const formStructuralElementsMutatorSchema = z.object({
 	id: formStructuralElementsIdSchema.optional(),
 	formId: formsIdSchema.optional(),
 	rank: z.string().optional(),
-	element: structuralFormElementSchema.optional().nullable(),
+	element: structuralFormElementSchema.optional(),
 	content: z.string().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),

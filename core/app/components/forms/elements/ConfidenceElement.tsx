@@ -9,7 +9,7 @@ import { confidenceIntervalConfigSchema } from "schemas";
 import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
-import type { ElementProps } from "../types";
+import type { InputElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 
 const Confidence = dynamic(
@@ -28,16 +28,12 @@ const ForwardedRefConfidence = forwardRef<
 	React.ComponentPropsWithoutRef<typeof Confidence>
 >((props, ref) => <Confidence {...props} forwardedRef={ref} />);
 
-export const ConfidenceElement = ({
-	slug,
-	label,
-	config,
-}: ElementProps<InputComponent.confidenceInterval>) => {
+export const ConfidenceElement = (props: InputElementProps<InputComponent.confidenceInterval>) => {
 	const { control } = useFormContext();
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const isEnabled = formElementToggle.isEnabled(props.slug);
 
-	if (!Value.Check(confidenceIntervalConfigSchema, config)) {
+	if (!Value.Check(confidenceIntervalConfigSchema, props.config)) {
 		return null;
 	}
 
@@ -45,14 +41,14 @@ export const ConfidenceElement = ({
 		<>
 			<FormField
 				control={control}
-				name={slug}
+				name={props.slug}
 				render={({ field }) => {
 					// Need to pass the field's onChange as onValueChange in Confidence
 					// and make sure it is not passed in as the default onChange
 					const { onChange, ...fieldProps } = field;
 					return (
 						<FormItem className="mb-6">
-							<FormLabel className="text-[0.9em]">{label}</FormLabel>
+							<FormLabel className="text-[0.9em]">{props.config.label}</FormLabel>
 							<FormControl>
 								<ForwardedRefConfidence
 									{...fieldProps}
@@ -71,7 +67,7 @@ export const ConfidenceElement = ({
 					);
 				}}
 			/>
-			<FormDescription>{config.help}</FormDescription>
+			<FormDescription>{props.config.help}</FormDescription>
 		</>
 	);
 };

@@ -4,7 +4,6 @@ import { useForm, useFormContext } from "react-hook-form";
 import { z } from "zod";
 
 import type { StagesId } from "db/public";
-import { ElementType } from "db/public";
 import { zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
@@ -27,12 +26,11 @@ import { ChevronDown } from "ui/icon";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
-import type { FormBuilderSchema } from "../types";
+import type { FormBuilderButtonElement, FormBuilderSchema } from "../types";
 import { findRanksBetween } from "~/lib/rank";
-import { useCommunity } from "../../providers/CommunityProvider";
 import { useFormBuilder } from "../FormBuilderContext";
 import { ButtonOption } from "../SubmissionSettings";
-import { isButtonElement } from "../types";
+import { isFormBuilderButtonElement } from "../types";
 
 const DEFAULT_BUTTON = {
 	label: "Submit",
@@ -45,7 +43,7 @@ export const ButtonConfigurationForm = ({
 	// The id here is either the button's elementId or its label depending on what is available
 	buttonIdentifier: string | null;
 }) => {
-	const { dispatch, update, stages } = useFormBuilder();
+	const { dispatch, update, stages, formId } = useFormBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext<FormBuilderSchema>();
 	// Derive some initial values based on the state of the parent form when this panel was opened
@@ -54,16 +52,17 @@ export const ButtonConfigurationForm = ({
 		// Because a button might not have an ID yet (if it wasn't saved to the db yet) fall back to its label as an identifier
 		const buttonIndex = buttonIdentifier
 			? elements.findIndex((e) => {
-					if (!isButtonElement(e)) {
+					if (!isFormBuilderButtonElement(e)) {
 						return false;
 					}
 					return e.elementId === buttonIdentifier || e.label === buttonIdentifier;
 				})
 			: -1;
-		const button = buttonIndex === -1 ? undefined : elements[buttonIndex];
+		const button =
+			buttonIndex === -1 ? undefined : (elements[buttonIndex] as FormBuilderButtonElement);
 		const otherButtons = elements.filter(
-			(e) =>
-				isButtonElement(e) &&
+			(e): e is FormBuilderButtonElement =>
+				isFormBuilderButtonElement(e) &&
 				e.elementId !== buttonIdentifier &&
 				e.label !== buttonIdentifier
 		);
@@ -80,8 +79,6 @@ export const ButtonConfigurationForm = ({
 		content: z.string().min(1),
 		stageId: z.string().optional(),
 	});
-
-	const community = useCommunity();
 
 	const defaultValues = button
 		? {
@@ -107,13 +104,13 @@ export const ButtonConfigurationForm = ({
 				start: elements[index - 1]?.rank ?? "",
 				end: elements[index + 1]?.rank ?? "",
 			})[0],
-			type: ElementType.button,
 			elementId: button?.elementId,
 			label: values.label,
 			content: values.content,
 			stageId: values.stageId as StagesId | undefined,
 			updated: true,
 			configured: true,
+			formId,
 		});
 		dispatch({ eventName: "save" });
 	};

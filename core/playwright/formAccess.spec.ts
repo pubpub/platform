@@ -4,7 +4,7 @@ import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
 import type { FormsId, PubsId, UsersId } from "db/public";
-import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
+import { CoreSchemaType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { db } from "~/lib/__tests__/db";
@@ -99,7 +99,6 @@ const seed = createSeed({
 			pubType: "Evaluation",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -107,7 +106,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: "Content",
 					component: InputComponent.textArea,
 					config: {
@@ -115,7 +113,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.pubfield,
 					field: CoreSchemaType.Email,
 					component: InputComponent.textInput,
 					config: {
@@ -123,7 +120,6 @@ const seed = createSeed({
 					},
 				},
 				{
-					type: ElementType.button,
 					content: `Go see your pubs :link{page='currentPub' text='here'}`,
 					label: "Submit",
 					stage: "Evaluating",
@@ -135,7 +131,6 @@ const seed = createSeed({
 			pubType: "Title Only",
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {
@@ -189,7 +184,6 @@ const seed2 = createSeed({
 			access: FormAccessType.private,
 			elements: [
 				{
-					type: ElementType.pubfield,
 					field: "Title",
 					component: InputComponent.textInput,
 					config: {

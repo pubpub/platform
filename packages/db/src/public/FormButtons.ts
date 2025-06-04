@@ -23,6 +23,8 @@ export interface FormButtonsTable {
 
 	label: ColumnType<string | null, string | null, string | null>;
 
+	content: ColumnType<string | null, string | null, string | null>;
+
 	stageId: ColumnType<StagesId | null, StagesId | null, StagesId | null>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
@@ -43,6 +45,7 @@ export const formButtonsSchema = z.object({
 	formId: formsIdSchema,
 	rank: z.string(),
 	label: z.string().nullable(),
+	content: z.string().nullable(),
 	stageId: stagesIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
@@ -53,6 +56,7 @@ export const formButtonsInitializerSchema = z.object({
 	formId: formsIdSchema,
 	rank: z.string(),
 	label: z.string().optional().nullable(),
+	content: z.string().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
@@ -63,6 +67,7 @@ export const formButtonsMutatorSchema = z.object({
 	formId: formsIdSchema.optional(),
 	rank: z.string().optional(),
 	label: z.string().optional().nullable(),
+	content: z.string().optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),

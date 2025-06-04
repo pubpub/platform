@@ -5,7 +5,6 @@ import type { CommunitiesId, UsersId } from "db/public";
 import {
 	Action,
 	CoreSchemaType,
-	ElementType,
 	FormAccessType,
 	InputComponent,
 	MemberRole,
@@ -118,13 +117,11 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					slug: "public-review",
 					elements: [
 						{
-							type: ElementType.structural,
 							element: StructuralFormElement.p,
 							content: `# Review\n\n Thank you for agreeing to review this Pub, please do not be a meany bobeeny.`,
 						},
 						{
 							field: "Title",
-							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							config: {
 								label: "Title",
@@ -134,7 +131,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						},
 						{
 							field: "Content",
-							type: ElementType.pubfield,
 							component: InputComponent.richText,
 							config: {
 								label: "Content",
@@ -144,7 +140,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						},
 						{
 							field: "File",
-							type: ElementType.pubfield,
 							component: InputComponent.fileUpload,
 							config: {
 								label: "Attachment",
@@ -152,7 +147,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 							},
 						},
 						{
-							type: ElementType.button,
 							content: `Go see your pubs :link{page='currentPub' text='here'}`,
 							label: "Submit",
 							stage: "Draft",
@@ -165,13 +159,11 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					pubType: "Evaluation",
 					elements: [
 						{
-							type: ElementType.structural,
 							element: StructuralFormElement.p,
 							content: `# Review\n\n Thank you for agreeing to review this Pub, please do not be a meany bobeeny.`,
 						},
 						{
 							field: "Title",
-							type: ElementType.pubfield,
 							component: InputComponent.textInput,
 							config: {
 								label: "Title",
@@ -181,7 +173,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						},
 						{
 							field: "Content",
-							type: ElementType.pubfield,
 							component: InputComponent.richText,
 							config: {
 								label: "Content",
@@ -190,7 +181,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						},
 						{
 							field: "File",
-							type: ElementType.pubfield,
 							component: InputComponent.fileUpload,
 							config: {
 								label: "Attachment",
@@ -198,10 +188,8 @@ export async function seedStarter(communityId?: CommunitiesId) {
 							},
 						},
 						{
-							type: ElementType.button,
 							content: `Go see your pubs :link{page='currentPub' text='here'}`,
 							label: "Submit",
-							stage: "Published",
 						},
 					],
 				},
