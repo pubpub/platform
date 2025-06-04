@@ -5,7 +5,6 @@ import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
 import { Button } from "ui/button";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
@@ -13,6 +12,7 @@ import { PubCard } from "~/app/components/PubCard";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
@@ -21,7 +21,7 @@ import { PubListSkeleton } from "../../pubs/PubList";
 type Props = {
 	userId: UsersId;
 	communityId: CommunitiesId;
-	pageContext: PageContext;
+	searchParams: Record<string, unknown>;
 };
 
 export async function StageList(props: Props) {
@@ -41,7 +41,7 @@ export async function StageList(props: Props) {
 					key={stage.id}
 					stage={stage}
 					members={communityMembers}
-					pageContext={props.pageContext}
+					searchParams={props.searchParams}
 				/>
 			))}
 		</div>
@@ -50,20 +50,21 @@ export async function StageList(props: Props) {
 
 async function StageCard({
 	stage,
-	pageContext,
+	searchParams,
 	members,
 	userId,
 }: {
 	stage: CommunityStage;
 	members?: MemberWithUser[];
-	pageContext: PageContext;
+	searchParams: Record<string, unknown>;
 	userId: UsersId;
 }) {
+	const communitySlug = await getCommunitySlug();
 	return (
 		<div key={stage.id} className="mb-20">
 			<div className="flex flex-row justify-between">
 				<h3 className="mb-2 text-lg font-semibold hover:underline">
-					<Link href={`/c/${pageContext.params.communitySlug}/stages/${stage.id}`}>
+					<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
 						{stage.name} ({stage.pubsCount})
 					</Link>
 				</h3>
@@ -74,10 +75,10 @@ async function StageCard({
 				<StagePubs
 					userId={userId}
 					stage={stage}
-					pageContext={pageContext}
+					searchParams={searchParams}
 					members={members}
 					totalPubLimit={3}
-					basePath={`/c/${pageContext.params.communitySlug}/stages`}
+					basePath={`/c/${communitySlug}/stages`}
 				/>
 			</Suspense>
 		</div>
@@ -86,15 +87,14 @@ async function StageCard({
 
 export async function StagePubs({
 	stage,
-	pageContext,
-	members,
+	searchParams,
 	totalPubLimit,
 	basePath,
 	pagination,
 	userId,
 }: {
 	stage: CommunityStage;
-	pageContext: PageContext;
+	searchParams: Record<string, unknown>;
 	members?: MemberWithUser[];
 	totalPubLimit?: number;
 	pagination?: { page: number; pubsPerPage: number };
@@ -149,7 +149,7 @@ export async function StagePubs({
 			{pagination && (
 				<BasicPagination
 					basePath={basePath}
-					searchParams={pageContext.searchParams}
+					searchParams={searchParams}
 					page={pagination.page}
 					totalPages={totalPages}
 				/>
@@ -161,7 +161,7 @@ export async function StagePubs({
 					size="lg"
 					asChild
 				>
-					<Link href={`/c/${pageContext.params.communitySlug}/stages/${stage.id}`}>
+					<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
 						See all pubs in stage {stage.name}
 					</Link>
 				</Button>

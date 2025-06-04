@@ -127,8 +127,6 @@ export const PubCard = async ({
 							actionInstances={actionInstances}
 							stage={pub.stage}
 							pubId={pub.id}
-							// @ts-ignore TODO: do we need this?
-							pageContext={{}}
 							iconOnly
 							variant="ghost"
 							className="w-6 px-4 py-2 [&_svg]:size-6"
