@@ -50,13 +50,19 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
 			<DropdownMenuTrigger asChild>
-				<Button variant="outline" className="flex h-[22px] gap-1 px-2 text-xs">
+				<Button
+					variant="outline"
+					className="flex h-[22px] gap-1 px-2 px-[.35rem] text-xs font-semibold shadow-none"
+				>
 					<span className="rounded bg-slate-100 px-1 text-[10px]">{numRelations}</span>
 					Relations
 					<ChevronDown strokeWidth="1px" />
 				</Button>
 			</DropdownMenuTrigger>
-			<DropdownMenuContent className="max-h-72 w-[350px] min-w-0 overflow-y-scroll">
+			<DropdownMenuContent
+				className="max-h-72 w-[350px] min-w-0 overflow-y-scroll"
+				align="start"
+			>
 				{isLoading ? (
 					<Skeleton className="flex flex-col gap-2">
 						{Array.from({ length: numRelations - 1 }, (_, index) => (
@@ -70,7 +76,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 							<DropdownMenuItem key={relatedPub.id}>
 								<Badge
 									variant="secondary"
-									className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold"
+									className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold leading-4 tracking-[-.1px]"
 								>
 									{relatedPub.pubType.name}
 								</Badge>
