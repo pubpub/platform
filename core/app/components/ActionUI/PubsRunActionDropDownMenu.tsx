@@ -37,7 +37,7 @@ export const PubsRunActionDropDownMenu = async ({
 					data-testid={testId}
 					{...buttonProps}
 				>
-					<Play size="12" strokeWidth="1px" />
+					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
 					<span className={cn({ "sr-only": iconOnly })}>Run action</span>
 					{iconOnly ? null : <ChevronDown size="14" />}
 				</Button>

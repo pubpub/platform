@@ -1,4 +1,3 @@
-import React from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
@@ -6,15 +5,7 @@ import type { ActionInstances } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Checkbox } from "ui/checkbox";
-import {
-	Calendar,
-	ChevronDown,
-	FlagTriangleRightIcon,
-	History,
-	Pencil,
-	Play,
-	Trash,
-} from "ui/icon";
+import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 } from "ui/icon";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
@@ -62,7 +53,10 @@ export const PubCard = async ({
 			<div className="flex min-w-0 flex-col space-y-[6px]">
 				<div className="flex flex-row gap-2 p-0 font-semibold leading-4">
 					{/* TODO: make filter by pub type */}
-					<Button variant="outline" className="h-[22px] rounded px-2 text-xs">
+					<Button
+						variant="outline"
+						className="h-[22px] rounded border-gray-300 bg-gray-100 px-[.35rem] text-xs font-semibold shadow-none"
+					>
 						{pub.pubType.name}
 					</Button>
 					{pub.stage ? (
@@ -73,9 +67,12 @@ export const PubCard = async ({
 							button={
 								<Button
 									variant="outline"
-									className="h-[22px] rounded-[104px] px-2 text-xs"
+									className="h-[22px] gap-0.5 rounded-[104px] px-2 px-[.35rem] text-xs font-semibold shadow-none"
 								>
-									<FlagTriangleRightIcon strokeWidth="1px" />
+									<FlagTriangleRightIcon
+										strokeWidth="1px"
+										className="text-neutral-500"
+									/>
 									{pub.stage.name}
 									<ChevronDown strokeWidth="1px" />
 								</Button>
@@ -103,16 +100,16 @@ export const PubCard = async ({
 				</CardDescription>
 				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
 					<div className="flex gap-1" title="Created at">
-						<Calendar size="16px" strokeWidth="1px" />
+						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
 						<span>{formatDateAsPossiblyDistance(new Date(pub.createdAt))}</span>
 					</div>
 					<div className="flex gap-1" title="Updated at">
-						<History size="16px" strokeWidth="1px" />
+						<History size="16px" strokeWidth="1px" className="text-neutral-500" />
 						<span>{formatDateAsPossiblyDistance(new Date(pub.updatedAt))}</span>
 					</div>
 				</CardFooter>
 			</div>
-			<div className="opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+			<div className="mr-4 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 				<div className="flex items-center gap-3 text-neutral-500">
 					<RemovePubButton
 						pubId={pub.id}
@@ -120,7 +117,7 @@ export const PubCard = async ({
 						buttonText="Archive"
 						variant="ghost"
 						className="w-8 px-4 py-2 [&_svg]:size-6"
-						icon={<Trash strokeWidth="1px" />}
+						icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
 					/>
 					{pub.stage ? (
 						<PubsRunActionDropDownMenu
@@ -134,7 +131,7 @@ export const PubCard = async ({
 					) : null}
 					<Action
 						link={`/c/${communitySlug}/pubs/${pub.id}/edit`}
-						icon={<Pencil strokeWidth="1px" />}
+						icon={<Pencil strokeWidth="1px" className="text-neutral-500" />}
 						title="Update"
 					/>
 					<Checkbox className="ml-2 box-content h-4 w-4 border-neutral-500" />
