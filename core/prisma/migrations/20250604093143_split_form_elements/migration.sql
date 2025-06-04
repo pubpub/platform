@@ -1,12 +1,3 @@
-/*
- Expand-Contract Migration: Split form_elements into separate tables
- 
- This migration:
- 1. Creates new tables (form_inputs, form_structural_elements, form_buttons)
- 2. Migrates existing data from form_elements based on type
- 3. Drops the old form_elements table and ElementType enum
- */
--- Step 1: Create new tables
 CREATE TABLE "form_inputs"(
     "id" text NOT NULL DEFAULT gen_random_uuid(),
     "fieldId" text,
@@ -15,7 +6,6 @@ CREATE TABLE "form_inputs"(
     "component" "InputComponent",
     "config" jsonb,
     "required" boolean,
-    "stageId" text,
     "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "form_inputs_pkey" PRIMARY KEY ("id")
@@ -50,7 +40,7 @@ CREATE TABLE "_FormInputToPubType"(
 
 -- Step 2: Migrate data from form_elements to appropriate tables
 -- Migrate pubfield elements to form_inputs
-INSERT INTO "form_inputs"("id", "fieldId", "formId", "rank", "component", "config", "required", "stageId", "createdAt", "updatedAt")
+INSERT INTO "form_inputs"("id", "fieldId", "formId", "rank", "component", "config", "required", "createdAt", "updatedAt")
 SELECT
     "id",
     "fieldId",
@@ -59,7 +49,6 @@ SELECT
     "component",
     "config",
     "required",
-    "stageId",
     "createdAt",
     "updatedAt"
 FROM
@@ -123,9 +112,6 @@ ALTER TABLE "form_inputs"
 
 ALTER TABLE "form_inputs"
     ADD CONSTRAINT "form_inputs_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE "form_inputs"
-    ADD CONSTRAINT "form_inputs_stageId_fkey" FOREIGN KEY ("stageId") REFERENCES "stages"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "form_structural_elements"
     ADD CONSTRAINT "form_structural_elements_formId_fkey" FOREIGN KEY ("formId") REFERENCES "forms"("id") ON DELETE CASCADE ON UPDATE CASCADE;

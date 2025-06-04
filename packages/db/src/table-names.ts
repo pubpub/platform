@@ -969,14 +969,6 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
-				name: "stageId",
-				dataType: "text",
-				dataTypeSchema: "pg_catalog",
-				isNullable: true,
-				isAutoIncrementing: false,
-				hasDefaultValue: false,
-			},
-			{
 				name: "createdAt",
 				dataType: "timestamp",
 				dataTypeSchema: "pg_catalog",
@@ -2344,6 +2336,8 @@ export const databaseTables = [
 				isNullable: false,
 				isAutoIncrementing: false,
 				hasDefaultValue: true,
+				comment:
+					"Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user",
 			},
 		],
 	},

@@ -264,7 +264,6 @@ model Stage {
   moveConstraints       MoveConstraint[]  @relation("move_constraint")
   moveConstraintSources MoveConstraint[]  @relation("move_constraint_destination")
   actionInstances       ActionInstance[]
-  formInputs            FormInput[]
   formButtons           FormButton[]
   members               StageMembership[]
   Invite                Invite[]
@@ -507,14 +506,6 @@ model Form {
   @@map(name: "forms")
 }
 
-// Supported structural elements in the form builder
-enum StructuralFormElement {
-  h2
-  h3
-  p
-  hr
-}
-
 enum InputComponent {
   textArea
   textInput
@@ -543,8 +534,6 @@ model FormInput {
   config          Json?
   required        Boolean?
   form            Form            @relation(fields: [formId], references: [id], onDelete: Cascade)
-  stage           Stage?          @relation(fields: [stageId], references: [id], onDelete: SetNull)
-  stageId         String?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @default(now()) @updatedAt
   relatedPubTypes PubType[]
@@ -553,14 +542,22 @@ model FormInput {
   @@map(name: "form_inputs")
 }
 
+// Supported structural elements in the form builder
+enum StructuralFormElement {
+  h2
+  h3
+  p
+  hr
+}
+
 // structural elements like headers, paragraphs, etc.
 model FormStructuralElement {
   id        String                 @id @default(dbgenerated("gen_random_uuid()"))
   formId    String
+  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
   rank      String // Uses "C" collation
   element   StructuralFormElement?
   content   String?
-  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
   createdAt DateTime               @default(now())
   updatedAt DateTime               @default(now()) @updatedAt
 

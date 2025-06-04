@@ -177,12 +177,12 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 
--- Enum StructuralFormElement comments
-
-
-
-
 -- Enum InputComponent comments
+
+
+
+
+-- Enum StructuralFormElement comments
 
 
 

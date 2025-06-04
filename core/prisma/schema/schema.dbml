@@ -211,7 +211,6 @@ Table stages {
   moveConstraints move_constraint [not null]
   moveConstraintSources move_constraint [not null]
   actionInstances action_instances [not null]
-  formInputs form_inputs [not null]
   formButtons form_buttons [not null]
   members stage_memberships [not null]
   Invite invites [not null]
@@ -386,8 +385,6 @@ Table form_inputs {
   config Json
   required Boolean
   form forms [not null]
-  stage stages
-  stageId String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   relatedPubTypes pub_types [not null]
@@ -400,10 +397,10 @@ Table form_inputs {
 Table form_structural_elements {
   id String [pk]
   formId String [not null]
+  form forms [not null]
   rank String [not null]
   element StructuralFormElement
   content String
-  form forms [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
 }
@@ -590,13 +587,6 @@ Enum FormAccessType {
   public
 }
 
-Enum StructuralFormElement {
-  h2
-  h3
-  p
-  hr
-}
-
 Enum InputComponent {
   textArea
   textInput
@@ -612,6 +602,13 @@ Enum InputComponent {
   multivalueInput
   relationBlock
   colorPicker
+}
+
+Enum StructuralFormElement {
+  h2
+  h3
+  p
+  hr
 }
 
 Enum ApiAccessType {
@@ -775,8 +772,6 @@ Ref: forms.pubTypeId > pub_types.id
 Ref: form_inputs.fieldId > pub_fields.id [delete: Cascade]
 
 Ref: form_inputs.formId > forms.id [delete: Cascade]
-
-Ref: form_inputs.stageId > stages.id [delete: Set Null]
 
 Ref: form_structural_elements.formId > forms.id [delete: Cascade]
 
