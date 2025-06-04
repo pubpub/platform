@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { PubsId, StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubDropDown } from "~/app/components/pubs/PubDropDown";
@@ -15,17 +14,17 @@ import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
 type PropsInner = {
 	stageId: StagesId;
-	pageContext: PageContext;
+	searchParams: Record<string, unknown>;
 	userId: UsersId;
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
-	const [stagePubs, stageActionInstances, stage] = await Promise.all([
+	const [communitySlug, stagePubs, stageActionInstances, stage] = await Promise.all([
+		getCommunitySlug(),
 		getStagePubs(props.stageId).execute(),
 		getStageActions({ stageId: props.stageId }).execute(),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 	]);
-	const communitySlug = await getCommunitySlug();
 
 	if (!stage) {
 		throw new Error("Stage not found");
@@ -53,11 +52,10 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 								actionInstances={stageActionInstances}
 								pubId={pub.id as PubsId}
 								stage={stage}
-								pageContext={props.pageContext}
 							/>
 							<PubDropDown
 								pubId={pub.id as PubsId}
-								searchParams={props.pageContext.searchParams}
+								searchParams={props.searchParams}
 							/>
 						</div>
 					</div>
@@ -69,7 +67,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 
 type Props = {
 	stageId?: StagesId;
-	pageContext: PageContext;
+	searchParams: Record<string, unknown>;
 	userId: UsersId;
 };
 
@@ -82,7 +80,7 @@ export const StagePanelPubs = async (props: Props) => {
 		<Suspense fallback={<SkeletonCard />}>
 			<StagePanelPubsInner
 				stageId={props.stageId}
-				pageContext={props.pageContext}
+				searchParams={props.searchParams}
 				userId={props.userId}
 			/>
 		</Suspense>

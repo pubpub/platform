@@ -9,16 +9,10 @@ import { cn } from "utils";
 
 import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
 
-export type PageContext = {
-	params: Record<string, unknown>;
-	searchParams: Record<string, unknown>;
-};
-
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
 	stage,
-	pageContext,
 	testId,
 	iconOnly,
 	...buttonProps
@@ -26,7 +20,6 @@ export const PubsRunActionDropDownMenu = async ({
 	actionInstances: ActionInstances[];
 	pubId: PubsId;
 	stage: Stages;
-	pageContext: PageContext;
 	testId?: string;
 	iconOnly?: boolean;
 } & ButtonProps) => {
@@ -44,7 +37,7 @@ export const PubsRunActionDropDownMenu = async ({
 					data-testid={testId}
 					{...buttonProps}
 				>
-					<Play size="12" strokeWidth="1px" />
+					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
 					<span className={cn({ "sr-only": iconOnly })}>Run action</span>
 					{iconOnly ? null : <ChevronDown size="14" />}
 				</Button>
@@ -55,7 +48,6 @@ export const PubsRunActionDropDownMenu = async ({
 						stage={stage}
 						pubId={pubId}
 						actionInstance={actionInstance}
-						pageContext={pageContext}
 						key={actionInstance.id}
 					/>
 				))}

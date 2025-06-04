@@ -111,7 +111,7 @@ export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
 					</Button>
 				)}
 			</PopoverTrigger>
-			<PopoverContent side="bottom" className="w-fit p-[5px]">
+			<PopoverContent side="bottom" className="w-fit p-[5px]" align="start">
 				<div className="flex flex-col gap-x-4">
 					{sources.length > 0 && (
 						<div className="flex flex-col gap-y-2" data-testid="sources">

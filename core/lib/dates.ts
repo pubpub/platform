@@ -42,6 +42,10 @@ export const formatDateAsTime = (date = new Date()) => {
 	return format(date, "h:mm aa");
 };
 
+export const formatDateAsMonthDayYear = (date: Date) => {
+	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
+};
+
 /** Format a date as ex: "Apr 28, 2025" OR if it is less than a week away, as "4 days ago" */
 export const formatDateAsPossiblyDistance = (date: Date) => {
 	const now = new Date();
@@ -49,7 +53,7 @@ export const formatDateAsPossiblyDistance = (date: Date) => {
 	if (daysDiff <= 7) {
 		return formatDistanceToNow(date, { addSuffix: true });
 	}
-	return date.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
+	return formatDateAsMonthDayYear(date);
 };
 
 // Used for createdAt in pub tables
