@@ -135,7 +135,7 @@ Table pub_fields {
   isRelation Boolean [not null, default: false]
   values pub_values [not null]
   pubTypes _PubFieldToPubType [not null]
-  FormInput form_elements [not null]
+  formInputs form_inputs [not null]
 }
 
 Table PubFieldSchema {
@@ -178,7 +178,7 @@ Table pub_types {
   fields _PubFieldToPubType [not null]
   pubs pubs [not null]
   Form forms [not null]
-  formElements form_elements [not null]
+  formInputs form_inputs [not null]
 
   indexes {
     (name, communityId) [unique]
@@ -211,7 +211,8 @@ Table stages {
   moveConstraints move_constraint [not null]
   moveConstraintSources move_constraint [not null]
   actionInstances action_instances [not null]
-  formElements form_elements [not null]
+  formInputs form_inputs [not null]
+  formButtons form_buttons [not null]
   members stage_memberships [not null]
   Invite invites [not null]
 }
@@ -356,7 +357,9 @@ Table forms {
   community communities [not null]
   pubType pub_types [not null]
   pubTypeId String [not null]
-  elements form_elements [not null]
+  inputs form_inputs [not null]
+  structuralElements form_structural_elements [not null]
+  buttons form_buttons [not null]
   isArchived Boolean [not null, default: false]
   access FormAccessType [not null, default: 'private']
   isDefault Boolean [not null, default: false]
@@ -373,18 +376,14 @@ Table forms {
   }
 }
 
-Table form_elements {
+Table form_inputs {
   id String [pk]
-  type ElementType [not null]
   fieldId String
   field pub_fields
   formId String [not null]
   rank String [not null]
-  label String
-  element StructuralFormElement
   component InputComponent
   config Json
-  content String
   required Boolean
   form forms [not null]
   stage stages
@@ -394,8 +393,34 @@ Table form_elements {
   relatedPubTypes pub_types [not null]
 
   indexes {
-    (type, label, formId) [unique]
     (fieldId, formId) [unique]
+  }
+}
+
+Table form_structural_elements {
+  id String [pk]
+  formId String [not null]
+  rank String [not null]
+  element StructuralFormElement
+  content String
+  form forms [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table form_buttons {
+  id String [pk]
+  formId String [not null]
+  rank String [not null]
+  label String
+  form forms [not null]
+  stage stages
+  stageId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (label, formId) [unique]
   }
 }
 
@@ -494,8 +519,8 @@ Table MemberGroupToUser {
   usersId String [ref: > users.id]
 }
 
-Table FormElementToPubType {
-  formelementsId String [ref: > form_elements.id]
+Table FormInputToPubType {
+  forminputsId String [ref: > form_inputs.id]
   relatedpubtypesId String [ref: > pub_types.id]
 }
 
@@ -570,12 +595,6 @@ Enum StructuralFormElement {
   h3
   p
   hr
-}
-
-Enum ElementType {
-  pubfield
-  structural
-  button
 }
 
 Enum InputComponent {
@@ -753,11 +772,17 @@ Ref: forms.communityId > communities.id [delete: Cascade]
 
 Ref: forms.pubTypeId > pub_types.id
 
-Ref: form_elements.fieldId > pub_fields.id [delete: Cascade]
+Ref: form_inputs.fieldId > pub_fields.id [delete: Cascade]
 
-Ref: form_elements.formId > forms.id [delete: Cascade]
+Ref: form_inputs.formId > forms.id [delete: Cascade]
 
-Ref: form_elements.stageId > stages.id [delete: Set Null]
+Ref: form_inputs.stageId > stages.id [delete: Set Null]
+
+Ref: form_structural_elements.formId > forms.id [delete: Cascade]
+
+Ref: form_buttons.formId > forms.id [delete: Cascade]
+
+Ref: form_buttons.stageId > stages.id [delete: Set Null]
 
 Ref: api_access_tokens.communityId > communities.id [delete: Cascade]
 

@@ -9,9 +9,11 @@ import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
 import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
-import type { FormElementsTable } from "./FormElements";
-import type { FormElementToPubTypeTable } from "./FormElementToPubType";
+import type { FormButtonsTable } from "./FormButtons";
+import type { FormInputsTable } from "./FormInputs";
+import type { FormInputToPubTypeTable } from "./FormInputToPubType";
 import type { FormsTable } from "./Forms";
+import type { FormStructuralElementsTable } from "./FormStructuralElements";
 import type { InviteFormsTable } from "./InviteForms";
 import type { InvitesTable } from "./Invites";
 import type { InvitesHistoryTable } from "./InvitesHistory";
@@ -36,12 +38,6 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	invites: InvitesTable;
-
-	invite_forms: InviteFormsTable;
-
-	invites_history: InvitesHistoryTable;
-
 	_prisma_migrations: PrismaMigrationsTable;
 
 	users: UsersTable;
@@ -50,9 +46,17 @@ export interface PublicSchema {
 
 	pub_types: PubTypesTable;
 
+	form_inputs: FormInputsTable;
+
+	form_structural_elements: FormStructuralElementsTable;
+
 	stages: StagesTable;
 
+	form_buttons: FormButtonsTable;
+
 	member_groups: MemberGroupsTable;
+
+	_FormInputToPubType: FormInputToPubTypeTable;
 
 	communities: CommunitiesTable;
 
@@ -86,8 +90,6 @@ export interface PublicSchema {
 
 	api_access_permissions: ApiAccessPermissionsTable;
 
-	form_elements: FormElementsTable;
-
 	sessions: SessionsTable;
 
 	community_memberships: CommunityMembershipsTable;
@@ -100,5 +102,9 @@ export interface PublicSchema {
 
 	pub_values_history: PubValuesHistoryTable;
 
-	_FormElementToPubType: FormElementToPubTypeTable;
+	invites: InvitesTable;
+
+	invite_forms: InviteFormsTable;
+
+	invites_history: InvitesHistoryTable;
 }

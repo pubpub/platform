@@ -151,9 +151,9 @@ model PubField {
   communityId      String
   isRelation       Boolean         @default(false)
 
-  values    PubValue[]
-  pubTypes  PubFieldToPubType[]
-  FormInput FormElement[]
+  values     PubValue[]
+  pubTypes   PubFieldToPubType[]
+  formInputs FormInput[]
 
   @@map(name: "pub_fields")
 }
@@ -225,10 +225,10 @@ model PubType {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
-  fields       PubFieldToPubType[]
-  pubs         Pub[]
-  Form         Form[]
-  formElements FormElement[]
+  fields     PubFieldToPubType[]
+  pubs       Pub[]
+  Form       Form[]
+  formInputs FormInput[]
 
   @@unique([name, communityId])
   @@map(name: "pub_types")
@@ -264,7 +264,8 @@ model Stage {
   moveConstraints       MoveConstraint[]  @relation("move_constraint")
   moveConstraintSources MoveConstraint[]  @relation("move_constraint_destination")
   actionInstances       ActionInstance[]
-  formElements          FormElement[]
+  formInputs            FormInput[]
+  formButtons           FormButton[]
   members               StageMembership[]
   Invite                Invite[]
 
@@ -477,19 +478,21 @@ enum FormAccessType {
 }
 
 model Form {
-  id          String         @id @default(dbgenerated("gen_random_uuid()"))
-  name        String
-  slug        String
-  communityId String
-  community   Community      @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  pubType     PubType        @relation(fields: [pubTypeId], references: [id])
-  pubTypeId   String
-  elements    FormElement[]
-  isArchived  Boolean        @default(false)
-  access      FormAccessType @default(private)
-  isDefault   Boolean        @default(false)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @default(now()) @updatedAt
+  id                 String                  @id @default(dbgenerated("gen_random_uuid()"))
+  name               String
+  slug               String
+  communityId        String
+  community          Community               @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  pubType            PubType                 @relation(fields: [pubTypeId], references: [id])
+  pubTypeId          String
+  inputs             FormInput[]
+  structuralElements FormStructuralElement[]
+  buttons            FormButton[]
+  isArchived         Boolean                 @default(false)
+  access             FormAccessType          @default(private)
+  isDefault          Boolean                 @default(false)
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @default(now()) @updatedAt
 
   inviteForms         InviteForm[]
   StageMembership     StageMembership[]
@@ -512,12 +515,6 @@ enum StructuralFormElement {
   hr
 }
 
-enum ElementType {
-  pubfield
-  structural
-  button
-}
-
 enum InputComponent {
   textArea
   textInput
@@ -535,31 +532,55 @@ enum InputComponent {
   colorPicker
 }
 
-// Either a structural element like a header, hr etc. or a pubfield input
-model FormElement {
-  id              String                 @id @default(dbgenerated("gen_random_uuid()"))
-  type            ElementType
+// form input elements for pub fields
+model FormInput {
+  id              String          @id @default(dbgenerated("gen_random_uuid()"))
   fieldId         String?
-  field           PubField?              @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  field           PubField?       @relation(fields: [fieldId], references: [id], onDelete: Cascade)
   formId          String
   rank            String // Uses "C" collation
-  // label is only used by elements with type: ElementType.button. Pubfield inputs put everything in config
-  label           String?
-  element         StructuralFormElement?
   component       InputComponent?
   config          Json?
-  content         String?
   required        Boolean?
-  form            Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
-  stage           Stage?                 @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  form            Form            @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stage           Stage?          @relation(fields: [stageId], references: [id], onDelete: SetNull)
   stageId         String?
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @default(now()) @updatedAt
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @default(now()) @updatedAt
   relatedPubTypes PubType[]
 
-  @@unique([type, label, formId])
   @@unique([fieldId, formId])
-  @@map(name: "form_elements")
+  @@map(name: "form_inputs")
+}
+
+// structural elements like headers, paragraphs, etc.
+model FormStructuralElement {
+  id        String                 @id @default(dbgenerated("gen_random_uuid()"))
+  formId    String
+  rank      String // Uses "C" collation
+  element   StructuralFormElement?
+  content   String?
+  form      Form                   @relation(fields: [formId], references: [id], onDelete: Cascade)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @default(now()) @updatedAt
+
+  @@map(name: "form_structural_elements")
+}
+
+// button elements for form actions
+model FormButton {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  formId    String
+  rank      String // Uses "C" collation
+  label     String?
+  form      Form     @relation(fields: [formId], references: [id], onDelete: Cascade)
+  stage     Stage?   @relation(fields: [stageId], references: [id], onDelete: SetNull)
+  stageId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([label, formId])
+  @@map(name: "form_buttons")
 }
 
 model ApiAccessToken {
