@@ -82,6 +82,7 @@ export {
 	Terminal,
 	ToyBrick,
 	Trash,
+	Trash2,
 	TriangleAlert,
 	Type,
 	Undo2,
