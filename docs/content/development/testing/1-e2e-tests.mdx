@@ -70,13 +70,13 @@ You can also use `playwright:test 'path/to/test' -- --debug` (note the extra `--
 
 Then you're able to use `await page.pause()` to pause the test at a specific point.
 
-```ts filename=some-test.spec.ts
+```ts filename="some-test.spec.ts"
 test("some test", async ({ page }) => {
 	await page.goto("https://example.com");
-	await page.pause();
+	await page.pause(); // look at what you've done
 });
 ```
 
 #### Misc
 
-2. currently, data seeded into playwright doesn't add all@pubpub.org which is why if you are logged in you won't see the seeded playwright data. it's sometimes useful to be able to see the playwright community in your dev server—in this case you'd have to log in as the user in the seed community
+Currently (2025-06-05), data seeded into playwright doesn't add all@pubpub.org which is why if you are logged in you won't see the seeded playwright data. it's sometimes useful to be able to see the playwright community in your dev server—in this case you'd have to log in as the user in the seed community
