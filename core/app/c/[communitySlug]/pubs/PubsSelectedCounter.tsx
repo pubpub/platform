@@ -3,11 +3,11 @@
 import { usePubsSelectedContext } from "./PubsSelectedContext";
 
 export const PubsSelectedCounter = ({ pageSize }: { pageSize: number }) => {
-	const { numSelected } = usePubsSelectedContext();
+	const { selectedPubIds } = usePubsSelectedContext();
 
 	return (
 		<span className="whitespace-nowrap tabular-nums">
-			{numSelected} of {pageSize} pub(s) selected
+			{selectedPubIds.length} of {pageSize} pub(s) selected
 		</span>
 	);
 };

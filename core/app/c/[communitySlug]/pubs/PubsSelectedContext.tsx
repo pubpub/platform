@@ -9,13 +9,13 @@ import type { PubsId } from "db/public";
 type PubsSelectedContext = {
 	isSelected: (pubId: PubsId) => boolean;
 	toggle: (pubId: PubsId) => void;
-	numSelected: number;
+	selectedPubIds: PubsId[];
 };
 
 const PubsSelectedContext = createContext<PubsSelectedContext>({
 	isSelected: () => false,
 	toggle: () => {},
-	numSelected: 0,
+	selectedPubIds: [],
 });
 
 type Props = PropsWithChildren<{
@@ -46,7 +46,7 @@ export const PubsSelectedProvider = (props: Props) => {
 	);
 
 	const value = useMemo(
-		() => ({ isSelected, toggle, numSelected: selectedPubs.size }),
+		() => ({ isSelected, toggle, selectedPubIds: Array.from(selectedPubs) }),
 		[toggle, selectedPubs]
 	);
 
