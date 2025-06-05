@@ -34,8 +34,10 @@ export default async function Page(props: Props) {
 	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
-		<div className="-mr-12 -mt-4 mb-4 max-h-screen overflow-y-scroll border">
-			<div>
+		// Position absolute to remove the parent layout padding so that the footer can hug the bottom properly
+		<div className="absolute bottom-0 left-0 right-0 top-0">
+			{/* Restore layout padding, but give extra bottom padding so that last item is not covered by the footer */}
+			<div className="mb-4 max-h-screen overflow-y-scroll px-4 py-4 pb-16 md:px-12">
 				<PubHeader communityId={community.id as CommunitiesId} />
 				<PaginatedPubList
 					communityId={community.id}
