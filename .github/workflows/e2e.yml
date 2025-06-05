@@ -102,7 +102,7 @@ jobs:
               run: pnpm p:build
 
             - name: Run migrations and seed
-              run: pnpm --filter core db:test:reset
+              run: pnpm --filter core reset
               env:
                   # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
                   MINIMAL_SEED: true
@@ -128,7 +128,7 @@ jobs:
               env:
                   NODE_ENV: test
                   INTEGRATION_TEST_HOST: localhost
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:54322/postgres
 
             - name: Print container logs
               if: ${{failure() || cancelled()}}

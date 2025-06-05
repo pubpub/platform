@@ -2,11 +2,13 @@
 	"name": "docs",
 	"version": "0.1.0",
 	"private": true,
+	"type": "module",
 	"scripts": {
 		"dev": "next dev --turbopack -p 3006",
 		"build": "next build",
 		"postbuild": "pagefind --site .next/server/app --output-path out/_pagefind",
 		"start": "serve ./out -p 3006",
+		"type-check": "tsc --noEmit",
 		"lint": "next lint"
 	},
 	"dependencies": {

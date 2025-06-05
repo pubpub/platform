@@ -93,6 +93,8 @@ test.describe("email action", () => {
 			await setMember(page, adminEmail);
 		});
 
+		await page.pause();
+
 		await test.step("verify that the field saved", async () => {
 			// Reload the page
 			await goToConfigureEmail(page);
