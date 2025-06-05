@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 type Props = {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Record<string, unknown> & { page?: string };
+	searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export default async function Page(props: Props) {
@@ -29,8 +29,6 @@ export default async function Page(props: Props) {
 		return null;
 	}
 
-	const page = searchParams.page ? parseInt(searchParams.page) : 1;
-
 	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
@@ -42,7 +40,6 @@ export default async function Page(props: Props) {
 				<PaginatedPubList
 					communityId={community.id}
 					searchParams={searchParams}
-					page={page}
 					basePath={basePath}
 					userId={user.id}
 				/>

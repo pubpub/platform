@@ -1,7 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
-import { ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 
 import { cn } from "utils";
 
@@ -62,7 +62,7 @@ const PaginationPrevious = ({
 		className={cn("gap-1 pl-2.5", className)}
 		{...props}
 	>
-		<ChevronLeftIcon className="h-4 w-4" />
+		<ChevronLeft className="h-4 w-4" />
 		<span className={cn({ "sr-only": iconOnly })}>Previous</span>
 	</PaginationLink>
 );
@@ -99,7 +99,7 @@ const PaginationNext = ({
 		{...props}
 	>
 		<span className={cn({ "sr-only": iconOnly })}>Next</span>
-		<ChevronRightIcon className="h-4 w-4" />
+		<ChevronRight className="h-4 w-4" />
 	</PaginationLink>
 );
 PaginationNext.displayName = "PaginationNext";

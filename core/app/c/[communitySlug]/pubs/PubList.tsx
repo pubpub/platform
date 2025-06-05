@@ -3,17 +3,15 @@ import { Suspense } from "react";
 import type { CommunitiesId, UsersId } from "db/public";
 import { cn } from "utils";
 
-import { BasicPagination, FooterPagination } from "~/app/components/Pagination";
+import { searchParamsCache } from "~/app/components/DataTable/PubsDataTable/validations";
+import { FooterPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 
-const PAGE_SIZE = 10;
-
 type PaginatedPubListProps = {
 	communityId: CommunitiesId;
-	page: number;
-	searchParams: Record<string, unknown>;
+	searchParams: { [key: string]: string | string[] | undefined };
 	/**
 	 * Needs to be provided for the pagination to work
 	 *
@@ -24,13 +22,14 @@ type PaginatedPubListProps = {
 };
 
 const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
+	const search = searchParamsCache.parse(props.searchParams);
 	const [count, pubs] = await Promise.all([
 		getPubsCount({ communityId: props.communityId }),
 		getPubsWithRelatedValues(
 			{ communityId: props.communityId, userId: props.userId },
 			{
-				limit: PAGE_SIZE,
-				offset: (props.page - 1) * PAGE_SIZE,
+				limit: search.perPage,
+				offset: (search.page - 1) * search.perPage,
 				orderBy: "updatedAt",
 				withPubType: true,
 				withRelatedPubs: false,
@@ -40,7 +39,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 		),
 	]);
 
-	const totalPages = Math.ceil(count / PAGE_SIZE);
+	const totalPages = Math.ceil(count / search.perPage);
 
 	const communitySlug = await getCommunitySlug();
 	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
@@ -60,9 +59,8 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 			<FooterPagination
 				basePath={basePath}
 				searchParams={props.searchParams}
-				page={props.page}
+				page={search.page}
 				totalPages={totalPages}
-				pageSize={PAGE_SIZE}
 			/>
 		</div>
 	);

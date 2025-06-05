@@ -11,6 +11,8 @@ import {
 } from "ui/pagination";
 import { cn } from "utils";
 
+import { ResultsPerPageInput } from "./ResultsPerPageInput";
+
 export const BasicPagination = (props: {
 	basePath: string;
 	searchParams: Record<string, unknown>;
@@ -135,19 +137,17 @@ export const FooterPagination = ({
 	searchParams,
 	page,
 	totalPages,
-	pageSize,
 }: {
 	basePath: string;
 	searchParams: Record<string, unknown>;
 	page: number;
 	totalPages: number;
-	pageSize: number;
 }) => {
 	const nextDisabled = page >= totalPages;
 	const prevDisabled = page <= 1;
 	return (
 		<div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-t border-gray-300 bg-white px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row">
-			<div className="whitespace-nowrap">Results per page: {pageSize}</div>
+			<ResultsPerPageInput />
 			<Pagination className="items-center gap-2 lg:gap-8">
 				<span className="whitespace-nowrap">
 					Page {page} of {totalPages}
