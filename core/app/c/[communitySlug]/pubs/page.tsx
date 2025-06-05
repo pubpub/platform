@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import type { CommunitiesId } from "db/public";
 
+import { FooterPagination } from "~/app/components/Pagination";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { env } from "~/lib/env/env";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 
 type Props = {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Record<string, unknown> & { page?: string };
+	searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export default async function Page(props: Props) {
@@ -28,20 +29,21 @@ export default async function Page(props: Props) {
 		return null;
 	}
 
-	const page = searchParams.page ? parseInt(searchParams.page) : 1;
-
 	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
-		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
-			<PaginatedPubList
-				communityId={community.id}
-				searchParams={searchParams}
-				page={page}
-				basePath={basePath}
-				userId={user.id}
-			/>
-		</>
+		// Position absolute to remove the parent layout padding so that the footer can hug the bottom properly
+		<div className="absolute bottom-0 left-0 right-0 top-0">
+			{/* Restore layout padding, but give extra bottom padding so that last item is not covered by the footer */}
+			<div className="mb-4 max-h-screen overflow-y-scroll px-4 py-4 pb-16 md:px-12">
+				<PubHeader communityId={community.id as CommunitiesId} />
+				<PaginatedPubList
+					communityId={community.id}
+					searchParams={searchParams}
+					basePath={basePath}
+					userId={user.id}
+				/>
+			</div>
+		</div>
 	);
 }
