@@ -21,6 +21,9 @@ const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
 };
 
 const HOVER_CLASS = "opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+// So that the whole card can be clickable as a link
+const LINK_AFTER =
+	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0";
 
 export const PubCard = async ({
 	pub,
@@ -37,11 +40,11 @@ export const PubCard = async ({
 }) => {
 	return (
 		<Card
-			className="group flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2"
+			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
 			data-testid={`pub-card-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-col space-y-[6px]">
-				<div className="flex flex-row gap-2 p-0 font-semibold leading-4">
+				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
 					{/* TODO: make filter by pub type */}
 					<Button
 						variant="outline"
@@ -79,7 +82,7 @@ export const PubCard = async ({
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${communitySlug}/pubs/${pub.id}`}
-							className="hover:underline"
+							className={cn("hover:underline", LINK_AFTER)}
 						>
 							{getPubTitle(pub)}
 						</Link>
@@ -99,7 +102,7 @@ export const PubCard = async ({
 					</div>
 				</CardFooter>
 			</div>
-			<div className="mr-4">
+			<div className="z-10 mr-4">
 				{/* We use grid and order-[x] to place items according to the design, but 
 				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other
 				buttons check if the `peer` is open, and if it is, it does not lose opacity.
