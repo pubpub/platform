@@ -128,7 +128,7 @@ jobs:
               env:
                   NODE_ENV: test
                   INTEGRATION_TEST_HOST: localhost
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:54322/postgres
 
             - name: Print container logs
               if: ${{failure() || cancelled()}}
