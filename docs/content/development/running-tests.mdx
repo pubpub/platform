@@ -1,0 +1,25 @@
+# Hello
+
+1. clone the repo
+2. install Playwright Test for VSCode plugin
+3. `pnpm -w dev:setup` (TIL: -w lets you run things from the root without actually being in the root!)
+4. Click on extension (test tube icon), click on refresh button, 'core' tests should appear
+
+- you might see an error to install @playwright/test but you can ignore this
+
+5. start your dev server via pnpm dev at root (core and jobs both need to be up for all playwright tests to pass)
+6. Now you should be able to either run a test from the testing panel, or directly inside a test
+7. You will need to install the playwright browsers—a notification in vscode should pop up and let you do so
+8. Try running again. You should see the test go through the steps and pass!
+9. Running all tests at once via VS code will likely fail against the dev server, but should be okay against the built server
+10. also have to make sure 'jobs' is up
+11. we can maybe provide
+12. We recommend running individual tests against the dev server
+13. For the CLI: pnpm run playwright:test
+14. currently, data seeded into playwright doesn't add all@pubpub.org which is why if you are logged in you won't see the seeded playwright data. it's sometimes useful to be able to see the playwright community in your dev server—in this case you'd have to log in as the user in the seed community
+15. we think we should re-combine the dev and test databases to make things simpler. originally we had separated them so that test data wouldn't clear dev data, but we have found we don't often run them together anyway
+16. then we also won't need playwright:test vs playwright:test:dev or test:setup
+17. pnpm playwright:test path/to/test or pnpm playwright:test 'playwright/actions\*' to run individual/groups of tests
+18. Can debug via breakpoints in vs code
+    can use playwright:test 'path/to/test' -- --debug if you are running from the CLI
+19. Checking the "Show trace viewer" checkbox on 'Settings' in the extension is also very helpful to see the UI while the test is running
