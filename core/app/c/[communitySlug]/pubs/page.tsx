@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import type { CommunitiesId } from "db/public";
 
+import { FooterPagination } from "~/app/components/Pagination";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { env } from "~/lib/env/env";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -33,15 +34,18 @@ export default async function Page(props: Props) {
 	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
-		<>
-			<PubHeader communityId={community.id as CommunitiesId} />
-			<PaginatedPubList
-				communityId={community.id}
-				searchParams={searchParams}
-				page={page}
-				basePath={basePath}
-				userId={user.id}
-			/>
-		</>
+		<div className="-mr-12 -mt-4 mb-4 max-h-screen overflow-y-scroll border">
+			<div>
+				<PubHeader communityId={community.id as CommunitiesId} />
+				<PaginatedPubList
+					communityId={community.id}
+					searchParams={searchParams}
+					page={page}
+					basePath={basePath}
+					userId={user.id}
+				/>
+			</div>
+			<FooterPagination />
+		</div>
 	);
 }

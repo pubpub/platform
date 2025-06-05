@@ -126,3 +126,15 @@ export const BasicPagination = (props: {
 		</Pagination>
 	);
 };
+
+export const FooterPagination = () => {
+	return (
+		<div className="absolute bottom-0 left-0 flex w-full items-center justify-between border-t border-gray-300 px-4 py-2 text-sm shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)]">
+			<div>Results per page</div>
+			<div>
+				Page 1 of 47 <PaginationNext href="" />{" "}
+			</div>
+			<div>0 of 10 pub(s) selected</div>
+		</div>
+	);
+};

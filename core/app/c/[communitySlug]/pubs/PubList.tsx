@@ -57,12 +57,12 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 					/>
 				);
 			})}
-			<BasicPagination
-				basePath={basePath}
-				searchParams={props.searchParams}
-				page={props.page}
-				totalPages={totalPages}
-			/>
+			{/* <BasicPagination
+					basePath={basePath}
+					searchParams={props.searchParams}
+					page={props.page}
+					totalPages={totalPages}
+				/> */}
 		</div>
 	);
 };
