@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
 
 import { cn } from "utils";
 
@@ -31,6 +32,7 @@ PaginationItem.displayName = "PaginationItem";
 
 type PaginationLinkProps = {
 	isActive?: boolean;
+	iconOnly?: boolean;
 } & Partial<Pick<ButtonProps, "size">> &
 	React.ComponentProps<typeof Link>;
 
@@ -51,6 +53,7 @@ PaginationLink.displayName = "PaginationLink";
 
 const PaginationPrevious = ({
 	className,
+	iconOnly,
 	...props
 }: React.ComponentProps<typeof PaginationLink>) => (
 	<PaginationLink
@@ -60,23 +63,65 @@ const PaginationPrevious = ({
 		{...props}
 	>
 		<ChevronLeftIcon className="h-4 w-4" />
-		<span>Previous</span>
+		<span className={cn({ "sr-only": iconOnly })}>Previous</span>
 	</PaginationLink>
 );
 PaginationPrevious.displayName = "PaginationPrevious";
 
-const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
+const PaginationFirst = ({
+	className,
+	iconOnly,
+	...props
+}: React.ComponentProps<typeof PaginationLink>) => {
+	return (
+		<PaginationLink
+			aria-label="Go to first page"
+			size="default"
+			className={cn("gap-1 px-2.5", className)}
+			{...props}
+		>
+			<span className={cn({ "sr-only": iconOnly })}>First</span>
+			<ChevronsLeft className="h-4 w-4" />
+		</PaginationLink>
+	);
+};
+PaginationFirst.displayName = "PaginationFirst";
+
+const PaginationNext = ({
+	className,
+	iconOnly,
+	...props
+}: React.ComponentProps<typeof PaginationLink>) => (
 	<PaginationLink
 		aria-label="Go to next page"
 		size="default"
 		className={cn("gap-1 pr-2.5", className)}
 		{...props}
 	>
-		<span>Next</span>
+		<span className={cn({ "sr-only": iconOnly })}>Next</span>
 		<ChevronRightIcon className="h-4 w-4" />
 	</PaginationLink>
 );
 PaginationNext.displayName = "PaginationNext";
+
+const PaginationLast = ({
+	className,
+	iconOnly,
+	...props
+}: React.ComponentProps<typeof PaginationLink>) => {
+	return (
+		<PaginationLink
+			aria-label="Go to last page"
+			size="default"
+			className={cn("gap-1 px-2.5", className)}
+			{...props}
+		>
+			<span className={cn({ "sr-only": iconOnly })}>Last</span>
+			<ChevronsRight className="h-4 w-4" />
+		</PaginationLink>
+	);
+};
+PaginationLast.displayName = "PaginationLast";
 
 const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
 	<span
@@ -95,6 +140,8 @@ export {
 	PaginationContent,
 	PaginationLink,
 	PaginationItem,
+	PaginationFirst,
+	PaginationLast,
 	PaginationPrevious,
 	PaginationNext,
 	PaginationEllipsis,

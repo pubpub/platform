@@ -2,11 +2,14 @@ import {
 	Pagination,
 	PaginationContent,
 	PaginationEllipsis,
+	PaginationFirst,
 	PaginationItem,
+	PaginationLast,
 	PaginationLink,
 	PaginationNext,
 	PaginationPrevious,
 } from "ui/pagination";
+import { cn } from "utils";
 
 export const BasicPagination = (props: {
 	basePath: string;
@@ -127,14 +130,82 @@ export const BasicPagination = (props: {
 	);
 };
 
-export const FooterPagination = () => {
+export const FooterPagination = ({
+	basePath,
+	searchParams,
+	page,
+	totalPages,
+	pageSize,
+}: {
+	basePath: string;
+	searchParams: Record<string, unknown>;
+	page: number;
+	totalPages: number;
+	pageSize: number;
+}) => {
+	const nextDisabled = page >= totalPages;
+	const prevDisabled = page <= 1;
 	return (
-		<div className="absolute bottom-0 left-0 flex w-full items-center justify-between border-t border-gray-300 bg-white px-4 py-2 text-sm shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)]">
-			<div>Results per page</div>
-			<div>
-				Page 1 of 47 <PaginationNext href="" />{" "}
-			</div>
-			<div>0 of 10 pub(s) selected</div>
+		<div className="absolute bottom-0 left-0 flex w-full flex-col items-center justify-between gap-2 border-t border-gray-300 bg-white px-4 py-2 text-sm leading-[19px] shadow-[4px_0px_10px_-1px_rgba(0,0,0,0.2)] md:flex-row">
+			<div className="whitespace-nowrap">Results per page: {pageSize}</div>
+			<Pagination className="items-center gap-2 lg:gap-8">
+				<span className="whitespace-nowrap">
+					Page {page} of {totalPages}
+				</span>
+
+				<PaginationContent className="gap-2">
+					<PaginationFirst
+						iconOnly
+						aria-disabled={prevDisabled}
+						tabIndex={prevDisabled ? -1 : undefined}
+						className={cn("border px-3 py-3", {
+							"pointer-events-none opacity-50": prevDisabled,
+						})}
+						href={{
+							pathname: basePath,
+							query: { ...searchParams, page: 1 },
+						}}
+					/>
+					<PaginationPrevious
+						iconOnly
+						aria-disabled={prevDisabled}
+						tabIndex={prevDisabled ? -1 : undefined}
+						className={cn("border px-3 py-3", {
+							"pointer-events-none opacity-50": prevDisabled,
+						})}
+						href={{
+							pathname: basePath,
+							query: { ...searchParams, page: page - 1 },
+						}}
+					/>
+					<PaginationNext
+						iconOnly
+						aria-disabled={nextDisabled}
+						tabIndex={nextDisabled ? -1 : undefined}
+						className={cn("border px-3 py-3", {
+							"pointer-events-none opacity-50": nextDisabled,
+						})}
+						href={{
+							pathname: basePath,
+							query: { ...searchParams, page: page + 1 },
+						}}
+					/>
+					<PaginationLast
+						iconOnly
+						aria-disabled={nextDisabled}
+						tabIndex={nextDisabled ? -1 : undefined}
+						className={cn("border px-3 py-3", {
+							"pointer-events-none opacity-50": nextDisabled,
+						})}
+						href={{
+							pathname: basePath,
+							query: { ...searchParams, page: totalPages },
+						}}
+					/>
+				</PaginationContent>
+			</Pagination>
+
+			<div className="whitespace-nowrap">0 of 10 pub(s) selected</div>
 		</div>
 	);
 };

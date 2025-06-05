@@ -47,7 +47,6 @@ export default async function Page(props: Props) {
 					userId={user.id}
 				/>
 			</div>
-			<FooterPagination />
 		</div>
 	);
 }

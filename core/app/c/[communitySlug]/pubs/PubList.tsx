@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { CommunitiesId, UsersId } from "db/public";
 import { cn } from "utils";
 
-import { BasicPagination } from "~/app/components/Pagination";
+import { BasicPagination, FooterPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -57,12 +57,13 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 					/>
 				);
 			})}
-			{/* <BasicPagination
-					basePath={basePath}
-					searchParams={props.searchParams}
-					page={props.page}
-					totalPages={totalPages}
-				/> */}
+			<FooterPagination
+				basePath={basePath}
+				searchParams={props.searchParams}
+				page={props.page}
+				totalPages={totalPages}
+				pageSize={PAGE_SIZE}
+			/>
 		</div>
 	);
 };
