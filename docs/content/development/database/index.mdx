@@ -1,0 +1,15 @@
+---
+title: "Database"
+description: "How we manage our database"
+sidebarTitle: "💾 Database"
+asIndexPage: true
+---
+
+# Database
+
+- We use [Postgres](https://www.postgresql.org/) as our database. Currently (2025-06-05) we use version 14 on prod, and 15 on dev.
+- We use [Prisma](https://www.prisma.io/) to manage our schema. The schemas are located in [core/prisma/schema](https://github.com/pubpub/platform/tree/main/core/prisma/schema/schema.prisma)
+- We use [Kanel](https://kristiandupont.github.io/kanel/) to generate types directly from the database schema.
+    - They end up in [packages/db/src/public](https://github.com/pubpub/platform/tree/main/packages/db/src)
+    - Import types from `db/public`
+- We use then use [Kysely](https://kysely.dev/) with those types as our type-safe query builder.

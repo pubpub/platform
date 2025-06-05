@@ -1,0 +1,54 @@
+import { Callout } from "nextra/components";
+
+# Prisma (migrations)
+
+## Schema definition
+
+The schema is defined in [core/prisma/schema/schema.prisma](https://github.com/pubpub/platform/blob/main/core/prisma/schema/schema.prisma).
+
+See [the type documenation for defining more complex types](./2-kanel-type-generation).
+
+## Migrations
+
+### Creating new migrations
+
+To modify the database schema, you need to create a migration.
+
+1. Run `pnpm migrate-dev`
+2. Enter the name of the migration (e.g. `add-new-field`)
+3. Say yes every time (this will create a new migration file in the `core/prisma/migrations` directory)
+4. Modify the migration file to do things like data-migrations if necessary.
+
+You can also create an empty migration, by running
+
+```sh
+pnpm -F core prisma migrate -- --create-only
+```
+
+write your migration, then
+
+```sh
+pnpm -F core migrate-dev
+```
+
+### Migrations in production
+
+Migrations are run before the container starts. This is currently (2025-06-05) defined here
+
+https://github.com/pubpub/platform/blob/main/infrastructure/terraform/modules/deployment/main.tf#L69-L75
+
+## History Tables
+
+We have a number of tables that exist just to record the history of a table, along with the entity that made the change. They serve both as a way to audit changes and as a way to reconstruct the value of an entity (usually a Pub) at a point in time.
+
+### How to create one
+
+1. Run `pnpm db:generate-history-table`
+2. Enter the name of the original table (e.g. `pubs`)
+3. Say yes every time
+4. Run `pnpm db:migrate-dev` (probably twice for good measure)
+5. Tadah! You should have a new table called `pubs_history`
+
+This will also add a new column to the original table called `lastModifiedBy` of type `LastModifiedBy`. This will probably mean you need to update some application level code in order to actually use it.
+
+The tables are stored in the `core/prisma/schema/history-tables` directory.
