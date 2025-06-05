@@ -8,6 +8,9 @@ import { FooterPagination } from "~/app/components/Pagination";
 import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { PubSelector } from "./PubSelector";
+import { PubsSelectedProvider } from "./PubsSelectedContext";
+import { PubsSelectedCounter } from "./PubsSelectedCounter";
 
 type PaginatedPubListProps = {
 	communityId: CommunitiesId;
@@ -46,22 +49,29 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 
 	return (
 		<div className={cn("flex flex-col gap-8")}>
-			{pubs.map((pub) => {
-				return (
-					<PubRow
-						key={pub.id}
-						userId={props.userId}
-						pub={pub}
-						searchParams={props.searchParams}
-					/>
-				);
-			})}
-			<FooterPagination
-				basePath={basePath}
-				searchParams={props.searchParams}
-				page={search.page}
-				totalPages={totalPages}
-			/>
+			<PubsSelectedProvider pubIds={[]}>
+				{pubs.map((pub) => {
+					return (
+						<div key={pub.id}>
+							<PubRow
+								key={pub.id}
+								userId={props.userId}
+								pub={pub}
+								searchParams={props.searchParams}
+							/>
+							<PubSelector pubId={pub.id} />
+						</div>
+					);
+				})}
+				<FooterPagination
+					basePath={basePath}
+					searchParams={props.searchParams}
+					page={search.page}
+					totalPages={totalPages}
+				>
+					<PubsSelectedCounter pageSize={search.perPage} />
+				</FooterPagination>
+			</PubsSelectedProvider>
 		</div>
 	);
 };
