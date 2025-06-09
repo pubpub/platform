@@ -135,7 +135,6 @@ export default (
 				? view.state.schema.nodeFromJSON(JSON.parse(existingContent)).content
 				: view.state.schema.nodeFromJSON({ type: "paragraph" });
 
-			// console.log("initialContent", initialContent);
 			const selectedItemFields = selectedType.fields
 				.map((field: any) => field.slug)
 				.reduce((prev: any, curr: any) => {

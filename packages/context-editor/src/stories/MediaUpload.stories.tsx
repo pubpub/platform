@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import type { Node } from "prosemirror-model";
 
 import React from "react";
+import { ProseMirror } from "@handlewithcare/react-prosemirror";
 
 import { MediaUpload } from "../components/menus/MediaUpload";
 import { generateSignedAssetUploadUrl } from "./mockUtils";
@@ -41,10 +42,12 @@ export const Primary: Story = {
 		node,
 		nodePos: 0,
 	},
-	render: function Render(args) {
+	render: (args) => {
 		return (
 			<div className="w-[300px]">
-				<MediaUpload {...args} />
+				<ProseMirror>
+					<MediaUpload {...args} />
+				</ProseMirror>
 			</div>
 		);
 	},
