@@ -72,3 +72,9 @@ type Story = StoryObj<typeof PubCard>;
 export const Base: Story = {
 	args: {},
 };
+
+export const WithSelection: Story = {
+	args: {
+		withSelection: true,
+	},
+};
