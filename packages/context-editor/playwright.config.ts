@@ -56,7 +56,6 @@ export default defineConfig({
 			name: "firefox",
 			use: {
 				...devices["Desktop Firefox"],
-				contextOptions: { permissions: ["clipboard-write"] },
 			},
 		},
 
@@ -64,7 +63,6 @@ export default defineConfig({
 			name: "webkit",
 			use: {
 				...devices["Desktop Safari"],
-				contextOptions: { permissions: ["clipboard-write"] },
 			},
 		},
 
