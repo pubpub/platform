@@ -53,12 +53,18 @@ export default defineConfig({
 
 		{
 			name: "firefox",
-			use: { ...devices["Desktop Firefox"] },
+			use: {
+				...devices["Desktop Firefox"],
+				contextOptions: { permissions: ["clipboard-write"] },
+			},
 		},
 
 		{
 			name: "webkit",
-			use: { ...devices["Desktop Safari"] },
+			use: {
+				...devices["Desktop Safari"],
+				contextOptions: { permissions: ["clipboard-write"] },
+			},
 		},
 
 		/* Test against mobile viewports. */
