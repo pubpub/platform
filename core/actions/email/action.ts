@@ -15,7 +15,14 @@ export const action = defineAction({
 	name: Action.email,
 	config: {
 		schema: z.object({
-			recipientEmail: z.string().email().describe("Recipient email address").optional(),
+			recipientEmail: z
+				.string()
+				.email()
+				.describe("Recipient email address")
+
+				// makes sure that "" is interpreted as undefined
+				.transform((val) => val || undefined)
+				.optional(),
 			recipientMember: z.string().uuid().describe("Recipient member").optional(),
 			subject: stringWithTokens().max(500).describe("Email subject"),
 			body: markdown().min(0).describe("Email body"),
@@ -41,7 +48,13 @@ export const action = defineAction({
 	params: {
 		schema: z
 			.object({
-				recipientEmail: z.string().email().describe("Recipient email address").optional(),
+				recipientEmail: z
+					.string()
+					.email()
+					.describe("Recipient email address")
+					// makes sure that "" is interpreted as undefined
+					.transform((val) => val || undefined)
+					.optional(),
 				recipientMember: z
 					.string()
 					.uuid()
