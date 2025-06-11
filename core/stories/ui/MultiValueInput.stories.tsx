@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { expect, fn, userEvent, within } from "@storybook/test";
 import { useForm } from "react-hook-form";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { z } from "zod";
 
 import { Button } from "ui/button";
@@ -80,7 +80,7 @@ export const FormUsage: Story = {
 
 		return (
 			<Form {...form}>
-				<form onSubmit={form.handleSubmit(fn)}>
+				<form onSubmit={form.handleSubmit(fn())}>
 					<FormField
 						control={form.control}
 						name="animals"

@@ -12,6 +12,7 @@ const selfHostedOptional = (schema: ZodTypeAny) => {
 export const env = createEnv({
 	shared: {
 		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
+		PUBPUB_URL: z.string().url().optional(),
 	},
 	server: {
 		SELF_HOSTED: z.string().optional(),
@@ -54,6 +55,7 @@ export const env = createEnv({
 	client: {},
 	experimental__runtimeEnv: {
 		NODE_ENV: process.env.NODE_ENV,
+		PUBPUB_URL: process.env.PUBPUB_URL,
 	},
 	skipValidation: Boolean(process.env.SKIP_VALIDATION),
 	emptyStringAsUndefined: true,

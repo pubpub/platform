@@ -28,8 +28,6 @@ export const addDuration = (duration: RuleConfig<PubInStageForDuration>, date = 
 			return addMonths(now, duration.duration);
 		case "year":
 			return addYears(now, duration.duration);
-		case "hour":
-			return addHours(now, duration.duration);
 		default:
 			throw new Error("Invalid interval");
 	}

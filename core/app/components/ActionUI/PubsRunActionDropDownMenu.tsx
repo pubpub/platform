@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropd
 import { ChevronDown, Play } from "ui/icon";
 import { cn } from "utils";
 
-import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
+import { ActionRunFormWrapper } from "~/app/components/ActionUI/ActionRunFormWrapper";
 
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,

@@ -16,6 +16,8 @@ import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu"
 import { RelationsDropDown } from "./pubs/RelationsDropDown";
 import { RemovePubButton } from "./pubs/RemovePubButton";
 
+// import { RemovePubButton } from "./pubs/RemovePubButton";
+
 // TODO: https://github.com/pubpub/platform/issues/1200
 const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
 	return null;
@@ -114,7 +116,7 @@ export const PubCard = async ({
 				Otherwise, when the dropdown menu opens, the buttons all fade away */}
 				<div className="grid grid-cols-4 items-center gap-3 text-neutral-500">
 					{!withSelection ? <div className="col-span-1" /> : null}
-					{pub.stage && actionInstances.length > 0 ? (
+					{pub.stage && actionInstances?.length > 0 ? (
 						<PubsRunActionDropDownMenu
 							actionInstances={actionInstances}
 							stage={pub.stage}
