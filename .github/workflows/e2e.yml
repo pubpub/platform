@@ -25,7 +25,6 @@ jobs:
             # note: should be the same version as the one in pnpm-workspace.yaml
             # the `noble` is roughly `--with-deps`
             image: mcr.microsoft.com/playwright:v1.52.0-noble
-            options: --user 1001
         strategy:
             matrix:
                 package:
