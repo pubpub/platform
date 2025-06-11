@@ -18,13 +18,10 @@ export const setup = async () => {
 	}
 
 	logger.info("Resetting database...");
-	const result = spawnSync(
-		"pnpm --filter core exec dotenv -e ./.env.development -e ./.env.local prisma migrate reset -- --preview-feature --force",
-		{
-			shell: true,
-			stdio: "inherit",
-		}
-	);
+	const result = spawnSync("pnpm -F core reset-base", {
+		shell: true,
+		stdio: "inherit",
+	});
 	const { stderr, error } = result;
 	if (!error) {
 		logger.info("Database reset successful");
