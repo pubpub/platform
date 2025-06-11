@@ -7,7 +7,7 @@ import dynamic from "next/dynamic";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
 import { Value } from "@sinclair/typebox/value";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { componentConfigSchemas, componentsBySchema, relationBlockConfigSchema } from "schemas";
 
 import type { PubsId, PubTypesId } from "db/public";
@@ -343,7 +343,7 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 
 	useUnsavedChangesWarning(form.formState.isDirty);
 
-	const component = form.watch("component");
+	const component = useWatch({ control: form.control, name: "component" });
 
 	const onSubmit = (values: ConfigFormData<typeof component>) => {
 		const schema = isRelation

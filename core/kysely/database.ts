@@ -4,7 +4,7 @@ import { createDatabase } from "./database-init";
 export const { db, pool } = createDatabase({
 	url: env.DATABASE_URL,
 	logLevel: env.LOG_LEVEL,
-	debug: env.KYSELY_DEBUG === "true",
+	debug: env.KYSELY_DEBUG,
 	nodeEnv: env.NODE_ENV,
 	latency: env.KYSELY_ARTIFICIAL_LATENCY,
 });

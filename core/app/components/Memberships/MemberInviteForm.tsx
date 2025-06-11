@@ -5,7 +5,7 @@ import type { z } from "zod";
 import { useEffect, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { skipToken } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
@@ -66,7 +66,7 @@ export const MemberInviteForm = ({
 		},
 		mode: "onChange",
 	});
-	const email = form.watch("email");
+	const email = useWatch({ control: form.control, name: "email" });
 	const emailState = form.getFieldState("email", form.formState);
 	const query = { email, limit: 1, communityId: community.id };
 	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember");
@@ -139,7 +139,8 @@ export const MemberInviteForm = ({
 		}
 	}
 
-	const isContributor = form.watch("role") === MemberRole.contributor;
+	const contributorRole = useWatch({ control: form.control, name: "role" });
+	const isContributor = contributorRole === MemberRole.contributor;
 
 	return (
 		<Form {...form}>

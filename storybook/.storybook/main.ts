@@ -2,6 +2,8 @@ import { dirname, join } from "path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
 
+import react from "@vitejs/plugin-react";
+
 /**
  * This function is used to resolve the absolute path of a package.
  * It is needed in projects that use Yarn PnP or are set up within a monorepo.
@@ -24,6 +26,19 @@ const config: StorybookConfig = {
 	framework: {
 		name: getAbsolutePath("@storybook/react-vite"),
 		options: {},
+	},
+	async viteFinal(config) {
+		const { mergeConfig } = await import("vite");
+
+		return mergeConfig(config, {
+			plugins: [
+				react({
+					babel: {
+						plugins: ["babel-plugin-react-compiler"],
+					},
+				}),
+			],
+		});
 	},
 };
 export default config;

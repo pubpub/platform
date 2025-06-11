@@ -34,10 +34,6 @@ type LinkMenuProps = {
 	onChange: (values: Record<string, string | null>) => void;
 };
 export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
-	if (!(mark.type.name === "link")) {
-		return null;
-	}
-
 	const removeLink = useEditorEventCallback((view) =>
 		toggleMarkExpandEmpty({
 			state: view.state,
@@ -63,6 +59,10 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 		onChange(attrs);
 	};
 
+	if (!(mark.type.name === "link")) {
+		return null;
+	}
+
 	return (
 		<Form {...form}>
 			<form className="my-2 flex flex-col gap-2" onBlur={form.handleSubmit(handleSubmit)}>
@@ -79,6 +79,8 @@ export const LinkMenu = ({ mark, onChange }: LinkMenuProps) => {
 											{...field}
 											type="url"
 											placeholder="https://example.com"
+											// FIXME: determine whether this is a good idea
+											// eslint-disable-next-line jsx-a11y/no-autofocus
 											autoFocus={field.value.length === 0}
 										/>
 									</FormControl>

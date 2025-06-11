@@ -47,6 +47,5 @@ export const generateSignedAssetUploadUrl = async (key: string) => {
 	});
 
 	const url = await getSignedUrl(client, command, { expiresIn: 3600 });
-	console.log({ url });
 	return url;
 };

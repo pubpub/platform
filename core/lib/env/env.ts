@@ -9,12 +9,14 @@ const selfHostedOptional = (schema: ZodTypeAny) => {
 	return process.env.SELF_HOSTED ? schema.optional() : schema;
 };
 
+const boolean = z.string().transform((val) => !!val && val !== "false" && val !== "0");
+
 export const env = createEnv({
 	shared: {
 		NODE_ENV: z.enum(["development", "production", "test"]).optional(),
 	},
 	server: {
-		SELF_HOSTED: z.string().optional(),
+		SELF_HOSTED: boolean.optional(),
 		API_KEY: z.string(),
 		ASSETS_BUCKET_NAME: z.string(),
 		ASSETS_REGION: z.string(),
@@ -24,12 +26,12 @@ export const env = createEnv({
 		/**
 		 * Whether or not to verbosely log `memoize` cache hits and misses
 		 */
-		CACHE_LOG: z.string().optional(),
+		CACHE_LOG: boolean.optional(),
 		VALKEY_HOST: z.string(),
 		DATABASE_URL: z.string().url(),
 		ENV_NAME: z.string().optional(),
 		FLAGS: flagsSchema,
-		KYSELY_DEBUG: z.string().optional(),
+		KYSELY_DEBUG: boolean.optional(),
 		KYSELY_ARTIFICIAL_LATENCY: z.coerce.number().optional(),
 		LOG_LEVEL: z.enum(["benchmark", "debug", "info", "warn", "error"]).optional(),
 		MAILGUN_SMTP_PASSWORD: selfHostedOptional(z.string()),
@@ -38,7 +40,7 @@ export const env = createEnv({
 		MAILGUN_SMTP_PORT: selfHostedOptional(z.string()),
 		MAILGUN_SMTP_FROM: z.string().optional(),
 		MAILGUN_SMTP_FROM_NAME: z.string().optional(),
-		MAILGUN_INSECURE_SENDMAIL: z.string().optional(),
+		MAILGUN_INSECURE_SENDMAIL: boolean.optional(),
 		MAILGUN_SMTP_SECURITY: z.enum(["ssl", "tls", "none"]).optional(),
 		OTEL_SERVICE_NAME: z.string().optional(),
 		HONEYCOMB_API_KEY: z.string().optional(),
@@ -50,6 +52,10 @@ export const env = createEnv({
 		DATACITE_REPOSITORY_ID: z.string().optional(),
 		DATACITE_PASSWORD: z.string().optional(),
 		SENTRY_AUTH_TOKEN: z.string().optional(),
+		/**
+		 * Whether or not to enable React Scan. only works in development mode
+		 */
+		REACT_SCAN_ENABLED: boolean.optional(),
 	},
 	client: {},
 	experimental__runtimeEnv: {
