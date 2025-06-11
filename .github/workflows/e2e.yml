@@ -37,6 +37,10 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
+            # needed since we are in the playwright container, which doesn't have docker installed
+            - name: Set up Docker
+              uses: docker/setup-docker-action@v4
+
             - name: Install Node.js
               uses: actions/setup-node@v4
               with:
