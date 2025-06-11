@@ -102,7 +102,7 @@ jobs:
               run: pnpm p:build
 
             - name: Run migrations and seed
-              run: pnpm --filter core reset
+              run: pnpm --filter core reset-base
               env:
                   # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
                   MINIMAL_SEED: true
