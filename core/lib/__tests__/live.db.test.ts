@@ -122,7 +122,7 @@ describe("live", () => {
 		const { community, users, pubs } = await seed(trx);
 
 		getLoginData.mockImplementation(() => {
-			return undefined;
+			return { user: null };
 		});
 
 		const createForm = await import("~/app/c/[communitySlug]/forms/actions").then(
@@ -143,7 +143,7 @@ describe("live", () => {
 	test("getForm and createForm", async () => {
 		const trx = getTrx();
 		getLoginData.mockImplementation(() => {
-			return { id: "123", isSuperAdmin: true };
+			return { user: { id: "123", isSuperAdmin: true } };
 		});
 
 		const { community, users, pubs } = await seed(trx);

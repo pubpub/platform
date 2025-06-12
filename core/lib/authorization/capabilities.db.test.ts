@@ -107,9 +107,6 @@ describe("Community membership grants appropriate capabilities", async () => {
 		Capabilities.movePub,
 		Capabilities.viewPub,
 		Capabilities.deletePub,
-		Capabilities.updatePubValues,
-		Capabilities.createRelatedPub,
-		Capabilities.editPubWithForm,
 		Capabilities.runAction,
 		Capabilities.seeExtraPubValues,
 	] as const;

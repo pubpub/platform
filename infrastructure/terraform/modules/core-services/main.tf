@@ -158,6 +158,18 @@ module "assets_bucket" {
     expose_headers  = ["ETag", "Location"]
     max_age_seconds = 3000
   }]
+
+  lifecycle_rule = [
+    {
+      id      = "expire-temporary"
+      enabled = true
+      filter = {
+        prefix = "temporary/"
+      }
+      expiration = {
+        days = 90
+      }
+  }]
 }
 
 # TODO: replace this with a role-based system for ECS containers
@@ -170,20 +182,17 @@ resource "aws_iam_access_key" "asset_uploader" {
   user = aws_iam_user.asset_uploader.name
 }
 
-
+data "aws_iam_policy_document" "asset_uploads" {
+  statement {
+    actions   = ["s3:PutObject", "s3:GetObject", "s3:PutObjectTagging", "s3:GetObjectTagging"]
+    effect    = "Allow"
+    resources = ["${module.assets_bucket.s3_bucket_arn}/*"]
+  }
+}
 resource "aws_iam_policy" "asset_uploads" {
   name        = "${var.cluster_info.name}-${var.cluster_info.environment}-asset-uploader"
-  description = "Allow "
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
-        Action   = "s3:PutObject"
-        Resource = "${module.assets_bucket.s3_bucket_arn}/*"
-      }
-    ]
-  })
+  description = "Allow core app to manage files in the assets bucket"
+  policy      = data.aws_iam_policy_document.asset_uploads.json
 }
 
 resource "aws_iam_user_policy_attachment" "attachment_asset_uploader" {
