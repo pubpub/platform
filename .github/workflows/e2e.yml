@@ -20,13 +20,14 @@ jobs:
     integration-tests:
         name: Integration tests
         runs-on: ubuntu-latest
+
         strategy:
             matrix:
                 package:
                     - core
                     - context-editor
         env:
-            ENV_FILE: .env.docker-compose.test
+            ENV_FILE: .env.docker-compose.dev
         steps:
             - name: Checkout
               uses: actions/checkout@v4
@@ -102,7 +103,7 @@ jobs:
               run: pnpm p:build
 
             - name: Run migrations and seed
-              run: pnpm --filter core db:test:reset
+              run: pnpm --filter core reset-base
               env:
                   # 20241126: this prevents the arcadia seed from running, which contains a ton of pubs which potentially might slow down the tests
                   MINIMAL_SEED: true
@@ -128,7 +129,7 @@ jobs:
               env:
                   NODE_ENV: test
                   INTEGRATION_TEST_HOST: localhost
-                  DATABASE_URL: postgresql://postgres:postgres@localhost:54323/postgres
+                  DATABASE_URL: postgresql://postgres:postgres@localhost:54322/postgres
 
             - name: Print container logs
               if: ${{failure() || cancelled()}}
