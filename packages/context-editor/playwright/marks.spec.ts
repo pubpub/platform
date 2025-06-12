@@ -208,7 +208,6 @@ test.describe("link", () => {
 			await editor.pressSequentially(url);
 			await editor.press("Space");
 			await editor.getByRole("link", { name: url }).waitFor();
-			throw new Error("stop");
 		});
 
 		await test.step("remove the link", async () => {
