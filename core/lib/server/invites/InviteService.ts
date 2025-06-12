@@ -131,6 +131,7 @@ export namespace InviteService {
 	 */
 	export function inviteUser(user: UsersId): InvitedByStep;
 	export function inviteUser(user: UsersId | NewUser): InvitedByStep {
+		// this looks silly, is just for typescript
 		if (typeof user === "string") {
 			return InviteBuilder.inviteUser(user);
 		}
