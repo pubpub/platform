@@ -1,9 +1,10 @@
 import { cache } from "react";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstancesId, StagesId, UsersId } from "db/public";
+import type { ActionInstancesId, CommunitiesId, StagesId, UsersId } from "db/public";
 import { Event } from "db/public";
 
+import type { XOR } from "../types";
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { pubType, pubValuesByRef } from "../server";
@@ -29,24 +30,44 @@ export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 	);
 });
 
-export const getStageActions = cache((stageId: StagesId) => {
-	return autoCache(
-		db
-			.selectFrom("action_instances")
-			.selectAll()
-			.select((eb) =>
-				jsonObjectFrom(
-					eb
-						.selectFrom("action_runs")
-						.selectAll("action_runs")
-						.whereRef("action_runs.actionInstanceId", "=", "action_instances.id")
-						.orderBy("action_runs.createdAt", "desc")
-						.limit(1)
-				).as("lastActionRun")
-			)
-			.where("stageId", "=", stageId)
-	);
-});
+export const getStageActions = cache(
+	({
+		stageId,
+		communityId,
+	}: XOR<
+		{ stageId: StagesId },
+		{
+			communityId: CommunitiesId;
+		}
+	>) => {
+		return autoCache(
+			db
+				.selectFrom("action_instances")
+				.select([
+					"action_instances.id",
+					"action_instances.action",
+					"action_instances.config",
+					"action_instances.name",
+					"action_instances.createdAt",
+					"action_instances.stageId",
+					"action_instances.updatedAt",
+				])
+				.select((eb) =>
+					jsonObjectFrom(
+						eb
+							.selectFrom("action_runs")
+							.selectAll("action_runs")
+							.whereRef("action_runs.actionInstanceId", "=", "action_instances.id")
+							.orderBy("action_runs.createdAt", "desc")
+							.limit(1)
+					).as("lastActionRun")
+				)
+				.innerJoin("stages", "action_instances.stageId", "stages.id")
+				.$if(!!stageId, (eb) => eb.where("stageId", "=", stageId!))
+				.$if(!!communityId, (eb) => eb.where("stages.communityId", "=", communityId!))
+		);
+	}
+);
 
 export type StagePub = Awaited<
 	ReturnType<ReturnType<typeof getStagePubs>["executeTakeFirstOrThrow"]>

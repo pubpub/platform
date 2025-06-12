@@ -23,7 +23,7 @@ import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { compareMemberRoles, getHighestRole } from "~/lib/authorization/rolesRanking";
 import { getLoginData } from "../authentication/loginData";
-import { createPasswordHash } from "../authentication/password";
+// import { createPasswordHash } from "../authentication/password";
 import { userCan } from "../authorization/capabilities";
 import { generateHash, slugifyString } from "../string";
 import { autoCache } from "./cache/autoCache";
@@ -163,6 +163,7 @@ export const getSuggestedUsers = ({
 		.limit(limit);
 
 export const setUserPassword = async (props: { userId: UsersId; password: string }, trx = db) => {
+	const { createPasswordHash } = await import("../authentication/password");
 	const passwordHash = await createPasswordHash(props.password);
 	await trx
 		.updateTable("users")

@@ -98,10 +98,7 @@ export default async function Page(props: {
 				<StagePubs
 					userId={user.id}
 					stage={stage}
-					pageContext={{
-						params,
-						searchParams,
-					}}
+					searchParams={searchParams}
 					pagination={{ page, pubsPerPage: 10 }}
 					basePath={""}
 				/>

@@ -10,8 +10,8 @@ import { Form } from "ui/form";
 import { Loader2, Trash } from "ui/icon";
 import { toast } from "ui/use-toast";
 
+import * as actions from "~/app/components/pubs/PubEditor/actions";
 import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./PubEditor/actions";
 
 export type PubRemoveProps = {
 	pubId: PubsId;

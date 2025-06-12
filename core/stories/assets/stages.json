@@ -1,0 +1,116 @@
+[
+	{
+		"moveConstraints": [
+			{
+				"id": "5d1248a7-7642-41e1-8d4e-12c4547fb728",
+				"name": "Stage 2"
+			}
+		],
+		"moveConstraintSources": [],
+		"pubsCount": 101,
+		"memberCount": 1,
+		"actionInstancesCount": 0,
+		"id": "f8bea11b-b6c7-43cb-86c3-05319bb0b4df",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Articles",
+		"order": "aa",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [],
+		"pubsCount": 1,
+		"memberCount": 0,
+		"actionInstancesCount": 0,
+		"id": "283fd73c-1e6d-40db-a8bc-344b01025f79",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Authors",
+		"order": "bb",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [],
+		"pubsCount": 1,
+		"memberCount": 0,
+		"actionInstancesCount": 0,
+		"id": "86199073-615b-4564-9836-fc8839663d0c",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Sites",
+		"order": "cc",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [],
+		"pubsCount": 1,
+		"memberCount": 0,
+		"actionInstancesCount": 0,
+		"id": "1912cd31-f4b8-4dcd-8681-820bc401d219",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Journals",
+		"order": "dd",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [],
+		"pubsCount": 1,
+		"memberCount": 0,
+		"actionInstancesCount": 0,
+		"id": "919c33f3-929c-4099-a8a8-1b1581be9b39",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Issues",
+		"order": "ee",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [],
+		"pubsCount": 2,
+		"memberCount": 0,
+		"actionInstancesCount": 0,
+		"id": "2be12b02-fb9b-4d81-b119-1ce83174e36a",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Navigations",
+		"order": "ff",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [],
+		"pubsCount": 1,
+		"memberCount": 0,
+		"actionInstancesCount": 0,
+		"id": "07432cee-4891-4bb9-b584-3aaa256bea29",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Tags",
+		"order": "gg",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	},
+	{
+		"moveConstraints": [],
+		"moveConstraintSources": [
+			{
+				"id": "f8bea11b-b6c7-43cb-86c3-05319bb0b4df",
+				"name": "Articles"
+			}
+		],
+		"pubsCount": 0,
+		"memberCount": 1,
+		"actionInstancesCount": 0,
+		"id": "5d1248a7-7642-41e1-8d4e-12c4547fb728",
+		"createdAt": "2025-04-23T17:55:57.418Z",
+		"updatedAt": "2025-04-23T17:55:57.418Z",
+		"name": "Stage 2",
+		"order": "hh",
+		"communityId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+	}
+]

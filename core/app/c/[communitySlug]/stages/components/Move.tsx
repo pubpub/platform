@@ -1,22 +1,32 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { useState, useTransition } from "react";
+import Link from "next/link";
 
 import type { PubsId, StagesId } from "db/public";
 import { Button } from "ui/button";
-import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
+import { ArrowLeft, ArrowRight, FlagTriangleRightIcon, Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { XOR } from "~/lib/types";
+import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { makeStagesById } from "~/lib/stages";
-import { move } from "./lib/actions";
 
 type Props = {
 	pubId: PubsId;
 	stageId: StagesId;
+	button?: ReactNode;
+	/**
+	 * If there are no source or destinations from the current stage, hide this component.
+	 * @default true
+	 */
+	hideIfNowhereToMove?: boolean;
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
@@ -25,7 +35,7 @@ type Props = {
 	}
 >;
 
-const makeSourcesAndDestinations = (props: Props) => {
+const makeSourcesAndDestinations = ({ ...props }: Props) => {
 	if (!props.communityStages) {
 		return {
 			sources: props.moveFrom,
@@ -44,11 +54,12 @@ const makeSourcesAndDestinations = (props: Props) => {
 	};
 };
 
-export default function Move(props: Props) {
+export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
 	const { sources, destinations } = makeSourcesAndDestinations(props);
 
 	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
 	const { toast } = useToast();
+	const community = useCommunity();
 
 	const [isMoving, startTransition] = useTransition();
 	const runMove = useServerAction(move);
@@ -87,40 +98,39 @@ export default function Move(props: Props) {
 		setPopoverIsOpen(false);
 	};
 
-	if (destinations.length === 0 && sources.length === 0) {
+	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
 		return null;
 	}
 
 	return (
 		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>
-				<Button size="sm" variant="outline" disabled={isMoving}>
-					{isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Move"}
-				</Button>
+				{props.button ?? (
+					<Button size="sm" variant="outline" disabled={isMoving}>
+						{isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Move"}
+					</Button>
+				)}
 			</PopoverTrigger>
-			<PopoverContent side="left" className="w-fit">
-				<div className="flex gap-x-4">
+			<PopoverContent side="bottom" className="w-fit p-[5px]" align="start">
+				<div className="flex flex-col gap-x-4">
 					{sources.length > 0 && (
 						<div className="flex flex-col gap-y-2" data-testid="sources">
-							<div className="flex items-center justify-start gap-x-2">
-								<span className="text-sm font-bold">Move back</span>
-							</div>
 							{sources.map((stage) => {
 								return stage.id === props.stageId ? null : (
 									<Button
 										disabled={isMoving}
-										variant="outline"
+										variant="ghost"
 										key={stage.id}
 										onClick={() =>
 											startTransition(async () => {
 												await onMove(props.pubId, props.stageId, stage.id);
 											})
 										}
-										className="flex justify-start gap-x-1"
+										className="flex w-full justify-start gap-x-2 px-2 py-0"
 									>
-										<ArrowLeft className="h-4 w-4 shrink-0 opacity-50" />
+										<ArrowLeft strokeWidth="1px" />
 										<span className="overflow-clip text-ellipsis whitespace-nowrap">
-											{stage.name}
+											Move to {stage.name}
 										</span>
 									</Button>
 								);
@@ -130,13 +140,10 @@ export default function Move(props: Props) {
 
 					{destinations.length > 0 && (
 						<div className="flex flex-col gap-y-2" data-testid="destinations">
-							<div className="flex items-center justify-start gap-x-2">
-								<span className="text-sm font-bold">Move to</span>
-							</div>
 							{destinations.map((stage) => {
 								return stage.id === props.stageId ? null : (
 									<Button
-										variant="outline"
+										variant="ghost"
 										disabled={isMoving}
 										key={stage.id}
 										onClick={() =>
@@ -144,17 +151,34 @@ export default function Move(props: Props) {
 												await onMove(props.pubId, props.stageId, stage.id);
 											})
 										}
-										className="flex justify-start gap-x-1"
+										className="flex w-full justify-start gap-x-2 px-2 py-0"
 									>
+										<ArrowRight strokeWidth="1px" />
 										<span className="overflow-clip text-ellipsis whitespace-nowrap">
-											{stage.name}
+											Move to {stage.name}
 										</span>
-										<ArrowRight className="h-4 w-4 shrink-0 opacity-50" />
 									</Button>
 								);
 							})}
 						</div>
 					)}
+
+					<div>
+						<Button
+							disabled={isMoving}
+							variant="ghost"
+							className="w-full justify-start px-2 py-0"
+							asChild
+						>
+							<Link
+								href={`/c/${community.slug}/stages/${props.stageId}`}
+								className="block flex w-full gap-x-2"
+							>
+								<FlagTriangleRightIcon strokeWidth="1px" />
+								<span>View Stage</span>
+							</Link>
+						</Button>
+					</div>
 				</div>
 			</PopoverContent>
 		</Popover>

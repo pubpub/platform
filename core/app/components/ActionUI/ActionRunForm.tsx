@@ -30,6 +30,9 @@ export const ActionRunForm = ({
 }) => {
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
+	// const runAction = useServerAction(async (props: any) => {
+	// 	return { success: "true", report: "Wheee" };
+	// });
 
 	const [isPending, startTransition] = useTransition();
 
