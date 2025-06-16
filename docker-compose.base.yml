@@ -17,8 +17,6 @@ services:
 
     minio-init:
         image: minio/mc:latest
-        networks:
-            - app-network
         # basically what this does:
         # - create the bucket
         # - allow public downloads for said bucket

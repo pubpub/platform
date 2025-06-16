@@ -51,6 +51,26 @@ export const getS3Client = () => {
 	return s3Client;
 };
 
+// we create a separate client for generating signed URLs that uses the public endpoint
+// this is bc, when using `minio` locally, the server
+// uses `minio:9000`, but for the client this does not make sense
+const getPublicS3Client = () => {
+	const region = env.ASSETS_REGION;
+	const key = env.ASSETS_UPLOAD_KEY;
+	const secret = env.ASSETS_UPLOAD_SECRET_KEY;
+	const publicEndpoint = env.ASSETS_PUBLIC_ENDPOINT || env.ASSETS_STORAGE_ENDPOINT;
+
+	return new S3Client({
+		endpoint: publicEndpoint,
+		region: region,
+		credentials: {
+			accessKeyId: key,
+			secretAccessKey: secret,
+		},
+		forcePathStyle: !!publicEndpoint, // Required for MinIO
+	});
+};
+
 export const generateSignedAssetUploadUrl = async (
 	userId: UsersId,
 	fileName: string,
@@ -59,7 +79,7 @@ export const generateSignedAssetUploadUrl = async (
 	const communitySlug = await getCommunitySlug();
 	const key = `temporary/${communitySlug}/${userId}/${crypto.randomUUID()}/${fileName}`;
 
-	const client = getS3Client();
+	const client = getPublicS3Client(); // use public client for signed URLs
 
 	const bucket = env.ASSETS_BUCKET_NAME;
 	const command = new PutObjectCommand({

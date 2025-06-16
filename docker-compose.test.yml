@@ -99,7 +99,7 @@ services:
                 condition: service_started
             inbucket:
                 condition: service_started
-        platform: linux/amd64
+        # platform: linux/amd64
         healthcheck:
             test: ["CMD-SHELL", "curl http://integration-tests:3000/api/health"]
             interval: 10s
@@ -116,6 +116,5 @@ volumes:
     minio_data:
     postgres_test_data:
         driver: local
-
 networks:
     app-network:
