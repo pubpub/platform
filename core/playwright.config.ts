@@ -13,23 +13,18 @@ export default defineConfig({
 	/* Retry on CI only */
 	retries: process.env.CI ? 2 : 0,
 	// multiple workers in CI is too flaky for now
-	workers: process.env.CI ? 2 : undefined,
+	workers: 2,
 	expect: {
 		timeout: process.env.CI ? 5_000 : 60_000,
 	},
 
 	// don't continue going after 3 tests have failed, that's too many
 	maxFailures: process.env.CI ? 3 : undefined,
-	// a
 	webServer: [
 		{
 			command: process.env.CI
 				? `echo ${baseURL}`
-				: `pnpm --workspace-root exec preconstruct build && ${
-						process.env.TEST_DEV
-							? "pnpm --filter core dev"
-							: "pnpm --filter core build && pnpm --filter core start"
-					}`,
+				: `curl -s ${baseURL} > /dev/null ||  echo "Error: Server not up"  && exit 1 && echo ${baseURL}`,
 			timeout: 600_000,
 			url: baseURL,
 			stderr: "pipe",

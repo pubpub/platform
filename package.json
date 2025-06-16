@@ -3,7 +3,7 @@
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
 		"build:docs": "turbo build --filter=docs",
-		"dev": "pnpm p:dev && turbo dev --filter=!emails --ui tui",
+		"dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!storybook --filter=!docs --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
@@ -42,6 +42,7 @@
 		"@babel/preset-env": "^7.22.15",
 		"@babel/preset-react": "^7.22.15",
 		"@babel/preset-typescript": "^7.22.15",
+		"@playwright/test": "catalog:",
 		"@preconstruct/cli": "^2.8.10",
 		"@pubpub/prettier-config": "workspace:*",
 		"@turbo/gen": "^2.1.1",
