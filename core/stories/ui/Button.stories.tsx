@@ -1,9 +1,9 @@
 // Adapted from https://github.com/shadcn-ui/ui/blob/94ee191d989cf93246f2feaca68b1fdb24c18940/apps/www/registry/stories/button.stories.tsx
 
-import type { Meta, StoryObj } from "@storybook/react";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import React from "react";
-import { fn } from "@storybook/test";
+import { fn } from "storybook/test";
 
 import { Button } from "ui/button";
 import { Loader2, Mail } from "ui/icon";
