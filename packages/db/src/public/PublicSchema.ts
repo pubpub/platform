@@ -36,11 +36,25 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	invites: InvitesTable;
+	api_access_tokens: ApiAccessTokensTable;
 
-	invite_forms: InviteFormsTable;
+	api_access_logs: ApiAccessLogsTable;
 
-	invites_history: InvitesHistoryTable;
+	api_access_permissions: ApiAccessPermissionsTable;
+
+	form_elements: FormElementsTable;
+
+	sessions: SessionsTable;
+
+	community_memberships: CommunityMembershipsTable;
+
+	pub_memberships: PubMembershipsTable;
+
+	stage_memberships: StageMembershipsTable;
+
+	membership_capabilities: MembershipCapabilitiesTable;
+
+	pub_values_history: PubValuesHistoryTable;
 
 	_prisma_migrations: PrismaMigrationsTable;
 
@@ -80,25 +94,11 @@ export interface PublicSchema {
 
 	forms: FormsTable;
 
-	api_access_tokens: ApiAccessTokensTable;
-
-	api_access_logs: ApiAccessLogsTable;
-
-	api_access_permissions: ApiAccessPermissionsTable;
-
-	form_elements: FormElementsTable;
-
-	sessions: SessionsTable;
-
-	community_memberships: CommunityMembershipsTable;
-
-	pub_memberships: PubMembershipsTable;
-
-	stage_memberships: StageMembershipsTable;
-
-	membership_capabilities: MembershipCapabilitiesTable;
-
-	pub_values_history: PubValuesHistoryTable;
-
 	_FormElementToPubType: FormElementToPubTypeTable;
+
+	invites: InvitesTable;
+
+	invite_forms: InviteFormsTable;
+
+	invites_history: InvitesHistoryTable;
 }

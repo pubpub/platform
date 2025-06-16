@@ -158,11 +158,34 @@ test.describe("link", () => {
 		if (browserName === "webkit" && process.env.CI) {
 			return;
 		}
-		await page.evaluate(() =>
-			navigator.clipboard.writeText("https://www.knowledgefutures.org")
-		);
-		await page.locator(".ProseMirror").press("ControlOrMeta+v");
-		await page.getByRole("link", { name: url }).waitFor({ timeout: 1000 });
+
+		const editor = page.locator(".ProseMirror");
+
+		await editor.click();
+		await editor.pressSequentially("https://www.knowledgefutures.org ");
+
+		await page
+			.locator(".ProseMirror a", { hasText: "https://www.knowledgefutures.org" })
+			.first()
+			.click({
+				clickCount: 3,
+			});
+		await editor.press("ControlOrMeta+C");
+
+		await page
+			.locator(".ProseMirror a", { hasText: "https://www.knowledgefutures.org" })
+			.first()
+			.click({
+				clickCount: 3,
+			});
+
+		await editor.press("ArrowRight");
+		await editor.press("Enter");
+
+		await editor.press("ControlOrMeta+v");
+
+		const count = await editor.getByRole("link", { name: url }).count();
+		expect(count).toBe(2);
 	});
 
 	test("can add a link via cmd+k", async ({ page }) => {

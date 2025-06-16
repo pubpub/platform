@@ -70,7 +70,9 @@ export function SignupForm(props: {
 			<form onSubmit={form.handleSubmit(handleSubmit)}>
 				<Card className="mx-auto max-w-sm">
 					<CardHeader>
-						<CardTitle className="text-xl">Sign Up</CardTitle>
+						<CardTitle className="text-xl">
+							<h3>Sign Up</h3>
+						</CardTitle>
 						<CardDescription>
 							Enter your information to finish setting up your account
 						</CardDescription>
