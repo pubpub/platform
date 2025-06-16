@@ -24,7 +24,7 @@ beforeAll(async () => {
 
 	if (!check.ok) {
 		throw new Error(
-			"Minio is not running. Please setup the test environment properly by running `pnpm -w test:setup`"
+			"Minio is not running. Please setup the dev environment properly by running `pnpm -w dev:setup`"
 		);
 	}
 });

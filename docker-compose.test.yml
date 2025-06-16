@@ -5,7 +5,7 @@ services:
         extends:
             file: ./docker-compose.base.yml
             service: db
-        env_file: ./.env.docker-compose.test
+        env_file: ./.env.docker-compose.dev
         volumes:
             - postgres_test_data:/var/lib/postgresql/data
         networks:
@@ -14,13 +14,13 @@ services:
             - test
             - integration
         ports:
-            - 54323:5432
+            - 54322:5432
 
     minio:
         extends:
             file: ./docker-compose.base.yml
             service: minio
-        env_file: ./.env.docker-compose.test
+        env_file: ./.env.docker-compose.dev
         volumes:
             - minio_data:/data
         networks:
@@ -33,7 +33,7 @@ services:
         depends_on:
             minio:
                 condition: service_healthy
-        env_file: ./.env.docker-compose.test
+        env_file: ./.env.docker-compose.dev
         extends:
             file: ./docker-compose.base.yml
             service: minio-init
@@ -47,7 +47,7 @@ services:
         extends:
             file: ./docker-compose.base.yml
             service: inbucket
-        env_file: ./.env.docker-compose.test
+        env_file: ./.env.docker-compose.dev
         networks:
             - app-network
         profiles:
@@ -55,7 +55,7 @@ services:
             - integration
 
     cache:
-        env_file: ./.env.docker-compose.test
+        env_file: ./.env.docker-compose.dev
         extends:
             file: docker-compose.base.yml
             service: cache
@@ -69,7 +69,7 @@ services:
         container_name: jobs
         image: ${JOBS_IMAGE}
         platform: linux/amd64
-        env_file: .env.docker-compose.test
+        env_file: .env.docker-compose.dev
         environment:
             - OTEL_SERVICE_NAME=jobs.jobs
             - PUBPUB_URL=${JOBS_INTEGRATION_PUBPUB_URL:-http://integration-tests:3000}
@@ -82,7 +82,7 @@ services:
 
     integration-tests:
         image: ${INTEGRATION_TESTS_IMAGE}
-        env_file: ./.env.docker-compose.test
+        env_file: ./.env.docker-compose.dev
         environment:
             - PORT=3000
             - CI=true

@@ -1,0 +1,82 @@
+# E2E Tests
+
+Here we describe how to run E2E test (end-to-end, also referred to as "integration" tests, for us meaning tests that run in the browser) tests.
+
+We use [Playwright](https://playwright.dev/) for E2E tests.
+
+## Running integration tests (in `core`)
+
+### Basic Setup
+
+1. Install Playwright Test for VSCode plugin (should be recommended)
+2. `pnpm -w dev:setup`
+    - (TIL: `-w` lets you run things from the root without actually being in the root!)
+3. Click on extension (test tube icon), click on refresh button (if the tests don't show up), `core` tests should appear
+    - you might see an error to install `@playwright/test` but you can ignore this!
+    - (20250605) The `context-editor` tests currently do not show up here.
+4. Start your dev server via `pnpm dev at root`
+
+    - This makes sure `core` and `jobs` are both up, which is needed for some for all playwright tests to pass)
+
+5. Now you should be able to either run a test from the testing panel, or directly inside a test
+
+6. You will need to install the `playwright` browsers — a notification in `VSCode` should pop up and let you do so
+7. Try running again. You should see the test go through the steps and pass!
+
+### Tips
+
+#### Running all tests at once
+
+Running all tests at once via VS code will likely fail against the dev server, but should be okay against the built server.
+
+To run tests against the built app:
+
+1. Run `pnpm -F core build && pnpm -F core start`
+2. In another terminal tab, run `pnpm -F jobs start`
+3. Run `pnpm run playwright:test`, or run tests through the `ui`
+
+#### Running individual tests
+
+Most of the time you likely just want to run a single test, eg to debug it or (gasp) when writing a new test.
+
+We recommend running individual tests against the dev server, as it's much easier to setup and you can iterate more quickly.
+
+#### Running tests through the `CLI`
+
+1. For the CLI: `pnpm -F core playwright:test`
+2. `pnpm playwright:test path/to/test` or `pnpm playwright:test 'playwright/actions\*'` to run individual/groups of tests
+
+#### 🐞 Debugging
+
+[Playwright docs](https://playwright.dev/docs/debug)
+
+You can debug either using `VSCode`s built-in breakpoints, or by manually adding breakpoints in the test.
+
+##### Through the plugin
+
+Set a breakpoint in the test by clicking
+
+<img
+	src="../../public/images/02da306f20fb0b0c4ce90c44117a9339250643f64ddda619bd7ad8989cf54a7c.png"
+	alt="Break points"
+	width="500"
+/>
+
+In `VSCode`, you can either right click a test and select "Debug test", or click the debug icon next to the test in the sidebar.
+
+##### Through the `CLI`
+
+You can also use `playwright:test 'path/to/test' -- --debug` (note the extra `--`) if you are running from the `CLI`.
+
+Then you're able to use `await page.pause()` to pause the test at a specific point.
+
+```ts filename="some-test.spec.ts"
+test("some test", async ({ page }) => {
+	await page.goto("https://example.com");
+	await page.pause(); // look at what you've done
+});
+```
+
+#### Misc
+
+Currently (2025-06-05), data seeded into playwright doesn't add all@pubpub.org which is why if you are logged in you won't see the seeded playwright data. it's sometimes useful to be able to see the playwright community in your dev server—in this case you'd have to log in as the user in the seed community
