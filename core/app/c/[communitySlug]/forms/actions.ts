@@ -19,7 +19,7 @@ export const createForm = defineServerAction(async function createForm(
 	slug: string,
 	communityId: CommunitiesId
 ) {
-	const user = await getLoginData();
+	const { user } = await getLoginData();
 
 	if (!user) {
 		return {

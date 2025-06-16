@@ -3,16 +3,13 @@ import type { ContextEditorProps } from "context-editor";
 import { useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 
-import type { PubsId, PubTypesId } from "db/public";
+import type { PubsId, PubTypes, PubTypesId } from "db/public";
 import { Skeleton } from "ui/skeleton";
 
-import type { GetPubTypesResult } from "~/lib/server";
 import { upload } from "../forms/actions";
 import { ContextAtom } from "./AtomRenderer";
 
 import "context-editor/style.css";
-
-import React from "react";
 
 import type { ContextEditorPub } from "./ContextEditorContext";
 import { useServerAction } from "~/lib/serverActions";
@@ -25,7 +22,7 @@ const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.C
 export const ContextEditorClient = (
 	props: {
 		pubs: ContextEditorPub[];
-		pubTypes: GetPubTypesResult;
+		pubTypes: Pick<PubTypes, "id" | "name">[];
 		pubId: PubsId;
 		pubTypeId: PubTypesId;
 		// Might be able to use more of this type in the future—for now, this component is a lil more stricty typed than context-editor
@@ -46,7 +43,7 @@ export const ContextEditorClient = (
 	);
 
 	const signedUploadUrl = (fileName: string) => {
-		return runUpload(props.pubId, fileName);
+		return runUpload(fileName, props.pubId);
 	};
 
 	const memoEditor = useMemo(() => {

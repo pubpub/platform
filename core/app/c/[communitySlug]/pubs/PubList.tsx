@@ -58,16 +58,13 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 			<PubsSelectedProvider pubIds={[]}>
 				{pubs.map((pub) => {
 					return (
-						<div key={pub.id}>
-							<PubCard
-								key={pub.id}
-								pub={pub}
-								communitySlug={communitySlug}
-								stages={stages}
-								actionInstances={actions}
-							/>
-							<PubSelector pubId={pub.id} />
-						</div>
+						<PubCard
+							key={pub.id}
+							pub={pub}
+							communitySlug={communitySlug}
+							stages={stages}
+							actionInstances={actions}
+						/>
 					);
 				})}
 				<FooterPagination

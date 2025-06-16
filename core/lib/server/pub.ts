@@ -19,6 +19,7 @@ import type {
 	JsonValue,
 	MaybePubOptions,
 	ProcessedPub,
+	ProcessedPubWithForm,
 	PubTypePubField,
 } from "contracts";
 import type { Database } from "db/Database";
@@ -1985,6 +1986,14 @@ export type FullProcessedPub = ProcessedPub<{
 	withMembers: true;
 	withPubType: true;
 	withStage: true;
+	withStageActionInstances: true;
+}>;
+
+export type FullProcessedPubWithForm = ProcessedPubWithForm<{
+	withRelatedPubs: true;
+	withStage: true;
+	withPubType: true;
+	withMembers: true;
 	withStageActionInstances: true;
 }>;
 
