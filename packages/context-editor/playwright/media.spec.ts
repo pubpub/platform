@@ -47,7 +47,6 @@ test.describe("images", () => {
 	});
 
 	test("can add and remove caption, credit, license fields", async ({ page }) => {
-		test.setTimeout(5_000);
 		// await clickImageNode(page);
 		await page.getByRole("button", { name: "figure", exact: true }).first().click();
 		await page.getByTestId("attribute-panel").waitFor();
