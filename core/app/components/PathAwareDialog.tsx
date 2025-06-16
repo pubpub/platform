@@ -29,6 +29,11 @@ export type PathAwareDialogProps = {
 	disabled?: boolean;
 	icon: React.ReactElement;
 	param: string;
+	/**
+	 * If true, will only display the icon, and the button text will be rendered
+	 * only for screen readers.
+	 */
+	iconOnly?: boolean;
 };
 
 export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => {
@@ -69,7 +74,7 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => 
 					disabled={props.disabled}
 				>
 					{props.icon}
-					<span>{props.buttonText}</span>
+					<span className={cn({ "sr-only": props.iconOnly })}>{props.buttonText}</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">

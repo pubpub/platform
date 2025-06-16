@@ -1,13 +1,16 @@
 import { Suspense } from "react";
 
 import type { CommunitiesId, UsersId } from "db/public";
+import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import { searchParamsCache } from "~/app/components/DataTable/PubsDataTable/validations";
 import { FooterPagination } from "~/app/components/Pagination";
-import PubRow, { PubRowSkeleton } from "~/app/components/PubRow";
+import { PubCard } from "~/app/components/PubCard";
+import { getStageActions } from "~/lib/db/queries";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { getStages } from "~/lib/server/stages";
 import { PubSelector } from "./PubSelector";
 import { PubsSelectedProvider } from "./PubsSelectedContext";
 import { PubsSelectedCounter } from "./PubsSelectedCounter";
@@ -26,7 +29,7 @@ type PaginatedPubListProps = {
 
 const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 	const search = searchParamsCache.parse(props.searchParams);
-	const [count, pubs] = await Promise.all([
+	const [count, pubs, stages, actions] = await Promise.all([
 		getPubsCount({ communityId: props.communityId }),
 		getPubsWithRelatedValues(
 			{ communityId: props.communityId, userId: props.userId },
@@ -38,8 +41,11 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
+				withRelatedCounts: true,
 			}
 		),
+		getStages({ communityId: props.communityId, userId: props.userId }).execute(),
+		getStageActions({ communityId: props.communityId }).execute(),
 	]);
 
 	const totalPages = Math.ceil(count / search.perPage);
@@ -52,15 +58,13 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 			<PubsSelectedProvider pubIds={[]}>
 				{pubs.map((pub) => {
 					return (
-						<div key={pub.id}>
-							<PubRow
-								key={pub.id}
-								userId={props.userId}
-								pub={pub}
-								searchParams={props.searchParams}
-							/>
-							<PubSelector pubId={pub.id} />
-						</div>
+						<PubCard
+							key={pub.id}
+							pub={pub}
+							communitySlug={communitySlug}
+							stages={stages}
+							actionInstances={actions}
+						/>
 					);
 				})}
 				<FooterPagination
@@ -85,7 +89,10 @@ export const PubListSkeleton = ({
 }) => (
 	<div className={cn(["flex flex-col gap-8", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
-			<PubRowSkeleton key={index} />
+			<Skeleton key={index} className="flex h-[90px] w-full flex-col gap-2 px-4 py-3">
+				<Skeleton className="mt-3 h-6 w-24 space-y-1.5" />
+				<Skeleton className="h-8 w-1/2 space-y-1.5" />
+			</Skeleton>
 		))}
 	</div>
 );

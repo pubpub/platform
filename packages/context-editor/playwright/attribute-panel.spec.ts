@@ -74,13 +74,15 @@ test.describe("attribute panel", () => {
 
 			await test.step("click on other text", async () => {
 				// Add position to make sure we click inside the text
+				// and just REALLY click it, apparently necessary. this does not happen in headful mode
 				await page
 					.locator(".ProseMirror")
 					.getByText(text)
-					.click({ position: { x: 20, y: 0 } });
+					.click({ position: { x: 20, y: 0 }, clickCount: 2 });
+
 				await expect(page.getByTestId("attribute-panel")).toContainText("strong");
 				await page.getByTestId("advanced-options-trigger").click();
-				await expect(page.getByTestId("id-input")).toHaveValue("");
+				await expect(page.getByTestId("id-input")).toHaveValue("", { timeout: 1_000 });
 			});
 		});
 

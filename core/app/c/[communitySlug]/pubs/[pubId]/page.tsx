@@ -138,13 +138,15 @@ export default async function Page(props: {
 		return null;
 	}
 
-	const actionsPromise = pub.stage ? getStageActions(pub.stage.id).execute() : null;
+	const actionsPromise = pub.stage ? getStageActions({ stageId: pub.stage.id }).execute() : null;
+
 	const getFormProps = formSlug
 		? { communityId: community.id, slug: formSlug }
 		: {
 				communityId: community.id,
 				pubTypeId: pub.pubType.id,
 			};
+
 	const [actions, communityMembers, communityStages, form, withExtraPubValues, availableForms] =
 		await Promise.all([
 			actionsPromise,
@@ -163,10 +165,6 @@ export default async function Page(props: {
 
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
 	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
-	const pageContext = {
-		params: params,
-		searchParams,
-	};
 
 	const { stage, ...slimPub } = pub;
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
@@ -230,7 +228,6 @@ export default async function Page(props: {
 									actionInstances={actions}
 									pubId={pubId}
 									stage={stage!}
-									pageContext={pageContext}
 									testId="run-action-primary"
 								/>
 							</div>
@@ -275,7 +272,7 @@ export default async function Page(props: {
 						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
 						className="w-fit"
 					/>
-					<RelatedPubsTableWrapper pub={pubByForm} pageContext={pageContext} />
+					<RelatedPubsTableWrapper pub={pubByForm} />
 				</div>
 			)}
 		</div>

@@ -31,14 +31,7 @@ export default async function Page(props: Props) {
 				<h1 className="text-xl font-bold">Stages</h1>
 				<CreatePubButton communityId={community.id} text="Add Pub" />
 			</div>
-			<StageList
-				userId={user.id}
-				communityId={community.id}
-				pageContext={{
-					params,
-					searchParams,
-				}}
-			/>
+			<StageList userId={user.id} communityId={community.id} searchParams={searchParams} />
 		</>
 	);
 }
