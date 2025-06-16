@@ -67,6 +67,8 @@ services:
         profiles:
             - test
             - integration
+        ports:
+            - 6379:6379
 
     jobs:
         container_name: jobs
