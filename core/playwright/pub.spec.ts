@@ -339,7 +339,7 @@ test.describe("Updating a pub", () => {
 			.getByRole("link", { name: "Update" })
 			.click();
 
-		await expect(page.getByTestId("save-status")).toHaveText(
+		await expect(page.getByTestId("save-status-text")).toHaveText(
 			"Form will save when you click save"
 		);
 
