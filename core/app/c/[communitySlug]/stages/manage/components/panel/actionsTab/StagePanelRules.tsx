@@ -16,7 +16,7 @@ type PropsInner = {
 const StagePanelRulesInner = async (props: PropsInner) => {
 	const [stage, actionInstances, rules] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageActions(props.stageId).execute(),
+		getStageActions({ stageId: props.stageId }).execute(),
 		getStageRules(props.stageId).execute(),
 	]);
 

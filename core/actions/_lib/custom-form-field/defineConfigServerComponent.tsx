@@ -3,13 +3,11 @@ import type React from "react";
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
 
 import type { Action, ActionInstanceOf } from "../../types";
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 
 export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
 	actionInstance: ActionInstanceOf<T>;
 	communityId: CommunitiesId;
 	stageId: StagesId;
-	pageContext: PageContext;
 } & (Type extends "params"
 	? {
 			pubId: PubsId;
@@ -27,7 +25,6 @@ export const defineActionFormFieldServerComponent = <
 		actionInstance,
 		stageId,
 		communityId,
-		pageContext,
 	}: ActionFormFieldBaseProps<T, Type> & {
 		action: T;
 	}) => Promise<React.ReactNode>
