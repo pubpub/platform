@@ -77,11 +77,6 @@ export default async function Page(props: Props) {
 
 	const stages = await getStages({ communityId: community.id, userId: user.id }).execute();
 
-	const pageContext = {
-		params,
-		searchParams,
-	};
-
 	return (
 		<>
 			<StagesProvider stages={stages} communityId={community.id}>
@@ -93,7 +88,7 @@ export default async function Page(props: Props) {
 								{searchParams.editingStageId && (
 									<StagePanel
 										stageId={searchParams.editingStageId as StagesId}
-										pageContext={pageContext}
+										searchParams={searchParams}
 										user={user}
 									/>
 								)}

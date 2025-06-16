@@ -1,9 +1,0 @@
-{
-	"extends": "tsconfig/react-library.json",
-	"compilerOptions": {
-		"noEmit": true,
-		"jsx": "react"
-	},
-	"include": ["**/*.ts", "**/*.tsx"],
-	"exclude": ["node_modules"]
-}
