@@ -21,18 +21,20 @@ export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) =
 	return validateRequest(opts);
 });
 
+const defaultPageOpts: ExtraSessionValidationOptions & LoginRedirectOpts = {
+	allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
+};
+
 /**
  * Get the login data for the current page, and redirect to the login page if the user is not logged in.
  */
 export const getPageLoginData = cache(
 	async (opts?: ExtraSessionValidationOptions & LoginRedirectOpts) => {
-		const loginData = await getLoginData({
-			...opts,
-			allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
-		});
+		const options = opts ?? defaultPageOpts;
+		const loginData = await getLoginData(options);
 
 		if (!loginData.user) {
-			redirectToLogin(opts);
+			redirectToLogin(options);
 		}
 
 		if (loginData.session && loginData.session.type === AuthTokenType.verifyEmail) {

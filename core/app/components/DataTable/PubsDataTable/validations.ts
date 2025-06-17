@@ -2,7 +2,7 @@
 
 import type { inferParserType } from "nuqs/server";
 
-import { createSearchParamsCache, parseAsInteger } from "nuqs/server";
+import { createSearchParamsCache, parseAsInteger, parseAsString } from "nuqs/server";
 
 import type { ProcessedPub } from "contracts";
 import { getSortingStateParser } from "ui/data-table-paged";
@@ -14,6 +14,7 @@ export type DataTableSearchParams = inferParserType<typeof dataTableParsers>;
 export const dataTableParsers = {
 	page: parseAsInteger.withDefault(1),
 	perPage: parseAsInteger.withDefault(DEFAULT_PAGE_SIZE),
+	query: parseAsString.withDefault(""),
 	sort: getSortingStateParser<
 		ProcessedPub<{
 			withPubType: true;

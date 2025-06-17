@@ -233,6 +233,15 @@ const defaultOptions = {
 } as const satisfies ExtraSessionValidationOptions;
 
 /**
+ * Separately cache this call because validateRequest can be called with different options
+ * leading to cache misses
+ */
+const validateLuciaSession = cache(async (sessionId: string) => {
+	const result = await lucia.validateSession(sessionId);
+	return result;
+});
+
+/**
  * Get the session and corresponding user from cookies
  *
  * Also extends the session cookie with the updated expiration date, keeping it fresh,
@@ -263,7 +272,7 @@ export const validateRequest = cache(
 			};
 		}
 
-		const result = await lucia.validateSession(sessionId);
+		const result = await validateLuciaSession(sessionId);
 
 		// do not allow unspecified sessions
 		// eg prevent generic session from being used for password reset

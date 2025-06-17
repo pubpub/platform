@@ -1201,7 +1201,7 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	 * @default 2
 	 */
 	depth?: number;
-	search?: string;
+	searchConfig?: SearchConfig;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
 	 * By default, the first "cycled" pub is included, marked with `isCycle: true`.
@@ -1308,6 +1308,8 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		limit,
 		offset,
 		search,
+		withSearchValues,
+		searchConfig,
 		withPubType,
 		withStage,
 		withStageActionInstances,
@@ -1329,6 +1331,13 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 	const topLevelStageFilter = Array.from(
 		new Set([...(props.stageId ?? []), ...(allowedStages ?? [])])
 	);
+
+	const language = searchConfig?.language ?? DEFAULT_FULLTEXT_SEARCH_OPTS.language;
+	const headlineConfig =
+		searchConfig?.headlineConfig ?? DEFAULT_FULLTEXT_SEARCH_OPTS.headlineConfig;
+	const tsQuery = search ? createTsQuery(search, searchConfig) : undefined;
+
+	const includeSearchValues = Boolean(search) && withSearchValues !== false;
 
 	const result = await autoCache(
 		trx
@@ -1690,6 +1699,12 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))
+
+					.$if(Boolean(tsQuery), (qb) =>
+						qb
+							.where((eb) => sql`pubs."searchVector" @@ ${tsQuery}`)
+							.orderBy(sql`ts_rank_cd(pubs."searchVector",${tsQuery}) desc`)
+					)
 			)
 			.selectFrom("pub_tree as pt")
 			.select([
@@ -1704,6 +1719,52 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 				"pt.updatedAt",
 				"pt.title",
 			])
+			.$if(Boolean(tsQuery), (qb) =>
+				qb.select((eb) => [
+					sql<string>`ts_headline(
+								'${sql.raw(language)}',
+								pt.title, 
+								${tsQuery}, 
+								'${sql.raw(headlineConfig)}'
+							)`.as("title"),
+				])
+			)
+			.$if(Boolean(includeSearchValues), (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_values")
+							.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+							.innerJoin("_PubFieldToPubType", (join) =>
+								join
+									.onRef("A", "=", "pub_fields.id")
+									.onRef("B", "=", "pt.pubTypeId")
+							)
+							.select([
+								"pub_values.value",
+								"pub_fields.name",
+								"pub_fields.slug",
+								"pub_fields.schemaName",
+								"_PubFieldToPubType.isTitle",
+								sql<string>`ts_headline(
+							'${sql.raw(language)}',
+							pub_values.value#>>'{}',
+							${tsQuery},
+							'${sql.raw(headlineConfig)}'
+						)`.as("highlights"),
+							])
+							.$narrowType<{
+								value: JsonValue;
+								// still typed as null in db
+								schemaName: CoreSchemaType;
+							}>()
+							.whereRef("pub_values.pubId", "=", "pt.pubId")
+							.where(
+								(eb) => sql`to_tsvector(${language}, value#>>'{}') @@ ${tsQuery}`
+							)
+					).as("matchingValues")
+				)
+			)
 			.$if(Boolean(withValues), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
@@ -2046,7 +2107,12 @@ const DEFAULT_FULLTEXT_SEARCH_OPTS = {
 } satisfies SearchConfig;
 
 export const createTsQuery = (query: string, config: SearchConfig = {}) => {
-	const { prefixSearch = true, minLength = 2 } = config;
+	const options = {
+		...DEFAULT_FULLTEXT_SEARCH_OPTS,
+		...config,
+	};
+
+	const { prefixSearch = true, minLength = 2 } = options;
 
 	const cleanQuery = query.trim();
 	if (cleanQuery.length < minLength) {
@@ -2060,16 +2126,16 @@ export const createTsQuery = (query: string, config: SearchConfig = {}) => {
 	}
 
 	// this is the most specific match, ie match "quick brown fox" when you search for "quick brown fox"
-	const phraseQuery = sql`to_tsquery(${config.language}, ${terms.join(" <-> ")})`;
+	const phraseQuery = sql`to_tsquery(${options.language}, ${terms.join(" <-> ")})`;
 
 	// all words match but in any order. could perhaps be removed in favor of prefix search
 	const exactTerms = terms.join(" & ");
-	const exactQuery = sql`to_tsquery(${config.language}, ${exactTerms})`;
+	const exactQuery = sql`to_tsquery(${options.language}, ${exactTerms})`;
 
 	// prefix matches, ie match "quick" when you search for "qu"
 	// this significantly slows down the query, but makes it much more useful
 	const prefixTerms = prefixSearch ? terms.map((term) => `${term}:*`).join(" & ") : null;
-	const prefixQuery = prefixTerms ? sql`to_tsquery(${config.language}, ${prefixTerms})` : null;
+	const prefixQuery = prefixTerms ? sql`to_tsquery(${options.language}, ${prefixTerms})` : null;
 
 	// combine queries
 	return sql`(

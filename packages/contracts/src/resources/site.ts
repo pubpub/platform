@@ -194,6 +194,17 @@ export type MaybePubOptions = {
 	 * @default false
 	 */
 	withRelatedCounts?: boolean;
+
+	/**
+	 * The search query to use for matching values
+	 */
+	search?: string;
+
+	/**
+	 * Whether to include matched and highlighted values
+	 * @default true if `search` is defined
+	 */
+	withSearchValues?: boolean;
 };
 
 /**
@@ -259,6 +270,20 @@ type ProcessedPubBase = {
 	updatedAt: Date;
 };
 
+type MaybeSearchResults<Options extends MaybePubOptions> = Options["search"] extends undefined
+	? { matchingValues?: never }
+	: Options["withSearchValues"] extends false
+		? { matchingValues?: never }
+		: {
+				matchingValues?: {
+					slug: string;
+					name: string;
+					value: Json;
+					isTitle: boolean;
+					highlights: string;
+				}[];
+			};
+
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
 	/**
 	 * Is an empty array if `withValues` is false
@@ -267,7 +292,8 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
 	MaybePubMembers<Options> &
-	MaybePubRelatedCounts<Options>;
+	MaybePubRelatedCounts<Options> &
+	MaybeSearchResults<Options>;
 
 export type ProcessedPubWithForm<
 	Options extends Omit<MaybePubOptions, "withValues" & { withValues: true }> = {},
