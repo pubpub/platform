@@ -11,7 +11,7 @@ import { getStageActions } from "~/lib/db/queries";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getStages } from "~/lib/server/stages";
-import { PubSelector } from "./PubSelector";
+import { PubSearch } from "./PubSearchInput";
 import { PubsSelectedProvider } from "./PubsSelectedContext";
 import { PubsSelectedCounter } from "./PubsSelectedCounter";
 
@@ -27,10 +27,9 @@ type PaginatedPubListProps = {
 	userId: UsersId;
 };
 
-const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
-	const search = searchParamsCache.parse(props.searchParams);
-	const [count, pubs, stages, actions] = await Promise.all([
-		getPubsCount({ communityId: props.communityId }),
+const PaginatedPubListInner = async (props: PaginatedPubListProps & { communitySlug: string }) => {
+	const search = searchParamsCache.all();
+	const [pubs, stages, actions] = await Promise.all([
 		getPubsWithRelatedValues(
 			{ communityId: props.communityId, userId: props.userId },
 			{
@@ -42,41 +41,30 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps) => {
 				withStage: true,
 				withValues: false,
 				withRelatedCounts: true,
+				search: search.query,
 			}
 		),
+		// fullTextSearch(search.query, props.communityId, props.userId),
 		getStages({ communityId: props.communityId, userId: props.userId }).execute(),
 		getStageActions({ communityId: props.communityId }).execute(),
 	]);
 
-	const totalPages = Math.ceil(count / search.perPage);
-
-	const communitySlug = await getCommunitySlug();
-	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
-
 	return (
-		<div className={cn("flex flex-col gap-8")}>
-			<PubsSelectedProvider pubIds={[]}>
+		<PubsSelectedProvider pubIds={[]}>
+			<div className="flex flex-col gap-3">
 				{pubs.map((pub) => {
 					return (
 						<PubCard
 							key={pub.id}
 							pub={pub}
-							communitySlug={communitySlug}
+							communitySlug={props.communitySlug}
 							stages={stages}
 							actionInstances={actions}
 						/>
 					);
 				})}
-				<FooterPagination
-					basePath={basePath}
-					searchParams={props.searchParams}
-					page={search.page}
-					totalPages={totalPages}
-				>
-					<PubsSelectedCounter pageSize={search.perPage} />
-				</FooterPagination>
-			</PubsSelectedProvider>
-		</div>
+			</div>
+		</PubsSelectedProvider>
 	);
 };
 
@@ -87,7 +75,7 @@ export const PubListSkeleton = ({
 	amount?: number;
 	className?: string;
 }) => (
-	<div className={cn(["flex flex-col gap-8", className])}>
+	<div className={cn(["flex flex-col gap-3", className])}>
 		{Array.from({ length: amount }).map((_, index) => (
 			<Skeleton key={index} className="flex h-[90px] w-full flex-col gap-2 px-4 py-3">
 				<Skeleton className="mt-3 h-6 w-24 space-y-1.5" />
@@ -97,10 +85,48 @@ export const PubListSkeleton = ({
 	</div>
 );
 
-export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) => {
+const PubListFooterPagination = async (props: {
+	basePath: string;
+	searchParams: Record<string, unknown>;
+	page: number;
+	communityId: CommunitiesId;
+	children: React.ReactNode;
+}) => {
+	const perPage = searchParamsCache.get("perPage");
+	const count = await getPubsCount({ communityId: props.communityId });
+
+	const totalPages = Math.ceil((count ?? 0) / perPage);
+
 	return (
-		<Suspense fallback={<PubListSkeleton />}>
-			<PaginatedPubListInner {...props} />
-		</Suspense>
+		<FooterPagination {...props} totalPages={totalPages} className="z-20">
+			{props.children}
+		</FooterPagination>
+	);
+};
+
+export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) => {
+	const search = searchParamsCache.parse(props.searchParams);
+
+	const communitySlug = await getCommunitySlug();
+
+	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
+
+	return (
+		<div className={cn("mb-4 flex max-h-screen flex-col gap-3 overflow-y-scroll p-4 pb-16")}>
+			<PubSearch>
+				<Suspense fallback={<PubListSkeleton />}>
+					<PaginatedPubListInner {...props} communitySlug={communitySlug} />
+				</Suspense>
+			</PubSearch>
+
+			<PubListFooterPagination
+				basePath={basePath}
+				searchParams={props.searchParams}
+				page={search.page}
+				communityId={props.communityId}
+			>
+				<PubsSelectedCounter pageSize={search.perPage} />
+			</PubListFooterPagination>
+		</div>
 	);
 };

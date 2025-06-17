@@ -1,10 +1,10 @@
+import React from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
 import type { ActionInstances } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
-import { Checkbox } from "ui/checkbox";
 import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 } from "ui/icon";
 import { cn } from "utils";
 
@@ -92,13 +92,42 @@ export const PubCard = async ({
 							href={`/c/${communitySlug}/pubs/${pub.id}`}
 							className={cn("hover:underline", LINK_AFTER)}
 						>
-							{getPubTitle(pub)}
+							<div
+								className="[&_mark]:bg-yellow-300"
+								dangerouslySetInnerHTML={{ __html: getPubTitle(pub) }}
+							/>
 						</Link>
 					</h3>
 				</CardTitle>
-				<CardDescription className="min-w-0 truncate">
-					<PubDescription pub={pub} />
-				</CardDescription>
+				{"description" in pub && (
+					<CardDescription className="min-w-0 truncate">
+						<PubDescription pub={pub} />
+					</CardDescription>
+				)}
+
+				{pub.matchingValues && pub.matchingValues.length > 0 && (
+					<div
+						className={cn(
+							"grid gap-1 text-xs text-gray-500 [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"[&_mark]:bg-yellow-200"
+						)}
+					>
+						{/* Matching values that aren't titles */}
+						{pub.matchingValues
+							.filter((match) => !match.isTitle)
+							.map((match, idx) => (
+								<React.Fragment key={idx}>
+									<span className="font-medium">{match.name}:</span>
+									<span
+										dangerouslySetInnerHTML={{
+											__html: match.highlights,
+										}}
+										className="font-light text-gray-600"
+									/>
+								</React.Fragment>
+							))}
+					</div>
+				)}
 				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
 					<div className="flex gap-1" title="Created at">
 						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
