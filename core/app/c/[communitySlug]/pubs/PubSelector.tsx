@@ -5,7 +5,7 @@ import { Checkbox } from "ui/checkbox";
 
 import { usePubsSelectedContext } from "./PubsSelectedContext";
 
-export const PubSelector = ({ pubId }: { pubId: PubsId }) => {
+export const PubSelector = ({ pubId, className }: { pubId: PubsId; className?: string }) => {
 	const { isSelected, toggle } = usePubsSelectedContext();
 
 	return (
@@ -14,6 +14,7 @@ export const PubSelector = ({ pubId }: { pubId: PubsId }) => {
 			onCheckedChange={() => {
 				toggle(pubId);
 			}}
+			className={className}
 		/>
 	);
 };

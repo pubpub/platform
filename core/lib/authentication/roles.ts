@@ -2,6 +2,7 @@ import { MemberRole } from "db/public";
 
 import type { OR } from "../types";
 import type { LoginData } from "./loginData";
+import { getHighestRole } from "../authorization/rolesRanking";
 
 export const getCommunityRole = (
 	loginData: LoginData["user"],
@@ -14,7 +15,7 @@ export const getCommunityRole = (
 
 	const isIdentifiedWithCommunityId = communityIdentifier.id !== undefined;
 
-	const membership = loginData?.memberships.find((m) => {
+	const communityMemberships = loginData?.memberships.filter((m) => {
 		if (isIdentifiedWithCommunityId) {
 			return m.community.id === communityIdentifier.id;
 		}
@@ -22,11 +23,11 @@ export const getCommunityRole = (
 		return m.community.slug === communityIdentifier.slug;
 	});
 
-	if (!membership) {
+	if (!communityMemberships?.length) {
 		return null;
 	}
 
-	return membership.role;
+	return getHighestRole(communityMemberships);
 };
 
 export const isCommunityAdmin = (

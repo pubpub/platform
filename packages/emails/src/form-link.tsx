@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
 	Body,
 	Button,
@@ -10,7 +9,6 @@ import {
 	Img,
 	Link,
 	Preview,
-	Row,
 	Section,
 	Tailwind,
 	Text,
@@ -30,7 +28,7 @@ interface RequestAccessToForm {
 /**
  * For when a link to a form is expired
  */
-export const RequestLinkToForm = ({
+export const FormLink = ({
 	community,
 	formInviteLink,
 	form,

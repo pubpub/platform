@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { Eye } from "lucide-react";
 
 import type { PubsId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
@@ -11,18 +12,19 @@ import { Pencil } from "ui/icon";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import { getAuthorizedViewForms, userCan } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm, getMembershipForms } from "~/lib/server/form";
+import { getForm } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import {
@@ -68,7 +70,7 @@ export default async function Page(props: {
 	params: Promise<{ pubId: PubsId; communitySlug: string }>;
 	searchParams: Promise<Record<string, string>>;
 }) {
-	const searchParams = await props.searchParams;
+	const { form: formSlug, ...searchParams } = await props.searchParams;
 	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
@@ -138,15 +140,19 @@ export default async function Page(props: {
 
 	const actionsPromise = pub.stage ? getStageActions({ stageId: pub.stage.id }).execute() : null;
 
+	const getFormProps = formSlug
+		? { communityId: community.id, slug: formSlug }
+		: {
+				communityId: community.id,
+				pubTypeId: pub.pubType.id,
+			};
+
 	const [actions, communityMembers, communityStages, form, withExtraPubValues, availableForms] =
 		await Promise.all([
 			actionsPromise,
 			communityMembersPromise,
 			communityStagesPromise,
-			getForm({
-				communityId: community.id,
-				pubTypeId: pub.pubType.id,
-			}).executeTakeFirstOrThrow(
+			getForm(getFormProps).executeTakeFirstOrThrow(
 				() => new Error(`Could not find a form for pubtype ${pub.pubType.name}`)
 			),
 			userCan(
@@ -154,7 +160,7 @@ export default async function Page(props: {
 				{ type: MembershipType.pub, pubId: pub.id },
 				user.id
 			),
-			getMembershipForms(pub.pubType.id),
+			getAuthorizedViewForms(user.id, pub.id).execute(),
 		]);
 
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
@@ -166,8 +172,17 @@ export default async function Page(props: {
 		<div className="flex flex-col space-y-4">
 			<div className="mb-8 flex items-center justify-between">
 				<div>
-					<div className="text-lg font-semibold text-muted-foreground">
-						{pub.pubType.name}
+					<div className="flex items-baseline gap-2">
+						<span className="text-lg font-semibold text-muted-foreground">
+							{pub.pubType.name}
+						</span>
+						<FormSwitcher
+							defaultFormSlug={formSlug}
+							forms={availableForms}
+							className="ml-4 p-1 text-xs text-muted-foreground"
+						>
+							<Eye size={14} />
+						</FormSwitcher>
 					</div>
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
@@ -257,7 +272,7 @@ export default async function Page(props: {
 						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
 						className="w-fit"
 					/>
-					<RelatedPubsTableWrapper pub={pub} />
+					<RelatedPubsTableWrapper pub={pubByForm} />
 				</div>
 			)}
 		</div>

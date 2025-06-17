@@ -162,6 +162,10 @@ test.describe("link", () => {
 		const editor = page.locator(".ProseMirror");
 
 		await editor.click();
+
+		await editor.press("Enter");
+		await editor.press("ArrowUp");
+
 		await editor.pressSequentially("https://www.knowledgefutures.org ");
 
 		await page
@@ -172,14 +176,8 @@ test.describe("link", () => {
 			});
 		await editor.press("ControlOrMeta+C");
 
-		await page
-			.locator(".ProseMirror a", { hasText: "https://www.knowledgefutures.org" })
-			.first()
-			.click({
-				clickCount: 3,
-			});
-
-		await editor.press("ArrowRight");
+		await editor.press("ArrowDown");
+		await editor.press("ArrowDown");
 		await editor.press("Enter");
 
 		await editor.press("ControlOrMeta+v");

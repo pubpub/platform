@@ -12,6 +12,7 @@ import type { CommunityStage } from "~/lib/server/stages";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
+import { PubSelector } from "../c/[communitySlug]/pubs/PubSelector";
 import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu";
 import { RelationsDropDown } from "./pubs/RelationsDropDown";
 import { RemovePubButton } from "./pubs/RemovePubButton";
@@ -156,7 +157,8 @@ export const PubCard = async ({
 						</Link>
 					</Button>
 					{withSelection ? (
-						<Checkbox
+						<PubSelector
+							pubId={pub.id}
 							className={cn(
 								"order-4 ml-2 box-content h-4 w-4 border-neutral-500 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
 								HOVER_CLASS

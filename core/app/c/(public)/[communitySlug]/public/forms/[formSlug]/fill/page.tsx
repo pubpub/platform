@@ -24,14 +24,14 @@ import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
+import { userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getForm, userHasPermissionToForm } from "~/lib/server/form";
+import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
 import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { capitalize } from "~/lib/string";
 import { ExternalFormWrapper } from "./ExternalFormWrapper";
 import { RequestLink } from "./RequestLink";
-import { handleFormToken } from "./utils";
 
 const NotFound = ({ children }: { children: ReactNode }) => {
 	return <div className="w-full pt-8 text-center">{children}</div>;
@@ -163,6 +163,10 @@ export default async function FormPage(props: {
 		return <NotFound>No form found</NotFound>;
 	}
 
+	if (searchParams.pubId && !pub) {
+		return <NotFound>Pub not found</NotFound>;
+	}
+
 	if (!user && !session) {
 		if (form.access === "public") {
 			// redirect user to signup/login
@@ -170,14 +174,6 @@ export default async function FormPage(props: {
 				`/c/${params.communitySlug}/public/signup?redirectTo=/c/${params.communitySlug}/public/forms/${params.formSlug}/fill`
 			);
 		}
-
-		const result = await handleFormToken({
-			params,
-			searchParams,
-			onExpired: ({ params, searchParams, result }) => {
-				return;
-			},
-		});
 
 		return (
 			<ExpiredTokenPage
@@ -203,11 +199,19 @@ export default async function FormPage(props: {
 
 	// all other roles always have access to the form
 	if (role === MemberRole.contributor && form.access !== FormAccessType.public) {
-		const memberHasAccessToForm = await userHasPermissionToForm({
-			formSlug: params.formSlug,
-			userId: user.id,
-			pubId: pub?.id,
-		});
+		const memberHasAccessToForm = pub
+			? await userCanEditPub({
+					formSlug: params.formSlug,
+					userId: user.id,
+					pubId: pub.id,
+				})
+			: await userCanCreatePub({
+					userId: user.id,
+					communityId: community.id,
+					// When the form is in create mode (there's no pub), just pass the form's pubType since
+					// the user doesn't control the type.
+					pubTypeId: form.pubTypeId,
+				});
 
 		if (!memberHasAccessToForm) {
 			// TODO: show no access page

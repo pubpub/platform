@@ -333,12 +333,13 @@ test.describe("Creating a pub", () => {
 test.describe("Updating a pub", () => {
 	test("Can update a pub from pubs list page", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
-		pubsPage.goTo();
+		await pubsPage.goTo();
 		await page
 			.getByTestId(`pub-card-${community.pubs[0].id}`)
 			.getByRole("link", { name: "Update" })
 			.click();
-		await expect(page.getByTestId("save-status")).toHaveText(
+
+		await expect(page.getByTestId("save-status-text")).toHaveText(
 			"Form will save when you click save"
 		);
 
@@ -348,7 +349,7 @@ test.describe("Updating a pub", () => {
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
-		await expect(page.getByTestId("save-status")).toContainText("Last saved at");
+		await expect(page.getByTestId("save-status-text")).toContainText("Last saved at");
 
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByRole("heading", { name: newTitle })).toHaveCount(1);

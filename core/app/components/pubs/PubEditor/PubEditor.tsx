@@ -104,8 +104,9 @@ const getRelatedPubData = async ({
 };
 
 export type PubEditorProps = {
-	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId };
-	formId?: string;
+	searchParams: { relatedPubId?: PubsId; slug?: string; pubTypeId?: PubTypesId; form?: string };
+	htmlFormId?: string;
+	formSlug?: string;
 } & (
 	| {
 			pubId: PubsId;
@@ -217,10 +218,13 @@ export async function PubEditor(props: PubEditorProps) {
 		);
 	}
 
-	const form = await getForm({
-		communityId: community.id,
-		pubTypeId: pubType.id,
-	}).executeTakeFirstOrThrow(
+	const getFormProps = props.formSlug
+		? { communityId: community.id, slug: props.formSlug }
+		: {
+				communityId: community.id,
+				pubTypeId: pubType.id,
+			};
+	const form = await getForm(getFormProps).executeTakeFirstOrThrow(
 		() => new Error(`Could not find a form for pubtype ${pubType.name}`)
 	);
 
@@ -322,7 +326,7 @@ export async function PubEditor(props: PubEditorProps) {
 					isUpdating={isUpdating}
 					withAutoSave={false}
 					withButtonElements
-					htmlFormId={props.formId}
+					htmlFormId={props.htmlFormId}
 					stageId={currentStageId}
 					relatedPub={
 						relatedPubId && relatedFieldSlug
