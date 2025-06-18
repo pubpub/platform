@@ -47,6 +47,9 @@ export const PubCard = async ({
 	actionInstances: ActionInstances[];
 	withSelection?: boolean;
 }) => {
+	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
+
+	const showMatchingValues = matchingValues && matchingValues.length !== 0;
 	return (
 		<Card
 			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
@@ -69,7 +72,7 @@ export const PubCard = async ({
 							button={
 								<Button
 									variant="outline"
-									className="h-[22px] gap-0.5 rounded-[104px] px-2 px-[.35rem] text-xs font-semibold shadow-none"
+									className="h-[22px] gap-0.5 rounded-[104px] px-[.35rem] text-xs font-semibold shadow-none"
 								>
 									<FlagTriangleRightIcon
 										strokeWidth="1px"
@@ -102,7 +105,7 @@ export const PubCard = async ({
 				<CardDescription className="m-0 min-w-0 truncate p-0">
 					<PubDescription pub={pub} />
 				</CardDescription>
-				{pub.matchingValues && pub.matchingValues.length > 0 && (
+				{showMatchingValues && (
 					<div
 						className={cn(
 							"grid gap-1 text-xs text-gray-500 [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
@@ -110,19 +113,17 @@ export const PubCard = async ({
 						)}
 					>
 						{/* Matching values that aren't titles */}
-						{pub.matchingValues
-							.filter((match) => !match.isTitle)
-							.map((match, idx) => (
-								<React.Fragment key={idx}>
-									<span className="font-medium">{match.name}:</span>
-									<span
-										dangerouslySetInnerHTML={{
-											__html: match.highlights,
-										}}
-										className="font-light text-gray-600"
-									/>
-								</React.Fragment>
-							))}
+						{matchingValues.map((match, idx) => (
+							<React.Fragment key={idx}>
+								<span className="font-medium">{match.name}:</span>
+								<span
+									dangerouslySetInnerHTML={{
+										__html: match.highlights,
+									}}
+									className="font-light text-gray-600"
+								/>
+							</React.Fragment>
+						))}
 					</div>
 				)}
 				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
