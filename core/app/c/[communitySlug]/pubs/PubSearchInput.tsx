@@ -33,7 +33,7 @@ export const PubSearch = (props: PubSearchProps) => {
 
 	return (
 		<div className="relative flex flex-col gap-4">
-			<div className="sticky top-0 z-20 flex items-center gap-x-2">
+			<div className="sticky top-0 z-20 flex max-w-md items-center gap-x-2">
 				<Search
 					className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
 					size={16}

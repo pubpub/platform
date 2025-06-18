@@ -10,6 +10,7 @@ export const PubSelector = ({ pubId, className }: { pubId: PubsId; className?: s
 
 	return (
 		<Checkbox
+			aria-label="Select pub"
 			checked={isSelected(pubId)}
 			onCheckedChange={() => {
 				toggle(pubId);

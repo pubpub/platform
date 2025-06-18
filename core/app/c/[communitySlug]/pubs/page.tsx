@@ -59,15 +59,12 @@ export default async function Page(props: Props) {
 				</div>
 			}
 		>
-			{/* Restore layout padding, but give extra bottom padding so that last item is not covered by the footer */}
-			<div className="">
-				<PaginatedPubList
-					communityId={community.id}
-					searchParams={searchParams}
-					basePath={basePath}
-					userId={user.id}
-				/>
-			</div>
+			<PaginatedPubList
+				communityId={community.id}
+				searchParams={searchParams}
+				basePath={basePath}
+				userId={user.id}
+			/>
 		</ContentLayout>
 	);
 }

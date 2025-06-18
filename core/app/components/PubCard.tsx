@@ -99,12 +99,9 @@ export const PubCard = async ({
 						</Link>
 					</h3>
 				</CardTitle>
-				{"description" in pub && (
-					<CardDescription className="min-w-0 truncate">
-						<PubDescription pub={pub} />
-					</CardDescription>
-				)}
-
+				<CardDescription className="m-0 min-w-0 truncate p-0">
+					<PubDescription pub={pub} />
+				</CardDescription>
 				{pub.matchingValues && pub.matchingValues.length > 0 && (
 					<div
 						className={cn(

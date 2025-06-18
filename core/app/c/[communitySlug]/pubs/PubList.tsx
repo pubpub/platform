@@ -51,7 +51,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps & { communityS
 
 	return (
 		<PubsSelectedProvider pubIds={[]}>
-			<div className="flex flex-col gap-3">
+			<div className="mr-auto flex max-w-screen-lg flex-col gap-3">
 				{pubs.map((pub) => {
 					return (
 						<PubCard
@@ -112,13 +112,16 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
 
 	return (
-		<div className={cn("mb-4 flex max-h-screen flex-col gap-3 overflow-y-scroll p-4 pb-16")}>
-			<PubSearch>
-				<Suspense fallback={<PubListSkeleton />}>
-					<PaginatedPubListInner {...props} communitySlug={communitySlug} />
-				</Suspense>
-			</PubSearch>
-
+		<div className="relative flex h-full flex-col">
+			<div
+				className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll p-4 pb-16")}
+			>
+				<PubSearch>
+					<Suspense fallback={<PubListSkeleton />}>
+						<PaginatedPubListInner {...props} communitySlug={communitySlug} />
+					</Suspense>
+				</PubSearch>
+			</div>
 			<PubListFooterPagination
 				basePath={basePath}
 				searchParams={props.searchParams}
