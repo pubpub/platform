@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useDeferredValue, useEffect, useState } from "react";
+import React, { useDeferredValue, useEffect, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { useDebouncedCallback } from "use-debounce";
 
-import { usePlatformModifierKey } from "ui/hooks";
+import { KeyboardShortcutPriority, useKeyboardShortcut, usePlatformModifierKey } from "ui/hooks";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
@@ -32,6 +32,19 @@ export const PubSearch = (props: PubSearchProps) => {
 	// without this, we can't only check if inputValue !== query.query,
 	// which only tells us that the debounce has happened
 	const deferredQuery = useDeferredValue(query.query);
+
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useKeyboardShortcut(
+		"Mod+k",
+		() => {
+			inputRef.current?.focus();
+			inputRef.current?.select();
+		},
+		{
+			priority: KeyboardShortcutPriority.MEDIUM,
+		}
+	);
 
 	// sync input with URL when navigating back/forward
 	useEffect(() => {
@@ -60,6 +73,7 @@ export const PubSearch = (props: PubSearchProps) => {
 					size={16}
 				/>
 				<Input
+					ref={inputRef}
 					value={inputValue}
 					onChange={(e) => {
 						setInputValue(e.target.value);

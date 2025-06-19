@@ -7,7 +7,6 @@ import { cn } from "utils";
 import { searchParamsCache } from "~/app/components/DataTable/PubsDataTable/validations";
 import { FooterPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/PubCard";
-import { getStageActions } from "~/lib/db/queries";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getStages } from "~/lib/server/stages";
@@ -29,7 +28,7 @@ type PaginatedPubListProps = {
 
 const PaginatedPubListInner = async (props: PaginatedPubListProps & { communitySlug: string }) => {
 	const search = searchParamsCache.all();
-	const [pubs, stages, actions] = await Promise.all([
+	const [pubs, stages] = await Promise.all([
 		getPubsWithRelatedValues(
 			{ communityId: props.communityId, userId: props.userId },
 			{
@@ -44,22 +43,26 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps & { communityS
 				search: search.query,
 			}
 		),
-		// fullTextSearch(search.query, props.communityId, props.userId),
-		getStages({ communityId: props.communityId, userId: props.userId }).execute(),
-		getStageActions({ communityId: props.communityId }).execute(),
+		getStages(
+			{ communityId: props.communityId, userId: props.userId },
+			{ withActionInstances: "full" }
+		).execute(),
 	]);
 
 	return (
 		<PubsSelectedProvider pubIds={[]}>
 			<div className="mr-auto flex max-w-screen-lg flex-col gap-3">
 				{pubs.map((pub) => {
+					const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
+
 					return (
 						<PubCard
 							key={pub.id}
 							pub={pub}
 							communitySlug={props.communitySlug}
-							stages={stages}
-							actionInstances={actions}
+							moveFrom={stageForPub?.moveConstraintSources}
+							moveTo={stageForPub?.moveConstraints}
+							actionInstances={stageForPub?.actionInstances}
 						/>
 					);
 				})}

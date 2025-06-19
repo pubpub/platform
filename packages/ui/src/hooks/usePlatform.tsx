@@ -1,6 +1,6 @@
 import * as React from "react";
 
-type Platform = "mac" | "windows" | "linux" | "unknown";
+export type Platform = "mac" | "windows" | "linux" | "unknown";
 
 export function usePlatform(): Platform {
 	const [platform, setPlatform] = React.useState<Platform>("unknown");

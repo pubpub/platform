@@ -14,6 +14,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "ui/command";
+import { KeyboardShortcutPriority, useKeyboardShortcut } from "ui/hooks";
 import { AlertCircle, Loader2 } from "ui/icon";
 
 import type { fullTextSearch } from "~/lib/server/pub";
@@ -54,21 +55,14 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 		},
 	});
 
-	// CMD+K handler
-	useEffect(() => {
-		const down = (e: KeyboardEvent) => {
-			if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-				e.preventDefault();
-				onOpenChange?.(true);
-				setOpen(true);
-			}
-		};
-
-		document.addEventListener("keydown", down);
-		return () => document.removeEventListener("keydown", down);
-	}, [onOpenChange]);
+	useKeyboardShortcut("Mod+k", () => {
+		console.log("Mod+k");
+		onOpenChange?.(true);
+		setOpen(true);
+	});
 
 	const router = useRouter();
+
 	return (
 		<CommandDialog
 			open={open}

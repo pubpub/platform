@@ -12,7 +12,6 @@ import { PubCard } from "~/app/components/PubCard";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { findCommunityBySlug } from "~/lib/server/community";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
@@ -101,9 +100,8 @@ export async function StagePubs({
 	basePath: string;
 	userId: UsersId;
 }) {
-	const [communitySlug, stages, stagePubs, actionInstances] = await Promise.all([
+	const [communitySlug, stagePubs, actionInstances] = await Promise.all([
 		getCommunitySlug(),
-		getStages({ communityId: stage.communityId, userId }).execute(),
 		getPubsWithRelatedValues(
 			{ stageId: [stage.id], communityId: stage.communityId },
 			{
@@ -140,7 +138,8 @@ export async function StagePubs({
 								withRelatedPubs: false;
 							}>
 						}
-						stages={stages}
+						moveFrom={stage.moveConstraintSources}
+						moveTo={stage.moveConstraints}
 						actionInstances={actionInstances}
 						communitySlug={communitySlug}
 						withSelection={false}

@@ -32,7 +32,8 @@ const LINK_AFTER =
 export const PubCard = async ({
 	pub,
 	communitySlug,
-	stages,
+	moveFrom,
+	moveTo,
 	actionInstances,
 	withSelection = true,
 }: {
@@ -43,19 +44,22 @@ export const PubCard = async ({
 		withRelatedCounts: true;
 	}>;
 	communitySlug: string;
-	stages: CommunityStage[];
-	actionInstances: ActionInstances[];
+	moveFrom?: CommunityStage["moveConstraintSources"];
+	moveTo?: CommunityStage["moveConstraints"];
+	actionInstances?: ActionInstances[];
 	withSelection?: boolean;
 }) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
 
 	const showMatchingValues = matchingValues && matchingValues.length !== 0;
+	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues;
+	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
 	return (
 		<Card
 			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
 			data-testid={`pub-card-${pub.id}`}
 		>
-			<div className="flex min-w-0 flex-col space-y-[6px]">
+			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
 				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
 					{/* TODO: make filter by pub type */}
 					<Button
@@ -68,7 +72,8 @@ export const PubCard = async ({
 						<Move
 							pubId={pub.id}
 							stageId={pub.stage.id}
-							communityStages={stages}
+							moveFrom={moveFrom ?? []}
+							moveTo={moveTo ?? []}
 							button={
 								<Button
 									variant="outline"
@@ -102,7 +107,11 @@ export const PubCard = async ({
 						</Link>
 					</h3>
 				</CardTitle>
-				<CardDescription className="m-0 min-w-0 truncate p-0">
+				<CardDescription
+					className={cn("m-0 min-w-0 truncate p-0", {
+						hidden: showMatchingValues || !showDescription,
+					})}
+				>
 					<PubDescription pub={pub} />
 				</CardDescription>
 				{showMatchingValues && (
@@ -137,17 +146,24 @@ export const PubCard = async ({
 					</div>
 				</CardFooter>
 			</div>
-			<div className="z-10 mr-4">
+			<div className="z-10 mr-4 w-fit flex-shrink-0">
 				{/* We use grid and order-[x] to place items according to the design, but 
 				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other
 				buttons check if the `peer` is open, and if it is, it does not lose opacity.
 				Otherwise, when the dropdown menu opens, the buttons all fade away */}
-				<div className="grid grid-cols-4 items-center gap-3 text-neutral-500">
-					{!withSelection ? <div className="col-span-1" /> : null}
-					{pub.stage && actionInstances?.length > 0 ? (
+				<div
+					className={cn(
+						"grid w-fit items-center gap-3 text-neutral-500",
+						withSelection && hasActions && "grid-cols-4",
+						withSelection && !hasActions && "grid-cols-3",
+						!withSelection && hasActions && "grid-cols-3",
+						!withSelection && !hasActions && "grid-cols-2"
+					)}
+				>
+					{hasActions ? (
 						<PubsRunActionDropDownMenu
 							actionInstances={actionInstances}
-							stage={pub.stage}
+							stage={pub.stage!}
 							pubId={pub.id}
 							iconOnly
 							variant="ghost"
@@ -156,9 +172,7 @@ export const PubCard = async ({
 								HOVER_CLASS
 							)}
 						/>
-					) : (
-						<div className="col-span-1" />
-					)}
+					) : null}
 					<RemovePubButton
 						pubId={pub.id}
 						iconOnly
