@@ -122,7 +122,7 @@ export async function StagePubs({
 		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;
 
 	return (
-		<div className="flex flex-col gap-8">
+		<div className="flex flex-col gap-3">
 			{stagePubs.map((pub, index) => {
 				if (totalPubLimit && index > totalPubLimit - 1) {
 					return null;
