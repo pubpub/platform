@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 
+import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
 import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
@@ -26,23 +27,21 @@ type PaginatedPubListProps = {
 	userId: UsersId;
 };
 
-const PaginatedPubListInner = async (props: PaginatedPubListProps & { communitySlug: string }) => {
-	const search = searchParamsCache.all();
+type PubListProcessedPub = ProcessedPub<{
+	withPubType: true;
+	withRelatedPubs: false;
+	withStage: true;
+	withRelatedCounts: true;
+}>;
+
+const PaginatedPubListInner = async (
+	props: PaginatedPubListProps & {
+		communitySlug: string;
+		pubsPromise: Promise<PubListProcessedPub[]>;
+	}
+) => {
 	const [pubs, stages] = await Promise.all([
-		getPubsWithRelatedValues(
-			{ communityId: props.communityId, userId: props.userId },
-			{
-				limit: search.perPage,
-				offset: (search.page - 1) * search.perPage,
-				orderBy: "updatedAt",
-				withPubType: true,
-				withRelatedPubs: false,
-				withStage: true,
-				withValues: false,
-				withRelatedCounts: true,
-				search: search.query,
-			}
-		),
+		props.pubsPromise,
 		getStages(
 			{ communityId: props.communityId, userId: props.userId },
 			{ withActionInstances: "full" }
@@ -51,7 +50,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps & { communityS
 
 	return (
 		<PubsSelectedProvider pubIds={[]}>
-			<div className="mr-auto flex max-w-screen-lg flex-col gap-3">
+			<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
 				{pubs.map((pub) => {
 					const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
 
@@ -94,14 +93,27 @@ const PubListFooterPagination = async (props: {
 	page: number;
 	communityId: CommunitiesId;
 	children: React.ReactNode;
+	pubsPromise: Promise<ProcessedPub[]>;
 }) => {
 	const perPage = searchParamsCache.get("perPage");
-	const count = await getPubsCount({ communityId: props.communityId });
+	const isQuery = !!searchParamsCache.get("query");
 
-	const totalPages = Math.ceil((count ?? 0) / perPage);
+	const count = await (isQuery
+		? props.pubsPromise.then((pubs) => pubs.length)
+		: getPubsCount({ communityId: props.communityId }));
+
+	const paginationProps = isQuery
+		? {
+				mode: "cursor" as const,
+				hasNextPage: count > perPage,
+			}
+		: {
+				mode: "total" as const,
+				totalPages: Math.ceil((count ?? 0) / perPage),
+			};
 
 	return (
-		<FooterPagination {...props} totalPages={totalPages} className="z-20">
+		<FooterPagination {...props} {...paginationProps} className="z-20">
 			{props.children}
 		</FooterPagination>
 	);
@@ -114,6 +126,24 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 
 	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
 
+	// we do one more than the total amount of pubs to know if there is a next page
+	const limit = search.query ? search.perPage + 1 : search.perPage;
+
+	const pubsPromise = getPubsWithRelatedValues(
+		{ communityId: props.communityId, userId: props.userId },
+		{
+			limit,
+			offset: (search.page - 1) * search.perPage,
+			orderBy: "updatedAt",
+			withPubType: true,
+			withRelatedPubs: false,
+			withStage: true,
+			withValues: false,
+			withRelatedCounts: true,
+			search: search.query,
+		}
+	);
+
 	return (
 		<div className="relative flex h-full flex-col">
 			<div
@@ -121,7 +151,11 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 			>
 				<PubSearch>
 					<Suspense fallback={<PubListSkeleton />}>
-						<PaginatedPubListInner {...props} communitySlug={communitySlug} />
+						<PaginatedPubListInner
+							{...props}
+							communitySlug={communitySlug}
+							pubsPromise={pubsPromise}
+						/>
 					</Suspense>
 				</PubSearch>
 			</div>
@@ -130,6 +164,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 				searchParams={props.searchParams}
 				page={search.page}
 				communityId={props.communityId}
+				pubsPromise={pubsPromise}
 			>
 				<PubsSelectedCounter pageSize={search.perPage} />
 			</PubListFooterPagination>
