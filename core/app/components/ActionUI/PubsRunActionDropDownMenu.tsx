@@ -15,6 +15,7 @@ export const PubsRunActionDropDownMenu = async ({
 	stage,
 	testId,
 	iconOnly,
+	children,
 	...buttonProps
 }: {
 	actionInstances: ActionInstances[];
@@ -22,6 +23,7 @@ export const PubsRunActionDropDownMenu = async ({
 	stage: Stages;
 	testId?: string;
 	iconOnly?: boolean;
+	children?: React.ReactNode;
 } & ButtonProps) => {
 	if (!actionInstances.length) {
 		return null;
@@ -37,9 +39,13 @@ export const PubsRunActionDropDownMenu = async ({
 					data-testid={testId}
 					{...buttonProps}
 				>
-					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
-					<span className={cn({ "sr-only": iconOnly })}>Run action</span>
-					{iconOnly ? null : <ChevronDown size="14" />}
+					{children ?? (
+						<>
+							<Play size="12" strokeWidth="1px" className="text-neutral-500" />
+							<span className={cn({ "sr-only": iconOnly })}>Run action</span>
+							{iconOnly ? null : <ChevronDown size="14" />}
+						</>
+					)}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
