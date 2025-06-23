@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
@@ -8,6 +9,7 @@ import { Button } from "ui/button";
 
 import { FooterPagination } from "~/app/components/Pagination";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { env } from "~/lib/env/env";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -40,7 +42,6 @@ export default async function Page(props: Props) {
 	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
-		// Position absolute to remove the parent layout padding so that the footer can hug the bottom properly
 		<ContentLayout
 			title={
 				<>
@@ -52,12 +53,15 @@ export default async function Page(props: Props) {
 					<Button variant="ghost" size="sm" asChild>
 						<Link href="types">Manage Types</Link>
 					</Button>
-					<CreatePubButton
-						communityId={community.id as CommunitiesId}
-						className="bg-emerald-500 text-white"
-					/>
+					<Suspense fallback={<SkeletonButton className="h-6 w-20" />}>
+						<CreatePubButton
+							communityId={community.id as CommunitiesId}
+							className="bg-emerald-500 text-white"
+						/>
+					</Suspense>
 				</div>
 			}
+			className="overflow-hidden"
 		>
 			<PaginatedPubList
 				communityId={community.id}

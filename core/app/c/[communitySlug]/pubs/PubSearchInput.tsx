@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useDeferredValue, useEffect, useRef, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { useDebouncedCallback } from "use-debounce";
 
@@ -62,11 +62,16 @@ export const PubSearch = (props: PubSearchProps) => {
 		}
 	}, DEBOUNCE_TIME);
 
+	const handleClearInput = () => {
+		setInputValue("");
+		setQuery({ query: "", page: 1 });
+	};
+
 	// determine if content is stale, in order to provide a visual feedback to the user
 	const isStale = inputValue !== deferredQuery;
 
 	return (
-		<div className="relative flex flex-col gap-4">
+		<div className="flex flex-col gap-4">
 			<div className="sticky top-0 z-20 flex max-w-md items-center gap-x-2">
 				<Search
 					className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
@@ -80,10 +85,33 @@ export const PubSearch = (props: PubSearchProps) => {
 						debouncedSetQuery(e.target.value);
 					}}
 					placeholder="Search updates as you type..."
-					className="bg-white pl-8 tracking-wide shadow-none"
+					className={cn("bg-white pl-8 tracking-wide shadow-none", inputValue && "pr-8")}
 				/>
-				<span className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-x-1 font-mono text-xs text-gray-500 opacity-50 md:flex">
-					<span className={cn(platform === "mac" && "text-lg")}>{symbol}</span> K
+				<span className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-x-2 font-mono text-xs text-gray-500 opacity-50 md:flex">
+					{inputValue && (
+						<button
+							onClick={handleClearInput}
+							className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:right-16"
+							type="button"
+							aria-label="Clear search"
+						>
+							<X size={14} />
+						</button>
+					)}
+					<span
+						className={cn(
+							"flex w-10 items-center justify-center gap-x-1 transition-opacity duration-200",
+							{
+								// hide until hydrated, otherwise you see flash of `Ctrl` -> `Cmd` on mac
+								"opacity-0": platform === "unknown",
+							}
+						)}
+					>
+						<span className={cn({ "mt-0.5 text-lg": platform === "mac" })}>
+							{symbol}
+						</span>{" "}
+						K
+					</span>
 				</span>
 			</div>
 			<div className={cn(isStale && "opacity-50 transition-opacity duration-200")}>
