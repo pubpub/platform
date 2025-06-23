@@ -12,6 +12,11 @@ import stagesJson from "./assets/stages.json";
 
 const pub = {
 	...pubJson,
+	title: "aoaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+	stage: {
+		...pubJson.stage,
+		name: "Very Very Long Stage Name",
+	},
 	createdAt: new Date(pubJson.createdAt),
 	updatedAt: new Date(pubJson.updatedAt),
 } as unknown as ProcessedPub<{

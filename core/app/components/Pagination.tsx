@@ -156,65 +156,69 @@ export const FooterPagination = ({
 				className
 			)}
 		>
-			<ResultsPerPageInput />
-			<Pagination
-				className={cn("items-center gap-2 lg:gap-8", { "mx-0 justify-end": !children })}
-			>
-				<span className="whitespace-nowrap">
-					Page {page} of {totalPages}
-				</span>
+			<div className="flex w-full items-center gap-2 md:flex-col">
+				<ResultsPerPageInput className="justify-self-start" />
+				<Pagination
+					className={cn("items-center gap-2 lg:gap-8", { "mx-0 justify-end": !children })}
+				>
+					<PaginationContent className="gap-2">
+						<PaginationFirst
+							iconOnly
+							aria-disabled={prevDisabled}
+							tabIndex={prevDisabled ? -1 : undefined}
+							className={cn("border px-3 py-3", {
+								"pointer-events-none opacity-50": prevDisabled,
+							})}
+							href={{
+								pathname: basePath,
+								query: { ...searchParams, page: 1 },
+							}}
+						/>
+						<PaginationPrevious
+							iconOnly
+							aria-disabled={prevDisabled}
+							tabIndex={prevDisabled ? -1 : undefined}
+							className={cn("border px-3 py-3", {
+								"pointer-events-none opacity-50": prevDisabled,
+							})}
+							href={{
+								pathname: basePath,
+								query: { ...searchParams, page: page - 1 },
+							}}
+						/>
 
-				<PaginationContent className="gap-2">
-					<PaginationFirst
-						iconOnly
-						aria-disabled={prevDisabled}
-						tabIndex={prevDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": prevDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: 1 },
-						}}
-					/>
-					<PaginationPrevious
-						iconOnly
-						aria-disabled={prevDisabled}
-						tabIndex={prevDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": prevDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: page - 1 },
-						}}
-					/>
-					<PaginationNext
-						iconOnly
-						aria-disabled={nextDisabled}
-						tabIndex={nextDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": nextDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: page + 1 },
-						}}
-					/>
-					<PaginationLast
-						iconOnly
-						aria-disabled={nextDisabled}
-						tabIndex={nextDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": nextDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: totalPages },
-						}}
-					/>
-				</PaginationContent>
-			</Pagination>
+						<PaginationItem>
+							<span className="whitespace-nowrap text-sm">
+								{page} / {totalPages}
+							</span>
+						</PaginationItem>
+						<PaginationNext
+							iconOnly
+							aria-disabled={nextDisabled}
+							tabIndex={nextDisabled ? -1 : undefined}
+							className={cn("border px-3 py-3", {
+								"pointer-events-none opacity-50": nextDisabled,
+							})}
+							href={{
+								pathname: basePath,
+								query: { ...searchParams, page: page + 1 },
+							}}
+						/>
+						<PaginationLast
+							iconOnly
+							aria-disabled={nextDisabled}
+							tabIndex={nextDisabled ? -1 : undefined}
+							className={cn("border px-3 py-3", {
+								"pointer-events-none opacity-50": nextDisabled,
+							})}
+							href={{
+								pathname: basePath,
+								query: { ...searchParams, page: totalPages },
+							}}
+						/>
+					</PaginationContent>
+				</Pagination>
+			</div>
 			{children}
 		</div>
 	);

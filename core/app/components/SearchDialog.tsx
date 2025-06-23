@@ -56,7 +56,6 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 	});
 
 	useKeyboardShortcut("Mod+k", () => {
-		console.log("Mod+k");
 		onOpenChange?.(true);
 		setOpen(true);
 	});

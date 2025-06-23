@@ -51,7 +51,7 @@ const PaginatedPubListInner = async (props: PaginatedPubListProps & { communityS
 
 	return (
 		<PubsSelectedProvider pubIds={[]}>
-			<div className="mr-auto flex max-w-screen-lg flex-col gap-3">
+			<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
 				{pubs.map((pub) => {
 					const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
 
