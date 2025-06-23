@@ -132,23 +132,30 @@ export const BasicPagination = (props: {
 	);
 };
 
-export const FooterPagination = ({
-	basePath,
-	searchParams,
-	page,
-	totalPages,
-	children,
-	className,
-}: {
-	basePath: string;
-	searchParams: Record<string, unknown>;
-	page: number;
-	totalPages: number;
-	children?: React.ReactNode;
-	className?: string;
-}) => {
-	const nextDisabled = page >= totalPages;
+export const FooterPagination = (
+	props: {
+		basePath: string;
+		searchParams: Record<string, unknown>;
+		page: number;
+		children?: React.ReactNode;
+		className?: string;
+	} & (
+		| {
+				mode: "total";
+				totalPages: number;
+		  }
+		| {
+				mode: "cursor";
+				hasNextPage: boolean;
+		  }
+	)
+) => {
+	const { basePath, searchParams, page, children, className } = props;
+
 	const prevDisabled = page <= 1;
+	const nextDisabled = props.mode === "total" ? page >= props.totalPages : !props.hasNextPage;
+	const showLastButton = props.mode === "total";
+
 	return (
 		<div
 			className={cn(
@@ -156,12 +163,23 @@ export const FooterPagination = ({
 				className
 			)}
 		>
-			<div className="flex w-full items-center gap-2 md:flex-col">
+			<div className="flex w-full items-center gap-2">
 				<ResultsPerPageInput className="justify-self-start" />
 				<Pagination
 					className={cn("items-center gap-2 lg:gap-8", { "mx-0 justify-end": !children })}
 				>
 					<PaginationContent className="gap-2">
+						{/* dont show this on mobile */}
+						<div className="hidden md:block">
+							{props.mode === "total" ? (
+								<span className="whitespace-nowrap">
+									Page {page} of {props.totalPages}
+								</span>
+							) : (
+								<span className="whitespace-nowrap">Page {page}</span>
+							)}
+						</div>
+
 						<PaginationFirst
 							iconOnly
 							aria-disabled={prevDisabled}
@@ -186,11 +204,25 @@ export const FooterPagination = ({
 								query: { ...searchParams, page: page - 1 },
 							}}
 						/>
+						{/* show this on mobile */}
+						<PaginationItem className="md:hidden">
+							{props.mode === "total" ? (
+								<span className="whitespace-nowrap text-sm">
+									{page}
 
-						<PaginationItem>
-							<span className="whitespace-nowrap text-sm">
-								{page} / {totalPages}
-							</span>
+									{props.mode === "total" && <span> of {props.totalPages}</span>}
+								</span>
+							) : (
+								<PaginationLink
+									isActive
+									href={{
+										pathname: basePath,
+										query: { ...searchParams, page: page },
+									}}
+								>
+									{page}
+								</PaginationLink>
+							)}
 						</PaginationItem>
 						<PaginationNext
 							iconOnly
@@ -204,18 +236,21 @@ export const FooterPagination = ({
 								query: { ...searchParams, page: page + 1 },
 							}}
 						/>
-						<PaginationLast
-							iconOnly
-							aria-disabled={nextDisabled}
-							tabIndex={nextDisabled ? -1 : undefined}
-							className={cn("border px-3 py-3", {
-								"pointer-events-none opacity-50": nextDisabled,
-							})}
-							href={{
-								pathname: basePath,
-								query: { ...searchParams, page: totalPages },
-							}}
-						/>
+
+						{showLastButton && (
+							<PaginationLast
+								iconOnly
+								aria-disabled={nextDisabled}
+								tabIndex={nextDisabled ? -1 : undefined}
+								className={cn("border px-3 py-3", {
+									"pointer-events-none opacity-50": nextDisabled,
+								})}
+								href={{
+									pathname: basePath,
+									query: { ...searchParams, page: props.totalPages },
+								}}
+							/>
+						)}
 					</PaginationContent>
 				</Pagination>
 			</div>

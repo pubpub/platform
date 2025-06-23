@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { useDebounce } from "use-debounce";
@@ -14,7 +14,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "ui/command";
-import { KeyboardShortcutPriority, useKeyboardShortcut } from "ui/hooks";
+import { useKeyboardShortcut } from "ui/hooks";
 import { AlertCircle, Loader2 } from "ui/icon";
 
 import type { fullTextSearch } from "~/lib/server/pub";
