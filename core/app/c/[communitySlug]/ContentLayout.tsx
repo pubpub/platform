@@ -30,17 +30,19 @@ export const ContentLayout = ({
 	left,
 	right,
 	children,
+	className,
 }: {
 	title: ReactNode;
 	left?: ReactNode;
 	right?: ReactNode;
 	children: ReactNode;
+	className?: string;
 }) => {
 	return (
 		<div className="absolute inset-0 w-full">
 			<div className="flex h-full flex-col">
 				<Heading title={title} left={left} right={right} />
-				<div className="h-full flex-1 overflow-auto">{children}</div>
+				<div className={`h-full flex-1 overflow-auto ${className || ""}`}>{children}</div>
 			</div>
 		</div>
 	);
