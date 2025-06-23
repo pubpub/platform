@@ -159,15 +159,17 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 					</Suspense>
 				</PubSearch>
 			</div>
-			<PubListFooterPagination
-				basePath={basePath}
-				searchParams={props.searchParams}
-				page={search.page}
-				communityId={props.communityId}
-				pubsPromise={pubsPromise}
-			>
-				<PubsSelectedCounter pageSize={search.perPage} />
-			</PubListFooterPagination>
+			<Suspense fallback={null}>
+				<PubListFooterPagination
+					basePath={basePath}
+					searchParams={props.searchParams}
+					page={search.page}
+					communityId={props.communityId}
+					pubsPromise={pubsPromise}
+				>
+					<PubsSelectedCounter pageSize={search.perPage} />
+				</PubListFooterPagination>
+			</Suspense>
 		</div>
 	);
 };
