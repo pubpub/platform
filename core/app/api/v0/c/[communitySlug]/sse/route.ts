@@ -32,9 +32,12 @@ export type ChangeNotification<T extends NotifyTables> = {
 	row: PublicSchema[T];
 };
 
-const handleClose = (client?: PoolClient) => {
+const handleClose = (client?: PoolClient, interval?: NodeJS.Timeout) => {
 	return () => {
 		logger.info("closing sse connection");
+		if (interval) {
+			clearInterval(interval);
+		}
 		if (client) {
 			logger.info("unlistening for change");
 			client.query("UNLISTEN change").catch(logger.error);
@@ -48,30 +51,63 @@ const constructChangeChannel = (communityId: string, table: NotifyTables) => {
 	return `change_${communityId}_${table}`;
 };
 
+const HEARTBEAT_INTERVAL = 15_000;
+const MAX_IDLE_TIME = 60 * 60 * 1_000;
+
 // bit awkward since we want to read the search params here, but the next-use-sse does not expose the request
 export const GET = (req: NextRequest) => {
 	return createSSEHandler(async (send, close, { onClose }) => {
 		const listen = parseNotifyTables(req.nextUrl.searchParams.getAll("listen"));
+		const connectionId = req.nextUrl.searchParams.get("connectionId") ?? "unknown";
+
+		const interval = setInterval(() => {
+			logger.info({ connectionId, msg: "sending heartbeat" });
+			send("heartbeat", connectionId);
+		}, HEARTBEAT_INTERVAL);
+
+		const cleanup = (client?: PoolClient) => {
+			logger.info({ connectionId, msg: "closing sse connection" });
+			clearInterval(interval);
+			if (client) {
+				logger.info({ connectionId, msg: "unlistening for change" });
+				client.query("UNLISTEN change").catch(logger.error);
+				logger.info({ connectionId, msg: "releasing client" });
+				client.release();
+			}
+		};
+
+		// register cleanup for all scenarios
+		onClose(() => cleanup());
 
 		if (!listen?.length) {
-			logger.info("no listen tables, closing sse connection");
-			return handleClose();
+			logger.info({
+				msg: "no listen tables, closing sse connection",
+				connectionId,
+			});
+			cleanup();
+			return;
 		}
 
-		logger.info("opening sse connection");
+		logger.info({ connectionId, msg: "opening sse connection" });
+
 		const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
 		if (!user) {
-			logger.info("no user found, closing sse connection");
-			return handleClose();
+			logger.info({ connectionId, msg: "no user found, closing sse connection" });
+			cleanup();
+			return;
 		}
 
 		if (!community) {
-			logger.info("no community found, closing sse connection");
-			return handleClose();
+			logger.info({ connectionId, msg: "no community found, closing sse connection" });
+			cleanup();
+			return;
 		}
 
 		const client = await pool.connect();
+
+		// update cleanup to include client
+		onClose(() => cleanup(client));
 
 		listen.forEach(async (table) => {
 			const channelName = constructChangeChannel(community.id, table);
@@ -86,17 +122,47 @@ export const GET = (req: NextRequest) => {
 				const notification = JSON.parse(msg.payload) as ChangeNotification<NotifyTables>;
 
 				if (!listen.includes(notification.table)) {
-					logger.info("not listening to this table, skipping");
+					logger.info({
+						connectionId,
+						msg: "not listening to this table, skipping",
+						table: notification.table,
+						userId: user.id,
+						community: community.slug,
+					});
 					return;
 				}
 
-				logger.info({ msg: "notification", notification });
+				logger.info({
+					connectionId,
+					msg: "notification",
+					notification,
+					userId: user.id,
+					community: community.slug,
+				});
 				send(notification, "change");
 			} catch (err) {
-				logger.error({ msg: "Failed to parse notification:", err });
+				logger.error({
+					connectionId,
+					msg: "Failed to parse notification:",
+					err,
+					userId: user.id,
+					community: community.slug,
+				});
 			}
 		});
 
-		return handleClose(client);
+		setTimeout(() => {
+			logger.info({
+				connectionId,
+				msg: "closing sse connection after max idle time",
+				userId: user.id,
+				community: community.slug,
+			});
+			// close connection after a long time
+			cleanup();
+
+			// manually clear interval just to be safe
+			clearInterval(interval);
+		}, MAX_IDLE_TIME);
 	})(req);
 };
