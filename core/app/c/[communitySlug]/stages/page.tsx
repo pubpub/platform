@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 
+import { FlagTriangleRightIcon } from "ui/icon";
+
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { ContentLayout } from "../ContentLayout";
 import { StageList } from "./components/StageList";
 
 export const metadata: Metadata = {
@@ -26,12 +31,34 @@ export default async function Page(props: Props) {
 	}
 
 	return (
-		<>
-			<div className="mb-16 flex items-center justify-between">
-				<h1 className="text-xl font-bold">Stages</h1>
-				<CreatePubButton communityId={community.id} text="Add Pub" />
+		<ContentLayout
+			title={
+				<>
+					<FlagTriangleRightIcon
+						size={20}
+						strokeWidth={1}
+						className="mr-2 text-gray-500"
+					/>
+					<span>Stages</span>
+				</>
+			}
+			right={
+				<Suspense fallback={<SkeletonButton className="h-8 w-24" />}>
+					<CreatePubButton
+						communityId={community.id}
+						text="Add Pub"
+						className="bg-emerald-500 text-white"
+					/>
+				</Suspense>
+			}
+		>
+			<div className="px-4 py-8">
+				<StageList
+					userId={user.id}
+					communityId={community.id}
+					searchParams={searchParams}
+				/>
 			</div>
-			<StageList userId={user.id} communityId={community.id} searchParams={searchParams} />
-		</>
+		</ContentLayout>
 	);
 }

@@ -4,17 +4,18 @@ import { useQueryStates } from "nuqs";
 
 import { Label } from "ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { cn } from "utils";
 
 import { dataTableParsers } from "./DataTable/PubsDataTable/validations";
 
 const PAGE_OPTIONS = [10, 25, 50, 100];
 
-export const ResultsPerPageInput = () => {
+export const ResultsPerPageInput = ({ className }: { className?: string }) => {
 	const [{ perPage }, setPaging] = useQueryStates(dataTableParsers);
 
 	return (
 		<div className="flex items-center gap-2 whitespace-nowrap">
-			<Label htmlFor="pagination-per-page" className="font-normal">
+			<Label htmlFor="pagination-per-page" className="hidden text-sm font-normal md:block">
 				Results per page:
 			</Label>
 			<Select
@@ -23,7 +24,7 @@ export const ResultsPerPageInput = () => {
 					setPaging({ perPage: parseInt(value) }, { shallow: false });
 				}}
 			>
-				<SelectTrigger className="h-8 w-[4.5rem]">
+				<SelectTrigger className={cn("h-8 w-[4.5rem] text-sm", className)}>
 					<SelectValue placeholder={perPage} />
 				</SelectTrigger>
 				<SelectContent side="top">

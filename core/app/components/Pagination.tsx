@@ -163,57 +163,68 @@ export const FooterPagination = (
 				className
 			)}
 		>
-			<ResultsPerPageInput />
-			<Pagination
-				className={cn("items-center gap-2 lg:gap-8", { "mx-0 justify-end": !children })}
-			>
-				{props.mode === "total" ? (
-					<span className="whitespace-nowrap">
-						Page {page} of {props.totalPages}
-					</span>
-				) : (
-					<span className="whitespace-nowrap">Page {page}</span>
-				)}
+			<div className="flex w-full items-center gap-2">
+				<ResultsPerPageInput className="justify-self-start" />
+				<Pagination
+					className={cn("items-center gap-2 lg:gap-8", { "mx-0 justify-end": !children })}
+				>
+					<PaginationContent className="gap-2">
+						{/* dont show this on mobile */}
+						<div className="hidden md:block">
+							{props.mode === "total" ? (
+								<span className="whitespace-nowrap">
+									Page {page} of {props.totalPages}
+								</span>
+							) : (
+								<span className="whitespace-nowrap">Page {page}</span>
+							)}
+						</div>
 
-				<PaginationContent className="gap-2">
-					<PaginationFirst
-						iconOnly
-						aria-disabled={prevDisabled}
-						tabIndex={prevDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": prevDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: 1 },
-						}}
-					/>
-					<PaginationPrevious
-						iconOnly
-						aria-disabled={prevDisabled}
-						tabIndex={prevDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": prevDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: page - 1 },
-						}}
-					/>
-					<PaginationNext
-						iconOnly
-						aria-disabled={nextDisabled}
-						tabIndex={nextDisabled ? -1 : undefined}
-						className={cn("border px-3 py-3", {
-							"pointer-events-none opacity-50": nextDisabled,
-						})}
-						href={{
-							pathname: basePath,
-							query: { ...searchParams, page: page + 1 },
-						}}
-					/>
-					{showLastButton && (
-						<PaginationLast
+						<PaginationFirst
+							iconOnly
+							aria-disabled={prevDisabled}
+							tabIndex={prevDisabled ? -1 : undefined}
+							className={cn("border px-3 py-3", {
+								"pointer-events-none opacity-50": prevDisabled,
+							})}
+							href={{
+								pathname: basePath,
+								query: { ...searchParams, page: 1 },
+							}}
+						/>
+						<PaginationPrevious
+							iconOnly
+							aria-disabled={prevDisabled}
+							tabIndex={prevDisabled ? -1 : undefined}
+							className={cn("border px-3 py-3", {
+								"pointer-events-none opacity-50": prevDisabled,
+							})}
+							href={{
+								pathname: basePath,
+								query: { ...searchParams, page: page - 1 },
+							}}
+						/>
+						{/* show this on mobile */}
+						<PaginationItem className="md:hidden">
+							{props.mode === "total" ? (
+								<span className="whitespace-nowrap text-sm">
+									{page}
+
+									{props.mode === "total" && <span> of {props.totalPages}</span>}
+								</span>
+							) : (
+								<PaginationLink
+									isActive
+									href={{
+										pathname: basePath,
+										query: { ...searchParams, page: page },
+									}}
+								>
+									{page}
+								</PaginationLink>
+							)}
+						</PaginationItem>
+						<PaginationNext
 							iconOnly
 							aria-disabled={nextDisabled}
 							tabIndex={nextDisabled ? -1 : undefined}
@@ -222,12 +233,27 @@ export const FooterPagination = (
 							})}
 							href={{
 								pathname: basePath,
-								query: { ...searchParams, page: props.totalPages },
+								query: { ...searchParams, page: page + 1 },
 							}}
 						/>
-					)}
-				</PaginationContent>
-			</Pagination>
+
+						{showLastButton && (
+							<PaginationLast
+								iconOnly
+								aria-disabled={nextDisabled}
+								tabIndex={nextDisabled ? -1 : undefined}
+								className={cn("border px-3 py-3", {
+									"pointer-events-none opacity-50": nextDisabled,
+								})}
+								href={{
+									pathname: basePath,
+									query: { ...searchParams, page: props.totalPages },
+								}}
+							/>
+						)}
+					</PaginationContent>
+				</Pagination>
+			</div>
 			{children}
 		</div>
 	);

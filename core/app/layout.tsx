@@ -3,6 +3,7 @@ import { NuqsAdapter } from "nuqs/adapters/next/app";
 import "ui/styles.css";
 
 import { Suspense } from "react";
+import Script from "next/script";
 
 import { KeyboardShortcutProvider } from "ui/hooks";
 // import "./globals.css";
