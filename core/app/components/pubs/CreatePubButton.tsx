@@ -94,22 +94,17 @@ type Props = {
 export const CreatePubButton = async (props: Props) => {
 	const id = "stageId" in props ? props.stageId : props.communityId;
 
-	const communitySlug = await getCommunitySlug();
-	const community = await findCommunityBySlug(communitySlug);
+	const [community, { user }] = await Promise.all([findCommunityBySlug(), getLoginData()]);
 
 	if (!community) {
 		return null;
 	}
-
-	const { user } = await getLoginData();
 
 	if (!user) {
 		return null;
 	}
 
 	const pubTypes = await getCreatablePubTypes(user.id, community.id).execute();
-
-	logger.debug({ msg: "Creatable pub types", pubTypes, community });
 
 	const stageId = "stageId" in props ? props.stageId : undefined;
 

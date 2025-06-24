@@ -221,3 +221,87 @@ describe("fullTextSearch", () => {
 		expect(invalidResults).toHaveLength(0);
 	});
 });
+
+describe("searching", () => {
+	it("should find pubs by full text search", async () => {
+		// const { community, pubFields, pubTypes } = await seedCommunity(seed);
+
+		const trx = getTrx();
+		const seeded = await seed(trx);
+
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		// search for "machine learning" - should find pub1
+		const searchResults1 = await getPubsWithRelatedValues(
+			{ communityId: seeded.community.id },
+			{
+				search: "machine",
+				withRelatedPubs: false,
+				withValues: false,
+				withPubType: true,
+				withStage: true,
+			}
+		);
+
+		expect(searchResults1).toHaveLength(1);
+
+		// search for "climate" - should find pub2
+		const searchResults2 = await getPubsWithRelatedValues(
+			{ communityId: seeded.community.id },
+			{ search: "machine" }
+		);
+
+		expect(searchResults2).toHaveLength(1);
+
+		// search for "research" - should find pub1 (in title)
+		const searchResults3 = await getPubsWithRelatedValues(
+			{ communityId: seeded.community.id },
+			{ search: "machine" }
+		);
+
+		expect(searchResults3).toHaveLength(1);
+	});
+
+	it("should return empty results for non-matching search terms", async () => {
+		const trx = getTrx();
+		const seeded = await seed(trx);
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		const searchResults = await getPubsWithRelatedValues(
+			{ communityId: seeded.community.id },
+			{ search: "nonexistent term" }
+		);
+
+		expect(searchResults).toHaveLength(0);
+	});
+
+	it("should handle search with multiple terms", async () => {
+		const trx = getTrx();
+		const seeded = await seed(trx);
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		// search with multiple terms - should find the pub
+		const searchResults = await getPubsWithRelatedValues(
+			{ communityId: seeded.community.id },
+			{ search: "machine learning neural" }
+		);
+
+		expect(searchResults).toHaveLength(1);
+	});
+
+	it("should combine search with other filters", async () => {
+		const trx = getTrx();
+		const seeded = await seed(trx);
+		const { getPubsWithRelatedValues } = await import("./pub");
+
+		// create pubs of different types
+
+		// search for "machine" but only in basic pubs
+		const searchResults = await getPubsWithRelatedValues(
+			{ communityId: seeded.community.id, pubTypeId: [seeded.pubTypes["Basic Pub"].id] },
+			{ search: "machine" }
+		);
+
+		expect(searchResults).toHaveLength(1);
+	});
+});
