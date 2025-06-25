@@ -47,7 +47,7 @@ export default async function Page(props: {
 		<div>
 			<h1 className="mb-12 text-2xl font-bold">Legacy Migration</h1>
 
-			<MigrationForm community={community} />
+			<MigrationForm />
 
 			<div className="mt-4" />
 			<UndoMigrationForm community={community} toBeDeletedStructure={tobeDeletedStructure} />

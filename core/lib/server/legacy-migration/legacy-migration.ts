@@ -7,6 +7,7 @@ import pMap from "p-map";
 import type { CommunitiesId, PubFields, PubFieldsId, PubTypes, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { FileMetadata } from "../assets";
 import type { LegacyCommunity, LegacyPage, MenuNavigationChild } from "./schemas";
@@ -20,7 +21,6 @@ import { maybeWithTrx } from "../maybeWithTrx";
 import { PubOp } from "../pub-op";
 import { getPubFields } from "../pubFields";
 import { getAllPubTypesForCommunity } from "../pubtype";
-import { getLegacyCommunity } from "./get-legacy-community";
 import { transformLayoutBlocks } from "./layouts";
 import { REQUIRED_LEGACY_PUB_FIELDS, REQUIRED_LEGACY_PUB_TYPES } from "./legacy-structure";
 import { transformProsemirrorTree } from "./prosemirror";
@@ -364,7 +364,12 @@ const getOrGenerateMetadata = async (
 		return { image: existing, imageMap };
 	}
 
-	const metadata = await generateMetadataFromS3(imageUrl, communitySlug);
+	const [error, metadata] = await tryCatch(generateMetadataFromS3(imageUrl, communitySlug));
+	if (error) {
+		logger.error(error);
+		return { image: undefined, imageMap };
+	}
+
 	imageMap.set(imageUrl, metadata);
 	return { image: metadata, imageMap };
 };
@@ -1231,14 +1236,14 @@ const createJournal = async (
 };
 
 export const importFromLegacy = async (
-	legacyCommunitySlug: string,
+	legacyCommunity: LegacyCommunity,
 	currentCommunity: { id: CommunitiesId; slug: string },
 	trx = db
 ) => {
 	const result = await maybeWithTrx(trx, async (trx) => {
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
-		const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
+		// const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
 
 		await writeFile(
 			"lib/server/legacy-migration/archive.json",

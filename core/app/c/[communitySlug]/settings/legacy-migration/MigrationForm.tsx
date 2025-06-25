@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { UndoIcon } from "lucide-react";
 import { parseAsBoolean, useQueryState } from "nuqs";
@@ -13,7 +13,6 @@ import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public";
 import { pubFieldsIdSchema, pubsIdSchema, pubTypesIdSchema } from "db/public";
 import {
 	AlertDialog,
-	AlertDialogAction,
 	AlertDialogCancel,
 	AlertDialogContent,
 	AlertDialogDescription,
@@ -23,7 +22,6 @@ import {
 } from "ui/alert-dialog";
 import { Button } from "ui/button";
 import { Checkbox } from "ui/checkbox";
-import { DialogFooter } from "ui/dialog";
 import {
 	Form,
 	FormControl,
@@ -43,19 +41,20 @@ import { getPubTitle } from "~/lib/pubs";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { importFromLegacy, undoMigration } from "./actions";
 
-export function MigrationForm({ community }: { community: { slug: string; id: CommunitiesId } }) {
-	const form = useForm({
-		defaultValues: {
-			legacyCommunity: "",
-		},
+const migrationFormSchema = z.object({
+	file: z.instanceof(File),
+});
+export type MigrationFormSchema = z.infer<typeof migrationFormSchema>;
+
+export function MigrationForm() {
+	const form = useForm<z.infer<typeof migrationFormSchema>>({
+		resolver: zodResolver(migrationFormSchema),
 	});
 
 	const runImportFromLegacy = useServerAction(importFromLegacy);
 
-	const onSubmit = form.handleSubmit(async (data) => {
-		const result = await runImportFromLegacy({
-			slug: data.legacyCommunity,
-		});
+	const onSubmit = async (data: MigrationFormSchema) => {
+		const result = await runImportFromLegacy(data);
 
 		if (didSucceed(result)) {
 			toast({
@@ -63,22 +62,27 @@ export function MigrationForm({ community }: { community: { slug: string; id: Co
 				description: "The import has been completed successfully.",
 			});
 		}
-	});
+	};
 
 	return (
 		<Form {...form}>
-			<form onSubmit={onSubmit}>
+			<form onSubmit={form.handleSubmit(onSubmit)}>
 				<FormField
 					control={form.control}
-					name="legacyCommunity"
+					name="file"
 					render={({ field }) => (
 						<FormItem className="space-y-2">
-							<FormLabel>Legacy Community Slug</FormLabel>
-							<FormControl>
-								<Input placeholder="e.g. jtrialerror" {...field} />
-							</FormControl>
+							<FormLabel>Legacy Community Export</FormLabel>
+							<Input
+								type="file"
+								accept="application/json"
+								onChange={(e) => {
+									field.onChange(e.target.files && e.target.files[0]);
+								}}
+							/>
 							<FormDescription>
-								Enter the slug of the legacy community you want to import from
+								Upload the <code>static.json</code> file that's included in the{" "}
+								<code>.zip</code> file from your Legacy export
 							</FormDescription>
 							<FormMessage />
 							<FormSubmitButton
