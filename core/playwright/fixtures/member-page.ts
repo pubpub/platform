@@ -4,6 +4,8 @@ import { faker } from "@faker-js/faker";
 
 import { MemberRole } from "db/public";
 
+import { AddMemberDialog } from "./member-dialog";
+
 export class MembersPage {
 	private readonly communitySlug: string;
 
@@ -26,7 +28,7 @@ export class MembersPage {
 		await this.page.getByText(/Add Member/).click();
 		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
 		await addMemberDialog.waitFor();
-		return addMemberDialog;
+		return new AddMemberDialog(this.page, addMemberDialog);
 	}
 
 	async addNewUser(
@@ -52,33 +54,13 @@ export class MembersPage {
 		}
 	) {
 		const addMemberDialog = await this.openAddMemberDialog();
-		await addMemberDialog.getByLabel("Email").fill(email);
-
-		await this.page.locator('input[name="firstName"]').fill(firstName);
-		await this.page.locator('input[name="lastName"]').fill(lastName);
-		if (isSuperAdmin) {
-			await this.page.getByLabel("Make user superadmin").click();
-		}
-
-		await this.page.getByLabel("Role").click();
-		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
-
-		if (role === MemberRole.contributor && forms.length) {
-			await this.selectForms(forms);
-		}
-
-		await this.page.getByRole("button", { name: "Invite" }).click();
-
-		await this.page.getByText("User successfully invited", { exact: true }).waitFor();
-		await addMemberDialog.waitFor({ state: "hidden" });
-
-		return {
-			email,
+		return await addMemberDialog.addNewUser(email, {
 			firstName,
 			lastName,
 			isSuperAdmin,
 			role,
-		};
+			forms,
+		});
 	}
 
 	/**
@@ -86,28 +68,7 @@ export class MembersPage {
 	 */
 	async addExistingUser(email: string, role = MemberRole.editor, forms: string[] = []) {
 		const addMemberDialog = await this.openAddMemberDialog();
-		await addMemberDialog.getByLabel("Email").fill(email);
-
-		await this.page.getByLabel("Role").click();
-		await this.page.getByLabel(role[0].toUpperCase() + role.slice(1)).click();
-
-		if (role === MemberRole.contributor && forms.length) {
-			await this.selectForms(forms);
-		}
-
-		await this.page.getByRole("button", { name: "Add Member" }).click();
-
-		await this.page.getByText("Member added successfully", { exact: true }).waitFor();
-		await addMemberDialog.waitFor({ state: "hidden" });
-	}
-
-	async selectForms(forms: string[]) {
-		const button = this.page.getByRole("button", { name: "Edit/View Access", exact: true });
-		await button.click();
-		for (const form of forms) {
-			await this.page.getByRole("option", { name: form, exact: true }).click();
-		}
-		await button.click();
+		return await addMemberDialog.addExistingUser(email, role, forms);
 	}
 
 	async removeMember(email: string) {

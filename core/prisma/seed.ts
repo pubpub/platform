@@ -9,7 +9,6 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env";
 import { seedBlank } from "./seeds/blank";
-import { setupInviteTestCommunity } from "./seeds/invite-test-community";
 import { seedLegacy } from "./seeds/legacy";
 import { seedStarter } from "./seeds/starter";
 
@@ -95,12 +94,7 @@ async function main() {
 
 	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
 
-	await Promise.all([
-		seedStarter(starterId),
-		seedBlank(blankId),
-		legacyPromise,
-		setupInviteTestCommunity(),
-	]);
+	await Promise.all([seedStarter(starterId), seedBlank(blankId), legacyPromise]);
 
 	await Promise.all([
 		createUserMembers({

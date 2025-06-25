@@ -153,7 +153,7 @@ const seed = createSeed({
 	forms: {
 		Evaluation: {
 			slug: evalSlug,
-			pubType: "Evaluation",
+			pubType: "Submission",
 			elements: [
 				{
 					type: ElementType.pubfield,

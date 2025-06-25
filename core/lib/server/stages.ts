@@ -105,10 +105,20 @@ export const viewableStagesCte = ({
 };
 
 type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+type CommunityStageOptions = {
+	withActionInstances?: "count" | "full" | false;
+	withMembers?: "count" | "full" | false;
+};
+
 /**
  * Get all stages the given user has access to
  */
-export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
+export const getStages = (
+	{ communityId, stageId, userId }: CommunityStageProps,
+	options: CommunityStageOptions = {}
+) => {
+	const withActionInstances = options.withActionInstances ?? "count";
+
 	return autoCache(
 		db
 			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
@@ -150,15 +160,28 @@ export const getStages = ({ communityId, stageId, userId }: CommunityStageProps)
 							.as("memberCount")
 					)
 					.as("memberCount"),
-
-				eb
-					.selectFrom("action_instances")
-					.whereRef("action_instances.stageId", "=", "stages.id")
-					.select((eb) =>
-						eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
-					)
-					.as("actionInstancesCount"),
 			])
+			.$if(withActionInstances === "count", (qb) =>
+				qb.select((eb) =>
+					eb
+						.selectFrom("action_instances")
+						.whereRef("action_instances.stageId", "=", "stages.id")
+						.select((eb) =>
+							eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
+						)
+						.as("actionInstancesCount")
+				)
+			)
+			.$if(withActionInstances === "full", (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("action_instances")
+							.whereRef("action_instances.stageId", "=", "stages.id")
+							.selectAll("action_instances")
+					).as("actionInstances")
+				)
+			)
 			.selectAll("stages")
 			.orderBy("order asc")
 	);

@@ -387,11 +387,15 @@ test.describe("reordering fields", async () => {
 		const initialElements = await elements.allTextContents();
 
 		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.waitForTimeout(100);
 		await page.keyboard.press("ArrowDown");
+		await page.waitForTimeout(100);
 		await page.keyboard.press(" ");
 
 		await page.getByRole("button", { name: "Drag handle" }).last().press(" ");
+		await page.waitForTimeout(100);
 		await page.keyboard.press("ArrowUp");
+		await page.waitForTimeout(100);
 		await page.keyboard.press(" ");
 
 		// Make sure reordering worked on the client

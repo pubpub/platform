@@ -1,10 +1,10 @@
+import React from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
 import type { ActionInstances } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
-import { Checkbox } from "ui/checkbox";
 import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 } from "ui/icon";
 import { cn } from "utils";
 
@@ -12,6 +12,7 @@ import type { CommunityStage } from "~/lib/server/stages";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
+import { PubSelector } from "../c/[communitySlug]/pubs/PubSelector";
 import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu";
 import { RelationsDropDown } from "./pubs/RelationsDropDown";
 import { RemovePubButton } from "./pubs/RemovePubButton";
@@ -31,7 +32,8 @@ const LINK_AFTER =
 export const PubCard = async ({
 	pub,
 	communitySlug,
-	stages,
+	moveFrom,
+	moveTo,
 	actionInstances,
 	withSelection = true,
 }: {
@@ -42,16 +44,22 @@ export const PubCard = async ({
 		withRelatedCounts: true;
 	}>;
 	communitySlug: string;
-	stages: CommunityStage[];
-	actionInstances: ActionInstances[];
+	moveFrom?: CommunityStage["moveConstraintSources"];
+	moveTo?: CommunityStage["moveConstraints"];
+	actionInstances?: ActionInstances[];
 	withSelection?: boolean;
 }) => {
+	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
+
+	const showMatchingValues = matchingValues && matchingValues.length !== 0;
+	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues;
+	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
 	return (
 		<Card
 			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
 			data-testid={`pub-card-${pub.id}`}
 		>
-			<div className="flex min-w-0 flex-col space-y-[6px]">
+			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
 				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
 					{/* TODO: make filter by pub type */}
 					<Button
@@ -64,11 +72,12 @@ export const PubCard = async ({
 						<Move
 							pubId={pub.id}
 							stageId={pub.stage.id}
-							communityStages={stages}
+							moveFrom={moveFrom ?? []}
+							moveTo={moveTo ?? []}
 							button={
 								<Button
 									variant="outline"
-									className="h-[22px] gap-0.5 rounded-[104px] px-2 px-[.35rem] text-xs font-semibold shadow-none"
+									className="h-[22px] gap-0.5 rounded-[104px] px-[.35rem] text-xs font-semibold shadow-none"
 								>
 									<FlagTriangleRightIcon
 										strokeWidth="1px"
@@ -91,13 +100,41 @@ export const PubCard = async ({
 							href={`/c/${communitySlug}/pubs/${pub.id}`}
 							className={cn("hover:underline", LINK_AFTER)}
 						>
-							{getPubTitle(pub)}
+							<div
+								className="[&_mark]:bg-yellow-300"
+								dangerouslySetInnerHTML={{ __html: getPubTitle(pub) }}
+							/>
 						</Link>
 					</h3>
 				</CardTitle>
-				<CardDescription className="min-w-0 truncate">
+				<CardDescription
+					className={cn("m-0 min-w-0 truncate p-0", {
+						hidden: showMatchingValues || !showDescription,
+					})}
+				>
 					<PubDescription pub={pub} />
 				</CardDescription>
+				{showMatchingValues && (
+					<div
+						className={cn(
+							"grid gap-1 text-xs text-gray-500 [grid-template-columns:minmax(0rem,auto)_minmax(0,1fr)]",
+							"[&_mark]:bg-yellow-200"
+						)}
+					>
+						{/* Matching values that aren't titles */}
+						{matchingValues.map((match, idx) => (
+							<React.Fragment key={idx}>
+								<span className="font-medium">{match.name}:</span>
+								<span
+									dangerouslySetInnerHTML={{
+										__html: match.highlights,
+									}}
+									className="font-light text-gray-600"
+								/>
+							</React.Fragment>
+						))}
+					</div>
+				)}
 				<CardFooter className="flex gap-2 p-0 text-xs text-gray-600">
 					<div className="flex gap-1" title="Created at">
 						<Calendar size="16px" strokeWidth="1px" className="text-neutral-500" />
@@ -109,17 +146,24 @@ export const PubCard = async ({
 					</div>
 				</CardFooter>
 			</div>
-			<div className="z-10 mr-4">
+			<div className="z-10 mr-4 w-fit flex-shrink-0">
 				{/* We use grid and order-[x] to place items according to the design, but 
 				PubsRunActionDropDownMenu needs to be first so it can have `peer`. The other
 				buttons check if the `peer` is open, and if it is, it does not lose opacity.
 				Otherwise, when the dropdown menu opens, the buttons all fade away */}
-				<div className="grid grid-cols-4 items-center gap-3 text-neutral-500">
-					{!withSelection ? <div className="col-span-1" /> : null}
-					{pub.stage && actionInstances?.length > 0 ? (
+				<div
+					className={cn(
+						"grid w-fit items-center gap-3 text-neutral-500",
+						withSelection && hasActions && "grid-cols-4",
+						withSelection && !hasActions && "grid-cols-3",
+						!withSelection && hasActions && "grid-cols-3",
+						!withSelection && !hasActions && "grid-cols-2"
+					)}
+				>
+					{hasActions ? (
 						<PubsRunActionDropDownMenu
 							actionInstances={actionInstances}
-							stage={pub.stage}
+							stage={pub.stage!}
 							pubId={pub.id}
 							iconOnly
 							variant="ghost"
@@ -128,9 +172,7 @@ export const PubCard = async ({
 								HOVER_CLASS
 							)}
 						/>
-					) : (
-						<div className="col-span-1" />
-					)}
+					) : null}
 					<RemovePubButton
 						pubId={pub.id}
 						iconOnly
@@ -156,7 +198,8 @@ export const PubCard = async ({
 						</Link>
 					</Button>
 					{withSelection ? (
-						<Checkbox
+						<PubSelector
+							pubId={pub.id}
 							className={cn(
 								"order-4 ml-2 box-content h-4 w-4 border-neutral-500 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",
 								HOVER_CLASS

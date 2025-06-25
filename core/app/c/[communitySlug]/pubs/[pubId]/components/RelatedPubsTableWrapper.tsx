@@ -1,7 +1,7 @@
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
-import type { FullProcessedPub } from "~/lib/server";
+import type { FullProcessedPubWithForm } from "~/lib/server";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { RelatedPubsTable } from "./RelatedPubsTable";
 
@@ -23,7 +23,7 @@ const NoActions = () => {
 	);
 };
 
-const getRelatedPubRunActionsDropdowns = (row: FullProcessedPub) => {
+const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 	return row.stage && row.stage?.actionInstances.length > 0 ? (
 		<PubsRunActionDropDownMenu
 			actionInstances={row.stage.actionInstances}
@@ -36,7 +36,7 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPub) => {
 };
 
 type Props = {
-	pub: FullProcessedPub;
+	pub: FullProcessedPubWithForm;
 };
 
 export const RelatedPubsTableWrapper = async (props: Props) => {

@@ -72,14 +72,17 @@ test.describe("images", () => {
 		// Fill in values and check they reflect in the prosemirror state
 		const caption = "my caption";
 		await page.locator("figure figcaption").click();
+		await page.waitForTimeout(100);
 		await page.keyboard.type(caption);
 
 		const credit = "my credit";
 		await page.locator("figure").getByRole("paragraph").first().click();
+		await page.waitForTimeout(100);
 		await page.keyboard.type(credit);
 
 		const license = "my license";
 		await page.locator("figure").getByRole("paragraph").nth(1).click();
+		await page.waitForTimeout(100);
 		await page.keyboard.type(license);
 
 		const state = await getProsemirrorState(page);

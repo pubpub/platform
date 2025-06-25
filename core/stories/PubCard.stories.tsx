@@ -30,7 +30,8 @@ const meta: Meta<typeof PubCard> = {
 	args: {
 		pub: pub,
 		communitySlug: "test-community",
-		stages,
+		moveFrom: [],
+		moveTo: [],
 		actionInstances: [
 			{
 				action: Action.log,

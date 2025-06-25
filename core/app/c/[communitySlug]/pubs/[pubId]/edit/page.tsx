@@ -5,14 +5,13 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
-import { PageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
+import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import { getAuthorizedUpdateForms, userCanEditPub } from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -72,57 +71,59 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ pubId: PubsId; communitySlug: string }>;
-	searchParams: Promise<Record<string, string>>;
+	searchParams: Promise<Record<string, string> & { form: string }>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
-	const { user } = await getPageLoginData();
-
-	const canUpdatePub = await userCan(
-		Capabilities.updatePubValues,
-		{
-			type: MembershipType.pub,
-			pubId,
-		},
-		user.id
-	);
-
 	if (!pubId || !communitySlug) {
-		return null;
+		return notFound();
 	}
 
-	if (!canUpdatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
-
-	const community = await findCommunityBySlug(communitySlug);
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
 
 	if (!community) {
 		notFound();
 	}
 
-	const pub = await getPubsWithRelatedValuesCached({
-		pubId: params.pubId as PubsId,
-		communityId: community.id,
-		userId: user.id,
-	});
+	const [canUpdatePub, pub, availableForms] = await Promise.all([
+		userCanEditPub({ userId: user.id, pubId }),
+		getPubsWithRelatedValuesCached({
+			pubId: params.pubId as PubsId,
+			communityId: community.id,
+			userId: user.id,
+		}),
+		getAuthorizedUpdateForms(user.id, params.pubId).execute(),
+	]);
 
-	if (!pub) {
-		return null;
+	if (!canUpdatePub) {
+		redirect(`/c/${communitySlug}/unauthorized`);
 	}
 
-	const formId = `edit-pub-${pub.id}`;
+	if (!pub) {
+		return notFound();
+	}
+
+	const htmlFormId = `edit-pub-${pub.id}`;
 
 	return (
 		<ContentLayout
 			left={
-				<Button form={formId} type="submit">
+				<Button form={htmlFormId} type="submit">
 					Save
 				</Button>
 			}
-			title={<PageTitleWithStatus title="Edit pub" />}
+			title={
+				<PubPageTitleWithStatus
+					title="Edit pub"
+					defaultFormSlug={searchParams.form}
+					forms={availableForms}
+				/>
+			}
 			right={
 				<Button variant="link" asChild>
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
@@ -134,8 +135,9 @@ export default async function Page(props: {
 					{/** TODO: Add suspense */}
 					<PubEditor
 						searchParams={searchParams}
+						formSlug={searchParams.form}
 						pubId={pub.id}
-						formId={formId}
+						htmlFormId={htmlFormId}
 						communityId={community.id}
 					/>
 				</div>
