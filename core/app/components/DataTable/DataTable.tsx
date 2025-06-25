@@ -6,6 +6,7 @@
 import type {
 	ColumnDef,
 	ColumnFiltersState,
+	PaginationState,
 	Row,
 	RowSelectionState,
 	SortingState,
@@ -41,6 +42,8 @@ export interface DataTableProps<TData, TValue> {
 	selectedRows?: RowSelectionState;
 	setSelectedRows?: React.Dispatch<React.SetStateAction<{}>>;
 	getRowId?: (data: TData) => string;
+	pagination?: PaginationState;
+	stickyHeader?: boolean;
 	defaultSort?: SortingState;
 }
 
@@ -58,6 +61,8 @@ export function DataTable<TData, TValue>({
 	selectedRows,
 	setSelectedRows,
 	getRowId,
+	pagination,
+	stickyHeader,
 	defaultSort,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = React.useState<SortingState>(defaultSort ?? []);
@@ -79,6 +84,12 @@ export function DataTable<TData, TValue>({
 			sorting,
 			columnFilters,
 			rowSelection: selectedRows ?? rowSelection,
+		},
+		initialState: {
+			pagination: pagination ?? {
+				pageIndex: 0,
+				pageSize: 10,
+			},
 		},
 	});
 
@@ -121,12 +132,43 @@ export function DataTable<TData, TValue>({
 			)}
 			<div className={cn("mb-2 rounded-md border", className)}>
 				<Table>
-					<TableHeader>
+					<TableHeader
+						className={cn({
+							"sticky top-0 z-10 bg-white": stickyHeader,
+						})}
+						style={
+							stickyHeader
+								? {
+										// you cant put borders on the table header without doing some evil shit
+										// https://stackoverflow.com/questions/50361698/border-style-do-not-work-with-sticky-position-element
+										boxShadow: `inset 0 -1px 0 hsl(var(--border))`,
+									}
+								: {}
+						}
+					>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
+									const size = header.column.columnDef.size;
+									const isNotDefaultSize = size && size !== 150;
 									return (
-										<TableHead key={header.id}>
+										<TableHead
+											key={header.id}
+											className={cn([
+												Boolean(isNotDefaultSize)
+													? "overflow-clip"
+													: "max-w-[12rem] overflow-auto",
+											])}
+											style={
+												isNotDefaultSize
+													? {
+															width: size,
+															minWidth: size,
+															maxWidth: size,
+														}
+													: undefined
+											}
+										>
 											{header.isPlaceholder
 												? null
 												: flexRender(
@@ -157,22 +199,39 @@ export function DataTable<TData, TValue>({
 											handleRowClick(evt, row);
 										}}
 										className={cn({
-											"cursor-pointer": onRowClick,
+											"cursor-pointer": Boolean(onRowClick),
 											"bg-gray-100/50": striped && idx % 2,
 											[STRIPED_ROW_STYLING]: striped,
 										})}
 									>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell
-												key={cell.id}
-												className="max-w-[12rem] overflow-auto"
-											>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext()
-												)}
-											</TableCell>
-										))}
+										{row.getVisibleCells().map((cell) => {
+											const size = cell.column.columnDef.size;
+											const isNotDefaultSize = size && size !== 150;
+											return (
+												<TableCell
+													key={cell.id}
+													className={cn([
+														Boolean(isNotDefaultSize)
+															? "overflow-clip"
+															: "max-w-[12rem] overflow-auto",
+													])}
+													style={
+														isNotDefaultSize
+															? {
+																	width: size,
+																	maxWidth: size,
+																	minWidth: size,
+																}
+															: undefined
+													}
+												>
+													{flexRender(
+														cell.column.columnDef.cell,
+														cell.getContext()
+													)}
+												</TableCell>
+											);
+										})}
 									</TableRow>
 								))
 							: (emptyState ?? (

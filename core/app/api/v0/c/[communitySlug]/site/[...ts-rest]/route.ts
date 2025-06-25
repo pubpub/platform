@@ -48,7 +48,7 @@ import {
 	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
-import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
+import { allPermissions, validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
@@ -113,7 +113,7 @@ const getAuthorization = async () => {
 		.execute();
 
 	const user = rules[0].user;
-	if (!rules[0].user) {
+	if (!rules[0].user && !validatedAccessToken.isSiteBuilderToken) {
 		throw new NotFoundError(`Unable to locate user associated with api token`);
 	}
 
@@ -129,6 +129,7 @@ const getAuthorization = async () => {
 			return acc;
 		}, baseAuthorizationObject),
 		apiAccessTokenId: validatedAccessToken.id,
+		isSiteBuilderToken: validatedAccessToken.isSiteBuilderToken,
 		community,
 	};
 };
@@ -138,6 +139,7 @@ type AuthorizationOutput<S extends ApiAccessScope, AT extends ApiAccessType> = {
 	community: Communities;
 	lastModifiedBy: LastModifiedBy;
 	user: User;
+	isSiteBuilderToken?: boolean;
 };
 
 const checkAuthorization = async <
@@ -163,7 +165,8 @@ const checkAuthorization = async <
 	const authorizationTokenWithBearer = (await headers()).get("Authorization");
 
 	if (authorizationTokenWithBearer) {
-		const { user, authorization, community, apiAccessTokenId } = await getAuthorization();
+		const { user, authorization, community, apiAccessTokenId, isSiteBuilderToken } =
+			await getAuthorization();
 
 		const constraints = authorization[token.scope][token.type];
 		if (!constraints) {
@@ -179,6 +182,7 @@ const checkAuthorization = async <
 			community,
 			lastModifiedBy,
 			user,
+			isSiteBuilderToken,
 		};
 	}
 
@@ -271,6 +275,55 @@ const parseQueryWithQsMiddleware: RequestMiddleware = (req) => {
 const handler = createNextHandler(
 	siteApi,
 	{
+		auth: {
+			check: {
+				siteBuilder: async () => {
+					const { authorization, community, isSiteBuilderToken } =
+						await getAuthorization();
+
+					if (!isSiteBuilderToken) {
+						return {
+							status: 401,
+							body: {
+								ok: false,
+								code: "NON_SITE_BUILDER_TOKEN",
+								reason: "The supplied token is not a site builder token. Either something went wrong with the token generation or the token was intercepted by a third party.",
+							},
+						};
+					}
+
+					// TODO: enable again when you're less silly
+					// for (const permission of allPermissions) {
+					// 	const exists = authorization[permission.scope]?.[permission.accessType];
+					// 	if (permission.accessType !== "read" && exists) {
+					// 		return {
+					// 			status: 401,
+					// 			body: {
+					// 				ok: false,
+					// 				code: "HAS_WRITE_PERMISSIONS",
+					// 				reason: `Site builder token has ${permission.accessType} permissions for ${permission.scope}, which is not allowed. Please contact support.`,
+					// 			},
+					// 		};
+					// 	}
+					// 	if (permission.accessType === "read" && !exists) {
+					// 		return {
+					// 			status: 401,
+					// 			body: {
+					// 				ok: false,
+					// 				code: "HAS_NO_READ_PERMISSIONS",
+					// 				reason: `Site builder token has no read permissions for ${permission.scope}, which is required. Please contact support.`,
+					// 			},
+					// 		};
+					// 	}
+					// }
+
+					return {
+						status: 200,
+						body: { ok: true },
+					};
+				},
+			},
+		},
 		pubs: {
 			search: async ({ query }) => {
 				const { user, community } = await checkAuthorization({
@@ -335,10 +388,11 @@ const handler = createNextHandler(
 				};
 			},
 			getMany: async ({ query }, { request, responseHeaders }) => {
-				const { user, community, authorization } = await checkAuthorization({
-					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
-					cookies: "community-member",
-				});
+				const { user, community, authorization, isSiteBuilderToken } =
+					await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+						cookies: "community-member",
+					});
 
 				const allowedPubTypes =
 					typeof authorization === "object" ? authorization.pubTypes : undefined;
@@ -361,7 +415,7 @@ const handler = createNextHandler(
 						pubTypeId: pubTypeId,
 						stageId: stageId,
 						pubIds: pubIds,
-						userId: user.id,
+						userId: isSiteBuilderToken ? undefined : user.id,
 					},
 					{
 						...rest,

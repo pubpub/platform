@@ -21,4 +21,5 @@ export {
 	stubFn as default,
 	stubFn as reactErrorHandler,
 	stubFn as withSentryConfig,
+	stubFn as revalidateTag,
 };
