@@ -654,6 +654,10 @@ export const pubSchema = z
 		inboundEdges: z.array(pubEdgeSchema),
 		collectionPubs: z.array(collectionPubSchema),
 		facets: facetsSchema,
+		/**
+		 * html for the latest release
+		 */
+		html: z.string().nullish(),
 	})
 	.merge(baseTimestampsSchema);
 
