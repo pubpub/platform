@@ -22,20 +22,23 @@ import { getCommunitySlug } from "./getCommunitySlug";
 export const revalidateTagsForCommunity = async <S extends CacheScope>(
 	scope: S | S[],
 	communitySlug?: string | string[]
-): Promise<void> => {
+): Promise<string[]> => {
 	const slug = communitySlug ?? (await getCommunitySlug());
 
 	const scopes = Array.isArray(scope) ? scope : [scope];
 
 	const slugs = Array.isArray(slug) ? slug : [slug];
 
-	slugs.forEach((slug) => {
+	const tags = slugs.flatMap((slug) => {
 		const tags = createCommunityCacheTags(scopes, slug);
-		tags.forEach((tag) => {
-			if (env.CACHE_LOG === "true") {
-				logger.debug(`MANUAL REVALIDATE: revalidating tag: ${tag}`);
-			}
+		return tags.map((tag) => {
 			revalidateTag(tag);
+			return tag;
 		});
 	});
+	if (env.CACHE_LOG === "true") {
+		logger.debug(`MANUAL REVALIDATE: revalidating tags: ${tags.join(", ")}`);
+	}
+
+	return tags;
 };

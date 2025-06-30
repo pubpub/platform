@@ -6,3 +6,4 @@ export { run as pushToV6 } from "./pushToV6/run";
 export { run as http } from "./http/run";
 export { run as googleDriveImport } from "./googleDriveImport/run";
 export { run as datacite } from "./datacite/run";
+export { run as buildJournalSite } from "./buildJournalSite/run";
