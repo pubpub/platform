@@ -20,6 +20,7 @@
 		"./avatar": "./dist/ui-avatar.js",
 		"./button": "./dist/ui-button.js",
 		"./dialog": "./dist/ui-dialog.js",
+		"./drawer": "./dist/ui-drawer.js",
 		"./select": "./dist/ui-select.js",
 		"./slider": "./dist/ui-slider.js",
 		"./switch": "./dist/ui-switch.js",
@@ -198,7 +199,8 @@
 		"schemas": "workspace:*",
 		"tailwind-merge": "catalog:",
 		"tailwindcss-animate": "^1.0.6",
-		"utils": "workspace:*"
+		"utils": "workspace:*",
+		"vaul": "^1.1.2"
 	},
 	"peerDependencies": {
 		"next": "catalog:",
@@ -257,6 +259,7 @@
 			"data-table-paged/index.tsx",
 			"date-picker.tsx",
 			"dialog.tsx",
+			"drawer.tsx",
 			"dropdown-menu.tsx",
 			"editors/index.tsx",
 			"form.tsx",
