@@ -20,14 +20,23 @@ export function AutoFormSubmit({
 	children,
 	className,
 	disabled,
+	"data-testid": testId,
 }: {
 	children?: React.ReactNode;
+	"data-testid"?: string;
 	className?: string;
 	disabled?: boolean;
 }) {
 	const form = useFormState();
 
-	return <FormSubmitButton formState={form} idleText={children} className={className} />;
+	return (
+		<FormSubmitButton
+			data-testid={testId ?? "auto-form-submit"}
+			formState={form}
+			idleText={children}
+			className={className}
+		/>
+	);
 }
 
 function AutoForm<SchemaType extends ZodObjectOrWrapped>({

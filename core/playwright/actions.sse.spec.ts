@@ -156,7 +156,7 @@ test.describe("Actions SSE", () => {
 				.getByRole("textbox", { name: "The string to log out in" })
 				.fill(extraStringRun2);
 
-			await page1.getByRole("button", { name: "Run" }).first().click();
+			await page1.getByTestId("action-run-button").first().click();
 
 			await page1
 				.getByText("Successfully ran Log 1", { exact: true })

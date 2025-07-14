@@ -97,7 +97,11 @@ export const ActionRunForm = ({
 						dependencies={action.params.dependencies}
 						onSubmit={onSubmit}
 					>
-						<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+						<AutoFormSubmit
+							disabled={isPending}
+							className="flex items-center gap-x-2"
+							data-testid="action-run-button"
+						>
 							{isPending ? (
 								<Loader2 size="14" className="animate-spin" />
 							) : (
