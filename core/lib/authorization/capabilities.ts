@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import type {
 	CommunitiesId,
 	Forms,
@@ -308,6 +310,11 @@ export const userCanCreatePub = async ({
 	return forms.length !== 0;
 };
 
+export const userCanCreateAnyPub = cache(async (userId: UsersId, communityId: CommunitiesId) => {
+	const pubTypes = await getCreatablePubTypes(userId, communityId);
+	return pubTypes.length !== 0;
+});
+
 const authorizedCreateFormsBase = ({
 	userId,
 	communityId,
@@ -482,7 +489,7 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 
 export type PubTypeWithForm = (Pick<PubTypes, "id" | "name"> & Pick<Forms, "slug" | "isDefault">)[];
 
-export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId) => {
+export const getCreatablePubTypes = cache(async (userId: UsersId, communityId: CommunitiesId) => {
 	return autoCache(
 		authorizedCreateFormsBase({ userId, communityId })
 			.innerJoin("pub_types", "forms.pubTypeId", "pub_types.id")
@@ -491,5 +498,5 @@ export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId
 			.select(["pub_types.id", "pub_types.name", "forms.slug", "forms.isDefault"])
 			.distinctOn(["pub_types.id"])
 			.orderBy(["pub_types.id", "forms.isDefault desc"])
-	);
-};
+	).execute();
+});

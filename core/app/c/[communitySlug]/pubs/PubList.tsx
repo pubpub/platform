@@ -62,6 +62,7 @@ const PaginatedPubListInner = async (
 							moveFrom={stageForPub?.moveConstraintSources}
 							moveTo={stageForPub?.moveConstraints}
 							actionInstances={stageForPub?.actionInstances}
+							userId={props.userId}
 						/>
 					);
 				})}
