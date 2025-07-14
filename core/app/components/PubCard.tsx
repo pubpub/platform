@@ -1,8 +1,9 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import type { ActionInstances } from "db/public";
+import type { ActionInstances, UsersId } from "db/public";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 } from "ui/icon";
@@ -10,12 +11,14 @@ import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 import { PubSelector } from "../c/[communitySlug]/pubs/PubSelector";
 import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu";
 import { RelationsDropDown } from "./pubs/RelationsDropDown";
 import { RemovePubButton } from "./pubs/RemovePubButton";
+import { SkeletonButton } from "./skeletons/SkeletonButton";
 
 // import { RemovePubButton } from "./pubs/RemovePubButton";
 
@@ -29,14 +32,7 @@ const HOVER_CLASS = "opacity-0 group-hover:opacity-100 transition-opacity durati
 const LINK_AFTER =
 	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0";
 
-export const PubCard = async ({
-	pub,
-	communitySlug,
-	moveFrom,
-	moveTo,
-	actionInstances,
-	withSelection = true,
-}: {
+export type PubCardProps = {
 	pub: ProcessedPub<{
 		withPubType: true;
 		withRelatedPubs: false;
@@ -48,7 +44,18 @@ export const PubCard = async ({
 	moveTo?: CommunityStage["moveConstraints"];
 	actionInstances?: ActionInstances[];
 	withSelection?: boolean;
-}) => {
+	userId: UsersId;
+};
+
+export const PubCard = async ({
+	pub,
+	communitySlug,
+	moveFrom,
+	moveTo,
+	actionInstances,
+	withSelection = true,
+	userId,
+}: PubCardProps) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
 
 	const showMatchingValues = matchingValues && matchingValues.length !== 0;
@@ -160,43 +167,39 @@ export const PubCard = async ({
 						!withSelection && !hasActions && "grid-cols-2"
 					)}
 				>
-					{hasActions ? (
-						<PubsRunActionDropDownMenu
-							actionInstances={actionInstances}
-							stage={pub.stage!}
-							pubId={pub.id}
-							iconOnly
-							variant="ghost"
-							className={cn(
-								"peer order-2 w-6 px-4 py-2 data-[state=open]:opacity-100 [&_svg]:size-6",
-								HOVER_CLASS
-							)}
-						/>
-					) : null}
-					<RemovePubButton
-						pubId={pub.id}
-						iconOnly
-						buttonText="Archive"
-						variant="ghost"
-						className={cn(
-							"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
-							HOVER_CLASS
-						)}
-						icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
-					/>
-					<Button
-						variant="ghost"
-						className={cn(
-							"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
-							HOVER_CLASS
-						)}
-						asChild
+					<Suspense
+						fallback={
+							<>
+								{hasActions ? (
+									<SkeletonButton
+										className={cn(
+											"peer order-2 w-6 px-4 py-2 data-[state=open]:opacity-100 [&_svg]:size-6",
+											HOVER_CLASS
+										)}
+									/>
+								) : null}
+								<SkeletonButton
+									className={cn(
+										"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+										HOVER_CLASS
+									)}
+								/>
+								<SkeletonButton
+									className={cn(
+										"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+										HOVER_CLASS
+									)}
+								/>
+							</>
+						}
 					>
-						<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
-							<Pencil strokeWidth="1px" className="text-neutral-500" />
-							<span className="sr-only">Update</span>
-						</Link>
-					</Button>
+						<PubCardActions
+							actionInstances={actionInstances}
+							pub={pub}
+							communitySlug={communitySlug}
+							userId={userId}
+						/>
+					</Suspense>
 					{withSelection ? (
 						<PubSelector
 							pubId={pub.id}
@@ -209,5 +212,93 @@ export const PubCard = async ({
 				</div>
 			</div>
 		</Card>
+	);
+};
+
+const PubCardActions = async ({
+	actionInstances,
+	pub,
+	communitySlug,
+	userId,
+}: {
+	actionInstances?: ActionInstances[];
+	pub: ProcessedPub<{
+		withPubType: true;
+		withRelatedPubs: false;
+		withStage: true;
+		withRelatedCounts: true;
+	}>;
+	communitySlug: string;
+	userId: UsersId;
+}) => {
+	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	const [canArchive, canRunActions, canEdit] = await Promise.all([
+		userCan(
+			Capabilities.deletePub,
+			{
+				type: MembershipType.pub,
+				pubId: pub.id,
+			},
+			userId
+		),
+		userCan(
+			Capabilities.runAction,
+			{
+				type: MembershipType.pub,
+				pubId: pub.id,
+			},
+			userId
+		),
+		userCanEditPub({
+			userId,
+			pubId: pub.id,
+		}),
+	]);
+	console.log({ canArchive, canRunActions, canEdit });
+
+	return (
+		<>
+			{hasActions && canRunActions ? (
+				<PubsRunActionDropDownMenu
+					actionInstances={actionInstances}
+					stage={pub.stage!}
+					pubId={pub.id}
+					iconOnly
+					variant="ghost"
+					className={cn(
+						"peer order-2 w-6 px-4 py-2 data-[state=open]:opacity-100 [&_svg]:size-6",
+						HOVER_CLASS
+					)}
+				/>
+			) : null}
+			{canArchive ? (
+				<RemovePubButton
+					pubId={pub.id}
+					iconOnly
+					buttonText="Archive"
+					variant="ghost"
+					className={cn(
+						"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+						HOVER_CLASS
+					)}
+					icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
+				/>
+			) : null}
+			{canEdit ? (
+				<Button
+					variant="ghost"
+					className={cn(
+						"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+						HOVER_CLASS
+					)}
+					asChild
+				>
+					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+						<Pencil strokeWidth="1px" className="text-neutral-500" />
+						<span className="sr-only">Update</span>
+					</Link>
+				</Button>
+			) : null}
+		</>
 	);
 };
