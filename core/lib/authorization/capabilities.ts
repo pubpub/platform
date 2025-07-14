@@ -25,6 +25,7 @@ export const pubCapabilities = [
 	Capabilities.removePubMember,
 	Capabilities.runAction,
 	Capabilities.seeExtraPubValues,
+	Capabilities.createRelatedPub,
 ] as const;
 
 export const communityCapabilities = [

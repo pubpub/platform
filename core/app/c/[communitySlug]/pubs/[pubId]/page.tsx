@@ -18,7 +18,7 @@ import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { RemovePubButton } from "~/app/components/pubs/RemovePubButton";
 import { db } from "~/kysely/database";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getAuthorizedViewForms, userCan } from "~/lib/authorization/capabilities";
+import { getAuthorizedViewForms, userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
@@ -74,44 +74,18 @@ export default async function Page(props: {
 	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
-	const { user } = await getPageLoginData();
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
 
 	if (!pubId || !communitySlug) {
-		return null;
+		return notFound();
 	}
-
-	const community = await findCommunityBySlug(communitySlug);
 
 	if (!community) {
 		notFound();
 	}
-
-	const canView = await userCan(
-		Capabilities.viewPub,
-		{ type: MembershipType.pub, pubId },
-		user.id
-	);
-
-	if (!canView) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
-	}
-
-	const canAddMember = await userCan(
-		Capabilities.addPubMember,
-		{
-			type: MembershipType.pub,
-			pubId,
-		},
-		user.id
-	);
-	const canRemoveMember = await userCan(
-		Capabilities.removePubMember,
-		{
-			type: MembershipType.pub,
-			pubId,
-		},
-		user.id
-	);
 
 	const communityMembersPromise = selectAllCommunityMemberships({
 		communityId: community.id,
@@ -123,7 +97,7 @@ export default async function Page(props: {
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
-	const pub = await getPubsWithRelatedValues(
+	const pubPromise = getPubsWithRelatedValues(
 		{ pubId: params.pubId, communityId: community.id },
 		{
 			withPubType: true,
@@ -134,34 +108,62 @@ export default async function Page(props: {
 			depth: 3,
 		}
 	);
-	if (!pub) {
-		return null;
-	}
 
-	const actionsPromise = pub.stage ? getStageActions({ stageId: pub.stage.id }).execute() : null;
+	const actionsPromise = getStageActions({ pubId: pubId }).execute();
 
 	const getFormProps = formSlug
 		? { communityId: community.id, slug: formSlug }
 		: {
 				communityId: community.id,
-				pubTypeId: pub.pubType.id,
+				pubId: pubId,
 			};
+	// surely this can be done in fewer queries
+	const [
+		canView,
+		canEdit,
+		canArchive,
+		canRunActions,
+		canAddMember,
+		canRemoveMember,
+		canCreateRelatedPub,
+		pub,
 
-	const [actions, communityMembers, communityStages, form, withExtraPubValues, availableForms] =
-		await Promise.all([
-			actionsPromise,
-			communityMembersPromise,
-			communityStagesPromise,
-			getForm(getFormProps).executeTakeFirstOrThrow(
-				() => new Error(`Could not find a form for pubtype ${pub.pubType.name}`)
-			),
-			userCan(
-				Capabilities.seeExtraPubValues,
-				{ type: MembershipType.pub, pubId: pub.id },
-				user.id
-			),
-			getAuthorizedViewForms(user.id, pub.id).execute(),
-		]);
+		actions,
+		communityMembers,
+		communityStages,
+		withExtraPubValues,
+		availableForms,
+		form,
+	] = await Promise.all([
+		userCan(Capabilities.viewPub, { type: MembershipType.pub, pubId }, user.id),
+		userCanEditPub({ userId: user.id, pubId }),
+		userCan(Capabilities.deletePub, { type: MembershipType.pub, pubId }, user.id),
+		userCan(Capabilities.runAction, { type: MembershipType.pub, pubId }, user.id),
+		userCan(Capabilities.addPubMember, { type: MembershipType.pub, pubId }, user.id),
+		userCan(Capabilities.removePubMember, { type: MembershipType.pub, pubId }, user.id),
+		userCan(Capabilities.createRelatedPub, { type: MembershipType.pub, pubId }, user.id),
+		pubPromise,
+		actionsPromise,
+		communityMembersPromise,
+		communityStagesPromise,
+		userCan(
+			Capabilities.seeExtraPubValues,
+			{ type: MembershipType.pub, pubId: pubId },
+			user.id
+		),
+		getAuthorizedViewForms(user.id, pubId).execute(),
+		getForm(getFormProps).executeTakeFirstOrThrow(
+			() => new Error(`Could not find a form for pub`)
+		),
+	]);
+
+	if (!canView) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
+
+	if (!pub) {
+		return null;
+	}
 
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
 	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
@@ -187,18 +189,22 @@ export default async function Page(props: {
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
 				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						size="sm"
-						asChild
-						className="flex items-center gap-x-2 py-4"
-					>
-						<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
-							<Pencil size="12" />
-							<span>Update</span>
-						</Link>
-					</Button>
-					<RemovePubButton pubId={pub.id} redirectTo={`/c/${communitySlug}/pubs`} />
+					{canEdit && (
+						<Button
+							variant="outline"
+							size="sm"
+							asChild
+							className="flex items-center gap-x-2 py-4"
+						>
+							<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
+								<Pencil size="12" />
+								<span>Update</span>
+							</Link>
+						</Button>
+					)}
+					{canArchive && (
+						<RemovePubButton pubId={pub.id} redirectTo={`/c/${communitySlug}/pubs`} />
+					)}
 				</div>
 			</div>
 
@@ -222,7 +228,7 @@ export default async function Page(props: {
 					) : null}
 					<div>
 						<div className="mb-1 text-lg font-bold">Actions</div>
-						{actions && actions.length > 0 && stage ? (
+						{actions && actions.length > 0 && stage && canRunActions ? (
 							<div className="ml-4">
 								<PubsRunActionDropDownMenu
 									actionInstances={actions}
@@ -266,12 +272,14 @@ export default async function Page(props: {
 			{(pubTypeHasRelatedPubs || pubHasRelatedPubs) && (
 				<div className="flex flex-col gap-2" data-testid="related-pubs">
 					<h2 className="mb-2 text-xl font-bold">Related Pubs</h2>
-					<CreatePubButton
-						text="Add Related Pub"
-						communityId={community.id}
-						relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
-						className="w-fit"
-					/>
+					{canCreateRelatedPub && (
+						<CreatePubButton
+							text="Add Related Pub"
+							communityId={community.id}
+							relatedPub={{ pubId: pub.id, pubTypeId: pub.pubTypeId }}
+							className="w-fit"
+						/>
+					)}
 					<RelatedPubsTableWrapper pub={pubByForm} />
 				</div>
 			)}
