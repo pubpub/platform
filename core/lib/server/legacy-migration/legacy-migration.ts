@@ -1243,12 +1243,6 @@ export const importFromLegacy = async (
 	const result = await maybeWithTrx(trx, async (trx) => {
 		const legacyStructure = await createLegacyStructure({ community: currentCommunity }, trx);
 
-		// const legacyCommunity = await getLegacyCommunity(legacyCommunitySlug);
-
-		await writeFile(
-			"lib/server/legacy-migration/archive.json",
-			JSON.stringify(legacyCommunity, null, 2)
-		);
 		const parsed = legacyExportSchema.parse(legacyCommunity);
 
 		const imageMap = new Map<string, FileMetadata>();
