@@ -70,28 +70,44 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 						))}
 						<Skeleton className="h-4" />
 					</Skeleton>
-				) : (
-					relatedPubs.map((relatedPub) => {
-						return (
-							<DropdownMenuItem key={relatedPub.id}>
-								<Badge
-									variant="secondary"
-									className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold leading-4 tracking-[-.1px]"
-								>
-									{relatedPub.pubType.name}
-								</Badge>
-								<div className="truncate">
-									<Link
-										href={`/c/${community.slug}/pubs/${relatedPub.id}`}
-										className="text-xs font-bold"
+				) : relatedPubs.length > 0 ? (
+					<>
+						{relatedPubs.map((relatedPub) => {
+							return (
+								<DropdownMenuItem key={relatedPub.id}>
+									<Badge
+										variant="secondary"
+										className="col-span-2 whitespace-nowrap rounded border-gray-300 px-1 py-0 text-[10px] font-semibold leading-4 tracking-[-.1px]"
 									>
-										{getPubTitle(relatedPub)}
-									</Link>
-									{/* TODO: pub description */}
-								</div>
+										{relatedPub.pubType.name}
+									</Badge>
+									<div className="truncate">
+										<Link
+											href={`/c/${community.slug}/pubs/${relatedPub.id}`}
+											className="text-xs font-bold"
+										>
+											{getPubTitle(relatedPub)}
+										</Link>
+										{/* TODO: pub description */}
+									</div>
+								</DropdownMenuItem>
+							);
+						})}
+						{relatedPubs.length !== numRelations && (
+							<DropdownMenuItem>
+								<p className="w-full text-center text-xs font-medium text-muted-foreground">
+									{numRelations - relatedPubs.length} related Pubs are not visible
+									to you
+								</p>
 							</DropdownMenuItem>
-						);
-					})
+						)}
+					</>
+				) : (
+					<DropdownMenuItem>
+						<p className="w-full text-center text-xs font-medium text-muted-foreground">
+							No related Pubs are visible to you
+						</p>
+					</DropdownMenuItem>
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
