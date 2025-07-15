@@ -69,30 +69,28 @@ const PaginatedPubListInner = async (
 	]);
 
 	return (
-		<PubsSelectedProvider pubIds={[]}>
-			<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
-				{pubs.map((pub) => {
-					const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
+		<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
+			{pubs.map((pub) => {
+				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
 
-					return (
-						<PubCard
-							key={pub.id}
-							pub={pub}
-							communitySlug={props.communitySlug}
-							moveFrom={stageForPub?.moveConstraintSources}
-							moveTo={stageForPub?.moveConstraints}
-							actionInstances={stageForPub?.actionInstances}
-							userId={props.userId}
-							canEditAllPubs={canEditAllPubs}
-							canArchiveAllPubs={canArchiveAllPubs}
-							canRunActionsAllPubs={canRunActionsAllPubs}
-							canMoveAllPubs={canMoveAllPubs}
-							canViewAllStages={canViewAllStages}
-						/>
-					);
-				})}
-			</div>
-		</PubsSelectedProvider>
+				return (
+					<PubCard
+						key={pub.id}
+						pub={pub}
+						communitySlug={props.communitySlug}
+						moveFrom={stageForPub?.moveConstraintSources}
+						moveTo={stageForPub?.moveConstraints}
+						actionInstances={stageForPub?.actionInstances}
+						userId={props.userId}
+						canEditAllPubs={canEditAllPubs}
+						canArchiveAllPubs={canArchiveAllPubs}
+						canRunActionsAllPubs={canRunActionsAllPubs}
+						canMoveAllPubs={canMoveAllPubs}
+						canViewAllStages={canViewAllStages}
+					/>
+				);
+			})}
+		</div>
 	);
 };
 
@@ -172,29 +170,33 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 
 	return (
 		<div className="relative flex h-full flex-col">
-			<div
-				className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll p-4 pb-16")}
-			>
-				<PubSearch>
-					<Suspense fallback={<PubListSkeleton />}>
-						<PaginatedPubListInner
-							{...props}
-							communitySlug={communitySlug}
-							pubsPromise={pubsPromise}
-						/>
-					</Suspense>
-				</PubSearch>
-			</div>
-			<Suspense fallback={null}>
-				<PubListFooterPagination
-					basePath={basePath}
-					searchParams={props.searchParams}
-					userId={props.userId}
-					page={search.page}
-					communityId={props.communityId}
-					pubsPromise={pubsPromise}
-				></PubListFooterPagination>
-			</Suspense>
+			<PubsSelectedProvider pubIds={[]}>
+				<div
+					className={cn(
+						"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll p-4 pb-16"
+					)}
+				>
+					<PubSearch>
+						<Suspense fallback={<PubListSkeleton />}>
+							<PaginatedPubListInner
+								{...props}
+								communitySlug={communitySlug}
+								pubsPromise={pubsPromise}
+							/>
+						</Suspense>
+					</PubSearch>
+				</div>
+				<Suspense fallback={null}>
+					<PubListFooterPagination
+						basePath={basePath}
+						searchParams={props.searchParams}
+						userId={props.userId}
+						page={search.page}
+						communityId={props.communityId}
+						pubsPromise={pubsPromise}
+					></PubListFooterPagination>
+				</Suspense>
+			</PubsSelectedProvider>
 		</div>
 	);
 };
