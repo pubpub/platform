@@ -45,7 +45,7 @@ export default function LoginForm() {
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(handleSubmit)}>
-				<Card className="w-full max-w-sm">
+				<Card className="w-full max-w-sm shadow-lg">
 					<CardHeader>
 						<CardTitle className="text-2xl">Login</CardTitle>
 						<CardDescription>
