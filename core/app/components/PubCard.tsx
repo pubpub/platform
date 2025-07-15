@@ -1,5 +1,3 @@
-import { setTimeout } from "timers/promises";
-
 import React, { Suspense } from "react";
 import Link from "next/link";
 
@@ -254,7 +252,6 @@ const PubCardActions = async ({
 	canRunActionsAllPubs?: boolean;
 }) => {
 	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
-	await setTimeout(3_000);
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
 		canArchiveAllPubs ||
 			userCan(
