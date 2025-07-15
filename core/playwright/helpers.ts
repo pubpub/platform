@@ -122,3 +122,7 @@ export const waitForBaseCommunityPage = async (page: Page, communitySlug?: strin
 		timeout: 10_000,
 	});
 };
+
+export const closeToast = async (page: Page) => {
+	await page.getByTestId("toast-close").click();
+};

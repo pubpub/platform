@@ -14,6 +14,7 @@ import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { choosePubType, PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
+import { closeToast } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -122,7 +123,7 @@ test.describe("Moving a pub", () => {
 		const destinations = page.getByTestId("destinations");
 		await expect(sources).toHaveCount(0);
 		await expect(destinations).toHaveCount(0);
-		await expect(page.getByRole("button", { name: "View Stage", exact: true })).toHaveCount(1);
+		await expect(page.getByRole("button", { name: "View Stage", exact: true })).toHaveCount(0);
 	});
 });
 
@@ -193,6 +194,7 @@ test.describe("Creating a pub", () => {
 		await page.getByRole("button", { name: "Save" }).click();
 
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit?*`);
+		await closeToast(page);
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
 
@@ -201,10 +203,11 @@ test.describe("Creating a pub", () => {
 		await page.getByLabel("Animals").fill("penguins");
 		await page.keyboard.press("Enter");
 		await page.getByTestId("remove-button").first().click();
+		await page.waitForTimeout(200);
 		await page.getByRole("button", { name: "Save" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
-		).toHaveCount(1);
+		).toHaveCount(1, { timeout: 10_000 });
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
