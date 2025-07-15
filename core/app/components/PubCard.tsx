@@ -12,7 +12,7 @@ import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 }
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import Move, { BasicMove } from "~/app/c/[communitySlug]/stages/components/Move";
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
@@ -78,26 +78,29 @@ export const PubCard = async ({
 						{pub.pubType.name}
 					</Button>
 					{pub.stage ? (
-						<Move
-							pubId={pub.id}
-							stageId={pub.stage.id}
-							moveFrom={moveFrom ?? []}
-							moveTo={moveTo ?? []}
-							button={
-								<Button
-									variant="outline"
-									className="h-[22px] gap-0.5 rounded-[104px] px-[.35rem] text-xs font-semibold shadow-none"
-								>
-									<FlagTriangleRightIcon
-										strokeWidth="1px"
-										className="text-neutral-500"
-									/>
-									{pub.stage.name}
-									<ChevronDown strokeWidth="1px" />
-								</Button>
-							}
-							hideIfNowhereToMove={false}
-						/>
+						<Suspense fallback={<BasicMove name={pub.stage.name} />}>
+							<Move
+								stageName={pub.stage.name}
+								pubId={pub.id}
+								stageId={pub.stage.id}
+								moveFrom={moveFrom ?? []}
+								moveTo={moveTo ?? []}
+								button={
+									<Button
+										variant="outline"
+										className="h-[22px] gap-0.5 rounded-full px-2 pr-3 text-xs font-semibold shadow-none"
+									>
+										<FlagTriangleRightIcon
+											strokeWidth="1px"
+											className="text-neutral-500"
+										/>
+										{pub.stage.name}
+										<ChevronDown strokeWidth="1px" />
+									</Button>
+								}
+								hideIfNowhereToMove={false}
+							/>
+						</Suspense>
 					) : null}
 					{pub.relatedPubsCount ? (
 						<RelationsDropDown pubId={pub.id} numRelations={pub.relatedPubsCount} />

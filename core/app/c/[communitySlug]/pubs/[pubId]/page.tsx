@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Eye } from "lucide-react";
@@ -9,7 +10,7 @@ import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import Move, { BasicMove } from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
@@ -218,11 +219,14 @@ export default async function Page(props: {
 							<div className="mb-1 text-lg font-bold">Current Stage</div>
 							<div className="ml-4 flex items-center gap-2 font-medium">
 								<div data-testid="current-stage">{pub.stage.name}</div>
-								<Move
-									pubId={pub.id}
-									stageId={pub.stage.id}
-									communityStages={communityStages}
-								/>
+								<Suspense fallback={<BasicMove name={pub.stage.name} />}>
+									<Move
+										stageName={pub.stage.name}
+										pubId={pub.id}
+										stageId={pub.stage.id}
+										communityStages={communityStages}
+									/>
+								</Suspense>
 							</div>
 						</div>
 					) : null}
