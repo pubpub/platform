@@ -63,10 +63,7 @@ export const ActionRunForm = ({
 						variant: "default",
 						// TODO: SHOULD ABSOLUTELY BE SANITIZED
 						description: (
-							<div
-								className="max-h-40 max-w-sm overflow-auto"
-								dangerouslySetInnerHTML={{ __html: result.report ?? "" }}
-							/>
+							<div className="max-h-40 max-w-sm overflow-auto">{result.report} </div>
 						),
 					});
 				}
@@ -100,7 +97,11 @@ export const ActionRunForm = ({
 						dependencies={action.params.dependencies}
 						onSubmit={onSubmit}
 					>
-						<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
+						<AutoFormSubmit
+							disabled={isPending}
+							className="flex items-center gap-x-2"
+							data-testid="action-run-button"
+						>
 							{isPending ? (
 								<Loader2 size="14" className="animate-spin" />
 							) : (

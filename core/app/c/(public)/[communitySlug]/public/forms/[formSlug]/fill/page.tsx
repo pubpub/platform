@@ -219,7 +219,12 @@ export default async function FormPage(props: {
 		}
 	}
 
-	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
+	const member = user.memberships.find((m) => m.communityId === community?.id);
+
+	// if you eg access this as a superadmin
+	if (!member) {
+		return notFound();
+	}
 
 	const memberWithUser = {
 		...member,

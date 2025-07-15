@@ -259,6 +259,7 @@ test.describe("Rich text editor", () => {
 		// Add a new form
 		const formsPage = new FormsPage(page, community.community.slug);
 		formsPage.goto();
+		await page.waitForURL(`/c/${community.community.slug}/forms`);
 		const formSlug = "rich-text-test";
 		await formsPage.addForm("Rich text test", formSlug);
 

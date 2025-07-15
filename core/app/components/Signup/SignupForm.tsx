@@ -17,11 +17,11 @@ import {
 	FormMessage,
 } from "ui/form";
 import { Input } from "ui/input";
+import { FormSubmitButton } from "ui/submit-button";
 
 import type { SignupFormSchema } from "./schema";
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 import { useServerAction } from "~/lib/serverActions";
-import { FormSubmitButton } from "../SubmitButton";
 import { compiledSignupFormSchema } from "./schema";
 
 type SignupAction = (input: {
