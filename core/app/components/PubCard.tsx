@@ -1,5 +1,3 @@
-import { setTimeout } from "timers/promises";
-
 import React, { Suspense } from "react";
 import Link from "next/link";
 
