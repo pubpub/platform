@@ -47,6 +47,16 @@ export type PubCardProps = {
 	actionInstances?: ActionInstances[];
 	withSelection?: boolean;
 	userId: UsersId;
+	/* if true, overrides the view stage capability check */
+	canViewAllStages?: boolean;
+	/* if true, overrides the edit pub capability check */
+	canEditAllPubs?: boolean;
+	/* if true, overrides the archive pub capability check */
+	canArchiveAllPubs?: boolean;
+	/* if true, overrides the run actions capability check */
+	canRunActionsAllPubs?: boolean;
+	/* if true, overrides the move pub capability check. dramatically reduces the number of queries for admins and editors and the like */
+	canMoveAllPubs?: boolean;
 };
 
 export const PubCard = async ({
@@ -57,6 +67,11 @@ export const PubCard = async ({
 	actionInstances,
 	withSelection = true,
 	userId,
+	canEditAllPubs,
+	canArchiveAllPubs,
+	canRunActionsAllPubs,
+	canMoveAllPubs,
+	canViewAllStages,
 }: PubCardProps) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
 
@@ -85,6 +100,8 @@ export const PubCard = async ({
 							moveFrom={moveFrom ?? []}
 							moveTo={moveTo ?? []}
 							hideIfNowhereToMove={false}
+							canMoveAllPubs={canMoveAllPubs}
+							canViewAllStages={canViewAllStages}
 						/>
 					) : null}
 					{pub.relatedPubsCount ? (
@@ -194,6 +211,9 @@ export const PubCard = async ({
 							pub={pub}
 							communitySlug={communitySlug}
 							userId={userId}
+							canEditAllPubs={canEditAllPubs}
+							canArchiveAllPubs={canArchiveAllPubs}
+							canRunActionsAllPubs={canRunActionsAllPubs}
 						/>
 					</Suspense>
 					{withSelection ? (
@@ -216,6 +236,9 @@ const PubCardActions = async ({
 	pub,
 	communitySlug,
 	userId,
+	canEditAllPubs,
+	canArchiveAllPubs,
+	canRunActionsAllPubs,
 }: {
 	actionInstances?: ActionInstances[];
 	pub: ProcessedPub<{
@@ -226,29 +249,35 @@ const PubCardActions = async ({
 	}>;
 	communitySlug: string;
 	userId: UsersId;
+	canEditAllPubs?: boolean;
+	canArchiveAllPubs?: boolean;
+	canRunActionsAllPubs?: boolean;
 }) => {
 	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
-		userCan(
-			Capabilities.deletePub,
-			{
-				type: MembershipType.pub,
+		canArchiveAllPubs ||
+			userCan(
+				Capabilities.deletePub,
+				{
+					type: MembershipType.pub,
+					pubId: pub.id,
+				},
+				userId
+			),
+		canRunActionsAllPubs ||
+			userCan(
+				Capabilities.runAction,
+				{
+					type: MembershipType.pub,
+					pubId: pub.id,
+				},
+				userId
+			),
+		canEditAllPubs ||
+			userCanEditPub({
+				userId,
 				pubId: pub.id,
-			},
-			userId
-		),
-		userCan(
-			Capabilities.runAction,
-			{
-				type: MembershipType.pub,
-				pubId: pub.id,
-			},
-			userId
-		),
-		userCanEditPub({
-			userId,
-			pubId: pub.id,
-		}),
+			}),
 	]);
 
 	return (

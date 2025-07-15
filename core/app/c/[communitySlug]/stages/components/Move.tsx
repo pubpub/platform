@@ -25,6 +25,10 @@ type Props = {
 	 */
 	hideIfNowhereToMove?: boolean;
 	stageName?: string;
+	/* if true, overrides the move pub capability check */
+	canMoveAllPubs?: boolean;
+	/* if true, overrides the view stage capability check */
+	canViewAllStages?: boolean;
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
@@ -80,16 +84,18 @@ async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
 	}
 
 	const [canMovePub, canViewStage] = await Promise.all([
-		userCan(
-			Capabilities.movePub,
-			{ type: MembershipType.pub, pubId: props.pubId },
-			loginData.user.id
-		),
-		userCan(
-			Capabilities.viewStage,
-			{ type: MembershipType.stage, stageId: props.stageId },
-			loginData.user.id
-		),
+		props.canMoveAllPubs ||
+			userCan(
+				Capabilities.movePub,
+				{ type: MembershipType.pub, pubId: props.pubId },
+				loginData.user.id
+			),
+		props.canViewAllStages ||
+			userCan(
+				Capabilities.viewStage,
+				{ type: MembershipType.stage, stageId: props.stageId },
+				loginData.user.id
+			),
 	]);
 
 	if (!canMovePub && !canViewStage) {

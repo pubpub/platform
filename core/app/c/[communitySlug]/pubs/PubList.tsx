@@ -8,6 +8,13 @@ import { cn } from "utils";
 import { searchParamsCache } from "~/app/components/DataTable/PubsDataTable/validations";
 import { FooterPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/PubCard";
+import {
+	userCanArchiveAllPubs,
+	userCanEditAllPubs,
+	userCanMoveAllPubs,
+	userCanRunActionsAllPubs,
+	userCanViewAllStages,
+} from "~/lib/authorization/capabilities";
 import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getStages } from "~/lib/server/stages";
@@ -40,12 +47,25 @@ const PaginatedPubListInner = async (
 		pubsPromise: Promise<PubListProcessedPub[]>;
 	}
 ) => {
-	const [pubs, stages] = await Promise.all([
+	const [
+		pubs,
+		stages,
+		canEditAllPubs,
+		canArchiveAllPubs,
+		canRunActionsAllPubs,
+		canMoveAllPubs,
+		canViewAllStages,
+	] = await Promise.all([
 		props.pubsPromise,
 		getStages(
 			{ communityId: props.communityId, userId: props.userId },
 			{ withActionInstances: "full" }
 		).execute(),
+		userCanEditAllPubs(),
+		userCanArchiveAllPubs(),
+		userCanRunActionsAllPubs(),
+		userCanMoveAllPubs(),
+		userCanViewAllStages(),
 	]);
 
 	return (
@@ -63,6 +83,11 @@ const PaginatedPubListInner = async (
 							moveTo={stageForPub?.moveConstraints}
 							actionInstances={stageForPub?.actionInstances}
 							userId={props.userId}
+							canEditAllPubs={canEditAllPubs}
+							canArchiveAllPubs={canArchiveAllPubs}
+							canRunActionsAllPubs={canRunActionsAllPubs}
+							canMoveAllPubs={canMoveAllPubs}
+							canViewAllStages={canViewAllStages}
 						/>
 					);
 				})}

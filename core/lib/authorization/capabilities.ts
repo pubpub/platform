@@ -10,12 +10,13 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+import { Capabilities, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { autoCache } from "../server/cache/autoCache";
+import { findCommunityBySlug } from "../server/community";
 
 export const pubCapabilities = [
 	Capabilities.movePub,
@@ -500,4 +501,40 @@ export const getCreatablePubTypes = cache(async (userId: UsersId, communityId: C
 			.distinctOn(["pub_types.id"])
 			.orderBy(["pub_types.id", "forms.isDefault desc"])
 	).execute();
+});
+
+export const userIsCommunityRole = async (role: MemberRole[]) => {
+	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	if (!user || !community) {
+		return false;
+	}
+	if (user.isSuperAdmin) {
+		return true;
+	}
+
+	return user.memberships.some((membership) => role.includes(membership.role));
+};
+
+const userIsAdminOrEditor = cache(async () => {
+	return userIsCommunityRole([MemberRole.admin, MemberRole.editor]);
+});
+
+export const userCanEditAllPubs = cache(async () => {
+	return userIsAdminOrEditor();
+});
+
+export const userCanArchiveAllPubs = cache(async () => {
+	return userIsAdminOrEditor();
+});
+
+export const userCanMoveAllPubs = cache(async () => {
+	return userIsAdminOrEditor();
+});
+
+export const userCanRunActionsAllPubs = cache(async () => {
+	return userIsAdminOrEditor();
+});
+
+export const userCanViewAllStages = cache(async () => {
+	return userIsAdminOrEditor();
 });
