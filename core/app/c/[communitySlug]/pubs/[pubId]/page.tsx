@@ -9,6 +9,7 @@ import type { PubsId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
+import { tryCatch } from "utils/try-catch";
 
 import Move, { BasicMove } from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
@@ -26,7 +27,6 @@ import { getPubsWithRelatedValues, pubValuesByVal } from "~/lib/server";
 import { autoCache } from "~/lib/server/cache/autoCache";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
-import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { getStages } from "~/lib/server/stages";
 import {
 	addPubMember,
@@ -88,9 +88,6 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const communityMembersPromise = selectAllCommunityMemberships({
-		communityId: community.id,
-	}).execute();
 	const communityStagesPromise = getStages({
 		communityId: community.id,
 		userId: user.id,
@@ -98,16 +95,18 @@ export default async function Page(props: {
 
 	// We don't pass the userId here because we want to include related pubs regardless of authorization
 	// This is safe because we've already explicitly checked authorization for the root pub
-	const pubPromise = getPubsWithRelatedValues(
-		{ pubId: params.pubId, communityId: community.id },
-		{
-			withPubType: true,
-			withRelatedPubs: true,
-			withStage: true,
-			withStageActionInstances: true,
-			withMembers: true,
-			depth: 3,
-		}
+	const pubPromise = tryCatch(
+		getPubsWithRelatedValues(
+			{ pubId: params.pubId, communityId: community.id },
+			{
+				withPubType: true,
+				withRelatedPubs: true,
+				withStage: true,
+				withStageActionInstances: true,
+				withMembers: true,
+				depth: 3,
+			}
+		)
 	);
 
 	const actionsPromise = getStageActions({ pubId: pubId }).execute();
@@ -127,10 +126,9 @@ export default async function Page(props: {
 		canAddMember,
 		canRemoveMember,
 		canCreateRelatedPub,
-		pub,
+		[pubErr, pub],
 
 		actions,
-		communityMembers,
 		communityStages,
 		withExtraPubValues,
 		availableForms,
@@ -145,7 +143,6 @@ export default async function Page(props: {
 		userCan(Capabilities.createRelatedPub, { type: MembershipType.pub, pubId }, user.id),
 		pubPromise,
 		actionsPromise,
-		communityMembersPromise,
 		communityStagesPromise,
 		userCan(
 			Capabilities.seeExtraPubValues,
@@ -153,16 +150,18 @@ export default async function Page(props: {
 			user.id
 		),
 		getAuthorizedViewForms(user.id, pubId).execute(),
-		getForm(getFormProps).executeTakeFirstOrThrow(
-			() => new Error(`Could not find a form for pub`)
-		),
+		getForm(getFormProps).executeTakeFirst(),
 	]);
 
 	if (!canView) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	if (!pub) {
+	if (pubErr || !pub) {
+		notFound();
+	}
+
+	if (!form) {
 		return null;
 	}
 
