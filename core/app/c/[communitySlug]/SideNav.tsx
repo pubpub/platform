@@ -37,8 +37,10 @@ import {
 
 import type { CommunityData } from "~/lib/server/community";
 import type { MaybeHas } from "~/lib/types";
+import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { userCanViewAnyStages, viewableStagesCte } from "~/lib/server/stages";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
@@ -106,7 +108,7 @@ const viewLinks: LinkGroupDefinition = {
 			pattern: "/stages$",
 			text: "All Workflows",
 			icon: <FlagTriangleRightIcon size={16} />,
-			authorization: null,
+			authorization: userCanViewAnyStages,
 		},
 		{
 			href: "/activity/actions",
