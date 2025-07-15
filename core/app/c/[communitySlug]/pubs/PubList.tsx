@@ -95,23 +95,22 @@ const PubListFooterPagination = async (props: {
 	communityId: CommunitiesId;
 	children: React.ReactNode;
 	pubsPromise: Promise<ProcessedPub[]>;
+	userId: UsersId;
 }) => {
 	const perPage = searchParamsCache.get("perPage");
-	const isQuery = !!searchParamsCache.get("query");
+	const query = searchParamsCache.get("query");
 
-	const count = await (isQuery
-		? props.pubsPromise.then((pubs) => pubs.length)
-		: getPubsCount({ communityId: props.communityId }));
+	const count = await getPubsCount(
+		{ communityId: props.communityId, userId: props.userId },
+		{
+			search: query,
+		}
+	);
 
-	const paginationProps = isQuery
-		? {
-				mode: "cursor" as const,
-				hasNextPage: count > perPage,
-			}
-		: {
-				mode: "total" as const,
-				totalPages: Math.ceil((count ?? 0) / perPage),
-			};
+	const paginationProps = {
+		mode: "total" as const,
+		totalPages: Math.ceil((count ?? 0) / perPage),
+	};
 
 	return (
 		<FooterPagination {...props} {...paginationProps} className="z-20">
@@ -164,6 +163,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 				<PubListFooterPagination
 					basePath={basePath}
 					searchParams={props.searchParams}
+					userId={props.userId}
 					page={search.page}
 					communityId={props.communityId}
 					pubsPromise={pubsPromise}
