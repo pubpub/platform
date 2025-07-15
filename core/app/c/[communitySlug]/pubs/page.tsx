@@ -5,16 +5,15 @@ import Link from "next/link";
 import { BookOpen } from "lucide-react";
 
 import type { CommunitiesId } from "db/public";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 
-import { FooterPagination } from "~/app/components/Pagination";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { env } from "~/lib/env/env";
+import { userCan, userCanCreateAnyPub } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ContentLayout } from "../ContentLayout";
-import PubHeader from "./PubHeader";
 import { PaginatedPubList } from "./PubList";
 
 export const metadata: Metadata = {
@@ -23,7 +22,7 @@ export const metadata: Metadata = {
 
 type Props = {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: { [key: string]: string | string[] | undefined };
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default async function Page(props: Props) {
@@ -39,6 +38,18 @@ export default async function Page(props: Props) {
 		return null;
 	}
 
+	const [canEditTypes, canCreateAnyPub] = await Promise.all([
+		await userCan(
+			Capabilities.editPubType,
+			{
+				type: MembershipType.community,
+				communityId: community.id,
+			},
+			user.id
+		),
+		userCanCreateAnyPub(user.id, community.id),
+	]);
+
 	const basePath = `/c/${community.slug}/pubs`;
 
 	return (
@@ -50,15 +61,19 @@ export default async function Page(props: Props) {
 			}
 			right={
 				<div className="flex items-center gap-x-2">
-					<Button variant="ghost" size="sm" asChild>
-						<Link href="types">Manage Types</Link>
-					</Button>
-					<Suspense fallback={<SkeletonButton className="h-6 w-20" />}>
-						<CreatePubButton
-							communityId={community.id as CommunitiesId}
-							className="bg-emerald-500 text-white"
-						/>
-					</Suspense>
+					{canEditTypes && (
+						<Button variant="ghost" size="sm" asChild>
+							<Link href="types">Manage Types</Link>
+						</Button>
+					)}
+					{canCreateAnyPub && (
+						<Suspense fallback={<SkeletonButton className="h-6 w-20" />}>
+							<CreatePubButton
+								communityId={community.id as CommunitiesId}
+								className="bg-emerald-500 text-white"
+							/>
+						</Suspense>
+					)}
 				</div>
 			}
 			className="overflow-hidden"

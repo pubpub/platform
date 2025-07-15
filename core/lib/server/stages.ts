@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { QueryCreator, sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
@@ -74,6 +75,11 @@ export const viewableStagesCte = ({
 				.onRef("stage_memberships.role", "=", "membership_capabilities.role")
 				.on("membership_capabilities.type", "=", MembershipType.stage)
 		)
+		.$if(Boolean(communityId), (qb) =>
+			qb
+				.innerJoin("stages", "stages.id", "stage_memberships.stageId")
+				.where("stages.communityId", "=", communityId!)
+		)
 		.select("stage_memberships.stageId")
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
 		.where("stage_memberships.userId", "=", userId);
@@ -103,6 +109,16 @@ export const viewableStagesCte = ({
 		.distinct()
 		.select("stageId");
 };
+
+export const userCanViewAnyStages = cache(async (userId: UsersId, communityId: CommunitiesId) => {
+	return autoCache(
+		viewableStagesCte({ db, userId, communityId })
+			.clearSelect()
+			.select((eb) => eb.fn.countAll<number>().as("count"))
+	)
+		.executeTakeFirstOrThrow()
+		.then((res) => (res?.count ?? 0) > 0);
+});
 
 type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
 type CommunityStageOptions = {
