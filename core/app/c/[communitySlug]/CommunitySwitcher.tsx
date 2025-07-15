@@ -22,21 +22,30 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 	const avatarClasses =
 		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 border";
 	const textClasses = "flex-auto text-base font-semibold w-44 text-left";
+
+	const onlyOneCommunity = availableCommunities.length === 1;
+
+	const button = (
+		<SidebarMenuButton
+			aria-label="Select a community"
+			className={`h-full group-data-[collapsible=icon]:!p-0 md:py-1 ${onlyOneCommunity ? "cursor-default" : ""}`}
+		>
+			<Avatar className={avatarClasses}>
+				<AvatarImage src={community.avatar || undefined} />
+				<AvatarFallback>{community.name[0]}</AvatarFallback>
+			</Avatar>
+			<span className={textClasses}>{community.name}</span>
+			{!onlyOneCommunity && <ChevronsUpDown className="ml-auto" />}
+		</SidebarMenuButton>
+	);
+
+	if (onlyOneCommunity) {
+		return button;
+	}
+
 	return (
 		<DropdownMenu>
-			<DropdownMenuTrigger asChild>
-				<SidebarMenuButton
-					aria-label="Select a community"
-					className={`h-full group-data-[collapsible=icon]:!p-0 md:py-1`}
-				>
-					<Avatar className={avatarClasses}>
-						<AvatarImage src={community.avatar || undefined} />
-						<AvatarFallback>{community.name[0]}</AvatarFallback>
-					</Avatar>
-					<span className={textClasses}>{community.name}</span>
-					<ChevronsUpDown className="ml-auto" />
-				</SidebarMenuButton>
-			</DropdownMenuTrigger>
+			<DropdownMenuTrigger asChild>{button}</DropdownMenuTrigger>
 			<DropdownMenuContent className="w-[--radix-popper-anchor-width] min-w-52" side="right">
 				{availableCommunities
 					.filter((option) => {
