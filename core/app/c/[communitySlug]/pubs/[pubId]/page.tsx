@@ -12,7 +12,6 @@ import { Pencil } from "ui/icon";
 import { tryCatch } from "utils/try-catch";
 
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { BasicMove } from "~/app/c/[communitySlug]/stages/components/MoveInteractive";
 import { MembersList } from "~/app/components//Memberships/MembersList";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
@@ -217,15 +216,16 @@ export default async function Page(props: {
 					{pub.stage ? (
 						<div>
 							<div className="mb-1 text-lg font-bold">Current Stage</div>
-							<div className="ml-4 flex items-center gap-2 font-medium">
-								<Suspense fallback={<BasicMove name={pub.stage.name} />}>
-									<Move
-										stageName={pub.stage.name}
-										pubId={pub.id}
-										stageId={pub.stage.id}
-										communityStages={communityStages}
-									/>
-								</Suspense>
+							<div
+								className="ml-4 flex items-center gap-2 font-medium"
+								data-testid="current-stage"
+							>
+								<Move
+									stageName={pub.stage.name}
+									pubId={pub.id}
+									stageId={pub.stage.id}
+									communityStages={communityStages}
+								/>
 							</div>
 						</div>
 					) : null}

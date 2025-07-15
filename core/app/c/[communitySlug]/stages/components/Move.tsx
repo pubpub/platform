@@ -12,7 +12,8 @@ import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { makeStagesById } from "~/lib/stages";
-import { BasicMove, MoveInteractive } from "./MoveInteractive";
+import { BasicMoveButton } from "./BasicMoveButton";
+import { MoveInteractive } from "./MoveInteractive";
 
 type Props = {
 	pubId: PubsId;
@@ -65,17 +66,17 @@ const getStageDisplayName = (props: Props) => {
 	return stage?.name || "Stage";
 };
 
-export default async function Move({ hideIfNowhereToMove = true, ...props }: Props) {
+async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
 	const { sources, destinations } = makeSourcesAndDestinations(props);
 	const stageName = getStageDisplayName(props);
 
 	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
-		return <BasicMove name={stageName} />;
+		return <BasicMoveButton name={stageName} />;
 	}
 
 	const loginData = await getLoginData();
 	if (!loginData.user) {
-		return <BasicMove name={stageName} />;
+		return <BasicMoveButton name={stageName} />;
 	}
 
 	const [canMovePub, canViewStage] = await Promise.all([
@@ -92,22 +93,28 @@ export default async function Move({ hideIfNowhereToMove = true, ...props }: Pro
 	]);
 
 	if (!canMovePub && !canViewStage) {
-		return <BasicMove name={stageName} />;
+		return <BasicMoveButton name={stageName} />;
 	}
 
-	const stageButton = props.button ?? <BasicMove name={stageName} withDropdown={true} />;
+	const stageButton = props.button ?? <BasicMoveButton name={stageName} withDropdown={true} />;
 
 	return (
-		<Suspense fallback={stageButton}>
-			<MoveInteractive
-				{...props}
-				sources={sources}
-				destinations={destinations}
-				canMovePub={canMovePub}
-				canViewStage={canViewStage}
-				button={stageButton}
-				hideIfNowhereToMove={hideIfNowhereToMove}
-			/>
+		<MoveInteractive
+			{...props}
+			sources={sources}
+			destinations={destinations}
+			canMovePub={canMovePub}
+			canViewStage={canViewStage}
+			button={stageButton}
+			hideIfNowhereToMove={hideIfNowhereToMove}
+		/>
+	);
+}
+
+export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
+	return (
+		<Suspense fallback={<BasicMoveButton name={getStageDisplayName(props)} />}>
+			<MoveButton hideIfNowhereToMove={hideIfNowhereToMove} {...props} />
 		</Suspense>
 	);
 }
