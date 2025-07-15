@@ -1,3 +1,5 @@
+import { setTimeout } from "timers/promises";
+
 import React, { Suspense } from "react";
 import Link from "next/link";
 
@@ -171,25 +173,31 @@ export const PubCard = async ({
 						fallback={
 							<>
 								{hasActions ? (
-									<SkeletonButton
+									<div
 										className={cn(
-											"peer order-2 w-6 px-4 py-2 data-[state=open]:opacity-100 [&_svg]:size-6",
+											"peer order-2 data-[state=open]:opacity-100",
 											HOVER_CLASS
 										)}
-									/>
+									>
+										<SkeletonButton className="mx-1 h-6 w-6" />
+									</div>
 								) : null}
-								<SkeletonButton
+								<div
 									className={cn(
-										"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+										"order-1 peer-data-[state=open]:opacity-100",
 										HOVER_CLASS
 									)}
-								/>
-								<SkeletonButton
+								>
+									<SkeletonButton className="mx-1 h-6 w-6" />
+								</div>
+								<div
 									className={cn(
-										"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+										"order-3 peer-data-[state=open]:opacity-100",
 										HOVER_CLASS
 									)}
-								/>
+								>
+									<SkeletonButton className="mx-1 h-6 w-6" />
+								</div>
 							</>
 						}
 					>
@@ -254,7 +262,6 @@ const PubCardActions = async ({
 			pubId: pub.id,
 		}),
 	]);
-	console.log({ canArchive, canRunActions, canEdit });
 
 	return (
 		<>

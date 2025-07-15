@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 
 type Props = {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: { [key: string]: string | string[] | undefined };
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default async function Page(props: Props) {
