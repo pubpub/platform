@@ -12,7 +12,8 @@ import { Calendar, ChevronDown, FlagTriangleRightIcon, History, Pencil, Trash2 }
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
-import Move, { BasicMove } from "~/app/c/[communitySlug]/stages/components/Move";
+import Move from "~/app/c/[communitySlug]/stages/components/Move";
+import { BasicMove } from "~/app/c/[communitySlug]/stages/components/MoveInteractive";
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";

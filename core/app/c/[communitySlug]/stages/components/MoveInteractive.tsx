@@ -7,9 +7,10 @@ import Link from "next/link";
 
 import type { PubsId, StagesId } from "db/public";
 import { Button } from "ui/button";
-import { ArrowLeft, ArrowRight, FlagTriangleRightIcon, Loader2 } from "ui/icon";
+import { ArrowLeft, ArrowRight, ChevronDown, FlagTriangleRightIcon, Loader2 } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
+import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions";
@@ -169,3 +170,20 @@ export function MoveInteractive({
 		</Popover>
 	);
 }
+
+export const BasicMove = (props: { name: string; withDropdown?: boolean; className?: string }) => {
+	return (
+		<Button
+			variant="outline"
+			className={cn(
+				"h-[22px] gap-0.5 rounded-full px-[.35rem] text-xs font-semibold shadow-none",
+				props.withDropdown ? "" : "pr-4",
+				props.className
+			)}
+		>
+			<FlagTriangleRightIcon strokeWidth="1px" className="text-neutral-500" />
+			{props.name}
+			{props.withDropdown && <ChevronDown strokeWidth="1px" />}
+		</Button>
+	);
+};

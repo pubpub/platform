@@ -12,7 +12,7 @@ import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { makeStagesById } from "~/lib/stages";
-import { MoveInteractive } from "./MoveInteractive";
+import { BasicMove, MoveInteractive } from "./MoveInteractive";
 
 type Props = {
 	pubId: PubsId;
@@ -73,8 +73,6 @@ export default async function Move({ hideIfNowhereToMove = true, ...props }: Pro
 		return <BasicMove name={stageName} />;
 	}
 
-	const stageButton = props.button ?? <BasicMove name={stageName} />;
-
 	const loginData = await getLoginData();
 	if (!loginData.user) {
 		return <BasicMove name={stageName} />;
@@ -97,6 +95,8 @@ export default async function Move({ hideIfNowhereToMove = true, ...props }: Pro
 		return <BasicMove name={stageName} />;
 	}
 
+	const stageButton = props.button ?? <BasicMove name={stageName} withDropdown={true} />;
+
 	return (
 		<Suspense fallback={stageButton}>
 			<MoveInteractive
@@ -111,15 +111,3 @@ export default async function Move({ hideIfNowhereToMove = true, ...props }: Pro
 		</Suspense>
 	);
 }
-
-export const BasicMove = (props: { name: string }) => {
-	return (
-		<Button
-			variant="outline"
-			className="h-[22px] gap-0.5 rounded-full px-2 pr-4 text-xs font-semibold shadow-none"
-		>
-			<FlagTriangleRightIcon strokeWidth="1px" className="text-neutral-500" />
-			{props.name}
-		</Button>
-	);
-};
