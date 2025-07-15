@@ -118,7 +118,7 @@ const PubListFooterPagination = async (props: {
 	searchParams: Record<string, unknown>;
 	page: number;
 	communityId: CommunitiesId;
-	children: React.ReactNode;
+	children?: React.ReactNode;
 	pubsPromise: Promise<ProcessedPub[]>;
 	userId: UsersId;
 }) => {
@@ -140,6 +140,7 @@ const PubListFooterPagination = async (props: {
 	return (
 		<FooterPagination {...props} {...paginationProps} className="z-20">
 			{props.children}
+			<PubsSelectedCounter pageSize={Math.min(perPage, count)} />
 		</FooterPagination>
 	);
 };
@@ -192,9 +193,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 					page={search.page}
 					communityId={props.communityId}
 					pubsPromise={pubsPromise}
-				>
-					<PubsSelectedCounter pageSize={search.perPage} />
-				</PubListFooterPagination>
+				></PubListFooterPagination>
 			</Suspense>
 		</div>
 	);
