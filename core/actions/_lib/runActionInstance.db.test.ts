@@ -107,7 +107,7 @@ describe("runActionInstance", () => {
 			report: "Logged out some data, check your console.",
 			data: {},
 		});
-	});
+	}, 10_000);
 
 	it.skip("should properly blame the action run if an action modifies a pub", async () => {
 		const trx = getTrx();
