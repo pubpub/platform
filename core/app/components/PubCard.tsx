@@ -1,3 +1,5 @@
+import { setTimeout } from "timers/promises";
+
 import React, { Suspense } from "react";
 import Link from "next/link";
 
@@ -252,6 +254,7 @@ const PubCardActions = async ({
 	canRunActionsAllPubs?: boolean;
 }) => {
 	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	await setTimeout(3_000);
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
 		canArchiveAllPubs ||
 			userCan(
@@ -305,7 +308,14 @@ const PubCardActions = async ({
 					)}
 					icon={<Trash2 strokeWidth="1px" className="text-neutral-500" />}
 				/>
-			) : null}
+			) : (
+				<span
+					className={cn(
+						"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+						HOVER_CLASS
+					)}
+				></span>
+			)}
 			{canEdit ? (
 				<Button
 					variant="ghost"
@@ -320,7 +330,14 @@ const PubCardActions = async ({
 						<span className="sr-only">Update</span>
 					</Link>
 				</Button>
-			) : null}
+			) : (
+				<span
+					className={cn(
+						"order-3 w-6 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
+						HOVER_CLASS
+					)}
+				></span>
+			)}
 		</>
 	);
 };
