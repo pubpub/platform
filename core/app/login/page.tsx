@@ -1,9 +1,11 @@
 import { cookies } from "next/headers";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { Notice } from "../../components/Notice";
+import { LogoWithText } from "../components/Logo";
+import { Notice } from "../components/Notice";
 import LoginForm from "./LoginForm";
 
 export default async function Login({
@@ -33,11 +35,15 @@ export default async function Login({
 	const { notice, error, body } = await searchParams;
 
 	return (
-		<div className="mx-auto max-w-sm">
-			<LoginForm />
-			{notice && <Notice type="notice" title={notice} body={body} />}
-			{error && <Notice type="error" title={error} body={body} />}
-			{/* <div className="text-gray-600 text-center mt-6">
+		<div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted/50 p-6 md:p-10">
+			<div className="flex w-full max-w-sm flex-col gap-2">
+				<div className="flex items-center gap-2 self-center font-medium">
+					<LogoWithText />
+				</div>
+				<LoginForm />
+				{notice && <Notice type="notice" title={notice} body={body} />}
+				{error && <Notice type="error" title={error} body={body} />}
+				{/* <div className="text-gray-600 text-center mt-6">
 				Don't have an account?{" "}
 				<Link
 					href="/signup"
@@ -46,6 +52,7 @@ export default async function Login({
 					Sign up
 				</Link>
 			</div> */}
+			</div>
 		</div>
 	);
 }

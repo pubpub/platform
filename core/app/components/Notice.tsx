@@ -18,7 +18,12 @@ export const Notice = ({
 } & NoticeParams) => (
 	<Alert
 		variant={type === "error" ? "destructive" : "default"}
-		className={cn("mt-4", !body && "flex flex-row items-center [&>svg]:static", className)}
+		className={cn(
+			"mt-4",
+			!body && "flex flex-row items-center [&>svg]:static",
+			type === "error" && "bg-red-50",
+			className
+		)}
 	>
 		<AlertCircle className="h-4 w-4" />
 		<AlertTitle className={cn("font-semibold", !body && "mb-0")}>{title}</AlertTitle>
