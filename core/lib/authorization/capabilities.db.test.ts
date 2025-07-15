@@ -109,6 +109,7 @@ describe("Community membership grants appropriate capabilities", async () => {
 		Capabilities.deletePub,
 		Capabilities.runAction,
 		Capabilities.seeExtraPubValues,
+		Capabilities.createRelatedPub,
 	] as const;
 
 	const editorPubInabilities = pubCapabilities.filter(
