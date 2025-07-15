@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Check, Loader2 } from "ui/icon";
 import { Input } from "ui/input";
+import { PasswordInput } from "ui/password-input";
 
 import * as actions from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
@@ -74,7 +75,8 @@ export default function LoginForm() {
 									<FormItem>
 										<FormLabel>Password</FormLabel>
 										<FormControl>
-											<Input type="password" {...field} />
+											{/* <Input type="password" {...field} /> */}
+											<PasswordInput {...field} />
 										</FormControl>
 									</FormItem>
 								</div>
