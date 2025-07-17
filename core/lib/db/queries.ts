@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstancesId, CommunitiesId, StagesId, UsersId } from "db/public";
+import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Event } from "db/public";
 
 import type { XOR } from "../types";
@@ -34,12 +34,23 @@ export const getStageActions = cache(
 	({
 		stageId,
 		communityId,
-	}: XOR<
-		{ stageId: StagesId },
-		{
-			communityId: CommunitiesId;
-		}
-	>) => {
+		pubId,
+	}:
+		| {
+				stageId: StagesId;
+				communityId?: never;
+				pubId?: never;
+		  }
+		| {
+				communityId: CommunitiesId;
+				stageId?: never;
+				pubId?: never;
+		  }
+		| {
+				pubId: PubsId;
+				stageId?: never;
+				communityId?: never;
+		  }) => {
 		return autoCache(
 			db
 				.selectFrom("action_instances")
@@ -63,6 +74,11 @@ export const getStageActions = cache(
 					).as("lastActionRun")
 				)
 				.innerJoin("stages", "action_instances.stageId", "stages.id")
+				.$if(!!pubId, (eb) =>
+					eb
+						.innerJoin("PubsInStages", "PubsInStages.stageId", "stages.id")
+						.where("PubsInStages.pubId", "=", pubId!)
+				)
 				.$if(!!stageId, (eb) => eb.where("stageId", "=", stageId!))
 				.$if(!!communityId, (eb) => eb.where("stages.communityId", "=", communityId!))
 		);

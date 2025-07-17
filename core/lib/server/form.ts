@@ -31,9 +31,10 @@ import { getUser } from "./user";
  */
 export const getForm = (
 	props: (
-		| { id: FormsId; slug?: never; pubTypeId?: never }
-		| { id?: never; slug: string; pubTypeId?: never }
-		| { id?: never; slug?: never; pubTypeId: PubTypesId }
+		| { id: FormsId; slug?: never; pubTypeId?: never; pubId?: never }
+		| { id?: never; slug: string; pubTypeId?: never; pubId?: never }
+		| { id?: never; slug?: never; pubTypeId: PubTypesId; pubId?: never }
+		| { id?: never; slug?: never; pubTypeId?: never; pubId: PubsId }
 	) & { communityId: CommunitiesId },
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) =>
@@ -47,6 +48,11 @@ export const getForm = (
 				eb.where((eb) =>
 					eb("forms.pubTypeId", "=", props.pubTypeId!).and("forms.isDefault", "=", true)
 				)
+			)
+			.$if(Boolean(props.pubId), (eb) =>
+				eb
+					.innerJoin("pubs", "pubs.pubTypeId", "forms.pubTypeId")
+					.where("pubs.id", "=", props.pubId!)
 			)
 			.selectAll("forms")
 			.select((eb) =>

@@ -14,6 +14,7 @@ import { PubDetailsPage } from "./fixtures/pub-details-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { choosePubType, PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
+import { closeToast } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -85,7 +86,7 @@ test.describe("Moving a pub", () => {
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Submitted");
 		// For this initial stage, there are only destinations ,no sources
-		await page.getByRole("button", { name: "Move", exact: true }).click();
+		await page.getByRole("button", { name: "Submitted", exact: true }).click();
 		const sources = page.getByTestId("sources");
 		const destinations = page.getByTestId("destinations");
 		await expect(sources).toHaveCount(0);
@@ -93,7 +94,7 @@ test.describe("Moving a pub", () => {
 		await expect(page.getByTestId("current-stage")).toHaveText("Ask Author for Consent");
 
 		// Open the move modal again and expect to be able to move to sources and destinations
-		await page.getByRole("button", { name: "Move", exact: true }).click();
+		await page.getByRole("button", { name: "Ask Author for Consent", exact: true }).click();
 		await expect(sources.getByRole("button", { name: "Submitted" })).toHaveCount(1);
 		await expect(destinations.getByRole("button", { name: "To Evaluate" })).toHaveCount(1);
 	});
@@ -117,7 +118,12 @@ test.describe("Moving a pub", () => {
 		);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Shelved");
-		await expect(page.getByRole("button", { name: "Move", exact: true })).toHaveCount(0);
+		await page.getByRole("button", { name: "Shelved", exact: true }).click();
+		const sources = page.getByTestId("sources");
+		const destinations = page.getByTestId("destinations");
+		await expect(sources).toHaveCount(0);
+		await expect(destinations).toHaveCount(0);
+		await expect(page.getByRole("button", { name: "View Stage", exact: true })).toHaveCount(0);
 	});
 });
 
@@ -188,6 +194,7 @@ test.describe("Creating a pub", () => {
 		await page.getByRole("button", { name: "Save" }).click();
 
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit?*`);
+		await closeToast(page);
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
 
@@ -196,10 +203,11 @@ test.describe("Creating a pub", () => {
 		await page.getByLabel("Animals").fill("penguins");
 		await page.keyboard.press("Enter");
 		await page.getByTestId("remove-button").first().click();
+		await page.waitForTimeout(200);
 		await page.getByRole("button", { name: "Save" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
-		).toHaveCount(1);
+		).toHaveCount(1, { timeout: 10_000 });
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});

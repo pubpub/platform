@@ -9,6 +9,13 @@ import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
 import { BasicPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/PubCard";
+import {
+	userCanArchiveAllPubs,
+	userCanEditAllPubs,
+	userCanMoveAllPubs,
+	userCanRunActionsAllPubs,
+	userCanViewAllStages,
+} from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
@@ -100,7 +107,16 @@ export async function StagePubs({
 	basePath: string;
 	userId: UsersId;
 }) {
-	const [communitySlug, stagePubs, actionInstances] = await Promise.all([
+	const [
+		communitySlug,
+		stagePubs,
+		actionInstances,
+		canEditAllPubs,
+		canArchiveAllPubs,
+		canRunActionsAllPubs,
+		canMoveAllPubs,
+		canViewAllStages,
+	] = await Promise.all([
 		getCommunitySlug(),
 		getPubsWithRelatedValues(
 			{ stageId: [stage.id], communityId: stage.communityId },
@@ -113,9 +129,15 @@ export async function StagePubs({
 				withValues: false,
 				withStage: true,
 				withPubType: true,
+				withStageActionInstances: true,
 			}
 		),
 		getStageActions({ stageId: stage.id }).execute(),
+		userCanEditAllPubs(),
+		userCanArchiveAllPubs(),
+		userCanRunActionsAllPubs(),
+		userCanMoveAllPubs(),
+		userCanViewAllStages(),
 	]);
 
 	const totalPages =
@@ -143,6 +165,12 @@ export async function StagePubs({
 						actionInstances={actionInstances}
 						communitySlug={communitySlug}
 						withSelection={false}
+						userId={userId}
+						canEditAllPubs={canEditAllPubs}
+						canArchiveAllPubs={canArchiveAllPubs}
+						canRunActionsAllPubs={canRunActionsAllPubs}
+						canMoveAllPubs={canMoveAllPubs}
+						canViewAllStages={canViewAllStages}
 					/>
 				);
 			})}
