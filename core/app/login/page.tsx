@@ -38,10 +38,10 @@ export default async function Login({
 	return (
 		<div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-white p-6 md:p-10">
 			<DotBackground className="opacity-50" />
-			<div className="absolute inset-0 z-0 bg-gradient-to-b from-white to-transparent" />
+			<div className="absolute inset-0 z-0 bg-gradient-to-b from-white/80 to-transparent" />
 			<div className="relative z-10 flex w-full max-w-sm flex-col gap-2">
 				<div className="flex items-center gap-2 self-center font-medium">
-					<LogoWithText />
+					<LogoWithText className="text-2xl" />
 				</div>
 				<LoginForm />
 				{notice && <Notice type="notice" title={notice} body={body} />}

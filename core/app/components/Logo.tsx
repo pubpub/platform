@@ -29,9 +29,9 @@ export const Logo = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
 };
 
 export const LogoWithText = ({ className }: { className?: string }) => (
-	<div className={cn("container mx-auto flex items-center gap-2 py-5", className)}>
+	<div className={cn("container mx-auto flex items-center gap-2 py-5 text-xl", className)}>
 		<Logo width={24} height={24} />
-		<span className="text-xl">
+		<span>
 			<span className="font-medium text-muted-foreground">PubPub</span>{" "}
 			<span className="font-bold">Platform</span>
 		</span>
