@@ -21,6 +21,6 @@ export const DotBackground = ({ className }: { className?: string }) => (
 				<circle id="pattern-circle" cx="1" cy="1" r="1"></circle>
 			</pattern>
 		</defs>
-		<rect width="100%" height="100%" stroke-width="0" fill="url(#:r2R0:)"></rect>
+		<rect width="100%" height="100%" strokeWidth="0" fill="url(#:r2R0:)"></rect>
 	</svg>
 );
