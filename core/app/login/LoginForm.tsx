@@ -8,12 +8,14 @@ import { z } from "zod";
 
 import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
-import { Check, Loader2 } from "ui/icon";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Check, Loader2, X } from "ui/icon";
 import { Input } from "ui/input";
+import { PasswordInput } from "ui/password-input";
 
 import * as actions from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
+import { FormSubmitButton } from "../components/SubmitButton";
 
 export const loginFormSchema = z.object({
 	email: z.string().email(),
@@ -34,17 +36,21 @@ export default function LoginForm() {
 	const runLoginWithPassword = useServerAction(actions.loginWithPassword);
 
 	const handleSubmit = async (formData: z.infer<typeof loginFormSchema>) => {
-		await runLoginWithPassword({
+		const result = await runLoginWithPassword({
 			email: formData.email,
 			password: formData.password,
 			redirectTo: searchParams.get("redirectTo") ?? null,
 		});
+
+		if (result && result.error) {
+			form.setError("root", { message: result.error });
+		}
 	};
 
 	return (
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(handleSubmit)}>
-				<Card className="w-full max-w-sm">
+				<Card className="w-full max-w-sm shadow-lg transition-shadow duration-300 hover:shadow-xl">
 					<CardHeader>
 						<CardTitle className="text-2xl">Login</CardTitle>
 						<CardDescription>
@@ -74,7 +80,7 @@ export default function LoginForm() {
 									<FormItem>
 										<FormLabel>Password</FormLabel>
 										<FormControl>
-											<Input type="password" {...field} />
+											<PasswordInput {...field} />
 										</FormControl>
 									</FormItem>
 								</div>
@@ -82,22 +88,14 @@ export default function LoginForm() {
 						/>
 					</CardContent>
 					<CardFooter className="flex flex-col gap-y-4">
-						<Button
-							className="flex w-full items-center gap-x-2"
-							disabled={form.formState.isSubmitting || !form.formState.isValid}
-							type="submit"
-						>
-							{form.formState.isSubmitting ? (
-								<Loader2 className="animate-spin" />
-							) : form.formState.isSubmitSuccessful ? (
-								<>
-									<Check className="h-4 w-4" />
-									<span>Success</span>
-								</>
-							) : (
-								"Sign in"
-							)}
-						</Button>
+						<FormSubmitButton
+							formState={form.formState}
+							idleText="Sign in"
+							pendingText="Signing in..."
+							successText="Success!"
+							errorText="Error signing in"
+							className="w-full"
+						/>
 						<Link href="/forgot" className="text-sm text-gray-600 hover:underline">
 							Forgot Password
 						</Link>

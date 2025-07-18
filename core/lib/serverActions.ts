@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { captureException } from "@sentry/nextjs";
 
 import { logger } from "logger";
@@ -42,15 +43,23 @@ export const isClientExceptionOptions = (error: unknown): error is ClientExcepti
 export function useServerAction<T extends unknown[], U>(action: (...args: T) => Promise<U>) {
 	const runServerAction = useCallback(
 		async function runServerAction(...args: T) {
-			const result = await action(...args);
-			if (isClientException(result)) {
-				toast({
-					title: result.title ?? "Error",
-					variant: "destructive",
-					description: `${result.error}${result.id ? ` (Error ID: ${result.id})` : ""}`,
-				});
+			try {
+				const result = await action(...args);
+				if (isClientException(result)) {
+					toast({
+						title: result.title ?? "Error",
+						variant: "destructive",
+						description: `${result.error}${result.id ? ` (Error ID: ${result.id})` : ""}`,
+					});
+				}
+				return result;
+			} catch (error) {
+				if (isRedirectError(error)) {
+					// the consumer should never rely on this value, so we can safely cast it to `never`
+					return undefined as never;
+				}
+				throw error;
 			}
-			return result;
 		},
 		[action, toast]
 	);
