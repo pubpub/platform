@@ -66,7 +66,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.textArea>) => 
 								}}
 							/>
 						</FormControl>
-						<FormDescription>The maximum number of characters allowed</FormDescription>
+						<FormDescription>The minimum number of characters allowed</FormDescription>
 						<FormMessage />
 					</FormItem>
 				)}
@@ -86,7 +86,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.textArea>) => 
 								}}
 							/>
 						</FormControl>
-						<FormDescription>The minimum number of characters allowed</FormDescription>
+						<FormDescription>The maximum number of characters allowed</FormDescription>
 						<FormMessage />
 					</FormItem>
 				)}
