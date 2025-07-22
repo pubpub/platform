@@ -116,14 +116,14 @@ export const CAPABILITY_MAPPINGS = {
 
 	// membership management
 	[Capabilities.addPubMember]: {
-		target: [MembershipType.stage],
+		target: [MembershipType.pub],
 		access: {
 			[MembershipType.stage]: [MemberRole.admin],
 			[MembershipType.community]: [MemberRole.admin],
 		},
 	},
 	[Capabilities.removePubMember]: {
-		target: [MembershipType.stage],
+		target: [MembershipType.pub],
 		access: {
 			[MembershipType.stage]: [MemberRole.admin],
 			[MembershipType.community]: [MemberRole.admin],
