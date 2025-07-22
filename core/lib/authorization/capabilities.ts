@@ -13,52 +13,20 @@ import type {
 import { Capabilities, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
+import type {
+	CommunityTargetCapabilities,
+	PubTargetCapabilities,
+	StageTargetCapabilities,
+} from "./capabalities.definition";
 import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { autoCache } from "../server/cache/autoCache";
 import { findCommunityBySlug } from "../server/community";
 
-export const pubCapabilities = [
-	Capabilities.movePub,
-	Capabilities.viewPub,
-	Capabilities.deletePub,
-	Capabilities.addPubMember,
-	Capabilities.removePubMember,
-	Capabilities.runAction,
-	Capabilities.seeExtraPubValues,
-	Capabilities.createRelatedPub,
-] as const;
-
-export const communityCapabilities = [
-	Capabilities.createPubField,
-	Capabilities.archivePubField,
-	Capabilities.editPubField,
-	Capabilities.createPubType,
-	Capabilities.editPubType,
-	Capabilities.deletePubType,
-	Capabilities.createStage,
-	Capabilities.addCommunityMember,
-	Capabilities.removeCommunityMember,
-	Capabilities.manageMemberGroups,
-	Capabilities.editCommunity,
-	Capabilities.createForm,
-	Capabilities.createApiToken,
-	Capabilities.revokeApiToken,
-	Capabilities.seeExtraPubValues,
-] as const;
-export const stageCapabilities = [
-	Capabilities.viewStage,
-	Capabilities.manageStage,
-	Capabilities.deleteStage,
-	Capabilities.addStageMember,
-	Capabilities.removeStageMember,
-	Capabilities.seeExtraPubValues,
-] as const;
-
 type CapabilitiesArg = {
-	[MembershipType.pub]: typeof pubCapabilities;
-	[MembershipType.stage]: typeof stageCapabilities;
-	[MembershipType.community]: typeof communityCapabilities;
+	[MembershipType.pub]: PubTargetCapabilities;
+	[MembershipType.stage]: StageTargetCapabilities;
+	[MembershipType.community]: CommunityTargetCapabilities;
 };
 
 export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
@@ -136,7 +104,7 @@ const communityMemberships = ({
 	);
 
 export const userCan = async <T extends CapabilityTarget>(
-	capability: CapabilitiesArg[T["type"]][number],
+	capability: CapabilitiesArg[T["type"]],
 	target: T,
 	userId: UsersId
 ) => {

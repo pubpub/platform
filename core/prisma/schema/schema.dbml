@@ -2,6 +2,73 @@
 //// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 //// ------------------------------------------------------
 
+Table member_groups {
+  id String [pk]
+  community communities [not null]
+  communityId String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  users users [not null]
+  communityMemberships community_memberships [not null]
+  pubMemberships pub_memberships [not null]
+  stageMemberships stage_memberships [not null]
+}
+
+Table community_memberships {
+  id String [pk]
+  role MemberRole [not null]
+  community communities [not null]
+  communityId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  form forms
+  formId String
+}
+
+Table pub_memberships {
+  id String [pk]
+  role MemberRole [not null]
+  pub pubs [not null]
+  pubId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  form forms
+  formId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table stage_memberships {
+  id String [pk]
+  role MemberRole [not null]
+  stage stages [not null]
+  stageId String [not null]
+  user users
+  userId String
+  memberGroup member_groups
+  memberGroupId String
+  form forms
+  formId String
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+}
+
+Table membership_capabilities {
+  role MemberRole [not null]
+  type MembershipType [not null]
+  capability Capabilities [not null]
+
+  indexes {
+    (role, type, capability) [pk]
+  }
+}
+
 Table invites_history {
   id String [pk]
   createdAt DateTime [default: `now()`, not null]
@@ -242,63 +309,6 @@ Table move_constraint {
   }
 }
 
-Table member_groups {
-  id String [pk]
-  community communities [not null]
-  communityId String [not null]
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [default: `now()`, not null]
-  users users [not null]
-  communityMemberships community_memberships [not null]
-  pubMemberships pub_memberships [not null]
-  stageMemberships stage_memberships [not null]
-}
-
-Table community_memberships {
-  id String [pk]
-  role MemberRole [not null]
-  community communities [not null]
-  communityId String [not null]
-  user users
-  userId String
-  memberGroup member_groups
-  memberGroupId String
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [default: `now()`, not null]
-  form forms
-  formId String
-}
-
-Table pub_memberships {
-  id String [pk]
-  role MemberRole [not null]
-  pub pubs [not null]
-  pubId String [not null]
-  user users
-  userId String
-  memberGroup member_groups
-  memberGroupId String
-  form forms
-  formId String
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [default: `now()`, not null]
-}
-
-Table stage_memberships {
-  id String [pk]
-  role MemberRole [not null]
-  stage stages [not null]
-  stageId String [not null]
-  user users
-  userId String
-  memberGroup member_groups
-  memberGroupId String
-  form forms
-  formId String
-  createdAt DateTime [default: `now()`, not null]
-  updatedAt DateTime [default: `now()`, not null]
-}
-
 Table action_instances {
   id String [pk]
   name String [not null, default: '']
@@ -436,16 +446,6 @@ Table api_access_permissions {
   updatedAt DateTime [default: `now()`, not null]
 }
 
-Table membership_capabilities {
-  role MemberRole [not null]
-  type MembershipType [not null]
-  capability Capabilities [not null]
-
-  indexes {
-    (role, type, capability) [pk]
-  }
-}
-
 Table invites {
   id String [pk]
   lastModifiedBy String [not null, note: '@type(LastModifiedBy, \'../types\', true, false, true)']
@@ -490,13 +490,65 @@ Table invite_forms {
 }
 
 Table MemberGroupToUser {
-  membergroupsId String [ref: > member_groups.id]
   usersId String [ref: > users.id]
+  membergroupsId String [ref: > member_groups.id]
 }
 
 Table FormElementToPubType {
   formelementsId String [ref: > form_elements.id]
   relatedpubtypesId String [ref: > pub_types.id]
+}
+
+Enum Capabilities {
+  movePub
+  viewPub
+  deletePub
+  createRelatedPub
+  createPubWithForm
+  createPubWithAnyForm
+  editPubWithForm
+  editPubWithAnyForm
+  editPubWithDefaultForm
+  createPubField
+  archivePubField
+  editPubField
+  createPubType
+  editPubType
+  deletePubType
+  runAction
+  viewStage
+  createStage
+  manageStage
+  deleteStage
+  addPubMember
+  removePubMember
+  addStageMember
+  removeStageMember
+  addFormMember
+  removeFormMember
+  addCommunityMember
+  removeCommunityMember
+  manageMemberGroups
+  addCommunity
+  editCommunity
+  createForm
+  editForm
+  archiveForm
+  createApiToken
+  revokeApiToken
+  seeExtraPubValues
+}
+
+Enum MemberRole {
+  admin
+  editor
+  contributor
+}
+
+Enum MembershipType {
+  community
+  stage
+  pub
 }
 
 Enum AuthTokenType {
@@ -527,12 +579,6 @@ Enum OperationType {
   insert
   update
   delete
-}
-
-Enum MemberRole {
-  admin
-  editor
-  contributor
 }
 
 Enum Action {
@@ -609,52 +655,6 @@ Enum ApiAccessScope {
   pubType
 }
 
-Enum Capabilities {
-  movePub
-  viewPub
-  deletePub
-  createRelatedPub
-  createPubWithForm
-  createPubWithAnyForm
-  editPubWithForm
-  editPubWithAnyForm
-  editPubWithDefaultForm
-  createPubField
-  archivePubField
-  editPubField
-  createPubType
-  editPubType
-  deletePubType
-  runAction
-  viewStage
-  createStage
-  manageStage
-  deleteStage
-  addPubMember
-  removePubMember
-  addStageMember
-  removeStageMember
-  addFormMember
-  removeFormMember
-  addCommunityMember
-  removeCommunityMember
-  manageMemberGroups
-  addCommunity
-  editCommunity
-  createForm
-  editForm
-  archiveForm
-  createApiToken
-  revokeApiToken
-  seeExtraPubValues
-}
-
-Enum MembershipType {
-  community
-  stage
-  pub
-}
-
 Enum InviteStatus {
   created
   pending
@@ -663,6 +663,32 @@ Enum InviteStatus {
   rejected
   revoked
 }
+
+Ref: member_groups.communityId > communities.id [delete: Cascade]
+
+Ref: community_memberships.communityId > communities.id [delete: Cascade]
+
+Ref: community_memberships.userId > users.id [delete: Cascade]
+
+Ref: community_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: community_memberships.formId > forms.id [delete: Cascade]
+
+Ref: pub_memberships.pubId > pubs.id [delete: Cascade]
+
+Ref: pub_memberships.userId > users.id [delete: Cascade]
+
+Ref: pub_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: pub_memberships.formId > forms.id [delete: Cascade]
+
+Ref: stage_memberships.stageId > stages.id [delete: Cascade]
+
+Ref: stage_memberships.userId > users.id [delete: Cascade]
+
+Ref: stage_memberships.memberGroupId > member_groups.id [delete: Cascade]
+
+Ref: stage_memberships.formId > forms.id [delete: Cascade]
 
 Ref: invites_history.userId > users.id
 
@@ -709,32 +735,6 @@ Ref: PubsInStages.stageId > stages.id [delete: Cascade]
 Ref: move_constraint.stageId > stages.id [delete: Cascade]
 
 Ref: move_constraint.destinationId > stages.id [delete: Cascade]
-
-Ref: member_groups.communityId > communities.id [delete: Cascade]
-
-Ref: community_memberships.communityId > communities.id [delete: Cascade]
-
-Ref: community_memberships.userId > users.id [delete: Cascade]
-
-Ref: community_memberships.memberGroupId > member_groups.id [delete: Cascade]
-
-Ref: community_memberships.formId > forms.id [delete: Cascade]
-
-Ref: pub_memberships.pubId > pubs.id [delete: Cascade]
-
-Ref: pub_memberships.userId > users.id [delete: Cascade]
-
-Ref: pub_memberships.memberGroupId > member_groups.id [delete: Cascade]
-
-Ref: pub_memberships.formId > forms.id [delete: Cascade]
-
-Ref: stage_memberships.stageId > stages.id [delete: Cascade]
-
-Ref: stage_memberships.userId > users.id [delete: Cascade]
-
-Ref: stage_memberships.memberGroupId > member_groups.id [delete: Cascade]
-
-Ref: stage_memberships.formId > forms.id [delete: Cascade]
 
 Ref: action_instances.stageId > stages.id [delete: Cascade]
 
