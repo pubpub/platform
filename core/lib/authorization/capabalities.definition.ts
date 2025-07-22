@@ -59,8 +59,8 @@ export const CAPABILITY_MAPPINGS = {
 		target: [MembershipType.community],
 		access: {
 			[MembershipType.community]: [
-				// MemberRole.admin,
-				// MemberRole.editor,
+				MemberRole.admin,
+				MemberRole.editor,
 				MemberRole.contributor,
 			],
 		},
@@ -100,7 +100,7 @@ export const CAPABILITY_MAPPINGS = {
 		access: {
 			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor],
 			[MembershipType.stage]: [MemberRole.admin, MemberRole.editor],
-			// [MembershipType.community]: [MemberRole.admin, MemberRole.editor],
+			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},
 	},
 
