@@ -24,7 +24,7 @@ export const CAPABILITY_MAPPINGS = {
 	[Capabilities.deletePub]: {
 		target: [MembershipType.pub],
 		access: {
-			[MembershipType.pub]: [MemberRole.admin],
+			[MembershipType.pub]: [MemberRole.admin, MemberRole.editor, MemberRole.contributor],
 			[MembershipType.stage]: [MemberRole.admin],
 			[MembershipType.community]: [MemberRole.admin, MemberRole.editor],
 		},

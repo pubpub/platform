@@ -50,7 +50,7 @@ describe("capability helper functions", () => {
 	it("should get capabilities for specific role", () => {
 		const adminPubCapabilities = getCapabilitiesForRole(MembershipType.pub, MemberRole.admin);
 
-		expect(adminPubCapabilities).toContain(Capabilities.deletePub);
+		expect(adminPubCapabilities).toContain(Capabilities.createRelatedPub);
 		expect(adminPubCapabilities).toContain(Capabilities.viewPub);
 		expect(adminPubCapabilities.length).toBeGreaterThan(0);
 
@@ -58,7 +58,7 @@ describe("capability helper functions", () => {
 			MembershipType.pub,
 			MemberRole.contributor
 		);
-		expect(contributorPubCapabilities).not.toContain(Capabilities.deletePub);
+		expect(contributorPubCapabilities).not.toContain(Capabilities.createRelatedPub);
 		expect(contributorPubCapabilities).toContain(Capabilities.viewPub);
 	});
 
@@ -69,11 +69,11 @@ describe("capability helper functions", () => {
 	});
 
 	it("should check if role has specific capability", () => {
-		expect(hasCapability(MembershipType.pub, MemberRole.admin, Capabilities.deletePub)).toBe(
-			true
-		);
 		expect(
-			hasCapability(MembershipType.pub, MemberRole.contributor, Capabilities.deletePub)
+			hasCapability(MembershipType.pub, MemberRole.admin, Capabilities.createRelatedPub)
+		).toBe(true);
+		expect(
+			hasCapability(MembershipType.pub, MemberRole.contributor, Capabilities.createRelatedPub)
 		).toBe(false);
 		expect(
 			hasCapability(MembershipType.pub, MemberRole.contributor, Capabilities.viewPub)
