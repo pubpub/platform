@@ -153,12 +153,13 @@ export default async function Page(props: {
 		getForm(getFormProps).executeTakeFirst(),
 	]);
 
-	if (!canView) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
-	}
-
+	// more useful to see this first rather than "not authorized" if pub does ot exist
 	if (pubErr || !pub) {
 		notFound();
+	}
+
+	if (!canView) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
 	if (!form) {
