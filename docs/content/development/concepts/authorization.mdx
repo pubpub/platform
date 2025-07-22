@@ -1,0 +1,92 @@
+# Capabilities
+
+We are running at time of writing some kind of Attribute Based Access Control system (ABAC) for authorization.
+
+The capabilities are defined in `capabalities.definition.ts` and synced to the database using the `sync-capabilities.ts` script.
+
+You can do most capability checks using the `userCan` function.
+
+## Key Files
+
+- **`capabalities.definition.ts`** - The canonical definition of all capability mappings. This is the single source of truth.
+- **`sync-capabilities.ts`** - Functions to sync capabilities from code to database and validate they're in sync
+- **`generate-migration.ts`** - Functions to generate migration files from the capability definitions
+- **`capabilities.ts`** - The main authorization functions used throughout the app
+
+## CLI Scripts
+
+You can manage capabilities using the following npm scripts:
+
+```bash
+# Sync capabilities from code to database (live update)
+pnpm capabilities:sync
+
+# Check if capabilities in database match the code definition
+pnpm capabilities:validate
+
+# Check if the Capabilities enum in Prisma schema matches the TypeScript enum
+pnpm capabilities:validate-enum
+
+# Show what would be synced without making changes
+pnpm capabilities:dry-run
+
+# Generate a new migration file (handles both enum changes and data sync)
+pnpm capabilities:generate-migration
+
+# Print the migration SQL to stdout (useful for debugging)
+pnpm capabilities:print-migration
+```
+
+## Workflow
+
+### Making Changes to Capabilities
+
+1. **Edit the canonical definition**: Modify `capabalities.definition.ts` to add, remove, or change capability mappings
+2. **Test your changes**: Run the tests to ensure your changes are valid
+3. **Choose sync method**:
+    - **For quick testing**: Use `pnpm capabilities:sync` to sync directly to your database. The other reason this is included is in case you have somehow removed the capabilities from the database.
+    - **For production**: Use `pnpm capabilities:generate-migration` to create a migration file
+
+### Adding New Capabilities
+
+**Option 1: Automatic (Recommended)**
+
+1. Update `capabalities.definition.ts` to include the new capability in the relevant mappings
+2. Run `pnpm capabilities:generate-migration` - this will automatically:
+    - Update the `Capabilities` enum in your Prisma schema
+    - Generate migration SQL for both enum and data changes
+3. Run the generated migration with `pnpm db:migrate-dev`
+
+**Option 2: Manual**
+
+1. Add the new capability to the `Capabilities` enum in your Prisma schema
+2. Run `pnpm db:migrate-dev` to create the enum migration
+3. Update `capabalities.definition.ts` to include the new capability in the relevant mappings
+4. Sync or generate migration as needed
+
+### Removing Capabilities
+
+1. Remove the capability from `capabalities.definition.ts`
+2. Run `pnpm capabilities:generate-migration` - this will automatically:
+    - Update the `Capabilities` enum in your Prisma schema (removing the capability)
+    - Delete any existing membership_capabilities rows using the removed capability
+    - Remove the capability from the enum in the migration SQL
+    - Sync the remaining capabilities
+3. Run the generated migration with `pnpm db:migrate-dev`
+
+### Validating Sync Status
+
+You can check if your database is in sync with the code definition:
+
+```bash
+# Check if membership_capabilities data matches the definitions
+pnpm capabilities:validate
+
+# Check if the Capabilities enum matches the TypeScript enum
+pnpm capabilities:validate-enum
+```
+
+- `validate` checks if the membership_capabilities data in the database matches your definitions
+- `validate-enum` checks if the Capabilities enum in your Prisma schema matches your TypeScript enum
+
+Both will show any differences found.
