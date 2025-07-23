@@ -332,7 +332,7 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 			report: `Successfully removed the pub`,
 		};
 	} catch (error) {
-		logger.debug(error);
+		logger.error({ msg: "Failed to remove pub", err: error });
 		return {
 			error: "Failed to remove pub",
 			cause: error,
