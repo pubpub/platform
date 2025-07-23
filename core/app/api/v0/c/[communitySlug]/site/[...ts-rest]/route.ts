@@ -154,7 +154,7 @@ const checkAuthorization = async <
 	};
 	cookies:
 		| {
-				capability: Parameters<typeof userCan>[0];
+				capability: Parameters<typeof userCan<T>>[0];
 				target: T;
 		  }
 		| "community-member"

@@ -11,6 +11,7 @@ export class PubDetailsPage {
 
 	async goTo() {
 		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`);
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/${this.pubId}`);
 	}
 
 	async runAction(
@@ -42,5 +43,16 @@ export class PubDetailsPage {
 		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
 		await addMemberDialog.waitFor();
 		return addMemberDialog;
+	}
+
+	async removePub() {
+		await this.page.getByRole("button", { name: "Remove" }).click();
+		await this.page.getByRole("button", { name: "Permanently Remove Pub" }).click({
+			timeout: 5000,
+		});
+		await this.page
+			.getByRole("status")
+			.filter({ hasText: "Successfully removed the pub" })
+			.waitFor();
 	}
 }
