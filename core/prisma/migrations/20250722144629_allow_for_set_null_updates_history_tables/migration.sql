@@ -65,9 +65,11 @@ BEGIN
                     old_vals.key LIKE '%Id'
                     AND old_vals.value IS NOT NULL
                     AND new_vals.value IS NULL) THEN
-            -- this is an automated update, set to system
+            -- this is an automated update, set to system, all the other values are the old values
+            v_userId := NULL;
+            v_apiAccessTokenId := NULL;
+            v_actionRunId := NULL;
             v_other := 'system';
-            v_timestamp_new := now();
         ELSE
             -- this is a missing lastModifiedBy, throw error
             RAISE EXCEPTION 'lastModifiedBy must be explicitly set in UPDATE';
