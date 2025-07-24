@@ -60,7 +60,7 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 				val.schemaName === CoreSchemaType.DateTime
 					? // get the date in YYYY-MM-DD format
 						// we should allow the user to specify this
-						new Date(value as string).toISOString().split("T")[0]
+						new Date(val.value as string).toISOString().split("T")[0]
 					: val.value;
 		}
 	}
