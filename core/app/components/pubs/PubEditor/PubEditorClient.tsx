@@ -301,7 +301,6 @@ export const PubEditorClient = ({
 	formSlug,
 	withAutoSave,
 	withButtonElements,
-	isExternalForm,
 	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
@@ -396,7 +395,7 @@ export const PubEditorClient = ({
 						stageId: newStageId,
 					},
 					communityId: community.id,
-					addUserToForm: isExternalForm,
+					addUserToForm: true,
 					relation: relatedPub && {
 						slug: relatedPub.slug,
 						pubId: relatedPub.id,
@@ -428,7 +427,6 @@ export const PubEditorClient = ({
 			withButtonElements,
 			buttonElements,
 			pubId,
-			isExternalForm,
 			relatedPub,
 			defaultValues,
 			arrayDefaults,

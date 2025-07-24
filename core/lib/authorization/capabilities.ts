@@ -450,8 +450,6 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 							eb("forms.id", "in", eb.selectFrom("stage_ms").select("formId")),
 						]),
 					]),
-					// Always include the default form (otherwise these conditions are identical to update)
-					eb("forms.isDefault", "is", true),
 				])
 			)
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
