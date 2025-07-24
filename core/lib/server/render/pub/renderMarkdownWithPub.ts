@@ -65,7 +65,10 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 		}
 	}
 
-	assert(value !== undefined, `Missing value for ${field}`);
+	assert(
+		value !== undefined,
+		`Missing value for ${field}. You can avoid this error by adding a fallback like so: ":value{field=<field name> fallback=<some value>}"`
+	);
 
 	node.data = {
 		...node.data,
