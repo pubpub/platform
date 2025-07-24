@@ -104,6 +104,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 										Title: "Evaluation of Ancient Giants",
 										"Published At": new Date(),
 									},
+									stage: "Draft",
 								},
 							},
 						],
