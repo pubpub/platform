@@ -6,11 +6,26 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/ca
 
 import LogoutButton from "~/app/components/LogoutButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
 import { ResetPasswordButton } from "./ResetPasswordButton";
 import { UserInfoForm } from "./UserInfoForm";
 
 export default async function Page() {
 	const { user } = await getPageLoginData();
+
+	// pre-compute redirect urls for each community
+	const communityRedirectUrls = await Promise.all(
+		user.memberships.map(async ({ community }) => ({
+			communityId: community.id,
+			redirectUrl: await constructRedirectToBaseCommunityPage({
+				communitySlug: community.slug,
+			}),
+		}))
+	);
+
+	const redirectUrlMap = new Map(
+		communityRedirectUrls.map(({ communityId, redirectUrl }) => [communityId, redirectUrl])
+	);
 
 	return (
 		<main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
@@ -36,7 +51,10 @@ export default async function Page() {
 									return (
 										<Button variant="link" key={community.id} asChild>
 											<Link
-												href={`/c/${community.slug}/stages`}
+												href={
+													redirectUrlMap.get(community.id) ||
+													`/c/${community.slug}`
+												}
 												className="flex w-min items-center gap-2 hover:bg-gray-50"
 											>
 												<Avatar className="h-6 w-6">

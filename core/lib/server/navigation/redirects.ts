@@ -2,7 +2,12 @@ import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
 import type { NoticeParams } from "~/app/components/Notice";
+import type { XOR } from "~/lib/types";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCanViewStagePage } from "~/lib/authorization/capabilities";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
+import { findCommunityBySlug } from "../community";
+import { getStagesViewableByUser } from "../stages";
 
 const defaultLoginRedirectError = {
 	type: "error",
@@ -110,5 +115,57 @@ export const constructVerifyLink = (opts: { redirectTo: string }) => {
 
 export function redirectToVerify(opts: { redirectTo: string }): never {
 	const basePath = constructVerifyLink(opts);
+	redirect(basePath);
+}
+
+type RedirectToBaseCommunityPageOpts = XOR<
+	{ redirectTo?: string },
+	{ searchParams?: Record<string, string> }
+> & {
+	// can manually specify the community slug to redirect the user to a different community
+	communitySlug?: string;
+};
+
+export const constructRedirectToBaseCommunityPage = async (
+	opts?: RedirectToBaseCommunityPageOpts
+) => {
+	const [{ user }, community] = await Promise.all([
+		getLoginData(),
+		// weird ternary bc no-params findCommunityBySlug is likely cached, while findCommunityBySlug(undefined) likely isn't
+		!opts?.communitySlug ? findCommunityBySlug() : findCommunityBySlug(opts?.communitySlug),
+	]);
+
+	if (!user || !community) {
+		redirectToLogin();
+	}
+
+	const isAbleToViewStages = await userCanViewStagePage(
+		user.id,
+		community.id,
+		opts?.communitySlug
+	);
+
+	const searchParams = new URLSearchParams();
+
+	if (opts?.redirectTo) {
+		searchParams.set("redirectTo", opts.redirectTo);
+	}
+
+	if (opts?.searchParams) {
+		Object.entries(opts.searchParams).forEach(([key, value]) => {
+			searchParams.set(key, value);
+		});
+	}
+
+	const page = isAbleToViewStages ? "stages" : "pubs";
+
+	const basePath = `/c/${community.slug}/${page}?${searchParams.toString()}`;
+	return basePath;
+};
+
+export async function redirectToBaseCommunityPage(
+	opts?: RedirectToBaseCommunityPageOpts
+): Promise<never> {
+	const basePath = await constructRedirectToBaseCommunityPage(opts);
 	redirect(basePath);
 }
