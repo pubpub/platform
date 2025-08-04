@@ -9,6 +9,14 @@ import { cn } from "utils";
 
 import { ActionRunFormWrapper } from "~/app/components/ActionUI/ActionRunFormWrapper";
 
+export type PubsRunActionDropDownMenuProps = {
+	actionInstances: ActionInstances[];
+	pubId: PubsId;
+	stage: Stages;
+	testId?: string;
+	iconOnly?: boolean;
+} & ButtonProps;
+
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
@@ -16,13 +24,7 @@ export const PubsRunActionDropDownMenu = async ({
 	testId,
 	iconOnly,
 	...buttonProps
-}: {
-	actionInstances: ActionInstances[];
-	pubId: PubsId;
-	stage: Stages;
-	testId?: string;
-	iconOnly?: boolean;
-} & ButtonProps) => {
+}: PubsRunActionDropDownMenuProps) => {
 	if (!actionInstances.length) {
 		return null;
 	}

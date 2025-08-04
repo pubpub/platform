@@ -46,7 +46,7 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 	const attrs = expect(node.attributes, "Invalid syntax in value directive");
 	const field = expect(attrs.field, "Missing field attribute in value directive");
 
-	let value: unknown;
+	let value: unknown = attrs.fallback;
 
 	const hydratedPubValues = hydratePubValues(context.pub.values);
 
@@ -55,16 +55,20 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 	} else {
 		const val = hydratedPubValues.find((value) => value.fieldSlug === field);
 
-		value = val?.value;
-
-		if (val?.schemaName === CoreSchemaType.DateTime) {
-			// get the date in YYYY-MM-DD format
-			// we should allow the user to specify this
-			value = new Date(value as string).toISOString().split("T")[0];
+		if (val !== undefined) {
+			value =
+				val.schemaName === CoreSchemaType.DateTime
+					? // get the date in YYYY-MM-DD format
+						// we should allow the user to specify this
+						new Date(val.value as string).toISOString().split("T")[0]
+					: val.value;
 		}
 	}
 
-	assert(value !== undefined, `Missing value for ${field}`);
+	assert(
+		value !== undefined,
+		`Missing value for ${field}. You can avoid this error by adding a fallback like so: ":value{field=<field name> fallback=<some value>}"`
+	);
 
 	node.data = {
 		...node.data,

@@ -1,5 +1,25 @@
 -- generator-version: 1.0.0
 
+-- Model member_groups comments
+
+
+
+-- Model community_memberships comments
+
+
+
+-- Model pub_memberships comments
+
+
+
+-- Model stage_memberships comments
+
+
+
+-- Model membership_capabilities comments
+
+
+
 -- Model invites_history comments
 
 
@@ -64,22 +84,6 @@ COMMENT ON COLUMN "pub_values"."lastModifiedBy" IS '@type(LastModifiedBy, ''../t
 
 
 
--- Model member_groups comments
-
-
-
--- Model community_memberships comments
-
-
-
--- Model pub_memberships comments
-
-
-
--- Model stage_memberships comments
-
-
-
 -- Model action_instances comments
 
 
@@ -113,16 +117,27 @@ COMMENT ON COLUMN "pub_values"."lastModifiedBy" IS '@type(LastModifiedBy, ''../t
 COMMENT ON COLUMN "api_access_permissions"."constraints" IS '@type(ApiAccessPermissionConstraints, ''../types'', true, false, true)';
 
 
--- Model membership_capabilities comments
-
-
-
 -- Model invites comments
 
 COMMENT ON COLUMN "invites"."lastModifiedBy" IS '@type(LastModifiedBy, ''../types'', true, false, true)';
 
 
 -- Model invite_forms comments
+
+
+
+-- Enum Capabilities comments
+
+
+
+
+-- Enum MemberRole comments
+
+
+
+
+-- Enum MembershipType comments
+
 
 
 
@@ -140,11 +155,6 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 -- Enum OperationType comments
-
-
-
-
--- Enum MemberRole comments
 
 
 
@@ -190,16 +200,6 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 -- Enum ApiAccessScope comments
-
-
-
-
--- Enum Capabilities comments
-
-
-
-
--- Enum MembershipType comments
 
 
 

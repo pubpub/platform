@@ -25,6 +25,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
+import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
@@ -225,6 +226,10 @@ export default async function FormPage(props: {
 	if (!member) {
 		return notFound();
 	}
+	const pubWithProsemirrorRichText = pub
+		? transformRichTextValuesToProsemirror(pub, { toJson: true })
+		: undefined;
+
 
 	const memberWithUser = {
 		...member,
@@ -250,7 +255,7 @@ export default async function FormPage(props: {
 
 	if (submitId && submitElement) {
 		// The post-submission page will only render once we have a pub
-		if (pub) {
+		if (pubWithProsemirrorRichText) {
 			submitElement.content = await renderElementMarkdownContent(
 				submitElement,
 				renderWithPubContext as RenderWithPubContext
@@ -259,16 +264,24 @@ export default async function FormPage(props: {
 	} else {
 		await hydrateMarkdownElements({
 			elements: form.elements,
-			renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
+			renderWithPubContext: pubWithProsemirrorRichText
+				? (renderWithPubContext as RenderWithPubContext)
+				: undefined,
 		});
 	}
 
-	const isUpdating = !!pub;
-	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const isUpdating = !!pubWithProsemirrorRichText;
+	const pubId = pubWithProsemirrorRichText?.id ?? (randomUUID() as PubsId);
+	const pubForForm = pubWithProsemirrorRichText ?? {
+		id: pubId,
+		values: [],
+		pubTypeId: form.pubTypeId,
+	};
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
-	const relatedPubs = pub ? pub.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) : [];
+	const relatedPubs = pubWithProsemirrorRichText
+		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
+		: [];
 	const pubsForContext = [...pubs, ...relatedPubs];
 
 	return (
@@ -313,7 +326,11 @@ export default async function FormPage(props: {
 											key={e.id}
 											pubId={pubId}
 											element={e}
-											values={pub ? pub.values : []}
+											values={
+												pubWithProsemirrorRichText
+													? pubWithProsemirrorRichText.values
+													: []
+											}
 										/>
 									))}
 								</ExternalFormWrapper>

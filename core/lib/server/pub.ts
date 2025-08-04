@@ -1196,7 +1196,7 @@ export type UnprocessedPub = {
 interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions {
 	/**
 	 * The maximum depth to recurse to.
-	 * Does not do anything if `includeRelatedPubs` is `false`.
+	 * Does not do anything if `includeRelatedPubs` is `false`, or if `count` is true.
 	 *
 	 * @default 2
 	 */
@@ -1229,6 +1229,10 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	 * Constraints on which stages the user/token has access to. Will also filter related pubs.
 	 */
 	allowedStages?: StageConstraint[];
+	/**
+	 * If true, only the count of pubs will be returned, without any other information.
+	 */
+	count?: boolean;
 }
 
 // TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
@@ -1275,6 +1279,21 @@ const DEFAULT_OPTIONS = {
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
+const COUNT_OPTIONS = {
+	...DEFAULT_OPTIONS,
+	withRelatedPubs: false,
+	withValues: false,
+	depth: 1,
+	withRelatedCounts: false,
+	count: true,
+	withPubType: false,
+	withSearchValues: false,
+	withStageActionInstances: false,
+	withMembers: false,
+	withStage: false,
+	trx: db,
+} as const satisfies GetPubsWithRelatedValuesOptions;
+
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
 	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
@@ -1293,7 +1312,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
 	const opts = {
-		...DEFAULT_OPTIONS,
+		...(options?.count ? COUNT_OPTIONS : DEFAULT_OPTIONS),
 		...options,
 	};
 
@@ -1318,6 +1337,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		allowedPubTypes,
 		allowedStages,
 		withRelatedCounts,
+		count,
 	} = opts;
 
 	if (depth < 1) {
@@ -1892,11 +1912,28 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 				"pt.isCycle",
 				"pt.path",
 			])
+
+			.$if(Boolean(count), (qb) =>
+				// aggregate count
+				// @ts-expect-error just trust me its finneee
+				qb
+					.clearGroupBy()
+					.clearGroupBy()
+					.clearSelect()
+					.select((eb) => eb.fn.countAll<number>().as("count"))
+					.where("pt.depth", "=", 1)
+					.groupBy(["pt.depth"])
+			)
 	).execute();
 
 	if (options?._debugDontNest) {
 		// @ts-expect-error We should not accomodate the return type for this option
 		return result;
+	}
+
+	if (options?.count) {
+		// @ts-expect-error We should not accomodate the return type for this option
+		return (result?.[0]?.count ?? 0) as number;
 	}
 
 	if (props.pubId) {
@@ -2020,27 +2057,32 @@ export const stagesWhere = <EB extends ExpressionBuilder<any, any>>(
 /**
  * Get the number of pubs in a community, optionally additionally filtered by stage and pub type
  */
-export const getPubsCount = async (props: {
-	communityId: CommunitiesId;
-	stageId?: StageConstraint[];
-	pubTypeId?: PubTypesId[];
-}): Promise<number> => {
-	const pubs = await db
-		.selectFrom("pubs")
-		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props?.stageId?.length), (qb) => {
-			return qb
-				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"));
-		})
-		.$if(Boolean(props.pubTypeId?.length), (qb) =>
-			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
-		)
-		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "in", props.pubTypeId!))
-		.select((eb) => eb.fn.countAll<number>().as("count"))
-		.executeTakeFirstOrThrow();
+export const getPubsCount = async (
+	props: {
+		communityId: CommunitiesId;
+		stageId?: StageConstraint[];
+		pubTypeId?: PubTypesId[];
+		userId?: UsersId;
+	},
+	opts?: Pick<
+		GetPubsWithRelatedValuesOptions,
+		"filters" | "search" | "searchConfig" | "allowedPubTypes" | "allowedStages"
+	>
+): Promise<number> => {
+	const pubsCount = await getPubsWithRelatedValues(
+		{
+			communityId: props.communityId,
+			stageId: props.stageId,
+			pubTypeId: props.pubTypeId,
+			userId: props.userId,
+		},
+		{ ...opts, limit: 1_000_000, count: true }
+	);
 
-	return pubs.count;
+	// @ts-expect-error just trust me its a number
+	const count = pubsCount as number;
+
+	return count;
 };
 export type FullProcessedPub = ProcessedPub<{
 	withRelatedPubs: true;
