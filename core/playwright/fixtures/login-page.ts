@@ -15,9 +15,8 @@ export class LoginPage {
 		await this.page.getByRole("button", { name: "Sign in" }).click();
 	}
 
-	async loginAndWaitForNavigation(email: string, password: string) {
+	async loginAndWaitForNavigation(email: string, password: string, slug?: "pubs" | "stages") {
 		await this.login(email, password);
-		// await this.page.waitForURL(/.*\/c\/.+\/stages.*/);
-		await waitForBaseCommunityPage(this.page);
+		await waitForBaseCommunityPage(this.page, undefined, slug);
 	}
 }

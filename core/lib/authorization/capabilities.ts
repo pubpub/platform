@@ -22,6 +22,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { autoCache } from "../server/cache/autoCache";
 import { findCommunityBySlug } from "../server/community";
+import { getStagesViewableByUser } from "../server/stages";
 
 type CapabilitiesArg = {
 	[MembershipType.pub]: PubTargetCapabilities;
@@ -469,8 +470,11 @@ export const getCreatablePubTypes = cache(async (userId: UsersId, communityId: C
 	).execute();
 });
 
-export const userIsCommunityRole = async (role: MemberRole[]) => {
-	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+export const userIsCommunityRole = async (role: MemberRole[], communitySlug?: string) => {
+	const [{ user }, community] = await Promise.all([
+		getLoginData(),
+		!communitySlug ? findCommunityBySlug() : findCommunityBySlug(communitySlug),
+	]);
 	if (!user || !community) {
 		return false;
 	}
@@ -481,26 +485,47 @@ export const userIsCommunityRole = async (role: MemberRole[]) => {
 	return user.memberships.some((membership) => role.includes(membership.role));
 };
 
-const userIsAdminOrEditor = cache(async () => {
-	return userIsCommunityRole([MemberRole.admin, MemberRole.editor]);
+const userIsCommunityAdminOrEditor = cache(
+	async (communitySlug: string | undefined = undefined) => {
+		return userIsCommunityRole([MemberRole.admin, MemberRole.editor], communitySlug);
+	}
+);
+
+export const userCanEditAllPubs = cache(async (communitySlug: string | undefined = undefined) => {
+	return userIsCommunityAdminOrEditor(communitySlug);
 });
 
-export const userCanEditAllPubs = cache(async () => {
-	return userIsAdminOrEditor();
+export const userCanArchiveAllPubs = cache(
+	async (communitySlug: string | undefined = undefined) => {
+		return userIsCommunityAdminOrEditor(communitySlug);
+	}
+);
+
+export const userCanMoveAllPubs = cache(async (communitySlug: string | undefined = undefined) => {
+	return userIsCommunityAdminOrEditor(communitySlug);
 });
 
-export const userCanArchiveAllPubs = cache(async () => {
-	return userIsAdminOrEditor();
+export const userCanRunActionsAllPubs = cache(
+	async (communitySlug: string | undefined = undefined) => {
+		return userIsCommunityAdminOrEditor(communitySlug);
+	}
+);
+
+export const userCanViewAllStages = cache(async (communitySlug: string | undefined = undefined) => {
+	return userIsCommunityAdminOrEditor(communitySlug);
 });
 
-export const userCanMoveAllPubs = cache(async () => {
-	return userIsAdminOrEditor();
-});
+export const userCanViewStagePage = cache(
+	async (
+		userId: UsersId,
+		communityId: CommunitiesId,
+		communitySlug: string | undefined = undefined
+	) => {
+		const userCanViewAnyStage = await Promise.all([
+			getStagesViewableByUser(userId, communityId, communitySlug),
+			userIsCommunityAdminOrEditor(communitySlug),
+		]);
 
-export const userCanRunActionsAllPubs = cache(async () => {
-	return userIsAdminOrEditor();
-});
-
-export const userCanViewAllStages = cache(async () => {
-	return userIsAdminOrEditor();
-});
+		return userCanViewAnyStage.some((x) => !!x);
+	}
+);

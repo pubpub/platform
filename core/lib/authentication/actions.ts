@@ -37,7 +37,7 @@ import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/c
 import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
 import { insertCommunityMemberships, selectCommunityMemberships } from "../server/member";
-import { redirectToLogin } from "../server/navigation/redirects";
+import { redirectToBaseCommunityPage, redirectToLogin } from "../server/navigation/redirects";
 import { invalidateTokensForUser } from "../server/token";
 import { SignupErrors } from "./errors";
 import { getLoginData } from "./loginData";
@@ -68,7 +68,9 @@ async function redirectUser(
 	const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
 	const communitySlug = lastVisited?.value ?? memberships[0].community?.slug;
 
-	redirect(`/c/${communitySlug}/stages`);
+	return redirectToBaseCommunityPage({
+		communitySlug,
+	});
 }
 
 export const loginWithPassword = defineServerAction(async function loginWithPassword(props: {

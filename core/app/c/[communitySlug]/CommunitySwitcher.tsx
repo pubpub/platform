@@ -12,18 +12,31 @@ import { SidebarMenuButton } from "ui/sidebar";
 import { cn } from "utils";
 
 import type { CommunityData } from "~/lib/server/community";
+import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
 
 type Props = {
 	community: NonNullable<CommunityData>;
 	availableCommunities: NonNullable<CommunityData>[];
 };
 
-const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommunities }) {
+const CommunitySwitcher: React.FC<Props> = async function ({ community, availableCommunities }) {
 	const avatarClasses =
 		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 border";
 	const textClasses = "flex-auto text-base font-semibold w-44 text-left";
 
 	const onlyOneCommunity = availableCommunities.length === 1;
+
+	// pre-compute redirect urls for all available communities
+	const communityRedirectUrls = await Promise.all(
+		availableCommunities.map(async (option) => ({
+			communityId: option.id,
+			redirectUrl: await constructRedirectToBaseCommunityPage({ communitySlug: option.slug }),
+		}))
+	);
+
+	const redirectUrlMap = new Map(
+		communityRedirectUrls.map(({ communityId, redirectUrl }) => [communityId, redirectUrl])
+	);
 
 	const button = (
 		<SidebarMenuButton
@@ -55,7 +68,7 @@ const CommunitySwitcher: React.FC<Props> = function ({ community, availableCommu
 						return (
 							<DropdownMenuItem asChild key={option.id}>
 								<Link
-									href={`/c/${option.slug}/stages`}
+									href={redirectUrlMap.get(option.id) || `/c/${option.slug}`}
 									className="cursor-pointer hover:bg-gray-50"
 								>
 									<div className="flex items-center gap-2">
