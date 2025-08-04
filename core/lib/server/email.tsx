@@ -168,9 +168,7 @@ export function _legacy_signupInvite(
 			{
 				type: AuthTokenType.signup,
 				expiresAt,
-				path: `/signup?redirectTo=${encodeURIComponent(
-					`/c/${props.community.slug}/stages`
-				)}`,
+				path: `/signup?redirectTo=${encodeURIComponent(`/c/${props.community.slug}/pubs`)}`,
 				userId: props.user.id,
 			},
 			trx

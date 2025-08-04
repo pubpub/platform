@@ -110,15 +110,25 @@ export const viewableStagesCte = ({
 		.select("stageId");
 };
 
-export const userCanViewAnyStages = cache(async (userId: UsersId, communityId: CommunitiesId) => {
-	return autoCache(
-		viewableStagesCte({ db, userId, communityId })
-			.clearSelect()
-			.select((eb) => eb.fn.countAll<number>().as("count"))
-	)
-		.executeTakeFirstOrThrow()
-		.then((res) => (res?.count ?? 0) > 0);
-});
+export const getStagesViewableByUser = cache(
+	async (
+		userId: UsersId,
+		communityId: CommunitiesId,
+		/* manually supply this when calling outside a community context */
+		communitySlug?: string
+	) => {
+		return autoCache(
+			viewableStagesCte({ db, userId, communityId })
+				.clearSelect()
+				.select((eb) => eb.fn.countAll<number>().as("count")),
+			{
+				communitySlug,
+			}
+		)
+			.executeTakeFirstOrThrow()
+			.then((res) => (res?.count ?? 0) > 0);
+	}
+);
 
 type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
 type CommunityStageOptions = {

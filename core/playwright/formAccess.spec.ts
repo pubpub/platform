@@ -242,10 +242,14 @@ test.describe("public signup cases", () => {
 		}) => {
 			const loginPage = new LoginPage(page);
 			await loginPage.goto();
-			await loginPage.loginAndWaitForNavigation(community.users.baseMember.email, password);
+			await loginPage.loginAndWaitForNavigation(
+				community.users.baseMember.email,
+				password,
+				"pubs"
+			);
 
 			const res = await page.goto(`/c/${community.community.slug}/public/signup`);
-			await waitForBaseCommunityPage(page, community.community.slug);
+			await waitForBaseCommunityPage(page, community.community.slug, "pubs");
 		});
 	});
 });
