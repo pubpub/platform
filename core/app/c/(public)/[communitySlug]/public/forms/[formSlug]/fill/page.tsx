@@ -230,7 +230,6 @@ export default async function FormPage(props: {
 		? transformRichTextValuesToProsemirror(pub, { toJson: true })
 		: undefined;
 
-
 	const memberWithUser = {
 		...member,
 		id: member.id,
