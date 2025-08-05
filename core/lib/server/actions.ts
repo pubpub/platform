@@ -1,4 +1,10 @@
-import type { ActionInstancesId, ActionInstancesUpdate, NewActionInstances } from "db/public";
+import type {
+	Action,
+	ActionInstancesId,
+	ActionInstancesUpdate,
+	CommunitiesId,
+	NewActionInstances,
+} from "db/public";
 
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
@@ -20,3 +26,13 @@ export const updateActionInstance = (
 
 export const removeActionInstance = (actionInstanceId: ActionInstancesId) =>
 	autoRevalidate(db.deleteFrom("action_instances").where("id", "=", actionInstanceId));
+
+export const getActionConfigDefaults = (communityId: CommunitiesId, action: Action) => {
+	return autoCache(
+		db
+			.selectFrom("action_config_defaults")
+			.selectAll()
+			.where("communityId", "=", communityId)
+			.where("action", "=", action)
+	).executeTakeFirst();
+};
