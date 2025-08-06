@@ -10,5 +10,9 @@ CREATE TABLE "action_config_defaults" (
     CONSTRAINT "action_config_defaults_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateIndex
+
+ALTER TABLE "action_config_defaults" ADD CONSTRAINT "action_config_defaults_communityId_action_key" UNIQUE ("communityId", "action");
+
 -- AddForeignKey
 ALTER TABLE "action_config_defaults" ADD CONSTRAINT "action_config_defaults_communityId_fkey" FOREIGN KEY ("communityId") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;

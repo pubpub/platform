@@ -34,5 +34,22 @@ export const getActionConfigDefaults = (communityId: CommunitiesId, action: Acti
 			.selectAll()
 			.where("communityId", "=", communityId)
 			.where("action", "=", action)
-	).executeTakeFirst();
+	);
+};
+
+export const setActionConfigDefaults = (
+	communityId: CommunitiesId,
+	action: Action,
+	config: Record<string, unknown>
+) => {
+	return autoRevalidate(
+		db
+			.insertInto("action_config_defaults")
+			.values({ communityId, action, config })
+			.onConflict((oc) =>
+				oc
+					.constraint("action_config_defaults_communityId_action_key")
+					.doUpdateSet({ config })
+			)
+	);
 };

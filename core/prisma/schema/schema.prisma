@@ -331,6 +331,7 @@ model ActionConfigDefault {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
 
+  @@unique([communityId, action], name: "action_config_defaults_communityId_action_key")
   @@map(name: "action_config_defaults")
 }
 

@@ -171,6 +171,11 @@ const adminLinks: LinkGroupDefinition = {
 					text: "API Tokens",
 					authorization: userCanEditCommunityCached,
 				},
+				{
+					href: "/settings/actions",
+					text: "Actions",
+					authorization: userCanEditCommunityCached,
+				},
 			],
 		},
 		{

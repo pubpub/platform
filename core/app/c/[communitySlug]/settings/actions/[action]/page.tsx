@@ -35,16 +35,32 @@ export default async function Page(props: Props) {
 		redirect(`/c/${props.params.communitySlug}/unauthorized`);
 	}
 
-	const actionConfigDefaults = await getActionConfigDefaults(community.id, props.params.action);
+	const actionConfigDefaults = await getActionConfigDefaults(
+		community.id,
+		props.params.action
+	).executeTakeFirst();
 
 	return (
-		<div>
-			<h1>{props.params.action} Action Settings</h1>
-			<ActionConfigDefaultForm
-				communityId={community.id}
-				action={props.params.action}
-				values={actionConfigDefaults}
-			/>
+		<div className="container mx-auto px-4 py-12 md:px-6">
+			<div className="space-y-6">
+				<div>
+					<h1 className="text-3xl font-bold">
+						{props.params.action[0].toUpperCase() + props.params.action.slice(1)} Action
+						Settings
+					</h1>
+					<p className="text-muted-foreground">
+						Set default configuration values for the{" "}
+						{props.params.action[0].toUpperCase() + props.params.action.slice(1)}{" "}
+						action. These defaults will be applied to new instances of this action in
+						your community.
+					</p>
+				</div>
+				<ActionConfigDefaultForm
+					communityId={community.id}
+					action={props.params.action}
+					values={actionConfigDefaults?.config as Record<string, unknown> | undefined}
+				/>
+			</div>
 		</div>
 	);
 }

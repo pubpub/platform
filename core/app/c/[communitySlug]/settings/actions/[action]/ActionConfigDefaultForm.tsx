@@ -7,8 +7,10 @@ import { Loader2 } from "lucide-react";
 
 import type { Action, CommunitiesId } from "db/public";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import { toast } from "ui/use-toast";
 
 import { getActionByName } from "~/actions/api";
+import { didSucceed } from "~/lib/serverActions";
 import { updateActionConfigDefault } from "./actions";
 
 type Props = {
@@ -22,7 +24,13 @@ export const ActionConfigDefaultForm = (props: Props) => {
 	const action = useMemo(() => getActionByName(props.action), [props.action]);
 	const onSubmit = useCallback((values: z.infer<typeof action.config.schema>) => {
 		startTransition(async () => {
-			await updateActionConfigDefault(props.communityId, props.action, values);
+			const result = await updateActionConfigDefault(props.communityId, props.action, values);
+			if (didSucceed(result)) {
+				toast({
+					title: "Success",
+					description: "Action config defaults updated",
+				});
+			}
 		});
 	}, []);
 

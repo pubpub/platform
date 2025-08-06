@@ -6,6 +6,7 @@ import { Capabilities, MembershipType } from "db/public";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { ApiError } from "~/lib/server";
+import { setActionConfigDefaults } from "~/lib/server/actions";
 
 export async function updateActionConfigDefault(
 	communityId: CommunitiesId,
@@ -28,5 +29,5 @@ export async function updateActionConfigDefault(
 		return ApiError.UNAUTHORIZED;
 	}
 
-	console.log(action, values);
+	await setActionConfigDefaults(communityId, action, values).execute();
 }

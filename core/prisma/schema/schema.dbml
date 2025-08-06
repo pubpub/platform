@@ -332,6 +332,10 @@ Table action_config_defaults {
   config Json
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (communityId, action) [unique]
+  }
 }
 
 Table action_runs {
