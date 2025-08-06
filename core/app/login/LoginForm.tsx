@@ -6,16 +6,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Button } from "ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Check, Loader2, X } from "ui/icon";
+import { Form, FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Input } from "ui/input";
 import { PasswordInput } from "ui/password-input";
+import { FormSubmitButton } from "ui/submit-button";
 
 import * as actions from "~/lib/authentication/actions";
 import { useServerAction } from "~/lib/serverActions";
-import { FormSubmitButton } from "../components/SubmitButton";
 
 export const loginFormSchema = z.object({
 	email: z.string().email(),

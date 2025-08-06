@@ -1,14 +1,13 @@
-import type { MutationStatus } from "@tanstack/react-query";
 import type { FormState } from "react-hook-form";
 
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 
 import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-export type ButtonState = MutationStatus;
+export type ButtonState = "idle" | "pending" | "success" | "error";
 
 type SubmitButtonProps = {
 	// customization
@@ -57,13 +56,14 @@ export const SubmitButton = ({
 	...props
 }: ButtonProps & SubmitButtonProps) => {
 	const [buttonState, setButtonState] = useState<ButtonState>("idle");
-	const [errorTimeout, setErrorTimeout] = useState<NodeJS.Timeout | null>(null);
+	const [errorTimeout, setErrorTimeout] = useState<number | null>(null);
 
 	const setErrorState = useCallback(() => {
 		setButtonState("error");
 		if (errorTimeout) clearTimeout(errorTimeout);
 		const timeout = setTimeout(() => setButtonState("idle"), 2000);
-		setErrorTimeout(timeout);
+		// cast necessary bc typescript sometimes gets confused and uses a NodeJS.Timeout instead of a number
+		setErrorTimeout(timeout as unknown as number);
 	}, [errorTimeout]);
 
 	useEffect(() => {

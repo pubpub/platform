@@ -36,7 +36,7 @@ export function IsUuid(value: string): boolean {
 	return Uuid.test(value);
 }
 
-const Hex = /[\#]([a-fA-F\d]{6}|[a-fA-F\d]{3})/;
+const Hex = /[\#]([a-fA-F\d]{6}|[a-fA-F\d]{3}|[a-fA-F\d]{8})/;
 
 const RGB = /rbg[\(](((([\d]{1,3})[\,]{0,1})[\s]*){3})[\)]/;
 

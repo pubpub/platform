@@ -2,6 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 
 import type { PubsId } from "db/public";
 
+import { closeToast } from "../helpers";
+
 export class PubDetailsPage {
 	constructor(
 		public readonly page: Page,
@@ -54,5 +56,6 @@ export class PubDetailsPage {
 			.getByRole("status")
 			.filter({ hasText: "Successfully removed the pub" })
 			.waitFor();
+		await closeToast(this.page);
 	}
 }
