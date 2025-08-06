@@ -167,6 +167,7 @@ Table communities {
   pubFields pub_fields [not null]
   members community_memberships [not null]
   Invite invites [not null]
+  ActionConfigDefault action_config_defaults [not null]
 }
 
 Table pubs {
@@ -321,6 +322,20 @@ Table action_instances {
   rules rules [not null]
   runs action_runs [not null]
   watchedBy rules [not null]
+}
+
+Table action_config_defaults {
+  id String [pk]
+  community communities [not null]
+  communityId String [not null]
+  action Action [not null]
+  config Json
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+
+  indexes {
+    (communityId, action) [unique]
+  }
 }
 
 Table action_runs {
@@ -737,6 +752,8 @@ Ref: move_constraint.stageId > stages.id [delete: Cascade]
 Ref: move_constraint.destinationId > stages.id [delete: Cascade]
 
 Ref: action_instances.stageId > stages.id [delete: Cascade]
+
+Ref: action_config_defaults.communityId > communities.id [delete: Cascade]
 
 Ref: action_runs.actionInstanceId > action_instances.id [delete: Cascade]
 

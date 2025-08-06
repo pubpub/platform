@@ -11,17 +11,30 @@ import {
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
+const emptyStringToUndefined = (val: string) => (val === "" ? undefined : val);
+
 export const action = defineAction({
 	name: Action.email,
 	config: {
 		schema: z.object({
+			senderName: z
+				.string()
+				.min(1)
+				.max(100)
+				.describe("Sender name")
+				.transform(emptyStringToUndefined)
+				.optional(),
+			replyTo: z
+				.string()
+				.email()
+				.describe("Reply-to email address")
+				.transform(emptyStringToUndefined)
+				.optional(),
 			recipientEmail: z
 				.string()
 				.email()
 				.describe("Recipient email address")
-
-				// makes sure that "" is interpreted as undefined
-				.transform((val) => val || undefined)
+				.transform(emptyStringToUndefined)
 				.optional(),
 			recipientMember: z.string().uuid().describe("Recipient member").optional(),
 			subject: stringWithTokens().max(500).describe("Email subject"),
@@ -48,12 +61,24 @@ export const action = defineAction({
 	params: {
 		schema: z
 			.object({
+				senderName: z
+					.string()
+					.min(1)
+					.max(100)
+					.describe("Sender name")
+					.transform(emptyStringToUndefined)
+					.optional(),
+				replyTo: z
+					.string()
+					.email()
+					.describe("Reply-to email address")
+					.transform(emptyStringToUndefined)
+					.optional(),
 				recipientEmail: z
 					.string()
 					.email()
 					.describe("Recipient email address")
-					// makes sure that "" is interpreted as undefined
-					.transform((val) => val || undefined)
+					.transform(emptyStringToUndefined)
 					.optional(),
 				recipientMember: z
 					.string()
