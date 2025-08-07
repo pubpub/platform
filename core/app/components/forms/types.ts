@@ -3,7 +3,6 @@ import { type InputComponentConfigSchema, type SchemaTypeByInputComponent } from
 import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import type {
 	CoreSchemaType,
-	ElementType,
 	FormElementsId,
 	InputComponent,
 	PubFieldsId,
@@ -13,18 +12,22 @@ import type {
 	StagesId,
 	StructuralFormElement,
 } from "db/public";
+import { ElementType } from "db/public";
 
-export type ElementProps<T extends InputComponent> = T extends T
-	? {
-			/**
-			 * label ?? slug
-			 */
-			label: string;
-			slug: string;
-			config: InputComponentConfigSchema<T>;
-			schemaName: SchemaTypeByInputComponent[T];
-		}
-	: never;
+import type { Prettify } from "~/lib/types";
+
+export type ElementProps<T extends InputComponent> =
+	//T extends T
+	{
+		/**
+		 * label ?? slug
+		 */
+		label: string;
+		slug: string;
+		config: InputComponentConfigSchema<T>;
+		schemaName: SchemaTypeByInputComponent[T];
+	};
+// : never;
 
 type BasePubFieldElement = {
 	id: FormElementsId;
@@ -39,7 +42,6 @@ type BasePubFieldElement = {
 	rank: string;
 	slug: string;
 	isRelation: boolean;
-	relatedPubTypes: PubTypesId[];
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {
@@ -48,13 +50,47 @@ export type BasicPubFieldElement = BasePubFieldElement & {
 	config: Record<string, unknown>;
 };
 
-export type PubFieldElement = {
-	[I in InputComponent]: BasePubFieldElement & {
+export type PubFieldElementComponent = Exclude<InputComponent, InputComponent.relationBlock>;
+
+type PubFieldElementMap = {
+	[I in PubFieldElementComponent]: BasePubFieldElement & {
 		component: I | null;
-		schemaName: SchemaTypeByInputComponent[I];
 		config: InputComponentConfigSchema<I>;
 	};
-}[InputComponent];
+};
+
+export type PubFieldElement<
+	I extends PubFieldElementComponent = PubFieldElementComponent,
+	IsRelation extends boolean = boolean,
+> = I extends I
+	? Prettify<
+			PubFieldElementMap[I] &
+				(IsRelation extends true
+					? {
+							isRelation: true;
+							relatedPubTypes: PubTypesId[];
+							config: InputComponentConfigSchema<InputComponent.relationBlock>;
+							schemaName: CoreSchemaType;
+						}
+					: {
+							isRelation: false;
+							relatedPubTypes: [];
+							config: Record<string, unknown>;
+							schemaName: SchemaTypeByInputComponent[I];
+						})
+		>
+	: never;
+
+export const isInputElement = <I extends InputComponent>(
+	element: BasicPubFieldElement,
+	component: I
+): element is BasicPubFieldElement & {
+	component: I | null;
+	schemaName: SchemaTypeByInputComponent[I];
+	config: InputComponentConfigSchema<I>;
+} => {
+	return element.type === ElementType.pubfield && element.component === component;
+};
 
 export type ButtonElement = {
 	id: FormElementsId;

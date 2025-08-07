@@ -1,6 +1,10 @@
+import type { Static, TLiteral, TObject, TUnion } from "@sinclair/typebox";
+
+import { Type } from "@sinclair/typebox";
+import { componentConfigSchemas, textAreaConfigSchema, textInputConfigSchema } from "schemas";
 import { z } from "zod";
 
-import type { InputComponent, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	CoreSchemaType,
 	ElementType,
@@ -8,6 +12,7 @@ import {
 	formElementsIdSchema,
 	formElementsInitializerSchema,
 	formsIdSchema,
+	InputComponent,
 	pubTypesIdSchema,
 } from "db/public";
 
@@ -80,6 +85,98 @@ export const formBuilderSchema = z.object({
 	elements: z.array(formElementSchema),
 	formId: formsIdSchema,
 });
+
+// const formElementBaseSchema = Type.Object({
+// 	id: Type.String({
+// 		format: "uuid",
+// 	}),
+// 	type: Type.Enum(ElementType),
+// 	fieldId: Type.Optional(
+// 		Type.String({
+// 			format: "uuid",
+// 		})
+// 	),
+// 	formId: Type.String({
+// 		format: "uuid",
+// 	}),
+// 	label: Type.Optional(Type.String()),
+// 	element: Type.Optional(Type.String()),
+// 	content: Type.Optional(Type.String()),
+// 	required: Type.Optional(Type.Boolean()),
+// 	stageId: Type.Optional(
+// 		Type.String({
+// 			format: "uuid",
+// 		})
+// 	),
+// 	// component: Type.Optional(Type.String()),
+// 	// config: Type.Optional(Type.Unknown()),
+// 	createdAt: Type.String({
+// 		format: "date-time",
+// 	}),
+// 	updatedAt: Type.Optional(
+// 		Type.String({
+// 			format: "date-time",
+// 		})
+// 	),
+// 	rank: Type.String(),
+// });
+
+// type BaseSchemaBody = (typeof formElementBaseSchema)["properties"];
+
+// const formElementSchema = Type.Union([
+// 	// Object.entries(componentConfigSchemas).map(([component, configSchema]) =>
+// 	Type.Intersect([
+// 		formElementBaseSchema,
+// 		Type.Object({
+// 			component: Type.Literal(InputComponent.textInput),
+// 			config: textInputConfigSchema,
+// 		}),
+// 	]),
+
+// 	Type.Intersect([
+// 		formElementBaseSchema,
+// 		Type.Object({
+// 			component: Type.Literal(InputComponent.textArea),
+// 			config: textAreaConfigSchema,
+// 		}),
+// 	]),
+// ]);
+
+// // as unknown as TUnion<
+// // 	{
+// // 		[K in keyof typeof componentConfigSchemas]: TObject<
+// // 			BaseSchemaBody & {
+// // 				component: TLiteral<K>;
+// // 				config: (typeof componentConfigSchemas)[K];
+// // 			}
+// // 		>;
+// // 	}[keyof typeof componentConfigSchemas]
+// // >;
+// // Type.Intersect([
+// // 	formElementBaseSchema,
+// // 	Type.Object({
+// // 		component: Type.Literal(InputComponent.textInput),
+// // 		config: textInputConfigSchema
+// // 	})
+// // ]),
+// // Type.Intersect([
+// // 	formElementBaseSchema,
+// // 	Type.Object({
+// // 		component: Type.Literal(InputComponent.textArea),
+// // 		config: textAreaConfigSchema
+// // 	})
+// // ])
+// // ])
+
+// type L = Static<typeof formElementSchema>;
+
+// export const formBuilderSchema = Type.Object({
+// 	access: Type.Enum(FormAccessType),
+// 	elements: Type.Array(formElementSchema),
+// 	formId: Type.String({
+// 		format: "uuid",
+// 	}),
+// });
 
 export type FormBuilderSchema = z.input<typeof formBuilderSchema>;
 export type PanelState = {

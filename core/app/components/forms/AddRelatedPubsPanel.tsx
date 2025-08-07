@@ -7,7 +7,7 @@ import type { PubsId, PubTypes } from "db/public";
 import { Button } from "ui/button";
 
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
-import { PubsDataTableClient } from "../DataTable/PubsDataTable/PubsDataTableClient";
+import { FormPubsDataTableClient } from "../DataTable/PubsDataTable/FormPubsDataTableClient";
 
 export const AddRelatedPubsPanel = ({
 	title,
@@ -16,13 +16,17 @@ export const AddRelatedPubsPanel = ({
 	onChangeRelatedPubs,
 	disabledPubs,
 	pubTypes,
+	fieldSlug,
+	currentPubId,
 }: {
 	title: string;
+	fieldSlug: string;
 	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
 	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
 	disabledPubs?: PubsId[];
 	pubTypes?: Pick<PubTypes, "id" | "name">[];
+	currentPubId?: PubsId;
 }) => {
 	const sidebarRef = useRef(null);
 	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(relatedPubs);
@@ -36,11 +40,19 @@ export const AddRelatedPubsPanel = ({
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={title} showCancel onCancel={onCancel} />
-				<PubsDataTableClient
+				{/* <PubsDataTableClient
 					selectedPubs={selected}
 					onSelectedPubsChange={setSelected}
 					disabledRows={disabledPubs}
 					pubTypes={pubTypes}
+				/> */}
+				<FormPubsDataTableClient
+					fieldSlug={fieldSlug}
+					selectedPubs={selected}
+					onSelectedPubsChange={setSelected}
+					disabledRows={disabledPubs}
+					pubTypes={pubTypes}
+					currentPubId={currentPubId}
 				/>
 			</div>
 			<div className="mt-auto flex w-full justify-between gap-2">

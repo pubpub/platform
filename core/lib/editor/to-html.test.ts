@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 // @ts-expect-error
-import ponies from "../../prisma/seeds/ponies.snippet.html?raw";
+import ponies from "../../prisma/seed/seeds/ponies.snippet.html?raw";
 import { processEditorHTML } from "./process-editor-html";
 import { htmlToProsemirrorServer, prosemirrorToHTMLServer } from "./serialize-server";
 

@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> };
