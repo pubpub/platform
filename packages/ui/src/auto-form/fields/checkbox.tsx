@@ -22,7 +22,6 @@ export default function AutoFormCheckbox({
 	fieldProps,
 	zodItem,
 }: AutoFormInputComponentProps) {
-	console.log(field.name, fieldConfigItem.allowedSchemas);
 	return (
 		<PubFieldSelectProvider
 			field={field}

@@ -27,11 +27,17 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
 
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
-import type { ElementProps, RelatedFormValues, SingleFormValues } from "../types";
+import type {
+	ElementProps,
+	PubFieldElementComponent,
+	RelatedFormValues,
+	SingleFormValues,
+} from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
+import { useFormData } from "../FormDataProvider";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
@@ -125,7 +131,7 @@ export const ConfigureRelatedValue = ({
 	className?: string;
 }) => {
 	const configLabel =
-		"relationshipConfig" in element.config
+		element.isRelation && "relationshipConfig" in element.config
 			? element.config.relationshipConfig.label
 			: element.config.label;
 	const label = configLabel || element.label || element.slug;
@@ -137,7 +143,8 @@ export const ConfigureRelatedValue = ({
 
 	const valueError = parseRelatedPubValuesSlugError(slug, formState.errors);
 
-	if (element.component === null) {
+	// cant have a relation as related value
+	if (element.component === null || element.isRelation) {
 		return null;
 	}
 
@@ -187,7 +194,7 @@ export const RelatedPubsElement = ({
 	config,
 	valueComponentProps,
 }: ElementProps<InputComponent.relationBlock> & {
-	valueComponentProps: PubFieldFormElementProps;
+	valueComponentProps: PubFieldFormElementProps<PubFieldElementComponent, true>;
 }) => {
 	const { pubId, element } = valueComponentProps;
 	const { pubTypes } = useContextEditorContext();
@@ -312,6 +319,8 @@ export const RelatedPubsElement = ({
 									// Do not allow linking to itself
 									disabledPubs={pubId ? [pubId] : undefined}
 									pubTypes={relatedPubTypes}
+									fieldSlug={slug}
+									currentPubId={pubId}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>

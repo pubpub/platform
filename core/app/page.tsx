@@ -6,7 +6,7 @@ import { AuthTokenType } from "db/public";
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { createRedirectUrl } from "~/lib/redirect";
-import { redirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
+import { redirectToBaseCommunityPage, redirectToLogin } from "~/lib/server/navigation/redirects";
 
 export default async function Page({
 	searchParams,
@@ -18,7 +18,7 @@ export default async function Page({
 	const params = await searchParams;
 
 	if (!user) {
-		redirect(createRedirectUrl("/login", params).toString());
+		redirectToLogin({ loginNotice: false });
 	}
 
 	if (session.type === AuthTokenType.verifyEmail) {

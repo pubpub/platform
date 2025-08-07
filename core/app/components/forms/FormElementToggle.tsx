@@ -2,15 +2,11 @@
 
 import type { PropsWithChildren } from "react";
 
-import type { InputComponent } from "db/public";
 import { Toggle } from "ui/toggle";
 
-import type { ElementProps } from "./types";
 import { useFormElementToggleContext } from "./FormElementToggleContext";
 
-type Props<I extends InputComponent> = PropsWithChildren<ElementProps<I>>;
-
-export const FormElementToggle = <I extends InputComponent>(props: Props<I>) => {
+export const FormElementToggle = (props: PropsWithChildren<{ slug: string }>) => {
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(props.slug);
 	return (

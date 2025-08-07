@@ -22,7 +22,7 @@ const useMemberSelectData = ({
 }) => {
 	// Individual member query
 	const shouldQueryForIndividualUser = !!memberId && memberId !== "";
-	const { data: userResult, isPending: userPending } = client.members.get.useQuery({
+	const { data: userResult, isPending: userPending } = client.site.members.get.useQuery({
 		queryKey: ["getMember", memberId, community.slug],
 		queryData: shouldQueryForIndividualUser
 			? {
@@ -39,7 +39,7 @@ const useMemberSelectData = ({
 		data: userSuggestionsResult,
 		isPending: userSuggestionsPending,
 		refetch,
-	} = client.users.search.useQuery({
+	} = client.site.users.search.useQuery({
 		queryKey: ["searchUsersByEmail", usersQuery, community.slug],
 		queryData: shouldQueryForUsers
 			? {

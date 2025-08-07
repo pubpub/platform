@@ -62,13 +62,19 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 									</span>
 								),
 							}))}
-							placeholder="Select a pub type"
+							placeholder="Select a Pub Type"
 							onValueChange={(value) => field.onChange(value)}
 							animation={0}
 							badgeClassName="bg-blue-200 text-blue-400 rounded-sm font-mono font-normal border border-blue-400 whitespace-nowrap"
 							defaultValue={field.value ?? []}
 							data-testid="related-pub-type-selector"
 						/>
+						<FormDescription>
+							Select the Types of Pubs that can be related through this field.
+							<br />
+							<strong>NOTE:</strong> Anyone with access to this form will be able to
+							see <em>every</em> Pubs of the selected types!
+						</FormDescription>
 						<FormMessage />
 					</FormItem>
 				)}

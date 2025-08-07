@@ -5,7 +5,7 @@ import type { CommunityMembershipsId, PubsId } from "db/public";
 import { CoreSchemaType, InputComponent } from "db/public";
 import { logger } from "logger";
 
-import type { PubFieldElement } from "./types";
+import type { PubFieldElement, PubFieldElementComponent } from "./types";
 import { CheckboxElement } from "./elements/CheckboxElement";
 import { CheckboxGroupElement } from "./elements/CheckboxGroupElement";
 import { ColorPickerElement } from "./elements/ColorPickerElement";
@@ -20,9 +20,12 @@ import { SelectDropdownElement } from "./elements/SelectDropdownElement";
 import { TextAreaElement } from "./elements/TextAreaElement";
 import { TextInputElement } from "./elements/TextInputElement";
 
-export type PubFieldFormElementProps = {
+export type PubFieldFormElementProps<
+	I extends PubFieldElementComponent = PubFieldElementComponent,
+	isRelation extends boolean = boolean,
+> = {
 	pubId: PubsId;
-	element: PubFieldElement;
+	element: I extends PubFieldElementComponent ? PubFieldElement<I, isRelation> : never;
 	values: ProcessedPub["values"];
 };
 
@@ -32,7 +35,7 @@ export const PubFieldFormElement = ({
 	values,
 	label,
 	slug,
-}: PubFieldFormElementProps & { label: string; slug: string }) => {
+}: PubFieldFormElementProps<PubFieldElementComponent, false> & { label: string; slug: string }) => {
 	const element = {
 		...propElement,
 		component:
