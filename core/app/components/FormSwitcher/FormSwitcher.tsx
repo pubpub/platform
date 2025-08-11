@@ -31,21 +31,9 @@ export const FormSwitcher = ({
 	className?: string;
 	children?: React.ReactNode;
 }) => {
-	// const router = useRouter();
-	// const pathname = usePathname();
-	// const params = useSearchParams();
-
-	// const [selectedFormSlug, setSelectedFormSlug] = useState(defaultFormSlug ?? forms[0].slug);
-	// useEffect(() => {
-	// 	if (!params.get(formSwitcherUrlParam)) {
-	// 		const newParams = new URLSearchParams(params);
-	// 		newParams.set(formSwitcherUrlParam, selectedFormSlug);
-	// 		router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
-	// 	}
-	// }, []);
 	const [selectedFormSlug, setSelectedFormSlug] = useQueryState(
 		formSwitcherUrlParam,
-		parseAsString.withDefault(defaultFormSlug ?? forms[0].slug).withOptions({
+		parseAsString.withDefault(defaultFormSlug ?? "").withOptions({
 			shallow: false,
 		})
 	);

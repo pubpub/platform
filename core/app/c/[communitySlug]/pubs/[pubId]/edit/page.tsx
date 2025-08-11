@@ -6,6 +6,7 @@ import { notFound, redirect } from "next/navigation";
 
 import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
+import { tryCatch } from "utils/try-catch";
 
 import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
@@ -13,7 +14,7 @@ import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { getAuthorizedUpdateForms, userCanEditPub } from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
-import { getPubsWithRelatedValues } from "~/lib/server";
+import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 const getPubsWithRelatedValuesCached = cache(
@@ -26,16 +27,23 @@ const getPubsWithRelatedValuesCached = cache(
 		pubId: PubsId;
 		communityId: CommunitiesId;
 	}) => {
-		return getPubsWithRelatedValues(
-			{
-				pubId,
-				communityId,
-				userId,
-			},
-			{
-				withPubType: true,
-			}
+		const [error, pub] = await tryCatch(
+			getPubsWithRelatedValues(
+				{
+					pubId,
+					communityId,
+					userId,
+				},
+				{
+					withPubType: true,
+				}
+			)
 		);
+		if (error && !(error instanceof NotFoundError)) {
+			throw error;
+		}
+
+		return pub;
 	}
 );
 
@@ -86,19 +94,23 @@ export default async function Page(props: {
 		findCommunityBySlug(communitySlug),
 	]);
 
+	const formSlug = searchParams.form;
+
 	if (!community) {
 		notFound();
 	}
 
-	const [canUpdatePub, pub, availableForms] = await Promise.all([
-		userCanEditPub({ userId: user.id, pubId }),
+	const [pub, availableForms] = await Promise.all([
 		getPubsWithRelatedValuesCached({
 			pubId: params.pubId as PubsId,
 			communityId: community.id,
 			userId: user.id,
 		}),
+
 		getAuthorizedUpdateForms(user.id, params.pubId).execute(),
 	]);
+
+	const canUpdatePub = availableForms.length > 0;
 
 	if (!canUpdatePub) {
 		redirect(`/c/${communitySlug}/unauthorized`);
@@ -106,6 +118,11 @@ export default async function Page(props: {
 
 	if (!pub) {
 		return notFound();
+	}
+
+	if (!availableForms.find((form) => form.slug === formSlug)) {
+		// redirect to first available form
+		redirect(`/c/${communitySlug}/pubs/${pub.id}?form=${availableForms[0].slug}`);
 	}
 
 	const htmlFormId = `edit-pub-${pub.id}`;
