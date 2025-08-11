@@ -23,7 +23,6 @@ export default async function Page(props: Props) {
 					<Link
 						key={action.name}
 						href={`/c/${props.params.communitySlug}/settings/actions/${action.name}`}
-						as={`/c/${props.params.communitySlug}/settings/actions/${action.name}`}
 					>
 						<div className="rounded border p-4 hover:bg-gray-50">
 							<h2 className="text-xl font-semibold">{action.name}</h2>

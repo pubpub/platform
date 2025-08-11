@@ -124,7 +124,10 @@ export const run = defineRun<typeof action>(
 					to: expect(recipient.email ?? recipient.user.email),
 					subject,
 					html,
-				}).send();
+				}).send({
+					name: config.senderName,
+					replyTo: config.replyTo,
+				});
 
 				if (isClientException(result)) {
 					logger.error({

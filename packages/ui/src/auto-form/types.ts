@@ -14,6 +14,7 @@ export type FieldConfigItem = {
 	fieldType?: keyof typeof INPUT_COMPONENTS | React.FC<AutoFormInputComponentProps>;
 	renderParent?: (props: { children: React.ReactNode }) => React.ReactElement | null;
 	allowedSchemas?: CoreSchemaType[] | boolean;
+	placeholder?: string;
 };
 
 export type FieldConfig<SchemaType extends z.infer<z.ZodObject<any, any>>> = {
@@ -71,4 +72,5 @@ export type AutoFormInputComponentProps = {
 	className?: string;
 	canUsePubField?: boolean;
 	descriptionPlacement?: "top" | "bottom";
+	placeholder?: string;
 };
