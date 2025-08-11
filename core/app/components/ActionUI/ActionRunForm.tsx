@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 
-import { Suspense, useCallback, useTransition } from "react";
+import { Suspense, useCallback, useMemo, useTransition } from "react";
 
 import type { ActionInstances, ActionInstancesId, CommunitiesId, PubsId } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
@@ -23,20 +23,29 @@ export const ActionRunForm = ({
 	actionInstance,
 	pubId,
 	fieldConfig,
+	defaultFields,
 }: {
 	actionInstance: ActionInstances;
 	pubId: PubsId;
 	fieldConfig: FieldConfig<any>;
+	defaultFields: string[];
 }) => {
+	const [isPending, startTransition] = useTransition();
+	const action = getActionByName(actionInstance.action);
+	const schema = useMemo(() => {
+		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
+			defaultFields.reduce(
+				(acc, key) => {
+					acc[key] = true;
+					return acc;
+				},
+				{} as Record<string, true>
+			)
+		);
+		return schemaWithPartialDefaults;
+	}, [action.config.schema, defaultFields]);
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
-	// const runAction = useServerAction(async (props: any) => {
-	// 	return { success: "true", report: "Wheee" };
-	// });
-
-	const [isPending, startTransition] = useTransition();
-
-	const action = getActionByName(actionInstance.action);
 
 	if (!action) {
 		logger.info(`Invalid action name ${actionInstance.action}`);
@@ -96,7 +105,7 @@ export const ActionRunForm = ({
 					<AutoForm
 						values={actionInstance.config ?? {}}
 						fieldConfig={fieldConfig}
-						formSchema={action.params.schema}
+						formSchema={schema}
 						dependencies={action.params.dependencies}
 						onSubmit={onSubmit}
 					>
