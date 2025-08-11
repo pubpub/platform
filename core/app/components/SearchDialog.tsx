@@ -42,7 +42,7 @@ export function SearchDialog({ defaultOpen, onOpenChange, onPubSelect }: SearchD
 	} = useQuery({
 		queryKey: ["pubs", "search", community.id, debouncedQuery],
 		queryFn: () =>
-			client.site.pubs.search.query({
+			client.pubs.search.query({
 				query: { query: debouncedQuery },
 				params: { communitySlug: community.slug },
 			}),

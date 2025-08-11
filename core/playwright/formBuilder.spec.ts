@@ -352,8 +352,7 @@ test.describe("relationship fields", () => {
 				const { upserts, relatedPubTypes } = data[0];
 				const authorElement = upserts.find(
 					(e: PubFieldElement) =>
-						"relationshipConfig" in e.config &&
-						e.config.relationshipConfig.label === "Authors"
+						e.isRelation && e.config.relationshipConfig.label === "Authors"
 				);
 				expect(authorElement.component).toBeNull();
 				expect(authorElement.config).toMatchObject({

@@ -222,7 +222,7 @@ export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
 		orderDirection: "desc",
 	});
 
-	const { data, isLoading } = client.site.pubs.getMany.useQuery({
+	const { data, isLoading } = client.pubs.getMany.useQuery({
 		queryKey: ["getPubs", filterParams],
 		queryData: {
 			query: {

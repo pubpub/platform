@@ -37,7 +37,6 @@ import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel"
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
-import { useFormData } from "../FormDataProvider";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
@@ -193,8 +192,10 @@ export const RelatedPubsElement = ({
 	label,
 	config,
 	valueComponentProps,
+	formSlug,
 }: ElementProps<InputComponent.relationBlock> & {
 	valueComponentProps: PubFieldFormElementProps<PubFieldElementComponent, true>;
+	formSlug: string;
 }) => {
 	const { pubId, element } = valueComponentProps;
 	const { pubTypes } = useContextEditorContext();
@@ -320,6 +321,7 @@ export const RelatedPubsElement = ({
 									disabledPubs={pubId ? [pubId] : undefined}
 									pubTypes={relatedPubTypes}
 									fieldSlug={slug}
+									formSlug={formSlug}
 									currentPubId={pubId}
 								/>
 							)}

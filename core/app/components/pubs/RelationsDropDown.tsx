@@ -30,7 +30,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 	const community = useCommunity();
 	const [isOpen, setIsOpen] = useState(false);
 
-	const { data, isLoading } = client.site.pubs.get.useQuery({
+	const { data, isLoading } = client.pubs.get.useQuery({
 		queryKey: ["getPub", pubId],
 		queryData: isOpen
 			? {

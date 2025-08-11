@@ -7,12 +7,12 @@ import type { FormsId, PubsId, PubTypes } from "db/public";
 
 import { client } from "~/lib/api";
 import { type GetManyParams } from "~/lib/server";
-import { useFormData } from "../../forms/FormDataProvider";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { PubsDataTableClient, PubsDataTableClientBase } from "./PubsDataTableClient";
 
 type FormPubsDataTableClientProps = {
 	/* The slug of the field on the form that's being used to render the table */
+	formSlug: string;
 	fieldSlug: string;
 	selectedPubs?: NonGenericProcessedPub[];
 	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
@@ -33,11 +33,9 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 		orderDirection: "desc",
 	});
 
-	const { form, token } = useFormData();
-
 	const community = useCommunity();
 
-	const { data, isLoading } = client.site.forms.getPubsForFormField.useQuery({
+	const { data, isLoading } = client.forms.getPubsForFormField.useQuery({
 		queryKey: ["getPubs", filterParams],
 		queryData: {
 			query: {
@@ -50,7 +48,7 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 			},
 			params: {
 				communitySlug: community.slug,
-				formSlug: form.slug,
+				formSlug: props.formSlug,
 				fieldSlug: props.fieldSlug,
 				pubId: props.currentPubId,
 			},

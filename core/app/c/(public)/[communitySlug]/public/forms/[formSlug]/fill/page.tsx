@@ -8,13 +8,11 @@ import { notFound, redirect } from "next/navigation";
 import type { Communities, PubsId } from "db/public";
 import { ElementType, FormAccessType, MemberRole } from "db/public";
 import { expect } from "utils";
-import { tryCatch } from "utils/try-catch";
 
 import type { Form } from "~/lib/server/form";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import { Header } from "~/app/c/(public)/[communitySlug]/public/Header";
 import { ContextEditorContextProvider } from "~/app/components/ContextEditor/ContextEditorContext";
-import { FormDataProvider } from "~/app/components/forms/FormDataProvider";
 import { FormElement } from "~/app/components/forms/FormElement";
 import { FormElementToggleProvider } from "~/app/components/forms/FormElementToggleContext";
 import {
@@ -23,7 +21,6 @@ import {
 } from "~/app/components/forms/structural";
 import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
-import { generateFormToken } from "~/db/redis/formToken";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
@@ -141,7 +138,7 @@ export default async function FormPage(props: {
 	}
 	const { user, session } = await getLoginData();
 
-	const [form, pub, pubs, pubTypes, [tokenError, formToken]] = await Promise.all([
+	const [form, pub, pubs, pubTypes] = await Promise.all([
 		getForm({
 			slug: params.formSlug,
 			communityId: community.id,
@@ -161,14 +158,6 @@ export default async function FormPage(props: {
 			}
 		),
 		getPubTypesForCommunity(community.id, { limit: 0 }),
-
-		tryCatch(
-			generateFormToken({
-				slug: params.formSlug,
-				userId: user!.id,
-				communityId: community.id,
-			})
-		),
 	]);
 
 	if (!form) {
@@ -207,10 +196,6 @@ export default async function FormPage(props: {
 		}
 		// TODO: show no access page
 		return notFound();
-	}
-
-	if (tokenError) {
-		return <NotFound>Error generating form token</NotFound>;
 	}
 
 	// all other roles always have access to the form
@@ -309,45 +294,44 @@ export default async function FormPage(props: {
 					<Completed element={submitElement} />
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
-						<FormDataProvider form={form} token={formToken}>
-							<FormElementToggleProvider
-								fieldSlugs={form.elements.reduce(
-									(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
-									[] as string[]
-								)}
+						<FormElementToggleProvider
+							fieldSlugs={form.elements.reduce(
+								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
+								[] as string[]
+							)}
+						>
+							<ContextEditorContextProvider
+								pubId={pubId}
+								pubTypeId={form.pubTypeId}
+								pubs={pubsForContext}
+								pubTypes={pubTypes}
 							>
-								<ContextEditorContextProvider
-									pubId={pubId}
-									pubTypeId={form.pubTypeId}
-									pubs={pubsForContext}
-									pubTypes={pubTypes}
+								<ExternalFormWrapper
+									pub={pubForForm}
+									elements={form.elements}
+									formSlug={form.slug}
+									isUpdating={isUpdating}
+									withAutoSave={isUpdating}
+									withButtonElements
+									isExternalForm
+									className="col-span-2 col-start-2"
 								>
-									<ExternalFormWrapper
-										pub={pubForForm}
-										elements={form.elements}
-										formSlug={form.slug}
-										isUpdating={isUpdating}
-										withAutoSave={isUpdating}
-										withButtonElements
-										isExternalForm
-										className="col-span-2 col-start-2"
-									>
-										{form.elements.map((e) => (
-											<FormElement
-												key={e.id}
-												pubId={pubId}
-												element={e}
-												values={
-													pubWithProsemirrorRichText
-														? pubWithProsemirrorRichText.values
-														: []
-												}
-											/>
-										))}
-									</ExternalFormWrapper>
-								</ContextEditorContextProvider>
-							</FormElementToggleProvider>
-						</FormDataProvider>
+									{form.elements.map((e) => (
+										<FormElement
+											key={e.id}
+											pubId={pubId}
+											element={e}
+											formSlug={form.slug}
+											values={
+												pubWithProsemirrorRichText
+													? pubWithProsemirrorRichText.values
+													: []
+											}
+										/>
+									))}
+								</ExternalFormWrapper>
+							</ContextEditorContextProvider>
+						</FormElementToggleProvider>
 					</div>
 				)}
 			</div>

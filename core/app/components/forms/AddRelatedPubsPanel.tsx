@@ -17,9 +17,11 @@ export const AddRelatedPubsPanel = ({
 	disabledPubs,
 	pubTypes,
 	fieldSlug,
+	formSlug,
 	currentPubId,
 }: {
 	title: string;
+	formSlug: string;
 	fieldSlug: string;
 	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
@@ -47,6 +49,7 @@ export const AddRelatedPubsPanel = ({
 					pubTypes={pubTypes}
 				/> */}
 				<FormPubsDataTableClient
+					formSlug={formSlug}
 					fieldSlug={fieldSlug}
 					selectedPubs={selected}
 					onSelectedPubsChange={setSelected}

@@ -42,12 +42,14 @@ type BasePubFieldElement = {
 	rank: string;
 	slug: string;
 	isRelation: boolean;
+	relatedPubTypes: PubTypesId[];
 };
 
 export type BasicPubFieldElement = BasePubFieldElement & {
 	component: InputComponent | null;
 	schemaName: CoreSchemaType;
 	config: Record<string, unknown>;
+	isRelation: boolean;
 };
 
 export type PubFieldElementComponent = Exclude<InputComponent, InputComponent.relationBlock>;
@@ -68,13 +70,11 @@ export type PubFieldElement<
 				(IsRelation extends true
 					? {
 							isRelation: true;
-							relatedPubTypes: PubTypesId[];
 							config: InputComponentConfigSchema<InputComponent.relationBlock>;
 							schemaName: CoreSchemaType;
 						}
 					: {
 							isRelation: false;
-							relatedPubTypes: [];
 							config: Record<string, unknown>;
 							schemaName: SchemaTypeByInputComponent[I];
 						})

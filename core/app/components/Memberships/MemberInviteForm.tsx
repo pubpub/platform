@@ -70,7 +70,7 @@ export const MemberInviteForm = ({
 	const emailState = form.getFieldState("email", form.formState);
 	const query = { email, limit: 1, communityId: community.id };
 	const shouldSearch = email && (!emailState.error || emailState.error.type === "alreadyMember");
-	const { data: userSuggestions, status } = client.site.users.search.useQuery({
+	const { data: userSuggestions, status } = client.users.search.useQuery({
 		queryKey: ["searchUsers", query, community.slug],
 		queryData: shouldSearch ? { query, params: { communitySlug: community.slug } } : skipToken,
 	});

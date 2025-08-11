@@ -12,6 +12,7 @@ import { PubFieldFormElement } from "./PubFieldFormElement";
 
 export type FormElementProps = Omit<PubFieldFormElementProps, "element"> & {
 	element: FormElements;
+	formSlug: string;
 };
 
 export const MaybeWithToggle = (
@@ -27,7 +28,7 @@ export const MaybeWithToggle = (
 	return <FormElementToggle {...props}>{props.children}</FormElementToggle>;
 };
 
-export const FormElement = ({ pubId, element, values }: FormElementProps) => {
+export const FormElement = ({ pubId, element, values, formSlug }: FormElementProps) => {
 	if (!element.slug) {
 		if (element.type === ElementType.structural) {
 			return (
@@ -67,6 +68,7 @@ export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 						element,
 						values,
 					}}
+					formSlug={formSlug}
 				/>
 			</MaybeWithToggle>
 		);
