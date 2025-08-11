@@ -3,7 +3,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import type { FormsId, UsersId } from "db/public";
-import { MemberRole } from "db/public";
+import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -16,8 +16,10 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { MoreVertical } from "ui/icon";
+import { Info, MoreVertical } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
+import { descriptions } from "~/app/components/Memberships/MemberInviteForm";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
@@ -116,7 +118,13 @@ export const getMemberTableColumns = () =>
 			},
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Forms" />,
+			header: ({ column }) => (
+				<DataTableColumnHeader
+					column={column}
+					title="Forms"
+					info={descriptions[MembershipType.community]}
+				/>
+			),
 			accessorKey: "forms",
 			cell: ({ getValue, row }) => {
 				const forms = getValue() as TableMember["forms"];
