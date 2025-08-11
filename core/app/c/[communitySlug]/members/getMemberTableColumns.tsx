@@ -2,7 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { MemberRole, UsersId } from "db/public";
+import type { FormsId, UsersId } from "db/public";
+import { MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -26,6 +27,11 @@ export type TableMember = {
 	firstName: string;
 	lastName: string | null;
 	role: MemberRole;
+	forms?: {
+		id: FormsId;
+		slug: string;
+		name: string;
+	}[];
 	joined: string;
 };
 
@@ -104,6 +110,24 @@ export const getMemberTableColumns = () =>
 					>
 						{role}
 					</Badge>
+				) : (
+					"-"
+				);
+			},
+		},
+		{
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Forms" />,
+			accessorKey: "forms",
+			cell: ({ getValue, row }) => {
+				const forms = getValue() as TableMember["forms"];
+				return forms && row.original.role === MemberRole.contributor ? (
+					<div className="flex gap-2 overflow-x-scroll whitespace-nowrap">
+						{forms.map((form) => (
+							<Badge key={form.id} variant="outline">
+								{form.name}
+							</Badge>
+						))}
+					</div>
 				) : (
 					"-"
 				);
