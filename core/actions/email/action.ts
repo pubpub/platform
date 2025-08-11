@@ -11,31 +11,27 @@ import {
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
-const emptyStringToUndefined = (val: string) => (val === "" ? undefined : val);
+const emptyStringToUndefined = (arg: unknown) => {
+	if (typeof arg === "string" && arg === "") {
+		return undefined;
+	} else {
+		return arg;
+	}
+};
 
 export const action = defineAction({
 	name: Action.email,
 	config: {
 		schema: z.object({
 			senderName: z
-				.string()
-				.min(1)
-				.max(100)
-				.describe("Sender name")
-				.transform(emptyStringToUndefined)
-				.optional(),
+				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+				.describe("Sender name"),
 			replyTo: z
-				.string()
-				.email()
-				.describe("Reply-to email address")
-				.transform(emptyStringToUndefined)
-				.optional(),
+				.preprocess(emptyStringToUndefined, z.string().email().optional())
+				.describe("Reply-to email address"),
 			recipientEmail: z
-				.string()
-				.email()
-				.describe("Recipient email address")
-				.transform(emptyStringToUndefined)
-				.optional(),
+				.preprocess(emptyStringToUndefined, z.string().email().optional())
+				.describe("Recipient email address"),
 			recipientMember: z.string().uuid().describe("Recipient member").optional(),
 			subject: stringWithTokens().max(500).describe("Email subject"),
 			body: markdown().min(0).describe("Email body"),
@@ -62,24 +58,14 @@ export const action = defineAction({
 		schema: z
 			.object({
 				senderName: z
-					.string()
-					.min(1)
-					.max(100)
-					.describe("Sender name")
-					.transform(emptyStringToUndefined)
-					.optional(),
+					.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+					.describe("Sender name"),
 				replyTo: z
-					.string()
-					.email()
-					.describe("Reply-to email address")
-					.transform(emptyStringToUndefined)
-					.optional(),
+					.preprocess(emptyStringToUndefined, z.string().email().optional())
+					.describe("Reply-to email address"),
 				recipientEmail: z
-					.string()
-					.email()
-					.describe("Recipient email address")
-					.transform(emptyStringToUndefined)
-					.optional(),
+					.preprocess(emptyStringToUndefined, z.string().email().optional())
+					.describe("Recipient email address"),
 				recipientMember: z
 					.string()
 					.uuid()
