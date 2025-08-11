@@ -26,6 +26,7 @@ import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
 import type { PubField } from "~/lib/types";
 import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher";
 import { useCommunity } from "../providers/CommunityProvider";
+import { FormSubmitButton } from "../SubmitButton";
 
 const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 	return (
@@ -192,17 +193,13 @@ export const InitialCreatePubForm = ({
 					<Button type="button" onClick={closeForm} variant="outline">
 						Cancel
 					</Button>
-					<Button
-						type="submit"
-						disabled={form.formState.isSubmitting || !form.formState.isValid}
-						className="flex items-center gap-x-2"
-					>
-						{form.formState.isSubmitting ? (
-							<Loader2 className="h-4 w-4 animate-spin" />
-						) : (
-							"Create Pub"
-						)}
-					</Button>
+					<FormSubmitButton
+						formState={form.formState}
+						idleText="Create Pub"
+						successText="Redirecting..."
+						pendingText="Redirecting..."
+						isSubmitting={form.formState.isSubmitSuccessful}
+					/>
 				</div>
 			</form>
 		</Form>
