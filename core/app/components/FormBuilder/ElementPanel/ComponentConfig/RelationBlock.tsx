@@ -8,6 +8,7 @@ import type { ComponentConfigFormProps } from "./types";
 
 export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>) => {
 	const pubTypes = usePubTypeContext();
+
 	return (
 		<>
 			<FormField
@@ -70,7 +71,7 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 							data-testid="related-pub-type-selector"
 						/>
 						<FormDescription>
-							Select the Types of Pubs that can be related through this field.
+							Select the Types of Pubs that can be related through this field (min 1).
 							<br />
 							<strong>NOTE:</strong> Anyone with access to this form will be able to
 							see <em>every</em> Pubs of the selected types!

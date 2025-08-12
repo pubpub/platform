@@ -330,6 +330,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				config: values.component
 					? componentConfigSchemas[values.component]
 					: relationBlockConfigSchema,
+				relatedPubTypes: Type.Array(Type.String(), {
+					// if it's a relation we need to have at least one pub type
+					minItems: fieldInputElement.isRelation ? 1 : 0,
+					error: "At least one Pub Type must be selected",
+				}),
 			});
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);
