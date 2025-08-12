@@ -58,37 +58,35 @@ export const action = defineAction({
 	},
 	description: "Send an email to one or more users",
 	params: {
-		schema: z
-			.object({
-				senderName: z
-					.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
-					.optional()
-					.describe("Sender name"),
-				replyTo: z
-					.preprocess(emptyStringToUndefined, z.string().email().optional())
-					.optional()
-					.describe("Reply-to email address"),
-				recipientEmail: z
-					.preprocess(emptyStringToUndefined, z.string().email().optional())
-					.optional()
-					.describe("Recipient email address"),
-				recipientMember: z
-					.string()
-					.uuid()
-					.describe(
-						"Recipient Member|Overrides the recipient community member specified in the action config."
-					)
-					.optional(),
-				subject: stringWithTokens()
-					.max(500)
-					.describe("Email subject|Overrides the subject specified in the action config.")
-					.optional(),
-				body: markdown()
-					.min(0)
-					.describe("Email body|Overrides the body specified in the action config.")
-					.optional(),
-			})
-			.optional(),
+		schema: z.object({
+			senderName: z
+				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+				.optional()
+				.describe("Sender name"),
+			replyTo: z
+				.preprocess(emptyStringToUndefined, z.string().email().optional())
+				.optional()
+				.describe("Reply-to email address"),
+			recipientEmail: z
+				.preprocess(emptyStringToUndefined, z.string().email().optional())
+				.optional()
+				.describe("Recipient email address"),
+			recipientMember: z
+				.string()
+				.uuid()
+				.describe(
+					"Recipient Member|Overrides the recipient community member specified in the action config."
+				)
+				.optional(),
+			subject: stringWithTokens()
+				.max(500)
+				.describe("Email subject|Overrides the subject specified in the action config.")
+				.optional(),
+			body: markdown()
+				.min(0)
+				.describe("Email body|Overrides the body specified in the action config.")
+				.optional(),
+		}),
 		fieldConfig: {
 			recipientEmail: {
 				allowedSchemas: true,
