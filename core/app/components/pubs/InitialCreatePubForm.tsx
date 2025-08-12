@@ -195,6 +195,7 @@ export const InitialCreatePubForm = ({
 					</Button>
 					<FormSubmitButton
 						formState={form.formState}
+						disabled={!form.formState.isValid}
 						idleText="Create Pub"
 						successText="Redirecting..."
 						pendingText="Redirecting..."
