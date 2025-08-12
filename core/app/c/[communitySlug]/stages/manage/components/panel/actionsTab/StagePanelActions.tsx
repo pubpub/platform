@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -14,14 +13,13 @@ import { StagePanelActionEditor } from "./StagePanelActionEditor";
 
 type PropsInner = {
 	stageId: StagesId;
-	pageContext: PageContext;
 	userId: UsersId;
 };
 
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const [stage, actionInstances] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageActions(props.stageId).execute(),
+		getStageActions({ stageId: props.stageId }).execute(),
 	]);
 
 	if (stage === undefined) {
@@ -60,7 +58,6 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 								<ActionConfigFormWrapper
 									stage={stage}
 									actionInstance={actionInstance}
-									pageContext={props.pageContext}
 								/>
 							</Suspense>
 						</StagePanelActionEditor>
@@ -74,7 +71,6 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 
 type Props = {
 	stageId?: StagesId;
-	pageContext: PageContext;
 	userId: UsersId;
 };
 
@@ -85,11 +81,7 @@ export const StagePanelActions = async (props: Props) => {
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelActionsInner
-				stageId={props.stageId}
-				pageContext={props.pageContext}
-				userId={props.userId}
-			/>
+			<StagePanelActionsInner stageId={props.stageId} userId={props.userId} />
 		</Suspense>
 	);
 };

@@ -239,7 +239,7 @@ test.describe("Multivalue inputs", () => {
 		await page.goto(`/c/${community.community.slug}/pubs`);
 		await page.getByRole("link", { name: title }).click();
 		// Make sure pub details page has loaded before making assertions
-		await page.getByText("Update").waitFor();
+		await page.waitForURL(`/c/${community.community.slug}/pubs/*`);
 		await expect(page.getByText(numberElement.name)).toHaveCount(1);
 		await expect(page.getByTestId(`${numberElement.name}-value`)).toHaveText("0");
 		await expect(page.getByText(animalElement.name)).toHaveCount(1);
@@ -259,6 +259,7 @@ test.describe("Rich text editor", () => {
 		// Add a new form
 		const formsPage = new FormsPage(page, community.community.slug);
 		formsPage.goto();
+		await page.waitForURL(`/c/${community.community.slug}/forms`);
 		const formSlug = "rich-text-test";
 		await formsPage.addForm("Rich text test", formSlug);
 
@@ -459,7 +460,7 @@ test.describe("Related pubs", () => {
 		await page.goto(`/c/${community.community.slug}/pubs`);
 		await page.getByRole("link", { name: title }).click();
 		// Make sure pub details page has loaded before making assertions
-		await page.getByText("Update").waitFor();
+		await page.waitForURL(`/c/${community.community.slug}/pubs/*`);
 		await expect(page.getByText("admin:related pub")).toHaveCount(1);
 		await expect(page.getByText("nullrelated pub")).toHaveCount(1);
 	});

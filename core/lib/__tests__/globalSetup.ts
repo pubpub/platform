@@ -8,8 +8,8 @@ import { logger } from "logger";
 export const setup = async () => {
 	config({
 		path: [
-			new URL("../../.env.test", import.meta.url).pathname,
-			new URL("../../.env.test.local", import.meta.url).pathname,
+			new URL("../../.env.development", import.meta.url).pathname,
+			new URL("../../.env.local", import.meta.url).pathname,
 		],
 	});
 
@@ -18,13 +18,10 @@ export const setup = async () => {
 	}
 
 	logger.info("Resetting database...");
-	const result = spawnSync(
-		"pnpm --filter core exec dotenv -e ./.env.test -e ./.env.test.local prisma migrate reset -- --preview-feature --force",
-		{
-			shell: true,
-			stdio: "inherit",
-		}
-	);
+	const result = spawnSync("pnpm -F core reset-base", {
+		shell: true,
+		stdio: "inherit",
+	});
 	const { stderr, error } = result;
 	if (!error) {
 		logger.info("Database reset successful");

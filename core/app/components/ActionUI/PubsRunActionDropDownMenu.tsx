@@ -1,30 +1,30 @@
 import "server-only";
 
 import type { ActionInstances, PubsId, Stages } from "db/public";
+import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
+import { cn } from "utils";
 
-import { ActionRunFormWrapper } from "./ActionRunFormWrapper";
+import { ActionRunFormWrapper } from "~/app/components/ActionUI/ActionRunFormWrapper";
 
-export type PageContext = {
-	params: Record<string, unknown>;
-	searchParams: Record<string, unknown>;
-};
+export type PubsRunActionDropDownMenuProps = {
+	actionInstances: ActionInstances[];
+	pubId: PubsId;
+	stage: Stages;
+	testId?: string;
+	iconOnly?: boolean;
+} & ButtonProps;
 
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
 	stage,
-	pageContext,
 	testId,
-}: {
-	actionInstances: ActionInstances[];
-	pubId: PubsId;
-	stage: Stages;
-	pageContext: PageContext;
-	testId?: string;
-}) => {
+	iconOnly,
+	...buttonProps
+}: PubsRunActionDropDownMenuProps) => {
 	if (!actionInstances.length) {
 		return null;
 	}
@@ -37,10 +37,11 @@ export const PubsRunActionDropDownMenu = async ({
 					variant="outline"
 					size="sm"
 					data-testid={testId}
+					{...buttonProps}
 				>
-					<Play size="12" />
-					Run action
-					<ChevronDown size="14" />
+					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
+					<span className={cn({ "sr-only": iconOnly })}>Run action</span>
+					{iconOnly ? null : <ChevronDown size="14" />}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
@@ -49,7 +50,6 @@ export const PubsRunActionDropDownMenu = async ({
 						stage={stage}
 						pubId={pubId}
 						actionInstance={actionInstance}
-						pageContext={pageContext}
 						key={actionInstance.id}
 					/>
 				))}

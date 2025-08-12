@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { cache, Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { forbidden, notFound, redirect, unauthorized } from "next/navigation";
 
 import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
@@ -11,6 +11,7 @@ import { Button } from "ui/button";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
+import { UnauthorizedError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
@@ -18,7 +19,18 @@ import { StagePubs } from "../components/StageList";
 
 const getStageCached = cache(
 	async (stageId: StagesId, communityId: CommunitiesId, userId: UsersId) => {
-		return getStages({ stageId, communityId, userId }).executeTakeFirst();
+		const [stage, canViewStage] = await Promise.all([
+			getStages({ stageId, communityId, userId }).executeTakeFirst(),
+			userCan(
+				Capabilities.viewStage,
+				{
+					type: MembershipType.stage,
+					stageId,
+				},
+				userId
+			),
+		]);
+		return { stage, canViewStage };
 	}
 );
 
@@ -34,7 +46,13 @@ export async function generateMetadata(props: {
 	if (!community) {
 		notFound();
 	}
-	const stage = await getStageCached(stageId, community.id, user.id);
+	const { stage, canViewStage } = await getStageCached(stageId, community.id, user.id);
+	if (!canViewStage) {
+		return {
+			title: "Unauthorized",
+		};
+	}
+
 	if (!stage) {
 		notFound();
 	}
@@ -67,7 +85,15 @@ export default async function Page(props: {
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
 	);
-	const [stage, showEditButton] = await Promise.all([stagePromise, capabilityPromise]);
+	const [{ stage, canViewStage }, showEditButton] = await Promise.all([
+		stagePromise,
+		capabilityPromise,
+	]);
+
+	if (!canViewStage) {
+		// TODO: replace with new nextjs auth interrupts
+		redirect(`/c/${communitySlug}/unauthorized`);
+	}
 
 	if (!stage) {
 		notFound();
@@ -98,10 +124,7 @@ export default async function Page(props: {
 				<StagePubs
 					userId={user.id}
 					stage={stage}
-					pageContext={{
-						params,
-						searchParams,
-					}}
+					searchParams={searchParams}
 					pagination={{ page, pubsPerPage: 10 }}
 					basePath={""}
 				/>

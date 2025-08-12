@@ -5,6 +5,7 @@ import "ui/styles.css";
 import { Suspense } from "react";
 import Script from "next/script";
 
+import { KeyboardShortcutProvider } from "ui/hooks";
 // import "./globals.css";
 
 import { TooltipProvider } from "ui/tooltip";
@@ -28,16 +29,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 						src="//unpkg.com/react-scan/dist/auto.global.js"
 					/>
 				)}
-				<ReactQueryProvider>
-					<NuqsAdapter>
-						<TooltipProvider>
-							{children}
-							<Suspense>
-								<RootToaster />
-							</Suspense>
-						</TooltipProvider>
-					</NuqsAdapter>
-				</ReactQueryProvider>
+				<KeyboardShortcutProvider>
+					<ReactQueryProvider>
+						<NuqsAdapter>
+							<TooltipProvider>
+								{children}
+								<Suspense>
+									<RootToaster />
+								</Suspense>
+							</TooltipProvider>
+						</NuqsAdapter>
+					</ReactQueryProvider>
+				</KeyboardShortcutProvider>
 			</body>
 		</html>
 	);

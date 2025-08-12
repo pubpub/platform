@@ -26,8 +26,14 @@ export type PathAwareDialogProps = {
 	buttonIcon?: LucideIcon;
 	buttonVariant?: ButtonProps["variant"];
 	buttonSize?: ButtonProps["size"];
+	disabled?: boolean;
 	icon: React.ReactElement;
 	param: string;
+	/**
+	 * If true, will only display the icon, and the button text will be rendered
+	 * only for screen readers.
+	 */
+	iconOnly?: boolean;
 };
 
 export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => {
@@ -65,9 +71,11 @@ export const PathAwareDialog = forwardRef((props: PathAwareDialogProps, ref) => 
 					variant={props.buttonVariant ?? "outline"}
 					size={props.buttonSize ?? "sm"}
 					className={cn("flex items-center gap-x-2 py-4", props.className)}
+					disabled={props.disabled}
+					aria-label={props.buttonLabel ?? props.buttonText}
 				>
 					{props.icon}
-					<span>{props.buttonText}</span>
+					<span className={cn({ "sr-only": props.iconOnly })}>{props.buttonText}</span>
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="max-h-full min-w-[32rem] max-w-fit overflow-auto">

@@ -2,7 +2,7 @@ import type { SVGProps } from "react";
 
 import { cn } from "utils";
 
-const Logo = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
+export const Logo = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
 	return (
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
@@ -27,4 +27,13 @@ const Logo = ({ className, ...props }: SVGProps<SVGSVGElement>) => {
 		</svg>
 	);
 };
-export default Logo;
+
+export const LogoWithText = ({ className }: { className?: string }) => (
+	<div className={cn("container mx-auto flex items-center gap-2 py-5 text-xl", className)}>
+		<Logo width={24} height={24} />
+		<span>
+			<span className="font-medium text-muted-foreground">PubPub</span>{" "}
+			<span className="font-bold">Platform</span>
+		</span>
+	</div>
+);

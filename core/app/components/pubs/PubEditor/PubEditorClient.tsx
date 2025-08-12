@@ -301,7 +301,6 @@ export const PubEditorClient = ({
 	formSlug,
 	withAutoSave,
 	withButtonElements,
-	isExternalForm,
 	relatedPub,
 	onSuccess,
 }: PubEditorClientProps) => {
@@ -396,19 +395,13 @@ export const PubEditorClient = ({
 						stageId: newStageId,
 					},
 					communityId: community.id,
-					addUserToForm: isExternalForm,
-				});
-				// TODO: this currently overwrites existing pub values of the same field
-				if (relatedPub) {
-					await runUpdatePub({
+					addUserToForm: true,
+					relation: relatedPub && {
+						slug: relatedPub.slug,
 						pubId: relatedPub.id,
-						pubValues: {
-							[relatedPub.slug]: [{ value: relatedPubValue, relatedPubId: pubId }],
-						},
-						continueOnValidationError: true,
-						deleted: [],
-					});
-				}
+						value: relatedPubValue,
+					},
+				});
 			}
 			if (didSucceed(result)) {
 				// Reset dirty state to prevent the unsaved changes warning from
@@ -434,7 +427,6 @@ export const PubEditorClient = ({
 			withButtonElements,
 			buttonElements,
 			pubId,
-			isExternalForm,
 			relatedPub,
 			defaultValues,
 			arrayDefaults,

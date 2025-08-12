@@ -108,15 +108,15 @@ type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] exten
 		? { stage?: never }
 		: { stage?: Stages | null };
 
-/**
- * Only add the `pubType` if the `withPubType` option has not been set to `false
- */
 export type PubTypePubField = Pick<
 	PubFields,
 	"id" | "name" | "slug" | "schemaName" | "isRelation"
 > & {
 	isTitle: boolean;
 };
+/**
+ * Only add the `pubType` if the `withPubType` option has not been set to `false`
+ */
 type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] extends true
 	? {
 			pubType: PubTypes & {
@@ -128,7 +128,7 @@ type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] e
 		: { pubType?: PubTypes & { fields: PubTypePubField[] } };
 
 /**
- * Only add the `pubType` if the `withPubType` option has not been set to `false
+ * Only add the `members` if the `withMembers` option has not been set to `false`
  */
 type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] extends true
 	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
@@ -139,6 +139,11 @@ type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] e
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }
 	: { relatedPub?: ProcessedPub<Options> | null; relatedPubId: PubsId | null };
+
+type MaybePubRelatedCounts<Options extends MaybePubOptions> =
+	Options["withRelatedCounts"] extends false
+		? { relatedPubsCount?: never }
+		: { relatedPubsCount?: number };
 
 /**
  * Those options of `getPubsWithRelatedValuesOptions` that affect the output of `ProcessedPub`
@@ -183,6 +188,23 @@ export type MaybePubOptions = {
 	 * @default boolean
 	 */
 	withValues?: boolean;
+	/**
+	 * Whether to include a count of related pubs
+	 *
+	 * @default false
+	 */
+	withRelatedCounts?: boolean;
+
+	/**
+	 * The search query to use for matching values
+	 */
+	search?: string;
+
+	/**
+	 * Whether to include matched and highlighted values
+	 * @default true if `search` is defined
+	 */
+	withSearchValues?: boolean;
 };
 
 /**
@@ -248,6 +270,20 @@ type ProcessedPubBase = {
 	updatedAt: Date;
 };
 
+type MaybeSearchResults<Options extends MaybePubOptions> = Options["search"] extends undefined
+	? { matchingValues?: never }
+	: Options["withSearchValues"] extends false
+		? { matchingValues?: never }
+		: {
+				matchingValues?: {
+					slug: string;
+					name: string;
+					value: Json;
+					isTitle: boolean;
+					highlights: string;
+				}[];
+			};
+
 export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBase & {
 	/**
 	 * Is an empty array if `withValues` is false
@@ -255,7 +291,9 @@ export type ProcessedPub<Options extends MaybePubOptions = {}> = ProcessedPubBas
 	values: (ValueBase & MaybePubRelatedPub<Options>)[];
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
-	MaybePubMembers<Options>;
+	MaybePubMembers<Options> &
+	MaybePubRelatedCounts<Options> &
+	MaybeSearchResults<Options>;
 
 export type ProcessedPubWithForm<
 	Options extends Omit<MaybePubOptions, "withValues" & { withValues: true }> = {},
@@ -263,7 +301,8 @@ export type ProcessedPubWithForm<
 	values: (ValuesWithFormElements & MaybePubRelatedPub<Options>)[];
 } & MaybePubStage<Options> &
 	MaybePubPubType<Options> &
-	MaybePubMembers<Options>;
+	MaybePubMembers<Options> &
+	MaybePubRelatedCounts<Options>;
 
 export interface NonGenericProcessedPub extends ProcessedPubBase {
 	stage?: Stages | null;
@@ -272,6 +311,7 @@ export interface NonGenericProcessedPub extends ProcessedPubBase {
 		relatedPub?: NonGenericProcessedPub | null;
 		relatedPubId: PubsId | null;
 	})[];
+	relatedPubCounts?: number;
 }
 
 const pubTypeWithFieldsSchema = pubTypesSchema.extend({
@@ -301,6 +341,7 @@ const processedPubSchema: z.ZodType<NonGenericProcessedPub> = z.object({
 	updatedAt: z.date(),
 	stage: stagesSchema.nullish(),
 	pubType: pubTypeWithFieldsSchema.optional(),
+	relatedPubCounts: z.number().optional(),
 });
 
 const preferRepresentationHeaderSchema = z.object({

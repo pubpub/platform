@@ -12,7 +12,7 @@ import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getStageMembers } from "~/lib/db/queries";
-import { getMembershipForms } from "~/lib/server/form";
+import { getSimpleForms } from "~/lib/server/form";
 import {
 	addStageMember,
 	addUserWithStageMembership,
@@ -29,7 +29,7 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 	const [members, canManage, availableForms] = await Promise.all([
 		getStageMembers(stageId).execute(),
 		userCan(Capabilities.removeStageMember, { type: MembershipType.stage, stageId }, user.id),
-		getMembershipForms(),
+		getSimpleForms(),
 	]);
 
 	return (

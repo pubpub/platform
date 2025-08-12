@@ -82,9 +82,9 @@ export const SubmitButton = ({
 			setButtonState("success");
 		} else if (isSubmitError) {
 			setErrorState();
+		} else {
+			setButtonState("idle");
 		}
-
-		setButtonState("idle");
 		return;
 	}, [state, isSubmitting, isSubmitSuccessful, isSubmitError]);
 
@@ -144,11 +144,12 @@ export const FormSubmitButton = ({
 	formState,
 	...props
 }: ButtonProps & Omit<SubmitButtonProps, "state"> & { formState: FormState<any> }) => {
+	const hasErrors = Object.keys(formState.errors ?? {}).length > 0;
 	return (
 		<SubmitButton
 			isSubmitting={Boolean(formState.isSubmitting)}
-			isSubmitSuccessful={Boolean(formState.isSubmitSuccessful)}
-			isSubmitError={Boolean(Object.keys(formState.errors ?? {}).length > 0)}
+			isSubmitSuccessful={Boolean(formState.isSubmitSuccessful) && !hasErrors}
+			isSubmitError={hasErrors}
 			{...props}
 		/>
 	);

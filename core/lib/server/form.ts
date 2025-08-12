@@ -31,9 +31,10 @@ import { getUser } from "./user";
  */
 export const getForm = (
 	props: (
-		| { id: FormsId; slug?: never; pubTypeId?: never }
-		| { id?: never; slug: string; pubTypeId?: never }
-		| { id?: never; slug?: never; pubTypeId: PubTypesId }
+		| { id: FormsId; slug?: never; pubTypeId?: never; pubId?: never }
+		| { id?: never; slug: string; pubTypeId?: never; pubId?: never }
+		| { id?: never; slug?: never; pubTypeId: PubTypesId; pubId?: never }
+		| { id?: never; slug?: never; pubTypeId?: never; pubId: PubsId }
 	) & { communityId: CommunitiesId },
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) =>
@@ -47,6 +48,11 @@ export const getForm = (
 				eb.where((eb) =>
 					eb("forms.pubTypeId", "=", props.pubTypeId!).and("forms.isDefault", "=", true)
 				)
+			)
+			.$if(Boolean(props.pubId), (eb) =>
+				eb
+					.innerJoin("pubs", "pubs.pubTypeId", "forms.pubTypeId")
+					.where("pubs.id", "=", props.pubId!)
 			)
 			.selectAll("forms")
 			.select((eb) =>
@@ -160,7 +166,7 @@ export const userHasPermissionToForm = async (
 };
 
 /**
- * Gives a community member access to a form
+ * Gives a community member permission to create pubs with a form or edit a specific pub with a form
  */
 export const grantFormAccess = async (
 	props: { communityId: CommunitiesId; userId: UsersId; pubId?: PubsId } & XOR<
@@ -340,10 +346,17 @@ export const insertForm = (
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
 
+export type SimpleForm = {
+	id: FormsId;
+	name: string;
+	isDefault: boolean;
+	slug: string;
+};
+
 /**
- * Gets a list of forms for the member add dialog
+ * Gets an array of forms suitable for use in a <select> element (no form_elements included)
  */
-export const getMembershipForms = async (pubTypeId?: PubTypesId, trx = db) => {
+export const getSimpleForms = async (userId?: UsersId, pubTypeId?: PubTypesId, trx = db) => {
 	const community = await findCommunityBySlug();
 	if (!community) {
 		throw new Error("Community not found");
@@ -354,7 +367,7 @@ export const getMembershipForms = async (pubTypeId?: PubTypesId, trx = db) => {
 			.selectFrom("forms")
 			.where("communityId", "=", community.id)
 			.$if(Boolean(pubTypeId), (qb) => qb.where("forms.pubTypeId", "=", pubTypeId!))
-			.select(["forms.name", "forms.isDefault", "forms.id"])
+			.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
 			.orderBy("isDefault desc")
 			.orderBy("updatedAt desc")
 	).execute();

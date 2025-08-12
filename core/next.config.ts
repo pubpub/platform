@@ -69,6 +69,21 @@ const nextConfig: NextConfig = {
 		}
 		return config;
 	},
+	async headers() {
+		// otherwise SSE doesn't work
+		// also recommended by Next: https://nextjs.org/docs/app/guides/self-hosting#streaming-and-suspense
+		return [
+			{
+				source: "/:path*{/}?",
+				headers: [
+					{
+						key: "X-Accel-Buffering",
+						value: "no",
+					},
+				],
+			},
+		];
+	},
 };
 
 const modifiedConfig = withPreconstruct(

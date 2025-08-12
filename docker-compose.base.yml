@@ -1,6 +1,6 @@
 services:
     minio:
-        image: minio/minio:latest
+        image: minio/minio:RELEASE.2025-04-22T22-12-26Z
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
             interval: 1m30s
@@ -17,8 +17,6 @@ services:
 
     minio-init:
         image: minio/mc:latest
-        networks:
-            - app-network
         # basically what this does:
         # - create the bucket
         # - allow public downloads for said bucket

@@ -2,7 +2,7 @@ import type { SignupInviteProps } from "emails";
 import type { SendMailOptions } from "nodemailer";
 
 import { render } from "@react-email/render";
-import { Invite, PasswordReset, RequestLinkToForm, VerifyEmail } from "emails";
+import { FormLink, Invite, PasswordReset, VerifyEmail } from "emails";
 
 import type { Communities, MembershipType, Users } from "db/public";
 import { AuthTokenType, MemberRole } from "db/public";
@@ -168,9 +168,7 @@ export function _legacy_signupInvite(
 			{
 				type: AuthTokenType.signup,
 				expiresAt,
-				path: `/signup?redirectTo=${encodeURIComponent(
-					`/c/${props.community.slug}/stages`
-				)}`,
+				path: `/signup?redirectTo=${encodeURIComponent(`/c/${props.community.slug}/pubs`)}`,
 				userId: props.user.id,
 			},
 			trx
@@ -223,7 +221,7 @@ export function signupInvite(
 	});
 }
 
-export function requestAccessToForm(
+export function formLink(
 	props: {
 		community: Pick<Communities, "name" | "avatar" | "slug">;
 		form: { name: string };
@@ -236,11 +234,7 @@ export function requestAccessToForm(
 			"formInviteLink" in props ? props.formInviteLink : await createFormInviteLink(props);
 
 		const email = await render(
-			<RequestLinkToForm
-				community={props.community}
-				formInviteLink={inviteLink}
-				form={props.form}
-			/>
+			<FormLink community={props.community} formInviteLink={inviteLink} form={props.form} />
 		);
 
 		return {

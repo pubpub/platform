@@ -19,6 +19,7 @@ import type {
 	JsonValue,
 	MaybePubOptions,
 	ProcessedPub,
+	ProcessedPubWithForm,
 	PubTypePubField,
 } from "contracts";
 import type { Database } from "db/Database";
@@ -1195,12 +1196,12 @@ export type UnprocessedPub = {
 interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions {
 	/**
 	 * The maximum depth to recurse to.
-	 * Does not do anything if `includeRelatedPubs` is `false`.
+	 * Does not do anything if `includeRelatedPubs` is `false`, or if `count` is true.
 	 *
 	 * @default 2
 	 */
 	depth?: number;
-	search?: string;
+	searchConfig?: SearchConfig;
 	/**
 	 * Whether to include the first pub that is part of a cycle.
 	 * By default, the first "cycled" pub is included, marked with `isCycle: true`.
@@ -1228,6 +1229,10 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	 * Constraints on which stages the user/token has access to. Will also filter related pubs.
 	 */
 	allowedStages?: StageConstraint[];
+	/**
+	 * If true, only the count of pubs will be returned, without any other information.
+	 */
+	count?: boolean;
 }
 
 // TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
@@ -1270,6 +1275,22 @@ const DEFAULT_OPTIONS = {
 	withMembers: false,
 	cycle: "include",
 	withValues: true,
+	withRelatedCounts: false,
+	trx: db,
+} as const satisfies GetPubsWithRelatedValuesOptions;
+
+const COUNT_OPTIONS = {
+	...DEFAULT_OPTIONS,
+	withRelatedPubs: false,
+	withValues: false,
+	depth: 1,
+	withRelatedCounts: false,
+	count: true,
+	withPubType: false,
+	withSearchValues: false,
+	withStageActionInstances: false,
+	withMembers: false,
+	withStage: false,
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
@@ -1291,7 +1312,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
 	const opts = {
-		...DEFAULT_OPTIONS,
+		...(options?.count ? COUNT_OPTIONS : DEFAULT_OPTIONS),
 		...options,
 	};
 
@@ -1306,6 +1327,8 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		limit,
 		offset,
 		search,
+		withSearchValues,
+		searchConfig,
 		withPubType,
 		withStage,
 		withStageActionInstances,
@@ -1313,6 +1336,8 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		trx,
 		allowedPubTypes,
 		allowedStages,
+		withRelatedCounts,
+		count,
 	} = opts;
 
 	if (depth < 1) {
@@ -1326,6 +1351,13 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 	const topLevelStageFilter = Array.from(
 		new Set([...(props.stageId ?? []), ...(allowedStages ?? [])])
 	);
+
+	const language = searchConfig?.language ?? DEFAULT_FULLTEXT_SEARCH_OPTS.language;
+	const headlineConfig =
+		searchConfig?.headlineConfig ?? DEFAULT_FULLTEXT_SEARCH_OPTS.headlineConfig;
+	const tsQuery = search ? createTsQuery(search, searchConfig) : undefined;
+
+	const includeSearchValues = Boolean(search) && withSearchValues !== false;
 
 	const result = await autoCache(
 		trx
@@ -1687,6 +1719,12 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.$if(Boolean(orderBy), (qb) => qb.orderBy(orderBy!, orderDirection ?? "desc"))
 					.$if(Boolean(limit), (qb) => qb.limit(limit!))
 					.$if(Boolean(offset), (qb) => qb.offset(offset!))
+
+					.$if(Boolean(tsQuery), (qb) =>
+						qb
+							.where((eb) => sql`pubs."searchVector" @@ ${tsQuery}`)
+							.orderBy(sql`ts_rank_cd(pubs."searchVector",${tsQuery}) desc`)
+					)
 			)
 			.selectFrom("pub_tree as pt")
 			.select([
@@ -1701,6 +1739,52 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 				"pt.updatedAt",
 				"pt.title",
 			])
+			.$if(Boolean(tsQuery), (qb) =>
+				qb.select((eb) => [
+					sql<string>`ts_headline(
+								'${sql.raw(language)}',
+								pt.title, 
+								${tsQuery}, 
+								'${sql.raw(headlineConfig)}'
+							)`.as("title"),
+				])
+			)
+			.$if(Boolean(includeSearchValues), (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("pub_values")
+							.innerJoin("pub_fields", "pub_fields.id", "pub_values.fieldId")
+							.innerJoin("_PubFieldToPubType", (join) =>
+								join
+									.onRef("A", "=", "pub_fields.id")
+									.onRef("B", "=", "pt.pubTypeId")
+							)
+							.select([
+								"pub_values.value",
+								"pub_fields.name",
+								"pub_fields.slug",
+								"pub_fields.schemaName",
+								"_PubFieldToPubType.isTitle",
+								sql<string>`ts_headline(
+							'${sql.raw(language)}',
+							pub_values.value#>>'{}',
+							${tsQuery},
+							'${sql.raw(headlineConfig)}'
+						)`.as("highlights"),
+							])
+							.$narrowType<{
+								value: JsonValue;
+								// still typed as null in db
+								schemaName: CoreSchemaType;
+							}>()
+							.whereRef("pub_values.pubId", "=", "pt.pubId")
+							.where(
+								(eb) => sql`to_tsvector(${language}, value#>>'{}') @@ ${tsQuery}`
+							)
+					).as("matchingValues")
+				)
+			)
 			.$if(Boolean(withValues), (qb) =>
 				qb.select((eb) =>
 					jsonArrayFrom(
@@ -1746,6 +1830,34 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 								)
 							)
 					).as("values")
+				)
+			)
+			.$if(Boolean(withRelatedCounts), (qb) =>
+				qb.select((eb) =>
+					eb
+						.selectFrom("pub_values as pv")
+						.innerJoin("pub_fields", "pub_fields.id", "pv.fieldId")
+						.$if(Boolean(fieldSlugs), (qb) =>
+							qb.where("pub_fields.slug", "in", fieldSlugs!)
+						)
+						.select((eb) =>
+							eb.fn.count<number>("pv.relatedPubId").as("relatedPubsCount")
+						)
+						.whereRef("pv.pubId", "=", "pt.pubId")
+						// filter out relatedPubs with pubTypes/stages that the user does not have access to
+						.$if(Boolean(allowedPubTypes?.length || allowedStages?.length), (qb) =>
+							qb.where((eb) =>
+								eb.or([
+									eb("pv.relatedPubId", "is", null),
+									eb(
+										"pv.relatedPubId",
+										"in",
+										eb.selectFrom("pub_tree").select("pub_tree.pubId")
+									),
+								])
+							)
+						)
+						.as("relatedPubsCount")
 				)
 			)
 			// TODO: is there a more efficient way to do this?
@@ -1800,11 +1912,28 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 				"pt.isCycle",
 				"pt.path",
 			])
+
+			.$if(Boolean(count), (qb) =>
+				// aggregate count
+				// @ts-expect-error just trust me its finneee
+				qb
+					.clearGroupBy()
+					.clearGroupBy()
+					.clearSelect()
+					.select((eb) => eb.fn.countAll<number>().as("count"))
+					.where("pt.depth", "=", 1)
+					.groupBy(["pt.depth"])
+			)
 	).execute();
 
 	if (options?._debugDontNest) {
 		// @ts-expect-error We should not accomodate the return type for this option
 		return result;
+	}
+
+	if (options?.count) {
+		// @ts-expect-error We should not accomodate the return type for this option
+		return (result?.[0]?.count ?? 0) as number;
 	}
 
 	if (props.pubId) {
@@ -1928,33 +2057,46 @@ export const stagesWhere = <EB extends ExpressionBuilder<any, any>>(
 /**
  * Get the number of pubs in a community, optionally additionally filtered by stage and pub type
  */
-export const getPubsCount = async (props: {
-	communityId: CommunitiesId;
-	stageId?: StageConstraint[];
-	pubTypeId?: PubTypesId[];
-}): Promise<number> => {
-	const pubs = await db
-		.selectFrom("pubs")
-		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props?.stageId?.length), (qb) => {
-			return qb
-				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"));
-		})
-		.$if(Boolean(props.pubTypeId?.length), (qb) =>
-			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
-		)
-		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "in", props.pubTypeId!))
-		.select((eb) => eb.fn.countAll<number>().as("count"))
-		.executeTakeFirstOrThrow();
+export const getPubsCount = async (
+	props: {
+		communityId: CommunitiesId;
+		stageId?: StageConstraint[];
+		pubTypeId?: PubTypesId[];
+		userId?: UsersId;
+	},
+	opts?: Pick<
+		GetPubsWithRelatedValuesOptions,
+		"filters" | "search" | "searchConfig" | "allowedPubTypes" | "allowedStages"
+	>
+): Promise<number> => {
+	const pubsCount = await getPubsWithRelatedValues(
+		{
+			communityId: props.communityId,
+			stageId: props.stageId,
+			pubTypeId: props.pubTypeId,
+			userId: props.userId,
+		},
+		{ ...opts, limit: 1_000_000, count: true }
+	);
 
-	return pubs.count;
+	// @ts-expect-error just trust me its a number
+	const count = pubsCount as number;
+
+	return count;
 };
 export type FullProcessedPub = ProcessedPub<{
 	withRelatedPubs: true;
 	withMembers: true;
 	withPubType: true;
 	withStage: true;
+	withStageActionInstances: true;
+}>;
+
+export type FullProcessedPubWithForm = ProcessedPubWithForm<{
+	withRelatedPubs: true;
+	withStage: true;
+	withPubType: true;
+	withMembers: true;
 	withStageActionInstances: true;
 }>;
 
@@ -2007,7 +2149,12 @@ const DEFAULT_FULLTEXT_SEARCH_OPTS = {
 } satisfies SearchConfig;
 
 export const createTsQuery = (query: string, config: SearchConfig = {}) => {
-	const { prefixSearch = true, minLength = 2 } = config;
+	const options = {
+		...DEFAULT_FULLTEXT_SEARCH_OPTS,
+		...config,
+	};
+
+	const { prefixSearch = true, minLength = 2 } = options;
 
 	const cleanQuery = query.trim();
 	if (cleanQuery.length < minLength) {
@@ -2021,16 +2168,16 @@ export const createTsQuery = (query: string, config: SearchConfig = {}) => {
 	}
 
 	// this is the most specific match, ie match "quick brown fox" when you search for "quick brown fox"
-	const phraseQuery = sql`to_tsquery(${config.language}, ${terms.join(" <-> ")})`;
+	const phraseQuery = sql`to_tsquery(${options.language}, ${terms.join(" <-> ")})`;
 
 	// all words match but in any order. could perhaps be removed in favor of prefix search
 	const exactTerms = terms.join(" & ");
-	const exactQuery = sql`to_tsquery(${config.language}, ${exactTerms})`;
+	const exactQuery = sql`to_tsquery(${options.language}, ${exactTerms})`;
 
 	// prefix matches, ie match "quick" when you search for "qu"
 	// this significantly slows down the query, but makes it much more useful
 	const prefixTerms = prefixSearch ? terms.map((term) => `${term}:*`).join(" & ") : null;
-	const prefixQuery = prefixTerms ? sql`to_tsquery(${config.language}, ${prefixTerms})` : null;
+	const prefixQuery = prefixTerms ? sql`to_tsquery(${options.language}, ${prefixTerms})` : null;
 
 	// combine queries
 	return sql`(

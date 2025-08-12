@@ -1,22 +1,34 @@
-"use client";
+import type { ReactNode } from "react";
 
-import { useState, useTransition } from "react";
+import { Suspense } from "react";
 
-import type { PubsId, StagesId } from "db/public";
+import type { PubsId, StagesId, UsersId } from "db/public";
+import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
-import { ArrowLeft, ArrowRight, Loader2 } from "ui/icon";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { useToast } from "ui/use-toast";
+import { ChevronDown, FlagTriangleRightIcon } from "ui/icon";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { XOR } from "~/lib/types";
-import { isClientException, useServerAction } from "~/lib/serverActions";
+import { getLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { makeStagesById } from "~/lib/stages";
-import { move } from "./lib/actions";
+import { BasicMoveButton } from "./BasicMoveButton";
+import { MoveInteractive } from "./MoveInteractive";
 
 type Props = {
 	pubId: PubsId;
 	stageId: StagesId;
+	button?: ReactNode;
+	/**
+	 * If there are no source or destinations from the current stage, hide this component.
+	 * @default true
+	 */
+	hideIfNowhereToMove?: boolean;
+	stageName?: string;
+	/* if true, overrides the move pub capability check */
+	canMoveAllPubs?: boolean;
+	/* if true, overrides the view stage capability check */
+	canViewAllStages?: boolean;
 } & XOR<
 	{ communityStages: CommunityStage[] },
 	{
@@ -25,7 +37,7 @@ type Props = {
 	}
 >;
 
-const makeSourcesAndDestinations = (props: Props) => {
+const makeSourcesAndDestinations = ({ ...props }: Props) => {
 	if (!props.communityStages) {
 		return {
 			sources: props.moveFrom,
@@ -44,119 +56,71 @@ const makeSourcesAndDestinations = (props: Props) => {
 	};
 };
 
-export default function Move(props: Props) {
-	const { sources, destinations } = makeSourcesAndDestinations(props);
-
-	const [popoverIsOpen, setPopoverIsOpen] = useState(false);
-	const { toast } = useToast();
-
-	const [isMoving, startTransition] = useTransition();
-	const runMove = useServerAction(move);
-
-	const onMove = async (pubId: PubsId, sourceStageId: StagesId, destStageId: StagesId) => {
-		const err = await runMove(pubId, sourceStageId, destStageId);
-
-		if (isClientException(err)) {
-			setPopoverIsOpen(false);
-			return;
-		}
-
-		toast({
-			title: "Success",
-			description: "Pub was successfully moved",
-			variant: "default",
-			action: (
-				<Button
-					onClick={async () => {
-						const result = await runMove(pubId, destStageId, sourceStageId);
-
-						if (isClientException(result)) {
-							return;
-						}
-						toast({
-							variant: "default",
-							title: "Success",
-							description: "Pub was successfully moved back",
-						});
-					}}
-				>
-					Undo
-				</Button>
-			),
-		});
-		setPopoverIsOpen(false);
-	};
-
-	if (destinations.length === 0 && sources.length === 0) {
-		return null;
+const getStageDisplayName = (props: Props) => {
+	if (props.stageName) {
+		return props.stageName;
 	}
 
-	return (
-		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
-			<PopoverTrigger asChild>
-				<Button size="sm" variant="outline" disabled={isMoving}>
-					{isMoving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Move"}
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent side="left" className="w-fit">
-				<div className="flex gap-x-4">
-					{sources.length > 0 && (
-						<div className="flex flex-col gap-y-2" data-testid="sources">
-							<div className="flex items-center justify-start gap-x-2">
-								<span className="text-sm font-bold">Move back</span>
-							</div>
-							{sources.map((stage) => {
-								return stage.id === props.stageId ? null : (
-									<Button
-										disabled={isMoving}
-										variant="outline"
-										key={stage.id}
-										onClick={() =>
-											startTransition(async () => {
-												await onMove(props.pubId, props.stageId, stage.id);
-											})
-										}
-										className="flex justify-start gap-x-1"
-									>
-										<ArrowLeft className="h-4 w-4 shrink-0 opacity-50" />
-										<span className="overflow-clip text-ellipsis whitespace-nowrap">
-											{stage.name}
-										</span>
-									</Button>
-								);
-							})}
-						</div>
-					)}
+	if (!props.communityStages) {
+		return "Stage";
+	}
 
-					{destinations.length > 0 && (
-						<div className="flex flex-col gap-y-2" data-testid="destinations">
-							<div className="flex items-center justify-start gap-x-2">
-								<span className="text-sm font-bold">Move to</span>
-							</div>
-							{destinations.map((stage) => {
-								return stage.id === props.stageId ? null : (
-									<Button
-										variant="outline"
-										disabled={isMoving}
-										key={stage.id}
-										onClick={() =>
-											startTransition(async () => {
-												await onMove(props.pubId, props.stageId, stage.id);
-											})
-										}
-										className="flex justify-start gap-x-1"
-									>
-										<span className="overflow-clip text-ellipsis whitespace-nowrap">
-											{stage.name}
-										</span>
-										<ArrowRight className="h-4 w-4 shrink-0 opacity-50" />
-									</Button>
-								);
-							})}
-						</div>
-					)}
-				</div>
-			</PopoverContent>
-		</Popover>
+	const stagesById = makeStagesById(props.communityStages);
+	const stage = stagesById[props.stageId];
+	return stage?.name || "Stage";
+};
+
+async function MoveButton({ hideIfNowhereToMove = true, ...props }: Props) {
+	const { sources, destinations } = makeSourcesAndDestinations(props);
+	const stageName = getStageDisplayName(props);
+
+	if (destinations.length === 0 && sources.length === 0 && hideIfNowhereToMove) {
+		return <BasicMoveButton name={stageName} />;
+	}
+
+	const loginData = await getLoginData();
+	if (!loginData.user) {
+		return <BasicMoveButton name={stageName} />;
+	}
+
+	const [canMovePub, canViewStage] = await Promise.all([
+		props.canMoveAllPubs ||
+			userCan(
+				Capabilities.movePub,
+				{ type: MembershipType.pub, pubId: props.pubId },
+				loginData.user.id
+			),
+		props.canViewAllStages ||
+			userCan(
+				Capabilities.viewStage,
+				{ type: MembershipType.stage, stageId: props.stageId },
+				loginData.user.id
+			),
+	]);
+
+	if (!canMovePub && !canViewStage) {
+		return <BasicMoveButton name={stageName} />;
+	}
+
+	const stageButton = props.button ?? <BasicMoveButton name={stageName} withDropdown={true} />;
+
+	return (
+		<MoveInteractive
+			{...props}
+			sources={sources}
+			destinations={destinations}
+			canMovePub={canMovePub}
+			canViewStage={canViewStage}
+			button={stageButton}
+			hideIfNowhereToMove={hideIfNowhereToMove}
+		/>
+	);
+}
+
+export default function Move({ hideIfNowhereToMove = true, ...props }: Props) {
+	return (
+		<Suspense fallback={<BasicMoveButton name={getStageDisplayName(props)} />}>
+			<MoveButton hideIfNowhereToMove={hideIfNowhereToMove} {...props} />
+		</Suspense>
 	);
 }

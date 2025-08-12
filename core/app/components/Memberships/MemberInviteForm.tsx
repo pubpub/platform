@@ -263,7 +263,7 @@ export const MemberInviteForm = ({
 								</FormItem>
 							)}
 						/>
-						{isContributor && (
+						{isContributor && !!availableForms.length && (
 							<FormField
 								control={form.control}
 								name="forms"

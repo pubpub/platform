@@ -1,6 +1,9 @@
 "use server";
 
-import type { CommunityMembershipsId } from "db/public";
+import type { Kysely } from "kysely";
+
+import type { Database } from "db/Database";
+import type { CommunitiesId, CommunityMembershipsId } from "db/public";
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
@@ -12,8 +15,66 @@ import * as Email from "~/lib/server/email";
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
 import { coalesceMemberships, selectCommunityMemberships } from "~/lib/server/member";
 import { renderMarkdownWithPub } from "~/lib/server/render/pub/renderMarkdownWithPub";
+import { getUser } from "~/lib/server/user";
 import { isClientException } from "~/lib/serverActions";
 import { defineRun } from "../types";
+
+const resolveRecipient = async (
+	recipientEmail: string | undefined,
+	recipientMemberId: CommunityMembershipsId | undefined,
+	communityId: CommunitiesId,
+	trx: Kysely<Database>
+): Promise<NonNullable<RenderWithPubContext["recipient"]>> => {
+	if (recipientMemberId !== undefined) {
+		const memberships = await selectCommunityMemberships({
+			id: recipientMemberId,
+		}).execute();
+		if (!memberships.length) {
+			throw new Error(`Could not find member with ID ${recipientMemberId}`);
+		}
+
+		const membership = coalesceMemberships(memberships);
+
+		return {
+			id: membership.id,
+			user: membership.user,
+		};
+	}
+
+	if (!recipientEmail) {
+		throw new Error("No recipient was specified");
+	}
+
+	// check if user exists
+	const user = await getUser({ email: recipientEmail }, trx).executeTakeFirst();
+
+	// this email is not associated with a user
+	if (!user) {
+		return {
+			email: recipientEmail,
+		};
+	}
+
+	// check if that user is a member of the community then
+	const memberships = await selectCommunityMemberships({
+		userId: user.id,
+		communityId,
+	}).execute();
+
+	if (!memberships.length) {
+		// we send an invite
+		return {
+			email: recipientEmail,
+		};
+	}
+
+	// we send the email to the user
+	const membership = coalesceMemberships(memberships);
+	return {
+		id: membership.id,
+		user: membership.user,
+	};
+};
 
 export const run = defineRun<typeof action>(
 	async ({ pub, config, args, communityId, actionRunId, userId }) => {
@@ -30,29 +91,12 @@ export const run = defineRun<typeof action>(
 					"No recipient was specified for email"
 				);
 
-				let recipient: RenderWithPubContext["recipient"] | undefined;
-
-				if (recipientMemberId !== undefined) {
-					const memberships = await selectCommunityMemberships({
-						id: recipientMemberId,
-					}).execute();
-					if (!memberships.length) {
-						throw new Error(`Could not find member with ID ${recipientMemberId}`);
-					}
-
-					const membership = coalesceMemberships(memberships);
-
-					recipient = {
-						id: membership.id,
-						user: membership.user,
-					};
-				} else if (recipientEmail !== undefined) {
-					recipient = {
-						email: recipientEmail,
-					};
-				} else {
-					throw new Error("No recipient was specified");
-				}
+				const recipient = await resolveRecipient(
+					recipientEmail,
+					recipientMemberId,
+					communityId,
+					trx
+				);
 
 				const renderMarkdownWithPubContext = {
 					communityId,

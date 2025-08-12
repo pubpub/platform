@@ -99,16 +99,23 @@ const seed = createSeed({
 	},
 	pubs: [
 		{
-			pubType: "Submission",
+			pubType: "Evaluation",
 			values: {
-				Title: "The Activity of Snails",
+				Title: "Evaluation of The Activity of Snails",
+			},
+			stage: "Evaluating",
+		},
+		{
+			pubType: "Evaluation",
+			values: {
+				Title: "Do not let anyone edit me",
 			},
 			stage: "Evaluating",
 		},
 		{
 			pubType: "Submission",
 			values: {
-				Title: "Do not let anyone edit me",
+				Title: "The Activity of Snails",
 			},
 			stage: "Evaluating",
 		},
@@ -296,13 +303,75 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await expect(newPage.getByText("This page could not be found.")).toHaveCount(1);
 	});
 
+	test("Invite fails if pub and form pub_types don't match", async () => {
+		const pubDetailsPage = new PubDetailsPage(
+			page,
+			community.community.slug,
+			community.pubs[2].id
+		);
+		await pubDetailsPage.goTo();
+
+		await pubDetailsPage.runAction(
+			ACTION_NAME_EMAIL,
+			async (runActionDialog) => {
+				await runActionDialog
+					.getByLabel("Email body")
+					.fill(
+						`Please fill out :link[this form]{form=${community.pubTypes.Evaluation.defaultForm.slug}}`
+					);
+			},
+			false
+		);
+		await page.getByText("Failed to Send Email", { exact: true }).waitFor();
+		await expect(
+			page
+				.getByLabel("Notifications (F8)")
+				.getByText(
+					"Invitation failed. The specified form is for Evaluation pubs but this pub's type is Submission"
+				)
+		).toBeVisible();
+	});
+
+	test("New user can be invited again through email field and should be redirectd to the form immediately", async ({
+		browser,
+	}) => {
+		const pubDetailsPage = new PubDetailsPage(
+			page,
+			community.community.slug,
+			community.pubs[0].id
+		);
+		await pubDetailsPage.goTo();
+		await pubDetailsPage.runAction(ACTION_NAME_USER, async (dialog) => {
+			await dialog.getByLabel("Recipient email address").fill(email1);
+			await dialog
+				.getByLabel("Email body")
+				.fill(`Please fill out :link[this form]{form=${community.forms.Evaluation.slug}}`);
+		});
+
+		const { message } = await (await inbucketClient.getMailbox(firstName1)).getLatestMessage();
+		const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
+		expect(url).toBeTruthy();
+
+		// Use the browser to decode the html entities in our URL
+		const decodedUrl = await page.evaluate((url) => {
+			const elem = document.createElement("div");
+			elem.innerHTML = url;
+			return elem.textContent!;
+		}, url!);
+		expect(url).toBeTruthy();
+
+		const newPage = await browser.newPage();
+		await newPage.goto(decodedUrl);
+		await newPage.waitForURL(/\/forms/);
+	});
+
 	// happy path
 	test("Invites without creating a new user", async () => {
 		await test.step("admin sends invite to non-existing user", async () => {
 			const pubDetailsPage = new PubDetailsPage(
 				page,
 				community.community.slug,
-				community.pubs[2].id
+				community.pubs[0].id
 			);
 			await pubDetailsPage.goTo();
 

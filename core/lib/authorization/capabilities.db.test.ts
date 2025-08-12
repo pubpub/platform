@@ -4,7 +4,7 @@ import { Capabilities, CoreSchemaType, MemberRole, MembershipType } from "db/pub
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { pubCapabilities, stageCapabilities } from "./capabilities";
+import { pubTargetCapabilities, stageTargetCapabilities } from "./capabalities.definition";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
@@ -37,6 +37,16 @@ const { pubs, users, stages } = await seedCommunity({
 			},
 			stage: "Stage 1",
 		},
+		{
+			pubType: "Basic Pub",
+			values: {
+				Title: "Some title 2",
+			},
+			stage: "Stage 1",
+			members: {
+				pubContributor: MemberRole.contributor,
+			},
+		},
 	],
 	users: {
 		communityAdmin: {
@@ -54,12 +64,17 @@ const { pubs, users, stages } = await seedCommunity({
 			lastName: "Contributor",
 			role: MemberRole.contributor,
 		},
+		pubContributor: {
+			firstName: "Pub",
+			lastName: "Contributor",
+			role: MemberRole.contributor,
+		},
 	},
 });
 
 describe("Community membership grants appropriate capabilities", async () => {
 	test("Community admin has all pub capabilities", async () => {
-		pubCapabilities.forEach(async (capability) => {
+		pubTargetCapabilities.forEach(async (capability) => {
 			expect(
 				await userCan(
 					capability,
@@ -70,7 +85,7 @@ describe("Community membership grants appropriate capabilities", async () => {
 		});
 	});
 	test("Community admin has all stage capabilities", async () => {
-		stageCapabilities.forEach(async (capability) => {
+		stageTargetCapabilities.forEach(async (capability) => {
 			expect(
 				await userCan(
 					capability,
@@ -81,7 +96,7 @@ describe("Community membership grants appropriate capabilities", async () => {
 		});
 	});
 	test("Community contributor has no pub capabilities", async () => {
-		pubCapabilities.forEach(async (capability) => {
+		pubTargetCapabilities.forEach(async (capability) => {
 			expect(
 				await userCan(
 					capability,
@@ -92,7 +107,7 @@ describe("Community membership grants appropriate capabilities", async () => {
 		});
 	});
 	test("Community contributor has no stage capabilities", async () => {
-		stageCapabilities.forEach(async (capability) => {
+		stageTargetCapabilities.forEach(async (capability) => {
 			expect(
 				await userCan(
 					capability,
@@ -103,25 +118,63 @@ describe("Community membership grants appropriate capabilities", async () => {
 		});
 	});
 
-	const editorPubCapabilities = [
+	describe("Pub contributor capabilities", () => {
+		const pubContributorPubCapabilities = [
+			Capabilities.viewPub,
+			Capabilities.deletePub,
+			Capabilities.editPubWithForm,
+		] as const;
+
+		const pubContributorPubInabilities = pubTargetCapabilities.filter(
+			(capability) =>
+				// The type of Array.prototype.includes is so strict as to make the function useless here, so we need to do this cast
+				!pubContributorPubCapabilities.includes(
+					capability as (typeof pubContributorPubCapabilities)[number]
+				)
+		);
+
+		test.each([
+			...pubContributorPubCapabilities.map((capability) => ["can", capability] as const),
+			...pubContributorPubInabilities.map((capability) => ["can't", capability] as const),
+		])("Pub contributor %s %s", async (expectation, capability) => {
+			if (capability === Capabilities.editPubWithForm) {
+				// different kind of check
+				// TODO: write tests for these editWithForm capabilities
+				return;
+			}
+
+			expect(
+				await userCan(
+					capability,
+					{
+						type: MembershipType.pub,
+						pubId: pubs[1].id,
+					},
+					users.pubContributor.id
+				)
+			).toBe(expectation === "can");
+		});
+	});
+
+	const communityEditorPubCapabilities = [
 		Capabilities.movePub,
 		Capabilities.viewPub,
 		Capabilities.deletePub,
-		Capabilities.updatePubValues,
-		Capabilities.createRelatedPub,
-		Capabilities.editPubWithForm,
 		Capabilities.runAction,
 		Capabilities.seeExtraPubValues,
+		Capabilities.createRelatedPub,
 	] as const;
 
-	const editorPubInabilities = pubCapabilities.filter(
+	const editorPubInabilities = pubTargetCapabilities.filter(
 		(capability) =>
 			// The type of Array.prototype.includes is so strict as to make the function useless here, so we need to do this cast
-			!editorPubCapabilities.includes(capability as (typeof editorPubCapabilities)[number])
+			!communityEditorPubCapabilities.includes(
+				capability as (typeof communityEditorPubCapabilities)[number]
+			)
 	);
 
 	test.each([
-		...editorPubCapabilities.map((capability) => ["can", capability] as const),
+		...communityEditorPubCapabilities.map((capability) => ["can", capability] as const),
 		...editorPubInabilities.map((capability) => ["can't", capability] as const),
 	])("Community editor %s %s", async (expectation, capability) => {
 		expect(
@@ -136,28 +189,32 @@ describe("Community membership grants appropriate capabilities", async () => {
 		).toBe(expectation === "can");
 	});
 
-	const editorStageCapabilities = [
+	const communityEditorStageCapabilities = [
 		Capabilities.viewStage,
 		Capabilities.seeExtraPubValues,
 	] as const;
-	const editorStageInabilities = stageCapabilities.filter(
+	const editorStageInabilities = stageTargetCapabilities.filter(
 		(capability) =>
 			// The type of Array.prototype.includes is so strict as to make the function useless here, so we need to do this cast
-			!editorStageCapabilities.includes(
-				capability as (typeof editorStageCapabilities)[number]
+			!communityEditorStageCapabilities.includes(
+				capability as (typeof communityEditorStageCapabilities)[number]
 			)
 	);
 
 	test.each([
-		...editorStageCapabilities.map((capability) => ["can", capability] as const),
+		...communityEditorStageCapabilities.map((capability) => ["can", capability] as const),
 		...editorStageInabilities.map((capability) => ["can't", capability] as const),
 	] as const)("Community editor %s %s", async (expectation, capability) => {
-		expect(
-			await userCan(
-				capability,
-				{ type: MembershipType.stage, stageId: stages["Stage 1"].id },
-				users.communityEditor.id
-			)
-		).toBe(expectation === "can");
+		try {
+			expect(
+				await userCan(
+					capability,
+					{ type: MembershipType.stage, stageId: stages["Stage 1"].id },
+					users.communityEditor.id
+				)
+			).toBe(expectation === "can");
+		} catch (error) {
+			throw error;
+		}
 	});
 });

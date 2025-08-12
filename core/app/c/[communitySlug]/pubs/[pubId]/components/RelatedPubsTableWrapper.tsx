@@ -1,8 +1,7 @@
 import { Info } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
 
-import type { PageContext } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
-import type { FullProcessedPub } from "~/lib/server";
+import type { FullProcessedPubWithForm } from "~/lib/server";
 import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { RelatedPubsTable } from "./RelatedPubsTable";
 
@@ -24,13 +23,12 @@ const NoActions = () => {
 	);
 };
 
-const getRelatedPubRunActionsDropdowns = (row: FullProcessedPub, pageContext: PageContext) => {
+const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 	return row.stage && row.stage?.actionInstances.length > 0 ? (
 		<PubsRunActionDropDownMenu
 			actionInstances={row.stage.actionInstances}
 			pubId={row.id}
 			stage={row.stage}
-			pageContext={pageContext}
 		/>
 	) : (
 		<NoActions />
@@ -38,8 +36,7 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPub, pageContext: Pa
 };
 
 type Props = {
-	pub: FullProcessedPub;
-	pageContext: PageContext;
+	pub: FullProcessedPubWithForm;
 };
 
 export const RelatedPubsTableWrapper = async (props: Props) => {
@@ -48,10 +45,7 @@ export const RelatedPubsTableWrapper = async (props: Props) => {
 			value.relatedPubId && value.relatedPub
 				? {
 						...a,
-						[value.relatedPubId]: getRelatedPubRunActionsDropdowns(
-							value.relatedPub,
-							props.pageContext
-						),
+						[value.relatedPubId]: getRelatedPubRunActionsDropdowns(value.relatedPub),
 					}
 				: a,
 		{}

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { QueryCreator, sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
@@ -74,6 +75,11 @@ export const viewableStagesCte = ({
 				.onRef("stage_memberships.role", "=", "membership_capabilities.role")
 				.on("membership_capabilities.type", "=", MembershipType.stage)
 		)
+		.$if(Boolean(communityId), (qb) =>
+			qb
+				.innerJoin("stages", "stages.id", "stage_memberships.stageId")
+				.where("stages.communityId", "=", communityId!)
+		)
 		.select("stage_memberships.stageId")
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
 		.where("stage_memberships.userId", "=", userId);
@@ -104,11 +110,41 @@ export const viewableStagesCte = ({
 		.select("stageId");
 };
 
+export const getStagesViewableByUser = cache(
+	async (
+		userId: UsersId,
+		communityId: CommunitiesId,
+		/* manually supply this when calling outside a community context */
+		communitySlug?: string
+	) => {
+		return autoCache(
+			viewableStagesCte({ db, userId, communityId })
+				.clearSelect()
+				.select((eb) => eb.fn.countAll<number>().as("count")),
+			{
+				communitySlug,
+			}
+		)
+			.executeTakeFirstOrThrow()
+			.then((res) => (res?.count ?? 0) > 0);
+	}
+);
+
 type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+type CommunityStageOptions = {
+	withActionInstances?: "count" | "full" | false;
+	withMembers?: "count" | "full" | false;
+};
+
 /**
  * Get all stages the given user has access to
  */
-export const getStages = ({ communityId, stageId, userId }: CommunityStageProps) => {
+export const getStages = (
+	{ communityId, stageId, userId }: CommunityStageProps,
+	options: CommunityStageOptions = {}
+) => {
+	const withActionInstances = options.withActionInstances ?? "count";
+
 	return autoCache(
 		db
 			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
@@ -150,15 +186,28 @@ export const getStages = ({ communityId, stageId, userId }: CommunityStageProps)
 							.as("memberCount")
 					)
 					.as("memberCount"),
-
-				eb
-					.selectFrom("action_instances")
-					.whereRef("action_instances.stageId", "=", "stages.id")
-					.select((eb) =>
-						eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
-					)
-					.as("actionInstancesCount"),
 			])
+			.$if(withActionInstances === "count", (qb) =>
+				qb.select((eb) =>
+					eb
+						.selectFrom("action_instances")
+						.whereRef("action_instances.stageId", "=", "stages.id")
+						.select((eb) =>
+							eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
+						)
+						.as("actionInstancesCount")
+				)
+			)
+			.$if(withActionInstances === "full", (qb) =>
+				qb.select((eb) =>
+					jsonArrayFrom(
+						eb
+							.selectFrom("action_instances")
+							.whereRef("action_instances.stageId", "=", "stages.id")
+							.selectAll("action_instances")
+					).as("actionInstances")
+				)
+			)
 			.selectAll("stages")
 			.orderBy("order asc")
 	);

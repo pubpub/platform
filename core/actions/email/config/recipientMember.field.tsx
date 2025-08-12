@@ -9,7 +9,7 @@ import { action } from "../action";
 const component = defineActionFormFieldServerComponent(
 	action,
 	"config",
-	async ({ pageContext, actionInstance, communityId }) => {
+	async ({ actionInstance, communityId }) => {
 		const community = await autoCache(
 			db.selectFrom("communities").selectAll().where("id", "=", communityId)
 		).executeTakeFirstOrThrow();
