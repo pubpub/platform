@@ -22,7 +22,8 @@ type Props = {
 export const ActionConfigDefaultForm = (props: Props) => {
 	const [isPending, startTransition] = useTransition();
 	const action = useMemo(() => getActionByName(props.action), [props.action]);
-	const onSubmit = useCallback((values: z.infer<typeof action.config.schema>) => {
+	const schema = useMemo(() => action.config.schema.partial(), [action.config.schema]);
+	const onSubmit = useCallback((values: z.infer<typeof schema>) => {
 		startTransition(async () => {
 			const result = await updateActionConfigDefault(props.communityId, props.action, values);
 			if (didSucceed(result)) {
@@ -37,7 +38,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 	return (
 		<AutoForm
 			values={props.values ?? {}}
-			formSchema={action.config.schema}
+			formSchema={schema}
 			dependencies={action.config.dependencies}
 			onSubmit={onSubmit}
 		>

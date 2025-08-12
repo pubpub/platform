@@ -293,7 +293,11 @@ const SubMenuLinks = async ({
 		>
 			{link.children.map((child) => (
 				<SidebarMenuSubItem key={child.href}>
-					<Links user={user} community={community} links={link.children} />
+					<Link
+						user={user}
+						community={community}
+						link={child as SubLevelLinkDefinition}
+					/>
 				</SidebarMenuSubItem>
 			))}
 		</NavLinkSubMenu>
