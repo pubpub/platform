@@ -11,7 +11,7 @@ export class PubDetailsPage {
 
 	async goTo() {
 		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`);
-		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/${this.pubId}`);
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/${this.pubId}*`);
 	}
 
 	async runAction(

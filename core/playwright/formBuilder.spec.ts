@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 
 import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
-import type { PubFieldElement } from "~/app/components/forms/types";
+import type { PubFieldElement, PubFieldElementComponent } from "~/app/components/forms/types";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
@@ -314,23 +314,24 @@ test.describe("relationship fields", () => {
 			page.getByRole("row", { name: `Select row ${community.pubs[1].title}` })
 		).toHaveCount(0);
 
-		await test.step("Remove pubtypes from a form", async () => {
+		await test.step("Cant remove pubtypes from a form", async () => {
 			await formEditPage.goto();
 			await page.getByRole("listitem", { name: "Role" }).getByLabel("Edit field").click();
 			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(pubType.name);
 			await page.getByTestId("related-pub-type-selector").click();
 			await page.getByRole("button", { name: "Clear" }).click();
 			await page.getByRole("button", { name: "Close" }).click();
-			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(
-				"Select a pub type"
-			);
+			// await expect(page.getByTestId("related-pub-type-selector")).toHaveText(
+			// 	"Select a Pub Type"
+			// );
 			await formEditPage.saveFormElementConfiguration();
-			await formEditPage.saveForm();
+			await expect(page.getByText("At least one Pub Type must be selected")).toHaveCount(1);
+			// await formEditPage.();
 
-			// Verify external form
-			await formEditPage.goToExternalForm();
-			await relatedField.getByRole("button", { name: "Add" }).click();
-			await expect(page.getByRole("row", { name: "Select row" })).toHaveCount(2);
+			// // Verify external form
+			// await formEditPage.goToExternalForm();
+			// await relatedField.getByRole("button", { name: "Add" }).click();
+			// await expect(page.getByRole("row", { name: "Select row" })).toHaveCount(2);
 		});
 	});
 
@@ -342,6 +343,10 @@ test.describe("relationship fields", () => {
 		await formEditPage.goto();
 		await formEditPage.openAddForm();
 		await formEditPage.openFormElementPanel(`${community.community.slug}:authornull`);
+
+		await page.getByRole("button", { name: "Select a pub type" }).click();
+		const pubType = community.pubTypes["Submission"];
+		await page.getByRole("group").getByText(pubType.name).click();
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
@@ -352,8 +357,8 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { upserts, relatedPubTypes } = data[0];
 				const authorElement = upserts.find(
-					(e: PubFieldElement) =>
-						e.isRelation && e.config.relationshipConfig.label === "Authors"
+					(e: PubFieldElement<PubFieldElementComponent, true>) =>
+						e.config.relationshipConfig.label === "Authors"
 				);
 				expect(authorElement.component).toBeNull();
 				expect(authorElement.config).toMatchObject({
@@ -363,6 +368,7 @@ test.describe("relationship fields", () => {
 						help: "Authors associated with this pub",
 					},
 				});
+				expect(relatedPubTypes).toEqual([{ A: authorElement.id, B: pubType.id }]);
 				// Should only have the relationshipConfig
 				expect(Object.keys(authorElement.config)).toEqual(["relationshipConfig"]);
 			}
