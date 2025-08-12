@@ -32,26 +32,11 @@ export type ChangeNotification<T extends NotifyTables> = {
 	row: PublicSchema[T];
 };
 
-const handleClose = (client?: PoolClient, interval?: NodeJS.Timeout) => {
-	return () => {
-		logger.info("closing sse connection");
-		if (interval) {
-			clearInterval(interval);
-		}
-		if (client) {
-			logger.info("unlistening for change");
-			client.query("UNLISTEN change").catch(logger.error);
-			logger.info("releasing client");
-			client.release();
-		}
-	};
-};
-
 const constructChangeChannel = (communityId: string, table: NotifyTables) => {
 	return `change_${communityId}_${table}`;
 };
 
-const HEARTBEAT_INTERVAL = 15_000;
+const HEARTBEAT_INTERVAL = 15_000; // 15 seconds
 const MAX_IDLE_TIME = 60 * 60 * 1_000;
 
 // bit awkward since we want to read the search params here, but the next-use-sse does not expose the request
@@ -60,109 +45,148 @@ export const GET = (req: NextRequest) => {
 		const listen = parseNotifyTables(req.nextUrl.searchParams.getAll("listen"));
 		const connectionId = req.nextUrl.searchParams.get("connectionId") ?? "unknown";
 
-		const interval = setInterval(() => {
-			logger.info({ connectionId, msg: "sending heartbeat" });
-			send("heartbeat", connectionId);
-		}, HEARTBEAT_INTERVAL);
+		let interval: NodeJS.Timeout | undefined;
+		let client: PoolClient | undefined;
+		let channels: string[] = [];
+		let timeoutId: NodeJS.Timeout | undefined;
 
-		const cleanup = (client?: PoolClient) => {
+		const cleanup = async () => {
 			logger.info({ connectionId, msg: "closing sse connection" });
-			clearInterval(interval);
+
+			if (interval) {
+				clearInterval(interval);
+				interval = undefined;
+			}
+
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				timeoutId = undefined;
+			}
+
 			if (client) {
-				logger.info({ connectionId, msg: "unlistening for change" });
-				client.query("UNLISTEN change").catch(logger.error);
-				logger.info({ connectionId, msg: "releasing client" });
-				client.release();
+				try {
+					// unlisten from all channels we listened to
+					for (const channel of channels) {
+						await client.query(`UNLISTEN "${channel}"`);
+					}
+				} catch (err) {
+					logger.error({ connectionId, msg: "error during unlisten", err });
+				}
+
+				try {
+					logger.info({ connectionId, msg: "releasing client" });
+					client.release();
+				} catch (err) {
+					logger.error({ connectionId, msg: "error releasing client", err });
+				} finally {
+					client = undefined;
+				}
 			}
 		};
 
-		// register cleanup for all scenarios
-		onClose(() => cleanup());
+		// register single cleanup handler
+		onClose(cleanup);
 
 		if (!listen?.length) {
 			logger.info({
 				msg: "no listen tables, closing sse connection",
 				connectionId,
 			});
-			cleanup();
+			await cleanup();
 			return;
 		}
 
 		logger.info({ connectionId, msg: "opening sse connection" });
 
-		const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+		try {
+			const [{ user }, community] = await Promise.all([
+				getLoginData(),
+				findCommunityBySlug(),
+			]);
 
-		if (!user) {
-			logger.info({ connectionId, msg: "no user found, closing sse connection" });
-			cleanup();
-			return;
-		}
+			if (!user) {
+				logger.info({ connectionId, msg: "no user found, closing sse connection" });
+				await cleanup();
+				return;
+			}
 
-		if (!community) {
-			logger.info({ connectionId, msg: "no community found, closing sse connection" });
-			cleanup();
-			return;
-		}
+			if (!community) {
+				logger.info({ connectionId, msg: "no community found, closing sse connection" });
+				await cleanup();
+				return;
+			}
 
-		const client = await pool.connect();
+			client = await pool.connect();
 
-		// update cleanup to include client
-		onClose(() => cleanup(client));
+			// setup channels and listen to them
+			channels = listen.map((table) => constructChangeChannel(community.id, table));
 
-		listen.forEach(async (table) => {
-			const channelName = constructChangeChannel(community.id, table);
-			await client.query(`LISTEN "${channelName}"`);
-		});
+			for (const channelName of channels) {
+				await client.query(`LISTEN "${channelName}"`);
+			}
 
-		// handle postgres notifications
-		client.on("notification", async (msg) => {
-			if (!msg.payload) return;
+			// setup heartbeat interval
+			interval = setInterval(() => {
+				logger.info({ connectionId, msg: "sending heartbeat" });
+				send("heartbeat", connectionId);
+			}, HEARTBEAT_INTERVAL);
 
-			try {
-				const notification = JSON.parse(msg.payload) as ChangeNotification<NotifyTables>;
+			// handle postgres notifications
+			client.on("notification", async (msg) => {
+				if (!msg.payload) return;
 
-				if (!listen.includes(notification.table)) {
+				try {
+					const notification = JSON.parse(
+						msg.payload
+					) as ChangeNotification<NotifyTables>;
+
+					if (!listen.includes(notification.table)) {
+						logger.debug({
+							connectionId,
+							msg: "not listening to this table, skipping",
+							table: notification.table,
+							userId: user.id,
+							community: community.slug,
+						});
+						return;
+					}
+
 					logger.info({
 						connectionId,
-						msg: "not listening to this table, skipping",
-						table: notification.table,
+						msg: "notification",
+						notification,
 						userId: user.id,
 						community: community.slug,
 					});
-					return;
+					send(notification, "change");
+				} catch (err) {
+					logger.error({
+						connectionId,
+						msg: "Failed to parse notification:",
+						err,
+						userId: user.id,
+						community: community.slug,
+					});
 				}
+			});
 
+			// setup max idle timeout
+			timeoutId = setTimeout(async () => {
 				logger.info({
 					connectionId,
-					msg: "notification",
-					notification,
+					msg: "closing sse connection after max idle time",
 					userId: user.id,
 					community: community.slug,
 				});
-				send(notification, "change");
-			} catch (err) {
-				logger.error({
-					connectionId,
-					msg: "Failed to parse notification:",
-					err,
-					userId: user.id,
-					community: community.slug,
-				});
-			}
-		});
-
-		setTimeout(() => {
-			logger.info({
+				await cleanup();
+			}, MAX_IDLE_TIME);
+		} catch (err) {
+			logger.error({
 				connectionId,
-				msg: "closing sse connection after max idle time",
-				userId: user.id,
-				community: community.slug,
+				msg: "error setting up sse connection",
+				err,
 			});
-			// close connection after a long time
-			cleanup();
-
-			// manually clear interval just to be safe
-			clearInterval(interval);
-		}, MAX_IDLE_TIME);
+			await cleanup();
+		}
 	})(req);
 };
