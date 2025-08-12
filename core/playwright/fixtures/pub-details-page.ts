@@ -55,6 +55,7 @@ export class PubDetailsPage {
 		await this.page
 			.getByRole("status")
 			.filter({ hasText: "Successfully removed the pub" })
+			.first()
 			.waitFor();
 	}
 }
