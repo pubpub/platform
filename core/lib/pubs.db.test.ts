@@ -450,7 +450,7 @@ describe("getPubByForm", () => {
 						relationshipConfig: {
 							label: "Related",
 							help: "Help",
-							component: InputComponent.textInput,
+							component: InputComponent.relationBlock,
 						},
 					},
 				},
@@ -460,7 +460,7 @@ describe("getPubByForm", () => {
 						relationshipConfig: {
 							label: "Related",
 							help: "Help",
-							component: InputComponent.textInput,
+							component: InputComponent.relationBlock,
 						},
 					},
 				},
