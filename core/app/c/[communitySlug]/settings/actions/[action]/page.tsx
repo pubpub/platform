@@ -18,28 +18,29 @@ type Props = {
 
 export default async function Page(props: Props) {
 	const params = await props.params;
-	const community = await findCommunityBySlug(params.communitySlug);
+
+	const [loginData, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
 
 	if (!community) {
 		notFound();
 	}
 
-	const loginData = await getPageLoginData();
+	if (!loginData || !loginData.user) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
 
-	const userCanEditCommunity = await userCan(
-		Capabilities.editCommunity,
-		{ type: MembershipType.community, communityId: community.id },
-		loginData.user.id
-	);
+	const [userCanEditCommunity, actionConfigDefaults] = await Promise.all([
+		userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			loginData.user.id
+		),
+		getActionConfigDefaults(community.id, params.action).executeTakeFirst(),
+	]);
 
 	if (!userCanEditCommunity) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
-
-	const actionConfigDefaults = await getActionConfigDefaults(
-		community.id,
-		params.action
-	).executeTakeFirst();
 
 	const actionName = params.action[0].toUpperCase() + params.action.slice(1);
 

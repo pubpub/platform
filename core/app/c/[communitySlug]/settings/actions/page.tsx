@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+
+import { Capabilities, MembershipType } from "db/public";
 
 import { actions } from "~/actions/api";
+import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
+import { findCommunityBySlug } from "~/lib/server/community";
 
 type Props = {
 	params: {
@@ -9,6 +15,25 @@ type Props = {
 };
 
 export default async function Page(props: Props) {
+	const params = await props.params;
+	const community = await findCommunityBySlug(params.communitySlug);
+
+	if (!community) {
+		notFound();
+	}
+
+	const loginData = await getPageLoginData();
+
+	const userCanEditCommunity = await userCan(
+		Capabilities.editCommunity,
+		{ type: MembershipType.community, communityId: community.id },
+		loginData.user.id
+	);
+
+	if (!userCanEditCommunity) {
+		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
+
 	return (
 		<div className="container mx-auto px-4 py-12 md:px-6">
 			<div className="flex flex-col space-y-6">

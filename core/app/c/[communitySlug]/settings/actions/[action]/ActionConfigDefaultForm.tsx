@@ -25,7 +25,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 	const schema = useMemo(() => action.config.schema.partial(), [action.config.schema]);
 	const onSubmit = useCallback((values: z.infer<typeof schema>) => {
 		startTransition(async () => {
-			const result = await updateActionConfigDefault(props.communityId, props.action, values);
+			const result = await updateActionConfigDefault(props.action, values);
 			if (didSucceed(result)) {
 				toast({
 					title: "Success",

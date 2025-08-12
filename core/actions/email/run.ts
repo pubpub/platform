@@ -125,8 +125,8 @@ export const run = defineRun<typeof action>(
 					subject,
 					html,
 				}).send({
-					name: config.senderName,
-					replyTo: config.replyTo,
+					name: args?.senderName ?? config.senderName,
+					replyTo: args?.replyTo ?? config.replyTo,
 				});
 
 				if (isClientException(result)) {
