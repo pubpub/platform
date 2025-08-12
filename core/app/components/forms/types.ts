@@ -71,7 +71,7 @@ export type PubFieldElement<
 					? {
 							isRelation: true;
 							config: InputComponentConfigSchema<InputComponent.relationBlock>;
-							schemaName: CoreSchemaType;
+							schemaName: SchemaTypeByInputComponent[I];
 						}
 					: {
 							isRelation: false;

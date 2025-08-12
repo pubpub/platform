@@ -146,8 +146,7 @@ export const ConfigureRelatedValue = ({
 
 	const valueError = parseRelatedPubValuesSlugError(slug, formState.errors);
 
-	// cant have a relation as related value
-	if (element.component === null || element.isRelation) {
+	if (element.component === null) {
 		return null;
 	}
 

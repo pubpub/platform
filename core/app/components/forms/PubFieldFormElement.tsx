@@ -35,7 +35,7 @@ export const PubFieldFormElement = ({
 	values,
 	label,
 	slug,
-}: PubFieldFormElementProps<PubFieldElementComponent, false> & { label: string; slug: string }) => {
+}: PubFieldFormElementProps & { label: string; slug: string }) => {
 	const element = {
 		...propElement,
 		component:
