@@ -187,7 +187,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 							stage: "Draft",
 						},
 					],
-					members: ["contributor"],
 				},
 				"Private Review (with relation)": {
 					slug: "private-review",
