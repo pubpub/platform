@@ -122,7 +122,7 @@ export default async function Page(props: {
 
 	if (!availableForms.find((form) => form.slug === formSlug)) {
 		// redirect to first available form
-		redirect(`/c/${communitySlug}/pubs/${pub.id}?form=${availableForms[0].slug}`);
+		redirect(`/c/${communitySlug}/pubs/${pub.id}/edit?form=${availableForms[0].slug}`);
 	}
 
 	const htmlFormId = `edit-pub-${pub.id}`;
