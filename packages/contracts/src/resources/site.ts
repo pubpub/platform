@@ -107,7 +107,7 @@ export const siteApi = contract.router(
 		forms: {
 			getPubsForFormField: {
 				method: "GET",
-				path: "/:formSlug/:fieldSlug/pubs/:pubId?",
+				path: "/forms/:formSlug/:fieldSlug/pubs/:pubId?",
 				summary: "Gets pubs for a specific form context",
 				description:
 					"Get pubs that are available for selection within a specific form context. This endpoint is restricted to form-based access only and requires a valid form token.",
