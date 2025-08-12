@@ -9,6 +9,7 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { seedCommunity } from "../seed/seedCommunity";
+import { usersExisting } from "./users";
 
 const abstract = `<p>The development of AAV capsids for therapeutic gene delivery has exploded in popularity over the past few years. <em>However</em>, humans aren’t the first or only species using viral capsids for gene delivery — wasps evolved this tactic over 100 million years ago. Parasitoid wasps that lay eggs inside arthropod hosts have co-opted ancient viruses for gene delivery to manipulate multiple aspects of the host’s biology, thereby increasing the probability of survival of the wasp larvae</p>`;
 
@@ -381,6 +382,7 @@ export const seedLegacy = async (communityId?: CommunitiesId) => {
 					role: MemberRole.admin,
 					password: "pubpub-legacy",
 				},
+				...usersExisting,
 			},
 			stages: {
 				"Test Pubs": {},
