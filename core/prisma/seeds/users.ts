@@ -12,7 +12,7 @@ const editorBase = {
 } as const;
 
 const contributorBase = {
-	id: "a54fd9b7-7d8f-43c9-bc00-400652a118c0 " as UsersId,
+	id: "a54fd9b7-7d8f-43c9-bc00-400652a118c0" as UsersId,
 	role: MemberRole.contributor,
 } as const;
 
