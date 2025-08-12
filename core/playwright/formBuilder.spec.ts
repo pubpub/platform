@@ -115,11 +115,12 @@ const seed = createSeed({
 				{
 					type: ElementType.pubfield,
 					field: "Author",
-					component: InputComponent.relationBlock,
+					component: InputComponent.textInput,
+					relatedPubTypes: ["Evaluation"],
 					config: {
 						label: "Author",
 						relationshipConfig: {
-							component: InputComponent.textArea,
+							component: InputComponent.relationBlock,
 							help: "",
 							label: "Role",
 						},
