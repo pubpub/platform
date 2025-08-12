@@ -121,10 +121,15 @@ export default async function Page(props: {
 	const actionsPromise = getStageActions({ pubId: pubId }).execute();
 
 	// sadly two steps
-	const [availableViewForms, availableUpdateForms] = await Promise.all([
+	const [pub, availableViewForms, availableUpdateForms] = await Promise.all([
+		pubPromise,
 		getAuthorizedViewForms(user.id, pubId).execute(),
 		getAuthorizedUpdateForms(user.id, pubId).execute(),
 	]);
+
+	if (!pub) {
+		notFound();
+	}
 
 	if (!availableViewForms.length) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
@@ -153,7 +158,6 @@ export default async function Page(props: {
 		canRemoveMember,
 		canCreateRelatedPub,
 		canRunActionsAllPubs,
-		pub,
 		actions,
 		communityStages,
 		withExtraPubValues,
@@ -165,7 +169,6 @@ export default async function Page(props: {
 		userCan(Capabilities.removePubMember, { type: MembershipType.pub, pubId }, user.id),
 		userCan(Capabilities.createRelatedPub, { type: MembershipType.pub, pubId }, user.id),
 		userCanRunActionsAllPubs(communitySlug),
-		pubPromise,
 		actionsPromise,
 		communityStagesPromise,
 		userCan(
