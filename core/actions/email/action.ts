@@ -25,12 +25,15 @@ export const action = defineAction({
 		schema: z.object({
 			senderName: z
 				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+				.optional()
 				.describe("Sender name"),
 			replyTo: z
 				.preprocess(emptyStringToUndefined, z.string().email().optional())
+				.optional()
 				.describe("Reply-to email address"),
 			recipientEmail: z
 				.preprocess(emptyStringToUndefined, z.string().email().optional())
+				.optional()
 				.describe("Recipient email address"),
 			recipientMember: z.string().uuid().describe("Recipient member").optional(),
 			subject: stringWithTokens().max(500).describe("Email subject"),
@@ -59,12 +62,15 @@ export const action = defineAction({
 			.object({
 				senderName: z
 					.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+					.optional()
 					.describe("Sender name"),
 				replyTo: z
 					.preprocess(emptyStringToUndefined, z.string().email().optional())
+					.optional()
 					.describe("Reply-to email address"),
 				recipientEmail: z
 					.preprocess(emptyStringToUndefined, z.string().email().optional())
+					.optional()
 					.describe("Recipient email address"),
 				recipientMember: z
 					.string()
