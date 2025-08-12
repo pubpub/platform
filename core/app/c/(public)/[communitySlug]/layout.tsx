@@ -10,8 +10,7 @@ type Props = { children: React.ReactNode; params: Promise<{ communitySlug: strin
 export async function generateMetadata(props: {
 	params: Promise<{ communitySlug: string }>;
 }): Promise<Metadata> {
-	const params = await props.params;
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return { title: "Community Not Found" };
@@ -26,11 +25,9 @@ export async function generateMetadata(props: {
 }
 
 export default async function MainLayout(props: Props) {
-	const params = await props.params;
-
 	const { children } = props;
 
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return notFound();
