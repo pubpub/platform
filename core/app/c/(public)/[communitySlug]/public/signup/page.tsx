@@ -18,6 +18,7 @@ import { publicSignup } from "~/lib/authentication/actions";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { InviteService } from "~/lib/server/invites/InviteService";
+import { redirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
 import { publicSignupsAllowed } from "~/lib/server/user";
 import { signupThroughInvite } from "../invite/actions";
 import { InvalidInviteError } from "../invite/InviteStatuses";
@@ -97,7 +98,7 @@ const Wrapper = ({ children, notice }: { children: React.ReactNode; notice?: Not
 	);
 };
 
-const PublicSignupFlow = ({
+const PublicSignupFlow = async ({
 	user,
 	community,
 	redirectTo,
@@ -108,7 +109,11 @@ const PublicSignupFlow = ({
 }) => {
 	if (user) {
 		if (user.memberships.some((m) => m.communityId === community.id)) {
-			redirect(redirectTo ?? `/c/${community.slug}/stages`);
+			if (redirectTo) {
+				redirect(redirectTo);
+			} else {
+				await redirectToBaseCommunityPage();
+			}
 		}
 
 		// TODO: figure this out based on the invite

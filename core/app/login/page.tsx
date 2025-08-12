@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getLoginData } from "~/lib/authentication/loginData";
+import { redirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
 import { DotBackground } from "../components/DotBackground";
 import { LogoWithText } from "../components/Logo";
 import { Notice } from "../components/Notice";
@@ -27,7 +28,7 @@ export default async function Login({
 		const communitySlug = lastVisited?.value ?? firstSlug;
 
 		if (firstSlug) {
-			redirect(`/c/${communitySlug}/stages`);
+			await redirectToBaseCommunityPage({ communitySlug });
 		}
 
 		redirect("/settings");

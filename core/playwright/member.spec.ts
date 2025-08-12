@@ -93,7 +93,7 @@ test.describe("Community members", () => {
 
 			await page.click("button[type='submit']");
 
-			await page.waitForURL(/\/c\/.*?\/stages/);
+			await page.waitForURL(/\/c\/.*?\/pubs/);
 
 			await page.close();
 		});
