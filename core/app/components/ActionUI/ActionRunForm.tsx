@@ -33,7 +33,7 @@ export const ActionRunForm = ({
 	const [isPending, startTransition] = useTransition();
 	const action = getActionByName(actionInstance.action);
 	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
+		const schemaWithPartialDefaults = (action.params.schema as z.ZodObject<any>).partial(
 			defaultFields.reduce(
 				(acc, key) => {
 					acc[key] = true;
@@ -43,7 +43,7 @@ export const ActionRunForm = ({
 			)
 		);
 		return schemaWithPartialDefaults;
-	}, [action.config.schema, defaultFields]);
+	}, [action.params.schema, defaultFields]);
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
 
