@@ -3,12 +3,12 @@
 import { useState } from "react";
 
 import type { NonGenericProcessedPub } from "contracts";
-import type { FormsId, PubsId, PubTypes } from "db/public";
+import type { PubsId, PubTypes } from "db/public";
 
 import { client } from "~/lib/api";
 import { type GetManyParams } from "~/lib/server";
 import { useCommunity } from "../../providers/CommunityProvider";
-import { PubsDataTableClient, PubsDataTableClientBase } from "./PubsDataTableClient";
+import { PubsDataTableClientBase } from "./PubsDataTableClient";
 
 type FormPubsDataTableClientProps = {
 	/* The slug of the field on the form that's being used to render the table */
@@ -36,7 +36,7 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 	const community = useCommunity();
 
 	const { data, isLoading } = client.forms.getPubsForFormField.useQuery({
-		queryKey: ["getPubs", filterParams],
+		queryKey: ["getPubsForFormField", props.formSlug, props.fieldSlug, filterParams],
 		queryData: {
 			query: {
 				...filterParams,
@@ -52,9 +52,6 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 				fieldSlug: props.fieldSlug,
 				pubId: props.currentPubId,
 			},
-			// headers: {
-			// 	"x-form-token": token,
-			// },
 		},
 	});
 
