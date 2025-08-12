@@ -190,7 +190,7 @@ export const ConfigureRelatedValue = ({
 	);
 };
 
-const shouldShowRelationBlockWarning = (
+const useShouldShowRelationBlockWarning = (
 	element: PubFieldElement<PubFieldElementComponent, true>
 ) => {
 	const membership = useCommunityMembershipOrThrow();
@@ -263,12 +263,12 @@ export const RelatedPubsElement = ({
 		[fields]
 	);
 
+	const showRelationBlockWarning = useShouldShowRelationBlockWarning(element);
+
 	Value.Default(relationBlockConfigSchema, config);
 	if (!Value.Check(relationBlockConfigSchema, config)) {
 		return null;
 	}
-
-	const showRelationBlockWarning = shouldShowRelationBlockWarning(element);
 
 	return (
 		<>
