@@ -324,7 +324,11 @@ export const RelatedPubsElement = ({
 					};
 
 					return (
-						<>
+						<FormItem
+							data-testid={`related-pubs-${label}`}
+							// otherwise it jumps down when the panel is open
+							className="flex flex-col gap-y-2 space-y-0"
+						>
 							{showPanel && (
 								<AddRelatedPubsPanel
 									title={`Add ${label}`}
@@ -339,79 +343,69 @@ export const RelatedPubsElement = ({
 									currentPubId={pubId}
 								/>
 							)}
-							<FormItem data-testid={`related-pubs-${label}`}>
-								<FormLabel className="flex">{label}</FormLabel>
-								<div className="flex items-end gap-x-2">
-									<FormControl>
-										<MultiBlock
-											title="Pub Relations"
-											disabled={!isEnabled}
-											onAdd={() => setShowPanel(true)}
-										>
-											{fields.length ? (
-												<div className="flex flex-col gap-2">
-													<DndContext
-														id={id}
-														modifiers={[
-															restrictToVerticalAxis,
-															restrictToParentElement,
-														]}
-														onDragEnd={handleDragEnd}
-														sensors={sensors}
+							<FormLabel className="flex">{label}</FormLabel>
+							<div className="flex items-end gap-x-2">
+								<FormControl>
+									<MultiBlock
+										title="Pub Relations"
+										disabled={!isEnabled}
+										onAdd={() => setShowPanel(true)}
+									>
+										{fields.length ? (
+											<div className="flex flex-col gap-2">
+												<DndContext
+													id={id}
+													modifiers={[
+														restrictToVerticalAxis,
+														restrictToParentElement,
+													]}
+													onDragEnd={handleDragEnd}
+													sensors={sensors}
+												>
+													<SortableContext
+														items={fields}
+														strategy={verticalListSortingStrategy}
 													>
-														<SortableContext
-															items={fields}
-															strategy={verticalListSortingStrategy}
-														>
-															{fields.map(
-																({ id, ...item }, index) => {
-																	const innerSlug =
-																		`${slug}.${index}.value` as const;
-																	return (
-																		<RelatedPubBlock
-																			key={id}
-																			id={id}
-																			pubTitle={
-																				pubTitles[
-																					item
-																						.relatedPubId
-																				]
-																			}
-																			onRemove={() =>
-																				handleRemovePub(
-																					item,
-																					index
-																				)
-																			}
-																			slug={innerSlug}
-																			valueComponentProps={
-																				valueComponentProps
-																			}
-																			onBlur={field.onBlur}
-																		/>
-																	);
-																}
-															)}
-														</SortableContext>
-													</DndContext>
-												</div>
-											) : null}
-										</MultiBlock>
-									</FormControl>
-								</div>
+														{fields.map(({ id, ...item }, index) => {
+															const innerSlug =
+																`${slug}.${index}.value` as const;
+															return (
+																<RelatedPubBlock
+																	key={id}
+																	id={id}
+																	pubTitle={
+																		pubTitles[item.relatedPubId]
+																	}
+																	onRemove={() =>
+																		handleRemovePub(item, index)
+																	}
+																	slug={innerSlug}
+																	valueComponentProps={
+																		valueComponentProps
+																	}
+																	onBlur={field.onBlur}
+																/>
+															);
+														})}
+													</SortableContext>
+												</DndContext>
+											</div>
+										) : null}
+									</MultiBlock>
+								</FormControl>
+							</div>
 
-								<FormDescription>{config.relationshipConfig.help}</FormDescription>
-								<FormMessage />
-								{showRelationBlockWarning && (
-									<div className="flex items-center gap-2 text-xs text-amber-500">
-										<AlertTriangle size={16} /> No related Pub Types have been
-										configured, so users will not be able to link to this pub.{" "}
-										<br />
-										Only admins can see this warning.
-									</div>
-								)}
-							</FormItem>
-						</>
+							<FormDescription>{config.relationshipConfig.help}</FormDescription>
+							<FormMessage />
+							{showRelationBlockWarning && (
+								<div className="flex items-center gap-2 text-xs text-amber-500">
+									<AlertTriangle size={16} /> No related Pub Types have been
+									configured, so users will not be able to link to this pub.{" "}
+									<br />
+									Only admins can see this warning.
+								</div>
+							)}
+						</FormItem>
 					);
 				}}
 			/>
