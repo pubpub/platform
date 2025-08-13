@@ -19,7 +19,6 @@ import {
 	FormLabel,
 	FormMessage,
 } from "ui/form";
-import { Loader2 } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
 import type { PubTypeWithForm } from "~/lib/authorization/capabilities";

@@ -1,7 +1,3 @@
-import type { Static, TLiteral, TObject, TUnion } from "@sinclair/typebox";
-
-import { Type } from "@sinclair/typebox";
-import { componentConfigSchemas, textAreaConfigSchema, textInputConfigSchema } from "schemas";
 import { z } from "zod";
 
 import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";

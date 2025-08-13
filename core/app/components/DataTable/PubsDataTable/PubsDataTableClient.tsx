@@ -2,7 +2,6 @@
 
 import type {
 	ColumnDef,
-	// OnChangeFn,
 	PaginationState,
 	RowSelectionState,
 	SortingState,

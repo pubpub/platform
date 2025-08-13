@@ -5,8 +5,6 @@ import "ui/styles.css";
 import { Suspense } from "react";
 
 import { KeyboardShortcutProvider } from "ui/hooks";
-// import "./globals.css";
-
 import { TooltipProvider } from "ui/tooltip";
 
 import { getLoginData } from "~/lib/authentication/loginData";
