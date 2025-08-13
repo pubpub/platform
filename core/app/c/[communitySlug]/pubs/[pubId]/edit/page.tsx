@@ -120,12 +120,16 @@ export default async function Page(props: {
 		return notFound();
 	}
 
-	const hasAccessToCurrentForm = !availableForms.find(
+	const hasAccessToCurrentForm = availableForms.find(
 		(form) => form.slug === formSlug || (form.isDefault && !formSlug)
 	);
 	const defaultForm = availableForms.find((form) => form.isDefault);
+	const firstAvailableForm = defaultForm || availableForms[0];
+
 	if (!hasAccessToCurrentForm) {
-		const redirectQuery = defaultForm ? "" : `?form=${availableForms[0].slug}`;
+		const redirectQuery = firstAvailableForm.isDefault
+			? ""
+			: `?form=${firstAvailableForm.slug}`;
 
 		// redirect to first available form
 		redirect(`/c/${communitySlug}/pubs/${pub.id}/edit${redirectQuery}`);

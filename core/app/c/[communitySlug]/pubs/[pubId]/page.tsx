@@ -119,42 +119,17 @@ export default async function Page(props: {
 
 	const actionsPromise = getStageActions({ pubId: pubId }).execute();
 
-	// sadly two steps
-	const [pub, availableViewForms, availableUpdateForms] = await Promise.all([
-		pubPromise,
-		getAuthorizedViewForms(user.id, pubId).execute(),
-		getAuthorizedUpdateForms(user.id, pubId).execute(),
-	]);
-
-	if (!pub) {
-		notFound();
-	}
-
-	if (!availableViewForms.length) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
-	}
-
-	const hasAccessToCurrentForm = !availableViewForms.find(
-		(form) => form.slug === formSlug || (form.isDefault && !formSlug)
-	);
-	const defaultForm = availableViewForms.find((form) => form.isDefault);
-	if (!hasAccessToCurrentForm) {
-		const redirectQuery = defaultForm ? "" : `?form=${availableViewForms[0].slug}`;
-
-		// redirect to first available form
-		redirect(`/c/${communitySlug}/pubs/${pub.id}/edit${redirectQuery}`);
-	}
-
+	// if a specific form is provided, we use the slug
+	// otherwise, we get the default form for the pub type of the current pub
 	const getFormProps = formSlug
 		? { communityId: community.id, slug: formSlug }
-		: {
-				communityId: community.id,
-				// pubId: pubId,
-				slug: availableViewForms[0].slug,
-			};
+		: { communityId: community.id, pubId };
 
 	// surely this can be done in fewer queries
 	const [
+		pub,
+		availableViewForms,
+		availableUpdateForms,
 		canArchive,
 		canRunActions,
 		canAddMember,
@@ -166,6 +141,9 @@ export default async function Page(props: {
 		withExtraPubValues,
 		form,
 	] = await Promise.all([
+		pubPromise,
+		getAuthorizedViewForms(user.id, pubId).execute(),
+		getAuthorizedUpdateForms(user.id, pubId).execute(),
 		userCan(Capabilities.deletePub, { type: MembershipType.pub, pubId }, user.id),
 		userCan(Capabilities.runAction, { type: MembershipType.pub, pubId }, user.id),
 		userCan(Capabilities.addPubMember, { type: MembershipType.pub, pubId }, user.id),
@@ -182,16 +160,30 @@ export default async function Page(props: {
 		getForm(getFormProps).executeTakeFirst(),
 	]);
 
-	const canView = availableViewForms.length > 0;
-	const canEdit = availableUpdateForms.length > 0;
-
-	// more useful to see this first rather than "not authorized" if pub does ot exist
 	if (!pub) {
 		notFound();
 	}
 
+	const canView = availableViewForms.length > 0;
+	const canEdit = availableUpdateForms.length > 0;
+
 	if (!canView) {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
+	}
+
+	const hasAccessToCurrentForm = availableViewForms.find(
+		(form) => form.slug === formSlug || (form.isDefault && !formSlug)
+	);
+	const defaultForm = availableViewForms.find((form) => form.isDefault);
+	const firstAvailableForm = defaultForm || availableViewForms[0];
+
+	if (!hasAccessToCurrentForm) {
+		const redirectQuery = firstAvailableForm.isDefault
+			? ""
+			: `?form=${firstAvailableForm.slug}`;
+
+		// redirect to first available form
+		redirect(`/c/${communitySlug}/pubs/${pub.id}${redirectQuery}`);
 	}
 
 	if (!form) {
