@@ -590,12 +590,12 @@ const handler = createNextHandler(
 		},
 		forms: {
 			getPubsForFormField: async ({ params, query }, { responseHeaders }) => {
-				const { user, community, authorization } = await checkAuthorization({
+				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
 					cookies: "community-member",
 				});
 
-				let { pubTypeId, stageId, pubIds, filters, ...rest } = query ?? {};
+				let { pubTypeId, stageId, pubIds, filters, currentPubId, ...rest } = query ?? {};
 
 				if (query?.filters) {
 					try {
@@ -614,7 +614,7 @@ const handler = createNextHandler(
 						userId: user.id,
 						communityId: community.id,
 						formSlug: params.formSlug,
-						pubId: params.pubId,
+						pubId: currentPubId,
 					}),
 				]);
 

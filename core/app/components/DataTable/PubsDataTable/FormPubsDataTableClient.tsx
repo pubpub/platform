@@ -45,12 +45,12 @@ export const FormPubsDataTableClient = (props: FormPubsDataTableClientProps) => 
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
+				currentPubId: props.currentPubId,
 			},
 			params: {
 				communitySlug: community.slug,
 				formSlug: props.formSlug,
 				fieldSlug: props.fieldSlug,
-				pubId: props.currentPubId,
 			},
 		},
 	});

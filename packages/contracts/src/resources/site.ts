@@ -107,7 +107,7 @@ export const siteApi = contract.router(
 		forms: {
 			getPubsForFormField: {
 				method: "GET",
-				path: "/forms/:formSlug/:fieldSlug/pubs/:pubId?",
+				path: "/forms/:formSlug/:fieldSlug/pubs",
 				summary: "Gets pubs for a specific form context",
 				description:
 					"Get pubs that are available for selection within a specific form context. This endpoint is restricted to form-based access only and requires a valid form token.",
@@ -116,11 +116,17 @@ export const siteApi = contract.router(
 					fieldSlug: z
 						.string()
 						.describe("The slug of the field you want to retrieve pubs for"),
-					pubId: pubsIdSchema
-						.optional()
-						.describe("The ID of the pub to check access for (when updating a pub)"),
 				}),
-				query: finalGetManyQuerySchema.passthrough().optional(),
+				query: finalGetManyQuerySchema
+					.extend({
+						currentPubId: pubsIdSchema
+							.optional()
+							.describe(
+								"The ID of the pub to check access for (when updating a pub)"
+							),
+					})
+					.passthrough()
+					.optional(),
 				responses: {
 					200: z.array(processedPubSchema),
 				},
