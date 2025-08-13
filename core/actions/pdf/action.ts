@@ -14,11 +14,9 @@ export const action = defineAction({
 	},
 	description: "Generate a PDF from a pub",
 	params: {
-		schema: z
-			.object({
-				margin: z.number().optional().describe("Page margin in pixels"),
-			})
-			.optional(),
+		schema: z.object({
+			margin: z.number().optional().describe("Page margin in pixels"),
+		}),
 	},
 	icon: FileText,
 	superAdminOnly: true,

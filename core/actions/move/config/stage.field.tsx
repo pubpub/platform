@@ -4,8 +4,8 @@ import { action } from "../action";
 
 const component = defineActionFormFieldServerComponent(
 	action,
-	"params",
-	async ({ communityId, actionInstance }) => {
+	"config",
+	async ({ communityId }) => {
 		return (
 			<StageSelectServer
 				fieldName="stage"
