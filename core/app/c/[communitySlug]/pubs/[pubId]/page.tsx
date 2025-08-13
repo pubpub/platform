@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 
-import { cache, Suspense } from "react";
+import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Eye } from "lucide-react";
 
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
@@ -23,7 +23,6 @@ import {
 	getAuthorizedUpdateForms,
 	getAuthorizedViewForms,
 	userCan,
-	userCanEditPub,
 	userCanRunActionsAllPubs,
 } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
@@ -135,11 +134,15 @@ export default async function Page(props: {
 		redirect(`/c/${params.communitySlug}/unauthorized`);
 	}
 
-	const slugIsInAvailableForms = availableViewForms.some((form) => form.slug === formSlug);
+	const hasAccessToCurrentForm = !availableViewForms.find(
+		(form) => form.slug === formSlug || (form.isDefault && !formSlug)
+	);
+	const defaultForm = availableViewForms.find((form) => form.isDefault);
+	if (!hasAccessToCurrentForm) {
+		const redirectQuery = defaultForm ? "" : `?form=${availableViewForms[0].slug}`;
 
-	if (!slugIsInAvailableForms) {
 		// redirect to first available form
-		redirect(`/c/${params.communitySlug}/pubs/${pubId}?form=${availableViewForms[0].slug}`);
+		redirect(`/c/${communitySlug}/pubs/${pub.id}/edit${redirectQuery}`);
 	}
 
 	const getFormProps = formSlug
@@ -205,9 +208,12 @@ export default async function Page(props: {
 	const { stage, ...slimPub } = pub;
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
 
-	const editFormSlug =
-		availableUpdateForms.find((form) => form.slug === formSlug)?.slug ||
-		availableUpdateForms[0].slug;
+	const editForm =
+		availableUpdateForms.find((form) => form.slug === formSlug) ||
+		availableUpdateForms.find((form) => form.isDefault) ||
+		availableUpdateForms[0];
+
+	const editQuery = editForm.isDefault ? "" : `?form=${editForm.slug}`;
 
 	return (
 		<div className="flex flex-col space-y-4">
@@ -235,9 +241,7 @@ export default async function Page(props: {
 							asChild
 							className="flex items-center gap-x-2 py-4"
 						>
-							<Link
-								href={`/c/${communitySlug}/pubs/${pub.id}/edit?form=${editFormSlug}`}
-							>
+							<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit${editQuery}`}>
 								<Pencil size="12" />
 								<span>Update</span>
 							</Link>
