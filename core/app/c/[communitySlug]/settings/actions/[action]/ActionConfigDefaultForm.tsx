@@ -6,6 +6,7 @@ import { useCallback, useMemo, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
 import type { Action, CommunitiesId } from "db/public";
+import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
 
@@ -17,6 +18,7 @@ type Props = {
 	action: Action;
 	communityId: CommunitiesId;
 	values?: Record<string, unknown>;
+	fieldConfig: FieldConfig<any>;
 };
 
 export const ActionConfigDefaultForm = (props: Props) => {
@@ -41,6 +43,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 			formSchema={schema}
 			dependencies={action.config.dependencies}
 			onSubmit={onSubmit}
+			fieldConfig={props.fieldConfig}
 		>
 			<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
 				{isPending ? <Loader2 size="14" className="animate-spin" /> : "Submit"}

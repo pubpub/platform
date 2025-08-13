@@ -35,7 +35,7 @@ export default async function Page(props: Props) {
 	}
 
 	return (
-		<div className="container mx-auto px-4 py-12 md:px-6">
+		<div className="container ml-0 max-w-screen-md px-4 py-12 md:px-6">
 			<div className="flex flex-col space-y-6">
 				<div>
 					<h1 className="text-3xl font-bold">Action Settings</h1>

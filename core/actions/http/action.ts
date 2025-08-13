@@ -79,46 +79,42 @@ export const action = defineAction({
 	},
 	description: "Make an arbitrary HTTP request",
 	params: {
-		schema: z
-			.object({
-				test: z.boolean().optional().describe("Test|Run the action in test mode"),
-				url: z.string().url().optional().describe("URL|URL to send the request to"),
-				method: z
-					.enum(["GET", "POST", "PUT", "DELETE"])
-					.describe("Method|HTTP method to use. Defaults to GET")
-					.default("GET")
-					.optional(),
-				authToken: z
-					.string()
-					.optional()
-					.describe(
-						'Bearer token|Will get put as "Authorization: Bearer <token>" in the headers'
-					),
-				body: z
-					.string()
-					.transform((str, ctx) => {
-						if (!str) {
-							return undefined;
-						}
-						try {
-							// we just want to check if it can be parsed
-							const parsed = JSON.parse(str);
-							return str;
-						} catch (e) {
-							ctx.addIssue({ code: "custom", message: "Invalid JSON" });
-							return z.NEVER;
-						}
-					})
-					.optional()
-					.describe(
-						"Body|Body to send with the request. Only sent for non-GET requests."
-					),
-				outputMap: z
-					.array(z.object({ pubField: z.string(), responseField: z.string() }))
-					.optional()
-					.describe("Output map|Map of JSON paths to pub fields"),
-			})
-			.optional(),
+		schema: z.object({
+			test: z.boolean().optional().describe("Test|Run the action in test mode"),
+			url: z.string().url().optional().describe("URL|URL to send the request to"),
+			method: z
+				.enum(["GET", "POST", "PUT", "DELETE"])
+				.describe("Method|HTTP method to use. Defaults to GET")
+				.default("GET")
+				.optional(),
+			authToken: z
+				.string()
+				.optional()
+				.describe(
+					'Bearer token|Will get put as "Authorization: Bearer <token>" in the headers'
+				),
+			body: z
+				.string()
+				.transform((str, ctx) => {
+					if (!str) {
+						return undefined;
+					}
+					try {
+						// we just want to check if it can be parsed
+						const parsed = JSON.parse(str);
+						return str;
+					} catch (e) {
+						ctx.addIssue({ code: "custom", message: "Invalid JSON" });
+						return z.NEVER;
+					}
+				})
+				.optional()
+				.describe("Body|Body to send with the request. Only sent for non-GET requests."),
+			outputMap: z
+				.array(z.object({ pubField: z.string(), responseField: z.string() }))
+				.optional()
+				.describe("Output map|Map of JSON paths to pub fields"),
+		}),
 
 		dependencies: [
 			{
