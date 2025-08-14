@@ -1,6 +1,6 @@
 import type { User } from "lucia";
 
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
 import type { Communities } from "db/public";
