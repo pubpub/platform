@@ -48,9 +48,9 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		body: { values, ...body },
 		...createPubProps
 	} = props;
-	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	const loginData = await getLoginData();
 
-	if (!loginData || !loginData.user || !community) {
+	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 	const { user } = loginData;
