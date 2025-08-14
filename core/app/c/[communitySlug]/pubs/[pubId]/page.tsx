@@ -30,6 +30,12 @@ import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
+import { resolveFormAccess } from "~/lib/server/form-access";
+import {
+	constructRedirectToPubEditPage,
+	redirectToPubDetailPage,
+	redirectToUnauthorized,
+} from "~/lib/server/navigation/redirects";
 import { getStages } from "~/lib/server/stages";
 import {
 	addPubMember,
@@ -164,26 +170,27 @@ export default async function Page(props: {
 		notFound();
 	}
 
-	const canView = availableViewForms.length > 0;
-	const canEdit = availableUpdateForms.length > 0;
+	// ensure user has access to at least one view form, and resolve the current form
+	const {
+		hasAccessToAnyForm: hasAccessToAnyViewForm,
+		hasAccessToCurrentForm: hasAccessToCurrentViewForm,
+		canonicalForm: viewFormToRedirectTo,
+	} = resolveFormAccess({
+		availableForms: availableViewForms,
+		requestedFormSlug: formSlug,
+		communitySlug,
+	});
 
-	if (!canView) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
+	if (!hasAccessToAnyViewForm) {
+		await redirectToUnauthorized();
 	}
 
-	const hasAccessToCurrentForm = availableViewForms.find(
-		(form) => form.slug === formSlug || (form.isDefault && !formSlug)
-	);
-	const defaultForm = availableViewForms.find((form) => form.isDefault);
-	const firstAvailableForm = defaultForm || availableViewForms[0];
-
-	if (!hasAccessToCurrentForm) {
-		const redirectQuery = firstAvailableForm.isDefault
-			? ""
-			: `?form=${firstAvailableForm.slug}`;
-
-		// redirect to first available form
-		redirect(`/c/${communitySlug}/pubs/${pub.id}${redirectQuery}`);
+	if (hasAccessToAnyViewForm && !hasAccessToCurrentViewForm) {
+		await redirectToPubDetailPage({
+			pubId,
+			communitySlug,
+			formSlug: viewFormToRedirectTo.slug,
+		});
 	}
 
 	if (!form) {
@@ -200,12 +207,12 @@ export default async function Page(props: {
 	const { stage, ...slimPub } = pub;
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
 
-	const editForm =
-		availableUpdateForms.find((form) => form.slug === formSlug) ||
-		availableUpdateForms.find((form) => form.isDefault) ||
-		availableUpdateForms[0];
-
-	const editQuery = editForm.isDefault ? "" : `?form=${editForm.slug}`;
+	const { hasAccessToAnyForm: hasAccessToAnyEditForm, canonicalForm: editFormToRedirectTo } =
+		resolveFormAccess({
+			availableForms: availableUpdateForms,
+			requestedFormSlug: formSlug,
+			communitySlug,
+		});
 
 	return (
 		<div className="flex flex-col space-y-4">
@@ -226,14 +233,20 @@ export default async function Page(props: {
 					<h1 className="mb-2 text-xl font-bold">{getPubTitle(pub)} </h1>
 				</div>
 				<div className="flex items-center gap-2">
-					{canEdit && (
+					{hasAccessToAnyEditForm && (
 						<Button
 							variant="outline"
 							size="sm"
 							asChild
 							className="flex items-center gap-x-2 py-4"
 						>
-							<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit${editQuery}`}>
+							<Link
+								href={constructRedirectToPubEditPage({
+									pubId,
+									communitySlug,
+									formSlug: editFormToRedirectTo.slug,
+								})}
+							>
 								<Pencil size="12" />
 								<span>Update</span>
 							</Link>

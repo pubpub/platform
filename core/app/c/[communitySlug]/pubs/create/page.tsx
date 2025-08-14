@@ -10,8 +10,10 @@ import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getAuthorizedCreateForms, userCanCreatePub } from "~/lib/authorization/capabilities";
+import { getAuthorizedCreateForms } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { resolveFormAccess } from "~/lib/server/form-access";
+import { redirectToPubCreatePage, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 
 export async function generateMetadata(props: {
 	params: Promise<{ pubId: string; communitySlug: string }>;
@@ -34,35 +36,49 @@ export default async function Page(props: {
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
-	const { communitySlug } = params;
 
-	const { user } = await getPageLoginData();
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(params.communitySlug),
+	]);
 
-	const community = await findCommunityBySlug(communitySlug);
+	if (!user || !community) {
+		notFound();
+	}
 
 	if (!community) {
 		notFound();
 	}
-
-	const canCreatePub = await userCanCreatePub({
-		communityId: community.id,
-		userId: user.id,
-		pubTypeId: searchParams.pubTypeId,
-		// No formSlug because we're just checking if there are any authorized forms
-		// We validate that the user can create a pub with the specified form in the create action
-	});
-
-	if (!canCreatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
-
-	const htmlFormId = `create-pub`;
 
 	const availableForms = await getAuthorizedCreateForms({
 		userId: user.id,
 		communityId: community.id,
 		pubTypeId: searchParams.pubTypeId,
 	}).execute();
+
+	// ensure user has access to at least one form, and resolve the current form
+	const {
+		hasAccessToAnyForm,
+		hasAccessToCurrentForm,
+		canonicalForm: createFormToRedirectTo,
+	} = resolveFormAccess({
+		availableForms,
+		requestedFormSlug: searchParams.form,
+		communitySlug: community.slug,
+	});
+
+	if (!hasAccessToAnyForm) {
+		await redirectToUnauthorized();
+	}
+
+	if (hasAccessToAnyForm && !hasAccessToCurrentForm) {
+		await redirectToPubCreatePage({
+			communitySlug: community.slug,
+			formSlug: createFormToRedirectTo.slug,
+		});
+	}
+
+	const htmlFormId = `create-pub`;
 
 	return (
 		<ContentLayout
