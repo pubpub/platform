@@ -1,25 +1,18 @@
+import type { ZodObject } from "zod";
+
 import type { Action as ActionName } from "db/public";
 import { logger } from "logger";
 
-import type { Action, ZodObjectOrWrappedOrOptional } from "../../types";
+import type { Action } from "../../types";
 import type { ActionConfigServerComponentProps } from "./defineConfigServerComponent";
 import { getActionByName } from "../../api";
 import { getCustomConfigComponentByActionName } from "./getCustomConfigComponent";
 
-const isSchemaKey = <S extends ZodObjectOrWrappedOrOptional>(
+const isSchemaKey = <S extends ZodObject<any>>(
 	schema: S,
 	key: string
 ): key is Extract<keyof S["_output"], string> => {
 	const def = schema["_def"];
-
-	if (def.typeName === "ZodOptional") {
-		return isSchemaKey(def.innerType, key);
-	}
-
-	if (def.typeName === "ZodEffects") {
-		return isSchemaKey(def.schema, key);
-	}
-
 	return key in def.shape();
 };
 
@@ -66,7 +59,7 @@ export const resolveFieldConfig = async <
 					);
 				}
 
-				const fullComponent = CustomComponent(props);
+				const fullComponent = CustomComponent(props as any);
 
 				return [
 					fieldName,

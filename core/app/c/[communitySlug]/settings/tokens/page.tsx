@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { NO_STAGE_OPTION } from "db/types";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getAllPubTypesForCommunity, getPubTypesForCommunity } from "~/lib/server";
+import { getAllPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getStages } from "~/lib/server/stages";
@@ -31,7 +31,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 	]);
 
 	return (
-		<div className="container mx-auto px-4 py-12 md:px-6">
+		<div className="container ml-0 max-w-screen-md px-4 py-12 md:px-6">
 			<div className="space-y-6">
 				<div>
 					<h1 className="text-3xl font-bold">Access Tokens</h1>

@@ -4,18 +4,14 @@ import { defineActionFormFieldServerComponent } from "../../_lib/custom-form-fie
 import { action } from "../action";
 import OutputField from "../OutputField";
 
-const component = defineActionFormFieldServerComponent(
-	action,
-	"config",
-	async ({ action, actionInstance, stageId, communityId }) => {
-		return (
-			<OutputField
-				context={{
-					allowedSchemaTypes: [CoreSchemaType.String],
-				}}
-			/>
-		);
-	}
-);
+const component = defineActionFormFieldServerComponent(action, "config", async () => {
+	return (
+		<OutputField
+			context={{
+				allowedSchemaTypes: [CoreSchemaType.String],
+			}}
+		/>
+	);
+});
 
 export default component;
