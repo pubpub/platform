@@ -1,5 +1,7 @@
 import { DOMParser, DOMSerializer, Node } from "prosemirror-model";
 
+import { logger } from "logger";
+
 import { baseSchema } from "../schemas";
 
 /**
@@ -58,7 +60,10 @@ export const htmlToProsemirror = (html: string, document?: Document) => {
 
 		return node;
 	} catch (e) {
-		console.error("Something went wrong during the rendering from HTML to ProseMirror", e);
+		logger.error({
+			msg: "Something went wrong during the rendering from HTML to ProseMirror",
+			err: e,
+		});
 		throw e;
 	} finally {
 		if (temp) {

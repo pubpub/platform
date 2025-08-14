@@ -351,6 +351,7 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 				<SidebarMenu>
 					<SidebarMenuItem className={`h-full`}>
 						<CommunitySwitcher
+							user={user}
 							community={community}
 							availableCommunities={availableCommunities}
 						/>

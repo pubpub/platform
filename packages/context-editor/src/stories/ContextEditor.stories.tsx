@@ -40,6 +40,7 @@ export const Primary: Story = {
 		pubTypeId: "67704c04-4f04-46e9-b93e-e3988a992a9b",
 		getPubs,
 		onChange: (state) => {
+			// eslint-disable-next-line no-console
 			console.log(state);
 		},
 		getPubById: () => undefined,

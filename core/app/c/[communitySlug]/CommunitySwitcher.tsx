@@ -1,3 +1,5 @@
+import type { User } from "lucia";
+
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
@@ -17,9 +19,14 @@ import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/re
 type Props = {
 	community: NonNullable<CommunityData>;
 	availableCommunities: NonNullable<CommunityData>[];
+	user: User;
 };
 
-const CommunitySwitcher: React.FC<Props> = async function ({ community, availableCommunities }) {
+const CommunitySwitcher: React.FC<Props> = async function ({
+	community,
+	availableCommunities,
+	user,
+}) {
 	const avatarClasses =
 		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 border";
 	const textClasses = "flex-auto text-base font-semibold w-44 text-left";
@@ -30,7 +37,11 @@ const CommunitySwitcher: React.FC<Props> = async function ({ community, availabl
 	const communityRedirectUrls = await Promise.all(
 		availableCommunities.map(async (option) => ({
 			communityId: option.id,
-			redirectUrl: await constructRedirectToBaseCommunityPage({ communitySlug: option.slug }),
+			redirectUrl: await constructRedirectToBaseCommunityPage({
+				communitySlug: option.slug,
+				community,
+				user,
+			}),
 		}))
 	);
 

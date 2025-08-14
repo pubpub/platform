@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useFormContext } from "react-hook-form";
+import { useForm, useFormContext, useWatch } from "react-hook-form";
 import { z } from "zod";
 
 import type { StagesId } from "db/public";
@@ -117,7 +117,8 @@ export const ButtonConfigurationForm = ({
 		});
 		dispatch({ eventName: "save" });
 	};
-	const labelValue = form.watch("label");
+
+	const labelValue = useWatch({ control: form.control, name: "label" });
 
 	return (
 		<Form {...form}>

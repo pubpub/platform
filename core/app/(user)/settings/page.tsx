@@ -19,6 +19,8 @@ export default async function Page() {
 			communityId: community.id,
 			redirectUrl: await constructRedirectToBaseCommunityPage({
 				communitySlug: community.slug,
+				user,
+				community,
 			}),
 		}))
 	);

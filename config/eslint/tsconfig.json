@@ -5,6 +5,6 @@
 		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
 		"typeRoots": ["node_modules/@types", "./types.d.ts"]
 	},
-	"include": ["."],
+	"include": ["./**.js", "./**.d.ts"],
 	"exclude": ["node_modules"]
 }

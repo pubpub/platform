@@ -21,5 +21,19 @@ const config: StorybookConfig = {
 		options: {},
 	},
 	staticDirs: ["../src/stories/assets"],
+	async viteFinal(config) {
+		const { mergeConfig } = await import("vite");
+		const { default: react } = await import("@vitejs/plugin-react");
+
+		return mergeConfig(config, {
+			plugins: [
+				react({
+					babel: {
+						plugins: ["babel-plugin-react-compiler"],
+					},
+				}),
+			],
+		});
+	},
 };
 export default config;
