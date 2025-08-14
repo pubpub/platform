@@ -70,31 +70,33 @@ services:
         ports:
             - 6379:6379
 
-    jobs:
-        container_name: jobs
-        image: ${JOBS_IMAGE}
-        platform: linux/amd64
-        env_file: .env.docker-compose.dev
-        environment:
-            - OTEL_SERVICE_NAME=jobs.jobs
-            - PUBPUB_URL=${JOBS_INTEGRATION_PUBPUB_URL:-http://integration-tests:3000}
-        networks:
-            - app-network
-        depends_on:
-            - db
-        profiles:
-            - integration
+    # jobs:
+    #     container_name: jobs
+    #     image: ${JOBS_IMAGE}
+    #     platform: linux/amd64
+    #     env_file: .env.docker-compose.dev
+    #     environment:
+    #         - OTEL_SERVICE_NAME=jobs.jobs
+    #         - PUBPUB_URL=${JOBS_INTEGRATION_PUBPUB_URL:-http://integration-tests:3000}
+    #     networks:
+    #         - app-network
+    #     depends_on:
+    #         - db
+    #     profiles:
+    #         - integration
 
     integration-tests:
-        image: ${INTEGRATION_TESTS_IMAGE}
+        # image: ${INTEGRATION_TESTS_IMAGE}
+        image: core:latest
+        platform: linux/arm64
         env_file: ./.env.docker-compose.dev
         environment:
             - PORT=3000
             - CI=true
         depends_on:
-            jobs:
-                # TODO: add a healthcheck for jobs
-                condition: service_started
+            # jobs:
+            #     # TODO: add a healthcheck for jobs
+            #     condition: service_started
             db:
                 condition: service_started
             inbucket:

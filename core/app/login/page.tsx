@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
@@ -27,7 +26,8 @@ export default async function Login({
 		const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
 		const communitySlug = lastVisited?.value ?? firstSlug;
 
-		if (firstSlug) {
+		console.log("communitySlug", communitySlug);
+		if (communitySlug) {
 			await redirectToBaseCommunityPage({ communitySlug });
 		}
 

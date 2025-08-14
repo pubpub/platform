@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import type { User } from "lucia";
+
+import { notFound, redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
+
+import type { Communities } from "db/public";
 
 import type { NoticeParams } from "~/app/components/Notice";
 import type { XOR } from "~/lib/types";
@@ -127,22 +131,12 @@ type RedirectToBaseCommunityPageOpts = XOR<
 };
 
 export const constructRedirectToBaseCommunityPage = async (
-	opts?: RedirectToBaseCommunityPageOpts
+	opts: RedirectToBaseCommunityPageOpts & { user: User; community: Communities }
 ) => {
-	const [{ user }, community] = await Promise.all([
-		getLoginData(),
-		// weird ternary bc no-params findCommunityBySlug is likely cached, while findCommunityBySlug(undefined) likely isn't
-		!opts?.communitySlug ? findCommunityBySlug() : findCommunityBySlug(opts?.communitySlug),
-	]);
-
-	if (!user || !community) {
-		redirectToLogin();
-	}
-
 	const isAbleToViewStages = await userCanViewStagePage(
-		user.id,
-		community.id,
-		opts?.communitySlug
+		opts.user.id,
+		opts.community.id,
+		opts.community.slug
 	);
 
 	const searchParams = new URLSearchParams();
@@ -159,13 +153,29 @@ export const constructRedirectToBaseCommunityPage = async (
 
 	const page = isAbleToViewStages ? "stages" : "pubs";
 
-	const basePath = `/c/${community.slug}/${page}?${searchParams.toString()}`;
+	const basePath = `/c/${opts.community.slug}/${page}?${searchParams.toString()}`;
 	return basePath;
 };
 
 export async function redirectToBaseCommunityPage(
 	opts?: RedirectToBaseCommunityPageOpts
 ): Promise<never> {
-	const basePath = await constructRedirectToBaseCommunityPage(opts);
+	const [{ user }, community] = await Promise.all([
+		getLoginData(),
+		// weird ternary bc no-params findCommunityBySlug is likely cached, while findCommunityBySlug(undefined) likely isn't
+		!opts?.communitySlug ? findCommunityBySlug() : findCommunityBySlug(opts?.communitySlug),
+	]);
+
+	if (!user) {
+		redirectToLogin();
+	}
+	if (!community) {
+		redirect("/settings");
+	}
+	const basePath = await constructRedirectToBaseCommunityPage({
+		user,
+		community,
+		...opts,
+	});
 	redirect(basePath);
 }
