@@ -266,7 +266,9 @@ export default async function FormPage(props: {
 		});
 	}
 
-	const isUpdating = !!pubWithProsemirrorRichText;
+	const mode = !!pubWithProsemirrorRichText ? "edit" : "create";
+	const withAutoSave = mode === "edit";
+
 	const pubId = pubWithProsemirrorRichText?.id ?? (randomUUID() as PubsId);
 	const pubForForm = pubWithProsemirrorRichText ?? {
 		id: pubId,
@@ -287,7 +289,7 @@ export default async function FormPage(props: {
 					<h1 className="text-xl font-bold">
 						{capitalize(form.name)} for {community?.name}
 					</h1>
-					<SaveStatus autosave={isUpdating} />
+					<SaveStatus autosave={withAutoSave} />
 				</div>
 			</Header>
 			<div className="container mx-auto">
@@ -299,7 +301,7 @@ export default async function FormPage(props: {
 							form={{
 								pubId,
 								form,
-								mode: isUpdating ? "edit" : "create",
+								mode,
 								isExternalForm: true,
 							}}
 						>
@@ -319,8 +321,8 @@ export default async function FormPage(props: {
 										pub={pubForForm}
 										elements={form.elements}
 										formSlug={form.slug}
-										isUpdating={isUpdating}
-										withAutoSave={isUpdating}
+										mode={mode}
+										withAutoSave={withAutoSave}
 										withButtonElements
 										isExternalForm
 										className="col-span-2 col-start-2"
