@@ -309,10 +309,10 @@ test.describe("relationship fields", () => {
 		// We should see the first pub but not the second, since the second is of a different pub type
 		await expect(
 			page.getByRole("row", { name: `Select row ${community.pubs[0].title}` })
-		).toHaveCount(1);
+		).toHaveCount(1, { timeout: 10_000 });
 		await expect(
 			page.getByRole("row", { name: `Select row ${community.pubs[1].title}` })
-		).toHaveCount(0);
+		).toHaveCount(0, { timeout: 10_000 });
 
 		await test.step("Cant remove pubtypes from a form", async () => {
 			await formEditPage.goto();

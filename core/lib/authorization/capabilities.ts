@@ -495,7 +495,7 @@ export const userHasAccessToForm = async (
 	if (props.pubId) {
 		return userCanEditPub({
 			userId: props.userId,
-			pubId: props.pubId!,
+			pubId: props.pubId,
 			formId: props.formId,
 			formSlug: props.formSlug,
 		});

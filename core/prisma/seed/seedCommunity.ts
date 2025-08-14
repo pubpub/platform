@@ -8,7 +8,6 @@ import type {
 import type { z } from "zod";
 
 import { faker } from "@faker-js/faker";
-import { sql } from "kysely";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type { ProcessedPub } from "contracts";
