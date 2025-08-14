@@ -26,7 +26,6 @@ export default async function Login({
 		const lastVisited = cookieStore.get(LAST_VISITED_COOKIE);
 		const communitySlug = lastVisited?.value ?? firstSlug;
 
-		console.log("communitySlug", communitySlug);
 		if (communitySlug) {
 			await redirectToBaseCommunityPage({ communitySlug });
 		}
