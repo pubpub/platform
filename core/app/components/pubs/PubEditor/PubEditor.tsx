@@ -27,6 +27,7 @@ import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
 import { PubFieldFormElement } from "../../forms/PubFieldFormElement";
 import { hydrateMarkdownElements } from "../../forms/structural";
+import { PubFormProvider } from "../../providers/PubFormProvider";
 import { StageSelectClient } from "../../StageSelect/StageSelectClient";
 import { RELATED_PUB_SLUG } from "./constants";
 import { makeFormElementDefFromPubFields } from "./helpers";
@@ -234,7 +235,6 @@ export async function PubEditor(props: PubEditorProps) {
 	const formElements = form.elements.map((e) => (
 		<FormElement
 			key={e.id}
-			formSlug={form.slug}
 			pubId={pubId}
 			element={e}
 			values={pubWithProsemirrorRichText ? pubWithProsemirrorRichText.values : []}
@@ -308,67 +308,70 @@ export async function PubEditor(props: PubEditorProps) {
 	const pubsForContext = [...pubs, ...relatedPubs];
 
 	return (
-		<FormElementToggleProvider fieldSlugs={allSlugs}>
-			<ContextEditorContextProvider
-				pubId={pubId}
-				pubTypeId={pubType.id}
-				pubs={pubsForContext}
-				pubTypes={pubTypes}
-			>
-				<PubEditorWrapper
-					elements={[
-						...form.elements,
-						...pubOnlyElementDefinitions,
-						...(relatedPubData ? [relatedPubData.element] : []),
-					]}
-					pub={pubForForm}
-					formSlug={form.slug}
-					isUpdating={isUpdating}
-					withAutoSave={false}
-					withButtonElements
-					htmlFormId={props.htmlFormId}
-					stageId={currentStageId}
-					relatedPub={
-						relatedPubId && relatedFieldSlug
-							? {
-									id: relatedPubId as PubsId,
-									slug: relatedFieldSlug as string,
-								}
-							: undefined
-					}
+		<PubFormProvider
+			form={{ pubId, form, mode: isUpdating ? "edit" : "create", isExternalForm: false }}
+		>
+			<FormElementToggleProvider fieldSlugs={allSlugs}>
+				<ContextEditorContextProvider
+					pubId={pubId}
+					pubTypeId={pubType.id}
+					pubs={pubsForContext}
+					pubTypes={pubTypes}
 				>
-					<>
-						{relatedPubData ? (
-							<RelatedPubValueElement
-								relatedPub={relatedPubData.relatedPub}
-								element={relatedPubData.element}
-								fieldName={relatedPubData.relatedPubField.name}
-							/>
-						) : null}
-						{renderStageSelect && (
-							<StageSelectClient
-								fieldLabel="Stage"
-								fieldName="stageId"
-								stages={community.stages}
-							/>
-						)}
-						{formElements}
-						{pubOnlyElementDefinitions.map((formElementDef) => (
-							<FormElement
-								key={formElementDef.slug}
-								element={formElementDef as FormElements}
-								formSlug={form.slug}
-								pubId={pubId}
-								values={
-									pubWithProsemirrorRichText
-										? pubWithProsemirrorRichText.values
-										: []
-								}
-							/>
-						))}
-					</>
-				</PubEditorWrapper>
-			</ContextEditorContextProvider>
-		</FormElementToggleProvider>
+					<PubEditorWrapper
+						elements={[
+							...form.elements,
+							...pubOnlyElementDefinitions,
+							...(relatedPubData ? [relatedPubData.element] : []),
+						]}
+						pub={pubForForm}
+						formSlug={form.slug}
+						isUpdating={isUpdating}
+						withAutoSave={false}
+						withButtonElements
+						htmlFormId={props.htmlFormId}
+						stageId={currentStageId}
+						relatedPub={
+							relatedPubId && relatedFieldSlug
+								? {
+										id: relatedPubId as PubsId,
+										slug: relatedFieldSlug as string,
+									}
+								: undefined
+						}
+					>
+						<>
+							{relatedPubData ? (
+								<RelatedPubValueElement
+									relatedPub={relatedPubData.relatedPub}
+									element={relatedPubData.element}
+									fieldName={relatedPubData.relatedPubField.name}
+								/>
+							) : null}
+							{renderStageSelect && (
+								<StageSelectClient
+									fieldLabel="Stage"
+									fieldName="stageId"
+									stages={community.stages}
+								/>
+							)}
+							{formElements}
+							{pubOnlyElementDefinitions.map((formElementDef) => (
+								<FormElement
+									key={formElementDef.slug}
+									element={formElementDef as FormElements}
+									pubId={pubId}
+									values={
+										pubWithProsemirrorRichText
+											? pubWithProsemirrorRichText.values
+											: []
+									}
+								/>
+							))}
+						</>
+					</PubEditorWrapper>
+				</ContextEditorContextProvider>
+			</FormElementToggleProvider>
+		</PubFormProvider>
 	);
 }

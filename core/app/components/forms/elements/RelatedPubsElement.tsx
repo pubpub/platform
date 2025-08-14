@@ -40,6 +40,7 @@ import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel"
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
+import { usePubForm } from "../../providers/PubFormProvider";
 import { useCommunityMembershipOrThrow } from "../../providers/UserProvider";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
@@ -203,13 +204,12 @@ export const RelatedPubsElement = ({
 	label,
 	config,
 	valueComponentProps,
-	formSlug,
 }: ElementProps<InputComponent.relationBlock> & {
 	valueComponentProps: PubFieldFormElementProps<PubFieldElementComponent, true>;
-	formSlug: string;
 }) => {
 	const { pubId, element } = valueComponentProps;
 	const { pubTypes } = useContextEditorContext();
+	const { form, mode } = usePubForm();
 	const { relatedPubTypes: relatedPubTypeIds } = element;
 	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id));
 
@@ -338,8 +338,8 @@ export const RelatedPubsElement = ({
 									disabledPubs={pubId ? [pubId] : undefined}
 									pubTypes={relatedPubTypes}
 									fieldSlug={slug}
-									formSlug={formSlug}
-									currentPubId={pubId}
+									currentPubId={mode === "edit" ? pubId : undefined}
+									formSlug={form.slug}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>
