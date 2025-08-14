@@ -1,11 +1,13 @@
 "use client";
 
-import type { FieldValues } from "react-hook-form";
+import type { Static } from "@sinclair/typebox";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
 import { Type } from "@sinclair/typebox";
+import QueryString from "qs";
 import { useForm } from "react-hook-form";
 
 import type { PubsId, StagesId } from "db/public";
@@ -22,7 +24,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
 import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
-import type { PubField } from "~/lib/types";
+import type { DeepPartial, PubField } from "~/lib/types";
 import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher";
 import { useCommunity } from "../providers/CommunityProvider";
 import { FormSubmitButton } from "../SubmitButton";
@@ -66,14 +68,21 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 	);
 };
 
-const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFields"] }) => {
+const RelatedPubFieldSelector = ({
+	pubFields,
+	form,
+}: {
+	pubFields: Props["relatedPubFields"];
+	form: UseFormReturn<Schema>;
+}) => {
 	if (pubFields.length === 0) {
 		return null;
 	}
 	return (
 		<>
 			<FormField
-				name="relatedPub.slug"
+				control={form.control}
+				name="relatedPub.relatedFieldSlug"
 				render={({ field }) => (
 					<FormItem className="flex flex-col gap-y-1">
 						<div className="flex items-center justify-between">
@@ -110,16 +119,17 @@ const RelatedPubFieldSelector = ({ pubFields }: { pubFields: Props["relatedPubFi
 	);
 };
 
-const baseSchema = Type.Object({
+const schema = Type.Object({
 	pubTypeId: Type.String(),
+	relatedPub: Type.Optional(
+		Type.Object({
+			relatedPubId: Type.String(),
+			relatedFieldSlug: Type.String(),
+		})
+	),
 });
-const schemaWithRelatedPub = Type.Object({
-	pubTypeId: Type.String(),
-	relatedPub: Type.Object({
-		relatedPubId: Type.String(),
-		slug: Type.String(),
-	}),
-});
+
+type Schema = Static<typeof schema>;
 
 interface Props {
 	pubTypes: PubTypeWithForm;
@@ -127,6 +137,17 @@ interface Props {
 	stageId?: StagesId;
 	relatedPubId?: PubsId;
 }
+
+declare const x: {
+	form: string | undefined;
+	relatedPubId?: string | undefined;
+	relatedFieldSlug?: string | undefined;
+	stageId?: StagesId | undefined;
+	pubTypeId: string;
+};
+
+declare let y: Record<string, string>;
+
 /** The first step in creating a pub—choosing a pub type, and possibly a related pub */
 export const InitialCreatePubForm = ({
 	pubTypes,
@@ -134,26 +155,27 @@ export const InitialCreatePubForm = ({
 	stageId,
 	relatedPubId,
 }: Props) => {
-	const { defaultValues } = useMemo(() => {
-		const defaultValues = { pubTypeId: undefined };
+	const defaultValues = useMemo(() => {
+		const defaultValues = {
+			pubTypeId: undefined,
+		} satisfies DeepPartial<Schema>;
 		if (relatedPubId) {
 			return {
-				defaultValues: {
-					...defaultValues,
-					relatedPub: {
-						relatedPubId,
-					},
+				...defaultValues,
+				relatedPub: {
+					relatedPubId,
+					relatedFieldSlug: undefined,
 				},
-			};
+			} satisfies DeepPartial<Schema>;
 		}
-		return { schema: baseSchema, defaultValues };
+		return defaultValues;
 	}, [relatedPubId]);
 
-	const form = useForm<typeof baseSchema | typeof schemaWithRelatedPub>({
+	const form = useForm<Schema>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues,
-		resolver: typeboxResolver(relatedPubId ? schemaWithRelatedPub : baseSchema),
+		resolver: typeboxResolver(schema),
 	});
 
 	const path = usePathname();
@@ -171,14 +193,24 @@ export const InitialCreatePubForm = ({
 		router.replace(pathWithoutFormParam);
 	}, [pathWithoutFormParam]);
 
-	const onSubmit = async (values: FieldValues) => {
-		const pubParams = new URLSearchParams({
-			pubTypeId: values.pubTypeId,
-			...(stageId ? { stageId } : {}),
-			...(values.relatedPub ?? {}),
-			[formSwitcherUrlParam]: pubTypes.find((pubType) => pubType.id === values.pubTypeId)
-				?.slug,
-		});
+	const onSubmit = async (values: Schema) => {
+		const formSwitcherUrlParamValue = pubTypes.find(
+			(pubType) => pubType.id === values.pubTypeId
+		)?.slug;
+
+		const pubParams = QueryString.stringify(
+			{
+				pubTypeId: values.pubTypeId,
+				...(stageId ? { stageId } : {}),
+				...("relatedPub" in values ? values.relatedPub : {}),
+				...(formSwitcherUrlParamValue
+					? { [formSwitcherUrlParam]: formSwitcherUrlParamValue }
+					: {}),
+			},
+			{
+				skipNulls: true,
+			}
+		);
 		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
 		router.push(createPubPath);
 	};
@@ -187,7 +219,7 @@ export const InitialCreatePubForm = ({
 		<Form {...form}>
 			<form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-y-4">
 				<PubTypeSelector pubTypes={pubTypes} />
-				<RelatedPubFieldSelector pubFields={relatedPubFields} />
+				<RelatedPubFieldSelector pubFields={relatedPubFields} form={form} />
 				<div className="flex w-full items-center justify-end gap-x-4">
 					<Button type="button" onClick={closeForm} variant="outline">
 						Cancel

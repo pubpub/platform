@@ -175,6 +175,7 @@ export default async function Page(props: {
 		hasAccessToAnyForm: hasAccessToAnyViewForm,
 		hasAccessToCurrentForm: hasAccessToCurrentViewForm,
 		canonicalForm: viewFormToRedirectTo,
+		defaultForm: defaultViewForm,
 	} = resolveFormAccess({
 		availableForms: availableViewForms,
 		requestedFormSlug: formSlug,
@@ -182,11 +183,11 @@ export default async function Page(props: {
 	});
 
 	if (!hasAccessToAnyViewForm) {
-		await redirectToUnauthorized();
+		return await redirectToUnauthorized();
 	}
 
-	if (hasAccessToAnyViewForm && !hasAccessToCurrentViewForm) {
-		await redirectToPubDetailPage({
+	if (!hasAccessToCurrentViewForm) {
+		return await redirectToPubDetailPage({
 			pubId,
 			communitySlug,
 			formSlug: viewFormToRedirectTo.slug,
@@ -223,7 +224,7 @@ export default async function Page(props: {
 							{pub.pubType.name}
 						</span>
 						<FormSwitcher
-							defaultFormSlug={formSlug}
+							defaultFormSlug={defaultViewForm?.slug}
 							forms={availableViewForms}
 							className="ml-4 p-1 text-xs text-muted-foreground"
 						>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { type PubTypesId } from "db/public";
+import { type PubsId, type PubTypesId, type StagesId } from "db/public";
 import { Button } from "ui/button";
 import { Label } from "ui/label";
 
@@ -32,10 +32,35 @@ export async function generateMetadata(props: {
 
 export default async function Page(props: {
 	params: Promise<{ communitySlug: string }>;
-	searchParams: Promise<Record<string, string> & { pubTypeId: PubTypesId; form?: string }>;
+	searchParams: Promise<
+		Record<string, string> & {
+			pubTypeId: PubTypesId;
+			form?: string;
+			stageId?: StagesId;
+		} & (
+				| {
+						relatedPubId?: never;
+						relatedFieldSlug?: never;
+				  }
+				| {
+						relatedPubId: PubsId;
+						relatedFieldSlug: string;
+				  }
+			)
+	>;
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
+
+	const relatedPubData = searchParams.relatedPubId
+		? {
+				relatedPubId: searchParams.relatedPubId,
+				relatedFieldSlug: searchParams.relatedFieldSlug,
+			}
+		: {
+				relatedPubId: undefined,
+				relatedFieldSlug: undefined,
+			};
 
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
@@ -57,24 +82,20 @@ export default async function Page(props: {
 	}).execute();
 
 	// ensure user has access to at least one form, and resolve the current form
-	const {
-		hasAccessToAnyForm,
-		hasAccessToCurrentForm,
-		canonicalForm: createFormToRedirectTo,
-	} = resolveFormAccess({
+	const { hasAccessToAnyForm, hasAccessToCurrentForm, canonicalForm } = resolveFormAccess({
 		availableForms,
 		requestedFormSlug: searchParams.form,
 		communitySlug: community.slug,
 	});
 
 	if (!hasAccessToAnyForm) {
-		await redirectToUnauthorized();
+		return await redirectToUnauthorized();
 	}
 
-	if (hasAccessToAnyForm && !hasAccessToCurrentForm) {
-		await redirectToPubCreatePage({
+	if (!hasAccessToCurrentForm) {
+		return await redirectToPubCreatePage({
 			communitySlug: community.slug,
-			formSlug: createFormToRedirectTo.slug,
+			formSlug: canonicalForm.slug,
 		});
 	}
 
@@ -99,12 +120,12 @@ export default async function Page(props: {
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
 					<PubEditor
-						searchParams={searchParams}
-						communityId={community.id}
+						mode="create"
 						htmlFormId={htmlFormId}
-						formSlug={searchParams.form}
-						// PubEditor checks for the existence of the stageId prop
-						{...(searchParams["stageId"] ? { stageId: searchParams["stageId"] } : {})}
+						pubTypeId={searchParams.pubTypeId}
+						form={canonicalForm}
+						stageId={searchParams.stageId}
+						{...relatedPubData}
 					/>
 				</div>
 			</div>

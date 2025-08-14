@@ -4,7 +4,7 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { tryCatch } from "utils/try-catch";
 
@@ -46,6 +46,7 @@ const getPubsWithRelatedValuesCached = cache(
 				},
 				{
 					withPubType: true,
+					withStage: true,
 				}
 			)
 		);
@@ -124,6 +125,10 @@ export default async function Page(props: {
 	}
 
 	// ensure user has access to at least one form, and resolve the current form
+	// const {
+	// 	hasAccessToAnyForm: hasAccessToAnyUpdateForm,
+	// 	hasAccessToCurrentForm: hasAccessToCurrentUpdateForm,
+	// 	canonicalForm: updateFormToRedirectTo,
 	const {
 		hasAccessToAnyForm: hasAccessToAnyUpdateForm,
 		hasAccessToCurrentForm: hasAccessToCurrentUpdateForm,
@@ -135,11 +140,11 @@ export default async function Page(props: {
 	});
 
 	if (!hasAccessToAnyUpdateForm) {
-		await redirectToUnauthorized();
+		return await redirectToUnauthorized();
 	}
 
-	if (hasAccessToAnyUpdateForm && !hasAccessToCurrentUpdateForm) {
-		await redirectToPubEditPage({
+	if (!hasAccessToCurrentUpdateForm) {
+		return await redirectToPubEditPage({
 			pubId,
 			communitySlug,
 			formSlug: updateFormToRedirectTo.slug,
@@ -189,11 +194,12 @@ export default async function Page(props: {
 				<div className="max-w-prose flex-1">
 					{/** TODO: Add suspense */}
 					<PubEditor
-						searchParams={searchParams}
-						formSlug={searchParams.form}
+						mode="edit"
 						pubId={pub.id}
+						pub={pub}
 						htmlFormId={htmlFormId}
-						communityId={community.id}
+						pubTypeId={pub.pubTypeId}
+						form={updateFormToRedirectTo}
 					/>
 				</div>
 			</div>

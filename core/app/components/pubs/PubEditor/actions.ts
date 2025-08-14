@@ -48,9 +48,9 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 		body: { values, ...body },
 		...createPubProps
 	} = props;
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
-	if (!loginData || !loginData.user) {
+	if (!loginData || !loginData.user || !community) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 	const { user } = loginData;
@@ -203,13 +203,11 @@ export const updatePub = defineServerAction(async function updatePub({
 	continueOnValidationError: boolean;
 	deleted: { slug: string; relatedPubId: PubsId }[];
 }) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
-	if (!loginData || !loginData.user) {
+	if (!loginData || !loginData.user || !community) {
 		return ApiError.NOT_LOGGED_IN;
 	}
-
-	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;
@@ -219,8 +217,10 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.UNAUTHORIZED;
 	}
 
-	const form = await getForm({ slug: formSlug, communityId: community.id }).executeTakeFirst();
-	const canEdit = await userCanEditPub({ pubId, userId: loginData.user.id, formSlug });
+	const [form, canEdit] = await Promise.all([
+		getForm({ slug: formSlug, communityId: community.id }).executeTakeFirst(),
+		userCanEditPub({ pubId, userId: loginData.user.id, formSlug }),
+	]);
 
 	if (!form || !canEdit) {
 		return ApiError.UNAUTHORIZED;
@@ -297,9 +297,9 @@ export const updatePub = defineServerAction(async function updatePub({
 });
 
 export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
-	if (!loginData || !loginData.user) {
+	if (!loginData || !loginData.user || !community) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 
@@ -307,8 +307,6 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 		userId: loginData.user.id,
 	});
 	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;

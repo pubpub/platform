@@ -1,4 +1,8 @@
+import type { FormsId } from "db/public";
+
 type FormWithSlugAndDefault = {
+	id: FormsId;
+	name: string;
 	slug: string;
 	isDefault: boolean;
 };
@@ -24,7 +28,7 @@ export function resolveFormAccess(config: {
 
 	if (!hasAccessToAnyForm) {
 		return {
-			hasAccessToAnyForm,
+			hasAccessToAnyForm: false,
 			hasAccessToCurrentForm: undefined,
 			defaultForm: undefined,
 			canonicalForm: undefined,
@@ -41,7 +45,7 @@ export function resolveFormAccess(config: {
 	if (!currentAvailableForm) {
 		const firstAvailableForm = defaultForm || config.availableForms[0];
 		return {
-			hasAccessToAnyForm,
+			hasAccessToAnyForm: true,
 			hasAccessToCurrentForm: false,
 			defaultForm,
 			canonicalForm: firstAvailableForm,
