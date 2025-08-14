@@ -25,6 +25,19 @@ on:
                 value: ${{ jobs.build-jobs.outputs.image-sha }}
 
 jobs:
+    emit-sha-tag:
+        name: Emit container tag sha
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Get image tag
+              id: label
+              run: |
+                  sha_short=$(git describe --always --abbrev=40 --dirty)
+                  echo "Building containers with tag:"
+                  echo "$sha_short"
+
     build-base:
         uses: ./.github/workflows/ecrbuild-template.yml
         with:
