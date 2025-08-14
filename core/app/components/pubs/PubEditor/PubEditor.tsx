@@ -5,7 +5,12 @@ import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import { Capabilities, CoreSchemaType, MembershipType } from "db/public";
 import { expect } from "utils";
 
-import type { FormElements, PubFieldElement } from "../../forms/types";
+import type {
+	BasicPubFieldElement,
+	FormElements,
+	PubFieldElement,
+	PubFieldElementComponent,
+} from "../../forms/types";
 import type { RenderWithPubContext } from "~/lib/server/render/pub/renderWithPubUtils";
 import type { AutoReturnType, PubField } from "~/lib/types";
 import { db } from "~/kysely/database";
@@ -22,6 +27,7 @@ import { FormElement } from "../../forms/FormElement";
 import { FormElementToggleProvider } from "../../forms/FormElementToggleContext";
 import { PubFieldFormElement } from "../../forms/PubFieldFormElement";
 import { hydrateMarkdownElements } from "../../forms/structural";
+import { PubFormProvider } from "../../providers/PubFormProvider";
 import { StageSelectClient } from "../../StageSelect/StageSelectClient";
 import { RELATED_PUB_SLUG } from "./constants";
 import { makeFormElementDefFromPubFields } from "./helpers";
@@ -35,13 +41,9 @@ const RelatedPubValueElement = ({
 }: {
 	relatedPub: ProcessedPub<{ withPubType: true }>;
 	fieldName: string;
-	element: PubFieldElement;
+	element: BasicPubFieldElement;
 }) => {
-	const configLabel =
-		"relationshipConfig" in element.config
-			? element.config.relationshipConfig.label
-			: element.config.label;
-	const label = configLabel || element.label || element.slug;
+	const label = element.label || element.slug;
 
 	return (
 		<div className="flex flex-col gap-4">
@@ -57,7 +59,7 @@ const RelatedPubValueElement = ({
 				</p>
 				<PubFieldFormElement
 					label={label}
-					element={element}
+					element={element as PubFieldElement<PubFieldElementComponent, false>}
 					pubId={relatedPub.id}
 					slug={RELATED_PUB_SLUG}
 					values={[]}
@@ -93,9 +95,7 @@ const getRelatedPubData = async ({
 
 	// TODO: should maybe get this from the source pub's form?
 	// otherwise this will always be the default component
-	const relatedPubElement = makeFormElementDefFromPubFields([
-		relatedPubField,
-	])[0] as PubFieldElement;
+	const relatedPubElement = makeFormElementDefFromPubFields([relatedPubField])[0];
 	return {
 		element: { ...relatedPubElement, slug: RELATED_PUB_SLUG },
 		relatedPub,
@@ -308,66 +308,70 @@ export async function PubEditor(props: PubEditorProps) {
 	const pubsForContext = [...pubs, ...relatedPubs];
 
 	return (
-		<FormElementToggleProvider fieldSlugs={allSlugs}>
-			<ContextEditorContextProvider
-				pubId={pubId}
-				pubTypeId={pubType.id}
-				pubs={pubsForContext}
-				pubTypes={pubTypes}
-			>
-				<PubEditorWrapper
-					elements={[
-						...form.elements,
-						...pubOnlyElementDefinitions,
-						...(relatedPubData ? [relatedPubData.element] : []),
-					]}
-					pub={pubForForm}
-					formSlug={form.slug}
-					isUpdating={isUpdating}
-					withAutoSave={false}
-					withButtonElements
-					htmlFormId={props.htmlFormId}
-					stageId={currentStageId}
-					relatedPub={
-						relatedPubId && relatedFieldSlug
-							? {
-									id: relatedPubId as PubsId,
-									slug: relatedFieldSlug as string,
-								}
-							: undefined
-					}
+		<PubFormProvider
+			form={{ pubId, form, mode: isUpdating ? "edit" : "create", isExternalForm: false }}
+		>
+			<FormElementToggleProvider fieldSlugs={allSlugs}>
+				<ContextEditorContextProvider
+					pubId={pubId}
+					pubTypeId={pubType.id}
+					pubs={pubsForContext}
+					pubTypes={pubTypes}
 				>
-					<>
-						{relatedPubData ? (
-							<RelatedPubValueElement
-								relatedPub={relatedPubData.relatedPub}
-								element={relatedPubData.element}
-								fieldName={relatedPubData.relatedPubField.name}
-							/>
-						) : null}
-						{renderStageSelect && (
-							<StageSelectClient
-								fieldLabel="Stage"
-								fieldName="stageId"
-								stages={community.stages}
-							/>
-						)}
-						{formElements}
-						{pubOnlyElementDefinitions.map((formElementDef) => (
-							<FormElement
-								key={formElementDef.slug}
-								element={formElementDef as FormElements}
-								pubId={pubId}
-								values={
-									pubWithProsemirrorRichText
-										? pubWithProsemirrorRichText.values
-										: []
-								}
-							/>
-						))}
-					</>
-				</PubEditorWrapper>
-			</ContextEditorContextProvider>
-		</FormElementToggleProvider>
+					<PubEditorWrapper
+						elements={[
+							...form.elements,
+							...pubOnlyElementDefinitions,
+							...(relatedPubData ? [relatedPubData.element] : []),
+						]}
+						pub={pubForForm}
+						formSlug={form.slug}
+						isUpdating={isUpdating}
+						withAutoSave={false}
+						withButtonElements
+						htmlFormId={props.htmlFormId}
+						stageId={currentStageId}
+						relatedPub={
+							relatedPubId && relatedFieldSlug
+								? {
+										id: relatedPubId as PubsId,
+										slug: relatedFieldSlug as string,
+									}
+								: undefined
+						}
+					>
+						<>
+							{relatedPubData ? (
+								<RelatedPubValueElement
+									relatedPub={relatedPubData.relatedPub}
+									element={relatedPubData.element}
+									fieldName={relatedPubData.relatedPubField.name}
+								/>
+							) : null}
+							{renderStageSelect && (
+								<StageSelectClient
+									fieldLabel="Stage"
+									fieldName="stageId"
+									stages={community.stages}
+								/>
+							)}
+							{formElements}
+							{pubOnlyElementDefinitions.map((formElementDef) => (
+								<FormElement
+									key={formElementDef.slug}
+									element={formElementDef as FormElements}
+									pubId={pubId}
+									values={
+										pubWithProsemirrorRichText
+											? pubWithProsemirrorRichText.values
+											: []
+									}
+								/>
+							))}
+						</>
+					</PubEditorWrapper>
+				</ContextEditorContextProvider>
+			</FormElementToggleProvider>
+		</PubFormProvider>
 	);
 }

@@ -13,6 +13,7 @@ import type {
 import { Capabilities, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
+import type { XOR } from "../types";
 import type {
 	CommunityTargetCapabilities,
 	PubTargetCapabilities,
@@ -483,6 +484,32 @@ export const userIsCommunityRole = async (role: MemberRole[], communitySlug?: st
 	}
 
 	return user.memberships.some((membership) => role.includes(membership.role));
+};
+
+export const userHasAccessToForm = async (
+	props: { userId: UsersId; pubId?: PubsId; communityId: CommunitiesId } & XOR<
+		{ formId: FormsId },
+		{ formSlug: string }
+	>
+) => {
+	if (props.pubId) {
+		return userCanEditPub({
+			userId: props.userId,
+			pubId: props.pubId,
+			formId: props.formId,
+			formSlug: props.formSlug,
+		});
+	}
+
+	const x = await authorizedCreateFormsBase({
+		userId: props.userId,
+		communityId: props.communityId,
+	})
+		.$if(!!props.formId, (eb) => eb.where("forms.id", "=", props.formId!))
+		.$if(!!props.formSlug, (eb) => eb.where("forms.slug", "=", props.formSlug!))
+		.executeTakeFirst();
+
+	return !!x;
 };
 
 const userIsCommunityAdminOrEditor = cache(

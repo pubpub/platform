@@ -389,6 +389,10 @@ test.describe("Related pubs", () => {
 				`${community.community.slug}:${relatedField.name}`
 			);
 			await page.getByRole("textbox", { name: "Label" }).first().fill(relatedField.name);
+			await page.getByRole("button", { name: "Select a pub type" }).click();
+			// select all pubtypes
+			await page.getByRole("group").getByText(community.pubTypes.Submission.name).click();
+			await page.getByRole("group").getByText(community.pubTypes.Evaluation.name).click();
 			await formEditPage.saveFormElementConfiguration();
 		}
 

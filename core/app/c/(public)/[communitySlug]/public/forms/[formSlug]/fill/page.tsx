@@ -19,6 +19,7 @@ import {
 	hydrateMarkdownElements,
 	renderElementMarkdownContent,
 } from "~/app/components/forms/structural";
+import { PubFormProvider } from "~/app/components/providers/PubFormProvider";
 import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { db } from "~/kysely/database";
@@ -294,43 +295,52 @@ export default async function FormPage(props: {
 					<Completed element={submitElement} />
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
-						<FormElementToggleProvider
-							fieldSlugs={form.elements.reduce(
-								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
-								[] as string[]
-							)}
+						<PubFormProvider
+							form={{
+								pubId,
+								form,
+								mode: isUpdating ? "edit" : "create",
+								isExternalForm: true,
+							}}
 						>
-							<ContextEditorContextProvider
-								pubId={pubId}
-								pubTypeId={form.pubTypeId}
-								pubs={pubsForContext}
-								pubTypes={pubTypes}
+							<FormElementToggleProvider
+								fieldSlugs={form.elements.reduce(
+									(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
+									[] as string[]
+								)}
 							>
-								<ExternalFormWrapper
-									pub={pubForForm}
-									elements={form.elements}
-									formSlug={form.slug}
-									isUpdating={isUpdating}
-									withAutoSave={isUpdating}
-									withButtonElements
-									isExternalForm
-									className="col-span-2 col-start-2"
+								<ContextEditorContextProvider
+									pubId={pubId}
+									pubTypeId={form.pubTypeId}
+									pubs={pubsForContext}
+									pubTypes={pubTypes}
 								>
-									{form.elements.map((e) => (
-										<FormElement
-											key={e.id}
-											pubId={pubId}
-											element={e}
-											values={
-												pubWithProsemirrorRichText
-													? pubWithProsemirrorRichText.values
-													: []
-											}
-										/>
-									))}
-								</ExternalFormWrapper>
-							</ContextEditorContextProvider>
-						</FormElementToggleProvider>
+									<ExternalFormWrapper
+										pub={pubForForm}
+										elements={form.elements}
+										formSlug={form.slug}
+										isUpdating={isUpdating}
+										withAutoSave={isUpdating}
+										withButtonElements
+										isExternalForm
+										className="col-span-2 col-start-2"
+									>
+										{form.elements.map((e) => (
+											<FormElement
+												key={e.id}
+												pubId={pubId}
+												element={e}
+												values={
+													pubWithProsemirrorRichText
+														? pubWithProsemirrorRichText.values
+														: []
+												}
+											/>
+										))}
+									</ExternalFormWrapper>
+								</ContextEditorContextProvider>
+							</FormElementToggleProvider>
+						</PubFormProvider>
 					</div>
 				)}
 			</div>

@@ -2,7 +2,6 @@
 
 import type {
 	ColumnDef,
-	OnChangeFn,
 	PaginationState,
 	RowSelectionState,
 	SortingState,
@@ -51,47 +50,38 @@ export const PubsDataTable = ({ perPage, ...props }: PubsDataTableProps) => {
 	return <DataTable table={table} floatingBar={null} />;
 };
 
+export type PubsDataTableClientBaseProps = {
+	selectedPubs?: NonGenericProcessedPub[];
+	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
+	disabledRows?: PubsId[];
+	pubTypes?: Pick<PubTypes, "id" | "name">[];
+	data:
+		| {
+				status: 200;
+				body: NonGenericProcessedPub[];
+				headers: Headers;
+		  }
+		| undefined;
+	isLoading: boolean;
+	filterParams: Required<GetManyParams>;
+	setFilterParams: (updaterOrValue: Updater<Required<GetManyParams>>) => void;
+};
+
 /**
  * Like PubsDataTable, but keeps all state via React instead of query params.
  * This means various functions in `useDataTable` are overwritten in favor of controlling
  * state outside of the table.
  */
-export const PubsDataTableClient = ({
+export const PubsDataTableClientBase = ({
 	selectedPubs,
 	onSelectedPubsChange,
 	disabledRows = [],
 	pubTypes,
-}: {
-	selectedPubs?: NonGenericProcessedPub[];
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
-	disabledRows?: PubsId[];
-	pubTypes?: Pick<PubTypes, "id" | "name">[];
-}) => {
-	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
-		limit: 10,
-		offset: 0,
-		orderBy: "updatedAt",
-		orderDirection: "desc",
-	});
-	const community = useCommunity();
-
-	const { data, isLoading } = client.pubs.getMany.useQuery({
-		queryKey: ["getPubs", filterParams],
-		queryData: {
-			query: {
-				...filterParams,
-				pubTypeId: pubTypes ? pubTypes.map((p) => p.id) : undefined,
-				withPubType: true,
-				withRelatedPubs: false,
-				withStage: true,
-				withValues: false,
-			},
-			params: {
-				communitySlug: community.slug,
-			},
-		},
-	});
-
+	filterParams,
+	setFilterParams,
+	data,
+	isLoading,
+}: PubsDataTableClientBaseProps) => {
 	const pubs = data?.body ?? [];
 	const totalFromHeader = data?.headers?.get(TOTAL_PUBS_COUNT_HEADER);
 	const total = totalFromHeader ? parseInt(totalFromHeader) : 0;
@@ -221,3 +211,45 @@ export const PubsDataTableClient = ({
 		</div>
 	);
 };
+
+export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
+	const community = useCommunity();
+	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
+		limit: 10,
+		offset: 0,
+		orderBy: "updatedAt",
+		orderDirection: "desc",
+	});
+
+	const { data, isLoading } = client.pubs.getMany.useQuery({
+		queryKey: ["getPubs", filterParams],
+		queryData: {
+			query: {
+				...filterParams,
+				pubTypeId: props.pubTypes ? props.pubTypes.map((p) => p.id) : undefined,
+				withPubType: true,
+				withRelatedPubs: false,
+				withStage: true,
+				withValues: false,
+			},
+			params: {
+				communitySlug: community.slug,
+			},
+		},
+	});
+
+	return (
+		<PubsDataTableClientBase
+			{...props}
+			data={data}
+			isLoading={isLoading}
+			filterParams={filterParams}
+			setFilterParams={setFilterParams}
+		/>
+	);
+};
+
+export type PubsDataTableClientProps = Omit<
+	PubsDataTableClientBaseProps,
+	"data" | "isLoading" | "filterParams" | "setFilterParams"
+>;

@@ -22,6 +22,8 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "./dropdown-menu";
+import { Info } from "./icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 interface DataTablePaginationProps<TData> {
 	table: Table<TData>;
@@ -77,10 +79,15 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 	);
 }
 
-interface DataTableColumnHeaderProps<TData, TValue> extends React.HTMLAttributes<HTMLDivElement> {
+interface DataTableColumnHeaderProps<TData, TValue>
+	extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
 	column: Column<TData, TValue>;
-	title: string;
+	title: string | React.ReactNode;
 	icon?: React.ReactNode;
+	/**
+	 * Optional text to display as a tooltip next to the title.
+	 */
+	info?: string;
 }
 
 export function DataTableColumnHeader<TData, TValue>({
@@ -88,6 +95,7 @@ export function DataTableColumnHeader<TData, TValue>({
 	title,
 	className,
 	icon,
+	info,
 }: DataTableColumnHeaderProps<TData, TValue>) {
 	if (!column.getCanSort()) {
 		return <div className={cn(className)}>{title}</div>;
@@ -102,10 +110,21 @@ export function DataTableColumnHeader<TData, TValue>({
 						size="sm"
 						className="-ml-3 flex h-8 w-full min-w-fit items-center justify-between gap-x-1 data-[state=open]:bg-accent"
 					>
-						<span className="flex flex-row items-center">
-							<div className="pr-1">{icon}</div>
+						<span className="flex flex-row items-center gap-x-1">
+							{icon}
 							{title}
+							{info && (
+								<Tooltip>
+									<TooltipTrigger>
+										<Info size="10" />
+									</TooltipTrigger>
+									<TooltipContent className="max-w-md text-xs">
+										{info}
+									</TooltipContent>
+								</Tooltip>
+							)}
 						</span>
+
 						{column.getIsSorted() === "desc" ? (
 							<ArrowDownIcon className="h-4 w-4" />
 						) : column.getIsSorted() === "asc" ? (
