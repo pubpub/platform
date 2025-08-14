@@ -26,6 +26,7 @@ export default function AutoFormInput({
 	fieldConfigItem,
 	description,
 	zodItem,
+	placeholder,
 }: AutoFormInputComponentProps) {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
@@ -49,7 +50,11 @@ export default function AutoFormInput({
 						</>
 					)}
 					<FormControl>
-						<Input type={type} {...fieldPropsWithoutShowLabel} />
+						<Input
+							type={type}
+							{...fieldPropsWithoutShowLabel}
+							placeholder={placeholder}
+						/>
 					</FormControl>
 					<PubFieldSelectWrapper>
 						<PubFieldSelect />

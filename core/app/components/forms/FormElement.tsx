@@ -1,3 +1,5 @@
+import type { PropsWithChildren } from "react";
+
 import { ElementType } from "db/public";
 import { logger } from "logger";
 import { expect } from "utils";
@@ -10,6 +12,19 @@ import { PubFieldFormElement } from "./PubFieldFormElement";
 
 export type FormElementProps = Omit<PubFieldFormElementProps, "element"> & {
 	element: FormElements;
+};
+
+export const MaybeWithToggle = (
+	props: Parameters<typeof FormElementToggle>[0] & { required: boolean | null }
+) => {
+	if (!props.children) {
+		return null;
+	}
+
+	if (props.required) {
+		return props.children;
+	}
+	return <FormElementToggle {...props}>{props.children}</FormElementToggle>;
 };
 
 export const FormElement = ({ pubId, element, values }: FormElementProps) => {
@@ -31,7 +46,7 @@ export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 	}
 
 	const configLabel =
-		"relationshipConfig" in element.config
+		element.isRelation && "relationshipConfig" in element.config
 			? element.config.relationshipConfig.label
 			: element.config.label;
 
@@ -40,40 +55,26 @@ export const FormElement = ({ pubId, element, values }: FormElementProps) => {
 		slug: element.slug,
 	};
 
-	let input = (
-		<PubFieldFormElement pubId={pubId} element={element} values={values} {...basicProps} />
+	if (element.isRelation) {
+		return (
+			<MaybeWithToggle {...basicProps} required={element.required}>
+				<RelatedPubsElement
+					{...basicProps}
+					config={element.config}
+					schemaName={element.schemaName}
+					valueComponentProps={{
+						pubId,
+						element,
+						values,
+					}}
+				/>
+			</MaybeWithToggle>
+		);
+	}
+
+	return (
+		<MaybeWithToggle {...basicProps} required={element.required}>
+			<PubFieldFormElement pubId={pubId} element={element} values={values} {...basicProps} />
+		</MaybeWithToggle>
 	);
-
-	if (element.isRelation && "relationshipConfig" in element.config) {
-		input = (
-			<RelatedPubsElement
-				{...basicProps}
-				config={element.config}
-				schemaName={element.schemaName}
-				valueComponentProps={{
-					pubId,
-					element,
-					values,
-				}}
-			/>
-		);
-	}
-
-	if (input) {
-		return element.required ? (
-			input
-		) : (
-			<FormElementToggle {...element} {...basicProps}>
-				{input}
-			</FormElementToggle>
-		);
-	}
-
-	logger.error({
-		msg: `Encountered unknown component when rendering form element`,
-		component: element.component,
-		element,
-		pubId,
-	});
-	return null;
 };

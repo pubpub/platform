@@ -1,6 +1,6 @@
 "use client";
 
-import type { Stages } from "db/public";
+import type { Stages, StagesId } from "db/public";
 import { FormControl, FormField, FormItem, FormLabel } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 

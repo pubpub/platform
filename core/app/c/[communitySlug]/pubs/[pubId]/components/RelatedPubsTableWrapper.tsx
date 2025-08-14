@@ -37,19 +37,24 @@ const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 
 type Props = {
 	pub: FullProcessedPubWithForm;
+	userCanRunActions: boolean;
 };
 
 export const RelatedPubsTableWrapper = async (props: Props) => {
-	const relatedPubRunActionsDropdowns = props.pub.values.reduce(
-		(a, value) =>
-			value.relatedPubId && value.relatedPub
-				? {
-						...a,
-						[value.relatedPubId]: getRelatedPubRunActionsDropdowns(value.relatedPub),
-					}
-				: a,
-		{}
-	);
+	const relatedPubRunActionsDropdowns = !props.userCanRunActions
+		? {}
+		: props.pub.values.reduce(
+				(a, value) =>
+					value.relatedPubId && value.relatedPub
+						? {
+								...a,
+								[value.relatedPubId]: getRelatedPubRunActionsDropdowns(
+									value.relatedPub
+								),
+							}
+						: a,
+				{}
+			);
 	return (
 		<RelatedPubsTable
 			pub={props.pub}

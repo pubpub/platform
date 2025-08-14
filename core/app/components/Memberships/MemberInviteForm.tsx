@@ -33,7 +33,7 @@ import { client } from "~/lib/api";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { memberInviteFormSchema } from "./memberInviteFormSchema";
 
-const descriptions: Record<MembershipType, string> = {
+export const descriptions: Record<MembershipType, string> = {
 	[MembershipType.pub]:
 		"Select the forms via which this member can edit and view this Pub. If no form is selected, they will only be able to view the Pub, and will only see fields added to the default Pub form for this type.",
 	[MembershipType.stage]:

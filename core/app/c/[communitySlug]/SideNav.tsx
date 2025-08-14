@@ -166,6 +166,11 @@ const adminLinks: LinkGroupDefinition = {
 					text: "API Tokens",
 					authorization: userCanEditCommunityCached,
 				},
+				{
+					href: "/settings/actions",
+					text: "Actions",
+					authorization: userCanEditCommunityCached,
+				},
 			],
 		},
 		{
@@ -288,7 +293,11 @@ const SubMenuLinks = async ({
 		>
 			{link.children.map((child) => (
 				<SidebarMenuSubItem key={child.href}>
-					<Links user={user} community={community} links={link.children} />
+					<Link
+						user={user}
+						community={community}
+						link={child as SubLevelLinkDefinition}
+					/>
 				</SidebarMenuSubItem>
 			))}
 		</NavLinkSubMenu>

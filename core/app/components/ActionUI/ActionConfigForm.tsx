@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 
-import { startTransition, useCallback } from "react";
+import { startTransition, useCallback, useMemo } from "react";
 
 import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
 import type { FieldConfig } from "ui/auto-form";
@@ -19,15 +19,28 @@ export type Props = {
 	communityId: string;
 	fieldConfig: FieldConfig<any>;
 	stageId: StagesId;
+	defaultFields: string[];
 };
 
 export const ActionConfigForm = (props: Props) => {
 	const action = getActionByName(props.actionName);
+	const schema = useMemo(() => {
+		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
+			props.defaultFields.reduce(
+				(acc, key) => {
+					acc[key] = true;
+					return acc;
+				},
+				{} as Record<string, true>
+			)
+		);
+		return schemaWithPartialDefaults;
+	}, [action.config.schema, props.defaultFields]);
 
 	const runUpdateAction = useServerAction(updateAction);
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof action.config.schema>) => {
+		async (values: z.infer<typeof schema>) => {
 			startTransition(async () => {
 				const result = await runUpdateAction(
 					props.instance.id as ActionInstancesId,
@@ -56,7 +69,7 @@ export const ActionConfigForm = (props: Props) => {
 		<AutoForm
 			values={props.instance.config ?? {}}
 			fieldConfig={props.fieldConfig}
-			formSchema={action.config.schema}
+			formSchema={schema}
 			dependencies={action.config.dependencies}
 			onSubmit={onSubmit}
 		>

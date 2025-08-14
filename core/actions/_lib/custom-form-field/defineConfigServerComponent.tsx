@@ -1,3 +1,5 @@
+import "server-only";
+
 import type React from "react";
 
 import type { CommunitiesId, PubsId, StagesId } from "db/public";
@@ -5,9 +7,9 @@ import type { CommunitiesId, PubsId, StagesId } from "db/public";
 import type { Action, ActionInstanceOf } from "../../types";
 
 export type ActionFormFieldBaseProps<T extends Action, Type extends "config" | "params"> = {
-	actionInstance: ActionInstanceOf<T>;
+	config?: ActionInstanceOf<T>["config"];
 	communityId: CommunitiesId;
-	stageId: StagesId;
+	stageId?: StagesId;
 } & (Type extends "params"
 	? {
 			pubId: PubsId;
@@ -22,7 +24,7 @@ export const defineActionFormFieldServerComponent = <
 	type: Type,
 	FormField: ({
 		action,
-		actionInstance,
+		config,
 		stageId,
 		communityId,
 	}: ActionFormFieldBaseProps<T, Type> & {

@@ -16,20 +16,23 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type {
-	ApiAccessPermission,
-	ApiAccessPermissionConstraintsInput,
-	LastModifiedBy,
-} from "db/types";
 import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
-import { ApiAccessScope, ApiAccessType, Capabilities, MembershipType } from "db/public";
+import {
+	ApiAccessScope,
+	ApiAccessType,
+	Capabilities,
+	ElementType,
+	InputComponent,
+	MembershipType,
+} from "db/public";
 
-import type { CapabilityTarget } from "~/lib/authorization/capabilities";
-import { db } from "~/kysely/database";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import {
+	checkAuthorization,
+	parseQueryWithQsMiddleware,
+	shouldReturnRepresentation,
+} from "~/lib/authentication/api";
+import { userHasAccessToForm } from "~/lib/authorization/capabilities";
 import { getStage } from "~/lib/db/queries";
-import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -51,222 +54,11 @@ import {
 import { validateApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
-
-const baseAuthorizationObject = Object.fromEntries(
-	Object.keys(ApiAccessScope).map(
-		(scope) =>
-			[
-				scope,
-				Object.fromEntries(
-					Object.keys(ApiAccessType).map((type) => [type, false] as const)
-				),
-			] as const
-	)
-) as ApiAccessPermissionConstraintsInput;
-
-const bearerRegex = /Bearer ([^\s+])/;
-const bearerSchema = z
-	.string()
-	.regex(bearerRegex)
-	.transform((string) => string.replace(bearerRegex, "$1"));
-
-const getAuthorization = async () => {
-	const authorizationTokenWithBearer = (await headers()).get("Authorization");
-
-	const apiKeyParse = bearerSchema.safeParse(authorizationTokenWithBearer);
-	if (!apiKeyParse.success) {
-		throw new ForbiddenError("Invalid token");
-	}
-	const apiKey = apiKeyParse.data;
-
-	const community = await findCommunityBySlug();
-
-	if (!community) {
-		throw new NotFoundError(`No community found`);
-	}
-
-	// this throws, and we should let it
-	const validatedAccessToken = await validateApiAccessToken(apiKey, community.id);
-
-	const rules = await db
-		.selectFrom("api_access_permissions")
-		.selectAll("api_access_permissions")
-		.innerJoin(
-			"api_access_tokens",
-			"api_access_tokens.id",
-			"api_access_permissions.apiAccessTokenId"
-		)
-		.select((eb) =>
-			jsonObjectFrom(
-				eb
-					.selectFrom("users")
-					.select(SAFE_USER_SELECT)
-					.whereRef("users.id", "=", eb.ref("api_access_tokens.issuedById"))
-			).as("user")
-		)
-		.where("api_access_permissions.apiAccessTokenId", "=", validatedAccessToken.id)
-		.$castTo<ApiAccessPermission & { user: User }>()
-		.execute();
-
-	const user = rules[0].user;
-	if (!rules[0].user) {
-		throw new NotFoundError(`Unable to locate user associated with api token`);
-	}
-
-	return {
-		user,
-		authorization: rules.reduce((acc, curr) => {
-			if (!curr.constraints) {
-				acc[curr.scope][curr.accessType] = true;
-				return acc;
-			}
-
-			acc[curr.scope][curr.accessType] = curr.constraints ?? true;
-			return acc;
-		}, baseAuthorizationObject),
-		apiAccessTokenId: validatedAccessToken.id,
-		community,
-	};
-};
-
-type AuthorizationOutput<S extends ApiAccessScope, AT extends ApiAccessType> = {
-	authorization: true | Exclude<(typeof baseAuthorizationObject)[S][AT], false>;
-	community: Communities;
-	lastModifiedBy: LastModifiedBy;
-	user: User;
-};
-
-const checkAuthorization = async <
-	S extends ApiAccessScope,
-	AT extends ApiAccessType,
-	T extends CapabilityTarget,
->({
-	token,
-	cookies,
-}: {
-	token: {
-		scope: S;
-		type: AT;
-	};
-	cookies:
-		| {
-				capability: Parameters<typeof userCan<T>>[0];
-				target: T;
-		  }
-		| "community-member"
-		| boolean;
-}): Promise<AuthorizationOutput<S, AT>> => {
-	const authorizationTokenWithBearer = (await headers()).get("Authorization");
-
-	if (authorizationTokenWithBearer) {
-		const { user, authorization, community, apiAccessTokenId } = await getAuthorization();
-
-		const constraints = authorization[token.scope][token.type];
-		if (!constraints) {
-			throw new ForbiddenError(`You are not authorized to ${token.type} ${token.scope}`);
-		}
-
-		const lastModifiedBy = createLastModifiedBy({
-			apiAccessTokenId: apiAccessTokenId,
-		});
-
-		return {
-			authorization: constraints as Exclude<typeof constraints, false>,
-			community,
-			lastModifiedBy,
-			user,
-		};
-	}
-
-	if (!cookies) {
-		throw new UnauthorizedError("This resource is only accessible using an API key");
-	}
-
-	const communitySlug = await getCommunitySlug();
-	const [{ user }, community] = await Promise.all([
-		getLoginData(),
-		findCommunityBySlug(communitySlug),
-	]);
-
-	if (!user) {
-		throw new UnauthorizedError(
-			"You must either provide an `Authorization: Bearer ` header or be logged in to access this resource"
-		);
-	}
-
-	if (!community) {
-		throw new NotFoundError(`No community found for slug ${communitySlug}`);
-	}
-
-	const lastModifiedBy = createLastModifiedBy({
-		userId: user.id as UsersId,
-	});
-
-	// Handle cases where we only want to check for login but have no specific capability yet
-	if (typeof cookies === "boolean") {
-		return { user, authorization: true as const, community, lastModifiedBy };
-	}
-
-	// Handle when we just want to check the user is part of the community
-	if (cookies === "community-member") {
-		const userCommunityIds = user.memberships.map((m) => m.communityId);
-		if (!userCommunityIds.includes(community.id)) {
-			throw new ForbiddenError(`You are not authorized to perform actions in this community`);
-		}
-		return { user, authorization: true as const, community, lastModifiedBy };
-	}
-
-	const can = await userCan(cookies.capability, cookies.target, user.id);
-
-	if (!can) {
-		throw new ForbiddenError(
-			`You are not authorized to ${cookies.capability} ${cookies.target.type}`
-		);
-	}
-
-	return { user, authorization: true as const, community, lastModifiedBy };
-};
-
-const shouldReturnRepresentation = async () => {
-	const prefer = (await headers()).get("Prefer");
-
-	if (prefer === "return=representation") {
-		return true;
-	}
-	return false;
-};
-
-type RequestMiddleware = (
-	req: TsRestRequest,
-	platformArgs: {
-		nextRequest: NextRequest;
-	}
-) => void;
-
-// ================
-// Middleware
-// Note: Middleware runs before zod validation
-// ================
-
-/**
- * Parse the query string with `qs` instead of itty routers built in parser
- * This handles objects and arrays better,
- * eg `?foo[0]=2&bar[foo]=3` -> `{ foo: ["2"], bar: { foo: "3" } }`
- * instead of
- * `{ foo[0]: "2", bar[foo]: "3"}`
- */
-const parseQueryWithQsMiddleware: RequestMiddleware = (req) => {
-	// parse the queries with `qs`
-	const query = req.url.split("?")[1];
-	// @ts-expect-error - this obviously errors, but it's fine
-	req.query = query
-		? qs.parse(query, { depth: 10, arrayLimit: 1000, allowDots: false })
-		: req.query;
-};
 
 const handler = createNextHandler(
 	siteApi,
@@ -355,28 +147,30 @@ const handler = createNextHandler(
 					}
 				}
 
-				const pubs = await getPubsWithRelatedValues(
-					{
+				const [pubs, pubCount] = await Promise.all([
+					getPubsWithRelatedValues(
+						{
+							communityId: community.id,
+							pubTypeId: pubTypeId,
+							stageId: stageId,
+							pubIds: pubIds,
+							userId: user.id,
+						},
+						{
+							...rest,
+							filters: query?.filters,
+							allowedPubTypes,
+							allowedStages,
+						}
+					),
+					getPubsCount({
 						communityId: community.id,
 						pubTypeId: pubTypeId,
 						stageId: stageId,
-						pubIds: pubIds,
-						userId: user.id,
-					},
-					{
-						...rest,
-						filters: query?.filters,
-						allowedPubTypes,
-						allowedStages,
-					}
-				);
+					}),
+				]);
 
 				// TODO: this does not account for permissions
-				const pubCount = await getPubsCount({
-					communityId: community.id,
-					pubTypeId: pubTypeId,
-					stageId: stageId,
-				});
 				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
 
 				return {
@@ -791,6 +585,97 @@ const handler = createNextHandler(
 				return {
 					status: 200,
 					body: user,
+				};
+			},
+		},
+		forms: {
+			getPubsForFormField: async ({ params, query }, { responseHeaders }) => {
+				const { user, community } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: "community-member",
+				});
+
+				let { pubTypeId, stageId, pubIds, filters, currentPubId, ...rest } = query ?? {};
+
+				if (query?.filters) {
+					try {
+						await validateFilter(community.id, query.filters);
+					} catch (e) {
+						throw new BadRequestError(e.message);
+					}
+				}
+
+				const [form, userCanAccessForm] = await Promise.all([
+					getForm({
+						slug: params.formSlug,
+						communityId: community.id,
+					}).executeTakeFirst(),
+					userHasAccessToForm({
+						userId: user.id,
+						communityId: community.id,
+						formSlug: params.formSlug,
+						pubId: currentPubId,
+					}),
+				]);
+
+				if (!form) {
+					throw new NotFoundError();
+				}
+
+				if (!userCanAccessForm) {
+					throw new ForbiddenError();
+				}
+
+				// check if user has access to the form
+				const field = form.elements.find((e) => e.slug === params.fieldSlug);
+
+				if (
+					!field ||
+					field.type !== ElementType.pubfield ||
+					field.isRelation !== true ||
+					field.config.relationshipConfig.component !== InputComponent.relationBlock
+				) {
+					throw new NotFoundError(
+						`Field ${params.fieldSlug} not found on form ${params.formSlug}`
+					);
+				}
+
+				const formFieldPubTypes = field.relatedPubTypes;
+
+				if (formFieldPubTypes.length === 0) {
+					throw new BadRequestError(
+						`Field ${params.fieldSlug} on form ${params.formSlug} does not allow any pub types`
+					);
+				}
+
+				const [pubs, pubCount] = await Promise.all([
+					getPubsWithRelatedValues(
+						{
+							communityId: community.id,
+							pubTypeId: pubTypeId,
+							stageId: stageId,
+							pubIds: pubIds,
+							// userId: user.id,
+						},
+						{
+							...rest,
+							filters: query?.filters,
+							allowedPubTypes: formFieldPubTypes,
+						}
+					),
+					getPubsCount({
+						communityId: community.id,
+						pubTypeId: pubTypeId,
+						stageId: stageId,
+					}),
+				]);
+
+				// TODO: this does not account for permissions
+				responseHeaders.set(TOTAL_PUBS_COUNT_HEADER, `${pubCount}`);
+
+				return {
+					status: 200,
+					body: pubs,
 				};
 			},
 		},

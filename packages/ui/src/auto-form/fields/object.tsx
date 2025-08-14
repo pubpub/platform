@@ -249,6 +249,7 @@ function FormFieldObject({
 							zodItem={item}
 							fieldProps={fieldProps}
 							className={fieldProps.className}
+							placeholder={fieldConfigItem.placeholder}
 						/>
 					</ParentElement>
 				);

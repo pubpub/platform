@@ -159,12 +159,13 @@ const seed = createSeed({
 				{
 					type: ElementType.pubfield,
 					field: "Related",
-					component: InputComponent.relationBlock,
+					component: InputComponent.textInput,
+					relatedPubTypes: ["Submission"],
 					config: {
 						relationshipConfig: {
 							label: "related",
 							help: "help",
-							component: InputComponent.textInput,
+							component: InputComponent.relationBlock,
 						},
 					},
 				},

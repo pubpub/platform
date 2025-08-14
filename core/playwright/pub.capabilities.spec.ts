@@ -111,7 +111,7 @@ test.describe("Pub contributor capabilities", () => {
 		});
 
 		// going back to pub details page should show 404
-		await pubDetailsPage.goTo();
+		await pubDetailsPage.goTo(false);
 
 		expect(requests).toHaveLength(1);
 		expect(requests[0].status()).toBe(404);

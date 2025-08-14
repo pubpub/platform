@@ -4,13 +4,13 @@ import { defaultComponent } from "schemas";
 import type { FormElementsId } from "db/public";
 import { ElementType } from "db/public";
 
-import type { BasicFormElements, BasicPubFieldElement } from "../../forms/types";
+import type { BasicPubFieldElement } from "../../forms/types";
 import type { DefinitelyHas, PubField } from "~/lib/types";
 
 // Function to create an element object based on pubType parameter
 export function makeFormElementDefFromPubFields(
 	pubFields: Pick<PubField, "id" | "name" | "slug" | "schemaName">[]
-): BasicFormElements[] {
+): BasicPubFieldElement[] {
 	return pubFields
 		.filter((field): field is DefinitelyHas<typeof field, "schemaName"> => !!field.schemaName)
 		.map(
@@ -20,6 +20,7 @@ export function makeFormElementDefFromPubFields(
 					id: field.id as unknown as FormElementsId, // use field.id?
 					slug: field.slug,
 					schemaName: field.schemaName,
+					fieldName: field.name,
 					type: ElementType.pubfield,
 					rank: mudder.base62.numberToString(index + 1),
 					stageId: null,
@@ -30,6 +31,8 @@ export function makeFormElementDefFromPubFields(
 					required: false,
 					component: defaultComponent(field.schemaName),
 					config: {},
+					relatedPubTypes: [],
+					isRelation: false,
 				}) as BasicPubFieldElement
 		);
 }

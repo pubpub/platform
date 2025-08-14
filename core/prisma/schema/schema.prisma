@@ -96,15 +96,16 @@ model Community {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  pubTypes       PubType[]
-  pubs           Pub[]
-  memberGroups   MemberGroup[]
-  stages         Stage[]
-  APIAccessToken ApiAccessToken[]
-  Form           Form[]
-  pubFields      PubField[]
-  members        CommunityMembership[]
-  Invite         Invite[]
+  pubTypes            PubType[]
+  pubs                Pub[]
+  memberGroups        MemberGroup[]
+  stages              Stage[]
+  APIAccessToken      ApiAccessToken[]
+  Form                Form[]
+  pubFields           PubField[]
+  members             CommunityMembership[]
+  Invite              Invite[]
+  ActionConfigDefault ActionConfigDefault[]
 
   @@map(name: "communities")
 }
@@ -319,6 +320,19 @@ enum Action {
   move
   googleDriveImport
   datacite
+}
+
+model ActionConfigDefault {
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId String
+  action      Action
+  config      Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@unique([communityId, action], name: "action_config_defaults_communityId_action_key")
+  @@map(name: "action_config_defaults")
 }
 
 model ActionRun {

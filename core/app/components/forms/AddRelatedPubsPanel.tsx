@@ -7,44 +7,45 @@ import type { PubsId, PubTypes } from "db/public";
 import { Button } from "ui/button";
 
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
-import { PubsDataTableClient } from "../DataTable/PubsDataTable/PubsDataTableClient";
+import { FormPubsDataTableClient } from "../DataTable/PubsDataTable/FormPubsDataTableClient";
 
-export const AddRelatedPubsPanel = ({
-	title,
-	relatedPubs,
-	onCancel,
-	onChangeRelatedPubs,
-	disabledPubs,
-	pubTypes,
-}: {
+type AddRelatedPubsPanelProps = {
 	title: string;
+	formSlug: string;
+	fieldSlug: string;
 	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
 	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
 	disabledPubs?: PubsId[];
 	pubTypes?: Pick<PubTypes, "id" | "name">[];
-}) => {
+	currentPubId?: PubsId;
+};
+
+export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 	const sidebarRef = useRef(null);
-	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(relatedPubs);
+	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(props.relatedPubs);
 
 	const handleUpdate = () => {
-		onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[]);
-		onCancel();
+		props.onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[]);
+		props.onCancel();
 	};
 
 	return (
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
-				<PanelHeader title={title} showCancel onCancel={onCancel} />
-				<PubsDataTableClient
+				<PanelHeader title={props.title} showCancel onCancel={props.onCancel} />
+				<FormPubsDataTableClient
+					formSlug={props.formSlug}
+					fieldSlug={props.fieldSlug}
 					selectedPubs={selected}
 					onSelectedPubsChange={setSelected}
-					disabledRows={disabledPubs}
-					pubTypes={pubTypes}
+					disabledRows={props.disabledPubs}
+					pubTypes={props.pubTypes}
+					currentPubId={props.currentPubId}
 				/>
 			</div>
 			<div className="mt-auto flex w-full justify-between gap-2">
-				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
+				<Button type="button" variant="outline" className="flex-1" onClick={props.onCancel}>
 					Cancel
 				</Button>
 				<Button

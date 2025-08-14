@@ -6,12 +6,12 @@ import { Suspense } from "react";
 import Script from "next/script";
 
 import { KeyboardShortcutProvider } from "ui/hooks";
-// import "./globals.css";
-
 import { TooltipProvider } from "ui/tooltip";
 
+import { getLoginData } from "~/lib/authentication/loginData";
 import { env } from "~/lib/env/env";
 import { ReactQueryProvider } from "./components/providers/QueryProvider";
+import { UserProvider } from "./components/providers/UserProvider";
 import { RootToaster } from "./RootToaster";
 
 export const metadata = {
@@ -19,7 +19,8 @@ export const metadata = {
 	description: "A more flexible PubPub",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+	const loginData = await getLoginData();
 	return (
 		<html lang="en">
 			<body>
@@ -29,18 +30,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 						src="//unpkg.com/react-scan/dist/auto.global.js"
 					/>
 				)}
-				<KeyboardShortcutProvider>
-					<ReactQueryProvider>
-						<NuqsAdapter>
-							<TooltipProvider>
-								{children}
-								<Suspense>
-									<RootToaster />
-								</Suspense>
-							</TooltipProvider>
-						</NuqsAdapter>
-					</ReactQueryProvider>
-				</KeyboardShortcutProvider>
+				<UserProvider {...loginData}>
+					<KeyboardShortcutProvider>
+						<ReactQueryProvider>
+							<NuqsAdapter>
+								<TooltipProvider>
+									{children}
+									<Suspense>
+										<RootToaster />
+									</Suspense>
+								</TooltipProvider>
+							</NuqsAdapter>
+						</ReactQueryProvider>
+					</KeyboardShortcutProvider>
+				</UserProvider>
 			</body>
 		</html>
 	);

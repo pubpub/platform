@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { Capabilities, MembershipType } from "db/public";
+import type { FormsId } from "db/public";
+import { Capabilities, MemberRole, MembershipType } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
@@ -54,6 +55,7 @@ export default async function Page(props: {
 	const page = parseInt(searchParams.page ?? "1", 10);
 	const [members, availableForms] = await Promise.all([
 		selectAllCommunityMemberships({ communityId: community.id }).execute(),
+
 		getSimpleForms(),
 	]);
 
@@ -71,18 +73,55 @@ export default async function Page(props: {
 			role,
 			email: user.email,
 			joined: new Date(createdAt).toLocaleString(),
-		} satisfies TableMember;
+			form: member.formId,
+		} satisfies TableMember & { form: FormsId | null };
 	});
 
 	const dedupedMembersMap = new Map<TableMember["id"], TableMember>();
-	for (const member of tableMembers) {
+	for (const { form, ...member } of tableMembers) {
+		const correspondingForm = availableForms.find((f) => f.id === form);
 		if (!dedupedMembersMap.has(member.id)) {
-			dedupedMembersMap.set(member.id, member);
-		} else {
-			const m = dedupedMembersMap.get(member.id);
-			if (m && compareMemberRoles(member.role, ">", m.role)) {
-				dedupedMembersMap.set(member.id, m);
-			}
+			const forms =
+				correspondingForm && member.role === MemberRole.contributor
+					? [
+							{
+								id: correspondingForm.id,
+								name: correspondingForm.name,
+								slug: correspondingForm.slug,
+							},
+						]
+					: [];
+			dedupedMembersMap.set(member.id, {
+				...member,
+				forms,
+			});
+			continue;
+		}
+
+		const m = dedupedMembersMap.get(member.id);
+
+		if (m && m.role === MemberRole.contributor && member.role === MemberRole.contributor) {
+			const forms = [
+				...(m.forms ?? []),
+				...(correspondingForm
+					? [
+							{
+								id: correspondingForm.id,
+								name: correspondingForm.name,
+								slug: correspondingForm.slug,
+							},
+						]
+					: []),
+			];
+			dedupedMembersMap.set(member.id, {
+				...member,
+				forms,
+			});
+			continue;
+		}
+
+		if (m && compareMemberRoles(member.role, ">", m.role)) {
+			dedupedMembersMap.set(member.id, m);
 		}
 	}
 	const dedupedMembers = [...dedupedMembersMap.values()];

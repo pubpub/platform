@@ -14,11 +14,13 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Value } from "@sinclair/typebox/value";
+import { AlertTriangle } from "lucide-react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
 import { relationBlockConfigSchema } from "schemas";
 
 import type { ProcessedPub } from "contracts";
 import type { InputComponent, PubsId, PubValuesId } from "db/public";
+import { MemberRole } from "db/public";
 import { Button } from "ui/button";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { GripVertical, Pencil, Plus, Trash, TriangleAlert } from "ui/icon";
@@ -27,11 +29,19 @@ import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { cn } from "utils";
 
 import type { PubFieldFormElementProps } from "../PubFieldFormElement";
-import type { ElementProps, RelatedFormValues, SingleFormValues } from "../types";
+import type {
+	ElementProps,
+	PubFieldElement,
+	PubFieldElementComponent,
+	RelatedFormValues,
+	SingleFormValues,
+} from "../types";
 import { AddRelatedPubsPanel } from "~/app/components/forms/AddRelatedPubsPanel";
 import { getPubTitle } from "~/lib/pubs";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
+import { usePubForm } from "../../providers/PubFormProvider";
+import { useCommunityMembershipOrThrow } from "../../providers/UserProvider";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
 import { PubFieldFormElement } from "../PubFieldFormElement";
 
@@ -125,7 +135,7 @@ export const ConfigureRelatedValue = ({
 	className?: string;
 }) => {
 	const configLabel =
-		"relationshipConfig" in element.config
+		element.isRelation && "relationshipConfig" in element.config
 			? element.config.relationshipConfig.label
 			: element.config.label;
 	const label = configLabel || element.label || element.slug;
@@ -182,16 +192,25 @@ export const ConfigureRelatedValue = ({
 	);
 };
 
+const useShouldShowRelationBlockWarning = (
+	element: PubFieldElement<PubFieldElementComponent, true>
+) => {
+	const membership = useCommunityMembershipOrThrow();
+	const { relatedPubTypes } = element;
+	return relatedPubTypes.length === 0 && membership.role === MemberRole.admin;
+};
+
 export const RelatedPubsElement = ({
 	slug,
 	label,
 	config,
 	valueComponentProps,
 }: ElementProps<InputComponent.relationBlock> & {
-	valueComponentProps: PubFieldFormElementProps;
+	valueComponentProps: PubFieldFormElementProps<PubFieldElementComponent, true>;
 }) => {
 	const { pubId, element } = valueComponentProps;
 	const { pubTypes } = useContextEditorContext();
+	const { form, mode } = usePubForm();
 	const { relatedPubTypes: relatedPubTypeIds } = element;
 	const relatedPubTypes = pubTypes.filter((pt) => relatedPubTypeIds?.includes(pt.id));
 
@@ -244,6 +263,8 @@ export const RelatedPubsElement = ({
 		},
 		[fields]
 	);
+
+	const showRelationBlockWarning = useShouldShowRelationBlockWarning(element);
 
 	Value.Default(relationBlockConfigSchema, config);
 	if (!Value.Check(relationBlockConfigSchema, config)) {
@@ -303,7 +324,11 @@ export const RelatedPubsElement = ({
 					};
 
 					return (
-						<FormItem data-testid={`related-pubs-${label}`}>
+						<FormItem
+							data-testid={`related-pubs-${label}`}
+							// otherwise it jumps down when the panel is open
+							className="flex flex-col gap-y-2 space-y-0"
+						>
 							{showPanel && (
 								<AddRelatedPubsPanel
 									title={`Add ${label}`}
@@ -313,6 +338,9 @@ export const RelatedPubsElement = ({
 									// Do not allow linking to itself
 									disabledPubs={pubId ? [pubId] : undefined}
 									pubTypes={relatedPubTypes}
+									fieldSlug={slug}
+									currentPubId={mode === "edit" ? pubId : undefined}
+									formSlug={form.slug}
 								/>
 							)}
 							<FormLabel className="flex">{label}</FormLabel>
@@ -366,8 +394,17 @@ export const RelatedPubsElement = ({
 									</MultiBlock>
 								</FormControl>
 							</div>
+
 							<FormDescription>{config.relationshipConfig.help}</FormDescription>
 							<FormMessage />
+							{showRelationBlockWarning && (
+								<div className="flex items-center gap-2 text-xs text-amber-500">
+									<AlertTriangle size={16} /> No related Pub Types have been
+									configured, so users will not be able to link to this pub.{" "}
+									<br />
+									Only admins can see this warning.
+								</div>
+							)}
 						</FormItem>
 					);
 				}}

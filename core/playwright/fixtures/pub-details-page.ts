@@ -9,9 +9,11 @@ export class PubDetailsPage {
 		private readonly pubId: PubsId
 	) {}
 
-	async goTo() {
+	async goTo(waitForUrl = true) {
 		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`);
-		await this.page.waitForURL(`/c/${this.communitySlug}/pubs/${this.pubId}`);
+		if (waitForUrl) {
+			await this.page.waitForURL(`/c/${this.communitySlug}/pubs/${this.pubId}*`);
+		}
 	}
 
 	async runAction(
@@ -53,6 +55,7 @@ export class PubDetailsPage {
 		await this.page
 			.getByRole("status")
 			.filter({ hasText: "Successfully removed the pub" })
+			.first()
 			.waitFor();
 	}
 }

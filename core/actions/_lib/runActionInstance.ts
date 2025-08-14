@@ -20,6 +20,7 @@ import { env } from "~/lib/env/env";
 import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
+import { getActionConfigDefaults } from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { MAX_STACK_DEPTH } from "~/lib/server/rules";
 import { isClientExceptionOptions } from "~/lib/serverActions";
@@ -98,6 +99,10 @@ const _runActionInstance = async (
 
 	const action = getActionByName(args.actionInstance.action);
 	const actionRun = await getActionRunByName(args.actionInstance.action);
+	const actionDefaults = await getActionConfigDefaults(
+		pub.communityId,
+		args.actionInstance.action
+	).executeTakeFirst();
 
 	if (!actionRun || !action) {
 		return {
@@ -106,7 +111,12 @@ const _runActionInstance = async (
 		};
 	}
 
-	const parsedConfig = action.config.schema.safeParse(args.actionInstance.config ?? {});
+	const actionConfig = {
+		...(actionDefaults?.config as Record<string, any>),
+		...(args.actionInstance.config as Record<string, any>),
+	};
+
+	const parsedConfig = action.config.schema.safeParse(actionConfig);
 
 	if (!parsedConfig.success) {
 		const err = {
