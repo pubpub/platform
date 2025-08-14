@@ -12,8 +12,8 @@ import { usePubFieldContext } from "ui/pubFields";
 import { cn } from "utils";
 
 import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
+import { useBuilder } from "./BuilderContext";
 import { FieldIcon } from "./FieldIcon";
-import { useFormBuilder } from "./FormBuilderContext";
 import { structuralElements } from "./StructuralElements";
 import { isFieldInput, isStructuralElement } from "./types";
 
@@ -35,7 +35,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		transition,
 	};
 
-	const { openConfigPanel, removeElement, restoreElement } = useFormBuilder();
+	const { openConfigPanel, removeElement, restoreElement } = useBuilder();
 
 	const labelId = useId();
 

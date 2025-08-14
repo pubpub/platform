@@ -1,6 +1,7 @@
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { useCallback } from "react";
+import { Hash } from "lucide-react";
 import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 
 import type { CoreSchemaType, PubFieldsId, PubTypes } from "db/public";
@@ -12,6 +13,7 @@ import { toast } from "ui/use-toast";
 
 import type { GetPubTypesResult } from "~/lib/server/pubtype";
 import { MenuItemButton, TableActionMenu } from "~/app/components/TableActionMenu";
+import { formatDateAsPossiblyDistance } from "~/lib/dates";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 
@@ -71,23 +73,30 @@ export const getTypesTableColumns = () =>
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
 			accessorKey: "name",
 			cell: ({ row }) => {
-				const { name } = row.original;
+				const { name, description } = row.original;
 				return (
-					<div className="flex items-center gap-2">
-						<span>{row.original.name}</span>
+					<div className="flex flex-col gap-1">
+						<span className="font-medium">{name}</span>
+						{description && (
+							<span className="text-sm text-muted-foreground">{description}</span>
+						)}
 					</div>
 				);
 			},
 		},
 		{
+			id: "fields",
 			header: ({ column }) => (
 				<DataTableColumnHeader
 					column={column}
-					title="Description"
-					icon={<Info size={15} strokeWidth={1} />}
+					title="Fields"
+					icon={<Hash size={15} strokeWidth={1} />}
 				/>
 			),
-			accessorKey: "description",
+			accessorFn: (row) => row.fields.length,
+			cell: ({ row }) => {
+				return <div className="pr-10">{row.original.fields.length}</div>;
+			},
 		},
 		{
 			id: "updated",
@@ -102,7 +111,7 @@ export const getTypesTableColumns = () =>
 			cell: ({ row }) => {
 				return (
 					<div className="pr-10">
-						{new Date(row.original.updatedAt).toLocaleDateString()}
+						{formatDateAsPossiblyDistance(new Date(row.original.updatedAt))}
 					</div>
 				);
 			},

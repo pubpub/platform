@@ -1,5 +1,7 @@
 "use server";
 
+import { sql } from "kysely";
+
 import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { logger } from "logger";
@@ -54,11 +56,17 @@ export const addPubField = defineServerAction(async function addPubField(
 	).execute();
 });
 
-export const updatePubType = defineServerAction(async function updatePubType(
-	pubTypeId: PubTypesId,
-	name: string,
-	description: string
-) {
+export const updatePubType = defineServerAction(async function updatePubType(opts: {
+	pubTypeId: PubTypesId;
+	name?: string;
+	description?: string | undefined;
+	titleField?: PubFieldsId | undefined;
+	fields: {
+		id: PubFieldsId;
+		rank: string;
+		deleted: boolean;
+	}[];
+}) {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
 	if (!user) {
@@ -79,13 +87,87 @@ export const updatePubType = defineServerAction(async function updatePubType(
 		return ApiError.UNAUTHORIZED;
 	}
 
-	await autoRevalidate(
-		db
-			.updateTable("pub_types")
-			.set({ name, description })
-			.where("id", "=", pubTypeId)
-			.where("communityId", "=", community.id)
-	).execute();
+	const { pubTypeId, name, description, titleField, fields } = opts;
+
+	const fieldsToDelete = fields.filter((field) => field.deleted);
+	console.log(titleField);
+	const fieldsToUpsert = fields
+		.filter((field) => !field.deleted)
+		.map((field) => ({
+			...field,
+			isTitle: field.id === titleField,
+		}));
+
+	try {
+		const res = await db.transaction().execute(async (trx) => {
+			if (name || description !== undefined) {
+				await autoRevalidate(
+					trx
+						.updateTable("pub_types")
+						.set({ name, description })
+						.where("id", "=", pubTypeId)
+				).execute();
+			}
+
+			if (fieldsToDelete.length > 0) {
+				await autoRevalidate(
+					trx
+						.deleteFrom("_PubFieldToPubType")
+						.where("B", "=", pubTypeId)
+						.where(
+							"A",
+							"in",
+							fieldsToDelete.map((field) => field.id)
+						)
+				).execute();
+			}
+
+			console.log("fieldsToUpsert", fieldsToUpsert);
+			if (fieldsToUpsert.length > 0) {
+				await autoRevalidate(
+					trx
+						.insertInto("_PubFieldToPubType")
+						.values(
+							fieldsToUpsert.map((field) => ({
+								A: field.id,
+								B: pubTypeId,
+								isTitle: field.id === titleField,
+							}))
+						)
+						.onConflict((b) =>
+							b.columns(["A", "B"]).doUpdateSet((eb) => ({
+								isTitle: sql<boolean>`excluded."A" = ${titleField}`,
+							}))
+						)
+				).execute();
+			}
+
+			await autoRevalidate(
+				trx
+					.updateTable("_PubFieldToPubType")
+					.set({ isTitle: false })
+					.where("B", "=", pubTypeId)
+			).execute();
+
+			if (titleField) {
+				await autoRevalidate(
+					trx
+						.updateTable("_PubFieldToPubType")
+						.set({ isTitle: true })
+						.where("A", "=", titleField)
+						.where("B", "=", pubTypeId)
+				).execute();
+			}
+		});
+
+		return {
+			data: {},
+			success: true,
+		};
+	} catch (error) {
+		logger.error(error);
+		return { error: "Pub type update failed", cause: error };
+	}
 });
 
 export const updateTitleField = defineServerAction(async function updateTitleField(
@@ -189,7 +271,6 @@ export const createPubType = defineServerAction(async function createPubType(
 	}
 	try {
 		const result = await db.transaction().execute(async (trx) => {
-			console.log("inserting pub type", fields);
 			const query = trx
 				.with("newType", (db) =>
 					db

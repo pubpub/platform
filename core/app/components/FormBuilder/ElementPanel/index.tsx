@@ -6,7 +6,8 @@ import { PlusCircle, X } from "ui/icon";
 import { Input } from "ui/input";
 
 import type { PanelState } from "../types";
-import { useFormBuilder } from "../FormBuilderContext";
+import type { FormElementData } from "../types";
+import { useBuilder } from "../BuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
 import { isFieldInput, isStructuralElement } from "../types";
 import { ButtonConfigurationForm } from "./ButtonConfigurationForm";
@@ -20,8 +21,13 @@ type ElementPanelProps = {
 };
 
 export const ElementPanel = ({ panelState }: ElementPanelProps) => {
-	const { elementsCount, removeIfUnconfigured, dispatch, slug, selectedElement } =
-		useFormBuilder();
+	const {
+		elementsCount,
+		removeIfUnconfigured,
+		dispatch,
+		identity: slug,
+		selectedElement,
+	} = useBuilder<FormElementData>();
 
 	switch (panelState.state) {
 		case "initial":
