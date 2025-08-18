@@ -3,7 +3,7 @@
 import type { PropsWithChildren } from "react";
 
 import * as React from "react";
-import { createContext, useContext } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 import type { Stages } from "db/public";
 
@@ -26,9 +26,9 @@ type BuilderContext<T extends Record<string, unknown> = Record<string, unknown>>
 	isDirty: boolean;
 };
 
-const BuilderContext = createContext<BuilderContext<Record<string, any>> | undefined>(undefined);
+const BuilderContext = createContext<BuilderContext | undefined>(undefined);
 
-export const useBuilder = <T extends Record<string, unknown> = Record<string, unknown>>() => {
+export const useBuilder = <T extends Record<string, unknown>>() => {
 	const context = useContext(BuilderContext) as BuilderContext<T>;
 	if (!context) {
 		throw new Error("Builder context used before initialization");
@@ -44,5 +44,10 @@ export const BuilderProvider = <T extends Record<string, unknown> = Record<strin
 	props: BuilderProviderProps<T>
 ) => {
 	const { children, ...value } = props;
-	return <BuilderContext.Provider value={value}>{children}</BuilderContext.Provider>;
+	const builderContext = useMemo(
+		() => BuilderContext as React.Context<BuilderContext<T> | undefined>,
+		[]
+	);
+
+	return <builderContext.Provider value={value}>{children}</builderContext.Provider>;
 };
