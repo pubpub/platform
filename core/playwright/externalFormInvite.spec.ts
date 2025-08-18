@@ -251,7 +251,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		// Open a new page so that we're no longer logged in as admin
 		const newPage = await browser.newPage();
 		await newPage.goto(decodedUrl);
-		await newPage.getByText("Progress will be automatically saved").waitFor();
+		await newPage.getByText("Form will save every few seconds while editing").waitFor();
 
 		await newPage.getByLabel("Content").fill("LGTM");
 
