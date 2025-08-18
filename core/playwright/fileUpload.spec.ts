@@ -80,7 +80,7 @@ test.describe("File upload", () => {
 		});
 
 		await page.getByRole("link", { name: "View Pub", exact: true }).click();
-		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}`);
+		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`);
 
 		const fileUploadValue = await page
 			.getByTestId(`FileUpload-value`)

@@ -21,14 +21,14 @@ export const PubEditorWrapper = ({
 	const onSuccess = () => {
 		toast({
 			title: "Success",
-			description: props.isUpdating ? "Pub successfully updated" : "New pub created",
+			description: props.mode === "edit" ? "Pub successfully updated" : "New pub created",
 		});
 
 		const newParams = new URLSearchParams(params);
 		const currentTime = `${new Date().getTime()}`;
 		newParams.set(SAVE_STATUS_QUERY_PARAM, currentTime);
 
-		if (props.isUpdating) {
+		if (props.mode === "edit") {
 			router.replace(`${pathname}?${newParams.toString()}`, { scroll: false });
 		} else {
 			// Delete the params associated with creating a related pub

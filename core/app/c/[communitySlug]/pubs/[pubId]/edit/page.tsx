@@ -4,7 +4,7 @@ import { cache } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import type { CommunitiesId, PubsId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { tryCatch } from "utils/try-catch";
 
@@ -12,10 +12,20 @@ import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getAuthorizedUpdateForms, userCanEditPub } from "~/lib/authorization/capabilities";
+import {
+	getAuthorizedUpdateForms,
+	getAuthorizedViewForms,
+	userCanEditPub,
+} from "~/lib/authorization/capabilities";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { resolveFormAccess } from "~/lib/server/form-access";
+import {
+	constructRedirectToPubDetailPage,
+	redirectToPubEditPage,
+	redirectToUnauthorized,
+} from "~/lib/server/navigation/redirects";
 
 const getPubsWithRelatedValuesCached = cache(
 	async ({
@@ -36,6 +46,7 @@ const getPubsWithRelatedValuesCached = cache(
 				},
 				{
 					withPubType: true,
+					withStage: true,
 				}
 			)
 		);
@@ -94,13 +105,11 @@ export default async function Page(props: {
 		findCommunityBySlug(communitySlug),
 	]);
 
-	const formSlug = searchParams.form;
-
 	if (!community) {
 		notFound();
 	}
 
-	const [pub, availableForms] = await Promise.all([
+	const [pub, availableUpdateForms, availableViewForms] = await Promise.all([
 		getPubsWithRelatedValuesCached({
 			pubId: params.pubId as PubsId,
 			communityId: community.id,
@@ -108,32 +117,46 @@ export default async function Page(props: {
 		}),
 
 		getAuthorizedUpdateForms(user.id, params.pubId).execute(),
+		getAuthorizedViewForms(user.id, params.pubId).execute(),
 	]);
-
-	const canUpdatePub = availableForms.length > 0;
-
-	if (!canUpdatePub) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
 
 	if (!pub) {
 		return notFound();
 	}
 
-	const hasAccessToCurrentForm = availableForms.find(
-		(form) => form.slug === formSlug || (form.isDefault && !formSlug)
-	);
-	const defaultForm = availableForms.find((form) => form.isDefault);
-	const firstAvailableForm = defaultForm || availableForms[0];
+	// ensure user has access to at least one form, and resolve the current form
+	// const {
+	// 	hasAccessToAnyForm: hasAccessToAnyUpdateForm,
+	// 	hasAccessToCurrentForm: hasAccessToCurrentUpdateForm,
+	// 	canonicalForm: updateFormToRedirectTo,
+	const {
+		hasAccessToAnyForm: hasAccessToAnyUpdateForm,
+		hasAccessToCurrentForm: hasAccessToCurrentUpdateForm,
+		canonicalForm: updateFormToRedirectTo,
+	} = resolveFormAccess({
+		availableForms: availableUpdateForms,
+		requestedFormSlug: searchParams.form,
+		communitySlug,
+	});
 
-	if (!hasAccessToCurrentForm) {
-		const redirectQuery = firstAvailableForm.isDefault
-			? ""
-			: `?form=${firstAvailableForm.slug}`;
-
-		// redirect to first available form
-		redirect(`/c/${communitySlug}/pubs/${pub.id}/edit${redirectQuery}`);
+	if (!hasAccessToAnyUpdateForm) {
+		return await redirectToUnauthorized();
 	}
+
+	if (!hasAccessToCurrentUpdateForm) {
+		return await redirectToPubEditPage({
+			pubId,
+			communitySlug,
+			formSlug: updateFormToRedirectTo.slug,
+		});
+	}
+
+	const { hasAccessToAnyForm: hasAccessToAnyViewForm, canonicalForm: viewFormToRedirectTo } =
+		resolveFormAccess({
+			availableForms: availableViewForms,
+			requestedFormSlug: searchParams.form,
+			communitySlug,
+		});
 
 	const htmlFormId = `edit-pub-${pub.id}`;
 
@@ -148,24 +171,35 @@ export default async function Page(props: {
 				<PubPageTitleWithStatus
 					title="Edit pub"
 					defaultFormSlug={searchParams.form}
-					forms={availableForms}
+					forms={availableUpdateForms}
 				/>
 			}
 			right={
-				<Button variant="link" asChild>
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>View Pub</Link>
-				</Button>
+				hasAccessToAnyViewForm && (
+					<Button variant="link" asChild>
+						<Link
+							href={constructRedirectToPubDetailPage({
+								pubId,
+								communitySlug,
+								formSlug: viewFormToRedirectTo.slug,
+							})}
+						>
+							View Pub
+						</Link>
+					</Button>
+				)
 			}
 		>
 			<div className="flex justify-center py-10">
 				<div className="max-w-prose flex-1">
 					{/** TODO: Add suspense */}
 					<PubEditor
-						searchParams={searchParams}
-						formSlug={searchParams.form}
+						mode="edit"
 						pubId={pub.id}
+						pub={pub}
 						htmlFormId={htmlFormId}
-						communityId={community.id}
+						pubTypeId={pub.pubTypeId}
+						form={updateFormToRedirectTo}
 					/>
 				</div>
 			</div>
