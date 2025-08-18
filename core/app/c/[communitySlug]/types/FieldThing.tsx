@@ -5,14 +5,15 @@ import { type Static } from "@sinclair/typebox";
 import { ArchiveRestore, GripVertical, Pencil, Text, Trash, TypeOutline } from "lucide-react";
 
 import { Button } from "ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
 import { useBuilder } from "~/app/components/FormBuilder/BuilderContext";
 import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon";
-import { pubTypeSchema } from "./TypeBuilder";
+import { pubTypeBuilderSchema } from "./TypeBuilder";
 
 export type FieldThingProps = {
-	field: Static<typeof pubTypeSchema>["fields"][number];
+	field: Static<typeof pubTypeBuilderSchema>["fields"][number];
 	isEditing: boolean;
 	isDisabled: boolean;
 	isTitle: boolean;
@@ -38,38 +39,48 @@ export const FieldThing = ({
 	};
 
 	const { openConfigPanel, removeElement, restoreElement } =
-		useBuilder<Static<typeof pubTypeSchema>["fields"][number]>();
+		useBuilder<Static<typeof pubTypeBuilderSchema>["fields"][number]>();
 	const labelId = useId();
 
 	const restoreRemoveButton = field.deleted ? (
 		<>
 			<div className="my-auto text-gray-500">Deleted on save</div>
-			<Button
-				type="button"
-				disabled={isDisabled}
-				variant="ghost"
-				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
-				aria-label="Restore element"
-				onClick={() => {
-					restoreElement(index);
-				}}
-			>
-				<ArchiveRestore size={24} className="text-neutral-400" />
-			</Button>
+			<Tooltip delayDuration={300}>
+				<TooltipTrigger asChild>
+					<Button
+						type="button"
+						disabled={isDisabled}
+						variant="ghost"
+						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
+						aria-label="Restore element"
+						onClick={() => {
+							restoreElement(index);
+						}}
+					>
+						<ArchiveRestore size={24} className="text-neutral-400" />
+					</Button>
+				</TooltipTrigger>
+				<TooltipContent>Restore this field</TooltipContent>
+			</Tooltip>
 		</>
 	) : (
-		<Button
-			type="button"
-			disabled={isDisabled}
-			variant="ghost"
-			className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
-			aria-label="Delete element"
-			onClick={() => {
-				removeElement(index);
-			}}
-		>
-			<Trash size={24} className="text-neutral-400" />
-		</Button>
+		<Tooltip delayDuration={300}>
+			<TooltipTrigger asChild>
+				<Button
+					type="button"
+					disabled={isDisabled}
+					variant="ghost"
+					className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
+					aria-label="Delete element"
+					onClick={() => {
+						removeElement(index);
+					}}
+				>
+					<Trash size={24} className="text-neutral-400" />
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent>Remove this field from this Pub Type</TooltipContent>
+		</Tooltip>
 	);
 
 	return (
@@ -109,23 +120,30 @@ export const FieldThing = ({
 					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
 				) : ( */}
 				<div className="my-auto ml-auto flex gap-1">
-					<Button
-						type="button"
-						aria-label="Make title"
-						disabled={isDisabled || field.deleted}
-						variant="ghost"
-						className={cn(
-							"p-1.5 text-neutral-400 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-							"hover:bg-white hover:text-blue-500",
-							isTitle && "text-blue-500 opacity-100"
-						)}
-						onClick={() => {
-							toggleTitle();
-						}}
-						tabIndex={0}
-					>
-						<TypeOutline size={24} />
-					</Button>
+					<Tooltip delayDuration={300}>
+						<TooltipTrigger asChild>
+							<Button
+								type="button"
+								aria-label="Set as title"
+								disabled={isDisabled || field.deleted}
+								variant="ghost"
+								className={cn(
+									"p-1.5 text-neutral-400 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
+									"hover:bg-white hover:text-blue-500",
+									isTitle && "text-blue-500 opacity-100"
+								)}
+								onClick={() => {
+									toggleTitle();
+								}}
+								tabIndex={0}
+							>
+								<TypeOutline size={24} />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>
+							Mark this field as the title of this Pub Type
+						</TooltipContent>
+					</Tooltip>
 
 					{restoreRemoveButton}
 					{/* Cant edit fields yet */}

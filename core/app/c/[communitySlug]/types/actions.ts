@@ -72,11 +72,11 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 	pubTypeId: PubTypesId;
 	name?: string;
 	description?: string | undefined;
-	titleField?: PubFieldsId | undefined;
 	fields: {
 		id: PubFieldsId;
 		rank: string;
 		deleted: boolean;
+		isTitle: boolean;
 	}[];
 }) {
 	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
@@ -99,7 +99,7 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 		return ApiError.UNAUTHORIZED;
 	}
 
-	const { pubTypeId, name, description, titleField, fields } = opts;
+	const { pubTypeId, name, description, fields } = opts;
 
 	const fieldsToDelete = fields.filter((field) => field.deleted);
 
@@ -107,7 +107,7 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 		.filter((field) => !field.deleted)
 		.map((field) => ({
 			...field,
-			isTitle: field.id === titleField,
+			isTitle: field.isTitle,
 		}));
 
 	try {
@@ -142,32 +142,16 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 							fieldsToUpsert.map((field) => ({
 								A: field.id,
 								B: pubTypeId,
-								isTitle: field.id === titleField,
+								isTitle: field.isTitle,
 								rank: field.rank,
 							}))
 						)
 						.onConflict((b) =>
 							b.columns(["A", "B"]).doUpdateSet((eb) => ({
-								isTitle: sql<boolean>`excluded."A" = ${titleField}`,
+								isTitle: sql<boolean>`excluded."isTitle"`,
+								rank: sql<string>`excluded.rank`,
 							}))
 						)
-				).execute();
-			}
-
-			await autoRevalidate(
-				trx
-					.updateTable("_PubFieldToPubType")
-					.set({ isTitle: false })
-					.where("B", "=", pubTypeId)
-			).execute();
-
-			if (titleField) {
-				await autoRevalidate(
-					trx
-						.updateTable("_PubFieldToPubType")
-						.set({ isTitle: true })
-						.where("A", "=", titleField)
-						.where("B", "=", pubTypeId)
 				).execute();
 			}
 		});

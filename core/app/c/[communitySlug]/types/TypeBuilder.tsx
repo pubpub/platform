@@ -12,12 +12,12 @@ import {
 	verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Type } from "@sinclair/typebox";
 import { CircleCheck, PlusCircle } from "lucide-react";
 import { useFieldArray, useForm, useFormContext } from "react-hook-form";
+import { IdString } from "schemas/utils";
 
-import type { PubFieldsId } from "db/public";
+import type { NewPubFieldToPubType, PubFieldsId, PubTypesId } from "db/public";
 import { CoreSchemaType } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
@@ -27,45 +27,100 @@ import { Input } from "ui/input";
 import { usePubFieldContext } from "ui/pubFields";
 import { toast } from "ui/use-toast";
 
-import type {
-	FormBuilderSchema,
-	FormElementData,
-	PanelState,
-} from "~/app/components/FormBuilder/types";
+import type { PanelState } from "~/app/components/FormBuilder/types";
 import type { GetPubTypesResult } from "~/lib/server";
-import { saveForm } from "~/app/components/FormBuilder/actions";
 import { BuilderProvider, useBuilder } from "~/app/components/FormBuilder/BuilderContext";
-import { ElementPanel } from "~/app/components/FormBuilder/ElementPanel";
-import { ButtonConfigurationForm } from "~/app/components/FormBuilder/ElementPanel/ButtonConfigurationForm";
-import { InputComponentConfigurationForm } from "~/app/components/FormBuilder/ElementPanel/InputComponentConfigurationForm";
-import { SelectAccess } from "~/app/components/FormBuilder/ElementPanel/SelectAccess";
-import { SelectElement } from "~/app/components/FormBuilder/ElementPanel/SelectElement";
-import { StructuralElementConfigurationForm } from "~/app/components/FormBuilder/ElementPanel/StructuralElementConfigurationForm";
 import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon";
 import { elementPanelReducer } from "~/app/components/FormBuilder/FormBuilder";
-import { SubmissionSettings } from "~/app/components/FormBuilder/SubmissionSettings";
-import {
-	formBuilderSchema,
-	isButtonElement,
-	isFieldInput,
-	isStructuralElement,
-} from "~/app/components/FormBuilder/types";
 import { useIsChanged } from "~/app/components/FormBuilder/useIsChanged";
-import { FormElement } from "~/app/components/forms/FormElement";
 import { PanelHeader, PanelWrapper, SidePanel } from "~/app/components/SidePanel";
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
-import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { updatePubType } from "./actions";
 import { FieldThing } from "./FieldThing";
 
-export const pubTypeSchema = Type.Object({
+/**
+ * Only sends the dirty fields to the server
+ */
+const preparePayload = ({
+	pubTypeId,
+	formValues,
+	defaultValues,
+}: {
+	pubTypeId: PubTypesId;
+	formValues: PubTypeBuilderSchema;
+	defaultValues: PubTypeBuilderSchema;
+}) => {
+	const { upserts, deletes } = formValues.fields.reduce<{
+		upserts: NewPubFieldToPubType[];
+		deletes: PubFieldsId[];
+	}>(
+		(acc, field) => {
+			if (field.deleted) {
+				if (field.fieldId) {
+					acc.deletes.push(field.fieldId);
+				}
+				return acc;
+			}
+
+			if (!field.fieldId) {
+				// Newly created elements have no elementId, so generate an id to use
+				const id = crypto.randomUUID() as PubFieldsId;
+				acc.upserts.push({
+					A: id,
+					B: pubTypeId,
+					rank: field.rank,
+					isTitle: field.isTitle,
+				});
+				return acc;
+			}
+
+			if (field.updated) {
+				// check whether the element is reeeaally updated minus the updated field
+				const { updated: _, id: _id, ...fieldWithoutUpdated } = field;
+				const { updated, id, ...rest } =
+					defaultValues.fields.find((f) => f.fieldId === field.fieldId) ?? {};
+
+				const defaultField = rest as Omit<
+					PubTypeBuilderSchema["fields"][number],
+					"updated" | "id"
+				>;
+
+				if (JSON.stringify(defaultField) === JSON.stringify(fieldWithoutUpdated)) {
+					return acc;
+				}
+
+				acc.upserts.push({
+					A: field.fieldId,
+					B: pubTypeId,
+					rank: field.rank,
+					isTitle: field.isTitle,
+					// ...field,
+					// fieldId: field.fieldId,
+					// id: field.fieldId,
+				});
+				return acc;
+			}
+			return acc;
+		},
+		{ upserts: [], deletes: [] }
+	);
+
+	return {
+		upserts,
+		deletes,
+		name: defaultValues.name !== formValues.name,
+		description: defaultValues.description !== formValues.description,
+	};
+};
+
+export const pubTypeBuilderSchema = Type.Object({
 	name: Type.String(),
 	description: Type.Optional(Type.String()),
 	fields: Type.Array(
 		Type.Object({
 			id: Type.String(), // ignore this field
-			fieldId: Type.String(),
+			fieldId: IdString<PubFieldsId>(),
 			deleted: Type.Optional(Type.Boolean()),
 			name: Type.String(),
 			configured: Type.Optional(Type.Boolean()),
@@ -75,17 +130,19 @@ export const pubTypeSchema = Type.Object({
 			rank: Type.String(),
 			slug: Type.String(),
 			schemaName: Type.Enum(CoreSchemaType),
+			isTitle: Type.Boolean(),
 		})
 	),
-	titleField: Type.Optional(Type.String()),
 });
+
+export type PubTypeBuilderSchema = Static<typeof pubTypeBuilderSchema>;
 
 export const TypeBuilder = ({
 	pubType,
-	id,
+	formId,
 }: {
 	pubType: GetPubTypesResult[number];
-	id: string;
+	formId: string;
 }) => {
 	const [isChanged, setIsChanged] = useIsChanged();
 
@@ -103,15 +160,15 @@ export const TypeBuilder = ({
 				configured: false,
 				added: false,
 				updated: false,
+				isTitle: field.isTitle,
 			})),
 			name: pubType.name,
 			description: pubType.description ?? undefined,
-			titleField: pubType.fields.find((field) => field.isTitle)?.id,
 		};
 	}, [pubType]);
 
-	const form = useForm<Static<typeof pubTypeSchema>>({
-		resolver: typeboxResolver(pubTypeSchema),
+	const form = useForm<Static<typeof pubTypeBuilderSchema>>({
+		resolver: typeboxResolver(pubTypeBuilderSchema),
 		values: defaultValues,
 	});
 
@@ -125,7 +182,7 @@ export const TypeBuilder = ({
 	});
 
 	const { append, fields, move, remove, update } = useFieldArray<
-		Static<typeof pubTypeSchema>,
+		Static<typeof pubTypeBuilderSchema>,
 		"fields",
 		"id"
 	>({
@@ -137,41 +194,39 @@ export const TypeBuilder = ({
 
 	useUnsavedChangesWarning(form.formState.isDirty);
 
+	const payload = useMemo(
+		() =>
+			preparePayload({
+				pubTypeId: pubType.id,
+				formValues,
+				defaultValues,
+			}),
+		[pubType.id, formValues, defaultValues]
+	);
+
 	React.useEffect(() => {
 		setIsChanged(
-			formValues.name !== pubType.name ||
-				formValues.description !== pubType.description ||
-				formValues.titleField !== pubType.fields.find((field) => field.isTitle)?.id ||
-				formValues.fields.some((field) => field.deleted) ||
-				formValues.fields.some((field) => field.added)
+			payload.upserts.length > 0 ||
+				payload.deletes.length > 0 ||
+				payload.name ||
+				payload.description
 		);
-	}, [formValues, pubType]);
-
-	// const payload = useMemo(
-	// 	() => preparePayload({ formValues, defaultValues }),
-	// 	[formValues, defaultValues]
-	// );
-
-	// React.useEffect(() => {
-	// 	setIsChanged(
-	// 		payload.upserts.length > 0 || payload.deletes.length > 0 || payload.access != null
-	// 	);
-	// }, [payload]);
+	}, [payload]);
 
 	const runUpdatePubType = useServerAction(updatePubType);
 
-	console.log("titlefield", formValues.titleField);
+	// console.log("titlefield", formValues.titleField);
 
-	const onSubmit = async (formData: Static<typeof pubTypeSchema>) => {
+	const onSubmit = async (formData: Static<typeof pubTypeBuilderSchema>) => {
 		const result = await runUpdatePubType({
 			pubTypeId: pubType.id,
 			name: formData.name,
 			description: formData.description,
-			titleField: formData.titleField as PubFieldsId | undefined,
 			fields: formData.fields.map((field) => ({
 				id: field.fieldId as PubFieldsId,
 				rank: field.rank,
 				deleted: field.deleted ?? false,
+				isTitle: field.isTitle,
 			})),
 		});
 		if (didSucceed(result)) {
@@ -186,7 +241,7 @@ export const TypeBuilder = ({
 		}
 	};
 	const addElement = useCallback(
-		(element: Static<typeof pubTypeSchema>["fields"][number]) => {
+		(element: Static<typeof pubTypeBuilderSchema>["fields"][number]) => {
 			append(element);
 		},
 		[append]
@@ -240,7 +295,6 @@ export const TypeBuilder = ({
 		})
 	);
 
-	const titleField = form.watch("titleField");
 	const dndContextId = useId();
 
 	return (
@@ -271,7 +325,7 @@ export const TypeBuilder = ({
 				>
 					<Form {...form}>
 						<form
-							id={id}
+							id={formId}
 							aria-label="Pub type builder"
 							onSubmit={form.handleSubmit(onSubmit, (errors, event) =>
 								logger.error({
@@ -303,17 +357,26 @@ export const TypeBuilder = ({
 												>
 													{fields.map((field, index) => (
 														<FieldThing
-															isTitle={titleField === field.fieldId}
+															isTitle={field.isTitle}
 															toggleTitle={() => {
-																if (titleField === field.fieldId) {
-																	form.setValue(
-																		"titleField",
-																		undefined
-																	);
-																} else {
-																	form.setValue(
-																		"titleField",
-																		field.fieldId
+																update(index, {
+																	...field,
+																	isTitle: !field.isTitle,
+																	updated: true,
+																});
+																// also update the current title field
+																const currentTitleField =
+																	fields.find((f) => f.isTitle);
+																if (currentTitleField) {
+																	update(
+																		fields.indexOf(
+																			currentTitleField
+																		),
+																		{
+																			...currentTitleField,
+																			isTitle: false,
+																			updated: true,
+																		}
 																	);
 																}
 															}}
@@ -369,7 +432,7 @@ export const FieldPanel = ({ panelState }: { panelState: PanelState }) => {
 		dispatch,
 		identity: id,
 		selectedElement,
-	} = useBuilder<Static<typeof pubTypeSchema>["fields"][number]>();
+	} = useBuilder<Static<typeof pubTypeBuilderSchema>["fields"][number]>();
 
 	switch (panelState.state) {
 		case "initial":
@@ -414,8 +477,8 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();
 
 	const { elementsCount, dispatch, addElement } =
-		useBuilder<Static<typeof pubTypeSchema>["fields"][number]>();
-	const { getValues } = useFormContext<Static<typeof pubTypeSchema>>();
+		useBuilder<Static<typeof pubTypeBuilderSchema>["fields"][number]>();
+	const { getValues } = useFormContext<Static<typeof pubTypeBuilderSchema>>();
 	const selectedFields = getValues()["fields"];
 
 	const fieldButtons = Object.values(fields).map((field) => {
@@ -454,6 +517,7 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 							start: selectedFields[elementsCount - 1]?.rank,
 						})[0],
 						configured: false,
+						isTitle: false,
 					});
 				}}
 				data-testid={`field-button-${field.slug}`}

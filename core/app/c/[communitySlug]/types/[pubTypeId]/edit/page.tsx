@@ -98,10 +98,7 @@ export default async function Page(props: {
 			}
 		>
 			<PubFieldProvider pubFields={fields}>
-				{/* <PubTypeProvider pubTypes={pubTypes}> */}
-				<TypeBuilder pubType={pubType} id={pubtypebuilderId} />
-				{/* <FormBuilder pubForm={form} id={formBuilderId} stages={communityStages} /> */}
-				{/* </PubTypeProvider> */}
+				<TypeBuilder pubType={pubType} formId={pubtypebuilderId} />
 			</PubFieldProvider>
 		</ContentLayout>
 	);
