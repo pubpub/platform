@@ -1,14 +1,15 @@
+import type { Static } from "@sinclair/typebox";
 import type { ReactNode } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 
-import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useMemo } from "react";
+import { typeboxResolver } from "@hookform/resolvers/typebox";
+import { Type } from "@sinclair/typebox";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { IdString } from "schemas/utils";
 
-import type { PubTypesId } from "db/public";
+import type { PubFieldsId, PubTypesId } from "db/public";
 import type { PubFieldContext } from "ui/pubFields";
-import { pubFieldsIdSchema } from "db/public";
 import {
 	Form,
 	FormControl,
@@ -25,15 +26,22 @@ import { toast } from "ui/use-toast";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import { updatePubType } from "./[pubTypeId]/edit/actions";
+import { createPubType } from "./actions";
 
-const baseSchema = z.object({
-	name: z.string().min(2),
-	description: z.string().min(1).optional(),
-	fields: z.array(pubFieldsIdSchema).min(1),
+const baseSchema = Type.Object({
+	name: Type.String({
+		minLength: 2,
+	}),
+	description: Type.Optional(Type.String()),
+
+	fields: Type.Array(IdString<PubFieldsId>(), {
+		minItems: 1,
+	}),
 });
 
-type FormValues = z.infer<typeof baseSchema>;
+type FormValues = Static<typeof baseSchema>;
+// type FormValues = Static<typeof createSchema>;
 
 const DEFAULT_VALUES = {
 	name: "",
@@ -45,23 +53,53 @@ type FormType = UseFormReturn<FormValues, any, FieldValues>;
 export const NewTypeForm = ({
 	onSubmitSuccess,
 	children,
+	...props
 }: {
 	onSubmitSuccess: (pubTypeId: PubTypesId) => void;
 	children: ReactNode;
-}) => {
-	const createType = useServerAction(actions.createPubType);
+} & (
+	| {
+			mode: "create";
+			pubTypeId?: never;
+	  }
+	| {
+			mode: "edit";
+			pubTypeId: PubTypesId;
+			name: string;
+			description?: string | null;
+	  }
+)) => {
+	const runCreatePubType = useServerAction(createPubType);
+	const runUpdatePubType = useServerAction(updatePubType);
 	const pubFields = usePubFieldContext();
 	const community = useCommunity();
 
 	const handleSubmit = useCallback(async (values: FormValues) => {
-		const result = await createType(
+		if (props.mode === "edit") {
+			const result = await runUpdatePubType({
+				pubTypeId: props.pubTypeId,
+				name: values.name,
+				description: values.description,
+				fields: [],
+			});
+			if (result && didSucceed(result)) {
+				toast({ title: `Type ${values.name} updated` });
+				onSubmitSuccess(props.pubTypeId);
+				return;
+			}
+
+			form.setError("root", { message: result.error });
+			return;
+		}
+
+		const result = await runCreatePubType(
 			values.name,
 			community.id,
 			values.description,
 			values.fields
 		);
 		if (result && didSucceed(result)) {
-			toast({ title: `Created type ${values.name}` });
+			toast({ title: `Type ${values.name} created` });
 			onSubmitSuccess(result.data.id);
 			return;
 		}
@@ -69,9 +107,23 @@ export const NewTypeForm = ({
 		form.setError("root", { message: result.error });
 	}, []);
 
+	const resolver = useMemo(() => {
+		if (props.mode === "create") {
+			return typeboxResolver(Type.Required(baseSchema));
+		}
+
+		return typeboxResolver(Type.Omit(baseSchema, ["fields"]));
+	}, []);
+
 	const form = useForm<FormValues>({
-		defaultValues: DEFAULT_VALUES,
-		resolver: zodResolver(baseSchema),
+		defaultValues:
+			props.mode === "create"
+				? DEFAULT_VALUES
+				: {
+						name: props.name,
+						description: props.description ?? "",
+					},
+		resolver,
 	});
 
 	return (
@@ -107,7 +159,7 @@ export const NewTypeForm = ({
 							</FormItem>
 						)}
 					/>
-					<FieldSelector pubFields={pubFields} form={form} />
+					{props.mode === "create" && <FieldSelector pubFields={pubFields} form={form} />}
 					{form.formState.errors.root && (
 						<div className="text-sm text-red-500">
 							{form.formState.errors.root.message}

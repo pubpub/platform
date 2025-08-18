@@ -43,7 +43,7 @@ export const CreatePubTypeButton = ({ className }: { className?: string }) => {
 				<DialogTitle>Create Type</DialogTitle>
 
 				{isOpen && (
-					<NewTypeForm onSubmitSuccess={onSuccess}>
+					<NewTypeForm mode="create" onSubmitSuccess={onSuccess}>
 						<Footer submitText="Create" onCancel={() => setIsOpen(false)} />
 					</NewTypeForm>
 				)}

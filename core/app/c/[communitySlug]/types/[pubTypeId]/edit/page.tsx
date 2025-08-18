@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import type { PubTypesId } from "db/public";
@@ -9,6 +10,7 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "ui/breadcrumb";
+import { Button } from "ui/button";
 import { ToyBrick } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
@@ -20,7 +22,29 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { redirectToLogin } from "~/lib/server/navigation/redirects";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
+import { UpdatePubTypeButton } from "../../UpdatePubTypeDialog";
 import { TypeBuilder } from "./TypeBuilder";
+
+const getPubTypeCached = cache(async (pubTypeId: PubTypesId) => {
+	return getPubType(pubTypeId).executeTakeFirstOrThrow();
+});
+
+export const generateMetadata = async ({
+	params,
+}: {
+	params: Promise<{ pubTypeId: PubTypesId }>;
+}) => {
+	const { pubTypeId } = await params;
+	const pubType = await getPubTypeCached(pubTypeId);
+
+	if (!pubType) {
+		notFound();
+	}
+
+	return {
+		title: `${pubType.name} [Type]`,
+	};
+};
 
 export default async function Page(props: {
 	params: Promise<{
@@ -74,7 +98,7 @@ export default async function Page(props: {
 									Types
 								</BreadcrumbLink>
 							</BreadcrumbItem>
-							<BreadcrumbSeparator />
+							<BreadcrumbSeparator className="mt-1" />
 							<BreadcrumbPage>{pubType.name}</BreadcrumbPage>
 						</BreadcrumbList>
 						{pubType.description && (
@@ -82,6 +106,18 @@ export default async function Page(props: {
 								{pubType.description}
 							</div>
 						)}
+						<UpdatePubTypeButton
+							pubTypeId={pubTypeId}
+							name={pubType.name}
+							description={pubType.description}
+						>
+							<Button
+								variant="link"
+								className="mt-1 text-sm text-blue-500 underline hover:text-blue-600"
+							>
+								Edit
+							</Button>
+						</UpdatePubTypeButton>
 						{/* <span>Types</span>
 						<span className="text-lg font-bold">{pubType.name}</span> */}
 						{/* <EditFormTitleButton formId={form.id} name={form.name} /> */}

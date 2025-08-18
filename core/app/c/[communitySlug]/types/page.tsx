@@ -13,7 +13,7 @@ import { redirectToLogin } from "~/lib/server/navigation/redirects";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";
-import { CreatePubTypeButton } from "./CreatePubType";
+import { CreatePubTypeButton } from "./CreatePubTypeDialog";
 import { TypesTable } from "./TypesTable";
 
 export const metadata: Metadata = {
