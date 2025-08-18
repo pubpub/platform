@@ -11,6 +11,7 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
+import { PubTypesEditPage } from "./fixtures/pub-types-edit-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { choosePubType, PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
@@ -221,7 +222,13 @@ test.describe("Creating a pub", () => {
 		// Add it as a pub type
 		const pubTypePage = new PubTypesPage(page, community.community.slug);
 		await pubTypePage.goto();
-		await pubTypePage.addType("Editor", "editor", ["title", "rich-text"], "title");
+		const { id } = await pubTypePage.addType("Editor", "editor", ["Title", "Rich Text"]);
+
+		const pubTypesEditPage = new PubTypesEditPage(page, community.community.slug, id);
+		await pubTypesEditPage.goto();
+
+		await pubTypesEditPage.setAsTitleField("Title");
+		await pubTypesEditPage.saveType();
 
 		// Now create a pub of this type
 		const actualTitle = "new title";
@@ -263,12 +270,19 @@ test.describe("Creating a pub", () => {
 		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		await fieldsPage.addField(stringField, CoreSchemaType.String, true);
-		const pubTypePage = new PubTypesPage(page, community.community.slug);
-		await pubTypePage.goto();
-		await pubTypePage.addFieldToPubType(
-			"Submission",
-			`${community.community.slug}:${stringField}`
+
+		const submissionPubTypeId = community.pubTypes.Submission.id;
+
+		const pubTypePage = new PubTypesEditPage(
+			page,
+			community.community.slug,
+			submissionPubTypeId
 		);
+		await pubTypePage.goto();
+		await page.waitForTimeout(500);
+		await pubTypePage.addField(stringField);
+
+		await pubTypePage.saveType();
 
 		// Now go to a pub page and add a related pub
 		const pubPage = new PubDetailsPage(page, community.community.slug, community.pubs[0].id);

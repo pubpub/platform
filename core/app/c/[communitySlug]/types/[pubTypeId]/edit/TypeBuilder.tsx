@@ -75,6 +75,15 @@ const preparePayload = ({
 				return acc;
 			}
 
+			if (field.added) {
+				acc.upserts.push({
+					A: field.fieldId,
+					B: pubTypeId,
+					rank: field.rank,
+					isTitle: field.isTitle,
+				});
+			}
+
 			if (field.updated) {
 				// check whether the element is reeeaally updated minus the updated field
 				const { updated: _, id: _id, ...fieldWithoutUpdated } = field;
@@ -218,7 +227,7 @@ export const TypeBuilder = ({
 				className: "rounded border-emerald-100 bg-emerald-50",
 				action: (
 					<div className="flex w-full gap-3 text-green-700">
-						<CircleCheck className="" /> Form Successfully Saved
+						<CircleCheck className="" /> Type Successfully Saved
 					</div>
 				),
 			});
@@ -427,6 +436,8 @@ export const FieldPanel = ({ panelState }: { panelState: PanelState }) => {
 						className="flex w-full items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600"
 						size="lg"
 						onClick={() => dispatch({ eventName: "add" })}
+						aria-label="Add new field"
+						data-testid="add-field-button"
 					>
 						<PlusCircle /> Add New
 					</Button>
@@ -503,7 +514,7 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 						isTitle: false,
 					});
 				}}
-				data-testid={`field-button-${field.slug}`}
+				data-testid={`field-button-${field.name}`}
 			>
 				<FieldIcon field={field} className="my-auto text-emerald-500" />
 				<div className="flex flex-col items-start text-left">

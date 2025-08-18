@@ -55,10 +55,11 @@ export const FieldBlock = ({
 						disabled={isDisabled}
 						variant="ghost"
 						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
-						aria-label="Restore element"
+						aria-label={`Restore ${field.name}`}
 						onClick={() => {
 							restoreElement(index);
 						}}
+						data-testid={`restore-${field.name}`}
 					>
 						<ArchiveRestore size={24} className="text-neutral-400" />
 					</Button>
@@ -74,7 +75,8 @@ export const FieldBlock = ({
 					disabled={isDisabled}
 					variant="ghost"
 					className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
-					aria-label="Delete element"
+					aria-label={`Delete ${field.name}`}
+					data-testid={`delete-${field.name}`}
 					onClick={() => {
 						removeElement(index);
 					}}
@@ -125,7 +127,7 @@ export const FieldBlock = ({
 							<TooltipTrigger asChild>
 								<Button
 									type="button"
-									aria-label="Set as title"
+									aria-label={`${isTitle ? "Remove" : "Set"} as title ${field.name}`}
 									disabled={isDisabled || field.deleted}
 									variant="ghost"
 									className={cn(
@@ -137,6 +139,7 @@ export const FieldBlock = ({
 										toggleTitle();
 									}}
 									tabIndex={0}
+									data-testid={`${isTitle ? "remove" : "set"}-as-title-${field.name}`}
 								>
 									<TypeOutline size={24} />
 								</Button>
@@ -163,7 +166,7 @@ export const FieldBlock = ({
 						</Button> */}
 					<Button
 						type="button"
-						aria-label="Drag handle"
+						aria-label={`Drag ${field.name}`}
 						disabled={isDisabled || field.deleted}
 						variant="ghost"
 						className={cn(
@@ -173,6 +176,7 @@ export const FieldBlock = ({
 						{...listeners}
 						{...attributes}
 						tabIndex={0}
+						data-testid={`drag-${field.name}`}
 					>
 						<GripVertical size={24} className="text-neutral-400" />
 					</Button>

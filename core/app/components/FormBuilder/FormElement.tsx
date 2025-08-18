@@ -35,6 +35,12 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 		transition,
 	};
 
+	const pubFields = usePubFieldContext();
+	const field = pubFields[element.fieldId as PubFieldsId];
+	const labelName = field
+		? (element.label ?? (element.config as any)?.label ?? field.name)
+		: (element.label ?? element.id);
+
 	const { openConfigPanel, removeElement, restoreElement } = useBuilder();
 
 	const labelId = useId();
@@ -47,10 +53,11 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				disabled={isDisabled}
 				variant="ghost"
 				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
-				aria-label="Restore element"
+				aria-label={`Restore ${labelName}`}
 				onClick={() => {
 					restoreElement(index);
 				}}
+				data-testid={`restore-${labelName}`}
 			>
 				<ArchiveRestore size={24} className="text-neutral-400" />
 			</Button>
@@ -61,7 +68,8 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			disabled={isDisabled}
 			variant="ghost"
 			className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
-			aria-label="Delete element"
+			aria-label={`Delete ${labelName}`}
+			data-testid={`delete-${labelName}`}
 			onClick={() => {
 				removeElement(index);
 			}}
@@ -100,6 +108,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
 							className="p-2 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
+							data-testid={`edit-${labelName}`}
 							onClick={() => {
 								openConfigPanel(index);
 							}}
@@ -108,7 +117,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 						</Button>
 						<Button
 							type="button"
-							aria-label="Drag handle"
+							aria-label={`Drag ${labelName}`}
 							disabled={isDisabled || element.deleted}
 							variant="ghost"
 							className={cn(
@@ -118,6 +127,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							{...listeners}
 							{...attributes}
 							tabIndex={0}
+							data-testid={`drag-${labelName}`}
 						>
 							<GripVertical size={24} className="text-neutral-400" />
 						</Button>

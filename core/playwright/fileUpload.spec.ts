@@ -7,11 +7,8 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { FieldsPage } from "./fixtures/fields-page";
 import { LoginPage } from "./fixtures/login-page";
-import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
-import { createCommunity } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
