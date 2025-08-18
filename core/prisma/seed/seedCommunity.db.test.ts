@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { describe, expect, test } from "vitest";
 
@@ -32,6 +33,8 @@ describe("seedCommunity", () => {
 		const stage1Id = crypto.randomUUID() as StagesId;
 		const AuthorPubTypeId = crypto.randomUUID() as PubTypesId;
 
+		const email = faker.internet.email();
+
 		const seededCommunity = await seedCommunity({
 			community: {
 				name: "test",
@@ -57,7 +60,7 @@ describe("seedCommunity", () => {
 				test: {
 					id: testUserId,
 					firstName: "Testy",
-					email: "test@test.com",
+					email,
 					lastName: "McTestFace",
 					role: MemberRole.admin,
 				},
