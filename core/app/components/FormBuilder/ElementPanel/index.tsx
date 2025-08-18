@@ -5,8 +5,7 @@ import { FormLabel } from "ui/form";
 import { PlusCircle, X } from "ui/icon";
 import { Input } from "ui/input";
 
-import type { PanelState } from "../types";
-import type { FormElementData } from "../types";
+import type { FormElementData, PanelState } from "../types";
 import { useBuilder } from "../BuilderContext";
 import { SubmissionSettings } from "../SubmissionSettings";
 import { isFieldInput, isStructuralElement } from "../types";
