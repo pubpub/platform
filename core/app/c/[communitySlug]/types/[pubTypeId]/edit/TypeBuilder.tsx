@@ -106,14 +106,10 @@ const preparePayload = ({
 	return {
 		upserts,
 		deletes,
-		name: defaultValues.name !== formValues.name,
-		description: defaultValues.description !== formValues.description,
 	};
 };
 
 export const pubTypeBuilderSchema = Type.Object({
-	name: Type.String(),
-	description: Type.Optional(Type.String()),
 	fields: Type.Array(
 		Type.Object({
 			id: Type.String(), // ignore this field
@@ -202,12 +198,7 @@ export const TypeBuilder = ({
 	);
 
 	React.useEffect(() => {
-		setIsChanged(
-			payload.upserts.length > 0 ||
-				payload.deletes.length > 0 ||
-				payload.name ||
-				payload.description
-		);
+		setIsChanged(payload.upserts.length > 0 || payload.deletes.length > 0);
 	}, [payload]);
 
 	const runUpdatePubType = useServerAction(updatePubType);
@@ -215,8 +206,6 @@ export const TypeBuilder = ({
 	const onSubmit = async (formData: Static<typeof pubTypeBuilderSchema>) => {
 		const result = await runUpdatePubType({
 			pubTypeId: pubType.id,
-			name: formData.name,
-			description: formData.description,
 			fields: formData.fields.map((field) => ({
 				id: field.fieldId as PubFieldsId,
 				rank: field.rank,
@@ -476,7 +465,7 @@ export const SelectField = ({ panelState }: { panelState: PanelState }) => {
 	const selectedFields = getValues()["fields"];
 
 	const fieldButtons = Object.values(fields).map((field) => {
-		const usedFields = selectedFields.map((e) => e.id);
+		const usedFields = selectedFields.map((e) => e.fieldId);
 		if (
 			usedFields.includes(field.id) ||
 			field.isArchived ||
