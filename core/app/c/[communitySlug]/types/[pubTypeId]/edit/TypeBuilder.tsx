@@ -37,7 +37,7 @@ import { PanelHeader, PanelWrapper, SidePanel } from "~/app/components/SidePanel
 import { findRanksBetween, getRankAndIndexChanges } from "~/lib/rank";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { updatePubType } from "./actions";
-import { FieldThing } from "./FieldThing";
+import { FieldBlock } from "./FieldBlock";
 
 /**
  * Only sends the dirty fields to the server
@@ -356,7 +356,7 @@ export const TypeBuilder = ({
 													strategy={verticalListSortingStrategy}
 												>
 													{fields.map((field, index) => (
-														<FieldThing
+														<FieldBlock
 															isTitle={field.isTitle}
 															toggleTitle={() => {
 																update(index, {

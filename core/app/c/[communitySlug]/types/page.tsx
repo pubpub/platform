@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { Capabilities, MembershipType } from "db/public";
-import { FormInput, ToyBrick } from "ui/icon";
+import { ToyBrick } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
@@ -11,10 +11,9 @@ import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { redirectToLogin } from "~/lib/server/navigation/redirects";
 import { getPubFields } from "~/lib/server/pubFields";
-import { getAllPubTypesForCommunity, getPubTypesForCommunity } from "~/lib/server/pubtype";
+import { getPubTypesForCommunity } from "~/lib/server/pubtype";
 import { ContentLayout } from "../ContentLayout";
 import { CreatePubTypeButton } from "./CreatePubType";
-import TypeList from "./TypeList";
 import { TypesTable } from "./TypesTable";
 
 export const metadata: Metadata = {

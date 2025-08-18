@@ -21,7 +21,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { redirectToLogin } from "~/lib/server/navigation/redirects";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContentLayout } from "../../../ContentLayout";
-import { TypeBuilder } from "../../TypeBuilder";
+import { TypeBuilder } from "./TypeBuilder";
 
 export default async function Page(props: {
 	params: Promise<{

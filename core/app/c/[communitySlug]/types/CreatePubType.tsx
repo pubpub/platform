@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import type { PubTypesId } from "db/public";
@@ -11,9 +11,7 @@ import { cn } from "utils";
 
 import { Footer } from "~/app/components/CreateEditDialog";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { NewTypeForm } from "./NewTypeForm";
-import { TypeEditor } from "./TypeEditor";
 
 export const CreatePubTypeButton = ({ className }: { className?: string }) => {
 	const [isOpen, setIsOpen] = useState(false);
