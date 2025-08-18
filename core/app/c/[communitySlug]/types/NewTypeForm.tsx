@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import type { PubTypesId } from "db/public";
 import type { PubFieldContext } from "ui/pubFields";
-import { pubFieldsIdSchema, pubTypesIdSchema } from "db/public";
+import { pubFieldsIdSchema } from "db/public";
 import {
 	Form,
 	FormControl,
@@ -23,7 +23,6 @@ import { MultiSelect } from "ui/multi-select";
 import { usePubFieldContext } from "ui/pubFields";
 import { toast } from "ui/use-toast";
 
-import type { MaybeHas } from "~/lib/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";

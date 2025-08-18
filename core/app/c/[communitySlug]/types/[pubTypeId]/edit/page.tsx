@@ -9,10 +9,9 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "ui/breadcrumb";
-import { ClipboardPenLine, ToyBrick } from "ui/icon";
+import { ToyBrick } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 
-import { BuilderProvider } from "~/app/components/FormBuilder/BuilderContext";
 import { SaveFormButton } from "~/app/components/FormBuilder/SaveFormButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";

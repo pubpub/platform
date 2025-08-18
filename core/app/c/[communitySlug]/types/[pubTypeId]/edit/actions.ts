@@ -1,3 +1,5 @@
+"use server";
+
 import { sql } from "kysely";
 
 import type { PubFieldsId, PubTypesId } from "db/public";
@@ -79,6 +81,19 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 			}
 
 			if (fieldsToUpsert.length > 0) {
+				if (fieldsToUpsert.some((field) => field.isTitle)) {
+					// if one of the upserts has a isTitle: true,
+					// we first unset the isTitle for all other fields
+					// this prevents ordering issues when we set an earlier field as title and then a later one as not title
+					// { isTitle: true, rank: 0 } and { isTitle: false, rank: 1 }
+					await autoRevalidate(
+						trx
+							.updateTable("_PubFieldToPubType")
+							.set({ isTitle: false })
+							.where("B", "=", pubTypeId)
+					).execute();
+				}
+
 				await autoRevalidate(
 					trx
 						.insertInto("_PubFieldToPubType")

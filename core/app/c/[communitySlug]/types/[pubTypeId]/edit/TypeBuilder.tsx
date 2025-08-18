@@ -95,9 +95,6 @@ const preparePayload = ({
 					B: pubTypeId,
 					rank: field.rank,
 					isTitle: field.isTitle,
-					// ...field,
-					// fieldId: field.fieldId,
-					// id: field.fieldId,
 				});
 				return acc;
 			}
@@ -214,8 +211,6 @@ export const TypeBuilder = ({
 	}, [payload]);
 
 	const runUpdatePubType = useServerAction(updatePubType);
-
-	// console.log("titlefield", formValues.titleField);
 
 	const onSubmit = async (formData: Static<typeof pubTypeBuilderSchema>) => {
 		const result = await runUpdatePubType({
@@ -401,7 +396,6 @@ export const TypeBuilder = ({
 										<PanelWrapper sidebar={sidebarRef.current}>
 											<FormItem className="relative flex h-screen flex-col">
 												<PanelHeader
-													// title={elementPanelTitles[panelState.state]}
 													title="Fields"
 													showCancel={!(panelState.state === "initial")}
 													onCancel={() =>
