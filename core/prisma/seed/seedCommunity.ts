@@ -505,13 +505,16 @@ type CommunitySeedInput = {
 
 // ========
 // These are helper types to make the output of the seeding functions match the input more closely.
-type PubFieldsByName<PF> = {
-	[K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean };
+type PubFieldsByName<PF, withRank extends boolean = false> = {
+	[K in keyof PF]: PF[K] &
+		Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean } & (withRank extends true
+			? { rank: string }
+			: {});
 };
 
 type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & {
-		fields: PubFieldsByName<PF>;
+		fields: PubFieldsByName<PF, true>;
 		defaultForm: { slug: string };
 	};
 };
@@ -872,8 +875,12 @@ export async function seedCommunity<
 			? await trx
 					.insertInto("_PubFieldToPubType")
 					.values(
-						pubTypesList.flatMap(({ name, id, fields }, idx) =>
-							Object.entries(fields).flatMap(([field, meta]) => {
+						pubTypesList.flatMap(({ name, id, fields }, idx) => {
+							const ranks = findRanksBetween({
+								numberOfRanks: Object.keys(fields).length,
+							});
+
+							return Object.entries(fields).flatMap(([field, meta], fieldIdx) => {
 								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
@@ -890,10 +897,11 @@ export async function seedCommunity<
 										A: fieldId,
 										B: pubTypeId,
 										isTitle,
+										rank: ranks[fieldIdx],
 									},
 								];
-							})
-						)
+							});
+						})
 					)
 					.returningAll()
 					.execute()
@@ -914,7 +922,11 @@ export async function seedCommunity<
 
 							return [
 								pubField.name,
-								{ ...pubField, isTitle: pubFieldToPubType.isTitle },
+								{
+									...pubField,
+									isTitle: pubFieldToPubType.isTitle,
+									rank: pubFieldToPubType.rank,
+								},
 							] as const;
 						})
 				),

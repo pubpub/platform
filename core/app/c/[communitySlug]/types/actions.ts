@@ -11,6 +11,7 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defaultFormName, defaultFormSlug } from "~/lib/form";
+import { findRanksBetween } from "~/lib/rank";
 import { ApiError, getPubType } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -25,33 +26,44 @@ export const addPubField = defineServerAction(async function addPubField(
 	pubTypeId: PubTypesId,
 	pubFieldId: PubFieldsId
 ) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
-
-	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
-	const authorized = await userCan(
-		Capabilities.editPubType,
-		{ type: MembershipType.community, communityId: community.id },
-		user.id
-	);
+	const { user } = loginData;
+
+	const [authorized, pubType] = await Promise.all([
+		await userCan(
+			Capabilities.editPubType,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		),
+		getPubType(pubTypeId).executeTakeFirst(),
+	]);
 
 	if (!authorized) {
 		return ApiError.UNAUTHORIZED;
 	}
 
+	if (!pubType) {
+		return ApiError.PUB_TYPE_NOT_FOUND;
+	}
+
+	const newRank = findRanksBetween({
+		numberOfRanks: 1,
+		start: pubType.fields.at(-1)?.rank ?? "0",
+	});
+
 	await autoRevalidate(
 		db.insertInto("_PubFieldToPubType").values({
 			A: pubFieldId,
 			B: pubTypeId,
+			rank: newRank[0],
 		})
 	).execute();
 });
@@ -90,7 +102,7 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 	const { pubTypeId, name, description, titleField, fields } = opts;
 
 	const fieldsToDelete = fields.filter((field) => field.deleted);
-	console.log(titleField);
+
 	const fieldsToUpsert = fields
 		.filter((field) => !field.deleted)
 		.map((field) => ({
@@ -122,7 +134,6 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 				).execute();
 			}
 
-			console.log("fieldsToUpsert", fieldsToUpsert);
 			if (fieldsToUpsert.length > 0) {
 				await autoRevalidate(
 					trx
@@ -132,6 +143,7 @@ export const updatePubType = defineServerAction(async function updatePubType(opt
 								A: field.id,
 								B: pubTypeId,
 								isTitle: field.id === titleField,
+								rank: field.rank,
 							}))
 						)
 						.onConflict((b) =>
@@ -271,6 +283,9 @@ export const createPubType = defineServerAction(async function createPubType(
 	}
 	try {
 		const result = await db.transaction().execute(async (trx) => {
+			const ranks = findRanksBetween({
+				numberOfRanks: fields.length,
+			});
 			const query = trx
 				.with("newType", (db) =>
 					db
@@ -282,13 +297,13 @@ export const createPubType = defineServerAction(async function createPubType(
 						})
 						.returning("pub_types.id")
 				)
-
 				.insertInto("_PubFieldToPubType")
 				.values((eb) =>
-					fields.map((id) => ({
+					fields.map((id, idx) => ({
 						A: id,
 						B: eb.selectFrom("newType").select("id"),
 						isTitle: titleField === id,
+						rank: ranks[idx],
 					}))
 				)
 				.returning("B as id");

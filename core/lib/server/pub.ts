@@ -1033,7 +1033,7 @@ const getRankedValues = async ({
 					.where("pubId", "=", newValue.pubId)
 					.where("fieldId", "=", value.fieldId)
 					.where("rank", "is not", null)
-					.orderBy("rank desc")
+					.orderBy("rank")
 					.limit(1)
 			);
 		}
