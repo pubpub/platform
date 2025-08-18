@@ -90,19 +90,22 @@ export default async function Page(props: {
 		<ContentLayout
 			title={
 				<div className="flex flex-col">
-					<div className="flex flex-row items-center gap-4">
-						<ToyBrick size={24} strokeWidth={1} className="text-gray-500" />
+					<div className="flex flex-row items-center gap-3">
+						<ToyBrick size={24} strokeWidth={1} className="text-muted-foreground" />
 						<BreadcrumbList className="text-lg">
 							<BreadcrumbItem>
-								<BreadcrumbLink href={`/c/${communitySlug}/types`}>
+								<BreadcrumbLink
+									href={`/c/${communitySlug}/types`}
+									className="font-normal text-gray-900"
+								>
 									Types
 								</BreadcrumbLink>
 							</BreadcrumbItem>
 							<BreadcrumbSeparator className="mt-1" />
-							<BreadcrumbPage>{pubType.name}</BreadcrumbPage>
+							<BreadcrumbPage className="font-bold">{pubType.name}</BreadcrumbPage>
 						</BreadcrumbList>
 						{pubType.description && (
-							<div className="mt-1 text-sm font-light text-gray-500">
+							<div className="text-sm font-normal text-muted-foreground">
 								{pubType.description}
 							</div>
 						)}
@@ -113,7 +116,8 @@ export default async function Page(props: {
 						>
 							<Button
 								variant="link"
-								className="mt-1 text-sm text-blue-500 underline hover:text-blue-600"
+								size="sm"
+								className="h-auto p-0 text-blue-500 underline hover:text-blue-600"
 							>
 								Edit
 							</Button>
