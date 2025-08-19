@@ -172,9 +172,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 		<div className="relative flex h-full flex-col">
 			<PubsSelectedProvider pubIds={[]}>
 				<div
-					className={cn(
-						"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll p-4 pb-16"
-					)}
+					className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16")}
 				>
 					<PubSearch>
 						<Suspense fallback={<PubListSkeleton />}>

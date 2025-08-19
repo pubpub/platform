@@ -1,15 +1,20 @@
 "use client";
 
 import React, { useDeferredValue, useEffect, useRef, useState } from "react";
-import { Search, X } from "lucide-react";
-import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
+import { PlusCircle, Search, X } from "lucide-react";
+import { parseAsArrayOf, parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { useDebouncedCallback } from "use-debounce";
 
+import type { PubTypesId, StagesId } from "db/public";
+import { Button } from "ui/button";
 import { KeyboardShortcutPriority, useKeyboardShortcut, usePlatformModifierKey } from "ui/hooks";
 import { Input } from "ui/input";
 import { cn } from "utils";
 
-type PubSearchProps = React.PropsWithChildren<{}>;
+type PubSearchProps = React.PropsWithChildren<{
+	startingTypeFilters?: PubTypesId[];
+	startingStageFilters?: StagesId[];
+}>;
 
 const DEBOUNCE_TIME = 300;
 
@@ -18,6 +23,8 @@ export const PubSearch = (props: PubSearchProps) => {
 		{
 			query: parseAsString.withDefault(""),
 			page: parseAsInteger.withDefault(1),
+			type: parseAsArrayOf(parseAsString).withDefault(props.startingTypeFilters ?? []),
+			stage: parseAsArrayOf(parseAsString).withDefault(props.startingStageFilters ?? []),
 		},
 		{
 			shallow: false,
@@ -72,49 +79,68 @@ export const PubSearch = (props: PubSearchProps) => {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="sticky top-0 z-20 flex max-w-md items-center gap-x-2">
-				<Search
-					className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
-					size={16}
-				/>
-				<Input
-					ref={inputRef}
-					value={inputValue}
-					onChange={(e) => {
-						setInputValue(e.target.value);
-						debouncedSetQuery(e.target.value);
-					}}
-					placeholder="Search updates as you type..."
-					className={cn("bg-white pl-8 tracking-wide shadow-none", inputValue && "pr-8")}
-				/>
-				<span className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-x-2 font-mono text-xs text-gray-500 opacity-50 md:flex">
-					{inputValue && (
-						<button
-							onClick={handleClearInput}
-							className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:right-16"
-							type="button"
-							aria-label="Clear search"
-						>
-							<X size={14} />
-						</button>
-					)}
-					<span
+			<div className="sticky top-0 z-20 mt-0 flex w-full items-center gap-x-2 border-b bg-white px-4 py-2">
+				<div className="relative flex min-w-96 items-center gap-x-2">
+					<Search
+						className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-500"
+						size={16}
+					/>
+					<Input
+						ref={inputRef}
+						value={inputValue}
+						onChange={(e) => {
+							setInputValue(e.target.value);
+							debouncedSetQuery(e.target.value);
+						}}
+						placeholder="Search updates as you type..."
 						className={cn(
-							"flex w-10 items-center justify-center gap-x-1 transition-opacity duration-200",
-							{
-								// hide until hydrated, otherwise you see flash of `Ctrl` -> `Cmd` on mac
-								"opacity-0": platform === "unknown",
-							}
+							"bg-white pl-8 tracking-wide shadow-none",
+							inputValue && "pr-8"
 						)}
-					>
-						<span className={cn({ "mt-0.5 text-lg": platform === "mac" })}>
-							{symbol}
-						</span>{" "}
-						K
+					/>
+					<span className="absolute right-2 top-1/2 hidden -translate-y-1/2 items-center gap-x-2 font-mono text-xs text-gray-500 opacity-50 md:flex">
+						{inputValue && (
+							<button
+								onClick={handleClearInput}
+								className="rounded-full p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700 md:right-16"
+								type="button"
+								aria-label="Clear search"
+							>
+								<X size={14} />
+							</button>
+						)}
+						<span
+							className={cn(
+								"flex w-10 items-center justify-center gap-x-1 transition-opacity duration-200",
+								{
+									// hide until hydrated, otherwise you see flash of `Ctrl` -> `Cmd` on mac
+									"opacity-0": platform === "unknown",
+								}
+							)}
+						>
+							<span className={cn({ "mt-0.5 text-lg": platform === "mac" })}>
+								{symbol}
+							</span>{" "}
+							K
+						</span>
 					</span>
-				</span>
+				</div>
+				<Button variant="outline" size="sm">
+					<PlusCircle size={16} />
+					Type
+				</Button>
+				<Button variant="outline" size="sm">
+					<PlusCircle size={16} />
+					Stage
+				</Button>
+				<Button variant="outline" size="sm" className="ml-auto">
+					<PlusCircle size={16} />
+					Sort
+				</Button>
 			</div>
-			<div className={cn(isStale && "opacity-50 transition-opacity duration-200")}>
+			<div
+				className={cn(isStale && "opacity-50 transition-opacity duration-200", "m-4 mt-1")}
+			>
 				{props.children}
 			</div>
 		</div>
