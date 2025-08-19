@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
 
+import { Capabilities, MembershipType } from "db/public";
 import { NO_STAGE_OPTION } from "db/types";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCan } from "~/lib/authorization/capabilities";
 import { getAllPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 import { getStages } from "~/lib/server/stages";
 import { CreateTokenFormWithContext } from "./CreateTokenForm";
 import { ExistingToken } from "./ExistingToken";
@@ -17,18 +20,33 @@ export const metadata: Metadata = {
 };
 
 export default async function Page(props: { params: { communitySlug: string } }) {
-	const params = await props.params;
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug(params.communitySlug);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+
 	if (!community) {
 		return notFound();
 	}
 
-	const [stages, pubTypes, existingTokens] = await Promise.all([
+	if (!user) {
+		return redirectToLogin();
+	}
+
+	const [canEditCommunity, stages, pubTypes, existingTokens] = await Promise.all([
+		userCan(
+			Capabilities.editCommunity,
+			{
+				communityId: community.id,
+				type: MembershipType.community,
+			},
+			user.id
+		),
 		getStages({ communityId: community.id, userId: user.id }).execute(),
 		getAllPubTypesForCommunity(community.slug).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
+
+	if (!canEditCommunity) {
+		return redirectToUnauthorized();
+	}
 
 	return (
 		<div className="container ml-0 max-w-screen-md px-4 py-12 md:px-6">
