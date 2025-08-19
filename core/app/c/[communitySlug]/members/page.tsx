@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 
 import type { FormsId } from "db/public";
 import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { Users } from "ui/icon";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
@@ -13,6 +14,7 @@ import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getSimpleForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
+import { ContentLayout } from "../ContentLayout";
 import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
 
@@ -34,30 +36,30 @@ export default async function Page(props: {
 
 	const { communitySlug } = params;
 
-	const community = await findCommunityBySlug(communitySlug);
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
 
 	if (!community) {
 		return notFound();
 	}
 
-	const { user } = await getPageLoginData();
-
-	if (
-		!(await userCan(
-			Capabilities.editCommunity,
-			{ type: MembershipType.community, communityId: community.id },
-			user.id
-		))
-	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
-
 	const page = parseInt(searchParams.page ?? "1", 10);
-	const [members, availableForms] = await Promise.all([
+	const [members, availableForms, canEditCommunity] = await Promise.all([
 		selectAllCommunityMemberships({ communityId: community.id }).execute(),
 
 		getSimpleForms(),
+		userCan(
+			Capabilities.editCommunity,
+			{ type: MembershipType.community, communityId: community.id },
+			user.id
+		),
 	]);
+
+	if (!canEditCommunity) {
+		return redirect(`/c/${communitySlug}/unauthorized`);
+	}
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -127,9 +129,13 @@ export default async function Page(props: {
 	const dedupedMembers = [...dedupedMembersMap.values()];
 
 	return (
-		<>
-			<div className="mb-16 flex items-center justify-between">
-				<h1 className="text-xl font-bold">Members</h1>
+		<ContentLayout
+			title={
+				<>
+					<Users size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Members
+				</>
+			}
+			right={
 				<AddMemberDialog
 					addMember={addMember}
 					addUserMember={createUserWithCommunityMembership}
@@ -137,9 +143,13 @@ export default async function Page(props: {
 					isSuperAdmin={user.isSuperAdmin}
 					membershipType={MembershipType.community}
 					availableForms={availableForms}
+					className="bg-emerald-500 text-white"
 				/>
+			}
+		>
+			<div className="m-4">
+				<MemberTable members={dedupedMembers} />
 			</div>
-			<MemberTable members={dedupedMembers} />
-		</>
+		</ContentLayout>
 	);
 }
