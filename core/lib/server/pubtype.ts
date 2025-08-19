@@ -100,18 +100,19 @@ export const getAllPubTypesForCommunity = (communitySlug: string) => {
 						.select((eb) =>
 							eb.fn
 								.coalesce(
-									eb.fn.jsonAgg(
-										jsonBuildObject({
-											id: eb.ref("A"),
-											isTitle: eb.ref("isTitle"),
-											rank: eb.ref("rank"),
-										})
-									),
+									eb.fn
+										.jsonAgg(
+											jsonBuildObject({
+												id: eb.ref("A"),
+												isTitle: eb.ref("isTitle"),
+												rank: eb.ref("rank"),
+											})
+										)
+										.orderBy("rank"),
 									sql`json_build_array()`
 								)
 								.as("pub_field_titles")
 						)
-						.orderBy("rank")
 						.as("fields"),
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
