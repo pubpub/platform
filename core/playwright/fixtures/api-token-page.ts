@@ -5,7 +5,7 @@ import { expect } from "@playwright/test";
 
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
-import type { createTokenFormSchema } from "~/app/c/[communitySlug]/settings/tokens/CreateTokenForm";
+import type { createTokenFormSchema } from "~/app/c/[communitySlug]/settings/tokens/types";
 
 type Permissions = z.infer<typeof createTokenFormSchema>["permissions"];
 

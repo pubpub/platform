@@ -13,7 +13,7 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/for
 import { MultiSelect } from "ui/multi-select";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 
-import type { CreateTokenForm, CreateTokenFormSchema } from "./CreateTokenForm";
+import type { CreateTokenForm, CreateTokenFormSchema } from "./types";
 import { CreateTokenFormContext } from "./CreateTokenFormContext";
 
 /**
