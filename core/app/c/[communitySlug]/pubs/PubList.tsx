@@ -7,7 +7,7 @@ import { cn } from "utils";
 
 import type { AutoReturnType } from "~/lib/types";
 import { FooterPagination } from "~/app/components/Pagination";
-import { PubCard } from "~/app/components/PubCard";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
@@ -86,6 +86,7 @@ const PaginatedPubListInner = async (
 						canRunActionsAllPubs={canRunActionsAllPubs}
 						canMoveAllPubs={canMoveAllPubs}
 						canViewAllStages={canViewAllStages}
+						canFilter={true}
 					/>
 				);
 			})}

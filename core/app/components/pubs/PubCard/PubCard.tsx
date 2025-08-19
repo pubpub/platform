@@ -14,11 +14,13 @@ import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
-import { PubSelector } from "../c/[communitySlug]/pubs/PubSelector";
-import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu";
-import { RelationsDropDown } from "./pubs/RelationsDropDown";
-import { RemovePubButton } from "./pubs/RemovePubButton";
-import { SkeletonButton } from "./skeletons/SkeletonButton";
+import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
+import { PubsRunActionDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
+import { SkeletonButton } from "../../skeletons/SkeletonButton";
+import { RelationsDropDown } from "../RelationsDropDown";
+import { RemovePubButton } from "../RemovePubButton";
+import { PubTypeLabel } from "./PubTypeLabel";
+import { StageMoveButton } from "./StageMoveButton";
 
 // import { RemovePubButton } from "./pubs/RemovePubButton";
 
@@ -55,6 +57,7 @@ export type PubCardProps = {
 	canRunActionsAllPubs?: boolean;
 	/* if true, overrides the move pub capability check. dramatically reduces the number of queries for admins and editors and the like */
 	canMoveAllPubs?: boolean;
+	canFilter?: boolean;
 };
 
 export const PubCard = async ({
@@ -70,6 +73,7 @@ export const PubCard = async ({
 	canRunActionsAllPubs,
 	canMoveAllPubs,
 	canViewAllStages,
+	canFilter,
 }: PubCardProps) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
 
@@ -84,12 +88,7 @@ export const PubCard = async ({
 			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
 				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
 					{/* TODO: make filter by pub type */}
-					<Button
-						variant="outline"
-						className="h-[22px] rounded border-gray-300 bg-gray-100 px-[.35rem] text-xs font-semibold shadow-none"
-					>
-						{pub.pubType.name}
-					</Button>
+					<PubTypeLabel pubType={pub.pubType} canFilter={canFilter} />
 					{pub.stage ? (
 						<Move
 							stageName={pub.stage.name}
@@ -100,6 +99,13 @@ export const PubCard = async ({
 							hideIfNowhereToMove={false}
 							canMoveAllPubs={canMoveAllPubs}
 							canViewAllStages={canViewAllStages}
+							button={
+								<StageMoveButton
+									stage={pub.stage}
+									canFilter={canFilter}
+									withDropdown={!!(moveTo?.length || moveFrom?.length)}
+								/>
+							}
 						/>
 					) : null}
 					{pub.relatedPubsCount ? (
