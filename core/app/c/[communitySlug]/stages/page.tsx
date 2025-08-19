@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 
+import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { Button } from "ui/button";
+import { FlagTriangleRightIcon, Stages } from "ui/icon";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCanViewStagePage } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
+import { ContentLayout } from "../ContentLayout";
 import { StageList } from "./components/StageList";
 
 export const metadata: Metadata = {
@@ -15,23 +22,50 @@ type Props = { params: Promise<{ communitySlug: string }>; searchParams: Record<
 
 export default async function Page(props: Props) {
 	const searchParams = await props.searchParams;
-	const params = await props.params;
-	const [{ user }, community] = await Promise.all([
-		getPageLoginData(),
-		findCommunityBySlug(params.communitySlug),
-	]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+
+	if (!user) {
+		redirectToLogin();
+	}
 
 	if (!community) {
 		notFound();
 	}
 
+	const userCanSeeStage = await userCanViewStagePage(user.id, community.id);
+
+	if (!userCanSeeStage) {
+		redirectToUnauthorized();
+	}
+
 	return (
-		<>
-			<div className="mb-16 flex items-center justify-between">
-				<h1 className="text-xl font-bold">Stages</h1>
-				<CreatePubButton communityId={community.id} text="Add Pub" />
+		<ContentLayout
+			title={
+				<>
+					<FlagTriangleRightIcon size={24} className="mr-2" strokeWidth={1} />
+					Stages
+				</>
+			}
+			right={
+				<div className="flex items-center gap-4">
+					<Button asChild variant="link" className="text-sm underline">
+						<Link href={`/c/${community.slug}/stages/manage`}>Manage</Link>
+					</Button>
+					<CreatePubButton
+						communityId={community.id}
+						text="Add Pub"
+						className="bg-emerald-500 text-white"
+					/>
+				</div>
+			}
+		>
+			<div className="m-4 max-w-screen-lg">
+				<StageList
+					userId={user.id}
+					communityId={community.id}
+					searchParams={searchParams}
+				/>
 			</div>
-			<StageList userId={user.id} communityId={community.id} searchParams={searchParams} />
-		</>
+		</ContentLayout>
 	);
 }
