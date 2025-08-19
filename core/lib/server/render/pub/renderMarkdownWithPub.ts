@@ -47,6 +47,7 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 	const field = expect(attrs.field, "Missing field attribute in value directive");
 
 	let value: unknown = attrs.fallback;
+	let valueIsUrl = false;
 
 	const hydratedPubValues = hydratePubValues(context.pub.values);
 
@@ -56,6 +57,9 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 		const val = hydratedPubValues.find((value) => value.fieldSlug === field);
 
 		if (val !== undefined) {
+			if (val.schemaName === CoreSchemaType.URL) {
+				valueIsUrl = true;
+			}
 			value =
 				val.schemaName === CoreSchemaType.DateTime
 					? // get the date in YYYY-MM-DD format
@@ -72,13 +76,17 @@ const visitValueDirective = (node: Directive, context: utils.RenderWithPubContex
 
 	node.data = {
 		...node.data,
-		hName: "span",
+		hName: valueIsUrl ? "a" : "span",
 		hChildren: [
 			{
 				type: "text",
 				value: String(value),
 			},
 		],
+		hProperties: {
+			...node.data?.hProperties,
+			...(valueIsUrl ? { href: String(value) } : {}),
+		},
 	};
 };
 
