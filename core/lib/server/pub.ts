@@ -1193,7 +1193,10 @@ export type UnprocessedPub = {
 	}[];
 };
 
-interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions {
+export interface GetPubsWithRelatedValuesOptions
+	extends Omit<GetManyParams, "orderBy">,
+		MaybePubOptions {
+	orderBy?: "createdAt" | "updatedAt" | "title";
 	/**
 	 * The maximum depth to recurse to.
 	 * Does not do anything if `includeRelatedPubs` is `false`, or if `count` is true.
