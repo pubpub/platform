@@ -5,26 +5,21 @@ import { expect } from "@playwright/test";
 
 import { ApiAccessScope, ApiAccessType } from "db/public";
 
-import type { createTokenFormSchema } from "~/app/c/[communitySlug]/settings/tokens/CreateTokenForm";
+import type { createTokenFormSchema } from "~/app/c/[communitySlug]/settings/tokens/types";
 
 type Permissions = z.infer<typeof createTokenFormSchema>["permissions"];
 
 export class ApiTokenPage {
-	private readonly newTokenNameBox: Locator;
-	private readonly newTokenDescriptionBox: Locator;
-	// private readonly newTokenExpiryDatePicker: Locator;
-	private readonly newTokenCreateButton: Locator;
 	private readonly communitySlug: string;
+
+	private readonly newTokenButton: Locator;
 
 	constructor(
 		public readonly page: Page,
 		communitySlug: string
 	) {
 		this.communitySlug = communitySlug;
-		this.newTokenNameBox = this.page.getByRole("textbox", { name: "name" });
-		this.newTokenDescriptionBox = this.page.getByRole("textbox", { name: "description" });
-		// this.newTokenExpiryDatePicker = this.page.getByLabel("Expiry date");
-		this.newTokenCreateButton = this.page.getByTestId("create-token-button");
+		this.newTokenButton = this.page.getByTestId("new-token-button").first();
 	}
 
 	async goto() {
@@ -43,9 +38,9 @@ export class ApiTokenPage {
 			permissions: Partial<Permissions> | true;
 		}
 	) {
-		await this.newTokenNameBox.click();
-		await this.newTokenNameBox.fill(input.name);
-		await this.newTokenDescriptionBox.fill(input.description ?? "");
+		await this.newTokenButton.click();
+		await this.page.getByRole("textbox", { name: "name" }).fill(input.name);
+		await this.page.getByRole("textbox", { name: "description" }).fill(input.description ?? "");
 		// TODO: add this back once we have a way of using the date picker programmatically
 		// await this.newTokenExpiryDatePicker.fill(input.expiration.toISOString());
 
@@ -99,10 +94,9 @@ export class ApiTokenPage {
 			}
 		}
 
-		// for some reason the name is not recognized properly sometimes
-		await this.newTokenNameBox.fill(input.name);
+		await this.page.getByRole("textbox", { name: "name" }).fill(input.name);
 
-		await this.newTokenCreateButton.click({
+		await this.page.getByTestId("create-token-button").click({
 			timeout: 1_000,
 		});
 
