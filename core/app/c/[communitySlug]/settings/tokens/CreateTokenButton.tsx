@@ -2,9 +2,11 @@
 
 import type { PropsWithChildren } from "react";
 
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
+import type { CreateTokenFormContext } from "db/types";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -18,33 +20,50 @@ import {
 import { cn } from "utils";
 
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { CreateTokenFormWithContext } from "./CreateTokenForm";
 
 export type CreateTokenButtonProps = {
 	className?: string;
-};
+} & CreateTokenFormContext;
 export const CreateTokenButton = ({
 	className,
 	children,
+	...context
 }: PropsWithChildren<CreateTokenButtonProps>) => {
 	const community = useCommunity();
 
+	const [success, setSuccess] = useState(false);
+	const onSuccess = useCallback(() => {
+		setSuccess(true);
+	}, []);
+
 	return (
-		<Dialog defaultOpen={false}>
+		<Dialog defaultOpen={false} modal={true}>
 			<DialogOverlay />
 			<DialogTrigger asChild>
 				<Button className={cn("h-10 bg-emerald-500 text-white", className)}>
-					<Plus size={16} /> New Token
+					{children || (
+						<>
+							<Plus size={16} /> New Token
+						</>
+					)}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className="max-h-full min-w-[20rem] max-w-fit overflow-auto md:min-w-[32rem]">
 				<DialogHeader>
-					<DialogTitle>New API Token</DialogTitle>
-					<DialogDescription>
-						Create a new API token to access the{" "}
-						<Link href={`/c/${community.slug}/developers/docs`}>API</Link>.
-					</DialogDescription>
+					{!success ? (
+						<>
+							<DialogTitle>New API Token</DialogTitle>
+							<DialogDescription>
+								Create a new API token to access the{" "}
+								<Link href={`/c/${community.slug}/developers/docs`}>API</Link>.
+							</DialogDescription>
+						</>
+					) : (
+						<DialogTitle>Successfully created token!</DialogTitle>
+					)}
 				</DialogHeader>
-				{children}
+				<CreateTokenFormWithContext {...context} onSuccess={onSuccess} />
 			</DialogContent>
 		</Dialog>
 	);

@@ -1,22 +1,15 @@
 "use client";
 
-import type { type } from "os";
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Bell } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 
 import type { CreateTokenFormContext as CreateTokenFormContextType } from "db/types";
-import { ApiAccessScope, apiAccessTokensInitializerSchema } from "db/public";
-import { permissionsSchema } from "db/types";
+import { ApiAccessScope } from "db/public";
 import { Alert, AlertDescription, AlertTitle } from "ui/alert";
-import { Button } from "ui/button";
-import { Card, CardContent } from "ui/card";
 import { CopyButton } from "ui/copy-button";
 import { DatePicker } from "ui/date-picker";
-import { Dialog, DialogContent, DialogTitle } from "ui/dialog";
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
@@ -30,7 +23,11 @@ import { CreateTokenFormContext } from "./CreateTokenFormContext";
 import { PermissionField } from "./PermissionField";
 import { createTokenFormSchema } from "./types";
 
-export const CreateTokenForm = () => {
+export type CreateTokenFormProps = {
+	onSuccess?: (token: string) => void;
+};
+
+export const CreateTokenForm = ({ onSuccess }: CreateTokenFormProps) => {
 	const form = useForm<CreateTokenFormSchema>({
 		resolver: zodResolver(createTokenFormSchema),
 		defaultValues: {
@@ -48,14 +45,18 @@ export const CreateTokenForm = () => {
 
 		if ("success" in result) {
 			form.setValue("token" as const, result.data.token);
+			onSuccess?.(result.data.token);
+			return;
 		}
+
+		form.setError("root", { message: result.error });
 	};
 	// this `as const` should not be necessary, not sure why it is
 	const token = form.watch("token");
 
 	if (token) {
 		return (
-			<Alert variant="default" className={cn("mt-4 w-96 bg-emerald-50")}>
+			<Alert variant="default" className={cn("mt-4 w-full min-w-96 bg-emerald-50")}>
 				<Bell className="h-4 w-4 text-emerald-400" />
 				<AlertTitle className={cn("font-semibold leading-normal tracking-normal")}>
 					Make sure to copy this token now as you will not be able to see it again!
@@ -151,6 +152,9 @@ export const CreateTokenForm = () => {
 						);
 					}}
 				/>
+				{form.formState.errors?.root && (
+					<p className="text-sm text-red-500">{form.formState.errors?.root?.message}</p>
+				)}
 
 				<FormSubmitButton
 					type="submit"
@@ -173,7 +177,11 @@ export const CreateTokenForm = () => {
  * You likely forgot to export your component from the file it's defined in,
  * or you might have mixed up default and named imports
  */
-export const CreateTokenFormWithContext = ({ stages, pubTypes }: CreateTokenFormContextType) => {
+export const CreateTokenFormWithContext = ({
+	stages,
+	pubTypes,
+	onSuccess,
+}: CreateTokenFormContextType & { onSuccess?: (token: string) => void }) => {
 	return (
 		<CreateTokenFormContext.Provider
 			value={{
@@ -181,7 +189,7 @@ export const CreateTokenFormWithContext = ({ stages, pubTypes }: CreateTokenForm
 				pubTypes,
 			}}
 		>
-			<CreateTokenForm />
+			<CreateTokenForm onSuccess={onSuccess} />
 		</CreateTokenFormContext.Provider>
 	);
 };

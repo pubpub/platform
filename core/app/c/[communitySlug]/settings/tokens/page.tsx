@@ -17,7 +17,6 @@ import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation
 import { getStages } from "~/lib/server/stages";
 import { ContentLayout } from "../../ContentLayout";
 import { CreateTokenButton } from "./CreateTokenButton";
-import { CreateTokenFormWithContext } from "./CreateTokenForm";
 import { ExistingToken } from "./ExistingToken";
 
 export const metadata: Metadata = {
@@ -81,11 +80,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 					<Key size={24} strokeWidth={1} className="mr-2 text-gray-500" /> API Tokens
 				</>
 			}
-			right={
-				<CreateTokenButton>
-					<CreateTokenFormWithContext stages={stagesOptions} pubTypes={pubTypesOptions} />
-				</CreateTokenButton>
-			}
+			right={<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />}
 		>
 			<div className="m-4">
 				<div className="grid gap-6">
@@ -110,12 +105,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 							<p className="mb-4 text-center text-sm">
 								Create one to get started interacting with Platform's API
 							</p>
-							<CreateTokenButton>
-								<CreateTokenFormWithContext
-									stages={stagesOptions}
-									pubTypes={pubTypesOptions}
-								/>
-							</CreateTokenButton>
+							<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />
 						</div>
 					)}
 				</div>
