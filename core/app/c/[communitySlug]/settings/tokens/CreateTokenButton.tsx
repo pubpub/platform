@@ -41,7 +41,10 @@ export const CreateTokenButton = ({
 		<Dialog defaultOpen={false} modal={true}>
 			<DialogOverlay />
 			<DialogTrigger asChild>
-				<Button className={cn("h-10 bg-emerald-500 text-white", className)}>
+				<Button
+					data-testid="new-token-button"
+					className={cn("h-10 bg-emerald-500 text-white", className)}
+				>
 					{children || (
 						<>
 							<Plus size={16} /> New Token
