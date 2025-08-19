@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 
 import { cache, Suspense } from "react";
 import Link from "next/link";
-import { forbidden, notFound, redirect, unauthorized } from "next/navigation";
+import { notFound } from "next/navigation";
+import { FlagTriangleRightIcon } from "lucide-react";
 
 import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
@@ -11,9 +12,10 @@ import { Button } from "ui/button";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { UnauthorizedError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 import { getStages } from "~/lib/server/stages";
+import { ContentLayout } from "../../ContentLayout";
 import { PubListSkeleton } from "../../pubs/PubList";
 import { StagePubs } from "../components/StageList";
 
@@ -39,10 +41,10 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
 	const params = await props.params;
 
-	const { stageId, communitySlug } = params;
+	const { stageId } = params;
 
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug(communitySlug);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+
 	if (!community) {
 		notFound();
 	}
@@ -67,11 +69,8 @@ export default async function Page(props: {
 }) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
-	const { communitySlug, stageId } = params;
-	const [{ user }, community] = await Promise.all([
-		getPageLoginData(),
-		findCommunityBySlug(communitySlug),
-	]);
+	const { stageId } = params;
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
 
 	if (!community) {
 		notFound();
@@ -91,8 +90,7 @@ export default async function Page(props: {
 	]);
 
 	if (!canViewStage) {
-		// TODO: replace with new nextjs auth interrupts
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirectToUnauthorized();
 	}
 
 	if (!stage) {
@@ -100,13 +98,24 @@ export default async function Page(props: {
 	}
 
 	return (
-		<>
-			<div className="mb-16 flex items-center justify-between">
-				<h1 className="text-xl font-bold">{stage.name}</h1>
-				<div className="flex gap-2">
+		<ContentLayout
+			title={
+				<>
+					<FlagTriangleRightIcon
+						size={20}
+						strokeWidth={1}
+						className="mr-2 text-gray-500"
+					/>
+					{stage.name}
+				</>
+			}
+			right={
+				<div className="flex items-center gap-2">
 					{showEditButton && (
-						<Button variant="outline" size="sm" asChild>
-							<Link href={`./manage?editingStageId=${stageId}`}>
+						<Button variant="ghost" size="sm" asChild>
+							<Link
+								href={`/c/${community.slug}/stages/manage?editingStageId=${stageId}`}
+							>
 								Edit Stage Settings
 							</Link>
 						</Button>
@@ -114,21 +123,25 @@ export default async function Page(props: {
 					<CreatePubButton
 						text="Create Pub"
 						stageId={stageId}
+						className="bg-emerald-500 text-white"
 						communityId={community.id}
 					/>
 				</div>
+			}
+		>
+			<div className="m-4 max-w-screen-lg">
+				<Suspense
+					fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
+				>
+					<StagePubs
+						userId={user.id}
+						stage={stage}
+						searchParams={searchParams}
+						pagination={{ page, pubsPerPage: 10 }}
+						basePath={""}
+					/>
+				</Suspense>
 			</div>
-			<Suspense
-				fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
-			>
-				<StagePubs
-					userId={user.id}
-					stage={stage}
-					searchParams={searchParams}
-					pagination={{ page, pubsPerPage: 10 }}
-					basePath={""}
-				/>
-			</Suspense>
-		</>
+		</ContentLayout>
 	);
 }

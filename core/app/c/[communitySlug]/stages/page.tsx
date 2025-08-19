@@ -42,7 +42,11 @@ export default async function Page(props: Props) {
 		<ContentLayout
 			title={
 				<>
-					<FlagTriangleRightIcon size={24} className="mr-2" strokeWidth={1} />
+					<FlagTriangleRightIcon
+						size={20}
+						strokeWidth={1}
+						className="mr-2 text-gray-500"
+					/>
 					Stages
 				</>
 			}
