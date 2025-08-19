@@ -1,17 +1,20 @@
 import { notFound, redirect } from "next/navigation";
+import { Activity } from "lucide-react";
 
 import type { Action } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 import { TokenProvider } from "ui/tokens";
 
-import { getActionByName } from "~/actions/api";
+import { actions, getActionByName } from "~/actions/api";
 import { resolveFieldConfig } from "~/actions/api/server";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getActionConfigDefaults } from "~/lib/server/actions";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 import { getPubFields } from "~/lib/server/pubFields";
+import { ContentLayout } from "../../../ContentLayout";
 import { ActionConfigDefaultForm } from "./ActionConfigDefaultForm";
 
 type Props = {
@@ -31,7 +34,7 @@ export default async function Page(props: Props) {
 	}
 
 	if (!loginData || !loginData.user) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
+		redirectToLogin();
 	}
 
 	const actionConfigDefaults = await getActionConfigDefaults(
@@ -53,19 +56,30 @@ export default async function Page(props: Props) {
 	]);
 
 	if (!userCanEditCommunity) {
-		redirect(`/c/${params.communitySlug}/unauthorized`);
+		return await redirectToUnauthorized();
 	}
 
 	const { tokens = {} } = getActionByName(params.action);
 	const actionTitle = params.action[0].toUpperCase() + params.action.slice(1);
 
+	const action = actions[params.action];
+	if (!action) {
+		notFound();
+	}
+
 	return (
-		<div className="container ml-0 max-w-screen-md px-4 py-12 md:px-6">
-			<div className="space-y-6">
+		<ContentLayout
+			title={
+				<>
+					<action.icon size={20} strokeWidth={1} className="mr-2 text-gray-500" />
+					{actionTitle} Action Defaults
+				</>
+			}
+		>
+			<div className="container ml-0 max-w-screen-md px-4 py-6 md:px-6">
 				<div>
-					<h1 className="text-3xl font-bold">{actionTitle} Action Settings</h1>
-					<p className="text-muted-foreground">
-						Set default configuration values for the {actionTitle} action. These
+					<p className="mb-4 text-muted-foreground">
+						Set default configuration values for the {actionTitle} action. <br /> These
 						defaults will be applied to new instances of this action in your community.
 					</p>
 				</div>
@@ -82,6 +96,6 @@ export default async function Page(props: Props) {
 					</TokenProvider>
 				</PubFieldProvider>
 			</div>
-		</div>
+		</ContentLayout>
 	);
 }

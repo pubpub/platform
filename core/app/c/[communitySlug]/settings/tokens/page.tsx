@@ -49,7 +49,7 @@ export default async function Page(props: { params: { communitySlug: string } })
 	]);
 
 	if (!canEditCommunity) {
-		return redirectToUnauthorized();
+		return await redirectToUnauthorized();
 	}
 
 	const stagesOptions = {

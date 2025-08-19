@@ -35,7 +35,7 @@ export default async function Page(props: Props) {
 	const userCanSeeStage = await userCanViewStagePage(user.id, community.id);
 
 	if (!userCanSeeStage) {
-		redirectToUnauthorized();
+		return await redirectToUnauthorized();
 	}
 
 	return (

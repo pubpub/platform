@@ -90,7 +90,7 @@ export default async function Page(props: {
 	]);
 
 	if (!canViewStage) {
-		redirectToUnauthorized();
+		return await redirectToUnauthorized();
 	}
 
 	if (!stage) {

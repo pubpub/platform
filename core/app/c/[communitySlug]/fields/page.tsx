@@ -72,8 +72,12 @@ export default async function Page(props: Props) {
 	return (
 		<PubFieldProvider pubFields={pubFields.fields}>
 			<ContentLayout
-				icon={<FormInput size={24} strokeWidth={1} className="text-gray-500" />}
-				title="Fields"
+				title={
+					<>
+						<FormInput size={24} strokeWidth={1} className="mr-2 text-gray-500" />{" "}
+						Fields
+					</>
+				}
 				right={<NewFieldButton />}
 			>
 				<div className="m-4">
