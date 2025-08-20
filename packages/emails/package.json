@@ -2,8 +2,6 @@
 	"name": "emails",
 	"type": "module",
 	"version": "1.0.0",
-	"main": "dist/emails.cjs.js",
-	"module": "dist/emails.esm.js",
 	"exports": {
 		".": "./dist/emails.js",
 		"./package.json": "./package.json"

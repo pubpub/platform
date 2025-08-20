@@ -3,7 +3,7 @@
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
 		"build:docs": "turbo build --filter=docs",
-		"dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!storybook --filter=!docs --ui tui",
+		"dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!docs --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",

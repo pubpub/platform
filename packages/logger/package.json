@@ -2,8 +2,6 @@
 	"name": "logger",
 	"type": "module",
 	"version": "0.0.1",
-	"main": "dist/logger.cjs.js",
-	"module": "dist/logger.esm.js",
 	"exports": {
 		".": "./dist/logger.js",
 		"./package.json": "./package.json"

@@ -2,8 +2,6 @@
 	"name": "context-editor",
 	"type": "module",
 	"version": "0.0.1",
-	"main": "dist/context-editor.cjs.js",
-	"module": "dist/context-editor.esm.js",
 	"exports": {
 		".": "./dist/context-editor.js",
 		"./utils": "./dist/context-editor-utils.js",
