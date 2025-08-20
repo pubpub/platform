@@ -20,7 +20,7 @@
 		"typescript": "catalog:"
 	},
 	"dependencies": {
-		"pino": "^8.19.0"
+		"pino": "^8.21.0"
 	},
 	"preconstruct": {
 		"exports": true,
