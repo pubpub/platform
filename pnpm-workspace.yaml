@@ -20,7 +20,7 @@ catalog:
     date-fns: ^4.1.0
     nuqs: "^2.4.3"
     tsx: ^4.19.0
-    typescript: 5.7.2
+    typescript: ^5.9.2
     vite: ^6.0.0
     vitest: ^3.0.5
     zod: ^3.23.8
