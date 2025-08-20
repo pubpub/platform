@@ -8,7 +8,7 @@ packages:
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
-    next: ^15.2.3
+    next: ^15.5.0
     eslint: ^9.9.0
     katex: ^0.16.18
     prettier: ^3.4.2
@@ -18,7 +18,7 @@ catalog:
     postcss: ^8.4.27
     autoprefixer: ^10.4.20
     date-fns: ^4.1.0
-    nuqs: "^2.4.1"
+    nuqs: "^2.4.3"
     tsx: ^4.19.0
     typescript: 5.7.2
     vite: ^6.0.0
