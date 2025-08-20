@@ -261,17 +261,16 @@ The way to get around this is to either pass the `userId` as a parameter to the 
 
 ```ts
 const getProfile = unstable_cache(async (userId: number) => {
-        return await db.selectFrom('users').selectAll().where('users.id', '=', userId).execute()
-    })
+	return await db.selectFrom("users").selectAll().where("users.id", "=", userId).execute();
+});
 
 // or
 
 const getProfile = async (userId: number) => {
-    return await unstable_cache(async () => {
-        return await db.selectFrom('users').selectAll().where('users.id', '=', userId).execute()
-    }, [userId])()
-}
-
+	return await unstable_cache(async () => {
+		return await db.selectFrom("users").selectAll().where("users.id", "=", userId).execute();
+	}, [userId])();
+};
 ```
 
 2. The cache _tag_ is used to invalidate the cache. The tag can be anything you want, but it's usually a string that describes the data that is cached.
