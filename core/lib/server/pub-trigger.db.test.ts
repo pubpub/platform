@@ -17,6 +17,7 @@ import {
 } from "~/kysely/errors";
 import { mockServerCode } from "../__tests__/utils";
 import { createLastModifiedBy } from "../lastModifiedBy";
+import { findRanksBetween } from "../rank";
 
 const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } =
 	await mockServerCode();
@@ -511,12 +512,18 @@ describe("pubType title change trigger", () => {
 
 		expect(await getPubTitle(pubs[0].id, trx)).toBe(null);
 
+		const newRank = findRanksBetween({
+			numberOfRanks: 1,
+			start: Object.values(pubTypes["Basic Pub"].fields).at(-1)?.rank ?? "0",
+		});
+
 		await trx
 			.insertInto("_PubFieldToPubType")
 			.values({
 				A: pubFields.Title.id,
 				B: pubTypes["Basic Pub"].id,
 				isTitle: true,
+				rank: newRank[0],
 			})
 			.execute();
 

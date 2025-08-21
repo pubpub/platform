@@ -392,13 +392,13 @@ test.describe("reordering fields", async () => {
 		const elements = page.getByRole("form", { name: "Form builder" }).getByRole("listitem");
 		const initialElements = await elements.allTextContents();
 
-		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.getByRole("button", { name: "Drag" }).first().press(" ");
 		await page.waitForTimeout(100);
 		await page.keyboard.press("ArrowDown");
 		await page.waitForTimeout(100);
 		await page.keyboard.press(" ");
 
-		await page.getByRole("button", { name: "Drag handle" }).last().press(" ");
+		await page.getByRole("button", { name: "Drag" }).last().press(" ");
 		await page.waitForTimeout(100);
 		await page.keyboard.press("ArrowUp");
 		await page.waitForTimeout(100);
@@ -424,14 +424,14 @@ test.describe("reordering fields", async () => {
 
 		await formEditPage.goto();
 
-		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.getByRole("button", { name: "Drag" }).first().press(" ");
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press(" ");
 
 		const disabled = await page.getByTestId("save-form-button").getAttribute("disabled");
 		expect(disabled).toBe(null);
 
-		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.getByRole("button", { name: "Drag" }).first().press(" ");
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press(" ");
 

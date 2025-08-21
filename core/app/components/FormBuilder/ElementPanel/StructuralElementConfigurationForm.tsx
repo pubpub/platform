@@ -12,7 +12,7 @@ import { MarkdownEditor } from "ui/editors";
 import { Form, FormField } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 
-import { useFormBuilder } from "../FormBuilderContext";
+import { useBuilder } from "../BuilderContext";
 import { structuralElements } from "../StructuralElements";
 import { type StructuralElement } from "../types";
 
@@ -22,7 +22,7 @@ type Props = {
 };
 
 export const StructuralElementConfigurationForm = ({ index, structuralElement }: Props) => {
-	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
+	const { update, dispatch, removeIfUnconfigured } = useBuilder();
 
 	const schema = structuralElements[structuralElement.element].schema;
 

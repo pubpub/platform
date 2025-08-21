@@ -37,13 +37,13 @@ import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
 import { saveForm } from "./actions";
+import { BuilderProvider } from "./BuilderContext";
 import { ElementPanel } from "./ElementPanel";
-import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 import { useIsChanged } from "./useIsChanged";
 
-const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
+export const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
 	const { eventName } = event;
 	switch (eventName) {
 		case "filterFields":
@@ -331,7 +331,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	return (
 		<TokenProvider tokens={tokens}>
-			<FormBuilderProvider
+			<BuilderProvider
 				removeIfUnconfigured={removeIfUnconfigured}
 				addElement={addElement}
 				removeElement={removeElement}
@@ -348,7 +348,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 				openButtonConfigPanel={(id) => dispatch({ eventName: "editButton", buttonId: id })}
 				update={update}
 				dispatch={dispatch}
-				slug={pubForm.slug}
+				identity={pubForm.slug}
 				stages={stages}
 				isDirty={isChanged}
 			>
@@ -441,7 +441,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 					</div>
 				</Tabs>
 				<SidePanel ref={sidebarRef} />
-			</FormBuilderProvider>
+			</BuilderProvider>
 		</TokenProvider>
 	);
 }

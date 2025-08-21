@@ -1,13 +1,15 @@
 "use server";
 
-import type { CommunitiesId, PubFieldsId, PubTypesId } from "db/public";
+import type { CommunitiesId, PubFieldsId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
+import { logger } from "logger";
 
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defaultFormName, defaultFormSlug } from "~/lib/form";
+import { findRanksBetween } from "~/lib/rank";
 import { ApiError, getPubType } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -18,129 +20,18 @@ import {
 	insertForm,
 } from "~/lib/server/form";
 
-export const addPubField = defineServerAction(async function addPubField(
-	pubTypeId: PubTypesId,
-	pubFieldId: PubFieldsId
-) {
-	const loginData = await getLoginData();
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
-	}
-
-	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
-
-	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
-	}
-
-	const authorized = await userCan(
-		Capabilities.editPubType,
-		{ type: MembershipType.community, communityId: community.id },
-		user.id
-	);
-
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
-	}
-
-	await autoRevalidate(
-		db.insertInto("_PubFieldToPubType").values({
-			A: pubFieldId,
-			B: pubTypeId,
-		})
-	).execute();
-});
-
-export const updateTitleField = defineServerAction(async function updateTitleField(
-	pubTypeId: PubTypesId,
-	pubFieldId: PubFieldsId
-) {
-	const loginData = await getLoginData();
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
-	}
-
-	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
-
-	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
-	}
-
-	const authorized = await userCan(
-		Capabilities.editPubType,
-		{ type: MembershipType.community, communityId: community.id },
-		user.id
-	);
-
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
-	}
-
-	await db.transaction().execute(async (trx) => {
-		await autoRevalidate(
-			trx.updateTable("_PubFieldToPubType").set({ isTitle: false }).where("B", "=", pubTypeId)
-		).execute();
-		await autoRevalidate(
-			trx
-				.updateTable("_PubFieldToPubType")
-				.set({ isTitle: true })
-				.where("A", "=", pubFieldId)
-				.where("B", "=", pubTypeId)
-		).execute();
-	});
-});
-
-export const removePubField = defineServerAction(async function removePubField(
-	pubTypeId: PubTypesId,
-	pubFieldId: PubFieldsId
-) {
-	const loginData = await getLoginData();
-	if (!loginData || !loginData.user) {
-		return ApiError.NOT_LOGGED_IN;
-	}
-
-	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
-
-	if (!community) {
-		return ApiError.COMMUNITY_NOT_FOUND;
-	}
-
-	const authorized = await userCan(
-		Capabilities.editPubType,
-		{ type: MembershipType.community, communityId: community.id },
-		user.id
-	);
-
-	if (!authorized) {
-		return ApiError.UNAUTHORIZED;
-	}
-
-	await autoRevalidate(
-		db.deleteFrom("_PubFieldToPubType").where("A", "=", pubFieldId).where("B", "=", pubTypeId)
-	).execute();
-});
-
 export const createPubType = defineServerAction(async function createPubType(
 	name: string,
 	communityId: CommunitiesId,
 	description: string | undefined,
 	fields: PubFieldsId[],
-	titleField: PubFieldsId
+	titleField?: PubFieldsId
 ) {
-	const loginData = await getLoginData();
-	if (!loginData || !loginData.user) {
+	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+
+	if (!user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
-
-	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;
@@ -156,31 +47,35 @@ export const createPubType = defineServerAction(async function createPubType(
 		return ApiError.UNAUTHORIZED;
 	}
 	try {
-		await db.transaction().execute(async (trx) => {
-			const { id: pubTypeId } = await autoRevalidate(
-				trx
-					.with("newType", (db) =>
-						db
-							.insertInto("pub_types")
-							.values({
-								communityId,
-								name,
-								description,
-							})
-							.returning("pub_types.id")
-					)
-					.insertInto("_PubFieldToPubType")
-					.values((eb) =>
-						fields.map((id) => ({
-							A: id,
-							B: eb.selectFrom("newType").select("id"),
-							isTitle: titleField === id,
-						}))
-					)
-					.returning("B as id")
-			).executeTakeFirstOrThrow();
+		const result = await db.transaction().execute(async (trx) => {
+			const ranks = findRanksBetween({
+				numberOfRanks: fields.length,
+			});
+			const query = trx
+				.with("newType", (db) =>
+					db
+						.insertInto("pub_types")
+						.values({
+							communityId,
+							name,
+							description,
+						})
+						.returning("pub_types.id")
+				)
+				.insertInto("_PubFieldToPubType")
+				.values((eb) =>
+					fields.map((id, idx) => ({
+						A: id,
+						B: eb.selectFrom("newType").select("id"),
+						isTitle: titleField === id,
+						rank: ranks[idx],
+					}))
+				)
+				.returning("B as id");
 
-			const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
+			const res = await autoRevalidate(query).executeTakeFirstOrThrow();
+
+			const pubType = await getPubType(res.id, trx).executeTakeFirstOrThrow();
 
 			await autoRevalidate(
 				insertForm(
@@ -192,7 +87,14 @@ export const createPubType = defineServerAction(async function createPubType(
 					trx
 				)
 			).executeTakeFirstOrThrow();
+
+			return pubType;
 		});
+
+		return {
+			data: result,
+			success: true,
+		};
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			if (error.table === "pub_types") {
@@ -209,6 +111,8 @@ export const createPubType = defineServerAction(async function createPubType(
 				};
 			}
 		}
+		logger.error(error);
+
 		return { error: "Pub type creation failed", cause: error };
 	}
 });

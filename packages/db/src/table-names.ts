@@ -225,6 +225,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: true,
 			},
+			{
+				name: "rank",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{
