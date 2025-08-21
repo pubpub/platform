@@ -29,10 +29,7 @@ export default async function Page(props: Props) {
 	const searchParams = await props.searchParams;
 	const params = await props.params;
 
-	const [{ user }, community] = await Promise.all([
-		getPageLoginData(),
-		findCommunityBySlug(params.communitySlug),
-	]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
 
 	if (!community) {
 		return null;
