@@ -1926,7 +1926,13 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 					.select((eb) => eb.fn.countAll<number>().as("count"))
 					.where("pt.depth", "=", 1)
 					.groupBy(["pt.depth"])
-			)
+			),
+		{
+			// if more than 50 are fetched it likely takes more time to cache/uncache than it does to just execute the query
+			skipCacheFn: () => {
+				return !options?.limit || options?.limit > 50;
+			},
+		}
 	).execute();
 
 	if (options?._debugDontNest) {
