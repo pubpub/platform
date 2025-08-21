@@ -86,7 +86,7 @@
 			"@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
 			"@radix-ui/react-dismissable-layer": "^1.0.5",
 			"@radix-ui/react-focus-scope": "^1.0.4",
-			"@react-email/render@1>prettier": "^3.4.2",
+			"@react-email/render@1>prettier": "^3.6.2",
 			"react-email@3>next": "^15.5.0"
 		}
 	},
