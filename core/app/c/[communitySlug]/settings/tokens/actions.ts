@@ -8,7 +8,7 @@ import type {
 	UsersId,
 } from "db/public";
 
-import type { CreateTokenFormSchema } from "./CreateTokenForm";
+import type { CreateTokenFormSchema } from "./types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { createApiAccessToken, deleteApiAccessToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";

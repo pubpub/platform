@@ -1,12 +1,14 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { Eye } from "lucide-react";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
-import { Button } from "ui/button";
+import { Pencil } from "ui/icon";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
 import { BasicPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
 import {
@@ -40,7 +42,7 @@ export async function StageList(props: Props) {
 	const stages = getOrderedStages(communityStages);
 
 	return (
-		<div>
+		<div className="flex flex-col gap-8">
 			{stages.map((stage) => (
 				<StageCard
 					userId={props.userId}
@@ -66,27 +68,61 @@ async function StageCard({
 	userId: UsersId;
 }) {
 	const communitySlug = await getCommunitySlug();
+
 	return (
-		<div key={stage.id} className="mb-20">
-			<div className="flex flex-row justify-between">
-				<h3 className="mb-2 text-lg font-semibold hover:underline">
-					<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-						{stage.name} ({stage.pubsCount})
-					</Link>
-				</h3>
+		<div key={stage.id} className="relative rounded-l-md border-l-2 border-gray-400 py-2 pl-4">
+			<div className="flex flex-col justify-between gap-4">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-3">
+						<Link
+							href={`/c/${communitySlug}/stages/${stage.id}`}
+							className="group underline"
+						>
+							<h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+								{stage.name}
+							</h3>
+						</Link>
+						<p className="mt-1 text-xs text-gray-500">
+							{stage.pubsCount === 0
+								? "No Pubs in this stage"
+								: `${stage.pubsCount} ${stage.pubsCount === 1 ? "Pub" : "Pubs"}`}
+						</p>
+					</div>
+					<EllipsisMenu>
+						<EllipsisMenuButton asChild>
+							<Link
+								href={`/c/${communitySlug}/stages/${stage.id}/manage?editingStageId=${stage.id}`}
+							>
+								Edit Stage <Pencil size={10} strokeWidth={1.5} />
+							</Link>
+						</EllipsisMenuButton>
+						<EllipsisMenuButton asChild>
+							<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+								View Stage <Eye size={10} strokeWidth={1.5} />
+							</Link>
+						</EllipsisMenuButton>
+					</EllipsisMenu>
+				</div>
+
+				{!!stage.pubsCount && stage.pubsCount > 0 && (
+					<div className="flex flex-col gap-4">
+						<Suspense
+							fallback={
+								<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-4" />
+							}
+						>
+							<StagePubs
+								userId={userId}
+								stage={stage}
+								searchParams={searchParams}
+								members={members}
+								totalPubLimit={3}
+								basePath={`/c/${communitySlug}/stages`}
+							/>
+						</Suspense>
+					</div>
+				)}
 			</div>
-			<Suspense
-				fallback={<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-16" />}
-			>
-				<StagePubs
-					userId={userId}
-					stage={stage}
-					searchParams={searchParams}
-					members={members}
-					totalPubLimit={3}
-					basePath={`/c/${communitySlug}/stages`}
-				/>
-			</Suspense>
 		</div>
 	);
 }
@@ -144,7 +180,7 @@ export async function StagePubs({
 		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;
 
 	return (
-		<div className="flex flex-col gap-8">
+		<div className="flex flex-col gap-3">
 			{stagePubs.map((pub, index) => {
 				if (totalPubLimit && index > totalPubLimit - 1) {
 					return null;
@@ -182,18 +218,25 @@ export async function StagePubs({
 					totalPages={totalPages}
 				/>
 			)}
-			{!pagination && totalPubLimit && stagePubs.length > totalPubLimit && (
-				<Button
-					variant="ghost"
-					className="text-md inline-flex text-muted-foreground"
-					size="lg"
-					asChild
-				>
-					<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-						See all pubs in stage {stage.name}
-					</Link>
-				</Button>
-			)}
+			{!pagination &&
+				stage.pubsCount &&
+				totalPubLimit &&
+				stagePubs.length > totalPubLimit && (
+					<div className="flex items-center justify-center pt-4">
+						<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+							<div className="group flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 transition-all hover:bg-gray-200">
+								<div className="flex gap-1">
+									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+								</div>
+								<span className="text-sm text-gray-600 group-hover:text-gray-800">
+									{stage.pubsCount - totalPubLimit} more
+								</span>
+							</div>
+						</Link>
+					</div>
+				)}
 		</div>
 	);
 }
