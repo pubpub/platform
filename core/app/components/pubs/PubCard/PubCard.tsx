@@ -84,7 +84,11 @@ export const PubCard = async ({
 	return (
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
-			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500 has-[a:focus]:border-black has-[a:focus]:ring-2 has-[a:focus]:ring-gray-200"
+			className={cn(
+				"group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500",
+				// accessibility focus styles
+				"has-[h3>a:focus]:border-black has-[h3>a:focus]:ring-2 has-[h3>a:focus]:ring-gray-200"
+			)}
 			data-testid={`pub-card-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
