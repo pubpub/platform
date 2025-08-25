@@ -38,7 +38,7 @@
 		"context-editor:playwright": "pnpm --filter context-editor run playwright:test"
 	},
 	"devDependencies": {
-		"@babel/core": "7.25.2",
+		"@babel/core": "7.28.3",
 		"@babel/preset-env": "7.25.2",
 		"@babel/preset-react": "^7.27.1",
 		"@babel/preset-typescript": "^7.27.1",
