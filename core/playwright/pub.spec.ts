@@ -254,7 +254,9 @@ test.describe("Creating a pub", () => {
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
 		await pubsPage.goTo();
-		await expect(page.getByRole("link", { name: `prefix ${actualTitle}` })).toHaveCount(1);
+		await expect(
+			page.getByRole("link", { name: `prefix ${actualTitle}`, exact: true })
+		).toHaveCount(1);
 	});
 
 	test("Can create a related pub", async () => {
