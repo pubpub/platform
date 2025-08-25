@@ -103,7 +103,7 @@
 		"google-auth-library": "^9.15.1",
 		"graphile-worker": "^0.16.6",
 		"hastscript": "^9.0.1",
-		"import-in-the-middle": "1.7.1",
+		"import-in-the-middle": "1.14.2",
 		"ioredis": "^5.7.0",
 		"jsonpath-plus": "^10.3.0",
 		"jsonwebtoken": "^9.0.2",
