@@ -14,21 +14,21 @@
 		"src"
 	],
 	"dependencies": {
-		"db": "workspace:*",
-		"zod": "catalog:",
-		"react": "catalog:react19",
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
 		"@ts-rest/core": "catalog:",
 		"contracts": "workspace:*",
-		"graphile-worker": "^0.16.5",
+		"db": "workspace:*",
+		"graphile-worker": "^0.16.6",
 		"logger": "workspace:*",
-		"tsx": "catalog:"
+		"react": "catalog:react19",
+		"tsx": "catalog:",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
-		"dotenv-cli": "^7.2.1",
+		"dotenv-cli": "^7.4.4",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:"
 	},

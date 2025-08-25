@@ -4,8 +4,6 @@
 	"private": true,
 	"version": "0.0.0",
 	"description": "",
-	"main": "dist/contracts.cjs.js",
-	"module": "dist/contracts.esm.js",
 	"exports": {
 		".": "./dist/contracts.js",
 		"./package.json": "./package.json"

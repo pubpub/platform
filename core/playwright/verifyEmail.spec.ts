@@ -144,10 +144,7 @@ test.describe("unverified user", () => {
 
 		await test.step("second verification should succeed", async () => {
 			await page.goto(secondVerification!);
-			await page
-				.getByRole("status")
-				.getByText("Your email is now verified", { exact: true })
-				.waitFor();
+			await page.getByText("Your email is now verified", { exact: true }).waitFor();
 		});
 	});
 
@@ -187,10 +184,7 @@ test.describe("unverified user", () => {
 		await test.step("link in email redirects to redirect link", async () => {
 			await page.goto(url);
 			await page.waitForURL("/communities**");
-			await page
-				.getByRole("status")
-				.getByText("Your email is now verified", { exact: true })
-				.waitFor();
+			await page.getByText("Your email is now verified", { exact: true }).waitFor();
 		});
 	});
 

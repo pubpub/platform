@@ -43,6 +43,9 @@ const nextConfig: NextConfig = {
 			},
 		],
 	},
+	turbopack: {
+		root: new URL("./..", import.meta.url).pathname,
+	},
 	serverExternalPackages: [
 		"@aws-sdk",
 		// without this here, next will sort of implode and no longer compile and serve pages properly

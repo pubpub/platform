@@ -32,3 +32,5 @@ if (env.NODE_ENV === "production") {
 		],
 	});
 }
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

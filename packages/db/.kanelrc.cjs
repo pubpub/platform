@@ -23,6 +23,12 @@ module.exports = {
 
 	preDeleteOutputFolder: false,
 	enumStyle: "enum",
+	typeFilter: (type) => {
+		if (type.kind === "function") {
+			return false;
+		}
+		return true;
+	},
 	generateIdentifierType: (column, details, config) => {
 		const name = escapeIdentifier(toPascalCase(details.name) + toPascalCase(column.name));
 		const innerType = resolveType(column, details, {
