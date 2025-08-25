@@ -92,11 +92,6 @@ export function MoveInteractive({
 		return button;
 	}
 
-	console.log("sources", sources);
-	console.log("destinations", destinations);
-	console.log("canMovePub", canMovePub);
-
-	console.log(button);
 	return (
 		<Popover open={popoverIsOpen} onOpenChange={setPopoverIsOpen}>
 			<PopoverTrigger asChild>{button}</PopoverTrigger>

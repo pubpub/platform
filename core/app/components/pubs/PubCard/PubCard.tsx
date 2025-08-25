@@ -29,7 +29,8 @@ const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
 	return null;
 };
 
-const HOVER_CLASS = "opacity-0 group-hover:opacity-100 transition-opacity duration-200";
+const HOVER_CLASS =
+	"opacity-0 group-hover:opacity-100 transition-opacity duration-200 group-focus-within:opacity-100";
 // So that the whole card can be clickable as a link
 const LINK_AFTER =
 	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0";
@@ -82,12 +83,12 @@ export const PubCard = async ({
 	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
 	return (
 		<Card
-			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
+			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
+			className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500 has-[a:focus]:border-black has-[a:focus]:ring-2 has-[a:focus]:ring-gray-200"
 			data-testid={`pub-card-${pub.id}`}
 		>
 			<div className="flex min-w-0 flex-1 flex-col space-y-[6px]">
 				<div className="z-10 flex flex-row gap-2 p-0 font-semibold leading-4">
-					{/* TODO: make filter by pub type */}
 					<PubTypeLabel pubType={pub.pubType} canFilter={canFilter} />
 					{pub.stage ? (
 						<Move
@@ -116,7 +117,7 @@ export const PubCard = async ({
 					<h3 className="min-w-0 truncate">
 						<Link
 							href={`/c/${communitySlug}/pubs/${pub.id}`}
-							className={cn("hover:underline", LINK_AFTER)}
+							className={cn("hover:underline", LINK_AFTER, "focus-within:underline")}
 						>
 							<div
 								className="[&_mark]:bg-yellow-300"
@@ -258,6 +259,7 @@ const PubCardActions = async ({
 	canRunActionsAllPubs?: boolean;
 }) => {
 	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	const pubTitle = getPubTitle(pub);
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
 		canArchiveAllPubs ||
 			userCan(
@@ -291,6 +293,7 @@ const PubCardActions = async ({
 					actionInstances={actionInstances}
 					stage={pub.stage!}
 					pubId={pub.id}
+					buttonText={`Run actions for ${pubTitle}`}
 					iconOnly
 					variant="ghost"
 					className={cn(
@@ -303,7 +306,7 @@ const PubCardActions = async ({
 				<RemovePubButton
 					pubId={pub.id}
 					iconOnly
-					buttonText="Archive"
+					buttonText={`Archive ${pubTitle}`}
 					variant="ghost"
 					className={cn(
 						"order-1 w-8 px-4 py-2 peer-data-[state=open]:opacity-100 [&_svg]:size-6",
@@ -330,7 +333,7 @@ const PubCardActions = async ({
 				>
 					<Link href={`/c/${communitySlug}/pubs/${pub.id}/edit`}>
 						<Pencil strokeWidth="1px" className="text-neutral-500" />
-						<span className="sr-only">Update</span>
+						<span className="sr-only">Update {pubTitle}</span>
 					</Link>
 				</Button>
 			) : (
