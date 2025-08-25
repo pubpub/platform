@@ -20,6 +20,7 @@ import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getStages } from "~/lib/server/stages";
 import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery";
 import { PubSearch } from "./PubSearchInput";
+import { PubSearchProvider } from "./PubSearchProvider";
 import { PubsSelectedProvider } from "./PubsSelectedContext";
 import { PubsSelectedCounter } from "./PubsSelectedCounter";
 
@@ -184,54 +185,67 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 		}
 	);
 
-	const stagesPromise = getStages(
-		{ communityId: props.communityId, userId: props.userId },
-		{ withActionInstances: "full" }
-	).execute();
+	const [pubTypes, stages] = await Promise.all([
+		getPubTypesForCommunity(props.communityId, {
+			limit: 0,
+		}),
+		getStages(
+			{ communityId: props.communityId, userId: props.userId },
+			{ withActionInstances: "full" }
+		).execute(),
+	]);
+	// const stagesPromise = getStages(
+	// 	{ communityId: props.communityId, userId: props.userId },
+	// 	{ withActionInstances: "full" }
+	// ).execute();
 
-	const pubTypesPromise = getPubTypesForCommunity(props.communityId, {
-		limit: 0,
-	});
+	// const pubTypesPromise = getPubTypesForCommunity(props.communityId, {
+	// 	limit: 0,
+	// });
 
 	return (
 		<div className="relative flex h-full flex-col">
-			<PubsSelectedProvider pubIds={[]}>
-				<div
-					className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16")}
-				>
-					<PubSearch
-						filters={{
-							default: {
-								stage: [],
-								type: [],
-							},
-							available: {
-								stage: stagesPromise,
-								type: pubTypesPromise,
-							},
-						}}
+			<PubSearchProvider availablePubTypes={pubTypes} availableStages={stages}>
+				<PubsSelectedProvider pubIds={[]}>
+					<div
+						className={cn(
+							"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
+						)}
 					>
-						<Suspense fallback={<PubListSkeleton />}>
-							<PaginatedPubListInner
-								{...props}
-								communitySlug={communitySlug}
-								pubsPromise={pubsPromise}
-								stagesPromise={stagesPromise}
-							/>
-						</Suspense>
-					</PubSearch>
-				</div>
-				<Suspense fallback={null}>
-					<PubListFooterPagination
-						basePath={basePath}
-						searchParams={props.searchParams}
-						userId={props.userId}
-						page={search.page}
-						communityId={props.communityId}
-						pubsPromise={pubsPromise}
-					></PubListFooterPagination>
-				</Suspense>
-			</PubsSelectedProvider>
+						<PubSearch
+						// filters={{
+						// 	default: {
+						// 		stage: [],
+						// 		type: [],
+						// 	},
+						// 	available: {
+						// 		stage: stagesPromise,
+						// 		type: pubTypesPromise,
+						// 	},
+						// }}
+						>
+							<Suspense fallback={<PubListSkeleton />}>
+								<PaginatedPubListInner
+									{...props}
+									communitySlug={communitySlug}
+									pubsPromise={pubsPromise}
+									stagesPromise={Promise.resolve(stages)}
+								/>
+							</Suspense>
+						</PubSearch>
+					</div>
+					<Suspense fallback={null}>
+						<PubListFooterPagination
+							basePath={basePath}
+							searchParams={props.searchParams}
+							userId={props.userId}
+							page={search.page}
+							communityId={props.communityId}
+							pubsPromise={pubsPromise}
+						></PubListFooterPagination>
+					</Suspense>
+				</PubsSelectedProvider>
+			</PubSearchProvider>
 		</div>
 	);
 };

@@ -35,6 +35,7 @@ import { cn } from "utils";
 import type { PubSearchParams } from "./pubQuery";
 import { entries } from "~/lib/mapping";
 import { pubSearchParsers } from "./pubQuery";
+import { usePubSearch } from "./PubSearchProvider";
 
 export type StageFilters = {
 	id: StagesId;
@@ -58,7 +59,7 @@ export type PubSearchFilters = {
 };
 
 export type PubSearchProps = React.PropsWithChildren<{
-	filters: PubSearchFilters;
+	// filters: PubSearchFilters;
 }>;
 
 const sorts = {
@@ -67,86 +68,10 @@ const sorts = {
 	title: "Title",
 };
 
-const DEBOUNCE_TIME = 300;
-
-const isStale = (query: PubSearchParams, inputValues: PubSearchParams) => {
-	if (query.query !== inputValues.query) {
-		return true;
-	}
-
-	const sort = query.sort[0];
-	if (sort.id !== inputValues.sort[0]?.id || sort.desc !== inputValues.sort[0]?.desc) {
-		return true;
-	}
-
-	if (query.page !== inputValues.page) {
-		return true;
-	}
-
-	if (query.perPage !== inputValues.perPage) {
-		return true;
-	}
-
-	if (query.pubTypes) {
-		const currentPubTypesSet = new Set(query.pubTypes);
-		const inputPubTypesSet = new Set(inputValues.pubTypes);
-
-		if (
-			currentPubTypesSet.difference(inputPubTypesSet).size !== 0 ||
-			inputPubTypesSet.difference(currentPubTypesSet).size !== 0
-		) {
-			return true;
-		}
-	}
-
-	if (query.stages) {
-		const currentStagesSet = new Set(query.stages);
-		const inputStagesSet = new Set(inputValues.stages);
-
-		if (
-			currentStagesSet.difference(inputStagesSet).size !== 0 ||
-			inputStagesSet.difference(currentStagesSet).size !== 0
-		) {
-			return true;
-		}
-	}
-
-	if (query.filters) {
-		for (const [idx, filter] of Object.entries(query.filters)) {
-			const inputFilter = inputValues.filters[Number(idx)];
-
-			if (
-				inputFilter.id !== filter.id ||
-				inputFilter.operator !== filter.operator ||
-				inputFilter.value !== filter.value
-			) {
-				return true;
-			}
-		}
-	}
-
-	return false;
-};
-
 export const PubSearch = (props: PubSearchProps) => {
-	const [query, setQuery] = useQueryStates(pubSearchParsers, {
-		shallow: false,
-	});
-
-	const availablePubTypes = use(props.filters.available.type);
-	const availableStages = use(props.filters.available.stage);
-
-	// local input state for immediate UI responsiveness + sync with URL
-	// otherwise, when navigating back/forward or refreshing, the input will be empty
-	const [inputValues, setInputValues] = useState(query);
-
-	// deferred query to keep track of server updates
-	// without this, we cant only compare eg inputValues.query with query.query,
-	// which only tells us that the debounce has happened
-	const deferredQuery = useDeferredValue(query);
-
 	const inputRef = useRef<HTMLInputElement>(null);
 
+	const { symbol, platform } = usePlatformModifierKey();
 	useKeyboardShortcut(
 		"Mod+k",
 		() => {
@@ -158,40 +83,11 @@ export const PubSearch = (props: PubSearchProps) => {
 		}
 	);
 
-	const currentPubTypes = availablePubTypes?.filter((type) => query.pubTypes?.includes(type.id));
-	const currentStages = availableStages?.filter((stage) => query.stages?.includes(stage.id));
-
-	const stale = isStale(deferredQuery, inputValues);
-
-	// sync input with URL when navigating back/forward
-	useEffect(() => {
-		// if (isStale(query, inputValues)) {
-		// 	return;
-		// }
-		setInputValues(query);
-	}, []);
-
-	const { symbol, platform } = usePlatformModifierKey();
-
-	const debouncedSetQuery = useDebouncedCallback((value: string) => {
-		if (value.length >= 2 || value.length === 0) {
-			setQuery({ query: value, page: 1 }); // reset to page 1 on new search
-		}
-	}, DEBOUNCE_TIME);
-
-	const setQueryAndInputValues = useCallback((newQuery: Partial<PubSearchParams>) => {
-		setQuery((old) => ({ ...old, ...newQuery }));
-		setInputValues((old) => ({ ...old, ...newQuery }));
-	}, []);
+	const { queryParams, inputValues, setQuery, setFilters, stale } = usePubSearch();
 
 	const handleClearInput = () => {
-		setInputValues((old) => ({
-			...old,
-			query: "",
-		}));
-		setQuery((old) => ({ ...old, query: "", page: 1 }));
+		setQuery("");
 	};
-
 	// determine if content is stale, in order to provide a visual feedback to the user
 
 	return (
@@ -206,11 +102,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						ref={inputRef}
 						value={inputValues?.query}
 						onChange={(e) => {
-							setInputValues((old) => ({
-								...old,
-								query: e.target.value,
-							}));
-							debouncedSetQuery(e.target.value);
+							setQuery(e.target.value);
 						}}
 						placeholder="Search updates as you type..."
 						className={cn(
@@ -246,43 +138,47 @@ export const PubSearch = (props: PubSearchProps) => {
 					</span>
 				</div>
 				<MultiSelect
-					options={availablePubTypes?.map((type) => ({
+					options={queryParams.pubTypes?.map((type) => ({
 						label: type.name,
 						value: type.id,
 					}))}
-					defaultValue={currentPubTypes?.map((type) => type.id)}
-					onValueChange={(items) => setQueryAndInputValues({ pubTypes: items })}
+					defaultValue={queryParams.pubTypes.map((type) => type.id)}
+					onValueChange={(items) =>
+						setFilters((old) => ({ ...old, pubTypes: items as PubTypesId[] }))
+					}
 					showClearAll
-					value={query.pubTypes ?? []}
+					value={queryParams.pubTypes.map((type) => type.id)}
 					asChild
 				>
 					<Button variant="outline" size="sm">
 						<PlusCircle size={16} />
 						Type
-						{currentPubTypes?.length ? (
+						{queryParams.pubTypes?.length ? (
 							<span className="ml-1 text-xs text-gray-500">
-								{currentPubTypes.length}
+								{queryParams.pubTypes.length}
 							</span>
 						) : null}
 					</Button>
 				</MultiSelect>
 				<MultiSelect
-					options={availableStages?.map((stage) => ({
+					options={queryParams.stages?.map((stage) => ({
 						label: stage.name,
 						value: stage.id,
 					}))}
-					defaultValue={currentStages?.map((stage) => stage.id)}
-					onValueChange={(items) => setQueryAndInputValues({ stages: items })}
-					value={query.stages ?? []}
+					defaultValue={queryParams.stages.map((stage) => stage.id)}
+					onValueChange={(items) =>
+						setFilters((old) => ({ ...old, stages: items as StagesId[] }))
+					}
+					value={queryParams.stages.map((stage) => stage.id)}
 					showClearAll
 					asChild
 				>
 					<Button variant="outline" size="sm">
 						<PlusCircle size={16} />
 						Stage
-						{currentStages?.length ? (
+						{queryParams.stages?.length ? (
 							<span className="ml-1 text-xs text-gray-500">
-								{currentStages.length}
+								{queryParams.stages.length}
 							</span>
 						) : null}
 					</Button>
@@ -290,8 +186,8 @@ export const PubSearch = (props: PubSearchProps) => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<Button variant="outline" size="sm" className="ml-auto">
-							{query.sort ? (
-								query.sort[0]?.desc ? (
+							{queryParams.sort ? (
+								queryParams.sort[0]?.desc ? (
 									<SortDesc />
 								) : (
 									<SortAsc />
@@ -299,7 +195,9 @@ export const PubSearch = (props: PubSearchProps) => {
 							) : (
 								<ArrowUpDownIcon />
 							)}
-							{query.sort ? sorts[query.sort[0]?.id as keyof typeof sorts] : "Sort"}
+							{queryParams.sort
+								? sorts[queryParams.sort[0]?.id as keyof typeof sorts]
+								: "Sort"}
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent>
@@ -307,9 +205,10 @@ export const PubSearch = (props: PubSearchProps) => {
 							<DropdownMenuItem
 								key={key}
 								onClick={() =>
-									setQueryAndInputValues({
-										sort: [{ id: key, desc: !query.sort[0]?.desc }],
-									})
+									setFilters((old) => ({
+										...old,
+										sort: [{ id: key, desc: !queryParams.sort[0]?.desc }],
+									}))
 								}
 							>
 								{label}
