@@ -240,7 +240,7 @@ test.describe("Creating a pub", () => {
 			1
 		);
 		await pubsPage.goTo();
-		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1);
 
 		// Now update
 		await page.getByRole("link", { name: "Update" }).first().click();
