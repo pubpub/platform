@@ -30,7 +30,7 @@ import { cn } from "utils";
 import type { FormBuilderSchema } from "../types";
 import { findRanksBetween } from "~/lib/rank";
 import { useCommunity } from "../../providers/CommunityProvider";
-import { useFormBuilder } from "../FormBuilderContext";
+import { useBuilder } from "../BuilderContext";
 import { ButtonOption } from "../SubmissionSettings";
 import { isButtonElement } from "../types";
 
@@ -45,7 +45,7 @@ export const ButtonConfigurationForm = ({
 	// The id here is either the button's elementId or its label depending on what is available
 	buttonIdentifier: string | null;
 }) => {
-	const { dispatch, update, stages } = useFormBuilder();
+	const { dispatch, update, stages } = useBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext<FormBuilderSchema>();
 	// Derive some initial values based on the state of the parent form when this panel was opened

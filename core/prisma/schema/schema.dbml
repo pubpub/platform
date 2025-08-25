@@ -257,6 +257,7 @@ Table _PubFieldToPubType {
   A String [not null]
   B String [not null]
   isTitle Boolean [not null, default: false]
+  rank String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   pubField pub_fields [not null]

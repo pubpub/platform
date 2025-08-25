@@ -241,6 +241,7 @@ model PubFieldToPubType {
   // when this changes, a trigger is run to update the title of all pubs in that pubType
   // see migrations/20241210172906_trigger_for_changing_is_title/migration.sql
   isTitle   Boolean  @default(false)
+  rank      String // Uses "C" collation
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 

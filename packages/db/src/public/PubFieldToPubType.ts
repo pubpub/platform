@@ -21,6 +21,8 @@ export interface PubFieldToPubTypeTable {
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	rank: ColumnType<string, string, string>;
 }
 
 export type PubFieldToPubType = Selectable<PubFieldToPubTypeTable>;
@@ -35,6 +37,7 @@ export const pubFieldToPubTypeSchema = z.object({
 	isTitle: z.boolean(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
+	rank: z.string(),
 });
 
 export const pubFieldToPubTypeInitializerSchema = z.object({
@@ -43,6 +46,7 @@ export const pubFieldToPubTypeInitializerSchema = z.object({
 	isTitle: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	rank: z.string(),
 });
 
 export const pubFieldToPubTypeMutatorSchema = z.object({
@@ -51,4 +55,5 @@ export const pubFieldToPubTypeMutatorSchema = z.object({
 	isTitle: z.boolean().optional(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	rank: z.string().optional(),
 });
