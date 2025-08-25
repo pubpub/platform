@@ -8,6 +8,7 @@ import {
 	useContext,
 	useDeferredValue,
 	useEffect,
+	useMemo,
 	useState,
 } from "react";
 import { useQueryStates } from "nuqs";
@@ -141,7 +142,7 @@ export function PubSearchProvider({ children, ...props }: Props) {
 		queryparams.stages?.includes(stage.id)
 	);
 
-	const stale = isStale(deferredQuery, inputValues);
+	const stale = useMemo(() => isStale(deferredQuery, inputValues), [deferredQuery, inputValues]);
 
 	// sync input with URL when navigating back/forward
 	useEffect(() => {
