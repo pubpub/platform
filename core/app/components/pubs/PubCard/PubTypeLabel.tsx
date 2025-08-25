@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
-import { useQueryStates } from "nuqs";
 
 import type { PubTypesId } from "db/public";
 import { Button } from "ui/button";
 import { cn } from "utils";
 
-import { pubSearchParsers } from "~/app/c/[communitySlug]/pubs/pubQuery";
+import { usePubSearch } from "~/app/c/[communitySlug]/pubs/PubSearchProvider";
 
 export const PubTypeLabel = ({
 	pubType,
@@ -20,16 +19,18 @@ export const PubTypeLabel = ({
 	};
 	canFilter?: boolean;
 }) => {
-	if (!canFilter) {
+	if (canFilter) {
+		return <FilterablePubTypeLabel pubType={pubType} />;
+	}
+
+	return (
 		<Button
 			variant="outline"
 			className="h-[22px] rounded border-gray-300 bg-gray-100 px-[.35rem] text-xs font-semibold shadow-none"
 		>
 			{pubType.name}
-		</Button>;
-	}
-
-	return <FilterablePubTypeLabel pubType={pubType} />;
+		</Button>
+	);
 };
 
 export const FilterablePubTypeLabel = ({
@@ -40,12 +41,11 @@ export const FilterablePubTypeLabel = ({
 		name: string;
 	};
 }) => {
-	const [query, setQuery] = useQueryStates(pubSearchParsers, {
-		shallow: false,
-	});
+	const { inputValues, setFilters } = usePubSearch();
+
 	const [expanded, setExpanded] = useState(false);
 
-	const currentPubTypes = query.pubTypes ?? [];
+	const currentPubTypes = inputValues.pubTypes ?? [];
 
 	const isSelected = currentPubTypes.includes(pubType.id);
 
@@ -57,11 +57,14 @@ export const FilterablePubTypeLabel = ({
 			)}
 			onMouseEnter={() => setExpanded(true)}
 			onMouseLeave={() => setExpanded(false)}
+			onFocus={() => setExpanded(true)}
+			onBlur={() => setExpanded(false)}
+			aria-label={`${pubType.name} ${isSelected ? "remove from" : "add to"} filter`}
 			onClick={() => {
-				setQuery((old) => ({
+				setFilters((old) => ({
 					...old,
 					pubTypes: isSelected
-						? old.pubTypes.filter((id) => id !== pubType.id)
+						? (old.pubTypes.filter((id) => id !== pubType.id) as PubTypesId[])
 						: [...old.pubTypes, pubType.id],
 				}));
 			}}
