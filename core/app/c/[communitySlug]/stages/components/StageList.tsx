@@ -10,7 +10,7 @@ import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
 import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
 import { BasicPagination } from "~/app/components/Pagination";
-import { PubCard } from "~/app/components/PubCard";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
@@ -207,6 +207,7 @@ export async function StagePubs({
 						canRunActionsAllPubs={canRunActionsAllPubs}
 						canMoveAllPubs={canMoveAllPubs}
 						canViewAllStages={canViewAllStages}
+						canFilter={false}
 					/>
 				);
 			})}
