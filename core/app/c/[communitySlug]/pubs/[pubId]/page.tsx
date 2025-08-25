@@ -9,6 +9,7 @@ import type { CommunitiesId, PubsId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { tryCatch } from "utils/try-catch";
 
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
@@ -222,7 +223,18 @@ export default async function Page(props: {
 				<>
 					<BookOpen size={24} strokeWidth={1} className="mr-3 text-gray-500" />
 					<div>
-						{getPubTitle(pub)}
+						<Tooltip delayDuration={300}>
+							<TooltipTrigger className="m-0 -ml-3 line-clamp-1 p-0">
+								{getPubTitle(pub)}
+							</TooltipTrigger>
+							<TooltipContent
+								side="bottom"
+								align="start"
+								className="max-w-sm text-xs"
+							>
+								{getPubTitle(pub)}
+							</TooltipContent>
+						</Tooltip>
 						<div className="flex items-center gap-1 text-sm text-muted-foreground">
 							<span className="font-semibold">{pub.pubType.name}</span>•
 							<FormSwitcher
