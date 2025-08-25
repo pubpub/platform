@@ -207,6 +207,7 @@ export async function StagePubs({
 						canRunActionsAllPubs={canRunActionsAllPubs}
 						canMoveAllPubs={canMoveAllPubs}
 						canViewAllStages={canViewAllStages}
+						canFilter={false}
 					/>
 				);
 			})}

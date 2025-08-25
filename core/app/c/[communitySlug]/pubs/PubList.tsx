@@ -212,18 +212,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 							"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
 						)}
 					>
-						<PubSearch
-						// filters={{
-						// 	default: {
-						// 		stage: [],
-						// 		type: [],
-						// 	},
-						// 	available: {
-						// 		stage: stagesPromise,
-						// 		type: pubTypesPromise,
-						// 	},
-						// }}
-						>
+						<PubSearch>
 							<Suspense fallback={<PubListSkeleton />}>
 								<PaginatedPubListInner
 									{...props}

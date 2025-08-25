@@ -4,23 +4,18 @@ import type { Dispatch, SetStateAction } from "react";
 
 import {
 	createContext,
-	use,
 	useCallback,
 	useContext,
 	useDeferredValue,
 	useEffect,
-	useRef,
 	useState,
 } from "react";
 import { useQueryStates } from "nuqs";
 import { useDebouncedCallback } from "use-debounce";
 
-import type { Filter } from "contracts";
-import type { PubTypes, PubTypesId, Stages, StagesId } from "db/public";
-import { KeyboardShortcutPriority, useKeyboardShortcut, usePlatformModifierKey } from "ui/hooks";
+import type { PubTypes, Stages } from "db/public";
 
 import type { PubSearchParams } from "./pubQuery";
-import type { LoginData } from "~/lib/authentication/loginData";
 import { pubSearchParsers } from "./pubQuery";
 
 type Props = {
@@ -36,6 +31,8 @@ type FullPubSearchParams = Omit<PubSearchParams, "pubTypes" | "stages"> & {
 
 type PubSearchContextType = {
 	queryParams: FullPubSearchParams;
+	availablePubTypes: PubTypes[];
+	availableStages: Stages[];
 	inputValues: PubSearchParams;
 	setQuery: Dispatch<SetStateAction<string>>;
 	setFilters: Dispatch<SetStateAction<PubSearchParams>>;
@@ -50,11 +47,13 @@ const DEFAULT_SEARCH_PARAMS = {
 	page: 1,
 	sort: [{ id: "updatedAt", desc: true }],
 	perPage: 10,
-} as FullPubSearchParams;
+};
 
 const PubSearchContext = createContext<PubSearchContextType>({
-	queryParams: DEFAULT_SEARCH_PARAMS,
-	inputValues: DEFAULT_SEARCH_PARAMS,
+	queryParams: DEFAULT_SEARCH_PARAMS as FullPubSearchParams,
+	inputValues: DEFAULT_SEARCH_PARAMS as PubSearchParams,
+	availablePubTypes: [],
+	availableStages: [],
 	stale: false,
 	setQuery: () => "",
 	setFilters: () => DEFAULT_SEARCH_PARAMS,
@@ -161,7 +160,6 @@ export function PubSearchProvider({ children, ...props }: Props) {
 
 	const setQuery = useCallback(
 		(value: SetStateAction<string>) => {
-			// console.log(value);
 			setInputValues((old) => {
 				const newQuery = typeof value === "function" ? value(old.query) : value;
 				return { ...old, query: newQuery, page: 1 };
@@ -174,22 +172,18 @@ export function PubSearchProvider({ children, ...props }: Props) {
 	);
 
 	const setFilters = useCallback((filters: SetStateAction<PubSearchParams>) => {
-		setQueryParaams((old) => {
-			const newFilters = typeof filters === "function" ? filters(old) : filters;
-			return {
-				...old,
-				...newFilters,
-				pubTypes: currentPubTypes.map((type) => type.id),
-				stages: currentStages.map((stage) => stage.id),
-			};
-		});
 		setInputValues((old) => {
 			const newFilters = typeof filters === "function" ? filters(old) : filters;
 			return {
 				...old,
 				...newFilters,
-				pubTypes: currentPubTypes.map((type) => type.id),
-				stages: currentStages.map((stage) => stage.id),
+			};
+		});
+		setQueryParaams((old) => {
+			const newFilters = typeof filters === "function" ? filters(old) : filters;
+			return {
+				...old,
+				...newFilters,
 			};
 		});
 	}, []);
@@ -211,7 +205,7 @@ export function PubSearchProvider({ children, ...props }: Props) {
 				setQuery,
 				inputValues,
 				stale,
-				setFilters: setFilters,
+				setFilters,
 			}}
 		>
 			{children}

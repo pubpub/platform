@@ -83,7 +83,15 @@ export const PubSearch = (props: PubSearchProps) => {
 		}
 	);
 
-	const { queryParams, inputValues, setQuery, setFilters, stale } = usePubSearch();
+	const {
+		queryParams,
+		inputValues,
+		setQuery,
+		setFilters,
+		stale,
+		availableStages,
+		availablePubTypes,
+	} = usePubSearch();
 
 	const handleClearInput = () => {
 		setQuery("");
@@ -138,7 +146,7 @@ export const PubSearch = (props: PubSearchProps) => {
 					</span>
 				</div>
 				<MultiSelect
-					options={queryParams.pubTypes?.map((type) => ({
+					options={availablePubTypes?.map((type) => ({
 						label: type.name,
 						value: type.id,
 					}))}
@@ -147,7 +155,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						setFilters((old) => ({ ...old, pubTypes: items as PubTypesId[] }))
 					}
 					showClearAll
-					value={queryParams.pubTypes.map((type) => type.id)}
+					value={inputValues.pubTypes}
 					asChild
 				>
 					<Button variant="outline" size="sm">
@@ -161,7 +169,7 @@ export const PubSearch = (props: PubSearchProps) => {
 					</Button>
 				</MultiSelect>
 				<MultiSelect
-					options={queryParams.stages?.map((stage) => ({
+					options={availableStages?.map((stage) => ({
 						label: stage.name,
 						value: stage.id,
 					}))}
@@ -169,7 +177,7 @@ export const PubSearch = (props: PubSearchProps) => {
 					onValueChange={(items) =>
 						setFilters((old) => ({ ...old, stages: items as StagesId[] }))
 					}
-					value={queryParams.stages.map((stage) => stage.id)}
+					value={inputValues.stages}
 					showClearAll
 					asChild
 				>
