@@ -38,6 +38,8 @@ type PubSearchContextType = {
 	setQuery: Dispatch<SetStateAction<string>>;
 	setFilters: Dispatch<SetStateAction<PubSearchParams>>;
 	stale: boolean;
+	/* for extra granular control over the loading state */
+	setInputValues: Dispatch<SetStateAction<PubSearchParams>>;
 };
 
 const DEFAULT_SEARCH_PARAMS = {
@@ -58,6 +60,7 @@ const PubSearchContext = createContext<PubSearchContextType>({
 	stale: false,
 	setQuery: () => "",
 	setFilters: () => DEFAULT_SEARCH_PARAMS,
+	setInputValues: () => {},
 });
 
 const DEBOUNCE_TIME = 300;
@@ -205,6 +208,7 @@ export function PubSearchProvider({ children, ...props }: Props) {
 				availableStages: props.availableStages,
 				setQuery,
 				inputValues,
+				setInputValues,
 				stale,
 				setFilters,
 			}}

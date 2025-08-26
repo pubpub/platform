@@ -6,7 +6,6 @@ import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import type { AutoReturnType } from "~/lib/types";
-import { FooterPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
 import {
 	userCanArchiveAllPubs,
@@ -19,6 +18,7 @@ import { getPubsCount, getPubsWithRelatedValues, getPubTypesForCommunity } from 
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getStages } from "~/lib/server/stages";
 import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery";
+import { PubSearchFooter } from "./PubSearchFooter";
 import { PubSearch } from "./PubSearchInput";
 import { PubSearchProvider } from "./PubSearchProvider";
 import { PubsSelectedProvider } from "./PubsSelectedContext";
@@ -145,10 +145,10 @@ const PubListFooterPagination = async (props: {
 	};
 
 	return (
-		<FooterPagination {...props} {...paginationProps} className="z-20">
+		<PubSearchFooter {...props} {...paginationProps} className="z-20">
 			{props.children}
 			<PubsSelectedCounter pageSize={Math.min(search.perPage, count)} />
-		</FooterPagination>
+		</PubSearchFooter>
 	);
 };
 
