@@ -2,8 +2,6 @@
 	"name": "schemas",
 	"type": "module",
 	"version": "0.0.1",
-	"main": "dist/schemas.cjs.js",
-	"module": "dist/schemas.esm.js",
 	"exports": {
 		".": "./dist/schemas.js",
 		"./utils": "./dist/schemas-utils.js",

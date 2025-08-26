@@ -8,19 +8,19 @@ packages:
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
-    next: ^15.2.3
+    next: ^15.5.0
     eslint: ^9.9.0
     katex: ^0.16.18
-    prettier: ^3.4.2
-    tailwindcss: ^3.4.10
+    prettier: ^3.6.2
+    tailwindcss: 3.4.14
     tailwind-merge: ^2.5.2
     clsx: ^2.0.0
     postcss: ^8.4.27
-    autoprefixer: ^10.4.20
+    autoprefixer: ^10.4.21
     date-fns: ^4.1.0
-    nuqs: "^2.4.1"
+    nuqs: "^2.4.3"
     tsx: ^4.19.0
-    typescript: 5.7.2
+    typescript: ^5.9.2
     vite: ^6.0.0
     vitest: ^3.0.5
     zod: ^3.23.8
@@ -29,16 +29,16 @@ catalog:
     "@playwright/test": ^1.52.0
     "@sinclair/typebox": ^0.34.30
     "@types/node": ^20
-    "@handlewithcare/react-prosemirror": "^2.4.2"
+    "@handlewithcare/react-prosemirror": "^2.4.12"
     "@honeycombio/opentelemetry-node": ^0.6.1
     "@opentelemetry/auto-instrumentations-node": 0.53.0
-    "@sentry/nextjs": "^9.10.1"
+    "@sentry/nextjs": "^10.5.0"
     "@ts-rest/core": 3.51.0
     "@ts-rest/next": 3.51.0
     "@ts-rest/open-api": 3.51.0
     "@ts-rest/serverless": 3.51.0
     "@ts-rest/react-query": 3.51.0
-    "prosemirror-model": "1.25.1"
+    "prosemirror-model": "1.25.3"
     "prosemirror-view": "1.39.2"
     "prosemirror-state": "1.4.3"
 
@@ -49,8 +49,8 @@ catalogs:
         "@types/react": ^18.3.5
         "@types/react-dom": ^18.3.0
     react19:
-        react: ^19.1.0
-        react-dom: ^19.1.0
-        "@types/react": ^19.1.0
-        "@types/react-dom": ^19.1.0
+        react: ^19.1.1
+        react-dom: ^19.1.1
+        "@types/react": ^19.1.10
+        "@types/react-dom": ^19.1.7
         react-reconciler: "0.32.0"
