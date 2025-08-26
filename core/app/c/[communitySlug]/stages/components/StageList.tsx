@@ -91,7 +91,7 @@ async function StageCard({
 					<EllipsisMenu>
 						<EllipsisMenuButton asChild>
 							<Link
-								href={`/c/${communitySlug}/stages/${stage.id}/manage?editingStageId=${stage.id}`}
+								href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}`}
 							>
 								Edit Stage <Pencil size={10} strokeWidth={1.5} />
 							</Link>
