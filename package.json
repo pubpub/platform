@@ -3,7 +3,7 @@
 	"scripts": {
 		"build": "pnpm p:build && turbo build",
 		"build:docs": "turbo build --filter=docs",
-		"dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!storybook --filter=!docs --ui tui",
+		"dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!docs --ui tui",
 		"clean": "turbo clean",
 		"start": "turbo start",
 		"type-check": "turbo type-check",
@@ -38,20 +38,20 @@
 		"context-editor:playwright": "pnpm --filter context-editor run playwright:test"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.22.17",
-		"@babel/preset-env": "^7.22.15",
-		"@babel/preset-react": "^7.22.15",
-		"@babel/preset-typescript": "^7.22.15",
+		"@babel/core": "7.28.3",
+		"@babel/preset-env": "7.25.2",
+		"@babel/preset-react": "^7.27.1",
+		"@babel/preset-typescript": "^7.27.1",
 		"@playwright/test": "catalog:",
-		"@preconstruct/cli": "^2.8.10",
+		"@preconstruct/cli": "^2.8.12",
 		"@pubpub/prettier-config": "workspace:*",
-		"@turbo/gen": "^2.1.1",
-		"concurrently": "^9.0.1",
+		"@turbo/gen": "^2.5.6",
+		"concurrently": "^9.2.0",
 		"husky": "^8.0.3",
-		"lint-staged": "^13.2.2",
+		"lint-staged": "^13.3.0",
 		"pino-pretty": "^10.3.1",
 		"prettier": "catalog:",
-		"turbo": "^2.4.4"
+		"turbo": "^2.5.6"
 	},
 	"lint-staged": {
 		"*.{ts,tsx,js,jsx,scss,json,md}": [
@@ -86,7 +86,9 @@
 			"@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
 			"@radix-ui/react-dismissable-layer": "^1.0.5",
 			"@radix-ui/react-focus-scope": "^1.0.4",
-			"@react-email/render@1>prettier": "^3.4.2"
+			"@react-email/render@1>prettier": "^3.6.2",
+			"react-email@3>next": "^15.5.0",
+			"@opentelemetry/instrumentation@0>import-in-the-middle": "1.14.2"
 		}
 	},
 	"name": "v7",

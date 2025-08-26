@@ -2,8 +2,6 @@
 	"name": "utils",
 	"type": "module",
 	"version": "0.0.1",
-	"main": "dist/utils.cjs.js",
-	"module": "dist/utils.esm.js",
 	"exports": {
 		"./doi": "./dist/utils-doi.js",
 		"./url": "./dist/utils-url.js",
