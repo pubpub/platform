@@ -61,10 +61,10 @@ export function getCommonPinningStyles<TData>({
  */
 export function getDefaultFilterOperator(columnType: ColumnType): FilterOperator {
 	if (columnType === "text") {
-		return "iLike";
+		return "$contains";
 	}
 
-	return "eq";
+	return "$eq";
 }
 
 /**
@@ -105,8 +105,8 @@ export function getFilterOperators(columnType: ColumnType) {
 export function getValidFilters<TData>(filters: Filter<TData>[]): Filter<TData>[] {
 	return filters.filter(
 		(filter) =>
-			filter.operator === "isEmpty" ||
-			filter.operator === "isNotEmpty" ||
+			filter.operator === "$null" ||
+			filter.operator === "$exists" ||
 			(Array.isArray(filter.value)
 				? filter.value.length > 0
 				: filter.value !== "" && filter.value !== null && filter.value !== undefined)

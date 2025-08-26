@@ -132,7 +132,7 @@ test("Can create a pub from an external form", async () => {
 
 	// Check the pub page that this pub was created
 	await page.goto(`/c/${community.community.slug}/pubs`);
-	await expect(page.getByRole("link", { name: title })).toHaveCount(1);
+	await expect(page.getByRole("link", { name: title, exact: true })).toHaveCount(1);
 });
 
 test.describe("Multivalue inputs", () => {
@@ -237,7 +237,7 @@ test.describe("Multivalue inputs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`);
-		await page.getByRole("link", { name: title }).click();
+		await page.getByRole("link", { name: title, exact: true }).click();
 		// Make sure pub details page has loaded before making assertions
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*`);
 		await expect(page.getByText(numberElement.name)).toHaveCount(1);
@@ -290,7 +290,7 @@ test.describe("Rich text editor", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`);
-		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1);
 	});
 });
 
@@ -462,7 +462,7 @@ test.describe("Related pubs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`);
-		await page.getByRole("link", { name: title }).click();
+		await page.getByRole("link", { name: title, exact: true }).click();
 		// Make sure pub details page has loaded before making assertions
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*`);
 		await expect(page.getByText("admin:related pub")).toHaveCount(1);

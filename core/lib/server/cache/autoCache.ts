@@ -25,6 +25,10 @@ const executeWithCache = <
 
 		const allTables = getTablesWithLinkedTables(tables);
 
+		if (options?.skipCacheFn?.()) {
+			return qb[method](...args) as ReturnType<Q[M]>;
+		}
+
 		const cachedExecute = memoize(
 			async <M extends "execute" | "executeTakeFirst" | "executeTakeFirstOrThrow">(
 				method: M

@@ -23,13 +23,19 @@ export type MQB<K extends keyof Database = keyof Database> =
 export type QB<K extends keyof Database = keyof Database> = SQB<K> | MQB<K>;
 
 export type AutoCacheOptions = Omit<
-	MemoizeOptionType<any[]>,
+	MemoizeOptionType<unknown[]>,
 	"revalidateTags" | "additionalCacheKey"
 > & {
 	additionalRevalidateTags?: CacheTag[];
 	additionalCacheKey?: string[];
 	/** The slug of the community, in case the query is being made outside of a scoped community path */
 	communitySlug?: string;
+	/**
+	 * A function that returns true if the query should be skipped from caching.
+	 *
+	 * Useful if you expect the query to be real big
+	 */
+	skipCacheFn?: () => boolean;
 };
 
 export type AutoRevalidateOptions = {

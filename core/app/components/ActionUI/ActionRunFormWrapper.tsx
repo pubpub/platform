@@ -1,4 +1,6 @@
-import type { ActionInstances, PubsId, Stages } from "db/public";
+import { cache } from "react";
+
+import type { ActionInstances, CommunitiesId, PubsId, Stages } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 import { TokenProvider } from "ui/tokens";
 
@@ -9,6 +11,11 @@ import { getActionConfigDefaults } from "~/lib/server/actions";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ActionRunForm } from "./ActionRunForm";
 
+// if there's a ton of ActionRun buttons on a page, this will be a lot faster
+const pubFieldsCached = cache(async (communityId: CommunitiesId) => {
+	return getPubFields({ communityId }).executeTakeFirstOrThrow();
+});
+
 export const ActionRunFormWrapper = async ({
 	actionInstance,
 	pubId,
@@ -17,10 +24,11 @@ export const ActionRunFormWrapper = async ({
 	actionInstance: ActionInstances;
 	pubId: PubsId;
 	stage: Stages;
+	/* pass in pubfields rather than loading it here */
 }) => {
 	const { tokens = {} } = getActionByName(actionInstance.action);
 
-	const fieldPromise = getPubFields({ communityId: stage.communityId }).executeTakeFirstOrThrow();
+	const fieldPromise = pubFieldsCached(stage.communityId);
 
 	const resolvedFieldConfigPromise = resolveFieldConfig(actionInstance.action, "config", {
 		stageId: stage.id,
