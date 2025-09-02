@@ -13,10 +13,10 @@ import { DatePicker } from "ui/date-picker";
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Input } from "ui/input";
 import { Separator } from "ui/separator";
+import { FormSubmitButton } from "ui/submit-button";
 import { cn } from "utils";
 
 import type { CreateTokenFormSchema } from "./types";
-import { FormSubmitButton } from "~/app/components/SubmitButton";
 import { useServerAction } from "~/lib/serverActions";
 import * as actions from "./actions";
 import { CreateTokenFormContext } from "./CreateTokenFormContext";

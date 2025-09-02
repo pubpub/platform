@@ -13,6 +13,7 @@ import type { FileMetadata } from "../assets";
 import type { LegacyCommunity, LegacyPage, MenuNavigationChild } from "./schemas";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
+import { findRanksBetween } from "~/lib/rank";
 import { slugifyString } from "~/lib/string";
 import { generateMetadataFromS3 } from "../assets";
 import { autoRevalidate } from "../cache/autoRevalidate";
@@ -256,27 +257,34 @@ export const createLegacyStructure = async (
 				trx
 					.insertInto("_PubFieldToPubType")
 					.values((eb) =>
-						pubTypesToCreate.flatMap((pt) =>
-							pt.fields.map((f) => ({
-								A: eb
-									.selectFrom("created_fields")
-									.select("created_fields.id")
-									.where("slug", "=", f.slug)
-									.limit(1),
-								B: eb
-									.selectFrom("created_pub_types")
-									.select("created_pub_types.id")
-									.where("name", "=", pt.name)
-									.limit(1),
-								isTitle: f.isTitle,
-							}))
-						)
+						pubTypesToCreate.flatMap((pt) => {
+							const ranks = findRanksBetween({
+								numberOfRanks: pt.fields.length,
+							});
+							return pt.fields.map((f, idx) => {
+								return {
+									A: eb
+										.selectFrom("created_fields")
+										.select("created_fields.id")
+										.where("slug", "=", f.slug)
+										.limit(1),
+									B: eb
+										.selectFrom("created_pub_types")
+										.select("created_pub_types.id")
+										.where("name", "=", pt.name)
+										.limit(1),
+									isTitle: f.isTitle,
+									rank: ranks[idx],
+								};
+							});
+						})
 					)
 					.onConflict((oc) =>
 						oc.columns(["A", "B"]).doUpdateSet((eb) => ({
 							A: eb.ref("excluded.A"),
 							B: eb.ref("excluded.B"),
 							isTitle: eb.ref("excluded.isTitle"),
+							rank: eb.ref("excluded.rank"),
 						}))
 					)
 					.returningAll()
@@ -294,6 +302,7 @@ export const createLegacyStructure = async (
 						)
 						.selectAll("created_fields")
 						.select("created_pub_type_to_fields.isTitle as isTitle")
+						.select("created_pub_type_to_fields.rank as rank")
 						.select(sql<null>`null`.as("schema"))
 						.whereRef("created_pub_type_to_fields.B", "=", "created_pub_types.id")
 				).as("fields"),
@@ -338,7 +347,7 @@ export const createLegacyStructure = async (
 				fields: Object.fromEntries(r.fields.map(({ schema, ...f }) => [f.name, f])),
 			},
 		])
-	) as LegacyStructure;
+	) as unknown as LegacyStructure;
 
 	return output;
 };

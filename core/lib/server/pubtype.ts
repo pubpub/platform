@@ -191,11 +191,13 @@ export const createPubTypeWithDefaultForm = async (
 
 	const pubType = await getPubType(pubTypeId, trx).executeTakeFirstOrThrow();
 
-	return createDefaultForm(
+	await createDefaultForm(
 		{
 			communityId: props.communityId,
 			pubType,
 		},
 		trx
 	).executeTakeFirstOrThrow();
+
+	return pubType;
 };
