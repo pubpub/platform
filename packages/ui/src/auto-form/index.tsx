@@ -11,8 +11,8 @@ import { cn } from "utils";
 
 import type { Dependency, FieldConfig } from "./types";
 import type { ZodObjectOrWrapped } from "./utils";
-import { Button } from "../button";
 import { Form } from "../form";
+import { FormSubmitButton } from "../submit-button";
 import AutoFormObject from "./fields/object";
 import { getDefaultValues, getObjectFormSchema } from "./utils";
 
@@ -20,23 +20,22 @@ export function AutoFormSubmit({
 	children,
 	className,
 	disabled,
+	"data-testid": testId,
 }: {
 	children?: React.ReactNode;
+	"data-testid"?: string;
 	className?: string;
 	disabled?: boolean;
 }) {
 	const form = useFormState();
 
-	const { isSubmitting, isValid } = form;
-
 	return (
-		<Button
-			type="submit"
-			// disabled={disabled && (isSubmitting || !isValid)}
+		<FormSubmitButton
+			data-testid={testId ?? "auto-form-submit"}
+			formState={form}
+			idleText={children}
 			className={className}
-		>
-			{children ?? "Submit"}
-		</Button>
+		/>
 	);
 }
 

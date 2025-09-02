@@ -22,12 +22,12 @@ import {
 	FormMessage,
 } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { FormSubmitButton } from "ui/submit-button";
 
 import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
 import type { DeepPartial, PubField } from "~/lib/types";
 import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher";
 import { useCommunity } from "../providers/CommunityProvider";
-import { FormSubmitButton } from "../SubmitButton";
 
 const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 	return (

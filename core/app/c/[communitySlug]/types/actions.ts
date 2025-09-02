@@ -9,16 +9,10 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defaultFormName, defaultFormSlug } from "~/lib/form";
-import { findRanksBetween } from "~/lib/rank";
-import { ApiError, getPubType } from "~/lib/server";
-import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { ApiError, createPubTypeWithDefaultForm } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import {
-	FORM_NAME_UNIQUE_CONSTRAINT,
-	FORM_SLUG_UNIQUE_CONSTRAINT,
-	insertForm,
-} from "~/lib/server/form";
+import { FORM_NAME_UNIQUE_CONSTRAINT, FORM_SLUG_UNIQUE_CONSTRAINT } from "~/lib/server/form";
 
 export const createPubType = defineServerAction(async function createPubType(
 	name: string,
@@ -48,47 +42,16 @@ export const createPubType = defineServerAction(async function createPubType(
 	}
 	try {
 		const result = await db.transaction().execute(async (trx) => {
-			const ranks = findRanksBetween({
-				numberOfRanks: fields.length,
-			});
-			const query = trx
-				.with("newType", (db) =>
-					db
-						.insertInto("pub_types")
-						.values({
-							communityId,
-							name,
-							description,
-						})
-						.returning("pub_types.id")
-				)
-				.insertInto("_PubFieldToPubType")
-				.values((eb) =>
-					fields.map((id, idx) => ({
-						A: id,
-						B: eb.selectFrom("newType").select("id"),
-						isTitle: titleField === id,
-						rank: ranks[idx],
-					}))
-				)
-				.returning("B as id");
-
-			const res = await autoRevalidate(query).executeTakeFirstOrThrow();
-
-			const pubType = await getPubType(res.id, trx).executeTakeFirstOrThrow();
-
-			await autoRevalidate(
-				insertForm(
-					pubType,
-					defaultFormName(name),
-					defaultFormSlug(name),
+			return createPubTypeWithDefaultForm(
+				{
 					communityId,
-					true,
-					trx
-				)
-			).executeTakeFirstOrThrow();
-
-			return pubType;
+					name,
+					description,
+					fields,
+					titleField,
+				},
+				trx
+			);
 		});
 
 		return {

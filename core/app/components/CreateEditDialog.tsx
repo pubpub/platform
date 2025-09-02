@@ -11,8 +11,7 @@ import {
 	DialogOverlay,
 	DialogTitle,
 } from "ui/dialog";
-
-import { FormSubmitButton } from "./SubmitButton";
+import { FormSubmitButton } from "ui/submit-button";
 
 export const Footer = ({ onCancel, submitText }: { onCancel: () => void; submitText: string }) => {
 	const form = useFormContext();

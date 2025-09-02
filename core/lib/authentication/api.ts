@@ -108,7 +108,7 @@ export const getAuthorization = async () => {
 		.execute();
 
 	const user = rules[0].user;
-	if (!rules[0].user) {
+	if (!rules[0].user && !validatedAccessToken.isSiteBuilderToken) {
 		throw new NotFoundError(`Unable to locate user associated with api token`);
 	}
 
@@ -124,6 +124,7 @@ export const getAuthorization = async () => {
 			return acc;
 		}, baseAuthorizationObject),
 		apiAccessTokenId: validatedAccessToken.id,
+		isSiteBuilderToken: validatedAccessToken.isSiteBuilderToken,
 		community,
 	};
 };
@@ -133,6 +134,7 @@ export type AuthorizationOutput<S extends ApiAccessScope, AT extends ApiAccessTy
 	community: Communities;
 	lastModifiedBy: LastModifiedBy;
 	user: User;
+	isSiteBuilderToken?: boolean;
 };
 
 export const checkAuthorization = async <
@@ -158,7 +160,8 @@ export const checkAuthorization = async <
 	const authorizationTokenWithBearer = (await headers()).get("Authorization");
 
 	if (authorizationTokenWithBearer) {
-		const { user, authorization, community, apiAccessTokenId } = await getAuthorization();
+		const { user, authorization, community, apiAccessTokenId, isSiteBuilderToken } =
+			await getAuthorization();
 
 		const constraints = authorization[token.scope][token.type];
 		if (!constraints) {
@@ -174,6 +177,7 @@ export const checkAuthorization = async <
 			community,
 			lastModifiedBy,
 			user,
+			isSiteBuilderToken,
 		};
 	}
 
