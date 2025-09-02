@@ -1,67 +1,13 @@
 import { makeWorkerUtils } from "graphile-worker";
 
-import type { CommunitiesId, CommunityMembershipsId } from "db/public";
-import { MemberRole } from "db/public";
+import type { CommunitiesId } from "db/public";
 import { logger } from "logger";
 
-import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
-import { createPasswordHash } from "~/lib/authentication/password";
 import { env } from "~/lib/env/env";
 import { seedBlank } from "./seeds/blank";
 import { seedLegacy } from "./seeds/legacy";
 import { seedStarter } from "./seeds/starter";
-
-async function createUserMembers({
-	email,
-	password,
-	slug,
-	firstName,
-	lastName,
-	isSuperAdmin,
-	role,
-	prismaCommunityIds,
-	isVerified,
-}: {
-	email: string;
-	password: string;
-	slug: string;
-	firstName: string;
-	lastName: string | undefined;
-	isSuperAdmin: boolean;
-	role: MemberRole;
-	prismaCommunityIds: string[];
-	isVerified: boolean;
-}) {
-	const values = {
-		slug,
-		email: email,
-		firstName,
-		lastName,
-		passwordHash: await createPasswordHash(password),
-		avatar: "/demo/person.png",
-		isSuperAdmin,
-		isVerified,
-	};
-
-	const memberships = prismaCommunityIds.map((id) => ({
-		id: crypto.randomUUID(),
-		communityId: id as CommunitiesId,
-		role,
-	}));
-	return db
-		.with("new_users", (db) => db.insertInto("users").values(values).returningAll())
-		.insertInto("community_memberships")
-		.values((eb) =>
-			memberships.map((membership) => ({
-				...membership,
-				id: membership.id as CommunityMembershipsId,
-				userId: eb.selectFrom("new_users").select("new_users.id").where("slug", "=", slug),
-			}))
-		)
-		.returningAll()
-		.executeTakeFirstOrThrow();
-}
 
 const legacyId = "aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa" as CommunitiesId;
 const starterId = "bbbbbbbb-bbbb-4bbb-bbbb-bbbbbbbbbbbb" as CommunitiesId;
@@ -74,10 +20,6 @@ async function main() {
 	// and in e2e.yml
 	// eslint-disable-next-line no-restricted-properties
 	const shouldSeedLegacy = !Boolean(process.env.MINIMAL_SEED);
-
-	const prismaCommunityIds = [starterId, blankId, shouldSeedLegacy ? legacyId : null].filter(
-		Boolean
-	) as CommunitiesId[];
 
 	logger.info("migrate graphile");
 
@@ -92,47 +34,13 @@ async function main() {
 
 	await workerUtils.migrate();
 
-	const legacyPromise = shouldSeedLegacy ? seedLegacy(legacyId) : null;
+	await seedStarter(starterId);
 
-	await Promise.all([seedStarter(starterId), seedBlank(blankId), legacyPromise]);
+	if (shouldSeedLegacy) {
+		await seedLegacy(legacyId);
+	}
 
-	await Promise.all([
-		createUserMembers({
-			email: "all@pubpub.org",
-			password: "pubpub-all",
-			slug: "all",
-			firstName: "Jill",
-			lastName: "Admin",
-			isSuperAdmin: true,
-			role: MemberRole.admin,
-			prismaCommunityIds,
-			isVerified: true,
-		}),
-
-		createUserMembers({
-			email: "some@pubpub.org",
-			password: "pubpub-some",
-			slug: "some",
-			firstName: "Jack",
-			lastName: "Editor",
-			isSuperAdmin: false,
-			role: MemberRole.editor,
-			prismaCommunityIds,
-			isVerified: true,
-		}),
-
-		createUserMembers({
-			email: "none@pubpub.org",
-			password: "pubpub-none",
-			slug: "none",
-			firstName: "Jenna",
-			lastName: "Contributor",
-			isSuperAdmin: false,
-			role: MemberRole.contributor,
-			prismaCommunityIds,
-			isVerified: true,
-		}),
-	]);
+	await seedBlank(blankId);
 }
 main()
 	.then(async () => {

@@ -1,5 +1,7 @@
 "use client";
 
+import { useFormContext } from "react-hook-form";
+
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -10,15 +12,26 @@ import {
 	DialogTitle,
 } from "ui/dialog";
 
+import { FormSubmitButton } from "./SubmitButton";
+
 export const Footer = ({ onCancel, submitText }: { onCancel: () => void; submitText: string }) => {
+	const form = useFormContext();
 	return (
 		<DialogFooter className="gap-y-1">
 			<Button onClick={onCancel} type="button" variant="outline">
 				Cancel
 			</Button>
-			<Button type="submit" className="bg-blue-500 hover:bg-blue-600">
-				{submitText}
-			</Button>
+			{form ? (
+				<FormSubmitButton
+					formState={form.formState}
+					className="bg-blue-500 hover:bg-blue-600"
+					idleText={submitText}
+				/>
+			) : (
+				<Button type="submit" className="bg-blue-500 hover:bg-blue-600">
+					{submitText}
+				</Button>
+			)}
 		</DialogFooter>
 	);
 };

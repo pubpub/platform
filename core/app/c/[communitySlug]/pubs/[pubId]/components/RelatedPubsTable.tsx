@@ -18,7 +18,21 @@ import { DataTable } from "~/app/components/DataTable/DataTable";
 import { dateFormatOptions } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 
-const getRelatedPubsColumns = (relatedPubActionsDropdowns: Record<string, ReactNode>) => {
+type RelatedPubTableColumnDef = ColumnDef<
+	ProcessedPubWithForm<{
+		withRelatedPubs: true;
+		withStage: true;
+		withPubType: true;
+		withMembers: true;
+		withStageActionInstances: true;
+	}>,
+	unknown
+>;
+
+const getRelatedPubsColumns = (
+	relatedPubActionsDropdowns: Record<string, ReactNode>,
+	userCanRunActions: boolean
+) => {
 	return [
 		{
 			id: "select",
@@ -86,23 +100,20 @@ const getRelatedPubsColumns = (relatedPubActionsDropdowns: Record<string, ReactN
 				</time>
 			),
 		},
-		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Actions" />,
-			accessorKey: "stage.actions",
-			cell: ({ getValue, row }) => {
-				return relatedPubActionsDropdowns[row.original.id];
-			},
-		},
-	] as const satisfies ColumnDef<
-		ProcessedPubWithForm<{
-			withRelatedPubs: true;
-			withStage: true;
-			withPubType: true;
-			withMembers: true;
-			withStageActionInstances: true;
-		}>,
-		unknown
-	>[];
+		...(userCanRunActions
+			? [
+					{
+						header: ({ column }) => (
+							<DataTableColumnHeader column={column} title="Actions" />
+						),
+						accessorKey: "stage.actions",
+						cell: ({ getValue, row }) => {
+							return relatedPubActionsDropdowns[row.original.id];
+						},
+					} satisfies RelatedPubTableColumnDef,
+				]
+			: []),
+	] as const satisfies RelatedPubTableColumnDef[];
 };
 
 const Table = ({
@@ -118,7 +129,11 @@ const Table = ({
 	}>[];
 	relatedPubActionsDropdowns: Record<string, ReactNode>;
 }) => {
-	const columns = getRelatedPubsColumns(relatedPubActionsDropdowns);
+	const canRunActions = useMemo(() => {
+		return Object.keys(relatedPubActionsDropdowns).length > 0;
+	}, [relatedPubActionsDropdowns]);
+
+	const columns = getRelatedPubsColumns(relatedPubActionsDropdowns, canRunActions);
 
 	return <DataTable columns={columns} data={pubs} hidePaginationWhenSinglePage />;
 };
@@ -168,7 +183,9 @@ export const RelatedPubsTable = ({
 		count: value.length,
 	}));
 
-	const [selected, setSelected] = useState(fields[0]?.slug);
+	const defaultSelected = fields[0]?.slug;
+	const [selected, setSelected] = useState(defaultSelected);
+	const actualSelected = selected || defaultSelected; // for some reason on form switch `selected` gets set to undefined
 
 	if (fields.length === 0) {
 		return <Table pubs={[]} relatedPubActionsDropdowns={{}} />;
@@ -178,7 +195,7 @@ export const RelatedPubsTable = ({
 		<div>
 			<div className="flex items-center gap-2">
 				{fields.map((field) => {
-					const isSelected = selected === field.slug;
+					const isSelected = actualSelected === field.slug;
 					return (
 						<Button
 							key={field.slug}
@@ -194,7 +211,7 @@ export const RelatedPubsTable = ({
 				})}
 			</div>
 			<Table
-				pubs={groupedBySlug[selected].map((value) => value.pub)}
+				pubs={groupedBySlug[actualSelected].map((value) => value.pub)}
 				relatedPubActionsDropdowns={relatedPubActionsDropdowns}
 			/>
 		</div>

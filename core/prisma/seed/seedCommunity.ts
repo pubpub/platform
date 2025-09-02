@@ -1,4 +1,5 @@
 import type { Static } from "@sinclair/typebox";
+import type { Prettify } from "@ts-rest/core";
 import type {
 	componentConfigSchemas,
 	componentsBySchema,
@@ -18,6 +19,7 @@ import type {
 	ApiAccessType,
 	Communities,
 	CommunitiesId,
+	CommunityMemberships,
 	Event,
 	FormAccessType,
 	FormElements,
@@ -258,29 +260,53 @@ export type PubInitializer<
 	};
 }[keyof PT & string];
 
-export type FormElementInitializer<PF extends PubFieldsInitializer> = {
-	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
-		InputComponent
+export type FormElementInitializer<
+	PF extends PubFieldsInitializer,
+	PT extends PubTypeInitializer<PF>,
+> = {
+	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component
 		? {
 				type: ElementType.pubfield;
 				field: FieldName;
-				component: PF[FieldName]["relation"] extends true
-					? InputComponent.relationBlock
-					: Component;
+				component: PF[FieldName]["schemaName"] extends CoreSchemaType.Null
+					? null
+					: Component extends InputComponent
+						? Component
+						: null;
 				content?: never;
 				element?: never;
 				label?: never;
-				config: Static<(typeof componentConfigSchemas)[Component]> &
-					(PF[FieldName]["relation"] extends true
-						? {
-								relationshipConfig: {
-									label: string;
-									help: string;
-									component: Component;
-								};
-							}
-						: {});
-			}
+				// sorry for the mess, but basically
+				// 1. if the field is a relation, we need to set the relationshipConfig
+				// 2. if the field is Null type, we set the baseConfig to empty object
+				// ideally i'd do (2) by just checking whether the component is defined (Null has no component) but that doesn't seem to work
+				config: Prettify<
+					(PF[FieldName]["schemaName"] extends CoreSchemaType.Null
+						? {}
+						: Component extends InputComponent
+							? Static<(typeof componentConfigSchemas)[Component]>
+							: {}) &
+						(PF[FieldName]["relation"] extends true
+							? {
+									relationshipConfig: {
+										label: string;
+										help: string;
+										component: InputComponent.relationBlock;
+									};
+								}
+							: {
+									relationshipConfig?: never;
+								})
+				>;
+			} & (PF[FieldName]["relation"] extends true
+				? {
+						/**
+						 * The pub types that can be related through this field.
+						 * Min 1 pub type is required.
+						 */
+						relatedPubTypes: [keyof PT, ...(keyof PT)[]];
+					}
+				: { relatedPubTypes?: never })
 		: never;
 }[keyof PF];
 
@@ -303,13 +329,18 @@ export type FormInitializer<
 			isArchived?: boolean;
 			slug?: string;
 			pubType: PubType;
-			members?: (keyof U)[];
+			/**
+			 * This will add grant form access to the specified users if they are comm:cons.
+			 */
+			members?: (keyof {
+				[K in keyof U as U[K]["role"] extends MemberRole.contributor ? K : never]: K;
+			})[];
 			/**
 			 * @default false
 			 */
 			isDefault?: boolean;
 			elements: (
-				| FormElementInitializer<PF>
+				| FormElementInitializer<PF, PT>
 				| {
 						type: ElementType.structural;
 						element: StructuralFormElement;
@@ -318,6 +349,7 @@ export type FormInitializer<
 						label?: never;
 						config?: never;
 						field?: never;
+						relatedPubTypes?: never;
 				  }
 				| {
 						type: ElementType.button;
@@ -328,6 +360,7 @@ export type FormInitializer<
 						stage: keyof SI;
 						config?: never;
 						field?: never;
+						relatedPubTypes?: never;
 				  }
 			)[];
 		};
@@ -476,13 +509,16 @@ type CommunitySeedInput = {
 
 // ========
 // These are helper types to make the output of the seeding functions match the input more closely.
-type PubFieldsByName<PF> = {
-	[K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean };
+type PubFieldsByName<PF, withRank extends boolean = false> = {
+	[K in keyof PF]: PF[K] &
+		Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean } & (withRank extends true
+			? { rank: string }
+			: {});
 };
 
 type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & {
-		fields: PubFieldsByName<PF>;
+		fields: PubFieldsByName<PF, true>;
 		defaultForm: { slug: string };
 	};
 };
@@ -843,8 +879,12 @@ export async function seedCommunity<
 			? await trx
 					.insertInto("_PubFieldToPubType")
 					.values(
-						pubTypesList.flatMap(({ name, id, fields }, idx) =>
-							Object.entries(fields).flatMap(([field, meta]) => {
+						pubTypesList.flatMap(({ name, id, fields }, idx) => {
+							const ranks = findRanksBetween({
+								numberOfRanks: Object.keys(fields).length,
+							});
+
+							return Object.entries(fields).flatMap(([field, meta], fieldIdx) => {
 								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
@@ -861,10 +901,11 @@ export async function seedCommunity<
 										A: fieldId,
 										B: pubTypeId,
 										isTitle,
+										rank: ranks[fieldIdx],
 									},
 								];
-							})
-						)
+							});
+						})
 					)
 					.returningAll()
 					.execute()
@@ -885,7 +926,11 @@ export async function seedCommunity<
 
 							return [
 								pubField.name,
-								{ ...pubField, isTitle: pubFieldToPubType.isTitle },
+								{
+									...pubField,
+									isTitle: pubFieldToPubType.isTitle,
+									rank: pubFieldToPubType.rank,
+								},
 							] as const;
 						})
 				),
@@ -977,7 +1022,7 @@ export async function seedCommunity<
 					member: createdMembers[idx],
 				},
 			])
-	);
+	) as { [K in keyof U]: UsersBySlug<U>[K] & { member: CommunityMemberships } };
 
 	const stageList = Object.entries(props.stages ?? {});
 
@@ -1124,6 +1169,15 @@ export async function seedCommunity<
 	logger.info(`${createdCommunity.name}: Successfully created pubs`);
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
+	const formElementsWithRelatedPubTypes = formList.flatMap(([formTitle, formInput]) =>
+		formInput.elements
+			.filter((elementInput) => elementInput.relatedPubTypes?.length)
+			.map((elementInput) => ({
+				...elementInput,
+				formTitle,
+			}))
+	);
+
 	const createdForms =
 		formList.length > 0
 			? await trx
@@ -1179,6 +1233,7 @@ export async function seedCommunity<
 							)
 							.returningAll()
 					)
+
 					.selectFrom("form")
 					.selectAll("form")
 					.select((eb) =>
@@ -1191,6 +1246,57 @@ export async function seedCommunity<
 					)
 					.execute()
 			: [];
+
+	if (createdForms.length && formElementsWithRelatedPubTypes.length) {
+		const feee = createdForms.flatMap((form) =>
+			form.elements.flatMap((fe, feIdx) => {
+				const formInput = props.forms?.[form.name];
+				if (!formInput) return [];
+
+				const formElementInput = formInput.elements[feIdx];
+				if (!formElementInput) return [];
+
+				if (!formElementInput.relatedPubTypes || !formElementInput.relatedPubTypes.length)
+					return [];
+
+				return formElementInput.relatedPubTypes.map((relatedPubType) => {
+					const pubType = createdPubTypes.find(
+						(pubType) => pubType.name === relatedPubType
+					);
+
+					if (!pubType) throw new Error(`Pub type ${String(relatedPubType)} not found`);
+
+					return {
+						A: fe.id,
+						B: pubType.id,
+					};
+				});
+			})
+		);
+
+		if (feee.length) {
+			await trx.insertInto("_FormElementToPubType").values(feee).execute();
+		}
+	}
+
+	// form members
+	const toBeCreatedFormMembers = formList.flatMap(([formTitle, formInput]) => {
+		if (!formInput.members) return [];
+		return formInput.members.map((member) => ({
+			formId: createdForms.find((form) => form.name === formTitle)?.id,
+			userId: usersWithMemberShips[member].id,
+			role: usersWithMemberShips[member].role ?? MemberRole.contributor,
+			communityId: communityId,
+		}));
+	});
+
+	if (toBeCreatedFormMembers.length) {
+		const createdFormMembers = await trx
+			.insertInto("community_memberships")
+			.values(toBeCreatedFormMembers)
+			.returningAll()
+			.execute();
+	}
 
 	const formsByName = Object.fromEntries(
 		createdForms.map((form) => [form.name, form])

@@ -159,6 +159,7 @@ export const ApiError: Record<string, ClientExceptionOptions> = {
 	NOT_LOGGED_IN: { error: "Not logged in" },
 	COMMUNITY_NOT_FOUND: { error: "Community not found" },
 	PUB_NOT_FOUND: { error: "Pub not found" },
+	PUB_TYPE_NOT_FOUND: { error: "Pub type not found" },
 	FEATURE_DISABLED: {
 		title: "Feature unavailable",
 		error: `The requested feature is not available in ${env.ENV_NAME ? `the ${env.ENV_NAME}` : "this"} environment`,

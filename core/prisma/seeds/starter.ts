@@ -14,6 +14,7 @@ import {
 
 import { env } from "~/lib/env/env";
 import { seedCommunity } from "../seed/seedCommunity";
+import { usersNew } from "./users";
 
 export async function seedStarter(communityId?: CommunitiesId) {
 	const memberId = crypto.randomUUID() as UsersId;
@@ -38,6 +39,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				"Published At": { schemaName: CoreSchemaType.DateTime },
 				"File Upload": { schemaName: CoreSchemaType.FileUpload },
 				Evaluations: { schemaName: CoreSchemaType.Null, relation: true },
+				Submissions: { schemaName: CoreSchemaType.Null, relation: true },
 				Color: { schemaName: CoreSchemaType.Color },
 			},
 			pubTypes: {
@@ -77,9 +79,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					password: "pubpub-new",
 					role: MemberRole.admin,
 				},
-				hih: {
-					role: MemberRole.contributor,
-				},
+				...usersNew,
 			},
 			pubs: [
 				{
@@ -111,9 +111,38 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					},
 					stage: "Draft",
 				},
+				{
+					pubType: "Article",
+					values: {
+						Title: "Snap! The Crocodilian Chronicles: A Scaly Tale of Survival and Swamp Supremacy",
+						Content: defaultMarkdownParser.parse(faker.lorem.paragraph(1)).toJSON(),
+						Email: "new@pubpub.org",
+						URL: "https://pubpub.org",
+						MemberID: memberId,
+						"ok?": true,
+						Confidence: [0, 0, 0],
+						"Published At": new Date(),
+					},
+					relatedPubs: {
+						Evaluations: [
+							{
+								value: null,
+								pub: {
+									pubType: "Evaluation",
+									values: {
+										Title: "Evaluation of Snap!",
+										"Published At": new Date(),
+									},
+									stage: "Draft",
+								},
+							},
+						],
+					},
+					stage: "Draft",
+				},
 			],
 			forms: {
-				"Public Review": {
+				"Public Review (without relation)": {
 					access: FormAccessType.public,
 					pubType: "Evaluation",
 					slug: "public-review",
@@ -140,7 +169,6 @@ export async function seedStarter(communityId?: CommunitiesId) {
 							config: {
 								label: "Content",
 								help: "Enter your review here",
-								minLength: 255,
 							},
 						},
 						{
@@ -160,7 +188,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 						},
 					],
 				},
-				"Private Review": {
+				"Private Review (with relation)": {
 					slug: "private-review",
 					access: FormAccessType.private,
 					pubType: "Evaluation",
@@ -199,12 +227,26 @@ export async function seedStarter(communityId?: CommunitiesId) {
 							},
 						},
 						{
+							field: "Submissions",
+							type: ElementType.pubfield,
+							component: null,
+							relatedPubTypes: ["Article"],
+							config: {
+								relationshipConfig: {
+									label: "Related Article",
+									help: "Please select the article you are reviewing.",
+									component: InputComponent.relationBlock,
+								},
+							},
+						},
+						{
 							type: ElementType.button,
 							content: `Go see your pubs :link{page='currentPub' text='here'}`,
 							label: "Submit",
 							stage: "Published",
 						},
 					],
+					members: ["contributor"],
 				},
 			},
 			stages: {

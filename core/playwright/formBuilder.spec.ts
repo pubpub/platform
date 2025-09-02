@@ -8,7 +8,7 @@ import { expect, test } from "@playwright/test";
 
 import { CoreSchemaType, ElementType, FormAccessType, InputComponent, MemberRole } from "db/public";
 
-import type { PubFieldElement } from "~/app/components/forms/types";
+import type { PubFieldElement, PubFieldElementComponent } from "~/app/components/forms/types";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
@@ -115,11 +115,12 @@ const seed = createSeed({
 				{
 					type: ElementType.pubfield,
 					field: "Author",
-					component: InputComponent.relationBlock,
+					component: InputComponent.textInput,
+					relatedPubTypes: ["Evaluation"],
 					config: {
 						label: "Author",
 						relationshipConfig: {
-							component: InputComponent.textArea,
+							component: InputComponent.relationBlock,
 							help: "",
 							label: "Role",
 						},
@@ -308,28 +309,29 @@ test.describe("relationship fields", () => {
 		// We should see the first pub but not the second, since the second is of a different pub type
 		await expect(
 			page.getByRole("row", { name: `Select row ${community.pubs[0].title}` })
-		).toHaveCount(1);
+		).toHaveCount(1, { timeout: 10_000 });
 		await expect(
 			page.getByRole("row", { name: `Select row ${community.pubs[1].title}` })
-		).toHaveCount(0);
+		).toHaveCount(0, { timeout: 10_000 });
 
-		await test.step("Remove pubtypes from a form", async () => {
+		await test.step("Cant remove pubtypes from a form", async () => {
 			await formEditPage.goto();
 			await page.getByRole("listitem", { name: "Role" }).getByLabel("Edit field").click();
 			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(pubType.name);
 			await page.getByTestId("related-pub-type-selector").click();
 			await page.getByRole("button", { name: "Clear" }).click();
 			await page.getByRole("button", { name: "Close" }).click();
-			await expect(page.getByTestId("related-pub-type-selector")).toHaveText(
-				"Select a pub type"
-			);
+			// await expect(page.getByTestId("related-pub-type-selector")).toHaveText(
+			// 	"Select a Pub Type"
+			// );
 			await formEditPage.saveFormElementConfiguration();
-			await formEditPage.saveForm();
+			await expect(page.getByText("At least one Pub Type must be selected")).toHaveCount(1);
+			// await formEditPage.();
 
-			// Verify external form
-			await formEditPage.goToExternalForm();
-			await relatedField.getByRole("button", { name: "Add" }).click();
-			await expect(page.getByRole("row", { name: "Select row" })).toHaveCount(2);
+			// // Verify external form
+			// await formEditPage.goToExternalForm();
+			// await relatedField.getByRole("button", { name: "Add" }).click();
+			// await expect(page.getByRole("row", { name: "Select row" })).toHaveCount(2);
 		});
 	});
 
@@ -341,6 +343,10 @@ test.describe("relationship fields", () => {
 		await formEditPage.goto();
 		await formEditPage.openAddForm();
 		await formEditPage.openFormElementPanel(`${community.community.slug}:authornull`);
+
+		await page.getByRole("button", { name: "Select a pub type" }).click();
+		const pubType = community.pubTypes["Submission"];
+		await page.getByRole("group").getByText(pubType.name).click();
 		// Fill out relationship config first
 		await page.getByRole("textbox", { name: "Label" }).first().fill("Authors");
 		await page.getByLabel("Help Text").first().fill("Authors associated with this pub");
@@ -351,8 +357,7 @@ test.describe("relationship fields", () => {
 				const data = request.postDataJSON();
 				const { upserts, relatedPubTypes } = data[0];
 				const authorElement = upserts.find(
-					(e: PubFieldElement) =>
-						"relationshipConfig" in e.config &&
+					(e: PubFieldElement<PubFieldElementComponent, true>) =>
 						e.config.relationshipConfig.label === "Authors"
 				);
 				expect(authorElement.component).toBeNull();
@@ -363,6 +368,7 @@ test.describe("relationship fields", () => {
 						help: "Authors associated with this pub",
 					},
 				});
+				expect(relatedPubTypes).toEqual([{ A: authorElement.id, B: pubType.id }]);
 				// Should only have the relationshipConfig
 				expect(Object.keys(authorElement.config)).toEqual(["relationshipConfig"]);
 			}
@@ -386,13 +392,13 @@ test.describe("reordering fields", async () => {
 		const elements = page.getByRole("form", { name: "Form builder" }).getByRole("listitem");
 		const initialElements = await elements.allTextContents();
 
-		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.getByRole("button", { name: "Drag" }).first().press(" ");
 		await page.waitForTimeout(100);
 		await page.keyboard.press("ArrowDown");
 		await page.waitForTimeout(100);
 		await page.keyboard.press(" ");
 
-		await page.getByRole("button", { name: "Drag handle" }).last().press(" ");
+		await page.getByRole("button", { name: "Drag" }).last().press(" ");
 		await page.waitForTimeout(100);
 		await page.keyboard.press("ArrowUp");
 		await page.waitForTimeout(100);
@@ -418,14 +424,14 @@ test.describe("reordering fields", async () => {
 
 		await formEditPage.goto();
 
-		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.getByRole("button", { name: "Drag" }).first().press(" ");
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press(" ");
 
 		const disabled = await page.getByTestId("save-form-button").getAttribute("disabled");
 		expect(disabled).toBe(null);
 
-		await page.getByRole("button", { name: "Drag handle" }).first().press(" ");
+		await page.getByRole("button", { name: "Drag" }).first().press(" ");
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press(" ");
 

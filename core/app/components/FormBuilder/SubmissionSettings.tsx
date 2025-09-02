@@ -7,7 +7,7 @@ import { FormInput, Pencil, Plus } from "ui/icon";
 import { cn } from "utils";
 
 import type { FormBuilderSchema } from "./types";
-import { useFormBuilder } from "./FormBuilderContext";
+import { useBuilder } from "./BuilderContext";
 import { isButtonElement } from "./types";
 
 export const ButtonOption = ({
@@ -21,7 +21,7 @@ export const ButtonOption = ({
 }) => {
 	// TODO: need a way to determine if button is primary or secondary
 	const buttonType: string = "primary";
-	const { openButtonConfigPanel } = useFormBuilder();
+	const { openButtonConfigPanel } = useBuilder();
 	const handleClick = () => {
 		openButtonConfigPanel(id ?? label);
 	};
@@ -61,7 +61,7 @@ export const ButtonOption = ({
 };
 
 export const SubmissionSettings = () => {
-	const { openButtonConfigPanel } = useFormBuilder();
+	const { openButtonConfigPanel } = useBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext<FormBuilderSchema>();
 	const buttons = useMemo(() => {

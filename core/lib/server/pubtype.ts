@@ -8,6 +8,7 @@ import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db
 import type { Prettify, XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
+import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { createDefaultForm } from "./form";
@@ -34,6 +35,7 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 					"pub_fields.schemaName",
 					"pub_fields.isRelation",
 					"_PubFieldToPubType.isTitle",
+					"_PubFieldToPubType.rank",
 					jsonObjectFrom(
 						eb
 							.selectFrom("PubFieldSchema")
@@ -51,6 +53,7 @@ export const getPubTypeBase = <DB extends Record<string, any>>(
 					).as("schema"),
 				])
 				.where("_PubFieldToPubType.B", "=", eb.ref("pub_types.id"))
+				.orderBy("_PubFieldToPubType.rank")
 		).as("fields"),
 	]);
 
@@ -102,13 +105,16 @@ export const getAllPubTypesForCommunity = (communitySlug: string, trx = db) => {
 						.select((eb) =>
 							eb.fn
 								.coalesce(
-									eb.fn.jsonAgg(
-										jsonBuildObject({
-											id: eb.ref("A"),
-											isTitle: eb.ref("isTitle"),
-											slug: eb.ref("slug"),
-										})
-									),
+									eb.fn
+										.jsonAgg(
+											jsonBuildObject({
+												id: eb.ref("A"),
+												isTitle: eb.ref("isTitle"),
+												rank: eb.ref("rank"),
+												slug: eb.ref("slug"),
+											})
+										)
+										.orderBy("rank"),
 									sql`json_build_array()`
 								)
 								.as("pub_field_titles")
@@ -116,7 +122,9 @@ export const getAllPubTypesForCommunity = (communitySlug: string, trx = db) => {
 						.as("fields"),
 			])
 			// This type param could be passed to eb.fn.agg above, but $narrowType would still be required to assert that fields is not null
-			.$narrowType<{ fields: { id: PubFieldsId; isTitle: boolean; slug: string }[] }>()
+			.$narrowType<{
+				fields: { id: PubFieldsId; isTitle: boolean; slug: string; rank: string }[];
+			}>()
 	);
 };
 
@@ -138,6 +146,7 @@ export const getPubTypeForForm = (props: XOR<{ slug: string }, { id: FormsId }>)
 						.select((eb) =>
 							eb.fn.coalesce(eb.fn.agg("array_agg", ["A"]), sql`'{}'`).as("fields")
 						)
+						.orderBy("rank", "desc")
 						.as("fields"),
 			])
 	);
@@ -152,6 +161,10 @@ export const createPubTypeWithDefaultForm = async (
 	},
 	trx = db
 ) => {
+	const ranks = findRanksBetween({
+		numberOfRanks: props.fields.length,
+	});
+
 	const { id: pubTypeId } = await autoRevalidate(
 		trx
 			.with("newType", (db) =>
@@ -166,10 +179,11 @@ export const createPubTypeWithDefaultForm = async (
 			)
 			.insertInto("_PubFieldToPubType")
 			.values((eb) =>
-				props.fields.map((id) => ({
+				props.fields.map((id, idx) => ({
 					A: id,
 					B: eb.selectFrom("newType").select("id"),
 					isTitle: props.titleField === id,
+					rank: ranks[idx],
 				}))
 			)
 			.returning("B as id")

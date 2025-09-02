@@ -3,10 +3,16 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
-import { client } from "~/lib/api";
+import { client, retryPolicy } from "~/lib/api";
 
 export function ReactQueryProvider({ children }: React.PropsWithChildren) {
-	const queryClient = new QueryClient();
+	const queryClient = new QueryClient({
+		defaultOptions: {
+			queries: {
+				retry: retryPolicy,
+			},
+		},
+	});
 
 	return (
 		<QueryClientProvider client={queryClient}>

@@ -9,14 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
 
 import type { FormElementData, PanelState } from "../types";
 import { findRanksBetween } from "~/lib/rank";
+import { useBuilder } from "../BuilderContext";
 import { FieldIcon } from "../FieldIcon";
-import { useFormBuilder } from "../FormBuilderContext";
 import { structuralElements } from "../StructuralElements";
 
 export const SelectElement = ({ panelState }: { panelState: PanelState }) => {
 	const fields = usePubFieldContext();
 
-	const { elementsCount, dispatch, addElement } = useFormBuilder();
+	const { elementsCount, dispatch, addElement } = useBuilder();
 	const { getValues } = useFormContext();
 	const elements: FormElementData[] = getValues()["elements"];
 

@@ -16,16 +16,13 @@ import { Event } from "db/public";
 
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
-type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
-export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
-
 export type ActionPub = ProcessedPub<{
 	withPubType: true;
 	withRelatedPubs: undefined;
 }>;
 
 export type RunProps<T extends Action> =
-	T extends Action<infer C, infer A extends ZodObjectOrWrappedOrOptional>
+	T extends Action<infer C, infer A extends z.ZodObject<any>>
 		? {
 				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
 				configFieldOverrides: Set<string>;
@@ -60,8 +57,8 @@ export type TokenDef = {
 };
 
 export type Action<
-	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
-	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
+	C extends z.ZodObject<any> = z.ZodObject<any>,
+	A extends z.ZodObject<any> = z.ZodObject<any>,
 	N extends ActionName = ActionName,
 > = {
 	id?: string;
@@ -131,8 +128,8 @@ export type Action<
 };
 
 export const defineAction = <
-	C extends ZodObjectOrWrapped,
-	A extends ZodObjectOrWrappedOrOptional,
+	C extends z.ZodObject<any>,
+	A extends z.ZodObject<any>,
 	N extends ActionName,
 >(
 	action: Action<C, A, N>
@@ -204,8 +201,7 @@ export const defineRule = <E extends Event, AC extends Record<string, any> | und
 
 export type { RuleConfig, RuleConfigs } from "./_lib/rules";
 
-export type ConfigOf<T extends Action> =
-	T extends Action<infer _, infer C, any> ? z.infer<C> : never;
+export type ConfigOf<T extends Action> = T extends Action<infer C, any, any> ? z.infer<C> : never;
 
 export type ActionInstanceOf<T extends Action> = {
 	id: string;

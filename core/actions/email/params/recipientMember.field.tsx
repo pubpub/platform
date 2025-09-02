@@ -9,7 +9,7 @@ import { action } from "../action";
 const component = defineActionFormFieldServerComponent(
 	action,
 	"params",
-	async ({ communityId, actionInstance }) => {
+	async ({ communityId, config }) => {
 		const community = await autoCache(
 			db.selectFrom("communities").selectAll().where("id", "=", communityId)
 		).executeTakeFirstOrThrow();
@@ -19,7 +19,7 @@ const component = defineActionFormFieldServerComponent(
 				fieldName="recipientMember"
 				fieldLabel="Recipient member"
 				community={community}
-				value={actionInstance.config?.recipientMember as CommunityMembershipsId | undefined}
+				value={config?.recipientMember as CommunityMembershipsId | undefined}
 			/>
 		);
 	}

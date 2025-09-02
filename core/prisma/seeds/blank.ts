@@ -1,7 +1,7 @@
-import type { CommunitiesId, UsersId } from "db/public";
+import type { CommunitiesId } from "db/public";
 
-import { env } from "~/lib/env/env";
 import { seedCommunity } from "../seed/seedCommunity";
+import { usersExisting } from "./users";
 
 export async function seedBlank(communityId?: CommunitiesId) {
 	return seedCommunity(
@@ -10,6 +10,9 @@ export async function seedBlank(communityId?: CommunitiesId) {
 				id: communityId,
 				name: "Blank",
 				slug: "blank",
+			},
+			users: {
+				...usersExisting,
 			},
 		},
 		{

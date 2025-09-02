@@ -15,12 +15,12 @@ import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient
 
 const isComplete = (formElements: BasicFormElements[], values: FieldValues) => {
 	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
-	requiredElements.forEach((element) => {
+	for (const element of requiredElements) {
 		const value = values[element.slug!];
 		if (value == null) {
 			return false;
 		}
-	});
+	}
 	return true;
 };
 
@@ -44,7 +44,7 @@ export const ExternalFormWrapper = ({
 	}) => {
 		const newParams = new URLSearchParams(params);
 		const currentTime = `${new Date().getTime()}`;
-		if (!props.isUpdating) {
+		if (props.mode !== "edit") {
 			newParams.set("pubId", pubId);
 		}
 

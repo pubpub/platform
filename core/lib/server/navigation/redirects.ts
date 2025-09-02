@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
+import type { PubsId } from "db/public";
+
 import type { NoticeParams } from "~/app/components/Notice";
 import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
@@ -13,6 +15,13 @@ const defaultLoginRedirectError = {
 	type: "error",
 	title: "You must be logged in to access this page",
 	body: "Please log in to continue",
+};
+
+export const maybeWithSearchParams = (basePath: string, searchParams: URLSearchParams) => {
+	if (searchParams.size > 0) {
+		return `${basePath}?${searchParams.toString()}`;
+	}
+	return basePath;
 };
 
 export type LoginRedirectOpts = {
@@ -51,8 +60,8 @@ export const constructLoginLink = (opts?: LoginRedirectOpts) => {
 		searchParams.set("redirectTo", redirectTo);
 	}
 
-	const basePath = `/login?${searchParams.toString()}`;
-	return basePath;
+	const basePath = `/login`;
+	return maybeWithSearchParams(basePath, searchParams);
 };
 
 /**
@@ -85,8 +94,8 @@ export const constructCommunitySignupLink = async (opts: {
 		searchParams.set("inviteToken", opts.inviteToken);
 	}
 
-	const basePath = `/c/${communitySlug}/public/signup?${searchParams.toString()}`;
-	return basePath;
+	const basePath = `/c/${communitySlug}/public/signup`;
+	return maybeWithSearchParams(basePath, searchParams);
 };
 
 /**
@@ -109,8 +118,8 @@ export const constructVerifyLink = (opts: { redirectTo: string }) => {
 
 	searchParams.set("redirectTo", opts.redirectTo);
 
-	const basePath = `/verify?${searchParams.toString()}`;
-	return basePath;
+	const basePath = `/verify`;
+	return maybeWithSearchParams(basePath, searchParams);
 };
 
 export function redirectToVerify(opts: { redirectTo: string }): never {
@@ -159,13 +168,108 @@ export const constructRedirectToBaseCommunityPage = async (
 
 	const page = isAbleToViewStages ? "stages" : "pubs";
 
-	const basePath = `/c/${community.slug}/${page}?${searchParams.toString()}`;
-	return basePath;
+	const basePath = `/c/${community.slug}/${page}`;
+	return maybeWithSearchParams(basePath, searchParams);
 };
 
 export async function redirectToBaseCommunityPage(
 	opts?: RedirectToBaseCommunityPageOpts
 ): Promise<never> {
 	const basePath = await constructRedirectToBaseCommunityPage(opts);
+	redirect(basePath);
+}
+
+export async function redirectToUnauthorized(opts?: { communitySlug: string }): Promise<never> {
+	const communitySlug = opts?.communitySlug ?? (await getCommunitySlug());
+
+	redirect(`/c/${communitySlug}/unauthorized`);
+}
+
+export const constructRedirectToPubEditPage = (opts: {
+	pubId: PubsId;
+	communitySlug: string;
+	formSlug?: string;
+}) => {
+	const searchParams = new URLSearchParams();
+	if (opts.formSlug) {
+		searchParams.set("form", opts.formSlug);
+	}
+
+	const basePath = `/c/${opts.communitySlug}/pubs/${opts.pubId}/edit`;
+	return maybeWithSearchParams(basePath, searchParams);
+};
+
+export async function redirectToPubEditPage(opts: {
+	pubId: PubsId;
+	communitySlug?: string;
+	formSlug?: string;
+}): Promise<never> {
+	const communitySlug = opts.communitySlug ?? (await getCommunitySlug());
+	const basePath = constructRedirectToPubEditPage({
+		...opts,
+		communitySlug,
+	});
+	redirect(basePath);
+}
+
+export const constructRedirectToPubCreatePage = (opts: {
+	communitySlug: string;
+	formSlug?: string;
+	relatedPubId?: PubsId;
+	relatedFieldSlug?: string;
+}) => {
+	const searchParams = new URLSearchParams();
+	if (opts.formSlug) {
+		searchParams.set("form", opts.formSlug);
+	}
+	if (opts.relatedPubId) {
+		searchParams.set("relatedPubId", opts.relatedPubId.toString());
+	}
+	if (opts.relatedFieldSlug) {
+		searchParams.set("relatedFieldSlug", opts.relatedFieldSlug);
+	}
+
+	const basePath = `/c/${opts.communitySlug}/pubs/create`;
+	return maybeWithSearchParams(basePath, searchParams);
+};
+
+export async function redirectToPubCreatePage(opts: {
+	communitySlug?: string;
+	formSlug?: string;
+	relatedPubId?: PubsId;
+	relatedFieldSlug?: string;
+}): Promise<never> {
+	const communitySlug = opts.communitySlug ?? (await getCommunitySlug());
+	const basePath = constructRedirectToPubCreatePage({
+		...opts,
+		communitySlug,
+	});
+	redirect(basePath);
+}
+
+export const constructRedirectToPubDetailPage = (opts: {
+	pubId: PubsId;
+	communitySlug: string;
+	formSlug?: string;
+}) => {
+	const searchParams = new URLSearchParams();
+	if (opts.formSlug) {
+		searchParams.set("form", opts.formSlug);
+	}
+
+	const basePath = `/c/${opts.communitySlug}/pubs/${opts.pubId}`;
+	return maybeWithSearchParams(basePath, searchParams);
+};
+
+export async function redirectToPubDetailPage(opts: {
+	pubId: PubsId;
+	communitySlug?: string;
+	formSlug?: string;
+}): Promise<never> {
+	const communitySlug = opts.communitySlug ?? (await getCommunitySlug());
+	const basePath = constructRedirectToPubDetailPage({
+		...opts,
+		communitySlug,
+	});
 	redirect(basePath);
 }

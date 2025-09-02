@@ -3,8 +3,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getCommunityRole } from "~/lib/authentication/roles";
 import { findCommunityBySlug } from "~/lib/server/community";
 
 type Props = { children: React.ReactNode; params: Promise<{ communitySlug: string }> };
@@ -12,8 +10,7 @@ type Props = { children: React.ReactNode; params: Promise<{ communitySlug: strin
 export async function generateMetadata(props: {
 	params: Promise<{ communitySlug: string }>;
 }): Promise<Metadata> {
-	const params = await props.params;
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return { title: "Community Not Found" };
@@ -28,11 +25,9 @@ export async function generateMetadata(props: {
 }
 
 export default async function MainLayout(props: Props) {
-	const params = await props.params;
-
 	const { children } = props;
 
-	const community = await findCommunityBySlug(params.communitySlug);
+	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return notFound();

@@ -31,10 +31,12 @@ export const run = defineRun<typeof action>(
 
 		let body: string | undefined;
 
-		if (args.body) {
-			body = argsFieldOverrides.has("body") ? JSON.stringify(args.body) : args.body;
-		} else if (config.body) {
-			body = configFieldOverrides.has("body") ? JSON.stringify(config.body) : config.body;
+		if (method !== "GET") {
+			if (args.body) {
+				body = argsFieldOverrides.has("body") ? JSON.stringify(args.body) : args.body;
+			} else if (config.body) {
+				body = configFieldOverrides.has("body") ? JSON.stringify(config.body) : config.body;
+			}
 		}
 
 		const res = await fetch(url, {

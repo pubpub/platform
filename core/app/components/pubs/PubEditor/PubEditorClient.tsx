@@ -268,7 +268,7 @@ const getButtonConfig = ({
 export interface PubEditorClientProps {
 	elements: BasicFormElements[];
 	children: ReactNode;
-	isUpdating: boolean;
+	mode: "edit" | "create";
 	pub: Pick<ProcessedPubWithForm, "id" | "values" | "pubTypeId">;
 	onSuccess: (args: {
 		values: FieldValues;
@@ -285,8 +285,8 @@ export interface PubEditorClientProps {
 	withButtonElements?: boolean;
 	isExternalForm?: boolean;
 	relatedPub?: {
-		id: PubsId;
-		slug: string;
+		relatedPubId: PubsId;
+		relatedFieldSlug: string;
 	};
 }
 
@@ -294,7 +294,7 @@ export const PubEditorClient = ({
 	elements,
 	className,
 	children,
-	isUpdating,
+	mode,
 	pub,
 	stageId,
 	htmlFormId,
@@ -348,12 +348,7 @@ export const PubEditorClient = ({
 			evt: React.BaseSyntheticEvent | undefined,
 			autoSave = false
 		) => {
-			const {
-				stageId: stageIdFromForm,
-				[RELATED_PUB_SLUG]: relatedPubValue,
-				deleted,
-				...newValues
-			} = formValues;
+			const { stageId: stageIdFromForm, relatedPubValue, deleted, ...newValues } = formValues;
 
 			const pubValues = preparePayload({
 				formElements,
@@ -376,7 +371,7 @@ export const PubEditorClient = ({
 			const stageIdChanged = newStageId !== stageId;
 
 			let result;
-			if (isUpdating) {
+			if (mode === "edit") {
 				result = await runUpdatePub({
 					pubId: pubId,
 					pubValues,
@@ -397,8 +392,8 @@ export const PubEditorClient = ({
 					communityId: community.id,
 					addUserToForm: true,
 					relation: relatedPub && {
-						slug: relatedPub.slug,
-						pubId: relatedPub.id,
+						slug: relatedPub.relatedFieldSlug,
+						pubId: relatedPub.relatedPubId,
 						value: relatedPubValue,
 					},
 				});

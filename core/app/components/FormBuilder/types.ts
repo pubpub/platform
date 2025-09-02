@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { InputComponent, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	CoreSchemaType,
 	ElementType,
@@ -8,6 +8,7 @@ import {
 	formElementsIdSchema,
 	formElementsInitializerSchema,
 	formsIdSchema,
+	InputComponent,
 	pubTypesIdSchema,
 } from "db/public";
 

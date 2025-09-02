@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
 
 import { notFound } from "next/navigation";
+import { Key } from "lucide-react";
 
+import type { CreateTokenFormContext } from "db/types";
+import { Capabilities, MembershipType } from "db/public";
 import { NO_STAGE_OPTION } from "db/types";
+import { cn } from "utils";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import { getAllPubTypesForCommunity, getPubTypesForCommunity } from "~/lib/server";
+import { userCan } from "~/lib/authorization/capabilities";
+import { getAllPubTypesForCommunity } from "~/lib/server";
 import { getApiAccessTokensByCommunity } from "~/lib/server/apiAccessTokens";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 import { getStages } from "~/lib/server/stages";
-import { CreateTokenFormWithContext } from "./CreateTokenForm";
+import { ContentLayout } from "../../ContentLayout";
+import { CreateTokenButton } from "./CreateTokenButton";
 import { ExistingToken } from "./ExistingToken";
 
 export const metadata: Metadata = {
@@ -17,60 +24,92 @@ export const metadata: Metadata = {
 };
 
 export default async function Page(props: { params: { communitySlug: string } }) {
-	const params = await props.params;
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug(params.communitySlug);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+
+	if (!user) {
+		redirectToLogin();
+	}
+
 	if (!community) {
 		return notFound();
 	}
 
-	const [stages, pubTypes, existingTokens] = await Promise.all([
+	const [canEditCommunity, stages, pubTypes, existingTokens] = await Promise.all([
+		userCan(
+			Capabilities.editCommunity,
+			{
+				communityId: community.id,
+				type: MembershipType.community,
+			},
+			user.id
+		),
 		getStages({ communityId: community.id, userId: user.id }).execute(),
 		getAllPubTypesForCommunity(community.slug).execute(),
 		getApiAccessTokensByCommunity(community.id).execute(),
 	]);
 
+	if (!canEditCommunity) {
+		return await redirectToUnauthorized();
+	}
+
+	const stagesOptions = {
+		stages,
+		allOptions: [
+			NO_STAGE_OPTION,
+			...stages.map((stage) => ({
+				label: stage.name,
+				value: stage.id,
+			})),
+		],
+		allValues: [NO_STAGE_OPTION.value, ...stages.map((stage) => stage.id)],
+	} satisfies CreateTokenFormContext["stages"];
+
+	const pubTypesOptions = {
+		pubTypes,
+		allOptions: pubTypes.map((pubType) => ({
+			label: pubType.name,
+			value: pubType.id,
+		})),
+		allValues: pubTypes.map((pubType) => pubType.id),
+	} satisfies CreateTokenFormContext["pubTypes"];
+
 	return (
-		<div className="container mx-auto px-4 py-12 md:px-6">
-			<div className="space-y-6">
-				<div>
-					<h1 className="text-3xl font-bold">Access Tokens</h1>
-					<p className="text-muted-foreground">
-						Manage granular access tokens for your application. Create, revoke, and
-						monitor token usage.
-					</p>
-				</div>
+		<ContentLayout
+			title={
+				<>
+					<Key size={24} strokeWidth={1} className="mr-2 text-gray-500" /> API Tokens
+				</>
+			}
+			right={<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />}
+		>
+			<div className="m-4">
 				<div className="grid gap-6">
-					{existingTokens.length > 0 && (
-						<div className="grid gap-2">
-							<h2 className="text-xl font-semibold">Existing Tokens</h2>
-							<div className="grid gap-4 overflow-auto">
-								{existingTokens.map((token) => (
-									<ExistingToken key={token.id} token={token} />
-								))}
-							</div>
+					{existingTokens.length > 0 ? (
+						<div className="overflow-auto">
+							{existingTokens.map((token, idx) => (
+								<ExistingToken
+									key={token.id}
+									token={token}
+									className={cn(
+										idx < existingTokens.length - 1 && "rounded-b-none",
+										existingTokens[idx - 1] && "rounded-t-none border-t-0"
+									)}
+								/>
+							))}
+						</div>
+					) : (
+						<div className="mt-20 flex flex-col items-center gap-2">
+							<p className="text-center font-semibold">
+								You don't have any API tokens yet
+							</p>
+							<p className="mb-4 text-center text-sm">
+								Create one to get started interacting with Platform's API
+							</p>
+							<CreateTokenButton stages={stagesOptions} pubTypes={pubTypesOptions} />
 						</div>
 					)}
-					<CreateTokenFormWithContext
-						stages={{
-							stages,
-							allOptions: [
-								NO_STAGE_OPTION,
-								...stages.map((stage) => ({ label: stage.name, value: stage.id })),
-							],
-							allValues: [NO_STAGE_OPTION.value, ...stages.map((stage) => stage.id)],
-						}}
-						pubTypes={{
-							pubTypes,
-							allOptions: pubTypes.map((pubType) => ({
-								label: pubType.name,
-								value: pubType.id,
-							})),
-							allValues: pubTypes.map((pubType) => pubType.id),
-						}}
-					/>
 				</div>
 			</div>
-		</div>
+		</ContentLayout>
 	);
 }

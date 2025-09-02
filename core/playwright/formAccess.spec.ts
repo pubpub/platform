@@ -294,10 +294,7 @@ test.describe("public forms", () => {
 			}, url!);
 
 			await page.goto(decodedUrl);
-			await page
-				.getByRole("status")
-				.getByText("Your email is now verified", { exact: true })
-				.waitFor();
+			await page.getByText("Your email is now verified", { exact: true }).waitFor();
 			await page.waitForURL(fillUrl, { timeout: 5_000 });
 		});
 
@@ -314,7 +311,7 @@ test.describe("public forms", () => {
 
 		await test.step("user should be able to access their pub through a link on the post submission message", async () => {
 			await page.getByRole("link", { name: "here" }).click();
-			await page.waitForURL(`**/pubs/${pubId}`, { timeout: 10_000 });
+			await page.waitForURL(`**/pubs/${pubId}*`, { timeout: 10_000 });
 		});
 
 		await test.step("user should have been added as a contributor to the pub", async () => {

@@ -1,78 +1,94 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
-import { Card } from "ui/card";
-import { InfoButton } from "ui/info-button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from 'ui/accordion';
+import { InfoButton } from 'ui/info-button';
+import { Card, CardContent, CardFooter } from 'ui/card';
+import { cn } from 'utils';
 
-import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
-import { RevokeTokenButton } from "./RevokeTokenButton";
+import type { SafeApiAccessToken } from '~/lib/server/apiAccessTokens';
+import { UserAvatar } from '~/app/components/UserAvatar';
+import {
+  formatDateAsMonthDayYear,
+  formatDateAsPossiblyDistance,
+} from '~/lib/dates';
+import { RevokeTokenButton } from './RevokeTokenButton';
 
-export const ExistingToken = ({ token }: { token: SafeApiAccessToken }) => {
-	return (
-		<Card className="p-4">
-			<div className="grid grid-cols-[1fr_auto] gap-4">
-				<div>
-					<h3 className="text-base font-semibold">{token.name}</h3>
-					{token.description && (
-						<p className="text-sm text-muted-foreground">{token.description}</p>
-					)}
-				</div>
-				<div className="flex items-center justify-end">
-					{token.isSiteBuilderToken ? (
-						<InfoButton>
-							<p>
-								This token is a site builder token. It has read-only access to all
-								content in the community. It cannot be revoked.
-							</p>
-						</InfoButton>
-					) : (
-						<RevokeTokenButton token={token} />
-					)}
-				</div>
-			</div>
-			<div className="mt-4 flex flex-col gap-4">
-				<div className="flex items-center justify-between gap-2">
-					<div>
-						<p className="text-xs text-muted-foreground">Created on</p>
-						<p className="text-sm">{new Date(token.issuedAt).toLocaleDateString()}</p>
-					</div>
-					<div>
-						<p className="text-xs text-muted-foreground">Expires on</p>
-						<p className="text-sm">{new Date(token.expiration).toLocaleDateString()}</p>
-					</div>
-					<div>
-						{!token.isSiteBuilderToken && (
-							<>
-								<p className="text-xs text-muted-foreground">Issued by</p>
-								{token.issuedBy ? (
-									<p className="text-sm">
-										{token.issuedBy.firstName} {token.issuedBy.lastName}
-									</p>
-								) : (
-									<p>User account associated with this token has been deleted</p>
-								)}
-							</>
-						)}
-					</div>
-				</div>
-				<div>
-					<Accordion type="single" collapsible>
-						<AccordionItem value="permissions" className="border-b-0">
-							<AccordionTrigger className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-								Permissions
-							</AccordionTrigger>
-							<AccordionContent>
-								<p>
-									{token.permissions
-										?.map(
-											(permission) =>
-												`${permission.scope}: ${permission.accessType} ${permission.constraints ? JSON.stringify(permission.constraints) : ""}`
-										)
-										.join(", ")}
-								</p>
-							</AccordionContent>
-						</AccordionItem>
-					</Accordion>
-				</div>
-			</div>
-		</Card>
-	);
+export const ExistingToken = ({
+  token,
+  className,
+}: {
+  token: SafeApiAccessToken;
+  className?: string;
+}) => {
+  const now = new Date();
+  const expirationDate = new Date(token.expiration);
+  const isExpired = expirationDate < now;
+
+  return (
+    <Card className={cn('p-4 pb-1', className)}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-3">
+          {token.issuedBy && <UserAvatar user={token.issuedBy} />}
+          <div className="flex-1">
+            <h3 className="text-base font-semibold">{token.name}</h3>
+            {token.description && (
+              <p className="text-sm text-muted-foreground">
+                {token.description}
+              </p>
+            )}
+            <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <span className={isExpired ? 'text-red-600' : ''}>
+                  {isExpired ? 'Expired' : 'Expires'}
+                </span>
+                <time
+                  dateTime={expirationDate.toISOString()}
+                  className={isExpired ? 'text-red-600' : ''}
+                >
+                  {formatDateAsMonthDayYear(expirationDate)}
+                </time>
+              </div>
+              •
+              <div className="flex items-center gap-1">
+                <span>Created</span>
+                <time dateTime={new Date(token.issuedAt).toISOString()}>
+                  {formatDateAsPossiblyDistance(new Date(token.issuedAt))}
+                </time>
+              </div>
+            </div>
+          </div>
+        </div>
+        {token.isSiteBuilderToken ? (
+          <InfoButton>
+            <p>
+              This token is a site builder token. It has read-only access to all
+              content in the community. It cannot be revoked.
+            </p>
+          </InfoButton>
+        ) : (
+          <RevokeTokenButton token={token} />
+        )}
+      </div>
+      <Accordion type="single" collapsible className="ml-10">
+        <AccordionItem value="permissions" className="border-b-0">
+          <AccordionTrigger className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
+            Permissions
+          </AccordionTrigger>
+          <AccordionContent>
+            <p>
+              {token.permissions
+                ?.map(
+                  (permission) =>
+                    `${permission.scope}: ${permission.accessType} ${permission.constraints ? JSON.stringify(permission.constraints) : ''}`
+                )
+                .join(', ')}
+            </p>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </Card>
+  );
 };
