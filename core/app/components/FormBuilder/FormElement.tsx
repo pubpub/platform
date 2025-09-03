@@ -164,6 +164,7 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 					className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}
 				>
 					{(element.config as any)?.label ?? field.name}
+					{element.required && <span className="text-red-500">* </span>}
 				</div>
 			</div>
 		</>
