@@ -18,6 +18,7 @@ const baseElementSchema = z.object({
 	rank: z.string(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
+	added: z.boolean().default(false),
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
 	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),

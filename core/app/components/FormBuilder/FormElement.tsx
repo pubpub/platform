@@ -86,8 +86,12 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				"group flex min-h-[76px] flex-1 flex-shrink-0 items-center justify-between gap-3 self-stretch rounded border border-l-[12px] border-solid border-gray-200 border-l-emerald-100 bg-white p-3 pr-4",
 				isEditing && "border-sky-500 border-l-blue-500",
 				isDisabled && "cursor-auto opacity-50",
-				element.deleted && "border-l-red-200",
-				isDragging && "z-10 cursor-grabbing"
+				isDragging && "z-10 cursor-grabbing",
+				{
+					"border-l-amber-200/70 bg-amber-50/30": element.updated && !element.added,
+					"border-l-emerald-200 bg-emerald-50/30": element.added,
+					"border-l-red-200 bg-red-50/30": element.deleted,
+				}
 			)}
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
@@ -154,14 +158,20 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 				className={cn(
 					"mr-4 mt-3 shrink-0",
 					isEditing ? "text-blue-500" : "text-emerald-500",
-					element.deleted && "text-gray-500"
+					{
+						"text-red-300": element.deleted,
+						"text-amber-500": element.updated && !element.added,
+						"text-emerald-700": element.added,
+					}
 				)}
 			/>
 			<div>
 				<div className="text-gray-500">{field.slug}</div>
 				<div
 					id={labelId}
-					className={cn("font-semibold", element.deleted ? "text-gray-500" : "")}
+					className={cn("font-semibold", {
+						"text-gray-500": element.deleted,
+					})}
 				>
 					{(element.config as any)?.label ?? field.name}
 					{element.required && <span className="text-red-500">* </span>}
@@ -180,24 +190,24 @@ const StructuralElement = ({ element, isEditing, labelId }: StructuralElementPro
 	const { Icon, name } = structuralElements[element.element];
 
 	return (
-		<>
-			<Icon
-				size={20}
-				className={cn(
-					"mr-4 mt-3 shrink-0",
-					isEditing ? "text-blue-500" : "text-emerald-500",
-					element.deleted && "text-gray-500"
-				)}
-			/>
-			<div>
+		<div>
+			<div className="flex items-center gap-2">
+				<Icon
+					size={20}
+					className={cn("shrink-0", isEditing ? "text-blue-500" : "text-emerald-500", {
+						"text-amber-500": element.updated && !element.added,
+						"text-emerald-700": element.added,
+						"text-red-300": element.deleted,
+					})}
+				/>
 				<div id={labelId} className="text-gray-500">
 					{name}
 				</div>
-				<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
-					{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
-					<Markdown className="line-clamp-2">{element.content}</Markdown>
-				</div>
 			</div>
-		</>
+			<div className={cn("prose prose-sm", element.deleted ? "text-gray-500" : "")}>
+				{/* TODO: sanitize links, truncate, generally improve styles for rendered content*/}
+				<Markdown className="line-clamp-2">{element.content}</Markdown>
+			</div>
+		</div>
 	);
 };

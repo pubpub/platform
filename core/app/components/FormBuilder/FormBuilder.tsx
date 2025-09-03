@@ -274,7 +274,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 	};
 	const addElement = useCallback(
 		(element: FormElementData) => {
-			append(element);
+			append({ ...element, added: true });
 		},
 		[append]
 	);
