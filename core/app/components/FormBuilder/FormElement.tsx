@@ -39,7 +39,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 	const field = pubFields[element.fieldId as PubFieldsId];
 	const labelName = field
 		? (element.label ?? (element.config as any)?.label ?? field.name)
-		: (element.label ?? element.id);
+		: (element.label ?? element.elementId);
 
 	const { openConfigPanel, removeElement, restoreElement } = useBuilder();
 
