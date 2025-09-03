@@ -1,5 +1,6 @@
 import {
 	CopyObjectCommand,
+	DeleteObjectCommand,
 	PutObjectCommand,
 	S3Client,
 	waitUntilObjectExists,
@@ -24,7 +25,7 @@ export const getS3Client = () => {
 	const secret = env.ASSETS_UPLOAD_SECRET_KEY;
 
 	logger.info({
-		message: "Initializing S3 client",
+		msg: "Initializing S3 client",
 		endpoint: env.ASSETS_STORAGE_ENDPOINT,
 		region,
 		key,
@@ -45,7 +46,7 @@ export const getS3Client = () => {
 	});
 
 	logger.info({
-		message: "S3 client initialized",
+		msg: "S3 client initialized",
 	});
 
 	return s3Client;
@@ -90,6 +91,26 @@ export const generateSignedAssetUploadUrl = async (
 	return await getSignedUrl(client, command, { expiresIn: 3600 });
 };
 
+export const deleteFileFromS3 = async (fileUrl: string) => {
+	const client = getPublicS3Client();
+	const bucket = env.ASSETS_BUCKET_NAME;
+
+	const fileKey = fileUrl.split(new RegExp(`^.+${env.ASSETS_BUCKET_NAME}/`))[1];
+
+	console.log("fileUrl", fileUrl);
+	console.log("bucket", bucket);
+
+	console.log("fileKey", fileKey);
+
+	const command = new DeleteObjectCommand({
+		Bucket: bucket,
+		Key: fileKey,
+	});
+	const res = await client.send(command);
+
+	return res;
+};
+
 export const makeFileUploadPermanent = async (
 	{
 		pubId,
@@ -114,7 +135,7 @@ export const makeFileUploadPermanent = async (
 	const newKey = `${pubId}/${fileName}`;
 
 	logger.info({
-		message: "Retrieving S3 clients for makeFileUploadPermanent",
+		msg: "Retrieving S3 clients for makeFileUploadPermanent",
 		source,
 		newKey,
 	});
@@ -122,7 +143,7 @@ export const makeFileUploadPermanent = async (
 	const s3Client = getS3Client();
 
 	logger.info({
-		message: "S3 client retrieved for makeFileUploadPermanent. Creating copy command",
+		msg: "S3 client retrieved for makeFileUploadPermanent. Creating copy command",
 		source,
 		newKey,
 	});
@@ -134,14 +155,14 @@ export const makeFileUploadPermanent = async (
 	});
 
 	logger.info({
-		message: "Sending copy command",
+		msg: "Sending copy command",
 		copyCommand,
 	});
 
 	await s3Client.send(copyCommand);
 
 	logger.info({
-		message: "Waiting for object to exist",
+		msg: "Waiting for object to exist",
 		newKey,
 	});
 
@@ -170,7 +191,7 @@ export const makeFileUploadPermanent = async (
 		.execute();
 
 	logger.info({
-		message: "File uploaded permanently",
+		msg: "File uploaded permanently",
 		newKey,
 	});
 };
