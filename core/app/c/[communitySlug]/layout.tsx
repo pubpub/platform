@@ -36,9 +36,11 @@ export default async function MainLayout(props: Props) {
 
 	const { children } = props;
 
-	const { user } = await getPageLoginData();
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(params.communitySlug),
+	]);
 
-	const community = await findCommunityBySlug(params.communitySlug);
 	if (!community) {
 		return notFound();
 	}

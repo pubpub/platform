@@ -30,7 +30,9 @@ const CommunitySwitcher: React.FC<Props> = async function ({ community, availabl
 	const communityRedirectUrls = await Promise.all(
 		availableCommunities.map(async (option) => ({
 			communityId: option.id,
-			redirectUrl: await constructRedirectToBaseCommunityPage({ communitySlug: option.slug }),
+			redirectUrl: await constructRedirectToBaseCommunityPage({
+				communitySlug: community.slug === option.slug ? undefined : option.slug,
+			}),
 		}))
 	);
 

@@ -14,6 +14,8 @@ export type PubsRunActionDropDownMenuProps = {
 	pubId: PubsId;
 	stage: Stages;
 	testId?: string;
+	/* accessible text for the button */
+	buttonText?: string;
 	iconOnly?: boolean;
 } & ButtonProps;
 
@@ -23,6 +25,8 @@ export const PubsRunActionDropDownMenu = async ({
 	stage,
 	testId,
 	iconOnly,
+	buttonText,
+
 	...buttonProps
 }: PubsRunActionDropDownMenuProps) => {
 	if (!actionInstances.length) {
@@ -40,7 +44,9 @@ export const PubsRunActionDropDownMenu = async ({
 					{...buttonProps}
 				>
 					<Play size="12" strokeWidth="1px" className="text-neutral-500" />
-					<span className={cn({ "sr-only": iconOnly })}>Run action</span>
+					<span className={cn({ "sr-only": iconOnly })}>
+						{buttonText ?? "Run action"}
+					</span>
 					{iconOnly ? null : <ChevronDown size="14" />}
 				</Button>
 			</DropdownMenuTrigger>
