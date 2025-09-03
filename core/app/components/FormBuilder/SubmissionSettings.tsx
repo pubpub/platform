@@ -13,16 +13,14 @@ import { isButtonElement } from "./types";
 export const ButtonOption = ({
 	label,
 	id,
-	variant,
 	readOnly,
 }: {
 	label: string;
-	variant: "default" | "secondary" | "ghost" | "outline" | "destructive" | "link";
 	id?: string;
 	readOnly?: boolean;
 }) => {
 	// TODO: need a way to determine if button is primary or secondary
-	const buttonType = variant;
+	const buttonType: string = "primary";
 	const { openButtonConfigPanel } = useBuilder();
 	const handleClick = () => {
 		openButtonConfigPanel(id ?? label);
@@ -41,8 +39,10 @@ export const ButtonOption = ({
 			<div className="ml-7 flex items-center gap-3">
 				<FormInput width="20px" />
 				<div className="flex h-full flex-col py-3">
-					<span className="text-sm font-medium text-muted-foreground">Preview</span>
-					<Button variant={buttonType}>{label}</Button>
+					<span className="text-sm font-medium text-muted-foreground">
+						{buttonType === "primary" ? "Primary Button" : "Secondary Button"}
+					</span>
+					<span className="font-semibold">{label}</span>
 				</div>
 			</div>
 			{!readOnly ? (

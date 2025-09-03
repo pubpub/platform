@@ -25,10 +25,9 @@ import {
 } from "ui/form";
 import { ChevronDown } from "ui/icon";
 import { Input } from "ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { cn } from "utils";
 
-import type { ButtonElement, FormBuilderSchema } from "../types";
+import type { FormBuilderSchema } from "../types";
 import { findRanksBetween } from "~/lib/rank";
 import { useCommunity } from "../../providers/CommunityProvider";
 import { useBuilder } from "../BuilderContext";
@@ -39,23 +38,6 @@ const DEFAULT_BUTTON = {
 	label: "Submit",
 	content: "Thank you for your submission",
 };
-
-const buttonVariants = ["default", "secondary", "ghost", "outline", "destructive", "link"] as const;
-
-export type ButtonVariant = (typeof buttonVariants)[number];
-
-const createButtonConfigSchema = (otherButtons: ButtonElement[]) =>
-	z.object({
-		label: z
-			.string()
-			.min(1)
-			.refine((l) => !otherButtons.find((b) => b.label === l), {
-				message: "There is already a button with this label",
-			}),
-		variant: z.enum(buttonVariants).default("default"),
-		content: z.string().min(1),
-		stageId: z.string().optional(),
-	});
 
 export const ButtonConfigurationForm = ({
 	buttonIdentifier,
@@ -88,14 +70,24 @@ export const ButtonConfigurationForm = ({
 		return { button, buttonIndex, otherButtons, numElements: elements.length, elements };
 	}, []);
 
-	const schema = useMemo(() => createButtonConfigSchema(otherButtons), [otherButtons]);
+	const schema = z.object({
+		label: z
+			.string()
+			.min(1)
+			.refine((l) => !otherButtons.find((b) => b.label === l), {
+				message: "There is already a button with this label",
+			}),
+		content: z.string().min(1),
+		stageId: z.string().optional(),
+	});
+
+	const community = useCommunity();
 
 	const defaultValues = button
 		? {
 				label: button.label ?? "",
 				content: button.content ?? "",
 				stageId: button.stageId ?? undefined,
-				variant: button.config?.variant ?? "default",
 			}
 		: {
 				label: DEFAULT_BUTTON.label,
@@ -118,7 +110,6 @@ export const ButtonConfigurationForm = ({
 			type: ElementType.button,
 			elementId: button?.elementId,
 			label: values.label,
-			variant: values.variant,
 			content: values.content,
 			stageId: values.stageId as StagesId | undefined,
 			updated: true,
@@ -127,7 +118,6 @@ export const ButtonConfigurationForm = ({
 		dispatch({ eventName: "save" });
 	};
 	const labelValue = form.watch("label");
-	const variantValue = form.watch("variant");
 
 	return (
 		<Form {...form}>
@@ -138,7 +128,7 @@ export const ButtonConfigurationForm = ({
 				}}
 				className="flex h-full flex-col gap-4 pt-2"
 			>
-				<ButtonOption label={labelValue} readOnly variant={variantValue} />
+				<ButtonOption label={labelValue} readOnly />
 				<FormField
 					control={form.control}
 					name="label"
@@ -149,29 +139,6 @@ export const ButtonConfigurationForm = ({
 								<Input {...field} />
 							</FormControl>
 							<FormMessage data-testid="label-form-message" />
-						</FormItem>
-					)}
-				/>
-				<FormField
-					control={form.control}
-					name="variant"
-					render={({ field }) => (
-						<FormItem>
-							<FormLabel>Button variant</FormLabel>
-							<FormControl>
-								<Select onValueChange={field.onChange} defaultValue={field.value}>
-									<SelectTrigger>
-										<SelectValue placeholder="Select a variant" />
-									</SelectTrigger>
-									<SelectContent>
-										{buttonVariants.map((variant) => (
-											<SelectItem key={variant} value={variant}>
-												{variant}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</FormControl>
 						</FormItem>
 					)}
 				/>
