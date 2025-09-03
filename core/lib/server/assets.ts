@@ -97,16 +97,13 @@ export const deleteFileFromS3 = async (fileUrl: string) => {
 
 	const fileKey = fileUrl.split(new RegExp(`^.+${env.ASSETS_BUCKET_NAME}/`))[1];
 
-	console.log("fileUrl", fileUrl);
-	console.log("bucket", bucket);
-
-	console.log("fileKey", fileKey);
-
 	const command = new DeleteObjectCommand({
 		Bucket: bucket,
 		Key: fileKey,
 	});
+	logger.info({ msg: "Deleting file from S3", fileKey });
 	const res = await client.send(command);
+	logger.info({ msg: "File deleted from S3", fileKey });
 
 	return res;
 };
