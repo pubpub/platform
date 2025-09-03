@@ -14,13 +14,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import type {
-	FormElementsId,
-	FormsId,
-	NewFormElements,
-	NewFormElementToPubType,
-	Stages,
-} from "db/public";
+import type { FormElementsId, NewFormElements, NewFormElementToPubType, Stages } from "db/public";
 import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
@@ -244,7 +238,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	const formValues = form.getValues();
 
-	useUnsavedChangesWarning(form.formState.isDirty);
+	useUnsavedChangesWarning(isChanged);
 
 	const payload = useMemo(
 		() => preparePayload({ formValues, defaultValues }),
@@ -329,6 +323,8 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		})
 	);
 
+	const dndContextId = React.useId();
+
 	return (
 		<TokenProvider tokens={tokens}>
 			<BuilderProvider
@@ -385,6 +381,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 														]}
 														onDragEnd={handleDragEnd}
 														sensors={sensors}
+														id={dndContextId}
 													>
 														<SortableContext
 															items={elements}
