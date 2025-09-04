@@ -270,11 +270,7 @@ export interface PubEditorClientProps {
 	children: ReactNode;
 	mode: "edit" | "create";
 	pub: Pick<ProcessedPubWithForm, "id" | "values" | "pubTypeId">;
-	onSuccess: (args: {
-		values: FieldValues;
-		submitButtonId?: string;
-		isAutoSave: boolean;
-	}) => void;
+	onSuccess: (args: { submitButtonId?: string; isAutoSave: boolean }) => void;
 	stageId?: StagesId;
 	/** Slug of the Form this editor is using */
 	formSlug: string;
@@ -407,7 +403,7 @@ export const PubEditorClient = ({
 					stageId: newStageId ?? stageId,
 				});
 
-				onSuccess({ isAutoSave: autoSave, submitButtonId, values: pubValues });
+				onSuccess({ isAutoSave: autoSave, submitButtonId });
 			}
 		},
 		[
