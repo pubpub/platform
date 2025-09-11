@@ -9,6 +9,8 @@ import Redis from "ioredis";
 
 var REVALIDATED_TAGS_KEY = "__revalidated_tags__";
 
+const MAX_CACHE_ENTRY_SIZE = 1024 * 200; // 200kb, after this it's faster to just read from the db
+
 /**
  * Creates a redis handler based on fortedigital's redis-strings handler, but using the ioredis
  * client
@@ -139,7 +141,20 @@ function createRedisHandler({
 		async set(key, cacheHandlerValue) {
 			try {
 				assertClientIsReady();
+
+				const stringified = JSON.stringify(cacheHandlerValue);
+
+				if (stringified?.length > MAX_CACHE_ENTRY_SIZE) {
+					console.log(
+						"[CacheHandler]: Value is too large, skipping cache",
+						stringified?.length,
+						key
+					);
+					return;
+				}
+
 				const lifespan = cacheHandlerValue.lifespan;
+
 				const setTagsOperation =
 					cacheHandlerValue.tags.length > 0
 						? client.hset(
@@ -152,18 +167,15 @@ function createRedisHandler({
 					? client.hset(keyPrefix + sharedTagsTtlKey, key, lifespan.expireAt)
 					: void 0;
 				await Promise.all([setTagsOperation, setSharedTtlOperation]);
+
 				if (typeof lifespan?.expireAt === "number") {
-					await client.set(
-						keyPrefix + key,
-						JSON.stringify(cacheHandlerValue),
-						"EXAT",
-						lifespan.expireAt
-					);
+					await client.set(keyPrefix + key, stringified, "EXAT", lifespan.expireAt);
 				} else {
-					await client.set(keyPrefix + key, JSON.stringify(cacheHandlerValue));
+					await client.set(keyPrefix + key, stringified);
 				}
 			} catch (err) {
 				console.error("Cache set error", err);
+				console.error(err.stack);
 				throw err;
 			}
 		},

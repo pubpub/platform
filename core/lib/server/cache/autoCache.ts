@@ -87,7 +87,7 @@ const executeWithCache = <
 			asOne
 		);
 
-		if (shouldSkipCache) {
+		if (shouldSkipCache || options?.skipCacheFn?.()) {
 			if (env.CACHE_LOG) {
 				logger.debug(`AUTOCACHE: Skipping cache for query: ${asOne}`);
 			}

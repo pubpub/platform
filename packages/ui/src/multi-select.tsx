@@ -58,6 +58,7 @@ interface MultiSelectProps
 	animation?: number;
 	maxCount?: number;
 	asChild?: boolean;
+	children?: React.ReactNode;
 	className?: string;
 	badgeClassName?: string;
 	showClearAll?: boolean;
@@ -102,6 +103,7 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 			animation = 0,
 			maxCount = 3,
 			asChild = false,
+			children,
 			className,
 			badgeClassName,
 			showClearAll = true,
@@ -171,24 +173,51 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 				}}
 			>
 				<PopoverTrigger asChild>
-					<Button
-						ref={ref}
-						{...props}
-						className={cn(
-							"flex h-auto min-h-10 w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
-							className
-						)}
-					>
-						{selectedValues.length > 0 ? (
-							<div className="flex w-full items-center justify-between">
-								<div className="flex flex-wrap items-center">
-									{selectedValues.slice(0, maxCount).map((value) => {
-										const option = options.find((o) => o.value === value);
-										const IconComponent = option?.icon;
-										return (
+					{children ?? (
+						<Button
+							ref={ref}
+							{...props}
+							className={cn(
+								"flex h-auto min-h-10 w-full items-center justify-between rounded-md border bg-inherit px-3 py-2 hover:bg-inherit",
+								className
+							)}
+						>
+							{selectedValues.length > 0 ? (
+								<div className="flex w-full items-center justify-between">
+									<div className="flex flex-wrap items-center">
+										{selectedValues.slice(0, maxCount).map((value) => {
+											const option = options.find((o) => o.value === value);
+											const IconComponent = option?.icon;
+											return (
+												<Badge
+													key={value}
+													className={cn(
+														isAnimating ? "animate-bounce" : "",
+														multiSelectVariants({
+															variant,
+															className: badgeClassName,
+														}),
+														"flex items-center gap-2",
+														badgeClassName
+													)}
+													style={{ animationDuration: `${animation}s` }}
+												>
+													{IconComponent && (
+														<IconComponent className="mr-2 h-4 w-4" />
+													)}
+
+													{option?.label}
+													<XButton
+														onClick={() => toggleOption(value)}
+														dataTestId={`multi-select-remove-${value}`}
+													/>
+												</Badge>
+											);
+										})}
+										{selectedValues.length > maxCount && (
 											<Badge
-												key={value}
 												className={cn(
+													"border-foreground/1 bg-transparent text-foreground hover:bg-transparent",
 													isAnimating ? "animate-bounce" : "",
 													multiSelectVariants({
 														variant,
@@ -199,85 +228,65 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 												)}
 												style={{ animationDuration: `${animation}s` }}
 											>
-												{IconComponent && (
-													<IconComponent className="mr-2 h-4 w-4" />
-												)}
-
-												{option?.label}
+												{`+ ${selectedValues.length - maxCount} more`}
 												<XButton
-													onClick={() => toggleOption(value)}
-													dataTestId={`multi-select-remove-${value}`}
+													onClick={clearExtraOptions}
+													className="hover:bg-black/20"
+													dataTestId={`multi-select-clear-extra`}
 												/>
 											</Badge>
-										);
-									})}
-									{selectedValues.length > maxCount && (
-										<Badge
-											className={cn(
-												"border-foreground/1 bg-transparent text-foreground hover:bg-transparent",
-												isAnimating ? "animate-bounce" : "",
-												multiSelectVariants({
-													variant,
-													className: badgeClassName,
-												}),
-												"flex items-center gap-2",
-												badgeClassName
-											)}
-											style={{ animationDuration: `${animation}s` }}
-										>
-											{`+ ${selectedValues.length - maxCount} more`}
-											<XButton
-												onClick={clearExtraOptions}
-												className="hover:bg-black/20"
-												dataTestId={`multi-select-clear-extra`}
+										)}
+									</div>
+									<div className="flex items-center justify-between">
+										{showClearAll && (
+											<XIcon
+												className={ICON_CLASSNAME}
+												data-testid={`multi-select-clear-all`}
+												onClick={(event) => {
+													event.stopPropagation();
+													handleClear();
+												}}
 											/>
-										</Badge>
-									)}
-								</div>
-								<div className="flex items-center justify-between">
-									{showClearAll && (
-										<XIcon
-											className={ICON_CLASSNAME}
-											data-testid={`multi-select-clear-all`}
-											onClick={(event) => {
-												event.stopPropagation();
-												handleClear();
-											}}
+										)}
+										<Separator
+											orientation="vertical"
+											className="flex h-full min-h-6"
 										/>
-									)}
-									<Separator
-										orientation="vertical"
-										className="flex h-full min-h-6"
-									/>
+										{isPopoverOpen ? (
+											<ChevronUp className={ICON_CLASSNAME} />
+										) : (
+											<ChevronDown className={ICON_CLASSNAME} />
+										)}
+									</div>
+								</div>
+							) : (
+								<div className="mx-auto flex w-full items-center justify-between">
+									<span className="mx-3 text-sm text-muted-foreground">
+										{placeholder}
+									</span>
 									{isPopoverOpen ? (
 										<ChevronUp className={ICON_CLASSNAME} />
 									) : (
 										<ChevronDown className={ICON_CLASSNAME} />
 									)}
 								</div>
-							</div>
-						) : (
-							<div className="mx-auto flex w-full items-center justify-between">
-								<span className="mx-3 text-sm text-muted-foreground">
-									{placeholder}
-								</span>
-								{isPopoverOpen ? (
-									<ChevronUp className={ICON_CLASSNAME} />
-								) : (
-									<ChevronDown className={ICON_CLASSNAME} />
-								)}
-							</div>
-						)}
-					</Button>
+							)}
+						</Button>
+					)}
 				</PopoverTrigger>
 				<PopoverContent
 					className="w-auto p-0"
 					align="start"
 					onEscapeKeyDown={() => setIsPopoverOpen(false)}
 				>
-					<Command>
-						<CommandInput placeholder="Search..." onKeyDown={handleInputKeyDown} />
-						<CommandList>
+					<Command className="overflow-clip rounded-lg">
+						<CommandInput
+							placeholder="Search..."
+							wrapperClassName="border-none rounded-none"
+							onKeyDown={handleInputKeyDown}
+						/>
+						<CommandSeparator />
+						<CommandList className="max-h-[300px] overflow-y-auto">
 							<CommandEmpty>No results found.</CommandEmpty>
 							<CommandGroup>
 								<CommandItem
@@ -325,37 +334,37 @@ export const MultiSelect = React.forwardRef<HTMLButtonElement, MultiSelectProps>
 									);
 								})}
 							</CommandGroup>
-							<CommandSeparator />
-							<CommandGroup>
-								<div className="flex items-center justify-between">
-									{showClearAll && selectedValues.length > 0 && (
-										<>
-											<Button
-												onClick={handleClear}
-												variant="ghost"
-												className="flex-1 cursor-pointer justify-center"
-												data-testid={`multi-select-clear`}
-											>
-												Clear
-											</Button>
-											<Separator
-												orientation="vertical"
-												className="flex h-full min-h-6"
-											/>
-										</>
-									)}
-									<CommandSeparator />
-									<Button
-										onClick={() => setIsPopoverOpen(false)}
-										variant="ghost"
-										className="flex-1 cursor-pointer justify-center"
-										data-testid={`multi-select-close`}
-									>
-										Close
-									</Button>
-								</div>
-							</CommandGroup>
 						</CommandList>
+						<CommandSeparator />
+						<CommandGroup>
+							<div className="flex items-center justify-between">
+								{showClearAll && selectedValues.length > 0 && (
+									<>
+										<Button
+											onClick={handleClear}
+											variant="ghost"
+											className="flex-1 cursor-pointer justify-center"
+											data-testid={`multi-select-clear`}
+										>
+											Clear
+										</Button>
+										<Separator
+											orientation="vertical"
+											className="flex h-full min-h-6"
+										/>
+									</>
+								)}
+								<CommandSeparator />
+								<Button
+									onClick={() => setIsPopoverOpen(false)}
+									variant="ghost"
+									className="flex-1 cursor-pointer justify-center"
+									data-testid={`multi-select-close`}
+								>
+									Close
+								</Button>
+							</div>
+						</CommandGroup>
 					</Command>
 				</PopoverContent>
 				{animation > 0 && selectedValues.length > 0 && (

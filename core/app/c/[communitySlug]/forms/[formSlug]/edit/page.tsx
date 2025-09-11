@@ -31,10 +31,9 @@ export default async function Page(props: {
 }) {
 	const params = await props.params;
 
-	const { formSlug, communitySlug } = params;
+	const { formSlug } = params;
 
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug();
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
 
 	if (!community) {
 		notFound();
@@ -47,7 +46,7 @@ export default async function Page(props: {
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${community.slug}/unauthorized`);
 	}
 
 	const communityId = community.id as CommunitiesId;
