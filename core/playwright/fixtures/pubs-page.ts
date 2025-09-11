@@ -53,7 +53,10 @@ export class PubsPage {
 		stage?: string;
 		values?: Record<string, string>;
 	}) {
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs*`);
+		await this.page.waitForTimeout(500);
 		await this.page.getByRole("button", { name: "Create", exact: true }).click();
+		await this.page.waitForTimeout(500);
 		await this.choosePubType(pubType);
 
 		await this.page.waitForTimeout(500);
