@@ -320,6 +320,14 @@ const authorizedCreateFormsBase = ({
 		.where((eb) =>
 			eb.or([
 				eb(
+					eb
+						.selectFrom("users")
+						.where("users.id", "=", userId)
+						.select("users.isSuperAdmin"),
+					"is",
+					true
+				),
+				eb(
 					eb.val(Capabilities.createPubWithAnyForm),
 					"in",
 					eb.selectFrom("capabilities").select("capability")
