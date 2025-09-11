@@ -18,17 +18,21 @@ function formatFileSize(bytes: number): string {
 	return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
 }
 
-// TODO: make nicer
-function getFileIcon(mimeType: string) {
+type FileTypeInfo = {
+	description: string;
+	icon: typeof FileText;
+};
+
+function getFileTypeInfo(mimeType: string): FileTypeInfo {
 	if (mimeType.startsWith("image/")) {
 		if (mimeType === "image/svg+xml") {
-			return FilePen;
+			return { description: "SVG image", icon: FilePen };
 		}
-		return FileImage;
+		return { description: "Image file", icon: FileImage };
 	}
 
 	if (mimeType === "application/pdf") {
-		return FileText; // could use a PDF icon
+		return { description: "PDF document", icon: FileText };
 	}
 
 	if (
@@ -36,64 +40,87 @@ function getFileIcon(mimeType: string) {
 		mimeType === "application/vnd.ms-excel" ||
 		mimeType === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 	) {
-		return FileSpreadsheet;
+		return { description: "Spreadsheet", icon: FileSpreadsheet };
 	}
 
 	if (
 		mimeType === "application/msword" ||
 		mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 	) {
-		return FileText;
+		return { description: "Document", icon: FileText };
 	}
 
 	if (mimeType.startsWith("video/")) {
-		return FileVideo;
+		return { description: "Video file", icon: FileVideo };
 	}
 
 	if (mimeType.startsWith("audio/")) {
-		return FileAudio;
+		return { description: "Audio file", icon: FileAudio };
 	}
 
-	return FileText;
+	return { description: "Document", icon: FileText };
 }
 
-export function FileUploadPreview({
-	files,
-	onDelete,
-}: {
+type FileUploadPreviewProps = {
 	files: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>;
+	/** Passing this will allow the file to be deleted  */
 	onDelete?: (file: InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number]) => void;
-}) {
-	if (!files || files.length === 0) {
+};
+
+export function FileUploadPreview(props: FileUploadPreviewProps) {
+	if (!props.files || props.files.length === 0) {
 		return null;
 	}
 
+	const fileCount = props.files.length;
+
 	return (
-		<div className="space-y-2">
-			{files.map((file) => {
-				const FileIcon = getFileIcon(file.fileType);
+		<div
+			className="space-y-2"
+			role="region"
+			aria-label={`Uploaded files (${fileCount} ${fileCount === 1 ? "file" : "files"})`}
+		>
+			{props.files.map((file, index) => {
+				const fileTypeInfo = getFileTypeInfo(file.fileType);
+				const FileIcon = fileTypeInfo.icon;
+				const fileTypeDescription = fileTypeInfo.description;
+				const fileId = `file-${index}-${file.fileName.replace(/[^a-zA-Z0-9]/g, "-")}`;
 
 				return (
-					<Card key={file.fileName} className="p-0 transition-colors hover:bg-muted/50">
+					<Card
+						key={file.fileName}
+						className="p-0 transition-colors hover:bg-muted/50"
+						role="article"
+						aria-labelledby={`${fileId}-name`}
+						aria-describedby={`${fileId}-details`}
+					>
 						<CardContent className="p-3">
 							<div className="flex items-center gap-3">
-								{/* file icon */}
-								<div className="flex-shrink-0">
+								<div className="flex-shrink-0" aria-hidden="true">
 									<FileIcon className="h-5 w-5 text-muted-foreground" />
 								</div>
 
-								{/* file details */}
 								<div className="min-w-0 flex-1">
-									<div className="truncate text-sm font-medium">
+									<p
+										id={`${fileId}-name`}
+										className="truncate text-sm font-medium"
+									>
 										{file.fileName}
-									</div>
-									<div className="text-xs text-muted-foreground">
+									</p>
+									<p
+										id={`${fileId}-details`}
+										className="text-xs text-muted-foreground"
+										aria-label={`${fileTypeDescription}, ${formatFileSize(file.fileSize)}`}
+									>
 										{formatFileSize(file.fileSize)} • {file.fileType}
-									</div>
+									</p>
 								</div>
 
-								{/* action buttons */}
-								<div className="flex flex-shrink-0 items-center gap-1">
+								<div
+									className="flex flex-shrink-0 items-center gap-1"
+									role="group"
+									aria-label="File actions"
+								>
 									<TooltipProvider>
 										<Tooltip>
 											<TooltipTrigger asChild>
@@ -107,8 +134,10 @@ export function FileUploadPreview({
 														href={file.fileUploadUrl}
 														target="_blank"
 														rel="noopener noreferrer"
+														aria-label={`Open ${file.fileName} in new tab`}
 													>
 														<ExternalLink className="h-4 w-4" />
+														<span className="sr-only">Open file</span>
 													</a>
 												</Button>
 											</TooltipTrigger>
@@ -118,7 +147,7 @@ export function FileUploadPreview({
 										</Tooltip>
 									</TooltipProvider>
 
-									{onDelete && (
+									{props.onDelete && (
 										<TooltipProvider>
 											<Tooltip>
 												<TooltipTrigger asChild>
@@ -126,9 +155,11 @@ export function FileUploadPreview({
 														variant="ghost"
 														size="sm"
 														className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-														onClick={() => onDelete(file)}
+														onClick={() => props.onDelete!(file)}
+														aria-label={`Delete ${file.fileName}`}
 													>
 														<Trash2 className="h-4 w-4" />
+														<span className="sr-only">Delete file</span>
 													</Button>
 												</TooltipTrigger>
 												<TooltipContent>
