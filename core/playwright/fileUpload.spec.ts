@@ -54,6 +54,7 @@ test.describe("File upload", () => {
 	test("should upload files", async ({ context }) => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		await pubsPage.goTo();
+		await page.waitForURL(`/c/${community.community.slug}/pubs*`);
 		const pubId = await pubsPage.createPub({
 			pubType: "File Upload Test",
 			values: { title: "The Activity of Slugs" },
@@ -115,6 +116,7 @@ test.describe("File upload", () => {
 			const fileName = "test-diagram.png";
 			const pubsPage = new PubsPage(page, community.community.slug);
 			await pubsPage.goTo();
+			await page.waitForURL(`/c/${community.community.slug}/pubs*`);
 			const pubId = await pubsPage.createPub({
 				pubType: "File Upload Test",
 				values: { title: "The Activity of Slugs" },
@@ -167,6 +169,7 @@ test.describe("File upload", () => {
 			const fileName3 = "shadowman.mov";
 			const pubsPage = new PubsPage(page, community.community.slug);
 			await pubsPage.goTo();
+			await page.waitForURL(`/c/${community.community.slug}/pubs*`);
 			const pubId = await pubsPage.createPub({
 				pubType: "File Upload Test",
 				values: { title: "The Activity of Slugs" },
