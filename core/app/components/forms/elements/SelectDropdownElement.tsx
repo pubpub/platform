@@ -60,7 +60,7 @@ export const SelectDropdownElement = ({
 								})}
 							</SelectContent>
 						</Select>
-						<FormDescription>{config.help}</FormDescription>
+						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
 				);
