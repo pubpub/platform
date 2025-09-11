@@ -69,11 +69,15 @@ const CommandDialog = ({
 
 const CommandInput = React.forwardRef<
 	React.ElementRef<typeof CommandPrimitive.Input>,
-	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & { icon?: React.ReactNode }
->(({ className, icon, ...props }, ref) => (
+	React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input> & {
+		icon?: React.ReactNode;
+		wrapperClassName?: string;
+	}
+>(({ className, icon, wrapperClassName, ...props }, ref) => (
 	<div
 		className={cn(
 			"flex items-center rounded-lg border bg-background px-3 focus-within:border-blue-500",
+			wrapperClassName,
 			props.disabled ? "border-gray-200 bg-gray-200 opacity-50" : "bg-background"
 		)}
 		cmdk-input-wrapper=""
