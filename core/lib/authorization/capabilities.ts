@@ -23,6 +23,7 @@ import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { autoCache } from "../server/cache/autoCache";
 import { findCommunityBySlug } from "../server/community";
+import { getForm } from "../server/form";
 import { getStagesViewableByUser } from "../server/stages";
 
 type CapabilitiesArg = {
@@ -399,6 +400,17 @@ export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
 			.where((eb) =>
 				eb.or([
+					eb.and([
+						eb(
+							eb
+								.selectFrom("users")
+								.where("users.id", "=", userId)
+								.select("users.isSuperAdmin"),
+							"is",
+							true
+						),
+						eb("forms.pubTypeId", "=", eb.selectFrom("pubtype").select("pubtype.id")),
+					]),
 					eb(
 						eb.val(Capabilities.editPubWithAnyForm),
 						"in",
@@ -436,6 +448,16 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 			.qb.clearWhere()
 			.where((eb) =>
 				eb.or([
+					eb.and([
+						eb(
+							eb
+								.selectFrom("users")
+								.where("users.id", "=", userId)
+								.select("users.isSuperAdmin"),
+							"is",
+							true
+						),
+					]),
 					eb(
 						eb.val(Capabilities.editPubWithAnyForm),
 						"in",
