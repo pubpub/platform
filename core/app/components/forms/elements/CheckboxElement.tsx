@@ -48,7 +48,7 @@ export const CheckboxElement = ({ slug, label, config }: ElementProps<InputCompo
 							</FormControl>
 							<FormLabel>{config.checkboxLabel}</FormLabel>
 						</div>
-						<FormDescription>{config.help}</FormDescription>
+						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
 				);

@@ -8,6 +8,7 @@ import { confidenceIntervalConfigSchema } from "schemas";
 
 import type { InputComponent } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Skeleton } from "ui/skeleton";
 
 import type { ElementProps } from "../types";
 import { useFormElementToggleContext } from "../FormElementToggleContext";
@@ -17,7 +18,7 @@ const Confidence = dynamic(
 	{
 		ssr: false,
 		// TODO: add better loading state
-		loading: () => <div>Loading...</div>,
+		loading: () => <Skeleton className="relative h-2 w-full" />,
 	}
 );
 
@@ -51,7 +52,7 @@ export const ConfidenceElement = ({
 					// and make sure it is not passed in as the default onChange
 					const { onChange, ...fieldProps } = field;
 					return (
-						<FormItem className="mb-6">
+						<FormItem className="relative mb-6">
 							<FormLabel className="text-[0.9em]">{label}</FormLabel>
 							<FormControl>
 								<ForwardedRefConfidence
@@ -63,7 +64,7 @@ export const ConfidenceElement = ({
 									min={0}
 									max={100}
 									onValueChange={onChange}
-									className="confidence"
+									className="confidence mb-6"
 								/>
 							</FormControl>
 							<FormMessage />
@@ -71,7 +72,7 @@ export const ConfidenceElement = ({
 					);
 				}}
 			/>
-			<FormDescription>{config.help}</FormDescription>
+			{config.help && <FormDescription>{config.help}</FormDescription>}
 		</>
 	);
 };

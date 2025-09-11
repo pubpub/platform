@@ -110,7 +110,7 @@ export const RadioGroupElement = ({
 								) : null}
 							</RadioGroup>
 						</FormControl>
-						<FormDescription>{config.help}</FormDescription>
+						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
 				);
