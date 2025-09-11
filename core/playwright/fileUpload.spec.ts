@@ -163,6 +163,8 @@ test.describe("File upload", () => {
 
 		test("when editing a pub, deleting an uploaded file should make it not uploaded", async () => {
 			const fileName = "test-diagram.png";
+			const fileName2 = "sample-pdf.pdf";
+			const fileName3 = "shadowman.mov";
 			const pubsPage = new PubsPage(page, community.community.slug);
 			await pubsPage.goTo();
 			const pubId = await pubsPage.createPub({
@@ -175,9 +177,11 @@ test.describe("File upload", () => {
 
 			await page.setInputFiles("input[type='file']", [
 				new URL(`fixtures/test-assets/${fileName}`, import.meta.url).pathname,
+				new URL(`fixtures/test-assets/${fileName2}`, import.meta.url).pathname,
+				new URL(`fixtures/test-assets/${fileName3}`, import.meta.url).pathname,
 			]);
 
-			await page.getByRole("button", { name: "Upload 1 file", exact: true }).click({
+			await page.getByRole("button", { name: "Upload 3 files", exact: true }).click({
 				timeout: 2_000,
 			});
 
@@ -185,7 +189,16 @@ test.describe("File upload", () => {
 				timeout: 10_000,
 			});
 
+			await page.getByRole("button", { name: "Save" }).click();
+			await page.getByText("Pub successfully updated", { exact: true }).waitFor({
+				timeout: 2_000,
+			});
+
+			await page.reload();
+
 			const link = page.getByRole("link", { name: `Open ${fileName}` }).first();
+			// takes a second for the element to load in
+			await link.waitFor({ timeout: 1_000 });
 			const url = await link.getAttribute("href", { timeout: 1_000 });
 			const opts = await fetch(url!);
 			expect(opts.status).toBe(200);
@@ -204,6 +217,9 @@ test.describe("File upload", () => {
 
 			// should still be deleted
 			await expect(page.getByText(fileName)).toBeHidden({ timeout: 1_000 });
+			// check that the other files are still there
+			await expect(page.getByText(fileName2)).toBeVisible({ timeout: 1_000 });
+			await expect(page.getByText(fileName3)).toBeVisible({ timeout: 1_000 });
 		});
 	});
 });
