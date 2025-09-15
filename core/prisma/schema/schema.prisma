@@ -392,6 +392,7 @@ enum Event {
   pubInStageForDuration
   actionSucceeded
   actionFailed
+  webhook
 }
 
 enum FormAccessType {
