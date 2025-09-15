@@ -7,6 +7,7 @@ import { defineAction } from "../types";
 
 export const action = defineAction({
 	name: Action.log,
+	accepts: ["pub"],
 	config: {
 		schema: z.object({
 			debounce: z.number().optional().describe("Debounce time in milliseconds."),

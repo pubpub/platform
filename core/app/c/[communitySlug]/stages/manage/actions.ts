@@ -477,6 +477,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 					actionInstanceId: actionInstance.id,
 					pubId: pubInStageId,
 					stageId: actionInstance.stageId,
+					event: Event.pubInStageForDuration,
 				})
 			)
 		);

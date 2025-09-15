@@ -7,6 +7,7 @@ import { defineAction } from "../types";
 
 export const action = defineAction({
 	name: Action.pushToV6,
+	accepts: ["pub"],
 	config: {
 		schema: z.object({
 			communitySlug: z.string().describe("Community slug"),

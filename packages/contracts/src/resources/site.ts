@@ -351,6 +351,19 @@ export const siteApi = contract.router(
 				},
 			},
 		},
+		webhook: {
+			path: "/webhook/:ruleId",
+			method: "POST",
+			summary: "Receive a webhook",
+			description: "Receive a webhook from a rule",
+			pathParams: z.object({
+				ruleId: z.string().uuid(),
+			}),
+			body: z.any(),
+			responses: {
+				200: z.never().optional(),
+			},
+		},
 	},
 	{
 		strictStatusCodes: true,

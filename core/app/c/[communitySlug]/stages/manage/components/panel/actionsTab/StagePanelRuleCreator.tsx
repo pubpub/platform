@@ -32,7 +32,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
 import type { SequentialRuleEvent } from "~/actions/types";
-import { actions, getRuleByName, humanReadableEvent, rules } from "~/actions/api";
+import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { addRule } from "../../../actions";
 
@@ -286,7 +286,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 														>
 															<SelectValue placeholder="Event">
 																{field.value
-																	? humanReadableEvent(
+																	? humanReadableEventBase(
 																			field.value
 																		)
 																	: "Event"}
@@ -300,7 +300,9 @@ export const StagePanelRuleCreator = (props: Props) => {
 																	className="hover:bg-gray-100"
 																	data-testid={`event-select-item-${event}`}
 																>
-																	{humanReadableEvent(event)}{" "}
+																	{humanReadableEventBase(
+																		event
+																	)}{" "}
 																</SelectItem>
 															))}
 														</SelectContent>

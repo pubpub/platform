@@ -68,7 +68,7 @@ export const run = defineRun<typeof action>(
 
 		const result = await res.json();
 
-		if (!finalOutputMap || finalOutputMap.length === 0) {
+		if (!finalOutputMap || finalOutputMap.length === 0 || !pub) {
 			return {
 				success: true,
 				report: `<p>The HTTP request ran successfully without mapping</p>

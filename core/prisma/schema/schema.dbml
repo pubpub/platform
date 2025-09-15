@@ -345,6 +345,7 @@ Table action_runs {
   actionInstanceId String
   pub pubs
   pubId String
+  body Json
   config Json
   event Event
   params Json

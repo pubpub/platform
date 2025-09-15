@@ -11,15 +11,34 @@ import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
 
-export const scheduleActionInstances = async (
-	options: {
-		pubId: PubsId;
-		stageId: StagesId;
-		stack: ActionRunsId[];
-	} & GetEventRuleOptions
-) => {
-	if (!options.pubId || !options.stageId) {
-		throw new Error("pubId and stageId are required");
+type Shared = {
+	stageId: StagesId;
+	stack: ActionRunsId[];
+	/* Config for the action instance */
+	config?: Record<string, unknown>;
+} & GetEventRuleOptions;
+
+type ScheduleActionInstanceForPubOptions = Shared & {
+	pubId: PubsId;
+	json?: never;
+};
+
+type ScheduleActionInstanceGenericOptions = Shared & {
+	pubId?: never;
+	json: Record<string, unknown>;
+};
+
+type ScheduleActionInstanceOptions =
+	| ScheduleActionInstanceForPubOptions
+	| ScheduleActionInstanceGenericOptions;
+
+export const scheduleActionInstances = async (options: ScheduleActionInstanceOptions) => {
+	if (!options.stageId) {
+		throw new Error("StageId is required");
+	}
+
+	if (!options.pubId && !options.json) {
+		throw new Error("PubId or body is required");
 	}
 
 	const [rules, jobsClient] = await Promise.all([
@@ -42,6 +61,7 @@ export const scheduleActionInstances = async (
 			(rule): rule is typeof rule & SchedulableRule =>
 				rule.event === Event.actionFailed ||
 				rule.event === Event.actionSucceeded ||
+				rule.event === Event.webhook ||
 				(rule.event === Event.pubInStageForDuration &&
 					Boolean(
 						typeof rule.config === "object" &&
@@ -71,6 +91,7 @@ export const scheduleActionInstances = async (
 					.values({
 						actionInstanceId: rule.actionInstance.id,
 						pubId: options.pubId,
+						json: options.json,
 						status: ActionRunStatus.scheduled,
 						config: rule.actionInstance.config,
 						result: { scheduled: `Action scheduled for ${runAt}` },
@@ -85,13 +106,13 @@ export const scheduleActionInstances = async (
 				duration: rule.duration,
 				interval: rule.interval,
 				stageId: options.stageId,
-				pubId: options.pubId,
 				community: {
 					slug: await getCommunitySlug(),
 				},
 				stack: options.stack,
 				scheduledActionRunId: scheduledActionRun.id,
 				event: rule.event,
+				...(options.pubId ? { pubId: options.pubId } : { body: options.json! }),
 			});
 
 			return {
@@ -106,16 +127,24 @@ export const scheduleActionInstances = async (
 	return results;
 };
 
+// FIXME: this should be updated to allow unscheduling jobs which aren't pub based
 export const unscheduleAction = async ({
 	actionInstanceId,
 	stageId,
 	pubId,
+	event,
 }: {
 	actionInstanceId: ActionInstancesId;
 	stageId: StagesId;
 	pubId: PubsId;
+	event: Omit<Event, "webhook" | "actionSucceeded" | "actionFailed">;
 }) => {
-	const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
+	const jobKey = getScheduledActionJobKey({
+		stageId,
+		actionInstanceId,
+		pubId,
+		event: event as Event,
+	});
 	try {
 		const jobsClient = await getJobsClient();
 		await jobsClient.unscheduleJob(jobKey);

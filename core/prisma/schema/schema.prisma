@@ -342,6 +342,7 @@ model ActionRun {
   actionInstanceId String?
   pub              Pub?              @relation(fields: [pubId], references: [id])
   pubId            String?
+  body             Json?
   config           Json?
   event            Event?
   params           Json?

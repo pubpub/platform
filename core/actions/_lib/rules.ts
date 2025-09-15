@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { ActionInstances } from "db/public";
+import type { RulesId } from "db/public";
 import { Event } from "db/public";
 
 import { defineRule } from "~/actions/types";
@@ -16,7 +16,7 @@ export const pubInStageForDuration = defineRule({
 	}),
 	display: {
 		base: "a pub stays in this stage for...",
-		withConfig: ({ duration, interval }: { duration: number; interval: Interval }) =>
+		hydrated: ({ config: { duration, interval } }) =>
 			`a pub stays in this stage for ${duration} ${interval}s`,
 	},
 });
@@ -42,7 +42,7 @@ export const actionSucceeded = defineRule({
 	event: Event.actionSucceeded,
 	display: {
 		base: "a specific action succeeds",
-		withConfig: (actionInstance: ActionInstances) => `${actionInstance.name} succeeds`,
+		hydrated: ({ config }) => `${config.name} succeeds`,
 	},
 });
 export type ActionSucceeded = typeof actionSucceeded;
@@ -51,10 +51,23 @@ export const actionFailed = defineRule({
 	event: Event.actionFailed,
 	display: {
 		base: "a specific action fails",
-		withConfig: (actionInstance) => `${actionInstance.name} fails`,
+		hydrated: ({ config }) => `${config.name} fails`,
 	},
 });
 export type ActionFailed = typeof actionFailed;
+
+export const constructWebhookUrl = (ruleId: RulesId, communitySlug: string) =>
+	`/api/v0/c/${communitySlug}/site/webhook/${ruleId}`;
+
+export const webhook = defineRule({
+	event: Event.webhook,
+	display: {
+		base: ({ community }) =>
+			`a request is made to \`${constructWebhookUrl("<ruleId>" as RulesId, community.slug)}\``,
+		hydrated: ({ rule, community }) =>
+			`a request is made to \`${constructWebhookUrl(rule.id, community.slug)}\``,
+	},
+});
 
 export type Rules =
 	| PubInStageForDuration

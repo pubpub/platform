@@ -27,7 +27,6 @@ type ScheduledEventPayload = {
 	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
 	runAt: Date;
 	stageId: StagesId;
-	pubId: PubsId;
 	actionInstanceId: string;
 	community: {
 		slug: string;
@@ -35,7 +34,16 @@ type ScheduledEventPayload = {
 	sourceActionRunId?: string;
 	stack?: ActionRunsId[];
 	scheduledActionRunId: ActionRunsId;
-};
+} & (
+	| {
+			pubId: PubsId;
+			body?: never;
+	  }
+	| {
+			body: Record<string, unknown>;
+			pubId?: never;
+	  }
+);
 
 type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
 
@@ -153,12 +161,22 @@ const triggerAction = async (
 				communitySlug: community.slug,
 				actionInstanceId,
 			},
-			body: {
-				pubId,
-				event,
-				scheduledActionRunId,
-				stack,
-			},
+			body:
+				event === Event.webhook
+					? {
+							pubId: undefined,
+							event,
+							body: context.body,
+							scheduledActionRunId,
+							stack,
+						}
+					: {
+							pubId,
+							body: undefined,
+							event,
+							scheduledActionRunId,
+							stack,
+						},
 		});
 
 		if (status >= 400) {

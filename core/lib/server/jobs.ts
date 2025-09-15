@@ -12,6 +12,7 @@ import "date-fns";
 import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import { Event } from "db/public";
 
+import type { XOR } from "../types";
 import type { Interval } from "~/actions/_lib/rules";
 import { addDuration } from "../dates";
 
@@ -19,27 +20,30 @@ export const getScheduledActionJobKey = ({
 	stageId,
 	actionInstanceId,
 	pubId,
+	event,
 }: {
 	stageId: StagesId;
 	actionInstanceId: ActionInstancesId;
-	pubId: PubsId;
-}) => `scheduled-action-${stageId}-${actionInstanceId}-${pubId}`;
+	event: Event;
+	pubId?: PubsId;
+}) => `scheduled-action-${stageId}-${actionInstanceId}${pubId ? `-${pubId}` : ""}-${event}`;
 
 export type JobsClient = {
 	unscheduleJob(jobKey: string): Promise<void>;
-	scheduleAction(options: {
-		actionInstanceId: ActionInstancesId;
-		stageId: StagesId;
-		duration: number;
-		interval: Interval;
-		pubId: PubsId;
-		community: {
-			slug: string;
-		};
-		event: Event;
-		stack: ActionRunsId[];
-		scheduledActionRunId: ActionRunsId;
-	}): Promise<Job | ClientExceptionOptions>;
+	scheduleAction(
+		options: {
+			actionInstanceId: ActionInstancesId;
+			stageId: StagesId;
+			duration: number;
+			interval: Interval;
+			community: {
+				slug: string;
+			};
+			event: Event;
+			stack: ActionRunsId[];
+			scheduledActionRunId: ActionRunsId;
+		} & XOR<{ pubId: PubsId }, { body: Record<string, unknown> }>
+	): Promise<Job | ClientExceptionOptions>;
 };
 
 export const makeJobsClient = async (): Promise<JobsClient> => {
@@ -71,7 +75,12 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 			scheduledActionRunId,
 		}) {
 			const runAt = addDuration({ duration, interval });
-			const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
+			const jobKey = getScheduledActionJobKey({
+				stageId,
+				actionInstanceId,
+				pubId: pubId,
+				event,
+			});
 
 			logger.info({
 				msg: `Scheduling action with key: ${actionInstanceId} to run at ${runAt}. Cause: ${event}${stack?.length ? `, triggered by: ${stack.join(" -> ")}` : ""}`,

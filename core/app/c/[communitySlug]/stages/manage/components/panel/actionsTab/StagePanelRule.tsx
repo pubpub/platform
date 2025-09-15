@@ -2,14 +2,28 @@
 
 import { useCallback } from "react";
 
-import type { Action, ActionInstances, CommunitiesId, Event, RulesId, StagesId } from "db/public";
+import type {
+	Action,
+	ActionInstances,
+	ActionInstancesId,
+	CommunitiesId,
+	Event,
+	RulesId,
+	StagesId,
+} from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 import { cn } from "utils";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
-import { getActionByName, humanReadableEvent } from "~/actions/api";
+import {
+	getActionByName,
+	humanReadableEventBase,
+	humanReadableEventHydrated,
+	humanReadableRule,
+} from "~/actions/api";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 import { deleteRule } from "../../../actions";
 
@@ -21,7 +35,11 @@ type Props = {
 		event: Event;
 		actionInstance: ActionInstances;
 		sourceActionInstance?: ActionInstances | null;
-		config?: RuleConfig<RuleForEvent<Event>> | null;
+		config: RuleConfig<RuleForEvent<Event>> | null;
+		createdAt: Date;
+		updatedAt: Date;
+		actionInstanceId: ActionInstancesId;
+		sourceActionInstanceId: ActionInstancesId | null;
 	};
 };
 
@@ -36,6 +54,7 @@ export const StagePanelRule = (props: Props) => {
 	const onDeleteClick = useCallback(async () => {
 		runDeleteRule(rule.id, props.stageId);
 	}, [rule.id, props.communityId]);
+	const community = useCommunity();
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
@@ -50,14 +69,21 @@ export const StagePanelRule = (props: Props) => {
 										actionName={rule.sourceActionInstance.action}
 										className="mr-1 h-4 w-4 text-xs"
 									/>
-									{humanReadableEvent(
-										rule.event,
+									{humanReadableRule(
+										rule,
+										community,
+										rule.actionInstance.name,
 										rule.config ?? undefined,
 										rule.sourceActionInstance
 									)}
 								</>
 							) : (
-								humanReadableEvent(rule.event, rule.config ?? undefined)
+								humanReadableRule(
+									rule,
+									community,
+									rule.actionInstance.name,
+									rule.config ?? undefined
+								)
 							)}
 						</span>
 						, run{" "}

@@ -1,7 +1,13 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import { actionInstancesIdSchema, actionRunsIdSchema, eventSchema, pubsIdSchema } from "db/public";
+import {
+	actionInstancesIdSchema,
+	actionRunsIdSchema,
+	Event,
+	eventSchema,
+	pubsIdSchema,
+} from "db/public";
 
 const contract = initContract();
 
@@ -38,12 +44,22 @@ export const internalApi = contract.router(
 			pathParams: z.object({
 				actionInstanceId: z.string(),
 			}),
-			body: z.object({
-				pubId: pubsIdSchema,
-				event: eventSchema,
-				stack: z.array(actionRunsIdSchema).optional(),
-				scheduledActionRunId: actionRunsIdSchema.optional(),
-			}),
+			body: z
+				.object({
+					event: eventSchema,
+					stack: z.array(actionRunsIdSchema).optional(),
+					scheduledActionRunId: actionRunsIdSchema.optional(),
+				})
+				.and(
+					z.union([
+						z.object({
+							pubId: pubsIdSchema,
+						}),
+						z.object({
+							json: z.any(),
+						}),
+					])
+				),
 			responses: {
 				200: z.object({
 					actionInstanceId: z.string(),

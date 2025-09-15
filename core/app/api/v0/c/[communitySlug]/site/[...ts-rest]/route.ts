@@ -13,6 +13,7 @@ import type {
 	CommunityMembershipsId,
 	PubsId,
 	PubTypesId,
+	RulesId,
 	StagesId,
 	UsersId,
 } from "db/public";
@@ -22,10 +23,12 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
+	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
 
+import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
 	parseQueryWithQsMiddleware,
@@ -57,6 +60,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
+import { getRule } from "~/lib/server/rules";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers, SAFE_USER_SELECT } from "~/lib/server/user";
 
@@ -678,6 +682,36 @@ const handler = createNextHandler(
 					body: pubs,
 				};
 			},
+		},
+		webhook: async ({ params, body }) => {
+			const community = await findCommunityBySlug();
+			// const { community } = await checkAuthorization({
+			// 	token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+			// 	cookies: true,
+			// });
+			if (!community) {
+				throw new NotFoundError(`Community not found`);
+			}
+
+			const ruleId = params.ruleId as RulesId;
+
+			const rule = await getRule(ruleId, community.id).executeTakeFirst();
+
+			if (!rule) {
+				throw new NotFoundError(`Rule ${ruleId} not found`);
+			}
+
+			const actionScheduleResults = await scheduleActionInstances({
+				json: body,
+				stageId: rule.actionInstance.stageId,
+				stack: [],
+				event: Event.webhook,
+			});
+
+			return {
+				status: 200,
+				body: undefined,
+			};
 		},
 	},
 	{

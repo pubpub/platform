@@ -1,8 +1,15 @@
 import type { ZodError } from "zod";
 
 import { sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstances, ActionInstancesId, NewRules, RulesId } from "db/public";
+import type {
+	ActionInstances,
+	ActionInstancesId,
+	CommunitiesId,
+	NewRules,
+	RulesId,
+} from "db/public";
 import { Event } from "db/public";
 import { expect } from "utils";
 
@@ -11,6 +18,7 @@ import { rules } from "~/actions/api";
 import { isSequentialRuleEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 
 export class RuleError extends Error {
@@ -295,3 +303,32 @@ export async function createRuleWithCycleCheck(
 		throw e;
 	}
 }
+
+export const getRule = (ruleId: RulesId, communityId: CommunitiesId) =>
+	autoCache(
+		db
+			.selectFrom("rules")
+			.selectAll()
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_instances")
+						.whereRef("action_instances.id", "=", "rules.actionInstanceId")
+						.selectAll("action_instances")
+						.select((eb) => [
+							jsonObjectFrom(
+								eb
+									.selectFrom("stages")
+									.whereRef("stages.id", "=", "action_instances.stageId")
+									.where("stages.communityId", "=", communityId)
+									.selectAll("stages")
+							)
+								.$notNull()
+								.as("stage"),
+						])
+				)
+					.$notNull()
+					.as("actionInstance"),
+			])
+			.where("id", "=", ruleId)
+	);
