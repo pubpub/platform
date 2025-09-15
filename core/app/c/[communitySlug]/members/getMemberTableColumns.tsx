@@ -44,7 +44,9 @@ export type TableMember = {
 	joined: string;
 };
 
-export const getMemberTableColumns = () =>
+export const getMemberTableColumns = (
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[]
+) =>
 	[
 		{
 			id: "select",
@@ -182,7 +184,7 @@ export const getMemberTableColumns = () =>
 									}}
 									updateMember={async () => {}}
 									membershipType={MembershipType.community}
-									availableForms={[]}
+									availableForms={availableForms}
 								/>
 							</div>
 						</DropdownMenuContent>
