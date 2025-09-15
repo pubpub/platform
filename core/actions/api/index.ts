@@ -12,6 +12,7 @@ import {
 	pubInStageForDuration,
 	pubLeftStage,
 } from "../_lib/rules";
+import * as buildJournalSite from "../buildJournalSite/action";
 import * as datacite from "../datacite/action";
 import * as email from "../email/action";
 import * as googleDriveImport from "../googleDriveImport/action";
@@ -31,6 +32,7 @@ export const actions = {
 	[move.action.name]: move.action,
 	[googleDriveImport.action.name]: googleDriveImport.action,
 	[datacite.action.name]: datacite.action,
+	[buildJournalSite.action.name]: buildJournalSite.action,
 } as const;
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {

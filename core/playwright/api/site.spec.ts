@@ -110,7 +110,8 @@ test("should be able to create token with special permissions", async () => {
 
 	await tokenPage.goto();
 
-	await page.getByRole("button", { name: "Permissions" }).first().click();
+	// nth(1) bc the first is the site builder token
+	await page.getByRole("button", { name: "Permissions" }).nth(1).click();
 
 	const permissionsText = await page.getByText("pub: read").textContent();
 

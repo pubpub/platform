@@ -1,3 +1,5 @@
+import type { InputTypeForCoreSchemaType } from "schemas";
+
 import {
 	CopyObjectCommand,
 	PutObjectCommand,
@@ -8,7 +10,7 @@ import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { sql } from "kysely";
 
-import type { PubsId, UsersId } from "db/public";
+import type { CoreSchemaType, PubsId, UsersId } from "db/public";
 import { logger } from "logger";
 
 import { db } from "~/kysely/database";
@@ -17,6 +19,47 @@ import { createLastModifiedBy } from "../lastModifiedBy";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 
 let s3Client: S3Client;
+
+export type FileMetadata = InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>[number];
+
+/**
+ * Useful for migrating data from other S3 buckets to the new one.
+ */
+export const generateMetadataFromS3 = async (
+	url: string,
+	communitySlug: string
+): Promise<FileMetadata> => {
+	// fetch headers from s3
+	const encodedUrl = encodeURI(url);
+
+	const response = await fetch(encodedUrl, { method: "HEAD" });
+
+	if (!response.ok) {
+		throw new Error(`failed to fetch metadata from s3: ${response.statusText}`);
+	}
+	const baseId = `dashboard-${communitySlug}:file`;
+
+	const fileName = encodedUrl.split("/").pop() || "";
+	const fileSize = parseInt(response.headers.get("content-length") || "0", 10);
+	const fileType = response.headers.get("content-type") || "application/octet-stream";
+
+	// generate a deterministic id using the same format as uppy
+	const id = `${baseId}-${fileName.replace(/\./g, "-")}-${fileType.replace("/", "-")}-${fileSize}-${Date.now()}`;
+
+	return {
+		id,
+		fileName,
+		fileSource: baseId,
+		fileType,
+		fileSize,
+		fileMeta: {
+			relativePath: null,
+			name: fileName,
+			type: fileType,
+		},
+		fileUploadUrl: encodedUrl,
+	};
+};
 
 export const getS3Client = () => {
 	const region = env.ASSETS_REGION;

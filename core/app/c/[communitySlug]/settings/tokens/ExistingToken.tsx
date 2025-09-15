@@ -1,5 +1,6 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
 import { Card, CardContent, CardFooter } from "ui/card";
+import { InfoButton } from "ui/info-button";
 import { cn } from "utils";
 
 import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
@@ -50,7 +51,16 @@ export const ExistingToken = ({
 						</div>
 					</div>
 				</div>
-				<RevokeTokenButton token={token} />
+				{token.isSiteBuilderToken ? (
+					<InfoButton>
+						<p>
+							This token is a site builder token. It has read-only access to all
+							content in the community. It cannot be revoked.
+						</p>
+					</InfoButton>
+				) : (
+					<RevokeTokenButton token={token} />
+				)}
 			</div>
 			<Accordion type="single" collapsible className="ml-10">
 				<AccordionItem value="permissions" className="border-b-0">

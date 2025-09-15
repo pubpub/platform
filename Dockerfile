@@ -90,9 +90,19 @@ RUN pnpm --filter $PACKAGE --prod deploy /tmp/app
 
 FROM base AS jobs
 
+ARG PACKAGE
+
 WORKDIR /usr/src/app
 
 COPY --from=prepare-jobs --chown=node:node /tmp/app .
+
+# If the package is site-builder, create necessary directories and set permissions
+RUN if [ "$PACKAGE" = "site-builder" ]; then \
+  mkdir -p /usr/src/app/builds /usr/src/app/.astro /usr/src/app/dist && \
+  chown -R node:node /usr/src/app/builds /usr/src/app/.astro /usr/src/app/dist; \
+  fi
+
+
 
 USER node
 

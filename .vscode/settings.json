@@ -9,5 +9,9 @@
 		"NODE_OPTIONS": "--import=\"#register-loader\"",
 		"SKIP_VALIDATION": "true",
 		"DATABASE_URL": "postgresql://postgres:postgres@localhost:54322/postgres"
+	},
+	"prettier.documentSelectors": ["**/*.astro"],
+	"[astro]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	}
 }
