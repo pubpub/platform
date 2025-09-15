@@ -20,7 +20,7 @@ jobs:
         outputs:
             docs: ${{ steps.changes.outputs.docs }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
             - uses: dorny/paths-filter@v2
               id: changes
               with:
@@ -121,7 +121,7 @@ jobs:
         if: github.event.action == 'closed' && needs.path-filter.outputs.docs == 'true'
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v5
 
             - name: Close docs preview
               uses: rossjrw/pr-preview-action@v1
