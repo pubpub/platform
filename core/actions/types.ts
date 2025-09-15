@@ -205,6 +205,7 @@ export type EventRuleOptionsBase<
 	 * The display name options for this event
 	 */
 	display: {
+		icon: (typeof Icons)[keyof typeof Icons];
 		/**
 		 * The base display name for this rule, shown e.g. when selecting the event for a rule
 		 */

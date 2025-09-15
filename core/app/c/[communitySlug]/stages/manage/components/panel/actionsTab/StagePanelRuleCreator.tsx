@@ -311,28 +311,38 @@ export const StagePanelRuleCreator = (props: Props) => {
 														data-testid={`event-select-trigger`}
 													>
 														<SelectValue placeholder="Event">
-															{field.value
-																? humanReadableEventBase(
+															{field.value ? (
+																<>
+																	<rule.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																	{humanReadableEventBase(
 																		field.value,
 																		community
-																	)
-																: "Event"}
+																	)}
+																</>
+															) : (
+																"Event"
+															)}
 														</SelectValue>
 													</SelectTrigger>
 													<SelectContent>
-														{allowedEvents.map((event) => (
-															<SelectItem
-																key={event}
-																value={event}
-																className="hover:bg-gray-100"
-																data-testid={`event-select-item-${event}`}
-															>
-																{humanReadableEventBase(
-																	event,
-																	community
-																)}{" "}
-															</SelectItem>
-														))}
+														{allowedEvents.map((event) => {
+															const rule = getRuleByName(event);
+
+															return (
+																<SelectItem
+																	key={event}
+																	value={event}
+																	className="hover:bg-gray-100"
+																	data-testid={`event-select-item-${event}`}
+																>
+																	<rule.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																	{humanReadableEventBase(
+																		event,
+																		community
+																	)}
+																</SelectItem>
+															);
+														})}
 													</SelectContent>
 												</Select>
 												<FormMessage />
@@ -345,6 +355,24 @@ export const StagePanelRuleCreator = (props: Props) => {
 									</FormItem>
 								)}
 							/>
+							{/* Additional selector for watched action when using action chaining events */}
+							{isActionChainingEvent && (
+								<FormField
+									control={form.control}
+									name="sourceActionInstanceId"
+									render={({ field }) => (
+										<ActionSelector
+											fieldProps={field}
+											actionInstances={props.actionInstances}
+											label="After"
+											placeholder="Select action to watch"
+											key={field.value}
+											disabledActionId={selectedActionInstanceId} // Prevent self-references
+											dataTestIdPrefix="watched-action"
+										/>
+									)}
+								/>
+							)}
 
 							<FormField
 								control={form.control}
@@ -376,25 +404,6 @@ export const StagePanelRuleCreator = (props: Props) => {
 										/>
 									</div>
 								</div>
-							)}
-
-							{/* Additional selector for watched action when using action chaining events */}
-							{isActionChainingEvent && (
-								<FormField
-									control={form.control}
-									name="sourceActionInstanceId"
-									render={({ field }) => (
-										<ActionSelector
-											fieldProps={field}
-											actionInstances={props.actionInstances}
-											label="after action..."
-											placeholder="Select action to watch"
-											key={field.value}
-											disabledActionId={selectedActionInstanceId} // Prevent self-references
-											dataTestIdPrefix="watched-action"
-										/>
-									)}
-								/>
 							)}
 
 							{rule?.additionalConfig && (

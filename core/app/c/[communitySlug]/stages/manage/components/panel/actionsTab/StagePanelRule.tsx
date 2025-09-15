@@ -17,7 +17,7 @@ import { cn } from "utils";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
-import { getActionByName, humanReadableEventHydrated } from "~/actions/api";
+import { getActionByName, getRuleByName, humanReadableEventHydrated } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 import { deleteRule } from "../../../actions";
@@ -50,19 +50,21 @@ export const StagePanelRule = (props: Props) => {
 		runDeleteRule(rule.id, props.stageId);
 	}, [rule.id, props.communityId]);
 	const community = useCommunity();
+	const ruleSettings = getRuleByName(rule.event);
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
 			<div className="flex w-full items-center justify-between space-x-4 text-sm">
 				<div className="flex items-center gap-2 overflow-auto">
 					<span className="flex-grow-0 overflow-auto text-ellipsis">
-						If{" "}
+						When{" "}
 						<span className="italic underline decoration-dotted">
+							{<ruleSettings.display.icon className="mr-1 inline h-4 w-4 text-xs" />}
 							{rule.sourceActionInstance ? (
 								<>
 									<ActionIcon
 										actionName={rule.sourceActionInstance.action}
-										className="mr-1 h-4 w-4 text-xs"
+										className="mr-1 inline h-4 w-4 text-xs"
 									/>
 									{humanReadableEventHydrated(rule.event, community, {
 										rule,
@@ -78,7 +80,7 @@ export const StagePanelRule = (props: Props) => {
 								})
 							)}
 						</span>
-						, run{" "}
+						<br /> run{" "}
 						<span className="italic underline decoration-dotted">
 							<ActionIcon
 								actionName={rule.actionInstance.action}
