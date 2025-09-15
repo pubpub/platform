@@ -86,7 +86,7 @@ export type RuleForEvent<E extends Event> = E extends E ? Extract<Rules, { event
 export type SchedulableRule = RuleForEvent<SchedulableEvent>;
 
 export type RuleConfig<Rule extends Rules = Rules> = Rule extends Rule
-	? NonNullable<Rule["additionalConfig"]>["_input"]
+	? { ruleConfig: NonNullable<Rule["additionalConfig"]>["_input"] }
 	: never;
 
 export type RuleConfigs = RuleConfig | undefined;

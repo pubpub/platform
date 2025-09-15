@@ -66,14 +66,14 @@ export const StagePanelRule = (props: Props) => {
 									/>
 									{humanReadableEventHydrated(rule.event, community, {
 										rule,
-										config: rule.config ?? undefined,
+										config: rule.config?.ruleConfig ?? undefined,
 										sourceAction: rule.sourceActionInstance,
 									})}
 								</>
 							) : (
 								humanReadableEventHydrated(rule.event, community, {
 									rule,
-									config: rule.config ?? undefined,
+									config: rule.config?.ruleConfig ?? undefined,
 									sourceAction: rule.sourceActionInstance,
 								})
 							)}

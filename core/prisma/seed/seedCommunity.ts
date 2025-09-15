@@ -1326,7 +1326,7 @@ export async function seedCommunity<
 				sourceActionInstanceId: createdActions.find(
 					(action) => action.name === rule.sourceAction
 				)?.id,
-				config: rule.config ? JSON.stringify(rule.config) : null,
+				config: rule.config,
 			})) ?? []
 	);
 

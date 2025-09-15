@@ -10,6 +10,7 @@ import type {
 	NewRules,
 	RulesId,
 } from "db/public";
+import type { RuleConfigBase } from "db/types";
 import { Event } from "db/public";
 import { expect } from "utils";
 
@@ -243,7 +244,7 @@ export async function createRuleWithCycleCheck(
 		event: Event;
 		actionInstanceId: ActionInstancesId;
 		sourceActionInstanceId?: ActionInstancesId;
-		config?: Record<string, unknown> | null;
+		config?: RuleConfigBase | null;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
@@ -283,7 +284,7 @@ export async function createRuleWithCycleCheck(
 			event: data.event,
 			actionInstanceId: data.actionInstanceId,
 			sourceActionInstanceId: data.sourceActionInstanceId,
-			config: data.config ? JSON.stringify(data.config) : null,
+			config: data.config,
 		}).executeTakeFirstOrThrow();
 		return createdRule;
 	} catch (e) {

@@ -75,8 +75,8 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 		)
 		.map((rule) => ({
 			...rule,
-			duration: rule.config?.duration || 0,
-			interval: rule.config?.interval || "minute",
+			duration: rule.config?.ruleConfig?.duration || 0,
+			interval: rule.config?.ruleConfig?.interval || "minute",
 		}));
 
 	const results = await Promise.all(

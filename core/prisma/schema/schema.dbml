@@ -345,7 +345,7 @@ Table action_runs {
   actionInstanceId String
   pub pubs
   pubId String
-  body Json
+  json Json
   config Json
   event Event
   params Json
@@ -368,7 +368,7 @@ Table rules {
   event Event [not null]
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
-  config Json
+  config Json [note: '@type(RuleConfigBase, \'../types\', true, false, true)']
   sourceActionInstanceId String
   sourceActionInstance action_instances
   createdAt DateTime [default: `now()`, not null]
