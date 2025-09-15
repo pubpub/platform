@@ -41,6 +41,10 @@ export type RunActionInstanceArgs = {
 	actionInstanceArgs?: Record<string, unknown>;
 	stack: ActionRunsId[];
 	scheduledActionRunId?: ActionRunsId;
+	/**
+	 * The config for the action instance to use when scheduling the action
+	 */
+	config: Record<string, unknown> | null;
 } & XOR<{ event: Event }, { userId: UsersId }> &
 	XOR<{ pubId: PubsId }, { json: Json }>;
 
@@ -111,7 +115,7 @@ const _runActionInstance = async (
 		...(args.actionInstance.config as Record<string, any>),
 	};
 
-	const parsedConfig = action.config.schema.safeParse(actionConfig);
+	const parsedConfig = action.config.schema.safeParse(args.config ?? actionConfig);
 
 	if (!parsedConfig.success) {
 		const err = {
@@ -154,7 +158,7 @@ const _runActionInstance = async (
 	// }
 
 	let runArgs = parsedArgs.data;
-	let config = args.actionInstance.config;
+	let config = parsedConfig.data;
 
 	let inputPubInput = pub;
 
@@ -286,10 +290,12 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 				// we are setting it to `scheduled` very briefly
 				status: ActionRunStatus.scheduled,
 				// this is a bit hacky, would be better to pass this around methinks
-				config: eb
-					.selectFrom("action_instances")
-					.select("config")
-					.where("action_instances.id", "=", args.actionInstanceId),
+				config:
+					args.config ??
+					eb
+						.selectFrom("action_instances")
+						.select("config")
+						.where("action_instances.id", "=", args.actionInstanceId),
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
 				sourceActionRunId: args.stack.at(-1),
@@ -375,22 +381,30 @@ export const runInstancesForEvent = async (
 	const instances = await trx
 		.selectFrom("action_instances")
 		.where("action_instances.stageId", "=", stageId)
-		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
-		.where("rules.event", "=", event)
-		.selectAll()
+		.select((eb) =>
+			jsonObjectFrom(
+				eb
+					.selectFrom("rules")
+					.selectAll("rules")
+					.whereRef("rules.actionInstanceId", "=", "action_instances.id")
+					.where("rules.event", "=", event)
+			).as("rule")
+		)
+		.selectAll("action_instances")
 		.execute();
 
 	const results = await Promise.all(
 		instances.map(async (instance) => {
 			return {
-				actionInstanceId: instance.actionInstanceId,
+				actionInstanceId: instance.rule?.actionInstanceId,
 				actionInstanceName: instance.name,
 				result: await runActionInstance(
 					{
 						pubId,
 						communityId,
-						actionInstanceId: instance.actionInstanceId,
+						actionInstanceId: instance.id,
 						event,
+						config: instance.rule?.config ?? null,
 						stack,
 					},
 					trx

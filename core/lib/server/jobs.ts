@@ -43,6 +43,7 @@ export type JobsClient = {
 			event: Event;
 			stack: ActionRunsId[];
 			scheduledActionRunId: ActionRunsId;
+			config: Record<string, unknown> | null;
 		} & XOR<{ pubId: PubsId }, { json: Json }>
 	): Promise<Job | ClientExceptionOptions>;
 };
@@ -73,6 +74,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 			event,
 			stack,
 			scheduledActionRunId,
+			config,
 			...jsonOrPubId
 		}) {
 			const runAt = addDuration({ duration, interval });
@@ -89,6 +91,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				stageId,
 				duration,
 				interval,
+				config,
 				runAt,
 				stack,
 				event,
@@ -107,6 +110,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						stageId,
 						community,
 						stack,
+						config,
 						scheduledActionRunId,
 						...jsonOrPubId,
 					},
@@ -123,6 +127,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					stageId,
 					duration,
 					interval,
+					config,
 					...jsonOrPubId,
 				});
 				return job;

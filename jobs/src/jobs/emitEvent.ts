@@ -1,69 +1,23 @@
-import type { Json } from "contracts";
-import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
+import type { ActionInstancesId } from "db/public";
+import type {
+	DBTriggerEventPayload,
+	EmitEventPayload,
+	Json,
+	NormalizedEventPayload,
+	PubEnteredStageEventPayload,
+	PubInStagesRow,
+	PubLeftStageEventPayload,
+	ScheduledEventPayload,
+} from "db/types";
 import type { logger } from "logger";
 import { Event } from "db/public";
 
 import type { InternalClient } from "../clients";
 import { defineJob } from "../defineJob";
 
-// TODO: Use kanel generated types for these
-type PubInStagesRow = {
-	pubId: PubsId;
-	stageId: StagesId;
-};
-
-type DBTriggerEventPayload<T> = {
-	table: string;
-	operation: string;
-	new: T;
-	old: T;
-	community: {
-		slug: string;
-	};
-};
-
-type ScheduledEventPayload = {
-	event: Event;
-	duration: number;
-	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
-	runAt: Date;
-	stageId: StagesId;
-	actionInstanceId: ActionInstancesId;
-	community: {
-		slug: string;
-	};
-	sourceActionRunId?: ActionRunsId;
-	stack?: ActionRunsId[];
-	scheduledActionRunId: ActionRunsId;
-} & (
-	| {
-			pubId: PubsId;
-			json?: never;
-	  }
-	| {
-			pubId?: never;
-			json: Json;
-	  }
-);
-
-type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
-
-type PubEnteredStageEventPayload = PubInStagesRow & {
-	event: Event.pubEnteredStage;
-	community: { slug: string };
-};
-type PubLeftStageEventPayload = PubInStagesRow & {
-	event: Event.pubLeftStage;
-	community: { slug: string };
-};
-
-type NormalizedEventPayload =
-	| PubEnteredStageEventPayload
-	| PubLeftStageEventPayload
-	| ScheduledEventPayload;
-
 type Logger = typeof logger;
 
+// TODO: Use kanel generated types for these
 const makeBaseURL = (communitySlug: string) => {
 	return `${process.env.PUBPUB_URL}/api/v0/c/${communitySlug}`;
 };
@@ -155,6 +109,7 @@ const triggerAction = async (
 		duration,
 		interval,
 		runAt,
+		config,
 		sourceActionRunId,
 		...jsonOrPubId
 	} = payload;
@@ -170,6 +125,7 @@ const triggerAction = async (
 				event,
 				scheduledActionRunId,
 				stack,
+				config: (config as Json) ?? null,
 				...jsonOrPubId,
 			},
 		});

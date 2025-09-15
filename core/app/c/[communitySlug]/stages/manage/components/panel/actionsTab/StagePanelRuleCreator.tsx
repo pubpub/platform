@@ -220,7 +220,6 @@ export const StagePanelRuleCreator = (props: Props) => {
 
 		return refineSchema(schemaWithAction);
 	}, [selectedActionInstance]);
-	console.log(selectedActionInstance);
 
 	const form = useForm<CreateRuleSchema>({
 		resolver: zodResolver(schema),

@@ -701,11 +701,18 @@ const handler = createNextHandler(
 				throw new NotFoundError(`Rule ${ruleId} not found`);
 			}
 
+			if (!body) {
+				throw new BadRequestError(
+					"Body is required for webhook, send an empty one if needed"
+				);
+			}
+
 			const actionScheduleResults = await scheduleActionInstances({
 				json: body,
 				stageId: rule.actionInstance.stageId,
 				stack: [],
 				event: Event.webhook,
+				config: rule.config?.actionConfig ?? undefined,
 			});
 
 			return {

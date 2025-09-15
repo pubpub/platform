@@ -94,7 +94,7 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 						pubId: options.pubId,
 						json: options.json,
 						status: ActionRunStatus.scheduled,
-						config: rule.actionInstance.config,
+						config: options.config ?? rule.actionInstance.config,
 						result: { scheduled: `Action scheduled for ${runAt}` },
 						event: rule.event,
 						sourceActionRunId: options.stack.at(-1),
@@ -114,6 +114,7 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 				scheduledActionRunId: scheduledActionRun.id,
 				event: rule.event,
 				...(options.pubId ? { pubId: options.pubId } : { json: options.json! }),
+				config: options.config ?? rule.actionInstance.config ?? null,
 			});
 
 			return {

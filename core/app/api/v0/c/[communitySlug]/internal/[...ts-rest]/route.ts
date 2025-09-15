@@ -3,6 +3,7 @@ import { createNextHandler } from "@ts-rest/serverless/next";
 import type { ActionInstancesId, CommunitiesId, PubsId, StagesId } from "db/public";
 import { api } from "contracts";
 import { Event } from "db/public";
+import { logger } from "logger";
 
 import { runInstancesForEvent } from "~/actions/_lib/runActionInstance";
 import { scheduleActionInstances } from "~/actions/_lib/scheduleActionInstance";
@@ -22,7 +23,7 @@ const handler = createNextHandler(
 	{
 		triggerAction: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
-			const { event, stack, scheduledActionRunId, ...rest } = body;
+			const { event, stack, scheduledActionRunId, config, ...rest } = body;
 
 			const { actionInstanceId } = params;
 			const community = await findCommunityBySlug();
@@ -30,12 +31,22 @@ const handler = createNextHandler(
 				throw new NotFoundError("Community not found");
 			}
 
+			logger.info({
+				msg: "Triggering action",
+				actionInstanceId,
+				communityId: community.id,
+				stack,
+				scheduledActionRunId,
+				config,
+				...rest,
+			});
 			const actionRunResults = await runActionInstance({
 				event: event,
 				actionInstanceId: actionInstanceId as ActionInstancesId,
 				communityId: community.id as CommunitiesId,
 				stack: stack ?? [],
 				scheduledActionRunId: scheduledActionRunId,
+				config: config ?? null,
 				...rest,
 			});
 
