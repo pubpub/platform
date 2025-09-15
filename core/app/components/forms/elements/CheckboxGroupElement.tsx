@@ -121,7 +121,7 @@ export const CheckboxGroupElement = ({
 								</FormControl>
 							</FormItem>
 						) : null}
-						<FormDescription>{config.help}</FormDescription>
+						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage data-testid="error-message" />
 					</FormItem>
 				);

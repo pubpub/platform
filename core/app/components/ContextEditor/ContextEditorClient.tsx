@@ -16,7 +16,12 @@ import { useServerAction } from "~/lib/serverActions";
 
 const ContextEditor = dynamic(() => import("context-editor").then((mod) => mod.ContextEditor), {
 	ssr: false,
-	loading: () => <Skeleton className="h-16 w-full" />,
+	// make sure this is the same height as the context editor, otherwise looks ugly
+	loading: () => (
+		<Skeleton className="h-[440px] w-full">
+			<Skeleton className="h-14 w-full rounded-b-none" />
+		</Skeleton>
+	),
 });
 
 export const ContextEditorClient = (

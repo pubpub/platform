@@ -7,6 +7,7 @@ import { fileUploadConfigSchema } from "schemas";
 
 import type { InputComponent, PubsId } from "db/public";
 import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Skeleton } from "ui/skeleton";
 
 import type { ElementProps } from "../types";
 import { useServerAction } from "~/lib/serverActions";
@@ -18,8 +19,8 @@ const FileUpload = dynamic(
 	async () => import("ui/customRenderers/fileUpload/fileUpload").then((mod) => mod.FileUpload),
 	{
 		ssr: false,
-		// TODO: add better loading state
-		loading: () => <div>Loading...</div>,
+		// TODO: make sure this is the same height as the file upload, otherwise looks ugly
+		loading: () => <Skeleton className="h-[182px] w-full" />,
 	}
 );
 
@@ -51,7 +52,7 @@ export const FileUploadElement = ({
 				render={({ field }) => {
 					// Need the isolate to keep the FileUpload's huge z-index from covering our own header
 					return (
-						<FormItem className="isolate mb-6">
+						<FormItem className="isolate">
 							<FormLabel>{label}</FormLabel>
 							<FormControl>
 								<FileUpload
@@ -64,7 +65,10 @@ export const FileUploadElement = ({
 									id={slug}
 								/>
 							</FormControl>
-							<FormDescription>{config.help}</FormDescription>
+							{config.help && <FormDescription>{config.help}</FormDescription>}
+							{field.value && field.value.length > 0 ? (
+								<FileUploadPreview files={field.value} />
+							) : null}
 							<FormMessage />
 						</FormItem>
 					);
