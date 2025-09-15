@@ -12,3 +12,8 @@ export const memberInviteFormSchema = z.object({
 	isSuperAdmin: z.boolean().default(false).optional(),
 	forms: z.array(formsIdSchema).default([]),
 });
+
+export const memberEditFormSchema = z.object({
+	role: z.nativeEnum(MemberRole).default(MemberRole.editor),
+	forms: z.array(formsIdSchema).default([]),
+});

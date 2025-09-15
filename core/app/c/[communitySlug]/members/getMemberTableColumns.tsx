@@ -2,7 +2,13 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { FormsId, UsersId } from "db/public";
+import type {
+	CommunityMembershipsId,
+	FormsId,
+	PubMembershipsId,
+	StageMembershipsId,
+	UsersId,
+} from "db/public";
 import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
@@ -16,14 +22,15 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { Info, MoreVertical } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { MoreVertical } from "ui/icon";
 
+import { EditMemberDialog } from "~/app/components/Memberships/EditMemberDialog";
 import { descriptions } from "~/app/components/Memberships/MemberInviteForm";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
 	id: UsersId;
+	memberId: CommunityMembershipsId | StageMembershipsId | PubMembershipsId;
 	avatar: string | null;
 	email: string;
 	firstName: string;
@@ -165,6 +172,18 @@ export const getMemberTableColumns = () =>
 							<DropdownMenuSeparator />
 							<div className="w-full">
 								<RemoveMemberButton member={row.original} />
+							</div>
+							<div className="w-full">
+								<EditMemberDialog
+									member={{
+										id: row.original.memberId,
+										role: row.original.role,
+										forms: row.original.forms?.map((form) => form.id) ?? [],
+									}}
+									updateMember={async () => {}}
+									membershipType={MembershipType.community}
+									availableForms={[]}
+								/>
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>

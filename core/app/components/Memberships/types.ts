@@ -1,9 +1,12 @@
 import type {
+	CommunityMembershipsId,
 	FormsId,
 	MemberRole,
 	MembershipType,
 	NewUsers,
+	PubMembershipsId,
 	PubsId,
+	StageMembershipsId,
 	StagesId,
 	UsersId,
 } from "db/public";
@@ -41,6 +44,26 @@ export type DialogProps = {
 	}: Omit<NewUsers, "slug"> & { role: MemberRole; forms: FormsId[] }) => Promise<unknown>;
 	isSuperAdmin: boolean;
 	existingMembers: UsersId[];
+	membershipType: MembershipType;
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
+};
+
+export type MemberEditDialogProps = {
+	// There's probably a better type for these functions that should be server actions
+	updateMember: ({
+		memberId,
+		role,
+		forms,
+	}: {
+		memberId: CommunityMembershipsId | StageMembershipsId | PubMembershipsId;
+		role: MemberRole;
+		forms: FormsId[];
+	}) => Promise<unknown>;
+	member: {
+		id: CommunityMembershipsId | StageMembershipsId | PubMembershipsId;
+		role: MemberRole;
+		forms: FormsId[];
+	};
 	membershipType: MembershipType;
 	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
 };

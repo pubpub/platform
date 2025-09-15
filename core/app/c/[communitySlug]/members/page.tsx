@@ -69,6 +69,7 @@ export default async function Page(props: {
 		const { id, createdAt, user, role } = member;
 		return {
 			id: user.id,
+			memberId: id,
 			avatar: user.avatar,
 			firstName: user.firstName,
 			lastName: user.lastName,
