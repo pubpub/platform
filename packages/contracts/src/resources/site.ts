@@ -359,7 +359,7 @@ export const siteApi = contract.router(
 			pathParams: z.object({
 				ruleId: z.string().uuid(),
 			}),
-			body: z.any(),
+			body: jsonSchema,
 			responses: {
 				200: z.never().optional(),
 			},

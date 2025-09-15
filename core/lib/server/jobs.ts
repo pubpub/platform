@@ -9,6 +9,7 @@ import { env } from "../env/env";
 
 import "date-fns";
 
+import type { Json } from "contracts";
 import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import { Event } from "db/public";
 
@@ -42,7 +43,7 @@ export type JobsClient = {
 			event: Event;
 			stack: ActionRunsId[];
 			scheduledActionRunId: ActionRunsId;
-		} & XOR<{ pubId: PubsId }, { body: Record<string, unknown> }>
+		} & XOR<{ pubId: PubsId }, { json: Json }>
 	): Promise<Job | ClientExceptionOptions>;
 };
 
@@ -68,17 +69,17 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 			stageId,
 			duration,
 			interval,
-			pubId,
 			community,
 			event,
 			stack,
 			scheduledActionRunId,
+			...jsonOrPubId
 		}) {
 			const runAt = addDuration({ duration, interval });
 			const jobKey = getScheduledActionJobKey({
 				stageId,
 				actionInstanceId,
-				pubId: pubId,
+				pubId: jsonOrPubId.pubId,
 				event,
 			});
 
@@ -89,10 +90,10 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				duration,
 				interval,
 				runAt,
-				pubId,
 				stack,
 				event,
 				scheduledActionRunId,
+				...jsonOrPubId,
 			});
 			try {
 				const job = await workerUtils.addJob(
@@ -104,10 +105,10 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						runAt,
 						actionInstanceId,
 						stageId,
-						pubId,
 						community,
 						stack,
 						scheduledActionRunId,
+						...jsonOrPubId,
 					},
 					{
 						runAt,
@@ -122,7 +123,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					stageId,
 					duration,
 					interval,
-					pubId,
+					...jsonOrPubId,
 				});
 				return job;
 			} catch (err) {
@@ -132,7 +133,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					stageId,
 					duration,
 					interval,
-					pubId,
+					...jsonOrPubId,
 					err: err.message,
 					stack,
 					event,

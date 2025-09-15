@@ -1,3 +1,4 @@
+import type { Json } from "contracts";
 import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
@@ -25,7 +26,7 @@ type ScheduleActionInstanceForPubOptions = Shared & {
 
 type ScheduleActionInstanceGenericOptions = Shared & {
 	pubId?: never;
-	json: Record<string, unknown>;
+	json: Json;
 };
 
 type ScheduleActionInstanceOptions =
@@ -112,7 +113,7 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 				stack: options.stack,
 				scheduledActionRunId: scheduledActionRun.id,
 				event: rule.event,
-				...(options.pubId ? { pubId: options.pubId } : { body: options.json! }),
+				...(options.pubId ? { pubId: options.pubId } : { json: options.json! }),
 			});
 
 			return {

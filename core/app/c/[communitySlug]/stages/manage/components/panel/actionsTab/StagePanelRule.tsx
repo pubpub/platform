@@ -17,12 +17,7 @@ import { cn } from "utils";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
-import {
-	getActionByName,
-	humanReadableEventBase,
-	humanReadableEventHydrated,
-	humanReadableRule,
-} from "~/actions/api";
+import { getActionByName, humanReadableEventHydrated } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 import { deleteRule } from "../../../actions";
@@ -69,21 +64,18 @@ export const StagePanelRule = (props: Props) => {
 										actionName={rule.sourceActionInstance.action}
 										className="mr-1 h-4 w-4 text-xs"
 									/>
-									{humanReadableRule(
+									{humanReadableEventHydrated(rule.event, community, {
 										rule,
-										community,
-										rule.actionInstance.name,
-										rule.config ?? undefined,
-										rule.sourceActionInstance
-									)}
+										config: rule.config ?? undefined,
+										sourceAction: rule.sourceActionInstance,
+									})}
 								</>
 							) : (
-								humanReadableRule(
+								humanReadableEventHydrated(rule.event, community, {
 									rule,
-									community,
-									rule.actionInstance.name,
-									rule.config ?? undefined
-								)
+									config: rule.config ?? undefined,
+									sourceAction: rule.sourceActionInstance,
+								})
 							)}
 						</span>
 						, run{" "}

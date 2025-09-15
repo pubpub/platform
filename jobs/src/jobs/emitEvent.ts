@@ -1,4 +1,5 @@
-import type { ActionRunsId, PubsId, StagesId } from "db/public";
+import type { Json } from "contracts";
+import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
 import type { logger } from "logger";
 import { Event } from "db/public";
 
@@ -27,21 +28,21 @@ type ScheduledEventPayload = {
 	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
 	runAt: Date;
 	stageId: StagesId;
-	actionInstanceId: string;
+	actionInstanceId: ActionInstancesId;
 	community: {
 		slug: string;
 	};
-	sourceActionRunId?: string;
+	sourceActionRunId?: ActionRunsId;
 	stack?: ActionRunsId[];
 	scheduledActionRunId: ActionRunsId;
 } & (
 	| {
 			pubId: PubsId;
-			body?: never;
+			json?: never;
 	  }
 	| {
-			body: Record<string, unknown>;
 			pubId?: never;
+			json: Json;
 	  }
 );
 
@@ -148,48 +149,58 @@ const triggerAction = async (
 		stageId,
 		stack,
 		event,
-		pubId,
 		actionInstanceId,
 		scheduledActionRunId,
 		community,
-		...context
+		duration,
+		interval,
+		runAt,
+		sourceActionRunId,
+		...jsonOrPubId
 	} = payload;
 
 	try {
+		console.log("TRIGGERING ACTION", jsonOrPubId);
 		const { status, body } = await client.triggerAction({
 			params: {
 				communitySlug: community.slug,
-				actionInstanceId,
+				actionInstanceId: actionInstanceId as ActionInstancesId,
 			},
-			body:
-				event === Event.webhook
-					? {
-							pubId: undefined,
-							event,
-							body: context.body,
-							scheduledActionRunId,
-							stack,
-						}
-					: {
-							pubId,
-							body: undefined,
-							event,
-							scheduledActionRunId,
-							stack,
-						},
+			body: {
+				event,
+				scheduledActionRunId,
+				stack,
+				...jsonOrPubId,
+			},
 		});
 
 		if (status >= 400) {
-			logger.error({ msg: `API error triggering action`, body, ...context });
+			logger.error({
+				msg: `API error triggering action`,
+				results: body,
+				...jsonOrPubId,
+				event,
+				scheduledActionRunId,
+				stack,
+				sourceActionRunId,
+			});
 			return;
 		}
 
 		if (status === 200) {
-			logger.info({ msg: "Action run results", results: body, ...context });
+			logger.info({
+				msg: "Action run results",
+				results: body,
+				...jsonOrPubId,
+				event,
+				scheduledActionRunId,
+				stack,
+				sourceActionRunId,
+			});
 		}
 	} catch (e) {
 		logger.error({
-			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${pubId}`,
+			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${jsonOrPubId.pubId ?? "json"}`,
 		});
 		if (e instanceof Error) {
 			logger.error({ message: e.message });

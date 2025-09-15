@@ -4,6 +4,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import Link from "next/link";
 
+import type { Json } from "contracts";
 import type { PubsId } from "db/public";
 import { Event } from "db/public";
 import { Badge } from "ui/badge";
@@ -11,6 +12,7 @@ import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
 import type { PubTitleProps } from "~/lib/pubs";
+import type { XOR } from "~/lib/types";
 import { PubTitle } from "~/app/components/PubTitle";
 
 export type ActionRun = {
@@ -19,7 +21,6 @@ export type ActionRun = {
 	actionInstance: { name: string; action: string } | null;
 	sourceActionInstance: { name: string; action: string } | null;
 	stage: { id: string; name: string } | null;
-	pub: PubTitleProps & { id: PubsId };
 	result: unknown;
 } & (
 	| {
@@ -34,7 +35,8 @@ export type ActionRun = {
 				lastName: string | null;
 			};
 	  }
-);
+) &
+	XOR<{ pub: PubTitleProps & { id: PubsId } }, { json: Json }>;
 
 export const getActionRunsTableColumns = (communitySlug: string) =>
 	[
@@ -77,19 +79,26 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 			},
 		},
 		{
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Pub" />,
-			accessorKey: "pub",
+			id: "input",
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Input" />,
+			accessorFn: (row) =>
+				row.pub ? { type: "pub", pub: row.pub } : { type: "json", json: row.json },
 			cell: ({ getValue }) => {
-				const pub = getValue<ActionRun["pub"]>();
-				return pub ? (
-					<Link href={`/c/${communitySlug}/pubs/${pub.id}`}>
-						<PubTitle pub={pub} />
+				const input = getValue();
+				return input?.type === "pub" ? (
+					<Link href={`/c/${communitySlug}/pubs/${input.pub.id}`}>
+						<PubTitle pub={input.pub} />
 					</Link>
 				) : (
-					"Unknown"
+					<pre>
+						<code>{JSON.stringify(input.json, null, 2)}</code>
+					</pre>
 				);
 			},
-		},
+		} satisfies ColumnDef<
+			ActionRun,
+			{ type: "pub"; pub: PubTitleProps & { id: PubsId } } | { type: "json"; json: Json }
+		>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Time" />,
 			accessorKey: "createdAt",

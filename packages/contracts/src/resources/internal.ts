@@ -9,6 +9,8 @@ import {
 	pubsIdSchema,
 } from "db/public";
 
+import { jsonSchema } from "./types";
+
 const contract = initContract();
 
 export const internalApi = contract.router(
@@ -42,7 +44,7 @@ export const internalApi = contract.router(
 			description:
 				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
 			pathParams: z.object({
-				actionInstanceId: z.string(),
+				actionInstanceId: actionInstancesIdSchema,
 			}),
 			body: z
 				.object({
@@ -56,7 +58,7 @@ export const internalApi = contract.router(
 							pubId: pubsIdSchema,
 						}),
 						z.object({
-							json: z.any(),
+							json: jsonSchema,
 						}),
 					])
 				),

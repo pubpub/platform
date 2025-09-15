@@ -2,6 +2,7 @@ import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { Json } from "contracts";
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -41,7 +42,7 @@ export type RunActionInstanceArgs = {
 	stack: ActionRunsId[];
 	scheduledActionRunId?: ActionRunsId;
 } & XOR<{ event: Event }, { userId: UsersId }> &
-	XOR<{ pubId: PubsId }, { json: Record<string, unknown> }>;
+	XOR<{ pubId: PubsId }, { json: Json }>;
 
 const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
 	trx
@@ -67,24 +68,24 @@ const _runActionInstance = async (
 	const isActionUserInitiated = "userId" in args;
 
 	const stack = [...args.stack, args.actionRunId];
-	const input =
-		args.json ??
-		(await getPubsWithRelatedValues(
-			{
-				pubId: args.pubId,
-				communityId: args.communityId,
-				userId: isActionUserInitiated ? args.userId : undefined,
-			},
-			{
-				// depth 3 is necessary for the DataCite action to fetch related
-				// contributors and their people
-				depth: 3,
-				withPubType: true,
-				withStage: true,
-			}
-		));
+	const pub = args.json
+		? null
+		: await getPubsWithRelatedValues(
+				{
+					pubId: args.pubId!,
+					communityId: args.communityId,
+					userId: isActionUserInitiated ? args.userId : undefined,
+				},
+				{
+					// depth 3 is necessary for the DataCite action to fetch related
+					// contributors and their people
+					depth: 3,
+					withPubType: true,
+					withStage: true,
+				}
+			);
 
-	if (input === undefined) {
+	if (!args.json && !pub) {
 		return {
 			error: "No input found",
 			stack,
@@ -152,21 +153,31 @@ const _runActionInstance = async (
 	// 	};
 	// }
 
+	let runArgs = parsedArgs.data;
+	let config = args.actionInstance.config;
+
+	let inputPubInput = pub;
+
 	const argsFieldOverrides = new Set<string>();
 	const configFieldOverrides = new Set<string>();
+	if (inputPubInput) {
+		runArgs = resolveWithPubfields(
+			{ ...parsedArgs.data, ...args.actionInstanceArgs },
+			inputPubInput.values,
+			argsFieldOverrides
+		);
+		config = resolveWithPubfields(
+			{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
+			inputPubInput.values,
+			configFieldOverrides
+		);
 
-	const argsWithPubfields = resolveWithPubfields(
-		{ ...parsedArgs.data, ...args.actionInstanceArgs },
-		pub.values,
-		argsFieldOverrides
-	);
-	const configWithPubfields = resolveWithPubfields(
-		{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
-		pub.values,
-		configFieldOverrides
-	);
-
-	const hydratedPubValues = args.pubId ? hydratePubValues(input.values) : args.json;
+		const hydratedPubValues = hydratePubValues(inputPubInput.values);
+		inputPubInput = {
+			...inputPubInput,
+			values: hydratedPubValues,
+		};
+	}
 
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
@@ -176,18 +187,11 @@ const _runActionInstance = async (
 	try {
 		const result = await actionRun({
 			// FIXME: get rid of any
-			config: configWithPubfields as any,
+			config: config as any,
 			configFieldOverrides,
-			...(args.json
-				? { json: args.json }
-				: {
-						pub: {
-							...pub,
-							values: hydratedPubValues,
-						},
-					}),
+			...(inputPubInput ? { pub: inputPubInput } : { json: args.json }),
 			// FIXME: get rid of any
-			args: argsWithPubfields as any,
+			args: runArgs as any,
 			argsFieldOverrides,
 			stageId: args.actionInstance.stageId,
 			communityId: args.communityId,

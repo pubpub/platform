@@ -60,7 +60,6 @@ export type RunProps<T extends Action> =
 						: ("pub" extends Acc[number]
 								? {
 										pub: ActionPub;
-										a: Acc;
 									}
 								: { pub?: never }) &
 								("json" extends Acc[number]

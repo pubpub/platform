@@ -22,7 +22,7 @@ const handler = createNextHandler(
 	{
 		triggerAction: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
-			const { pubId, event, stack, scheduledActionRunId } = body;
+			const { event, stack, scheduledActionRunId, ...rest } = body;
 
 			const { actionInstanceId } = params;
 			const community = await findCommunityBySlug();
@@ -31,12 +31,12 @@ const handler = createNextHandler(
 			}
 
 			const actionRunResults = await runActionInstance({
-				pubId: pubId,
 				event: event,
 				actionInstanceId: actionInstanceId as ActionInstancesId,
 				communityId: community.id as CommunitiesId,
 				stack: stack ?? [],
 				scheduledActionRunId: scheduledActionRunId,
+				...rest,
 			});
 
 			return {

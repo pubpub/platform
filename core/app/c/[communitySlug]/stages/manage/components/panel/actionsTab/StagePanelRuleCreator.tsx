@@ -33,6 +33,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
 import type { SequentialRuleEvent } from "~/actions/types";
 import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { addRule } from "../../../actions";
 
@@ -199,6 +200,8 @@ export const StagePanelRuleCreator = (props: Props) => {
 		},
 	});
 
+	const community = useCommunity();
+
 	const event = form.watch("event");
 	const selectedActionInstanceId = form.watch("actionInstanceId");
 	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
@@ -287,7 +290,8 @@ export const StagePanelRuleCreator = (props: Props) => {
 															<SelectValue placeholder="Event">
 																{field.value
 																	? humanReadableEventBase(
-																			field.value
+																			field.value,
+																			community
 																		)
 																	: "Event"}
 															</SelectValue>
@@ -301,7 +305,8 @@ export const StagePanelRuleCreator = (props: Props) => {
 																	data-testid={`event-select-item-${event}`}
 																>
 																	{humanReadableEventBase(
-																		event
+																		event,
+																		community
 																	)}{" "}
 																</SelectItem>
 															))}
