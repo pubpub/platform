@@ -390,10 +390,13 @@ export const addRule = defineServerAction(async function addRule({
 	}
 
 	try {
-		await createRuleWithCycleCheck({
+		const createdRule = await createRuleWithCycleCheck({
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
-			config: "additionalConfiguration" in data ? data.additionalConfiguration : null,
+			config: {
+				actionConfig: data.actionConfig ?? null,
+				ruleConfig: "ruleConfig" in data && data.ruleConfig ? data.ruleConfig : null,
+			},
 			sourceActionInstanceId:
 				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
 		});

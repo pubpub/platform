@@ -92,7 +92,8 @@ export class RegularRuleAlreadyExistsError extends RuleAlreadyExistsError {
 	}
 }
 
-export const createRule = (props: NewRules) => autoRevalidate(db.insertInto("rules").values(props));
+export const createRule = (props: NewRules) =>
+	autoRevalidate(db.insertInto("rules").values(props).returningAll());
 
 export const removeRule = (ruleId: RulesId) =>
 	autoRevalidate(db.deleteFrom("rules").where("id", "=", ruleId));

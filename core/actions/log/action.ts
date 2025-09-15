@@ -10,6 +10,10 @@ export const action = defineAction({
 	accepts: ["pub"],
 	config: {
 		schema: z.object({
+			text: z
+				.string()
+				.optional()
+				.describe("The string to log out in addition to the default parameters"),
 			debounce: z.number().optional().describe("Debounce time in milliseconds."),
 		}),
 	},
