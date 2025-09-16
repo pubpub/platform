@@ -1,12 +1,9 @@
 import type {
-	CommunityMembershipsId,
 	FormsId,
 	MemberRole,
 	MembershipType,
 	NewUsers,
-	PubMembershipsId,
 	PubsId,
-	StageMembershipsId,
 	StagesId,
 	UsersId,
 } from "db/public";
@@ -51,16 +48,16 @@ export type DialogProps = {
 export type MemberEditDialogProps = {
 	// There's probably a better type for these functions that should be server actions
 	updateMember: ({
-		memberId,
+		userId,
 		role,
 		forms,
 	}: {
-		memberId: CommunityMembershipsId | StageMembershipsId | PubMembershipsId;
+		userId: UsersId;
 		role: MemberRole;
 		forms: FormsId[];
 	}) => Promise<unknown>;
 	member: {
-		id: CommunityMembershipsId | StageMembershipsId | PubMembershipsId;
+		userId: UsersId;
 		role: MemberRole;
 		forms: FormsId[];
 	};

@@ -11,10 +11,20 @@ import { getMemberTableColumns } from "./getMemberTableColumns";
 export const MemberTable = ({
 	members,
 	availableForms,
+	updateMember,
 }: {
 	members: TableMember[];
 	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
+	updateMember: ({
+		userId,
+		role,
+		forms,
+	}: {
+		userId: TableMember["id"];
+		role: TableMember["role"];
+		forms: FormsId[];
+	}) => Promise<unknown>;
 }) => {
-	const memberTableColumns = getMemberTableColumns(availableForms);
+	const memberTableColumns = getMemberTableColumns({ availableForms, updateMember });
 	return <DataTable columns={memberTableColumns} data={members} searchBy="email" />;
 };

@@ -15,7 +15,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getSimpleForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { ContentLayout } from "../ContentLayout";
-import { addMember, createUserWithCommunityMembership } from "./actions";
+import { addMember, createUserWithCommunityMembership, updateMember } from "./actions";
 import { MemberTable } from "./MemberTable";
 
 export const metadata: Metadata = {
@@ -69,7 +69,6 @@ export default async function Page(props: {
 		const { id, createdAt, user, role } = member;
 		return {
 			id: user.id,
-			memberId: id,
 			avatar: user.avatar,
 			firstName: user.firstName,
 			lastName: user.lastName,
@@ -149,7 +148,11 @@ export default async function Page(props: {
 			}
 		>
 			<div className="m-4">
-				<MemberTable members={dedupedMembers} availableForms={availableForms} />
+				<MemberTable
+					members={dedupedMembers}
+					availableForms={availableForms}
+					updateMember={updateMember}
+				/>
 			</div>
 		</ContentLayout>
 	);
