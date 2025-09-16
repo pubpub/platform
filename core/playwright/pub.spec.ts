@@ -252,7 +252,8 @@ test.describe("Creating a pub", () => {
 		// Now update
 		await page.getByRole("link", { name: "Update" }).first().click();
 		await page.locator(".ProseMirror").click();
-
+		// move the cursor to the beginning of the editor
+		await page.keyboard.press("Home");
 		await page.keyboard.type("prefix ");
 
 		await page.getByRole("button", { name: "Save" }).click();
