@@ -20,6 +20,10 @@ type Props = {
 export const StagePanel = async (props: Props) => {
 	let open = Boolean(props.stageId);
 
+	if (!props.stageId) {
+		return null;
+	}
+
 	if (props.stageId) {
 		const stage = await getStage(props.stageId, props.user.id).executeTakeFirst();
 		if (stage === null) {
