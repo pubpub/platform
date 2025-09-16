@@ -5,6 +5,7 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
+import type { XOR } from "utils/types";
 import {
 	AuthTokenType,
 	ElementType,
@@ -13,7 +14,6 @@ import {
 	StructuralFormElement,
 } from "db/public";
 
-import type { XOR } from "../types";
 import type { GetPubTypesResult } from "./pubtype";
 import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";

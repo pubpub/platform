@@ -41,6 +41,7 @@ const meta: Meta<typeof PubCard> = {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				name: "test",
+				defaultedActionConfigKeys: null,
 			},
 		],
 	},

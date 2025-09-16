@@ -43,6 +43,7 @@ import type {
 	NewInviteInput,
 	permissionsSchema,
 } from "db/types";
+import type { MaybeHas } from "utils/types";
 import {
 	Action as ActionName,
 	CoreSchemaType,
@@ -56,7 +57,6 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
-import type { MaybeHas } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";

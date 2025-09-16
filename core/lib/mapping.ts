@@ -1,4 +1,4 @@
-import type { Prettify, TupleToCustomObject } from "./types";
+import type { Prettify } from "utils/types";
 
 /**
  * Type-safe version of Object.entries()

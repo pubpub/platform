@@ -3,6 +3,7 @@ import type { User } from "lucia";
 import { cache, Suspense } from "react";
 
 import type { Communities, CommunitiesId, UsersId } from "db/public";
+import type { MaybeHas } from "utils/types";
 import { Capabilities, MembershipType } from "db/public";
 import {
 	Activity,
@@ -33,7 +34,6 @@ import {
 } from "ui/sidebar";
 
 import type { CommunityData } from "~/lib/server/community";
-import type { MaybeHas } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";

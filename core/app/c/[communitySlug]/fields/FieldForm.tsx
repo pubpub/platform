@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { SCHEMA_TYPES_WITH_ICONS } from "schemas";
 import { z } from "zod";
 
+import type { MaybeHas } from "utils/types";
 import { CoreSchemaType } from "db/public";
 import { Checkbox } from "ui/checkbox";
 import {
@@ -23,7 +24,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { toast } from "ui/use-toast";
 import { cn } from "utils";
 
-import type { MaybeHas } from "~/lib/types";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { slugifyString } from "~/lib/string";

@@ -9,6 +9,7 @@
 		"./color": "./dist/utils-color.js",
 		".": "./dist/utils.js",
 		"./sleep": "./dist/utils-sleep.js",
+		"./types": "./dist/utils-types.js",
 		"./assert": "./dist/utils-assert.js",
 		"./try-catch": "./dist/utils-try-catch.js",
 		"./classnames": "./dist/utils-classnames.js",
@@ -39,7 +40,8 @@
 			"doi.ts",
 			"sleep.ts",
 			"uuid.ts",
-			"try-catch.ts"
+			"try-catch.ts",
+			"types.ts"
 		],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {

@@ -304,7 +304,6 @@ export default async function Page(props: {
 									<PubsRunActionDropDownMenu
 										actionInstances={actions}
 										pubId={pubId}
-										stage={stage!}
 										testId="run-action-primary"
 									/>
 								</div>
