@@ -56,7 +56,7 @@ export const MemberEditForm = ({
 
 	async function onSubmit(data: z.infer<typeof memberEditFormSchema>) {
 		const result = await runUpdateMember({
-			memberId: member.id,
+			userId: member.userId,
 			role: data.role,
 			forms: data.forms,
 		});

@@ -2,13 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type {
-	CommunityMembershipsId,
-	FormsId,
-	PubMembershipsId,
-	StageMembershipsId,
-	UsersId,
-} from "db/public";
+import type { FormsId, UsersId } from "db/public";
 import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
@@ -30,7 +24,6 @@ import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
 	id: UsersId;
-	memberId: CommunityMembershipsId | StageMembershipsId | PubMembershipsId;
 	avatar: string | null;
 	email: string;
 	firstName: string;
@@ -44,9 +37,20 @@ export type TableMember = {
 	joined: string;
 };
 
-export const getMemberTableColumns = (
-	availableForms: { id: FormsId; name: string; isDefault: boolean }[]
-) =>
+type TableColumnsProps = {
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
+	updateMember: ({
+		userId,
+		role,
+		forms,
+	}: {
+		userId: UsersId;
+		role: MemberRole;
+		forms: FormsId[];
+	}) => Promise<unknown>;
+};
+
+export const getMemberTableColumns = (props: TableColumnsProps) =>
 	[
 		{
 			id: "select",
@@ -160,7 +164,7 @@ export const getMemberTableColumns = (
 		{
 			id: "actions",
 			enableHiding: false,
-			cell: ({ row, table }) => {
+			cell: ({ row }) => {
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -178,13 +182,13 @@ export const getMemberTableColumns = (
 							<div className="w-full">
 								<EditMemberDialog
 									member={{
-										id: row.original.memberId,
+										userId: row.original.id,
 										role: row.original.role,
 										forms: row.original.forms?.map((form) => form.id) ?? [],
 									}}
-									updateMember={async () => {}}
+									updateMember={props.updateMember}
 									membershipType={MembershipType.community}
-									availableForms={availableForms}
+									availableForms={props.availableForms}
 								/>
 							</div>
 						</DropdownMenuContent>
