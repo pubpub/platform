@@ -321,6 +321,7 @@ enum Action {
   move
   googleDriveImport
   datacite
+  buildJournalSite
 }
 
 model ActionConfigDefault {
@@ -504,6 +505,9 @@ model ApiAccessToken {
   logs            ApiAccessLog[]
   PubValueHistory PubValueHistory[]
   InviteHistory   InviteHistory[]
+
+  // has unique index with isSiteBuilderToken = true and communityId
+  isSiteBuilderToken Boolean @default(false)
 
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")

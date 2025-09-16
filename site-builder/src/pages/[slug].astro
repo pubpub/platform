@@ -1,0 +1,93 @@
+---
+import { expect } from "utils/assert";
+
+import type { FileUpload } from "../layouts/Layout.astro";
+import PubAbstract from "../components/PubAbstract.astro";
+import PubContent from "../components/PubContent.astro";
+import PubHeader from "../components/PubHeader.astro";
+import PubSidebar from "../components/PubSidebar.astro";
+import Layout from "../layouts/Layout.astro";
+import { getHeader, getJournal, getJournalArticles, getPages } from "../lib/client/queries";
+import { getFieldValue } from "../lib/getValue";
+
+const { slug } = Astro.params;
+
+export async function getStaticPaths() {
+	const [pages, journal, header] = await Promise.all([
+		getPages(),
+		getJournal({
+			depth: 1,
+			withRelatedPubs: true,
+		}),
+		getHeader(),
+	]);
+
+	const paths = pages
+		.map((page) => {
+			const slug = page.values?.find((value) => value.fieldName === "Slug")?.value;
+			if (!slug) {
+				console.log(page);
+				return;
+			}
+			const layout = page.values?.find((value) => value.fieldName === "Layout")?.value;
+			if (!layout) {
+				console.log(page);
+				return;
+			}
+
+			const isPublic = page.values?.find((value) => value.fieldName === "Is Public")?.value;
+			if (!isPublic) {
+				return;
+			}
+
+			return {
+				params: {
+					slug,
+				},
+				props: { page, journal, header },
+			};
+		})
+		.filter((page) => !!page);
+
+	return paths;
+}
+
+const { page, journal, header } = Astro.props;
+
+const title = getFieldValue<string>(page, "Title");
+const description = getFieldValue<string>(page, "Description");
+const layout = getFieldValue<string>(page, "Layout");
+const avatar = getFieldValue<FileUpload | undefined>(page, "Avatar");
+
+// Assuming contributors are in the values array
+
+// Calculate months since last update
+const getMonthsAgo = (dateString: string) => {
+	if (!dateString) return "";
+	const lastEditDate = new Date(dateString);
+	const now = new Date();
+	const months =
+		(now.getFullYear() - lastEditDate.getFullYear()) * 12 +
+		now.getMonth() -
+		lastEditDate.getMonth();
+	return `${months} months ago`;
+};
+
+const formatDate = (dateString: string) => {
+	if (!dateString) return "";
+	return new Date(dateString).toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+	});
+};
+
+console.log(page);
+---
+
+<Layout journal={journal} title={title} header={header}>
+	<!-- Header Component -->
+	<div class="container mx-auto prose">
+		<div set:html={layout} />
+	</div>
+</Layout>

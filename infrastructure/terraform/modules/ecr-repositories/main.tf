@@ -39,6 +39,15 @@ resource "aws_ecr_repository" "pubpub_v7_jobs" {
   }
 }
 
+resource "aws_ecr_repository" "pubpub_v7_site_builder" {
+  name                 = "pubpub-v7-site-builder"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = false # can set this to true if we want
+  }
+}
+
 # tiny image that just removes the a path prefix
 resource "aws_ecr_repository" "nginx" {
   name                 = "nginx"

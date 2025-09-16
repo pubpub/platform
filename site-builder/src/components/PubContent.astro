@@ -1,0 +1,19 @@
+---
+export interface Props {
+	content?: string;
+}
+
+const { content } = Astro.props;
+---
+
+<div class="bg-white p-6 rounded-lg shadow-md mb-8">
+	<div class="prose max-w-none prose-zinc">
+		{
+			content ? (
+				<div set:html={content} />
+			) : (
+				<p class="text-gray-500 italic">No content available</p>
+			)
+		}
+	</div>
+</div>

@@ -41,13 +41,14 @@
 		"@types/react-dom": "catalog:react19",
 		"@types/uuid": "^9.0.8",
 		"@uiw/react-json-view": "2.0.0-alpha.27",
-		"@vitejs/plugin-react": "^4.7.0",
+		"@vitejs/plugin-react": "catalog:",
 		"prosemirror-dev-tools": "^4.2.0",
 		"storybook": "^9.1.2",
 		"styled-jsx": "^5.1.7",
 		"tailwindcss": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"dependencies": {
