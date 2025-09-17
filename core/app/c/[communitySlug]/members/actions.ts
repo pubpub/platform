@@ -216,8 +216,6 @@ export const updateMember = defineServerAction(async function updateMember({
 			};
 		}
 
-		console.log(userId, role, forms);
-
 		const result = await db.transaction().execute(async (trx) => {
 			await deleteCommunityMemberships(
 				{
@@ -247,7 +245,6 @@ export const updateMember = defineServerAction(async function updateMember({
 
 		return { success: true };
 	} catch (error) {
-		console.error(error);
 		return {
 			title: "Failed to update member",
 			error: "An unexpected error occurred",

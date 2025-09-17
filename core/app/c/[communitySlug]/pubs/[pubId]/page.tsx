@@ -44,6 +44,7 @@ import {
 	addUserWithPubMembership,
 	removePubMember,
 	setPubMemberRole,
+	updatePubMember,
 } from "./actions";
 import { PubValues } from "./components/PubValues";
 import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper";
@@ -334,6 +335,7 @@ export default async function Page(props: {
 								members={pub.members}
 								setRole={setPubMemberRole}
 								removeMember={removePubMember}
+								updateMember={updatePubMember}
 								targetId={pubId}
 								readOnly={!canRemoveMember}
 							/>

@@ -3,10 +3,12 @@
 import { useMemo } from "react";
 
 import type { UsersId } from "db/public";
+import { MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { MembersListProps, TargetId } from "./types";
 import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
+import { EditMemberDialog } from "./EditMemberDialog";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 import { RoleSelect } from "./RoleSelect";
 
@@ -14,6 +16,7 @@ export const MembersList = <T extends TargetId>({
 	members,
 	setRole,
 	removeMember,
+	updateMember,
 	targetId,
 	readOnly,
 }: MembersListProps<T>) => {
@@ -67,6 +70,18 @@ export const MembersList = <T extends TargetId>({
 									userId={user.id}
 									targetId={targetId}
 									removeMember={removeMember}
+								/>
+
+								<EditMemberDialog
+									member={{ userId: user.id, role: user.role, forms: [] }}
+									membershipType={MembershipType.stage}
+									availableForms={[]}
+									updateMember={(member) =>
+										updateMember({
+											...member,
+											targetId,
+										})
+									}
 								/>
 							</>
 						)}

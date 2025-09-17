@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UserCog } from "lucide-react";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
@@ -16,14 +17,14 @@ export const EditMemberDialog = (props: MemberEditDialogProps & { className?: st
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<Tooltip>
-				<TooltipContent>Edit a user in your community</TooltipContent>
+				<TooltipContent>Edit Member</TooltipContent>
 				<TooltipTrigger asChild>
 					<DialogTrigger asChild>
 						<Button
-							variant="outline"
+							variant="ghost"
 							className={cn("inline-flex items-center gap-x-2", props.className)}
 						>
-							<UserPlus size="16" /> Edit Member
+							Edit member <UserCog size="16" />
 						</Button>
 					</DialogTrigger>
 				</TooltipTrigger>
