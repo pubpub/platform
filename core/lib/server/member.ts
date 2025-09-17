@@ -189,6 +189,20 @@ export const deleteCommunityMemberships = (
 			.returningAll()
 	);
 
+export const deletePubMemberships = (
+	{ userId, pubId }: { userId: UsersId; pubId: PubsId },
+	trx = db
+) =>
+	autoRevalidate(
+		trx
+			.deleteFrom("pub_memberships")
+			.using("users")
+			.whereRef("users.id", "=", "pub_memberships.userId")
+			.where("users.id", "=", userId)
+			.where("pub_memberships.pubId", "=", pubId)
+			.returningAll()
+	);
+
 export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
 	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
 
