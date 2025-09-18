@@ -468,8 +468,8 @@ const createJournalArticles = async (
 					op = op.set(jaFields["Publication Date"].slug, publishedAt);
 				}
 
-				if (pub.avatar) {
-					op = op.set(jaFields.Avatar.slug, [avatar!]);
+				if (avatar) {
+					op = op.set(jaFields.Avatar.slug, [avatar]);
 				}
 
 				const draftContent = pub?.draft?.doc?.content;

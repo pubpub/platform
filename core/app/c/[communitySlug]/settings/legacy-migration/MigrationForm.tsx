@@ -88,6 +88,8 @@ export function MigrationForm() {
 							<FormSubmitButton
 								formState={form.formState}
 								idleText="Import from Legacy"
+								pendingText="Importing..."
+								successText="Import successful"
 							/>
 						</FormItem>
 					)}
@@ -437,6 +439,8 @@ export function UndoMigrationForm({
 							<FormSubmitButton
 								formState={form.formState}
 								idleText="Undo Migration"
+								pendingText="Undoing Migration..."
+								successText="Migration Undone"
 							/>
 							{/* </AlertDialogAction> */}
 						</AlertDialogFooter>
