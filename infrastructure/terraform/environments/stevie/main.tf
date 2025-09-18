@@ -42,10 +42,10 @@ locals {
   pubpub_hostname = "app.pubpub.org"
   route53_zone_id = "Z00255803PJ09HVWNKPVY"
   ecr_repository_urls = {
-    core             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
-    jobs             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
-    nginx            = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
-    root             = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
+    core  = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-core"
+    jobs  = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7-jobs"
+    nginx = "246372085946.dkr.ecr.us-east-1.amazonaws.com/nginx"
+    root  = "246372085946.dkr.ecr.us-east-1.amazonaws.com/pubpub-v7"
   }
 
   MAILGUN_SMTP_USERNAME           = "v7@mg.pubpub.org"

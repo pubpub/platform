@@ -101,7 +101,9 @@ module "service_core" {
       { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
-      { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host }
+      { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host },
+      // FIXME: REPLACE WITH ACTUAL SITE BUILDER ENDPOINT ONCE WE SET IT UP
+      { name = "SITE_BUILDER_ENDPOINT", value = "https://bob.pubpub.org" }
     ]
 
     secrets = [
