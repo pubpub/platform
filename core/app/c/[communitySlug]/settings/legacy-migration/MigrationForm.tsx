@@ -81,7 +81,7 @@ export function MigrationForm() {
 								}}
 							/>
 							<FormDescription>
-								Upload the <code>static.json</code> file that's included in the{" "}
+								Upload the <code>export.json</code> file that's included in the{" "}
 								<code>.zip</code> file from your Legacy export
 							</FormDescription>
 							<FormMessage />
