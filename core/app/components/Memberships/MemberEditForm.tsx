@@ -23,6 +23,7 @@ import { toast } from "ui/use-toast";
 
 import type { MemberEditDialogProps } from "./types";
 import { didSucceed, useServerAction } from "~/lib/serverActions";
+import { updateMember } from "./actions";
 import { memberEditFormSchema } from "./memberInviteFormSchema";
 
 export const descriptions: Record<MembershipType, string> = {
@@ -36,8 +37,8 @@ export const descriptions: Record<MembershipType, string> = {
 
 export const MemberEditForm = ({
 	member,
-	updateMember,
 	closeForm,
+	membershipTargetId,
 	membershipType,
 	availableForms,
 }: MemberEditDialogProps & {
@@ -59,12 +60,14 @@ export const MemberEditForm = ({
 			userId: member.userId,
 			role: data.role,
 			forms: data.forms,
+			targetId: membershipTargetId,
+			targetType: membershipType,
 		});
 
 		if (didSucceed(result)) {
 			toast({
 				title: "Success",
-				description: "Member added successfully",
+				description: "Member updated successfully",
 			});
 
 			closeForm();

@@ -1,4 +1,5 @@
 import type {
+	CommunitiesId,
 	FormsId,
 	MemberRole,
 	MembershipType,
@@ -10,18 +11,13 @@ import type {
 
 import type { SafeUser } from "~/lib/server/user";
 
-export type TargetId = PubsId | StagesId;
+export type TargetId = CommunitiesId | PubsId | StagesId;
 
 export type MembersListProps<T extends TargetId> = {
-	members: (SafeUser & { role: MemberRole })[];
+	members: (SafeUser & { role: MemberRole; formId: FormsId | null })[];
+	membershipType: MembershipType;
 	setRole: (targetId: T, role: MemberRole, userId: UsersId) => Promise<unknown>;
 	removeMember: (userId: UsersId, targetId: T) => Promise<unknown>;
-	updateMember: (params: {
-		userId: UsersId;
-		role: MemberRole;
-		forms: FormsId[];
-		targetId: T;
-	}) => Promise<unknown>;
 	readOnly: boolean;
 	targetId: T;
 	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
@@ -53,21 +49,12 @@ export type DialogProps = {
 };
 
 export type MemberEditDialogProps = {
-	// There's probably a better type for these functions that should be server actions
-	updateMember: ({
-		userId,
-		role,
-		forms,
-	}: {
-		userId: UsersId;
-		role: MemberRole;
-		forms: FormsId[];
-	}) => Promise<unknown>;
 	member: {
 		userId: UsersId;
 		role: MemberRole;
 		forms: FormsId[];
 	};
+	membershipTargetId: TargetId;
 	membershipType: MembershipType;
 	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
 	minimal?: boolean;

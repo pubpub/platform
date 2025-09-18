@@ -15,7 +15,7 @@ import { findCommunityBySlug } from "~/lib/server/community";
 import { getSimpleForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
 import { ContentLayout } from "../ContentLayout";
-import { addMember, createUserWithCommunityMembership, updateMember } from "./actions";
+import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
 
 export const metadata: Metadata = {
@@ -151,7 +151,7 @@ export default async function Page(props: {
 				<MemberTable
 					members={dedupedMembers}
 					availableForms={availableForms}
-					updateMember={updateMember}
+					communityId={community.id}
 				/>
 			</div>
 		</ContentLayout>

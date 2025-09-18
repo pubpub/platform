@@ -2,42 +2,72 @@
 
 import { useMemo } from "react";
 
-import type { UsersId } from "db/public";
-import { MembershipType } from "db/public";
+import type { FormsId, UsersId } from "db/public";
+import { MemberRole } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 
 import type { MembersListProps, TargetId } from "./types";
+import type { SafeUser } from "~/lib/server/user";
 import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
 import { EditMemberDialog } from "./EditMemberDialog";
 import { RemoveMemberButton } from "./RemoveMemberButton";
-import { RoleSelect } from "./RoleSelect";
+
+const dedupeMembers = (
+	members: (SafeUser & {
+		role: MemberRole;
+		formId: FormsId | null;
+	})[],
+	availableForms: {
+		id: FormsId;
+		name: string;
+		isDefault: boolean;
+	}[]
+) => {
+	const dedupedMembersMap = new Map<any, any>();
+	for (const { formId, ...member } of members) {
+		const correspondingForm = availableForms.find((f) => f.id === formId);
+		if (!dedupedMembersMap.has(member.id)) {
+			const forms =
+				correspondingForm && member.role === MemberRole.contributor
+					? [correspondingForm.id]
+					: [];
+			dedupedMembersMap.set(member.id, {
+				...member,
+				forms,
+			});
+			continue;
+		}
+
+		const m = dedupedMembersMap.get(member.id);
+
+		if (m && m.role === MemberRole.contributor && member.role === MemberRole.contributor) {
+			const forms = [...(m.forms ?? []), ...(correspondingForm ? [formId] : [])];
+			dedupedMembersMap.set(member.id, {
+				...member,
+				forms,
+			});
+			continue;
+		}
+
+		if (m && compareMemberRoles(member.role, ">", m.role)) {
+			dedupedMembersMap.set(member.id, m);
+		}
+	}
+	return dedupedMembersMap;
+};
 
 export const MembersList = <T extends TargetId>({
 	members,
-	setRole,
+	membershipType,
 	removeMember,
-	updateMember,
 	targetId,
 	readOnly,
 	availableForms,
 }: MembersListProps<T>) => {
-	const dedupedMembers = useMemo(() => {
-		const dedupedMembers = new Map<UsersId, MembersListProps<T>["members"][number]>();
-		for (const member of members) {
-			if (!dedupedMembers.has(member.id)) {
-				dedupedMembers.set(member.id, member);
-			} else {
-				const m = dedupedMembers.get(member.id);
-				if (m && compareMemberRoles(member.role, ">", m.role)) {
-					dedupedMembers.set(member.id, m);
-				}
-			}
-		}
-		return dedupedMembers;
-	}, [members]);
+	const finalMembers = dedupeMembers(members, availableForms);
 	return (
 		<>
-			{[...dedupedMembers.values()].map((user) => (
+			{[...finalMembers.values()].map((user) => (
 				<div key={user.id} className="flex items-center justify-between gap-4">
 					<div className="flex items-center">
 						<Avatar className="mr-2 h-9 w-9">
@@ -66,15 +96,10 @@ export const MembersList = <T extends TargetId>({
 									removeMember={removeMember}
 								/>
 								<EditMemberDialog
-									member={{ userId: user.id, role: user.role, forms: [] }}
-									membershipType={MembershipType.stage}
+									member={{ userId: user.id, role: user.role, forms: user.forms }}
+									membershipTargetId={targetId}
+									membershipType={membershipType}
 									availableForms={availableForms}
-									updateMember={(member) =>
-										updateMember({
-											...member,
-											targetId,
-										})
-									}
 									minimal
 								/>
 							</>

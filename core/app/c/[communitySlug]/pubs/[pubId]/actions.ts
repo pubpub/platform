@@ -7,11 +7,9 @@ import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { ApiError } from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { deletePubMemberships, insertPubMemberships } from "~/lib/server/member";
+import { insertPubMemberships } from "~/lib/server/member";
 import { createUserWithMemberships } from "~/lib/server/user";
 
 export const removePubMember = defineServerAction(async function removePubMember(
@@ -80,82 +78,6 @@ export const addPubMember = defineServerAction(async function addPubMember(
 				error: "User is already a member of this pub",
 			};
 		}
-	}
-});
-
-export const updatePubMember = defineServerAction(async function updatePubMember({
-	userId,
-	role,
-	forms,
-	targetId,
-}: {
-	userId: UsersId;
-	role: MemberRole;
-	forms: FormsId[];
-	targetId: PubsId;
-}) {
-	try {
-		const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
-
-		if (!user) {
-			return {
-				error: ApiError.NOT_LOGGED_IN,
-			};
-		}
-
-		if (!community) {
-			return {
-				error: ApiError.COMMUNITY_NOT_FOUND,
-			};
-		}
-
-		if (
-			!(await userCan(
-				Capabilities.removePubMember,
-				{ type: MembershipType.pub, pubId: targetId },
-				user.id
-			))
-		) {
-			return {
-				title: "Unauthorized",
-				error: "You are not authorized to update a stage member",
-			};
-		}
-
-		const result = await db.transaction().execute(async (trx) => {
-			await deletePubMemberships(
-				{
-					pubId: targetId,
-					userId,
-				},
-				trx
-			).execute();
-
-			return insertPubMemberships(
-				{
-					pubId: targetId,
-					userId,
-					role,
-					forms: role === MemberRole.contributor ? forms : [],
-				},
-				trx
-			).execute();
-		});
-
-		if (!result) {
-			return {
-				title: "Failed to update member",
-				error: "An unexpected error occurred",
-			};
-		}
-
-		return { success: true };
-	} catch (error) {
-		return {
-			title: "Failed to update member",
-			error: "An unexpected error occurred",
-			cause: error,
-		};
 	}
 });
 

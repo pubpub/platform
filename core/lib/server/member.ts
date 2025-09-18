@@ -246,6 +246,26 @@ export const insertStageMemberships = (
 	trx = db
 ) => autoRevalidate(trx.insertInto("stage_memberships").values(getMembershipRows(membership)));
 
+export const deleteStageMemberships = (
+	params: { communityId: CommunitiesId; userId: UsersId },
+	trx?: typeof db
+) => {
+	const executor = trx ?? db;
+	return autoRevalidate(
+		executor
+			.deleteFrom("stage_memberships")
+			.where("stage_memberships.userId", "=", params.userId)
+			.where(
+				"stage_memberships.stageId",
+				"in",
+				executor
+					.selectFrom("stages")
+					.select("stages.id")
+					.where("stages.communityId", "=", params.communityId)
+			)
+	);
+};
+
 export const insertStageMembershipsOverrideRole = (
 	props: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db

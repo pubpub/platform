@@ -5,6 +5,7 @@ import type {
 	ActionInstances,
 	CommunitiesId,
 	FormElementsId,
+	FormsId,
 	PubFields,
 	PubFieldsId,
 	PubsId,
@@ -239,10 +240,15 @@ type MaybePubPubType<Options extends MaybePubOptions> = Options["withPubType"] e
  * Only add the `members` if the `withMembers` option has not been set to `false`
  */
 type MaybePubMembers<Options extends MaybePubOptions> = Options["withMembers"] extends true
-	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole })[] }
+	? { members: (Omit<Users, "passwordHash"> & { role: MemberRole; formId: FormsId | null })[] }
 	: Options["withMembers"] extends false
 		? { members?: never }
-		: { members?: (Omit<Users, "passwordHash"> & { role: MemberRole })[] };
+		: {
+				members?: (Omit<Users, "passwordHash"> & {
+					role: MemberRole;
+					formId: FormsId | null;
+				})[];
+			};
 
 type MaybePubRelatedPub<Options extends MaybePubOptions> = Options["withRelatedPubs"] extends false
 	? { relatedPub?: never; relatedPubId: PubsId | null }

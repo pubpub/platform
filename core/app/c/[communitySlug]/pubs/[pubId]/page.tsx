@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { cache } from "react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { BookOpen, Eye } from "lucide-react";
 
 import type { CommunitiesId, PubsId } from "db/public";
@@ -47,7 +47,6 @@ import {
 	addUserWithPubMembership,
 	removePubMember,
 	setPubMemberRole,
-	updatePubMember,
 } from "./actions";
 import { PubValues } from "./components/PubValues";
 import { RelatedPubsTableWrapper } from "./components/RelatedPubsTableWrapper";
@@ -344,9 +343,9 @@ export default async function Page(props: {
 									</div>
 									<MembersList
 										members={pub.members}
+										membershipType={MembershipType.pub}
 										setRole={setPubMemberRole}
 										removeMember={removePubMember}
-										updateMember={updatePubMember}
 										targetId={pubId}
 										readOnly={!canRemoveMember}
 										availableForms={availableViewForms}

@@ -18,7 +18,6 @@ import {
 	addUserWithStageMembership,
 	removeStageMember,
 	setStageMemberRole,
-	updateStageMember,
 } from "../../actions";
 
 type PropsInner = {
@@ -54,9 +53,9 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 				</div>
 				<MembersList
 					members={members}
+					membershipType={MembershipType.stage}
 					setRole={setStageMemberRole}
 					removeMember={removeStageMember}
-					updateMember={updateStageMember}
 					targetId={stageId}
 					readOnly={!canManage}
 					availableForms={availableForms}

@@ -72,26 +72,6 @@ async function deleteMoveConstraints(moveConstraintIds: StagesId[]) {
 	).execute();
 }
 
-function deleteStageMemberships(
-	params: { communityId: CommunitiesId; userId: UsersId },
-	trx?: typeof db
-) {
-	const executor = trx ?? db;
-	return autoRevalidate(
-		executor
-			.deleteFrom("stage_memberships")
-			.where("stage_memberships.userId", "=", params.userId)
-			.where(
-				"stage_memberships.stageId",
-				"in",
-				executor
-					.selectFrom("stages")
-					.select("stages.id")
-					.where("stages.communityId", "=", params.communityId)
-			)
-	);
-}
-
 export const createStage = defineServerAction(async function createStage(
 	communityId: CommunitiesId,
 	id: StagesId
@@ -577,82 +557,6 @@ export const addStageMember = defineServerAction(async function addStageMember(
 				error: "User is already a member of this stage",
 			};
 		}
-	}
-});
-
-export const updateStageMember = defineServerAction(async function updateStageMember({
-	userId,
-	role,
-	forms,
-	targetId,
-}: {
-	userId: UsersId;
-	role: MemberRole;
-	forms: FormsId[];
-	targetId: StagesId;
-}) {
-	try {
-		const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
-
-		if (!user) {
-			return {
-				error: ApiError.NOT_LOGGED_IN,
-			};
-		}
-
-		if (!community) {
-			return {
-				error: ApiError.COMMUNITY_NOT_FOUND,
-			};
-		}
-
-		if (
-			!(await userCan(
-				Capabilities.removeStageMember,
-				{ type: MembershipType.stage, stageId: targetId },
-				user.id
-			))
-		) {
-			return {
-				title: "Unauthorized",
-				error: "You are not authorized to update a stage member",
-			};
-		}
-
-		const result = await db.transaction().execute(async (trx) => {
-			await deleteStageMemberships(
-				{
-					communityId: community.id,
-					userId,
-				},
-				trx
-			).execute();
-
-			return insertStageMemberships(
-				{
-					stageId: targetId,
-					userId,
-					role,
-					forms: role === MemberRole.contributor ? forms : [],
-				},
-				trx
-			).execute();
-		});
-
-		if (!result) {
-			return {
-				title: "Failed to update member",
-				error: "An unexpected error occurred",
-			};
-		}
-
-		return { success: true };
-	} catch (error) {
-		return {
-			title: "Failed to update member",
-			error: "An unexpected error occurred",
-			cause: error,
-		};
 	}
 });
 
