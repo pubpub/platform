@@ -206,11 +206,14 @@ function FormFieldObject({
 				const inputType =
 					fieldConfigItem.fieldType ?? DEFAULT_ZOD_HANDLERS[zodBaseType] ?? "fallback";
 
+				console.log(inputType);
+
 				const typeToUse =
 					additionalType && additionalType in INPUT_COMPONENTS
 						? (additionalType as keyof typeof INPUT_COMPONENTS)
 						: inputType;
 
+				console.log(typeToUse);
 				const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
 
 				// fully rendered component

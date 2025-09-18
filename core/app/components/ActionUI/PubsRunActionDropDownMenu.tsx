@@ -1,18 +1,18 @@
 import "server-only";
 
-import type { ActionInstances, PubsId, Stages } from "db/public";
+import type { PubsId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 import { cn } from "utils";
 
-import { ActionRunFormWrapper } from "~/app/components/ActionUI/ActionRunFormWrapper";
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
+import { ActionRunForm } from "./ActionRunForm";
 
 export type PubsRunActionDropDownMenuProps = {
-	actionInstances: ActionInstances[];
+	actionInstances: ActionInstanceWithConfigDefaults[];
 	pubId: PubsId;
-	stage: Stages;
 	testId?: string;
 	/* accessible text for the button */
 	buttonText?: string;
@@ -22,11 +22,9 @@ export type PubsRunActionDropDownMenuProps = {
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
-	stage,
 	testId,
 	iconOnly,
 	buttonText,
-
 	...buttonProps
 }: PubsRunActionDropDownMenuProps) => {
 	if (!actionInstances.length) {
@@ -52,11 +50,11 @@ export const PubsRunActionDropDownMenu = async ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<ActionRunFormWrapper
-						stage={stage}
+					<ActionRunForm
+						key={actionInstance.id}
+						defaultFields={actionInstance.defaultedActionConfigKeys ?? []}
 						pubId={pubId}
 						actionInstance={actionInstance}
-						key={actionInstance.id}
 					/>
 				))}
 			</DropdownMenuContent>

@@ -5,13 +5,14 @@ import { isEnabled } from "@sentry/nextjs";
 import { skipToken } from "@tanstack/react-query";
 
 import type { Communities, CommunityMembershipsId } from "db/public";
-import { FormItem, FormLabel } from "ui/form";
+import { FormItem, FormLabel, useFormField } from "ui/form";
 import { PubFieldSelectorToggleButton } from "ui/pubFields";
 import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
 
 import type { MemberSelectUserWithMembership } from "./types";
 import { client } from "~/lib/api";
+import { useCommunity } from "../providers/CommunityProvider";
 import { MemberSelectClient } from "./MemberSelectClient";
 
 /** Hook to wrap all API calls/status for user search */
@@ -71,22 +72,21 @@ const useMemberSelectData = ({
 };
 
 type Props = {
-	community: Communities;
-	fieldLabel: string;
 	fieldName: string;
+	fieldLabel: string;
 	value?: CommunityMembershipsId;
 	allowPubFieldSubstitution?: boolean;
 	helpText?: string;
 };
 
 export function MemberSelectClientFetch({
-	community,
-	fieldLabel,
 	fieldName,
+	fieldLabel,
 	value,
 	helpText,
 	allowPubFieldSubstitution = true,
 }: Props) {
+	const community = useCommunity();
 	const [search, setSearch] = useState("");
 	const { initialized, user, users, refetchUsers } = useMemberSelectData({
 		community,

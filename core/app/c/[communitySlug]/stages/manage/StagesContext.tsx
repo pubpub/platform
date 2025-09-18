@@ -144,7 +144,7 @@ type DeleteBatch = {
 	moveConstraintIds: StagesId[];
 };
 
-export const StagesProvider = (props: StagesProviderProps) => {
+export const StagesManageProvider = (props: StagesProviderProps) => {
 	const runCreateStage = useServerAction(actions.createStage);
 	const runDeleteStagesAndMoveConstraints = useServerAction(
 		actions.deleteStagesAndMoveConstraints

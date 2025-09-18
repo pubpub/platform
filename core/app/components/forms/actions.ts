@@ -1,9 +1,9 @@
 "use server";
 
 import type { CommunitiesId, FormsId, PubsId } from "db/public";
+import type { XOR } from "utils/types";
 import { logger } from "logger";
 
-import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { env } from "~/lib/env/env";
 import { ApiError, generateSignedAssetUploadUrl } from "~/lib/server";

@@ -2,14 +2,13 @@ import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
 import type { PubsId } from "db/public";
+import type { XOR } from "utils/types";
 
 import type { NoticeParams } from "~/app/components/Notice";
-import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCanViewStagePage } from "~/lib/authorization/capabilities";
 import { getCommunitySlug } from "../cache/getCommunitySlug";
 import { findCommunityBySlug } from "../community";
-import { getStagesViewableByUser } from "../stages";
 
 const defaultLoginRedirectError = {
 	type: "error",

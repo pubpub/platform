@@ -15,6 +15,7 @@ import { getDefaultValueByCoreSchemaType, getJsonSchemaByCoreSchemaType } from "
 
 import type { JsonValue, ProcessedPubWithForm } from "contracts";
 import type { PubsId, StagesId } from "db/public";
+import type { DefinitelyHas } from "utils/types";
 import { CoreSchemaType, ElementType } from "db/public";
 import { Form } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
@@ -29,7 +30,6 @@ import type {
 	RelatedFieldValue,
 	SingleFormValues,
 } from "~/app/components/forms/types";
-import type { DefinitelyHas } from "~/lib/types";
 import { useContextEditorContext } from "~/app/components/ContextEditor/ContextEditorContext";
 import { EvilContextEditorSymbol } from "~/app/components/forms/elements/ContextEditorElement";
 import { useFormElementToggleContext } from "~/app/components/forms/FormElementToggleContext";

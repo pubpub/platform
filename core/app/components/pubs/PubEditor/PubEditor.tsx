@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import type { ProcessedPub } from "contracts";
 import type { Communities, CommunitiesId, FormsId, PubsId, PubTypesId, StagesId } from "db/public";
 import { Capabilities, CoreSchemaType, MembershipType } from "db/public";
+import { stagesDAO, StagesProvider, StagesSelectField } from "ui/stages";
 import { expect } from "utils";
 
 import type {
@@ -34,7 +35,6 @@ import { FormElementToggleProvider } from "../../forms/FormElementToggleContext"
 import { PubFieldFormElement } from "../../forms/PubFieldFormElement";
 import { hydrateMarkdownElements } from "../../forms/structural";
 import { PubFormProvider } from "../../providers/PubFormProvider";
-import { StageSelectClient } from "../../StageSelect/StageSelectClient";
 import { RELATED_PUB_SLUG } from "./constants";
 import { makeFormElementDefFromPubFields } from "./helpers";
 import { PubEditorWrapper } from "./PubEditorWrapper";
@@ -319,72 +319,72 @@ export async function PubEditor(props: PubEditorProps) {
 		<PubFormProvider
 			form={{ pubId: pubEditorData.pubId, form, mode: props.mode, isExternalForm: false }}
 		>
-			<FormElementToggleProvider fieldSlugs={pubEditorData.allSlugs}>
-				<ContextEditorContextProvider
-					pubId={pubEditorData.pubId}
-					pubTypeId={props.pubTypeId}
-					pubs={pubEditorData.pubsForContext}
-					pubTypes={pubTypes}
-				>
-					<PubEditorWrapper
-						elements={[
-							...form.elements,
-							...(pubEditorData.pubOnlyElementDefinitions ?? []),
-							...(relatedPubData ? [relatedPubData.element] : []),
-						]}
-						pub={pubEditorData.pubForForm}
-						formSlug={form.slug}
-						mode={props.mode}
-						withAutoSave={false}
-						withButtonElements
-						htmlFormId={props.htmlFormId}
-						stageId={pubEditorData.currentStageId}
-						relatedPub={
-							relatedPubData
-								? {
-										relatedPubId: relatedPubData.relatedPub.id,
-										relatedFieldSlug: relatedPubData.relatedPubField.slug,
-									}
-								: undefined
-						}
+			<StagesProvider stages={stagesDAO(stages)}>
+				<FormElementToggleProvider fieldSlugs={pubEditorData.allSlugs}>
+					<ContextEditorContextProvider
+						pubId={pubEditorData.pubId}
+						pubTypeId={props.pubTypeId}
+						pubs={pubEditorData.pubsForContext}
+						pubTypes={pubTypes}
 					>
-						<>
-							{relatedPubData ? (
-								<RelatedPubValueElement
-									relatedPub={relatedPubData.relatedPub}
-									element={relatedPubData.element}
-									fieldName={relatedPubData.relatedPubField.name}
-								/>
-							) : null}
-							{canMovePub && (
-								<StageSelectClient
-									fieldLabel="Stage"
-									fieldName="stageId"
-									stages={stages}
-								/>
-							)}
+						<PubEditorWrapper
+							elements={[
+								...form.elements,
+								...(pubEditorData.pubOnlyElementDefinitions ?? []),
+								...(relatedPubData ? [relatedPubData.element] : []),
+							]}
+							pub={pubEditorData.pubForForm}
+							formSlug={form.slug}
+							mode={props.mode}
+							withAutoSave={false}
+							withButtonElements
+							htmlFormId={props.htmlFormId}
+							stageId={pubEditorData.currentStageId}
+							relatedPub={
+								relatedPubData
+									? {
+											relatedPubId: relatedPubData.relatedPub.id,
+											relatedFieldSlug: relatedPubData.relatedPubField.slug,
+										}
+									: undefined
+							}
+						>
+							<>
+								{relatedPubData ? (
+									<RelatedPubValueElement
+										relatedPub={relatedPubData.relatedPub}
+										element={relatedPubData.element}
+										fieldName={relatedPubData.relatedPubField.name}
+									/>
+								) : null}
+								{canMovePub && (
+									<StagesSelectField fieldLabel="Stage" fieldName="stageId" />
+								)}
 
-							{form.elements.map((e) => (
-								<FormElement
-									key={e.id}
-									pubId={pubEditorData.pubId}
-									element={e}
-									values={pubEditorData.pub?.values ?? []}
-								/>
-							))}
-							{pubEditorData.pubOnlyElementDefinitions &&
-								pubEditorData.pubOnlyElementDefinitions.map((formElementDef) => (
+								{form.elements.map((e) => (
 									<FormElement
-										key={formElementDef.slug}
-										element={formElementDef as FormElements}
+										key={e.id}
 										pubId={pubEditorData.pubId}
+										element={e}
 										values={pubEditorData.pub?.values ?? []}
 									/>
 								))}
-						</>
-					</PubEditorWrapper>
-				</ContextEditorContextProvider>
-			</FormElementToggleProvider>
+								{pubEditorData.pubOnlyElementDefinitions &&
+									pubEditorData.pubOnlyElementDefinitions.map(
+										(formElementDef) => (
+											<FormElement
+												key={formElementDef.slug}
+												element={formElementDef as FormElements}
+												pubId={pubEditorData.pubId}
+												values={pubEditorData.pub?.values ?? []}
+											/>
+										)
+									)}
+							</>
+						</PubEditorWrapper>
+					</ContextEditorContextProvider>
+				</FormElementToggleProvider>
+			</StagesProvider>
 		</PubFormProvider>
 	);
 }

@@ -1,6 +1,8 @@
+import type { ExpressionBuilder } from "kysely";
+
 import { cache } from "react";
 import { QueryCreator, sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
@@ -136,6 +138,25 @@ type CommunityStageOptions = {
 	withMembers?: "count" | "full" | false;
 };
 
+export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
+	return (
+		eb
+			.selectFrom("action_config_defaults")
+			.whereRef("action_config_defaults.action", "=", "action_instances.action")
+			// only select the keys to prevent possibly leaking "secrets"
+			.select((eb) =>
+				eb.fn
+					.coalesce(
+						sql<
+							string[]
+						>`array(select jsonb_object_keys("action_config_defaults"."config"))`,
+						sql<string[]>`'{}'::text[]`
+					)
+					.as("defaultedConfigKeys")
+			)
+	);
+};
+
 /**
  * Get all stages the given user has access to
  */
@@ -205,6 +226,9 @@ export const getStages = (
 							.selectFrom("action_instances")
 							.whereRef("action_instances.stageId", "=", "stages.id")
 							.selectAll("action_instances")
+							.select((eb) =>
+								actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
+							)
 					).as("actionInstances")
 				)
 			)

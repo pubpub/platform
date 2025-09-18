@@ -2,10 +2,11 @@ import mudder from "mudder";
 import { defaultComponent } from "schemas";
 
 import type { FormElementsId } from "db/public";
+import type { DefinitelyHas } from "utils/types";
 import { ElementType } from "db/public";
 
 import type { BasicPubFieldElement } from "../../forms/types";
-import type { DefinitelyHas, PubField } from "~/lib/types";
+import type { PubField } from "~/lib/types";
 
 // Function to create an element object based on pubType parameter
 export function makeFormElementDefFromPubFields(

@@ -15,9 +15,9 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import type { XOR } from "utils/types";
 import { MemberRole } from "db/public";
 
-import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";

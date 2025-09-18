@@ -10,10 +10,10 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import type { XOR } from "utils/types";
 import { Capabilities, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
-import type { XOR } from "../types";
 import type {
 	CommunityTargetCapabilities,
 	PubTargetCapabilities,

@@ -21,7 +21,7 @@ export class MembersPage {
 	}
 
 	async searchMembers(email: string) {
-		await this.page.getByPlaceholder("Search table by email").fill(email);
+		await this.page.getByPlaceholder("Search table by email").pressSequentially(email);
 	}
 
 	async openAddMemberDialog() {

@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 
 import type { PubsId, StagesId, UsersId } from "db/public";
+import type { XOR } from "utils/types";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { ChevronDown, FlagTriangleRightIcon } from "ui/icon";
 
 import type { CommunityStage } from "~/lib/server/stages";
-import type { XOR } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { makeStagesById } from "~/lib/stages";
