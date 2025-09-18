@@ -5,7 +5,6 @@ import { UserCog } from "lucide-react";
 
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "ui/dialog";
-import { UserPlus } from "ui/icon";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
@@ -24,7 +23,8 @@ export const EditMemberDialog = (props: MemberEditDialogProps & { className?: st
 							variant="ghost"
 							className={cn("inline-flex items-center gap-x-2", props.className)}
 						>
-							Edit member <UserCog size="16" />
+							{!props.minimal && <>Edit member </>}
+							<UserCog size="16" />
 						</Button>
 					</DialogTrigger>
 				</TooltipTrigger>

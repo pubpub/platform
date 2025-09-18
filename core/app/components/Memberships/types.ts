@@ -24,6 +24,7 @@ export type MembersListProps<T extends TargetId> = {
 	}) => Promise<unknown>;
 	readOnly: boolean;
 	targetId: T;
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
 };
 
 export type DialogProps = {
@@ -69,4 +70,5 @@ export type MemberEditDialogProps = {
 	};
 	membershipType: MembershipType;
 	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
+	minimal?: boolean;
 };
