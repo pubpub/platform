@@ -148,7 +148,11 @@ export default async function Page(props: {
 			}
 		>
 			<div className="m-4">
-				<MemberTable members={dedupedMembers} />
+				<MemberTable
+					members={dedupedMembers}
+					availableForms={availableForms}
+					communityId={community.id}
+				/>
 			</div>
 		</ContentLayout>
 	);
