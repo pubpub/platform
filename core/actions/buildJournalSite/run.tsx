@@ -4,6 +4,7 @@ import { initClient } from "@ts-rest/core";
 
 import { siteBuilderApi } from "contracts/resources/site-builder";
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { action } from "./action";
 import { env } from "~/lib/env/env";
@@ -27,7 +28,11 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		},
 	});
 
-	const health = await siteBuilderClient.health();
+	const [healthError, health] = await tryCatch(siteBuilderClient.health());
+	if (healthError) {
+		logger.error({ msg: "Site builder server is not healthy", healthError });
+		throw new Error("Site builder server cannot be reached");
+	}
 	if (health.status !== 200) {
 		logger.error({ msg: "Site builder server is not healthy", health });
 		throw new Error("Site builder server is not healthy");
