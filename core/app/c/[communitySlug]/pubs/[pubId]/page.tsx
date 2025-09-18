@@ -224,7 +224,7 @@ export default async function Page(props: {
 					<BookOpen size={24} strokeWidth={1} className="mr-3 text-gray-500" />
 					<div>
 						<Tooltip delayDuration={300}>
-							<TooltipTrigger className="m-0 -ml-3 line-clamp-1 p-0">
+							<TooltipTrigger className="m-0 line-clamp-1 p-0 text-left">
 								{getPubTitle(pub)}
 							</TooltipTrigger>
 							<TooltipContent

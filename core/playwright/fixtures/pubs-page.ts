@@ -12,7 +12,9 @@ export const choosePubType = async ({
 	communitySlug: string;
 }) => {
 	const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true });
-	await createDialog.waitFor();
+	await createDialog.waitFor({
+		timeout: 2_000,
+	});
 
 	// Choose a pub type
 	await createDialog.getByLabel("Pub type").click();
@@ -53,7 +55,10 @@ export class PubsPage {
 		stage?: string;
 		values?: Record<string, string>;
 	}) {
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs*`);
+		await this.page.waitForTimeout(500);
 		await this.page.getByRole("button", { name: "Create", exact: true }).click();
+		await this.page.waitForTimeout(500);
 		await this.choosePubType(pubType);
 
 		await this.page.waitForTimeout(500);

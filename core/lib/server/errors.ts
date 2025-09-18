@@ -154,7 +154,7 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 	);
 };
 
-export const ApiError: Record<string, ClientExceptionOptions> = {
+export const ApiError = {
 	UNAUTHORIZED: { title: "Unauthorized", error: "You are not authorized to perform this action" },
 	NOT_LOGGED_IN: { error: "Not logged in" },
 	COMMUNITY_NOT_FOUND: { error: "Community not found" },
@@ -164,4 +164,4 @@ export const ApiError: Record<string, ClientExceptionOptions> = {
 		title: "Feature unavailable",
 		error: `The requested feature is not available in ${env.ENV_NAME ? `the ${env.ENV_NAME}` : "this"} environment`,
 	},
-};
+} as const satisfies Record<string, ClientExceptionOptions>;
