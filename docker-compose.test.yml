@@ -126,7 +126,6 @@ services:
         profiles:
             - integration
         environment:
-            - AUTH_TOKEN=11111111-1111-1111-1111-111111111111.yyyyyyyyyyyyyyyy
             - PUBPUB_URL=http://integration-tests:3000
             - S3_ENDPOINT=${ASSETS_STORAGE_ENDPOINT:-http://minio:9000}
             - S3_REGION=${ASSETS_REGION:-us-east-1}

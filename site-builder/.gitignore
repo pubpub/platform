@@ -29,4 +29,5 @@ pnpm-debug.log*
 builds/** 
 !builds/.gitkeep
 
-!.env.development.*
+!.env.development
+!.env.server.development

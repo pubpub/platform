@@ -19,6 +19,11 @@ variable "pubpub_hostname" {
   type        = string
 }
 
+variable "site_builder_hostname" {
+  description = "hostname where site builder will be addressable (DO NOT include https://)"
+  type        = string
+}
+
 variable "route53_zone_id" {
   description = "Zone ID of route53 zone that is already configured as the NS for your subdomain"
   type        = string
@@ -27,10 +32,11 @@ variable "route53_zone_id" {
 variable "ecr_repository_urls" {
   description = "URLs for ECR repositories created at a global level"
   type = object({
-    core             = string
-    jobs             = string
-    nginx            = string
-    root             = string
+    core         = string
+    jobs         = string
+    nginx        = string
+    root         = string
+    site_builder = string
   })
 }
 
@@ -49,15 +55,6 @@ variable "MAILGUN_SMTP_PORT" {
   description = "SMTP Network Port for Mailgun service"
   type        = string
   default     = "465"
-}
-
-variable "NEXT_PUBLIC_SUPABASE_URL" {
-  description = "URL to Supabase public address for this install"
-  type        = string
-}
-variable "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY" {
-  description = "Supabase anon public key"
-  type        = string
 }
 
 variable "HOSTNAME" {

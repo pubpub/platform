@@ -17,8 +17,10 @@ locals {
 }
 
 module "ecs_service" {
-  source = "terraform-aws-modules/ecs/aws//modules/service"
-  name   = "${var.cluster_info.name}-${var.service_name}"
+  source  = "terraform-aws-modules/ecs/aws//modules/service"
+  version = "~> 5.0"
+
+  name = "${var.cluster_info.name}-${var.service_name}"
 
   cluster_arn            = var.cluster_info.cluster_arn
   enable_execute_command = true
