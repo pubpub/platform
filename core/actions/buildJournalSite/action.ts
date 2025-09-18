@@ -8,15 +8,18 @@ import { fieldName } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
 const schema = z.object({
-	token: z.string().describe("The token for the site builder"),
-	articles: fieldName(),
-	collections: fieldName(),
-	mainColor: fieldName(),
-	accentColor: fieldName(),
+	siteUrl: z.string().url().describe("The URL of the site to build"),
+	// token: z.string().describe("The token for the site builder"),
+	// articles: fieldName(),
+	// collections: fieldName(),
+	// mainColor: fieldName(),
+	// accentColor: fieldName(),
 });
 
 export const action = defineAction({
 	name: Action.buildJournalSite,
+	superAdminOnly: true,
+	experimental: true,
 	config: {
 		schema,
 	},
