@@ -81,13 +81,15 @@ export function MigrationForm() {
 								}}
 							/>
 							<FormDescription>
-								Upload the <code>static.json</code> file that's included in the{" "}
+								Upload the <code>export.json</code> file that's included in the{" "}
 								<code>.zip</code> file from your Legacy export
 							</FormDescription>
 							<FormMessage />
 							<FormSubmitButton
 								formState={form.formState}
 								idleText="Import from Legacy"
+								pendingText="Importing..."
+								successText="Import successful"
 							/>
 						</FormItem>
 					)}
@@ -437,6 +439,8 @@ export function UndoMigrationForm({
 							<FormSubmitButton
 								formState={form.formState}
 								idleText="Undo Migration"
+								pendingText="Undoing Migration..."
+								successText="Migration Undone"
 							/>
 							{/* </AlertDialogAction> */}
 						</AlertDialogFooter>

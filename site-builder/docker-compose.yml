@@ -13,7 +13,6 @@ services:
             - S3_SECRET_KEY=${S3_SECRET_KEY}
             - S3_BUCKET_NAME=${S3_BUCKET_NAME:-astro-site}
             - S3_PUBLIC_URL=${S3_PUBLIC_URL:-http://localhost:9000}
-            - COMMUNITY_SLUG=${COMMUNITY_SLUG}
         depends_on:
             minio:
                 condition: service_healthy
