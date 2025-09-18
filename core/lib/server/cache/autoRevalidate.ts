@@ -8,6 +8,7 @@ import { env } from "~/lib/env/env";
 import { getCommunitySlug } from "./getCommunitySlug";
 import { revalidateTagsForCommunity } from "./revalidate";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
+import { setTransactionStore } from "./transactionStorage";
 
 const executeWithRevalidate = <
 	Q extends QB<any>,
@@ -30,12 +31,16 @@ const executeWithRevalidate = <
 		// https://github.com/microsoft/TypeScript/issues/241
 		const result = await (qb[method](...args) as ReturnType<Q[M]>);
 
-		await revalidateTagsForCommunity(tables, communitySlugs);
+		const additionalRevalidateTags = options?.additionalRevalidateTags ?? [];
 
-		// const tableTags = createCommunityCacheTags(tables, communitySlug);
+		const communityTags = await revalidateTagsForCommunity(tables, communitySlugs);
 
-		// const tagsToRevalidate = [...tableTags, ...(options?.additionalRevalidateTags ?? [])];
-		[...(options?.additionalRevalidateTags ?? [])].forEach((tag) => {
+		// so we can later check whether we need to use autocache or not
+		setTransactionStore({
+			revalidateTags: communityTags,
+		});
+
+		additionalRevalidateTags.forEach((tag) => {
 			if (env.CACHE_LOG) {
 				logger.debug(`AUTOREVALIDATE: Revalidating tag: ${tag}`);
 			}

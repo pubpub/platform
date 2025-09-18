@@ -171,6 +171,11 @@ const adminLinks: LinkGroupDefinition = {
 					text: "Actions",
 					authorization: userCanEditCommunityCached,
 				},
+				{
+					href: "/settings/legacy-migration",
+					text: "Imports",
+					authorization: userCanEditCommunityCached,
+				},
 			],
 		},
 		{
@@ -208,6 +213,7 @@ const Links = ({
 					return (
 						<Suspense fallback={<SidebarMenuSkeleton />} key={link.href || link.text}>
 							<Link
+								key={link.href || link.text}
 								user={user}
 								community={community}
 								link={link}
@@ -233,7 +239,7 @@ const Link = async ({
 }: {
 	user: User;
 	community: Communities;
-	link: TopLevelLinkDefinition | SubLevelLinkDefinition;
+	link: TopLevelLinkDefinition | SubLevelLinkDefinition | SubMenuLinkDefinition;
 	groupName?: string;
 }) => {
 	if (link.authorization) {
@@ -293,11 +299,7 @@ const SubMenuLinks = async ({
 		>
 			{link.children.map((child) => (
 				<SidebarMenuSubItem key={child.href}>
-					<Link
-						user={user}
-						community={community}
-						link={child as SubLevelLinkDefinition}
-					/>
+					<Link user={user} community={community} link={child} />
 				</SidebarMenuSubItem>
 			))}
 		</NavLinkSubMenu>

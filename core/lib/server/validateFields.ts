@@ -12,13 +12,11 @@ const validateAgainstContextEditorSchema = (value: unknown) => {
 			const node = htmlToProsemirrorServer(value);
 
 			node.check();
-			// return renderNodeToHTML(node);
 			return { success: true, value };
 		}
 
 		const node = baseSchema.nodeFromJSON(value);
 
-		// TODO: reenable this
 		node.check();
 
 		const html = prosemirrorToHTMLServer(node);

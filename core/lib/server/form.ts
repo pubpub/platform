@@ -18,8 +18,10 @@ import type { GetPubTypesResult } from "./pubtype";
 import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
+import { defaultFormName, defaultFormSlug } from "../form";
 import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
 import { insertCommunityMemberships, insertPubMemberships } from "./member";
@@ -27,6 +29,7 @@ import { getUser } from "./user";
 
 /**
  * Get a form by either slug, id, or pubtype ID. If given a pubtype ID, retrieves the
+import { autoRevalidate } from "./cache/autoRevalidate";
  * default form for that pubtype.
  */
 export const getForm = (
@@ -345,6 +348,27 @@ export const insertForm = (
 };
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
+
+export const createDefaultForm = (
+	props: {
+		communityId: CommunitiesId;
+		pubType: GetPubTypesResult[number];
+	},
+	trx = db
+) => {
+	const pubType = props.pubType;
+
+	return autoRevalidate(
+		insertForm(
+			pubType,
+			defaultFormName(pubType.name),
+			defaultFormSlug(pubType.name),
+			props.communityId,
+			true,
+			trx
+		)
+	);
+};
 
 export type SimpleForm = {
 	id: FormsId;

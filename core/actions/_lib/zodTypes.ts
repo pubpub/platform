@@ -53,6 +53,16 @@ class ActionInstance extends z.ZodObject<typeof actionInstanceShape, "strip", z.
 		});
 }
 
+class FieldName extends z.ZodString {
+	static create = () =>
+		new FieldName({
+			typeName: "FieldName" as z.ZodFirstPartyTypeKind.ZodString,
+			checks: [],
+			coerce: false,
+		});
+}
+
 export const markdown = Markdown.create;
 export const stringWithTokens = StringWithTokens.create;
 export const actionInstance = ActionInstance.create;
+export const fieldName = FieldName.create;

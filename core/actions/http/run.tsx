@@ -71,10 +71,12 @@ export const run = defineRun<typeof action>(
 		if (!finalOutputMap || finalOutputMap.length === 0) {
 			return {
 				success: true,
-				report: `<p>The HTTP request ran successfully without mapping</p>
-  <pre> 
-		${JSON.stringify(result, null, 2)}
-  </pre>`,
+				report: (
+					<div>
+						<p>The HTTP request ran successfully without mapping</p>
+						<pre>{JSON.stringify(result, null, 2)}</pre>
+					</div>
+				),
 				data: {},
 			};
 		}
@@ -95,14 +97,23 @@ export const run = defineRun<typeof action>(
 		if (args?.test) {
 			return {
 				success: true,
-				report: `<div>
-			<p>HTTP request ran successfully</p>
-			<p>The resulting mapping would have been:</p>
-			<div>
-${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`).join("\n")}
-<span>Data</span>
-				<p>${JSON.stringify(result, null, 2)}</p>
-			</div>`,
+				report: (
+					<div>
+						<p>HTTP request ran successfully</p>
+						<p>The resulting mapping would have been:</p>
+						<div>
+							$
+							{mappedOutputs
+								.map(
+									({ pubField, resValue }) =>
+										`<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`
+								)
+								.join("\n")}
+							<span>Data</span>
+							<p>{JSON.stringify(result, null, 2)}</p>
+						</div>
+					</div>
+				),
 				data: { result },
 			};
 		}
@@ -131,9 +142,20 @@ ${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.fi
 
 		return {
 			success: true,
-			report: `<p>Successfully updated fields</p>
-			<div>
-${mappedOutputs.map(({ pubField, resValue }) => `<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`).join("\n")}`,
+			report: (
+				<div>
+					<p>Successfully updated fields</p>
+					<div>
+						$
+						{mappedOutputs
+							.map(
+								({ pubField, resValue }) =>
+									`<p>${pubField}: ${pub.values.find((value) => value.fieldSlug === pubField)?.value} ➡️ ${resValue}</p>`
+							)
+							.join("\n")}
+					</div>
+				</div>
+			),
 			data: { result },
 		};
 	}
