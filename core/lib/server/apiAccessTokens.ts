@@ -63,7 +63,9 @@ export const validateApiAccessToken = async (token: string, communityId: Communi
 
 	// Site builder tokens can access any community
 	if (!dbToken.isSiteBuilderToken && dbToken.communityId !== communityId) {
-		throw new UnauthorizedError(`Access token ${dbToken.name} is not valid for this community`);
+		throw new UnauthorizedError(
+			`Access token ${dbToken.name} is not valid for community "${communityId}"`
+		);
 	}
 
 	// This comparison isn't actually constant time if the two items are of different lengths,

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 import type { TableCommunity } from "./getCommunityTableColumns";
 import { DataTable } from "~/app/components/DataTable/DataTable";
