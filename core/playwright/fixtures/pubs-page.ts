@@ -12,7 +12,9 @@ export const choosePubType = async ({
 	communitySlug: string;
 }) => {
 	const createDialog = page.getByRole("dialog", { name: "Create Pub", exact: true });
-	await createDialog.waitFor();
+	await createDialog.waitFor({
+		timeout: 2_000,
+	});
 
 	// Choose a pub type
 	await createDialog.getByLabel("Pub type").click();
