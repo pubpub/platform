@@ -1,11 +1,7 @@
 ---
-import { expect } from "utils/assert";
-
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
-import { getClient } from "../lib/client/client";
 import { getHeader, getJournal, getPages } from "../lib/client/queries";
-import { getFieldValue } from "../lib/getValue";
+import { getFieldValue, getRelatedPubs } from "../lib/getValue";
 
 const journal = await getJournal();
 const header = await getHeader();
@@ -13,16 +9,16 @@ const header = await getHeader();
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // don't want to use any of this? delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 
-const heroText = getFieldValue<string>(journal, "starter:hero-text");
-const description = getFieldValue<string>(journal, "starter:description");
-const publishAs = getFieldValue<string>(journal, "starter:publish-as");
-const publicationDate = getFieldValue<string>(journal, "starter:publication-date");
+const heroText = getFieldValue<string>(journal, "Hero Text");
+const description = getFieldValue<string>(journal, "Description");
+const publishAs = getFieldValue<string>(journal, "Publish As");
+const publicationDate = getFieldValue<string>(journal, "Publication Date");
 
 const page = await getPages({
 	slugs: ["/"],
 });
 
-const layout = page[0].values?.find((v) => v.fieldSlug === "starter:layout")?.value;
+const layout = getFieldValue<string>(page[0], "Layout");
 ---
 
 <Layout journal={journal} header={header}>
@@ -65,25 +61,23 @@ const layout = page[0].values?.find((v) => v.fieldSlug === "starter:layout")?.va
 
 				<div class="grid gap-6">
 					{
-						journal.values
-							?.filter(
-								(v) => v.fieldSlug === "starter:journal-articles" && v.relatedPub
-							)
-							.slice(0, 20)
+						getRelatedPubs(journal, "Journal Articles")
+							?.slice(0, 20)
 							.map((article) => {
-								const slug = article.relatedPub?.values?.find(
-									(v) => v.fieldSlug === "starter:slug"
-								)?.value;
+								if (!article) {
+									return;
+								}
+								const slug = getFieldValue(article, "Slug");
 								return (
 									<div class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
 										<a href={`/pub/${slug}`} class="block">
 											<h3 class="text-xl font-semibold mb-2 text-blue-800 hover:text-blue-600">
-												{article.relatedPub?.title}
+												{article.title}
 											</h3>
 											<div class="flex justify-between items-center">
 												<span class="text-sm text-gray-600">
 													{new Date(
-														article.relatedPub?.createdAt ?? new Date()
+														article.createdAt ?? new Date()
 													).toLocaleDateString("en-US", {
 														month: "short",
 														day: "numeric",

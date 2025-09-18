@@ -14,6 +14,11 @@ export async function seedBlank(communityId?: CommunitiesId) {
 			users: {
 				...usersExisting,
 			},
+			apiTokens: {
+				allToken: {
+					id: "22222222-2222-2222-2222-222222222222.zzzzzzzzzzzzzzzz",
+				},
+			},
 		},
 		{
 			randomSlug: false,
