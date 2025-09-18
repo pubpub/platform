@@ -13,7 +13,7 @@
 		"site:astro": "astro",
 		"start": "tsx server/server.ts",
 		"server:start": "tsx server/server.ts",
-		"server:dev": "tsx --env-file=.env.server.development --watch-preserve-output --watch-path server/server.ts server/server.ts",
+		"server:dev": "tsx --env-file=.env.server.development server/server.ts server/server.ts",
 		"docker:build": "docker build -f ../Dockerfile .. -t site-builder:latest --progress=plain --build-arg PACKAGE=site-builder --target jobs"
 	},
 	"dependencies": {
