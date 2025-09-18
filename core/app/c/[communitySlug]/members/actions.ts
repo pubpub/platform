@@ -7,7 +7,6 @@ import { MemberRole, MembershipType } from "db/public";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema";
-import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
@@ -166,7 +165,7 @@ export const removeMember = defineServerAction(async function removeMember({
 	member: TableMember;
 }) {
 	try {
-		const { user, error: adminError, community } = await isCommunityAdmin();
+		const { error: adminError, community } = await isCommunityAdmin();
 
 		if (adminError !== null) {
 			return {
@@ -191,62 +190,6 @@ export const removeMember = defineServerAction(async function removeMember({
 	} catch (error) {
 		return {
 			title: "Failed to remove member",
-			error: "An unexpected error occurred",
-			cause: error,
-		};
-	}
-});
-
-export const updateMember = defineServerAction(async function updateMember({
-	userId,
-	role,
-	forms,
-}: {
-	userId: UsersId;
-	role: MemberRole;
-	forms: FormsId[];
-}) {
-	try {
-		const { user, error: adminError, community } = await isCommunityAdmin();
-
-		if (adminError !== null) {
-			return {
-				title: "Failed to update member",
-				error: adminError,
-			};
-		}
-
-		const result = await db.transaction().execute(async (trx) => {
-			await deleteCommunityMemberships(
-				{
-					communityId: community.id,
-					userId,
-				},
-				trx
-			).execute();
-
-			return insertCommunityMemberships(
-				{
-					communityId: community.id,
-					userId,
-					role,
-					forms: role === MemberRole.contributor ? forms : [],
-				},
-				trx
-			).execute();
-		});
-
-		if (!result) {
-			return {
-				title: "Failed to update member",
-				error: "An unexpected error occurred",
-			};
-		}
-
-		return { success: true };
-	} catch (error) {
-		return {
-			title: "Failed to update member",
 			error: "An unexpected error occurred",
 			cause: error,
 		};

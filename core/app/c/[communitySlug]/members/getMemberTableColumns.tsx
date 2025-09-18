@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { FormsId, UsersId } from "db/public";
+import type { CommunitiesId, FormsId, UsersId } from "db/public";
 import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
@@ -39,15 +39,7 @@ export type TableMember = {
 
 type TableColumnsProps = {
 	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
-	updateMember: ({
-		userId,
-		role,
-		forms,
-	}: {
-		userId: UsersId;
-		role: MemberRole;
-		forms: FormsId[];
-	}) => Promise<unknown>;
+	communityId: CommunitiesId;
 };
 
 export const getMemberTableColumns = (props: TableColumnsProps) =>
@@ -181,14 +173,14 @@ export const getMemberTableColumns = (props: TableColumnsProps) =>
 							</div>
 							<div className="w-full">
 								<EditMemberDialog
+									availableForms={props.availableForms}
 									member={{
 										userId: row.original.id,
 										role: row.original.role,
 										forms: row.original.forms?.map((form) => form.id) ?? [],
 									}}
-									updateMember={props.updateMember}
 									membershipType={MembershipType.community}
-									availableForms={props.availableForms}
+									membershipTargetId={props.communityId}
 								/>
 							</div>
 						</DropdownMenuContent>

@@ -4,7 +4,6 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Event } from "db/public";
 
-import type { XOR } from "../types";
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { pubType, pubValuesByRef } from "../server";
@@ -109,6 +108,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.innerJoin("users", "users.id", "stage_memberships.userId")
 			.select(SAFE_USER_SELECT)
 			.select("stage_memberships.role")
+			.select("stage_memberships.formId")
 			.orderBy("stage_memberships.createdAt asc")
 	);
 });
