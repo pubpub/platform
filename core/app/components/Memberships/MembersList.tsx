@@ -19,6 +19,7 @@ export const MembersList = <T extends TargetId>({
 	updateMember,
 	targetId,
 	readOnly,
+	availableForms,
 }: MembersListProps<T>) => {
 	const dedupedMembers = useMemo(() => {
 		const dedupedMembers = new Map<UsersId, MembersListProps<T>["members"][number]>();
@@ -59,29 +60,22 @@ export const MembersList = <T extends TargetId>({
 							</span>
 						) : (
 							<>
-								<RoleSelect
-									role={user.role}
-									userId={user.id}
-									targetId={targetId}
-									setRole={setRole}
-								/>
-
 								<RemoveMemberButton
 									userId={user.id}
 									targetId={targetId}
 									removeMember={removeMember}
 								/>
-
 								<EditMemberDialog
 									member={{ userId: user.id, role: user.role, forms: [] }}
 									membershipType={MembershipType.stage}
-									availableForms={[]}
+									availableForms={availableForms}
 									updateMember={(member) =>
 										updateMember({
 											...member,
 											targetId,
 										})
 									}
+									minimal
 								/>
 							</>
 						)}

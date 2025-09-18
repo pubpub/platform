@@ -338,6 +338,7 @@ export default async function Page(props: {
 								updateMember={updatePubMember}
 								targetId={pubId}
 								readOnly={!canRemoveMember}
+								availableForms={availableViewForms}
 							/>
 						</div>
 					</div>

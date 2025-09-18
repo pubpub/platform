@@ -59,6 +59,7 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 					updateMember={updateStageMember}
 					targetId={stageId}
 					readOnly={!canManage}
+					availableForms={availableForms}
 				/>
 			</CardContent>
 		</Card>
