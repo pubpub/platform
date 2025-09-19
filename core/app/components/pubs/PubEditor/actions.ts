@@ -261,7 +261,10 @@ export const updatePub = defineServerAction(async function updatePub({
 			if (
 				element.schemaName === CoreSchemaType.FileUpload &&
 				Value.Check(fileUploadSchema, value) &&
-				value.length > 0
+				value.length > 0 &&
+				// otherwise it will try to make permanent already-permanent files
+				// FIXME: better check than this
+				value[0].fileUploadUrl.includes("temporary")
 			) {
 				fileUploads.push({
 					tempUrl: value[0].fileUploadUrl,

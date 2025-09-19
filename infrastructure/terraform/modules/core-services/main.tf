@@ -184,7 +184,7 @@ resource "aws_iam_access_key" "asset_uploader" {
 
 data "aws_iam_policy_document" "asset_uploads" {
   statement {
-    actions   = ["s3:PutObject", "s3:GetObject", "s3:PutObjectTagging", "s3:GetObjectTagging"]
+    actions   = ["s3:PutObject", "s3:GetObject", "s3:PutObjectTagging", "s3:GetObjectTagging", "s3:DeleteObject"]
     effect    = "Allow"
     resources = ["${module.assets_bucket.s3_bucket_arn}/*"]
   }
