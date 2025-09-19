@@ -343,6 +343,7 @@ model ActionRun {
   actionInstanceId String?
   pub              Pub?              @relation(fields: [pubId], references: [id])
   pubId            String?
+  json             Json?
   config           Json?
   event            Event?
   params           Json?
@@ -377,6 +378,7 @@ model Rule {
   event                  Event
   actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId       String
+  /// @type(RuleConfigBase, '../types', true, false, true)
   config                 Json?
   // as the trigger for "actionSucceeded" or "actionFailed"
   sourceActionInstanceId String?
@@ -393,6 +395,7 @@ enum Event {
   pubInStageForDuration
   actionSucceeded
   actionFailed
+  webhook
 }
 
 enum FormAccessType {

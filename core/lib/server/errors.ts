@@ -6,6 +6,7 @@ import { RequestValidationError, TsRestHttpError, TsRestResponse } from "@ts-res
 import pg from "pg";
 
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { ClientExceptionOptions } from "../serverActions";
 import { env } from "../env/env";
@@ -85,23 +86,31 @@ export const handleDatabaseErrors = (error: pg.DatabaseError, req: TsRestRequest
 	// panic
 };
 
-export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestResponse => {
-	logger.error(error);
+export const tsRestHandleErrors = async (
+	error: unknown,
+	req: TsRestRequest
+): Promise<TsRestResponse> => {
+	const [err, body] = req.bodyUsed ? [null, undefined] : await tryCatch(await req.json());
 	if (error instanceof RequestValidationError) {
+		console.log("INPUT", body);
+		logger.error({ err: error.body, input: body });
 		return TsRestResponse.fromJson(
 			{
 				body: error.body,
+				input: body,
 			},
 			{
 				status: 400,
 			}
 		);
 	}
+	logger.error({ err: error, input: body });
 	if (error instanceof HTTPStatusError) {
 		return TsRestResponse.fromJson(
 			{
 				status: error.status,
 				body: { message: error.message },
+				input: body,
 			},
 			{
 				status: error.status,
@@ -130,6 +139,7 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 			{
 				status: error.statusCode,
 				body: error.body,
+				input: body,
 			},
 
 			{
@@ -146,6 +156,7 @@ export const tsRestHandleErrors = (error: unknown, req: TsRestRequest): TsRestRe
 	return TsRestResponse.fromJson(
 		{
 			body: { message: "Internal Server Error" },
+			input: body,
 		},
 		{
 			status: 500,
