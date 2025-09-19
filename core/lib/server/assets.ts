@@ -134,11 +134,26 @@ export const generateSignedAssetUploadUrl = async (
 	return await getSignedUrl(client, command, { expiresIn: 3600 });
 };
 
+export class InvalidFileUrlError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "InvalidFileUrlError";
+	}
+}
+
+/**
+ * Be very careful with this, always confirm whether the user is allowed to access this file
+ */
 export const deleteFileFromS3 = async (fileUrl: string) => {
 	const client = getPublicS3Client();
 	const bucket = env.ASSETS_BUCKET_NAME;
 
 	const fileKey = fileUrl.split(new RegExp(`^.+${env.ASSETS_BUCKET_NAME}/`))[1];
+
+	if (!fileKey) {
+		logger.error({ msg: "Unable to parse URL of uploaded file", fileUrl });
+		throw new InvalidFileUrlError("Unable to parse URL of uploaded file");
+	}
 
 	const command = new DeleteObjectCommand({
 		Bucket: bucket,
