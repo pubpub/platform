@@ -14,7 +14,7 @@ import type {
 } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 
-import type { AutoReturnType } from "../types";
+import type { AutoReturnType, XOR } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -130,7 +130,10 @@ export const getStagesViewableByUser = cache(
 	}
 );
 
-type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
+type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId } & XOR<
+	{ userId: UsersId },
+	{ authorizedStages: StagesId[] | "all" }
+>;
 type CommunityStageOptions = {
 	withActionInstances?: "count" | "full" | false;
 	withMembers?: "count" | "full" | false;
@@ -140,14 +143,34 @@ type CommunityStageOptions = {
  * Get all stages the given user has access to
  */
 export const getStages = (
-	{ communityId, stageId, userId }: CommunityStageProps,
+	{ communityId, stageId, ...userOrAuthorizedStages }: CommunityStageProps,
 	options: CommunityStageOptions = {}
 ) => {
 	const withActionInstances = options.withActionInstances ?? "count";
 
 	return autoCache(
 		db
-			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
+			.with("viewableStages", (db) => {
+				if (userOrAuthorizedStages.userId) {
+					return viewableStagesCte({
+						db: db,
+						userId: userOrAuthorizedStages.userId,
+						communityId,
+					});
+				}
+
+				return db
+					.selectFrom("stages")
+					.select("stages.id as stageId")
+					.where("stages.communityId", "=", communityId)
+					.$if(userOrAuthorizedStages.authorizedStages !== "all", (qb) =>
+						qb.where(
+							"stages.id",
+							"in",
+							userOrAuthorizedStages.authorizedStages as StagesId[]
+						)
+					);
+			})
 			.selectFrom("stages")
 			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
 			.where("communityId", "=", communityId)
