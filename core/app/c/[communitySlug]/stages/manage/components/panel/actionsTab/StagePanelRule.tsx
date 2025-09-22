@@ -2,14 +2,23 @@
 
 import { useCallback } from "react";
 
-import type { Action, ActionInstances, CommunitiesId, Event, RulesId, StagesId } from "db/public";
+import type {
+	Action,
+	ActionInstances,
+	ActionInstancesId,
+	CommunitiesId,
+	Event,
+	RulesId,
+	StagesId,
+} from "db/public";
 import { Button } from "ui/button";
 import { Trash } from "ui/icon";
 import { cn } from "utils";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
-import { getActionByName, humanReadableEvent } from "~/actions/api";
+import { getActionByName, getRuleByName, humanReadableEventHydrated } from "~/actions/api";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { useServerAction } from "~/lib/serverActions";
 import { deleteRule } from "../../../actions";
 
@@ -21,7 +30,11 @@ type Props = {
 		event: Event;
 		actionInstance: ActionInstances;
 		sourceActionInstance?: ActionInstances | null;
-		config?: RuleConfig<RuleForEvent<Event>> | null;
+		config: RuleConfig<RuleForEvent<Event>> | null;
+		createdAt: Date;
+		updatedAt: Date;
+		actionInstanceId: ActionInstancesId;
+		sourceActionInstanceId: ActionInstancesId | null;
 	};
 };
 
@@ -36,31 +49,38 @@ export const StagePanelRule = (props: Props) => {
 	const onDeleteClick = useCallback(async () => {
 		runDeleteRule(rule.id, props.stageId);
 	}, [rule.id, props.communityId]);
+	const community = useCommunity();
+	const ruleSettings = getRuleByName(rule.event);
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
 			<div className="flex w-full items-center justify-between space-x-4 text-sm">
 				<div className="flex items-center gap-2 overflow-auto">
 					<span className="flex-grow-0 overflow-auto text-ellipsis">
-						If{" "}
+						When{" "}
 						<span className="italic underline decoration-dotted">
+							{<ruleSettings.display.icon className="mr-1 inline h-4 w-4 text-xs" />}
 							{rule.sourceActionInstance ? (
 								<>
 									<ActionIcon
 										actionName={rule.sourceActionInstance.action}
-										className="mr-1 h-4 w-4 text-xs"
+										className="mr-1 inline h-4 w-4 text-xs"
 									/>
-									{humanReadableEvent(
-										rule.event,
-										rule.config ?? undefined,
-										rule.sourceActionInstance
-									)}
+									{humanReadableEventHydrated(rule.event, community, {
+										rule,
+										config: rule.config?.ruleConfig ?? undefined,
+										sourceAction: rule.sourceActionInstance,
+									})}
 								</>
 							) : (
-								humanReadableEvent(rule.event, rule.config ?? undefined)
+								humanReadableEventHydrated(rule.event, community, {
+									rule,
+									config: rule.config?.ruleConfig ?? undefined,
+									sourceAction: rule.sourceActionInstance,
+								})
 							)}
 						</span>
-						, run{" "}
+						<br /> run{" "}
 						<span className="italic underline decoration-dotted">
 							<ActionIcon
 								actionName={rule.actionInstance.action}

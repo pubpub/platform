@@ -5,6 +5,7 @@ import type {
 	CommunityMembershipsId,
 	PubsId,
 	PubTypesId,
+	RulesId,
 	StagesId,
 } from "db/public";
 import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
@@ -13,10 +14,12 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
+	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
 
+import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -45,6 +48,7 @@ import {
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
+import { getRule } from "~/lib/server/rules";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers } from "~/lib/server/user";
 
@@ -717,6 +721,43 @@ const handler = createNextHandler(
 					body: pubs,
 				};
 			},
+		},
+		webhook: async ({ params, body }) => {
+			const community = await findCommunityBySlug();
+			// const { community } = await checkAuthorization({
+			// 	token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+			// 	cookies: true,
+			// });
+			if (!community) {
+				throw new NotFoundError(`Community not found`);
+			}
+
+			const ruleId = params.ruleId as RulesId;
+
+			const rule = await getRule(ruleId, community.id).executeTakeFirst();
+
+			if (!rule) {
+				throw new NotFoundError(`Rule ${ruleId} not found`);
+			}
+
+			if (!body) {
+				throw new BadRequestError(
+					"Body is required for webhook, send an empty one if needed"
+				);
+			}
+
+			const actionScheduleResults = await scheduleActionInstances({
+				json: body,
+				stageId: rule.actionInstance.stageId,
+				stack: [],
+				event: Event.webhook,
+				config: rule.config?.actionConfig ?? undefined,
+			});
+
+			return {
+				status: 200,
+				body: undefined,
+			};
 		},
 	},
 	{

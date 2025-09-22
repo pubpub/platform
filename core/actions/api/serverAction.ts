@@ -21,11 +21,15 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		};
 	}
 
-	const canRunAction = await userCan(
-		Capabilities.runAction,
-		{ type: MembershipType.pub, pubId: args.pubId },
-		user.id
-	);
+	const canRunAction = args.pubId
+		? await userCan(
+				Capabilities.runAction,
+				{ type: MembershipType.pub, pubId: args.pubId },
+				user.id
+			)
+		: // FIXME: (!!!!!) this is a hack to allow actions to be run without a pubId
+			// we should instead check whether the user can run the action on the stage
+			true;
 
 	if (!canRunAction) {
 		return {

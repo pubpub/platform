@@ -10,6 +10,7 @@ export enum Event {
 	pubInStageForDuration = "pubInStageForDuration",
 	actionSucceeded = "actionSucceeded",
 	actionFailed = "actionFailed",
+	webhook = "webhook",
 }
 
 /** Zod schema for Event */

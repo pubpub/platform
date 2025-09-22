@@ -115,7 +115,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 
 export type GetEventRuleOptions =
 	| {
-			event: Event.pubInStageForDuration;
+			event: Event.pubInStageForDuration | Event.webhook;
 			sourceActionInstanceId?: never;
 	  }
 	| {
@@ -128,10 +128,8 @@ export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOpt
 			.selectFrom("rules")
 			.innerJoin("action_instances as ai", "ai.id", "rules.actionInstanceId")
 			.where("ai.stageId", "=", stageId)
+			.selectAll("rules")
 			.select((eb) => [
-				"rules.id",
-				"rules.event",
-				"rules.config",
 				jsonObjectFrom(
 					eb
 						.selectFrom("action_instances")
@@ -140,7 +138,6 @@ export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOpt
 				)
 					.$notNull()
 					.as("actionInstance"),
-				"sourceActionInstanceId",
 				jsonObjectFrom(
 					eb
 						.selectFrom("action_instances")
@@ -152,7 +149,10 @@ export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOpt
 			.$if(!!options?.event, (eb) => {
 				const where = eb.where("rules.event", "=", options!.event);
 
-				if (options!.event === Event.pubInStageForDuration) {
+				if (
+					options!.event === Event.pubInStageForDuration ||
+					options!.event === Event.webhook
+				) {
 					return where;
 				}
 

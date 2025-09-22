@@ -37,71 +37,71 @@ import type { StagesTable } from "./Stages";
 import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
-	_prisma_migrations: PrismaMigrationsTable;
-
-	users: UsersTable;
-
-	pubs: PubsTable;
-
-	pub_types: PubTypesTable;
-
-	stages: StagesTable;
-
-	member_groups: MemberGroupsTable;
-
-	communities: CommunitiesTable;
-
-	move_constraint: MoveConstraintTable;
-
-	pub_fields: PubFieldsTable;
-
-	pub_values: PubValuesTable;
-
-	_PubFieldToPubType: PubFieldToPubTypeTable;
-
-	_MemberGroupToUser: MemberGroupToUserTable;
-
-	auth_tokens: AuthTokensTable;
-
 	PubFieldSchema: PubFieldSchemaTable;
-
-	action_instances: ActionInstancesTable;
-
-	PubsInStages: PubsInStagesTable;
-
-	rules: RulesTable;
-
-	action_runs: ActionRunsTable;
-
-	forms: FormsTable;
-
-	api_access_tokens: ApiAccessTokensTable;
-
-	api_access_logs: ApiAccessLogsTable;
-
-	api_access_permissions: ApiAccessPermissionsTable;
-
-	form_elements: FormElementsTable;
-
-	sessions: SessionsTable;
-
-	community_memberships: CommunityMembershipsTable;
-
-	pub_memberships: PubMembershipsTable;
-
-	stage_memberships: StageMembershipsTable;
 
 	membership_capabilities: MembershipCapabilitiesTable;
 
+	sessions: SessionsTable;
+
+	move_constraint: MoveConstraintTable;
+
 	pub_values_history: PubValuesHistoryTable;
+
+	api_access_tokens: ApiAccessTokensTable;
+
+	_MemberGroupToUser: MemberGroupToUserTable;
 
 	_FormElementToPubType: FormElementToPubTypeTable;
 
-	invites: InvitesTable;
+	PubsInStages: PubsInStagesTable;
 
-	invite_forms: InviteFormsTable;
+	stage_memberships: StageMembershipsTable;
+
+	rules: RulesTable;
+
+	_prisma_migrations: PrismaMigrationsTable;
+
+	auth_tokens: AuthTokensTable;
+
+	api_access_permissions: ApiAccessPermissionsTable;
+
+	api_access_logs: ApiAccessLogsTable;
+
+	pub_types: PubTypesTable;
+
+	pub_fields: PubFieldsTable;
 
 	invites_history: InvitesHistoryTable;
 
+	communities: CommunitiesTable;
+
+	users: UsersTable;
+
+	_PubFieldToPubType: PubFieldToPubTypeTable;
+
+	pub_values: PubValuesTable;
+
+	action_runs: ActionRunsTable;
+
+	invites: InvitesTable;
+
+	pubs: PubsTable;
+
 	action_config_defaults: ActionConfigDefaultsTable;
+
+	action_instances: ActionInstancesTable;
+
+	community_memberships: CommunityMembershipsTable;
+
+	member_groups: MemberGroupsTable;
+
+	pub_memberships: PubMembershipsTable;
+
+	stages: StagesTable;
+
+	form_elements: FormElementsTable;
+
+	forms: FormsTable;
+
+	invite_forms: InviteFormsTable;
 }
