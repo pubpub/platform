@@ -2,7 +2,7 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 
 import type { ProcessedPub } from "contracts";
-import type { ActionInstances, UsersId } from "db/public";
+import type { ActionConfigDefaults, ActionInstances, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
@@ -10,6 +10,7 @@ import { Calendar, History, Pencil, Trash2 } from "ui/icon";
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
@@ -45,7 +46,7 @@ export type PubCardProps = {
 	communitySlug: string;
 	moveFrom?: CommunityStage["moveConstraintSources"];
 	moveTo?: CommunityStage["moveConstraints"];
-	actionInstances?: ActionInstances[];
+	actionInstances?: ActionInstanceWithConfigDefaults[];
 	withSelection?: boolean;
 	userId: UsersId;
 	/* if true, overrides the view stage capability check */
@@ -249,7 +250,7 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	actionInstances?: ActionInstances[];
+	actionInstances?: ActionInstanceWithConfigDefaults[];
 	pub: ProcessedPub<{
 		withPubType: true;
 		withRelatedPubs: false;
@@ -295,7 +296,6 @@ const PubCardActions = async ({
 			{hasActions && canRunActions ? (
 				<PubsRunActionDropDownMenu
 					actionInstances={actionInstances}
-					stage={pub.stage!}
 					pubId={pub.id}
 					buttonText={`Run actions for ${pubTitle}`}
 					iconOnly

@@ -1,4 +1,4 @@
-import type { Kysely, Transaction } from "kysely";
+import type { Kysely } from "kysely";
 
 import type { Database } from "db/Database";
 import type {
@@ -8,10 +8,10 @@ import type {
 	PubsId,
 	UsersId,
 } from "db/public";
+import type { XOR } from "utils/types";
 import { CoreSchemaType, InviteStatus, MemberRole } from "db/public";
 import { assert, expect } from "utils";
 
-import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -19,7 +19,6 @@ import { autoCache } from "~/lib/server/cache/autoCache";
 import { getCommunitySlug } from "../../cache/getCommunitySlug";
 import { createFormInviteLink, grantFormAccess } from "../../form";
 import { InviteService } from "../../invites/InviteService";
-import { getUser } from "../../user";
 
 export type RenderWithPubRel = "self";
 

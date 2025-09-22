@@ -4,8 +4,8 @@ import { sql } from "kysely";
 import { jsonArrayFrom, jsonBuildObject, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { CommunitiesId, FormsId, PubFieldsId, PubsId, PubTypesId } from "db/public";
+import type { Prettify, XOR } from "utils/types";
 
-import type { Prettify, XOR } from "../types";
 import type { GetManyParams } from "./pub";
 import { db } from "~/kysely/database";
 import { findRanksBetween } from "../rank";

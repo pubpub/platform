@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import { ActionConfigFormWrapper } from "~/app/components/ActionUI/ActionConfigFormWrapper";
+import { ActionConfigForm } from "~/app/components/ActionUI/ActionConfigForm";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getStage, getStageActions } from "~/lib/db/queries";
@@ -54,12 +54,11 @@ const StagePanelActionsInner = async (props: PropsInner) => {
 							communityId={stage.communityId}
 							stageId={props.stageId}
 						>
-							<Suspense fallback={<SkeletonCard />}>
-								<ActionConfigFormWrapper
-									stage={stage}
-									actionInstance={actionInstance}
-								/>
-							</Suspense>
+							<ActionConfigForm
+								stageId={props.stageId}
+								actionInstance={actionInstance}
+								defaultFields={actionInstance.defaultedActionConfigKeys ?? []}
+							/>
 						</StagePanelActionEditor>
 					))}
 				</div>

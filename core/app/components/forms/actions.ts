@@ -3,10 +3,10 @@
 import { sql } from "kysely";
 
 import type { CommunitiesId, FormsId, PubsId } from "db/public";
+import type { XOR } from "utils/types";
 import { logger } from "logger";
 import { tryCatch } from "utils/try-catch";
 
-import type { XOR } from "~/lib/types";
 import { db } from "~/lib/__tests__/db";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userHasAccessToForm } from "~/lib/authorization/capabilities";

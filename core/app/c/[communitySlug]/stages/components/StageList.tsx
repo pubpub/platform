@@ -5,6 +5,8 @@ import { Eye } from "lucide-react";
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
 import { Pencil } from "ui/icon";
+import { PubFieldProvider } from "ui/pubFields";
+import { stagesDAO, StagesProvider } from "ui/stages";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
@@ -22,6 +24,7 @@ import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
+import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
@@ -34,24 +37,29 @@ type Props = {
 
 export async function StageList(props: Props) {
 	const { communityId, userId } = props;
-	const [communityStages, communityMembers] = await Promise.all([
+	const [communityStages, communityMembers, pubFields] = await Promise.all([
 		getStages({ communityId, userId }).execute(),
 		selectAllCommunityMemberships({ communityId }).execute(),
+		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 	]);
 
 	const stages = getOrderedStages(communityStages);
 
 	return (
 		<div className="flex flex-col gap-8">
-			{stages.map((stage) => (
-				<StageCard
-					userId={props.userId}
-					key={stage.id}
-					stage={stage}
-					members={communityMembers}
-					searchParams={props.searchParams}
-				/>
-			))}
+			<PubFieldProvider pubFields={pubFields.fields}>
+				<StagesProvider stages={stagesDAO(stages)}>
+					{stages.map((stage) => (
+						<StageCard
+							userId={props.userId}
+							key={stage.id}
+							stage={stage}
+							members={communityMembers}
+							searchParams={props.searchParams}
+						/>
+					))}
+				</StagesProvider>
+			</PubFieldProvider>
 		</div>
 	);
 }

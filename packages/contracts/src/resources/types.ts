@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type {
+	ActionConfigDefaults,
 	ActionInstances,
 	CommunitiesId,
 	FormElementsId,
@@ -201,7 +202,15 @@ export const upsertPubRelationsSchema = z.record(
  */
 type MaybePubStage<Options extends MaybePubOptions> = Options["withStage"] extends true
 	? Options["withStageActionInstances"] extends true
-		? { stage: (Stages & { actionInstances: ActionInstances[] }) | null }
+		? {
+				stage:
+					| (Stages & {
+							actionInstances: (ActionInstances & {
+								defaultedActionConfigKeys: string[] | null;
+							})[];
+					  })
+					| null;
+			}
 		: { stage: Stages | null }
 	: Options["withStage"] extends false
 		? { stage?: never }

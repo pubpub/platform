@@ -1,4 +1,5 @@
 export * from "./public/Action";
+export * from "./public/ActionConfigDefaults";
 export * from "./public/ActionInstances";
 export * from "./public/ActionRuns";
 export * from "./public/ActionRunStatus";
