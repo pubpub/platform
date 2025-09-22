@@ -8,12 +8,15 @@ import { FlagTriangleRightIcon } from "lucide-react";
 import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { Button } from "ui/button";
+import { PubFieldProvider } from "ui/pubFields";
+import { stagesDAO, StagesProvider } from "ui/stages";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { redirectToUnauthorized } from "~/lib/server/navigation/redirects";
+import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
 import { ContentLayout } from "../../ContentLayout";
 import { PubListSkeleton } from "../../pubs/PubList";
@@ -84,9 +87,11 @@ export default async function Page(props: {
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
 	);
-	const [{ stage, canViewStage }, showEditButton] = await Promise.all([
+	const [{ stage, canViewStage }, showEditButton, stages, pubFields] = await Promise.all([
 		stagePromise,
 		capabilityPromise,
+		getStages({ communityId: community.id, userId: user.id }).execute(),
+		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
 	]);
 
 	if (!canViewStage) {
@@ -133,13 +138,17 @@ export default async function Page(props: {
 				<Suspense
 					fallback={<PubListSkeleton amount={stage.pubsCount ?? 2} className="gap-16" />}
 				>
-					<StagePubs
-						userId={user.id}
-						stage={stage}
-						searchParams={searchParams}
-						pagination={{ page, pubsPerPage: 10 }}
-						basePath={""}
-					/>
+					<PubFieldProvider pubFields={pubFields.fields}>
+						<StagesProvider stages={stagesDAO(stages)}>
+							<StagePubs
+								userId={user.id}
+								stage={stage}
+								searchParams={searchParams}
+								pagination={{ page, pubsPerPage: 10 }}
+								basePath={""}
+							/>
+						</StagesProvider>
+					</PubFieldProvider>
 				</Suspense>
 			</div>
 		</ContentLayout>

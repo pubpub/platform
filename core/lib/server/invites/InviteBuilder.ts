@@ -4,17 +4,17 @@ import type { UserId } from "lucia";
 
 import type { ActionRunsId, CommunitiesId, FormsId, PubsId, StagesId, UsersId } from "db/public";
 import type { Invite, NewInvite } from "db/types";
+import type { XOR } from "utils/types";
 import { formsIdSchema, InviteStatus, MemberRole } from "db/public";
 import { newInviteSchema } from "db/types";
 import { expect } from "utils";
 
-import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findCommunityBySlug } from "~/lib/server/community";
 import * as Email from "~/lib/server/email";
 import { maybeWithTrx } from "~/lib/server/maybeWithTrx";
-import { addUser, generateUserSlug, getUser } from "~/lib/server/user";
+import { getUser } from "~/lib/server/user";
 import { InviteService } from "./InviteService";
 
 const BYTES_LENGTH = 16;

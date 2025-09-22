@@ -29,7 +29,6 @@ export const MemberSelectElement = ({
 
 	return (
 		<MemberSelectClientFetch
-			community={community}
 			fieldLabel={label}
 			fieldName={slug}
 			value={value}

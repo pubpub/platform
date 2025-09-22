@@ -38,12 +38,12 @@ import type {
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy, StageConstraint } from "db/types";
+import type { DefinitelyHas, MaybeHas, XOR } from "utils/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
 import { NO_STAGE_OPTION } from "db/types";
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { DefinitelyHas, MaybeHas, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -59,7 +59,7 @@ import { maybeWithTrx } from "./maybeWithTrx";
 import { applyFilters } from "./pub-filters";
 import { _getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
-import { movePub } from "./stages";
+import { actionConfigDefaultsSelect, movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";
 import { validatePubValuesBySchemaName } from "./validateFields";
 
@@ -1877,6 +1877,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 											.selectFrom("action_instances")
 											.whereRef("action_instances.stageId", "=", "pt.stageId")
 											.selectAll()
+											.select((eb) =>
+												actionConfigDefaultsSelect(eb).as(
+													"defaultedActionConfigKeys"
+												)
+											)
 									).as("actionInstances")
 								)
 							)

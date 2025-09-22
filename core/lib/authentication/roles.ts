@@ -1,6 +1,6 @@
+import type { OR } from "utils/types";
 import { MemberRole } from "db/public";
 
-import type { OR } from "../types";
 import type { LoginData } from "./loginData";
 import { getHighestRole } from "../authorization/rolesRanking";
 

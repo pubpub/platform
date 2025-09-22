@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Button } from "ui/button";
-import { FlagTriangleRightIcon, Stages } from "ui/icon";
+import { FlagTriangleRightIcon } from "ui/icon";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";

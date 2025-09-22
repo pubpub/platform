@@ -25,11 +25,7 @@ const NoActions = () => {
 
 const getRelatedPubRunActionsDropdowns = (row: FullProcessedPubWithForm) => {
 	return row.stage && row.stage?.actionInstances.length > 0 ? (
-		<PubsRunActionDropDownMenu
-			actionInstances={row.stage.actionInstances}
-			pubId={row.id}
-			stage={row.stage}
-		/>
+		<PubsRunActionDropDownMenu actionInstances={row.stage.actionInstances} pubId={row.id} />
 	) : (
 		<NoActions />
 	);

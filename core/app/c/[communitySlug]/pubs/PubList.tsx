@@ -2,7 +2,9 @@ import { Suspense } from "react";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
+import { PubFieldProvider } from "ui/pubFields";
 import { Skeleton } from "ui/skeleton";
+import { stagesDAO, StagesProvider } from "ui/stages";
 import { cn } from "utils";
 
 import type { AutoReturnType } from "~/lib/types";
@@ -16,6 +18,7 @@ import {
 } from "~/lib/authorization/capabilities";
 import { getPubsCount, getPubsWithRelatedValues, getPubTypesForCommunity } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
 import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery";
 import { PubSearchFooter } from "./PubSearchFooter";
@@ -185,7 +188,7 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 		}
 	);
 
-	const [pubTypes, stages] = await Promise.all([
+	const [pubTypes, stages, pubFields] = await Promise.all([
 		getPubTypesForCommunity(props.communityId, {
 			limit: 0,
 		}),
@@ -193,48 +196,46 @@ export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) =
 			{ communityId: props.communityId, userId: props.userId },
 			{ withActionInstances: "full" }
 		).execute(),
+		getPubFields({ communityId: props.communityId }).executeTakeFirstOrThrow(),
 	]);
-	// const stagesPromise = getStages(
-	// 	{ communityId: props.communityId, userId: props.userId },
-	// 	{ withActionInstances: "full" }
-	// ).execute();
-
-	// const pubTypesPromise = getPubTypesForCommunity(props.communityId, {
-	// 	limit: 0,
-	// });
 
 	return (
 		<div className="relative flex h-full flex-col">
-			<PubSearchProvider availablePubTypes={pubTypes} availableStages={stages}>
-				<PubsSelectedProvider pubIds={[]}>
-					<div
-						className={cn(
-							"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
-						)}
-					>
-						<PubSearch>
-							<Suspense fallback={<PubListSkeleton />}>
-								<PaginatedPubListInner
-									{...props}
-									communitySlug={communitySlug}
+			{/* field and stage provider are necessary for the ActionDropDown used in the pubcard to work */}
+			<PubFieldProvider pubFields={pubFields.fields}>
+				<StagesProvider stages={stagesDAO(stages)}>
+					<PubSearchProvider availablePubTypes={pubTypes} availableStages={stages}>
+						<PubsSelectedProvider pubIds={[]}>
+							<div
+								className={cn(
+									"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
+								)}
+							>
+								<PubSearch>
+									<Suspense fallback={<PubListSkeleton />}>
+										<PaginatedPubListInner
+											{...props}
+											communitySlug={communitySlug}
+											pubsPromise={pubsPromise}
+											stagesPromise={Promise.resolve(stages)}
+										/>
+									</Suspense>
+								</PubSearch>
+							</div>
+							<Suspense fallback={null}>
+								<PubListFooterPagination
+									basePath={basePath}
+									searchParams={props.searchParams}
+									userId={props.userId}
+									page={search.page}
+									communityId={props.communityId}
 									pubsPromise={pubsPromise}
-									stagesPromise={Promise.resolve(stages)}
-								/>
+								></PubListFooterPagination>
 							</Suspense>
-						</PubSearch>
-					</div>
-					<Suspense fallback={null}>
-						<PubListFooterPagination
-							basePath={basePath}
-							searchParams={props.searchParams}
-							userId={props.userId}
-							page={search.page}
-							communityId={props.communityId}
-							pubsPromise={pubsPromise}
-						></PubListFooterPagination>
-					</Suspense>
-				</PubsSelectedProvider>
-			</PubSearchProvider>
+						</PubsSelectedProvider>
+					</PubSearchProvider>
+				</StagesProvider>
+			</PubFieldProvider>
 		</div>
 	);
 };

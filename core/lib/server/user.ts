@@ -16,10 +16,10 @@ import type {
 	UsersId,
 	UsersUpdate,
 } from "db/public";
+import type { XOR } from "utils/types";
 import { Capabilities, FormAccessType, MemberRole, MembershipType } from "db/public";
 
 import type { CapabilityTarget } from "../authorization/capabilities";
-import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { compareMemberRoles, getHighestRole } from "~/lib/authorization/rolesRanking";
 import { getLoginData } from "../authentication/loginData";
