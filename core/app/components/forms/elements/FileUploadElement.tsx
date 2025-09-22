@@ -79,9 +79,9 @@ export const FileUploadElement = ({
 
 			field.onChange(field.value.filter((f) => f.fileName !== file.fileName));
 			toast({
-				title: "Success",
+				title: "Successfully removed file",
 				variant: "success",
-				description: "Successfully removed file",
+				description: res?.report,
 			});
 		},
 		[runDelete, slug, pubId, setValue, files]

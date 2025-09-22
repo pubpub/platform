@@ -4,6 +4,7 @@ import { sql } from "kysely";
 
 import type { CommunitiesId, FormsId, PubsId } from "db/public";
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { XOR } from "~/lib/types";
 import { db } from "~/lib/__tests__/db";
@@ -11,7 +12,12 @@ import { getLoginData } from "~/lib/authentication/loginData";
 import { userHasAccessToForm } from "~/lib/authorization/capabilities";
 import { env } from "~/lib/env/env";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
-import { ApiError, deleteFileFromS3, generateSignedAssetUploadUrl } from "~/lib/server";
+import {
+	ApiError,
+	deleteFileFromS3,
+	generateSignedAssetUploadUrl,
+	InvalidFileUrlError,
+} from "~/lib/server";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -86,17 +92,17 @@ export const deleteFile = defineServerAction(async function deleteFile({
 			if (mode === "edit") {
 				// delete pubvalue if it exists
 
+				// TODO: should we remove the pubvalue if it's an empty array?
 				await autoRevalidate(
 					trx
 						.updateTable("pub_values")
 						.where("pub_values.pubId", "=", pubId)
-						.where((eb) =>
-							eb.exists((eb) =>
-								eb
-									.selectFrom("pub_fields")
-									.select("slug")
-									.where("slug", "=", fieldSlug)
-							)
+						.where("pub_values.fieldId", "=", (eb) =>
+							eb
+								.selectFrom("pub_fields")
+								.select("pub_fields.id")
+								.where("pub_fields.slug", "=", fieldSlug)
+								.limit(1)
 						)
 						.where(
 							(eb) =>
@@ -116,16 +122,73 @@ export const deleteFile = defineServerAction(async function deleteFile({
 							]),
 							lastModifiedBy: createLastModifiedBy({ userId: user.id }),
 						}))
+						.returningAll()
 				).execute();
 			}
 
+			// should check whether any other fileupload fields are using this file
+			// TODO: this is extremely expensive, we should figure out a better heuristic
+			// like only allowing users to delete files scoped under a certain pubId/communityId belonging to their comumnity
+			const otherFiles = await trx
+				.selectFrom("pub_values")
+				.innerJoin("pub_fields", "pub_values.fieldId", "pub_fields.id")
+				.innerJoin("pubs", "pub_values.pubId", "pubs.id")
+				.select([
+					"pub_values.pubId",
+					"pub_fields.slug",
+					"pub_fields.communityId",
+					"pubs.title",
+				])
+				.where(
+					(eb) =>
+						eb.fn("jsonb_path_exists", [
+							"value",
+							sql.raw("'$[*] ? (@.fileUploadUrl == $url)'"),
+							eb.val(JSON.stringify({ url: fileUrl })),
+						]),
+					"=",
+					true
+				)
+				// we really just need to check if one other thing uses this file
+				.limit(1)
+				.executeTakeFirst();
+
+			if (otherFiles) {
+				logger.debug({
+					msg: `Not deleting file from ${fileUrl} because it is also used by field "${otherFiles.slug}" in pub "${otherFiles.pubId}" in community "${otherFiles.communityId}"`,
+				});
+
+				if (otherFiles.communityId !== community.id) {
+					return {
+						report: `File not deleted from ${fileUrl} because it is used by a pub in a different community`,
+					};
+				}
+
+				return {
+					report: `File not deleted from ${fileUrl} because it is also used by field "${otherFiles.slug}" in pub "${otherFiles.title}"`,
+				};
+			}
+
 			// delete file from s3
-			return deleteFileFromS3(fileUrl);
+			const [err, res] = await tryCatch(deleteFileFromS3(fileUrl));
+			if (err) {
+				if (err instanceof InvalidFileUrlError) {
+					logger.error({ msg: "Invalid file URL, not deleting from S3", err });
+					return {
+						report: `File not removed from ${fileUrl} because it is not a file controlled by PubPub`,
+					};
+				}
+				logger.error({ msg: "error deleting file from S3", err });
+				throw err;
+			}
+			return {
+				report: "File deleted successfully",
+			};
 		});
 
 		return {
 			success: true,
-			msg: "File deleted successfully",
+			report: res?.report,
 		};
 	} catch (error) {
 		logger.error({ msg: "error deleting file", err: error });
