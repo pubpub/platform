@@ -62,7 +62,11 @@ import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findRanksBetween } from "~/lib/rank";
 import { createPubRecursiveNew } from "~/lib/server";
-import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
+import {
+	allPermissions,
+	createApiAccessToken,
+	createSiteBuilderToken,
+} from "~/lib/server/apiAccessTokens";
 import { insertForm } from "~/lib/server/form";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { generateToken } from "~/lib/server/token";
@@ -1357,7 +1361,7 @@ export async function seedCommunity<
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
 		await Promise.all([
-			// ["site-builder", await createSiteBuilderToken(communityId)],
+			["site-builder", await createSiteBuilderToken(communityId, trx)],
 			...apiTokens.map(async ([tokenName, tokenInput]) => {
 				const [tokenId, tokenString] = tokenInput.id?.split(".") ?? [crypto.randomUUID()];
 
