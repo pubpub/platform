@@ -18,8 +18,8 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
+import { descriptions } from "~/app/components/Memberships/constants";
 import { EditMemberDialog } from "~/app/components/Memberships/EditMemberDialog";
-import { descriptions } from "~/app/components/Memberships/MemberInviteForm";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
