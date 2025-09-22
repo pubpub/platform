@@ -53,10 +53,12 @@ const StagePanelMembersInner = async ({ stageId, user }: PropsInner) => {
 				</div>
 				<MembersList
 					members={members}
+					membershipType={MembershipType.stage}
 					setRole={setStageMemberRole}
 					removeMember={removeStageMember}
 					targetId={stageId}
 					readOnly={!canManage}
+					availableForms={availableForms}
 				/>
 			</CardContent>
 		</Card>

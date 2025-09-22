@@ -14,7 +14,6 @@ import partition from "lodash.partition";
 import type {
 	CreatePubRequestBodyWithNullsNew,
 	Filter,
-	FTSReturn,
 	Json,
 	JsonValue,
 	MaybePubOptions,
@@ -1901,7 +1900,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 							.selectFrom("pub_memberships")
 							.whereRef("pub_memberships.pubId", "=", "pt.pubId")
 							.innerJoin("users", "users.id", "pub_memberships.userId")
-							.select(["pub_memberships.role", ...SAFE_USER_SELECT])
+							.select([
+								"pub_memberships.role",
+								"pub_memberships.formId",
+								...SAFE_USER_SELECT,
+							])
 					).as("members")
 				)
 			)

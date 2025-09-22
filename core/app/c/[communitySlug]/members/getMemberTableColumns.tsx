@@ -2,7 +2,7 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { FormsId, UsersId } from "db/public";
+import type { CommunitiesId, FormsId, UsersId } from "db/public";
 import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
@@ -16,10 +16,10 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "ui/dropdown-menu";
-import { Info, MoreVertical } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { MoreVertical } from "ui/icon";
 
-import { descriptions } from "~/app/components/Memberships/MemberInviteForm";
+import { descriptions } from "~/app/components/Memberships/constants";
+import { EditMemberDialog } from "~/app/components/Memberships/EditMemberDialog";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
@@ -37,7 +37,12 @@ export type TableMember = {
 	joined: string;
 };
 
-export const getMemberTableColumns = () =>
+type TableColumnsProps = {
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
+	communityId: CommunitiesId;
+};
+
+export const getMemberTableColumns = (props: TableColumnsProps) =>
 	[
 		{
 			id: "select",
@@ -151,7 +156,7 @@ export const getMemberTableColumns = () =>
 		{
 			id: "actions",
 			enableHiding: false,
-			cell: ({ row, table }) => {
+			cell: ({ row }) => {
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -165,6 +170,18 @@ export const getMemberTableColumns = () =>
 							<DropdownMenuSeparator />
 							<div className="w-full">
 								<RemoveMemberButton member={row.original} />
+							</div>
+							<div className="w-full">
+								<EditMemberDialog
+									availableForms={props.availableForms}
+									member={{
+										userId: row.original.id,
+										role: row.original.role,
+										forms: row.original.forms?.map((form) => form.id) ?? [],
+									}}
+									membershipType={MembershipType.community}
+									membershipTargetId={props.communityId}
+								/>
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>

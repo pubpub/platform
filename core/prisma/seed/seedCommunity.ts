@@ -1361,7 +1361,7 @@ export async function seedCommunity<
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
 		await Promise.all([
-			["site-builder", createSiteBuilderToken(createdCommunity.id)],
+			["site-builder", await createSiteBuilderToken(communityId, trx)],
 			...apiTokens.map(async ([tokenName, tokenInput]) => {
 				const [tokenId, tokenString] = tokenInput.id?.split(".") ?? [crypto.randomUUID()];
 

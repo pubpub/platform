@@ -165,7 +165,7 @@ export const removeMember = defineServerAction(async function removeMember({
 	member: TableMember;
 }) {
 	try {
-		const { user, error: adminError, community } = await isCommunityAdmin();
+		const { error: adminError, community } = await isCommunityAdmin();
 
 		if (adminError !== null) {
 			return {
