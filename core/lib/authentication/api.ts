@@ -133,7 +133,10 @@ export type AuthorizationOutput<S extends ApiAccessScope, AT extends ApiAccessTy
 	authorization: true | Exclude<(typeof baseAuthorizationObject)[S][AT], false>;
 	community: Communities;
 	lastModifiedBy: LastModifiedBy;
-	user: User;
+	// is empty for site builder tokens
+	// should be empty for other tokens, but isn't.
+	// we are incorrectly passing the user who minted the token to eg getPubs and getStages
+	user?: User;
 	isSiteBuilderToken?: boolean;
 };
 

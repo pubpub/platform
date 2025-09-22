@@ -12,23 +12,35 @@ import { autoCache } from "../server/cache/autoCache";
 import { viewableStagesCte } from "../server/stages";
 import { SAFE_USER_SELECT } from "../server/user";
 
-export const getStage = cache((stageId: StagesId, userId: UsersId) => {
-	return autoCache(
-		db
-			.with("viewableStages", (db) => viewableStagesCte({ db, userId }))
-			.selectFrom("stages")
-			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
-			.select([
-				"stages.id",
-				"communityId",
-				"stages.name",
-				"stages.order",
-				"createdAt",
-				"updatedAt",
-			])
-			.where("stages.id", "=", stageId)
-	);
-});
+export const getStage = cache(
+	(
+		stageId: StagesId,
+		userOrAuthorizedStages: XOR<{ userId?: UsersId }, { authorizedStages: StagesId[] | "all" }>
+	) => {
+		return autoCache(
+			db
+				.with("viewableStages", (db) => {
+					if (userOrAuthorizedStages.userId) {
+						return viewableStagesCte({ db, userId: userOrAuthorizedStages.userId });
+					}
+
+					return db.selectFrom("stages").select("stages.id as stageId").where();
+					where("stages.id", "in", userOrAuthorizedStages.authorizedStages as StagesId[]);
+				})
+				.selectFrom("stages")
+				.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
+				.select([
+					"stages.id",
+					"communityId",
+					"stages.name",
+					"stages.order",
+					"createdAt",
+					"updatedAt",
+				])
+				.where("stages.id", "=", stageId)
+		);
+	}
+);
 
 export const getStageActions = cache(
 	({
