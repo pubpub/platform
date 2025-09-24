@@ -97,7 +97,7 @@ module "service_core" {
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
       { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host },
-      { name = "SITE_BUILDER_ENDPOINT", valueFrom = local.SITE_BUILDER_URL }
+      { name = "SITE_BUILDER_ENDPOINT", value = local.SITE_BUILDER_URL }
     ]
 
     secrets = [
@@ -196,14 +196,14 @@ module "service_site_builder" {
     environment = [
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
       { name = "PORT", value = 4000 },
-      { name = "S3_ACCESS_KEY", value = module.core_dependency_services.secrets.s3_access_key },
-      { name = "S3_BUCKET_NAME", value = module.core_dependency_services.asset_uploader_key_id },
+      { name = "S3_ACCESS_KEY", value = module.core_dependency_services.asset_uploader_key_id },
+      { name = "S3_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
       { name = "S3_REGION", value = var.region },
       // don't need to set S3_ENDPOINT, if empty will use s3
     ]
 
     secrets = [
-      { name = "S3_SECRET_KEY", valueFrom = module.core_dependency_services.secrets.s3_secret_key },
+      { name = "S3_SECRET_KEY", valueFrom = module.core_dependency_services.secrets.asset_uploader_secret_key },
     ]
   }
 

@@ -4,7 +4,7 @@ output "cluster_info" {
     name        = var.name
     vpc_id      = aws_vpc.main.id
     environment = var.environment
-    # cluster_arn                  = module.ecs_cluster.arn
+    cluster_arn                  = module.ecs_cluster.arn
     private_subnet_ids           = aws_subnet.private.*.id
     container_security_group_ids = [aws_security_group.ecs_tasks.id]
     cloudwatch_log_group_name    = aws_cloudwatch_log_group.ecs.name
