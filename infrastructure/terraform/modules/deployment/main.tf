@@ -186,21 +186,9 @@ module "service_bastion" {
 module "service_site_builder" {
   source = "../container-generic"
 
-  service_name      = "site-builder"
-  cluster_info      = module.cluster.cluster_info
-  repository_url    = var.ecr_repository_urls.site_builder
-  nginx_image       = "${var.ecr_repository_urls.nginx}:latest"
-  health_check_path = "/health"
-
-  listener = {
-    service_name  = "site-builder"
-    public        = true
-    path_prefix   = "/"
-    rule_priority = 101
-    from_port     = 4000
-    to_port       = 4000
-    protocol      = "tcp"
-  }
+  service_name   = "site-builder"
+  cluster_info   = module.cluster.cluster_info
+  repository_url = var.ecr_repository_urls.site_builder
 
   configuration = {
     container_port = 4000
