@@ -190,6 +190,16 @@ module "service_site_builder" {
   cluster_info   = module.cluster.cluster_info
   repository_url = var.ecr_repository_urls.site_builder
 
+  listener = {
+    service_name  = "site-builder"
+    public        = false
+    path_prefix   = "/"
+    rule_priority = 101
+    from_port     = 4000
+    to_port       = 4000
+    protocol      = "tcp"
+  }
+
   configuration = {
     container_port = 4000
 
