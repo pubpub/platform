@@ -560,10 +560,10 @@ const router = tsr.router(siteBuilderApi, {
 	},
 });
 
-// // Health check endpoint
-// app.get("/health", (c) => {
-// 	return c.json({ status: "ok" });
-// });
+// Health check endpoint
+app.get("/health", (c) => {
+	return c.json({ status: "ok" });
+});
 
 app.all("*", async (c) => {
 	return fetchRequestHandler({
