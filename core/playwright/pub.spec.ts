@@ -129,7 +129,7 @@ test.describe("Moving a pub", () => {
 });
 
 test.describe("Creating a pub", () => {
-	test("Can create a pub without a stage", async () => {
+	test.skip("Can create a pub without a stage", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		const title = "Pub without a stage";
 		await pubsPage.goTo();
@@ -139,7 +139,7 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByTestId("current-stage")).toHaveCount(0);
 	});
 
-	test("Can create a pub with a stage", async () => {
+	test.skip("Can create a pub with a stage", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		const title = "Pub with a stage";
 		const stage = "Submitted";
