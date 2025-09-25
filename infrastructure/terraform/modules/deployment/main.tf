@@ -196,7 +196,7 @@ module "service_site_builder" {
     service_name  = "site-builder"
     public        = true
     path_prefix   = "/"
-    rule_priority = 100
+    rule_priority = 101
     from_port     = 4000
     to_port       = 4000
     protocol      = "tcp"
