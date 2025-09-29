@@ -189,14 +189,21 @@ module "service_site_builder" {
   service_name   = "site-builder"
   cluster_info   = module.cluster.cluster_info
   repository_url = var.ecr_repository_urls.site_builder
+  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
+
+  resources = {
+    cpu           = 1024
+    memory        = 2048
+    desired_count = 1
+  }
 
   listener = {
-    service_name = "site-builder"
-    public       = true
-    path_prefix  = "/services/site-builder/"
+    service_name  = "site-builder"
+    public        = true
+    path_prefix   = "/services/site-builder/"
     rule_priority = 80
-    from_port     = 4000
-    to_port       = 4000
+    from_port     = 3000
+    to_port       = 3000
     protocol      = "tcp"
   }
 
@@ -215,12 +222,6 @@ module "service_site_builder" {
     secrets = [
       { name = "S3_SECRET_KEY", valueFrom = module.core_dependency_services.secrets.asset_uploader_secret_key },
     ]
-  }
-
-  resources = {
-    cpu           = 1024
-    memory        = 2048
-    desired_count = 1
   }
 }
 
