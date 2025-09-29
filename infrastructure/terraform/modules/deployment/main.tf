@@ -191,10 +191,10 @@ module "service_site_builder" {
   repository_url = var.ecr_repository_urls.site_builder
 
   listener = {
-    service_name  = "site-builder"
-    public        = false
-    path_prefix   = "/"
-    rule_priority = 101
+    service_name = "evaluations"
+    public       = true
+    path_prefix  = "/service/site-builder/"
+    rule_priority = 80
     from_port     = 4000
     to_port       = 4000
     protocol      = "tcp"
