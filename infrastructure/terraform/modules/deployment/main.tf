@@ -43,7 +43,7 @@ module "core_dependency_services" {
 
 locals {
   PUBPUB_URL       = "https://${var.pubpub_hostname}"
-  SITE_BUILDER_URL = "https://${var.site_builder_hostname}"
+  SITE_BUILDER_URL = "https://${var.pubpub_hostname}/services/site-builder"
 }
 
 module "service_core" {
@@ -191,9 +191,9 @@ module "service_site_builder" {
   repository_url = var.ecr_repository_urls.site_builder
 
   listener = {
-    service_name = "evaluations"
+    service_name = "site-builder"
     public       = true
-    path_prefix  = "/service/site-builder/"
+    path_prefix  = "/services/site-builder/"
     rule_priority = 80
     from_port     = 4000
     to_port       = 4000
