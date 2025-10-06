@@ -3,11 +3,12 @@ import { z } from "zod";
 
 import { Action, CoreSchemaType } from "db/public";
 
+import { fieldName } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
 const sharedSchema = z.object({
 	docUrl: z.string().url().describe("Document URL|The URL of the Google Doc to import"),
-	outputField: z.string().describe("Output Field|Where to store the Google Doc's content"),
+	outputField: fieldName().describe("Output Field|Where to store the Google Doc's content"),
 });
 
 export const action = defineAction({
@@ -21,18 +22,10 @@ export const action = defineAction({
 			docUrl: {
 				allowedSchemas: [CoreSchemaType.URL],
 			},
-			outputField: {
-				fieldType: "custom",
-			},
 		},
 	},
 	params: {
 		schema: sharedSchema.partial(),
-		fieldConfig: {
-			outputField: {
-				fieldType: "custom",
-			},
-		},
 	},
 	experimental: true,
 	superAdminOnly: true,

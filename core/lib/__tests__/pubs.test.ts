@@ -2,8 +2,8 @@ import { expect, test } from "vitest";
 
 import type { ProcessedPub } from "contracts";
 import type { PubsId, PubTypesId } from "db/public";
+import type { DeepPartial } from "utils/types";
 
-import type { DeepPartial } from "../types";
 import { getPubTitle } from "../pubs";
 
 const mockPub = (

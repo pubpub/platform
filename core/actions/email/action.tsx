@@ -1,5 +1,6 @@
 import * as z from "zod";
 
+import type { AutoFormInputComponentProps } from "ui/auto-form";
 import { Action } from "db/public";
 import { DependencyType } from "ui/auto-form/dependencyType";
 import { Mail } from "ui/icon";
@@ -10,6 +11,7 @@ import {
 } from "~/lib/server/render/pub/renderWithPubTokens";
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
+import MemberSelectClientFetch from "./DynamicSelectFetch";
 
 const emptyStringToUndefined = (arg: unknown) => {
 	if (typeof arg === "string" && arg === "") {
@@ -45,7 +47,14 @@ export const action = defineAction({
 				allowedSchemas: true,
 			},
 			recipientMember: {
-				fieldType: "custom",
+				fieldType: (props: AutoFormInputComponentProps) => (
+					<MemberSelectClientFetch
+						value={props.field.value}
+						allowPubFieldSubstitution
+						fieldName={props.field.name}
+						fieldLabel={"Recipient Member"}
+					/>
+				),
 			},
 		},
 		dependencies: [
@@ -93,7 +102,14 @@ export const action = defineAction({
 				allowedSchemas: true,
 			},
 			recipientMember: {
-				fieldType: "custom",
+				fieldType: (props: AutoFormInputComponentProps) => (
+					<MemberSelectClientFetch
+						value={props.field.value}
+						allowPubFieldSubstitution
+						fieldName={props.field.name}
+						fieldLabel={"Recipient Member"}
+					/>
+				),
 			},
 		},
 		dependencies: [

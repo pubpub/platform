@@ -1,7 +1,7 @@
 "use client";
 
 import type { Static } from "@sinclair/typebox";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 
 import { useCallback, useMemo } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -11,6 +11,7 @@ import QueryString from "qs";
 import { useForm } from "react-hook-form";
 
 import type { PubsId, StagesId } from "db/public";
+import type { DeepPartial } from "utils/types";
 import { Button } from "ui/button";
 import {
 	Form,
@@ -25,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { FormSubmitButton } from "ui/submit-button";
 
 import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
-import type { DeepPartial, PubField } from "~/lib/types";
+import type { PubField } from "~/lib/types";
 import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher";
 import { useCommunity } from "../providers/CommunityProvider";
 

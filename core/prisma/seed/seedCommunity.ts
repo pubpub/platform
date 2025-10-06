@@ -43,6 +43,7 @@ import type {
 	NewInviteInput,
 	permissionsSchema,
 } from "db/types";
+import type { MaybeHas } from "utils/types";
 import {
 	Action as ActionName,
 	CoreSchemaType,
@@ -56,7 +57,6 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
-import type { MaybeHas } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -1361,7 +1361,7 @@ export async function seedCommunity<
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
 		await Promise.all([
-			["site-builder", createSiteBuilderToken(createdCommunity.id)],
+			["site-builder", await createSiteBuilderToken(communityId, trx)],
 			...apiTokens.map(async ([tokenName, tokenInput]) => {
 				const [tokenId, tokenString] = tokenInput.id?.split(".") ?? [crypto.randomUUID()];
 

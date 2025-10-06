@@ -1,13 +1,12 @@
-import { notFound, redirect } from "next/navigation";
-import { Activity } from "lucide-react";
+import { notFound } from "next/navigation";
 
 import type { Action } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { PubFieldProvider } from "ui/pubFields";
 import { TokenProvider } from "ui/tokens";
 
-import { actions, getActionByName } from "~/actions/api";
-import { resolveFieldConfig } from "~/actions/api/server";
+import { getActionByName } from "~/actions/api";
+import { createDefaultFieldConfig } from "~/app/components/ActionUI/defaultFieldConfig";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getActionConfigDefaults } from "~/lib/server/actions";
@@ -37,32 +36,29 @@ export default async function Page(props: Props) {
 		redirectToLogin();
 	}
 
-	const actionConfigDefaults = await getActionConfigDefaults(
-		community.id,
-		params.action
-	).executeTakeFirst();
-
-	const [userCanEditCommunity, pubFields, resolvedFieldConfig] = await Promise.all([
+	const [userCanEditCommunity, pubFields, actionConfigDefaults] = await Promise.all([
 		userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
 			loginData.user.id
 		),
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
-		resolveFieldConfig(params.action, "config", {
-			communityId: community.id,
-			config: actionConfigDefaults?.config as Record<string, unknown> | undefined,
-		}),
+
+		getActionConfigDefaults(community.id, params.action).executeTakeFirst(),
 	]);
+
+	const action = getActionByName(params.action);
+	const defaultFields = Object.keys(
+		(actionConfigDefaults?.config as Record<string, unknown> | undefined) ?? {}
+	);
+	const defaultFieldConfig = createDefaultFieldConfig(defaultFields, action.config.fieldConfig);
 
 	if (!userCanEditCommunity) {
 		return await redirectToUnauthorized();
 	}
 
-	const { tokens = {} } = getActionByName(params.action);
 	const actionTitle = params.action[0].toUpperCase() + params.action.slice(1);
 
-	const action = actions[params.action];
 	if (!action) {
 		notFound();
 	}
@@ -84,14 +80,14 @@ export default async function Page(props: Props) {
 					</p>
 				</div>
 				<PubFieldProvider pubFields={pubFields}>
-					<TokenProvider tokens={tokens}>
+					<TokenProvider tokens={action.tokens ?? {}}>
 						<ActionConfigDefaultForm
 							communityId={community.id}
 							action={params.action}
 							values={
 								actionConfigDefaults?.config as Record<string, unknown> | undefined
 							}
-							fieldConfig={resolvedFieldConfig}
+							fieldConfig={defaultFieldConfig}
 						/>
 					</TokenProvider>
 				</PubFieldProvider>

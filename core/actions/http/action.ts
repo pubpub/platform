@@ -4,6 +4,7 @@ import { Action } from "db/public";
 import { DependencyType } from "ui/auto-form/dependencyType";
 import { Globe } from "ui/icon";
 
+import { outputMap } from "../_lib/zodTypes";
 import { defineAction } from "../types";
 
 export const action = defineAction({
@@ -52,9 +53,6 @@ export const action = defineAction({
 				.describe("Output map|Map of JSON paths to pub fields"),
 		}),
 		fieldConfig: {
-			outputMap: {
-				fieldType: "custom",
-			},
 			body: {
 				allowedSchemas: true,
 				fieldType: "textarea",
@@ -111,8 +109,7 @@ export const action = defineAction({
 				})
 				.optional()
 				.describe("Body|Body to send with the request. Only sent for non-GET requests."),
-			outputMap: z
-				.array(z.object({ pubField: z.string(), responseField: z.string() }))
+			outputMap: outputMap()
 				.optional()
 				.describe("Output map|Map of JSON paths to pub fields"),
 		}),
@@ -132,9 +129,6 @@ export const action = defineAction({
 				inputProps: {
 					className: "font-mono text-gray-700",
 				},
-			},
-			outputMap: {
-				fieldType: "custom",
 			},
 		},
 	},

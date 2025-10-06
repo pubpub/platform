@@ -15,9 +15,9 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import type { XOR } from "utils/types";
 import { MemberRole } from "db/public";
 
-import type { XOR } from "../types";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -189,6 +189,20 @@ export const deleteCommunityMemberships = (
 			.returningAll()
 	);
 
+export const deletePubMemberships = (
+	{ userId, pubId }: { userId: UsersId; pubId: PubsId },
+	trx = db
+) =>
+	autoRevalidate(
+		trx
+			.deleteFrom("pub_memberships")
+			.using("users")
+			.whereRef("users.id", "=", "pub_memberships.userId")
+			.where("users.id", "=", userId)
+			.where("pub_memberships.pubId", "=", pubId)
+			.returningAll()
+	);
+
 export const deleteCommunityMember = (props: CommunityMembershipsId, trx = db) =>
 	autoRevalidate(trx.deleteFrom("community_memberships").where("id", "=", props).returningAll());
 
@@ -231,6 +245,26 @@ export const insertStageMemberships = (
 	membership: NewStageMemberships & { userId: UsersId; forms: FormsId[] },
 	trx = db
 ) => autoRevalidate(trx.insertInto("stage_memberships").values(getMembershipRows(membership)));
+
+export const deleteStageMemberships = (
+	params: { communityId: CommunitiesId; userId: UsersId },
+	trx?: typeof db
+) => {
+	const executor = trx ?? db;
+	return autoRevalidate(
+		executor
+			.deleteFrom("stage_memberships")
+			.where("stage_memberships.userId", "=", params.userId)
+			.where(
+				"stage_memberships.stageId",
+				"in",
+				executor
+					.selectFrom("stages")
+					.select("stages.id")
+					.where("stages.communityId", "=", params.communityId)
+			)
+	);
+};
 
 export const insertStageMembershipsOverrideRole = (
 	props: NewStageMemberships & { userId: UsersId; forms: FormsId[] },

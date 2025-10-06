@@ -1,7 +1,7 @@
 import { ActionInstanceSelectorInput } from "../actionInstances/ActionInstanceSelectorInput";
 import { InputWithTokens, MarkdownEditor } from "../editors";
-import { PubFieldSelect } from "../pubFields/pubFieldSelect";
 import { PubFieldSelectInput } from "../pubFields/pubFieldSelect/PubFieldSelect";
+import { StagesSelect } from "../stages/StagesSelect";
 import AutoFormCheckbox from "./fields/checkbox";
 import AutoFormDate from "./fields/date";
 import AutoFormEnum from "./fields/enum";
@@ -26,6 +26,7 @@ export const INPUT_COMPONENTS = {
 	stringWithTokens: InputWithTokens,
 	actionInstance: ActionInstanceSelectorInput,
 	fieldName: PubFieldSelectInput,
+	stage: StagesSelect,
 };
 
 /**
@@ -44,4 +45,5 @@ export const DEFAULT_ZOD_HANDLERS: {
 	StringWithTokens: "stringWithTokens",
 	ActionInstance: "actionInstance",
 	FieldName: "fieldName",
+	Stage: "stage",
 };

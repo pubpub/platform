@@ -7,12 +7,11 @@ import type {
 	ActionInstancesId,
 	CommunitiesId,
 	FormsId,
-	MemberRole,
 	RulesId,
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Capabilities, Event, MembershipType, stagesIdSchema } from "db/public";
+import { Capabilities, Event, MemberRole, MembershipType, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
 import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";

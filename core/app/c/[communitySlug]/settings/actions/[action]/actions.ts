@@ -13,7 +13,7 @@ export async function updateActionConfigDefault(action: Action, values: Record<s
 	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
 	if (!community) {
-		return ApiError.NOT_FOUND;
+		return ApiError.COMMUNITY_NOT_FOUND;
 	}
 
 	if (!loginData || !loginData.user) {

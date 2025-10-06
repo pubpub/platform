@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { InputTypeForCoreSchemaType } from "schemas";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -208,9 +209,12 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 		);
 	}
 
-	const fileUploadSchema = getJsonSchemaByCoreSchemaType(CoreSchemaType.FileUpload);
-	if (Value.Check(fileUploadSchema, value.value)) {
-		return <FileUploadPreview files={value.value} />;
+	if (value.schemaName === CoreSchemaType.FileUpload) {
+		return (
+			<FileUploadPreview
+				files={value.value as InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>}
+			/>
+		);
 	}
 
 	if (value.schemaName === CoreSchemaType.DateTime) {

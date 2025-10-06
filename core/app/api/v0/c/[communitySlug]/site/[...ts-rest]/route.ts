@@ -196,7 +196,8 @@ const handler = createNextHandler(
 							pubTypeId: pubTypeId,
 							stageId: stageId,
 							pubIds: pubIds,
-							userId: user.id,
+							// TODO: make sure User is nullable, you don't get that with api key
+							userId: user?.id,
 						},
 						{
 							...rest,

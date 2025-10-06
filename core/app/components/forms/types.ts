@@ -12,9 +12,8 @@ import type {
 	StagesId,
 	StructuralFormElement,
 } from "db/public";
+import type { Prettify } from "utils/types";
 import { ElementType } from "db/public";
-
-import type { Prettify } from "~/lib/types";
 
 export type ElementProps<T extends InputComponent> =
 	//T extends T

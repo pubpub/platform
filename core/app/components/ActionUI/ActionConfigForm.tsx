@@ -5,25 +5,29 @@ import type { z } from "zod";
 import { startTransition, useCallback, useMemo } from "react";
 
 import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
-import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import { getActionByName } from "~/actions/api";
 import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";
+import { useCommunity } from "../providers/CommunityProvider";
+import { createDefaultFieldConfig } from "./defaultFieldConfig";
 
 export type Props = {
-	actionName: ActionName;
-	instance: ActionInstances;
-	communityId: string;
-	fieldConfig: FieldConfig<any>;
+	actionInstance: ActionInstances;
 	stageId: StagesId;
 	defaultFields: string[];
 };
 
 export const ActionConfigForm = (props: Props) => {
-	const action = getActionByName(props.actionName);
+	const community = useCommunity();
+	const action = getActionByName(props.actionInstance.action);
+
+	const fieldConfig = action.config.fieldConfig ?? {};
+	const fieldConfigWithDefaults = createDefaultFieldConfig(props.defaultFields, fieldConfig);
+
 	const schema = useMemo(() => {
 		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
 			props.defaultFields.reduce(
@@ -43,7 +47,7 @@ export const ActionConfigForm = (props: Props) => {
 		async (values: z.infer<typeof schema>) => {
 			startTransition(async () => {
 				const result = await runUpdateAction(
-					props.instance.id as ActionInstancesId,
+					props.actionInstance.id as ActionInstancesId,
 					props.stageId,
 					{
 						config: values,
@@ -62,18 +66,20 @@ export const ActionConfigForm = (props: Props) => {
 				}
 			});
 		},
-		[runUpdateAction, props.instance.id, props.communityId]
+		[runUpdateAction, props.actionInstance.id, community.id]
 	);
 
 	return (
-		<AutoForm
-			values={props.instance.config ?? {}}
-			fieldConfig={props.fieldConfig}
-			formSchema={schema}
-			dependencies={action.config.dependencies}
-			onSubmit={onSubmit}
-		>
-			<AutoFormSubmit>Update config</AutoFormSubmit>
-		</AutoForm>
+		<TokenProvider tokens={action.tokens ?? {}}>
+			<AutoForm
+				values={props.actionInstance.config ?? {}}
+				fieldConfig={fieldConfigWithDefaults}
+				formSchema={schema}
+				dependencies={action.config.dependencies}
+				onSubmit={onSubmit}
+			>
+				<AutoFormSubmit>Update config</AutoFormSubmit>
+			</AutoForm>
+		</TokenProvider>
 	);
 };

@@ -99,15 +99,7 @@ export type Action<
 	config: {
 		schema: C;
 		fieldConfig?: {
-			[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
-				/**
-				 * The type of the field.
-				 * Either choose one of the predefined types, define a type inline, or use `custom`.
-				 *
-				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
-				 */
-				fieldType?: FieldConfigItem["fieldType"] | "custom";
-			};
+			[K in keyof FieldConfig<C["_output"]>]: FieldConfigItem;
 		};
 		dependencies?: Dependency<z.infer<C>>[];
 	};
@@ -122,12 +114,7 @@ export type Action<
 	params: {
 		schema: A;
 		fieldConfig?: {
-			[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
-				/**
-				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
-				 */
-				fieldType?: FieldConfigItem["fieldType"] | "custom";
-			};
+			[K in keyof NonNullable<A["_output"]>]: FieldConfigItem;
 		};
 		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
 	};

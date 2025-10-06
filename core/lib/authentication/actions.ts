@@ -2,8 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { captureException } from "@sentry/nextjs";
 import * as Sentry from "@sentry/nextjs";
+import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
 import type {
@@ -14,15 +14,15 @@ import type {
 	Users,
 	UsersId,
 } from "db/public";
+import type { Prettify } from "utils/types";
 import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
-import type { Prettify } from "../types";
 import type { NoticeParams } from "~/app/components/Notice";
 import { compiledSignupFormSchema } from "~/app/components/Signup/schema";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
-import { lucia, validateRequest } from "~/lib/authentication/lucia";
+import { lucia } from "~/lib/authentication/lucia";
 import { createPasswordHash, validatePassword } from "~/lib/authentication/password";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import {

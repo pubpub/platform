@@ -1,15 +1,14 @@
 import { cache } from "react";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Event } from "db/public";
 
-import type { XOR } from "../types";
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { pubType, pubValuesByRef } from "../server";
 import { autoCache } from "../server/cache/autoCache";
-import { viewableStagesCte } from "../server/stages";
+import { actionConfigDefaultsSelect, viewableStagesCte } from "../server/stages";
 import { SAFE_USER_SELECT } from "../server/user";
 
 export const getStage = cache((stageId: StagesId, userId: UsersId) => {
@@ -25,6 +24,22 @@ export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 				"stages.order",
 				"createdAt",
 				"updatedAt",
+			])
+			.select((eb) => [
+				jsonArrayFrom(
+					eb
+						.selectFrom("move_constraint")
+						.whereRef("move_constraint.stageId", "=", "stages.id")
+						.innerJoin("stages as s", "s.id", "move_constraint.destinationId")
+						.select(["s.id", "s.name"])
+				).as("moveConstraints"),
+				jsonArrayFrom(
+					eb
+						.selectFrom("move_constraint")
+						.whereRef("move_constraint.destinationId", "=", "stages.id")
+						.innerJoin("stages as s", "s.id", "move_constraint.stageId")
+						.select(["s.id", "s.name"])
+				).as("moveConstraintSources"),
 			])
 			.where("stages.id", "=", stageId)
 	);
@@ -74,6 +89,7 @@ export const getStageActions = cache(
 					).as("lastActionRun")
 				)
 				.innerJoin("stages", "action_instances.stageId", "stages.id")
+				.select((eb) => actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys"))
 				.$if(!!pubId, (eb) =>
 					eb
 						.innerJoin("PubsInStages", "PubsInStages.stageId", "stages.id")
@@ -109,6 +125,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.innerJoin("users", "users.id", "stage_memberships.userId")
 			.select(SAFE_USER_SELECT)
 			.select("stage_memberships.role")
+			.select("stage_memberships.formId")
 			.orderBy("stage_memberships.createdAt asc")
 	);
 });

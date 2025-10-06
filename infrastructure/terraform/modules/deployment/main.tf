@@ -27,7 +27,6 @@ module "cluster" {
   region      = var.region
 
   pubpub_hostname = var.pubpub_hostname
-
   route53_zone_id = var.route53_zone_id
 
   container_ingress_port = 8080
@@ -43,7 +42,8 @@ module "core_dependency_services" {
 }
 
 locals {
-  PUBPUB_URL = "https://${var.pubpub_hostname}"
+  PUBPUB_URL       = "https://${var.pubpub_hostname}"
+  SITE_BUILDER_URL = "https://${var.pubpub_hostname}/services/site-builder"
 }
 
 module "service_core" {
@@ -93,15 +93,11 @@ module "service_core" {
       { name = "MAILGUN_SMTP_USERNAME", value = var.MAILGUN_SMTP_USERNAME },
       { name = "MAILGUN_SMTP_HOST", value = var.MAILGUN_SMTP_HOST },
       { name = "MAILGUN_SMTP_PORT", value = var.MAILGUN_SMTP_PORT },
-      { name = "NEXT_PUBLIC_PUBPUB_URL", value = local.PUBPUB_URL },
-      { name = "NEXT_PUBLIC_SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
-      { name = "NEXT_PUBLIC_SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
       { name = "PUBPUB_URL", value = local.PUBPUB_URL },
-      { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
-      { name = "SUPABASE_PUBLIC_KEY", value = var.NEXT_PUBLIC_SUPABASE_PUBLIC_KEY },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
-      { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host }
+      { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host },
+      { name = "SITE_BUILDER_ENDPOINT", value = local.SITE_BUILDER_URL }
     ]
 
     secrets = [
@@ -165,7 +161,6 @@ module "service_bastion" {
       { name = "PGDATABASE", value = module.core_dependency_services.rds_connection_components.database },
       { name = "PGHOST", value = module.core_dependency_services.rds_connection_components.host },
       { name = "PGPORT", value = module.core_dependency_services.rds_connection_components.port },
-      { name = "SUPABASE_URL", value = var.NEXT_PUBLIC_SUPABASE_URL },
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "PAGER", value = "less -S" },
       { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host }
@@ -185,6 +180,48 @@ module "service_bastion" {
 
     # TODO: disable autoscaling, which makes no sense for a bastion
     desired_count = 1
+  }
+}
+
+module "service_site_builder" {
+  source = "../container-generic"
+
+  service_name   = "site-builder"
+  cluster_info   = module.cluster.cluster_info
+  repository_url = var.ecr_repository_urls.site_builder
+  nginx_image    = "${var.ecr_repository_urls.nginx}:latest"
+
+  resources = {
+    cpu           = 1024
+    memory        = 2048
+    desired_count = 1
+  }
+
+  listener = {
+    service_name  = "site-builder"
+    public        = true
+    path_prefix   = "/services/site-builder/"
+    rule_priority = 80
+    from_port     = 4000
+    to_port       = 4000
+    protocol      = "tcp"
+  }
+
+  configuration = {
+    container_port = 4000
+
+    environment = [
+      { name = "PUBPUB_URL", value = local.PUBPUB_URL },
+      { name = "PORT", value = 4000 },
+      { name = "S3_ACCESS_KEY", value = module.core_dependency_services.asset_uploader_key_id },
+      { name = "S3_BUCKET_NAME", value = var.ASSETS_BUCKET_NAME },
+      { name = "S3_REGION", value = var.region },
+      // don't need to set S3_ENDPOINT, if empty will use s3
+    ]
+
+    secrets = [
+      { name = "S3_SECRET_KEY", valueFrom = module.core_dependency_services.secrets.asset_uploader_secret_key },
+    ]
   }
 }
 
