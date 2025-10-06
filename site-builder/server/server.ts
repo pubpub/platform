@@ -19,14 +19,7 @@ import { buildAstroSite } from "./astro";
 
 const env = await import("../src/lib/env/server").then((m) => m.SERVER_ENV);
 
-const app = new Hono({
-	getPath(req) {
-		console.log("Original URL:", req.url);
-		const url = req.url.replace("/services/site-builder", "");
-		console.log("Modified URL:", url);
-		return url;
-	},
-});
+const app = new Hono();
 const PORT = env.PORT;
 
 // Define a custom error interface for archiver warnings
