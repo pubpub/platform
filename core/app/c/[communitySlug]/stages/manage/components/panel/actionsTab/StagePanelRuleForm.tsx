@@ -2,12 +2,14 @@
 
 import type { ControllerRenderProps } from "react-hook-form";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Trash } from "lucide-react";
+import { useQueryState } from "nuqs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { ActionInstances, CommunitiesId, StagesId } from "db/public";
+import type { ActionInstances, CommunitiesId, RulesId, StagesId } from "db/public";
 import { actionInstancesIdSchema, Event } from "db/public";
 import { logger } from "logger";
 import { AutoFormObject } from "ui/auto-form";
@@ -23,6 +25,7 @@ import {
 } from "ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { FormSubmitButton } from "ui/submit-button";
 import { TokenProvider } from "ui/tokens";
 
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
@@ -31,17 +34,18 @@ import type { AutoReturnType } from "~/lib/types";
 import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
-import { addRule } from "../../../actions";
+import { addOrUpdateRule, deleteRule } from "../../../actions";
 
 type Props = {
 	stageId: StagesId;
 	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	communityId: CommunitiesId;
 	rules: {
-		id: string;
+		id: RulesId;
 		event: Event;
 		actionInstance: ActionInstances;
 		sourceAction?: ActionInstances;
+
 		config?: RuleConfig<RuleForEvent<Event>> | null;
 	}[];
 };
@@ -180,17 +184,30 @@ export type CreateRuleSchema = z.infer<typeof baseSchema> & {
 	actionConfig: Record<string, unknown> | null;
 };
 
-export const StagePanelRuleCreator = (props: Props) => {
-	const runAddRule = useServerAction(addRule);
+export const StagePanelRuleForm = (props: Props) => {
+	const [currentlyEditingRuleId, setCurrentlyEditingRuleId] = useQueryState("rule-id");
+
+	const runUpsertRule = useServerAction(addOrUpdateRule);
 	const [isOpen, setIsOpen] = useState(false);
+
 	const onSubmit = useCallback(
 		async (data: CreateRuleSchema) => {
-			const result = await runAddRule({ stageId: props.stageId, data });
+			const result = await runUpsertRule({
+				stageId: props.stageId,
+				data,
+				ruleId: currentlyEditingRuleId as RulesId | undefined,
+			});
 			if (!isClientException(result)) {
 				setIsOpen(false);
+				setCurrentlyEditingRuleId(null);
+				setSelectedActionInstance(null);
+				form.reset();
+				return;
 			}
+
+			form.setError("root", { message: result.error });
 		},
-		[props.stageId, runAddRule]
+		[props.stageId, runUpsertRule]
 	);
 
 	const [selectedActionInstance, setSelectedActionInstance] = useState<ActionInstances | null>(
@@ -286,32 +303,10 @@ export const StagePanelRuleCreator = (props: Props) => {
 		},
 	});
 
-	const onOpenChange = useCallback(
-		(open: boolean) => {
-			form.reset();
-			setSelectedActionInstance(null);
-			setIsOpen(open);
-		},
-		[form, setSelectedActionInstance, setIsOpen]
-	);
-
 	const community = useCommunity();
 
 	const event = form.watch("event");
 	const selectedActionInstanceId = form.watch("actionInstanceId");
-
-	useEffect(() => {
-		const actionInstance =
-			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null;
-		setSelectedActionInstance(actionInstance);
-
-		if (actionInstance?.config) {
-			form.reset({
-				...form.getValues(),
-				actionConfig: actionInstance.config,
-			});
-		}
-	}, [selectedActionInstanceId]);
 
 	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
 
@@ -345,7 +340,65 @@ export const StagePanelRuleCreator = (props: Props) => {
 		return { disallowedEvents, allowedEvents };
 	}, [props.rules, selectedActionInstanceId, event, form]);
 
+	useEffect(() => {
+		const actionInstance =
+			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null;
+		setSelectedActionInstance(actionInstance);
+
+		if (actionInstance?.config) {
+			form.reset({
+				...form.getValues(),
+				actionConfig: actionInstance.config,
+			});
+		}
+	}, [selectedActionInstanceId]);
+
+	useEffect(() => {
+		const currentRule = props.rules.find((rule) => rule.id === currentlyEditingRuleId);
+
+		if (!currentRule) {
+			return;
+		}
+
+		setIsOpen(true);
+		const actionInstance =
+			props.actionInstances.find((action) => action.id === currentRule.actionInstance.id) ??
+			null;
+		setSelectedActionInstance(actionInstance);
+
+		form.reset({
+			actionInstanceId: currentRule.actionInstance.id,
+			event: currentRule.event,
+			actionConfig: currentRule.config?.actionConfig,
+			sourceActionInstanceId: currentRule.sourceAction?.id,
+			ruleConfig: currentRule.config?.ruleConfig,
+		} as CreateRuleSchema);
+	}, [currentlyEditingRuleId]);
+
+	const onOpenChange = useCallback(
+		(open: boolean) => {
+			if (!open) {
+				form.reset();
+				setSelectedActionInstance(null);
+				setCurrentlyEditingRuleId(null);
+			}
+			setIsOpen(open);
+		},
+		[form, setSelectedActionInstance, setIsOpen]
+	);
+
 	const rule = getRuleByName(event);
+
+	const runDeleteRule = useServerAction(deleteRule);
+	const onDeleteClick = useCallback(async () => {
+		if (!currentlyEditingRuleId) {
+			return;
+		}
+
+		runDeleteRule(currentlyEditingRuleId as RulesId, props.stageId);
+	}, [currentlyEditingRuleId, props.stageId, runDeleteRule]);
+
+	const formId = useId();
 
 	return (
 		<div className="space-y-2 py-2">
@@ -364,8 +417,9 @@ export const StagePanelRuleCreator = (props: Props) => {
 					</DialogHeader>
 					<Form {...form}>
 						<form
+							id={formId}
 							onSubmit={form.handleSubmit(onSubmit)}
-							className="flex flex-col gap-y-4"
+							className="flex max-h-[85vh] flex-col gap-y-4 overflow-y-auto"
 						>
 							<FormField
 								control={form.control}
@@ -508,19 +562,38 @@ export const StagePanelRuleCreator = (props: Props) => {
 									schema={rule.additionalConfig}
 								/>
 							)}
-							<DialogFooter>
-								<Button
-									type="submit"
-									disabled={
-										allowedEvents.length === 0 ||
-										(isActionChainingEvent && !sourceActionInstanceId)
-									}
-								>
-									Save rule
-								</Button>
-							</DialogFooter>
 						</form>
+						{form.formState.errors.root && (
+							<p
+								className={
+									"text-[0.8rem] font-medium text-red-500 dark:text-red-900"
+								}
+							>
+								{form.formState.errors.root.message}
+							</p>
+						)}
 					</Form>
+					<DialogFooter className="flex w-full items-center !justify-between">
+						{currentlyEditingRuleId && (
+							<Button type="button" variant="destructive" onClick={onDeleteClick}>
+								<Trash size="14" />
+								Delete rule
+							</Button>
+						)}
+
+						<FormSubmitButton
+							form={formId}
+							formState={form.formState}
+							disabled={
+								allowedEvents.length === 0 ||
+								(isActionChainingEvent && !sourceActionInstanceId)
+							}
+							idleText="Save rule"
+							pendingText="Saving rule..."
+							successText="Rule saved"
+							errorText="Error saving rule"
+						/>
+					</DialogFooter>
 				</DialogContent>
 			</Dialog>
 		</div>

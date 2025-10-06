@@ -14,7 +14,7 @@ import type {
 import { Capabilities, Event, MemberRole, MembershipType, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
-import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleCreator";
+import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleForm";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -25,14 +25,13 @@ import {
 	createActionInstance,
 	getActionInstance,
 	removeActionInstance,
-	updateActionInstance,
 } from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { insertStageMemberships } from "~/lib/server/member";
-import { createRuleWithCycleCheck, removeRule, RuleError } from "~/lib/server/rules";
+import { createOrUpdateRuleWithCycleCheck, removeRule, RuleError } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
@@ -327,8 +326,6 @@ export const updateAction = defineServerAction(async function updateAction(
 		return ApiError.UNAUTHORIZED;
 	}
 
-	const result = await updateActionInstance(actionInstanceId, props).executeTakeFirstOrThrow();
-
 	return {
 		success: true,
 		report: "Action updated",
@@ -366,11 +363,13 @@ export const deleteAction = defineServerAction(async function deleteAction(
 	}
 });
 
-export const addRule = defineServerAction(async function addRule({
+export const addOrUpdateRule = defineServerAction(async function addOrUpdateRule({
 	stageId,
+	ruleId,
 	data,
 }: {
 	stageId: StagesId;
+	ruleId?: RulesId;
 	data: CreateRuleSchema;
 }) {
 	const loginData = await getLoginData();
@@ -389,7 +388,8 @@ export const addRule = defineServerAction(async function addRule({
 	}
 
 	try {
-		const createdRule = await createRuleWithCycleCheck({
+		await createOrUpdateRuleWithCycleCheck({
+			ruleId,
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
 			config: {
@@ -403,14 +403,14 @@ export const addRule = defineServerAction(async function addRule({
 		logger.error(error);
 		if (error instanceof RuleError) {
 			return {
-				title: "Error creating rule",
+				title: ruleId ? "Error updating rule" : "Error creating rule",
 				error: error.message,
 				cause: error,
 			};
 		}
 
 		return {
-			error: "Failed to add rule",
+			error: ruleId ? "Failed to update rule" : "Failed to create rule",
 			cause: error,
 		};
 	} finally {

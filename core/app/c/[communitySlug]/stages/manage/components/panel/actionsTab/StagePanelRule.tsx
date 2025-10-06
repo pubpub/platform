@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import { parseAsString, useQueryState } from "nuqs";
 
 import type {
 	Action,
@@ -12,15 +13,13 @@ import type {
 	StagesId,
 } from "db/public";
 import { Button } from "ui/button";
-import { Trash } from "ui/icon";
+import { Pencil } from "ui/icon";
 import { cn } from "utils";
 
 import type { RuleForEvent } from "~/actions/_lib/rules";
 import type { RuleConfig } from "~/actions/types";
 import { getActionByName, getRuleByName, humanReadableEventHydrated } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { useServerAction } from "~/lib/serverActions";
-import { deleteRule } from "../../../actions";
 
 type Props = {
 	stageId: StagesId;
@@ -45,10 +44,12 @@ const ActionIcon = (props: { actionName: Action; className?: string }) => {
 
 export const StagePanelRule = (props: Props) => {
 	const { rule } = props;
-	const runDeleteRule = useServerAction(deleteRule);
-	const onDeleteClick = useCallback(async () => {
-		runDeleteRule(rule.id, props.stageId);
-	}, [rule.id, props.communityId]);
+
+	const [, setEditingRuleId] = useQueryState("rule-id", parseAsString.withDefault("new-rule"));
+
+	const onEditClick = useCallback(() => {
+		setEditingRuleId(rule.id);
+	}, [rule.id, setEditingRuleId]);
 	const community = useCommunity();
 	const ruleSettings = getRuleByName(rule.event);
 
@@ -91,13 +92,8 @@ export const StagePanelRule = (props: Props) => {
 					</span>
 				</div>
 				<div className="flex-gap-1">
-					<Button
-						variant="secondary"
-						size="sm"
-						className="flex gap-2"
-						onClick={onDeleteClick}
-					>
-						<Trash size={14} />
+					<Button variant="ghost" size="sm" className="flex gap-2" onClick={onEditClick}>
+						<Pencil size={14} />
 					</Button>
 				</div>
 			</div>

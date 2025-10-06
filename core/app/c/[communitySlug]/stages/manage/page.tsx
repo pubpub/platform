@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 import { redirect } from "next/navigation";
 
-import type { StagesId } from "db/public";
+import type { RulesId, StagesId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 import { PubFieldProvider } from "ui/pubFields";
@@ -16,7 +16,6 @@ import { getStage } from "~/lib/db/queries";
 import { SSERevalidator } from "~/lib/notify/SSERevalidator";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
-import { getStages } from "~/lib/server/stages";
 import { StageEditor } from "./components/editor/StageEditor";
 import { StageEditorProvider } from "./components/editor/StageEditorContext";
 import { StagePanel } from "./components/panel/StagePanel";
@@ -26,7 +25,9 @@ import { StagesManageProvider } from "./StagesContext";
 type Props = {
 	params: Promise<{ communitySlug: string }>;
 	searchParams: Promise<{
-		editingStageId: string | undefined;
+		editingStageId?: string;
+		tab?: string;
+		ruleId?: RulesId;
 	}>;
 };
 
@@ -41,8 +42,6 @@ export async function generateMetadata(props: {
 	const { editingStageId } = searchParams;
 
 	const params = await props.params;
-
-	const { communitySlug } = params;
 
 	if (!editingStageId) {
 		return { title: "Workflow Editor" };

@@ -6,7 +6,7 @@ import { Card, CardContent } from "ui/card";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStageRules } from "~/lib/db/queries";
 import { StagePanelRule } from "./StagePanelRule";
-import { StagePanelRuleCreator } from "./StagePanelRuleCreator";
+import { StagePanelRuleForm } from "./StagePanelRuleForm";
 
 type PropsInner = {
 	stageId: StagesId;
@@ -48,7 +48,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 								</div>
 							)}
 						</div>
-						<StagePanelRuleCreator
+						<StagePanelRuleForm
 							stageId={stage.id}
 							actionInstances={actionInstances}
 							communityId={stage.communityId}
