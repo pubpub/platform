@@ -1,22 +1,15 @@
 "use client";
 
-import type { ControllerRenderProps, FieldValue, UseFormReturn } from "react-hook-form";
+import type { ControllerRenderProps } from "react-hook-form";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type {
-	Action,
-	ActionInstances,
-	ActionInstancesId,
-	CommunitiesId,
-	StagesId,
-} from "db/public";
+import type { ActionInstances, CommunitiesId, StagesId } from "db/public";
 import { actionInstancesIdSchema, Event } from "db/public";
 import { logger } from "logger";
-import { ActionInstanceProvider } from "ui/actionInstances";
 import { AutoFormObject } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
@@ -30,9 +23,11 @@ import {
 } from "ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { TokenProvider } from "ui/tokens";
 
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
-import type { SequentialRuleEvent } from "~/actions/types";
+import type { getStageActions } from "~/lib/db/queries";
+import type { AutoReturnType } from "~/lib/types";
 import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
@@ -40,7 +35,7 @@ import { addRule } from "../../../actions";
 
 type Props = {
 	stageId: StagesId;
-	actionInstances: ActionInstances[];
+	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	communityId: CommunitiesId;
 	rules: {
 		id: string;
@@ -60,7 +55,7 @@ const ActionSelector = ({
 	dataTestIdPrefix,
 }: {
 	fieldProps: Omit<ControllerRenderProps<CreateRuleSchema, "sourceActionInstanceId">, "name">;
-	actionInstances: ActionInstances[];
+	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	label: string;
 	placeholder: string;
 	disabledActionId?: string;
@@ -128,6 +123,11 @@ const baseSchema = z.discriminatedUnion("event", [
 		actionInstanceId: actionInstancesIdSchema,
 		sourceActionInstanceId: actionInstancesIdSchema,
 	}),
+	z.object({
+		event: z.literal(Event.webhook),
+		actionInstanceId: actionInstancesIdSchema,
+		actionConfig: z.object({}),
+	}),
 	...Object.values(rules)
 		.filter(
 			(
@@ -139,7 +139,8 @@ const baseSchema = z.discriminatedUnion("event", [
 						| Event.pubEnteredStage
 						| Event.pubLeftStage
 						| Event.actionSucceeded
-						| Event.actionFailed;
+						| Event.actionFailed
+						| Event.webhook;
 				}
 			> =>
 				![
@@ -147,6 +148,7 @@ const baseSchema = z.discriminatedUnion("event", [
 					Event.pubLeftStage,
 					Event.actionSucceeded,
 					Event.actionFailed,
+					Event.webhook,
 				].includes(rule.event)
 		)
 		.map((rule) =>
@@ -191,26 +193,80 @@ export const StagePanelRuleCreator = (props: Props) => {
 		[props.stageId, runAddRule]
 	);
 
-	const onOpenChange = useCallback((open: boolean) => {
-		setIsOpen(open);
-	}, []);
-
 	const [selectedActionInstance, setSelectedActionInstance] = useState<ActionInstances | null>(
 		null
 	);
+
+	const actionInstance = useMemo(() => {
+		if (!selectedActionInstance) {
+			return null;
+		}
+		const actionInstance = props.actionInstances.find(
+			(action) => action.id === selectedActionInstance.id
+		);
+
+		if (!actionInstance) {
+			return null;
+		}
+
+		return {
+			...actionInstance,
+			action: actions[actionInstance.action],
+		};
+	}, [selectedActionInstance, props.actionInstances]);
+
+	const actionSchema = useMemo(() => {
+		if (!selectedActionInstance) {
+			return z.object({});
+		}
+
+		if (!actionInstance) {
+			return z.object({});
+		}
+
+		const actionSchema = actionInstance.action.config.schema;
+
+		const schemaWithPartialDefaults = (actionSchema as z.ZodObject<any>).partial(
+			(actionInstance.defaultedActionConfigKeys ?? []).reduce(
+				(acc, key) => {
+					acc[key] = true;
+					return acc;
+				},
+				{} as Record<string, true>
+			)
+		);
+
+		return schemaWithPartialDefaults;
+	}, [selectedActionInstance, props.actionInstances, actionInstance]);
+
+	const selectedActionTokens = useMemo(() => {
+		if (!actionInstance) {
+			return {};
+		}
+
+		if (!actionInstance.action.tokens) {
+			return {};
+		}
+
+		return Object.fromEntries(
+			Object.entries(actionInstance.action.tokens).map(([key, value]) => [
+				`actionConfig.${key}`,
+				value,
+			])
+		);
+	}, [actionInstance]);
 
 	const schema = useMemo(() => {
 		if (!selectedActionInstance) {
 			return refineSchema(baseSchema);
 		}
-		const action = props.actionInstances.find(
+		const actionInstance = props.actionInstances.find(
 			(action) => action.id === selectedActionInstance.id
-		)?.action;
-		if (!action) {
+		);
+		if (!actionInstance) {
 			logger.error({ msg: "Action not found", selectedActionInstance });
 			return refineSchema(baseSchema);
 		}
-		const actionSchema = actions[action].config.schema;
 
 		const schemaWithAction = baseSchema.and(
 			z.object({
@@ -219,7 +275,7 @@ export const StagePanelRuleCreator = (props: Props) => {
 		);
 
 		return refineSchema(schemaWithAction);
-	}, [selectedActionInstance]);
+	}, [selectedActionInstance, actionSchema]);
 
 	const form = useForm<CreateRuleSchema>({
 		resolver: zodResolver(schema),
@@ -230,15 +286,31 @@ export const StagePanelRuleCreator = (props: Props) => {
 		},
 	});
 
+	const onOpenChange = useCallback(
+		(open: boolean) => {
+			form.reset();
+			setSelectedActionInstance(null);
+			setIsOpen(open);
+		},
+		[form, setSelectedActionInstance, setIsOpen]
+	);
+
 	const community = useCommunity();
 
 	const event = form.watch("event");
 	const selectedActionInstanceId = form.watch("actionInstanceId");
 
 	useEffect(() => {
-		setSelectedActionInstance(
-			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null
-		);
+		const actionInstance =
+			props.actionInstances.find((action) => action.id === selectedActionInstanceId) ?? null;
+		setSelectedActionInstance(actionInstance);
+
+		if (actionInstance?.config) {
+			form.reset({
+				...form.getValues(),
+				actionConfig: actionInstance.config,
+			});
+		}
 	}, [selectedActionInstanceId]);
 
 	const sourceActionInstanceId = form.watch("sourceActionInstanceId");
@@ -246,10 +318,11 @@ export const StagePanelRuleCreator = (props: Props) => {
 	// for action chaining events, filter out self-references
 	const isActionChainingEvent = event === Event.actionSucceeded || event === Event.actionFailed;
 
-	const getDisallowedEvents = useCallback(() => {
-		if (!selectedActionInstanceId) return [];
+	const { allowedEvents } = useMemo(() => {
+		if (!selectedActionInstanceId && !event)
+			return { disallowedEvents: [], allowedEvents: Object.values(Event) };
 
-		return props.rules
+		const disallowedEvents = props.rules
 			.filter((rule) => {
 				// for regular events, disallow if same action+event already exists
 				if (rule.event !== Event.actionSucceeded && rule.event !== Event.actionFailed) {
@@ -264,10 +337,13 @@ export const StagePanelRuleCreator = (props: Props) => {
 				);
 			})
 			.map((rule) => rule.event);
-	}, [props.rules, selectedActionInstanceId, event, form]);
 
-	const disallowedEvents = getDisallowedEvents();
-	const allowedEvents = Object.values(Event).filter((event) => !disallowedEvents.includes(event));
+		const allowedEvents = Object.values(Event).filter(
+			(event) => !disallowedEvents.includes(event)
+		);
+
+		return { disallowedEvents, allowedEvents };
+	}, [props.rules, selectedActionInstanceId, event, form]);
 
 	const rule = getRuleByName(event);
 
@@ -388,20 +464,32 @@ export const StagePanelRuleCreator = (props: Props) => {
 								)}
 							/>
 
-							{selectedActionInstance && (
+							{selectedActionInstance && event === Event.webhook && (
 								<div className="mt-4 space-y-2">
 									<h4 className="text-sm font-medium">
 										With the following config:
 									</h4>
 									<div className="rounded-md border bg-gray-50 p-2">
-										<AutoFormObject
-											form={form}
-											path={["actionConfig"]}
-											name="actionConfig"
-											schema={
-												actions[selectedActionInstance.action].config.schema
-											}
-										/>
+										<TokenProvider tokens={selectedActionTokens}>
+											<AutoFormObject
+												key={selectedActionInstance.id}
+												// @ts-expect-error FIXME: this fails because AutoFormObject
+												// expects the schema for `form` to be the same as the one for
+												// `schema`.
+												// Could be fixed by changing AutoFormObject to look at the schema of `form` at `path` for
+												// the schema at `schema`.
+												form={form}
+												path={["actionConfig"]}
+												name="actionConfig"
+												schema={actionSchema}
+												fieldConfig={
+													actionInstance?.action.config.fieldConfig
+												}
+												dependencies={
+													actionInstance?.action.config.dependencies
+												}
+											/>
+										</TokenProvider>
 									</div>
 								</div>
 							)}
