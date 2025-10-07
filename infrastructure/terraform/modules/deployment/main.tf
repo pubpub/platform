@@ -42,8 +42,7 @@ module "core_dependency_services" {
 }
 
 locals {
-  PUBPUB_URL       = "https://${var.pubpub_hostname}"
-  SITE_BUILDER_URL = "https://${var.pubpub_hostname}/services/site-builder"
+  PUBPUB_URL = "https://${var.pubpub_hostname}"
 }
 
 module "service_core" {
@@ -97,7 +96,7 @@ module "service_core" {
       { name = "HOSTNAME", value = var.HOSTNAME },
       { name = "DATACITE_API_URL", value = var.DATACITE_API_URL },
       { name = "VALKEY_HOST", value = module.core_dependency_services.valkey_host },
-      { name = "SITE_BUILDER_ENDPOINT", value = local.SITE_BUILDER_URL }
+      { name = "SITE_BUILDER_ENDPOINT", value = local.PUBPUB_URL }
     ]
 
     secrets = [
