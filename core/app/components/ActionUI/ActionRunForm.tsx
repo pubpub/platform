@@ -33,7 +33,7 @@ export const ActionRunForm = (props: Props) => {
 		action.params.fieldConfig
 	);
 
-	const [isPending, startTransition] = useTransition();
+	const [isPending] = useTransition();
 	const schema = useMemo(() => {
 		const schemaWithPartialDefaults = (action.params.schema as z.ZodObject<any>)
 			.partial(
@@ -73,9 +73,8 @@ export const ActionRunForm = (props: Props) => {
 							? result.title
 							: "Action ran successfully!",
 					variant: "default",
-					// TODO: SHOULD ABSOLUTELY BE SANITIZED
 					description: (
-						<div className="max-h-40 max-w-sm overflow-auto">{result.report} </div>
+						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
 					),
 				});
 			}
@@ -113,6 +112,8 @@ export const ActionRunForm = (props: Props) => {
 								disabled={isPending}
 								className="flex items-center gap-x-2"
 								data-testid="action-run-button"
+								pendingText="Running action..."
+								errorText="Error running action"
 							>
 								{isPending ? (
 									<Loader2 size="14" className="animate-spin" />

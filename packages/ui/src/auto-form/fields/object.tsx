@@ -66,7 +66,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 	// probably used when rendering a server component
 	if (isFieldConfigItem(fieldConfig)) {
 		const itemName = schema._def.description ?? beautifyObjectName(path[0]);
-		const [title, description, additionalType] = itemName.split("|");
+		const [title, description] = itemName.split("|");
 
 		return (
 			<FormFieldObject
@@ -206,14 +206,11 @@ function FormFieldObject({
 				const inputType =
 					fieldConfigItem.fieldType ?? DEFAULT_ZOD_HANDLERS[zodBaseType] ?? "fallback";
 
-				console.log(inputType);
-
 				const typeToUse =
 					additionalType && additionalType in INPUT_COMPONENTS
 						? (additionalType as keyof typeof INPUT_COMPONENTS)
 						: inputType;
 
-				console.log(typeToUse);
 				const ParentElement = fieldConfigItem.renderParent ?? DefaultParent;
 
 				// fully rendered component
