@@ -6,7 +6,7 @@ import { Card, CardContent } from "ui/card";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getStage, getStageActions, getStageRules } from "~/lib/db/queries";
 import { StagePanelRule } from "./StagePanelRule";
-import { StagePanelRuleForm } from "./StagePanelRuleForm";
+import { StagePanelAutomationForm } from "./StagePanelRuleForm";
 
 type PropsInner = {
 	stageId: StagesId;
@@ -27,7 +27,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 	return (
 		<Card>
 			<CardContent className="space-y-2 p-4">
-				<h4 className="mb-2 text-base font-semibold">Rules</h4>
+				<h4 className="mb-2 text-base font-semibold">Automations</h4>
 				{actionInstances.length > 0 ? (
 					<>
 						<div className="flex flex-col gap-2">
@@ -44,11 +44,11 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 								</>
 							) : (
 								<div>
-									There are no rules for <em>{stage.name}</em>
+									There are no automations for <em>{stage.name}</em>
 								</div>
 							)}
 						</div>
-						<StagePanelRuleForm
+						<StagePanelAutomationForm
 							stageId={stage.id}
 							actionInstances={actionInstances}
 							communityId={stage.communityId}
@@ -58,7 +58,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 				) : (
 					<div>
 						There are no actions for <em>{stage.name}</em>. Once you add an action to
-						this stage you can add rules to it here.
+						this stage you can add automations to it here.
 					</div>
 				)}
 			</CardContent>

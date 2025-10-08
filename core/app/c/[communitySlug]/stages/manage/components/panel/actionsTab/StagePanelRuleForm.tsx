@@ -27,6 +27,7 @@ import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
 import { TokenProvider } from "ui/tokens";
+import { cn } from "utils";
 
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
 import type { getStageActions } from "~/lib/db/queries";
@@ -184,8 +185,8 @@ export type CreateRuleSchema = z.infer<typeof baseSchema> & {
 	actionConfig: Record<string, unknown> | null;
 };
 
-export const StagePanelRuleForm = (props: Props) => {
-	const [currentlyEditingRuleId, setCurrentlyEditingRuleId] = useQueryState("rule-id");
+export const StagePanelAutomationForm = (props: Props) => {
+	const [currentlyEditingRuleId, setCurrentlyEditingRuleId] = useQueryState("automation-id");
 
 	const runUpsertRule = useServerAction(addOrUpdateRule);
 	const [isOpen, setIsOpen] = useState(false);
@@ -405,14 +406,14 @@ export const StagePanelRuleForm = (props: Props) => {
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>
 					<Button variant="secondary" data-testid="add-rule-button">
-						Add a rule
+						Add automation
 					</Button>
 				</DialogTrigger>
 				<DialogContent>
 					<DialogHeader>
-						<DialogTitle>Add a rule</DialogTitle>
+						<DialogTitle>Add an automation</DialogTitle>
 						<DialogDescription>
-							Select an action and an event to trigger it from the list below.
+							Set up an automation to run whenever a certain event is triggered.
 						</DialogDescription>
 					</DialogHeader>
 					<Form {...form}>
@@ -573,11 +574,16 @@ export const StagePanelRuleForm = (props: Props) => {
 							</p>
 						)}
 					</Form>
-					<DialogFooter className="flex w-full items-center !justify-between">
+					<DialogFooter
+						className={cn(
+							"flex w-full items-center",
+							currentlyEditingRuleId && "!justify-between"
+						)}
+					>
 						{currentlyEditingRuleId && (
 							<Button type="button" variant="destructive" onClick={onDeleteClick}>
 								<Trash size="14" />
-								Delete rule
+								Delete automation
 							</Button>
 						)}
 
@@ -588,10 +594,10 @@ export const StagePanelRuleForm = (props: Props) => {
 								allowedEvents.length === 0 ||
 								(isActionChainingEvent && !sourceActionInstanceId)
 							}
-							idleText="Save rule"
-							pendingText="Saving rule..."
-							successText="Rule saved"
-							errorText="Error saving rule"
+							idleText="Save automation"
+							pendingText="Saving automation..."
+							successText="Automation saved"
+							errorText="Error saving automation"
 						/>
 					</DialogFooter>
 				</DialogContent>
