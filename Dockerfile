@@ -102,7 +102,8 @@ RUN if [ "$PACKAGE" = "site-builder" ]; then \
   chown -R node:node /usr/src/app/builds /usr/src/app/.astro /usr/src/app/dist; \
   fi
 
-
+# very important, otherwise you will see obscure `dispatcher.getOwner` errors
+ENV NODE_ENV=production
 
 USER node
 
@@ -117,19 +118,13 @@ CMD ["pnpm", "start"]
 FROM base AS prod-setup
 ARG PORT
 
-# Use production node environment by default.
-ENV NODE_ENV=production
 
-# Run the application as a non-root user.
 USER node
 
-# Expose the port that the application listens on.
 EXPOSE $PORT
 
-# Use production node environment by default.
 ENV NODE_ENV=production
 
-# otherwise it will use the strange default docker hostname
 ENV HOSTNAME="0.0.0.0"
 
 ### Core
