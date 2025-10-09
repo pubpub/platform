@@ -111,7 +111,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					</li>
 					<li>
 						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{props.data.stage.actionInstancesCount} members
+							{props.data.stage.memberCount} members
 						</Button>
 					</li>
 				</ul>
