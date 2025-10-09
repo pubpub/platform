@@ -5,8 +5,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 
 import type { Json } from "contracts";
-import type { PubsId } from "db/public";
-import type { XOR } from "utils/types";
+import type { ActionInstances, PubsId, Stages } from "db/public";
+import type { Writeable, XOR } from "utils/types";
 import { Event } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
@@ -14,6 +14,7 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
 import type { PubTitleProps } from "~/lib/pubs";
 import { PubTitle } from "~/app/components/PubTitle";
+import { getPubTitle } from "~/lib/pubs";
 
 export type ActionRun = {
 	id: string;
@@ -38,8 +39,8 @@ export type ActionRun = {
 ) &
 	XOR<{ pub: PubTitleProps & { id: PubsId } }, { json: Json }>;
 
-export const getActionRunsTableColumns = (communitySlug: string) =>
-	[
+export const getActionRunsTableColumns = (communitySlug: string) => {
+	const cols = [
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Action" />,
 			accessorKey: "actionInstance",
@@ -47,7 +48,7 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 				const actionInstance = getValue<ActionRun["actionInstance"]>();
 				return actionInstance ? actionInstance.name : "Unknown";
 			},
-		},
+		} satisfies ColumnDef<ActionRun, ActionInstances>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Initiator" />,
 			accessorKey: "event",
@@ -69,7 +70,7 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 						return "Rule (Pub in stage for duration)";
 				}
 			},
-		},
+		} satisfies ColumnDef<ActionRun, Event>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Stage" />,
 			accessorKey: "stage",
@@ -77,32 +78,28 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 				const stage = getValue<ActionRun["stage"]>();
 				return stage ? stage.name : "Unknown";
 			},
-		},
+		} satisfies ColumnDef<ActionRun, Stages>,
 		{
 			id: "input",
-			header: ({ column }) => <DataTableColumnHeader column={column} title="Input" />,
 			accessorFn: (row) =>
-				row.pub ? { type: "pub", pub: row.pub } : { type: "json", json: row.json },
-			cell: ({ getValue }) => {
-				const input = getValue();
-				return input?.type === "pub" ? (
-					<Link href={`/c/${communitySlug}/pubs/${input.pub.id}`}>
-						<PubTitle pub={input.pub} />
+				row.pub ? getPubTitle(row.pub) : (JSON.stringify(row.json, null, 2) ?? "unknown"),
+			header: ({ column }) => <DataTableColumnHeader column={column} title="Input" />,
+			cell: ({ row }) => {
+				return row.original.pub ? (
+					<Link href={`/c/${communitySlug}/pubs/${row.original.pub.id}`}>
+						<PubTitle pub={row.original.pub} />
 					</Link>
 				) : (
 					<pre>
-						<code>{JSON.stringify(input.json, null, 2)}</code>
+						<code>{JSON.stringify(row.original.json, null, 2)}</code>
 					</pre>
 				);
 			},
-		} satisfies ColumnDef<
-			ActionRun,
-			{ type: "pub"; pub: PubTitleProps & { id: PubsId } } | { type: "json"; json: Json }
-		>,
+		} satisfies ColumnDef<ActionRun, string>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Time" />,
 			accessorKey: "createdAt",
-		},
+		} satisfies ColumnDef<ActionRun, string>,
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
 			accessorKey: "status",
@@ -137,5 +134,8 @@ export const getActionRunsTableColumns = (communitySlug: string) =>
 					</HoverCard>
 				);
 			},
-		},
-	] as const satisfies ColumnDef<ActionRun, unknown>[];
+		} satisfies ColumnDef<ActionRun, string>,
+	] as const; // satisfies ColumnDef<ActionRun, unknown>[];
+
+	return cols as Writeable<typeof cols>;
+};

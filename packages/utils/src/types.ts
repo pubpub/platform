@@ -109,6 +109,14 @@ export function brand<B extends Brand<any, any>, T = B extends Brand<infer U, an
  * Brand something with a string brand
  */
 export function brand<T, const B extends string>(t: T, b: B): Brand<T, B>;
-export function brand<T, const B extends string>(t: T, b?: B): Brand<T, B> {
+export function brand<T, const B extends string>(t: T, _b?: B): Brand<T, B> {
 	return t as Brand<T, B>;
 }
+
+export type Writeable<T> = {
+	-readonly [P in keyof T]: T[P];
+};
+
+export type DeepWritable<T> = {
+	-readonly [P in keyof T]: DeepWritable<T[P]>;
+};
