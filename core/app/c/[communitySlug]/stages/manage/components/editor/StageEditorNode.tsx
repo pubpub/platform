@@ -51,7 +51,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	const onBlur = useCallback(() => {
 		if (isEditingName) {
 			window.getSelection()?.removeAllRanges();
-			if (nameRef.current) {
+			if (nameRef.current?.textContent) {
 				updateStageName(props.data.stage.id as StagesId, nameRef.current.textContent!);
 			}
 			setIsEditingName(false);
@@ -92,6 +92,9 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 					<p
 						className="nodrag cursor-text text-sm font-medium"
 						contentEditable
+						onBeforeInput={() => {
+							setIsEditingName(true);
+						}}
 						suppressContentEditableWarning
 						ref={nameRef}
 						aria-label="Edit stage name"
