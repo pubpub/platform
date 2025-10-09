@@ -14,10 +14,13 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
+	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
+import { logger } from "logger";
 
+import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -253,8 +256,8 @@ const handler = createNextHandler(
 					body: createdPub,
 				};
 			},
-			update: async ({ params, body }) => {
-				const { user, community, lastModifiedBy } = await checkAuthorization({
+			update: async ({ params }) => {
+				const { user, community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					// TODO: refactor so we call userCanEditPub here
 					cookies: false,
@@ -734,10 +737,26 @@ const handler = createNextHandler(
 				);
 			}
 
-			return {
-				status: 200,
-				body: undefined,
-			};
+			try {
+				await scheduleActionInstances({
+					event: Event.webhook,
+					stack: [],
+					stageId: rule.actionInstance.stageId,
+					json: body,
+					config: rule.config?.actionConfig,
+				});
+
+				return {
+					status: 201,
+					body: undefined,
+				};
+			} catch (e) {
+				logger.error(e);
+				return {
+					status: 500,
+					body: `Something went wrong when triggering webhook. ${e.message}`,
+				};
+			}
 		},
 	},
 	{

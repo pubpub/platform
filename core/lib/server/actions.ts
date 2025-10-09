@@ -74,6 +74,7 @@ export const getActionRuns = (communityId: CommunitiesId) => {
 				"action_runs.status",
 				"action_runs.result",
 				"action_runs.createdAt",
+				"action_runs.json",
 				jsonObjectFrom(
 					eb
 						.selectFrom("action_instances")

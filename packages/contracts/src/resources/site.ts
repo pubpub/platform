@@ -396,7 +396,8 @@ export const siteApi = contract.router(
 			}),
 			body: jsonSchema,
 			responses: {
-				200: z.never().optional(),
+				201: z.never().optional(),
+				500: z.string(),
 			},
 		},
 	},

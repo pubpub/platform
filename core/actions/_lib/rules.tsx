@@ -1,17 +1,16 @@
 import {
 	ArrowRightFromLine,
-	ArrowRightFromLineIcon,
 	ArrowRightToLine,
 	CalendarClock,
 	CheckCircle,
 	Globe,
-	GlobeIcon,
 	XCircle,
 } from "lucide-react";
 import { z } from "zod";
 
 import type { RulesId } from "db/public";
 import { Event } from "db/public";
+import { CopyButton } from "ui/copy-button";
 
 import { defineRule } from "~/actions/types";
 
@@ -78,10 +77,23 @@ export const webhook = defineRule({
 	event: Event.webhook,
 	display: {
 		icon: Globe,
-		base: ({ community }) =>
-			`a request is made to \`${constructWebhookUrl("<ruleId>" as RulesId, community.slug)}\``,
-		hydrated: ({ rule, community }) =>
-			`a request is made to \`${constructWebhookUrl(rule.id, community.slug)}\``,
+		base: ({ community }) => (
+			<span>
+				a request is made to{" "}
+				<code>{constructWebhookUrl("<ruleId>" as RulesId, community.slug)}</code>
+			</span>
+		),
+		hydrated: ({ rule, community }) => (
+			<span>
+				a request is made to <code>{constructWebhookUrl(rule.id, community.slug)}</code>
+				<CopyButton
+					value={new URL(
+						constructWebhookUrl(rule.id, community.slug),
+						window.location.origin
+					).toString()}
+				/>
+			</span>
+		),
 	},
 });
 

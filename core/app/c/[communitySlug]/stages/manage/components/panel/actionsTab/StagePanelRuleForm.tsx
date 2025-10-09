@@ -186,8 +186,7 @@ export type CreateRuleSchema = z.infer<typeof baseSchema> & {
 };
 
 export const StagePanelAutomationForm = (props: Props) => {
-	const [currentlyEditingRuleId, setCurrentlyEditingRuleId] = useQueryState("automation-id");
-
+	const [currentlyEditingRuleId, setCurrentlyEditingRuleId] = useQueryState("rule-id");
 	const runUpsertRule = useServerAction(addOrUpdateRule);
 	const [isOpen, setIsOpen] = useState(false);
 

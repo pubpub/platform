@@ -196,7 +196,7 @@ export type EventRuleOptionsBase<
 		/**
 		 * The base display name for this rule, shown e.g. when selecting the event for a rule
 		 */
-		base: string | ((options: { community: Communities }) => string);
+		base: React.ReactNode | ((options: { community: Communities }) => React.ReactNode);
 		/**
 		 * String to use when viewing the rule on the stage.
 		 * Useful if you want to show some configuration or rule-specific information
@@ -210,7 +210,7 @@ export type EventRuleOptionsBase<
 				: E extends SequentialRuleEvent
 					? { config: ActionInstances }
 					: {})
-		) => string;
+		) => React.ReactNode;
 	};
 };
 

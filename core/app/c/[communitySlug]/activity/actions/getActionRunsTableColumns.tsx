@@ -59,15 +59,17 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 				}
 				switch (getValue()) {
 					case Event.actionFailed:
-						return `Rule (${row.original.sourceActionInstance?.name} failed)`;
+						return `Automation (${row.original.sourceActionInstance?.name} failed)`;
 					case Event.actionSucceeded:
-						return `Rule (${row.original.sourceActionInstance?.name} succeeded)`;
+						return `Automation (${row.original.sourceActionInstance?.name} succeeded)`;
 					case Event.pubEnteredStage:
-						return "Rule (Pub entered stage)";
+						return "Automation (Pub entered stage)";
 					case Event.pubLeftStage:
-						return "Rule (Pub exited stage)";
+						return "Automation (Pub exited stage)";
 					case Event.pubInStageForDuration:
-						return "Rule (Pub in stage for duration)";
+						return "Automation (Pub in stage for duration)";
+					case Event.webhook:
+						return "Automation (Webhook)";
 				}
 			},
 		} satisfies ColumnDef<ActionRun, Event>,
@@ -85,6 +87,8 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 				row.pub ? getPubTitle(row.pub) : (JSON.stringify(row.json, null, 2) ?? "unknown"),
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Input" />,
 			cell: ({ row }) => {
+				console.log(row.original);
+
 				return row.original.pub ? (
 					<Link
 						href={`/c/${communitySlug}/pubs/${row.original.pub.id}`}
