@@ -14,10 +14,10 @@ import type {
 import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
+import type { Prettify, XOR } from "utils/types";
 import { Event } from "db/public";
 
 import type { ClientExceptionOptions } from "~/lib/serverActions";
-import type { Prettify, XOR } from "~/lib/types";
 
 export type ActionPub = ProcessedPub<{
 	withPubType: true;

@@ -11,9 +11,9 @@ import "date-fns";
 
 import type { Json } from "contracts";
 import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
+import type { XOR } from "utils/types";
 import { Event } from "db/public";
 
-import type { XOR } from "../types";
 import type { Interval } from "~/actions/_lib/rules";
 import { addDuration } from "../dates";
 

@@ -11,12 +11,13 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import type { BaseActionInstanceConfig } from "db/types";
+import type { Prettify, XOR } from "utils/types";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
-import type { XOR } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
 import { hydratePubValues } from "~/lib/fields/utils";
@@ -35,18 +36,21 @@ export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions 
 	stack: ActionRunsId[];
 };
 
-export type RunActionInstanceArgs = {
-	communityId: CommunitiesId;
-	actionInstanceId: ActionInstancesId;
-	actionInstanceArgs?: Record<string, unknown>;
-	stack: ActionRunsId[];
-	scheduledActionRunId?: ActionRunsId;
-	/**
-	 * The config for the action instance to use when scheduling the action
-	 */
-	config: Record<string, unknown> | null;
-} & XOR<{ event: Event }, { userId: UsersId }> &
-	XOR<{ pubId: PubsId }, { json: Json }>;
+export type RunActionInstanceArgs = Prettify<
+	{
+		communityId: CommunitiesId;
+		actionInstanceId: ActionInstancesId;
+		actionInstanceArgs?: Record<string, unknown>;
+		stack: ActionRunsId[];
+		scheduledActionRunId?: ActionRunsId;
+		/**
+		 * The config for the action instance to use when scheduling the action
+		 * Non-optional to make sure it's passed when needed
+		 */
+		config: Record<string, unknown> | null;
+	} & XOR<{ event: Event }, { userId: UsersId }> &
+		XOR<{ pubId: PubsId }, { json: Json }>
+>;
 
 const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
 	trx
@@ -54,7 +58,7 @@ const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
 		.where("action_instances.id", "=", actionInstanceId)
 		.select((eb) => [
 			"id",
-			eb.fn.coalesce("config", sql`'{}'`).as("config"),
+			eb.fn.coalesce("config", sql<BaseActionInstanceConfig>`'{}'`).as("config"),
 			"createdAt",
 			"updatedAt",
 			"stageId",
@@ -396,7 +400,7 @@ export const runInstancesForEvent = async (
 	const results = await Promise.all(
 		instances.map(async (instance) => {
 			return {
-				actionInstanceId: instance.rule?.actionInstanceId,
+				actionInstanceId: instance.id,
 				actionInstanceName: instance.name,
 				result: await runActionInstance(
 					{

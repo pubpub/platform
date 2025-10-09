@@ -4,9 +4,8 @@ import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
-const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } =
-	await mockServerCode();
-const { getTrx, rollback, commit } = createForEachMockedTransaction();
+const { createForEachMockedTransaction } = await mockServerCode();
+const { getTrx } = createForEachMockedTransaction();
 
 const pubTriggerTestSeed = async () => {
 	const slugName = `test-server-pub-${new Date().toISOString()}`;
@@ -70,7 +69,6 @@ const pubTriggerTestSeed = async () => {
 
 describe("runActionInstance", () => {
 	it("should be able to successfully run the most simple action", async () => {
-		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
@@ -84,6 +82,7 @@ describe("runActionInstance", () => {
 			event: Event.pubEnteredStage,
 			communityId: community.id,
 			stack: [],
+			config: null,
 		});
 
 		expect(result).toMatchObject({
@@ -135,6 +134,7 @@ describe("runActionInstance", () => {
 			},
 			communityId: community.id,
 			stack: [],
+			config: null,
 		});
 
 		expect(result).toEqual({

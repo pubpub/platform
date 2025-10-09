@@ -6,13 +6,13 @@ import Link from "next/link";
 
 import type { Json } from "contracts";
 import type { PubsId } from "db/public";
+import type { XOR } from "utils/types";
 import { Event } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";
 
 import type { PubTitleProps } from "~/lib/pubs";
-import type { XOR } from "~/lib/types";
 import { PubTitle } from "~/app/components/PubTitle";
 
 export type ActionRun = {

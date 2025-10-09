@@ -10,7 +10,7 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 import { runActionInstance as runActionInstanceInner } from "../_lib/runActionInstance";
 
 export const runActionInstance = defineServerAction(async function runActionInstance(
-	args: Omit<RunActionInstanceArgs, "userId" | "event">
+	args: Omit<RunActionInstanceArgs, "userId" | "event" | "config">
 ): Promise<ActionInstanceRunResult> {
 	const { user } = await getLoginData();
 
@@ -38,10 +38,14 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		};
 	}
 
+	const { json: _, pubId: __, ...rest } = args;
+
 	const result = await runActionInstanceInner({
-		...args,
+		...rest,
 		userId: user.id as UsersId,
 		stack: args.stack ?? [],
+		...(args.json ? { json: args.json } : { pubId: args.pubId! }),
+		config: null,
 	});
 
 	return result;

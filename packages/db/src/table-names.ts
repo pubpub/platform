@@ -405,6 +405,7 @@ export const databaseTables = [
 				isNullable: true,
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
+				comment: "@type(BaseActionInstanceConfig, '../types', true, false, true)",
 			},
 			{
 				name: "name",

@@ -3,6 +3,7 @@ import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
 import { Event } from "db/public";
+import { logger } from "logger";
 
 import type { RuleConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
@@ -170,6 +171,15 @@ export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOpt
 					options!.event === Event.pubInStageForDuration ||
 					options!.event === Event.webhook
 				) {
+					return where;
+				}
+
+				if (!options!.sourceActionInstanceId) {
+					logger.warn({
+						msg: `Source action instance id is not set for rule with event ${options!.event}`,
+						event: options!.event,
+						ruleId: options!.sourceActionInstanceId,
+					});
 					return where;
 				}
 

@@ -14,12 +14,10 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
-	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
 
-import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -42,9 +40,9 @@ import {
 	removePubRelations,
 	replacePubRelationsBySlug,
 	tsRestHandleErrors,
-	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
@@ -58,8 +56,7 @@ const handler = createNextHandler(
 		auth: {
 			check: {
 				siteBuilder: async () => {
-					const { authorization, community, isSiteBuilderToken } =
-						await getAuthorization();
+					const { isSiteBuilderToken } = await getAuthorization();
 
 					if (!isSiteBuilderToken) {
 						return {
@@ -167,12 +164,11 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async ({ query }, { request, responseHeaders }) => {
-				const { user, community, authorization, isSiteBuilderToken } =
-					await checkAuthorization({
-						token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
-						cookies: "community-member",
-					});
+			getMany: async ({ query }, { responseHeaders }) => {
+				const { user, community, authorization } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: "community-member",
+				});
 
 				const allowedPubTypes =
 					typeof authorization === "object" ? authorization.pubTypes : undefined;
@@ -272,14 +268,6 @@ const handler = createNextHandler(
 				if (!exists) {
 					throw new NotFoundError(`Pub ${params.pubId} not found`);
 				}
-
-				const updatedPub = await updatePub({
-					pubValues: body,
-					pubId: params.pubId as PubsId,
-					communityId: community.id,
-					continueOnValidationError: false,
-					lastModifiedBy,
-				});
 
 				const returnRepresentation = shouldReturnRepresentation();
 
@@ -533,7 +521,7 @@ const handler = createNextHandler(
 					body: pubType,
 				};
 			},
-			getMany: async (req, args) => {
+			getMany: async (req) => {
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
 					// TODO: figure out capability here
@@ -575,7 +563,7 @@ const handler = createNextHandler(
 					body: stage,
 				};
 			},
-			getMany: async (req, res) => {
+			getMany: async () => {
 				const { community, user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: false,
@@ -745,14 +733,6 @@ const handler = createNextHandler(
 					"Body is required for webhook, send an empty one if needed"
 				);
 			}
-
-			const actionScheduleResults = await scheduleActionInstances({
-				json: body,
-				stageId: rule.actionInstance.stageId,
-				stack: [],
-				event: Event.webhook,
-				config: rule.config?.actionConfig ?? undefined,
-			});
 
 			return {
 				status: 200,

@@ -1,13 +1,7 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import {
-	actionInstancesIdSchema,
-	actionRunsIdSchema,
-	Event,
-	eventSchema,
-	pubsIdSchema,
-} from "db/public";
+import { actionInstancesIdSchema, actionRunsIdSchema, eventSchema, pubsIdSchema } from "db/public";
 
 import { jsonSchema } from "./types";
 
@@ -51,7 +45,7 @@ export const internalApi = contract.router(
 					event: eventSchema,
 					stack: z.array(actionRunsIdSchema).optional(),
 					scheduledActionRunId: actionRunsIdSchema.optional(),
-					config: jsonSchema.optional(),
+					config: z.record(z.unknown()).optional(),
 				})
 				.and(
 					z.union([

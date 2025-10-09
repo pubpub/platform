@@ -8,7 +8,7 @@ import { createSeed } from "~/prisma/seed/createSeed";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
-const { getTrx } = createForEachMockedTransaction();
+createForEachMockedTransaction();
 
 const seed = createSeed({
 	community: {
@@ -70,8 +70,11 @@ const seed = createSeed({
 					event: Event.pubInStageForDuration,
 					actionInstance: "3",
 					config: {
-						duration: 1000,
-						interval: "s",
+						actionConfig: null,
+						ruleConfig: {
+							duration: 1000,
+							interval: "s",
+						},
 					},
 				},
 				{
@@ -107,7 +110,6 @@ describe("rules.db", () => {
 		const rule = await createRuleWithCycleCheck({
 			event: Event.pubEnteredStage,
 			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-			config: {},
 		});
 
 		expect(rule).toBeDefined();
@@ -122,7 +124,6 @@ describe("rules.db", () => {
 			createRuleWithCycleCheck({
 				event: Event.pubLeftStage,
 				actionInstanceId: community.stages["Stage 1"].actions["3"].id,
-				config: {},
 			})
 		).rejects.toThrow(RegularRuleAlreadyExistsError);
 	});
@@ -137,7 +138,6 @@ describe("rules.db", () => {
 				event: Event.actionSucceeded,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
-				config: {},
 			})
 		).rejects.toThrow(SequentialRuleAlreadyExistsError);
 	});
@@ -149,7 +149,6 @@ describe("rules.db", () => {
 			createRuleWithCycleCheck({
 				event: Event.pubInStageForDuration,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
-				config: {},
 			})
 		).rejects.toThrowError(RuleConfigError);
 	});
@@ -163,7 +162,6 @@ describe("rules.db", () => {
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
-					config: {},
 				})
 			).rejects.toThrow(RuleCycleError);
 
@@ -173,7 +171,6 @@ describe("rules.db", () => {
 					event: Event.actionFailed,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
-					config: {},
 				})
 			).rejects.toThrow(RuleCycleError);
 
@@ -183,7 +180,6 @@ describe("rules.db", () => {
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
-					config: {},
 				})
 			).rejects.toThrow(RuleCycleError);
 		});
@@ -197,7 +193,6 @@ describe("rules.db", () => {
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
-					config: {},
 				})
 			).resolves.not.toThrow();
 		});
@@ -213,7 +208,6 @@ describe("rules.db", () => {
 						event: Event.actionSucceeded,
 						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 						sourceActionInstanceId: community.stages["Stage 1"].actions["4"].id,
-						config: {},
 					},
 					3
 				)

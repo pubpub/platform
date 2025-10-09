@@ -304,6 +304,7 @@ model ActionInstance {
   stageId   String
   createdAt DateTime    @default(now())
   updatedAt DateTime    @default(now()) @updatedAt
+  /// @type(BaseActionInstanceConfig, '../types', true, false, true)
   config    Json?
   rules     Rule[]
   runs      ActionRun[]
