@@ -19,22 +19,17 @@ import { getDefaultValues, getObjectFormSchema } from "./utils";
 export function AutoFormSubmit({
 	children,
 	className,
-	disabled,
 	"data-testid": testId,
-}: {
-	children?: React.ReactNode;
-	"data-testid"?: string;
-	className?: string;
-	disabled?: boolean;
-}) {
+	...props
+}: Omit<Parameters<typeof FormSubmitButton>[0], "formState">) {
 	const form = useFormState();
 
 	return (
 		<FormSubmitButton
 			data-testid={testId ?? "auto-form-submit"}
+			{...props}
 			formState={form}
 			idleText={children}
-			className={className}
 		/>
 	);
 }
@@ -56,7 +51,9 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	onParsedValuesChange?: (
 		values: Partial<z.infer<SchemaType>> & { pubFields: Record<string, string[]> }
 	) => void;
-	onSubmit?: (values: z.infer<SchemaType> & { pubFields: Record<string, string[]> }) => void;
+	onSubmit?: (
+		values: z.infer<SchemaType> & { pubFields: Record<string, string[]> }
+	) => void | Promise<void>;
 	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>;
 	children?: React.ReactNode;
 	className?: string;
@@ -82,10 +79,10 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	// valuesString is needed because form.watch() returns a new object every time
 	const valuesString = JSON.stringify(values);
 
-	function onSubmit(submittedValues: z.infer<typeof formSchema>) {
+	async function onSubmit(submittedValues: z.infer<typeof formSchema>) {
 		const parsedValues = formSchema.safeParse(submittedValues);
 		if (parsedValues.success) {
-			onSubmitProp?.({
+			await onSubmitProp?.({
 				...parsedValues.data,
 				// need to grab this from `values` because it's not in the parsed values,
 				// as pubFields are not part of the schema
@@ -115,12 +112,7 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	return (
 		<div className="w-full">
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						form.handleSubmit(onSubmit)(e);
-					}}
-					className={cn("space-y-5", className)}
-				>
+				<form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-5", className)}>
 					<AutoFormObject
 						schema={objectFormSchema}
 						form={form}

@@ -4,8 +4,7 @@ import type { z } from "zod";
 
 import { Suspense, useCallback, useMemo, useTransition } from "react";
 
-import type { ActionInstances, ActionInstancesId, CommunitiesId, PubsId } from "db/public";
-import type { FieldConfig } from "ui/auto-form";
+import type { ActionInstances, CommunitiesId, PubsId } from "db/public";
 import { logger } from "logger";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
@@ -34,7 +33,7 @@ export const ActionRunForm = (props: Props) => {
 		action.params.fieldConfig
 	);
 
-	const [isPending, startTransition] = useTransition();
+	const [isPending] = useTransition();
 	const schema = useMemo(() => {
 		const schemaWithPartialDefaults = (action.params.schema as z.ZodObject<any>)
 			.partial(
@@ -59,29 +58,26 @@ export const ActionRunForm = (props: Props) => {
 
 	const onSubmit = useCallback(
 		async (values: z.infer<typeof action.params.schema>) => {
-			startTransition(async () => {
-				const result = await runAction({
-					actionInstanceId: props.actionInstance.id,
-					pubId: props.pubId,
-					actionInstanceArgs: values,
-					communityId: community.id as CommunitiesId,
-					stack: [],
-				});
-
-				if ("success" in result) {
-					toast({
-						title:
-							"title" in result && typeof result.title === "string"
-								? result.title
-								: "Action ran successfully!",
-						variant: "default",
-						// TODO: SHOULD ABSOLUTELY BE SANITIZED
-						description: (
-							<div className="max-h-40 max-w-sm overflow-auto">{result.report} </div>
-						),
-					});
-				}
+			const result = await runAction({
+				actionInstanceId: props.actionInstance.id,
+				pubId: props.pubId,
+				actionInstanceArgs: values,
+				communityId: community.id as CommunitiesId,
+				stack: [],
 			});
+
+			if ("success" in result) {
+				toast({
+					title:
+						"title" in result && typeof result.title === "string"
+							? result.title
+							: "Action ran successfully!",
+					variant: "default",
+					description: (
+						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
+					),
+				});
+			}
 		},
 		[runAction, props.actionInstance.id, props.pubId]
 	);
@@ -116,6 +112,8 @@ export const ActionRunForm = (props: Props) => {
 								disabled={isPending}
 								className="flex items-center gap-x-2"
 								data-testid="action-run-button"
+								pendingText="Running action..."
+								errorText="Error running action"
 							>
 								{isPending ? (
 									<Loader2 size="14" className="animate-spin" />

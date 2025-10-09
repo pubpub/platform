@@ -45,7 +45,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		communitySlug,
 		journalId: pub.id,
 		mapping: config,
-		uploadToS3Folder: true,
 		siteUrl,
 		headers: {
 			authorization: `Bearer ${siteBuilderToken}`,
@@ -57,7 +56,6 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 				communitySlug,
 				journalId: pub.id,
 				mapping: config,
-				uploadToS3Folder: true,
 				siteUrl,
 			},
 			headers: {
@@ -85,13 +83,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 
 	logger.info({ msg: "Journal site built", data });
 
-	const s3FolderUrl = data.s3FolderUrl ? new URL(data.s3FolderUrl) : undefined;
 	const dataUrl = new URL(data.url);
-
-	const rewrittenS3FolderUrl = s3FolderUrl
-		? `${env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org"}${s3FolderUrl.pathname}`
-		: undefined;
-	const rewrittenDataUrl = `${env.ASSETS_STORAGE_ENDPOINT ?? "assets.pubpub.org"}${dataUrl.pathname}`;
 
 	return {
 		success: true as const,
@@ -99,25 +91,15 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 			<div>
 				<p>Journal site built</p>
 				<p>
-					<a className="font-bold underline" href={rewrittenDataUrl}>
+					<a className="font-bold underline" href={dataUrl.toString()}>
 						Download
 					</a>
 				</p>
-				{/* <p>
-					{rewrittenS3FolderUrl ? (
-						<a className="font-bold underline" href={rewrittenS3FolderUrl}>
-							S3 Live site
-						</a>
-					) : (
-						""
-					)}
-				</p> */}
 			</div>
 		),
 		data: {
 			...data,
-			url: rewrittenDataUrl,
-			s3FolderUrl: rewrittenS3FolderUrl,
+			url: dataUrl.toString(),
 		},
 	};
 });

@@ -1,4 +1,4 @@
-import { createReadStream, ReadStream } from "fs";
+import { ReadStream } from "fs";
 import fs from "fs/promises";
 import path from "path";
 import { PassThrough } from "stream";
@@ -10,7 +10,6 @@ import { initClient } from "@ts-rest/core";
 import { fetchRequestHandler, tsr } from "@ts-rest/serverless/fetch";
 import archiver from "archiver";
 import { Hono } from "hono";
-import mime from "mime-types";
 
 import { siteApi } from "contracts";
 import { siteBuilderApi } from "contracts/resources/site-builder";
@@ -134,105 +133,6 @@ export const uploadFileToS3 = async (
 	console.log(`Upload completed for ${fileName}`);
 
 	return result.Location!;
-};
-
-/**
- * Upload a directory to S3 recursively using file streams
- * @param sourceDir - Directory to upload
- * @param s3Prefix - S3 key prefix (folder path)
- * @param timestamp - Timestamp to use in the prefix (for versioning)
- * @returns Base URL of the uploaded content
- */
-const uploadDirectoryToS3 = async (
-	sourceDir: string,
-	s3Prefix: string,
-	timestamp?: number
-): Promise<string> => {
-	const bucket = env.S3_BUCKET_NAME;
-
-	// Use timestamp for versioning if provided
-	const prefix = timestamp ? `${s3Prefix}/${timestamp}` : s3Prefix;
-
-	console.log(`Starting directory upload to S3: ${sourceDir} → s3://${bucket}/${prefix}`);
-
-	// Get list of all files recursively
-	const getAllFiles = async (dir: string): Promise<{ path: string; relativePath: string }[]> => {
-		const entries = await fs.readdir(dir, { withFileTypes: true });
-		const files = await Promise.all(
-			entries.map(async (entry) => {
-				const fullPath = path.join(dir, entry.name);
-				const relativePath = path.relative(sourceDir, fullPath);
-
-				if (entry.isDirectory()) {
-					return getAllFiles(fullPath);
-				} else {
-					return [
-						{
-							path: fullPath,
-							relativePath,
-						},
-					];
-				}
-			})
-		);
-
-		return files.flat();
-	};
-
-	// Get all files with their paths
-	const allFiles = await getAllFiles(sourceDir);
-	const totalFiles = allFiles.length;
-
-	console.log(`Found ${totalFiles} files to upload`);
-
-	// Upload files in parallel with max concurrency
-	const concurrencyLimit = 5;
-	const results = [];
-	let completedFiles = 0;
-
-	// Process files in batches for controlled concurrency
-	for (let i = 0; i < allFiles.length; i += concurrencyLimit) {
-		const batch = allFiles.slice(i, i + concurrencyLimit);
-		const batchPromises = batch.map(async (file) => {
-			try {
-				const contentType = mime.lookup(file.path) || "application/octet-stream";
-
-				// Convert Windows paths to forward slashes for S3
-				const s3Key = `${prefix}/${file.relativePath.replace(/\\/g, "/")}`;
-
-				// Create a read stream instead of reading the whole file into memory
-				const fileStream = createReadStream(file.path);
-
-				// Upload the file stream
-				await uploadFileToS3(s3Prefix, file.relativePath.replace(/\\/g, "/"), fileStream, {
-					contentType: contentType,
-				});
-
-				completedFiles++;
-				if (completedFiles % 10 === 0 || completedFiles === totalFiles) {
-					console.log(
-						`Uploaded ${completedFiles}/${totalFiles} files (${Math.round((completedFiles / totalFiles) * 100)}%)`
-					);
-				}
-
-				return s3Key;
-			} catch (error) {
-				console.error(`Error uploading ${file.path}:`, error);
-				throw error;
-			}
-		});
-
-		// Wait for current batch to complete before starting next batch
-		const batchResults = await Promise.all(batchPromises);
-		results.push(...batchResults);
-	}
-
-	console.log(
-		`Directory upload complete. Uploaded ${results.length} files to s3://${bucket}/${prefix}`
-	);
-
-	// Return the base URL of the uploaded content
-	return `${env.S3_ENDPOINT}/${bucket}/${prefix}`;
 };
 
 /**
@@ -426,7 +326,7 @@ const verifySiteBuilderToken = async (authHeader: string, communitySlug: string)
 };
 
 const router = tsr.router(siteBuilderApi, {
-	build: async ({ body, headers }, ctx) => {
+	build: async ({ body, headers }) => {
 		console.log("Build request received");
 
 		try {
@@ -441,7 +341,6 @@ const router = tsr.router(siteBuilderApi, {
 			}
 
 			const siteUrl = body.siteUrl;
-			const uploadToS3Folder = body.uploadToS3Folder || false;
 			const timestamp = Date.now();
 
 			const distDir = `./dist/${communitySlug}`;
@@ -470,8 +369,6 @@ const router = tsr.router(siteBuilderApi, {
 			console.log("Build successful");
 
 			let uploadResult: string | undefined;
-			let s3FolderUrl: string | undefined;
-			let s3FolderPath: string | undefined;
 			let error: Error | undefined;
 
 			try {
@@ -486,24 +383,6 @@ const router = tsr.router(siteBuilderApi, {
 
 				console.log(`Zip archive uploaded to: ${uploadResult}`);
 
-				// If requested, also upload dist contents to S3 folder
-				if (uploadToS3Folder) {
-					console.log("Additionally uploading dist contents to S3 folder");
-
-					// Use community slug as part of the path for better organization
-					const folderPath = `sites/${communitySlug}`;
-					console.log({
-						msg: `Uploading dist contents to S3 folder`,
-						distDir,
-						folderPath,
-						timestamp,
-					});
-					s3FolderUrl = await uploadDirectoryToS3(distDir, folderPath, timestamp);
-					s3FolderPath = `${folderPath}/${timestamp}`;
-
-					console.log(`Dist contents uploaded to: ${s3FolderUrl}`);
-				}
-
 				console.log("Process completed successfully");
 
 				return {
@@ -517,10 +396,6 @@ const router = tsr.router(siteBuilderApi, {
 						// or collecting that data during archiving/upload, so we provide estimated values
 						fileSize: 0, // Required by the API contract, but we don't know the exact size
 						fileSizeFormatted: "Unknown (streaming upload)",
-						...(uploadToS3Folder && {
-							s3FolderUrl,
-							s3FolderPath,
-						}),
 					},
 				};
 			} catch (err) {
@@ -533,7 +408,6 @@ const router = tsr.router(siteBuilderApi, {
 						success: false,
 						message: error.message || "An unknown error occurred",
 						...(uploadResult && { url: uploadResult }),
-						...(s3FolderUrl && { s3FolderUrl }),
 					},
 				};
 			}
