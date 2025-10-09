@@ -61,7 +61,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md",
+				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
 				props.selected ? "border-gray-800" : "border-gray-300"
 			)}
 			// Can't use Tailwind for dynamically computed styles
@@ -161,7 +161,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 				})}
 				aria-label="Configure stage"
 			>
-				<Settings className="h-4 w-4" />
+				<Settings className="h-4 w-4 hover:text-gray-700" />
 			</Link>
 		</div>
 	);
