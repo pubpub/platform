@@ -90,7 +90,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			<div className="flex flex-col">
 				<div>
 					<p
-						className="nodrag inline cursor-text text-sm font-medium"
+						className="nodrag cursor-text text-sm font-medium"
 						contentEditable
 						suppressContentEditableWarning
 						ref={nameRef}
