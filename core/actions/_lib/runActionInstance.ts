@@ -193,6 +193,7 @@ const _runActionInstance = async (
 
 	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! };
 	try {
+		// @ts-expect-error TODO: fix this
 		const result = await actionRun({
 			// FIXME: get rid of any
 			config: config as any,
