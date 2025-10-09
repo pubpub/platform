@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { isEnabled } from "@sentry/nextjs";
 import { skipToken } from "@tanstack/react-query";
 
 import type { Communities, CommunityMembershipsId } from "db/public";
-import { FormItem, FormLabel, useFormField } from "ui/form";
+import { FormItem, FormLabel } from "ui/form";
 import { PubFieldSelectorToggleButton } from "ui/pubFields";
 import { Skeleton } from "ui/skeleton";
 import { cn } from "utils";
@@ -98,12 +97,7 @@ export function MemberSelectClientFetch({
 		return (
 			<FormItem className="flex flex-col gap-y-1">
 				<div className="flex items-center justify-between">
-					<FormLabel
-						className={cn(
-							"text-sm font-medium leading-none",
-							!isEnabled && "cursor-not-allowed opacity-50"
-						)}
-					>
+					<FormLabel className={cn("text-sm font-medium leading-none")}>
 						{fieldLabel}
 					</FormLabel>
 					{allowPubFieldSubstitution && <PubFieldSelectorToggleButton />}
