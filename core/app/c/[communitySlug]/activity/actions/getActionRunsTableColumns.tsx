@@ -87,8 +87,6 @@ export const getActionRunsTableColumns = (communitySlug: string) => {
 				row.pub ? getPubTitle(row.pub) : (JSON.stringify(row.json, null, 2) ?? "unknown"),
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Input" />,
 			cell: ({ row }) => {
-				console.log(row.original);
-
 				return row.original.pub ? (
 					<Link
 						href={`/c/${communitySlug}/pubs/${row.original.pub.id}`}

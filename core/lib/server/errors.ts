@@ -92,7 +92,6 @@ export const tsRestHandleErrors = async (
 ): Promise<TsRestResponse> => {
 	const [err, body] = req.bodyUsed ? [null, undefined] : await tryCatch(await req.json());
 	if (error instanceof RequestValidationError) {
-		console.log("INPUT", body);
 		logger.error({ err: error.body, input: body });
 		return TsRestResponse.fromJson(
 			{
