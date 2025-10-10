@@ -104,10 +104,10 @@ beforeAll(async () => {
 
 describe("rules.db", () => {
 	it("should create a rule", async () => {
-		const { createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck } = await import(
+		const { createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck } = await import(
 			"./rules"
 		);
-		const rule = await createRuleWithCycleCheck({
+		const rule = await createOrUpdateRuleWithCycleCheck({
 			event: Event.pubEnteredStage,
 			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 		});
@@ -117,11 +117,11 @@ describe("rules.db", () => {
 
 	it("should throw a RegularRuleAlreadyExistsError if a regular rule already exists", async () => {
 		const {
-			createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck,
+			createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
 			RegularRuleAlreadyExistsError,
 		} = await import("./rules");
 		await expect(
-			createRuleWithCycleCheck({
+			createOrUpdateRuleWithCycleCheck({
 				event: Event.pubLeftStage,
 				actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 			})
@@ -130,11 +130,11 @@ describe("rules.db", () => {
 
 	it("should throw a SequentialRuleAlreadyExistsError if a sequential rule already exists", async () => {
 		const {
-			createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck,
+			createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
 			SequentialRuleAlreadyExistsError,
 		} = await import("./rules");
 		await expect(
-			createRuleWithCycleCheck({
+			createOrUpdateRuleWithCycleCheck({
 				event: Event.actionSucceeded,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
@@ -143,10 +143,12 @@ describe("rules.db", () => {
 	});
 
 	it("should throw a RuleConfigError if the config is invalid", async () => {
-		const { createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck, RuleConfigError } =
-			await import("./rules");
+		const {
+			createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
+			RuleConfigError,
+		} = await import("./rules");
 		await expect(
-			createRuleWithCycleCheck({
+			createOrUpdateRuleWithCycleCheck({
 				event: Event.pubInStageForDuration,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 			})
@@ -155,10 +157,12 @@ describe("rules.db", () => {
 
 	describe("cycle detection", () => {
 		it("should throw a RuleCycleError if the rule is a cycle", async () => {
-			const { createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck, RuleCycleError } =
-				await import("./rules");
+			const {
+				createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
+				RuleCycleError,
+			} = await import("./rules");
 			await expect(
-				createRuleWithCycleCheck({
+				createOrUpdateRuleWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
@@ -167,7 +171,7 @@ describe("rules.db", () => {
 
 			// should also happen for ActionFailed
 			await expect(
-				createRuleWithCycleCheck({
+				createOrUpdateRuleWithCycleCheck({
 					event: Event.actionFailed,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
@@ -176,7 +180,7 @@ describe("rules.db", () => {
 
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
-				createRuleWithCycleCheck({
+				createOrUpdateRuleWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
@@ -185,11 +189,10 @@ describe("rules.db", () => {
 		});
 		it("should not throw an error if the rule is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
-			const { createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck } = await import(
-				"./rules"
-			);
+			const { createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck } =
+				await import("./rules");
 			await expect(
-				createRuleWithCycleCheck({
+				createOrUpdateRuleWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
@@ -199,11 +202,11 @@ describe("rules.db", () => {
 
 		it("should throw a RuleMaxDepthError if the rule would exceed the maximum stack depth", async () => {
 			const {
-				createOrUpdateRuleWithCycleCheck: createRuleWithCycleCheck,
+				createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
 				RuleMaxDepthError,
 			} = await import("./rules");
 			await expect(
-				createRuleWithCycleCheck(
+				createOrUpdateRuleWithCycleCheck(
 					{
 						event: Event.actionSucceeded,
 						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
