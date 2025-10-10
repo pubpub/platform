@@ -45,7 +45,7 @@ export const internalApi = contract.router(
 					event: eventSchema,
 					stack: z.array(actionRunsIdSchema).optional(),
 					scheduledActionRunId: actionRunsIdSchema.optional(),
-					config: z.record(z.unknown()).optional(),
+					config: z.record(z.unknown()).nullish(),
 				})
 				.and(
 					z.union([

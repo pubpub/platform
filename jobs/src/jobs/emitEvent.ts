@@ -2,7 +2,6 @@ import type { ActionInstancesId } from "db/public";
 import type {
 	DBTriggerEventPayload,
 	EmitEventPayload,
-	Json,
 	NormalizedEventPayload,
 	PubEnteredStageEventPayload,
 	PubInStagesRow,
@@ -18,9 +17,6 @@ import { defineJob } from "../defineJob";
 type Logger = typeof logger;
 
 // TODO: Use kanel generated types for these
-const makeBaseURL = (communitySlug: string) => {
-	return `${process.env.PUBPUB_URL}/api/v0/c/${communitySlug}`;
-};
 
 interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventPayload> {
 	type: string;
@@ -125,7 +121,7 @@ const triggerAction = async (
 				event,
 				scheduledActionRunId,
 				stack,
-				config: (config as Json) ?? null,
+				config,
 				...jsonOrPubId,
 			},
 		});
