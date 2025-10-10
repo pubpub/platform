@@ -104,9 +104,7 @@ beforeAll(async () => {
 
 describe("rules.db", () => {
 	it("should create a rule", async () => {
-		const { createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck } = await import(
-			"./rules"
-		);
+		const { createOrUpdateRuleWithCycleCheck } = await import("./rules");
 		const rule = await createOrUpdateRuleWithCycleCheck({
 			event: Event.pubEnteredStage,
 			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
@@ -189,8 +187,7 @@ describe("rules.db", () => {
 		});
 		it("should not throw an error if the rule is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
-			const { createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck } =
-				await import("./rules");
+			const { createOrUpdateRuleWithCycleCheck } = await import("./rules");
 			await expect(
 				createOrUpdateRuleWithCycleCheck({
 					event: Event.actionSucceeded,
@@ -201,10 +198,7 @@ describe("rules.db", () => {
 		});
 
 		it("should throw a RuleMaxDepthError if the rule would exceed the maximum stack depth", async () => {
-			const {
-				createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
-				RuleMaxDepthError,
-			} = await import("./rules");
+			const { createOrUpdateRuleWithCycleCheck, RuleMaxDepthError } = await import("./rules");
 			await expect(
 				createOrUpdateRuleWithCycleCheck(
 					{
