@@ -95,9 +95,11 @@ test.describe("sequential rules", () => {
 
 		await page.goto(`/c/${community.community.slug}/activity/actions`);
 
-		await page.getByText("Log 1").waitFor();
-		await page.getByText("Rule (Log 2 Succeeded)", { exact: true });
-		await page.getByText("Log 2", { exact: true }).waitFor();
+		await page.getByText("Log 1").waitFor({ timeout: 5000 });
+		await page
+			.getByText("Automation (Log 2 succeeded)", { exact: true })
+			.waitFor({ timeout: 5000 });
+		await page.getByText("Log 2", { exact: true }).waitFor({ timeout: 5000 });
 
 		const success = await page.getByText("success").all();
 		test.expect(success).toHaveLength(2);

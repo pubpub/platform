@@ -1,6 +1,5 @@
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type { Json } from "contracts";
 import type {
@@ -385,31 +384,28 @@ export const runInstancesForEvent = async (
 ) => {
 	const instances = await trx
 		.selectFrom("action_instances")
+		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
+		.select([
+			"action_instances.id as actionInstanceId",
+			"rules.config as ruleConfig",
+			"action_instances.name as actionInstanceName",
+		])
+		.where("rules.event", "=", event)
 		.where("action_instances.stageId", "=", stageId)
-		.select((eb) =>
-			jsonObjectFrom(
-				eb
-					.selectFrom("rules")
-					.selectAll("rules")
-					.whereRef("rules.actionInstanceId", "=", "action_instances.id")
-					.where("rules.event", "=", event)
-			).as("rule")
-		)
-		.selectAll("action_instances")
 		.execute();
 
 	const results = await Promise.all(
 		instances.map(async (instance) => {
 			return {
-				actionInstanceId: instance.id,
-				actionInstanceName: instance.name,
+				actionInstanceId: instance.actionInstanceId,
+				actionInstanceName: instance.actionInstanceName,
 				result: await runActionInstance(
 					{
 						pubId,
 						communityId,
-						actionInstanceId: instance.id,
+						actionInstanceId: instance.actionInstanceId,
 						event,
-						config: instance.rule?.config ?? null,
+						config: instance.ruleConfig ?? null,
 						stack,
 					},
 					trx
