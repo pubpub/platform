@@ -43,6 +43,7 @@ import {
 	removePubRelations,
 	replacePubRelationsBySlug,
 	tsRestHandleErrors,
+	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -256,8 +257,8 @@ const handler = createNextHandler(
 					body: createdPub,
 				};
 			},
-			update: async ({ params }) => {
-				const { user, community } = await checkAuthorization({
+			update: async ({ params, body }) => {
+				const { user, community, lastModifiedBy } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pub, type: ApiAccessType.write },
 					// TODO: refactor so we call userCanEditPub here
 					cookies: false,
@@ -271,6 +272,14 @@ const handler = createNextHandler(
 				if (!exists) {
 					throw new NotFoundError(`Pub ${params.pubId} not found`);
 				}
+
+				await updatePub({
+					pubValues: body,
+					pubId: params.pubId as PubsId,
+					communityId: community.id,
+					continueOnValidationError: false,
+					lastModifiedBy,
+				});
 
 				const returnRepresentation = shouldReturnRepresentation();
 
