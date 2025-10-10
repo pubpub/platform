@@ -1,6 +1,6 @@
 "use client";
 
-import type { DefaultValues } from "react-hook-form";
+import type { DefaultValues, UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 
 import * as React from "react";
@@ -52,7 +52,8 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 		values: Partial<z.infer<SchemaType>> & { pubFields: Record<string, string[]> }
 	) => void;
 	onSubmit?: (
-		values: z.infer<SchemaType> & { pubFields: Record<string, string[]> }
+		values: z.infer<SchemaType> & { pubFields: Record<string, string[]> },
+		form: UseFormReturn<any>
 	) => void | Promise<void>;
 	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>;
 	children?: React.ReactNode;
@@ -82,12 +83,15 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	async function onSubmit(submittedValues: z.infer<typeof formSchema>) {
 		const parsedValues = formSchema.safeParse(submittedValues);
 		if (parsedValues.success) {
-			await onSubmitProp?.({
-				...parsedValues.data,
-				// need to grab this from `values` because it's not in the parsed values,
-				// as pubFields are not part of the schema
-				pubFields: values?.pubFields ?? {},
-			});
+			await onSubmitProp?.(
+				{
+					...parsedValues.data,
+					// need to grab this from `values` because it's not in the parsed values,
+					// as pubFields are not part of the schema
+					pubFields: values?.pubFields ?? {},
+				},
+				form
+			);
 			return;
 		}
 

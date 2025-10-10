@@ -9,7 +9,9 @@ import { env } from "../env/env";
 
 import "date-fns";
 
+import type { Json } from "contracts";
 import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/public";
+import type { XOR } from "utils/types";
 import { Event } from "db/public";
 
 import type { Interval } from "~/actions/_lib/rules";
@@ -19,27 +21,31 @@ export const getScheduledActionJobKey = ({
 	stageId,
 	actionInstanceId,
 	pubId,
+	event,
 }: {
 	stageId: StagesId;
 	actionInstanceId: ActionInstancesId;
-	pubId: PubsId;
-}) => `scheduled-action-${stageId}-${actionInstanceId}-${pubId}`;
+	event: Event;
+	pubId?: PubsId;
+}) => `scheduled-action-${stageId}-${actionInstanceId}${pubId ? `-${pubId}` : ""}-${event}`;
 
 export type JobsClient = {
 	unscheduleJob(jobKey: string): Promise<void>;
-	scheduleAction(options: {
-		actionInstanceId: ActionInstancesId;
-		stageId: StagesId;
-		duration: number;
-		interval: Interval;
-		pubId: PubsId;
-		community: {
-			slug: string;
-		};
-		event: Event;
-		stack: ActionRunsId[];
-		scheduledActionRunId: ActionRunsId;
-	}): Promise<Job | ClientExceptionOptions>;
+	scheduleAction(
+		options: {
+			actionInstanceId: ActionInstancesId;
+			stageId: StagesId;
+			duration: number;
+			interval: Interval;
+			community: {
+				slug: string;
+			};
+			event: Event;
+			stack: ActionRunsId[];
+			scheduledActionRunId: ActionRunsId;
+			config: Record<string, unknown> | null;
+		} & XOR<{ pubId: PubsId }, { json: Json }>
+	): Promise<Job | ClientExceptionOptions>;
 };
 
 export const makeJobsClient = async (): Promise<JobsClient> => {
@@ -64,14 +70,20 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 			stageId,
 			duration,
 			interval,
-			pubId,
 			community,
 			event,
 			stack,
 			scheduledActionRunId,
+			config,
+			...jsonOrPubId
 		}) {
 			const runAt = addDuration({ duration, interval });
-			const jobKey = getScheduledActionJobKey({ stageId, actionInstanceId, pubId });
+			const jobKey = getScheduledActionJobKey({
+				stageId,
+				actionInstanceId,
+				pubId: jsonOrPubId.pubId,
+				event,
+			});
 
 			logger.info({
 				msg: `Scheduling action with key: ${actionInstanceId} to run at ${runAt}. Cause: ${event}${stack?.length ? `, triggered by: ${stack.join(" -> ")}` : ""}`,
@@ -79,11 +91,12 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 				stageId,
 				duration,
 				interval,
+				config,
 				runAt,
-				pubId,
 				stack,
 				event,
 				scheduledActionRunId,
+				...jsonOrPubId,
 			});
 			try {
 				const job = await workerUtils.addJob(
@@ -95,10 +108,11 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 						runAt,
 						actionInstanceId,
 						stageId,
-						pubId,
 						community,
 						stack,
+						config,
 						scheduledActionRunId,
+						...jsonOrPubId,
 					},
 					{
 						runAt,
@@ -113,7 +127,8 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					stageId,
 					duration,
 					interval,
-					pubId,
+					config,
+					...jsonOrPubId,
 				});
 				return job;
 			} catch (err) {
@@ -123,7 +138,7 @@ export const makeJobsClient = async (): Promise<JobsClient> => {
 					stageId,
 					duration,
 					interval,
-					pubId,
+					...jsonOrPubId,
 					err: err.message,
 					stack,
 					event,

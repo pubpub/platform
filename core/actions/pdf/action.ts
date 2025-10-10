@@ -7,6 +7,7 @@ import { defineAction } from "../types";
 
 export const action = defineAction({
 	name: Action.pdf,
+	accepts: ["pub"],
 	config: {
 		schema: z.object({
 			margin: z.number().optional().describe("Page margin in pixels"),

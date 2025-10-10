@@ -9,6 +9,7 @@ import { defineAction } from "../types";
 
 export const action = defineAction({
 	name: Action.http,
+	accepts: ["json", "pub"],
 	config: {
 		schema: z.object({
 			url: z.string().url().describe("URL|URL to send the request to"),

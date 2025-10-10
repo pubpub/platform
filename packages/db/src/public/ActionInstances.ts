@@ -2,6 +2,7 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 
 import { z } from "zod";
 
+import type { BaseActionInstanceConfig } from "../types";
 import type { Action } from "./Action";
 import type { StagesId } from "./Stages";
 import { actionSchema } from "./Action";
@@ -23,7 +24,11 @@ export interface ActionInstancesTable {
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
-	config: ColumnType<unknown | null, unknown | null, unknown | null>;
+	config: ColumnType<
+		BaseActionInstanceConfig | null,
+		BaseActionInstanceConfig | null,
+		BaseActionInstanceConfig | null
+	>;
 
 	name: ColumnType<string, string | undefined, string>;
 

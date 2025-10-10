@@ -1,63 +1,22 @@
-import type { ActionRunsId, PubsId, StagesId } from "db/public";
+import type { ActionInstancesId } from "db/public";
+import type {
+	DBTriggerEventPayload,
+	EmitEventPayload,
+	NormalizedEventPayload,
+	PubEnteredStageEventPayload,
+	PubInStagesRow,
+	PubLeftStageEventPayload,
+	ScheduledEventPayload,
+} from "db/types";
 import type { logger } from "logger";
 import { Event } from "db/public";
 
 import type { InternalClient } from "../clients";
 import { defineJob } from "../defineJob";
 
-// TODO: Use kanel generated types for these
-type PubInStagesRow = {
-	pubId: PubsId;
-	stageId: StagesId;
-};
-
-type DBTriggerEventPayload<T> = {
-	table: string;
-	operation: string;
-	new: T;
-	old: T;
-	community: {
-		slug: string;
-	};
-};
-
-type ScheduledEventPayload = {
-	event: Event;
-	duration: number;
-	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
-	runAt: Date;
-	stageId: StagesId;
-	pubId: PubsId;
-	actionInstanceId: string;
-	community: {
-		slug: string;
-	};
-	sourceActionRunId?: string;
-	stack?: ActionRunsId[];
-	scheduledActionRunId: ActionRunsId;
-};
-
-type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
-
-type PubEnteredStageEventPayload = PubInStagesRow & {
-	event: Event.pubEnteredStage;
-	community: { slug: string };
-};
-type PubLeftStageEventPayload = PubInStagesRow & {
-	event: Event.pubLeftStage;
-	community: { slug: string };
-};
-
-type NormalizedEventPayload =
-	| PubEnteredStageEventPayload
-	| PubLeftStageEventPayload
-	| ScheduledEventPayload;
-
 type Logger = typeof logger;
 
-const makeBaseURL = (communitySlug: string) => {
-	return `${process.env.PUBPUB_URL}/api/v0/c/${communitySlug}`;
-};
+// TODO: Use kanel generated types for these
 
 interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventPayload> {
 	type: string;
@@ -140,38 +99,60 @@ const triggerAction = async (
 		stageId,
 		stack,
 		event,
-		pubId,
 		actionInstanceId,
 		scheduledActionRunId,
 		community,
-		...context
+		duration,
+		interval,
+		runAt,
+		config,
+		sourceActionRunId,
+		...jsonOrPubId
 	} = payload;
 
 	try {
+		console.log("TRIGGERING ACTION", jsonOrPubId);
 		const { status, body } = await client.triggerAction({
 			params: {
 				communitySlug: community.slug,
-				actionInstanceId,
+				actionInstanceId: actionInstanceId as ActionInstancesId,
 			},
 			body: {
-				pubId,
 				event,
 				scheduledActionRunId,
 				stack,
+				config,
+				...jsonOrPubId,
 			},
 		});
 
 		if (status >= 400) {
-			logger.error({ msg: `API error triggering action`, body, ...context });
+			logger.error({
+				msg: `API error triggering action`,
+				results: body,
+				...jsonOrPubId,
+				event,
+				scheduledActionRunId,
+				stack,
+				sourceActionRunId,
+			});
 			return;
 		}
 
 		if (status === 200) {
-			logger.info({ msg: "Action run results", results: body, ...context });
+			logger.info({
+				msg: "Action run results",
+				results: body,
+				...jsonOrPubId,
+				event,
+				scheduledActionRunId,
+				stack,
+				sourceActionRunId,
+			});
 		}
 	} catch (e) {
 		logger.error({
-			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${pubId}`,
+			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${jsonOrPubId.pubId ?? "json"}`,
 		});
 		if (e instanceof Error) {
 			logger.error({ message: e.message });

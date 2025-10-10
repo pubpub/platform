@@ -34,6 +34,7 @@ export interface UsersTable {
 
 	isVerified: ColumnType<boolean, boolean | undefined, boolean>;
 
+	/** Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user */
 	isProvisional: ColumnType<boolean, boolean | undefined, boolean>;
 }
 

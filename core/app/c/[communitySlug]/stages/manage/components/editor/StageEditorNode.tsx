@@ -3,7 +3,6 @@ import type { NodeProps } from "reactflow";
 
 import { memo, useCallback, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Handle, Position } from "reactflow";
 
 import type { StagesId } from "db/public";
@@ -12,6 +11,8 @@ import { Settings } from "ui/icon";
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
+import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { constructStageMangePanel } from "~/lib/links";
 import { slugifyString } from "~/lib/string";
 import { useStages } from "../../StagesContext";
 
@@ -19,7 +20,7 @@ export const STAGE_NODE_WIDTH = 250;
 export const STAGE_NODE_HEIGHT = 50;
 
 export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>) => {
-	const pathname = usePathname();
+	const community = useCommunity();
 	const { updateStageName } = useStages();
 	const [isEditingName, setIsEditingName] = useState(false);
 	const nodeRef = useRef<HTMLDivElement>(null);
@@ -50,7 +51,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	const onBlur = useCallback(() => {
 		if (isEditingName) {
 			window.getSelection()?.removeAllRanges();
-			if (nameRef.current) {
+			if (nameRef.current?.textContent) {
 				updateStageName(props.data.stage.id as StagesId, nameRef.current.textContent!);
 			}
 			setIsEditingName(false);
@@ -60,7 +61,7 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md",
+				"flex items-center justify-between rounded-md border bg-gray-100 p-1.5 text-xs shadow-md hover:cursor-grab active:cursor-grabbing",
 				props.selected ? "border-gray-800" : "border-gray-300"
 			)}
 			// Can't use Tailwind for dynamically computed styles
@@ -89,8 +90,11 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 			<div className="flex flex-col">
 				<div>
 					<p
-						className="nodrag inline cursor-text text-sm font-medium"
+						className="nodrag cursor-text text-sm font-medium"
 						contentEditable
+						onBeforeInput={() => {
+							setIsEditingName(true);
+						}}
 						suppressContentEditableWarning
 						ref={nameRef}
 						aria-label="Edit stage name"
@@ -100,27 +104,67 @@ export const StageEditorNode = memo((props: NodeProps<{ stage: CommunityStage }>
 				</div>
 				<ul className="m-0 flex list-none gap-2 p-0">
 					<li>
-						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{props.data.stage.pubsCount} pubs
+						<Button
+							variant="link"
+							className="m-0 h-auto p-0 text-xs font-light"
+							asChild
+						>
+							<Link
+								href={constructStageMangePanel({
+									stageId: props.data.stage.id,
+									communitySlug: community.slug,
+									tab: "pubs",
+								})}
+							>
+								{props.data.stage.pubsCount} pubs
+							</Link>
 						</Button>
 					</li>
 					<li>
-						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{props.data.stage.actionInstancesCount} actions
+						<Button
+							variant="link"
+							className="m-0 h-auto p-0 text-xs font-light"
+							asChild
+						>
+							<Link
+								href={constructStageMangePanel({
+									stageId: props.data.stage.id,
+									communitySlug: community.slug,
+									tab: "actions",
+								})}
+							>
+								{props.data.stage.actionInstancesCount} actions
+							</Link>
 						</Button>
 					</li>
 					<li>
-						<Button variant="link" className="m-0 h-auto p-0 text-xs font-light">
-							{props.data.stage.actionInstancesCount} members
+						<Button
+							variant="link"
+							className="m-0 h-auto p-0 text-xs font-light"
+							asChild
+						>
+							<Link
+								href={constructStageMangePanel({
+									stageId: props.data.stage.id,
+									communitySlug: community.slug,
+									tab: "members",
+								})}
+							>
+								{props.data.stage.memberCount} members
+							</Link>
 						</Button>
 					</li>
 				</ul>
 			</div>
 			<Link
-				href={`${pathname}?editingStageId=${props.data.stage.id}`}
+				href={constructStageMangePanel({
+					stageId: props.data.stage.id,
+					communitySlug: community.slug,
+					tab: "overview",
+				})}
 				aria-label="Configure stage"
 			>
-				<Settings className="h-4 w-4" />
+				<Settings className="h-4 w-4 hover:text-gray-700" />
 			</Link>
 		</div>
 	);

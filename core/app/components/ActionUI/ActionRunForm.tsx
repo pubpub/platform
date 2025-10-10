@@ -1,5 +1,6 @@
 "use client";
 
+import type { UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 
 import { Suspense, useCallback, useMemo, useTransition } from "react";
@@ -57,7 +58,7 @@ export const ActionRunForm = (props: Props) => {
 	}
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof action.params.schema>) => {
+		async (values: z.infer<typeof action.params.schema>, form: UseFormReturn<any>) => {
 			const result = await runAction({
 				actionInstanceId: props.actionInstance.id,
 				pubId: props.pubId,
@@ -77,7 +78,12 @@ export const ActionRunForm = (props: Props) => {
 						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
 					),
 				});
+				return;
 			}
+
+			form.setError("root.serverError", {
+				message: result.error,
+			});
 		},
 		[runAction, props.actionInstance.id, props.pubId]
 	);

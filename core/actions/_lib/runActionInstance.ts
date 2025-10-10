@@ -1,7 +1,7 @@
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
+import type { Json } from "contracts";
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -10,6 +10,8 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
+import type { BaseActionInstanceConfig } from "db/types";
+import type { Prettify, XOR } from "utils/types";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
@@ -33,36 +35,34 @@ export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions 
 	stack: ActionRunsId[];
 };
 
-export type RunActionInstanceArgs = {
-	pubId: PubsId;
-	communityId: CommunitiesId;
-	actionInstanceId: ActionInstancesId;
-	actionInstanceArgs?: Record<string, unknown>;
-	stack: ActionRunsId[];
-	scheduledActionRunId?: ActionRunsId;
-} & ({ event: Event } | { userId: UsersId });
+export type RunActionInstanceArgs = Prettify<
+	{
+		communityId: CommunitiesId;
+		actionInstanceId: ActionInstancesId;
+		actionInstanceArgs?: Record<string, unknown>;
+		stack: ActionRunsId[];
+		scheduledActionRunId?: ActionRunsId;
+		/**
+		 * The config for the action instance to use when scheduling the action
+		 * Non-optional to make sure it's passed when needed
+		 */
+		config: Record<string, unknown> | null;
+	} & XOR<{ event: Event }, { userId: UsersId }> &
+		XOR<{ pubId: PubsId }, { json: Json }>
+>;
 
-const getActionInstance = (actionInstanceId: ActionInstancesId, pubId: PubsId, trx = db) =>
+const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
 	trx
 		.selectFrom("action_instances")
 		.where("action_instances.id", "=", actionInstanceId)
 		.select((eb) => [
 			"id",
-			eb.fn.coalesce("config", sql`'{}'`).as("config"),
+			eb.fn.coalesce("config", sql<BaseActionInstanceConfig>`'{}'`).as("config"),
 			"createdAt",
 			"updatedAt",
 			"stageId",
 			"action",
 			"name",
-			// this is to check whether the pub is still in the stage the actionInstance is in
-			// often happens when an action is scheduled but a pub is moved before the action runs
-			jsonObjectFrom(
-				eb
-					.selectFrom("PubsInStages")
-					.select(["pubId", "stageId"])
-					.where("pubId", "=", pubId)
-					.whereRef("stageId", "=", "action_instances.stageId")
-			).as("pubInStage"),
 		])
 		.executeTakeFirst();
 
@@ -75,24 +75,26 @@ const _runActionInstance = async (
 	const isActionUserInitiated = "userId" in args;
 
 	const stack = [...args.stack, args.actionRunId];
-	const pub = await getPubsWithRelatedValues(
-		{
-			pubId: args.pubId,
-			communityId: args.communityId,
-			userId: isActionUserInitiated ? args.userId : undefined,
-		},
-		{
-			// depth 3 is necessary for the DataCite action to fetch related
-			// contributors and their people
-			depth: 3,
-			withPubType: true,
-			withStage: true,
-		}
-	);
+	const pub = args.json
+		? null
+		: await getPubsWithRelatedValues(
+				{
+					pubId: args.pubId!,
+					communityId: args.communityId,
+					userId: isActionUserInitiated ? args.userId : undefined,
+				},
+				{
+					// depth 3 is necessary for the DataCite action to fetch related
+					// contributors and their people
+					depth: 3,
+					withPubType: true,
+					withStage: true,
+				}
+			);
 
-	if (pub === undefined) {
+	if (!args.json && !pub) {
 		return {
-			error: "Pub not found",
+			error: "No input found",
 			stack,
 		};
 	}
@@ -100,7 +102,7 @@ const _runActionInstance = async (
 	const action = getActionByName(args.actionInstance.action);
 	const actionRun = await getActionRunByName(args.actionInstance.action);
 	const actionDefaults = await getActionConfigDefaults(
-		pub.communityId,
+		args.communityId,
 		args.actionInstance.action
 	).executeTakeFirst();
 
@@ -116,7 +118,7 @@ const _runActionInstance = async (
 		...(args.actionInstance.config as Record<string, any>),
 	};
 
-	const parsedConfig = action.config.schema.safeParse(actionConfig);
+	const parsedConfig = action.config.schema.safeParse(args.config ?? actionConfig);
 
 	if (!parsedConfig.success) {
 		const err = {
@@ -158,40 +160,49 @@ const _runActionInstance = async (
 	// 	};
 	// }
 
+	let runArgs = parsedArgs.data;
+	let config = parsedConfig.data;
+
+	let inputPubInput = pub;
+
 	const argsFieldOverrides = new Set<string>();
 	const configFieldOverrides = new Set<string>();
+	if (inputPubInput) {
+		runArgs = resolveWithPubfields(
+			{ ...parsedArgs.data, ...args.actionInstanceArgs },
+			inputPubInput.values,
+			argsFieldOverrides
+		);
+		config = resolveWithPubfields(
+			{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
+			inputPubInput.values,
+			configFieldOverrides
+		);
 
-	const argsWithPubfields = resolveWithPubfields(
-		{ ...parsedArgs.data, ...args.actionInstanceArgs },
-		pub.values,
-		argsFieldOverrides
-	);
-	const configWithPubfields = resolveWithPubfields(
-		{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
-		pub.values,
-		configFieldOverrides
-	);
-
-	const hydratedPubValues = hydratePubValues(pub.values);
+		const hydratedPubValues = hydratePubValues(inputPubInput.values);
+		inputPubInput = {
+			...inputPubInput,
+			values: hydratedPubValues,
+		};
+	}
 
 	const lastModifiedBy = createLastModifiedBy({
 		actionRunId: args.actionRunId,
 	});
 
+	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! };
 	try {
+		// @ts-expect-error TODO: fix this
 		const result = await actionRun({
 			// FIXME: get rid of any
-			config: configWithPubfields as any,
+			config: config as any,
 			configFieldOverrides,
-			pub: {
-				...pub,
-				values: hydratedPubValues,
-			},
+			...(inputPubInput ? { pub: inputPubInput } : { json: args.json }),
 			// FIXME: get rid of any
-			args: argsWithPubfields as any,
+			args: runArgs as any,
 			argsFieldOverrides,
 			stageId: args.actionInstance.stageId,
-			communityId: pub.communityId as CommunitiesId,
+			communityId: args.communityId,
 			lastModifiedBy,
 			actionRunId: args.actionRunId,
 			userId: isActionUserInitiated ? args.userId : undefined,
@@ -200,21 +211,21 @@ const _runActionInstance = async (
 
 		if (isClientExceptionOptions(result)) {
 			await scheduleActionInstances({
-				pubId: args.pubId,
 				stageId: args.actionInstance.stageId,
 				event: Event.actionFailed,
 				stack,
 				sourceActionInstanceId: args.actionInstance.id,
+				...jsonOrPubId,
 			});
 			return { ...result, stack };
 		}
 
 		await scheduleActionInstances({
-			pubId: args.pubId,
 			stageId: args.actionInstance.stageId,
 			event: Event.actionSucceeded,
 			stack,
 			sourceActionInstanceId: args.actionInstance.id,
+			...jsonOrPubId,
 		});
 
 		return { ...result, stack };
@@ -223,11 +234,11 @@ const _runActionInstance = async (
 		logger.error(error);
 
 		await scheduleActionInstances({
-			pubId: args.pubId,
 			stageId: args.actionInstance.stageId,
 			event: Event.actionFailed,
 			stack,
 			sourceActionInstanceId: args.actionInstance.id,
+			...jsonOrPubId,
 		});
 
 		return {
@@ -244,7 +255,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 			`Action instance stack depth of ${args.stack.length} exceeds the maximum allowed depth of ${MAX_STACK_DEPTH}`
 		);
 	}
-	const actionInstance = await getActionInstance(args.actionInstanceId, args.pubId);
+	const actionInstance = await getActionInstance(args.actionInstanceId);
 
 	if (actionInstance === undefined) {
 		return {
@@ -255,20 +266,6 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 
 	if (env.FLAGS?.get("disabled-actions").includes(actionInstance.action)) {
 		return { ...ApiError.FEATURE_DISABLED, stack: args.stack };
-	}
-
-	if (!actionInstance.pubInStage) {
-		logger.warn({
-			msg: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
-			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
-			pubId: args.pubId,
-			actionInstanceId: args.actionInstanceId,
-		});
-		return {
-			error: `Pub ${args.pubId} is not in stage ${actionInstance.stageId}, even though the action instance is.
-			This most likely happened because the pub was moved before the time the action was scheduled to run.`,
-			stack: args.stack,
-		};
 	}
 
 	if (!actionInstance.action) {
@@ -291,15 +288,18 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 				id: args.scheduledActionRunId,
 				actionInstanceId: args.actionInstanceId,
 				pubId: args.pubId,
+				json: args.json,
 				userId: isActionUserInitiated ? args.userId : null,
 				result: { scheduled: `Action to be run immediately` },
 				// we are setting it to `scheduled` very briefly
 				status: ActionRunStatus.scheduled,
 				// this is a bit hacky, would be better to pass this around methinks
-				config: eb
-					.selectFrom("action_instances")
-					.select("config")
-					.where("action_instances.id", "=", args.actionInstanceId),
+				config:
+					args.config ??
+					eb
+						.selectFrom("action_instances")
+						.select("config")
+						.where("action_instances.id", "=", args.actionInstanceId),
 				params: args,
 				event: isActionUserInitiated ? undefined : args.event,
 				sourceActionRunId: args.stack.at(-1),
@@ -384,23 +384,28 @@ export const runInstancesForEvent = async (
 ) => {
 	const instances = await trx
 		.selectFrom("action_instances")
-		.where("action_instances.stageId", "=", stageId)
 		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
+		.select([
+			"action_instances.id as actionInstanceId",
+			"rules.config as ruleConfig",
+			"action_instances.name as actionInstanceName",
+		])
 		.where("rules.event", "=", event)
-		.selectAll()
+		.where("action_instances.stageId", "=", stageId)
 		.execute();
 
 	const results = await Promise.all(
 		instances.map(async (instance) => {
 			return {
 				actionInstanceId: instance.actionInstanceId,
-				actionInstanceName: instance.name,
+				actionInstanceName: instance.actionInstanceName,
 				result: await runActionInstance(
 					{
 						pubId,
 						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
+						config: instance.ruleConfig ?? null,
 						stack,
 					},
 					trx

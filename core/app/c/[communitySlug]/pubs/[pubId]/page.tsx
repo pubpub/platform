@@ -29,16 +29,13 @@ import {
 	userCanRunActionsAllPubs,
 } from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
+import { constructRedirectToPubEditPage } from "~/lib/links";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { resolveFormAccess } from "~/lib/server/form-access";
-import {
-	constructRedirectToPubEditPage,
-	redirectToPubDetailPage,
-	redirectToUnauthorized,
-} from "~/lib/server/navigation/redirects";
+import { redirectToPubDetailPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
 import { ContentLayout } from "../../ContentLayout";
@@ -105,7 +102,7 @@ export default async function Page(props: {
 	params: Promise<{ pubId: PubsId; communitySlug: string }>;
 	searchParams: Promise<Record<string, string>>;
 }) {
-	const { form: formSlug, ...searchParams } = await props.searchParams;
+	const { form: formSlug } = await props.searchParams;
 	const params = await props.params;
 	const { pubId, communitySlug } = params;
 
@@ -212,7 +209,7 @@ export default async function Page(props: {
 	const pubTypeHasRelatedPubs = pub.pubType.fields.some((field) => field.isRelation);
 	const pubHasRelatedPubs = pub.values.some((value) => !!value.relatedPub);
 
-	const { stage, ...slimPub } = pub;
+	const { stage } = pub;
 	const pubByForm = getPubByForm({ pub, form, withExtraPubValues });
 
 	const { hasAccessToAnyForm: hasAccessToAnyEditForm, canonicalForm: editFormToRedirectTo } =

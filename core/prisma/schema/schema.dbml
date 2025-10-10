@@ -319,7 +319,7 @@ Table action_instances {
   stageId String [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-  config Json
+  config Json [note: '@type(BaseActionInstanceConfig, \'../types\', true, false, true)']
   rules rules [not null]
   runs action_runs [not null]
   watchedBy rules [not null]
@@ -345,6 +345,7 @@ Table action_runs {
   actionInstanceId String
   pub pubs
   pubId String
+  json Json
   config Json
   event Event
   params Json
@@ -367,7 +368,7 @@ Table rules {
   event Event [not null]
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
-  config Json
+  config Json [note: '@type(RuleConfigBase, \'../types\', true, false, true)']
   sourceActionInstanceId String
   sourceActionInstance action_instances
   createdAt DateTime [default: `now()`, not null]
@@ -622,6 +623,7 @@ Enum Event {
   pubInStageForDuration
   actionSucceeded
   actionFailed
+  webhook
 }
 
 Enum FormAccessType {

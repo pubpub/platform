@@ -128,7 +128,7 @@ export class StagesManagePage {
 
 		await this.page
 			.getByRole("button", {
-				name: "Save rule",
+				name: "Save automation",
 				exact: true,
 			})
 			.click({

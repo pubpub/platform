@@ -22,6 +22,7 @@ const emptyStringToUndefined = (arg: unknown) => {
 };
 
 export const action = defineAction({
+	accepts: ["pub"],
 	name: Action.email,
 	config: {
 		schema: z.object({

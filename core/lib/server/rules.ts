@@ -1,8 +1,17 @@
 import type { ZodError } from "zod";
 
 import { sql } from "kysely";
+import { jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstances, ActionInstancesId, NewRules, RulesId } from "db/public";
+import type {
+	ActionInstances,
+	ActionInstancesId,
+	CommunitiesId,
+	NewRules,
+	RulesId,
+	RulesUpdate,
+} from "db/public";
+import type { RuleConfigBase } from "db/types";
 import { Event } from "db/public";
 import { expect } from "utils";
 
@@ -11,6 +20,7 @@ import { rules } from "~/actions/api";
 import { isSequentialRuleEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 
 export class RuleError extends Error {
@@ -83,7 +93,11 @@ export class RegularRuleAlreadyExistsError extends RuleAlreadyExistsError {
 	}
 }
 
-export const createRule = (props: NewRules) => autoRevalidate(db.insertInto("rules").values(props));
+export const createRule = (props: NewRules) =>
+	autoRevalidate(db.insertInto("rules").values(props).returningAll());
+
+export const updateRule = (ruleId: RulesId, props: RulesUpdate) =>
+	autoRevalidate(db.updateTable("rules").set(props).where("id", "=", ruleId).returningAll());
 
 export const removeRule = (ruleId: RulesId) =>
 	autoRevalidate(db.deleteFrom("rules").where("id", "=", ruleId));
@@ -230,12 +244,13 @@ async function wouldCreateCycle(
 		  };
 }
 
-export async function createRuleWithCycleCheck(
+export async function createOrUpdateRuleWithCycleCheck(
 	data: {
+		ruleId?: RulesId;
 		event: Event;
 		actionInstanceId: ActionInstancesId;
 		sourceActionInstanceId?: ActionInstancesId;
-		config?: Record<string, unknown> | null;
+		config?: RuleConfigBase | null;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
@@ -271,11 +286,20 @@ export async function createRuleWithCycleCheck(
 	}
 
 	try {
+		if (data.ruleId) {
+			const updatedRule = await updateRule(data.ruleId, {
+				event: data.event,
+				actionInstanceId: data.actionInstanceId,
+				sourceActionInstanceId: data.sourceActionInstanceId,
+				config: data.config,
+			}).executeTakeFirstOrThrow();
+			return updatedRule;
+		}
 		const createdRule = await createRule({
 			event: data.event,
 			actionInstanceId: data.actionInstanceId,
 			sourceActionInstanceId: data.sourceActionInstanceId,
-			config: data.config ? JSON.stringify(data.config) : null,
+			config: data.config,
 		}).executeTakeFirstOrThrow();
 		return createdRule;
 	} catch (e) {
@@ -295,3 +319,32 @@ export async function createRuleWithCycleCheck(
 		throw e;
 	}
 }
+
+export const getRule = (ruleId: RulesId, communityId: CommunitiesId) =>
+	autoCache(
+		db
+			.selectFrom("rules")
+			.selectAll()
+			.select((eb) => [
+				jsonObjectFrom(
+					eb
+						.selectFrom("action_instances")
+						.whereRef("action_instances.id", "=", "rules.actionInstanceId")
+						.selectAll("action_instances")
+						.select((eb) => [
+							jsonObjectFrom(
+								eb
+									.selectFrom("stages")
+									.whereRef("stages.id", "=", "action_instances.stageId")
+									.where("stages.communityId", "=", communityId)
+									.selectAll("stages")
+							)
+								.$notNull()
+								.as("stage"),
+						])
+				)
+					.$notNull()
+					.as("actionInstance"),
+			])
+			.where("id", "=", ruleId)
+	);

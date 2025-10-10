@@ -1,19 +1,21 @@
 import type { User } from "lucia";
 
 import type { StagesId } from "db/public";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
+import { Tabs, TabsContent, TabsList } from "ui/tabs";
 
 import { getStage } from "~/lib/db/queries";
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { StagePanelActions } from "./actionsTab/StagePanelActions";
 import { StagePanelRules } from "./actionsTab/StagePanelRules";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
 import { StagePanelSheet } from "./StagePanelSheet";
+import { TabLink } from "./StagePanelTabLink";
 
 type Props = {
 	stageId: StagesId | undefined;
-	searchParams: Record<string, unknown>;
+	searchParams: Record<string, string>;
 	user: User;
 };
 
@@ -31,14 +33,16 @@ export const StagePanel = async (props: Props) => {
 		}
 	}
 
+	const defaultTab = props.searchParams.tab || "overview";
+
 	return (
 		<StagePanelSheet open={open}>
-			<Tabs defaultValue="overview">
+			<Tabs defaultValue={defaultTab}>
 				<TabsList className="grid grid-cols-4">
-					<TabsTrigger value="overview">Overview</TabsTrigger>
-					<TabsTrigger value="pubs">Pubs</TabsTrigger>
-					<TabsTrigger value="actions">Actions</TabsTrigger>
-					<TabsTrigger value="members">Members</TabsTrigger>
+					<TabLink tab="overview" />
+					<TabLink tab="pubs" />
+					<TabLink tab="actions" />
+					<TabLink tab="members" />
 				</TabsList>
 				<TabsContent value="overview">
 					<StagePanelOverview stageId={props.stageId} userId={props.user.id} />

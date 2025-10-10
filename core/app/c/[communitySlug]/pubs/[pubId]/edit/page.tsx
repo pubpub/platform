@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 
 import { cache } from "react";
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-import type { CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
+import type { CommunitiesId, PubsId, UsersId } from "db/public";
 import { Button } from "ui/button";
 import { tryCatch } from "utils/try-catch";
 
@@ -12,20 +12,13 @@ import { ContentLayout } from "~/app/c/[communitySlug]/ContentLayout";
 import { PubPageTitleWithStatus } from "~/app/components/pubs/PubEditor/PageTitleWithStatus";
 import { PubEditor } from "~/app/components/pubs/PubEditor/PubEditor";
 import { getPageLoginData } from "~/lib/authentication/loginData";
-import {
-	getAuthorizedUpdateForms,
-	getAuthorizedViewForms,
-	userCanEditPub,
-} from "~/lib/authorization/capabilities";
+import { getAuthorizedUpdateForms, getAuthorizedViewForms } from "~/lib/authorization/capabilities";
+import { constructRedirectToPubDetailPage } from "~/lib/links";
 import { getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { resolveFormAccess } from "~/lib/server/form-access";
-import {
-	constructRedirectToPubDetailPage,
-	redirectToPubEditPage,
-	redirectToUnauthorized,
-} from "~/lib/server/navigation/redirects";
+import { redirectToPubEditPage, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 
 const getPubsWithRelatedValuesCached = cache(
 	async ({

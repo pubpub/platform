@@ -2,6 +2,7 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 
 import { z } from "zod";
 
+import type { RuleConfigBase } from "../types";
 import type { ActionInstancesId } from "./ActionInstances";
 import type { Event } from "./Event";
 import { actionInstancesIdSchema } from "./ActionInstances";
@@ -21,7 +22,7 @@ export interface RulesTable {
 
 	actionInstanceId: ColumnType<ActionInstancesId, ActionInstancesId, ActionInstancesId>;
 
-	config: ColumnType<unknown | null, unknown | null, unknown | null>;
+	config: ColumnType<RuleConfigBase | null, RuleConfigBase | null, RuleConfigBase | null>;
 
 	createdAt: ColumnType<Date, Date | string | undefined, Date | string>;
 

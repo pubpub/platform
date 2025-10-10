@@ -13,6 +13,7 @@ const sharedSchema = z.object({
 
 export const action = defineAction({
 	name: Action.googleDriveImport,
+	accepts: ["pub"],
 	description: "Import a Google Doc.",
 	icon: SiGoogledrive,
 	config: {

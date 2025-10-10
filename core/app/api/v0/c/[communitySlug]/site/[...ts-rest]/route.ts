@@ -5,6 +5,7 @@ import type {
 	CommunityMembershipsId,
 	PubsId,
 	PubTypesId,
+	RulesId,
 	StagesId,
 } from "db/public";
 import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
@@ -13,10 +14,13 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
+	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
+import { logger } from "logger";
 
+import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -42,9 +46,11 @@ import {
 	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
+import { getRule } from "~/lib/server/rules";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers } from "~/lib/server/user";
 
@@ -54,8 +60,7 @@ const handler = createNextHandler(
 		auth: {
 			check: {
 				siteBuilder: async () => {
-					const { authorization, community, isSiteBuilderToken } =
-						await getAuthorization();
+					const { isSiteBuilderToken } = await getAuthorization();
 
 					if (!isSiteBuilderToken) {
 						return {
@@ -163,12 +168,11 @@ const handler = createNextHandler(
 					body: pub,
 				};
 			},
-			getMany: async ({ query }, { request, responseHeaders }) => {
-				const { user, community, authorization, isSiteBuilderToken } =
-					await checkAuthorization({
-						token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
-						cookies: "community-member",
-					});
+			getMany: async ({ query }, { responseHeaders }) => {
+				const { user, community, authorization } = await checkAuthorization({
+					token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+					cookies: "community-member",
+				});
 
 				const allowedPubTypes =
 					typeof authorization === "object" ? authorization.pubTypes : undefined;
@@ -269,7 +273,7 @@ const handler = createNextHandler(
 					throw new NotFoundError(`Pub ${params.pubId} not found`);
 				}
 
-				const updatedPub = await updatePub({
+				await updatePub({
 					pubValues: body,
 					pubId: params.pubId as PubsId,
 					communityId: community.id,
@@ -529,7 +533,7 @@ const handler = createNextHandler(
 					body: pubType,
 				};
 			},
-			getMany: async (req, args) => {
+			getMany: async (req) => {
 				const { community } = await checkAuthorization({
 					token: { scope: ApiAccessScope.pubType, type: ApiAccessType.read },
 					// TODO: figure out capability here
@@ -571,7 +575,7 @@ const handler = createNextHandler(
 					body: stage,
 				};
 			},
-			getMany: async (req, res) => {
+			getMany: async () => {
 				const { community, user } = await checkAuthorization({
 					token: { scope: ApiAccessScope.stage, type: ApiAccessType.read },
 					cookies: false,
@@ -717,6 +721,51 @@ const handler = createNextHandler(
 					body: pubs,
 				};
 			},
+		},
+		webhook: async ({ params, body }) => {
+			const community = await findCommunityBySlug();
+			// const { community } = await checkAuthorization({
+			// 	token: { scope: ApiAccessScope.community, type: ApiAccessType.read },
+			// 	cookies: true,
+			// });
+			if (!community) {
+				throw new NotFoundError(`Community not found`);
+			}
+
+			const ruleId = params.ruleId as RulesId;
+
+			const rule = await getRule(ruleId, community.id).executeTakeFirst();
+
+			if (!rule) {
+				throw new NotFoundError(`Rule ${ruleId} not found`);
+			}
+
+			if (!body) {
+				throw new BadRequestError(
+					"Body is required for webhook, send an empty one if needed"
+				);
+			}
+
+			try {
+				await scheduleActionInstances({
+					event: Event.webhook,
+					stack: [],
+					stageId: rule.actionInstance.stageId,
+					json: body,
+					config: rule.config?.actionConfig,
+				});
+
+				return {
+					status: 201,
+					body: undefined,
+				};
+			} catch (e) {
+				logger.error(e);
+				return {
+					status: 500,
+					body: `Something went wrong when triggering webhook. ${e.message}`,
+				};
+			}
 		},
 	},
 	{
