@@ -26,7 +26,7 @@ module "ecs_service" {
   enable_execute_command = true
 
   # allow github actions to update the service without confusing TF
-  ignore_task_definition_changes = true
+  ignore_task_definition_changes = false
 
   cpu           = var.resources.cpu
   memory        = var.resources.memory
