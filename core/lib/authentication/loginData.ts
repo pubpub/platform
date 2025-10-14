@@ -2,10 +2,7 @@ import "server-only";
 
 import { randomUUID } from "crypto";
 
-import type { Session, User } from "lucia";
-
 import { cache } from "react";
-import { redirect } from "next/navigation";
 import { getPathname } from "@nimpl/getters/get-pathname";
 
 import type { Communities, CommunityMemberships, CommunityMembershipsId } from "db/public";
@@ -13,9 +10,9 @@ import { AuthTokenType, MemberRole } from "db/public";
 import { expect } from "utils";
 import { tryCatch } from "utils/try-catch";
 
-import type { LoginRedirectOpts } from "../server/navigation/redirects";
+import type { LoginRedirectOpts } from "../links";
 import type { ExtraSessionValidationOptions } from "./lucia";
-import { getCommunitySlug, NotInCommunityError } from "../server/cache/getCommunitySlug";
+import { NotInCommunityError } from "../server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "../server/community";
 import { redirectToLogin, redirectToVerify } from "../server/navigation/redirects";
 import { validateRequest } from "./lucia";

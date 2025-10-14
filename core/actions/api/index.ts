@@ -1,8 +1,9 @@
 // shared actions between server and client
 
+import type { Rule } from "ajv/dist/compile/rules";
 import type * as z from "zod";
 
-import type { ActionInstances, Event } from "db/public";
+import type { ActionInstances, Communities, Event, Rules } from "db/public";
 
 import type { SequentialRuleEvent } from "../types";
 import {
@@ -11,6 +12,7 @@ import {
 	pubEnteredStage,
 	pubInStageForDuration,
 	pubLeftStage,
+	webhook,
 } from "../_lib/rules";
 import * as buildJournalSite from "../buildJournalSite/action";
 import * as datacite from "../datacite/action";
@@ -53,7 +55,9 @@ export const rules = {
 	[pubLeftStage.event]: pubLeftStage,
 	[actionSucceeded.event]: actionSucceeded,
 	[actionFailed.event]: actionFailed,
+	[webhook.event]: webhook,
 } as const;
+// export type Rules = typeof rules;
 
 export const getRuleByName = <T extends Event>(name: T) => {
 	return rules[name];
@@ -64,28 +68,57 @@ export const isReferentialRule = (
 ): rule is Extract<typeof rule, { event: SequentialRuleEvent }> =>
 	sequentialRuleEvents.includes(rule.event as any);
 
-export const humanReadableEvent = <T extends Event>(
-	event: T,
-	config?: (typeof rules)[T]["additionalConfig"] extends undefined
-		? never
-		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>,
-	sourceAction?: ActionInstances | null
-) => {
+export const humanReadableEventBase = <T extends Event>(event: T, community: Communities) => {
 	const rule = getRuleByName(event);
-	if (config && rule.additionalConfig) {
-		return rule.display.withConfig(config);
-	}
-	if (sourceAction && isReferentialRule(rule)) {
-		return rule.display.withConfig(sourceAction);
+
+	if (typeof rule.display.base === "function") {
+		return rule.display.base({ community });
 	}
 
 	return rule.display.base;
 };
 
-export const serializeRule = <T extends Event>(
+export const humanReadableEventHydrated = <T extends Event>(
 	event: T,
+	community: Communities,
+	options: {
+		rule: Rules;
+		config?: (typeof rules)[T]["additionalConfig"] extends undefined
+			? never
+			: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>;
+		sourceAction?: ActionInstances | null;
+	}
+) => {
+	const ruleConf = getRuleByName(event);
+	if (options.config && ruleConf.additionalConfig && ruleConf.display.hydrated) {
+		return ruleConf.display.hydrated({ rule: options.rule, community, config: options.config });
+	}
+	if (options.sourceAction && isReferentialRule(ruleConf) && ruleConf.display.hydrated) {
+		return ruleConf.display.hydrated({
+			rule: options.rule,
+			community,
+			config: options.sourceAction,
+		});
+	}
+
+	if (ruleConf.display.hydrated && !ruleConf.additionalConfig) {
+		return ruleConf.display.hydrated({ rule: options.rule, community, config: {} as any });
+	}
+
+	if (typeof ruleConf.display.base === "function") {
+		return ruleConf.display.base({ community });
+	}
+
+	return ruleConf.display.base;
+};
+
+export const humanReadableRule = <R extends Rules>(
+	rule: R,
+	community: Communities,
 	instanceName: string,
-	config?: (typeof rules)[T]["additionalConfig"] extends undefined
+	config?: (typeof rules)[R["event"]]["additionalConfig"] extends undefined
 		? never
-		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
-) => `${instanceName} will run when ${humanReadableEvent(event, config)}`;
+		: z.infer<NonNullable<(typeof rules)[R["event"]]["additionalConfig"]>>,
+	sourceAction?: ActionInstances | null
+) =>
+	`${instanceName} will run when ${humanReadableEventHydrated(rule.event, community, { rule, config, sourceAction })}`;

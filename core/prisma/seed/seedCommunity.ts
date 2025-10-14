@@ -42,6 +42,7 @@ import type {
 	Invite,
 	NewInviteInput,
 	permissionsSchema,
+	RuleConfigBase,
 } from "db/types";
 import type { MaybeHas } from "utils/types";
 import {
@@ -156,7 +157,7 @@ export type StagesInitializer<
 			event: Event;
 			actionInstance: keyof A;
 			sourceAction?: keyof A;
-			config?: Record<string, unknown> | null;
+			config?: RuleConfigBase | null;
 		}[];
 	}
 >;
@@ -879,7 +880,7 @@ export async function seedCommunity<
 			? await trx
 					.insertInto("_PubFieldToPubType")
 					.values(
-						pubTypesList.flatMap(({ name, id, fields }, idx) => {
+						pubTypesList.flatMap(({ name, id, fields }) => {
 							const ranks = findRanksBetween({
 								numberOfRanks: Object.keys(fields).length,
 							});
@@ -992,8 +993,8 @@ export async function seedCommunity<
 	]) as UsersBySlug<U>;
 
 	const possibleMembers = Object.entries(usersBySlug)
-		.filter(([slug, userInfo]) => !!userInfo.role)
-		.flatMap(([slug, userWithRole]) => {
+		.filter(([, userInfo]) => !!userInfo.role)
+		.flatMap(([, userWithRole]) => {
 			return [
 				{
 					id: userWithRole.existing ? undefined : userWithRole.id,
@@ -1014,7 +1015,7 @@ export async function seedCommunity<
 
 	const usersWithMemberShips = Object.fromEntries(
 		Object.entries(usersBySlug)
-			.filter(([slug, user]) => !!user.role)
+			.filter(([, user]) => !!user.role)
 			.map(([slug, user], idx) => [
 				slug,
 				{
@@ -1048,7 +1049,7 @@ export async function seedCommunity<
 	//
 
 	const stageMembers = consolidatedStages
-		.flatMap((stage, idx) => {
+		.flatMap((stage) => {
 			if (!stage.members) return [];
 
 			return Object.entries(stage.members)?.map(([member, role]) => ({
@@ -1065,7 +1066,7 @@ export async function seedCommunity<
 		stageMembers.length > 0
 			? await trx
 					.insertInto("stage_memberships")
-					.values((eb) =>
+					.values(() =>
 						stageMembers.map((stageMember) => ({
 							role: stageMember.role!,
 							stageId: stageMember.stage.id,
@@ -1075,18 +1076,6 @@ export async function seedCommunity<
 					.returningAll()
 					.execute()
 			: [];
-
-	const stagesWithPermissionsByName = Object.fromEntries(
-		consolidatedStages.map((stage) => [
-			stage.name,
-			{
-				...stage,
-				permissions: stageMemberships.filter(
-					(permission) => permission.stageId === stage.id
-				),
-			},
-		])
-	);
 
 	const stageConnectionsList = props.stageConnections
 		? await db
@@ -1204,7 +1193,7 @@ export async function seedCommunity<
 						db
 							.insertInto("form_elements")
 							.values((eb) =>
-								formList.flatMap(([formTitle, formInput], idx) => {
+								formList.flatMap(([formTitle, formInput]) => {
 									const ranks = findRanksBetween({
 										numberOfRanks: formInput.elements.length,
 									});
@@ -1291,11 +1280,6 @@ export async function seedCommunity<
 	});
 
 	if (toBeCreatedFormMembers.length) {
-		const createdFormMembers = await trx
-			.insertInto("community_memberships")
-			.values(toBeCreatedFormMembers)
-			.returningAll()
-			.execute();
 	}
 
 	const formsByName = Object.fromEntries(
@@ -1303,13 +1287,13 @@ export async function seedCommunity<
 	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's
-	const possibleActions = consolidatedStages.flatMap((stage, idx) =>
+	const possibleActions = consolidatedStages.flatMap((stage) =>
 		stage.actions
 			? Object.entries(stage.actions).map(([actionName, action]) => ({
 					stageId: stage.id,
 					action: action.action,
 					name: actionName,
-					config: JSON.stringify(action.config),
+					config: action.config,
 				}))
 			: []
 	);
@@ -1321,7 +1305,7 @@ export async function seedCommunity<
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
 	const possibleRules = consolidatedStages.flatMap(
-		(stage, idx) =>
+		(stage) =>
 			stage.rules?.map((rule) => ({
 				event: rule.event,
 				actionInstanceId: expect(
@@ -1330,7 +1314,7 @@ export async function seedCommunity<
 				sourceActionInstanceId: createdActions.find(
 					(action) => action.name === rule.sourceAction
 				)?.id,
-				config: rule.config ? JSON.stringify(rule.config) : null,
+				config: rule.config,
 			})) ?? []
 	);
 

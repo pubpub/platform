@@ -5,13 +5,16 @@ import type {
 	ActionInstances,
 	Action as ActionName,
 	ActionRunsId,
+	Communities,
 	CommunitiesId,
+	Rules,
 	StagesId,
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
+import type { Prettify, XOR } from "utils/types";
 import { Event } from "db/public";
 
 import type { ClientExceptionOptions } from "~/lib/serverActions";
@@ -22,28 +25,47 @@ export type ActionPub = ProcessedPub<{
 }>;
 
 export type RunProps<T extends Action> =
-	T extends Action<infer C, infer A extends z.ZodObject<any>>
-		? {
-				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
-				configFieldOverrides: Set<string>;
-				pub: ActionPub;
-				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
-				argsFieldOverrides: Set<string>;
-				stageId: StagesId;
-				communityId: CommunitiesId;
-				/**
-				 * The lastModifiedBy field, to be used when you are
-				 * creating/modifying pubs
-				 * Will likely look like: `action-run:<action-run-id>
-				 */
-				lastModifiedBy: LastModifiedBy;
-				actionRunId: ActionRunsId;
-				/**
-				 * The user ID of the user who initiated the action, if any
-				 */
-				userId?: UsersId;
-				actionInstance: ActionInstances;
-			}
+	T extends Action<
+		infer C,
+		infer A extends z.ZodObject<any>,
+		any,
+		infer Acc extends ActionRunAccepts[]
+	>
+		? Prettify<
+				{
+					config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
+					configFieldOverrides: Set<string>;
+					// pub: ActionPub;
+					args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
+					argsFieldOverrides: Set<string>;
+					stageId: StagesId;
+					communityId: CommunitiesId;
+					/**
+					 * The lastModifiedBy field, to be used when you are
+					 * creating/modifying pubs
+					 * Will likely look like: `action-run:<action-run-id>
+					 */
+					lastModifiedBy: LastModifiedBy;
+					actionRunId: ActionRunsId;
+					/**
+					 * The user ID of the user who initiated the action, if any
+					 */
+					userId?: UsersId;
+					actionInstance: ActionInstances;
+				} &
+					// if both are accepted, it's one or the other.
+					// if only one's accepted, it's only that one
+					("pub" | "json" extends Acc[number]
+						? XOR<{ pub: ActionPub }, { json: Record<string, any> }>
+						: ("pub" extends Acc[number]
+								? {
+										pub: ActionPub;
+									}
+								: { pub?: never }) &
+								("json" extends Acc[number]
+									? { json: Record<string, unknown> }
+									: { json?: never }))
+			>
 		: never;
 
 export type ConfigProps<C> = {
@@ -56,14 +78,19 @@ export type TokenDef = {
 	};
 };
 
+export const actionRunAccepts = ["pub", "json"] as const;
+export type ActionRunAccepts = (typeof actionRunAccepts)[number];
+
 export type Action<
 	C extends z.ZodObject<any> = z.ZodObject<any>,
 	A extends z.ZodObject<any> = z.ZodObject<any>,
 	N extends ActionName = ActionName,
+	Accepts extends ActionRunAccepts[] = ActionRunAccepts[],
 > = {
 	id?: string;
 	name: N;
 	description: string;
+	accepts: Accepts;
 	/**
 	 * The action's configuration
 	 *
@@ -118,8 +145,9 @@ export const defineAction = <
 	C extends z.ZodObject<any>,
 	A extends z.ZodObject<any>,
 	N extends ActionName,
+	Acc extends ActionRunAccepts[],
 >(
-	action: Action<C, A, N>
+	action: Action<C, A, N, Acc>
 ) => action;
 
 export type ActionSuccess = {
@@ -164,21 +192,25 @@ export type EventRuleOptionsBase<
 	 * The display name options for this event
 	 */
 	display: {
+		icon: (typeof Icons)[keyof typeof Icons];
 		/**
 		 * The base display name for this rule, shown e.g. when selecting the event for a rule
 		 */
-		base: string;
-	} & {
+		base: React.ReactNode | ((options: { community: Communities }) => React.ReactNode);
 		/**
-		 * The display name for this event when used in a rule
+		 * String to use when viewing the rule on the stage.
+		 * Useful if you want to show some configuration or rule-specific information
 		 */
-		[K in "withConfig" as AC extends Record<string, any>
-			? K
-			: E extends SequentialRuleEvent
-				? K
-				: never]: (
-			options: AC extends Record<string, any> ? AC : ActionInstances
-		) => string;
+		hydrated?: (
+			options: {
+				rule: Rules;
+				community: Communities;
+			} & (AC extends Record<string, any>
+				? { config: AC }
+				: E extends SequentialRuleEvent
+					? { config: ActionInstances }
+					: {})
+		) => React.ReactNode;
 	};
 };
 

@@ -1,10 +1,7 @@
 import * as React from "react";
-import { useFormContext } from "react-hook-form";
 
 import type { AutoFormInputComponentProps } from "../types";
-import { Button } from "../../button";
 import { FormControl, FormItem, FormMessage } from "../../form";
-import { Info, Minus, Plus } from "../../icon";
 import { Input } from "../../input";
 import {
 	PubFieldSelect,
@@ -12,7 +9,6 @@ import {
 	PubFieldSelectToggleButton,
 	PubFieldSelectWrapper,
 } from "../../pubFields/pubFieldSelect";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
@@ -54,6 +50,7 @@ export default function AutoFormInput({
 							type={type}
 							{...fieldPropsWithoutShowLabel}
 							placeholder={placeholder}
+							className="bg-white"
 						/>
 					</FormControl>
 					<PubFieldSelectWrapper>

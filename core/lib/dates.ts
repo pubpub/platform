@@ -12,7 +12,10 @@ import {
 
 import type { PubInStageForDuration, RuleConfig } from "~/actions/_lib/rules";
 
-export const addDuration = (duration: RuleConfig<PubInStageForDuration>, date = new Date()) => {
+export const addDuration = (
+	duration: RuleConfig<PubInStageForDuration>["ruleConfig"],
+	date = new Date()
+) => {
 	const now = new Date(date);
 
 	switch (duration.interval) {

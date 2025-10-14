@@ -1,3 +1,5 @@
+import type { TaskList } from "graphile-worker";
+
 import { run } from "graphile-worker";
 
 import { logger } from "logger";
@@ -5,7 +7,7 @@ import { logger } from "logger";
 import { clients } from "./clients";
 import { emitEvent } from "./jobs/emitEvent";
 
-const makeTaskList = (client: typeof clients): GraphileWorker.Tasks => ({
+const makeTaskList = (client: typeof clients): TaskList => ({
 	emitEvent: emitEvent(client.internalClient),
 });
 

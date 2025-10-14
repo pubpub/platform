@@ -405,6 +405,7 @@ export const databaseTables = [
 				isNullable: true,
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
+				comment: "@type(BaseActionInstanceConfig, '../types', true, false, true)",
 			},
 			{
 				name: "name",
@@ -520,6 +521,14 @@ export const databaseTables = [
 			{
 				name: "sourceActionRunId",
 				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
+			{
+				name: "json",
+				dataType: "jsonb",
 				dataTypeSchema: "pg_catalog",
 				isNullable: true,
 				isAutoIncrementing: false,
@@ -2002,6 +2011,7 @@ export const databaseTables = [
 				isNullable: true,
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
+				comment: "@type(RuleConfigBase, '../types', true, false, true)",
 			},
 			{
 				name: "createdAt",
@@ -2320,6 +2330,8 @@ export const databaseTables = [
 				isNullable: false,
 				isAutoIncrementing: false,
 				hasDefaultValue: true,
+				comment:
+					"Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user",
 			},
 		],
 	},
