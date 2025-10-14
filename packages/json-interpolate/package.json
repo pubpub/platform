@@ -3,7 +3,8 @@
 	"type": "module",
 	"version": "0.0.1",
 	"exports": {
-		".": "./dist/index.js"
+		".": "./dist/pubpub-json-interpolate.js",
+		"./package.json": "./package.json"
 	},
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
