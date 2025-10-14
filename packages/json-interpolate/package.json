@@ -1,0 +1,36 @@
+{
+	"name": "@pubpub/json-interpolate",
+	"type": "module",
+	"version": "0.0.1",
+	"exports": {
+		".": "./dist/index.js"
+	},
+	"scripts": {
+		"format": "prettier --check . --ignore-path ../../.gitignore",
+		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
+		"type-check": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest"
+	},
+	"dependencies": {
+		"jsonata": "^2.1.0"
+	},
+	"devDependencies": {
+		"@pubpub/prettier-config": "workspace:*",
+		"tsconfig": "workspace:*",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
+	},
+	"prettier": "@pubpub/prettier-config",
+	"preconstruct": {
+		"entrypoints": [
+			"index.ts"
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
+	}
+}
