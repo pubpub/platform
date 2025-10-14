@@ -6,11 +6,11 @@ import { useCallback, useMemo, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 
 import type { Action, CommunitiesId } from "db/public";
-import type { FieldConfig } from "ui/auto-form";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
 
 import { getActionByName } from "~/actions/api";
+import { createDefaultFieldConfig } from "~/app/components/ActionUI/defaultFieldConfig";
 import { didSucceed } from "~/lib/serverActions";
 import { updateActionConfigDefault } from "./actions";
 
@@ -18,12 +18,15 @@ type Props = {
 	action: Action;
 	communityId: CommunitiesId;
 	values?: Record<string, unknown>;
-	fieldConfig: FieldConfig<any>;
 };
 
 export const ActionConfigDefaultForm = (props: Props) => {
 	const [isPending, startTransition] = useTransition();
 	const action = useMemo(() => getActionByName(props.action), [props.action]);
+
+	const defaultFields = Object.keys((props.values as Record<string, unknown> | undefined) ?? {});
+	const defaultFieldConfig = createDefaultFieldConfig(defaultFields, action.config.fieldConfig);
+
 	const schema = useMemo(() => action.config.schema.partial(), [action.config.schema]);
 	const onSubmit = useCallback((values: z.infer<typeof schema>) => {
 		startTransition(async () => {
@@ -43,7 +46,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 			formSchema={schema}
 			dependencies={action.config.dependencies}
 			onSubmit={onSubmit}
-			fieldConfig={props.fieldConfig}
+			fieldConfig={defaultFieldConfig}
 		>
 			<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
 				{isPending ? <Loader2 size="14" className="animate-spin" /> : "Submit"}
