@@ -82,7 +82,11 @@ function isSingleRawInterpolation(template: string, blocks: InterpolationBlock[]
 }
 
 /**
+<<<<<<< HEAD
  * checks if an interpolation block is within a string
+=======
+ * checks if an interpolation block is within a JSON string value
+>>>>>>> 484426597 (feat: jsonata based string interpolation lib)
  */
 function isBlockInQuotedContext(template: string, block: InterpolationBlock): boolean {
 	// look backwards for the nearest quote
