@@ -8,7 +8,6 @@ interface InterpolationBlock {
 
 /**
  * parses template string to find all {{ }} interpolation blocks
- * handles nested braces by counting depth
  */
 function parseInterpolations(template: string): InterpolationBlock[] {
 	const blocks: InterpolationBlock[] = [];
@@ -61,6 +60,9 @@ function parseInterpolations(template: string): InterpolationBlock[] {
 	return blocks;
 }
 
+/**
+ * checks if its something like `"Hello {{ $.name }}"`, vs just a plain `{{ $.name }}`
+ */
 function isStringTemplate(template: string): boolean {
 	const trimmed = template.trim();
 	return trimmed.startsWith('"') && trimmed.endsWith('"');
@@ -79,7 +81,7 @@ function isSingleRawInterpolation(template: string, blocks: InterpolationBlock[]
 }
 
 /**
- * checks if an interpolation block is within a JSON string value
+ * checks if an interpolation block is within a string
  */
 function isBlockInQuotedContext(template: string, block: InterpolationBlock): boolean {
 	// look backwards for the nearest quote
@@ -121,7 +123,6 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 		return result;
 	}
 
-	// check if we're in a string context
 	const inStringContext = isStringTemplate(template);
 
 	// multiple interpolations in non-string, non-structured context
@@ -145,10 +146,12 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 		}
 	}
 
-	// string/template interpolation - evaluate each block and stringify
 	let result = template;
 
-	// process blocks in reverse order to maintain correct indices
+	// process blocks in reverse order to maintain correct indices for multiple interpolations
+	// otherwise wed have to offset the indices of all the blocks after the current one
+	// eg we have two blocks [{first: '$.first', startIndex: 0, endIndex: 5 }, {last: '$.last', startIndex: 10, endIndex: 15 }]
+	// if we replaced first with the value, we'd have to offset the indices of the last block by 5 - whatever the difference in length between $.first and its value is, which is really annoying
 	for (let i = blocks.length - 1; i >= 0; i--) {
 		const block = blocks[i];
 		const expression = jsonata(block.expression);
@@ -167,6 +170,7 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 				const valueStr = stringified.slice(1, -1);
 				result =
 					result.slice(0, block.startIndex) + valueStr + result.slice(block.endIndex);
+				console.log("valueStr", valueStr, result);
 			} else {
 				// for objects/arrays/etc, we need to escape the quotes for JSON string context
 				const escaped = stringified.replace(/"/g, '\\"');
