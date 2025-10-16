@@ -478,6 +478,9 @@ importers:
       pg:
         specifier: ^8.16.3
         version: 8.16.3
+      prisma:
+        specifier: ^6.17.0
+        version: 6.17.1(magicast@0.3.5)(typescript@5.9.2)
       prosemirror-markdown:
         specifier: ^1.13.2
         version: 1.13.2
@@ -550,6 +553,9 @@ importers:
       tailwind-merge:
         specifier: 'catalog:'
         version: 2.5.2
+      tsx:
+        specifier: 'catalog:'
+        version: 4.19.0
       ui:
         specifier: workspace:*
         version: link:../packages/ui
@@ -716,9 +722,6 @@ importers:
       postcss:
         specifier: 'catalog:'
         version: 8.4.49
-      prisma:
-        specifier: ^6.17.0
-        version: 6.17.1(magicast@0.3.5)(typescript@5.9.2)
       prisma-dbml-generator:
         specifier: ^0.12.0
         version: 0.12.0
@@ -737,9 +740,6 @@ importers:
       tsconfig:
         specifier: workspace:*
         version: link:../config/tsconfig
-      tsx:
-        specifier: 'catalog:'
-        version: 4.19.0
       typescript:
         specifier: 'catalog:'
         version: 5.9.2

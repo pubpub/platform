@@ -65,14 +65,6 @@ module "service_core" {
     protocol      = "tcp"
   }
 
-  init_containers = [{
-    name  = "migrations"
-    image = "${var.ecr_repository_urls.root}:latest"
-    command = [
-      "pnpm", "--filter", "core", "migrate-docker",
-    ]
-  }]
-
   resources = {
     cpu           = 1024
     memory        = 2048
