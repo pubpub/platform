@@ -7,9 +7,8 @@ datasource db {
 }
 
 generator dbml {
-  provider        = "prisma-dbml-generator"
-  previewFeatures = ["prismaSchemaFolder"]
-  output          = "."
+  provider = "prisma-dbml-generator"
+  output   = "."
 }
 
 generator comments {

@@ -68,6 +68,8 @@ module "ecs_service" {
       # wait for the init containers to finish
       # (this behavior is true for migrations, might need to be more
       # configurable if we have other init containers later)
+      # Note 20251016: we don't use this anymore after moving migrations to instrumentation.ts
+      # keeping around in case
       dependencies = [for ic in var.init_containers : {
         containerName = ic.name
         condition     = "SUCCESS"

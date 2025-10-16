@@ -6,45 +6,55 @@ import { logger } from "logger";
 
 import { env } from "./lib/env/env";
 
-// function hook() {
-logger.info("Running instrumentation hook for nodejs...");
+async function main() {
+	if (process.env.NODE_ENV === "development") {
+		logger.info(
+			"NEXT_RUNTIME is `nodejs` and NODE_ENV is `development`; skipping OTEL + Sentry registration."
+		);
+		return;
+	}
 
-if (env.NODE_ENV === "production") {
-	logger.info("Instrumenting Sentry...");
-	Sentry.init({
-		dsn: "https://5012643b47ea6b2c8917f14442066f23@o31718.ingest.sentry.io/4505959187480576",
+	logger.info("Running instrumentation hook for nodejs...");
 
-		// Adjust this value in production, or use tracesSampler for greater control
-		tracesSampleRate: 1,
+	if (env.NODE_ENV === "production") {
+		logger.info("Instrumenting Sentry...");
+		Sentry.init({
+			dsn: "https://5012643b47ea6b2c8917f14442066f23@o31718.ingest.sentry.io/4505959187480576",
 
-		// Setting this option to true will print useful information to the console while you're setting up Sentry.
-		debug: false,
-		integrations: [
-			Sentry.redisIntegration({
-				cachePrefixes: ["nextjs:"],
+			// Adjust this value in production, or use tracesSampler for greater control
+			tracesSampleRate: 1,
+
+			// Setting this option to true will print useful information to the console while you're setting up Sentry.
+			debug: false,
+			integrations: [
+				Sentry.redisIntegration({
+					cachePrefixes: ["nextjs:"],
+				}),
+			],
+		});
+		logger.info("✅ Successfully instrumented Sentry");
+	}
+
+	logger.info("Instrumenting Honeycomb...");
+	const sdk = new HoneycombSDK({
+		instrumentations: [
+			getNodeAutoInstrumentations({
+				// We recommend disabling fs automatic instrumentation because
+				// it can be noisy and expensive during startup
+				"@opentelemetry/instrumentation-fs": {
+					enabled: false,
+				},
 			}),
 		],
 	});
-	logger.info("✅ Successfully instrumented Sentry");
+
+	sdk.start();
+	logger.info("✅ Successfully instrumented Honeycomb");
+
+	logger.info("instrumentation hooked in for nodejs.");
 }
 
-logger.info("Instrumenting Honeycomb...");
-const sdk = new HoneycombSDK({
-	instrumentations: [
-		getNodeAutoInstrumentations({
-			// We recommend disabling fs automatic instrumentation because
-			// it can be noisy and expensive during startup
-			"@opentelemetry/instrumentation-fs": {
-				enabled: false,
-			},
-		}),
-	],
+main().catch((error) => {
+	logger.error("Instrumentation hook failed:", error);
+	process.exit(1);
 });
-
-sdk.start();
-logger.info("✅ Successfully instrumented Honeycomb");
-
-logger.info("instrumentation hooked in for nodejs.");
-// }
-
-// hook();
