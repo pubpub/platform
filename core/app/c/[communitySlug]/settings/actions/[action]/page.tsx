@@ -6,7 +6,6 @@ import { PubFieldProvider } from "ui/pubFields";
 import { TokenProvider } from "ui/tokens";
 
 import { getActionByName } from "~/actions/api";
-import { createDefaultFieldConfig } from "~/app/components/ActionUI/defaultFieldConfig";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { getActionConfigDefaults } from "~/lib/server/actions";
@@ -47,17 +46,13 @@ export default async function Page(props: Props) {
 		getActionConfigDefaults(community.id, params.action).executeTakeFirst(),
 	]);
 
-	const action = getActionByName(params.action);
-	const defaultFields = Object.keys(
-		(actionConfigDefaults?.config as Record<string, unknown> | undefined) ?? {}
-	);
-	const defaultFieldConfig = createDefaultFieldConfig(defaultFields, action.config.fieldConfig);
-
 	if (!userCanEditCommunity) {
 		return await redirectToUnauthorized();
 	}
 
 	const actionTitle = params.action[0].toUpperCase() + params.action.slice(1);
+
+	const action = getActionByName(params.action);
 
 	if (!action) {
 		notFound();
@@ -87,7 +82,6 @@ export default async function Page(props: Props) {
 							values={
 								actionConfigDefaults?.config as Record<string, unknown> | undefined
 							}
-							fieldConfig={defaultFieldConfig}
 						/>
 					</TokenProvider>
 				</PubFieldProvider>
