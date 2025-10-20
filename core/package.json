@@ -72,6 +72,7 @@
 		"@nimpl/getters": "^2.2.0",
 		"@node-rs/argon2": "^1.8.3",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
+		"@prisma/engines": "^6.17.1",
 		"@react-email/render": "^1.2.0",
 		"@sentry/nextjs": "catalog:",
 		"@sinclair/typebox": "catalog:",
