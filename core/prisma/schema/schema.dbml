@@ -111,7 +111,7 @@ Table users {
   avatar String
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
-  isSuperAdmin Boolean [not null, default: false, note: 'comment']
+  isSuperAdmin Boolean [not null, default: false]
   passwordHash String
   isVerified Boolean [not null, default: false]
   isProvisional Boolean [not null, default: false, note: 'Indicates whether a user is provisional, meaning they were added through an invite and need to accept it to become a full user']
@@ -497,6 +497,7 @@ Table invite_forms {
   inviteId String [not null]
   form forms [not null]
   formId String [not null]
+  helper Json
   type MembershipType [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]

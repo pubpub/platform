@@ -82,7 +82,10 @@
 			"@radix-ui/react-focus-scope": "^1.0.4",
 			"@react-email/render@1>prettier": "^3.6.2",
 			"react-email@3>next": "^15.5.0",
-			"@opentelemetry/instrumentation@0>import-in-the-middle": "1.14.2"
+			"@opentelemetry/instrumentation@0>import-in-the-middle": "1.14.2",
+			"prisma-dbml-generator>prisma": "catalog:",
+			"prisma-dbml-generator>@prisma/internals": "catalog:",
+			"prisma-dbml-generator>@prisma/generator-helper": "catalog:"
 		}
 	},
 	"name": "v7",

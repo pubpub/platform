@@ -10,6 +10,9 @@ packages:
 # A catalog is used to line up the package versions across workspaces
 catalog:
     next: ^15.5.0
+    prisma: ^6.17.0
+    "@prisma/internals": ^6.17.0
+    "@prisma/generator-helper": ^6.17.0
     eslint: ^9.9.0
     katex: ^0.16.18
     prettier: ^3.6.2
