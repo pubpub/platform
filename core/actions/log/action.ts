@@ -12,19 +12,19 @@ export const action = defineAction({
 		schema: z.object({
 			text: z
 				.string()
-				.optional()
+				.default("")
 				.describe("The string to log out in addition to the default parameters"),
-			debounce: z.number().optional().describe("Debounce time in milliseconds."),
+			debounce: z.number().default(0).describe("Debounce time in milliseconds"),
 		}),
 	},
 	description: "Log a pub to the console",
 	params: {
 		schema: z.object({
-			debounce: z.number().optional().describe("Debounce time in milliseconds."),
+			debounce: z.number().default(0).describe("Debounce time in milliseconds"),
 			text: z
 				.string()
-				.describe("The string to log out in addition to the default parameters")
-				.optional(),
+				.default("")
+				.describe("The string to log out in addition to the default parameters"),
 		}),
 	},
 	icon: Terminal,
