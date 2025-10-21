@@ -19,8 +19,6 @@ const map = {
 	[Action.http]: toDynamic("http"),
 	[Action.log]: toDynamic("log"),
 	[Action.move]: toDynamic("move"),
-	[Action.pdf]: toDynamic("pdf"),
-	[Action.pushToV6]: toDynamic("pushToV6"),
 };
 
 export function getActionFormComponent(action: Action): ComponentType<{}> {
