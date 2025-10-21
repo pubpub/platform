@@ -1,7 +1,13 @@
+import console from "console";
+
 import { describe, expect, test } from "vitest";
 import * as z from "zod";
 
+import { interpolate } from "@pubpub/json-interpolate";
+import { Action } from "db/public";
+
 import { schemaWithJsonFields } from "./schemaWithJsonFields";
+import { parseActionSchema } from "./validateActionSchema";
 
 describe("schemaWithJsonFields", () => {
 	test("accepts original type", () => {
@@ -212,5 +218,34 @@ describe("schemaWithJsonFields", () => {
 
 		const result3 = wrapped.parse({ count: "{{ $.count }}" });
 		expect(result3).toEqual({ count: "{{ $.count }}" });
+	});
+});
+
+describe("fullThing", () => {
+	test("full thing", async () => {
+		const schema = z.object({
+			number: z.date(),
+		});
+
+		const validated = await parseActionSchema(
+			Action.log,
+			{},
+			{},
+			{
+				debounce: "{{ $.cronk }}",
+			}
+		);
+
+		console.log(validated);
+		expect(validated).toEqual({
+			debounce: "{{ $.cronk }}",
+		});
+		const x = `{ debounce: ${validated.debounce} }`;
+		console.log(x);
+		const y = await interpolate(`{ debounce: ${validated.debounce} }`, { cronk: "1000" });
+		console.log(typeof y, y);
+		expect(JSON.parse(y)).toEqual({
+			debounce: 1000,
+		});
 	});
 });
