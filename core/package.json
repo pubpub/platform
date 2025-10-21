@@ -72,7 +72,13 @@
 		"@nimpl/getters": "^2.2.0",
 		"@node-rs/argon2": "^1.8.3",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",
+		"@prisma/config": "^6.17.1",
+		"@prisma/debug": "^6.17.1",
+		"@prisma/driver-adapter-utils": "^6.17.1",
 		"@prisma/engines": "^6.17.1",
+		"@prisma/engines-version": "6.18.0-8.34b5a692b7bd79939a9a2c3ef97d816e749cda2f",
+		"@prisma/fetch-engine": "^6.17.1",
+		"@prisma/get-platform": "^6.17.1",
 		"@react-email/render": "^1.2.0",
 		"@sentry/nextjs": "catalog:",
 		"@sinclair/typebox": "catalog:",
@@ -156,7 +162,11 @@
 		"use-next-sse": "^0.2.3",
 		"utils": "workspace:*",
 		"uuid": "^9.0.1",
-		"zod": "catalog:"
+		"zod": "catalog:",
+		"c12": "3.1.0",
+		"deepmerge-ts": "7.1.5",
+		"effect": "3.16.12",
+		"empathic": "2.0.0"
 	},
 	"devDependencies": {
 		"@chromatic-com/storybook": "^4.1.1",

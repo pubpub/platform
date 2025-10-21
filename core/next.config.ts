@@ -139,15 +139,41 @@ const config: typeof normalizeConfig = async (phase, { defaultConfig }): Promise
 	}
 
 	// see https://github.com/vercel/next.js/discussions/66327#discussioncomment-13247142
-	const { fileList: additionalTracedFiles } = await nodeFileTrace(
+	const {
+		fileList: additionalTracedFiles,
+		esmFileList,
+		reasons,
+		warnings,
+	} = await nodeFileTrace(
 		// add entry points for the missing packages or any additional scripts you need here
-		[require.resolve("prisma/build/index.js"), require.resolve("@prisma/engines")]
+		[
+			require.resolve("prisma/build/index.js"),
+			require.resolve("@prisma/engines"),
+			require.resolve("@prisma/config"),
+			require.resolve("@prisma/driver-adapter-utils"),
+			require.resolve("@prisma/engines-version"),
+			require.resolve("@prisma/fetch-engine"),
+			require.resolve("@prisma/get-platform"),
+			require.resolve("effect"),
+		],
+		{
+			analysis: {
+				emitGlobs: true,
+			},
+
+			conditions: ["import", "require", "node"],
+		}
+	);
+	console.log(additionalTracedFiles, esmFileList, warnings);
+
+	reasons.forEach((reason, key) =>
+		console.log(key, reason, Array.from(reason.parents.entries()))
 	);
 
 	return {
 		...modifiedConfig,
 		outputFileTracingIncludes: {
-			"/*": [
+			"**": [
 				...additionalTracedFiles,
 				"./node_modules/.bin/prisma",
 				"./node_modules/prisma/**",
@@ -156,6 +182,10 @@ const config: typeof normalizeConfig = async (phase, { defaultConfig }): Promise
 				"./prisma/prisma.config.ts",
 				"./prisma/schema/*",
 				"./prisma/create-admin-user.cts",
+				"./node_modules/effect/**",
+				"./node_modules/empathic/**",
+				"./node_modules/deepmerge-ts/**",
+				"./node_modules/c12/**",
 			],
 		},
 	};

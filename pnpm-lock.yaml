@@ -334,7 +334,25 @@ importers:
       '@opentelemetry/auto-instrumentations-node':
         specifier: 'catalog:'
         version: 0.53.0(@opentelemetry/api@1.9.0)
+      '@prisma/config':
+        specifier: ^6.17.1
+        version: 6.17.1(magicast@0.3.5)
+      '@prisma/debug':
+        specifier: ^6.17.1
+        version: 6.17.1
+      '@prisma/driver-adapter-utils':
+        specifier: ^6.17.1
+        version: 6.17.1
       '@prisma/engines':
+        specifier: ^6.17.1
+        version: 6.17.1
+      '@prisma/engines-version':
+        specifier: 6.18.0-8.34b5a692b7bd79939a9a2c3ef97d816e749cda2f
+        version: 6.18.0-8.34b5a692b7bd79939a9a2c3ef97d816e749cda2f
+      '@prisma/fetch-engine':
+        specifier: ^6.17.1
+        version: 6.17.1
+      '@prisma/get-platform':
         specifier: ^6.17.1
         version: 6.17.1
       '@react-email/render':
@@ -382,6 +400,9 @@ importers:
       ajv-formats:
         specifier: ^2.1.1
         version: 2.1.1(ajv@8.17.1)
+      c12:
+        specifier: 3.1.0
+        version: 3.1.0(magicast@0.3.5)
       clsx:
         specifier: 'catalog:'
         version: 2.1.1
@@ -400,12 +421,21 @@ importers:
       debounce:
         specifier: ^2.2.0
         version: 2.2.0
+      deepmerge-ts:
+        specifier: 7.1.5
+        version: 7.1.5
       diacritics:
         specifier: ^1.3.0
         version: 1.3.0
+      effect:
+        specifier: 3.16.12
+        version: 3.16.12
       emails:
         specifier: workspace:*
         version: link:../packages/emails
+      empathic:
+        specifier: 2.0.0
+        version: 2.0.0
       eta:
         specifier: ^3.5.0
         version: 3.5.0
@@ -5251,6 +5281,9 @@ packages:
 
   '@prisma/engines-version@6.17.1-1.272a37d34178c2894197e17273bf937f25acdeac':
     resolution: {integrity: sha512-17140E3huOuD9lMdJ9+SF/juOf3WR3sTJMVyyenzqUPbuH+89nPhSWcrY+Mf7tmSs6HvaO+7S+HkELinn6bhdg==}
+
+  '@prisma/engines-version@6.18.0-8.34b5a692b7bd79939a9a2c3ef97d816e749cda2f':
+    resolution: {integrity: sha512-T7Af4QsJQnSgWN1zBbX+Cha5t4qjHRxoeoWpK4JugJzG/ipmmDMY5S+O0N1ET6sCBNVkf6lz+Y+ZNO9+wFU8pQ==}
 
   '@prisma/engines@6.17.1':
     resolution: {integrity: sha512-D95Ik3GYZkqZ8lSR4EyFOJ/tR33FcYRP8kK61o+WMsyD10UfJwd7+YielflHfKwiGodcqKqoraWw8ElAgMDbPw==}
@@ -10725,6 +10758,7 @@ packages:
     resolution: {integrity: sha512-t0etAxTUk1w5MYdNOkZBZ8rvYYN5iL+2dHCCx/DpkFm/bW28M6y5nUS83D4XdZiHy35Fpaw6LBb+F88fHZnVCw==}
     engines: {node: '>=8.17.0'}
     hasBin: true
+    bundledDependencies: []
 
   jsonfile@6.2.0:
     resolution: {integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==}
@@ -19120,6 +19154,8 @@ snapshots:
       '@prisma/debug': 6.17.1
 
   '@prisma/engines-version@6.17.1-1.272a37d34178c2894197e17273bf937f25acdeac': {}
+
+  '@prisma/engines-version@6.18.0-8.34b5a692b7bd79939a9a2c3ef97d816e749cda2f': {}
 
   '@prisma/engines@6.17.1':
     dependencies:
