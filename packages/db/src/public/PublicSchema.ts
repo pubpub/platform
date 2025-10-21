@@ -83,9 +83,9 @@ export interface PublicSchema {
 
 	action_runs: ActionRunsTable;
 
-	pubs: PubsTable;
-
 	invites: InvitesTable;
+
+	pubs: PubsTable;
 
 	action_config_defaults: ActionConfigDefaultsTable;
 
