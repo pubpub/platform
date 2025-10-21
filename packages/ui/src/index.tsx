@@ -12,6 +12,7 @@ export * from "./collapsible";
 export * from "./checkbox";
 export * from "./dialog";
 export * from "./dropdown-menu";
+export * from "./field";
 export * from "./form";
 export * from "./hover-card";
 export * from "./input";
