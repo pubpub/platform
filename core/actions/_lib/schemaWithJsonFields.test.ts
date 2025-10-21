@@ -242,7 +242,7 @@ describe("fullThing", () => {
 		});
 		const x = `{ debounce: ${validated.debounce} }`;
 		console.log(x);
-		const y = await interpolate(`{ debounce: ${validated.debounce} }`, { cronk: "1000" });
+		const y = await interpolate(`{ debounce: ${validated.debounce} }`, { cronk: 1000 });
 		console.log(typeof y, y);
 		expect(y).toEqual({
 			debounce: 1000,
