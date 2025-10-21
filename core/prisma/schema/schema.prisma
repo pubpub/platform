@@ -315,9 +315,7 @@ model ActionInstance {
 
 enum Action {
   log
-  pdf
   email
-  pushToV6
   http
   move
   googleDriveImport
