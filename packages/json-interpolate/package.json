@@ -14,10 +14,12 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
+		"json5": "^2.2.3",
 		"jsonata": "^2.1.0"
 	},
 	"devDependencies": {
 		"@pubpub/prettier-config": "workspace:*",
+		"@types/json5": "^2.2.0",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "catalog:"

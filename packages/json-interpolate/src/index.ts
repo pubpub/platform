@@ -1,3 +1,4 @@
+import JSON5 from "json5";
 import jsonata from "jsonata";
 
 interface InterpolationBlock {
@@ -194,9 +195,10 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 	}
 
 	// if we're in a structured context (array or object), parse the result as JSON
+	// use JSON5 to support unquoted keys and more lenient syntax
 	if (isStructuredContext) {
 		try {
-			return JSON.parse(result);
+			return JSON5.parse(result);
 		} catch (error) {
 			throw new Error(
 				`failed to parse structured result as JSON: ${error instanceof Error ? error.message : String(error)}`

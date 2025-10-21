@@ -166,6 +166,21 @@ describe("interpolate", () => {
 			expect(result).toEqual({ key: 42 });
 		});
 
+		test("does not require quotes around keys", async () => {
+			const result = await interpolate("{ key: {{ $.value }} }", {
+				value: 42,
+			});
+			expect(result).toEqual({ key: 42 });
+		});
+
+		test("interpolates keys", async () => {
+			const result = await interpolate("{ {{ $.key }}: {{ $.value }} }", {
+				key: "A",
+				value: 42,
+			});
+			expect(result).toEqual({ A: 42 });
+		});
+
 		test("interpolates string in object", async () => {
 			const result = await interpolate('{ "name": "{{ $.name }}" }', {
 				name: "Jim",
