@@ -244,7 +244,7 @@ describe("fullThing", () => {
 		console.log(x);
 		const y = await interpolate(`{ debounce: ${validated.debounce} }`, { cronk: "1000" });
 		console.log(typeof y, y);
-		expect(JSON.parse(y)).toEqual({
+		expect(y).toEqual({
 			debounce: 1000,
 		});
 	});
