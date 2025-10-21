@@ -25,6 +25,7 @@ import {
 	createActionInstance,
 	getActionInstance,
 	removeActionInstance,
+	updateActionInstance,
 } from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
@@ -325,6 +326,11 @@ export const updateAction = defineServerAction(async function updateAction(
 	if (!authorized) {
 		return ApiError.UNAUTHORIZED;
 	}
+
+	await updateActionInstance(actionInstanceId, {
+		config: props.config,
+		name: props.name,
+	}).executeTakeFirstOrThrow();
 
 	return {
 		success: true,
