@@ -183,7 +183,6 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 				const valueStr = stringified.slice(1, -1);
 				result =
 					result.slice(0, block.startIndex) + valueStr + result.slice(block.endIndex);
-				console.log("valueStr", valueStr, result);
 			} else {
 				// for objects/arrays/etc, we need to escape the quotes for JSON string context
 				const escaped = stringified.replace(/"/g, '\\"');
