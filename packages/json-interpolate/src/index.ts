@@ -120,30 +120,34 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 			throw new Error(`expression '${blocks[0].expression}' returned undefined`);
 		}
 
+		// jsonata sequences have a non-enumerable `sequence` property
+		// convert to plain array to avoid issues with deep equality checks
+		if (Array.isArray(result) && (result as any).sequence === true) {
+			return [...result];
+		}
 		return result;
 	}
 
 	const inStringContext = isStringTemplate(template);
 
+	// check if template is a structured context (array or object)
+	const trimmed = template.trim();
+	const startsWithArray = trimmed.startsWith("[");
+	const startsWithObject = trimmed.startsWith("{") && !trimmed.startsWith("{{");
+	const endsWithArray = trimmed.endsWith("]");
+	const endsWithObject = trimmed.endsWith("}") && !trimmed.endsWith("}}");
+
+	const isArrayContext = startsWithArray && endsWithArray;
+	const isObjectContext = startsWithObject && endsWithObject;
+	const isStructuredContext = isArrayContext || isObjectContext;
+
 	// multiple interpolations in non-string, non-structured context
 	// allow multiple interpolations in arrays/objects like [{{ $.a }}, {{ $.b }}]
 	// but not in raw contexts like {{ $.a }}{{ $.b }}
-	if (!inStringContext && blocks.length > 1) {
-		// check if template starts with [ or single { (not {{)
-		const trimmed = template.trim();
-		const startsWithArray = trimmed.startsWith("[");
-		const startsWithObject = trimmed.startsWith("{") && !trimmed.startsWith("{{");
-		const endsWithArray = trimmed.endsWith("]");
-		const endsWithObject = trimmed.endsWith("}") && !trimmed.endsWith("}}");
-
-		const hasStructure =
-			(startsWithArray && endsWithArray) || (startsWithObject && endsWithObject);
-
-		if (!hasStructure) {
-			throw new Error(
-				`multiple interpolations are only allowed in string contexts, found ${blocks.length} interpolations in non-string template`
-			);
-		}
+	if (!inStringContext && blocks.length > 1 && !isStructuredContext) {
+		throw new Error(
+			`multiple interpolations are only allowed in string contexts, found ${blocks.length} interpolations in non-string template`
+		);
 	}
 
 	let result = template;
@@ -170,7 +174,6 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 				const valueStr = stringified.slice(1, -1);
 				result =
 					result.slice(0, block.startIndex) + valueStr + result.slice(block.endIndex);
-				console.log("valueStr", valueStr, result);
 			} else {
 				// for objects/arrays/etc, we need to escape the quotes for JSON string context
 				const escaped = stringified.replace(/"/g, '\\"');
@@ -187,6 +190,17 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 				result =
 					result.slice(0, block.startIndex) + stringified + result.slice(block.endIndex);
 			}
+		}
+	}
+
+	// if we're in a structured context (array or object), parse the result as JSON
+	if (isStructuredContext) {
+		try {
+			return JSON.parse(result);
+		} catch (error) {
+			throw new Error(
+				`failed to parse structured result as JSON: ${error instanceof Error ? error.message : String(error)}`
+			);
 		}
 	}
 

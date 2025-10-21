@@ -139,7 +139,7 @@ describe("interpolate", () => {
 	describe("arrays with multiple interpolations", () => {
 		test("interpolates array elements", async () => {
 			const result = await interpolate("[{{ $.a }}, {{ $.b }}]", { a: 1, b: 2 });
-			expect(result).toBe("[1, 2]");
+			expect(result).toEqual([1, 2]);
 		});
 
 		test("interpolates mixed types in array", async () => {
@@ -148,7 +148,7 @@ describe("interpolate", () => {
 				age: 30,
 				active: true,
 			});
-			expect(result).toBe('["Jim", 30, true]');
+			expect(result).toEqual(["Jim", 30, true]);
 		});
 
 		test("interpolates objects in array", async () => {
@@ -156,21 +156,33 @@ describe("interpolate", () => {
 				user1: { name: "Jim" },
 				user2: { name: "Pam" },
 			});
-			expect(result).toBe('[{"name":"Jim"}, {"name":"Pam"}]');
+			expect(result).toEqual([{ name: "Jim" }, { name: "Pam" }]);
 		});
 	});
 
 	describe("objects with interpolations", () => {
 		test("interpolates object value", async () => {
 			const result = await interpolate('{ "key": {{ $.value }} }', { value: 42 });
-			expect(result).toBe('{ "key": 42 }');
+			expect(result).toEqual({ key: 42 });
 		});
 
 		test("interpolates string in object", async () => {
 			const result = await interpolate('{ "name": "{{ $.name }}" }', {
 				name: "Jim",
 			});
-			expect(result).toBe('{ "name": "Jim" }');
+			expect(result).toEqual({ name: "Jim" });
+		});
+
+		test("can handle spaces and linebreaks around object", async () => {
+			const result = await interpolate(
+				`  
+				{
+				                 "name": "{{ $.name }}" } `,
+				{
+					name: "Jim",
+				}
+			);
+			expect(result).toEqual({ name: "Jim" });
 		});
 
 		test("interpolates multiple object values", async () => {
@@ -178,7 +190,7 @@ describe("interpolate", () => {
 				a: 1,
 				b: 2,
 			});
-			expect(result).toBe('{ "a": 1, "b": 2 }');
+			expect(result).toEqual({ a: 1, b: 2 });
 		});
 	});
 
@@ -187,19 +199,14 @@ describe("interpolate", () => {
 			const result = await interpolate('{{ $.items.{ "name": name } }}', {
 				items: [{ name: "Jim" }, { name: "Pam" }],
 			});
-			// normalize through JSON to handle JSONata's special array types
-			expect(JSON.parse(JSON.stringify(result))).toEqual([{ name: "Jim" }, { name: "Pam" }]);
+			expect(result).toEqual([{ name: "Jim" }, { name: "Pam" }]);
 		});
 
 		test("handles nested object literals", async () => {
 			const result = await interpolate('{{ $.data.{ "user": { "id": id } } }}', {
 				data: [{ id: 1 }, { id: 2 }],
 			});
-			// normalize through JSON to handle JSONata's special array types
-			expect(JSON.parse(JSON.stringify(result))).toEqual([
-				{ user: { id: 1 } },
-				{ user: { id: 2 } },
-			]);
+			expect(result).toEqual([{ user: { id: 1 } }, { user: { id: 2 } }]);
 		});
 
 		test("handles complex JSONata with multiple braces", async () => {
@@ -213,8 +220,7 @@ describe("interpolate", () => {
 					],
 				}
 			);
-			// normalize through JSON to handle JSONata's special array types
-			expect(JSON.parse(JSON.stringify(result))).toEqual([
+			expect(result).toEqual([
 				{ name: "Jim", role: "sales" },
 				{ name: "Dwight", role: "sales" },
 			]);
