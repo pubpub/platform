@@ -1,37 +1,58 @@
-import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-import { Form, FormField } from "ui/form";
+// doi: z.string().optional(),
+// doiPrefix: z.string().optional(),
+// doiSuffix: z.string().optional(),
+// title: z.string(),
+// url: z.string(),
+// publisher: z.string(),
+// publicationDate: z.coerce.date(),
+// contributor: z.string(),
+// contributorPerson: z.string(),
+// contributorPersonName: z.string(),
+// contributorPersonORCID: z.string().optional(),
+// bylineContributorFlag: z.boolean().optional(),
+import { DatePicker } from "ui/date-picker";
+import { FieldSet } from "ui/field";
 import { Input } from "ui/input";
 
-import type { ActionFormProps } from "../_lib/types";
-import { action } from "./action";
+import { ActionField } from "../_lib/ActionField";
 
-type T = z.infer<typeof action.config.schema>;
-
-export default function LogActionForm(props: ActionFormProps<T>) {
-	const form = useForm({
-		resolver: zodResolver(action.config.schema),
-	});
-	const onSubmit = useCallback(
-		(data: T) => {
-			props.onSubmit(data);
-		},
-		[props]
-	);
-
+export default function LogActionForm() {
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<FormField
-					name="message"
-					render={({ field }) => {
-						return <Input {...field} placeholder="Log message" />;
-					}}
-				/>
-			</form>
-		</Form>
+		<FieldSet>
+			<ActionField name="doi" label="DOI" />
+			<ActionField name="doiPrefix" label="DOI Prefix" />
+			<ActionField name="doiSuffix" label="DOI Suffix" />
+			<ActionField name="title" label="Title" />
+			<ActionField name="url" label="URL" />
+			<ActionField name="publisher" label="Publisher" />
+			<ActionField
+				name="publicationDate"
+				label="Publication Date"
+				render={({ field }) => (
+					<DatePicker
+						disabled={field.disabled}
+						date={field.value}
+						setDate={field.onChange}
+					/>
+				)}
+			/>
+			<ActionField name="contributor" label="Contributor" />
+			<ActionField name="contributorPerson" label="Contributor Person" />
+			<ActionField name="contributorPersonName" label="Contributor Person Name" />
+			<ActionField name="contributorPersonORCID" label="Contributor Person ORCID" />
+			<ActionField
+				name="bylineContributorFlag"
+				label="Byline Contributor Flag"
+				render={({ field, fieldState }) => (
+					<Input
+						type="checkbox"
+						{...field}
+						id={field.name}
+						aria-invalid={fieldState.invalid}
+						checked={field.value}
+					/>
+				)}
+			/>
+		</FieldSet>
 	);
 }

@@ -37,11 +37,6 @@ export const ActionRunForm = (props: Props) => {
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
 
-	if (!action) {
-		logger.info(`Invalid action name ${props.actionInstance.action}`);
-		return null;
-	}
-
 	const onSubmit = useCallback(
 		async (values: Record<string, unknown>, form: UseFormReturn<any>) => {
 			const result = await runAction({
@@ -78,6 +73,11 @@ export const ActionRunForm = (props: Props) => {
 	const onClose = useCallback(() => {
 		setOpen(false);
 	}, []);
+
+	if (!action) {
+		logger.info(`Invalid action name ${props.actionInstance.action}`);
+		return null;
+	}
 
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>
