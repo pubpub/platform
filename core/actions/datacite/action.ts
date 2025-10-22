@@ -13,102 +13,32 @@ export const action = defineAction({
 			doi: z.string().optional(),
 			doiPrefix: z.string().optional(),
 			doiSuffix: z.string().optional(),
-			title: z.string(),
-			url: z.string(),
-			publisher: z.string(),
-			publicationDate: z.coerce.date(),
-			contributor: z.string(),
-			contributorPerson: z.string(),
-			contributorPersonName: z.string(),
+			title: z.string().default(""),
+			url: z.string().default(""),
+			publisher: z.string().default(""),
+			publicationDate: z.coerce.date().default(new Date()),
+			contributor: z.string().default(""),
+			contributorPerson: z.string().default(""),
+			contributorPersonName: z.string().default(""),
 			contributorPersonORCID: z.string().optional(),
 			bylineContributorFlag: z.boolean().optional(),
 		}),
-		fieldConfig: {
-			doi: {
-				allowedSchemas: true,
-			},
-			doiSuffix: {
-				allowedSchemas: true,
-			},
-			title: {
-				allowedSchemas: true,
-			},
-			url: {
-				allowedSchemas: true,
-			},
-			publisher: {
-				allowedSchemas: true,
-			},
-			publicationDate: {
-				allowedSchemas: true,
-			},
-			contributor: {
-				allowedSchemas: true,
-			},
-			contributorPerson: {
-				allowedSchemas: true,
-			},
-			contributorPersonName: {
-				allowedSchemas: true,
-			},
-			contributorPersonORCID: {
-				allowedSchemas: true,
-			},
-			bylineContributorFlag: {
-				allowedSchemas: true,
-			},
-		},
 	},
 	params: {
 		schema: z.object({
 			doi: z.string().optional(),
 			doiPrefix: z.string().optional(),
 			doiSuffix: z.string().optional(),
-			title: z.string(),
-			url: z.string(),
-			publisher: z.string(),
-			publicationDate: z.coerce.date(),
-			contributor: z.string(),
-			contributorPerson: z.string(),
-			contributorPersonName: z.string(),
+			title: z.string().default(""),
+			url: z.string().default(""),
+			publisher: z.string().default(""),
+			publicationDate: z.coerce.date().default(new Date()),
+			contributor: z.string().default(""),
+			contributorPerson: z.string().default(""),
+			contributorPersonName: z.string().default(""),
 			contributorPersonORCID: z.string().optional(),
 			bylineContributorFlag: z.boolean().optional(),
 		}),
-		fieldConfig: {
-			doi: {
-				allowedSchemas: true,
-			},
-			doiSuffix: {
-				allowedSchemas: true,
-			},
-			title: {
-				allowedSchemas: true,
-			},
-			url: {
-				allowedSchemas: true,
-			},
-			publisher: {
-				allowedSchemas: true,
-			},
-			publicationDate: {
-				allowedSchemas: true,
-			},
-			contributor: {
-				allowedSchemas: true,
-			},
-			contributorPerson: {
-				allowedSchemas: true,
-			},
-			contributorPersonName: {
-				allowedSchemas: true,
-			},
-			contributorPersonORCID: {
-				allowedSchemas: true,
-			},
-			bylineContributorFlag: {
-				allowedSchemas: true,
-			},
-		},
 	},
 	description: "Deposit a pub to DataCite",
 	icon: Globe,
