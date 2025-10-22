@@ -6,6 +6,7 @@ const baseURL = `http://${process.env.INTEGRATION_TEST_HOST || "localhost"}:3000
  */
 export default defineConfig({
 	testDir: "./playwright",
+	testIgnore: process.env.TEST_IGNORE || "**/initialUser.spec.ts",
 	/* Don't run tests inside files in parallel */
 	fullyParallel: false,
 	/* Fail the build on CI if you accidentally left test.only in the source code. */

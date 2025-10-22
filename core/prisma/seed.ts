@@ -34,6 +34,12 @@ async function main() {
 
 	await workerUtils.migrate();
 
+	// eslint-disable-next-line no-restricted-properties
+	if (process.env.SKIP_SEED) {
+		logger.info("Skipping seeding...");
+		return;
+	}
+
 	await seedStarter(starterId);
 
 	if (shouldSeedLegacy) {
