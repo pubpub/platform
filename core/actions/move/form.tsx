@@ -3,7 +3,7 @@ import { StagesSelect } from "ui/stages";
 
 import { ActionField } from "../_lib/ActionField";
 
-export default function LogActionForm() {
+export default function MoveActionForm() {
 	return (
 		<FieldSet>
 			<ActionField

@@ -10,12 +10,10 @@ import { Button } from "ui/button";
 import { ArrowLeft, ArrowRight, FlagTriangleRightIcon } from "ui/icon";
 import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
 import { useToast } from "ui/use-toast";
-import { cn } from "utils";
 
 import { move } from "~/app/c/[communitySlug]/stages/components/lib/actions";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
-import { BasicMoveButton } from "./BasicMoveButton";
 
 type SimplifiedStage = {
 	id: StagesId;
