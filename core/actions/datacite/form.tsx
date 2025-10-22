@@ -1,15 +1,3 @@
-// doi: z.string().optional(),
-// doiPrefix: z.string().optional(),
-// doiSuffix: z.string().optional(),
-// title: z.string(),
-// url: z.string(),
-// publisher: z.string(),
-// publicationDate: z.coerce.date(),
-// contributor: z.string(),
-// contributorPerson: z.string(),
-// contributorPersonName: z.string(),
-// contributorPersonORCID: z.string().optional(),
-// bylineContributorFlag: z.boolean().optional(),
 import { DatePicker } from "ui/date-picker";
 import { FieldSet } from "ui/field";
 import { Input } from "ui/input";
