@@ -1,37 +1,55 @@
-import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-import { Form, FormField } from "ui/form";
+import { InputWithTokens, MarkdownEditor } from "ui/editors";
+import { FieldSet } from "ui/field";
 import { Input } from "ui/input";
 
-import type { ActionFormProps } from "../_lib/types";
-import { action } from "./action";
+import { ActionField } from "../_lib/ActionField";
+import MemberSelectClientFetch from "./DynamicSelectFetch";
 
-type T = z.infer<typeof action.config.schema>;
-
-export default function LogActionForm(props: ActionFormProps<T>) {
-	const form = useForm({
-		resolver: zodResolver(action.config.schema),
-	});
-	const onSubmit = useCallback(
-		(data: T) => {
-			props.onSubmit(data);
-		},
-		[props]
-	);
-
+export default function EmailActionForm() {
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<FormField
-					name="message"
-					render={({ field }) => {
-						return <Input {...field} placeholder="Log message" />;
-					}}
-				/>
-			</form>
-		</Form>
+		<FieldSet>
+			<ActionField
+				name="senderName"
+				label="Sender Name"
+				render={({ field, fieldState }) => (
+					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+			<ActionField
+				name="replyTo"
+				label="Reply-To"
+				render={({ field, fieldState }) => (
+					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+			<ActionField
+				name="recipientEmail"
+				label="Recipient Email"
+				render={({ field, fieldState }) => (
+					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+			<ActionField
+				name="recipientMember"
+				label="Recipient Member"
+				render={({ field, fieldState }) => (
+					<MemberSelectClientFetch name={field.name} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+			<ActionField
+				name="subject"
+				label="Subject"
+				render={({ field, fieldState }) => (
+					<InputWithTokens {...field} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+			<ActionField
+				name="body"
+				label="Body"
+				render={({ field, fieldState }) => (
+					<MarkdownEditor {...field} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+		</FieldSet>
 	);
 }

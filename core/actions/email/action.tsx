@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-import type { AutoFormInputComponentProps } from "ui/auto-form";
 import { Action } from "db/public";
 import { DependencyType } from "ui/auto-form/dependencyType";
 import { Mail } from "ui/icon";
@@ -11,7 +10,6 @@ import {
 } from "~/lib/server/render/pub/renderWithPubTokens";
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
-import MemberSelectClientFetch from "./DynamicSelectFetch";
 
 const emptyStringToUndefined = (arg: unknown) => {
 	if (typeof arg === "string" && arg === "") {
@@ -42,21 +40,6 @@ export const action = defineAction({
 			subject: stringWithTokens().max(500).describe("Email subject"),
 			body: markdown().min(0).describe("Email body"),
 		}),
-		fieldConfig: {
-			recipientEmail: {
-				allowedSchemas: true,
-			},
-			recipientMember: {
-				fieldType: (props: AutoFormInputComponentProps) => (
-					<MemberSelectClientFetch
-						value={props.field.value}
-						allowPubFieldSubstitution
-						fieldName={props.field.name}
-						fieldLabel={"Recipient Member"}
-					/>
-				),
-			},
-		},
 		dependencies: [
 			{
 				sourceField: "recipientMember",
@@ -84,34 +67,17 @@ export const action = defineAction({
 			recipientMember: z
 				.string()
 				.uuid()
-				.describe(
-					"Recipient Member|Overrides the recipient community member specified in the action config."
-				)
+				.describe("Overrides the recipient community member specified in the action config")
 				.optional(),
 			subject: stringWithTokens()
 				.max(500)
-				.describe("Email subject|Overrides the subject specified in the action config.")
+				.describe("Overrides the subject specified in the action config")
 				.optional(),
 			body: markdown()
 				.min(0)
-				.describe("Email body|Overrides the body specified in the action config.")
+				.describe("Overrides the body specified in the action config")
 				.optional(),
 		}),
-		fieldConfig: {
-			recipientEmail: {
-				allowedSchemas: true,
-			},
-			recipientMember: {
-				fieldType: (props: AutoFormInputComponentProps) => (
-					<MemberSelectClientFetch
-						value={props.field.value}
-						allowPubFieldSubstitution
-						fieldName={props.field.name}
-						fieldLabel={"Recipient Member"}
-					/>
-				),
-			},
-		},
 		dependencies: [
 			{
 				sourceField: "recipientMember",
