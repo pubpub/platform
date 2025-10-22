@@ -1,37 +1,98 @@
-import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+"use client";
 
-import { Form, FormField } from "ui/form";
-import { Input } from "ui/input";
+import { useCallback, useEffect } from "react";
 
-import type { ActionFormProps } from "../_lib/types";
-import { action } from "./action";
+import { FieldSet } from "ui/field";
+import { FieldOutputMap } from "ui/outputMap";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Textarea } from "ui/textarea";
 
-type T = z.infer<typeof action.config.schema>;
+import { ActionField } from "../_lib/ActionField";
+import { useActionForm } from "../_lib/ActionFormProvider";
 
-export default function LogActionForm(props: ActionFormProps<T>) {
-	const form = useForm({
-		resolver: zodResolver(action.config.schema),
-	});
-	const onSubmit = useCallback(
-		(data: T) => {
-			props.onSubmit(data);
-		},
-		[props]
-	);
+export default function HttpActionForm() {
+	const { form } = useActionForm();
+	const [method, response] = form.watch(["method", "response"]);
+
+	useEffect(() => {
+		form.setValue("outputMap", []);
+	}, [response]);
 
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<FormField
-					name="message"
-					render={({ field }) => {
-						return <Input {...field} placeholder="Log message" />;
-					}}
+		<FieldSet>
+			<ActionField name="url" label="Request URL" />
+			<ActionField
+				name="method"
+				label="Request Method"
+				render={({ field, fieldState }) => (
+					<Select
+						{...field}
+						onValueChange={field.onChange}
+						aria-invalid={fieldState.invalid}
+					>
+						<SelectTrigger>
+							<SelectValue
+								aria-label={field.value ?? undefined}
+								placeholder="Select one"
+							>
+								{field.value}
+							</SelectValue>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="GET">GET</SelectItem>
+							<SelectItem value="POST">POST</SelectItem>
+							<SelectItem value="PUT">PUT</SelectItem>
+							<SelectItem value="PATCH">PATCH</SelectItem>
+							<SelectItem value="DELETE">DELETE</SelectItem>
+						</SelectContent>
+					</Select>
+				)}
+			/>
+			{method !== "GET" && (
+				<ActionField
+					name="body"
+					label="Request Body"
+					render={({ field, fieldState }) => (
+						<Textarea {...field} id={field.name} aria-invalid={fieldState.invalid} />
+					)}
 				/>
-			</form>
-		</Form>
+			)}
+			<ActionField name="authToken" label="Auth Token" />
+			<ActionField
+				name="response"
+				label="Response Type"
+				render={({ field, fieldState }) => (
+					<Select
+						{...field}
+						onValueChange={field.onChange}
+						aria-invalid={fieldState.invalid}
+					>
+						<SelectTrigger>
+							<SelectValue
+								aria-label={field.value ?? undefined}
+								placeholder="Select one"
+							>
+								{field.value}
+							</SelectValue>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="json">JSON</SelectItem>
+							<SelectItem value="text">Text</SelectItem>
+							<SelectItem value="binary">Binary</SelectItem>
+						</SelectContent>
+					</Select>
+				)}
+			/>
+			<ActionField
+				name="outputMap"
+				render={({ field }) => (
+					<FieldOutputMap
+						disabled={response !== "json"}
+						form={form}
+						fieldName={field.name}
+					/>
+				)}
+			/>
+		</FieldSet>
 	);
 }

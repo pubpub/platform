@@ -1,37 +1,25 @@
-import { useCallback } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-
-import { Form, FormField } from "ui/form";
+import { FieldSet } from "ui/field";
 import { Input } from "ui/input";
 
-import type { ActionFormProps } from "../_lib/types";
-import { action } from "./action";
+import { ActionField } from "../_lib/ActionField";
 
-type T = z.infer<typeof action.config.schema>;
-
-export default function LogActionForm(props: ActionFormProps<T>) {
-	const form = useForm({
-		resolver: zodResolver(action.config.schema),
-	});
-	const onSubmit = useCallback(
-		(data: T) => {
-			props.onSubmit(data);
-		},
-		[props]
-	);
-
+export default function DataciteActionForm() {
 	return (
-		<Form {...form}>
-			<form onSubmit={form.handleSubmit(onSubmit)}>
-				<FormField
-					name="message"
-					render={({ field }) => {
-						return <Input {...field} placeholder="Log message" />;
-					}}
-				/>
-			</form>
-		</Form>
+		<FieldSet>
+			<ActionField
+				name="docUrl"
+				label="Document URL"
+				render={({ field, fieldState }) => (
+					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+			<ActionField
+				name="outputField"
+				label="Output Field"
+				render={({ field, fieldState }) => (
+					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
+				)}
+			/>
+		</FieldSet>
 	);
 }

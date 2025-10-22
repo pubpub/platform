@@ -1,7 +1,6 @@
 import * as z from "zod";
 
 import { Action } from "db/public";
-import { DependencyType } from "ui/auto-form/dependencyType";
 import { Globe } from "ui/icon";
 
 import { outputMap } from "../_lib/zodTypes";
@@ -12,23 +11,19 @@ export const action = defineAction({
 	accepts: ["json", "pub"],
 	config: {
 		schema: z.object({
-			url: z.string().url().describe("URL|URL to send the request to"),
+			url: z.string().url().describe("URL to send the request to"),
 			method: z
-				.enum(["GET", "POST", "PUT", "DELETE"])
-				.optional()
-				.describe("Method|HTTP method to use. Defaults to GET")
+				.enum(["GET", "POST", "PUT", "PATCH", "DELETE"])
+				.describe("HTTP method to use")
 				.default("GET"),
 			authToken: z
 				.string()
 				.optional()
-				.describe(
-					'Bearer token|Will get put as "Authorization: Bearer <token>" in the headers'
-				),
+				.describe('Will add an "Authorization: Bearer <token>" to the request headers'),
 			response: z
 				.enum(["json", "text", "binary"])
 				.default("json")
-				.optional()
-				.describe("Response|Expected type to return"),
+				.describe("Expected type to return"),
 			body: z
 				.string()
 				// this makes sure that the body is valid JSON
@@ -46,11 +41,11 @@ export const action = defineAction({
 					}
 				})
 				.optional()
-				.describe("Body|Body to send with the request. Only sent for non-GET requests."),
+				.describe("Body to send with the request. Only sent for non-GET requests."),
 			outputMap: z
 				.array(z.object({ pubField: z.string(), responseField: z.string() }))
 				.optional()
-				.describe("Output map|Map of JSON paths to pub fields"),
+				.describe("Map of JSON paths to pub fields"),
 		}),
 		fieldConfig: {
 			body: {
@@ -61,37 +56,24 @@ export const action = defineAction({
 				},
 			},
 		},
-		dependencies: [
-			{
-				sourceField: "method",
-				targetField: "body",
-				when: (method) => method === "GET" || !method,
-				type: DependencyType.HIDES,
-			},
-			{
-				sourceField: "response",
-				targetField: "outputMap",
-				when: (response) => response !== "json",
-				type: DependencyType.DISABLES,
-			},
-		],
 	},
 	description: "Make an arbitrary HTTP request",
 	params: {
 		schema: z.object({
-			test: z.boolean().optional().describe("Test|Run the action in test mode"),
-			url: z.string().url().optional().describe("URL|URL to send the request to"),
+			test: z.boolean().optional().describe("Run the action in test mode"),
+			url: z.string().url().optional().describe("URL to send the request to"),
 			method: z
-				.enum(["GET", "POST", "PUT", "DELETE"])
-				.describe("Method|HTTP method to use. Defaults to GET")
-				.default("GET")
-				.optional(),
+				.enum(["GET", "POST", "PUT", "PATCH", "DELETE"])
+				.describe("HTTP method to use")
+				.default("GET"),
+			response: z
+				.enum(["json", "text", "binary"])
+				.default("json")
+				.describe("Expected type to return"),
 			authToken: z
 				.string()
 				.optional()
-				.describe(
-					'Bearer token|Will get put as "Authorization: Bearer <token>" in the headers'
-				),
+				.describe('Will add an "Authorization: Bearer <token>" to the request headers'),
 			body: z
 				.string()
 				.transform((str, ctx) => {
@@ -108,29 +90,9 @@ export const action = defineAction({
 					}
 				})
 				.optional()
-				.describe("Body|Body to send with the request. Only sent for non-GET requests."),
-			outputMap: outputMap()
-				.optional()
-				.describe("Output map|Map of JSON paths to pub fields"),
+				.describe("Body to send with the request. Only sent for non-GET requests."),
+			outputMap: outputMap().optional().describe("Map of JSON paths to pub fields"),
 		}),
-
-		dependencies: [
-			{
-				sourceField: "method",
-				targetField: "body",
-				when: (method) => method === "GET" || !method,
-				type: DependencyType.HIDES,
-			},
-		],
-		fieldConfig: {
-			body: {
-				allowedSchemas: true,
-				fieldType: "textarea",
-				inputProps: {
-					className: "font-mono text-gray-700",
-				},
-			},
-		},
 	},
 	icon: Globe,
 	experimental: true,

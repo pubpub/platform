@@ -6,13 +6,7 @@ import { ActionField } from "../_lib/ActionField";
 export default function LogActionForm() {
 	return (
 		<FieldSet>
-			<ActionField
-				name="text"
-				label="Log Text"
-				render={({ field, fieldState }) => (
-					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
-				)}
-			/>
+			<ActionField name="text" label="Log Text" />
 			<ActionField
 				name="debounce"
 				label="Debounce (ms)"

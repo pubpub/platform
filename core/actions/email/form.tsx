@@ -8,27 +8,9 @@ import MemberSelectClientFetch from "./DynamicSelectFetch";
 export default function EmailActionForm() {
 	return (
 		<FieldSet>
-			<ActionField
-				name="senderName"
-				label="Sender Name"
-				render={({ field, fieldState }) => (
-					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
-				)}
-			/>
-			<ActionField
-				name="replyTo"
-				label="Reply-To"
-				render={({ field, fieldState }) => (
-					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
-				)}
-			/>
-			<ActionField
-				name="recipientEmail"
-				label="Recipient Email"
-				render={({ field, fieldState }) => (
-					<Input {...field} id={field.name} aria-invalid={fieldState.invalid} />
-				)}
-			/>
+			<ActionField name="senderName" label="Sender Name" />
+			<ActionField name="replyTo" label="Reply-To" />
+			<ActionField name="recipientEmail" label="Recipient Email" />
 			<ActionField
 				name="recipientMember"
 				label="Recipient Member"
