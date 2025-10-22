@@ -104,19 +104,19 @@ jobs:
             # Complication when the number of containers in the task are unknown:
             # we have to know where to get the inputs for each step, including the upload
             # step.
-            - name: Fill in the new image ID in the Amazon ECS task definition for migrations
-              id: task-def-migration
-              if: inputs.service == 'core'
-              uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
-              with:
-                  task-definition: ${{ steps.task-def-service.outputs.task-definition }}
-                  container-name: migrations
-                  image: ${{ steps.label.outputs.base_label }}
+            # - name: Fill in the new image ID in the Amazon ECS task definition for migrations
+            #   id: task-def-migration
+            #   if: inputs.service == 'core'
+            #   uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
+            #   with:
+            #       task-definition: ${{ steps.task-def-service.outputs.task-definition }}
+            #       container-name: migrations
+            #       image: ${{ steps.label.outputs.base_label }}
 
             - name: Deploy Amazon ECS task definition
               id: deploy-service-only
               # This one is different. The single-image case is when not deploying core.
-              if: inputs.service != 'core'
+              #   if: inputs.service != 'core'
               uses: aws-actions/amazon-ecs-deploy-task-definition@16f052ed696e6e5bf88c208a8e5ba1af7ced3310
               with:
                   # it is because of this line that the two steps need different if conditions
@@ -125,13 +125,13 @@ jobs:
                   cluster: ${{ env.ECS_CLUSTER }}
                   wait-for-service-stability: true
 
-            - name: Deploy Amazon ECS task definition including migrations
-              id: deploy-service-and-migrations
-              if: inputs.service == 'core'
-              uses: aws-actions/amazon-ecs-deploy-task-definition@16f052ed696e6e5bf88c208a8e5ba1af7ced3310
-              with:
-                  # it is because of this line that the two steps need different if conditions
-                  task-definition: ${{ steps.task-def-migration.outputs.task-definition }}
-                  service: ${{ env.ECS_SERVICE }}
-                  cluster: ${{ env.ECS_CLUSTER }}
-                  wait-for-service-stability: true
+            # - name: Deploy Amazon ECS task definition including migrations
+            #   id: deploy-service-and-migrations
+            #   if: inputs.service == 'core'
+            #   uses: aws-actions/amazon-ecs-deploy-task-definition@16f052ed696e6e5bf88c208a8e5ba1af7ced3310
+            #   with:
+            #       # it is because of this line that the two steps need different if conditions
+            #       task-definition: ${{ steps.task-def-migration.outputs.task-definition }}
+            #       service: ${{ env.ECS_SERVICE }}
+            #       cluster: ${{ env.ECS_CLUSTER }}
+            #       wait-for-service-stability: true

@@ -497,6 +497,7 @@ Table invite_forms {
   inviteId String [not null]
   form forms [not null]
   formId String [not null]
+  helper Json
   type MembershipType [not null]
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]

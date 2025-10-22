@@ -1,10 +1,9 @@
-// @ts-check
-
 import type { NextConfig, normalizeConfig } from "next/dist/server/config";
 
 import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
+import { nodeFileTrace } from "@vercel/nft";
 
 import { env } from "./lib/env/env";
 
@@ -12,6 +11,8 @@ import { env } from "./lib/env/env";
 
 const nextConfig: NextConfig = {
 	output: "standalone",
+	outputFileTracingRoot: new URL("./..", import.meta.url).pathname,
+
 	typescript: {
 		// this gets checked in CI already
 		ignoreBuildErrors: true,
@@ -123,7 +124,7 @@ const modifiedConfig = withPreconstruct(
 	})
 );
 
-const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
+const config: typeof normalizeConfig = async (phase, { defaultConfig }): Promise<NextConfig> => {
 	if (!env.SENTRY_AUTH_TOKEN) {
 		console.warn("⚠️ SENTRY_AUTH_TOKEN is not set");
 	}
@@ -136,7 +137,58 @@ const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
 		}
 		console.log("✅ SENTRY_AUTH_TOKEN is successfully set");
 	}
-	return modifiedConfig;
+
+	// see https://github.com/vercel/next.js/discussions/66327#discussioncomment-13247142
+	const {
+		fileList: additionalTracedFiles,
+		esmFileList,
+		reasons,
+		warnings,
+	} = await nodeFileTrace(
+		// add entry points for the missing packages or any additional scripts you need here
+		[
+			require.resolve("prisma/build/index.js"),
+			require.resolve("@prisma/engines"),
+			require.resolve("@prisma/config"),
+			require.resolve("@prisma/driver-adapter-utils"),
+			require.resolve("@prisma/engines-version"),
+			require.resolve("@prisma/fetch-engine"),
+			require.resolve("@prisma/get-platform"),
+			require.resolve("effect"),
+		],
+		{
+			analysis: {
+				emitGlobs: true,
+			},
+
+			conditions: ["import", "require", "node"],
+		}
+	);
+	console.log(additionalTracedFiles, esmFileList, warnings);
+
+	reasons.forEach((reason, key) =>
+		console.log(key, reason, Array.from(reason.parents.entries()))
+	);
+
+	return {
+		...modifiedConfig,
+		outputFileTracingIncludes: {
+			"**": [
+				...additionalTracedFiles,
+				"./node_modules/.bin/prisma",
+				"./node_modules/prisma/**",
+				"./node_modules/@prisma*/**",
+				"./prisma/migrations/*",
+				"./prisma/prisma.config.ts",
+				"./prisma/schema/*",
+				"./prisma/create-admin-user.cts",
+				"./node_modules/effect/**",
+				"./node_modules/empathic/**",
+				"./node_modules/deepmerge-ts/**",
+				"./node_modules/c12/**",
+			],
+		},
+	};
 };
 
 export default config;

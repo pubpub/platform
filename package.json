@@ -1,98 +1,95 @@
 {
-  "private": true,
-  "scripts": {
-    "build": "pnpm p:build && turbo build",
-    "build:docs": "turbo build --filter=docs",
-    "dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!docs --ui tui",
-    "clean": "turbo clean",
-    "start": "turbo start",
-    "type-check": "turbo type-check",
-    "playwright:test": "turbo run playwright:test --continue",
-    "p:dev": "preconstruct dev",
-    "p:build": "turbo run turbo:p:build",
-    "turbo:p:build": "preconstruct build",
-    "format": "turbo run format --continue",
-    "format:fix": "turbo format:fix --continue",
-    "lint": "turbo lint --continue",
-    "lint:fix": "turbo lint:fix --continue",
-    "lint:ws": "pnpm dlx sherif@latest",
-    "test": "turbo test",
-    "test-run": "turbo test-run --continue",
-    "test:setup": "docker compose -f docker-compose.test.yml --profile test up -d",
-    "test:teardown": "docker compose -f docker-compose.test.yml --profile test down -v",
-    "fix": "pnpm run lint:fix && pnpm run format:fix",
-    "dev:db:start": "docker compose -f docker-compose.dev.yml up db -d",
-    "dev:db:stop": "docker compose -f docker-compose.dev.yml down db",
-    "dev:inbucket:start": "docker compose -f docker-compose.dev.yml up inbucket -d",
-    "dev:inbucket:stop": "docker compose -f docker-compose.dev.yml down inbucket",
-    "dev:minio:start": "docker compose -f docker-compose.dev.yml up minio -d && docker compose -f docker-compose.dev.yml run minio-init",
-    "dev:minio:stop": "docker compose -f docker-compose.dev.yml down minio",
-    "dev:cache:start": "docker compose -f docker-compose.dev.yml up cache -d",
-    "dev:cache:stop": "docker compose -f docker-compose.dev.yml down cache",
-    "dev:setup:base": "pnpm install && docker compose -f docker-compose.dev.yml up -d && pnpm p:dev",
-    "dev:setup": "pnpm run dev:setup:base && pnpm --filter core migrate-dev",
-    "dev:setup:reset": "pnpm run dev:setup:base && pnpm --filter core reset",
-    "dev:teardown": "docker compose -f docker-compose.dev.yml down -v",
-    "integration:setup": "docker compose -f docker-compose.test.yml --profile integration up -d",
-    "integration:teardown": "docker compose -f docker-compose.test.yml --profile integration down -v",
-    "context-editor:playwright": "pnpm --filter context-editor run playwright:test"
-  },
-  "devDependencies": {
-    "@babel/core": "7.28.3",
-    "@babel/preset-env": "7.25.2",
-    "@babel/preset-react": "^7.27.1",
-    "@babel/preset-typescript": "^7.27.1",
-    "@playwright/test": "catalog:",
-    "@preconstruct/cli": "^2.8.12",
-    "@pubpub/prettier-config": "workspace:*",
-    "@turbo/gen": "^2.5.6",
-    "concurrently": "^9.2.0",
-    "husky": "^8.0.3",
-    "lint-staged": "^13.3.0",
-    "pino-pretty": "^10.3.1",
-    "prettier": "catalog:",
-    "turbo": "^2.5.6"
-  },
-  "lint-staged": {
-    "*.{ts,tsx,js,jsx,scss,json,md}": [
-      "prettier --write"
-    ],
-    "schema.prisma": [
-      "npx prisma format"
-    ]
-  },
-  "preconstruct": {
-    "packages": [
-      "packages/*"
-    ],
-    "exports": true,
-    "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
-      "typeModule": true,
-      "distInRoot": true,
-      "importsConditions": true
-    }
-  },
-  "prettier": "@pubpub/prettier-config",
-  "packageManager": "pnpm@9.10.0",
-  "prisma": {
-    "schema": "core/prisma/schema/"
-  },
-  "pnpm": {
-    "overrides": {
-      "@radix-ui/react-alert-dialog@1>@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
-      "react-style-singleton": "2.2.3",
-      "use-sidecar@1>@types/react": "-",
-      "use-sidecar@1>react": "-",
-      "@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
-      "@radix-ui/react-dismissable-layer": "^1.0.5",
-      "@radix-ui/react-focus-scope": "^1.0.4",
-      "@react-email/render@1>prettier": "^3.6.2",
-      "react-email@3>next": "^15.5.0",
-      "@opentelemetry/instrumentation@0>import-in-the-middle": "1.14.2"
-    }
-  },
-  "name": "v7",
-  "imports": {
-    "#register-loader": "./core/prisma/seed/stubs/register-loader.js"
-  }
+	"private": true,
+	"scripts": {
+		"build": "pnpm p:build && turbo build",
+		"build:docs": "turbo build --filter=docs",
+		"dev": "pnpm p:dev && turbo dev --filter=!emails --filter=!docs --ui tui",
+		"clean": "turbo clean",
+		"start": "turbo start",
+		"type-check": "turbo type-check",
+		"playwright:test": "turbo run playwright:test --continue",
+		"p:dev": "preconstruct dev",
+		"p:build": "turbo run turbo:p:build",
+		"turbo:p:build": "preconstruct build",
+		"format": "turbo run format --continue",
+		"format:fix": "turbo format:fix --continue",
+		"lint": "turbo lint --continue",
+		"lint:fix": "turbo lint:fix --continue",
+		"lint:ws": "pnpm dlx sherif@latest",
+		"test": "turbo test",
+		"test-run": "turbo test-run --continue",
+		"test:setup": "docker compose -f docker-compose.test.yml --profile test up -d",
+		"test:teardown": "docker compose -f docker-compose.test.yml --profile test down -v",
+		"fix": "pnpm run lint:fix && pnpm run format:fix",
+		"dev:db:start": "docker compose -f docker-compose.dev.yml up db -d",
+		"dev:db:stop": "docker compose -f docker-compose.dev.yml down db",
+		"dev:inbucket:start": "docker compose -f docker-compose.dev.yml up inbucket -d",
+		"dev:inbucket:stop": "docker compose -f docker-compose.dev.yml down inbucket",
+		"dev:minio:start": "docker compose -f docker-compose.dev.yml up minio -d && docker compose -f docker-compose.dev.yml run minio-init",
+		"dev:minio:stop": "docker compose -f docker-compose.dev.yml down minio",
+		"dev:cache:start": "docker compose -f docker-compose.dev.yml up cache -d",
+		"dev:cache:stop": "docker compose -f docker-compose.dev.yml down cache",
+		"dev:setup:base": "pnpm install && docker compose -f docker-compose.dev.yml up -d && pnpm p:dev",
+		"dev:setup": "pnpm run dev:setup:base && pnpm --filter core migrate-dev",
+		"dev:setup:reset": "pnpm run dev:setup:base && pnpm --filter core reset",
+		"dev:teardown": "docker compose -f docker-compose.dev.yml down -v",
+		"integration:setup": "docker compose -f docker-compose.test.yml --profile integration up -d",
+		"integration:teardown": "docker compose -f docker-compose.test.yml --profile integration down -v",
+		"context-editor:playwright": "pnpm --filter context-editor run playwright:test"
+	},
+	"devDependencies": {
+		"@babel/core": "7.28.3",
+		"@babel/preset-env": "7.25.2",
+		"@babel/preset-react": "^7.27.1",
+		"@babel/preset-typescript": "^7.27.1",
+		"@playwright/test": "catalog:",
+		"@preconstruct/cli": "^2.8.12",
+		"@pubpub/prettier-config": "workspace:*",
+		"@turbo/gen": "^2.5.6",
+		"concurrently": "^9.2.0",
+		"husky": "^8.0.3",
+		"lint-staged": "^13.3.0",
+		"pino-pretty": "^10.3.1",
+		"prettier": "catalog:",
+		"turbo": "^2.5.6"
+	},
+	"lint-staged": {
+		"*.{ts,tsx,js,jsx,scss,json,md}": [
+			"prettier --write"
+		]
+	},
+	"preconstruct": {
+		"packages": [
+			"packages/*"
+		],
+		"exports": true,
+		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+			"typeModule": true,
+			"distInRoot": true,
+			"importsConditions": true
+		}
+	},
+	"prettier": "@pubpub/prettier-config",
+	"packageManager": "pnpm@9.10.0",
+	"pnpm": {
+		"overrides": {
+			"@radix-ui/react-alert-dialog@1>@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
+			"react-style-singleton": "2.2.3",
+			"use-sidecar@1>@types/react": "-",
+			"use-sidecar@1>react": "-",
+			"@radix-ui/react-dialog@1>react-remove-scroll@2>react-style-singleton": "2.2.3",
+			"@radix-ui/react-dismissable-layer": "^1.0.5",
+			"@radix-ui/react-focus-scope": "^1.0.4",
+			"@react-email/render@1>prettier": "^3.6.2",
+			"react-email@3>next": "^15.5.0",
+			"@opentelemetry/instrumentation@0>import-in-the-middle": "1.14.2",
+			"prisma-dbml-generator>prisma": "catalog:",
+			"prisma-dbml-generator>@prisma/internals": "catalog:",
+			"prisma-dbml-generator>@prisma/generator-helper": "catalog:"
+		}
+	},
+	"name": "v7",
+	"imports": {
+		"#register-loader": "./core/prisma/seed/stubs/register-loader.js"
+	}
 }
