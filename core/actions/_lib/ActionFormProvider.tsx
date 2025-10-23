@@ -4,6 +4,7 @@ import type { ZodObject, ZodOptional } from "zod";
 import { createContext, useContext, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 import type { Action } from "../types";
 
@@ -34,13 +35,22 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 					{} as Record<string, true>
 				)
 			)
+			.extend({
+				pubFields: z
+					.record(z.string(), z.string().array())
+					.optional()
+					.describe("Mapping of pub fields to values"),
+			})
 			.optional();
 		return schemaWithPartialDefaults;
 	}, [props.action.config.schema, props.defaultFields]);
 
 	const form = useForm({
 		resolver: zodResolver(schema),
-		defaultValues: props.action.config.schema.partial().parse(props.values),
+		defaultValues: {
+			...props.action.config.schema.partial().parse(props.values),
+			pubFields: {},
+		},
 	});
 
 	return (
