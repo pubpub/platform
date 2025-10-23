@@ -130,11 +130,9 @@ test.describe("Sending an email to an email address", () => {
 		);
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
-			await runActionDialog
-				.getByLabel("Recipient email address")
-				.fill(community.users.user2.email);
-			await runActionDialog.getByLabel("Email subject").fill("Hello");
-			await runActionDialog.getByLabel("Email body").fill("Greetings");
+			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email);
+			await runActionDialog.getByLabel("Subject").fill("Hello");
+			await runActionDialog.getByLabel("Body").fill("Greetings");
 		});
 	});
 	test("Static email address recipient recieves the email", async () => {
@@ -154,12 +152,10 @@ test.describe("Sending an email containing a MemberId field from a related pub",
 		);
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
+			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email);
+			await runActionDialog.getByLabel("Subject").fill("Hello");
 			await runActionDialog
-				.getByLabel("Recipient email address")
-				.fill(community.users.user2.email);
-			await runActionDialog.getByLabel("Email subject").fill("Hello");
-			await runActionDialog
-				.getByLabel("Email body")
+				.getByLabel("Body")
 				.fill(
 					`:value{field="${community.pubFields.EvaluationManager.slug}" firstName lastName rel="${community.pubFields.Evaluations.slug}"}`
 				);

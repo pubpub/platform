@@ -601,9 +601,7 @@ Enum OperationType {
 
 Enum Action {
   log
-  pdf
   email
-  pushToV6
   http
   move
   googleDriveImport
