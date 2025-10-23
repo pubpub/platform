@@ -1,17 +1,18 @@
 import type { PropsWithChildren } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 
 import { useCallback, useTransition } from "react";
-import { useForm } from "react-hook-form";
 
 import { Button } from "ui/button";
 import { Field, FieldGroup } from "ui/field";
 import { Form } from "ui/form";
 import { FormSubmitButton } from "ui/submit-button";
 
+import type { ActionFormValues } from "./ActionFormProvider";
 import { useActionForm } from "./ActionFormProvider";
 
 type ActionFormProps = PropsWithChildren<{
-	onSubmit(values: Record<string, unknown>, form: ReturnType<typeof useForm>): Promise<void>;
+	onSubmit(values: Record<string, unknown>, form: UseFormReturn<ActionFormValues>): Promise<void>;
 	submitButton: {
 		text: string;
 		pendingText?: string;

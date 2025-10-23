@@ -9,10 +9,14 @@ import { z } from "zod";
 
 import type { Action } from "../types";
 
+export type ActionFormValues = FieldValues & {
+	pubFields: Record<string, string[]>;
+};
+
 type ActionFormContext = {
 	action: Action;
 	schema: ZodOptional<ZodObject<any>>;
-	form: UseFormReturn<FieldValues & { pubFields: Record<string, string[]> }>;
+	form: UseFormReturn<ActionFormValues>;
 	defaultFields: string[];
 };
 
