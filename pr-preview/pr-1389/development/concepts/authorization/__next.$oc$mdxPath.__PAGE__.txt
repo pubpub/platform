@@ -1,0 +1,135 @@
+1:"$Sreact.fragment"
+2:I[74508,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"TOCProvider"]
+3:I[99951,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"Sidebar"]
+4:I[87765,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ClientWrapper"]
+9:I[22915,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"HeadingAnchor"]
+a:I[68093,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ToggleWordWrapButton"]
+2a:I[2273,["/platform/pr-preview/pr-1389/_next/static/chunks/aeacce398bb52d2f.js","/platform/pr-preview/pr-1389/_next/static/chunks/688156694ad04c7c.js"],"OutletBoundary"]
+2b:"$Sreact.suspense"
+5:Te78,# Capabilities
+
+We are running at time of writing some kind of Attribute Based Access Control system (ABAC) for authorization.
+
+The capabilities are defined in `capabalities.definition.ts` and synced to the database using the `sync-capabilities.ts` script.
+
+You can do most capability checks using the `userCan` function.
+
+## Key Files
+
+- **`capabalities.definition.ts`** - The canonical definition of all capability mappings. This is the single source of truth.
+- **`sync-capabilities.ts`** - Functions to sync capabilities from code to database and validate they're in sync
+- **`generate-migration.ts`** - Functions to generate migration files from the capability definitions
+- **`capabilities.ts`** - The main authorization functions used throughout the app
+
+## CLI Scripts
+
+You can manage capabilities using the following npm scripts:
+
+```bash
+# Sync capabilities from code to database (live update)
+pnpm capabilities:sync
+
+# Check if capabilities in database match the code definition
+pnpm capabilities:validate
+
+# Check if the Capabilities enum in Prisma schema matches the TypeScript enum
+pnpm capabilities:validate-enum
+
+# Show what would be synced without making changes
+pnpm capabilities:dry-run
+
+# Generate a new migration file (handles both enum changes and data sync)
+pnpm capabilities:generate-migration
+
+# Print the migration SQL to stdout (useful for debugging)
+pnpm capabilities:print-migration
+```
+
+## Workflow
+
+### Making Changes to Capabilities
+
+1. **Edit the canonical definition**: Modify `capabalities.definition.ts` to add, remove, or change capability mappings
+2. **Test your changes**: Run the tests to ensure your changes are valid
+3. **Choose sync method**:
+    - **For quick testing**: Use `pnpm capabilities:sync` to sync directly to your database. The other reason this is included is in case you have somehow removed the capabilities from the database.
+    - **For production**: Use `pnpm capabilities:generate-migration` to create a migration file
+
+### Adding New Capabilities
+
+**Option 1: Automatic (Recommended)**
+
+1. Update `capabalities.definition.ts` to include the new capability in the relevant mappings
+2. Run `pnpm capabilities:generate-migration` - this will automatically:
+    - Update the `Capabilities` enum in your Prisma schema
+    - Generate migration SQL for both enum and data changes
+3. Run the generated migration with `pnpm db:migrate-dev`
+
+**Option 2: Manual**
+
+1. Add the new capability to the `Capabilities` enum in your Prisma schema
+2. Run `pnpm db:migrate-dev` to create the enum migration
+3. Update `capabalities.definition.ts` to include the new capability in the relevant mappings
+4. Sync or generate migration as needed
+
+### Removing Capabilities
+
+1. Remove the capability from `capabalities.definition.ts`
+2. Run `pnpm capabilities:generate-migration` - this will automatically:
+    - Update the `Capabilities` enum in your Prisma schema (removing the capability)
+    - Delete any existing membership_capabilities rows using the removed capability
+    - Remove the capability from the enum in the migration SQL
+    - Sync the remaining capabilities
+3. Run the generated migration with `pnpm db:migrate-dev`
+
+### Validating Sync Status
+
+You can check if your database is in sync with the code definition:
+
+```bash
+# Check if membership_capabilities data matches the definitions
+pnpm capabilities:validate
+
+# Check if the Capabilities enum matches the TypeScript enum
+pnpm capabilities:validate-enum
+```
+
+- `validate` checks if the membership_capabilities data in the database matches your definitions
+- `validate-enum` checks if the Capabilities enum in your Prisma schema matches your TypeScript enum
+
+Both will show any differences found.0:{"buildId":"sXk9w3kFa3LH4fq7rgKbP","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Key Files","id":"key-files","depth":2},{"value":"CLI Scripts","id":"cli-scripts","depth":2},{"value":"Workflow","id":"workflow","depth":2},{"value":"Making Changes to Capabilities","id":"making-changes-to-capabilities","depth":3},{"value":"Adding New Capabilities","id":"adding-new-capabilities","depth":3},{"value":"Removing Capabilities","id":"removing-capabilities","depth":3},{"value":"Validating Sync Status","id":"validating-sync-status","depth":3}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Capabilities","filePath":"content/development/concepts/authorization.mdx","timestamp":1753282322000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"loading":null,"isPartial":false}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Capabilities","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"We are running at time of writing some kind of Attribute Based Access Control system (ABAC) for authorization."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The capabilities are defined in ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabalities.definition.ts"}]," and synced to the database using the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"sync-capabilities.ts"}]," script."]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["You can do most capability checks using the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"userCan"}]," function."]}],"\n",["$","h2",null,{"id":"key-files","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Key Files",["$","$L9",null,{"id":"key-files"}]]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabalities.definition.ts"}]}]," - The canonical definition of all capability mappings. This is the single source of truth."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"sync-capabilities.ts"}]}]," - Functions to sync capabilities from code to database and validate they’re in sync"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"generate-migration.ts"}]}]," - Functions to generate migration files from the capability definitions"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabilities.ts"}]}]," - The main authorization functions used throughout the app"]}],"\n"]}],"\n",["$","h2",null,{"id":"cli-scripts","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["CLI Scripts",["$","$L9",null,{"id":"cli-scripts"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"You can manage capabilities using the following npm scripts:"}],"\n",["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$La",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Sync capabilities from code to database (live update)"}]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],"$Lb"]}],"\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a"]}]]}]]}],"\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23","\n","$L24","\n","$L25","\n","$L26","\n","$L27","\n","$L28","\n","$L29"]}]
+8:["$","$L2a",null,{"children":["$","$2b",null,{"name":"Next.MetadataOutlet","children":"$@2c"}]}]
+b:["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:sync"}]
+c:["$","span",null,{"children":" "}]
+d:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Check if capabilities in database match the code definition"}]}]
+e:["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:validate"}]]}]
+f:["$","span",null,{"children":" "}]
+10:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Check if the Capabilities enum in Prisma schema matches the TypeScript enum"}]}]
+11:["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:validate-enum"}]]}]
+12:["$","span",null,{"children":" "}]
+13:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Show what would be synced without making changes"}]}]
+14:["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:dry-run"}]]}]
+15:["$","span",null,{"children":" "}]
+16:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Generate a new migration file (handles both enum changes and data sync)"}]}]
+17:["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:generate-migration"}]]}]
+18:["$","span",null,{"children":" "}]
+19:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Print the migration SQL to stdout (useful for debugging)"}]}]
+1a:["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:print-migration"}]]}]
+1b:["$","h2",null,{"id":"workflow","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Workflow",["$","$L9",null,{"id":"workflow"}]]}]
+1c:["$","h3",null,{"id":"making-changes-to-capabilities","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Making Changes to Capabilities",["$","$L9",null,{"id":"making-changes-to-capabilities"}]]}]
+1d:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Edit the canonical definition"}],": Modify ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabalities.definition.ts"}]," to add, remove, or change capability mappings"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Test your changes"}],": Run the tests to ensure your changes are valid"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Choose sync method"}],":","\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"For quick testing"}],": Use ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm capabilities:sync"}]," to sync directly to your database. The other reason this is included is in case you have somehow removed the capabilities from the database."]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"For production"}],": Use ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm capabilities:generate-migration"}]," to create a migration file"]}],"\n"]}],"\n"]}],"\n"]}]
+1e:["$","h3",null,{"id":"adding-new-capabilities","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Adding New Capabilities",["$","$L9",null,{"id":"adding-new-capabilities"}]]}]
+1f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Option 1: Automatic (Recommended)"}]}]
+20:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Update ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabalities.definition.ts"}]," to include the new capability in the relevant mappings"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm capabilities:generate-migration"}]," - this will automatically:","\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Update the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Capabilities"}]," enum in your Prisma schema"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Generate migration SQL for both enum and data changes"}],"\n"]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run the generated migration with ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm db:migrate-dev"}]]}],"\n"]}]
+21:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Option 2: Manual"}]}]
+22:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Add the new capability to the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Capabilities"}]," enum in your Prisma schema"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm db:migrate-dev"}]," to create the enum migration"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Update ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabalities.definition.ts"}]," to include the new capability in the relevant mappings"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Sync or generate migration as needed"}],"\n"]}]
+23:["$","h3",null,{"id":"removing-capabilities","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Removing Capabilities",["$","$L9",null,{"id":"removing-capabilities"}]]}]
+24:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Remove the capability from ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"capabalities.definition.ts"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm capabilities:generate-migration"}]," - this will automatically:","\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Update the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Capabilities"}]," enum in your Prisma schema (removing the capability)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Delete any existing membership_capabilities rows using the removed capability"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Remove the capability from the enum in the migration SQL"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Sync the remaining capabilities"}],"\n"]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run the generated migration with ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm db:migrate-dev"}]]}],"\n"]}]
+25:["$","h3",null,{"id":"validating-sync-status","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Validating Sync Status",["$","$L9",null,{"id":"validating-sync-status"}]]}]
+26:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"You can check if your database is in sync with the code definition:"}]
+27:["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$La",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Check if membership_capabilities data matches the definitions"}]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:validate"}]]}],"\n",["$","span",null,{"children":" "}],"\n",["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# Check if the Capabilities enum matches the TypeScript enum"}]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" capabilities:validate-enum"}]]}]]}]]}]]}]
+28:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"validate"}]," checks if the membership_capabilities data in the database matches your definitions"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"validate-enum"}]," checks if the Capabilities enum in your Prisma schema matches your TypeScript enum"]}],"\n"]}]
+29:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Both will show any differences found."}]
+2c:null

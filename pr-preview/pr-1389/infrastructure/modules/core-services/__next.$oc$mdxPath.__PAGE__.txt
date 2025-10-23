@@ -1,0 +1,144 @@
+1:"$Sreact.fragment"
+2:I[74508,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"TOCProvider"]
+3:I[99951,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"Sidebar"]
+4:I[87765,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ClientWrapper"]
+9:I[68093,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ToggleWordWrapButton"]
+22:I[2273,["/platform/pr-preview/pr-1389/_next/static/chunks/aeacce398bb52d2f.js","/platform/pr-preview/pr-1389/_next/static/chunks/688156694ad04c7c.js"],"OutletBoundary"]
+23:"$Sreact.suspense"
+25:I[22915,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"HeadingAnchor"]
+5:Te95,---
+title: Core Services
+---
+
+# Setup
+
+In a `main.tf` file for a workspace that needs a cluster,
+you can use this module like:
+
+```tf filename="example.tf"
+module "cluster" {
+    source = "../path/to/this/directory"
+    // version is disallowed when using path-based modules
+
+    environment = "staging"
+    region = "us-east-2"
+    hosted_zone_id = "SOME-ZONE-ID"
+    // all other variables are optional
+}
+```
+
+then
+
+```sh filename="apply.sh"
+terraform init
+terraform apply
+```
+
+You will see these resources under `module.cluster.xyz`.
+
+## Managing the ECS Task Definition
+
+Working with ECS task definitions in Terraform
+is kind of awkward.
+
+This module creates an ECS task definition,
+so that it can set up the ECS service that uses that task definition,
+but expects that future task revisions will be created by a CI pipeline
+as new images are created and pushed.
+The `deploy_on_merge.yml` has an example of such a pipeline.
+In this pipeline,
+we get the ECS task definition from a file,
+and interpolate the image,
+to create a new revision.
+Terraform ignores changes
+made by the pipeline,
+due to the `lifecycle` setting
+on the ECS service resource.
+
+If you make changes to the task definition resource in this module,
+and run `terraform apply` in the `ecs-staging` directory,
+Terraform will update the task,
+but the next time a new commit is pushed to git,
+that change will be overwritten
+by the definition in the `ecs-staging` directory,
+that's used by the pipeline.
+
+Ideally these definitions would come from the same source
+so if you're reading this
+perhaps today is the day
+to make that refactor!
+
+More information about the general wonkiness
+of managing ECS with Terraform
+can be found in [this Terraform issue.](https://github.com/hashicorp/terraform-provider-aws/issues/632)
+
+## Rotating the RDS Password
+
+The RDS password is retrieved from AWS Secrets Manager
+but that password is managed manually,
+and rotating it requires downtime.
+
+To rotate it, you'll need to perform the following steps:
+
+- Update the value of the Secrets Manager entry through the AWS console
+- Update the value in the RDS instance through the AWS console. (At this point, the core container will stop being able to access the database.)
+- Recreate the core container's service with `aws update-service cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment`
+
+In the future the RDS should probably [manage its own password](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html)
+which will probably require changing the service's code
+to fetch the password from Secrets Manager itself
+rather than getting it passed in from an environment variable.
+
+## Rotating the ACM Certificate
+
+ACM issues certs that last for 1 year. They send you an email prior to renewing, but will automatically rotate the cert.
+
+Since we rely on DNS validation, it is necessary that our validation CNAMEs are present in route53, provided by this module.
+The required records MAY not change, but if they have changed behind the scenes, this will catch up our terraform state:
+
+```bash
+# from clean state , no changes to code
+
+# updates our state file's records of the Domain Validation Options on the cert (DVOs).
+terraform apply
+
+# should show that new DNS records need to be created/updated, matching the DVOs.
+terraform plan -out TMP.tfplan
+terraform apply TMP.tfplan
+```
+
+For more info: see [AWS Docs](https://docs.aws.amazon.com/acm/latest/userguide/dns-renewal-validation.html).
+
+## Development
+
+When you change the resources in this directory, you must run `terraform apply` in the calling workspace to see changes.
+
+More info on developing [terraform modules](https://developer.hashicorp.com/terraform/language/modules/develop).0:{"buildId":"sXk9w3kFa3LH4fq7rgKbP","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Managing the ECS Task Definition","id":"managing-the-ecs-task-definition","depth":2},{"value":"Rotating the RDS Password","id":"rotating-the-rds-password","depth":2},{"value":"Rotating the ACM Certificate","id":"rotating-the-acm-certificate","depth":2},{"value":"Development","id":"development","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Core Services","filePath":"content/infrastructure/modules/core-services.mdx","timestamp":1750086553000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"loading":null,"isPartial":false}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Setup","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["In a ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"main.tf"}]," file for a workspace that needs a cluster,\nyou can use this module like:"]}],"\n",["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":[["$","div",null,{"className":"x:px-4 x:text-xs x:text-gray-700 x:dark:text-gray-200 x:bg-gray-100 x:dark:bg-neutral-900 x:flex x:items-center x:h-12 x:gap-2 x:rounded-t-md x:border x:border-gray-300 x:dark:border-neutral-700 x:contrast-more:border-gray-900 x:contrast-more:dark:border-gray-50 x:border-b-0","children":[["$","svg",null,{"viewBox":"0 0 22 24","fill":"currentColor","height":"1em","className":"x:max-w-6 x:shrink-0","children":["$","path",null,{"fillRule":"evenodd","clipRule":"evenodd","d":"M7.28963 4.22959L13.861 8.01763V15.5928L7.28963 11.8065V4.22959ZM14.5819 8.01763V15.5928L21.1524 11.8065V4.22959L14.5819 8.01763ZM0 0V7.57695L6.57045 11.365V3.78804L0 0ZM7.28963 20.2111L13.861 24V16.4248L7.28963 12.6359V20.2111Z"}]}],["$","span",null,{"className":"x:truncate","children":"example.tf"}],false]}],["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-b-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-14","children":[["$","$L9",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"module"}],["$","span",null,{"style":{"--shiki-light":"#005CC5","--shiki-dark":"#79B8FF"},"children":" \"cluster\""}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" {"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    source"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" ="}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" \"../path/to/this/directory\""}]]}],"\n",["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"    // version is disallowed when using path-based modules"}]}],"\n",["$","span",null,{"children":" "}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    environment"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" ="}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" \"staging\""}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    region"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" ="}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" \"us-east-2\""}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    hosted_zone_id"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" ="}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" \"SOME-ZONE-ID\""}]]}],"\n",["$","span",null,{"children":"$La"}],"\n","$Lb"]}]]}]]}],"\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21"]}]
+8:["$","$L22",null,{"children":["$","$23",null,{"name":"Next.MetadataOutlet","children":"$@24"}]}]
+a:["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"    // all other variables are optional"}]
+b:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"}"}]}]
+c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"then"}]
+d:["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":[["$","div",null,{"className":"x:px-4 x:text-xs x:text-gray-700 x:dark:text-gray-200 x:bg-gray-100 x:dark:bg-neutral-900 x:flex x:items-center x:h-12 x:gap-2 x:rounded-t-md x:border x:border-gray-300 x:dark:border-neutral-700 x:contrast-more:border-gray-900 x:contrast-more:dark:border-gray-50 x:border-b-0","children":[["$","svg",null,{"viewBox":"0 0 28 24","fill":"none","stroke":"currentColor","height":"1em","className":"x:max-w-6 x:shrink-0","children":["$","path",null,{"d":"M7.3 7.8L12.55 12L7.3 16.2M14.65 16.2H19.9M2.11562 1.5H25.0844C25.7005 1.5 26.2 1.99948 26.2 2.61562V21.3844C26.2 22.0005 25.7005 22.5 25.0844 22.5H2.11562C1.49948 22.5 1 22.0005 1 21.3844V2.61562C1 1.99948 1.49948 1.5 2.11562 1.5Z","strokeWidth":2,"strokeLinecap":"round","strokeLinejoin":"round"}]}],["$","span",null,{"className":"x:truncate","children":"apply.sh"}],false]}],["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-b-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-14","children":[["$","$L9",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"terraform"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" init"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"terraform"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" apply"}]]}]]}]]}]]}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["You will see these resources under ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"module.cluster.xyz"}],"."]}]
+f:["$","h2",null,{"id":"managing-the-ecs-task-definition","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Managing the ECS Task Definition",["$","$L25",null,{"id":"managing-the-ecs-task-definition"}]]}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Working with ECS task definitions in Terraform\nis kind of awkward."}]
+11:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["This module creates an ECS task definition,\nso that it can set up the ECS service that uses that task definition,\nbut expects that future task revisions will be created by a CI pipeline\nas new images are created and pushed.\nThe ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"deploy_on_merge.yml"}]," has an example of such a pipeline.\nIn this pipeline,\nwe get the ECS task definition from a file,\nand interpolate the image,\nto create a new revision.\nTerraform ignores changes\nmade by the pipeline,\ndue to the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"lifecycle"}]," setting\non the ECS service resource."]}]
+12:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["If you make changes to the task definition resource in this module,\nand run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"terraform apply"}]," in the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"ecs-staging"}]," directory,\nTerraform will update the task,\nbut the next time a new commit is pushed to git,\nthat change will be overwritten\nby the definition in the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"ecs-staging"}]," directory,\nthat’s used by the pipeline."]}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Ideally these definitions would come from the same source\nso if you’re reading this\nperhaps today is the day\nto make that refactor!"}]
+14:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["More information about the general wonkiness\nof managing ECS with Terraform\ncan be found in ",["$","a",null,{"href":"https://github.com/hashicorp/terraform-provider-aws/issues/632","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["this Terraform issue.",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]]}]
+15:["$","h2",null,{"id":"rotating-the-rds-password","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Rotating the RDS Password",["$","$L25",null,{"id":"rotating-the-rds-password"}]]}]
+16:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"The RDS password is retrieved from AWS Secrets Manager\nbut that password is managed manually,\nand rotating it requires downtime."}]
+17:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"To rotate it, you’ll need to perform the following steps:"}]
+18:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Update the value of the Secrets Manager entry through the AWS console"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Update the value in the RDS instance through the AWS console. (At this point, the core container will stop being able to access the database.)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Recreate the core container’s service with ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"aws update-service cluster $CLUSTER_NAME --service $SERVICE_NAME --force-new-deployment"}]]}],"\n"]}]
+19:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["In the future the RDS should probably ",["$","a",null,{"href":"https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-secrets-manager.html","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["manage its own password",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}],"\nwhich will probably require changing the service’s code\nto fetch the password from Secrets Manager itself\nrather than getting it passed in from an environment variable."]}]
+1a:["$","h2",null,{"id":"rotating-the-acm-certificate","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Rotating the ACM Certificate",["$","$L25",null,{"id":"rotating-the-acm-certificate"}]]}]
+1b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"ACM issues certs that last for 1 year. They send you an email prior to renewing, but will automatically rotate the cert."}]
+1c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Since we rely on DNS validation, it is necessary that our validation CNAMEs are present in route53, provided by this module.\nThe required records MAY not change, but if they have changed behind the scenes, this will catch up our terraform state:"}]
+1d:["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L9",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# from clean state , no changes to code"}]}],"\n",["$","span",null,{"children":" "}],"\n",["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# updates our state file's records of the Domain Validation Options on the cert (DVOs)."}]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"terraform"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" apply"}]]}],"\n",["$","span",null,{"children":" "}],"\n",["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"# should show that new DNS records need to be created/updated, matching the DVOs."}]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"terraform"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" plan"}],["$","span",null,{"style":{"--shiki-light":"#005CC5","--shiki-dark":"#79B8FF"},"children":" -out"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" TMP.tfplan"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"terraform"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" apply"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" TMP.tfplan"}]]}]]}]]}]]}]
+1e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["For more info: see ",["$","a",null,{"href":"https://docs.aws.amazon.com/acm/latest/userguide/dns-renewal-validation.html","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["AWS Docs",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}],"."]}]
+1f:["$","h2",null,{"id":"development","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Development",["$","$L25",null,{"id":"development"}]]}]
+20:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["When you change the resources in this directory, you must run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"terraform apply"}]," in the calling workspace to see changes."]}]
+21:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["More info on developing ",["$","a",null,{"href":"https://developer.hashicorp.com/terraform/language/modules/develop","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["terraform modules",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}],"."]}]
+24:null

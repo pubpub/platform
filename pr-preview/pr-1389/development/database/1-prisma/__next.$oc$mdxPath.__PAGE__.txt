@@ -1,0 +1,84 @@
+1:"$Sreact.fragment"
+2:I[74508,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"TOCProvider"]
+3:I[99951,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"Sidebar"]
+4:I[87765,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ClientWrapper"]
+6:I[22915,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"HeadingAnchor"]
+1b:I[14325,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],""]
+1c:I[68093,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ToggleWordWrapButton"]
+1d:I[2273,["/platform/pr-preview/pr-1389/_next/static/chunks/aeacce398bb52d2f.js","/platform/pr-preview/pr-1389/_next/static/chunks/688156694ad04c7c.js"],"OutletBoundary"]
+1e:"$Sreact.suspense"
+5:T775,import { Callout } from "nextra/components";
+
+# Prisma (migrations)
+
+## Schema definition
+
+The schema is defined in [core/prisma/schema/schema.prisma](https://github.com/pubpub/platform/blob/main/core/prisma/schema/schema.prisma).
+
+See [the type documenation for defining more complex types](./2-kanel-type-generation).
+
+## Migrations
+
+### Creating new migrations
+
+To modify the database schema, you need to create a migration.
+
+1. Run `pnpm migrate-dev`
+2. Enter the name of the migration (e.g. `add-new-field`)
+3. Say yes every time (this will create a new migration file in the `core/prisma/migrations` directory)
+4. Modify the migration file to do things like data-migrations if necessary.
+
+You can also create an empty migration, by running
+
+```sh
+pnpm -F core prisma migrate -- --create-only
+```
+
+write your migration, then
+
+```sh
+pnpm -F core migrate-dev
+```
+
+### Migrations in production
+
+Migrations are run before the container starts. This is currently (2025-06-05) defined here
+
+https://github.com/pubpub/platform/blob/main/infrastructure/terraform/modules/deployment/main.tf#L69-L75
+
+## History Tables
+
+We have a number of tables that exist just to record the history of a table, along with the entity that made the change. They serve both as a way to audit changes and as a way to reconstruct the value of an entity (usually a Pub) at a point in time.
+
+### How to create one
+
+1. Run `pnpm db:generate-history-table`
+2. Enter the name of the original table (e.g. `pubs`)
+3. Say yes every time
+4. Run `pnpm db:migrate-dev` (probably twice for good measure)
+5. Tadah! You should have a new table called `pubs_history`
+
+This will also add a new column to the original table called `lastModifiedBy` of type `LastModifiedBy`. This will probably mean you need to update some application level code in order to actually use it.
+
+The tables are stored in the `core/prisma/schema/history-tables` directory.0:{"buildId":"sXk9w3kFa3LH4fq7rgKbP","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Schema definition","id":"schema-definition","depth":2},{"value":"Migrations","id":"migrations","depth":2},{"value":"Creating new migrations","id":"creating-new-migrations","depth":3},{"value":"Migrations in production","id":"migrations-in-production","depth":3},{"value":"History Tables","id":"history-tables","depth":2},{"value":"How to create one","id":"how-to-create-one","depth":3}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Prisma (migrations)","filePath":"content/development/database/1-prisma.mdx","timestamp":1750086553000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Prisma (migrations)","$undefined"]}],"\n",["$","h2",null,{"id":"schema-definition","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Schema definition",["$","$L6",null,{"id":"schema-definition"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The schema is defined in ",["$","a",null,{"href":"https://github.com/pubpub/platform/blob/main/core/prisma/schema/schema.prisma","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["core/prisma/schema/schema.prisma",[" ","$L7"]]}],"."]}],"\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19"]}]]}]]}]}],null,"$L1a"]}],"loading":null,"isPartial":false}
+7:["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]
+8:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["See ",["$","$L1b",null,{"href":"./2-kanel-type-generation","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"the type documenation for defining more complex types"}],"."]}]
+9:["$","h2",null,{"id":"migrations","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Migrations",["$","$L6",null,{"id":"migrations"}]]}]
+a:["$","h3",null,{"id":"creating-new-migrations","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Creating new migrations",["$","$L6",null,{"id":"creating-new-migrations"}]]}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"To modify the database schema, you need to create a migration."}]
+c:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm migrate-dev"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Enter the name of the migration (e.g. ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"add-new-field"}],")"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Say yes every time (this will create a new migration file in the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"core/prisma/migrations"}]," directory)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Modify the migration file to do things like data-migrations if necessary."}],"\n"]}]
+d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"You can also create an empty migration, by running"}]
+e:["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L1c",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#005CC5","--shiki-dark":"#79B8FF"},"children":" -F"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" core"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" prisma"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" migrate"}],["$","span",null,{"style":{"--shiki-light":"#005CC5","--shiki-dark":"#79B8FF"},"children":" --"}],["$","span",null,{"style":{"--shiki-light":"#005CC5","--shiki-dark":"#79B8FF"},"children":" --create-only"}]]}]}]]}]]}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"write your migration, then"}]
+10:["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L1c",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pnpm"}],["$","span",null,{"style":{"--shiki-light":"#005CC5","--shiki-dark":"#79B8FF"},"children":" -F"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" core"}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":" migrate-dev"}]]}]}]]}]]}]
+11:["$","h3",null,{"id":"migrations-in-production","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Migrations in production",["$","$L6",null,{"id":"migrations-in-production"}]]}]
+12:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Migrations are run before the container starts. This is currently (2025-06-05) defined here"}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","a",null,{"href":"https://github.com/pubpub/platform/blob/main/infrastructure/terraform/modules/deployment/main.tf#L69-L75","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["https://github.com/pubpub/platform/blob/main/infrastructure/terraform/modules/deployment/main.tf#L69-L75",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]}]
+14:["$","h2",null,{"id":"history-tables","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["History Tables",["$","$L6",null,{"id":"history-tables"}]]}]
+15:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"We have a number of tables that exist just to record the history of a table, along with the entity that made the change. They serve both as a way to audit changes and as a way to reconstruct the value of an entity (usually a Pub) at a point in time."}]
+16:["$","h3",null,{"id":"how-to-create-one","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["How to create one",["$","$L6",null,{"id":"how-to-create-one"}]]}]
+17:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm db:generate-history-table"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Enter the name of the original table (e.g. ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pubs"}],")"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Say yes every time"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm db:migrate-dev"}]," (probably twice for good measure)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Tadah! You should have a new table called ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pubs_history"}]]}],"\n"]}]
+18:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["This will also add a new column to the original table called ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"lastModifiedBy"}]," of type ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LastModifiedBy"}],". This will probably mean you need to update some application level code in order to actually use it."]}]
+19:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The tables are stored in the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"core/prisma/schema/history-tables"}]," directory."]}]
+1a:["$","$L1d",null,{"children":["$","$1e",null,{"name":"Next.MetadataOutlet","children":"$@1f"}]}]
+1f:null

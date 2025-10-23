@@ -1,0 +1,125 @@
+1:"$Sreact.fragment"
+2:I[74508,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"TOCProvider"]
+3:I[99951,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"Sidebar"]
+4:I[87765,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ClientWrapper"]
+9:I[22915,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"HeadingAnchor"]
+24:I[2273,["/platform/pr-preview/pr-1389/_next/static/chunks/aeacce398bb52d2f.js","/platform/pr-preview/pr-1389/_next/static/chunks/688156694ad04c7c.js"],"OutletBoundary"]
+25:"$Sreact.suspense"
+27:I[68093,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],"ToggleWordWrapButton"]
+2b:I[14325,["/platform/pr-preview/pr-1389/_next/static/chunks/dd28ad6c648d3915.js","/platform/pr-preview/pr-1389/_next/static/chunks/7c21ffbacf124703.js","/platform/pr-preview/pr-1389/_next/static/chunks/40c2ac68a22f3b83.js","/platform/pr-preview/pr-1389/_next/static/chunks/e2d6c8eabf052809.js"],""]
+:HL["../../public/images/02da306f20fb0b0c4ce90c44117a9339250643f64ddda619bd7ad8989cf54a7c.png","image"]
+5:Tcd2,# E2E Tests
+
+Here we describe how to run E2E test (end-to-end, also referred to as "integration" tests, for us meaning tests that run in the browser) tests.
+
+We use [Playwright](https://playwright.dev/) for E2E tests.
+
+## Running integration tests (in `core`)
+
+### Basic Setup
+
+1. Install Playwright Test for VSCode plugin (should be recommended)
+2. `pnpm -w dev:setup`
+    - (TIL: `-w` lets you run things from the root without actually being in the root!)
+3. Click on extension (test tube icon), click on refresh button (if the tests don't show up), `core` tests should appear
+    - you might see an error to install `@playwright/test` but you can ignore this!
+    - (20250605) The `context-editor` tests currently do not show up here.
+4. Start your dev server via `pnpm dev at root`
+
+    - This makes sure `core` and `jobs` are both up, which is needed for some for all playwright tests to pass)
+
+5. Now you should be able to either run a test from the testing panel, or directly inside a test
+
+6. You will need to install the `playwright` browsers — a notification in `VSCode` should pop up and let you do so
+7. Try running again. You should see the test go through the steps and pass!
+
+### Tips
+
+#### Running all tests at once
+
+Running all tests at once via VS code will likely fail against the dev server, but should be okay against the built server.
+
+To run tests against the built app:
+
+1. Run `pnpm -F core build && pnpm -F core start`
+2. In another terminal tab, run `pnpm -F jobs start`
+3. Run `pnpm run playwright:test`, or run tests through the `ui`
+
+#### Running individual tests
+
+Most of the time you likely just want to run a single test, eg to debug it or (gasp) when writing a new test.
+
+We recommend running individual tests against the dev server, as it's much easier to setup and you can iterate more quickly.
+
+#### Running tests through the `CLI`
+
+1. For the CLI: `pnpm -F core playwright:test`
+2. `pnpm playwright:test path/to/test` or `pnpm playwright:test 'playwright/actions\*'` to run individual/groups of tests
+
+#### 🐞 Debugging
+
+[Playwright docs](https://playwright.dev/docs/debug)
+
+You can debug either using `VSCode`s built-in breakpoints, or by manually adding breakpoints in the test.
+
+##### Through the plugin
+
+Set a breakpoint in the test by clicking
+
+<img
+	src="../../public/images/02da306f20fb0b0c4ce90c44117a9339250643f64ddda619bd7ad8989cf54a7c.png"
+	alt="Break points"
+	width="500"
+/>
+
+In `VSCode`, you can either right click a test and select "Debug test", or click the debug icon next to the test in the sidebar.
+
+##### Through the `CLI`
+
+You can also use `playwright:test 'path/to/test' -- --debug` (note the extra `--`) if you are running from the `CLI`.
+
+Then you're able to use `await page.pause()` to pause the test at a specific point.
+
+```ts filename="some-test.spec.ts"
+test("some test", async ({ page }) => {
+	await page.goto("https://example.com");
+	await page.pause(); // look at what you've done
+});
+```
+
+#### Misc
+
+Currently (2025-06-05), data seeded into playwright doesn't add all@pubpub.org which is why if you are logged in you won't see the seeded playwright data. it's sometimes useful to be able to see the playwright community in your dev server—in this case you'd have to log in as the user in the seed community0:{"buildId":"sXk9w3kFa3LH4fq7rgKbP","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":[["$","$1",".0",{"children":["Running integration tests (in ",["$","code",".1",{"className":"nextra-code","dir":"ltr","children":"core"}],")"]}]],"id":"running-integration-tests-in-core","depth":2},{"value":"Basic Setup","id":"basic-setup","depth":3},{"value":"Tips","id":"tips","depth":3},{"value":"Running all tests at once","id":"running-all-tests-at-once","depth":4},{"value":"Running individual tests","id":"running-individual-tests","depth":4},{"value":[["$","$1",".0",{"children":["Running tests through the ",["$","code",".1",{"className":"nextra-code","dir":"ltr","children":"CLI"}]]}]],"id":"running-tests-through-the-cli","depth":4},{"value":"🐞 Debugging","id":"-debugging","depth":4},{"value":"Through the plugin","id":"through-the-plugin","depth":5},{"value":[["$","$1",".0",{"children":["Through the ",["$","code",".1",{"className":"nextra-code","dir":"ltr","children":"CLI"}]]}]],"id":"through-the-cli","depth":5},{"value":"Misc","id":"misc","depth":4}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"E2E Tests","filePath":"content/development/testing/1-e2e-tests.mdx","timestamp":1753282322000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"loading":null,"isPartial":false}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["E2E Tests","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Here we describe how to run E2E test (end-to-end, also referred to as “integration” tests, for us meaning tests that run in the browser) tests."}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["We use ",["$","a",null,{"href":"https://playwright.dev/","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["Playwright",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]," for E2E tests."]}],"\n",["$","h2",null,{"id":"running-integration-tests-in-core","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":[["Running integration tests (in ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"core"}],")"],["$","$L9",null,{"id":"running-integration-tests-in-core"}]]}],"\n",["$","h3",null,{"id":"basic-setup","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Basic Setup",["$","$L9",null,{"id":"basic-setup"}]]}],"\n",["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Install Playwright Test for VSCode plugin (should be recommended)"}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm -w dev:setup"}]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["(TIL: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"-w"}]," lets you run things from the root without actually being in the root!)"]}],"\n"]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Click on extension (test tube icon), click on refresh button (if the tests don’t show up), ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"core"}]," tests should appear"]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["you might see an error to install ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"@playwright/test"}]," but you can ignore this!"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["(20250605) The ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"context-editor"}]," tests currently do not show up here."]}],"\n"]}],"\n"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Start your dev server via ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm dev at root"}]]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["This makes sure ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"core"}]," and ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"jobs"}]," are both up, which is needed for some for all playwright tests to pass)"]}],"\n"]}],"\n"]}],"\n","$La","\n","$Lb","\n","$Lc","\n"]}],"\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23"]}]
+8:["$","$L24",null,{"children":["$","$25",null,{"name":"Next.MetadataOutlet","children":"$@26"}]}]
+a:["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Now you should be able to either run a test from the testing panel, or directly inside a test"}],"\n"]}]
+b:["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["You will need to install the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"playwright"}]," browsers — a notification in ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"VSCode"}]," should pop up and let you do so"]}],"\n"]}]
+c:["$","li",null,{"className":"x:my-[.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Try running again. You should see the test go through the steps and pass!"}],"\n"]}]
+d:["$","h3",null,{"id":"tips","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Tips",["$","$L9",null,{"id":"tips"}]]}]
+e:["$","h4",null,{"id":"running-all-tests-at-once","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-xl","children":["Running all tests at once",["$","$L9",null,{"id":"running-all-tests-at-once"}]]}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Running all tests at once via VS code will likely fail against the dev server, but should be okay against the built server."}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"To run tests against the built app:"}]
+11:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm -F core build && pnpm -F core start"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["In another terminal tab, run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm -F jobs start"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm run playwright:test"}],", or run tests through the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"ui"}]]}],"\n"]}]
+12:["$","h4",null,{"id":"running-individual-tests","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-xl","children":["Running individual tests",["$","$L9",null,{"id":"running-individual-tests"}]]}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Most of the time you likely just want to run a single test, eg to debug it or (gasp) when writing a new test."}]
+14:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"We recommend running individual tests against the dev server, as it’s much easier to setup and you can iterate more quickly."}]
+15:["$","h4",null,{"id":"running-tests-through-the-cli","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-xl","children":[["Running tests through the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CLI"}]],["$","$L9",null,{"id":"running-tests-through-the-cli"}]]}]
+16:["$","ol",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-decimal x:ms-6","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["For the CLI: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm -F core playwright:test"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm playwright:test path/to/test"}]," or ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pnpm playwright:test 'playwright/actions\\*'"}]," to run individual/groups of tests"]}],"\n"]}]
+17:["$","h4",null,{"id":"-debugging","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-xl","children":["🐞 Debugging",["$","$L9",null,{"id":"-debugging"}]]}]
+18:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","a",null,{"href":"https://playwright.dev/docs/debug","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["Playwright docs",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]}]
+19:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["You can debug either using ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"VSCode"}],"s built-in breakpoints, or by manually adding breakpoints in the test."]}]
+1a:["$","h5",null,{"id":"through-the-plugin","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-lg","children":["Through the plugin",["$","$L9",null,{"id":"through-the-plugin"}]]}]
+1b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Set a breakpoint in the test by clicking"}]
+1c:["$","img",null,{"src":"../../public/images/02da306f20fb0b0c4ce90c44117a9339250643f64ddda619bd7ad8989cf54a7c.png","alt":"Break points","width":"500"}]
+1d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["In ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"VSCode"}],", you can either right click a test and select “Debug test”, or click the debug icon next to the test in the sidebar."]}]
+1e:["$","h5",null,{"id":"through-the-cli","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-lg","children":[["Through the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CLI"}]],["$","$L9",null,{"id":"through-the-cli"}]]}]
+1f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["You can also use ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"playwright:test 'path/to/test' -- --debug"}]," (note the extra ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"--"}],") if you are running from the ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CLI"}],"."]}]
+20:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Then you’re able to use ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"await page.pause()"}]," to pause the test at a specific point."]}]
+21:["$","div",null,{"className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":[["$","div",null,{"className":"x:px-4 x:text-xs x:text-gray-700 x:dark:text-gray-200 x:bg-gray-100 x:dark:bg-neutral-900 x:flex x:items-center x:h-12 x:gap-2 x:rounded-t-md x:border x:border-gray-300 x:dark:border-neutral-700 x:contrast-more:border-gray-900 x:contrast-more:dark:border-gray-50 x:border-b-0","children":[["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","className":"x:max-w-6 x:shrink-0","children":["$","path",null,{"d":"M0 2.66667V21.3333C0 22.8067 1.19333 24 2.66667 24H21.3333C22.8067 24 24 22.8067 24 21.3333V2.66667C24 1.19333 22.8067 0 21.3333 0H2.66667C1.19333 0 0 1.19333 0 2.66667ZM14.2213 12.6013H11.3973V21.3333H9.12133V12.6013H6.356V10.6667H14.2213V12.6013ZM14.664 20.8347V18.5C14.664 18.5 15.9387 19.4613 17.4693 19.4613C19 19.4613 18.94 18.4613 18.94 18.324C18.94 16.872 14.6053 16.872 14.6053 13.656C14.6053 9.28133 20.9213 11.008 20.9213 11.008L20.8427 13.0867C20.8427 13.0867 19.784 12.38 18.5867 12.38C17.3907 12.38 16.9587 12.9493 16.9587 13.5573C16.9587 15.1267 21.3333 14.9693 21.3333 18.128C21.3333 22.992 14.664 20.8347 14.664 20.8347Z"}]}],["$","span",null,{"className":"x:truncate","children":"some-test.spec.ts"}],false]}],["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-b-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-14","children":[["$","$L27",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"test"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"("}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":"\"some test\""}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":", "}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"async"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" ({ "}],["$","span",null,{"style":{"--shiki-light":"#E36209","--shiki-dark":"#FFAB70"},"children":"page"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" }) "}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"=>"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" {"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"\tawait"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" page."}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"goto"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"("}],["$","span",null,{"style":{"--shiki-light":"#032F62","--shiki-dark":"#9ECBFF"},"children":"\"https://example.com\""}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":");"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"\tawait"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" page."}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"pause"}],"$L28","$L29"]}],"\n","$L2a"]}]]}]]}]
+22:["$","h4",null,{"id":"misc","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-xl","children":["Misc",["$","$L9",null,{"id":"misc"}]]}]
+23:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Currently (2025-06-05), data seeded into playwright doesn’t add ",["$","$L2b",null,{"href":"mailto:all@pubpub.org","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"all@pubpub.org"}]," which is why if you are logged in you won’t see the seeded playwright data. it’s sometimes useful to be able to see the playwright community in your dev server—in this case you’d have to log in as the user in the seed community"]}]
+26:null
+28:["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"(); "}]
+29:["$","span",null,{"style":{"--shiki-light":"#6A737D","--shiki-dark":"#6A737D"},"children":"// look at what you've done"}]
+2a:["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"});"}]}]
