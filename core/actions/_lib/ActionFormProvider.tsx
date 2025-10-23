@@ -24,7 +24,7 @@ export const ActionFormContext = createContext<ActionFormContext | undefined>(un
 
 export function ActionFormProvider(props: ActionFormProviderProps) {
 	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (props.action.params.schema as ZodObject<any>)
+		const schemaWithPartialDefaults = (props.action.config.schema as ZodObject<any>)
 			.partial(
 				props.defaultFields.reduce(
 					(acc, key) => {
@@ -36,11 +36,11 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 			)
 			.optional();
 		return schemaWithPartialDefaults;
-	}, [props.action.params.schema, props.defaultFields]);
+	}, [props.action.config.schema, props.defaultFields]);
 
 	const form = useForm({
 		resolver: zodResolver(schema),
-		defaultValues: schema.parse(props.values),
+		defaultValues: props.action.config.schema.partial().parse(props.values),
 	});
 
 	return (

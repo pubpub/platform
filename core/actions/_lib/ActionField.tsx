@@ -42,6 +42,7 @@ export function ActionField(props: ActionFieldProps) {
 								placeholder={isDefaultField ? "(use default)" : undefined}
 								{...p.field}
 								id={p.field.name}
+								value={p.field.value ?? ""}
 								aria-invalid={p.fieldState.invalid}
 							/>
 						)}
