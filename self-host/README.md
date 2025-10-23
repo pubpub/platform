@@ -267,34 +267,19 @@ Everything should start up without any issues.
 
 You should now be able to visit Platform at `http://localhost:3000`, and browse your files at `http://localhost:9001` (if you are using the built-in MinIO service).
 
-But, as you might have noticed: you cannot login yet!
+### Complete the initial setup
 
-This is because you need to create an admin user.
+When you first visit Platform at `http://localhost:3000`, you'll see a setup screen where you can create the first admin user and your first community in a single step.
 
-### Create an admin user
+Fill in the form with:
 
-First, make the script executable:
+- Your admin account details (email, password, first name, last name)
+- Your first community details (name, slug, and optionally an avatar URL)
 
-```sh
-chmod +x ./create-admin.sh
-```
+Once you submit the form, you'll be automatically logged in and redirected to your new community dashboard.
 
-Then, run the script:
+### Create additional communities
 
-```sh
-./create-admin.sh
-```
-
-You will be prompted to enter an email, password, first name, and last name.
-
-Once you have done this, you should be able to login to Platform at `http://localhost:3000` (or the URL you have set up) with the email and password you just created.
-
-### Create a community
-
-Navigate to `http://localhost:3000/communities` and create a community.
-
-### Go to your new community
-
-Navigate to `http://localhost:3000/c/your-community-slug` and you should see the community dashboard!
+As a super admin, you can create additional communities by navigating to `http://localhost:3000/communities`.
 
 Congrats! You're ready to start using Platform!

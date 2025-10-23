@@ -405,3 +405,15 @@ export const publicSignupsAllowed = async (communityId: CommunitiesId) => {
 
 	return Boolean(publicForms);
 };
+
+/**
+ * Are there any users in the database
+ */
+export const hasUsers = cache(async () => {
+	const result = await db
+		.selectFrom("users")
+		.select(db.fn.count<number>("id").as("count"))
+		.executeTakeFirst();
+
+	return (result?.count ?? 0) > 0;
+});

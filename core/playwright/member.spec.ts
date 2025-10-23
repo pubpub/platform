@@ -3,20 +3,60 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import { expect, test } from "@playwright/test";
 
-import type { BaseSeedOutput } from "./helpers";
+import { MemberRole } from "db/public";
+
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
+import { createSeed } from "~/prisma/seed/createSeed";
+import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
 import { MembersPage } from "./fixtures/member-page";
-import { inbucketClient, seedBase } from "./helpers";
+import { inbucketClient } from "./helpers";
 
 let COMMUNITY_SLUG = `playwright-test-community`;
 
 let page: Page;
-let community: BaseSeedOutput;
+
+const seed = createSeed({
+	community: {
+		name: "Test Community",
+		slug: "test-community",
+	},
+	users: {
+		admin: {
+			role: MemberRole.admin,
+			password: "password",
+		},
+		user1: {
+			role: MemberRole.contributor,
+			password: "password",
+		},
+	},
+});
+
+const seed2 = createSeed({
+	community: {
+		name: "Test Community 2",
+		slug: "test-community-2",
+	},
+	users: {
+		user2: {
+			password: "password",
+		},
+		user3: {
+			role: MemberRole.contributor,
+			password: "password",
+		},
+	},
+});
+
+let community: CommunitySeedOutput<typeof seed>;
+let community2: CommunitySeedOutput<typeof seed2>;
 
 test.beforeAll(async ({ browser }) => {
 	const password = "password";
 
-	community = await seedBase();
+	community = await seedCommunity(seed);
+	community2 = await seedCommunity(seed2);
 
 	page = await browser.newPage();
 
@@ -36,21 +76,21 @@ test.describe("Community members", () => {
 		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
 		await membersPage.goto();
 
-		await membersPage.addExistingUser("new@pubpub.org");
+		await membersPage.addExistingUser(community2.users.user2.email);
 	});
 
 	test("Community creator is automatically added as a member of new community", async () => {
 		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
 		await membersPage.goto();
-		await membersPage.searchMembers("all@pubpub.org");
+		await membersPage.searchMembers(community.users.admin.email);
 		expect(page.getByText("No results.")).not.toBeAttached();
 	});
 
 	test("Can remove a member", async () => {
 		const membersPage = new MembersPage(page, COMMUNITY_SLUG);
 		await membersPage.goto();
-		await membersPage.addExistingUser("some@pubpub.org");
-		await membersPage.removeMember("some@pubpub.org");
+		await membersPage.addExistingUser(community2.users.user3.email);
+		await membersPage.removeMember(community2.users.user3.email);
 		expect(page.getByText("No results.")).toBeVisible();
 	});
 
