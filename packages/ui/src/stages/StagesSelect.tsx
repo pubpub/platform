@@ -6,7 +6,7 @@ import React from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import { FormControl, FormField, FormItem, FormLabel } from "../form";
+import { FormControl, FormField } from "../form";
 import { useStages } from "./StagesProvider";
 
 type Props = {
@@ -48,9 +48,6 @@ export const StagesSelect = (props: Props) => {
  */
 export const StagesSelectField = (props: { fieldName: string; fieldLabel: string }) => {
 	return (
-		<FormField
-			name={props.fieldName}
-			render={({ field }) => <StagesSelect field={field} label={props.fieldLabel} />}
-		/>
+		<FormField name={props.fieldName} render={({ field }) => <StagesSelect field={field} />} />
 	);
 };

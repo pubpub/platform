@@ -81,8 +81,6 @@ export const ButtonConfigurationForm = ({
 		stageId: z.string().optional(),
 	});
 
-	const community = useCommunity();
-
 	const defaultValues = button
 		? {
 				label: button.label ?? "",
@@ -145,29 +143,7 @@ export const ButtonConfigurationForm = ({
 				<FormField
 					control={form.control}
 					name="content"
-					render={({ field }) => (
-						<MarkdownEditor
-							zodInputProps={zodToHtmlInputProps(schema.shape.content)}
-							// @ts-ignore can't seem to infer this is ok for FieldValues
-							field={field}
-							fieldConfigItem={{
-								description: undefined,
-								inputProps: undefined,
-								fieldType: undefined,
-								renderParent: undefined,
-								allowedSchemas: undefined,
-							}}
-							label="Post-submission message"
-							isRequired={false}
-							fieldProps={{
-								...zodToHtmlInputProps(schema.shape.content),
-								...field,
-							}}
-							zodItem={schema.shape.content}
-							description="The message displayed after submission. Markdown supported."
-							descriptionPlacement="bottom"
-						/>
-					)}
+					render={({ field }) => <MarkdownEditor {...field} />}
 				/>
 				<FormField
 					name="stageId"
