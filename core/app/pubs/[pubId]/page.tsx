@@ -13,7 +13,7 @@ export type Props = {
 
 export default async function Page(props: Props) {
 	const [pub, community] = await Promise.all([
-		getPlainPub((await props.params).pubId).executeTakeFirstOrThrow(),
+		getPlainPub((await props.params).pubId).qb.executeTakeFirstOrThrow(),
 		findCommunityByPubId((await props.params).pubId),
 	]);
 
