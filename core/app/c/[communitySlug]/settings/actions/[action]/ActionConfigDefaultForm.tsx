@@ -2,15 +2,15 @@
 
 import type { z } from "zod";
 
-import { useCallback, useMemo, useTransition } from "react";
-import { Loader2 } from "lucide-react";
+import { useCallback, useMemo } from "react";
 
 import type { Action, CommunitiesId } from "db/public";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { toast } from "ui/use-toast";
 
+import { ActionForm } from "~/actions/_lib/ActionForm";
+import { ActionFormProvider } from "~/actions/_lib/ActionFormProvider";
 import { getActionByName } from "~/actions/api";
-import { createDefaultFieldConfig } from "~/app/components/ActionUI/defaultFieldConfig";
+import { getActionFormComponent } from "~/actions/forms";
 import { didSucceed } from "~/lib/serverActions";
 import { updateActionConfigDefault } from "./actions";
 
@@ -21,15 +21,13 @@ type Props = {
 };
 
 export const ActionConfigDefaultForm = (props: Props) => {
-	const [isPending, startTransition] = useTransition();
 	const action = useMemo(() => getActionByName(props.action), [props.action]);
 
 	const defaultFields = Object.keys((props.values as Record<string, unknown> | undefined) ?? {});
-	const defaultFieldConfig = createDefaultFieldConfig(defaultFields, action.config.fieldConfig);
 
 	const schema = useMemo(() => action.config.schema.partial(), [action.config.schema]);
-	const onSubmit = useCallback((values: z.infer<typeof schema>) => {
-		startTransition(async () => {
+	const onSubmit = useCallback(
+		async (values: z.infer<typeof schema>) => {
 			const result = await updateActionConfigDefault(props.action, values);
 			if (didSucceed(result)) {
 				toast({
@@ -37,20 +35,29 @@ export const ActionConfigDefaultForm = (props: Props) => {
 					description: "Action config defaults updated",
 				});
 			}
-		});
-	}, []);
+		},
+		[props.action]
+	);
+
+	const ActionFormComponent = getActionFormComponent(action.name);
 
 	return (
-		<AutoForm
+		<ActionFormProvider
+			action={action}
 			values={props.values ?? {}}
-			formSchema={schema}
-			dependencies={action.config.dependencies}
-			onSubmit={onSubmit}
-			fieldConfig={defaultFieldConfig}
+			defaultFields={defaultFields}
 		>
-			<AutoFormSubmit disabled={isPending} className="flex items-center gap-x-2">
-				{isPending ? <Loader2 size="14" className="animate-spin" /> : "Submit"}
-			</AutoFormSubmit>
-		</AutoForm>
+			<ActionForm
+				onSubmit={onSubmit}
+				submitButton={{
+					text: "Submit",
+					pendingText: "Submitting...",
+					successText: "Submitted",
+					errorText: "Failed to submit",
+				}}
+			>
+				<ActionFormComponent />
+			</ActionForm>
+		</ActionFormProvider>
 	);
 };
