@@ -19,27 +19,45 @@ const emptyStringToUndefined = (arg: unknown) => {
 	}
 };
 
+const schema = z.object({
+	senderName: z
+		.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+		.optional()
+		.describe("This will appear in the 'From' header of the email"),
+	replyTo: z
+		.preprocess(emptyStringToUndefined, z.string().email().optional())
+		.optional()
+		.describe("Determines what the email recipient will see as the 'Reply-To' address"),
+	recipientEmail: z
+		.preprocess(emptyStringToUndefined, z.string().email().optional())
+		.optional()
+		.describe(
+			"The email address of the recipient(s). Either this or 'Recipient Member' must be set."
+		),
+	recipientMember: z
+		.string()
+		.uuid()
+		.describe(
+			"Someone who is a member of the community. Either this or 'Recipient Email' must be set."
+		)
+		.optional(),
+	subject: stringWithTokens()
+		.max(500)
+		.describe(
+			"The subject of the email. Tokens can be used to dynamically insert values from the pub or config."
+		),
+	body: markdown()
+		.min(0)
+		.describe(
+			"The body of the email. Markdown is supported. Tokens can be used to dynamically insert values from the pub or config."
+		),
+});
+
 export const action = defineAction({
 	accepts: ["pub"],
 	name: Action.email,
 	config: {
-		schema: z.object({
-			senderName: z
-				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
-				.optional()
-				.describe("Sender name"),
-			replyTo: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Reply-to email address"),
-			recipientEmail: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Recipient email address"),
-			recipientMember: z.string().uuid().describe("Recipient member").optional(),
-			subject: stringWithTokens().max(500).describe("Email subject"),
-			body: markdown().min(0).describe("Email body"),
-		}),
+		schema,
 		dependencies: [
 			{
 				sourceField: "recipientMember",
@@ -51,41 +69,15 @@ export const action = defineAction({
 	},
 	description: "Send an email to one or more users",
 	params: {
-		schema: z.object({
-			senderName: z
-				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
-				.optional()
-				.describe("Sender name"),
-			replyTo: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Reply-to email address"),
-			recipientEmail: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Recipient email address"),
-			recipientMember: z
-				.string()
-				.uuid()
-				.describe("Overrides the recipient community member specified in the action config")
-				.optional(),
-			subject: stringWithTokens()
-				.max(500)
-				.describe("Overrides the subject specified in the action config")
-				.optional(),
-			body: markdown()
-				.min(0)
-				.describe("Overrides the body specified in the action config")
-				.optional(),
-		}),
-		dependencies: [
-			{
-				sourceField: "recipientMember",
-				targetField: "recipientEmail",
-				when: (recipientMember) => Boolean(recipientMember),
-				type: DependencyType.DISABLES,
-			},
-		],
+		schema,
+		// dependencies: [
+		// 	{
+		// 		sourceField: "recipientMember",
+		// 		targetField: "recipientEmail",
+		// 		when: (recipientMember) => Boolean(recipientMember),
+		// 		type: DependencyType.DISABLES,
+		// 	},
+		// ],
 	},
 	icon: Mail,
 	tokens: {
