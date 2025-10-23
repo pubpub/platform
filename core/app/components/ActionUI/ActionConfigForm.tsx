@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 
-import { startTransition, Suspense, useCallback, useMemo } from "react";
+import { startTransition, useCallback, useMemo } from "react";
 
 import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
 import { TokenProvider } from "ui/tokens";
@@ -15,7 +15,6 @@ import { getActionFormComponent } from "~/actions/forms";
 import { deleteAction, updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";
 import { useCommunity } from "../providers/CommunityProvider";
-import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type Props = {
 	actionInstance: ActionInstances;
@@ -95,9 +94,7 @@ export const ActionConfigForm = (props: Props) => {
 						onClick: onDelete,
 					}}
 				>
-					<Suspense fallback={<SkeletonCard />}>
-						<ActionFormComponent />
-					</Suspense>
+					<ActionFormComponent />
 				</ActionForm>
 			</ActionFormProvider>
 		</TokenProvider>

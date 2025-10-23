@@ -8,7 +8,7 @@ import { Skeleton } from "ui/skeleton";
 const toDynamic = (path: string): ComponentType<{}> =>
 	dynamic(() => import(`./${path}/form.tsx`), {
 		ssr: false,
-		loading: () => <Skeleton className="h-full w-full" />,
+		loading: () => <Skeleton className="h-64 w-full" />,
 	});
 
 const map = {
