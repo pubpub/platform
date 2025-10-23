@@ -19,9 +19,6 @@ const nextConfig: NextConfig = withNextra({
 	typescript: {
 		ignoreBuildErrors: true,
 	},
-	eslint: {
-		ignoreDuringBuilds: true,
-	},
 	experimental: {
 		parallelServerBuildTraces: true,
 		webpackBuildWorker: true,

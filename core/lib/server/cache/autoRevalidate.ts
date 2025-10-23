@@ -1,4 +1,4 @@
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 
 import { logger } from "logger";
 
@@ -44,7 +44,7 @@ const executeWithRevalidate = <
 			if (env.CACHE_LOG) {
 				logger.debug(`AUTOREVALIDATE: Revalidating tag: ${tag}`);
 			}
-			revalidateTag(tag);
+			updateTag(tag);
 		});
 
 		if (options?.additionalRevalidatePaths) {

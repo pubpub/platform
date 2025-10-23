@@ -1,6 +1,6 @@
 import type { Kysely } from "kysely";
 
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 import { Transaction } from "kysely";
 
 import type { Database } from "db/Database";
@@ -51,7 +51,7 @@ export const maybeWithTrx = async <T>(
 		if (env.CACHE_LOG === "true") {
 			logger.debug(`MANUAL REVALIDATE: revalidating tag bc of failed transaction: ${tag}`);
 		}
-		revalidateTag(tag);
+		updateTag(tag);
 	}
 
 	throw error;
