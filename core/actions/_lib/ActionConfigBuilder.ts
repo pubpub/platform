@@ -102,7 +102,16 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * create new instance with default configuration values
 	 * these will be merged with the lowest priority
 	 */
-	withDefaults(defaults: Record<string, any>): ActionConfigBuilder<TConfig> {
+	withDefaults(defaults: Record<string, any> | string[]): ActionConfigBuilder<TConfig> {
+		if (Array.isArray(defaults)) {
+			defaults = defaults.reduce(
+				(acc, key) => {
+					acc[key] = true;
+					return acc;
+				},
+				{} as Record<string, true>
+			);
+		}
 		return new ActionConfigBuilder(this.actionName, {
 			action: this.action,
 			defaults,
