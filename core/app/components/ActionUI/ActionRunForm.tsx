@@ -14,6 +14,7 @@ import { Loader2, Play } from "ui/icon";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
+import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
@@ -35,20 +36,29 @@ export const ActionRunForm = (props: Props) => {
 	);
 
 	const [isPending] = useTransition();
+
 	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (action.params.schema as z.ZodObject<any>)
-			.partial(
-				props.defaultFields.reduce(
-					(acc, key) => {
-						acc[key] = true;
-						return acc;
-					},
-					{} as Record<string, true>
-				)
-			)
-			.optional();
-		return schemaWithPartialDefaults;
-	}, [action.params.schema, props.defaultFields]);
+		const config = new ActionConfigBuilder(action.name)
+			.withConfig(props.actionInstance.config ?? {})
+			.withDefaults(props.defaultFields)
+			.getSchema();
+
+		return config;
+	});
+	// const schema = useMemo(() => {
+	// 	const schemaWithPartialDefaults = (action.params.schema as z.ZodObject<any>)
+	// 		.partial(
+	// 			props.defaultFields.reduce(
+	// 				(acc, key) => {
+	// 					acc[key] = true;
+	// 					return acc;
+	// 				},
+	// 				{} as Record<string, true>
+	// 			)
+	// 		)
+	// 		.optional();
+	// 	return schemaWithPartialDefaults;
+	// }, [action.params.schema, props.defaultFields]);
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
 

@@ -4,13 +4,17 @@ import * as React from "react";
 import { useFormContext } from "react-hook-form";
 import * as z from "zod";
 
+import { cn } from "utils";
+
 import type { Dependency, FieldConfig, FieldConfigItem } from "../types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../../accordion";
+import { Button } from "../../button";
 import { FormField } from "../../form";
 import { DEFAULT_ZOD_HANDLERS, INPUT_COMPONENTS } from "../config";
 import resolveDependencies from "../dependencies";
 import { beautifyObjectName, getBaseSchema, getBaseType, zodToHtmlInputProps } from "../utils";
 import AutoFormArray from "./array";
+import Input from "./input";
 
 function DefaultParent({ children }: { children: React.ReactNode }) {
 	return <>{children}</>;
@@ -198,6 +202,8 @@ function FormFieldObject({
 }): React.JSX.Element | null {
 	const zodInputProps = zodToHtmlInputProps(item);
 
+	const [jsonata, setJsonata] = React.useState(false);
+
 	return (
 		<FormField
 			control={form.control}
@@ -239,18 +245,43 @@ function FormFieldObject({
 
 				return (
 					<ParentElement key={`${key}.parent`}>
-						<InputComponent
-							zodInputProps={zodInputProps}
-							field={field}
-							fieldConfigItem={fieldConfigItem}
-							label={title}
-							description={description}
-							isRequired={Boolean(isRequired)}
-							zodItem={item}
-							fieldProps={fieldProps}
-							className={fieldProps.className}
-							placeholder={fieldConfigItem.placeholder}
-						/>
+						<div className="relative">
+							<Button
+								variant="ghost"
+								size="icon"
+								className="absolute -top-3 right-0"
+								onClick={() => setJsonata(!jsonata)}
+							>
+								{jsonata ? "T" : "{}"}
+							</Button>
+							{jsonata ? (
+								<Input
+									zodInputProps={zodInputProps}
+									field={field}
+									fieldConfigItem={fieldConfigItem}
+									label={title}
+									description={description}
+									isRequired={Boolean(isRequired)}
+									zodItem={item}
+									fieldProps={fieldProps}
+									className={cn(fieldProps.className, "font-mono")}
+									placeholder={fieldConfigItem.placeholder}
+								/>
+							) : (
+								<InputComponent
+									zodInputProps={zodInputProps}
+									field={field}
+									fieldConfigItem={fieldConfigItem}
+									label={title}
+									description={description}
+									isRequired={Boolean(isRequired)}
+									zodItem={item}
+									fieldProps={fieldProps}
+									className={fieldProps.className}
+									placeholder={fieldConfigItem.placeholder}
+								/>
+							)}
+						</div>
 					</ParentElement>
 				);
 			}}

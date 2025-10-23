@@ -4,11 +4,12 @@ import type { z } from "zod";
 
 import { startTransition, useCallback, useMemo } from "react";
 
-import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
+import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
 import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
+import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { getActionByName } from "~/actions/api";
 import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";
@@ -29,22 +30,27 @@ export const ActionConfigForm = (props: Props) => {
 	const fieldConfigWithDefaults = createDefaultFieldConfig(props.defaultFields, fieldConfig);
 
 	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
-			props.defaultFields.reduce(
-				(acc, key) => {
-					acc[key] = true;
-					return acc;
-				},
-				{} as Record<string, true>
-			)
-		);
-		return schemaWithPartialDefaults;
+		const config = new ActionConfigBuilder(action.name)
+			.withConfig(props.actionInstance.config ?? {})
+			.withDefaults(props.defaultFields)
+			.getSchema();
+		// const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
+		// 	props.defaultFields.reduce(
+		// 		(acc, key) => {
+		// 			acc[key] = true;
+		// 			return acc;
+		// 		},
+		// 		{} as Record<string, true>
+		// 	)
+		// );
+		// return schemaWithPartialDefaults;
+		return config;
 	}, [action.config.schema, props.defaultFields]);
 
 	const runUpdateAction = useServerAction(updateAction);
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof schema>) => {
+		async (values: z.infer<NonNullable<typeof schema>>) => {
 			startTransition(async () => {
 				const result = await runUpdateAction(
 					props.actionInstance.id as ActionInstancesId,
