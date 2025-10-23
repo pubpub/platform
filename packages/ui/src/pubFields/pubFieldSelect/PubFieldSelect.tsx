@@ -51,7 +51,7 @@ export const PubFieldSelectProvider = ({
 	...allowedSchemasOrZodItem
 }: {
 	children: React.ReactNode;
-	field: ControllerRenderProps<FieldValues, any>;
+	field: ControllerRenderProps<any, any>;
 } & AllowedSchemasOrZodItem) => {
 	const form = useFormContext();
 	const allPubFields = usePubFieldContext();
@@ -140,8 +140,9 @@ export const PubFieldSelectToggleButton = () => {
 };
 
 export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode }) => {
-	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectContext();
-	if (!shouldReadFromPubField || allowedPubFields.length === 0) {
+	const { shouldReadFromPubField } = usePubFieldSelectContext();
+
+	if (!shouldReadFromPubField) {
 		return null;
 	}
 

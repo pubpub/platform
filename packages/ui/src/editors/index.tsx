@@ -1,13 +1,13 @@
 import React from "react";
 
-import type { AutoFormInputComponentProps } from "../auto-form";
+import type { LexicalEditorProps } from "./LexicalEditor";
 import { LexicalEditor } from "./LexicalEditor";
 
-export const MarkdownEditor = (props: AutoFormInputComponentProps) => {
+export const MarkdownEditor = (props: LexicalEditorProps) => {
 	return <LexicalEditor {...props} withMarkdown />;
 };
 
-export const InputWithTokens = (props: AutoFormInputComponentProps) => {
+export const InputWithTokens = (props: LexicalEditorProps) => {
 	return <LexicalEditor {...props} singleLine />;
 };
 

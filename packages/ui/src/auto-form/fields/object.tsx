@@ -268,6 +268,7 @@ function FormFieldObject({
 									placeholder={fieldConfigItem.placeholder}
 								/>
 							) : (
+								// @ts-expect-error FIXME:  dont care
 								<InputComponent
 									zodInputProps={zodInputProps}
 									field={field}

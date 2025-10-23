@@ -65,12 +65,14 @@ export const determineAllowedPubFields = ({
 }: {
 	allPubFields: PubFieldContext;
 } & AllowedSchemasOrZodItem) => {
-	const allowedSchemas = getAllowedSchemaNames(allowedSchemasOrZodItem);
-
+	// const allowedSchemas = getAllowedSchemaNames(allowedSchemasOrZodItem);
 	return Object.values(allPubFields).filter((pubField) => {
 		if (!pubField.schemaName) {
 			return false;
 		}
-		return allowedSchemas.includes(pubField.schemaName);
+		// TODO: this line temporarily enables any field to be used in actions
+		// while we migrate to the new action mapping/value interpolation
+		// system.
+		return true;
 	});
 };

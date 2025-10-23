@@ -180,9 +180,6 @@ const _runActionInstance = async (
 
 	let inputPubInput = pub;
 
-	// const argsFieldOverrides = new Set<string>();
-	// const configFieldOverrides = new Set<string>();
-
 	let config = null;
 	if (inputPubInput) {
 		const thing = createPubProxy(inputPubInput, community?.slug);

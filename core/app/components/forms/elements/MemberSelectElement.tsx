@@ -27,13 +27,5 @@ export const MemberSelectElement = ({
 		return null;
 	}
 
-	return (
-		<MemberSelectClientFetch
-			fieldLabel={label}
-			fieldName={slug}
-			value={value}
-			allowPubFieldSubstitution={false}
-			helpText={config.help}
-		/>
-	);
+	return <MemberSelectClientFetch name={slug} value={value} />;
 };
