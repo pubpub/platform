@@ -19,7 +19,6 @@ import { getActionFormComponent } from "~/actions/forms";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { useServerAction } from "~/lib/serverActions";
 import { useCommunity } from "../providers/CommunityProvider";
-import { createDefaultFieldConfig } from "./defaultFieldConfig";
 
 type Props = {
 	actionInstance: ActionInstances;
@@ -30,10 +29,6 @@ type Props = {
 export const ActionRunForm = (props: Props) => {
 	const action = getActionByName(props.actionInstance.action);
 	const ActionFormComponent = getActionFormComponent(action.name);
-	const defaultFieldConfig = createDefaultFieldConfig(
-		props.defaultFields,
-		action.params.fieldConfig
-	);
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
 
@@ -102,7 +97,19 @@ export const ActionRunForm = (props: Props) => {
 						values={props.actionInstance.config ?? {}}
 						defaultFields={props.defaultFields}
 					>
-						<ActionForm onSubmit={onSubmit} onCancel={onClose}>
+						<ActionForm
+							onSubmit={onSubmit}
+							submitButton={{
+								text: "Run Action",
+								pendingText: "Running Action...",
+								successText: "Action Ran",
+								errorText: "Failed to run action",
+							}}
+							secondaryButton={{
+								text: "Cancel",
+								onClick: onClose,
+							}}
+						>
 							<Suspense fallback={<SkeletonCard />}>
 								<ActionFormComponent />
 							</Suspense>
