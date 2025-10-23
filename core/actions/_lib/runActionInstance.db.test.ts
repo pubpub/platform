@@ -4,11 +4,16 @@ import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
-const { createForEachMockedTransaction } = await mockServerCode();
+const { createForEachMockedTransaction, getCommunity } = await mockServerCode();
 const { getTrx } = createForEachMockedTransaction();
 
 const pubTriggerTestSeed = async () => {
 	const slugName = `test-server-pub-${new Date().toISOString()}`;
+	getCommunity.mockImplementation(() => {
+		return {
+			slug: slugName,
+		};
+	});
 	const { createSeed } = await import("~/prisma/seed/createSeed");
 
 	return createSeed({

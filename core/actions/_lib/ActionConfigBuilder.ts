@@ -402,13 +402,17 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	// private helper methods
 	private clone({
 		result,
-	}: { result?: ActionConfigResult | null } = {}): ActionConfigBuilder<TConfig> {
+		state,
+	}: {
+		state?: BuilderState;
+		result?: ActionConfigResult | null;
+	} = {}): ActionConfigBuilder<TConfig> {
 		return new ActionConfigBuilder(this.actionName, {
 			action: this.action,
 			defaults: this.defaults,
 			config: this.config,
 			overrides: this.overrides,
-			state: this.state,
+			state: state ?? this.state,
 			result: result ?? this.result,
 		});
 	}
@@ -432,6 +436,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 
 		if (!parseResult.success) {
 			return this.clone({
+				state: "validated",
 				result: {
 					success: false,
 					error: {
@@ -443,12 +448,16 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			});
 		}
 
-		return this.clone({ result: { success: true, config: parseResult.data } });
+		return this.clone({
+			state: "validated",
+			result: { success: true, config: parseResult.data },
+		});
 	}
 
 	private validateInterpolated(): ActionConfigBuilder<TConfig> {
-		if (!this.result || !this.result.success) {
+		if (!this.result || !this.result.success || this.state !== "interpolated") {
 			return this.clone({
+				state: "interpolated",
 				result: {
 					success: false,
 					error: {
@@ -462,6 +471,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		const schema = this.getSchema();
 		if (!schema) {
 			return this.clone({
+				state: "interpolated",
 				result: {
 					success: false,
 					error: {
@@ -476,6 +486,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 
 		if (!parseResult.success) {
 			return this.clone({
+				state: "interpolated",
 				result: {
 					success: false,
 					error: {
