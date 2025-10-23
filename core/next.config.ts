@@ -1,8 +1,8 @@
 // @ts-check
 
-import type { NextConfig, normalizeConfig } from "next/dist/server/config";
+import type { NextConfig } from "next";
 
-import { PHASE_PRODUCTION_BUILD } from "next/dist/shared/lib/constants.js";
+import { PHASE_PRODUCTION_BUILD } from "next/constants.js";
 import withPreconstruct from "@preconstruct/next";
 import { withSentryConfig } from "@sentry/nextjs";
 
@@ -15,10 +15,6 @@ const nextConfig: NextConfig = {
 	typescript: {
 		// this gets checked in CI already
 		ignoreBuildErrors: true,
-	},
-	eslint: {
-		// this gets checked in CI already
-		ignoreDuringBuilds: true,
 	},
 	reactStrictMode: true,
 	/**
@@ -46,6 +42,7 @@ const nextConfig: NextConfig = {
 	turbopack: {
 		root: new URL("./..", import.meta.url).pathname,
 	},
+	typedRoutes: true,
 	serverExternalPackages: [
 		"@aws-sdk",
 		// without this here, next will sort of implode and no longer compile and serve pages properly
@@ -53,7 +50,10 @@ const nextConfig: NextConfig = {
 		"graphile-worker",
 		"@node-rs/argon2",
 	],
+
 	experimental: {
+		turbopackFileSystemCacheForDev: true,
+		browserDebugInfoInTerminal: true,
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
 		webpackBuildWorker: true,
 		parallelServerBuildTraces: true,
@@ -61,19 +61,7 @@ const nextConfig: NextConfig = {
 			bodySizeLimit: "1gb",
 		},
 	},
-	// open telemetry cries a lot during build, don't think it's serious
-	// https://github.com/open-telemetry/opentelemetry-js/issues/4173
-	webpack: (config, { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }) => {
-		if (config.cache && !dev) {
-			config.cache = Object.freeze({
-				type: "memory",
-			});
-		}
-		if (isServer) {
-			config.ignoreWarnings = [{ module: /opentelemetry/ }];
-		}
-		return config;
-	},
+
 	async headers() {
 		// otherwise SSE doesn't work
 		// also recommended by Next: https://nextjs.org/docs/app/guides/self-hosting#streaming-and-suspense
@@ -123,7 +111,9 @@ const modifiedConfig = withPreconstruct(
 	})
 );
 
-const config: typeof normalizeConfig = async (phase, { defaultConfig }) => {
+const config = async (
+	phase: "phase-development-server" | "phase-production-server" | "phase-production-build"
+): Promise<NextConfig> => {
 	if (!env.SENTRY_AUTH_TOKEN) {
 		console.warn("⚠️ SENTRY_AUTH_TOKEN is not set");
 	}

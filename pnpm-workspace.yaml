@@ -9,7 +9,7 @@ packages:
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
-    next: ^15.5.0
+    next: ^16.0.0
     eslint: ^9.9.0
     katex: ^0.16.18
     prettier: ^3.6.2
@@ -19,7 +19,7 @@ catalog:
     postcss: ^8.4.27
     autoprefixer: ^10.4.21
     date-fns: ^4.1.0
-    nuqs: "2.4.3"
+    nuqs: "2.7.2"
     # not manually specifying this lead to two different versions of nuqs being installed
     # see https://github.com/47ng/nuqs/issues/798
     "@babel/core": 7.27.4
@@ -55,8 +55,8 @@ catalogs:
         "@types/react": ^18.3.5
         "@types/react-dom": ^18.3.0
     react19:
-        react: ^19.1.1
-        react-dom: ^19.1.1
-        "@types/react": ^19.1.10
-        "@types/react-dom": ^19.1.7
+        react: ^19.2.0
+        react-dom: ^19.2.0
+        "@types/react": ^19.2.0
+        "@types/react-dom": ^19.2.0
         react-reconciler: "0.32.0"
