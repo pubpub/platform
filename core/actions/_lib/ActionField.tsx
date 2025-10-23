@@ -37,6 +37,7 @@ export function ActionField(props: ActionFieldProps) {
 						{props.render?.(p) ?? (
 							<Input
 								type="text"
+								className="bg-white"
 								{...p.field}
 								id={p.field.name}
 								aria-invalid={p.fieldState.invalid}
