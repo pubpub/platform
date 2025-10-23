@@ -6,15 +6,7 @@ import * as Sentry from "@sentry/nextjs";
 import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
-import type {
-	Communities,
-	CommunitiesId,
-	CommunityMemberships,
-	FormsId,
-	Users,
-	UsersId,
-} from "db/public";
-import type { Prettify } from "utils/types";
+import type { Communities, CommunitiesId, CommunityMemberships, FormsId, UsersId } from "db/public";
 import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
@@ -50,12 +42,6 @@ const schema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1),
 });
-
-type LoginUser = Prettify<
-	Omit<Users, "orcid" | "avatar"> & {
-		memberships: (CommunityMemberships & { community: Communities | null })[];
-	}
->;
 
 const getUserWithPasswordHash = async (props: Parameters<typeof getUser>[0]) =>
 	getUser(props).select("users.passwordHash").executeTakeFirst();
