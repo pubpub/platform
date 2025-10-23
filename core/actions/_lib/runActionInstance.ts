@@ -100,11 +100,10 @@ const _runActionInstance = async (
 	}
 
 	const action = getActionByName(args.actionInstance.action);
-	const actionRun = await getActionRunByName(args.actionInstance.action);
-	const actionDefaults = await getActionConfigDefaults(
-		args.communityId,
-		args.actionInstance.action
-	).executeTakeFirst();
+	const [actionRun, actionDefaults] = await Promise.all([
+		getActionRunByName(args.actionInstance.action),
+		getActionConfigDefaults(args.communityId, args.actionInstance.action).executeTakeFirst(),
+	]);
 
 	if (!actionRun || !action) {
 		return {
@@ -169,6 +168,7 @@ const _runActionInstance = async (
 			...(args.actionInstanceArgs as Record<string, any>),
 		})
 		.withOverrides(args.config as Record<string, any>)
+		.withDefaults(actionDefaults?.config as Record<string, any>)
 		.validate();
 
 	let inputPubInput = pub;
@@ -178,37 +178,65 @@ const _runActionInstance = async (
 
 	let config = null;
 	if (inputPubInput) {
-<<<<<<< HEAD
-		runArgs = resolveWithPubfields(
-			{ ...parsedArgs.data, ...args.actionInstanceArgs },
-			inputPubInput.values,
-			argsFieldOverrides
-		);
-		// @ts-expect-error FIXME: will be diff
-		config = resolveWithPubfields(
-			{ ...args.actionInstance.config, ...parsedConfig.data },
-			inputPubInput.values,
-			configFieldOverrides
-=======
 		const communitySlug = await getCommunitySlug();
-		const iii = Object.fromEntries(
-			inputPubInput.values.map((val) => [
-				val.fieldSlug.replace(`${communitySlug}:`, ""),
-				val.value,
-			])
->>>>>>> 66b5ef22b (feat: yesss interpolation)
-		);
+		const createPubProxy = (pub: typeof inputPubInput, communitySlug: string): any => {
+			const valuesMap = new Map(pub.values.map((v) => [v.fieldSlug, v]));
 
-		const thing = {
-			...inputPubInput,
-			values: {
-				...inputPubInput.values,
-				...iii,
-			},
+			return new Proxy(pub, {
+				get(target, prop) {
+					if (prop === "fields") {
+						return new Proxy(
+							{},
+							{
+								get(_, fieldSlug: string) {
+									return valuesMap.get(fieldSlug);
+								},
+							}
+						);
+					}
+
+					if (prop === "values") {
+						return new Proxy(
+							{},
+							{
+								get(_, fieldSlug: string) {
+									const val =
+										valuesMap.get(`${communitySlug}:${fieldSlug}`) ??
+										valuesMap.get(fieldSlug);
+									return val?.value;
+								},
+							}
+						);
+					}
+
+					if (prop === "out") {
+						return new Proxy(
+							{},
+							{
+								get(_, fieldSlug: string) {
+									const val =
+										valuesMap.get(`${communitySlug}:${fieldSlug}`) ??
+										valuesMap.get(fieldSlug);
+									if (val && "relatedPub" in val && val.relatedPub) {
+										return createPubProxy(val.relatedPub, communitySlug);
+									}
+									return undefined;
+								},
+							}
+						);
+					}
+
+					return target[prop as keyof typeof target];
+				},
+			});
 		};
 
+		const thing = createPubProxy(inputPubInput, communitySlug);
+
 		const interpolated = await actionConfigBuilder.interpolate(thing);
+
 		const result = interpolated.validate().getResult();
+
 		if (!result.success) {
 			logger.error("Invalid action configuration", {
 				// config: result.config,
@@ -261,16 +289,10 @@ const _runActionInstance = async (
 
 	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! };
 	try {
-		// @ts-expect-error TODO: fix this
 		const result = await actionRun({
 			// FIXME: get rid of any
 			config,
-			// config: config as any,
-			// configFieldOverrides,
 			...(inputPubInput ? { pub: inputPubInput } : { json: args.json }),
-			// FIXME: get rid of any
-			// args: runArgs as any,
-			// argsFieldOverrides,
 			stageId: args.actionInstance.stageId,
 			communityId: args.communityId,
 			lastModifiedBy,

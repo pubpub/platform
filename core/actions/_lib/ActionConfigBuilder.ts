@@ -400,16 +400,23 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	}
 
 	// private helper methods
+	private clone({
+		result,
+	}: { result?: ActionConfigResult | null } = {}): ActionConfigBuilder<TConfig> {
+		return new ActionConfigBuilder(this.actionName, {
+			action: this.action,
+			defaults: this.defaults,
+			config: this.config,
+			overrides: this.overrides,
+			state: this.state,
+			result: result ?? this.result,
+		});
+	}
 
 	private validateRaw(): ActionConfigBuilder<TConfig> {
 		const schema = this.getSchemaWithJsonFields();
 		if (!schema) {
-			return new ActionConfigBuilder(this.actionName, {
-				action: this.action,
-				defaults: this.defaults,
-				config: this.config,
-				overrides: this.overrides,
-				state: this.state,
+			return this.clone({
 				result: {
 					success: false,
 					error: {
@@ -424,12 +431,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		const parseResult = schema.safeParse(mergedConfig);
 
 		if (!parseResult.success) {
-			return new ActionConfigBuilder(this.actionName, {
-				action: this.action,
-				defaults: this.defaults,
-				config: this.config,
-				overrides: this.overrides,
-				state: this.state,
+			return this.clone({
 				result: {
 					success: false,
 					error: {
@@ -441,24 +443,12 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			});
 		}
 
-		return new ActionConfigBuilder(this.actionName, {
-			action: this.action,
-			defaults: this.defaults,
-			config: this.config,
-			overrides: this.overrides,
-			state: "validated",
-			result: { success: true, config: parseResult.data },
-		});
+		return this.clone({ result: { success: true, config: parseResult.data } });
 	}
 
 	private validateInterpolated(): ActionConfigBuilder<TConfig> {
 		if (!this.result || !this.result.success) {
-			return new ActionConfigBuilder(this.actionName, {
-				action: this.action,
-				defaults: this.defaults,
-				config: this.config,
-				overrides: this.overrides,
-				state: this.state,
+			return this.clone({
 				result: {
 					success: false,
 					error: {
@@ -471,12 +461,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 
 		const schema = this.getSchema();
 		if (!schema) {
-			return new ActionConfigBuilder(this.actionName, {
-				action: this.action,
-				defaults: this.defaults,
-				config: this.config,
-				overrides: this.overrides,
-				state: this.state,
+			return this.clone({
 				result: {
 					success: false,
 					error: {
@@ -490,12 +475,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		const parseResult = schema.safeParse(this.result.config);
 
 		if (!parseResult.success) {
-			return new ActionConfigBuilder(this.actionName, {
-				action: this.action,
-				defaults: this.defaults,
-				config: this.config,
-				overrides: this.overrides,
-				state: this.state,
+			return this.clone({
 				result: {
 					success: false,
 					error: {
@@ -507,14 +487,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			});
 		}
 
-		return new ActionConfigBuilder(this.actionName, {
-			action: this.action,
-			defaults: this.defaults,
-			config: this.config,
-			overrides: this.overrides,
-			state: this.state,
-			result: { success: true, config: parseResult.data },
-		});
+		return this.clone({ result: { success: true, config: parseResult.data } });
 	}
 }
 
