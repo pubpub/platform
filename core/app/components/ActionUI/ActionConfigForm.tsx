@@ -2,18 +2,20 @@
 
 import type { z } from "zod";
 
-import { startTransition, useCallback, useMemo } from "react";
+import { startTransition, Suspense, useCallback, useMemo } from "react";
 
-import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
+import { ActionForm } from "~/actions/_lib/ActionForm";
+import { ActionFormProvider } from "~/actions/_lib/ActionFormProvider";
 import { getActionByName } from "~/actions/api";
-import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
+import { getActionFormComponent } from "~/actions/forms";
+import { deleteAction, updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";
 import { useCommunity } from "../providers/CommunityProvider";
-import { createDefaultFieldConfig } from "./defaultFieldConfig";
+import { SkeletonCard } from "../skeletons/SkeletonCard";
 
 export type Props = {
 	actionInstance: ActionInstances;
@@ -25,8 +27,10 @@ export const ActionConfigForm = (props: Props) => {
 	const community = useCommunity();
 	const action = getActionByName(props.actionInstance.action);
 
-	const fieldConfig = action.config.fieldConfig ?? {};
-	const fieldConfigWithDefaults = createDefaultFieldConfig(props.defaultFields, fieldConfig);
+	const runDeleteAction = useServerAction(deleteAction);
+	const onDelete = useCallback(async () => {
+		await runDeleteAction(props.actionInstance.id as ActionInstancesId, props.stageId);
+	}, [runDeleteAction, props.actionInstance.id, props.stageId]);
 
 	const schema = useMemo(() => {
 		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
@@ -69,17 +73,33 @@ export const ActionConfigForm = (props: Props) => {
 		[runUpdateAction, props.actionInstance.id, community.id]
 	);
 
+	const ActionFormComponent = getActionFormComponent(action.name);
+
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>
-			<AutoForm
+			<ActionFormProvider
+				action={action}
 				values={props.actionInstance.config ?? {}}
-				fieldConfig={fieldConfigWithDefaults}
-				formSchema={schema}
-				dependencies={action.config.dependencies}
-				onSubmit={onSubmit}
+				defaultFields={props.defaultFields}
 			>
-				<AutoFormSubmit>Update config</AutoFormSubmit>
-			</AutoForm>
+				<ActionForm
+					onSubmit={onSubmit}
+					submitButton={{
+						text: "Update Action",
+						pendingText: "Updating Action...",
+						successText: "Action Updated",
+						errorText: "Failed to update action",
+					}}
+					secondaryButton={{
+						text: "Remove Action",
+						onClick: onDelete,
+					}}
+				>
+					<Suspense fallback={<SkeletonCard />}>
+						<ActionFormComponent />
+					</Suspense>
+				</ActionForm>
+			</ActionFormProvider>
 		</TokenProvider>
 	);
 };
