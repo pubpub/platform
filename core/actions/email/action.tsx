@@ -56,29 +56,9 @@ const schema = z.object({
 export const action = defineAction({
 	accepts: ["pub"],
 	name: Action.email,
-	config: {
-		schema,
-		dependencies: [
-			{
-				sourceField: "recipientMember",
-				targetField: "recipientEmail",
-				when: (recipientMember) => Boolean(recipientMember),
-				type: DependencyType.DISABLES,
-			},
-		],
-	},
+	config: { schema },
 	description: "Send an email to one or more users",
-	params: {
-		schema,
-		// dependencies: [
-		// 	{
-		// 		sourceField: "recipientMember",
-		// 		targetField: "recipientEmail",
-		// 		when: (recipientMember) => Boolean(recipientMember),
-		// 		type: DependencyType.DISABLES,
-		// 	},
-		// ],
-	},
+	params: { schema },
 	icon: Mail,
 	tokens: {
 		subject: {
