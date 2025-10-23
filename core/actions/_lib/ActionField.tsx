@@ -17,9 +17,10 @@ type ActionFieldProps = PropsWithChildren<{
 }>;
 
 export function ActionField(props: ActionFieldProps) {
-	const { form, schema } = useActionForm();
+	const { form, schema, defaultFields } = useActionForm();
 	const fieldSchema = schema._def.innerType.shape[props.name] as z.ZodType<any>;
 	const required = !fieldSchema.isOptional();
+	const isDefaultField = defaultFields.includes(props.name);
 
 	return (
 		<Controller
@@ -38,6 +39,7 @@ export function ActionField(props: ActionFieldProps) {
 							<Input
 								type="text"
 								className="bg-white"
+								placeholder={isDefaultField ? "(use default)" : undefined}
 								{...p.field}
 								id={p.field.name}
 								aria-invalid={p.fieldState.invalid}

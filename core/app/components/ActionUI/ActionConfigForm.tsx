@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 
-import { startTransition, useCallback, useMemo } from "react";
+import { useCallback } from "react";
 
 import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
 import { TokenProvider } from "ui/tokens";
@@ -31,43 +31,26 @@ export const ActionConfigForm = (props: Props) => {
 		await runDeleteAction(props.actionInstance.id as ActionInstancesId, props.stageId);
 	}, [runDeleteAction, props.actionInstance.id, props.stageId]);
 
-	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
-			props.defaultFields.reduce(
-				(acc, key) => {
-					acc[key] = true;
-					return acc;
-				},
-				{} as Record<string, true>
-			)
-		);
-		return schemaWithPartialDefaults;
-	}, [action.config.schema, props.defaultFields]);
-
 	const runUpdateAction = useServerAction(updateAction);
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof schema>) => {
-			startTransition(async () => {
-				const result = await runUpdateAction(
-					props.actionInstance.id as ActionInstancesId,
-					props.stageId,
-					{
-						config: values,
-					}
-				);
-
-				if (result && "success" in result) {
-					toast({
-						title: "Action updated successfully!",
-						variant: "default",
-						// TODO: SHOULD ABSOLUTELY BE SANITIZED
-						description: (
-							<div dangerouslySetInnerHTML={{ __html: result.report ?? "" }} />
-						),
-					});
+		async (values: z.infer<typeof action.config.schema>) => {
+			const result = await runUpdateAction(
+				props.actionInstance.id as ActionInstancesId,
+				props.stageId,
+				{
+					config: values,
 				}
-			});
+			);
+
+			if (result && "success" in result) {
+				toast({
+					title: "Action updated successfully!",
+					variant: "default",
+					// TODO: SHOULD ABSOLUTELY BE SANITIZED
+					description: <div dangerouslySetInnerHTML={{ __html: result.report ?? "" }} />,
+				});
+			}
 		},
 		[runUpdateAction, props.actionInstance.id, community.id]
 	);

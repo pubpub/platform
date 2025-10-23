@@ -11,6 +11,7 @@ type ActionFormContext = {
 	action: Action;
 	schema: ZodOptional<ZodObject<any>>;
 	form: ReturnType<typeof useForm>;
+	defaultFields: string[];
 };
 
 type ActionFormProviderProps = PropsWithChildren<{
@@ -43,7 +44,9 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 	});
 
 	return (
-		<ActionFormContext.Provider value={{ action: props.action, schema, form }}>
+		<ActionFormContext.Provider
+			value={{ action: props.action, schema, form, defaultFields: props.defaultFields }}
+		>
 			{props.children}
 		</ActionFormContext.Provider>
 	);
