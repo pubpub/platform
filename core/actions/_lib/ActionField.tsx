@@ -8,6 +8,7 @@ import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
 import { PubFieldSelector, PubFieldSelectorHider, PubFieldSelectorProvider } from "ui/pubFields";
 
+import { PubFieldSelectToggleButton } from "../../../packages/ui/src/pubFields/pubFieldSelect";
 import { useActionForm } from "./ActionFormProvider";
 
 type ActionFieldProps = PropsWithChildren<{
@@ -29,12 +30,15 @@ export function ActionField(props: ActionFieldProps) {
 			render={(p) => (
 				<PubFieldSelectorProvider field={p.field} allowedSchemas={[]} zodItem={fieldSchema}>
 					<Field data-invalid={p.fieldState.invalid}>
-						{props.label && (
-							<FieldLabel htmlFor={p.field.name} aria-required={required}>
-								{props.label}
-								{required && <span className="-ml-1 text-red-500">*</span>}
-							</FieldLabel>
-						)}
+						<div className="flex flex-row items-center justify-between space-x-2">
+							{props.label && (
+								<FieldLabel htmlFor={p.field.name} aria-required={required}>
+									{props.label}
+									{required && <span className="-ml-1 text-red-500">*</span>}
+								</FieldLabel>
+							)}
+							<PubFieldSelectToggleButton />
+						</div>
 						{props.render?.(p) ?? (
 							<Input
 								type="text"

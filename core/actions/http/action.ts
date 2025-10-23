@@ -47,15 +47,6 @@ export const action = defineAction({
 				.optional()
 				.describe("Map of JSON paths to pub fields"),
 		}),
-		fieldConfig: {
-			body: {
-				allowedSchemas: true,
-				fieldType: "textarea",
-				inputProps: {
-					className: "font-mono text-gray-700",
-				},
-			},
-		},
 	},
 	description: "Make an arbitrary HTTP request",
 	params: {
