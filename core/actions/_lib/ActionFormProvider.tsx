@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from "react";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { ZodObject, ZodOptional } from "zod";
 
 import { createContext, useContext, useMemo } from "react";
@@ -11,7 +12,7 @@ import type { Action } from "../types";
 type ActionFormContext = {
 	action: Action;
 	schema: ZodOptional<ZodObject<any>>;
-	form: ReturnType<typeof useForm>;
+	form: UseFormReturn<FieldValues & { pubFields: Record<string, string[]> }>;
 	defaultFields: string[];
 };
 
