@@ -22,4 +22,5 @@ export {
 	stubFn as reactErrorHandler,
 	stubFn as withSentryConfig,
 	stubFn as revalidateTag,
+	stubFn as updateTag,
 };

@@ -116,7 +116,7 @@
 		"lucide-react": "^0.469.0",
 		"micromark-extension-directive": "^3.0.2",
 		"mudder": "^2.1.1",
-		"next": "16.0.0",
+		"next": "catalog:",
 		"next-connect": "^1.0.0",
 		"nodemailer": "^6.10.1",
 		"nuqs": "catalog:",
@@ -189,8 +189,8 @@
 		"@types/pg": "^8.15.5",
 		"@types/pluralize": "^0.0.33",
 		"@types/qs": "^6.14.0",
-		"@types/react": "19.2.2",
-		"@types/react-dom": "19.2.2",
+		"@types/react": "catalog:react19",
+		"@types/react-dom": "catalog:react19",
 		"@types/unist": "^3.0.3",
 		"@types/uuid": "^9.0.8",
 		"@vitejs/plugin-react": "catalog:",
@@ -208,8 +208,6 @@
 		"postcss": "catalog:",
 		"prisma": "^5.22.0",
 		"prisma-dbml-generator": "^0.12.0",
-		"react": "19.2.0",
-		"react-dom": "19.2.0",
 		"storybook": "^9.1.2",
 		"styled-jsx": "^5.1.7",
 		"tailwindcss": "catalog:",
@@ -225,11 +223,5 @@
 	"prettier": "@pubpub/prettier-config",
 	"imports": {
 		"#register-loader": "./prisma/seed/stubs/register-loader.js"
-	},
-	"pnpm": {
-		"overrides": {
-			"@types/react": "19.2.2",
-			"@types/react-dom": "19.2.2"
-		}
 	}
 }
