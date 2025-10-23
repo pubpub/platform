@@ -173,8 +173,9 @@ const _runActionInstance = async (
 			inputPubInput.values,
 			argsFieldOverrides
 		);
+		// @ts-expect-error FIXME: will be diff
 		config = resolveWithPubfields(
-			{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
+			{ ...args.actionInstance.config, ...parsedConfig.data },
 			inputPubInput.values,
 			configFieldOverrides
 		);
