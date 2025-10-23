@@ -7,17 +7,20 @@ import type { PublicSchema } from "db/public";
 import { beginTransaction } from "./transactions";
 
 export const mockServerCode = async () => {
-	const { getLoginData, findCommunityBySlug, testDb } = await vi.hoisted(async () => {
-		const testDb = await import("./db").then((m) => m.testDb);
+	const { getLoginData, findCommunityBySlug, getCommunity, testDb } = await vi.hoisted(
+		async () => {
+			const testDb = await import("./db").then((m) => m.testDb);
 
-		return {
-			testDb,
-			getLoginData: vi.fn((): { user: { isSuperAdmin: boolean } | null } => ({
-				user: { isSuperAdmin: false },
-			})),
-			findCommunityBySlug: vi.fn(),
-		};
-	});
+			return {
+				testDb,
+				getLoginData: vi.fn((): { user: { isSuperAdmin: boolean } | null } => ({
+					user: { isSuperAdmin: false },
+				})),
+				findCommunityBySlug: vi.fn(),
+				getCommunity: vi.fn(),
+			};
+		}
+	);
 
 	vi.mock("~/lib/server/cache/autoRevalidate", () => ({
 		autoRevalidate: (db: any) => {
@@ -40,6 +43,7 @@ export const mockServerCode = async () => {
 	vi.mock("~/lib/server/community", () => {
 		return {
 			findCommunityBySlug: findCommunityBySlug,
+			getCommunity: getCommunity,
 		};
 	});
 
@@ -121,6 +125,7 @@ export const mockServerCode = async () => {
 	return {
 		getLoginData,
 		findCommunityBySlug,
+		getCommunity,
 		beginTransaction,
 		testDb,
 		createSingleMockedTransaction,

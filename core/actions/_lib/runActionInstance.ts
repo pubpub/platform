@@ -23,12 +23,13 @@ import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
 import { getActionConfigDefaults } from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { getCommunity } from "~/lib/server/community";
 import { MAX_STACK_DEPTH } from "~/lib/server/rules";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
 import { ActionConfigBuilder } from "./ActionConfigBuilder";
 import { getActionRunByName } from "./getRuns";
+import { createPubProxy } from "./pubProxy";
 import { scheduleActionInstances } from "./scheduleActionInstance";
 
 export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
@@ -75,22 +76,34 @@ const _runActionInstance = async (
 	const isActionUserInitiated = "userId" in args;
 
 	const stack = [...args.stack, args.actionRunId];
-	const pub = args.json
-		? null
-		: await getPubsWithRelatedValues(
-				{
-					pubId: args.pubId!,
-					communityId: args.communityId,
-					userId: isActionUserInitiated ? args.userId : undefined,
-				},
-				{
-					// depth 3 is necessary for the DataCite action to fetch related
-					// contributors and their people
-					depth: 3,
-					withPubType: true,
-					withStage: true,
-				}
-			);
+
+	const action = getActionByName(args.actionInstance.action);
+	const [actionRun, actionDefaults, pub, community] = await Promise.all([
+		getActionRunByName(args.actionInstance.action),
+		getActionConfigDefaults(args.communityId, args.actionInstance.action).executeTakeFirst(),
+		args.json
+			? null
+			: getPubsWithRelatedValues(
+					{
+						pubId: args.pubId!,
+						communityId: args.communityId,
+						userId: isActionUserInitiated ? args.userId : undefined,
+					},
+					{
+						depth: 3,
+						withPubType: true,
+						withStage: true,
+					}
+				),
+		getCommunity(args.communityId),
+	]);
+
+	if (!community) {
+		return {
+			error: "Community not found",
+			stack,
+		};
+	}
 
 	if (!args.json && !pub) {
 		return {
@@ -98,12 +111,6 @@ const _runActionInstance = async (
 			stack,
 		};
 	}
-
-	const action = getActionByName(args.actionInstance.action);
-	const [actionRun, actionDefaults] = await Promise.all([
-		getActionRunByName(args.actionInstance.action),
-		getActionConfigDefaults(args.communityId, args.actionInstance.action).executeTakeFirst(),
-	]);
 
 	if (!actionRun || !action) {
 		return {
@@ -178,60 +185,7 @@ const _runActionInstance = async (
 
 	let config = null;
 	if (inputPubInput) {
-		const communitySlug = await getCommunitySlug();
-		const createPubProxy = (pub: typeof inputPubInput, communitySlug: string): any => {
-			const valuesMap = new Map(pub.values.map((v) => [v.fieldSlug, v]));
-
-			return new Proxy(pub, {
-				get(target, prop) {
-					if (prop === "fields") {
-						return new Proxy(
-							{},
-							{
-								get(_, fieldSlug: string) {
-									return valuesMap.get(fieldSlug);
-								},
-							}
-						);
-					}
-
-					if (prop === "values") {
-						return new Proxy(
-							{},
-							{
-								get(_, fieldSlug: string) {
-									const val =
-										valuesMap.get(`${communitySlug}:${fieldSlug}`) ??
-										valuesMap.get(fieldSlug);
-									return val?.value;
-								},
-							}
-						);
-					}
-
-					if (prop === "out") {
-						return new Proxy(
-							{},
-							{
-								get(_, fieldSlug: string) {
-									const val =
-										valuesMap.get(`${communitySlug}:${fieldSlug}`) ??
-										valuesMap.get(fieldSlug);
-									if (val && "relatedPub" in val && val.relatedPub) {
-										return createPubProxy(val.relatedPub, communitySlug);
-									}
-									return undefined;
-								},
-							}
-						);
-					}
-
-					return target[prop as keyof typeof target];
-				},
-			});
-		};
-
-		const thing = createPubProxy(inputPubInput, communitySlug);
+		const thing = createPubProxy(inputPubInput, community?.slug);
 
 		const interpolated = await actionConfigBuilder.interpolate(thing);
 
@@ -254,22 +208,6 @@ const _runActionInstance = async (
 		}
 
 		config = result.config;
-		// runArgs = resolveWithPubfields(
-		// 	{ ...parsedArgs.data, ...args.actionInstanceArgs },
-		// 	inputPubInput.values,
-		// 	argsFieldOverrides
-		// );
-		// config = resolveWithPubfields(
-		// 	{ ...(args.actionInstance.config as {}), ...parsedConfig.data },
-		// 	inputPubInput.values,
-		// 	configFieldOverrides
-		// );
-
-		// const hydratedPubValues = hydratePubValues(inputPubInput.values);
-		// inputPubInput = {
-		// 	...inputPubInput,
-		// 	values: hydratedPubValues,
-		// };
 	} else {
 		const result = (await actionConfigBuilder.interpolate(args.json)).getResult();
 		if (!result.success) {
