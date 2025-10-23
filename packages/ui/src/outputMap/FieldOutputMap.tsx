@@ -140,7 +140,7 @@ export const FieldOutputMap = <F extends string>({
 				responseField: string;
 				pubField: string;
 			}[];
-		},
+		} & { pubFields: Record<string, string[]> },
 		unknown,
 		FieldValues | undefined
 	>;

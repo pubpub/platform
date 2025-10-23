@@ -51,7 +51,7 @@ export const PubFieldSelectProvider = ({
 	...allowedSchemasOrZodItem
 }: {
 	children: React.ReactNode;
-	field: ControllerRenderProps<FieldValues, any>;
+	field: ControllerRenderProps<any, any>;
 } & AllowedSchemasOrZodItem) => {
 	const form = useFormContext();
 	const allPubFields = usePubFieldContext();
