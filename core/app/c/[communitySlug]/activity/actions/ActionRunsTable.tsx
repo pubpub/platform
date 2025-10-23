@@ -1,5 +1,7 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
+
 import type { ActionRun } from "./getActionRunsTableColumns";
 import { DataTable } from "~/app/components/DataTable/DataTable";
 import { getActionRunsTableColumns } from "./getActionRunsTableColumns";
@@ -12,5 +14,10 @@ export const ActionRunsTable = ({
 	communitySlug: string;
 }) => {
 	const actionRunsColumns = getActionRunsTableColumns(communitySlug);
-	return <DataTable columns={actionRunsColumns} data={actionRuns} />;
+	return (
+		<DataTable
+			columns={actionRunsColumns as ColumnDef<ActionRun, unknown>[]}
+			data={actionRuns}
+		/>
+	);
 };

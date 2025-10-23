@@ -9,12 +9,12 @@
 		"postbuild": "pagefind --site .next/server/app --output-path out/_pagefind",
 		"start": "serve ./out -p 3006",
 		"type-check": "tsc --noEmit",
-		"lint": "next lint"
+		"lint": "eslint"
 	},
 	"dependencies": {
 		"next": "catalog:",
-		"nextra": "^4.3.0",
-		"nextra-theme-docs": "^4.3.0",
+		"nextra": "^4.6.0",
+		"nextra-theme-docs": "^4.6.0",
 		"pagefind": "^1.3.0",
 		"react": "catalog:react19",
 		"react-dom": "catalog:react19"

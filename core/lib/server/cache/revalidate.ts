@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { updateTag } from "next/cache";
 
 import { logger } from "logger";
 
@@ -32,7 +32,7 @@ export const revalidateTagsForCommunity = async <S extends CacheScope>(
 	const tags = slugs.flatMap((slug) => {
 		const tags = createCommunityCacheTags(scopes, slug);
 		return tags.map((tag) => {
-			revalidateTag(tag);
+			updateTag(tag);
 			return tag;
 		});
 	});

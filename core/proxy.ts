@@ -35,7 +35,7 @@ const communitySlugMiddleware = async (request: NextRequest) => {
 	return response;
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const response = await communitySlugMiddleware(request);
 	return response;
 }
