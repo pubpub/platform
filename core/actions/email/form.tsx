@@ -1,6 +1,5 @@
 import { InputWithTokens, MarkdownEditor } from "ui/editors";
 import { FieldSet } from "ui/field";
-import { Input } from "ui/input";
 
 import { ActionField } from "../_lib/ActionField";
 import MemberSelectClientFetch from "./DynamicSelectFetch";
@@ -9,6 +8,7 @@ export default function EmailActionForm() {
 	return (
 		<FieldSet>
 			<ActionField name="senderName" label="Sender Name" />
+
 			<ActionField name="replyTo" label="Reply-To" />
 			<ActionField name="recipientEmail" label="Recipient Email" />
 			<ActionField
