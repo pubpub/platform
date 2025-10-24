@@ -2,14 +2,15 @@ import type { PropsWithChildren } from "react";
 import type { ControllerProps } from "react-hook-form";
 import type z from "zod";
 
+import { useEffect, useState } from "react";
 import { Controller } from "react-hook-form";
 
+import { Button } from "ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
-import { PubFieldSelector, PubFieldSelectorHider, PubFieldSelectorProvider } from "ui/pubFields";
 
-import { PubFieldSelectToggleButton } from "../../../packages/ui/src/pubFields/pubFieldSelect";
-import { useActionForm } from "./ActionForm";
+import { useActionForm } from "./ActionFormProvider";
+import { isJsonTemplate } from "./schemaWithJsonFields";
 
 type ActionFieldProps = PropsWithChildren<{
 	name: string;
@@ -18,33 +19,87 @@ type ActionFieldProps = PropsWithChildren<{
 	id?: string;
 }>;
 
+type JsonState =
+	| {
+			state: "json";
+			jsonValue: string;
+			normalValue: string;
+	  }
+	| {
+			state: "normal";
+			normalValue: string;
+			jsonValue: string;
+	  };
+
 export function ActionField(props: ActionFieldProps) {
 	const { form, schema, defaultFields } = useActionForm();
 	const fieldSchema = schema._def.innerType.shape[props.name] as z.ZodType<any>;
 	const required = !fieldSchema.isOptional();
 	const isDefaultField = defaultFields.includes(props.name);
+	const val = form.getValues()?.[props.name];
+	const isJson = isJsonTemplate(val);
+	const [jsonState, setJsonState] = useState<JsonState>({
+		state: isJson ? "json" : "normal",
+		jsonValue: isJson ? val : "",
+		normalValue: isJson ? "" : val,
+	});
+
+	const toggleJsonState = () => {
+		setJsonState((prev) => ({
+			...prev,
+			state: jsonState.state === "json" ? "normal" : "json",
+		}));
+	};
+
+	useEffect(() => {
+		setJsonState((prev) => ({
+			...prev,
+			jsonValue: prev.state === "json" ? val : prev.jsonValue,
+			normalValue: prev.state === "normal" ? val : prev.normalValue,
+		}));
+	}, [val]);
 
 	return (
 		<Controller
 			name={props.name}
 			control={form.control}
 			render={(p) => (
-				<PubFieldSelectorProvider field={p.field} allowedSchemas={[]} zodItem={fieldSchema}>
-					<Field data-invalid={p.fieldState.invalid}>
-						<div className="flex flex-row items-center justify-between space-x-2">
-							{props.label && (
-								<FieldLabel
-									htmlFor={p.field.name}
-									aria-required={required}
-									id={props.id}
-								>
-									{props.label}
-									{required && <span className="-ml-1 text-red-500">*</span>}
-								</FieldLabel>
-							)}
-							<PubFieldSelectToggleButton />
-						</div>
-						{props.render?.(p) ?? (
+				<Field data-invalid={p.fieldState.invalid}>
+					<div className="flex flex-row items-center justify-between space-x-2">
+						{props.label && (
+							<FieldLabel htmlFor={p.field.name} aria-required={required}>
+								{props.label}
+								{required && <span className="-ml-1 text-red-500">*</span>}
+							</FieldLabel>
+						)}
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={() => {
+								p.field.onChange(
+									jsonState.state === "json"
+										? jsonState.normalValue
+										: jsonState.jsonValue
+								);
+
+								toggleJsonState();
+							}}
+						>
+							{jsonState.state === "json" ? "T" : "{}"}
+						</Button>
+					</div>
+					{jsonState.state === "json" ? (
+						<Input
+							type="text"
+							className="border-orange-400 bg-orange-50 font-mono font-semibold text-gray-900"
+							placeholder={isDefaultField ? "(use default)" : undefined}
+							{...p.field}
+							id={p.field.name}
+							value={p.field.value ?? ""}
+							aria-invalid={p.fieldState.invalid}
+						/>
+					) : (
+						(props.render?.(p) ?? (
 							<Input
 								type="text"
 								className="bg-white"
@@ -54,14 +109,11 @@ export function ActionField(props: ActionFieldProps) {
 								value={p.field.value}
 								aria-invalid={p.fieldState.invalid}
 							/>
-						)}
-						<FieldDescription>{fieldSchema.description}</FieldDescription>
-						{p.fieldState.invalid && <FieldError errors={[p.fieldState.error]} />}
-					</Field>
-					<PubFieldSelectorHider>
-						<PubFieldSelector />
-					</PubFieldSelectorHider>
-				</PubFieldSelectorProvider>
+						))
+					)}
+					<FieldDescription>{fieldSchema.description}</FieldDescription>
+					{p.fieldState.invalid && <FieldError errors={[p.fieldState.error]} />}
+				</Field>
 			)}
 		/>
 	);
