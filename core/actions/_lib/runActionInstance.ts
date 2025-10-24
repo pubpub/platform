@@ -19,16 +19,17 @@ import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
-import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
 import { getActionConfigDefaults } from "~/lib/server/actions";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
+import { getCommunity } from "~/lib/server/community";
 import { MAX_STACK_DEPTH } from "~/lib/server/rules";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
+import { ActionConfigBuilder } from "./ActionConfigBuilder";
 import { getActionRunByName } from "./getRuns";
-import { resolveWithPubfields } from "./resolvePubfields";
+import { createPubProxy } from "./pubProxy";
 import { scheduleActionInstances } from "./scheduleActionInstance";
 
 export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
@@ -75,22 +76,34 @@ const _runActionInstance = async (
 	const isActionUserInitiated = "userId" in args;
 
 	const stack = [...args.stack, args.actionRunId];
-	const pub = args.json
-		? null
-		: await getPubsWithRelatedValues(
-				{
-					pubId: args.pubId!,
-					communityId: args.communityId,
-					userId: isActionUserInitiated ? args.userId : undefined,
-				},
-				{
-					// depth 3 is necessary for the DataCite action to fetch related
-					// contributors and their people
-					depth: 3,
-					withPubType: true,
-					withStage: true,
-				}
-			);
+
+	const action = getActionByName(args.actionInstance.action);
+	const [actionRun, actionDefaults, pub, community] = await Promise.all([
+		getActionRunByName(args.actionInstance.action),
+		getActionConfigDefaults(args.communityId, args.actionInstance.action).executeTakeFirst(),
+		args.json
+			? null
+			: getPubsWithRelatedValues(
+					{
+						pubId: args.pubId!,
+						communityId: args.communityId,
+						userId: isActionUserInitiated ? args.userId : undefined,
+					},
+					{
+						depth: 3,
+						withPubType: true,
+						withStage: true,
+					}
+				),
+		getCommunity(args.communityId),
+	]);
+
+	if (!community) {
+		return {
+			error: "Community not found",
+			stack,
+		};
+	}
 
 	if (!args.json && !pub) {
 		return {
@@ -99,13 +112,6 @@ const _runActionInstance = async (
 		};
 	}
 
-	const action = getActionByName(args.actionInstance.action);
-	const actionRun = await getActionRunByName(args.actionInstance.action);
-	const actionDefaults = await getActionConfigDefaults(
-		args.communityId,
-		args.actionInstance.action
-	).executeTakeFirst();
-
 	if (!actionRun || !action) {
 		return {
 			error: "Action not found",
@@ -113,40 +119,40 @@ const _runActionInstance = async (
 		};
 	}
 
-	const actionConfig = {
-		...(actionDefaults?.config as Record<string, any>),
-		...(args.actionInstance.config as Record<string, any>),
-	};
+	// const actionConfig = {
+	// 	...(actionDefaults?.config as Record<string, any>),
+	// 	...(args.actionInstance.config as Record<string, any>),
+	// };
 
-	const parsedConfig = action.config.schema.safeParse(args.config ?? actionConfig);
+	// const parsedConfig = action.config.schema.safeParse(args.config ?? actionConfig);
 
-	if (!parsedConfig.success) {
-		const err = {
-			error: "Invalid config",
-			cause: parsedConfig.error,
-			stack,
-		};
-		if (args.actionInstanceArgs) {
-			// Check if the args passed can substitute for missing or invalid config
-			const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs);
-			if (!argsParsedAsConfig.success) {
-				return err;
-			}
-		} else {
-			return err;
-		}
-	}
+	// if (!parsedConfig.success) {
+	// 	const err = {
+	// 		error: "Invalid config",
+	// 		cause: parsedConfig.error,
+	// 		stack,
+	// 	};
+	// 	if (args.actionInstanceArgs) {
+	// 		// Check if the args passed can substitute for missing or invalid config
+	// 		const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs);
+	// 		if (!argsParsedAsConfig.success) {
+	// 			return err;
+	// 		}
+	// 	} else {
+	// 		return err;
+	// 	}
+	// }
 
-	const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
+	// const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
 
-	if (!parsedArgs.success) {
-		return {
-			title: "Invalid pub config",
-			cause: parsedArgs.error,
-			error: "The action was run with invalid parameters",
-			stack,
-		};
-	}
+	// if (!parsedArgs.success) {
+	// 	return {
+	// 		title: "Invalid pub config",
+	// 		cause: parsedArgs.error,
+	// 		error: "The action was run with invalid parameters",
+	// 		stack,
+	// 	};
+	// }
 
 	// TODO: restore validation https://github.com/pubpub/v7/issues/455
 	// const pubValuesValidationResult = validatePubValues({
@@ -160,31 +166,56 @@ const _runActionInstance = async (
 	// 	};
 	// }
 
-	let runArgs = parsedArgs.data;
-	let config = parsedConfig.data;
+	// let runArgs = parsedArgs.data;
+	// let config = parsedConfig.data;
+
+	const actionConfigBuilder = new ActionConfigBuilder(args.actionInstance.action)
+		.withConfig({
+			...(args.actionInstance.config as Record<string, any>),
+			...(args.actionInstanceArgs as Record<string, any>),
+		})
+		.withOverrides(args.config as Record<string, any>)
+		.withDefaults(actionDefaults?.config as Record<string, any>)
+		.validate();
 
 	let inputPubInput = pub;
 
-	const argsFieldOverrides = new Set<string>();
-	const configFieldOverrides = new Set<string>();
+	let config = null;
 	if (inputPubInput) {
-		runArgs = resolveWithPubfields(
-			{ ...parsedArgs.data, ...args.actionInstanceArgs },
-			inputPubInput.values,
-			argsFieldOverrides
-		);
-		// @ts-expect-error FIXME: will be diff
-		config = resolveWithPubfields(
-			{ ...args.actionInstance.config, ...parsedConfig.data },
-			inputPubInput.values,
-			configFieldOverrides
-		);
+		const thing = createPubProxy(inputPubInput, community?.slug);
 
-		const hydratedPubValues = hydratePubValues(inputPubInput.values);
-		inputPubInput = {
-			...inputPubInput,
-			values: hydratedPubValues,
-		};
+		const interpolated = await actionConfigBuilder.interpolate(thing);
+
+		const result = interpolated.validate().getResult();
+
+		if (!result.success) {
+			logger.error("Invalid action configuration", {
+				// config: result.config,
+				error: result.error.message,
+				code: result.error.code,
+				cause: result.error.zodError ?? result.error.cause,
+				stack,
+			});
+			return {
+				title: "Invalid action configuration",
+				error: result.error.message,
+				cause: result.error.zodError ?? result.error.cause,
+				stack,
+			};
+		}
+
+		config = result.config;
+	} else {
+		const result = (await actionConfigBuilder.interpolate(args.json)).getResult();
+		if (!result.success) {
+			return {
+				title: "Invalid action configuration",
+				error: result.error.message,
+				cause: result.error.zodError ?? result.error.cause,
+				stack,
+			};
+		}
+		config = result.config;
 	}
 
 	const lastModifiedBy = createLastModifiedBy({
@@ -193,15 +224,10 @@ const _runActionInstance = async (
 
 	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! };
 	try {
-		// @ts-expect-error TODO: fix this
 		const result = await actionRun({
 			// FIXME: get rid of any
-			config: config as any,
-			configFieldOverrides,
+			config,
 			...(inputPubInput ? { pub: inputPubInput } : { json: args.json }),
-			// FIXME: get rid of any
-			args: runArgs as any,
-			argsFieldOverrides,
 			stageId: args.actionInstance.stageId,
 			communityId: args.communityId,
 			lastModifiedBy,
