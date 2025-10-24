@@ -8,7 +8,7 @@ const JSON_TEMPLATE_REGEX = /\{\{.*?\}\}/;
 /**
  * checks if a value is a json template string
  */
-const isJsonTemplate = (value: unknown): value is string => {
+export const isJsonTemplate = (value: unknown): value is string => {
 	return typeof value === "string" && JSON_TEMPLATE_REGEX.test(value);
 };
 
