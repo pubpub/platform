@@ -6,7 +6,6 @@ import type { action } from "./action";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ actionInstance, pub, config, args }) => {
-	console.log("config", config);
 	const text = config.text;
 	const debounce = config.debounce;
 
