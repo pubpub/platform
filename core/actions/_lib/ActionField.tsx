@@ -8,6 +8,7 @@ import { Controller } from "react-hook-form";
 import { Button } from "ui/button";
 import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
+import { cn } from "utils";
 
 import { useActionForm } from "./ActionFormProvider";
 import { isJsonTemplate } from "./schemaWithJsonFields";
@@ -33,7 +34,8 @@ type JsonState =
 
 export function ActionField(props: ActionFieldProps) {
 	const { form, schema, defaultFields } = useActionForm();
-	const fieldSchema = schema._def.innerType.shape[props.name] as z.ZodType<any>;
+	const fieldSchema =
+		schema?.shape?.[props.name] ?? (schema?._def.innerType.shape[props.name] as z.ZodType<any>);
 	const required = !fieldSchema.isOptional();
 	const isDefaultField = defaultFields.includes(props.name);
 	const val = form.getValues()?.[props.name];
@@ -73,8 +75,13 @@ export function ActionField(props: ActionFieldProps) {
 							</FieldLabel>
 						)}
 						<Button
-							variant="ghost"
+							variant="outline"
 							size="icon"
+							className={cn(
+								"font-mono font-semibold text-gray-900 hover:bg-amber-50",
+								jsonState.state === "json" &&
+									"border-orange-400 bg-orange-50 text-orange-900"
+							)}
 							onClick={() => {
 								p.field.onChange(
 									jsonState.state === "json"
@@ -85,13 +92,13 @@ export function ActionField(props: ActionFieldProps) {
 								toggleJsonState();
 							}}
 						>
-							{jsonState.state === "json" ? "T" : "{}"}
+							{"{}"}
 						</Button>
 					</div>
 					{jsonState.state === "json" ? (
 						<Input
 							type="text"
-							className="border-orange-400 bg-orange-50 font-mono font-semibold text-gray-900"
+							className="border-amber-400 bg-amber-50/10 font-mono font-semibold text-gray-900"
 							placeholder={isDefaultField ? "(use default)" : undefined}
 							{...p.field}
 							id={p.field.name}

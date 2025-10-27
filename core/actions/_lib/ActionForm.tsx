@@ -2,10 +2,7 @@ import type { PropsWithChildren } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { ZodObject, ZodOptional } from "zod";
 
-import { createContext, useCallback, useContext, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { createContext, useCallback, useContext } from "react";
 
 import { Button } from "ui/button";
 import { Field, FieldGroup } from "ui/field";
@@ -13,7 +10,6 @@ import { Form } from "ui/form";
 import { FormSubmitButton } from "ui/submit-button";
 
 import type { Action } from "../types";
-import { getDefaultValues } from "../../lib/zod";
 
 export type ActionFormValues = FieldValues & {
 	pubFields: Record<string, string[]>;
@@ -48,36 +44,7 @@ type ActionFormProps = PropsWithChildren<{
 }>;
 
 export function ActionForm(props: ActionFormProps) {
-	const form = useForm({
-		resolver: zodResolver(props.action.config.schema),
-		defaultValues: {
-			...getDefaultValues(props.action.config.schema),
-			...props.values,
-			pubFields: {},
-		},
-	});
-
-	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (props.action.config.schema as ZodObject<any>)
-			.partial(
-				props.defaultFields.reduce(
-					(acc, key) => {
-						acc[key] = true;
-						return acc;
-					},
-					{} as Record<string, true>
-				)
-			)
-			.extend({
-				pubFields: z
-					.record(z.string(), z.string().array())
-					.optional()
-					.describe("Mapping of pub fields to values"),
-			})
-			.optional();
-		return schemaWithPartialDefaults;
-	}, [props.action.config.schema, props.defaultFields]);
-
+	const { form, schema } = useActionForm();
 	const onSubmit = useCallback(
 		async (data: Record<string, unknown>) => {
 			await props.onSubmit(data, form);

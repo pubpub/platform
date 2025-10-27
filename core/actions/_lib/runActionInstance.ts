@@ -1,3 +1,5 @@
+import type { ZodError } from "zod";
+
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 
@@ -196,13 +198,14 @@ const _runActionInstance = async (
 				// config: result.config,
 				error: result.error.message,
 				code: result.error.code,
-				cause: result.error.zodError ?? result.error.cause,
-				stack,
+				cause: result.error.zodError,
 			});
+
 			return {
 				title: "Invalid action configuration",
 				error: result.error.message,
-				cause: result.error.zodError ?? result.error.cause,
+				cause: result.error.zodError as ZodError<any>,
+				issues: result.error.zodError?.issues,
 				stack,
 			};
 		}
@@ -215,6 +218,7 @@ const _runActionInstance = async (
 				title: "Invalid action configuration",
 				error: result.error.message,
 				cause: result.error.zodError ?? result.error.cause,
+				issues: result.error.zodError?.issues,
 				stack,
 			};
 		}

@@ -54,6 +54,14 @@ export const ActionRunForm = (props: Props) => {
 				});
 				return;
 			}
+			if ("issues" in result && result.issues) {
+				const issues = result.issues;
+				for (const issue of issues) {
+					form.setError(issue.path.join("."), {
+						message: issue.message,
+					});
+				}
+			}
 
 			form.setError("root.serverError", {
 				message: result.error,
