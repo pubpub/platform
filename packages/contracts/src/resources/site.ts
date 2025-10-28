@@ -401,59 +401,6 @@ export const siteApi = contract.router(
 				500: z.string(),
 			},
 		},
-
-		actions: {
-			test: {
-				interpolate: {
-					method: "POST",
-					path: "/actions/:actionName/test/interpolate",
-					summary: "Interpolate a string",
-					description: "Get the result back from interpolating a string",
-					body: z
-						.object({
-							key: z.string(),
-							value: z.string(),
-							validate: z.boolean().optional(),
-						})
-						.and(
-							z.union([
-								z.object({
-									body: jsonSchema,
-								}),
-								z.object({
-									pubId: pubsIdSchema,
-								}),
-							])
-						),
-					pathParams: z.object({
-						actionName: actionSchema,
-					}),
-					responses: {
-						200: z.union([
-							z.object({
-								success: z.literal(true),
-								interpolated: z.unknown(),
-							}),
-							z.object({
-								success: z.literal(false),
-								error: z.object({
-									type: z.enum([
-										"invalid_key",
-										"validation_error",
-										"jsonata_error",
-										"parse_error",
-										"syntax_error",
-										"unknown_error",
-									]),
-									message: z.string(),
-									issues: z.array(z.any()).optional(),
-								}),
-							}),
-						]),
-					},
-				},
-			},
-		},
 	},
 	{
 		strictStatusCodes: true,
