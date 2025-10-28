@@ -12,7 +12,6 @@ import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import { ActionForm } from "~/actions/_lib/ActionForm";
-import { ActionFormProvider } from "~/actions/_lib/ActionFormProvider";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
 import { getActionFormComponent } from "~/actions/forms";
@@ -92,29 +91,26 @@ export const ActionRunForm = (props: Props) => {
 					<DialogHeader>
 						<DialogTitle>{props.actionInstance.name || action.name}</DialogTitle>
 					</DialogHeader>
-					<ActionFormProvider
+					<ActionForm
 						action={action}
 						values={props.actionInstance.config ?? {}}
 						defaultFields={props.defaultFields}
+						onSubmit={onSubmit}
+						submitButton={{
+							text: "Run Action",
+							pendingText: "Running Action...",
+							successText: "Action Ran",
+							errorText: "Failed to run action",
+						}}
+						secondaryButton={{
+							text: "Cancel",
+							onClick: onClose,
+						}}
 					>
-						<ActionForm
-							onSubmit={onSubmit}
-							submitButton={{
-								text: "Run Action",
-								pendingText: "Running Action...",
-								successText: "Action Ran",
-								errorText: "Failed to run action",
-							}}
-							secondaryButton={{
-								text: "Cancel",
-								onClick: onClose,
-							}}
-						>
-							<Suspense fallback={<SkeletonCard />}>
-								<ActionFormComponent />
-							</Suspense>
-						</ActionForm>
-					</ActionFormProvider>
+						<Suspense fallback={<SkeletonCard />}>
+							<ActionFormComponent />
+						</Suspense>
+					</ActionForm>
 				</DialogContent>
 			</Dialog>
 		</TokenProvider>

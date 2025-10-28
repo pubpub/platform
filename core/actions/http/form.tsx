@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { Textarea } from "ui/textarea";
 
 import { ActionField } from "../_lib/ActionField";
-import { useActionForm } from "../_lib/ActionFormProvider";
+import { useActionForm } from "../_lib/ActionForm";
 
 export default function HttpActionForm() {
 	const { form } = useActionForm();

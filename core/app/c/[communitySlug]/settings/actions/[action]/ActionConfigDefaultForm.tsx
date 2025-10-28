@@ -8,7 +8,6 @@ import type { Action, CommunitiesId } from "db/public";
 import { toast } from "ui/use-toast";
 
 import { ActionForm } from "~/actions/_lib/ActionForm";
-import { ActionFormProvider } from "~/actions/_lib/ActionFormProvider";
 import { getActionByName } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
 import { didSucceed } from "~/lib/serverActions";
@@ -42,22 +41,19 @@ export const ActionConfigDefaultForm = (props: Props) => {
 	const ActionFormComponent = getActionFormComponent(action.name);
 
 	return (
-		<ActionFormProvider
+		<ActionForm
 			action={action}
 			values={props.values ?? {}}
 			defaultFields={defaultFields}
+			onSubmit={onSubmit}
+			submitButton={{
+				text: "Submit",
+				pendingText: "Submitting...",
+				successText: "Submitted",
+				errorText: "Failed to submit",
+			}}
 		>
-			<ActionForm
-				onSubmit={onSubmit}
-				submitButton={{
-					text: "Submit",
-					pendingText: "Submitting...",
-					successText: "Submitted",
-					errorText: "Failed to submit",
-				}}
-			>
-				<ActionFormComponent />
-			</ActionForm>
-		</ActionFormProvider>
+			<ActionFormComponent />
+		</ActionForm>
 	);
 };

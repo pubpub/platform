@@ -9,7 +9,7 @@ import { Input } from "ui/input";
 import { PubFieldSelector, PubFieldSelectorHider, PubFieldSelectorProvider } from "ui/pubFields";
 
 import { PubFieldSelectToggleButton } from "../../../packages/ui/src/pubFields/pubFieldSelect";
-import { useActionForm } from "./ActionFormProvider";
+import { useActionForm } from "./ActionForm";
 
 type ActionFieldProps = PropsWithChildren<{
 	name: string;

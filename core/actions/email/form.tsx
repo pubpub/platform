@@ -3,7 +3,7 @@ import { FieldSet } from "ui/field";
 import { Input } from "ui/input";
 
 import { ActionField } from "../_lib/ActionField";
-import { useActionForm } from "../_lib/ActionFormProvider";
+import { useActionForm } from "../_lib/ActionForm";
 import MemberSelectClientFetch from "./DynamicSelectFetch";
 
 export default function EmailActionForm() {

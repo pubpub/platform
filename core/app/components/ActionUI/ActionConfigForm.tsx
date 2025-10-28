@@ -9,7 +9,6 @@ import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
 import { ActionForm } from "~/actions/_lib/ActionForm";
-import { ActionFormProvider } from "~/actions/_lib/ActionFormProvider";
 import { getActionByName } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
 import { deleteAction, updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
@@ -59,27 +58,24 @@ export const ActionConfigForm = (props: Props) => {
 
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>
-			<ActionFormProvider
+			<ActionForm
 				action={action}
 				values={props.actionInstance.config ?? {}}
 				defaultFields={props.defaultFields}
+				onSubmit={onSubmit}
+				submitButton={{
+					text: "Update Action",
+					pendingText: "Updating Action...",
+					successText: "Action Updated",
+					errorText: "Failed to update action",
+				}}
+				secondaryButton={{
+					text: "Remove Action",
+					onClick: onDelete,
+				}}
 			>
-				<ActionForm
-					onSubmit={onSubmit}
-					submitButton={{
-						text: "Update Action",
-						pendingText: "Updating Action...",
-						successText: "Action Updated",
-						errorText: "Failed to update action",
-					}}
-					secondaryButton={{
-						text: "Remove Action",
-						onClick: onDelete,
-					}}
-				>
-					<ActionFormComponent />
-				</ActionForm>
-			</ActionFormProvider>
+				<ActionFormComponent />
+			</ActionForm>
 		</TokenProvider>
 	);
 };
