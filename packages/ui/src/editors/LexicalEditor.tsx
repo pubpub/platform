@@ -23,7 +23,6 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 
 import { cn } from "utils";
 
-import { FormControl } from "../form";
 import { useTokenContext } from "../tokens";
 import { SingleLinePlugin } from "./SingleLinePlugin";
 import { TokenNode } from "./TokenNode";
@@ -60,6 +59,7 @@ const makeSyntheticChangeEvent = (value: string) => {
 export type LexicalEditorProps = ControllerRenderProps<any, string> & {
 	withMarkdown?: boolean;
 	singleLine?: boolean;
+	"aria-labelledby"?: string;
 };
 
 export const LexicalEditor = (props: LexicalEditorProps) => {
@@ -85,24 +85,21 @@ export const LexicalEditor = (props: LexicalEditorProps) => {
 		[props.onChange]
 	);
 
-	const labelId = React.useId();
-
 	return (
 		<LexicalComposer initialConfig={initialConfig}>
 			<RichTextPlugin
 				contentEditable={
-					<FormControl>
-						<ContentEditable
-							ariaLabelledBy={labelId}
-							className={cn(
-								"editor",
-								"prose prose-sm",
-								props.singleLine ? "min-h-5" : "min-h-[200px]",
-								// Copied from ui/src/input.tsx
-								"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-							)}
-						/>
-					</FormControl>
+					<ContentEditable
+						id={props.name}
+						ariaLabelledBy={props["aria-labelledby"]}
+						className={cn(
+							"editor",
+							"prose prose-sm",
+							props.singleLine ? "min-h-5" : "min-h-[200px]",
+							// Copied from ui/src/input.tsx
+							"w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+						)}
+					/>
 				}
 				placeholder={null}
 				ErrorBoundary={LexicalErrorBoundary}

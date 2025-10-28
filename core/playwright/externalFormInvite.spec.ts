@@ -342,7 +342,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		);
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME_USER, async (dialog) => {
-			await dialog.getByLabel("Recipient email address").fill(email1);
+			await dialog.getByLabel("Recipient Email").fill(email1);
 			await dialog
 				.getByLabel("Body")
 				.fill(`Please fill out :link[this form]{form=${community.forms.Evaluation.slug}}`);

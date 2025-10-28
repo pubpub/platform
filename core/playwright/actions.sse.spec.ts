@@ -90,9 +90,7 @@ test.describe("Actions SSE", () => {
 			await page1.getByRole("button", { name: "Run Action" }).first().click();
 			await page1.getByRole("button", { name: "Log 1" }).first().click();
 
-			await page1
-				.getByRole("textbox", { name: "The string to log out in" })
-				.fill(extraStringRun1);
+			await page1.getByRole("textbox", { name: "Log Text" }).fill(extraStringRun1);
 
 			await page1.getByRole("button", { name: "Run" }).first().click();
 
@@ -151,9 +149,7 @@ test.describe("Actions SSE", () => {
 
 		const extraStringRun2 = "`This is Run 2`";
 		await test.step("running the action again should make the stale indicator reappear and update the data", async () => {
-			await page1
-				.getByRole("textbox", { name: "The string to log out in" })
-				.fill(extraStringRun2);
+			await page1.getByRole("textbox", { name: "Log Text" }).fill(extraStringRun2);
 
 			await page1.getByTestId("action-run-button").first().click();
 

@@ -31,7 +31,7 @@ export class PubDetailsPage {
 
 		await configureCallback?.(runActionDialog);
 
-		await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
+		await runActionDialog.getByTestId("action-run-button").click();
 		if (waitForSuccess) {
 			await this.page
 				.getByRole("status")

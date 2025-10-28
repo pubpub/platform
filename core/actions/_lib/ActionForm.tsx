@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from "react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form";
 
-import { useCallback, useTransition } from "react";
+import { useCallback } from "react";
 
 import { Button } from "ui/button";
 import { Field, FieldGroup } from "ui/field";
@@ -29,12 +29,9 @@ type ActionFormProps = PropsWithChildren<{
 
 export function ActionForm(props: ActionFormProps) {
 	const { form } = useActionForm();
-	const [, startTransition] = useTransition();
 	const onSubmit = useCallback(
-		(data: Record<string, unknown>) => {
-			startTransition(async () => {
-				await props.onSubmit(data, form);
-			});
+		async (data: Record<string, unknown>) => {
+			await props.onSubmit(data, form);
 		},
 		[props.onSubmit, form]
 	);
@@ -57,6 +54,7 @@ export function ActionForm(props: ActionFormProps) {
 						)}
 
 						<FormSubmitButton
+							data-testid="action-run-button"
 							formState={form.formState}
 							className={props.submitButton.className}
 							idleText={props.submitButton.text}

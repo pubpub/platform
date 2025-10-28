@@ -35,15 +35,25 @@ export default function EmailActionForm() {
 			<ActionField
 				name="subject"
 				label="Subject"
+				id="subject-label"
 				render={({ field, fieldState }) => (
-					<InputWithTokens {...field} aria-invalid={fieldState.invalid} />
+					<InputWithTokens
+						{...field}
+						aria-invalid={fieldState.invalid}
+						aria-labelledby="subject-label"
+					/>
 				)}
 			/>
 			<ActionField
 				name="body"
 				label="Body"
+				id="body-label"
 				render={({ field, fieldState }) => (
-					<MarkdownEditor {...field} aria-invalid={fieldState.invalid} />
+					<MarkdownEditor
+						{...field}
+						aria-invalid={fieldState.invalid}
+						aria-labelledby="body-label"
+					/>
 				)}
 			/>
 		</FieldSet>

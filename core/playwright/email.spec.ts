@@ -72,8 +72,8 @@ const seed = createSeed({
 					action: Action.email,
 					name: ACTION_NAME,
 					config: {
-						subject: "Hello",
-						body: "Greetings",
+						subject: "Sup",
+						body: "Yo",
 						recipientEmail: "test@example.com",
 					},
 				},
@@ -131,8 +131,8 @@ test.describe("Sending an email to an email address", () => {
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email);
-			await runActionDialog.getByLabel("Subject").fill("Hello");
-			await runActionDialog.getByLabel("Body").fill("Greetings");
+			await runActionDialog.getByLabel("Subject").fill("Hello", { timeout: 2_000 });
+			await runActionDialog.getByLabel("Body").fill("Greetings", { timeout: 2_000 });
 		});
 	});
 	test("Static email address recipient recieves the email", async () => {
