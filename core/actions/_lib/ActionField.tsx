@@ -339,7 +339,7 @@ export function ActionFieldTestButton(props: {
 		(props.actionAccepts.includes("json") ? 1 : 0);
 
 	return (
-		<div className="max-w-md space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
+		<div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
 			{showInputSelector && (
 				<div className="space-y-2">
 					<Label className="text-xs text-gray-700">Test with</Label>
@@ -430,7 +430,7 @@ export function ActionFieldTestButton(props: {
 						<div className="text-xs font-medium text-green-900">
 							Interpolation successful
 						</div>
-						<pre className="mt-2 max-h-[200px] overflow-auto rounded bg-white p-2 font-mono text-xs text-gray-900">
+						<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900">
 							{JSON.stringify(result.interpolated, null, 2)}
 						</pre>
 					</AlertDescription>
