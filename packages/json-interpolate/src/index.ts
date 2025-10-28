@@ -201,7 +201,7 @@ export async function interpolate(template: string, data: unknown): Promise<unkn
 			return JSON5.parse(result);
 		} catch (error) {
 			throw new Error(
-				`failed to parse structured result as JSON: ${error instanceof Error ? error.message : String(error)}`
+				`Failed to parse structured result as JSON: ${error instanceof Error ? error.message : String(error)}. Attempted to parse: ${result}`
 			);
 		}
 	}
