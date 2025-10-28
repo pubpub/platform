@@ -6,24 +6,37 @@ import { createContext, useContext, useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import type { PubsId } from "db/public";
+
 import type { Action } from "../types";
 import { ActionConfigBuilder } from "./ActionConfigBuilder";
 
-export type ActionFormValues = FieldValues & {
-	pubFields: Record<string, string[]>;
-};
+export type ActionFormValues = FieldValues;
+
+export type ActionFormContextContextValue = "run" | "configure" | "automation" | "default";
+export type ActionFormContextContext =
+	| {
+			type: "run";
+			pubId: PubsId;
+	  }
+	| {
+			type: Omit<ActionFormContextContextValue, "run">;
+			pubId?: never;
+	  };
 
 type ActionFormContext = {
 	action: Action;
 	schema: ZodOptional<ZodObject<any>>;
 	form: UseFormReturn<ActionFormValues>;
 	defaultFields: string[];
+	context: ActionFormContextContext;
 };
 
 type ActionFormProviderProps = PropsWithChildren<{
 	action: Action;
 	values: Record<string, unknown> | null;
 	defaultFields: string[];
+	context: ActionFormContextContext;
 }>;
 
 export const ActionFormContext = createContext<ActionFormContext | undefined>(undefined);
@@ -47,7 +60,13 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 
 	return (
 		<ActionFormContext.Provider
-			value={{ action: props.action, schema, form, defaultFields: props.defaultFields }}
+			value={{
+				action: props.action,
+				schema,
+				form,
+				defaultFields: props.defaultFields,
+				context: props.context,
+			}}
 		>
 			{props.children}
 		</ActionFormContext.Provider>

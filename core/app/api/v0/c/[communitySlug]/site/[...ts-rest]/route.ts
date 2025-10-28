@@ -1,3 +1,5 @@
+import type z from "zod";
+
 import { createNextHandler } from "@ts-rest/serverless/next";
 
 import type {
@@ -8,6 +10,7 @@ import type {
 	RulesId,
 	StagesId,
 } from "db/public";
+import { interpolate } from "@pubpub/json-interpolate";
 import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import {
 	ApiAccessScope,
@@ -20,6 +23,8 @@ import {
 } from "db/public";
 import { logger } from "logger";
 
+import { createPubProxy } from "~/actions/_lib/pubProxy";
+import { getActionByName } from "~/actions/api";
 import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
@@ -720,6 +725,132 @@ const handler = createNextHandler(
 					status: 200,
 					body: pubs,
 				};
+			},
+		},
+		actions: {
+			test: {
+				interpolate: async ({ params, body }) => {
+					const pubId = "pubId" in body ? body.pubId : undefined;
+					const { user, community } = await checkAuthorization({
+						token: { scope: ApiAccessScope.pub, type: ApiAccessType.read },
+						cookies: {
+							capability: Capabilities.runAction,
+							target: {
+								type: MembershipType.pub,
+								pubId: pubId as PubsId,
+							},
+						},
+					});
+
+					const { key, value, validate } = body;
+					const { actionName } = params;
+
+					const bod =
+						"body" in body
+							? body.body
+							: createPubProxy(
+									await getPubsWithRelatedValues(
+										{
+											pubId: pubId as PubsId,
+											communityId: community.id as CommunitiesId,
+											userId: user.id,
+										},
+										{
+											depth: 3,
+											withPubType: true,
+											withStage: true,
+											withValues: true,
+										}
+									),
+									community.slug
+								);
+
+					const action = getActionByName(actionName);
+					const configShape = action.config.schema.shape as Record<
+						string,
+						z.ZodType<any>
+					>;
+
+					if (!(key in configShape)) {
+						return {
+							status: 200,
+							body: {
+								success: false as const,
+								error: {
+									type: "invalid_key" as const,
+									message: `Key ${key} not found in action ${actionName}`,
+								},
+							},
+						};
+					}
+
+					try {
+						const interpolated = await interpolate(value, bod);
+
+						if (!validate) {
+							return {
+								status: 200,
+								body: {
+									success: true as const,
+									interpolated: interpolated,
+								},
+							};
+						}
+
+						const parsedBody = configShape[key].safeParse(interpolated);
+
+						if (!parsedBody.success) {
+							return {
+								status: 200,
+								body: {
+									success: false as const,
+									error: {
+										type: "validation_error" as const,
+										message: "Interpolated value failed validation",
+										issues: parsedBody.error.issues,
+									},
+								},
+							};
+						}
+
+						return {
+							status: 200,
+							body: {
+								success: true as const,
+								interpolated: parsedBody.data,
+							},
+						};
+					} catch (error) {
+						const errorMessage = error instanceof Error ? error.message : String(error);
+
+						let errorType:
+							| "jsonata_error"
+							| "parse_error"
+							| "syntax_error"
+							| "unknown_error" = "unknown_error";
+						if (errorMessage.includes("expression")) {
+							errorType = "jsonata_error";
+						} else if (
+							errorMessage.includes("parse") ||
+							errorMessage.includes("JSON")
+						) {
+							errorType = "parse_error";
+						} else if (errorMessage.includes("unclosed interpolation")) {
+							errorType = "syntax_error";
+						}
+
+						return {
+							status: 200,
+							body: {
+								success: false as const,
+								error: {
+									type: errorType,
+									message: errorMessage,
+								},
+							},
+						};
+					}
+				},
 			},
 		},
 		webhook: async ({ params, body }) => {
