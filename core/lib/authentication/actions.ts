@@ -6,15 +6,7 @@ import * as Sentry from "@sentry/nextjs";
 import { captureException } from "@sentry/nextjs";
 import { z } from "zod";
 
-import type {
-	Communities,
-	CommunitiesId,
-	CommunityMemberships,
-	FormsId,
-	Users,
-	UsersId,
-} from "db/public";
-import type { Prettify } from "utils/types";
+import type { Communities, CommunitiesId, CommunityMemberships, FormsId, UsersId } from "db/public";
 import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
@@ -29,29 +21,27 @@ import {
 	addUser,
 	generateUserSlug,
 	getUser,
+	hasUsers,
 	publicSignupsAllowed,
 	setUserPassword,
 	updateUser,
 } from "~/lib/server/user";
 import { LAST_VISITED_COOKIE } from "../../app/components/LastVisitedCommunity/constants";
+import { createSiteBuilderToken } from "../server/apiAccessTokens";
 import { findCommunityBySlug } from "../server/community";
 import * as Email from "../server/email";
 import { insertCommunityMemberships, selectCommunityMemberships } from "../server/member";
 import { redirectToBaseCommunityPage, redirectToLogin } from "../server/navigation/redirects";
 import { invalidateTokensForUser } from "../server/token";
+import { slugifyString } from "../string";
 import { SignupErrors } from "./errors";
 import { getLoginData } from "./loginData";
+import { setupSchema } from "./schemas";
 
 const schema = z.object({
 	email: z.string().email(),
 	password: z.string().min(1),
 });
-
-type LoginUser = Prettify<
-	Omit<Users, "orcid" | "avatar"> & {
-		memberships: (CommunityMemberships & { community: Communities | null })[];
-	}
->;
 
 const getUserWithPasswordHash = async (props: Parameters<typeof getUser>[0]) =>
 	getUser(props).select("users.passwordHash").executeTakeFirst();
@@ -599,3 +589,97 @@ export const legacySignup = defineServerAction(async function signup(
 });
 
 // for invite signup, see the app/c/(public)/[communitySlug]/public/invite/actions.ts
+
+export const initializeSetup = defineServerAction(async function initializeSetup(props: {
+	email: string;
+	password: string;
+	firstName: string;
+	lastName?: string;
+	communityName: string;
+	communitySlug: string;
+	communityAvatar?: string;
+}) {
+	const usersExist = await hasUsers();
+	if (usersExist) {
+		return {
+			error: "Setup has already been completed",
+		};
+	}
+
+	const parsed = setupSchema.safeParse(props);
+	if (!parsed.success) {
+		return {
+			error: parsed.error.message,
+		};
+	}
+
+	const { email, password, firstName, lastName, communityName, communitySlug, communityAvatar } =
+		parsed.data;
+
+	let result;
+	try {
+		result = await db.transaction().execute(async (trx) => {
+			const passwordHash = await createPasswordHash(password);
+
+			const newUser = await trx
+				.insertInto("users")
+				.values({
+					email,
+					firstName,
+					lastName: lastName ?? null,
+					slug: generateUserSlug({ firstName, lastName: lastName ?? null }),
+					passwordHash,
+					isSuperAdmin: true,
+					isVerified: true,
+				})
+				.returningAll()
+				.executeTakeFirstOrThrow();
+
+			const community = await trx
+				.insertInto("communities")
+				.values({
+					name: communityName,
+					slug: slugifyString(communitySlug),
+					avatar: communityAvatar ?? null,
+				})
+				.returningAll()
+				.executeTakeFirstOrThrow();
+
+			await trx
+				.insertInto("community_memberships")
+				.values({
+					userId: newUser.id as UsersId,
+					communityId: community.id,
+					role: MemberRole.admin,
+				})
+				.execute();
+
+			await createSiteBuilderToken(community.id, trx);
+
+			return { user: newUser, community };
+		});
+
+		const session = await lucia.createSession(result.user.id, { type: AuthTokenType.generic });
+		const sessionCookie = lucia.createSessionCookie(session.id);
+		(await cookies()).set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes);
+	} catch (error) {
+		if (isUniqueConstraintError(error)) {
+			if (error.constraint === "users_email_key") {
+				return {
+					error: "A user with that email already exists",
+				};
+			}
+			if (error.constraint === "communities_slug_key") {
+				return {
+					error: "A community with that slug already exists",
+				};
+			}
+		}
+		logger.error(error);
+		return {
+			error: "An unexpected error occurred",
+		};
+	}
+
+	redirect(`/c/${result.community.slug}`);
+});
