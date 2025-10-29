@@ -37,10 +37,10 @@ const schema = z.object({
 	recipientMember: z
 		.string()
 		.uuid()
+		.optional()
 		.describe(
 			"Someone who is a member of the community. Either this or 'Recipient Email' must be set."
-		)
-		.optional(),
+		),
 	subject: stringWithTokens()
 		.max(500)
 		.describe(
