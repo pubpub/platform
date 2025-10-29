@@ -13,6 +13,7 @@ import { Form } from "ui/form";
 import { FormSubmitButton } from "ui/submit-button";
 
 import type { Action } from "../types";
+import { getDefaultValues } from "../../lib/zod";
 
 export type ActionFormValues = FieldValues & {
 	pubFields: Record<string, string[]>;
@@ -50,9 +51,14 @@ export function ActionForm(props: ActionFormProps) {
 	const form = useForm({
 		resolver: zodResolver(props.action.config.schema),
 		defaultValues: {
-			...props.action.config.schema.partial().parse(props.values),
+			...getDefaultValues(props.action.config.schema),
 			pubFields: {},
 		},
+	});
+
+	console.log({
+		...getDefaultValues(props.action.config.schema),
+		pubFields: {},
 	});
 
 	const schema = useMemo(() => {

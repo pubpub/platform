@@ -27,6 +27,7 @@ export default function HttpActionForm() {
 				render={({ field, fieldState }) => (
 					<Select
 						{...field}
+						defaultValue={field.value}
 						onValueChange={field.onChange}
 						aria-invalid={fieldState.invalid}
 					>
@@ -61,27 +62,31 @@ export default function HttpActionForm() {
 			<ActionField
 				name="response"
 				label="Response Type"
-				render={({ field, fieldState }) => (
-					<Select
-						{...field}
-						onValueChange={field.onChange}
-						aria-invalid={fieldState.invalid}
-					>
-						<SelectTrigger>
-							<SelectValue
-								aria-label={field.value ?? undefined}
-								placeholder="Select one"
-							>
-								{field.value}
-							</SelectValue>
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="json">JSON</SelectItem>
-							<SelectItem value="text">Text</SelectItem>
-							<SelectItem value="binary">Binary</SelectItem>
-						</SelectContent>
-					</Select>
-				)}
+				render={({ field, fieldState }) => {
+					console.log(field.value);
+					return (
+						<Select
+							{...field}
+							defaultValue={field.value}
+							onValueChange={field.onChange}
+							aria-invalid={fieldState.invalid}
+						>
+							<SelectTrigger>
+								<SelectValue
+									aria-label={field.value ?? undefined}
+									placeholder="Select one"
+								>
+									{field.value}
+								</SelectValue>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="json">JSON</SelectItem>
+								<SelectItem value="text">Text</SelectItem>
+								<SelectItem value="binary">Binary</SelectItem>
+							</SelectContent>
+						</Select>
+					);
+				}}
 			/>
 			<ActionField
 				name="outputMap"
