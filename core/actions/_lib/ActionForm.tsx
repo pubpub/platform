@@ -56,11 +56,6 @@ export function ActionForm(props: ActionFormProps) {
 		},
 	});
 
-	console.log({
-		...getDefaultValues(props.action.config.schema),
-		pubFields: {},
-	});
-
 	const schema = useMemo(() => {
 		const schemaWithPartialDefaults = (props.action.config.schema as ZodObject<any>)
 			.partial(

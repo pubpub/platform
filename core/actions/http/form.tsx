@@ -63,7 +63,6 @@ export default function HttpActionForm() {
 				name="response"
 				label="Response Type"
 				render={({ field, fieldState }) => {
-					console.log(field.value);
 					return (
 						<Select
 							{...field}
