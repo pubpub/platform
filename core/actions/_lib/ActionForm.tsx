@@ -52,6 +52,7 @@ export function ActionForm(props: ActionFormProps) {
 		resolver: zodResolver(props.action.config.schema),
 		defaultValues: {
 			...getDefaultValues(props.action.config.schema),
+			...props.values,
 			pubFields: {},
 		},
 	});
