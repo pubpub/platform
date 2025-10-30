@@ -31,7 +31,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			subject: '{{ $.values.title :? "Hey jimmy!" }}',
+			subject: '<<<$.pub.values.title ?? "Hey jimmy!">>>',
 		});
 	});
 
@@ -46,7 +46,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			count: "{{ $.values.count :? 42 }}",
+			count: "<<<$.pub.values.count ?? 42>>>",
 		});
 	});
 
@@ -61,7 +61,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			isPublic: "{{ $.values.published :? true }}",
+			isPublic: "<<<$.pub.values.published ?? true>>>",
 		});
 	});
 
@@ -76,7 +76,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			metadata: '{{ $.values.data :? {"baz": 123, "foo": "bar"} }}',
+			metadata: '<<<$.pub.values.data ?? {"baz": 123, "foo": "bar"}>>>',
 		});
 	});
 
@@ -91,7 +91,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			tags: '{{ $.values.keywords :? ["alpha", "beta"] }}',
+			tags: '<<<$.pub.values.keywords ?? ["alpha", "beta"]>>>',
 		});
 	});
 
@@ -105,7 +105,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			title: "{{ $.values.title }}",
+			title: "<<<$.pub.values.title>>>",
 		});
 	});
 
@@ -124,9 +124,9 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			subject: '{{ $.values.title :? "Default Subject" }}',
-			body: '{{ $.values.description :? "Default Body" }}',
-			count: "{{ $.values.counter :? 10 }}",
+			subject: '<<<$.pub.values.title ?? "Default Subject">>>',
+			body: '<<<$.pub.values.description ?? "Default Body">>>',
+			count: "<<<$.pub.values.counter ?? 10>>>",
 		});
 	});
 
@@ -188,7 +188,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			subject: '{{ $.values.title :? "Hey jimmy!" }}',
+			subject: '<<<$.pub.values.title ?? "Hey jimmy!">>>',
 			otherKey: "should stay",
 			nested: {
 				value: "also stays",
@@ -207,7 +207,7 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			value: "{{ $.values.field :? null }}",
+			value: "<<<$.pub.values.field ?? null>>>",
 		});
 	});
 
@@ -225,8 +225,8 @@ describe("migrate_action_instance_pubfields", () => {
 		const migrated = await migratePubfields(input);
 
 		expect(migrated).toEqual({
-			subject: '{{ $.values.title :? "Hey jimmy!" }}',
-			body: '{{ $.values.description :? "Default Body" }}',
+			subject: '<<<$.pub.values.title ?? "Hey jimmy!">>>',
+			body: '<<<$.pub.values.description ?? "Default Body">>>',
 			receiver: "John Doe",
 		});
 	});

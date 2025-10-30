@@ -35,12 +35,12 @@ BEGIN
             field_slug := split_part(full_field_slug, ':', 2);
             -- get the current value for this key in config (this becomes the fallback)
             current_value := config_json -> key;
-            IF current_value IS NOT NULL AND current_value != ''::jsonb THEN
+            IF current_value IS NOT NULL AND current_value != '""'::jsonb THEN
                 fallback_str := current_value::text;
                 -- we use ?? rather than :?, bc it's somewhat likely empty strings are set as values, but we don't want to use those
-                interpolation := '{{ $.values.' || field_slug || ' ?? ' || fallback_str || ' }}';
+                interpolation := '<<<$.pub.values.' || field_slug || ' ?? ' || fallback_str || '>>>';
             ELSE
-                interpolation := '{{ $.values.' || field_slug || ' }}';
+                interpolation := '<<<$.pub.values.' || field_slug || '>>>';
             END IF;
             new_config := jsonb_set(new_config, ARRAY[key], to_jsonb(interpolation));
         END LOOP;
