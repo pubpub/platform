@@ -199,8 +199,8 @@ test.describe("Inviting a new user to fill out a form", () => {
 		);
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME_USER, async (runActionDialog) => {
-			// Clear the default recipient member field
-			await runActionDialog.getByLabel("Recipient Member").clear();
+			// Clear the default recipient email field
+			await runActionDialog.getByLabel("Recipient Email").clear();
 			// Invite a new user to fill out the form
 			await runActionDialog.getByRole("combobox").fill(email1);
 
