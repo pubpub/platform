@@ -2,7 +2,6 @@
 
 import { JSONPath } from "jsonpath-plus";
 
-import type { Json } from "contracts";
 import type { PubsId } from "db/public";
 import { logger } from "logger";
 
@@ -25,12 +24,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy
 
 	const finalOutputMap = config?.outputMap ?? [];
 
-	let body: string | undefined | Json = config.body;
-
-	console.log("BBBBBBB", body, typeof body);
-	if (method !== "GET") {
-		body = typeof body === "string" ? body : JSON.stringify(body);
-	}
+	const body = typeof config.body === "string" ? config.body : JSON.stringify(config.body);
 
 	const res = await fetch(url, {
 		method: method,
