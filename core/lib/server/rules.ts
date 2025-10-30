@@ -286,6 +286,7 @@ export async function createOrUpdateRuleWithCycleCheck(
 	}
 
 	try {
+		console.log("data", data);
 		if (data.ruleId) {
 			const updatedRule = await updateRule(data.ruleId, {
 				event: data.event,

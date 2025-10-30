@@ -13,7 +13,7 @@ describe("ActionConfigBuilder", () => {
 		test("creates builder for valid action", () => {
 			const builder = new ActionConfigBuilder(Action.http);
 			expect(builder).toBeDefined();
-			expect(builder.getSchema()).toBeDefined();
+			expect(builder.getRawSchema()).toBeDefined();
 		});
 
 		test("handles invalid action", () => {

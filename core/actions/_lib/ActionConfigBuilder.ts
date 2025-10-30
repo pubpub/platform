@@ -7,7 +7,7 @@ import type { Action } from "db/public";
 // import { interpolate } from "@pubpub/json-interpolate";
 
 import { getActionByName } from "../api";
-import { schemaWithJsonFields } from "./schemaWithJsonFields";
+import { extractJsonata, schemaWithJsonFields } from "./schemaWithJsonFields";
 
 // error codes for clear error handling
 export enum ActionConfigErrorCode {
@@ -176,7 +176,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			return this;
 		}
 
-		const schema = this.getSchemaWithJsonFields();
+		const schema = this.getSchema();
 		if (!schema) {
 			return new ActionConfigBuilder(this.actionName, {
 				action: this.action,
@@ -259,9 +259,9 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			return value.includes("{{") || value.includes("$.");
 		};
 
-		// helper to determine mode: if value contains {{ }}, use template mode, otherwise jsonata mode
+		// helper to determine mode: if value starts with <<<, use jsonata mode, otherwise template mode
 		const determineMode = (value: string): "template" | "jsonata" => {
-			return value.includes("{{") ? "template" : "jsonata";
+			return value.startsWith("<<<") ? "jsonata" : "template";
 		};
 
 		try {
@@ -272,7 +272,8 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 				if (typeof value === "string") {
 					if (needsInterpolation(value)) {
 						const mode = determineMode(value);
-						interpolatedConfig[key] = await interpolate(value, data, mode);
+						const valueJsonata = extractJsonata(value);
+						interpolatedConfig[key] = await interpolate(valueJsonata, data, mode);
 					} else {
 						// no interpolation needed, use value as-is
 						interpolatedConfig[key] = value;
@@ -282,11 +283,9 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 					const valueAsString = JSON.stringify(value);
 					if (needsInterpolation(valueAsString)) {
 						const mode = determineMode(valueAsString);
-						const interpolated = await interpolate(valueAsString, data, mode);
-						interpolatedConfig[key] =
-							typeof interpolated === "string"
-								? JSON.parse(interpolated)
-								: interpolated;
+						const valueJsonata = extractJsonata(valueAsString);
+						const interpolated = await interpolate(valueJsonata, data, mode);
+						interpolatedConfig[key] = interpolated;
 					} else {
 						interpolatedConfig[key] = value;
 					}
@@ -304,6 +303,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 				result: { success: true, config: interpolatedConfig },
 			});
 		} catch (error) {
+			console.error(error);
 			return new ActionConfigBuilder(this.actionName, {
 				action: this.action,
 				defaults: this.defaults,
@@ -326,7 +326,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * get the action schema
 	 * returns null if action not found
 	 */
-	getSchema(): z.ZodObject<any> {
+	getRawSchema(): z.ZodObject<any> {
 		return this.action.config.schema;
 	}
 
@@ -334,8 +334,8 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * get the schema that accepts json template strings
 	 * throws if action not found
 	 */
-	getSchemaWithJsonFields(): z.ZodObject<any> {
-		const schema = this.getSchema();
+	getSchema(): z.ZodObject<any> {
+		const schema = this.getRawSchema();
 		return schemaWithJsonFields(schema);
 	}
 
@@ -426,7 +426,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	}
 
 	private validateRaw(): ActionConfigBuilder<TConfig> {
-		const schema = this.getSchemaWithJsonFields();
+		const schema = this.getSchema();
 		if (!schema) {
 			return this.clone({
 				result: {
@@ -476,7 +476,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			});
 		}
 
-		const schema = this.getSchema();
+		const schema = this.getRawSchema();
 		if (!schema) {
 			return this.clone({
 				state: "interpolated",

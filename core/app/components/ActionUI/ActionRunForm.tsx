@@ -95,7 +95,7 @@ export const ActionRunForm = (props: Props) => {
 						</span>
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="max-h-full overflow-y-auto">
+				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>{props.actionInstance.name || action.name}</DialogTitle>
 					</DialogHeader>

@@ -3,6 +3,8 @@ import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 import { Textarea } from "ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
+import { extractJsonata, wrapInJsonata } from "./schemaWithJsonFields";
+
 export type InputState =
 	| {
 			state: "jsonata";
@@ -62,7 +64,10 @@ export function ActionFieldJsonataInput(props: {
 				placeholder={isDefaultField ? "(use default)" : undefined}
 				{...field}
 				id={field.name}
-				value={field.value ?? ""}
+				value={field.value ? extractJsonata(field.value) : ""}
+				onChange={(e) => {
+					field.onChange(wrapInJsonata(e.target.value));
+				}}
 			/>
 		</div>
 	);

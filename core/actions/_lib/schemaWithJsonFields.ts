@@ -3,13 +3,21 @@ import * as z from "zod";
 /**
  * regex to detect json template strings like {{ $.something }} or pure jsonata like $.something
  */
-const JSON_TEMPLATE_REGEX = /\{\{.*?\}\}|\$\./;
+export const JSON_TEMPLATE_REGEX = /^<<<.*?>>>$|\{\{.*?\}\}/;
 
 /**
  * checks if a value is a json template string (contains {{ }} or jsonata expressions)
  */
 export const isJsonTemplate = (value: unknown): value is string => {
-	return typeof value === "string" && JSON_TEMPLATE_REGEX.test(value);
+	return typeof value === "string" && value.startsWith("<<<") && value.endsWith(">>>");
+};
+
+export const wrapInJsonata = (value: string) => {
+	return `<<<${value}>>>`;
+};
+
+export const extractJsonata = (value: string) => {
+	return value.replace(/^<<<(.+?)>>>$/, "$1");
 };
 
 /**
@@ -17,11 +25,9 @@ export const isJsonTemplate = (value: unknown): value is string => {
  * handles existing modifiers like .optional(), .default(), .transform()
  */
 const wrapFieldWithJsonTemplate = (fieldSchema: z.ZodTypeAny): z.ZodTypeAny => {
-	// unwrap to find the base type
 	let current = fieldSchema;
 	const modifiers: Array<{ type: string; value?: any }> = [];
 
-	// unwrap modifiers and record them
 	while (current) {
 		if (current instanceof z.ZodOptional) {
 			modifiers.push({ type: "optional" });
@@ -37,21 +43,13 @@ const wrapFieldWithJsonTemplate = (fieldSchema: z.ZodTypeAny): z.ZodTypeAny => {
 		}
 	}
 
-	// create the union that accepts either the original type or a template string
 	const baseSchema = current;
 	const templateSchema = z.string().regex(JSON_TEMPLATE_REGEX, {
 		message: "String must be a valid template with {{ }} syntax or JSONata expression",
 	});
 
 	// create a transform that checks for template strings first
-	let wrappedSchema = z.union([templateSchema, baseSchema as any]).transform((val, ctx) => {
-		// if it's a template string, pass it through
-		if (isJsonTemplate(val)) {
-			return val;
-		}
-		// otherwise, use the original validation
-		return val;
-	});
+	let wrappedSchema = z.union([templateSchema, baseSchema as any]);
 
 	// re-apply modifiers in reverse order
 	for (let i = modifiers.length - 1; i >= 0; i--) {

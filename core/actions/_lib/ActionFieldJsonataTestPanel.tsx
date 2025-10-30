@@ -3,6 +3,7 @@ import type z from "zod";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { skipToken } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Loader2, Play, Zap, ZapOff } from "lucide-react";
+import { useWatch } from "react-hook-form";
 
 import type { ProcessedPub } from "contracts";
 import type { PubsId } from "db/public";
@@ -22,7 +23,9 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect";
 import { client } from "~/lib/api";
 import { getActionByName } from "../api";
+import { useActionForm } from "./ActionFormProvider";
 import { createPubProxy } from "./pubProxy";
+import { extractJsonata } from "./schemaWithJsonFields";
 
 export type TestInputType = "current-pub" | "select-pub" | "json-blob";
 
@@ -52,6 +55,7 @@ export function ActionFieldJsonataTestPanel(props: {
 	const [inputType, setInputType] = useState<TestInputType>(() =>
 		getDefaultTestInputType(props.contextType, props.pubId, props.actionAccepts)
 	);
+	const { form, path } = useActionForm();
 
 	const action = getActionByName(props.actionName);
 	const [selectedPubId, setSelectedPubId] = useState(props.pubId);
@@ -102,23 +106,41 @@ export function ActionFieldJsonataTestPanel(props: {
 
 	const bodyForTest = useMemo(() => {
 		if (inputType === "current-pub" && selectedPubId && data?.body) {
-			return createPubProxy(data.body as ProcessedPub, community.slug);
+			return { pub: createPubProxy(data.body as ProcessedPub, community.slug) };
 		}
 		if (inputType === "select-pub") {
 			if (selectedPubId && data?.body) {
-				return createPubProxy(data.body as ProcessedPub, community.slug);
+				return { pub: createPubProxy(data.body as ProcessedPub, community.slug) };
 			}
 			return {};
 		}
 		if (inputType === "json-blob") {
 			try {
-				return { body: JSON.parse(jsonBlob) };
+				return { json: JSON.parse(jsonBlob) };
 			} catch {
 				return null;
 			}
 		}
 		return null;
 	}, [inputType, selectedPubId, jsonBlob, data?.body, community.slug]);
+
+	const values = useWatch({ control: form.control, ...(path ? { name: path } : {}) });
+
+	const valuesMinusCurrent = useMemo(() => {
+		const { [props.configKey]: _, ...rest } = values;
+
+		return rest;
+	}, [values, props.configKey]);
+
+	const bodyWithAction = useMemo(() => {
+		return {
+			...bodyForTest,
+			action: {
+				...action,
+				config: valuesMinusCurrent,
+			},
+		};
+	}, [bodyForTest, valuesMinusCurrent, action]);
 
 	const canTest = useMemo(() => {
 		if (inputType === "current-pub") {
@@ -139,7 +161,7 @@ export function ActionFieldJsonataTestPanel(props: {
 	}, [inputType, jsonBlob, props.pubId, selectedPubId]);
 
 	const handleTest = useCallback(async () => {
-		if (!bodyForTest) {
+		if (!bodyWithAction) {
 			setTestResult({
 				status: "error",
 				error: {
@@ -167,8 +189,10 @@ export function ActionFieldJsonataTestPanel(props: {
 
 		try {
 			const mode = props.mode ?? "jsonata";
+			const extractedValue =
+				props.mode === "jsonata" ? extractJsonata(props.value) : props.value;
 			const [interpolateError, interpolated] = await tryCatch(
-				interpolate(props.value, bodyForTest, mode)
+				interpolate(extractedValue, bodyWithAction, mode)
 			);
 
 			if (interpolateError) {
@@ -224,7 +248,7 @@ export function ActionFieldJsonataTestPanel(props: {
 			});
 		}
 	}, [
-		bodyForTest,
+		bodyWithAction,
 		action.config.schema,
 		props.configKey,
 		props.actionName,
@@ -258,7 +282,7 @@ export function ActionFieldJsonataTestPanel(props: {
 				clearTimeout(debounceTimerRef.current);
 			}
 		};
-	}, [autoEvaluate, props.value, bodyForTest, canTest, handleTest]);
+	}, [autoEvaluate, canTest, handleTest]);
 
 	const tabCount =
 		(props.pubId && props.contextType === "run" ? 1 : 0) +

@@ -7,7 +7,7 @@ import type z from "zod";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Braces, TestTube, X } from "lucide-react";
-import { Controller } from "react-hook-form";
+import { Controller, useWatch } from "react-hook-form";
 
 import { Button } from "ui/button";
 import { ButtonGroup } from "ui/button-group";
@@ -51,14 +51,17 @@ type ActionFieldProps = PropsWithChildren<{
 }>;
 
 export function ActionField(props: ActionFieldProps) {
-	const { form, schema, defaultFields, context, action } = useActionForm();
+	const { form, schema, defaultFields, context, action, path } = useActionForm();
+
+	const fieldName = path ? `${path}.${props.name}` : props.name;
+
 	const innerSchema =
 		"innerType" in schema._def ? schema._def?.innerType : (schema as z.ZodObject<any>);
 	const schemaShape = innerSchema?.shape ?? {};
 	const fieldSchema = schemaShape[props.name] as z.ZodType<any>;
 	const required = fieldSchema && !fieldSchema.isOptional();
 	const isDefaultField = defaultFields.includes(props.name);
-	const val = form.getValues()?.[props.name];
+	const val = useWatch({ control: form.control, name: fieldName });
 	const isInitialJsonata = isJsonTemplate(val);
 
 	const [inputState, setInputState] = useState<InputState>({
@@ -85,7 +88,7 @@ export function ActionField(props: ActionFieldProps) {
 
 	return (
 		<Controller
-			name={props.name}
+			name={fieldName}
 			control={form.control}
 			render={(p) => {
 				const showTestButton =

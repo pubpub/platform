@@ -7,7 +7,7 @@ import { defineAction } from "../types";
 
 export const action = defineAction({
 	name: Action.log,
-	accepts: ["pub"],
+	accepts: ["pub", "json"],
 	config: {
 		schema: z.object({
 			text: z

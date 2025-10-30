@@ -30,11 +30,15 @@ type ActionFormContext = {
 	form: UseFormReturn<ActionFormValues>;
 	defaultFields: string[];
 	context: ActionFormContextContext;
+	/* when rendering a nested form, the path is the path to the form */
+	path?: string;
 };
 
 type ActionFormProviderProps = PropsWithChildren<{
 	action: Action;
 	values: Record<string, unknown> | null;
+	/* when rendering a nested form, the path is the path to the form */
+	path?: string;
 	defaultFields: string[];
 	context: ActionFormContextContext;
 }>;
@@ -47,7 +51,7 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 			.withConfig(props.action.config.schema)
 			.withDefaults(props.defaultFields);
 
-		return s.getSchemaWithJsonFields();
+		return s.getSchema();
 	}, [props.action.config.schema, props.action.name, props.defaultFields]);
 
 	const form = useForm({
@@ -63,6 +67,7 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 				form,
 				defaultFields: props.defaultFields,
 				context: props.context,
+				path: props.path,
 			}}
 		>
 			{props.children}
