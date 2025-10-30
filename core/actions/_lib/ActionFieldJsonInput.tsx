@@ -2,7 +2,7 @@ import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
 import { useEffect, useMemo, useState } from "react";
 import { skipToken } from "@tanstack/react-query";
-import { AlertCircle, Braces, CheckCircle2, Loader2, TestTube, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, TestTube, X } from "lucide-react";
 import { z } from "zod";
 
 import type { Action as ActionEnum, PubsId } from "db/public";
@@ -10,7 +10,6 @@ import { interpolate } from "@pubpub/json-interpolate";
 import { Alert, AlertDescription } from "ui/alert";
 import { Button } from "ui/button";
 import { ButtonGroup } from "ui/button-group";
-import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
@@ -65,16 +64,7 @@ export function ActionFieldJsonInput(props: {
 	value: string;
 	jsonState: JsonState;
 }) {
-	const {
-		isDefaultField,
-		actionName,
-		configKey,
-		field,
-		context,
-		actionAccepts,
-		value,
-		jsonState,
-	} = props;
+	const { actionName, configKey, field, context, actionAccepts, jsonState } = props;
 	const shouldShowTest =
 		jsonState.state === "json" &&
 		isJsonTemplate(field.value) &&
@@ -84,12 +74,12 @@ export function ActionFieldJsonInput(props: {
 			(context.type === "default" && actionAccepts.includes("json")));
 
 	const [isTestOpen, setIsTestOpen] = useState(false);
+	const isDefaultField = field.value === undefined;
 
 	return (
 		<>
 			<ButtonGroup>
-				<Input
-					type="text"
+				<Textarea
 					className="border-amber-400 bg-amber-50/10 font-mono font-medium text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
 					placeholder={isDefaultField ? "(use default)" : undefined}
 					{...field}
@@ -165,7 +155,7 @@ export function ActionFieldJsonTest(props: {
 		};
 	}>({ status: "start" });
 
-	const { data, isPending, isSuccess, isError } = client.pubs.get.useQuery({
+	const { data, isPending, isSuccess } = client.pubs.get.useQuery({
 		queryData: selectedPubId
 			? {
 					params: {
@@ -206,8 +196,6 @@ export function ActionFieldJsonTest(props: {
 		}
 		return null;
 	}, [inputType, props.pubId, selectedPubId, jsonBlob, data?.body, community.slug]);
-
-	const result = data?.body;
 
 	const canTest = () => {
 		if (inputType === "current-pub") {

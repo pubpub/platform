@@ -1,35 +1,22 @@
 "use client";
 
 import type { PropsWithChildren } from "react";
-import type { ControllerProps, ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { ControllerProps } from "react-hook-form";
 import type z from "zod";
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import { skipToken } from "@tanstack/react-query";
-import { AlertCircle, Braces, CheckCircle2, Loader2, TestTube, X } from "lucide-react";
+import { Braces } from "lucide-react";
 import { Controller } from "react-hook-form";
 
-import type { Action as ActionEnum, PubsId } from "db/public";
-import { Alert, AlertDescription } from "ui/alert";
 import { Button } from "ui/button";
-import { ButtonGroup } from "ui/button-group";
 import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
-import { Label } from "ui/label";
 import { Skeleton } from "ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
-import { Textarea } from "ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
 import type { JsonState } from "./ActionFieldJsonInput";
-import type { ActionFormContextContext, ActionFormContextContextValue } from "./ActionFormProvider";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { client } from "~/lib/api";
-import { action } from "../buildJournalSite/action";
 import { useActionForm } from "./ActionFormProvider";
-import { createPubProxy } from "./pubProxy";
 import { isJsonTemplate } from "./schemaWithJsonFields";
 
 const ActionFieldJsonInput = dynamic(
@@ -45,6 +32,7 @@ type ActionFieldProps = PropsWithChildren<{
 	label?: string;
 	render?: ControllerProps<any>["render"];
 	id?: string;
+	description?: string;
 }>;
 
 export function ActionField(props: ActionFieldProps) {
@@ -140,7 +128,9 @@ export function ActionField(props: ActionFieldProps) {
 								/>
 							))
 						)}
-						<FieldDescription>{fieldSchema.description}</FieldDescription>
+						<FieldDescription>
+							{props.description ?? fieldSchema.description}
+						</FieldDescription>
 						{p.fieldState.invalid && <FieldError errors={[p.fieldState.error]} />}
 					</Field>
 				);
