@@ -18,12 +18,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 import { tryCatch } from "utils/try-catch";
 
-import type { ActionFormContextContextValue } from "./ActionFormProvider";
+import type { ActionFormContextContextValue } from "./ActionForm";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { PubSearchSelect } from "~/app/components/pubs/PubSearchSelect";
 import { client } from "~/lib/api";
 import { getActionByName } from "../api";
-import { useActionForm } from "./ActionFormProvider";
+import { useActionForm } from "./ActionForm";
 import { createPubProxy } from "./pubProxy";
 import { extractJsonata } from "./schemaWithJsonFields";
 

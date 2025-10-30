@@ -4,8 +4,6 @@ import { z } from "zod";
 
 import type { Action } from "db/public";
 
-// import { interpolate } from "@pubpub/json-interpolate";
-
 import { getActionByName } from "../api";
 import { extractJsonata, schemaWithJsonFields } from "./schemaWithJsonFields";
 

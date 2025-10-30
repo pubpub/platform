@@ -2,33 +2,51 @@ import type { PropsWithChildren } from "react";
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { ZodObject, ZodOptional } from "zod";
 
-import { createContext, useCallback, useContext } from "react";
+import { createContext, useCallback, useContext, useMemo } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
+import type { PubsId } from "db/public";
 import { Button } from "ui/button";
 import { Field, FieldGroup } from "ui/field";
 import { Form } from "ui/form";
 import { FormSubmitButton } from "ui/submit-button";
 
 import type { Action } from "../types";
+import { ActionConfigBuilder } from "./ActionConfigBuilder";
 
-export type ActionFormValues = FieldValues & {
-	pubFields: Record<string, string[]>;
-};
+export type ActionFormContextContextValue = "run" | "configure" | "automation" | "default";
+export type ActionFormContextContext =
+	| {
+			type: "run";
+			pubId: PubsId;
+	  }
+	| {
+			type: Exclude<ActionFormContextContextValue, "run">;
+			pubId?: never;
+	  };
 
 type ActionFormContext = {
 	action: Action;
-	schema: ZodOptional<ZodObject<any>>;
-	form: UseFormReturn<ActionFormValues>;
+	schema: ZodOptional<ZodObject<any>> | ZodObject<any>;
+	form: UseFormReturn<FieldValues>;
 	defaultFields: string[];
+	context: ActionFormContextContext;
+	/* when rendering a nested form, the path is the path to the form */
+	path?: string;
 };
 
-const ActionFormContext = createContext<ActionFormContext | undefined>(undefined);
-
 type ActionFormProps = PropsWithChildren<{
-	onSubmit(values: Record<string, unknown>, form: UseFormReturn<ActionFormValues>): Promise<void>;
 	action: Action;
-	defaultFields: string[];
 	values: Record<string, unknown> | null;
+	/* when rendering a nested form, the path is the path to the form */
+	path?: string;
+	defaultFields: string[];
+
+	context: ActionFormContextContext;
+
+	onSubmit(values: Record<string, unknown>, form: UseFormReturn<FieldValues>): Promise<void>;
+
 	submitButton: {
 		text: string;
 		pendingText?: string;
@@ -43,8 +61,22 @@ type ActionFormProps = PropsWithChildren<{
 	};
 }>;
 
+export const ActionFormContext = createContext<ActionFormContext | undefined>(undefined);
+
 export function ActionForm(props: ActionFormProps) {
-	const { form, schema } = useActionForm();
+	const schema = useMemo(() => {
+		const s = new ActionConfigBuilder(props.action.name)
+			.withConfig(props.action.config.schema)
+			.withDefaults(props.defaultFields);
+
+		return s.getSchema();
+	}, [props.action.config.schema, props.action.name, props.defaultFields]);
+
+	const form = useForm({
+		resolver: zodResolver(schema),
+		defaultValues: props.action.config.schema.partial().parse(props.values),
+	});
+
 	const onSubmit = useCallback(
 		async (data: Record<string, unknown>) => {
 			await props.onSubmit(data, form);
@@ -54,7 +86,13 @@ export function ActionForm(props: ActionFormProps) {
 
 	return (
 		<ActionFormContext.Provider
-			value={{ action: props.action, schema, form, defaultFields: props.defaultFields }}
+			value={{
+				action: props.action,
+				schema,
+				form,
+				defaultFields: props.defaultFields,
+				context: props.context,
+			}}
 		>
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)}>

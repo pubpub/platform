@@ -103,7 +103,6 @@ export const ActionRunForm = (props: Props) => {
 						action={action}
 						values={props.actionInstance.config ?? {}}
 						defaultFields={props.defaultFields}
-<<<<<<< HEAD
 						onSubmit={onSubmit}
 						submitButton={{
 							text: "Run Action",
@@ -115,9 +114,7 @@ export const ActionRunForm = (props: Props) => {
 							text: "Cancel",
 							onClick: onClose,
 						}}
-=======
 						context={{ type: "run", pubId: props.pubId }}
->>>>>>> a3e6b5156 (feat: add way to test output of interpolation action)
 					>
 						<Suspense fallback={<SkeletonCard />}>
 							<ActionFormComponent />

@@ -30,7 +30,7 @@ import { cn } from "utils";
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
 import type { getStageActions } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
-import { ActionFormContext } from "~/actions/_lib/ActionFormProvider";
+import { ActionFormContext } from "~/actions/_lib/ActionForm";
 import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";

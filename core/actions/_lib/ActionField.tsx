@@ -18,7 +18,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
 import type { InputState } from "./ActionFieldJsonataInput";
-import { useActionForm } from "./ActionFormProvider";
+import { useActionForm } from "./ActionForm";
 import { isJsonTemplate } from "./schemaWithJsonFields";
 
 // checks if value contains template syntax {{ }}
