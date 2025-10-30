@@ -35,8 +35,7 @@ const schema = z.object({
 			"The email address of the recipient(s). Either this or 'Recipient Member' must be set."
 		),
 	recipientMember: z
-		.string()
-		.uuid()
+		.preprocess(emptyStringToUndefined, z.string().uuid().optional())
 		.optional()
 		.describe(
 			"Someone who is a member of the community. Either this or 'Recipient Email' must be set."
