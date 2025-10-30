@@ -67,7 +67,6 @@ export function ActionFieldJsonataInput(props: {
 				value={field.value ? extractJsonata(field.value) : ""}
 				onChange={(e) => {
 					const wrappedValue = wrapInJsonata(e.target.value);
-					console.log("CCCCCCC", wrappedValue);
 					field.onChange(wrappedValue);
 				}}
 			/>

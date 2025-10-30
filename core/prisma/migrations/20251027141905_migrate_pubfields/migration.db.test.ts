@@ -14,7 +14,6 @@ const migratePubfields = async (input: any) => {
 	}>`SELECT migrate_action_instance_pubfields(${JSON.stringify(input)}::jsonb) as migrate_action_instance_pubfields`;
 
 	const compiled = query.compile(trx);
-	console.log(compiled.sql, compiled.parameters);
 
 	const result = await query.execute(trx);
 	return result.rows[0].migrate_action_instance_pubfields;

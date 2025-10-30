@@ -47,15 +47,11 @@ export const FileUploadElement = ({
 	const runDelete = useServerAction(deleteFile);
 	const { form, mode } = usePubForm();
 
-	const { control, getValues, formState, setValue } = useFormContext<FormValues>();
+	const { control, getValues, setValue } = useFormContext<FormValues>();
 
 	const formElementToggle = useFormElementToggleContext();
 	const isEnabled = formElementToggle.isEnabled(slug);
 	const files = getValues()[slug];
-
-	if (!Value.Check(fileUploadConfigSchema, config)) {
-		return null;
-	}
 
 	const handleDeleteFile = useCallback(
 		async (
@@ -86,6 +82,10 @@ export const FileUploadElement = ({
 		},
 		[runDelete, slug, pubId, setValue, files]
 	);
+
+	if (!Value.Check(fileUploadConfigSchema, config)) {
+		return null;
+	}
 
 	return (
 		<div>

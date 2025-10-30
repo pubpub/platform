@@ -293,8 +293,6 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 				result: { success: true, config: interpolatedConfig },
 			});
 		} catch (error) {
-			console.error(error);
-			console.log(data);
 			return new ActionConfigBuilder(this.actionName, {
 				action: this.action,
 				defaults: this.defaults,
@@ -484,7 +482,6 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		const parseResult = schema.safeParse(this.result.config);
 
 		if (!parseResult.success) {
-			console.log(this.result.config);
 			return this.clone({
 				state: "interpolated",
 				result: {

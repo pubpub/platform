@@ -11,7 +11,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import type { BaseActionInstanceConfig } from "db/types";
+import type { BaseActionInstanceConfig, Json } from "db/types";
 import type { Prettify, XOR } from "utils/types";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
@@ -51,7 +51,7 @@ export type RunActionInstanceArgs = Prettify<
 		 */
 		config: Record<string, unknown> | null;
 	} & XOR<{ event: Event }, { userId: UsersId }> &
-		XOR<{ pubId: PubsId }, { json: Record<string, any> }>
+		XOR<{ pubId: PubsId }, { json: Json }>
 >;
 
 const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>

@@ -1,6 +1,6 @@
 import type * as z from "zod";
 
-import type { ProcessedPub } from "contracts";
+import type { Json, ProcessedPub } from "contracts";
 import type {
 	ActionInstances,
 	Action as ActionName,
@@ -52,15 +52,13 @@ export type RunProps<T extends Action> =
 					// if both are accepted, it's one or the other.
 					// if only one's accepted, it's only that one
 					("pub" | "json" extends Acc[number]
-						? XOR<{ pub: ActionPub }, { json: Record<string, any> }>
+						? XOR<{ pub: ActionPub }, { json: Json }>
 						: ("pub" extends Acc[number]
 								? {
 										pub: ActionPub;
 									}
 								: { pub?: never }) &
-								("json" extends Acc[number]
-									? { json: Record<string, unknown> }
-									: { json?: never }))
+								("json" extends Acc[number] ? { json: Json } : { json?: never }))
 			>
 		: never;
 

@@ -192,7 +192,6 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 	const onSubmit = useCallback(
 		async (data: CreateRuleSchema) => {
-			console.log("data", data.actionConfig);
 			const result = await runUpsertRule({
 				stageId: props.stageId,
 				data,
