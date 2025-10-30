@@ -269,29 +269,19 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			const interpolatedConfig: Record<string, any> = {};
 
 			for (const [key, value] of Object.entries(configToInterpolate)) {
-				if (typeof value === "string") {
-					if (needsInterpolation(value)) {
-						const mode = determineMode(value);
-						const valueJsonata = extractJsonata(value);
-						interpolatedConfig[key] = await interpolate(valueJsonata, data, mode);
-					} else {
-						// no interpolation needed, use value as-is
-						interpolatedConfig[key] = value;
-					}
-				} else if (typeof value === "object" && value !== null) {
-					// recursively interpolate nested objects
-					const valueAsString = JSON.stringify(value);
-					if (needsInterpolation(valueAsString)) {
-						const mode = determineMode(valueAsString);
-						const valueJsonata = extractJsonata(valueAsString);
-						const interpolated = await interpolate(valueJsonata, data, mode);
-						interpolatedConfig[key] = interpolated;
-					} else {
-						interpolatedConfig[key] = value;
-					}
-				} else {
+				if (typeof value !== "string") {
 					interpolatedConfig[key] = value;
+					continue;
 				}
+
+				if (!needsInterpolation(value)) {
+					interpolatedConfig[key] = value;
+					continue;
+				}
+
+				const mode = determineMode(value);
+				const valueJsonata = extractJsonata(value);
+				interpolatedConfig[key] = await interpolate(valueJsonata, data, mode);
 			}
 
 			return new ActionConfigBuilder(this.actionName, {
@@ -304,6 +294,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			});
 		} catch (error) {
 			console.error(error);
+			console.log(data);
 			return new ActionConfigBuilder(this.actionName, {
 				action: this.action,
 				defaults: this.defaults,
@@ -314,7 +305,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 					success: false,
 					error: {
 						code: ActionConfigErrorCode.INTERPOLATION_FAILED,
-						message: "Failed to interpolate configuration",
+						message: `Failed to interpolate configuration: ${error.message}`,
 						cause: error,
 					},
 				},
@@ -493,6 +484,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		const parseResult = schema.safeParse(this.result.config);
 
 		if (!parseResult.success) {
+			console.log(this.result.config);
 			return this.clone({
 				state: "interpolated",
 				result: {

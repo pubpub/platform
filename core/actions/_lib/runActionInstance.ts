@@ -3,7 +3,6 @@ import type { ZodError } from "zod";
 import { captureException } from "@sentry/nextjs";
 import { sql } from "kysely";
 
-import type { Json } from "contracts";
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -17,6 +16,7 @@ import type { Prettify, XOR } from "utils/types";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
+import type { run as logRun } from "../log/run";
 import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
@@ -51,7 +51,7 @@ export type RunActionInstanceArgs = Prettify<
 		 */
 		config: Record<string, unknown> | null;
 	} & XOR<{ event: Event }, { userId: UsersId }> &
-		XOR<{ pubId: PubsId }, { json: Json }>
+		XOR<{ pubId: PubsId }, { json: Record<string, any> }>
 >;
 
 const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
@@ -121,56 +121,6 @@ const _runActionInstance = async (
 		};
 	}
 
-	// const actionConfig = {
-	// 	...(actionDefaults?.config as Record<string, any>),
-	// 	...(args.actionInstance.config as Record<string, any>),
-	// };
-
-	// const parsedConfig = action.config.schema.safeParse(args.config ?? actionConfig);
-
-	// if (!parsedConfig.success) {
-	// 	const err = {
-	// 		error: "Invalid config",
-	// 		cause: parsedConfig.error,
-	// 		stack,
-	// 	};
-	// 	if (args.actionInstanceArgs) {
-	// 		// Check if the args passed can substitute for missing or invalid config
-	// 		const argsParsedAsConfig = action.config.schema.safeParse(args.actionInstanceArgs);
-	// 		if (!argsParsedAsConfig.success) {
-	// 			return err;
-	// 		}
-	// 	} else {
-	// 		return err;
-	// 	}
-	// }
-
-	// const parsedArgs = action.params.schema.safeParse(args.actionInstanceArgs ?? {});
-
-	// if (!parsedArgs.success) {
-	// 	return {
-	// 		title: "Invalid pub config",
-	// 		cause: parsedArgs.error,
-	// 		error: "The action was run with invalid parameters",
-	// 		stack,
-	// 	};
-	// }
-
-	// TODO: restore validation https://github.com/pubpub/v7/issues/455
-	// const pubValuesValidationResult = validatePubValues({
-	// 	fields: action.pubFields,
-	// 	values: pub.values,
-	// });
-
-	// if (pubValuesValidationResult?.error) {
-	// 	return {
-	// 		error: pubValuesValidationResult.error,
-	// 	};
-	// }
-
-	// let runArgs = parsedArgs.data;
-	// let config = parsedConfig.data;
-
 	const actionConfigBuilder = new ActionConfigBuilder(args.actionInstance.action)
 		.withConfig({
 			...(args.actionInstance.config as Record<string, any>),
@@ -186,8 +136,16 @@ const _runActionInstance = async (
 	// const configFieldOverrides = new Set<string>();
 
 	let config = null;
+	const mergedConfig = actionConfigBuilder.getMergedConfig();
+	const actionForInterpolation = {
+		...args.actionInstance,
+		config: mergedConfig,
+	};
 	if (inputPubInput) {
-		const thing = createPubProxy(inputPubInput, community?.slug);
+		const thing = {
+			pub: createPubProxy(inputPubInput, community?.slug),
+			action: actionForInterpolation,
+		};
 
 		const interpolated = await actionConfigBuilder.interpolate(thing);
 
@@ -212,7 +170,9 @@ const _runActionInstance = async (
 
 		config = result.config;
 	} else {
-		const result = (await actionConfigBuilder.interpolate(args.json)).getResult();
+		const thing = { json: args.json, action: actionForInterpolation };
+
+		const result = (await actionConfigBuilder.interpolate(thing)).getResult();
 		if (!result.success) {
 			return {
 				title: "Invalid action configuration",
@@ -231,10 +191,13 @@ const _runActionInstance = async (
 
 	const jsonOrPubId = args.pubId ? { pubId: args.pubId } : { json: args.json! };
 	try {
-		const result = await actionRun({
+		// just hard cast it to one option so we at least have some typesafety
+		const result = await (actionRun as typeof logRun)({
 			// FIXME: get rid of any
 			config: config as any,
-			...(inputPubInput ? { pub: inputPubInput } : { json: args.json }),
+			...(inputPubInput
+				? { pub: inputPubInput }
+				: { json: args.json ?? ({} as Record<string, any>) }),
 			stageId: args.actionInstance.stageId,
 			communityId: args.communityId,
 			lastModifiedBy,

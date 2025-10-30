@@ -5,7 +5,7 @@ import { logger } from "logger";
 import type { action } from "./action";
 import { defineRun } from "../types";
 
-export const run = defineRun<typeof action>(async ({ actionInstance, pub, config, args }) => {
+export const run = defineRun<typeof action>(async ({ actionInstance, pub, config }) => {
 	const text = config.text;
 	const debounce = config.debounce;
 
@@ -14,7 +14,6 @@ export const run = defineRun<typeof action>(async ({ actionInstance, pub, config
 		pub,
 		debounce,
 		config,
-		args,
 	});
 
 	return {

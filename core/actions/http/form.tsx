@@ -13,7 +13,6 @@ import { useActionForm } from "../_lib/ActionForm";
 export default function HttpActionForm() {
 	const { form } = useActionForm();
 	const [method, response] = form.watch(["method", "response"]);
-	console.log(form);
 
 	useEffect(() => {
 		form.setValue("outputMap", []);

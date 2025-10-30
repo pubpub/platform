@@ -8,8 +8,8 @@ import { isUniqueConstraintError } from "~/kysely/errors";
 import { movePub } from "~/lib/server/stages";
 import { defineRun } from "../types";
 
-export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
-	const stageToMoveTo = args.stage ?? config.stage;
+export const run = defineRun<typeof action>(async ({ pub, config }) => {
+	const stageToMoveTo = config.stage;
 
 	try {
 		await movePub(pub.id, stageToMoveTo as StagesId).execute();
@@ -29,7 +29,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		};
 	}
 
-	logger.info({ msg: "move", pub, config, args, stageToMoveTo });
+	logger.info({ msg: "move", pub, config, stageToMoveTo });
 
 	return {
 		success: true,

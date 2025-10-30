@@ -1,6 +1,6 @@
 "use client";
 
-import type { ControllerRenderProps } from "react-hook-form";
+import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-hook-form";
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -211,9 +211,9 @@ export const StagePanelAutomationForm = (props: Props) => {
 		[props.stageId, runUpsertRule]
 	);
 
-	const [selectedActionInstance, setSelectedActionInstance] = useState<ActionInstances | null>(
-		null
-	);
+	const [selectedActionInstance, setSelectedActionInstance] = useState<
+		(typeof props.actionInstances)[number] | null
+	>(null);
 
 	const actionInstance = useMemo(() => {
 		if (!selectedActionInstance) {
@@ -525,10 +525,12 @@ export const StagePanelAutomationForm = (props: Props) => {
 												value={{
 													action: actions[selectedActionInstance.action],
 													schema: actionSchema,
-													defaultFields: [],
 													path: "actionConfig",
-													form,
-													// defaultFields: selectedActionInstance.defaultedActionConfigKeys ?? [],
+													// slightly elobarate cast, slightly more typesafe
+													form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
+													defaultFields:
+														selectedActionInstance.defaultedActionConfigKeys ??
+														[],
 													context: { type: "automation" },
 												}}
 											>

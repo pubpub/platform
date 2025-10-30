@@ -6,18 +6,18 @@ import * as z from "zod";
 export const JSON_TEMPLATE_REGEX = /^<<<.*?>>>$|\{\{.*?\}\}/;
 
 /**
- * checks if a value is a json template string (contains {{ }} or jsonata expressions)
+ * checks if a value is a jsonata expression by looking for <<< and >>>
  */
 export const isJsonTemplate = (value: unknown): value is string => {
 	return typeof value === "string" && value.startsWith("<<<") && value.endsWith(">>>");
 };
 
 export const wrapInJsonata = (value: string) => {
-	return `<<<${value}>>>`;
+	return `<<<${value.replace(/^<*|>*$/gs, "")}>>>`;
 };
 
 export const extractJsonata = (value: string) => {
-	return value.replace(/^<<<(.+?)>>>$/, "$1");
+	return value.replace(/^<*|>*$/gs, "");
 };
 
 /**
@@ -27,8 +27,13 @@ export const extractJsonata = (value: string) => {
 const wrapFieldWithJsonTemplate = (fieldSchema: z.ZodTypeAny): z.ZodTypeAny => {
 	let current = fieldSchema;
 	const modifiers: Array<{ type: string; value?: any }> = [];
+	let description: string | undefined;
 
 	while (current) {
+		if (current._def.description) {
+			description = current._def.description;
+		}
+
 		if (current instanceof z.ZodOptional) {
 			modifiers.push({ type: "optional" });
 			current = current._def.innerType;
@@ -48,10 +53,13 @@ const wrapFieldWithJsonTemplate = (fieldSchema: z.ZodTypeAny): z.ZodTypeAny => {
 		message: "String must be a valid template with {{ }} syntax or JSONata expression",
 	});
 
-	// create a transform that checks for template strings first
 	let wrappedSchema = z.union([templateSchema, baseSchema as any]);
 
-	// re-apply modifiers in reverse order
+	// re-apply description if it existed
+	if (description) {
+		wrappedSchema = wrappedSchema.describe(description) as any;
+	}
+
 	for (let i = modifiers.length - 1; i >= 0; i--) {
 		const modifier = modifiers[i];
 		if (modifier.type === "optional") {
