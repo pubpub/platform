@@ -52,7 +52,8 @@ type ActionFieldProps = PropsWithChildren<{
 
 export function ActionField(props: ActionFieldProps) {
 	const { form, schema, defaultFields, context, action } = useActionForm();
-	const innerSchema = schema._def?.innerType || schema;
+	const innerSchema =
+		"innerType" in schema._def ? schema._def?.innerType : (schema as z.ZodObject<any>);
 	const schemaShape = innerSchema?.shape ?? {};
 	const fieldSchema = schemaShape[props.name] as z.ZodType<any>;
 	const required = fieldSchema && !fieldSchema.isOptional();
@@ -109,7 +110,7 @@ export function ActionField(props: ActionFieldProps) {
 									<Tooltip delayDuration={500}>
 										<TooltipTrigger asChild>
 											<Button
-												variant="outline"
+												variant="ghost"
 												size="sm"
 												aria-label={isTestOpen ? "Close test" : "Open test"}
 												className="h-9 px-2 font-mono text-xs"
@@ -130,7 +131,7 @@ export function ActionField(props: ActionFieldProps) {
 									</Tooltip>
 								)}
 								<Button
-									variant="outline"
+									variant="ghost"
 									size="icon"
 									type="button"
 									className={cn(
@@ -158,13 +159,7 @@ export function ActionField(props: ActionFieldProps) {
 							<ActionFieldJsonInput
 								field={p.field}
 								isDefaultField={isDefaultField}
-								actionName={action.name}
-								configKey={props.name}
-								pubId={context.type === "run" ? context.pubId : undefined}
-								context={context}
 								actionAccepts={action.accepts}
-								value={p.field.value ?? ""}
-								jsonState={inputState}
 							/>
 						) : (
 							(props.render?.(p) ?? (
@@ -192,7 +187,7 @@ export function ActionField(props: ActionFieldProps) {
 								configKey={props.name}
 								value={p.field.value ?? ""}
 								pubId={context.type === "run" ? context.pubId : undefined}
-								contextType={context.type === "run" ? "run" : (context.type as any)}
+								contextType={context.type}
 								actionAccepts={action.accepts}
 								mode={inputState.state === "jsonata" ? "jsonata" : "template"}
 							/>

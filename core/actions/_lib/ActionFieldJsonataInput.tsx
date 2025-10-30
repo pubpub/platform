@@ -63,7 +63,6 @@ export function ActionFieldJsonataInput(props: {
 				{...field}
 				id={field.name}
 				value={field.value ?? ""}
-				aria-invalid={field.invalid}
 			/>
 		</div>
 	);

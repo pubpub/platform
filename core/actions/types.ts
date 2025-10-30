@@ -34,10 +34,6 @@ export type RunProps<T extends Action> =
 		? Prettify<
 				{
 					config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
-					configFieldOverrides: Set<string>;
-					// pub: ActionPub;
-					args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
-					argsFieldOverrides: Set<string>;
 					stageId: StagesId;
 					communityId: CommunitiesId;
 					/**

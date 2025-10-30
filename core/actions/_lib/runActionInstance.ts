@@ -233,7 +233,7 @@ const _runActionInstance = async (
 	try {
 		const result = await actionRun({
 			// FIXME: get rid of any
-			config,
+			config: config as any,
 			...(inputPubInput ? { pub: inputPubInput } : { json: args.json }),
 			stageId: args.actionInstance.stageId,
 			communityId: args.communityId,

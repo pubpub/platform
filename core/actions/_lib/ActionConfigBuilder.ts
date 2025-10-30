@@ -55,7 +55,7 @@ type BuilderState = "initial" | "validated" | "interpolated";
  */
 export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<any>> {
 	private readonly actionName: Action;
-	private readonly action: ReturnType<typeof getActionByName> | null;
+	private readonly action: ReturnType<typeof getActionByName>;
 	private readonly defaults: Record<string, any>;
 	private readonly config: Record<string, any>;
 	private readonly overrides: Record<string, any>;
@@ -80,23 +80,13 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		this.state = options.state ?? "initial";
 		this.result = options.result ?? null;
 
-		if (options.action !== undefined) {
+		if (options.action != null) {
 			this.action = options.action;
-		} else {
-			try {
-				this.action = getActionByName(actionName);
-			} catch (error) {
-				this.action = null;
-				this.result = {
-					success: false,
-					error: {
-						code: ActionConfigErrorCode.ACTION_NOT_FOUND,
-						message: `Action ${actionName} not found`,
-						cause: error,
-					},
-				};
-			}
+			return;
 		}
+
+		// will throw if action not found
+		this.action = getActionByName(actionName);
 	}
 
 	/**
@@ -336,19 +326,16 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * get the action schema
 	 * returns null if action not found
 	 */
-	getSchema(): z.ZodObject<any> | null {
-		return this.action?.config.schema ?? null;
+	getSchema(): z.ZodObject<any> {
+		return this.action.config.schema;
 	}
 
 	/**
 	 * get the schema that accepts json template strings
-	 * returns null if action not found
+	 * throws if action not found
 	 */
-	getSchemaWithJsonFields(): z.ZodObject<any> | null {
+	getSchemaWithJsonFields(): z.ZodObject<any> {
 		const schema = this.getSchema();
-		if (!schema) {
-			return null;
-		}
 		return schemaWithJsonFields(schema);
 	}
 

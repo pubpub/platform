@@ -20,13 +20,13 @@ export type ActionFormContextContext =
 			pubId: PubsId;
 	  }
 	| {
-			type: Omit<ActionFormContextContextValue, "run">;
+			type: Exclude<ActionFormContextContextValue, "run">;
 			pubId?: never;
 	  };
 
 type ActionFormContext = {
 	action: Action;
-	schema: ZodOptional<ZodObject<any>>;
+	schema: ZodOptional<ZodObject<any>> | ZodObject<any>;
 	form: UseFormReturn<ActionFormValues>;
 	defaultFields: string[];
 	context: ActionFormContextContext;
@@ -48,14 +48,11 @@ export function ActionFormProvider(props: ActionFormProviderProps) {
 			.withDefaults(props.defaultFields);
 
 		return s.getSchemaWithJsonFields();
-	}, [props.action.config.schema, props.defaultFields]);
+	}, [props.action.config.schema, props.action.name, props.defaultFields]);
 
 	const form = useForm({
 		resolver: zodResolver(schema),
-		defaultValues: {
-			...props.action.config.schema.partial().parse(props.values),
-			pubFields: {},
-		},
+		defaultValues: props.action.config.schema.partial().parse(props.values),
 	});
 
 	return (
