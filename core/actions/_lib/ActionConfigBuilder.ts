@@ -3,7 +3,8 @@ import type { ZodError } from "zod";
 import { z } from "zod";
 
 import type { Action } from "db/public";
-import { interpolate } from "@pubpub/json-interpolate";
+
+// import { interpolate } from "@pubpub/json-interpolate";
 
 import { getActionByName } from "../api";
 import { schemaWithJsonFields } from "./schemaWithJsonFields";
@@ -259,6 +260,9 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			this.result?.success && this.state === "validated"
 				? this.result.config
 				: this.getMergedConfig();
+
+		// to prevent this from being bundled into the main bundle, we import it here
+		const { interpolate } = await import("@pubpub/json-interpolate");
 
 		try {
 			// interpolate each field individually to preserve string types
