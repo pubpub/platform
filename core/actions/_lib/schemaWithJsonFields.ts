@@ -1,12 +1,12 @@
 import * as z from "zod";
 
 /**
- * regex to detect json template strings like {{ $.something }}
+ * regex to detect json template strings like {{ $.something }} or pure jsonata like $.something
  */
-const JSON_TEMPLATE_REGEX = /\{\{.*?\}\}/;
+const JSON_TEMPLATE_REGEX = /\{\{.*?\}\}|\$\./;
 
 /**
- * checks if a value is a json template string
+ * checks if a value is a json template string (contains {{ }} or jsonata expressions)
  */
 export const isJsonTemplate = (value: unknown): value is string => {
 	return typeof value === "string" && JSON_TEMPLATE_REGEX.test(value);
@@ -40,7 +40,7 @@ const wrapFieldWithJsonTemplate = (fieldSchema: z.ZodTypeAny): z.ZodTypeAny => {
 	// create the union that accepts either the original type or a template string
 	const baseSchema = current;
 	const templateSchema = z.string().regex(JSON_TEMPLATE_REGEX, {
-		message: "String must be a valid JSON template with {{ }} syntax",
+		message: "String must be a valid template with {{ }} syntax or JSONata expression",
 	});
 
 	// create a transform that checks for template strings first

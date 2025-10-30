@@ -5,7 +5,6 @@ import type { z } from "zod";
 import { startTransition, useCallback, useMemo } from "react";
 
 import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
@@ -13,7 +12,7 @@ import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { ActionForm } from "~/actions/_lib/ActionForm";
 import { getActionByName } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
-import { deleteAction, updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
+import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
 import { useServerAction } from "~/lib/serverActions";
 import { useCommunity } from "../providers/CommunityProvider";
 
@@ -107,6 +106,7 @@ export const ActionConfigForm = (props: Props) => {
 					text: "Remove Action",
 					onClick: onDelete,
 				}}
+				context={{ type: "configure" }}
 			>
 				<ActionFormComponent />
 			</ActionForm>

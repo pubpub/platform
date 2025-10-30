@@ -1,15 +1,13 @@
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type z from "zod";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { skipToken } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Loader2, TestTube, X } from "lucide-react";
-import { z } from "zod";
+import { AlertCircle, CheckCircle2, Loader2, Zap, ZapOff } from "lucide-react";
 
-import type { Action as ActionEnum, PubsId } from "db/public";
 import { interpolate } from "@pubpub/json-interpolate";
+import { Action as ActionEnum, PubsId } from "db/public";
 import { Alert, AlertDescription } from "ui/alert";
 import { Button } from "ui/button";
-import { ButtonGroup } from "ui/button-group";
 import { Input } from "ui/input";
 import { Label } from "ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "ui/tabs";
@@ -18,26 +16,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 import { tryCatch } from "utils/try-catch";
 
-import type { ActionFormContextContext, ActionFormContextContextValue } from "./ActionFormProvider";
-import { getActionByName } from "~/actions/api";
+import type { ActionFormContextContextValue } from "./ActionFormProvider";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { client } from "~/lib/api";
+import { getActionByName } from "../api";
 import { createPubProxy } from "./pubProxy";
-import { isJsonTemplate } from "./schemaWithJsonFields";
 
-type TestInputType = "current-pub" | "select-pub" | "json-blob";
-
-export type JsonState =
-	| {
-			state: "json";
-			jsonValue: string;
-			normalValue: string;
-	  }
-	| {
-			state: "normal";
-			normalValue: string;
-			jsonValue: string;
-	  };
+export type TestInputType = "current-pub" | "select-pub" | "json-blob";
 
 function getDefaultTestInputType(
 	contextType: string,
@@ -53,109 +38,39 @@ function getDefaultTestInputType(
 	return "select-pub";
 }
 
-export function ActionFieldJsonInput(props: {
-	field: ControllerRenderProps<FieldValues, any>;
-	isDefaultField: boolean;
-	actionName: ActionEnum;
-	configKey: string;
-	pubId: PubsId | undefined;
-	context: ActionFormContextContext;
-	actionAccepts: readonly string[];
-	value: string;
-	jsonState: JsonState;
-}) {
-	const { actionName, configKey, field, context, actionAccepts, jsonState } = props;
-	const shouldShowTest =
-		jsonState.state === "json" &&
-		isJsonTemplate(field.value) &&
-		(context.type === "run" ||
-			context.type === "configure" ||
-			context.type === "automation" ||
-			(context.type === "default" && actionAccepts.includes("json")));
-
-	const [isTestOpen, setIsTestOpen] = useState(false);
-	const isDefaultField = field.value === undefined;
-
-	return (
-		<>
-			<ButtonGroup>
-				<Textarea
-					className="border-amber-400 bg-amber-50/10 font-mono font-medium text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
-					placeholder={isDefaultField ? "(use default)" : undefined}
-					{...field}
-					id={field.name}
-					value={field.value ?? ""}
-					aria-invalid={field.invalid}
-				/>
-				{shouldShowTest && (
-					<Tooltip delayDuration={500}>
-						<TooltipTrigger asChild>
-							<Button
-								variant="outline"
-								size="icon"
-								aria-label={isTestOpen ? "Close test" : "Open test"}
-								className="border-amber-400 bg-amber-50/10 font-mono font-semibold text-amber-700 hover:bg-amber-50 focus:shadow-none"
-								onClick={() => setIsTestOpen(!isTestOpen)}
-							>
-								{isTestOpen ? <X size={6} /> : <TestTube size={6} />}
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent>
-							{isTestOpen ? "Close test" : "Test the result of this field"}
-						</TooltipContent>
-					</Tooltip>
-				)}
-			</ButtonGroup>
-			{isTestOpen && (
-				<ActionFieldJsonTest
-					actionName={actionName}
-					configKey={configKey}
-					value={field.value}
-					pubId={context.type === "run" ? context.pubId : undefined}
-					contextType={
-						context.type === "run"
-							? "run"
-							: (context.type as Exclude<ActionFormContextContextValue, "run">)
-					}
-					actionAccepts={actionAccepts}
-				/>
-			)}
-		</>
-	);
-}
-
-export function ActionFieldJsonTest(props: {
+export function ActionFieldJsonataTestPanel(props: {
 	actionName: ActionEnum;
 	configKey: string;
 	value: string;
 	pubId?: PubsId;
 	contextType: ActionFormContextContextValue;
 	actionAccepts: readonly string[];
+	mode?: "template" | "jsonata";
 }) {
-	const [, setInputType] = useState<TestInputType>(() =>
+	const [inputType, setInputType] = useState<TestInputType>(() =>
 		getDefaultTestInputType(props.contextType, props.pubId, props.actionAccepts)
 	);
 
 	const action = getActionByName(props.actionName);
 	const [selectedPubId, setSelectedPubId] = useState<string>(props.pubId ?? "");
-
 	const [jsonBlob, setJsonBlob] = useState("{}");
+	const [autoEvaluate, setAutoEvaluate] = useState(true);
 
 	const community = useCommunity();
 
-	const inputType = getDefaultTestInputType(props.contextType, props.pubId, props.actionAccepts);
-
 	const [testResult, setTestResult] = useState<{
-		status: "success" | "error" | "pending" | "ready" | "start" | "unknown";
+		status: "success" | "error" | "pending" | "ready" | "start" | "idle";
 		interpolated?: unknown;
 		error?: {
 			type: string;
 			message: string;
 			issues?: z.ZodIssue[];
 		};
-	}>({ status: "start" });
+	}>({ status: "idle" });
 
-	const { data, isPending, isSuccess } = client.pubs.get.useQuery({
+	const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+	const { data, isPending } = client.pubs.get.useQuery({
 		queryData: selectedPubId
 			? {
 					params: {
@@ -174,11 +89,14 @@ export function ActionFieldJsonTest(props: {
 		queryKey: ["pub", props.pubId],
 	});
 
+	// cleanup debounce timer on unmount
 	useEffect(() => {
-		if (testResult.status === "start" && isSuccess) {
-			setTestResult({ status: "ready" });
-		}
-	}, [isSuccess]);
+		return () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+			}
+		};
+	}, []);
 
 	const bodyForTest = useMemo(() => {
 		if (inputType === "current-pub" && selectedPubId && data?.body) {
@@ -215,13 +133,13 @@ export function ActionFieldJsonTest(props: {
 		return false;
 	};
 
-	const handleTest = async () => {
+	const handleTest = useCallback(async () => {
 		if (!bodyForTest) {
 			setTestResult({
 				status: "error",
 				error: {
 					type: "unknown_error" as const,
-					message: "No body to test",
+					message: "No data available to test",
 				},
 			});
 			return;
@@ -240,9 +158,12 @@ export function ActionFieldJsonTest(props: {
 			return;
 		}
 
+		setTestResult({ status: "pending" });
+
 		try {
+			const mode = props.mode ?? "jsonata";
 			const [interpolateError, interpolated] = await tryCatch(
-				interpolate(props.value, bodyForTest)
+				interpolate(props.value, bodyForTest, mode)
 			);
 
 			if (interpolateError) {
@@ -296,9 +217,41 @@ export function ActionFieldJsonTest(props: {
 					message: error instanceof Error ? error.message : String(error),
 				},
 			});
+		}
+	}, [
+		bodyForTest,
+		action.config.schema,
+		props.configKey,
+		props.actionName,
+		props.value,
+		props.mode,
+	]);
+
+	// auto-evaluate with debouncing
+	useEffect(() => {
+		if (!autoEvaluate) {
 			return;
 		}
-	};
+
+		if (!canTest()) {
+			setTestResult({ status: "idle" });
+			return;
+		}
+
+		if (debounceTimerRef.current) {
+			clearTimeout(debounceTimerRef.current);
+		}
+
+		debounceTimerRef.current = setTimeout(() => {
+			handleTest();
+		}, 500);
+
+		return () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+			}
+		};
+	}, [autoEvaluate, props.value, bodyForTest, canTest, handleTest]);
 
 	const showInputSelector =
 		props.contextType !== "run" ||
@@ -310,10 +263,34 @@ export function ActionFieldJsonTest(props: {
 		(props.actionAccepts.includes("json") ? 1 : 0);
 
 	return (
-		<div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2">
+		<div className="space-y-2 rounded-md border border-gray-200 bg-gray-50 p-2 transition-all duration-200">
+			<div className="flex items-center justify-between">
+				<Label className="text-xs font-medium text-gray-700">Test result</Label>
+				<Tooltip delayDuration={300}>
+					<TooltipTrigger asChild>
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => setAutoEvaluate(!autoEvaluate)}
+							className={cn(
+								"h-7 gap-1.5 px-2 text-xs transition-colors",
+								autoEvaluate
+									? "text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+									: "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+							)}
+						>
+							{autoEvaluate ? <Zap size={12} /> : <ZapOff size={12} />}
+							Auto
+						</Button>
+					</TooltipTrigger>
+					<TooltipContent>
+						{autoEvaluate ? "Auto-evaluation enabled" : "Auto-evaluation disabled"}
+					</TooltipContent>
+				</Tooltip>
+			</div>
+
 			{showInputSelector && (
 				<div className="space-y-2">
-					<Label className="text-xs text-gray-700">Test with</Label>
 					<Tabs
 						value={inputType}
 						onValueChange={(v) => {
@@ -369,82 +346,95 @@ export function ActionFieldJsonTest(props: {
 				</div>
 			)}
 
-			<Button
-				variant="outline"
-				size="sm"
-				type="button"
-				onClick={async () => {
-					setTestResult({ status: "pending" });
-					await handleTest();
-				}}
-				disabled={!canTest() || isPending}
-				className="w-full text-xs"
-			>
-				{testResult.status === "pending" ? (
-					<>
-						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-						Testing...
-					</>
-				) : testResult.status === "start" && isPending ? (
-					<>
-						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-						Fetching pub...
-					</>
-				) : (
-					"Evaluate"
-				)}
-			</Button>
-
-			{testResult.status === "success" && testResult.interpolated !== undefined && (
-				<Alert className="border-green-200 bg-green-50">
-					<CheckCircle2 className="h-4 w-4 text-green-600" />
-					<AlertDescription className="ml-2">
-						<div className="text-xs font-medium text-green-900">
-							Interpolation successful
-						</div>
-						<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900">
-							{JSON.stringify(testResult.interpolated, null, 2)}
-						</pre>
-					</AlertDescription>
-				</Alert>
+			{!autoEvaluate && (
+				<Button
+					variant="outline"
+					size="sm"
+					type="button"
+					onClick={handleTest}
+					disabled={!canTest() || isPending || testResult.status === "pending"}
+					className="w-full text-xs"
+				>
+					{testResult.status === "pending" ? (
+						<>
+							<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+							Evaluating...
+						</>
+					) : isPending ? (
+						<>
+							<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+							Loading data...
+						</>
+					) : (
+						"Evaluate"
+					)}
+				</Button>
 			)}
 
-			{testResult.status === "error" && testResult.error !== undefined && (
-				<Alert className="border-red-200 bg-red-50">
-					<AlertCircle className="h-4 w-4 text-red-600" />
-					<AlertDescription className="ml-2">
-						<div className="text-xs font-medium text-red-900">
-							{testResult.error.type === "jsonata_error" &&
-								"JSONata expression error"}
-							{testResult.error.type === "parse_error" && "JSON parse error"}
-							{testResult.error.type === "syntax_error" && "Syntax error"}
-							{testResult.error.type === "validation_error" && "Validation error"}
-							{testResult.error.type === "invalid_key" && "Invalid configuration"}
-							{testResult.error.type === "unknown_error" && "Error"}
-						</div>
-						<div className="mt-1 text-xs text-red-800">{testResult.error.message}</div>
-						{testResult.interpolated && (
+			<div className="min-h-[60px] transition-all duration-200">
+				{testResult.status === "pending" && (
+					<div className="flex items-center justify-center py-4 text-xs text-gray-500">
+						<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+						Evaluating...
+					</div>
+				)}
+
+				{testResult.status === "idle" && (
+					<div className="flex items-center justify-center py-4 text-xs text-gray-400">
+						{!canTest() ? "Enter test data to see results" : "Waiting for input..."}
+					</div>
+				)}
+
+				{testResult.status === "success" && testResult.interpolated !== undefined && (
+					<Alert className="border-green-200 bg-green-50 duration-200 animate-in fade-in-50">
+						<CheckCircle2 className="h-4 w-4 text-green-600" />
+						<AlertDescription className="ml-2">
+							<div className="text-xs font-medium text-green-900">Success</div>
 							<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900">
 								{JSON.stringify(testResult.interpolated, null, 2)}
 							</pre>
-						)}
-						{testResult.error.issues && testResult.error.issues.length > 0 && (
-							<div className="mt-2 space-y-1">
-								{testResult.error.issues.map((issue: any, idx: number) => (
-									<div key={idx} className="text-xs text-red-700">
-										{issue.path?.length > 0 && (
-											<span className="font-medium">
-												{issue.path.join(".")}:{" "}
-											</span>
-										)}
-										{issue.message}
-									</div>
-								))}
+						</AlertDescription>
+					</Alert>
+				)}
+
+				{testResult.status === "error" && testResult.error !== undefined && (
+					<Alert className="border-red-200 bg-red-50 duration-200 animate-in fade-in-50">
+						<AlertCircle className="h-4 w-4 text-red-600" />
+						<AlertDescription className="ml-2">
+							<div className="text-xs font-medium text-red-900">
+								{testResult.error.type === "jsonata_error" && "JSONata Error"}
+								{testResult.error.type === "parse_error" && "Parse Error"}
+								{testResult.error.type === "syntax_error" && "Syntax Error"}
+								{testResult.error.type === "validation_error" && "Validation Error"}
+								{testResult.error.type === "invalid_key" && "Configuration Error"}
+								{testResult.error.type === "unknown_error" && "Error"}
 							</div>
-						)}
-					</AlertDescription>
-				</Alert>
-			)}
+							<div className="mt-1 text-xs text-red-800">
+								{testResult.error.message}
+							</div>
+							{testResult.interpolated && (
+								<pre className="mt-2 max-h-[300px] overflow-auto whitespace-pre-wrap rounded bg-white p-2 font-mono text-xs text-gray-900">
+									{JSON.stringify(testResult.interpolated, null, 2)}
+								</pre>
+							)}
+							{testResult.error.issues && testResult.error.issues.length > 0 && (
+								<div className="mt-2 space-y-1">
+									{testResult.error.issues.map((issue: any, idx: number) => (
+										<div key={idx} className="text-xs text-red-700">
+											{issue.path?.length > 0 && (
+												<span className="font-medium">
+													{issue.path.join(".")}:{" "}
+												</span>
+											)}
+											{issue.message}
+										</div>
+									))}
+								</div>
+							)}
+						</AlertDescription>
+					</Alert>
+				)}
+			</div>
 		</div>
 	);
 }

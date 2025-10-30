@@ -278,6 +278,189 @@ describe("ActionConfigBuilder", () => {
 		});
 	});
 
+	describe("template mode interpolation", () => {
+		test("interpolates string with {{ }} syntax", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "https://{{ $.domain }}/api",
+					method: "GET",
+				})
+				.validate()
+				.interpolate({
+					domain: "example.com",
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.config.url).toBe("https://example.com/api");
+			}
+		});
+
+		test("handles multiple {{ }} blocks in one string", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "https://{{ $.domain }}/{{ $.path }}",
+					method: "GET",
+				})
+				.validate()
+				.interpolate({
+					domain: "example.com",
+					path: "api/v1",
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.config.url).toBe("https://example.com/api/v1");
+			}
+		});
+
+		test("always returns string in template mode", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "Count: {{ $.count }}",
+					method: "GET",
+				})
+				.validate()
+				.interpolate({
+					count: 42,
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.config.url).toBe("Count: 42");
+				expect(typeof result.config.url).toBe("string");
+			}
+		});
+
+		test("stringifies objects and arrays in template mode", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "Data: {{ $.data }}",
+					method: "GET",
+				})
+				.validate()
+				.interpolate({
+					data: { key: "value", nested: [1, 2, 3] },
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.config.url).toBe('Data: {"key":"value","nested":[1,2,3]}');
+			}
+		});
+	});
+
+	describe("jsonata mode interpolation", () => {
+		test("evaluates pure jsonata expression without {{ }}", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "$.baseUrl",
+					method: "GET",
+				})
+				.validate()
+				.interpolate({
+					baseUrl: "https://api.example.com",
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.config.url).toBe("https://api.example.com");
+			}
+		});
+
+		test("returns actual types in jsonata mode", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "https://example.com",
+					method: "GET",
+					body: "$.requestData",
+				})
+				.validate()
+				.interpolate({
+					requestData: { title: "Test", count: 42, active: true },
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				const body = JSON.parse(result.config.body);
+				expect(body.title).toBe("Test");
+				expect(body.count).toBe(42);
+				expect(body.active).toBe(true);
+			}
+		});
+
+		test("handles jsonata expressions with object construction", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "https://example.com",
+					method: "POST",
+					body: '{ "name": $.user.name, "email": $.user.email, "count": $.total }',
+				})
+				.validate()
+				.interpolate({
+					user: { name: "Alice", email: "alice@example.com" },
+					total: 100,
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				const body = JSON.parse(result.config.body);
+				expect(body.name).toBe("Alice");
+				expect(body.email).toBe("alice@example.com");
+				expect(body.count).toBe(100);
+			}
+		});
+
+		test("handles jsonata array operations", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "https://example.com",
+					method: "GET",
+					body: "$.items[0]",
+				})
+				.validate()
+				.interpolate({
+					items: [
+						{ id: 1, name: "First" },
+						{ id: 2, name: "Second" },
+					],
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				const body = JSON.parse(result.config.body);
+				expect(body.id).toBe(1);
+				expect(body.name).toBe("First");
+			}
+		});
+
+		test("handles jsonata transformations", async () => {
+			const builder = await new ActionConfigBuilder(Action.http)
+				.withConfig({
+					url: "$uppercase($.domain)",
+					method: "GET",
+				})
+				.validate()
+				.interpolate({
+					domain: "https://example.com",
+				});
+
+			const result = builder.getResult();
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.config.url).toBe("HTTPS://EXAMPLE.COM");
+			}
+		});
+	});
+
 	describe("validation after interpolation", () => {
 		test("validates interpolated config matches original schema", async () => {
 			const builder = await new ActionConfigBuilder(Action.http)

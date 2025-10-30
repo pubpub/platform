@@ -264,25 +264,42 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		// to prevent this from being bundled into the main bundle, we import it here
 		const { interpolate } = await import("@pubpub/json-interpolate");
 
+		// helper to check if a value needs interpolation
+		const needsInterpolation = (value: string): boolean => {
+			return value.includes("{{") || value.includes("$.");
+		};
+
+		// helper to determine mode: if value contains {{ }}, use template mode, otherwise jsonata mode
+		const determineMode = (value: string): "template" | "jsonata" => {
+			return value.includes("{{") ? "template" : "jsonata";
+		};
+
 		try {
-			// interpolate each field individually to preserve string types
+			// interpolate each field individually
 			const interpolatedConfig: Record<string, any> = {};
 
 			for (const [key, value] of Object.entries(configToInterpolate)) {
 				if (typeof value === "string") {
-					const interpolated = await interpolate(value, data);
-					// if the result is an object but the original was a string field,
-					// stringify it back to JSON for fields like body
-					interpolatedConfig[key] =
-						typeof interpolated === "object"
-							? JSON.stringify(interpolated)
-							: interpolated;
+					if (needsInterpolation(value)) {
+						const mode = determineMode(value);
+						interpolatedConfig[key] = await interpolate(value, data, mode);
+					} else {
+						// no interpolation needed, use value as-is
+						interpolatedConfig[key] = value;
+					}
 				} else if (typeof value === "object" && value !== null) {
 					// recursively interpolate nested objects
 					const valueAsString = JSON.stringify(value);
-					const interpolated = await interpolate(valueAsString, data);
-					interpolatedConfig[key] =
-						typeof interpolated === "string" ? JSON.parse(interpolated) : interpolated;
+					if (needsInterpolation(valueAsString)) {
+						const mode = determineMode(valueAsString);
+						const interpolated = await interpolate(valueAsString, data, mode);
+						interpolatedConfig[key] =
+							typeof interpolated === "string"
+								? JSON.parse(interpolated)
+								: interpolated;
+					} else {
+						interpolatedConfig[key] = value;
+					}
 				} else {
 					interpolatedConfig[key] = value;
 				}
