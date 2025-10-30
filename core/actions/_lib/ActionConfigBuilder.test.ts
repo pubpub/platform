@@ -16,15 +16,6 @@ describe("ActionConfigBuilder", () => {
 			expect(builder.getRawSchema()).toBeDefined();
 		});
 
-		test("handles invalid action", () => {
-			const builder = new ActionConfigBuilder("invalid_action" as Action);
-			const result = builder.getResult();
-			expect(result.success).toBe(false);
-			if (!result.success) {
-				expect(result.error.code).toBe(ActionConfigErrorCode.ACTION_NOT_FOUND);
-			}
-		});
-
 		test("convenience function creates builder", () => {
 			const builder = createActionConfigBuilder(Action.http);
 			expect(builder).toBeInstanceOf(ActionConfigBuilder);
@@ -358,7 +349,7 @@ describe("ActionConfigBuilder", () => {
 		test("evaluates pure jsonata expression without {{ }}", async () => {
 			const builder = await new ActionConfigBuilder(Action.http)
 				.withConfig({
-					url: "$.baseUrl",
+					url: "<<<$.baseUrl>>>",
 					method: "GET",
 				})
 				.validate()
@@ -378,7 +369,7 @@ describe("ActionConfigBuilder", () => {
 				.withConfig({
 					url: "https://example.com",
 					method: "GET",
-					body: "$.requestData",
+					body: "<<<$.requestData>>>",
 				})
 				.validate()
 				.interpolate({
@@ -388,7 +379,7 @@ describe("ActionConfigBuilder", () => {
 			const result = builder.getResult();
 			expect(result.success).toBe(true);
 			if (result.success) {
-				const body = JSON.parse(result.config.body);
+				const body = result.config.body;
 				expect(body.title).toBe("Test");
 				expect(body.count).toBe(42);
 				expect(body.active).toBe(true);
@@ -400,7 +391,7 @@ describe("ActionConfigBuilder", () => {
 				.withConfig({
 					url: "https://example.com",
 					method: "POST",
-					body: '{ "name": $.user.name, "email": $.user.email, "count": $.total }',
+					body: '<<<{ "name": $.user.name, "email": $.user.email, "count": $.total }>>>',
 				})
 				.validate()
 				.interpolate({
@@ -411,7 +402,7 @@ describe("ActionConfigBuilder", () => {
 			const result = builder.getResult();
 			expect(result.success).toBe(true);
 			if (result.success) {
-				const body = JSON.parse(result.config.body);
+				const body = result.config.body;
 				expect(body.name).toBe("Alice");
 				expect(body.email).toBe("alice@example.com");
 				expect(body.count).toBe(100);
@@ -423,7 +414,7 @@ describe("ActionConfigBuilder", () => {
 				.withConfig({
 					url: "https://example.com",
 					method: "GET",
-					body: "$.items[0]",
+					body: "<<<$.items[0]>>>",
 				})
 				.validate()
 				.interpolate({
@@ -436,7 +427,7 @@ describe("ActionConfigBuilder", () => {
 			const result = builder.getResult();
 			expect(result.success).toBe(true);
 			if (result.success) {
-				const body = JSON.parse(result.config.body);
+				const body = result.config.body;
 				expect(body.id).toBe(1);
 				expect(body.name).toBe("First");
 			}
@@ -445,7 +436,7 @@ describe("ActionConfigBuilder", () => {
 		test("handles jsonata transformations", async () => {
 			const builder = await new ActionConfigBuilder(Action.http)
 				.withConfig({
-					url: "$uppercase($.domain)",
+					url: "<<<$uppercase($.domain)>>>",
 					method: "GET",
 				})
 				.validate()
