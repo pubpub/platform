@@ -6,11 +6,11 @@ import React from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import { FormControl, FormField } from "../form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../form";
 import { useStages } from "./StagesProvider";
 
 type Props = {
-	// fieldLabel: string;
+	fieldLabel?: string;
 	field: ControllerRenderProps<FieldValues, string>;
 };
 
@@ -48,6 +48,15 @@ export const StagesSelect = (props: Props) => {
  */
 export const StagesSelectField = (props: { fieldName: string; fieldLabel: string }) => {
 	return (
-		<FormField name={props.fieldName} render={({ field }) => <StagesSelect field={field} />} />
+		<FormField
+			name={props.fieldName}
+			render={({ field }) => (
+				<FormItem>
+					<FormLabel>{props.fieldLabel ?? "Stage"}</FormLabel>
+					<StagesSelect fieldLabel={props.fieldLabel} field={field} />
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
 	);
 };
