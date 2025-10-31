@@ -188,11 +188,10 @@ export function ActionFieldJsonataTestPanel(props: {
 		setTestResult({ status: "pending" });
 
 		try {
-			const mode = props.mode ?? "jsonata";
 			const extractedValue =
 				props.mode === "jsonata" ? extractJsonata(props.value) : props.value;
 			const [interpolateError, interpolated] = await tryCatch(
-				interpolate(extractedValue, bodyWithAction, mode)
+				interpolate(extractedValue, bodyWithAction)
 			);
 
 			if (interpolateError) {
