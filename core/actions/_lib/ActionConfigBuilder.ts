@@ -254,12 +254,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 
 		// helper to check if a value needs interpolation
 		const needsInterpolation = (value: string): boolean => {
-			return value.includes("{{") || value.includes("$.");
-		};
-
-		// helper to determine mode: if value starts with <<<, use jsonata mode, otherwise template mode
-		const determineMode = (value: string): "template" | "jsonata" => {
-			return value.startsWith("<<<") ? "jsonata" : "template";
+			return value.includes("{{") || value.includes("$.") || value.startsWith("<<<");
 		};
 
 		try {
@@ -277,9 +272,8 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 					continue;
 				}
 
-				const mode = determineMode(value);
 				const valueJsonata = extractJsonata(value);
-				interpolatedConfig[key] = await interpolate(valueJsonata, data, mode);
+				interpolatedConfig[key] = await interpolate(valueJsonata, data);
 			}
 
 			return new ActionConfigBuilder(this.actionName, {

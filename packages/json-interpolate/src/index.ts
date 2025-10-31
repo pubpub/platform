@@ -60,7 +60,13 @@ function parseInterpolations(template: string): InterpolationBlock[] {
 	return blocks;
 }
 
-export type InterpolationMode = "template" | "jsonata";
+const determineMode = (template: string): "template" | "jsonata" => {
+	if (template.includes("{{")) {
+		return "template";
+	}
+
+	return "jsonata";
+};
 
 /**
  * interpolates JSONata expressions in a template string
@@ -70,11 +76,9 @@ export type InterpolationMode = "template" | "jsonata";
  * @param mode - "template" for {{ }} interpolation (always returns string), "jsonata" for pure JSONata (returns any type)
  * @returns interpolated result (string for template mode, any JSON type for jsonata mode)
  */
-export async function interpolate(
-	template: string,
-	data: unknown,
-	mode: InterpolationMode = "template"
-): Promise<unknown> {
+export async function interpolate(template: string, data: unknown): Promise<unknown> {
+	const mode = determineMode(template);
+
 	// jsonata mode: evaluate entire input as pure JSONata expression
 	if (mode === "jsonata") {
 		const expression = jsonata(template);
