@@ -1,4 +1,4 @@
-import type { EditorState } from "lexical";
+import type { EditorState, LexicalNode } from "lexical";
 import type { ControllerRenderProps } from "react-hook-form";
 
 import * as React from "react";
@@ -13,7 +13,7 @@ import {
 import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import LexicalErrorBoundary from "@lexical/react/LexicalErrorBoundary";
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
@@ -24,12 +24,15 @@ import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { cn } from "utils";
 
 import { useTokenContext } from "../tokens";
+import { JsonataNode } from "./JsonataNode";
+import { JsonataPlugin } from "./JsonataPlugin";
 import { SingleLinePlugin } from "./SingleLinePlugin";
 import { TokenNode } from "./TokenNode";
 import { TokenPlugin } from "./TokenPlugin";
 
 const theme = {
 	token: "token",
+	jsonataToken: "jsonata-token",
 };
 
 function onError(error: unknown) {
@@ -46,6 +49,7 @@ const NODES = [
 	ListItemNode,
 	QuoteNode,
 	TokenNode,
+	JsonataNode,
 ];
 
 const makeSyntheticChangeEvent = (value: string) => {
@@ -60,6 +64,7 @@ export type LexicalEditorProps = ControllerRenderProps<any, string> & {
 	withMarkdown?: boolean;
 	singleLine?: boolean;
 	"aria-labelledby"?: string;
+	allowedNodes?: LexicalNode[];
 };
 
 export const LexicalEditor = (props: LexicalEditorProps) => {
@@ -110,6 +115,7 @@ export const LexicalEditor = (props: LexicalEditorProps) => {
 			{props.singleLine && <SingleLinePlugin />}
 			{props.withMarkdown && <MarkdownShortcutPlugin transformers={TRANSFORMERS} />}
 			<TokenPlugin tokens={Object.keys(tokens[props.name] ?? {})} />
+			<JsonataPlugin />
 		</LexicalComposer>
 	);
 };
