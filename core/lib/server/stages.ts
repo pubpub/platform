@@ -1,9 +1,10 @@
-import type { ExpressionBuilder } from "kysely";
+import type { ExpressionBuilder, Kysely } from "kysely";
 
 import { cache } from "react";
 import { QueryCreator, sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 
+import type { Database } from "db/Database";
 import type {
 	CommunitiesId,
 	NewMoveConstraint,
@@ -136,6 +137,7 @@ type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; use
 type CommunityStageOptions = {
 	withActionInstances?: "count" | "full" | false;
 	withMembers?: "count" | "full" | false;
+	trx?: Kysely<Database>;
 };
 
 export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
@@ -166,9 +168,10 @@ export const getStages = (
 ) => {
 	const withActionInstances = options.withActionInstances ?? "count";
 
+	const trx = options.trx ?? db;
 	return autoCache(
-		db
-			.with("viewableStages", (db) => viewableStagesCte({ db: db, userId, communityId }))
+		trx
+			.with("viewableStages", (db) => viewableStagesCte({ db, userId, communityId }))
 			.selectFrom("stages")
 			.innerJoin("viewableStages", "viewableStages.stageId", "stages.id")
 			.where("communityId", "=", communityId)

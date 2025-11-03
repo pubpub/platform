@@ -4,6 +4,7 @@ import { afterEach, beforeEach, vi } from "vitest";
 
 import type { PublicSchema } from "db/public";
 
+import type { SQB } from "../server/cache/types";
 import { beginTransaction } from "./transactions";
 
 export const mockServerCode = async () => {
@@ -26,7 +27,10 @@ export const mockServerCode = async () => {
 	}));
 
 	vi.mock("~/lib/server/cache/autoCache", () => ({
-		autoCache: (db: any) => {
+		autoCache: (db: SQB<any>) => {
+			Object.assign(db, {
+				qb: db,
+			});
 			return db;
 		},
 	}));
