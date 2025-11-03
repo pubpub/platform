@@ -46,7 +46,7 @@ export const ActionRunForm = (props: Props) => {
 					title:
 						"title" in result && typeof result.title === "string"
 							? result.title
-							: "Action ran successfully!",
+							: `Successfully ran ${props.actionInstance.name || action.name}`,
 					variant: "default",
 					description: (
 						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>

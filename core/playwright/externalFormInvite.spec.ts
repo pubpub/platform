@@ -230,10 +230,10 @@ test.describe("Inviting a new user to fill out a form", () => {
 			await memberDialog.waitFor({ state: "hidden" });
 
 			await runActionDialog
-				.getByLabel("Subject")
+				.getByRole("textbox", { name: "Subject" })
 				.fill("Test invitation for :RecipientFirstName");
 			await runActionDialog
-				.getByLabel("Body")
+				.getByRole("textbox", { name: "Body" })
 				.fill(`Please fill out :link[this form]{form=${community.forms.Evaluation.slug}}`);
 		});
 	});
@@ -317,7 +317,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 			ACTION_NAME_EMAIL,
 			async (runActionDialog) => {
 				await runActionDialog
-					.getByLabel("Body")
+					.getByRole("textbox", { name: "Body" })
 					.fill(
 						`Please fill out :link[this form]{form=${community.pubTypes.Evaluation.defaultForm.slug}}`
 					);
@@ -346,7 +346,7 @@ test.describe("Inviting a new user to fill out a form", () => {
 		await pubDetailsPage.runAction(ACTION_NAME_USER, async (dialog) => {
 			await dialog.getByLabel("Recipient Email").fill(email1);
 			await dialog
-				.getByLabel("Body")
+				.getByRole("textbox", { name: "Body" })
 				.fill(`Please fill out :link[this form]{form=${community.forms.Evaluation.slug}}`);
 		});
 

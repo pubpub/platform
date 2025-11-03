@@ -131,8 +131,12 @@ test.describe("Sending an email to an email address", () => {
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email);
-			await runActionDialog.getByLabel("Subject").fill("Hello", { timeout: 2_000 });
-			await runActionDialog.getByLabel("Body").fill("Greetings", { timeout: 2_000 });
+			await runActionDialog
+				.getByRole("textbox", { name: "Subject" })
+				.fill("Hello", { timeout: 2_000 });
+			await runActionDialog
+				.getByRole("textbox", { name: "Body" })
+				.fill("Greetings", { timeout: 2_000 });
 		});
 	});
 	test("Static email address recipient recieves the email", async () => {
@@ -153,9 +157,9 @@ test.describe("Sending an email containing a MemberId field from a related pub",
 		await pubDetailsPage.goTo();
 		await pubDetailsPage.runAction(ACTION_NAME, async (runActionDialog) => {
 			await runActionDialog.getByLabel("Recipient Email").fill(community.users.user2.email);
-			await runActionDialog.getByLabel("Subject").fill("Hello");
+			await runActionDialog.getByRole("textbox", { name: "Subject" }).fill("Hello");
 			await runActionDialog
-				.getByLabel("Body")
+				.getByRole("textbox", { name: "Body" })
 				.fill(
 					`:value{field="${community.pubFields.EvaluationManager.slug}" firstName lastName rel="${community.pubFields.Evaluations.slug}"}`
 				);
