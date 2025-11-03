@@ -1,25 +1,23 @@
 "use client";
 
 import type { UseFormReturn } from "react-hook-form";
-import type { z } from "zod";
 
-import { Suspense, useCallback, useMemo, useTransition } from "react";
+import { Suspense, useCallback, useState } from "react";
 
 import type { ActionInstances, CommunitiesId, PubsId } from "db/public";
 import { logger } from "logger";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
-import { Loader2, Play } from "ui/icon";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
+import { ActionForm } from "~/actions/_lib/ActionForm";
 import { getActionByName } from "~/actions/api";
 import { runActionInstance } from "~/actions/api/serverAction";
+import { getActionFormComponent } from "~/actions/forms";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { useServerAction } from "~/lib/serverActions";
 import { useCommunity } from "../providers/CommunityProvider";
-import { createDefaultFieldConfig } from "./defaultFieldConfig";
 
 type Props = {
 	actionInstance: ActionInstances;
@@ -29,36 +27,12 @@ type Props = {
 
 export const ActionRunForm = (props: Props) => {
 	const action = getActionByName(props.actionInstance.action);
-	const defaultFieldConfig = createDefaultFieldConfig(
-		props.defaultFields,
-		action.params.fieldConfig
-	);
-
-	const [isPending] = useTransition();
-	const schema = useMemo(() => {
-		const schemaWithPartialDefaults = (action.params.schema as z.ZodObject<any>)
-			.partial(
-				props.defaultFields.reduce(
-					(acc, key) => {
-						acc[key] = true;
-						return acc;
-					},
-					{} as Record<string, true>
-				)
-			)
-			.optional();
-		return schemaWithPartialDefaults;
-	}, [action.params.schema, props.defaultFields]);
+	const ActionFormComponent = getActionFormComponent(action.name);
 	const community = useCommunity();
 	const runAction = useServerAction(runActionInstance);
 
-	if (!action) {
-		logger.info(`Invalid action name ${props.actionInstance.action}`);
-		return null;
-	}
-
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof action.params.schema>, form: UseFormReturn<any>) => {
+		async (values: Record<string, unknown>, form: UseFormReturn<any>) => {
 			const result = await runAction({
 				actionInstanceId: props.actionInstance.id,
 				pubId: props.pubId,
@@ -88,9 +62,20 @@ export const ActionRunForm = (props: Props) => {
 		[runAction, props.actionInstance.id, props.pubId]
 	);
 
+	const [open, setOpen] = useState(false);
+
+	const onClose = useCallback(() => {
+		setOpen(false);
+	}, []);
+
+	if (!action) {
+		logger.info(`Invalid action name ${props.actionInstance.action}`);
+		return null;
+	}
+
 	return (
 		<TokenProvider tokens={action.tokens ?? {}}>
-			<Dialog>
+			<Dialog open={open} onOpenChange={setOpen}>
 				<DialogTrigger asChild>
 					<Button
 						variant="ghost"
@@ -106,31 +91,26 @@ export const ActionRunForm = (props: Props) => {
 					<DialogHeader>
 						<DialogTitle>{props.actionInstance.name || action.name}</DialogTitle>
 					</DialogHeader>
-					<Suspense fallback={<SkeletonCard />}>
-						<AutoForm
-							values={props.actionInstance.config ?? {}}
-							fieldConfig={defaultFieldConfig}
-							formSchema={schema}
-							dependencies={action.params.dependencies}
-							onSubmit={onSubmit}
-						>
-							<AutoFormSubmit
-								disabled={isPending}
-								className="flex items-center gap-x-2"
-								data-testid="action-run-button"
-								pendingText="Running action..."
-								errorText="Error running action"
-							>
-								{isPending ? (
-									<Loader2 size="14" className="animate-spin" />
-								) : (
-									<>
-										<Play size="14" /> Run
-									</>
-								)}
-							</AutoFormSubmit>
-						</AutoForm>
-					</Suspense>
+					<ActionForm
+						action={action}
+						values={props.actionInstance.config ?? {}}
+						defaultFields={props.defaultFields}
+						onSubmit={onSubmit}
+						submitButton={{
+							text: "Run Action",
+							pendingText: "Running Action...",
+							successText: "Action Ran",
+							errorText: "Failed to run action",
+						}}
+						secondaryButton={{
+							text: "Cancel",
+							onClick: onClose,
+						}}
+					>
+						<Suspense fallback={<SkeletonCard />}>
+							<ActionFormComponent />
+						</Suspense>
+					</ActionForm>
 				</DialogContent>
 			</Dialog>
 		</TokenProvider>

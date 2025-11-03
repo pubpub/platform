@@ -53,31 +53,25 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 
 type Props = {
 	community: Communities;
-	fieldLabel: string;
-	fieldName: string;
-	helpText?: string;
+	name: string;
 	member?: MemberSelectUserWithMembership;
 	users: MemberSelectUser[];
-	allowPubFieldSubstitution: boolean;
 	onChange: (search: string) => void;
 	onUserAdded: () => void;
 };
 
 export function MemberSelectClient({
 	community,
-	fieldLabel,
-	fieldName,
+	name,
 	member,
 	users,
-	allowPubFieldSubstitution,
-	helpText,
 	onChange,
 	onUserAdded,
 }: Props) {
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
 	const runAddMember = useServerAction(addMember);
 	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(fieldName);
+	const isEnabled = formElementToggle.isEnabled(name);
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
@@ -101,88 +95,58 @@ export function MemberSelectClient({
 
 	return (
 		<FormField
-			name={fieldName}
+			name={name}
 			render={({ field }) => {
 				const unsetUser = () => {
 					setSelectedUser(undefined);
 					field.onChange(undefined);
 				};
 				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
-				const formItem = (
-					<FormItem className="flex flex-col gap-y-1">
-						<div className="flex items-center justify-between">
-							<FormLabel
-								className={cn(
-									"text-sm font-medium leading-none",
-									!isEnabled && "cursor-not-allowed opacity-50"
-								)}
-							>
-								{fieldLabel}
-							</FormLabel>
-							{allowPubFieldSubstitution && <PubFieldSelectorToggleButton />}
-						</div>
-						<AutoComplete
-							name={fieldName}
-							value={selectedUserOption}
-							options={options}
-							disabled={!isEnabled}
-							empty={
-								<MemberSelectAddUserButton
-									key={addUserButtonKey}
-									community={community}
-									email={inputValue}
-									onUserAdded={onUserAdded}
-								/>
+				return (
+					<AutoComplete
+						name={name}
+						value={selectedUserOption}
+						options={options}
+						disabled={!isEnabled}
+						empty={
+							<MemberSelectAddUserButton
+								key={addUserButtonKey}
+								community={community}
+								email={inputValue}
+								onUserAdded={onUserAdded}
+							/>
+						}
+						onInputValueChange={(val) => {
+							if (val === "") {
+								unsetUser();
 							}
-							onInputValueChange={(val) => {
-								if (val === "") {
-									unsetUser();
+							onInputValueChange(val);
+						}}
+						onValueChange={async (option) => {
+							const user = users.find((user) => user.id === option.value);
+							if (!user) {
+								return;
+							}
+							if (isMemberSelectUserWithMembership(user)) {
+								setSelectedUser(user);
+								field.onChange(user.member.id);
+							} else {
+								const result = await runAddMember({
+									userId: user.id,
+									role: MemberRole.contributor,
+									forms: [],
+								});
+								if (didSucceed(result)) {
+									const member = expect(result.member);
+									setSelectedUser({ ...user, member });
+									field.onChange(member.id);
 								}
-								onInputValueChange(val);
-							}}
-							onValueChange={async (option) => {
-								const user = users.find((user) => user.id === option.value);
-								if (!user) {
-									return;
-								}
-								if (isMemberSelectUserWithMembership(user)) {
-									setSelectedUser(user);
-									field.onChange(user.member.id);
-								} else {
-									const result = await runAddMember({
-										userId: user.id,
-										role: MemberRole.contributor,
-										forms: [],
-									});
-									if (didSucceed(result)) {
-										const member = expect(result.member);
-										setSelectedUser({ ...user, member });
-										field.onChange(member.id);
-									}
-								}
-							}}
-							onClose={resetAddUserButton}
-							icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
-							onClear={selectedUser ? unsetUser : undefined}
-						/>
-						<FormMessage />
-						{helpText && <FormDescription>{helpText}</FormDescription>}
-						{allowPubFieldSubstitution && (
-							<PubFieldSelectorHider>
-								<PubFieldSelector />
-							</PubFieldSelectorHider>
-						)}
-					</FormItem>
-				);
-				return allowPubFieldSubstitution ? (
-					<PubFieldSelectorProvider
-						field={field}
-						allowedSchemas={[CoreSchemaType.MemberId]}
-					>
-						{formItem}
-					</PubFieldSelectorProvider>
-				) : (
-					formItem
+							}
+						}}
+						onClose={resetAddUserButton}
+						icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
+						onClear={selectedUser ? unsetUser : undefined}
+					/>
 				);
 			}}
 		/>

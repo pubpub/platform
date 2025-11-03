@@ -71,51 +71,25 @@ const useMemberSelectData = ({
 };
 
 type Props = {
-	fieldName: string;
-	fieldLabel: string;
+	name: string;
 	value?: CommunityMembershipsId;
-	allowPubFieldSubstitution?: boolean;
-	helpText?: string;
 };
 
-export function MemberSelectClientFetch({
-	fieldName,
-	fieldLabel,
-	value,
-	helpText,
-	allowPubFieldSubstitution = true,
-}: Props) {
+export function MemberSelectClientFetch({ name, value }: Props) {
 	const community = useCommunity();
 	const [search, setSearch] = useState("");
-	const { initialized, user, users, refetchUsers } = useMemberSelectData({
+	const { user, users, refetchUsers } = useMemberSelectData({
 		community,
 		memberId: value,
 		email: search,
 	});
 
-	if (!initialized) {
-		return (
-			<FormItem className="flex flex-col gap-y-1">
-				<div className="flex items-center justify-between">
-					<FormLabel className={cn("text-sm font-medium leading-none")}>
-						{fieldLabel}
-					</FormLabel>
-					{allowPubFieldSubstitution && <PubFieldSelectorToggleButton />}
-				</div>
-				<Skeleton className="h-[46.5px] w-full" />
-			</FormItem>
-		);
-	}
-
 	return (
 		<MemberSelectClient
-			helpText={helpText}
 			community={community}
-			fieldLabel={fieldLabel}
-			fieldName={fieldName}
+			name={name}
 			member={(user as MemberSelectUserWithMembership) ?? undefined}
 			users={users}
-			allowPubFieldSubstitution={allowPubFieldSubstitution}
 			onChange={setSearch}
 			onUserAdded={refetchUsers}
 		/>

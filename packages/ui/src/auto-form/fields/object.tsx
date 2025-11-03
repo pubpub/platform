@@ -239,6 +239,7 @@ function FormFieldObject({
 
 				return (
 					<ParentElement key={`${key}.parent`}>
+						{/* @ts-expect-error FIXME:  dont care */}
 						<InputComponent
 							zodInputProps={zodInputProps}
 							field={field}
