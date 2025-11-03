@@ -120,6 +120,7 @@ export const PubCardClient = ({
 				// eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions
 				<div className="z-10 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
 					<Checkbox
+						aria-label={`Select pub ${getPubTitle(pub)}`}
 						checked={selected}
 						onCheckedChange={handleCheckboxChange}
 						disabled={disabled}

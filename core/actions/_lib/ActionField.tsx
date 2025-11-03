@@ -103,7 +103,11 @@ export function ActionField(props: ActionFieldProps) {
 					<Field data-invalid={p.fieldState.invalid}>
 						<div className="flex flex-row items-center justify-between space-x-2">
 							{props.label && (
-								<FieldLabel htmlFor={p.field.name} aria-required={required}>
+								<FieldLabel
+									htmlFor={p.field.name}
+									aria-required={required}
+									id={props.id}
+								>
 									{props.label}
 									{required && <span className="-ml-1 text-red-500">*</span>}
 								</FieldLabel>

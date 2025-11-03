@@ -12,7 +12,6 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
-import { MembersPage } from "./fixtures/member-page";
 import { PubsPage } from "./fixtures/pubs-page";
 
 const seed = createSeed({
@@ -412,9 +411,11 @@ test.describe("Related pubs", () => {
 		const stringRelated = page.getByTestId("related-pubs-string");
 		await stringRelated.getByRole("button", { name: "Add" }).click();
 		await page
-			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
-			.getByLabel("Select row")
-			.click();
+			.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` })
+			// .getByLabel("Select row")
+			.click({
+				timeout: 10_000,
+			});
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(stringRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		await stringRelated.getByRole("button", { name: "Add string" }).click();
@@ -426,10 +427,7 @@ test.describe("Related pubs", () => {
 		// array related field
 		const arrayRelated = page.getByTestId("related-pubs-array");
 		await arrayRelated.getByRole("button", { name: "Add" }).click();
-		await page
-			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
-			.getByLabel("Select row")
-			.click();
+		await page.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` }).click();
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(arrayRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		await arrayRelated.getByRole("button", { name: "Add array" }).click();
@@ -449,10 +447,7 @@ test.describe("Related pubs", () => {
 		// null related field
 		const nullRelated = page.getByTestId("related-pubs-null");
 		await nullRelated.getByRole("button", { name: "Add" }).click();
-		await page
-			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
-			.getByLabel("Select row")
-			.click();
+		await page.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` }).click();
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(nullRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		// Can't add a value to a null related field
