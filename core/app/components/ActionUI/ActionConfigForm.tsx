@@ -12,9 +12,8 @@ import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
 import { ActionForm } from "~/actions/_lib/ActionForm";
 import { getActionByName } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
-import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
-import { useServerAction } from "~/lib/serverActions";
-import { useCommunity } from "../providers/CommunityProvider";
+import { deleteAction, updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 export type Props = {
 	actionInstance: ActionInstances;
@@ -23,30 +22,28 @@ export type Props = {
 };
 
 export const ActionConfigForm = (props: Props) => {
-	const community = useCommunity();
 	const action = getActionByName(props.actionInstance.action);
+	const runDeleteAction = useServerAction(deleteAction);
 
-	const onDelete = useCallback(() => {
-		startTransition(async () => {});
-	}, [props.actionInstance.id, props.stageId]);
+	const onDelete = useCallback(async () => {
+		const result = await runDeleteAction(
+			props.actionInstance.id as ActionInstancesId,
+			props.stageId
+		);
+		if (didSucceed(result)) {
+			toast({
+				title: "Action deleted successfully!",
+			});
+		}
+	}, [props.actionInstance.id, props.stageId, runDeleteAction]);
 
 	const schema = useMemo(() => {
 		const config = new ActionConfigBuilder(action.name)
 			.withConfig(props.actionInstance.config ?? {})
 			.withDefaults(props.defaultFields)
 			.getSchema();
-		// const schemaWithPartialDefaults = (action.config.schema as z.ZodObject<any>).partial(
-		// 	props.defaultFields.reduce(
-		// 		(acc, key) => {
-		// 			acc[key] = true;
-		// 			return acc;
-		// 		},
-		// 		{} as Record<string, true>
-		// 	)
-		// );
-		// return schemaWithPartialDefaults;
 		return config;
-	}, [action.config.schema, props.defaultFields]);
+	}, [action.name, props.actionInstance.config, props.defaultFields]);
 
 	const runUpdateAction = useServerAction(updateAction);
 
@@ -84,7 +81,7 @@ export const ActionConfigForm = (props: Props) => {
 				}
 			});
 		},
-		[runUpdateAction, props.actionInstance.id, community.id]
+		[runUpdateAction, props.actionInstance.id, props.stageId]
 	);
 
 	const ActionFormComponent = getActionFormComponent(action.name);

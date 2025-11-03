@@ -19,9 +19,6 @@ export const action = defineAction({
 	config: {
 		schema: sharedSchema,
 	},
-	params: {
-		schema: sharedSchema.partial(),
-	},
 	experimental: true,
 	superAdminOnly: true,
 });

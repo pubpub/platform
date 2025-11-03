@@ -42,14 +42,14 @@ export type RunActionInstanceArgs = Prettify<
 	{
 		communityId: CommunitiesId;
 		actionInstanceId: ActionInstancesId;
-		actionInstanceArgs?: Record<string, unknown>;
+		/**
+		 * extra params passed to the action instance
+		 * for now these are the manual arguments when running the action
+		 * or the config for an automation
+		 */
+		actionInstanceArgs: Record<string, unknown> | null;
 		stack: ActionRunsId[];
 		scheduledActionRunId?: ActionRunsId;
-		/**
-		 * The config for the action instance to use when scheduling the action
-		 * Non-optional to make sure it's passed when needed
-		 */
-		config: Record<string, unknown> | null;
 	} & XOR<{ event: Event }, { userId: UsersId }> &
 		XOR<{ pubId: PubsId }, { json: Json }>
 >;
@@ -122,18 +122,12 @@ const _runActionInstance = async (
 	}
 
 	const actionConfigBuilder = new ActionConfigBuilder(args.actionInstance.action)
-		.withConfig({
-			...(args.actionInstance.config as Record<string, any>),
-			...(args.actionInstanceArgs as Record<string, any>),
-		})
-		.withOverrides(args.config as Record<string, any>)
+		.withConfig(args.actionInstance.config as Record<string, any>)
+		.withOverrides(args.actionInstanceArgs as Record<string, any>)
 		.withDefaults(actionDefaults?.config as Record<string, any>)
 		.validate();
 
 	let inputPubInput = pub;
-
-	// const argsFieldOverrides = new Set<string>();
-	// const configFieldOverrides = new Set<string>();
 
 	let config = null;
 	const mergedConfig = actionConfigBuilder.getMergedConfig();
@@ -292,7 +286,7 @@ export async function runActionInstance(args: RunActionInstanceArgs, trx = db) {
 				status: ActionRunStatus.scheduled,
 				// this is a bit hacky, would be better to pass this around methinks
 				config:
-					args.config ??
+					args.actionInstanceArgs ??
 					eb
 						.selectFrom("action_instances")
 						.select("config")
@@ -402,7 +396,7 @@ export const runInstancesForEvent = async (
 						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
-						config: instance.ruleConfig ?? null,
+						actionInstanceArgs: instance.ruleConfig ?? null,
 						stack,
 					},
 					trx

@@ -15,8 +15,5 @@ export const action = defineAction({
 		}),
 	},
 	description: "Move a pub into a different stage",
-	params: {
-		schema: z.object({ stage: stage().describe("The stage the pub will be moved into") }),
-	},
 	icon: MoveHorizontal,
 });

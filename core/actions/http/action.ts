@@ -36,9 +36,6 @@ export const action = defineAction({
 		schema,
 	},
 	description: "Make an arbitrary HTTP request",
-	params: {
-		schema,
-	},
 	icon: Globe,
 	experimental: true,
 });

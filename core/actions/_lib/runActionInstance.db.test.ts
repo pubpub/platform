@@ -87,7 +87,7 @@ describe("runActionInstance", () => {
 			event: Event.pubEnteredStage,
 			communityId: community.id,
 			stack: [],
-			config: null,
+			actionInstanceArgs: null,
 		});
 
 		expect(result).toMatchObject({
@@ -139,7 +139,6 @@ describe("runActionInstance", () => {
 			},
 			communityId: community.id,
 			stack: [],
-			config: null,
 		});
 
 		expect(result).toEqual({

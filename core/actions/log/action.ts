@@ -18,15 +18,6 @@ export const action = defineAction({
 		}),
 	},
 	description: "Log a pub to the console",
-	params: {
-		schema: z.object({
-			debounce: z.number().default(0).describe("Debounce time in milliseconds"),
-			text: z
-				.string()
-				.default("")
-				.describe("The string to log out in addition to the default parameters"),
-		}),
-	},
 	icon: Terminal,
 	superAdminOnly: true,
 });
