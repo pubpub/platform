@@ -11,6 +11,7 @@ import { Controller, useWatch } from "react-hook-form";
 
 import { Button } from "ui/button";
 import { ButtonGroup } from "ui/button-group";
+import { PlainTextWithTokensEditor } from "ui/editors";
 import { Field, FieldDescription, FieldError, FieldLabel } from "ui/field";
 import { Input } from "ui/input";
 import { Skeleton } from "ui/skeleton";
@@ -178,17 +179,12 @@ export function ActionField(props: ActionFieldProps) {
 							/>
 						) : (
 							(props.render?.(p) ?? (
-								<>
-									<Input
-										type="text"
-										className="bg-white"
-										placeholder={isDefaultField ? "(use default)" : undefined}
-										{...p.field}
-										id={p.field.name}
-										value={p.field.value ?? ""}
-										aria-invalid={p.fieldState.invalid}
-									/>
-								</>
+								<PlainTextWithTokensEditor
+									{...p.field}
+									aria-invalid={p.fieldState.invalid}
+									aria-labelledby={labelId}
+									multiLine={false}
+								/>
 							))
 						)}
 
