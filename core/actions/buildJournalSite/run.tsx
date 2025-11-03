@@ -12,7 +12,7 @@ import { getSiteBuilderToken } from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { defineRun } from "../types";
 
-export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
+export const run = defineRun<typeof action>(async ({ pub, config }) => {
 	const siteBuilderToken = await getSiteBuilderToken(pub.communityId);
 
 	if (!siteBuilderToken) {
@@ -38,7 +38,7 @@ export const run = defineRun<typeof action>(async ({ pub, config, args }) => {
 		throw new Error("Site builder server is not healthy");
 	}
 
-	const siteUrl = args.siteUrl ?? config.siteUrl ?? "http://localhost:4321";
+	const siteUrl = config.siteUrl ?? "http://localhost:4321";
 
 	logger.debug({
 		msg: `Initializing site build`,

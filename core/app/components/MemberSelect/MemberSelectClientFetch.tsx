@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { skipToken } from "@tanstack/react-query";
 
 import type { Communities, CommunityMembershipsId } from "db/public";
@@ -73,9 +73,10 @@ const useMemberSelectData = ({
 type Props = {
 	name: string;
 	value?: CommunityMembershipsId;
+	onChange: (value: CommunityMembershipsId | undefined) => void;
 };
 
-export function MemberSelectClientFetch({ name, value }: Props) {
+export function MemberSelectClientFetch({ name, value, onChange: onChangeProp }: Props) {
 	const community = useCommunity();
 	const [search, setSearch] = useState("");
 	const { user, users, refetchUsers } = useMemberSelectData({
@@ -90,7 +91,8 @@ export function MemberSelectClientFetch({ name, value }: Props) {
 			name={name}
 			member={(user as MemberSelectUserWithMembership) ?? undefined}
 			users={users}
-			onChange={setSearch}
+			onChangeSearch={setSearch}
+			onChangeValue={onChangeProp}
 			onUserAdded={refetchUsers}
 		/>
 	);

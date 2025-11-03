@@ -77,12 +77,12 @@ const resolveRecipient = async (
 };
 
 export const run = defineRun<typeof action>(
-	async ({ pub, config, args, communityId, actionRunId, userId }) => {
+	async ({ pub, config, communityId, actionRunId, userId }) => {
 		try {
 			const result = await maybeWithTrx(db, async (trx) => {
 				const communitySlug = await getCommunitySlug();
-				const recipientEmail = args?.recipientEmail ?? config.recipientEmail;
-				const recipientMemberId = (args?.recipientMember ?? config.recipientMember) as
+				const recipientEmail = config.recipientEmail;
+				const recipientMemberId = config.recipientMember as
 					| CommunityMembershipsId
 					| undefined;
 
@@ -110,12 +110,9 @@ export const run = defineRun<typeof action>(
 					trx,
 				} as RenderWithPubContext;
 
-				const html = await renderMarkdownWithPub(
-					args?.body ?? config.body,
-					renderMarkdownWithPubContext
-				);
+				const html = await renderMarkdownWithPub(config.body, renderMarkdownWithPubContext);
 				const subject = await renderMarkdownWithPub(
-					args?.subject ?? config.subject,
+					config.subject,
 					renderMarkdownWithPubContext,
 					true
 				);
@@ -125,8 +122,8 @@ export const run = defineRun<typeof action>(
 					subject,
 					html,
 				}).send({
-					name: args?.senderName ?? config.senderName,
-					replyTo: args?.replyTo ?? config.replyTo,
+					name: config.senderName,
+					replyTo: config.replyTo,
 				});
 
 				if (isClientException(result)) {
@@ -135,7 +132,6 @@ export const run = defineRun<typeof action>(
 						error: result.error,
 						pub,
 						config,
-						args,
 						renderMarkdownWithPubContext,
 					});
 				} else {
@@ -143,7 +139,6 @@ export const run = defineRun<typeof action>(
 						msg: "Successfully sent email",
 						pub,
 						config,
-						args,
 						renderMarkdownWithPubContext,
 					});
 				}

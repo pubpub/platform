@@ -204,7 +204,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	},
 	[InputComponent.colorPicker]: {
 		name: "Color Picker",
-		demoComponent: () => {
+		demoComponent: function ColorPickerDemoComponent() {
 			const [color, setColor] = useState("#000000");
 			return (
 				<Popover>

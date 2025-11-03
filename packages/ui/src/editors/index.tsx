@@ -12,3 +12,5 @@ export const InputWithTokens = (props: LexicalEditorProps) => {
 };
 
 export { LexicalEditor } from "./LexicalEditor";
+
+export { PlainTextWithTokensEditor } from "./PlainTextWithTokensEditor";

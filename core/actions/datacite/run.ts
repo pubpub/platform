@@ -333,8 +333,8 @@ const updatePubDeposit = async (depositPayload: Payload) => {
 	return response.json();
 };
 
-export const run = defineRun<typeof action>(async ({ pub, config, args, lastModifiedBy }) => {
-	const depositConfig = { ...config, ...args };
+export const run = defineRun<typeof action>(async ({ pub, config, lastModifiedBy }) => {
+	const depositConfig = config;
 
 	let depositPayload: Payload;
 	try {

@@ -334,6 +334,9 @@ importers:
       '@prisma/client':
         specifier: 5.19.1
         version: 5.19.1(prisma@5.22.0)
+      '@pubpub/json-interpolate':
+        specifier: workspace:*
+        version: link:../packages/json-interpolate
       '@react-email/render':
         specifier: ^1.2.0
         version: 1.2.0(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -11256,6 +11259,7 @@ packages:
 
   mathjax-full@3.2.2:
     resolution: {integrity: sha512-+LfG9Fik+OuI8SLwsiR02IVdjcnRCy5MufYLi0C3TdMT56L/pjB0alMVGgoWJF8pN9Rc7FESycZB9BMNWIid5w==}
+    deprecated: Version 4 replaces this package with the scoped package @mathjax/src
 
   md-to-react-email@5.0.5:
     resolution: {integrity: sha512-OvAXqwq57uOk+WZqFFNCMZz8yDp8BD3WazW1wAKHUrPbbdr89K9DWS6JXY09vd9xNdPNeurI8DU/X4flcfaD8A==}

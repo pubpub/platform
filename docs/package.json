@@ -9,7 +9,7 @@
 		"postbuild": "pagefind --site .next/server/app --output-path out/_pagefind",
 		"start": "serve ./out -p 3006",
 		"type-check": "tsc --noEmit",
-		"lint": "next lint"
+		"lint": "eslint"
 	},
 	"dependencies": {
 		"next": "catalog:",

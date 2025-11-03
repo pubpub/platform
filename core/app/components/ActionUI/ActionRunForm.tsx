@@ -46,13 +46,21 @@ export const ActionRunForm = (props: Props) => {
 					title:
 						"title" in result && typeof result.title === "string"
 							? result.title
-							: "Action ran successfully!",
+							: `Successfully ran ${props.actionInstance.name || action.name}`,
 					variant: "default",
 					description: (
 						<div className="max-h-40 max-w-sm overflow-auto">{result.report}</div>
 					),
 				});
 				return;
+			}
+			if ("issues" in result && result.issues) {
+				const issues = result.issues;
+				for (const issue of issues) {
+					form.setError(issue.path.join("."), {
+						message: issue.message,
+					});
+				}
 			}
 
 			form.setError("root.serverError", {
@@ -87,7 +95,7 @@ export const ActionRunForm = (props: Props) => {
 						</span>
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="max-h-full overflow-y-auto">
+				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>{props.actionInstance.name || action.name}</DialogTitle>
 					</DialogHeader>
@@ -106,6 +114,7 @@ export const ActionRunForm = (props: Props) => {
 							text: "Cancel",
 							onClick: onClose,
 						}}
+						context={{ type: "run", pubId: props.pubId }}
 					>
 						<Suspense fallback={<SkeletonCard />}>
 							<ActionFormComponent />

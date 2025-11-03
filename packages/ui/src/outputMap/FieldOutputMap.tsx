@@ -140,7 +140,7 @@ export const FieldOutputMap = <F extends string>({
 				responseField: string;
 				pubField: string;
 			}[];
-		} & { pubFields: Record<string, string[]> },
+		},
 		unknown,
 		FieldValues | undefined
 	>;
@@ -159,6 +159,7 @@ export const FieldOutputMap = <F extends string>({
 	const [title] = itemName.split("|");
 
 	const alreadySelectedPubFields = values[fieldName] ?? [];
+
 	const unselectedPubFields = pubFields.filter(
 		(pubField) => !alreadySelectedPubFields.some((field) => field.pubField === pubField.slug)
 	);

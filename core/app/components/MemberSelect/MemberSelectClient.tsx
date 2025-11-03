@@ -3,20 +3,13 @@
 import { useCallback, useMemo, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 
-import type { Communities } from "db/public";
+import type { Communities, CommunityMembershipsId } from "db/public";
 import type { Option } from "ui/autocomplete";
-import { CoreSchemaType, MemberRole } from "db/public";
+import { MemberRole } from "db/public";
 import { AutoComplete } from "ui/autocomplete";
-import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { UserCheck } from "ui/icon";
-import {
-	PubFieldSelector,
-	PubFieldSelectorHider,
-	PubFieldSelectorProvider,
-	PubFieldSelectorToggleButton,
-} from "ui/pubFields";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { cn, expect } from "utils";
+import { expect } from "utils";
 
 import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
 import { addMember } from "~/app/c/[communitySlug]/members/actions";
@@ -56,7 +49,8 @@ type Props = {
 	name: string;
 	member?: MemberSelectUserWithMembership;
 	users: MemberSelectUser[];
-	onChange: (search: string) => void;
+	onChangeSearch: (search: string) => void;
+	onChangeValue: (value: CommunityMembershipsId | undefined) => void;
 	onUserAdded: () => void;
 };
 
@@ -65,7 +59,8 @@ export function MemberSelectClient({
 	name,
 	member,
 	users,
-	onChange,
+	onChangeSearch,
+	onChangeValue,
 	onUserAdded,
 }: Props) {
 	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
@@ -85,7 +80,7 @@ export function MemberSelectClient({
 	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
 
 	const updateSearch = useDebouncedCallback((value: string) => {
-		onChange(value);
+		onChangeSearch(value);
 	}, 400);
 
 	const onInputValueChange = (value: string) => {
@@ -93,62 +88,55 @@ export function MemberSelectClient({
 		updateSearch(value);
 	};
 
+	const unsetUser = () => {
+		setSelectedUser(undefined);
+		onChangeValue(undefined);
+	};
+	const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
 	return (
-		<FormField
+		<AutoComplete
 			name={name}
-			render={({ field }) => {
-				const unsetUser = () => {
-					setSelectedUser(undefined);
-					field.onChange(undefined);
-				};
-				const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
-				return (
-					<AutoComplete
-						name={name}
-						value={selectedUserOption}
-						options={options}
-						disabled={!isEnabled}
-						empty={
-							<MemberSelectAddUserButton
-								key={addUserButtonKey}
-								community={community}
-								email={inputValue}
-								onUserAdded={onUserAdded}
-							/>
-						}
-						onInputValueChange={(val) => {
-							if (val === "") {
-								unsetUser();
-							}
-							onInputValueChange(val);
-						}}
-						onValueChange={async (option) => {
-							const user = users.find((user) => user.id === option.value);
-							if (!user) {
-								return;
-							}
-							if (isMemberSelectUserWithMembership(user)) {
-								setSelectedUser(user);
-								field.onChange(user.member.id);
-							} else {
-								const result = await runAddMember({
-									userId: user.id,
-									role: MemberRole.contributor,
-									forms: [],
-								});
-								if (didSucceed(result)) {
-									const member = expect(result.member);
-									setSelectedUser({ ...user, member });
-									field.onChange(member.id);
-								}
-							}
-						}}
-						onClose={resetAddUserButton}
-						icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
-						onClear={selectedUser ? unsetUser : undefined}
-					/>
-				);
+			value={selectedUserOption}
+			options={options}
+			disabled={!isEnabled}
+			empty={
+				<MemberSelectAddUserButton
+					key={addUserButtonKey}
+					community={community}
+					email={inputValue}
+					onUserAdded={onUserAdded}
+				/>
+			}
+			onInputValueChange={(val) => {
+				if (val === "") {
+					unsetUser();
+				}
+				onInputValueChange(val);
 			}}
+			onValueChange={async (option) => {
+				const user = users.find((user) => user.id === option.value);
+				if (!user) {
+					return;
+				}
+				if (isMemberSelectUserWithMembership(user)) {
+					setSelectedUser(user);
+					onChangeValue(user.member.id);
+				} else {
+					const result = await runAddMember({
+						userId: user.id,
+						role: MemberRole.contributor,
+						forms: [],
+					});
+					if (didSucceed(result)) {
+						const member = expect(result.member);
+						setSelectedUser({ ...user, member });
+						onChangeValue(member.id);
+					}
+				}
+			}}
+			onClose={resetAddUserButton}
+			icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
+			onClear={selectedUser ? unsetUser : undefined}
 		/>
 	);
 }

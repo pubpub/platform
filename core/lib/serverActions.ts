@@ -1,3 +1,5 @@
+import type { ZodError } from "zod";
+
 import { useCallback } from "react";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { captureException } from "@sentry/nextjs";
@@ -10,6 +12,8 @@ export type ClientException = {
 	error: string;
 	title?: string;
 	id?: string;
+	/* for when you want to communitcate back validation issues to the client */
+	issues?: ZodError["issues"];
 };
 
 export type ClientExceptionOptions = Omit<ClientException, "isClientException"> & {
@@ -50,6 +54,11 @@ export function useServerAction<T extends unknown[], U>(action: (...args: T) => 
 						title: result.title ?? "Error",
 						variant: "destructive",
 						description: `${result.error}${result.id ? ` (Error ID: ${result.id})` : ""}`,
+						...(result.issues
+							? {
+									description: `${result.error}:\n${result.issues.map((issue) => `- ${issue.path.join(".")}: ${issue.message}`).join("\n")}`,
+								}
+							: {}),
 					});
 				}
 				return result;

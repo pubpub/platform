@@ -52,6 +52,7 @@ export const ActionConfigDefaultForm = (props: Props) => {
 				successText: "Submitted",
 				errorText: "Failed to submit",
 			}}
+			context={{ type: "default" }}
 		>
 			<ActionFormComponent />
 		</ActionForm>

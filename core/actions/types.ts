@@ -1,6 +1,6 @@
 import type * as z from "zod";
 
-import type { ProcessedPub } from "contracts";
+import type { Json, ProcessedPub } from "contracts";
 import type {
 	ActionInstances,
 	Action as ActionName,
@@ -25,19 +25,10 @@ export type ActionPub = ProcessedPub<{
 }>;
 
 export type RunProps<T extends Action> =
-	T extends Action<
-		infer C,
-		infer A extends z.ZodObject<any>,
-		any,
-		infer Acc extends ActionRunAccepts[]
-	>
+	T extends Action<infer C, any, infer Acc extends ActionRunAccepts[]>
 		? Prettify<
 				{
 					config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
-					configFieldOverrides: Set<string>;
-					// pub: ActionPub;
-					args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
-					argsFieldOverrides: Set<string>;
 					stageId: StagesId;
 					communityId: CommunitiesId;
 					/**
@@ -56,15 +47,13 @@ export type RunProps<T extends Action> =
 					// if both are accepted, it's one or the other.
 					// if only one's accepted, it's only that one
 					("pub" | "json" extends Acc[number]
-						? XOR<{ pub: ActionPub }, { json: Record<string, any> }>
+						? XOR<{ pub: ActionPub }, { json: Json }>
 						: ("pub" extends Acc[number]
 								? {
 										pub: ActionPub;
 									}
 								: { pub?: never }) &
-								("json" extends Acc[number]
-									? { json: Record<string, unknown> }
-									: { json?: never }))
+								("json" extends Acc[number] ? { json: Json } : { json?: never }))
 			>
 		: never;
 
@@ -83,7 +72,6 @@ export type ActionRunAccepts = (typeof actionRunAccepts)[number];
 
 export type Action<
 	C extends z.ZodObject<any> = z.ZodObject<any>,
-	A extends z.ZodObject<any> = z.ZodObject<any>,
 	N extends ActionName = ActionName,
 	Accepts extends ActionRunAccepts[] = ActionRunAccepts[],
 > = {
@@ -102,21 +90,6 @@ export type Action<
 			[K in keyof FieldConfig<C["_output"]>]: FieldConfigItem;
 		};
 		dependencies?: Dependency<z.infer<C>>[];
-	};
-	/**
-	 * The run parameters for this action
-	 *
-	 * These are the parameters you can specify when manually running the action.
-	 *
-	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
-	 * through a rule.
-	 */
-	params: {
-		schema: A;
-		fieldConfig?: {
-			[K in keyof NonNullable<A["_output"]>]: FieldConfigItem;
-		};
-		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
 	};
 	/**
 	 * The icon to display for this action. Used in the UI.
@@ -143,11 +116,10 @@ export type Action<
 
 export const defineAction = <
 	C extends z.ZodObject<any>,
-	A extends z.ZodObject<any>,
 	N extends ActionName,
 	Acc extends ActionRunAccepts[],
 >(
-	action: Action<C, A, N, Acc>
+	action: Action<C, N, Acc>
 ) => action;
 
 export type ActionSuccess = {

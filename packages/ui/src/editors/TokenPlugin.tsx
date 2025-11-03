@@ -5,8 +5,6 @@ import { TextNode } from "lexical";
 
 import { $createTokenNode, TokenNode } from "./TokenNode";
 
-const boundary = "^|$|[^&/" + "*" + "]";
-
 const $createTokenNode_ = (textNode: TextNode): TokenNode => {
 	return $createTokenNode(textNode.getTextContent());
 };

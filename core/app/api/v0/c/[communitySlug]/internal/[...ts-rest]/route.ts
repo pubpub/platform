@@ -46,7 +46,7 @@ const handler = createNextHandler(
 				communityId: community.id as CommunitiesId,
 				stack: stack ?? [],
 				scheduledActionRunId: scheduledActionRunId,
-				config: config ?? null,
+				actionInstanceArgs: config ?? null,
 				...rest,
 			});
 
