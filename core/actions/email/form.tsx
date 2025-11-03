@@ -21,6 +21,8 @@ export default function EmailActionForm() {
 						<MemberSelectClientFetch
 							name={field.name}
 							aria-invalid={fieldState.invalid}
+							onChange={field.onChange}
+							value={field.value}
 						/>
 					)}
 				/>
