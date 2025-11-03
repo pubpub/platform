@@ -13,7 +13,7 @@ type SSERevalidatorProps<T extends NotifyTables> = {
 	listenFilter?: (msg: ChangeNotification<T>) => boolean;
 };
 
-const _SSERevalidator = <T extends NotifyTables>({
+const SSERevalidatorInner = <T extends NotifyTables>({
 	eventName = "change",
 	debounceMs = 500,
 	listenTables,
@@ -47,7 +47,7 @@ const _SSERevalidator = <T extends NotifyTables>({
 export function SSERevalidator<T extends NotifyTables>(props: SSERevalidatorProps<T>) {
 	return (
 		<Suspense>
-			<_SSERevalidator {...props} />
+			<SSERevalidatorInner {...props} />
 		</Suspense>
 	);
 }

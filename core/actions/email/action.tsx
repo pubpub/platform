@@ -57,7 +57,6 @@ export const action = defineAction({
 	name: Action.email,
 	config: { schema },
 	description: "Send an email to one or more users",
-	params: { schema },
 	icon: Mail,
 	tokens: {
 		subject: {

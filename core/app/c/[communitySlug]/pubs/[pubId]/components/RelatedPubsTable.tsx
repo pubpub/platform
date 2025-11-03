@@ -60,7 +60,7 @@ const getRelatedPubsColumns = (
 		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Title" />,
 			accessorKey: "title",
-			cell: ({ row }) => {
+			cell: function TitleHeader({ row }) {
 				const pathname = usePathname();
 				const path = pathname.split("/").slice(0, 4).join("/");
 				const title = getPubTitle(row.original);
@@ -107,7 +107,7 @@ const getRelatedPubsColumns = (
 							<DataTableColumnHeader column={column} title="Actions" />
 						),
 						accessorKey: "stage.actions",
-						cell: ({ getValue, row }) => {
+						cell: ({ row }) => {
 							return relatedPubActionsDropdowns[row.original.id];
 						},
 					} satisfies RelatedPubTableColumnDef,

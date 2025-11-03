@@ -1,6 +1,6 @@
 "use client";
 
-import type { ControllerRenderProps } from "react-hook-form";
+import type { ControllerRenderProps, FieldValues, UseFormReturn } from "react-hook-form";
 
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,7 +12,6 @@ import { z } from "zod";
 import type { ActionInstances, CommunitiesId, RulesId, StagesId } from "db/public";
 import { actionInstancesIdSchema, Event } from "db/public";
 import { logger } from "logger";
-import { AutoFormObject } from "ui/auto-form";
 import { Button } from "ui/button";
 import {
 	Dialog,
@@ -26,13 +25,14 @@ import {
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
-import { TokenProvider } from "ui/tokens";
 import { cn } from "utils";
 
 import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
 import type { getStageActions } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
+import { ActionFormContext } from "~/actions/_lib/ActionForm";
 import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
+import { getActionFormComponent } from "~/actions/forms";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { addOrUpdateRule, deleteRule } from "../../../actions";
@@ -210,9 +210,9 @@ export const StagePanelAutomationForm = (props: Props) => {
 		[props.stageId, runUpsertRule]
 	);
 
-	const [selectedActionInstance, setSelectedActionInstance] = useState<ActionInstances | null>(
-		null
-	);
+	const [selectedActionInstance, setSelectedActionInstance] = useState<
+		(typeof props.actionInstances)[number] | null
+	>(null);
 
 	const actionInstance = useMemo(() => {
 		if (!selectedActionInstance) {
@@ -254,24 +254,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 		);
 
 		return schemaWithPartialDefaults;
-	}, [selectedActionInstance, props.actionInstances, actionInstance]);
-
-	const selectedActionTokens = useMemo(() => {
-		if (!actionInstance) {
-			return {};
-		}
-
-		if (!actionInstance.action.tokens) {
-			return {};
-		}
-
-		return Object.fromEntries(
-			Object.entries(actionInstance.action.tokens).map(([key, value]) => [
-				`actionConfig.${key}`,
-				value,
-			])
-		);
-	}, [actionInstance]);
+	}, [selectedActionInstance, actionInstance]);
 
 	const schema = useMemo(() => {
 		if (!selectedActionInstance) {
@@ -292,7 +275,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 		);
 
 		return refineSchema(schemaWithAction);
-	}, [selectedActionInstance, actionSchema]);
+	}, [selectedActionInstance, props.actionInstances, actionSchema]);
 
 	const form = useForm<CreateRuleSchema>({
 		resolver: zodResolver(schema),
@@ -338,7 +321,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 		);
 
 		return { disallowedEvents, allowedEvents };
-	}, [props.rules, selectedActionInstanceId, event, form]);
+	}, [selectedActionInstanceId, event, props.rules, sourceActionInstanceId]);
 
 	useEffect(() => {
 		const actionInstance =
@@ -351,7 +334,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 				actionConfig: actionInstance.config,
 			});
 		}
-	}, [selectedActionInstanceId]);
+	}, [form, props.actionInstances, selectedActionInstanceId]);
 
 	useEffect(() => {
 		const currentRule = props.rules.find((rule) => rule.id === currentlyEditingRuleId);
@@ -373,7 +356,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 			sourceActionInstanceId: currentRule.sourceAction?.id,
 			ruleConfig: currentRule.config?.ruleConfig,
 		} as CreateRuleSchema);
-	}, [currentlyEditingRuleId]);
+	}, [currentlyEditingRuleId, props.actionInstances, props.rules]);
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
@@ -384,7 +367,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 			}
 			setIsOpen(open);
 		},
-		[form, setSelectedActionInstance, setIsOpen]
+		[setSelectedActionInstance, setIsOpen]
 	);
 
 	const rule = getRuleByName(event);
@@ -400,6 +383,16 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 	const formId = useId();
 
+	const ActionFormComponent = useMemo(() => {
+		if (!selectedActionInstance) {
+			return null;
+		}
+
+		return getActionFormComponent(selectedActionInstance.action);
+	}, [selectedActionInstance]);
+
+	const isExistingRule = !!currentlyEditingRuleId;
+
 	return (
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -408,9 +401,11 @@ export const StagePanelAutomationForm = (props: Props) => {
 						Add automation
 					</Button>
 				</DialogTrigger>
-				<DialogContent>
+				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto">
 					<DialogHeader>
-						<DialogTitle>Add an automation</DialogTitle>
+						<DialogTitle>
+							{isExistingRule ? "Edit automation" : "Add automation"}
+						</DialogTitle>
 						<DialogDescription>
 							Set up an automation to run whenever a certain event is triggered.
 						</DialogDescription>
@@ -419,7 +414,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 						<form
 							id={formId}
 							onSubmit={form.handleSubmit(onSubmit)}
-							className="flex max-h-[85vh] flex-col gap-y-4 overflow-y-auto"
+							className="flex flex-col gap-y-4"
 						>
 							<FormField
 								control={form.control}
@@ -524,43 +519,25 @@ export const StagePanelAutomationForm = (props: Props) => {
 										With the following config:
 									</h4>
 									<div className="rounded-md border bg-gray-50 p-2">
-										<TokenProvider tokens={selectedActionTokens}>
-											<AutoFormObject
-												key={selectedActionInstance.id}
-												// @ts-expect-error FIXME: this fails because AutoFormObject
-												// expects the schema for `form` to be the same as the one for
-												// `schema`.
-												// Could be fixed by changing AutoFormObject to look at the schema of `form` at `path` for
-												// the schema at `schema`.
-												form={form}
-												path={["actionConfig"]}
-												name="actionConfig"
-												schema={actionSchema}
-												fieldConfig={
-													actionInstance?.action.config.fieldConfig
-												}
-												dependencies={
-													actionInstance?.action.config.dependencies
-												}
-											/>
-										</TokenProvider>
+										{ActionFormComponent && (
+											<ActionFormContext.Provider
+												value={{
+													action: actions[selectedActionInstance.action],
+													schema: actionSchema,
+													path: "actionConfig",
+													// slightly elobarate cast, slightly more typesafe
+													form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
+													defaultFields:
+														selectedActionInstance.defaultedActionConfigKeys ??
+														[],
+													context: { type: "automation" },
+												}}
+											>
+												<ActionFormComponent />
+											</ActionFormContext.Provider>
+										)}
 									</div>
 								</div>
-							)}
-
-							{rule?.additionalConfig && (
-								<AutoFormObject
-									// @ts-expect-error FIXME: this fails because AutoFormObject
-									// expects the schema for `form` to be the same as the one for
-									// `schema`.
-									// Could be fixed by changing AutoFormObject to look at the schema of `form` at `path` for
-									// the schema at `schema`.
-									form={form}
-									path={["additionalConfiguration"]}
-									name="additionalConfiguration"
-									// @ts-expect-error FIXME: rule.additionalConfig is a typed as a ZodType, not a ZodObject, even though it is.
-									schema={rule.additionalConfig}
-								/>
 							)}
 						</form>
 						{form.formState.errors.root && (
@@ -575,7 +552,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 					</Form>
 					<DialogFooter
 						className={cn(
-							"flex w-full items-center",
+							"sticky -bottom-4 flex w-full items-center",
 							currentlyEditingRuleId && "!justify-between"
 						)}
 					>
