@@ -354,6 +354,10 @@ test.describe("Member select", async () => {
 
 test.describe("Related pubs", () => {
 	test("Can add related pubs", async () => {
+		/**
+		 * can be long
+		 */
+		test.setTimeout(60_000);
 		// Create a related pub we can link to
 		const relatedPubTitle = "related pub";
 		const pubsPage = new PubsPage(page, community.community.slug);
