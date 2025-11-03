@@ -4,7 +4,7 @@ import type { PropsWithChildren } from "react";
 import type { ControllerProps } from "react-hook-form";
 import type z from "zod";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import dynamic from "next/dynamic";
 import { Braces, TestTube, X } from "lucide-react";
 import { Controller, useWatch } from "react-hook-form";
@@ -46,7 +46,8 @@ type ActionFieldProps = PropsWithChildren<{
 	name: string;
 	label?: string;
 	render?: ControllerProps<any>["render"];
-	id?: string;
+	/* id for the label */
+	labelId?: HTMLFormElement["id"];
 	description?: string;
 }>;
 
@@ -86,6 +87,9 @@ export function ActionField(props: ActionFieldProps) {
 		}));
 	}, [val]);
 
+	const labelIdMaybe = useId();
+	const labelId = props.labelId ?? labelIdMaybe;
+
 	return (
 		<Controller
 			name={fieldName}
@@ -106,7 +110,7 @@ export function ActionField(props: ActionFieldProps) {
 								<FieldLabel
 									htmlFor={p.field.name}
 									aria-required={required}
-									id={props.id}
+									id={labelId}
 								>
 									{props.label}
 									{required && <span className="-ml-1 text-red-500">*</span>}
@@ -120,6 +124,7 @@ export function ActionField(props: ActionFieldProps) {
 												variant="ghost"
 												size="sm"
 												aria-label={isTestOpen ? "Close test" : "Open test"}
+												data-testid={`toggle-jsonata-test-button-${p.field.name}`}
 												className="h-9 px-2 font-mono text-xs"
 												onClick={() => setIsTestOpen(!isTestOpen)}
 											>
@@ -141,6 +146,8 @@ export function ActionField(props: ActionFieldProps) {
 									variant="ghost"
 									size="icon"
 									type="button"
+									aria-label={`Toggle JSONata mode for ${p.field.name}`}
+									data-testid={`toggle-jsonata-${p.field.name}`}
 									className={cn(
 										"font-mono font-semibold text-gray-900 hover:bg-amber-50",
 										"transition-colors duration-200",
@@ -164,6 +171,7 @@ export function ActionField(props: ActionFieldProps) {
 						</div>
 						{inputState.state === "jsonata" ? (
 							<ActionFieldJsonInput
+								aria-labelledby={labelId}
 								field={p.field}
 								isDefaultField={isDefaultField}
 								actionAccepts={action.accepts}

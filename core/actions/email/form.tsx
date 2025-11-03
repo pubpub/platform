@@ -28,7 +28,7 @@ export default function EmailActionForm() {
 			<ActionField
 				name="subject"
 				label="Subject"
-				id="subject-label"
+				labelId="subject-label"
 				render={({ field, fieldState }) => (
 					<InputWithTokens
 						{...field}
@@ -40,7 +40,7 @@ export default function EmailActionForm() {
 			<ActionField
 				name="body"
 				label="Body"
-				id="body-label"
+				labelId="body-label"
 				render={({ field, fieldState }) => (
 					<MarkdownEditor
 						{...field}

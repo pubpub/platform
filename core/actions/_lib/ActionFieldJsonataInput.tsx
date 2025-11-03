@@ -21,6 +21,7 @@ export function ActionFieldJsonataInput(props: {
 	field: ControllerRenderProps<FieldValues, any>;
 	isDefaultField: boolean;
 	actionAccepts: readonly string[];
+	"aria-labelledby": string;
 }) {
 	const { field, actionAccepts } = props;
 
@@ -60,6 +61,7 @@ export function ActionFieldJsonataInput(props: {
 				</span>
 			</div>
 			<Textarea
+				aria-labelledby={props["aria-labelledby"]}
 				className="border-amber-400 bg-amber-50/10 font-mono font-medium text-gray-900 focus:border-amber-400 focus-visible:ring-amber-400"
 				placeholder={isDefaultField ? "(use default)" : undefined}
 				{...field}

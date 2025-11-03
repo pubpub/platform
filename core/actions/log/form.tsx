@@ -10,15 +10,18 @@ export default function LogActionForm() {
 			<ActionField
 				name="debounce"
 				label="Debounce (ms)"
-				render={({ field, fieldState }) => (
-					<Input
-						type="number"
-						{...field}
-						id={field.name}
-						aria-invalid={fieldState.invalid}
-						onChange={(e) => field.onChange(Number(e.target.value ?? 0))}
-					/>
-				)}
+				render={({ field, fieldState }) => {
+					console.log(field, fieldState);
+					return (
+						<Input
+							type="number"
+							{...field}
+							id={field.name}
+							aria-invalid={fieldState.invalid}
+							onChange={(e) => field.onChange(Number(e.target.value ?? 0))}
+						/>
+					);
+				}}
 			/>
 		</FieldSet>
 	);
