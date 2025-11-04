@@ -11,7 +11,7 @@ import type {
 	CommunitiesId,
 	NewAutomations,
 } from "db/public";
-import type { AutomationConfigBase } from "db/types";
+import type { AutomationConfig } from "db/types";
 import { Event } from "db/public";
 import { expect } from "utils";
 
@@ -262,7 +262,7 @@ export async function createOrUpdateAutomationWithCycleCheck(
 		event: Event;
 		actionInstanceId: ActionInstancesId;
 		sourceActionInstanceId?: ActionInstancesId;
-		config?: AutomationConfigBase | null;
+		config?: AutomationConfig | null;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {

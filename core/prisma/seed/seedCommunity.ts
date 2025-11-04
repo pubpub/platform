@@ -39,7 +39,7 @@ import type {
 } from "db/public";
 import type {
 	ApiAccessPermissionConstraints,
-	AutomationConfigBase,
+	AutomationConfig,
 	Invite,
 	NewInviteInput,
 	permissionsSchema,
@@ -157,7 +157,7 @@ export type StagesInitializer<
 			event: Event;
 			actionInstance: keyof A;
 			sourceAction?: keyof A;
-			config?: AutomationConfigBase | null;
+			config?: AutomationConfig | null;
 		}[];
 	}
 >;
