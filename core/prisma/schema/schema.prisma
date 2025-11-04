@@ -373,17 +373,18 @@ enum ActionRunStatus {
 }
 
 model Automation {
-  id                     String          @id @default(dbgenerated("gen_random_uuid()"))
-  event                  Event
-  actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId       String
+  id                       String                     @id @default(dbgenerated("gen_random_uuid()"))
+  event                    Event
+  actionInstance           ActionInstance             @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId         String
   /// @type(AutomationConfig, '../types', true, false, true)
-  config                 Json?
+  config                   Json?
   // as the trigger for "actionSucceeded" or "actionFailed"
-  sourceActionInstanceId String?
-  sourceActionInstance   ActionInstance? @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @default(now()) @updatedAt
+  sourceActionInstanceId   String?
+  sourceActionInstance     ActionInstance?            @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
+  createdAt                DateTime                   @default(now())
+  updatedAt                DateTime                   @default(now()) @updatedAt
+  AutomationConditionBlock AutomationConditionBlock[]
 
   @@map(name: "automations")
 }
@@ -395,6 +396,48 @@ enum Event {
   actionSucceeded
   actionFailed
   webhook
+}
+
+model AutomationConditionBlock {
+  id   String                       @id @default(dbgenerated("gen_random_uuid()"))
+  type AutomationConditionBlockType
+  rank String // Uses "C" collation
+
+  // nested automation condition blocks
+  automationConditionBlockId String?
+  automationConditionBlock   AutomationConditionBlock?  @relation("automation_condition_block", fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
+  automationConditionBlocks  AutomationConditionBlock[] @relation("automation_condition_block")
+
+  automationId String
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @default(now()) @updatedAt
+  AutomationCondition AutomationCondition[]
+
+  @@map(name: "automation_condition_blocks")
+}
+
+enum AutomationConditionBlockType {
+  AND
+  OR
+  NOT
+}
+
+model AutomationCondition {
+  id                         String                   @id @default(dbgenerated("gen_random_uuid()"))
+  automationConditionBlockId String
+  automationConditionBlock   AutomationConditionBlock @relation(fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
+
+  rank      String // Uses "C" collation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map(name: "automation_conditions")
+}
+
+enum AutomationConditionType {
+  jsonata
 }
 
 enum FormAccessType {

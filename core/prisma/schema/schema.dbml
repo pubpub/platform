@@ -373,6 +373,30 @@ Table automations {
   sourceActionInstance action_instances
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
+  AutomationConditionBlock automation_condition_blocks [not null]
+}
+
+Table automation_condition_blocks {
+  id String [pk]
+  type AutomationConditionBlockType [not null]
+  rank String [not null]
+  automationConditionBlockId String
+  automationConditionBlock automation_condition_blocks
+  automationConditionBlocks automation_condition_blocks [not null]
+  automationId String [not null]
+  automation automations [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
+  AutomationCondition automation_conditions [not null]
+}
+
+Table automation_conditions {
+  id String [pk]
+  automationConditionBlockId String [not null]
+  automationConditionBlock automation_condition_blocks [not null]
+  rank String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 }
 
 Table forms {
@@ -624,6 +648,16 @@ Enum Event {
   webhook
 }
 
+Enum AutomationConditionBlockType {
+  AND
+  OR
+  NOT
+}
+
+Enum AutomationConditionType {
+  jsonata
+}
+
 Enum FormAccessType {
   private
   public
@@ -769,6 +803,12 @@ Ref: action_runs.sourceActionRunId - action_runs.id [delete: Set Null]
 Ref: automations.actionInstanceId > action_instances.id [delete: Cascade]
 
 Ref: automations.sourceActionInstanceId > action_instances.id [delete: Cascade]
+
+Ref: automation_condition_blocks.automationConditionBlockId - automation_condition_blocks.id [delete: Cascade]
+
+Ref: automation_condition_blocks.automationId > automations.id [delete: Cascade]
+
+Ref: automation_conditions.automationConditionBlockId > automation_condition_blocks.id [delete: Cascade]
 
 Ref: forms.communityId > communities.id [delete: Cascade]
 

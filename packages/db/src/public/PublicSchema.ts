@@ -8,6 +8,8 @@ import type { ApiAccessLogsTable } from "./ApiAccessLogs";
 import type { ApiAccessPermissionsTable } from "./ApiAccessPermissions";
 import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
+import type { AutomationConditionBlocksTable } from "./AutomationConditionBlocks";
+import type { AutomationConditionsTable } from "./AutomationConditions";
 import type { AutomationsTable } from "./Automations";
 import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
@@ -67,6 +69,8 @@ export interface PublicSchema {
 
 	pub_types: PubTypesTable;
 
+	automation_conditions: AutomationConditionsTable;
+
 	pub_fields: PubFieldsTable;
 
 	invites_history: InvitesHistoryTable;
@@ -96,6 +100,8 @@ export interface PublicSchema {
 	pub_memberships: PubMembershipsTable;
 
 	stages: StagesTable;
+
+	automation_condition_blocks: AutomationConditionBlocksTable;
 
 	form_elements: FormElementsTable;
 
