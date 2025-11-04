@@ -1,4 +1,4 @@
-import { updateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 
 import { logger } from "logger";
 
@@ -21,7 +21,8 @@ import { getCommunitySlug } from "./getCommunitySlug";
  */
 export const revalidateTagsForCommunity = async <S extends CacheScope>(
 	scope: S | S[],
-	communitySlug?: string | string[]
+	communitySlug?: string | string[],
+	isApiRoute?: boolean
 ): Promise<string[]> => {
 	const slug = communitySlug ?? (await getCommunitySlug());
 
@@ -32,7 +33,13 @@ export const revalidateTagsForCommunity = async <S extends CacheScope>(
 	const tags = slugs.flatMap((slug) => {
 		const tags = createCommunityCacheTags(scopes, slug);
 		return tags.map((tag) => {
-			updateTag(tag);
+			if (isApiRoute) {
+				revalidateTag(tag, {
+					expire: 0,
+				});
+			} else {
+				updateTag(tag);
+			}
 			return tag;
 		});
 	});

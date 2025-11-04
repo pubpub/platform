@@ -9,7 +9,7 @@ packages:
 
 # A catalog is used to line up the package versions across workspaces
 catalog:
-    next: ^16.0.0
+    next: ^16.0.1
     eslint: ^9.9.0
     katex: ^0.16.18
     prettier: ^3.6.2

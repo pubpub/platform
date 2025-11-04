@@ -83,11 +83,10 @@ export class AutoCacheWithMutationError extends Error {
 	}
 }
 
-export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
+export const cachedFindTables = <T extends CompiledQuery<Simplify<any>>>(
 	query: T,
 	type: "select" | "mutation"
-): Promise<(keyof Database)[]> => {
-	const getTables = async () => findTables(query.query, type);
+): (keyof Database)[] => {
 	// TODO: benchmark whether memoization is worth it
 
 	// const getTables = memoize(() => findTables(query.query, type), {
@@ -97,7 +96,7 @@ export const cachedFindTables = async <T extends CompiledQuery<Simplify<any>>>(
 	// 	duration: ONE_DAY,
 	// });
 
-	const { tables, operations } = await getTables();
+	const { tables, operations } = findTables(query.query, type);
 
 	/**
 	 * basically, you should not be able to `autoRevalidate` select queries

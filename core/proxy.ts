@@ -3,11 +3,13 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import {
-	PUBPUB_COMMUNITY_SLUG_COOKIE_NAME,
+	PUBPUB_API_ROUTE_HEADER_NAME,
 	PUBPUB_COMMUNITY_SLUG_HEADER_NAME,
 } from "./lib/server/cache/constants";
 
 const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//;
+
+const apiRouteRegexp = /^\/api\/v\d\/([^/]*?)\//;
 
 /**
  * if you are in /c/[communitySlug] or in /api/v0/c/[communitySlug],
@@ -16,21 +18,27 @@ const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//;
  * use the communitySlug to tag or invalidate cached queries.
  */
 const communitySlugMiddleware = async (request: NextRequest) => {
-	const matched = request.nextUrl.pathname.match(communityRouteRegexp);
+	const communitySlugMatched = request.nextUrl.pathname.match(communityRouteRegexp);
+	const apiRouteMatched = request.nextUrl.pathname.match(apiRouteRegexp);
 
-	if (!matched) {
-		return NextResponse.next();
-	}
-	const communitySlug = matched[1] || matched[2];
-
-	if (!communitySlug) {
-		// TODO: Handle strange case where no community slug is found.
+	if (!communitySlugMatched && !apiRouteMatched) {
 		return NextResponse.next();
 	}
 
 	const response = NextResponse.next();
 
-	response.headers.set(PUBPUB_COMMUNITY_SLUG_HEADER_NAME, communitySlug);
+	// Set header to indicate we're in an API route
+	if (apiRouteMatched) {
+		response.headers.set(PUBPUB_API_ROUTE_HEADER_NAME, "true");
+	}
+
+	// Set community slug header if available
+	const communitySlug = communitySlugMatched
+		? (communitySlugMatched[1] ?? communitySlugMatched[2])
+		: null;
+	if (communitySlug) {
+		response.headers.set(PUBPUB_COMMUNITY_SLUG_HEADER_NAME, communitySlug);
+	}
 
 	return response;
 };

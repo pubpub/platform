@@ -1,11 +1,11 @@
-import { revalidatePath, updateTag } from "next/cache";
+import { revalidatePath, revalidateTag, updateTag } from "next/cache";
 
 import { logger } from "logger";
 
 import type { autoCache } from "./autoCache";
 import type { AutoRevalidateOptions, DirectAutoOutput, ExecuteFn, QB } from "./types";
 import { env } from "~/lib/env/env";
-import { getCommunitySlug } from "./getCommunitySlug";
+import { getCommunitySlug, getIsApiRoute } from "./getCommunitySlug";
 import { revalidateTagsForCommunity } from "./revalidate";
 import { cachedFindTables, directAutoOutput } from "./sharedAuto";
 import { setTransactionStore } from "./transactionStorage";
@@ -19,13 +19,16 @@ const executeWithRevalidate = <
 	options?: AutoRevalidateOptions
 ) => {
 	const executeFn = async (...args: Parameters<Q[M]>) => {
-		const communitySlug = options?.communitySlug ?? (await getCommunitySlug());
+		const [communitySlug, isApiRoute] = await Promise.all([
+			options?.communitySlug ?? (await getCommunitySlug()),
+			getIsApiRoute(),
+		]);
 
 		const communitySlugs = Array.isArray(communitySlug) ? communitySlug : [communitySlug];
 
 		const compiledQuery = qb.compile();
 
-		const tables = await cachedFindTables(compiledQuery, "mutation");
+		const tables = cachedFindTables(compiledQuery, "mutation");
 
 		// necessary assertion here due to
 		// https://github.com/microsoft/TypeScript/issues/241
@@ -33,7 +36,7 @@ const executeWithRevalidate = <
 
 		const additionalRevalidateTags = options?.additionalRevalidateTags ?? [];
 
-		const communityTags = await revalidateTagsForCommunity(tables, communitySlugs);
+		const communityTags = await revalidateTagsForCommunity(tables, communitySlugs, isApiRoute);
 
 		// so we can later check whether we need to use autocache or not
 		setTransactionStore({
@@ -44,7 +47,13 @@ const executeWithRevalidate = <
 			if (env.CACHE_LOG) {
 				logger.debug(`AUTOREVALIDATE: Revalidating tag: ${tag}`);
 			}
-			updateTag(tag);
+			if (isApiRoute) {
+				revalidateTag(tag, {
+					expire: 0,
+				});
+			} else {
+				updateTag(tag);
+			}
 		});
 
 		if (options?.additionalRevalidatePaths) {
