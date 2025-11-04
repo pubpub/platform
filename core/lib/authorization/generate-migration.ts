@@ -66,7 +66,7 @@ const updateCapabilitiesInPrismaFile = (newValues: string[]): void => {
 		let newEnumContent = "enum Capabilities {\n";
 		for (const value of newValues) {
 			if (value === "manageStage") {
-				newEnumContent += `    ${value} // includes managing stage name, actions, rules, and move constraints\n`;
+				newEnumContent += `    ${value} // includes managing stage name, actions, automations, and move constraints\n`;
 			} else {
 				newEnumContent += `    ${value}\n`;
 			}

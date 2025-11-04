@@ -3,11 +3,11 @@ import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/publi
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
 
-import type { SchedulableRule } from "./rules";
-import type { GetEventRuleOptions } from "~/lib/db/queries";
+import type { SchedulableAutomation } from "./automations";
+import type { GetEventAutomationOptions } from "~/lib/db/queries";
 import { db } from "~/kysely/database";
 import { addDuration } from "~/lib/dates";
-import { getStageRules } from "~/lib/db/queries";
+import { getStageAutomations } from "~/lib/db/queries";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getJobsClient, getScheduledActionJobKey } from "~/lib/server/jobs";
@@ -17,7 +17,7 @@ type Shared = {
 	stack: ActionRunsId[];
 	/* Config for the action instance */
 	config?: Record<string, unknown> | null;
-} & GetEventRuleOptions;
+} & GetEventAutomationOptions;
 
 type ScheduleActionInstanceForPubOptions = Shared & {
 	pubId: PubsId;
@@ -42,85 +42,85 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 		throw new Error("PubId or body is required");
 	}
 
-	const [rules, jobsClient] = await Promise.all([
-		getStageRules(options.stageId, options).execute(),
+	const [automations, jobsClient] = await Promise.all([
+		getStageAutomations(options.stageId, options).execute(),
 		getJobsClient(),
 	]);
 
-	if (!rules.length) {
+	if (!automations.length) {
 		logger.debug({
 			msg: `No action instances found for stage ${options.stageId}. Most likely this is because a Pub is moved into a stage without action instances.`,
 			pubId: options.pubId,
 			stageId: options.stageId,
-			rules,
+			automations,
 		});
 		return;
 	}
 
-	const validRules = rules
+	const validAutomations = automations
 		.filter(
-			(rule): rule is typeof rule & SchedulableRule =>
-				rule.event === Event.actionFailed ||
-				rule.event === Event.actionSucceeded ||
-				rule.event === Event.webhook ||
-				(rule.event === Event.pubInStageForDuration &&
+			(automation): automation is typeof automation & SchedulableAutomation =>
+				automation.event === Event.actionFailed ||
+				automation.event === Event.actionSucceeded ||
+				automation.event === Event.webhook ||
+				(automation.event === Event.pubInStageForDuration &&
 					Boolean(
-						typeof rule.config === "object" &&
-							rule.config &&
-							"duration" in rule.config &&
-							rule.config.duration &&
-							"interval" in rule.config &&
-							rule.config.interval
+						typeof automation.config === "object" &&
+							automation.config &&
+							"duration" in automation.config &&
+							automation.config.duration &&
+							"interval" in automation.config &&
+							automation.config.interval
 					))
 		)
-		.map((rule) => ({
-			...rule,
-			duration: rule.config?.ruleConfig?.duration || 0,
-			interval: rule.config?.ruleConfig?.interval || "minute",
+		.map((automation) => ({
+			...automation,
+			duration: automation.config?.automationConfig?.duration || 0,
+			interval: automation.config?.automationConfig?.interval || "minute",
 		}));
 
 	const results = await Promise.all(
-		validRules.flatMap(async (rule) => {
+		validAutomations.flatMap(async (automation) => {
 			const runAt = addDuration({
-				duration: rule.duration,
-				interval: rule.interval,
+				duration: automation.duration,
+				interval: automation.interval,
 			}).toISOString();
 
 			const scheduledActionRun = await autoRevalidate(
 				db
 					.insertInto("action_runs")
 					.values({
-						actionInstanceId: rule.actionInstance.id,
+						actionInstanceId: automation.actionInstance.id,
 						pubId: options.pubId,
 						json: options.json,
 						status: ActionRunStatus.scheduled,
-						config: options.config ?? rule.actionInstance.config,
+						config: options.config ?? automation.actionInstance.config,
 						result: { scheduled: `Action scheduled for ${runAt}` },
-						event: rule.event,
+						event: automation.event,
 						sourceActionRunId: options.stack.at(-1),
 					})
 					.returning("id")
 			).executeTakeFirstOrThrow();
 
 			const job = await jobsClient.scheduleAction({
-				actionInstanceId: rule.actionInstance.id,
-				duration: rule.duration,
-				interval: rule.interval,
+				actionInstanceId: automation.actionInstance.id,
+				duration: automation.duration,
+				interval: automation.interval,
 				stageId: options.stageId,
 				community: {
 					slug: await getCommunitySlug(),
 				},
 				stack: options.stack,
 				scheduledActionRunId: scheduledActionRun.id,
-				event: rule.event,
+				event: automation.event,
 				...(options.pubId ? { pubId: options.pubId } : { json: options.json! }),
-				config: options.config ?? rule.actionInstance.config ?? null,
+				config: options.config ?? automation.actionInstance.config ?? null,
 			});
 
 			return {
 				result: job,
-				actionInstanceId: rule.actionInstance.id,
-				actionInstanceName: rule.actionInstance.name,
+				actionInstanceId: automation.actionInstance.id,
+				actionInstanceName: automation.actionInstance.name,
 				runAt,
 			};
 		})

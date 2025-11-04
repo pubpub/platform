@@ -10,10 +10,10 @@ import {
 	formatDistanceToNow,
 } from "date-fns";
 
-import type { PubInStageForDuration, RuleConfig } from "~/actions/_lib/rules";
+import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/automations";
 
 export const addDuration = (
-	duration: RuleConfig<PubInStageForDuration>["ruleConfig"],
+	duration: AutomationConfig<PubInStageForDuration>["automationConfig"],
 	date = new Date()
 ) => {
 	const now = new Date(date);

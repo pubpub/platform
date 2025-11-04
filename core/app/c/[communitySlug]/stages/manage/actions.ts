@@ -5,16 +5,16 @@ import { captureException } from "@sentry/nextjs";
 import type {
 	Action,
 	ActionInstancesId,
+	AutomationsId,
 	CommunitiesId,
 	FormsId,
-	RulesId,
 	StagesId,
 	UsersId,
 } from "db/public";
 import { Capabilities, Event, MemberRole, MembershipType, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
-import type { CreateRuleSchema } from "./components/panel/actionsTab/StagePanelRuleForm";
+import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm";
 import { unscheduleAction } from "~/actions/_lib/scheduleActionInstance";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -27,12 +27,16 @@ import {
 	removeActionInstance,
 	updateActionInstance,
 } from "~/lib/server/actions";
+import {
+	AutomationError,
+	createOrUpdateAutomationWithCycleCheck,
+	removeAutomation,
+} from "~/lib/server/automations";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
 import { insertStageMemberships } from "~/lib/server/member";
-import { createOrUpdateRuleWithCycleCheck, removeRule, RuleError } from "~/lib/server/rules";
 import {
 	createMoveConstraint as createMoveConstraintDb,
 	createStage as createStageDb,
@@ -369,14 +373,14 @@ export const deleteAction = defineServerAction(async function deleteAction(
 	}
 });
 
-export const addOrUpdateRule = defineServerAction(async function addOrUpdateRule({
+export const addOrUpdateAutomation = defineServerAction(async function addOrUpdateAutomation({
 	stageId,
-	ruleId,
+	automationId,
 	data,
 }: {
 	stageId: StagesId;
-	ruleId?: RulesId;
-	data: CreateRuleSchema;
+	automationId?: AutomationsId;
+	data: CreateAutomationsSchema;
 }) {
 	const loginData = await getLoginData();
 	if (!loginData || !loginData.user) {
@@ -394,37 +398,40 @@ export const addOrUpdateRule = defineServerAction(async function addOrUpdateRule
 	}
 
 	try {
-		await createOrUpdateRuleWithCycleCheck({
-			ruleId,
+		await createOrUpdateAutomationWithCycleCheck({
+			automationId,
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
 			config: {
 				actionConfig: data.actionConfig ?? null,
-				ruleConfig: "ruleConfig" in data && data.ruleConfig ? data.ruleConfig : null,
+				automationConfig:
+					"automationConfig" in data && data.automationConfig
+						? data.automationConfig
+						: null,
 			},
 			sourceActionInstanceId:
 				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
 		});
 	} catch (error) {
 		logger.error(error);
-		if (error instanceof RuleError) {
+		if (error instanceof AutomationError) {
 			return {
-				title: ruleId ? "Error updating rule" : "Error creating rule",
+				title: automationId ? "Error updating automation" : "Error creating automation",
 				error: error.message,
 				cause: error,
 			};
 		}
 
 		return {
-			error: ruleId ? "Failed to update rule" : "Failed to create rule",
+			error: automationId ? "Failed to update automation" : "Failed to create automation",
 			cause: error,
 		};
 	} finally {
 	}
 });
 
-export const deleteRule = defineServerAction(async function deleteRule(
-	ruleId: RulesId,
+export const deleteAutomation = defineServerAction(async function deleteAutomation(
+	automationId: AutomationsId,
 	stageId: StagesId
 ) {
 	const loginData = await getLoginData();
@@ -443,30 +450,30 @@ export const deleteRule = defineServerAction(async function deleteRule(
 	}
 
 	try {
-		const deletedRule = await autoRevalidate(
-			removeRule(ruleId).qb.returningAll()
+		const deletedAutomation = await autoRevalidate(
+			removeAutomation(automationId).qb.returningAll()
 		).executeTakeFirstOrThrow();
 
-		if (!deletedRule) {
+		if (!deletedAutomation) {
 			return {
-				error: "Failed to delete rule",
-				cause: `Rule with id ${ruleId} not found`,
+				error: "Failed to delete automation",
+				cause: `Automation with id ${automationId} not found`,
 			};
 		}
 
-		if (deletedRule.event !== Event.pubInStageForDuration) {
+		if (deletedAutomation.event !== Event.pubInStageForDuration) {
 			return;
 		}
 
 		const actionInstance = await getActionInstance(
-			deletedRule.actionInstanceId
+			deletedAutomation.actionInstanceId
 		).executeTakeFirst();
 
 		if (!actionInstance) {
 			// something is wrong here
 			captureException(
 				new Error(
-					`Action instance not found for rule ${ruleId} while trying to unschedule jobs`
+					`Action instance not found for automation ${automationId} while trying to unschedule jobs`
 				)
 			);
 			return;
@@ -474,11 +481,11 @@ export const deleteRule = defineServerAction(async function deleteRule(
 
 		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
 		if (!pubsInStage) {
-			// we don't need to unschedule any jobs, as there are no pubs this rule could have been applied to
+			// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
 			return;
 		}
 
-		logger.debug(`Unscheduling jobs for rule ${ruleId}`);
+		logger.debug(`Unscheduling jobs for automation ${automationId}`);
 		await Promise.all(
 			pubsInStage.pubIds.map(async (pubInStageId) =>
 				unscheduleAction({
@@ -492,7 +499,7 @@ export const deleteRule = defineServerAction(async function deleteRule(
 	} catch (error) {
 		logger.error(error);
 		return {
-			error: "Failed to delete rule",
+			error: "Failed to delete automation",
 			cause: error,
 		};
 	} finally {

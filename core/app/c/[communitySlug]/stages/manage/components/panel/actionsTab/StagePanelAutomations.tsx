@@ -4,20 +4,20 @@ import type { CommunitiesId, StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions, getStageRules } from "~/lib/db/queries";
-import { StagePanelRule } from "./StagePanelRule";
-import { StagePanelAutomationForm } from "./StagePanelRuleForm";
+import { getStage, getStageActions, getStageAutomations } from "~/lib/db/queries";
+import { StagePanelAutomation } from "./StagePanelAutomation";
+import { StagePanelAutomationForm } from "./StagePanelAutomationForm";
 
 type PropsInner = {
 	stageId: StagesId;
 	userId: UsersId;
 };
 
-const StagePanelRulesInner = async (props: PropsInner) => {
-	const [stage, actionInstances, rules] = await Promise.all([
+const StagePanelAutomationsInner = async (props: PropsInner) => {
+	const [stage, actionInstances, automations] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
 		getStageActions({ stageId: props.stageId }).execute(),
-		getStageRules(props.stageId).execute(),
+		getStageAutomations(props.stageId).execute(),
 	]);
 
 	if (!stage) {
@@ -31,14 +31,14 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 				{actionInstances.length > 0 ? (
 					<>
 						<div className="flex flex-col gap-2">
-							{rules.length > 0 ? (
+							{automations.length > 0 ? (
 								<>
-									{rules.map((rule) => (
-										<StagePanelRule
+									{automations.map((automation) => (
+										<StagePanelAutomation
 											stageId={stage.id}
 											communityId={stage.communityId as CommunitiesId}
-											rule={rule}
-											key={rule.id}
+											automation={automation}
+											key={automation.id}
 										/>
 									))}
 								</>
@@ -52,7 +52,7 @@ const StagePanelRulesInner = async (props: PropsInner) => {
 							stageId={stage.id}
 							actionInstances={actionInstances}
 							communityId={stage.communityId}
-							rules={rules}
+							automations={automations}
 						/>
 					</>
 				) : (
@@ -71,14 +71,14 @@ type Props = {
 	userId: UsersId;
 };
 
-export const StagePanelRules = async (props: Props) => {
+export const StagePanelAutomations = async (props: Props) => {
 	if (props.stageId === undefined) {
 		return <SkeletonCard />;
 	}
 
 	return (
 		<Suspense fallback={<SkeletonCard />}>
-			<StagePanelRulesInner stageId={props.stageId} userId={props.userId} />
+			<StagePanelAutomationsInner stageId={props.stageId} userId={props.userId} />
 		</Suspense>
 	);
 };

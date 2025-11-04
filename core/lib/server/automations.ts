@@ -6,58 +6,60 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type {
 	ActionInstances,
 	ActionInstancesId,
+	AutomationsId,
+	AutomationsUpdate,
 	CommunitiesId,
-	NewRules,
-	RulesId,
-	RulesUpdate,
+	NewAutomations,
 } from "db/public";
-import type { RuleConfigBase } from "db/types";
+import type { AutomationConfigBase } from "db/types";
 import { Event } from "db/public";
 import { expect } from "utils";
 
-import type { SequentialRuleEvent } from "~/actions/types";
-import { rules } from "~/actions/api";
-import { isSequentialRuleEvent } from "~/actions/types";
+import type { SequentialAutomationEvent } from "~/actions/types";
+import { automations } from "~/actions/api";
+import { isSequentialAutomationEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 
-export class RuleError extends Error {
+export class AutomationError extends Error {
 	constructor(message: string) {
 		super(message);
-		this.name = "RuleError";
+		this.name = "AutomationError";
 	}
 }
 
-export class RuleConfigError extends RuleError {
+export class AutomationConfigError extends AutomationError {
 	constructor(
 		public event: Event,
 		public config: Record<string, unknown>,
 		public error: ZodError
 	) {
 		super(`Invalid config for ${event}: ${JSON.stringify(config)}. ${error.message}`);
-		this.name = "RuleConfigError";
+		this.name = "AutomationConfigError";
 	}
 }
 
-export class RuleCycleError extends RuleError {
-	constructor(public path: ActionInstances[]) {
-		super(`Creating this rule would create a cycle: ${path.map((p) => p.name).join(" -> ")}`);
-		this.name = "RuleCycleError";
-	}
-}
-
-export class RuleMaxDepthError extends RuleError {
+export class AutomationCycleError extends AutomationError {
 	constructor(public path: ActionInstances[]) {
 		super(
-			`Creating this rule would exceed the maximum stack depth (${MAX_STACK_DEPTH}): ${path.map((p) => p.name).join(" -> ")}`
+			`Creating this automation would create a cycle: ${path.map((p) => p.name).join(" -> ")}`
 		);
-		this.name = "RuleMaxDepthError";
+		this.name = "AutomationCycleError";
 	}
 }
 
-export class RuleAlreadyExistsError extends RuleError {
+export class AutomationMaxDepthError extends AutomationError {
+	constructor(public path: ActionInstances[]) {
+		super(
+			`Creating this automation would exceed the maximum stack depth (${MAX_STACK_DEPTH}): ${path.map((p) => p.name).join(" -> ")}`
+		);
+		this.name = "AutomationMaxDepthError";
+	}
+}
+
+export class AutomationAlreadyExistsError extends AutomationError {
 	constructor(
 		message: string,
 		public event: Event,
@@ -65,18 +67,18 @@ export class RuleAlreadyExistsError extends RuleError {
 		public sourceActionInstanceId?: ActionInstancesId
 	) {
 		super(message);
-		this.name = "RuleAlreadyExistsError";
+		this.name = "AutomationAlreadyExistsError";
 	}
 }
 
-export class SequentialRuleAlreadyExistsError extends RuleAlreadyExistsError {
+export class SequentialAutomationAlreadyExistsError extends AutomationAlreadyExistsError {
 	constructor(
-		public event: SequentialRuleEvent,
+		public event: SequentialAutomationEvent,
 		public actionInstanceId: ActionInstancesId,
 		public sourceActionInstanceId: ActionInstancesId
 	) {
 		super(
-			` ${event} rule for ${sourceActionInstanceId} running ${actionInstanceId} already exists`,
+			` ${event} automation for ${sourceActionInstanceId} running ${actionInstanceId} already exists`,
 			event,
 			actionInstanceId,
 			sourceActionInstanceId
@@ -84,23 +86,29 @@ export class SequentialRuleAlreadyExistsError extends RuleAlreadyExistsError {
 	}
 }
 
-export class RegularRuleAlreadyExistsError extends RuleAlreadyExistsError {
+export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExistsError {
 	constructor(
 		public event: Event,
 		public actionInstanceId: ActionInstancesId
 	) {
-		super(` ${event} rule for ${actionInstanceId} already exists`, event, actionInstanceId);
+		super(
+			` ${event} automation for ${actionInstanceId} already exists`,
+			event,
+			actionInstanceId
+		);
 	}
 }
 
-export const createRule = (props: NewRules) =>
-	autoRevalidate(db.insertInto("rules").values(props).returningAll());
+export const createAutomation = (props: NewAutomations) =>
+	autoRevalidate(db.insertInto("automations").values(props).returningAll());
 
-export const updateRule = (ruleId: RulesId, props: RulesUpdate) =>
-	autoRevalidate(db.updateTable("rules").set(props).where("id", "=", ruleId).returningAll());
+export const updateAutomation = (automationId: AutomationsId, props: AutomationsUpdate) =>
+	autoRevalidate(
+		db.updateTable("automations").set(props).where("id", "=", automationId).returningAll()
+	);
 
-export const removeRule = (ruleId: RulesId) =>
-	autoRevalidate(db.deleteFrom("rules").where("id", "=", ruleId));
+export const removeAutomation = (automationId: AutomationsId) =>
+	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId));
 
 const getFullPath = (
 	pathResult: { isCycle: boolean; id: ActionInstancesId; path: ActionInstancesId[] },
@@ -134,7 +142,7 @@ const getFullPath = (
 export const MAX_STACK_DEPTH = 10;
 
 /**
- * checks if adding a rule would create a cycle, or else adding it would create
+ * checks if adding a automation would create a cycle, or else adding it would create
  * a sequence exceeding the MAXIMUM_STACK_DEPTH
  */
 async function wouldCreateCycle(
@@ -162,11 +170,15 @@ async function wouldCreateCycle(
 				.union((qb) =>
 					qb
 						.selectFrom("action_path")
-						.innerJoin("rules", "rules.sourceActionInstanceId", "action_path.id")
+						.innerJoin(
+							"automations",
+							"automations.sourceActionInstanceId",
+							"action_path.id"
+						)
 						.innerJoin(
 							"action_instances",
 							"action_instances.id",
-							"rules.actionInstanceId"
+							"automations.actionInstanceId"
 						)
 						.select([
 							"action_instances.id",
@@ -194,7 +206,7 @@ async function wouldCreateCycle(
 		.where((eb) =>
 			// find either:
 			// 1. a path that creates a cycle (id = sourceActionInstanceId or id already in path)
-			// 2. a path that would exceed MAX_STACK_DEPTH when adding the new rule
+			// 2. a path that would exceed MAX_STACK_DEPTH when adding the new automation
 			eb.or([eb("isCycle", "=", true), eb("depth", ">=", maxStackDepth)])
 		)
 		.orderBy(["isCycle desc", "depth desc"])
@@ -244,24 +256,24 @@ async function wouldCreateCycle(
 		  };
 }
 
-export async function createOrUpdateRuleWithCycleCheck(
+export async function createOrUpdateAutomationWithCycleCheck(
 	data: {
-		ruleId?: RulesId;
+		automationId?: AutomationsId;
 		event: Event;
 		actionInstanceId: ActionInstancesId;
 		sourceActionInstanceId?: ActionInstancesId;
-		config?: RuleConfigBase | null;
+		config?: AutomationConfigBase | null;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
 	// check the config
-	const config = rules[data.event].additionalConfig;
+	const config = automations[data.event].additionalConfig;
 
 	if (config) {
 		try {
 			config.parse(data.config);
 		} catch (e) {
-			throw new RuleConfigError(data.event, data.config ?? {}, e);
+			throw new AutomationConfigError(data.event, data.config ?? {}, e);
 		}
 	}
 
@@ -277,59 +289,59 @@ export async function createOrUpdateRuleWithCycleCheck(
 		);
 
 		if (result.hasCycle) {
-			throw new RuleCycleError(result.path);
+			throw new AutomationCycleError(result.path);
 		}
 
 		if ("exceedsMaxDepth" in result && result.exceedsMaxDepth) {
-			throw new RuleMaxDepthError(result.path);
+			throw new AutomationMaxDepthError(result.path);
 		}
 	}
 
 	try {
-		if (data.ruleId) {
-			const updatedRule = await updateRule(data.ruleId, {
+		if (data.automationId) {
+			const updatedAutomation = await updateAutomation(data.automationId, {
 				event: data.event,
 				actionInstanceId: data.actionInstanceId,
 				sourceActionInstanceId: data.sourceActionInstanceId,
 				config: data.config,
 			}).executeTakeFirstOrThrow();
-			return updatedRule;
+			return updatedAutomation;
 		}
-		const createdRule = await createRule({
+		const createdAutomation = await createAutomation({
 			event: data.event,
 			actionInstanceId: data.actionInstanceId,
 			sourceActionInstanceId: data.sourceActionInstanceId,
 			config: data.config,
 		}).executeTakeFirstOrThrow();
-		return createdRule;
+		return createdAutomation;
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
-			if (isSequentialRuleEvent(data.event)) {
+			if (isSequentialAutomationEvent(data.event)) {
 				if (data.sourceActionInstanceId) {
-					throw new SequentialRuleAlreadyExistsError(
+					throw new SequentialAutomationAlreadyExistsError(
 						data.event,
 						data.actionInstanceId,
 						data.sourceActionInstanceId
 					);
 				}
 			} else {
-				throw new RegularRuleAlreadyExistsError(data.event, data.actionInstanceId);
+				throw new RegularAutomationAlreadyExistsError(data.event, data.actionInstanceId);
 			}
 		}
 		throw e;
 	}
 }
 
-export const getRule = (ruleId: RulesId, communityId: CommunitiesId) =>
+export const getAutomation = (automationId: AutomationsId, communityId: CommunitiesId) =>
 	autoCache(
 		db
-			.selectFrom("rules")
+			.selectFrom("automations")
 			.selectAll()
 			.select((eb) => [
 				jsonObjectFrom(
 					eb
 						.selectFrom("action_instances")
-						.whereRef("action_instances.id", "=", "rules.actionInstanceId")
+						.whereRef("action_instances.id", "=", "automations.actionInstanceId")
 						.selectAll("action_instances")
 						.select((eb) => [
 							jsonObjectFrom(
@@ -346,5 +358,5 @@ export const getRule = (ruleId: RulesId, communityId: CommunitiesId) =>
 					.$notNull()
 					.as("actionInstance"),
 			])
-			.where("id", "=", ruleId)
+			.where("id", "=", automationId)
 	);

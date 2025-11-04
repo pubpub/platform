@@ -2,7 +2,6 @@ import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
 import {
-	actionSchema,
 	communitiesIdSchema,
 	communityMembershipsSchema,
 	pubsIdSchema,
@@ -388,12 +387,12 @@ export const siteApi = contract.router(
 			},
 		},
 		webhook: {
-			path: "/webhook/:ruleId",
+			path: "/webhook/:automationId",
 			method: "POST",
 			summary: "Receive a webhook",
-			description: "Receive a webhook from a rule",
+			description: "Receive a webhook from a automation",
 			pathParams: z.object({
-				ruleId: z.string().uuid(),
+				automationId: z.string().uuid(),
 			}),
 			body: jsonSchema,
 			responses: {
