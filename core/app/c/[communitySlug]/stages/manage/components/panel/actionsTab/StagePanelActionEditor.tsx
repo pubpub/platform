@@ -1,19 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { isAfter, parseISO } from "date-fns";
 
 import type { ActionInstances, ActionInstancesId, ActionRuns, StagesId } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
-import { ChevronUp, Pencil, Trash } from "ui/icon";
+import { ChevronUp, Pencil } from "ui/icon";
 import { Input } from "ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 import { cn } from "utils";
 
 import { getActionByName } from "~/actions/api";
-import { useServerAction } from "~/lib/serverActions";
 import * as actions from "../../../actions";
 
 type Props = {
@@ -122,11 +121,7 @@ export const UpdateCircle = (
 };
 
 export const StagePanelActionEditor = (props: Props) => {
-	const runOnDelete = useServerAction(props.onDelete);
 	const [isOpen, setIsOpen] = useState(false);
-	const onDeleteClick = useCallback(async () => {
-		runOnDelete(props.actionInstance.id, props.stageId);
-	}, [props.actionInstance, runOnDelete]);
 	const action = getActionByName(props.actionInstance.action);
 
 	const [initTime, setInitTime] = useState(new Date());
@@ -200,20 +195,7 @@ export const StagePanelActionEditor = (props: Props) => {
 			</div>
 			<CollapsibleContent className="space-y-4 bg-gray-50 px-3 py-2 text-sm">
 				<p>{action.description}</p>
-				<div className="flex flex-col gap-2 py-2">
-					{props.children}
-					<div className="flex justify-end">
-						<Button
-							variant="secondary"
-							size="sm"
-							className="flex gap-2"
-							onClick={onDeleteClick}
-						>
-							<Trash size={14} />
-							Remove
-						</Button>
-					</div>
-				</div>
+				<div className="flex flex-col gap-2 py-2">{props.children}</div>
 			</CollapsibleContent>
 		</Collapsible>
 	);

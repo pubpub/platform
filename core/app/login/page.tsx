@@ -1,14 +1,15 @@
 import { cookies } from "next/headers";
-import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { LAST_VISITED_COOKIE } from "~/app/components/LastVisitedCommunity/constants";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { redirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
+import { hasUsers } from "~/lib/server/user";
 import { DotBackground } from "../components/DotBackground";
 import { LogoWithText } from "../components/Logo";
 import { Notice } from "../components/Notice";
 import LoginForm from "./LoginForm";
+import SetupForm from "./SetupForm";
 
 export default async function Login({
 	searchParams,
@@ -19,6 +20,23 @@ export default async function Login({
 		body?: string;
 	}>;
 }) {
+	const usersExist = await hasUsers();
+
+	if (!usersExist) {
+		return (
+			<div className="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-white p-6 md:p-10">
+				<DotBackground className="opacity-50" />
+				<div className="absolute inset-0 z-0 bg-gradient-to-b from-white/80 to-transparent" />
+				<div className="relative z-10 flex w-full max-w-2xl flex-col gap-2">
+					<div className="flex items-center gap-2 self-center font-medium">
+						<LogoWithText className="text-2xl" />
+					</div>
+					<SetupForm />
+				</div>
+			</div>
+		);
+	}
+
 	const { user } = await getLoginData();
 
 	if (user?.id) {

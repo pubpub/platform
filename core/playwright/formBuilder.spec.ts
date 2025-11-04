@@ -308,10 +308,10 @@ test.describe("relationship fields", () => {
 		await relatedField.getByRole("button", { name: "Add" }).click();
 		// We should see the first pub but not the second, since the second is of a different pub type
 		await expect(
-			page.getByRole("row", { name: `Select row ${community.pubs[0].title}` })
+			page.getByRole("checkbox", { name: `Select pub ${community.pubs[0].title}` })
 		).toHaveCount(1, { timeout: 10_000 });
 		await expect(
-			page.getByRole("row", { name: `Select row ${community.pubs[1].title}` })
+			page.getByRole("checkbox", { name: `Select pub ${community.pubs[1].title}` })
 		).toHaveCount(0, { timeout: 10_000 });
 
 		await test.step("Cant remove pubtypes from a form", async () => {

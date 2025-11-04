@@ -170,10 +170,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 			title: ["pubpub:title"],
 		},
 	},
-	configFieldOverrides: new Set(),
 	pub,
-	args: {} as any,
-	argsFieldOverrides: new Set(),
 	lastModifiedBy: "system|0",
 };
 

@@ -6,13 +6,12 @@ import React from "react";
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 
-import { FormControl, FormField, FormItem, FormLabel } from "../form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../form";
 import { useStages } from "./StagesProvider";
 
 type Props = {
-	// fieldLabel: string;
+	fieldLabel?: string;
 	field: ControllerRenderProps<FieldValues, string>;
-	label: string;
 };
 
 /**
@@ -21,33 +20,26 @@ type Props = {
 export const StagesSelect = (props: Props) => {
 	const stages = useStages();
 	return (
-		<FormItem className="flex flex-col gap-y-1">
-			<div className="flex items-center justify-between">
-				<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-					{props.label}
-				</FormLabel>
-			</div>
-			<Select
-				{...props.field}
-				onValueChange={(value) => {
-					props.field.onChange(value);
-				}}
-				defaultValue={props.field.value}
-			>
-				<FormControl>
-					<SelectTrigger>
-						<SelectValue placeholder="Select a stage" />
-					</SelectTrigger>
-				</FormControl>
-				<SelectContent>
-					{stages.map((stage) => (
-						<SelectItem key={stage.id} value={stage.id}>
-							{stage.name}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
-		</FormItem>
+		<Select
+			{...props.field}
+			onValueChange={(value) => {
+				props.field.onChange(value);
+			}}
+			defaultValue={props.field.value}
+		>
+			<FormControl>
+				<SelectTrigger>
+					<SelectValue placeholder="Select a stage" />
+				</SelectTrigger>
+			</FormControl>
+			<SelectContent>
+				{stages.map((stage) => (
+					<SelectItem key={stage.id} value={stage.id}>
+						{stage.name}
+					</SelectItem>
+				))}
+			</SelectContent>
+		</Select>
 	);
 };
 
@@ -58,7 +50,13 @@ export const StagesSelectField = (props: { fieldName: string; fieldLabel: string
 	return (
 		<FormField
 			name={props.fieldName}
-			render={({ field }) => <StagesSelect field={field} label={props.fieldLabel} />}
+			render={({ field }) => (
+				<FormItem>
+					<FormLabel>{props.fieldLabel ?? "Stage"}</FormLabel>
+					<StagesSelect fieldLabel={props.fieldLabel} field={field} />
+					<FormMessage />
+				</FormItem>
+			)}
 		/>
 	);
 };

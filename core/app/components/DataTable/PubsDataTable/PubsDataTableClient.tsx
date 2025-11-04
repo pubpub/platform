@@ -19,6 +19,7 @@ import { DataTable, useDataTable } from "ui/data-table-paged";
 import { client } from "~/lib/api";
 import { type GetManyParams } from "~/lib/server";
 import { useCommunity } from "../../providers/CommunityProvider";
+import { useUser } from "../../providers/UserProvider";
 import SkeletonTable from "../../skeletons/SkeletonTable";
 import { getColumns } from "./columns";
 
@@ -136,7 +137,7 @@ export const PubsDataTableClientBase = ({
 	 */
 	const rowSelection = useMemo(() => {
 		if (!selectedPubs) {
-			return undefined;
+			return {};
 		}
 		return Object.fromEntries(selectedPubs.map((p) => [p.id, true]));
 	}, [selectedPubs]);
@@ -150,7 +151,7 @@ export const PubsDataTableClientBase = ({
 			const newRows =
 				typeof updaterOrValue === "function" ? updaterOrValue(prevRows) : updaterOrValue;
 			const newPubs = Object.entries(newRows)
-				.filter(([pubId, selected]) => selected)
+				.filter(([, selected]) => selected)
 				.map(([pubId]) => {
 					return [...pubs, ...selectedPubs].find((p) => p.id === pubId);
 				})
@@ -214,6 +215,7 @@ export const PubsDataTableClientBase = ({
 
 export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
 	const community = useCommunity();
+	const user = useUser();
 	const [filterParams, setFilterParams] = useState<Required<GetManyParams>>({
 		limit: 10,
 		offset: 0,
@@ -231,6 +233,7 @@ export const PubsDataTableClient = (props: PubsDataTableClientProps) => {
 				withRelatedPubs: false,
 				withStage: true,
 				withValues: false,
+				userId: user.user?.id,
 			},
 			params: {
 				communitySlug: community.slug,

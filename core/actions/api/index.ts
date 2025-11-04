@@ -1,6 +1,5 @@
 // shared actions between server and client
 
-import type { Rule } from "ajv/dist/compile/rules";
 import type * as z from "zod";
 
 import type { ActionInstances, Communities, Event, Rules } from "db/public";
@@ -21,15 +20,11 @@ import * as googleDriveImport from "../googleDriveImport/action";
 import * as http from "../http/action";
 import * as log from "../log/action";
 import * as move from "../move/action";
-import * as pdf from "../pdf/action";
-import * as pushToV6 from "../pushToV6/action";
-import { isSequentialRuleEvent, sequentialRuleEvents } from "../types";
+import { sequentialRuleEvents } from "../types";
 
 export const actions = {
 	[log.action.name]: log.action,
-	[pdf.action.name]: pdf.action,
 	[email.action.name]: email.action,
-	[pushToV6.action.name]: pushToV6.action,
 	[http.action.name]: http.action,
 	[move.action.name]: move.action,
 	[googleDriveImport.action.name]: googleDriveImport.action,

@@ -1,6 +1,5 @@
 import * as z from "zod";
 
-import type { AutoFormInputComponentProps } from "ui/auto-form";
 import { Action } from "db/public";
 import { DependencyType } from "ui/auto-form/dependencyType";
 import { Mail } from "ui/icon";
@@ -11,7 +10,6 @@ import {
 } from "~/lib/server/render/pub/renderWithPubTokens";
 import { markdown, stringWithTokens } from "../_lib/zodTypes";
 import { defineAction } from "../types";
-import MemberSelectClientFetch from "./DynamicSelectFetch";
 
 const emptyStringToUndefined = (arg: unknown) => {
 	if (typeof arg === "string" && arg === "") {
@@ -21,106 +19,44 @@ const emptyStringToUndefined = (arg: unknown) => {
 	}
 };
 
+const schema = z.object({
+	senderName: z
+		.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
+		.optional()
+		.describe("This will appear in the 'From' header of the email"),
+	replyTo: z
+		.preprocess(emptyStringToUndefined, z.string().email().optional())
+		.optional()
+		.describe("Determines what the email recipient will see as the 'Reply-To' address"),
+	recipientEmail: z
+		.preprocess(emptyStringToUndefined, z.string().email().optional())
+		.optional()
+		.describe(
+			"The email address of the recipient(s). Either this or 'Recipient Member' must be set."
+		),
+	recipientMember: z
+		.preprocess(emptyStringToUndefined, z.string().uuid().optional())
+		.optional()
+		.describe(
+			"Someone who is a member of the community. Either this or 'Recipient Email' must be set."
+		),
+	subject: stringWithTokens()
+		.max(500)
+		.describe(
+			"The subject of the email. Tokens can be used to dynamically insert values from the pub or config."
+		),
+	body: markdown()
+		.min(0)
+		.describe(
+			"The body of the email. Markdown is supported. Tokens can be used to dynamically insert values from the pub or config."
+		),
+});
+
 export const action = defineAction({
 	accepts: ["pub"],
 	name: Action.email,
-	config: {
-		schema: z.object({
-			senderName: z
-				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
-				.optional()
-				.describe("Sender name"),
-			replyTo: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Reply-to email address"),
-			recipientEmail: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Recipient email address"),
-			recipientMember: z.string().uuid().describe("Recipient member").optional(),
-			subject: stringWithTokens().max(500).describe("Email subject"),
-			body: markdown().min(0).describe("Email body"),
-		}),
-		fieldConfig: {
-			recipientEmail: {
-				allowedSchemas: true,
-			},
-			recipientMember: {
-				fieldType: (props: AutoFormInputComponentProps) => (
-					<MemberSelectClientFetch
-						value={props.field.value}
-						allowPubFieldSubstitution
-						fieldName={props.field.name}
-						fieldLabel={"Recipient Member"}
-					/>
-				),
-			},
-		},
-		dependencies: [
-			{
-				sourceField: "recipientMember",
-				targetField: "recipientEmail",
-				when: (recipientMember) => Boolean(recipientMember),
-				type: DependencyType.DISABLES,
-			},
-		],
-	},
+	config: { schema },
 	description: "Send an email to one or more users",
-	params: {
-		schema: z.object({
-			senderName: z
-				.preprocess(emptyStringToUndefined, z.string().min(2).max(100).optional())
-				.optional()
-				.describe("Sender name"),
-			replyTo: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Reply-to email address"),
-			recipientEmail: z
-				.preprocess(emptyStringToUndefined, z.string().email().optional())
-				.optional()
-				.describe("Recipient email address"),
-			recipientMember: z
-				.string()
-				.uuid()
-				.describe(
-					"Recipient Member|Overrides the recipient community member specified in the action config."
-				)
-				.optional(),
-			subject: stringWithTokens()
-				.max(500)
-				.describe("Email subject|Overrides the subject specified in the action config.")
-				.optional(),
-			body: markdown()
-				.min(0)
-				.describe("Email body|Overrides the body specified in the action config.")
-				.optional(),
-		}),
-		fieldConfig: {
-			recipientEmail: {
-				allowedSchemas: true,
-			},
-			recipientMember: {
-				fieldType: (props: AutoFormInputComponentProps) => (
-					<MemberSelectClientFetch
-						value={props.field.value}
-						allowPubFieldSubstitution
-						fieldName={props.field.name}
-						fieldLabel={"Recipient Member"}
-					/>
-				),
-			},
-		},
-		dependencies: [
-			{
-				sourceField: "recipientMember",
-				targetField: "recipientEmail",
-				when: (recipientMember) => Boolean(recipientMember),
-				type: DependencyType.DISABLES,
-			},
-		],
-	},
 	icon: Mail,
 	tokens: {
 		subject: {

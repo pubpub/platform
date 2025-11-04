@@ -1,14 +1,11 @@
 import * as React from "react";
 
+import { cn } from "utils";
+
 import type { AutoFormInputComponentProps } from "../types";
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Input } from "../../input";
-import {
-	PubFieldSelect,
-	PubFieldSelectProvider,
-	PubFieldSelectToggleButton,
-	PubFieldSelectWrapper,
-} from "../../pubFields/pubFieldSelect";
+import { PubFieldSelectProvider } from "../../pubFields/pubFieldSelect";
 import AutoFormDescription from "../common/description";
 import AutoFormLabel from "../common/label";
 import AutoFormTooltip from "../common/tooltip";
@@ -23,6 +20,7 @@ export default function AutoFormInput({
 	description,
 	zodItem,
 	placeholder,
+	className,
 }: AutoFormInputComponentProps) {
 	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
 	const showLabel = _showLabel === undefined ? true : _showLabel;
@@ -40,7 +38,6 @@ export default function AutoFormInput({
 						<>
 							<span className="flex flex-row items-center justify-between space-x-2">
 								<AutoFormLabel label={label} isRequired={isRequired} />
-								<PubFieldSelectToggleButton />
 							</span>
 							{description && <AutoFormDescription description={description} />}
 						</>
@@ -50,12 +47,9 @@ export default function AutoFormInput({
 							type={type}
 							{...fieldPropsWithoutShowLabel}
 							placeholder={placeholder}
-							className="bg-white"
+							className={cn(className, "bg-white")}
 						/>
 					</FormControl>
-					<PubFieldSelectWrapper>
-						<PubFieldSelect />
-					</PubFieldSelectWrapper>
 					<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 					<FormMessage />
 				</FormItem>

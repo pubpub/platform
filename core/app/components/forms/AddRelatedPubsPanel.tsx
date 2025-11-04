@@ -7,7 +7,7 @@ import type { PubsId, PubTypes } from "db/public";
 import { Button } from "ui/button";
 
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
-import { FormPubsDataTableClient } from "../DataTable/PubsDataTable/FormPubsDataTableClient";
+import { FormPubSearchSelect } from "../pubs/FormPubSearchSelect";
 
 type AddRelatedPubsPanelProps = {
 	title: string;
@@ -34,14 +34,17 @@ export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
 				<PanelHeader title={props.title} showCancel onCancel={props.onCancel} />
-				<FormPubsDataTableClient
+				<FormPubSearchSelect
 					formSlug={props.formSlug}
 					fieldSlug={props.fieldSlug}
+					currentPubId={props.currentPubId}
 					selectedPubs={selected}
 					onSelectedPubsChange={setSelected}
-					disabledRows={props.disabledPubs}
-					pubTypes={props.pubTypes}
-					currentPubId={props.currentPubId}
+					disabledPubIds={props.disabledPubs}
+					pubTypeIds={props.pubTypes?.map((t) => t.id)}
+					mode="multi"
+					placeholder="Search for pubs to add..."
+					maxHeight="calc(100vh - 200px)"
 				/>
 			</div>
 			<div className="mt-auto flex w-full justify-between gap-2">

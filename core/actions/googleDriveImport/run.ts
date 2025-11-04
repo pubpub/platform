@@ -9,11 +9,8 @@ import { formatDriveData } from "./formatDriveData";
 import { getContentFromFolder } from "./getGDriveFiles";
 
 export const run = defineRun<typeof action>(
-	async ({ pub, config, args, communityId, lastModifiedBy }) => {
-		const input = {
-			...config,
-			...args,
-		};
+	async ({ pub, config, communityId, lastModifiedBy }) => {
+		const input = config;
 
 		try {
 			const communitySlug = await getCommunitySlug();

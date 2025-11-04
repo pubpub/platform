@@ -14,15 +14,8 @@ import AutoFormDescription from "../../auto-form/common/description";
 import AutoFormLabel from "../../auto-form/common/label";
 import AutoFormTooltip from "../../auto-form/common/tooltip";
 import { Button } from "../../button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "../../dropdown-menu";
 import { FormControl, FormItem, FormMessage } from "../../form";
 import { Info, Minus, Plus } from "../../icon";
-import { Input } from "../../input";
 import { MultiSelect } from "../../multi-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../tooltip";
@@ -58,7 +51,7 @@ export const PubFieldSelectProvider = ({
 	...allowedSchemasOrZodItem
 }: {
 	children: React.ReactNode;
-	field: ControllerRenderProps<FieldValues, any>;
+	field: ControllerRenderProps<any, any>;
 } & AllowedSchemasOrZodItem) => {
 	const form = useFormContext();
 	const allPubFields = usePubFieldContext();
@@ -147,8 +140,9 @@ export const PubFieldSelectToggleButton = () => {
 };
 
 export const PubFieldSelectWrapper = ({ children }: { children: React.ReactNode }) => {
-	const { shouldReadFromPubField, allowedPubFields } = usePubFieldSelectContext();
-	if (!shouldReadFromPubField || allowedPubFields.length === 0) {
+	const { shouldReadFromPubField } = usePubFieldSelectContext();
+
+	if (!shouldReadFromPubField) {
 		return null;
 	}
 

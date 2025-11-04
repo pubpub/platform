@@ -45,7 +45,6 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		userId: user.id as UsersId,
 		stack: args.stack ?? [],
 		...(args.json ? { json: args.json } : { pubId: args.pubId! }),
-		config: null,
 	});
 
 	return result;

@@ -1,18 +1,13 @@
 import assert from "assert";
 
 import { Suspense } from "react";
-import Link from "next/link";
 
-import type { PubsId, StagesId, UsersId } from "db/public";
+import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
-import { PubDropDown } from "~/app/components/pubs/PubDropDown";
-import { PubTitle } from "~/app/components/PubTitle";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getLoginData, getPageLoginData } from "~/lib/authentication/loginData";
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
@@ -20,13 +15,9 @@ import {
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
 } from "~/lib/authorization/capabilities";
-import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
+import { getStage } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getStages } from "~/lib/server/stages";
-import { getStagesCached } from "../../queries";
 
 type PropsInner = {
 	stageId: StagesId;
@@ -94,6 +85,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 						moveFrom={stage.moveConstraintSources}
 						moveTo={stage.moveConstraints}
 						canFilter={false}
+						withSelection={false}
 					/>
 				))}
 			</CardContent>

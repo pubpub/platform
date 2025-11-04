@@ -11,10 +11,9 @@ export const action = defineAction({
 	accepts: ["pub"],
 	config: {
 		schema: z.object({
-			stage: stage().describe("Destination stage"),
+			stage: stage().describe("The stage the pub will be moved into"),
 		}),
 	},
-	description: "Move a pub to a different stage",
-	params: { schema: z.object({ stage: stage().describe("Destination stage") }) },
+	description: "Move a pub into a different stage",
 	icon: MoveHorizontal,
 });

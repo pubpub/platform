@@ -1,6 +1,6 @@
 import { cache } from "react";
 
-import type { PubsId } from "db/public";
+import type { CommunitiesId, PubsId } from "db/public";
 
 import { db } from "~/kysely/database";
 import { createCacheTag } from "./cache/cacheTags";
@@ -18,6 +18,17 @@ export const findCommunityBySlug = cache(async (communitySlug?: string) => {
 		}
 	)();
 });
+
+export const getCommunity = memoize(
+	async (communityId: CommunitiesId) => {
+		return db
+			.selectFrom("communities")
+			.selectAll()
+			.where("id", "=", communityId)
+			.executeTakeFirst();
+	},
+	{ revalidateTags: ["all", "all-communities"], duration: ONE_DAY }
+);
 
 // Retrieve the pub's community id in order to revalidate the next server
 // cache after the action is run.
