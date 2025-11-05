@@ -5,7 +5,7 @@ import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from
 import { Event } from "db/public";
 import { logger } from "logger";
 
-import type { RuleConfig } from "~/actions/types";
+import type { AutomationConfig } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { pubType, pubValuesByRef } from "../server";
 import { autoCache } from "../server/cache/autoCache";
@@ -131,7 +131,7 @@ export const getStageMembers = cache((stageId: StagesId) => {
 	);
 });
 
-export type GetEventRuleOptions =
+export type GetEventAutomationOptions =
 	| {
 			event: Event.pubInStageForDuration | Event.webhook;
 			sourceActionInstanceId?: never;
@@ -140,65 +140,61 @@ export type GetEventRuleOptions =
 			event: Event.actionFailed | Event.actionSucceeded;
 			sourceActionInstanceId: ActionInstancesId;
 	  };
-export const getStageRules = cache((stageId: StagesId, options?: GetEventRuleOptions) => {
-	return autoCache(
-		db
-			.selectFrom("rules")
-			.innerJoin("action_instances as ai", "ai.id", "rules.actionInstanceId")
-			.where("ai.stageId", "=", stageId)
-			.selectAll("rules")
-			.select((eb) => [
-				jsonObjectFrom(
-					eb
-						.selectFrom("action_instances")
-						.selectAll("action_instances")
-						.whereRef("action_instances.id", "=", "rules.actionInstanceId")
-				)
-					.$notNull()
-					.as("actionInstance"),
-				jsonObjectFrom(
-					eb
-						.selectFrom("action_instances")
-						.selectAll("action_instances")
-						.whereRef("action_instances.id", "=", "rules.sourceActionInstanceId")
-					// .where("action_instances.stageId", "=", stageId)
-				).as("sourceActionInstance"),
-			])
-			.$if(!!options?.event, (eb) => {
-				const where = eb.where("rules.event", "=", options!.event);
+export const getStageAutomations = cache(
+	(stageId: StagesId, options?: GetEventAutomationOptions) => {
+		return autoCache(
+			db
+				.selectFrom("automations")
+				.innerJoin("action_instances as ai", "ai.id", "automations.actionInstanceId")
+				.where("ai.stageId", "=", stageId)
+				.selectAll("automations")
+				.select((eb) => [
+					jsonObjectFrom(
+						eb
+							.selectFrom("action_instances")
+							.selectAll("action_instances")
+							.whereRef("action_instances.id", "=", "automations.actionInstanceId")
+					)
+						.$notNull()
+						.as("actionInstance"),
+					jsonObjectFrom(
+						eb
+							.selectFrom("action_instances")
+							.selectAll("action_instances")
+							.whereRef(
+								"action_instances.id",
+								"=",
+								"automations.sourceActionInstanceId"
+							)
+						// .where("action_instances.stageId", "=", stageId)
+					).as("sourceActionInstance"),
+				])
+				.$if(!!options?.event, (eb) => {
+					const where = eb.where("automations.event", "=", options!.event);
 
-				if (
-					options!.event === Event.pubInStageForDuration ||
-					options!.event === Event.webhook
-				) {
-					return where;
-				}
+					if (
+						options!.event === Event.pubInStageForDuration ||
+						options!.event === Event.webhook
+					) {
+						return where;
+					}
 
-				if (!options!.sourceActionInstanceId) {
-					logger.warn({
-						msg: `Source action instance id is not set for rule with event ${options!.event}`,
-						event: options!.event,
-						ruleId: options!.sourceActionInstanceId,
-					});
-					return where;
-				}
+					if (!options!.sourceActionInstanceId) {
+						logger.warn({
+							msg: `Source action instance id is not set for automation with event ${options!.event}`,
+							event: options!.event,
+							sourceActionInstanceId: options!.sourceActionInstanceId,
+						});
+						return where;
+					}
 
-				return where.where(
-					"rules.sourceActionInstanceId",
-					"=",
-					options!.sourceActionInstanceId
-				);
-			})
-			.$narrowType<{ config: RuleConfig | null }>()
-	);
-});
-
-// export const getReferentialRules = cache(
-// 	(stageId: StagesId, event: Event, sourceActionInstanceId: ActionInstancesId) => {
-// 		return autoCache(
-// 			getStageRules(stageId)
-// 				.qb.where("rules.sourceActionInstanceId", "=", sourceActionInstanceId)
-// 				.where("rules.event", "=", event)
-// 		);
-// 	}
-// );
+					return where.where(
+						"automations.sourceActionInstanceId",
+						"=",
+						options!.sourceActionInstanceId
+					);
+				})
+				.$narrowType<{ config: AutomationConfig | null }>()
+		);
+	}
+);

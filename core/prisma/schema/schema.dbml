@@ -320,9 +320,9 @@ Table action_instances {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   config Json [note: '@type(BaseActionInstanceConfig, \'../types\', true, false, true)']
-  rules rules [not null]
+  automations automations [not null]
   runs action_runs [not null]
-  watchedBy rules [not null]
+  watchedBy automations [not null]
 }
 
 Table action_config_defaults {
@@ -363,12 +363,12 @@ Table action_runs {
   InviteHistory invites_history [not null]
 }
 
-Table rules {
+Table automations {
   id String [pk]
   event Event [not null]
   actionInstance action_instances [not null]
   actionInstanceId String [not null]
-  config Json [note: '@type(RuleConfigBase, \'../types\', true, false, true)']
+  config Json [note: '@type(AutomationConfig, \'../types\', true, false, true)']
   sourceActionInstanceId String
   sourceActionInstance action_instances
   createdAt DateTime [default: `now()`, not null]
@@ -766,9 +766,9 @@ Ref: action_runs.userId > users.id [delete: Set Null]
 
 Ref: action_runs.sourceActionRunId - action_runs.id [delete: Set Null]
 
-Ref: rules.actionInstanceId > action_instances.id [delete: Cascade]
+Ref: automations.actionInstanceId > action_instances.id [delete: Cascade]
 
-Ref: rules.sourceActionInstanceId > action_instances.id [delete: Cascade]
+Ref: automations.sourceActionInstanceId > action_instances.id [delete: Cascade]
 
 Ref: forms.communityId > communities.id [delete: Cascade]
 

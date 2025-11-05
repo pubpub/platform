@@ -14,7 +14,7 @@ import type { ActionInstancesId, ActionRunsId, PubsId, StagesId } from "db/publi
 import type { XOR } from "utils/types";
 import { Event } from "db/public";
 
-import type { Interval } from "~/actions/_lib/rules";
+import type { Interval } from "~/actions/_lib/automations";
 import { addDuration } from "../dates";
 
 export const getScheduledActionJobKey = ({

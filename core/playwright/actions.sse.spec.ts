@@ -83,6 +83,7 @@ test.describe("Actions SSE", () => {
 				`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle`
 			)
 		).not.toBeVisible();
+		await page2.reload();
 
 		const extraStringRun1 = "`This is Run 1`";
 		await test.step("trigger action for first time", async () => {
