@@ -47,6 +47,7 @@ import type {
 import type { MaybeHas } from "utils/types";
 import {
 	Action as ActionName,
+	AutomationConditionBlockType,
 	CoreSchemaType,
 	ElementType,
 	InputComponent,
@@ -58,6 +59,7 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
+import type { ConditionBlockFormValue } from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
@@ -139,6 +141,18 @@ export type ActionInstanceInitializer = Record<
 	}[keyof typeof actions]
 >;
 
+type ConditionItemInput =
+	| {
+			kind: "condition";
+			type: "jsonata";
+			expression: string;
+	  }
+	| {
+			kind: "block";
+			type: AutomationConditionBlockType;
+			items: ConditionItemInput[];
+	  };
+
 /**
  * Map of stagename to list of permissions
  */
@@ -158,6 +172,10 @@ export type StagesInitializer<
 			actionInstance: keyof A;
 			sourceAction?: keyof A;
 			config?: AutomationConfig | null;
+			conditions?: {
+				type: AutomationConditionBlockType;
+				items: ConditionItemInput[];
+			};
 		}[];
 	}
 >;
@@ -544,7 +562,13 @@ type StagesWithPermissionsAndActionsAndAutomationsByName<
 					? {
 							automations: {
 								[KK in keyof S[K]["automations"]]: S[K]["automations"][KK] &
-									Automations;
+									Automations & {
+										conditionBlocks?: Array<{
+											id: string;
+											type: AutomationConditionBlockType;
+											items: any[];
+										}>;
+									};
 							};
 						}
 					: {})
@@ -1305,23 +1329,44 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
-	const possibleAutomations = consolidatedStages.flatMap(
-		(stage) =>
-			stage.automations?.map((automation) => ({
-				event: automation.event,
-				actionInstanceId: expect(
-					createdActions.find((action) => action.name === automation.actionInstance)?.id
-				),
-				sourceActionInstanceId: createdActions.find(
-					(action) => action.name === automation.sourceAction
-				)?.id,
-				config: automation.config,
-			})) ?? []
-	);
+	const { upsertAutomation } = await import("~/lib/server/automations");
 
-	const createdAutomations = possibleAutomations.length
-		? await trx.insertInto("automations").values(possibleAutomations).returningAll().execute()
-		: [];
+	const createdAutomations: Automations[] = [];
+	for (const stage of consolidatedStages) {
+		if (!stage.automations) {
+			continue;
+		}
+
+		for (const automation of stage.automations) {
+			const createdAutomation = await upsertAutomation(
+				{
+					event: automation.event,
+					actionInstanceId: expect(
+						createdActions.find((action) => action.name === automation.actionInstance)
+							?.id
+					),
+					sourceActionInstanceId: createdActions.find(
+						(action) => action.name === automation.sourceAction
+					)?.id,
+					config: automation.config,
+					condition: automation.conditions
+						? {
+								// this cast is just to set the rank type, it's annoying to have to specify the rank manually in the seed
+								...(automation.conditions as ConditionBlockFormValue),
+								kind: "block" as const,
+								rank: "a", // get's auto gend
+							}
+						: undefined,
+				},
+				trx
+			);
+			createdAutomations.push(createdAutomation);
+		}
+	}
+
+	logger.info(
+		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
+	);
 
 	const fullStages = Object.fromEntries(
 		consolidatedStages.map((stage) => {
@@ -1344,10 +1389,6 @@ export async function seedCommunity<
 		S,
 		typeof stageMemberships
 	>;
-
-	logger.info(
-		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
-	);
 
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(

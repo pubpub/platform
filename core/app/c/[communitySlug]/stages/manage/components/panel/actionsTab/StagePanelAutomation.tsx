@@ -3,38 +3,20 @@
 import { useCallback } from "react";
 import { parseAsString, useQueryState } from "nuqs";
 
-import type {
-	Action,
-	ActionInstances,
-	ActionInstancesId,
-	AutomationsId,
-	CommunitiesId,
-	Event,
-	StagesId,
-} from "db/public";
+import type { Action, CommunitiesId, StagesId } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 import { cn } from "utils";
 
-import type { AutomationForEvent } from "~/actions/_lib/automations";
-import type { AutomationConfig } from "~/actions/types";
+import type { getStageAutomations } from "~/lib/db/queries";
+import type { AutoReturnType } from "~/lib/types";
 import { getActionByName, getAutomationByName, humanReadableEventHydrated } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 
 type Props = {
 	stageId: StagesId;
 	communityId: CommunitiesId;
-	automation: {
-		id: AutomationsId;
-		event: Event;
-		actionInstance: ActionInstances;
-		sourceActionInstance?: ActionInstances | null;
-		config: AutomationConfig<AutomationForEvent<Event>> | null;
-		createdAt: Date;
-		updatedAt: Date;
-		actionInstanceId: ActionInstancesId;
-		sourceActionInstanceId: ActionInstancesId | null;
-	};
+	automation: AutoReturnType<typeof getStageAutomations>["executeTakeFirstOrThrow"];
 };
 
 const ActionIcon = (props: { actionName: Action; className?: string }) => {

@@ -1,7 +1,16 @@
 import { cache } from "react";
+import { sql } from "kysely";
 import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
-import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
+import type {
+	ActionInstancesId,
+	AutomationConditionBlocks,
+	AutomationConditions,
+	CommunitiesId,
+	PubsId,
+	StagesId,
+	UsersId,
+} from "db/public";
 import { Event } from "db/public";
 import { logger } from "logger";
 
@@ -140,6 +149,12 @@ export type GetEventAutomationOptions =
 			event: Event.actionFailed | Event.actionSucceeded;
 			sourceActionInstanceId: ActionInstancesId;
 	  };
+
+export type ConditionBlock = AutomationConditionBlocks & {
+	kind: "block";
+	items: (ConditionBlock | (AutomationConditions & { kind: "condition" }))[];
+};
+
 export const getStageAutomations = cache(
 	(stageId: StagesId, options?: GetEventAutomationOptions) => {
 		return autoCache(
@@ -166,8 +181,33 @@ export const getStageAutomations = cache(
 								"=",
 								"automations.sourceActionInstanceId"
 							)
-						// .where("action_instances.stageId", "=", stageId)
 					).as("sourceActionInstance"),
+					jsonObjectFrom(
+						eb
+							.selectFrom("automation_condition_blocks")
+							.whereRef(
+								"automation_condition_blocks.automationId",
+								"=",
+								"automations.id"
+							)
+							.where(
+								"automation_condition_blocks.automationConditionBlockId",
+								"is",
+								null
+							)
+							.selectAll("automation_condition_blocks")
+
+							.select(sql.lit<"block">("block").as("kind"))
+							.select((eb) =>
+								// this function is what recursively builds the condition blocks and conditions
+								// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
+								eb
+									.fn<
+										ConditionBlock[]
+									>("get_condition_block_items", ["automation_condition_blocks.id"])
+									.as("items")
+							)
+					).as("condition"),
 				])
 				.$if(!!options?.event, (eb) => {
 					const where = eb.where("automations.event", "=", options!.event);

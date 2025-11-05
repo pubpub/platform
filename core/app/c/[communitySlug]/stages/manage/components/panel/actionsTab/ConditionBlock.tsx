@@ -1,6 +1,7 @@
 "use client";
 
 import type { DragEndEvent } from "@dnd-kit/core";
+import type { FieldErrors } from "react-hook-form";
 
 import { useCallback, useId, useState } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
@@ -55,7 +56,8 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id,
 	});
-	const { register } = useFormContext();
+	const { register, getFieldState } = useFormContext();
+	const { invalid, error } = getFieldState(slug);
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
@@ -68,7 +70,8 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 			style={style}
 			className={cn(
 				"relative flex items-center gap-2 rounded border border-l-4 border-l-blue-100 bg-white p-2",
-				isDragging && "z-10 cursor-grabbing"
+				isDragging && "z-10 cursor-grabbing",
+				invalid && "border-red-300"
 			)}
 		>
 			<Button
@@ -81,13 +84,18 @@ const ConditionItem = ({ id, expression, onRemove, slug }: ConditionItemProps) =
 			>
 				<GripVertical size={16} className="text-neutral-400" />
 			</Button>
-			<div className="flex-1">
+			<div className="flex-1 space-y-2">
 				<Input
 					{...register(slug)}
 					placeholder="Enter JSONata expression (e.g., $.fieldName = 'value')"
 					defaultValue={expression}
-					className="text-sm"
+					className={cn("text-sm", invalid && "border-red-300")}
 				/>
+				{invalid && error && (
+					<p className="text-xs text-red-500">
+						{error.type === "too_small" ? "Condition cannot be empty" : error.message}
+					</p>
+				)}
 			</div>
 			<Button
 				type="button"
@@ -110,8 +118,16 @@ type ConditionBlockProps = {
 };
 
 export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlockProps) => {
-	const { control, watch, setValue } = useFormContext<Record<string, ConditionItemFormValue>>();
+	const { control, watch, setValue, getFieldState } =
+		useFormContext<Record<string, ConditionItemFormValue>>();
 	const blockType = watch(`${slug}.type`) as AutomationConditionBlockType;
+
+	const { invalid, error } = getFieldState(slug);
+	// we don't want to higlight the block if some subitems have errors, too much info
+	const rootItemError =
+		invalid && error && "items" in error && !Array.isArray(error.items)
+			? (error.items as FieldErrors)?.root
+			: null;
 
 	const { fields, append, move, update, remove } = useFieldArray({
 		control,
@@ -192,7 +208,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 			ref={setNodeRef}
 			style={style}
 			className={cn(
-				"relative flex items-start gap-2 rounded border p-3",
+				"relative space-y-2 rounded border p-3",
 
 				"border-l-4 border-l-blue-100",
 				isDragging && "z-10 cursor-grabbing",
@@ -200,134 +216,144 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 				depth === 1 && "border-neutral-200 bg-white",
 				depth === 2 && "border-neutral-100 bg-neutral-50",
 				depth >= 3 && "border-neutral-100 bg-white",
-				depth > 0 && "p-2"
+				depth > 0 && "p-2",
+				rootItemError && "border-red-300"
 			)}
 		>
-			{depth > 0 && (
-				<Button
-					type="button"
-					aria-label="Drag handle"
-					variant="ghost"
-					className={cn("cursor-grab p-1", isDragging && "cursor-grabbing")}
-					{...listeners}
-					{...attributes}
-				>
-					<GripVertical size={16} className="text-neutral-400" />
-				</Button>
-			)}
-			<div className="flex-1">
-				<div className="mb-3 flex items-center justify-between gap-2">
-					<div className="flex items-center gap-2">
-						{depth === 0 && (
-							<Label className="text-xs font-semibold uppercase text-neutral-600">
-								When
-							</Label>
-						)}
-						<Select
-							value={blockType}
-							onValueChange={(value) =>
-								setValue(`${slug}.type`, value as AutomationConditionBlockType)
-							}
-						>
-							<SelectTrigger className="h-8 w-24 text-xs">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{Object.values(AutomationConditionBlockType).map((type) => (
-									<SelectItem key={type} value={type}>
-										{type}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
-					{depth > 0 && onRemove && (
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							className="px-1 text-xs text-neutral-400 hover:text-red-500"
-							onClick={onRemove}
-						>
-							<Trash size={14} />
-						</Button>
-					)}
-				</div>
-
-				<div className="space-y-2">
-					<DndContext
-						id={itemId}
-						modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-						onDragEnd={handleDragEnd}
-						sensors={sensors}
+			<div className="flex items-start gap-2">
+				{depth > 0 && (
+					<Button
+						type="button"
+						aria-label="Drag handle"
+						variant="ghost"
+						className={cn("cursor-grab p-1", isDragging && "cursor-grabbing")}
+						{...listeners}
+						{...attributes}
 					>
-						<SortableContext items={fields} strategy={verticalListSortingStrategy}>
-							{fields.map((field, index) =>
-								field.kind === "condition" ? (
-									<ConditionItem
-										key={field.id}
-										id={field.id}
-										expression={field.expression}
-										onRemove={() => handleRemove(index)}
-										slug={`${slug}.items.${index}.expression`}
-									/>
-								) : (
-									<ConditionBlock
-										key={field.id}
-										id={field.id}
-										depth={depth + 1}
-										onRemove={() => handleRemove(index)}
-										slug={`${slug}.items.${index}`}
-									/>
-								)
+						<GripVertical size={16} className="text-neutral-400" />
+					</Button>
+				)}
+				<div className="flex-1">
+					<div className="mb-3 flex items-center justify-between gap-2">
+						<div className="flex items-center gap-2">
+							{depth === 0 && (
+								<Label className="text-xs font-semibold uppercase text-neutral-600">
+									When
+								</Label>
 							)}
-						</SortableContext>
-					</DndContext>
-					<div className="flex gap-2 pt-1">
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							className="h-8 text-xs"
-							onClick={() => handleAdd("condition")}
-							disabled={
-								isNot &&
-								fields.filter((field) => field.kind === "condition").length >= 1
-							}
+							<Select
+								value={blockType}
+								onValueChange={(value) =>
+									setValue(`${slug}.type`, value as AutomationConditionBlockType)
+								}
+							>
+								<SelectTrigger className="h-8 w-24 text-xs">
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{Object.values(AutomationConditionBlockType).map((type) => (
+										<SelectItem key={type} value={type}>
+											{type}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+						{depth > 0 && onRemove && (
+							<Button
+								type="button"
+								variant="ghost"
+								size="sm"
+								className="px-1 text-xs text-neutral-400 hover:text-red-500"
+								onClick={onRemove}
+							>
+								<Trash size={14} />
+							</Button>
+						)}
+					</div>
+
+					<div className="space-y-2">
+						<DndContext
+							id={itemId}
+							modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+							onDragEnd={handleDragEnd}
+							sensors={sensors}
 						>
-							<Plus size={14} />
-							Add condition
-						</Button>
-						{canNest && (
+							<SortableContext items={fields} strategy={verticalListSortingStrategy}>
+								{fields.map((field, index) =>
+									field.kind === "condition" ? (
+										<ConditionItem
+											key={field.id}
+											id={field.id}
+											expression={field.expression}
+											onRemove={() => handleRemove(index)}
+											slug={`${slug}.items.${index}.expression`}
+										/>
+									) : (
+										<ConditionBlock
+											key={field.id}
+											id={field.id}
+											depth={depth + 1}
+											onRemove={() => handleRemove(index)}
+											slug={`${slug}.items.${index}`}
+										/>
+									)
+								)}
+							</SortableContext>
+						</DndContext>
+						<div className="flex gap-2 pt-1">
 							<Button
 								type="button"
 								variant="outline"
 								size="sm"
 								className="h-8 text-xs"
-								onClick={() => handleAdd("block")}
+								onClick={() => handleAdd("condition")}
 								disabled={
 									isNot &&
-									(fields.filter((field) => field.kind === "condition").length >=
-										1 ||
-										fields.filter((field) => field.kind === "block").length >=
-											1)
+									fields.filter((field) => field.kind === "condition").length >= 1
 								}
 							>
 								<Plus size={14} />
-								Add block
+								Add condition
 							</Button>
-						)}
-					</div>
+							{canNest && (
+								<Button
+									type="button"
+									variant="outline"
+									size="sm"
+									className="h-8 text-xs"
+									onClick={() => handleAdd("block")}
+									disabled={
+										isNot &&
+										(fields.filter((field) => field.kind === "condition")
+											.length >= 1 ||
+											fields.filter((field) => field.kind === "block")
+												.length >= 1)
+									}
+								>
+									<Plus size={14} />
+									Add block
+								</Button>
+							)}
+						</div>
 
-					{isNot &&
-						(fields.filter((field) => field.kind === "condition").length >= 1 ||
-							fields.filter((field) => field.kind === "block").length >= 1) && (
-							<p className="text-xs text-amber-600">
-								NOT blocks can only contain one condition or one block
-							</p>
-						)}
+						{isNot &&
+							(fields.filter((field) => field.kind === "condition").length >= 1 ||
+								fields.filter((field) => field.kind === "block").length >= 1) && (
+								<p className="text-xs text-amber-600">
+									NOT blocks can only contain one condition or one block
+								</p>
+							)}
+					</div>
 				</div>
 			</div>
+			{rootItemError && (
+				<p className="text-xs text-red-500">
+					{rootItemError.type === "too_small"
+						? "Block cannot be empty"
+						: rootItemError.message}
+				</p>
+			)}
 		</div>
 	);
 };

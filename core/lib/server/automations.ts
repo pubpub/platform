@@ -1,3 +1,5 @@
+import { randomUUID } from "crypto";
+
 import type { ZodError } from "zod";
 
 import { sql } from "kysely";
@@ -6,8 +8,10 @@ import { jsonObjectFrom } from "kysely/helpers/postgres";
 import type {
 	ActionInstances,
 	ActionInstancesId,
+	AutomationConditionBlocksId,
+	AutomationConditionBlockType,
+	AutomationConditionsId,
 	AutomationsId,
-	AutomationsUpdate,
 	CommunitiesId,
 	NewAutomations,
 } from "db/public";
@@ -16,12 +20,18 @@ import { Event } from "db/public";
 import { expect } from "utils";
 
 import type { SequentialAutomationEvent } from "~/actions/types";
+import type {
+	ConditionBlockFormValue,
+	ConditionFormValue,
+} from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock";
 import { automations } from "~/actions/api";
 import { isSequentialAutomationEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
+import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
+import { maybeWithTrx } from "./maybeWithTrx";
 
 export class AutomationError extends Error {
 	constructor(message: string) {
@@ -99,13 +109,152 @@ export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExists
 	}
 }
 
-export const createAutomation = (props: NewAutomations) =>
-	autoRevalidate(db.insertInto("automations").values(props).returningAll());
+type AutomationUpsertProps = NewAutomations & {
+	id?: AutomationsId;
+	condition?: ConditionBlockFormValue;
+};
 
-export const updateAutomation = (automationId: AutomationsId, props: AutomationsUpdate) =>
-	autoRevalidate(
-		db.updateTable("automations").set(props).where("id", "=", automationId).returningAll()
-	);
+// type FlatItem = (Omit<ConditionBlockFormValue, 'items'> | ConditionItemFormValue )
+
+// type CorrectItem = FlatItem & {
+// 	id: string;
+// 	parentId?: string;
+// }
+
+type OutputItems = {
+	blocks: (Omit<ConditionBlockFormValue, "items"> & {
+		id: string;
+		parentId?: string;
+	})[];
+	conditions: (ConditionFormValue & {
+		id: string;
+		parentId?: string;
+	})[];
+};
+
+const getFlatBlocksAndConditions = (
+	parentId: string,
+	items: ConditionBlockFormValue["items"],
+	accumulator: OutputItems
+): OutputItems => {
+	const ranks = findRanksBetween({ numberOfRanks: items.length });
+	for (const [index, item] of items.entries()) {
+		const rank = ranks[index];
+		if (item.kind === "condition") {
+			accumulator.conditions.push({
+				...item,
+				id: randomUUID(),
+				parentId,
+				rank: item.rank || rank, // makes it easy to seed,
+			});
+
+			continue;
+		}
+
+		const { id: _, items: blockItems, ...blockWithoutItems } = item;
+		const blockId = randomUUID();
+		accumulator.blocks.push({
+			...blockWithoutItems,
+			rank: blockWithoutItems.rank || rank,
+			id: blockId,
+			parentId,
+		});
+
+		if (blockItems.length > 0) {
+			getFlatBlocksAndConditions(blockId, blockItems, accumulator);
+		}
+		continue;
+	}
+
+	return accumulator;
+};
+
+export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) => {
+	const res = await maybeWithTrx(trx, async (trx) => {
+		const automation = await autoRevalidate(
+			trx
+				.insertInto("automations")
+				.values({
+					id: props.id ?? (randomUUID() as AutomationsId),
+					event: props.event,
+					actionInstanceId: props.actionInstanceId,
+					sourceActionInstanceId: props.sourceActionInstanceId,
+					config: props.config,
+				})
+				.onConflict((oc) =>
+					oc.columns(["id"]).doUpdateSet((eb) => ({
+						event: eb.ref("excluded.event"),
+						actionInstanceId: eb.ref("excluded.actionInstanceId"),
+						sourceActionInstanceId: eb.ref("excluded.sourceActionInstanceId"),
+						config: eb.ref("excluded.config"),
+					}))
+				)
+				.returningAll()
+		).executeTakeFirstOrThrow();
+
+		// delete all existing conditions/blocks, which should remove all conditions as well
+		await trx
+			.deleteFrom("automation_condition_blocks")
+			.where("automationId", "=", automation.id)
+			.execute();
+
+		console.log("props.condition", props.condition);
+
+		if (!props.condition) {
+			return automation;
+		}
+
+		// create new conditions/blocks
+		const firstBlockId = randomUUID() as AutomationConditionBlocksId;
+		const firstBlock = {
+			...props.condition,
+			id: firstBlockId,
+			parentId: undefined,
+		};
+
+		const flatItems = getFlatBlocksAndConditions(firstBlockId, props.condition.items, {
+			blocks: [firstBlock],
+			conditions: [],
+		});
+
+		console.log("flatItems", flatItems);
+
+		// create all block
+		await trx
+			.insertInto("automation_condition_blocks")
+			.values(
+				flatItems.blocks.map((block) => ({
+					type: block.type as AutomationConditionBlockType,
+					rank: block.rank,
+					automationConditionBlockId: (block.parentId ??
+						null) as AutomationConditionBlocksId | null,
+					id: block.id as AutomationConditionBlocksId,
+					automationId: automation.id,
+				}))
+			)
+			.execute();
+
+		if (flatItems.conditions.length > 0) {
+			await trx
+				.insertInto("automation_conditions")
+				.values(
+					flatItems.conditions.map((condition) => ({
+						rank: condition.rank,
+						type: condition.type,
+						expression: condition.expression,
+						id: condition.id as AutomationConditionsId,
+						automationConditionBlockId:
+							condition.parentId as AutomationConditionBlocksId,
+					}))
+				)
+				.execute();
+		}
+
+		return automation;
+	});
+
+	return res;
+};
 
 export const removeAutomation = (automationId: AutomationsId) =>
 	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId));
@@ -256,13 +405,14 @@ async function wouldCreateCycle(
 		  };
 }
 
-export async function createOrUpdateAutomationWithCycleCheck(
+export async function upsertAutomationWithCycleCheck(
 	data: {
 		automationId?: AutomationsId;
 		event: Event;
 		actionInstanceId: ActionInstancesId;
 		sourceActionInstanceId?: ActionInstancesId;
 		config?: AutomationConfig | null;
+		condition?: ConditionBlockFormValue;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
@@ -298,22 +448,15 @@ export async function createOrUpdateAutomationWithCycleCheck(
 	}
 
 	try {
-		if (data.automationId) {
-			const updatedAutomation = await updateAutomation(data.automationId, {
-				event: data.event,
-				actionInstanceId: data.actionInstanceId,
-				sourceActionInstanceId: data.sourceActionInstanceId,
-				config: data.config,
-			}).executeTakeFirstOrThrow();
-			return updatedAutomation;
-		}
-		const createdAutomation = await createAutomation({
+		const res = await upsertAutomation({
+			id: data.automationId,
 			event: data.event,
 			actionInstanceId: data.actionInstanceId,
 			sourceActionInstanceId: data.sourceActionInstanceId,
 			config: data.config,
-		}).executeTakeFirstOrThrow();
-		return createdAutomation;
+			condition: data.condition,
+		});
+		return res;
 	} catch (e) {
 		if (isUniqueConstraintError(e)) {
 			if (isSequentialAutomationEvent(data.event)) {

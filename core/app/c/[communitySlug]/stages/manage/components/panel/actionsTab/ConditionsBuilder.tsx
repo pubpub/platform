@@ -2,7 +2,7 @@
 
 import { useFormContext } from "react-hook-form";
 
-import { FormDescription, FormField, FormItem, FormLabel } from "ui/form";
+import { FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
 
 import { ConditionBlock } from "./ConditionBlock";
 
@@ -11,7 +11,7 @@ type ConditionsBuilderProps = {
 };
 
 export const ConditionsBuilder = ({ slug }: ConditionsBuilderProps) => {
-	const { control, watch } = useFormContext();
+	const { control, watch, formState } = useFormContext();
 	const hasConditions = watch(slug);
 
 	if (!hasConditions) {
@@ -31,6 +31,7 @@ export const ConditionsBuilder = ({ slug }: ConditionsBuilderProps) => {
 						<code>'Hello' in $.pub.values.title</code>.
 					</FormDescription>
 					<ConditionBlock slug={slug} id={"root-block"} />
+					<FormMessage />
 				</FormItem>
 			)}
 		/>

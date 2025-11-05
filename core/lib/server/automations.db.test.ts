@@ -104,7 +104,7 @@ beforeAll(async () => {
 
 describe("automations.db", () => {
 	it("should create an automation", async () => {
-		const { createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
+		const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
 			await import("./automations");
 		const automation = await createOrUpdateAutomationWithCycleCheck({
 			event: Event.pubEnteredStage,
@@ -116,7 +116,7 @@ describe("automations.db", () => {
 
 	it("should throw a RegularAutomationAlreadyExistsError if a regular automation already exists", async () => {
 		const {
-			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 			RegularAutomationAlreadyExistsError,
 		} = await import("./automations");
 		await expect(
@@ -129,7 +129,7 @@ describe("automations.db", () => {
 
 	it("should throw a SequentialAutomationAlreadyExistsError if a sequential automation already exists", async () => {
 		const {
-			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 			SequentialAutomationAlreadyExistsError,
 		} = await import("./automations");
 		await expect(
@@ -143,7 +143,7 @@ describe("automations.db", () => {
 
 	it("should throw a AutomationConfigError if the config is invalid", async () => {
 		const {
-			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+			upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
 			AutomationConfigError,
 		} = await import("./automations");
 		await expect(
@@ -156,9 +156,10 @@ describe("automations.db", () => {
 
 	describe("cycle detection", () => {
 		it("should throw a AutomationCycleError if the automation is a cycle", async () => {
-			const { createOrUpdateAutomationWithCycleCheck, AutomationCycleError } = await import(
-				"./automations"
-			);
+			const {
+				upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+				AutomationCycleError,
+			} = await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
@@ -187,7 +188,8 @@ describe("automations.db", () => {
 		});
 		it("should not throw an error if the automation is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
-			const { createOrUpdateAutomationWithCycleCheck } = await import("./automations");
+			const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
+				await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
@@ -198,8 +200,10 @@ describe("automations.db", () => {
 		});
 
 		it("should throw a AutomationMaxDepthError if the automation would exceed the maximum stack depth", async () => {
-			const { createOrUpdateAutomationWithCycleCheck, AutomationMaxDepthError } =
-				await import("./automations");
+			const {
+				upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+				AutomationMaxDepthError,
+			} = await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck(
 					{

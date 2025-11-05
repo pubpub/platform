@@ -19,6 +19,7 @@ const StagePanelAutomationsInner = async (props: PropsInner) => {
 		getStageActions({ stageId: props.stageId }).execute(),
 		getStageAutomations(props.stageId).execute(),
 	]);
+	console.log("automations", automations);
 
 	if (!stage) {
 		return <SkeletonCard />;
