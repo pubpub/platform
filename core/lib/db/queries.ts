@@ -6,6 +6,7 @@ import type {
 	ActionInstancesId,
 	AutomationConditionBlocks,
 	AutomationConditions,
+	AutomationsId,
 	CommunitiesId,
 	PubsId,
 	StagesId,
@@ -155,86 +156,81 @@ export type ConditionBlock = AutomationConditionBlocks & {
 	items: (ConditionBlock | (AutomationConditions & { kind: "condition" }))[];
 };
 
+const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
+	return db
+		.selectFrom("automations")
+		.innerJoin("action_instances as ai", "ai.id", "automations.actionInstanceId")
+		.selectAll("automations")
+		.select((eb) => [
+			jsonObjectFrom(
+				eb
+					.selectFrom("action_instances")
+					.selectAll("action_instances")
+					.whereRef("action_instances.id", "=", "automations.actionInstanceId")
+			)
+				.$notNull()
+				.as("actionInstance"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("action_instances")
+					.selectAll("action_instances")
+					.whereRef("action_instances.id", "=", "automations.sourceActionInstanceId")
+			).as("sourceActionInstance"),
+			jsonObjectFrom(
+				eb
+					.selectFrom("automation_condition_blocks")
+					.whereRef("automation_condition_blocks.automationId", "=", "automations.id")
+					.where("automation_condition_blocks.automationConditionBlockId", "is", null)
+					.selectAll("automation_condition_blocks")
+
+					.select(sql.lit<"block">("block").as("kind"))
+					.select((eb) =>
+						// this function is what recursively builds the condition blocks and conditions
+						// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
+						eb
+							.fn<
+								ConditionBlock[]
+							>("get_condition_block_items", ["automation_condition_blocks.id"])
+							.as("items")
+					)
+			).as("condition"),
+		])
+		.$if(!!options?.event, (eb) => {
+			const where = eb.where("automations.event", "=", options!.event);
+
+			if (
+				options!.event === Event.pubInStageForDuration ||
+				options!.event === Event.webhook
+			) {
+				return where;
+			}
+
+			if (!options!.sourceActionInstanceId) {
+				logger.warn({
+					msg: `Source action instance id is not set for automation with event ${options!.event}`,
+					event: options!.event,
+					sourceActionInstanceId: options!.sourceActionInstanceId,
+				});
+				return where;
+			}
+
+			return where.where(
+				"automations.sourceActionInstanceId",
+				"=",
+				options!.sourceActionInstanceId
+			);
+		})
+		.$narrowType<{ config: AutomationConfig | null }>();
+});
+
 export const getStageAutomations = cache(
 	(stageId: StagesId, options?: GetEventAutomationOptions) => {
-		return autoCache(
-			db
-				.selectFrom("automations")
-				.innerJoin("action_instances as ai", "ai.id", "automations.actionInstanceId")
-				.where("ai.stageId", "=", stageId)
-				.selectAll("automations")
-				.select((eb) => [
-					jsonObjectFrom(
-						eb
-							.selectFrom("action_instances")
-							.selectAll("action_instances")
-							.whereRef("action_instances.id", "=", "automations.actionInstanceId")
-					)
-						.$notNull()
-						.as("actionInstance"),
-					jsonObjectFrom(
-						eb
-							.selectFrom("action_instances")
-							.selectAll("action_instances")
-							.whereRef(
-								"action_instances.id",
-								"=",
-								"automations.sourceActionInstanceId"
-							)
-					).as("sourceActionInstance"),
-					jsonObjectFrom(
-						eb
-							.selectFrom("automation_condition_blocks")
-							.whereRef(
-								"automation_condition_blocks.automationId",
-								"=",
-								"automations.id"
-							)
-							.where(
-								"automation_condition_blocks.automationConditionBlockId",
-								"is",
-								null
-							)
-							.selectAll("automation_condition_blocks")
+		return autoCache(getAutomationBase(options).where("ai.stageId", "=", stageId));
+	}
+);
 
-							.select(sql.lit<"block">("block").as("kind"))
-							.select((eb) =>
-								// this function is what recursively builds the condition blocks and conditions
-								// defined in prisma/migrations/20251105151740_add_condition_block_items_function/migration.sql
-								eb
-									.fn<
-										ConditionBlock[]
-									>("get_condition_block_items", ["automation_condition_blocks.id"])
-									.as("items")
-							)
-					).as("condition"),
-				])
-				.$if(!!options?.event, (eb) => {
-					const where = eb.where("automations.event", "=", options!.event);
-
-					if (
-						options!.event === Event.pubInStageForDuration ||
-						options!.event === Event.webhook
-					) {
-						return where;
-					}
-
-					if (!options!.sourceActionInstanceId) {
-						logger.warn({
-							msg: `Source action instance id is not set for automation with event ${options!.event}`,
-							event: options!.event,
-							sourceActionInstanceId: options!.sourceActionInstanceId,
-						});
-						return where;
-					}
-
-					return where.where(
-						"automations.sourceActionInstanceId",
-						"=",
-						options!.sourceActionInstanceId
-					);
-				})
-				.$narrowType<{ config: AutomationConfig | null }>()
-		);
+export const getAutomation = cache(
+	(automationId: AutomationsId, options?: GetEventAutomationOptions) => {
+		return autoCache(getAutomationBase(options).where("automations.id", "=", automationId));
 	}
 );

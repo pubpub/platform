@@ -23,7 +23,7 @@ const handler = createNextHandler(
 	{
 		triggerAction: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
-			const { event, stack, scheduledActionRunId, config, ...rest } = body;
+			const { event, stack, scheduledActionRunId, config, automationId, ...rest } = body;
 
 			const { actionInstanceId } = params;
 			const community = await findCommunityBySlug();
@@ -47,6 +47,7 @@ const handler = createNextHandler(
 				stack: stack ?? [],
 				scheduledActionRunId: scheduledActionRunId,
 				actionInstanceArgs: config ?? null,
+				automationId: automationId ?? null,
 				...rest,
 			});
 
@@ -81,7 +82,7 @@ const handler = createNextHandler(
 		},
 		scheduleAction: async ({ headers, params, body }) => {
 			checkAuthentication(headers.authorization);
-			const { pubId } = body;
+			const { pubId, automationId } = body;
 			const { stageId } = params;
 			const community = await findCommunityBySlug();
 			if (!community) {
@@ -93,6 +94,7 @@ const handler = createNextHandler(
 				stageId: stageId as StagesId,
 				stack: [],
 				event: Event.pubInStageForDuration,
+				automationId: automationId ?? null,
 			});
 
 			return {

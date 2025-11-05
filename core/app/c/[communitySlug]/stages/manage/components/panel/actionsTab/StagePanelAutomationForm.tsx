@@ -10,7 +10,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type { ActionInstances, AutomationsId, CommunitiesId, StagesId } from "db/public";
-import { Action, actionInstancesIdSchema, AutomationConditionBlockType, Event } from "db/public";
+import {
+	Action,
+	actionInstancesIdSchema,
+	AutomationConditionBlockType,
+	AutomationConditionType,
+	Event,
+} from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import {
@@ -31,7 +37,7 @@ import { cn } from "utils";
 
 import type { ConditionBlockFormValue } from "./ConditionBlock";
 import type { Automation, AutomationConfig, AutomationForEvent } from "~/actions/_lib/automations";
-import type { getStageActions, getStageAutomations } from "~/lib/db/queries";
+import type { getAutomation, getStageActions } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
 import { ActionFormContext } from "~/actions/_lib/ActionForm";
 import { actions, automations, getAutomationByName, humanReadableEventBase } from "~/actions/api";
@@ -46,7 +52,7 @@ type Props = {
 	stageId: StagesId;
 	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	communityId: CommunitiesId;
-	automations: AutoReturnType<typeof getStageAutomations>["execute"];
+	automations: AutoReturnType<typeof getAutomation>["execute"];
 };
 
 const ActionSelector = ({
@@ -122,7 +128,7 @@ const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
 					z.object({
 						id: z.string().optional(),
 						kind: z.literal("condition"),
-						type: z.literal("jsonata"),
+						type: z.nativeEnum(AutomationConditionType),
 						expression: z.string().min(1),
 						rank: z.string(),
 					}),

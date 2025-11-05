@@ -892,6 +892,22 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
+				name: "type",
+				dataType: "AutomationConditionType",
+				dataTypeSchema: "public",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
+			{
+				name: "expression",
+				dataType: "text",
+				dataTypeSchema: "pg_catalog",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
+			{
 				name: "createdAt",
 				dataType: "timestamp",
 				dataTypeSchema: "pg_catalog",

@@ -1,6 +1,8 @@
 "use server";
 
-import type { UsersId } from "db/public";
+import type { PubsId, UsersId } from "db/public";
+import type { Json } from "db/types";
+import type { XOR } from "utils/types";
 import { Capabilities, MembershipType } from "db/public";
 
 import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
@@ -10,7 +12,8 @@ import { defineServerAction } from "~/lib/server/defineServerAction";
 import { runActionInstance as runActionInstanceInner } from "../_lib/runActionInstance";
 
 export const runActionInstance = defineServerAction(async function runActionInstance(
-	args: Omit<RunActionInstanceArgs, "userId" | "event" | "config">
+	args: Omit<RunActionInstanceArgs, "userId" | "event" | "config"> &
+		XOR<{ pubId: PubsId }, { json: Json }>
 ): Promise<ActionInstanceRunResult> {
 	const { user } = await getLoginData();
 
@@ -45,6 +48,8 @@ export const runActionInstance = defineServerAction(async function runActionInst
 		userId: user.id as UsersId,
 		stack: args.stack ?? [],
 		...(args.json ? { json: args.json } : { pubId: args.pubId! }),
+		// manual run
+		automationId: null,
 	});
 
 	return result;

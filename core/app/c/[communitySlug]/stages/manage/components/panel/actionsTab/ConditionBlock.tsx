@@ -15,7 +15,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useFieldArray, useFormContext } from "react-hook-form";
 
-import { AutomationConditionBlockType } from "db/public";
+import { AutomationConditionBlockType, AutomationConditionType } from "db/public";
 import { Button } from "ui/button";
 import { GripVertical, Plus, Trash } from "ui/icon";
 import { Input } from "ui/input";
@@ -30,15 +30,13 @@ export type ConditionBlockFormValue = {
 	kind: "block";
 	type: AutomationConditionBlockType;
 	rank: string;
-	// conditions: ConditionFormValue[];
-	// blocks: ConditionBlockFormValue[];
 	items: ConditionItemFormValue[];
 };
 
 export type ConditionFormValue = {
 	id?: string;
 	kind: "condition";
-	type: "jsonata";
+	type: AutomationConditionType;
 	expression: string;
 	rank: string;
 };
@@ -167,7 +165,7 @@ export const ConditionBlock = ({ slug, depth = 0, onRemove, id }: ConditionBlock
 			if (kind === "condition") {
 				append({
 					kind: "condition",
-					type: "jsonata",
+					type: AutomationConditionType.jsonata,
 					expression: "",
 					rank: ranks[0],
 				});

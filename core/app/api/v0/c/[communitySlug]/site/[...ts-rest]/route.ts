@@ -28,7 +28,7 @@ import {
 	shouldReturnRepresentation,
 } from "~/lib/authentication/api";
 import { userHasAccessToForm } from "~/lib/authorization/capabilities";
-import { getStage } from "~/lib/db/queries";
+import { getAutomation, getStage } from "~/lib/db/queries";
 import {
 	BadRequestError,
 	createPubRecursiveNew,
@@ -46,7 +46,6 @@ import {
 	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
-import { getAutomation } from "~/lib/server/automations";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
@@ -734,7 +733,7 @@ const handler = createNextHandler(
 
 			const automationId = params.automationId as AutomationsId;
 
-			const automation = await getAutomation(automationId, community.id).executeTakeFirst();
+			const automation = await getAutomation(automationId).executeTakeFirst();
 
 			if (!automation) {
 				throw new NotFoundError(`Automation ${automationId} not found`);

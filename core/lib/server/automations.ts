@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import type { ZodError } from "zod";
 
 import { sql } from "kysely";
-import { jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	ActionInstances,
@@ -12,7 +11,6 @@ import type {
 	AutomationConditionBlockType,
 	AutomationConditionsId,
 	AutomationsId,
-	CommunitiesId,
 	NewAutomations,
 } from "db/public";
 import type { AutomationConfig } from "db/types";
@@ -29,7 +27,6 @@ import { isSequentialAutomationEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
 import { findRanksBetween } from "../rank";
-import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { maybeWithTrx } from "./maybeWithTrx";
 
@@ -198,8 +195,6 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 			.where("automationId", "=", automation.id)
 			.execute();
 
-		console.log("props.condition", props.condition);
-
 		if (!props.condition) {
 			return automation;
 		}
@@ -216,8 +211,6 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 			blocks: [firstBlock],
 			conditions: [],
 		});
-
-		console.log("flatItems", flatItems);
 
 		// create all block
 		await trx
@@ -474,32 +467,3 @@ export async function upsertAutomationWithCycleCheck(
 		throw e;
 	}
 }
-
-export const getAutomation = (automationId: AutomationsId, communityId: CommunitiesId) =>
-	autoCache(
-		db
-			.selectFrom("automations")
-			.selectAll()
-			.select((eb) => [
-				jsonObjectFrom(
-					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.id", "=", "automations.actionInstanceId")
-						.selectAll("action_instances")
-						.select((eb) => [
-							jsonObjectFrom(
-								eb
-									.selectFrom("stages")
-									.whereRef("stages.id", "=", "action_instances.stageId")
-									.where("stages.communityId", "=", communityId)
-									.selectAll("stages")
-							)
-								.$notNull()
-								.as("stage"),
-						])
-				)
-					.$notNull()
-					.as("actionInstance"),
-			])
-			.where("id", "=", automationId)
-	);

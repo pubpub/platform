@@ -16,7 +16,8 @@ type Shared = {
 	stageId: StagesId;
 	stack: ActionRunsId[];
 	/* Config for the action instance */
-	config?: Record<string, unknown> | null;
+	// config?: Record<string, unknown> | null;
+	// automationId: AutomationsId | null;
 } & GetEventAutomationOptions;
 
 type ScheduleActionInstanceForPubOptions = Shared & {

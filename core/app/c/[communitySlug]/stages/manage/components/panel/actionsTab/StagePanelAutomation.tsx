@@ -8,7 +8,7 @@ import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 import { cn } from "utils";
 
-import type { getStageAutomations } from "~/lib/db/queries";
+import type { getAutomation } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
 import { getActionByName, getAutomationByName, humanReadableEventHydrated } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
@@ -16,7 +16,7 @@ import { useCommunity } from "~/app/components/providers/CommunityProvider";
 type Props = {
 	stageId: StagesId;
 	communityId: CommunitiesId;
-	automation: AutoReturnType<typeof getStageAutomations>["executeTakeFirstOrThrow"];
+	automation: AutoReturnType<typeof getAutomation>["executeTakeFirstOrThrow"];
 };
 
 const ActionIcon = (props: { actionName: Action; className?: string }) => {
