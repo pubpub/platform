@@ -100,6 +100,15 @@ const detectCycles = (graph: Record<string, string[]>): string[] => {
 	return cycle;
 };
 
+const reportCycle = (cycle: string[]): string => {
+	let message = "Failed to evaluate configuration because ";
+	for (let i = 0; i < cycle.length - 1; i++) {
+		message += i === 0 ? "" : "and ";
+		message += `$.action.config.${cycle[i]} uses $.action.config.${cycle[i + 1]}\n`;
+	}
+	return message;
+};
+
 /**
  * immutable builder for action configurations
  * handles validation, defaults, and interpolation with clear error codes
@@ -328,7 +337,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 					success: false,
 					error: {
 						code: ActionConfigErrorCode.INTERPOLATION_FAILED,
-						message: `Circular dependency detected in action config fields: ${cycle.join(" -> ")}`,
+						message: reportCycle(cycle),
 					},
 				},
 			});
