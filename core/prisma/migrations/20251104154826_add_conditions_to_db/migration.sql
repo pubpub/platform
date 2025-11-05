@@ -27,6 +27,8 @@ CREATE TABLE "automation_conditions"(
     "id" text NOT NULL DEFAULT gen_random_uuid(),
     "automationConditionBlockId" text NOT NULL,
     "rank" text NOT NULL COLLATE "C",
+    "type" "AutomationConditionType" NOT NULL,
+    "expression" text NOT NULL,
     "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT "automation_conditions_pkey" PRIMARY KEY ("id")
@@ -43,4 +45,8 @@ ALTER TABLE "automation_condition_blocks"
 -- AddForeignKey
 ALTER TABLE "automation_conditions"
     ADD CONSTRAINT "automation_conditions_automationConditionBlockId_fkey" FOREIGN KEY ("automationConditionBlockId") REFERENCES "automation_condition_blocks"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+DROP INDEX IF EXISTS "unique_action_chaining_events";
+
+DROP INDEX IF EXISTS "unique_regular_events";
 

@@ -10,6 +10,8 @@ export * from "./public/ApiAccessTokens";
 export * from "./public/ApiAccessType";
 export * from "./public/AuthTokens";
 export * from "./public/AuthTokenType";
+export * from "./public/AutomationConditionBlockType";
+export * from "./public/AutomationConditionType";
 export * from "./public/Automations";
 export * from "./public/Capabilities";
 export * from "./public/Communities";

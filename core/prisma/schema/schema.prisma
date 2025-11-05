@@ -429,6 +429,9 @@ model AutomationCondition {
   automationConditionBlockId String
   automationConditionBlock   AutomationConditionBlock @relation(fields: [automationConditionBlockId], references: [id], onDelete: Cascade)
 
+  type       AutomationConditionType
+  expression String
+
   rank      String // Uses "C" collation
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

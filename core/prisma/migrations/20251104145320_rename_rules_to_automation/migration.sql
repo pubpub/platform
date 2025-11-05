@@ -15,7 +15,3 @@ ALTER TABLE "automations" RENAME CONSTRAINT "rules_actionInstanceId_fkey" TO "au
 -- RenameConstraint
 ALTER TABLE "automations" RENAME CONSTRAINT "rules_sourceActionInstanceId_fkey" TO "automations_sourceActionInstanceId_fkey";
 
-
-DROP INDEX IF EXISTS "unique_action_chaining_events"; 
-
-DROP INDEX IF EXISTS "unique_regular_events"; 
