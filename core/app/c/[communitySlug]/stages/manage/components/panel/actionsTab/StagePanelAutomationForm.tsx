@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import type { ActionInstances, AutomationsId, CommunitiesId, StagesId } from "db/public";
-import { actionInstancesIdSchema, Event } from "db/public";
+import { actionInstancesIdSchema, AutomationConditionBlockType, Event } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import {
@@ -23,10 +23,12 @@ import {
 	DialogTrigger,
 } from "ui/dialog";
 import { Form, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { Plus } from "ui/icon";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
 import { FormSubmitButton } from "ui/submit-button";
 import { cn } from "utils";
 
+import type { ConditionBlockFormValue } from "./ConditionBlock";
 import type { Automation, AutomationConfig, AutomationForEvent } from "~/actions/_lib/automations";
 import type { getStageActions } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
@@ -34,8 +36,10 @@ import { ActionFormContext } from "~/actions/_lib/ActionForm";
 import { actions, automations, getAutomationByName, humanReadableEventBase } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { findRanksBetween } from "~/lib/rank";
 import { isClientException, useServerAction } from "~/lib/serverActions";
 import { addOrUpdateAutomation, deleteAutomation } from "../../../actions";
+import { ConditionsBuilder } from "./ConditionsBuilder";
 
 type Props = {
 	stageId: StagesId;
@@ -112,29 +116,55 @@ const ActionSelector = ({
 	);
 };
 
+const conditionBlockSchema: z.ZodType<ConditionBlockFormValue> = z.lazy(() =>
+	z.object({
+		id: z.string().optional(),
+		type: z.nativeEnum(AutomationConditionBlockType),
+		kind: z.literal("block"),
+		rank: z.string(),
+		items: z.array(
+			z.union([
+				z.object({
+					id: z.string().optional(),
+					kind: z.literal("condition"),
+					type: z.literal("jsonata"),
+					expression: z.string(),
+					rank: z.string(),
+				}),
+				conditionBlockSchema,
+			])
+		),
+	})
+);
+
 const baseSchema = z.discriminatedUnion("event", [
 	z.object({
 		event: z.literal(Event.pubEnteredStage),
 		actionInstanceId: actionInstancesIdSchema,
+		conditionBlock: conditionBlockSchema.optional(),
 	}),
 	z.object({
 		event: z.literal(Event.pubLeftStage),
 		actionInstanceId: actionInstancesIdSchema,
+		conditionBlock: conditionBlockSchema.optional(),
 	}),
 	z.object({
 		event: z.literal(Event.actionSucceeded),
 		actionInstanceId: actionInstancesIdSchema,
 		sourceActionInstanceId: actionInstancesIdSchema,
+		conditionBlock: conditionBlockSchema.optional(),
 	}),
 	z.object({
 		event: z.literal(Event.actionFailed),
 		actionInstanceId: actionInstancesIdSchema,
 		sourceActionInstanceId: actionInstancesIdSchema,
+		conditionBlock: conditionBlockSchema.optional(),
 	}),
 	z.object({
 		event: z.literal(Event.webhook),
 		actionInstanceId: actionInstancesIdSchema,
 		actionConfig: z.object({}),
+		conditionBlock: conditionBlockSchema.optional(),
 	}),
 	...Object.values(automations)
 		.filter(
@@ -166,6 +196,7 @@ const baseSchema = z.discriminatedUnion("event", [
 				automationConfig: automation.additionalConfig
 					? automation.additionalConfig
 					: z.null().optional(),
+				conditionBlock: conditionBlockSchema.optional(),
 			})
 		),
 ]);
@@ -289,6 +320,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 			actionInstanceId: undefined,
 			event: undefined,
 			actionConfig: null,
+			conditionBlock: undefined,
 		},
 	});
 
@@ -313,7 +345,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 					automation.event !== Event.actionSucceeded &&
 					automation.event !== Event.actionFailed
 				) {
-					return automation.actionInstance.id === selectedActionInstanceId;
+					return true;
 				}
 
 				// for action chaining events, allow multiple automations with different watched actions
@@ -368,7 +400,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 			sourceActionInstanceId: currentAutomation.sourceAction?.id,
 			automationConfig: currentAutomation.config?.automationConfig,
 		} as CreateAutomationsSchema);
-	}, [currentlyEditingAutomationId, props.actionInstances, props.automations]);
+	}, [currentlyEditingAutomationId, form, props.actionInstances, props.automations]);
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
@@ -379,7 +411,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 			}
 			setIsOpen(open);
 		},
-		[setSelectedActionInstance, setIsOpen]
+		[form, setCurrentlyEditingAutomationId]
 	);
 
 	const automation = getAutomationByName(event);
@@ -433,66 +465,100 @@ export const StagePanelAutomationForm = (props: Props) => {
 								name="event"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>When...</FormLabel>
+										<FormLabel>When</FormLabel>
 
-										{allowedEvents.length > 0 ? (
-											<>
-												<Select
-													onValueChange={(value) => {
-														field.onChange(value);
-													}}
-													defaultValue={field.value}
-													key={field.value}
-												>
-													<SelectTrigger
-														data-testid={`event-select-trigger`}
-													>
-														<SelectValue placeholder="Event">
-															{field.value ? (
-																<>
-																	<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
-																	{humanReadableEventBase(
-																		field.value,
-																		community
-																	)}
-																</>
-															) : (
-																"Event"
-															)}
-														</SelectValue>
-													</SelectTrigger>
-													<SelectContent>
-														{allowedEvents.map((event) => {
-															const automation =
-																getAutomationByName(event);
-
-															return (
-																<SelectItem
-																	key={event}
-																	value={event}
-																	className="hover:bg-gray-100"
-																	data-testid={`event-select-item-${event}`}
-																>
-																	<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
-																	{humanReadableEventBase(
-																		event,
-																		community
-																	)}
-																</SelectItem>
+										{field.value ? (
+											<div className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+												<automation.display.icon className="h-4 w-4 text-blue-600" />
+												<span className="flex-1 text-sm font-medium text-blue-900">
+													{humanReadableEventBase(field.value, community)}
+												</span>
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													className="h-6 text-xs"
+													onClick={() => {
+														field.onChange(undefined);
+														if (isActionChainingEvent) {
+															form.setValue(
+																"sourceActionInstanceId",
+																"" as any
 															);
-														})}
-													</SelectContent>
-												</Select>
-												<FormMessage />
-											</>
+														}
+													}}
+												>
+													Change
+												</Button>
+											</div>
+										) : allowedEvents.length > 0 ? (
+											<Select
+												onValueChange={(value) => {
+													field.onChange(value);
+												}}
+												defaultValue={field.value}
+												key={field.value}
+											>
+												<SelectTrigger
+													data-testid={`event-select-trigger`}
+													className="h-auto justify-start border-dashed"
+												>
+													<SelectValue
+														placeholder={
+															<div className="flex items-center gap-2 py-1">
+																<Plus
+																	size={16}
+																	className="text-neutral-500"
+																/>
+																<span className="text-neutral-600">
+																	Add event
+																</span>
+															</div>
+														}
+													>
+														{field.value ? (
+															<div className="flex items-center gap-2">
+																<automation.display.icon className="h-4 w-4" />
+																{humanReadableEventBase(
+																	field.value,
+																	community
+																)}
+															</div>
+														) : null}
+													</SelectValue>
+												</SelectTrigger>
+												<SelectContent>
+													{allowedEvents.map((event) => {
+														const automation =
+															getAutomationByName(event);
+
+														return (
+															<SelectItem
+																key={event}
+																value={event}
+																className="hover:bg-gray-100"
+																data-testid={`event-select-item-${event}`}
+															>
+																<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																{humanReadableEventBase(
+																	event,
+																	community
+																)}
+															</SelectItem>
+														);
+													})}
+												</SelectContent>
+											</Select>
 										) : (
 											<p className="text-xs text-red-500">
 												All events for this action have already been added.
 											</p>
 										)}
+										<FormMessage />
 									</FormItem>
 								)}
 							/>
+
 							{/* Additional selector for watched action when using action chaining events */}
 							{isActionChainingEvent && (
 								<FormField
@@ -505,7 +571,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 											label="After"
 											placeholder="Select action to watch"
 											key={field.value}
-											disabledActionId={selectedActionInstanceId} // Prevent self-references
+											disabledActionId={selectedActionInstanceId}
 											dataTestIdPrefix="watched-action"
 										/>
 									)}
@@ -516,29 +582,105 @@ export const StagePanelAutomationForm = (props: Props) => {
 								control={form.control}
 								name="actionInstanceId"
 								render={({ field }) => (
-									<ActionSelector
-										fieldProps={field}
-										actionInstances={props.actionInstances}
-										label="run..."
-										placeholder="Action"
-										dataTestIdPrefix="action-selector"
-									/>
+									<FormItem>
+										<FormLabel>Run</FormLabel>
+										{field.value && selectedActionInstance ? (
+											<div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+												{actions[selectedActionInstance.action].icon &&
+													(() => {
+														const Icon =
+															actions[selectedActionInstance.action]
+																.icon;
+														return (
+															<Icon className="h-4 w-4 text-emerald-600" />
+														);
+													})()}
+												<span className="flex-1 text-sm font-medium text-emerald-900">
+													{selectedActionInstance.name}
+												</span>
+												<Button
+													type="button"
+													variant="ghost"
+													size="sm"
+													className="h-6 text-xs"
+													onClick={() => {
+														field.onChange(undefined);
+														setSelectedActionInstance(null);
+													}}
+												>
+													Change
+												</Button>
+											</div>
+										) : (
+											<Select
+												onValueChange={field.onChange}
+												defaultValue={field.value}
+												value={field.value}
+											>
+												<SelectTrigger
+													data-testid="action-selector-select-trigger"
+													className="h-auto justify-start border-dashed"
+												>
+													<SelectValue
+														placeholder={
+															<div className="flex items-center gap-2 py-1">
+																<Plus
+																	size={16}
+																	className="text-neutral-500"
+																/>
+																<span className="text-neutral-600">
+																	Add action
+																</span>
+															</div>
+														}
+													/>
+												</SelectTrigger>
+												<SelectContent>
+													{props.actionInstances.map((instance) => {
+														const action = actions[instance.action];
+														const isDisabled =
+															instance.id ===
+															selectedActionInstanceId;
+
+														return (
+															<SelectItem
+																key={instance.id}
+																value={instance.id}
+																className="hover:bg-gray-100"
+																disabled={isDisabled}
+																data-testid={`action-selector-select-item-${instance.name}`}
+															>
+																<div className="flex flex-row items-center gap-x-2">
+																	<action.icon size="12" />
+																	<span>{instance.name}</span>
+																	{isDisabled && (
+																		<span className="text-xs text-gray-400">
+																			(self-reference not
+																			allowed)
+																		</span>
+																	)}
+																</div>
+															</SelectItem>
+														);
+													})}
+												</SelectContent>
+											</Select>
+										)}
+										<FormMessage />
+									</FormItem>
 								)}
 							/>
 
 							{selectedActionInstance && event === Event.webhook && (
-								<div className="mt-4 space-y-2">
-									<h4 className="text-sm font-medium">
-										With the following config:
-									</h4>
-									<div className="rounded-md border bg-gray-50 p-2">
+								<div className="space-y-2">
+									<h4 className="text-sm font-medium">Action configuration</h4>
+									<div className="rounded-md border bg-gray-50 p-3">
 										{ActionFormComponent && (
 											<ActionFormContext.Provider
 												value={{
 													action: actions[selectedActionInstance.action],
 													schema: actionSchema,
 													path: "actionConfig",
-													// slightly elobarate cast, slightly more typesafe
 													form: form as UseFormReturn<any> as UseFormReturn<FieldValues>,
 													defaultFields:
 														selectedActionInstance.defaultedActionConfigKeys ??
@@ -550,6 +692,56 @@ export const StagePanelAutomationForm = (props: Props) => {
 											</ActionFormContext.Provider>
 										)}
 									</div>
+								</div>
+							)}
+
+							{event && selectedActionInstance && (
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
+										{!form.watch("conditionBlock") && (
+											<>
+												<h4 className="text-sm font-medium">
+													Conditions (optional)
+												</h4>
+												<Button
+													type="button"
+													variant="outline"
+													size="sm"
+													className="h-7 text-xs"
+													onClick={() => {
+														const ranks = findRanksBetween({
+															numberOfRanks: 1,
+														});
+														form.setValue("conditionBlock", {
+															type: "OR",
+															rank: ranks[0],
+															conditions: [],
+															blocks: [],
+														});
+													}}
+												>
+													<Plus size={14} />
+													Add conditions
+												</Button>
+											</>
+										)}
+									</div>
+									{form.watch("conditionBlock") && (
+										<div className="space-y-2">
+											<ConditionsBuilder slug="conditionBlock" />
+											<Button
+												type="button"
+												variant="ghost"
+												size="sm"
+												className="h-7 text-xs text-neutral-500"
+												onClick={() => {
+													form.setValue("conditionBlock", undefined);
+												}}
+											>
+												Remove all conditions
+											</Button>
+										</div>
+									)}
 								</div>
 							)}
 						</form>
