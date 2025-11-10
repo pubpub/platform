@@ -37,7 +37,7 @@ export class PubDetailsPage {
 				.getByRole("status")
 				.filter({ hasText: `Successfully ran ${actionName}` })
 				.waitFor();
-			await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
+			await runActionDialog.getByRole("button", { name: "Cancel", exact: true }).click();
 			await runActionDialog.waitFor({ state: "hidden" });
 		}
 	}
