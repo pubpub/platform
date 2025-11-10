@@ -5,9 +5,9 @@ import type {
 	ActionInstances,
 	Action as ActionName,
 	ActionRunsId,
+	Automations,
 	Communities,
 	CommunitiesId,
-	Rules,
 	StagesId,
 	UsersId,
 } from "db/public";
@@ -137,28 +137,28 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>;
 
-export const sequentialRuleEvents = [Event.actionSucceeded, Event.actionFailed] as const;
-export type SequentialRuleEvent = (typeof sequentialRuleEvents)[number];
+export const sequentialAutomationEvents = [Event.actionSucceeded, Event.actionFailed] as const;
+export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number];
 
-export const isSequentialRuleEvent = (event: Event): event is SequentialRuleEvent =>
-	sequentialRuleEvents.includes(event as any);
+export const isSequentialAutomationEvent = (event: Event): event is SequentialAutomationEvent =>
+	sequentialAutomationEvents.includes(event as any);
 
-export const scheduableRuleEvents = [
+export const schedulableAutomationEvents = [
 	Event.pubInStageForDuration,
 	Event.actionFailed,
 	Event.actionSucceeded,
 ] as const;
-export type ScheduableRuleEvent = (typeof scheduableRuleEvents)[number];
+export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number];
 
-export const isScheduableRuleEvent = (event: Event): event is ScheduableRuleEvent =>
-	scheduableRuleEvents.includes(event as any);
+export const isSchedulableAutomationEvent = (event: Event): event is SchedulableAutomationEvent =>
+	schedulableAutomationEvents.includes(event as any);
 
-export type EventRuleOptionsBase<
+export type EventAutomationOptionsBase<
 	E extends Event,
 	AC extends Record<string, any> | undefined = undefined,
 > = {
 	event: E;
-	canBeRunAfterAddingRule?: boolean;
+	canBeRunAfterAddingAutomation?: boolean;
 	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined;
 	/**
 	 * The display name options for this event
@@ -166,31 +166,34 @@ export type EventRuleOptionsBase<
 	display: {
 		icon: (typeof Icons)[keyof typeof Icons];
 		/**
-		 * The base display name for this rule, shown e.g. when selecting the event for a rule
+		 * The base display name for this automation, shown e.g. when selecting the event for a automation
 		 */
 		base: React.ReactNode | ((options: { community: Communities }) => React.ReactNode);
 		/**
-		 * String to use when viewing the rule on the stage.
-		 * Useful if you want to show some configuration or rule-specific information
+		 * String to use when viewing the automation on the stage.
+		 * Useful if you want to show some configuration or automation-specific information
 		 */
 		hydrated?: (
 			options: {
-				rule: Rules;
+				automation: Automations;
 				community: Communities;
 			} & (AC extends Record<string, any>
 				? { config: AC }
-				: E extends SequentialRuleEvent
+				: E extends SequentialAutomationEvent
 					? { config: ActionInstances }
 					: {})
 		) => React.ReactNode;
 	};
 };
 
-export const defineRule = <E extends Event, AC extends Record<string, any> | undefined = undefined>(
-	options: EventRuleOptionsBase<E, AC>
+export const defineAutomation = <
+	E extends Event,
+	AC extends Record<string, any> | undefined = undefined,
+>(
+	options: EventAutomationOptionsBase<E, AC>
 ) => options;
 
-export type { RuleConfig, RuleConfigs } from "./_lib/rules";
+export type { AutomationConfig, AutomationConfigs } from "./_lib/automations";
 
 export type ConfigOf<T extends Action> = T extends Action<infer C, any, any> ? z.infer<C> : never;
 

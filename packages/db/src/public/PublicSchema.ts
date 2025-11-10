@@ -8,6 +8,7 @@ import type { ApiAccessLogsTable } from "./ApiAccessLogs";
 import type { ApiAccessPermissionsTable } from "./ApiAccessPermissions";
 import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
+import type { AutomationsTable } from "./Automations";
 import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
@@ -30,7 +31,6 @@ import type { PubsInStagesTable } from "./PubsInStages";
 import type { PubTypesTable } from "./PubTypes";
 import type { PubValuesTable } from "./PubValues";
 import type { PubValuesHistoryTable } from "./PubValuesHistory";
-import type { RulesTable } from "./Rules";
 import type { SessionsTable } from "./Sessions";
 import type { StageMembershipsTable } from "./StageMemberships";
 import type { StagesTable } from "./Stages";
@@ -56,8 +56,6 @@ export interface PublicSchema {
 	PubsInStages: PubsInStagesTable;
 
 	stage_memberships: StageMembershipsTable;
-
-	rules: RulesTable;
 
 	_prisma_migrations: PrismaMigrationsTable;
 
@@ -102,6 +100,8 @@ export interface PublicSchema {
 	form_elements: FormElementsTable;
 
 	forms: FormsTable;
+
+	automations: AutomationsTable;
 
 	invite_forms: InviteFormsTable;
 }

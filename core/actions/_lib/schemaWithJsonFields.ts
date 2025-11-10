@@ -53,7 +53,8 @@ const wrapFieldWithJsonTemplate = (fieldSchema: z.ZodTypeAny): z.ZodTypeAny => {
 		message: "String must be a valid template with {{ }} syntax or JSONata expression",
 	});
 
-	let wrappedSchema = z.union([templateSchema, baseSchema as any]);
+	// the order is important, bc if the other way around you would only see the error for the template schema rather than the base schema if the latter fails validation
+	let wrappedSchema = z.union([baseSchema as any, templateSchema]);
 
 	// re-apply description if it existed
 	if (description) {

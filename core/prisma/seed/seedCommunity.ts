@@ -17,6 +17,7 @@ import type {
 	ApiAccessScope,
 	ApiAccessTokensId,
 	ApiAccessType,
+	Automations,
 	Communities,
 	CommunitiesId,
 	CommunityMemberships,
@@ -31,7 +32,6 @@ import type {
 	PubsId,
 	PubTypes,
 	PubTypesId,
-	Rules,
 	Stages,
 	StagesId,
 	Users,
@@ -39,10 +39,10 @@ import type {
 } from "db/public";
 import type {
 	ApiAccessPermissionConstraints,
+	AutomationConfig,
 	Invite,
 	NewInviteInput,
 	permissionsSchema,
-	RuleConfigBase,
 } from "db/types";
 import type { MaybeHas } from "utils/types";
 import {
@@ -153,11 +153,11 @@ export type StagesInitializer<
 			[M in keyof U]?: MemberRole;
 		};
 		actions?: A;
-		rules?: {
+		automations?: {
 			event: Event;
 			actionInstance: keyof A;
 			sourceAction?: keyof A;
-			config?: RuleConfigBase | null;
+			config?: AutomationConfig | null;
 		}[];
 	}
 >;
@@ -528,7 +528,7 @@ type UsersBySlug<U extends UsersInitializer> = {
 	[K in keyof U]: U[K] & Users;
 };
 
-type StagesWithPermissionsAndActionsAndRulesByName<
+type StagesWithPermissionsAndActionsAndAutomationsByName<
 	U extends UsersInitializer,
 	S extends StagesInitializer<U>,
 	StagePermissions,
@@ -540,10 +540,11 @@ type StagesWithPermissionsAndActionsAndRulesByName<
 					actions: {
 						[KK in keyof S[K]["actions"]]: S[K]["actions"][KK] & ActionInstances;
 					};
-				} & ("rules" extends keyof S[K]
+				} & ("automations" extends keyof S[K]
 					? {
-							rules: {
-								[KK in keyof S[K]["rules"]]: S[K]["rules"][KK] & Rules;
+							automations: {
+								[KK in keyof S[K]["automations"]]: S[K]["automations"][KK] &
+									Automations;
 							};
 						}
 					: {})
@@ -1304,22 +1305,22 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
-	const possibleRules = consolidatedStages.flatMap(
+	const possibleAutomations = consolidatedStages.flatMap(
 		(stage) =>
-			stage.rules?.map((rule) => ({
-				event: rule.event,
+			stage.automations?.map((automation) => ({
+				event: automation.event,
 				actionInstanceId: expect(
-					createdActions.find((action) => action.name === rule.actionInstance)?.id
+					createdActions.find((action) => action.name === automation.actionInstance)?.id
 				),
 				sourceActionInstanceId: createdActions.find(
-					(action) => action.name === rule.sourceAction
+					(action) => action.name === automation.sourceAction
 				)?.id,
-				config: rule.config,
+				config: automation.config,
 			})) ?? []
 	);
 
-	const createdRules = possibleRules.length
-		? await trx.insertInto("rules").values(possibleRules).returningAll().execute()
+	const createdAutomations = possibleAutomations.length
+		? await trx.insertInto("automations").values(possibleAutomations).returningAll().execute()
 		: [];
 
 	const fullStages = Object.fromEntries(
@@ -1332,15 +1333,21 @@ export async function seedCommunity<
 					actions: Object.fromEntries(
 						actionsForStage.map((action) => [action.name, action])
 					),
-					rules: createdRules.filter((rule) =>
-						actionsForStage.some((action) => action.id === rule.actionInstanceId)
+					automations: createdAutomations.filter((automation) =>
+						actionsForStage.some((action) => action.id === automation.actionInstanceId)
 					),
 				},
 			];
 		})
-	) as unknown as StagesWithPermissionsAndActionsAndRulesByName<U, S, typeof stageMemberships>;
+	) as unknown as StagesWithPermissionsAndActionsAndAutomationsByName<
+		U,
+		S,
+		typeof stageMemberships
+	>;
 
-	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
+	logger.info(
+		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
+	);
 
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(

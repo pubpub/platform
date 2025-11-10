@@ -97,7 +97,8 @@ export const ActionConfigForm = (props: Props) => {
 					text: "Update Action",
 					pendingText: "Updating Action...",
 					successText: "Action Updated",
-					errorText: "Failed to update action",
+					// any longer and it doesn't fit in the button
+					errorText: "Error",
 				}}
 				secondaryButton={{
 					text: "Remove Action",

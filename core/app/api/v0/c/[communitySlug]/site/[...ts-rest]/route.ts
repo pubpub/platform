@@ -1,16 +1,13 @@
-import type z from "zod";
-
 import { createNextHandler } from "@ts-rest/serverless/next";
 
 import type {
+	AutomationsId,
 	CommunitiesId,
 	CommunityMembershipsId,
 	PubsId,
 	PubTypesId,
-	RulesId,
 	StagesId,
 } from "db/public";
-import { interpolate } from "@pubpub/json-interpolate";
 import { siteApi, TOTAL_PUBS_COUNT_HEADER } from "contracts";
 import {
 	ApiAccessScope,
@@ -23,8 +20,6 @@ import {
 } from "db/public";
 import { logger } from "logger";
 
-import { createPubProxy } from "~/actions/_lib/pubProxy";
-import { getActionByName } from "~/actions/api";
 import { scheduleActionInstances } from "~/actions/api/server";
 import {
 	checkAuthorization,
@@ -51,11 +46,11 @@ import {
 	updatePub,
 	upsertPubRelations,
 } from "~/lib/server";
+import { getAutomation } from "~/lib/server/automations";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { validateFilter } from "~/lib/server/pub-filters-validate";
 import { getPubType, getPubTypesForCommunity } from "~/lib/server/pubtype";
-import { getRule } from "~/lib/server/rules";
 import { getStages } from "~/lib/server/stages";
 import { getMember, getSuggestedUsers } from "~/lib/server/user";
 
@@ -737,12 +732,12 @@ const handler = createNextHandler(
 				throw new NotFoundError(`Community not found`);
 			}
 
-			const ruleId = params.ruleId as RulesId;
+			const automationId = params.automationId as AutomationsId;
 
-			const rule = await getRule(ruleId, community.id).executeTakeFirst();
+			const automation = await getAutomation(automationId, community.id).executeTakeFirst();
 
-			if (!rule) {
-				throw new NotFoundError(`Rule ${ruleId} not found`);
+			if (!automation) {
+				throw new NotFoundError(`Automation ${automationId} not found`);
 			}
 
 			if (!body) {
@@ -755,9 +750,9 @@ const handler = createNextHandler(
 				await scheduleActionInstances({
 					event: Event.webhook,
 					stack: [],
-					stageId: rule.actionInstance.stageId,
+					stageId: automation.actionInstance.stageId,
 					json: body,
-					config: rule.config?.actionConfig,
+					config: automation.config?.actionConfig,
 				});
 
 				return {

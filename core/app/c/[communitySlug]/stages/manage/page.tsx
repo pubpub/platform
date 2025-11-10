@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 
 import { redirect } from "next/navigation";
 
-import type { RulesId, StagesId } from "db/public";
+import type { AutomationsId, StagesId } from "db/public";
 import { Capabilities, MembershipType } from "db/public";
 import { LocalStorageProvider } from "ui/hooks";
 import { PubFieldProvider } from "ui/pubFields";
@@ -27,7 +27,7 @@ type Props = {
 	searchParams: Promise<{
 		editingStageId?: string;
 		tab?: string;
-		ruleId?: RulesId;
+		automationId?: AutomationsId;
 	}>;
 };
 

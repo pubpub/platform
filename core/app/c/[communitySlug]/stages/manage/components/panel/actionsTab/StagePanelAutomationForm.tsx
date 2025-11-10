@@ -9,7 +9,7 @@ import { useQueryState } from "nuqs";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import type { ActionInstances, CommunitiesId, RulesId, StagesId } from "db/public";
+import type { ActionInstances, AutomationsId, CommunitiesId, StagesId } from "db/public";
 import { actionInstancesIdSchema, Event } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
@@ -27,27 +27,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "u
 import { FormSubmitButton } from "ui/submit-button";
 import { cn } from "utils";
 
-import type { RuleConfig, RuleForEvent, Rules } from "~/actions/_lib/rules";
+import type { Automation, AutomationConfig, AutomationForEvent } from "~/actions/_lib/automations";
 import type { getStageActions } from "~/lib/db/queries";
 import type { AutoReturnType } from "~/lib/types";
 import { ActionFormContext } from "~/actions/_lib/ActionForm";
-import { actions, getRuleByName, humanReadableEventBase, rules } from "~/actions/api";
+import { actions, automations, getAutomationByName, humanReadableEventBase } from "~/actions/api";
 import { getActionFormComponent } from "~/actions/forms";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 import { isClientException, useServerAction } from "~/lib/serverActions";
-import { addOrUpdateRule, deleteRule } from "../../../actions";
+import { addOrUpdateAutomation, deleteAutomation } from "../../../actions";
 
 type Props = {
 	stageId: StagesId;
 	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	communityId: CommunitiesId;
-	rules: {
-		id: RulesId;
+	automations: {
+		id: AutomationsId;
 		event: Event;
 		actionInstance: ActionInstances;
 		sourceAction?: ActionInstances;
 
-		config?: RuleConfig<RuleForEvent<Event>> | null;
+		config?: AutomationConfig<AutomationForEvent<Event>> | null;
 	}[];
 };
 
@@ -59,7 +59,10 @@ const ActionSelector = ({
 	disabledActionId,
 	dataTestIdPrefix,
 }: {
-	fieldProps: Omit<ControllerRenderProps<CreateRuleSchema, "sourceActionInstanceId">, "name">;
+	fieldProps: Omit<
+		ControllerRenderProps<CreateAutomationsSchema, "sourceActionInstanceId">,
+		"name"
+	>;
 	actionInstances: AutoReturnType<typeof getStageActions>["execute"];
 	label: string;
 	placeholder: string;
@@ -133,12 +136,12 @@ const baseSchema = z.discriminatedUnion("event", [
 		actionInstanceId: actionInstancesIdSchema,
 		actionConfig: z.object({}),
 	}),
-	...Object.values(rules)
+	...Object.values(automations)
 		.filter(
 			(
-				rule
-			): rule is Exclude<
-				Rules,
+				automation
+			): automation is Exclude<
+				Automation,
 				{
 					event:
 						| Event.pubEnteredStage
@@ -154,13 +157,15 @@ const baseSchema = z.discriminatedUnion("event", [
 					Event.actionSucceeded,
 					Event.actionFailed,
 					Event.webhook,
-				].includes(rule.event)
+				].includes(automation.event)
 		)
-		.map((rule) =>
+		.map((automation) =>
 			z.object({
-				event: z.literal(rule.event),
+				event: z.literal(automation.event),
 				actionInstanceId: actionInstancesIdSchema,
-				ruleConfig: rule.additionalConfig ? rule.additionalConfig : z.null().optional(),
+				automationConfig: automation.additionalConfig
+					? automation.additionalConfig
+					: z.null().optional(),
 			})
 		),
 ]);
@@ -175,31 +180,32 @@ const refineSchema = <T extends z.ZodTypeAny>(schema: T) => {
 			ctx.addIssue({
 				path: ["sourceActionInstanceId"],
 				code: z.ZodIssueCode.custom,
-				message: "Rules may not trigger actions in a loop",
+				message: "Automations may not trigger actions in a loop",
 			});
 		}
 	});
 };
 
-export type CreateRuleSchema = z.infer<typeof baseSchema> & {
+export type CreateAutomationsSchema = z.infer<typeof baseSchema> & {
 	actionConfig: Record<string, unknown> | null;
 };
 
 export const StagePanelAutomationForm = (props: Props) => {
-	const [currentlyEditingRuleId, setCurrentlyEditingRuleId] = useQueryState("rule-id");
-	const runUpsertRule = useServerAction(addOrUpdateRule);
+	const [currentlyEditingAutomationId, setCurrentlyEditingAutomationId] =
+		useQueryState("automation-id");
+	const runUpsertAutomation = useServerAction(addOrUpdateAutomation);
 	const [isOpen, setIsOpen] = useState(false);
 
 	const onSubmit = useCallback(
-		async (data: CreateRuleSchema) => {
-			const result = await runUpsertRule({
+		async (data: CreateAutomationsSchema) => {
+			const result = await runUpsertAutomation({
 				stageId: props.stageId,
 				data,
-				ruleId: currentlyEditingRuleId as RulesId | undefined,
+				automationId: currentlyEditingAutomationId as AutomationsId | undefined,
 			});
 			if (!isClientException(result)) {
 				setIsOpen(false);
-				setCurrentlyEditingRuleId(null);
+				setCurrentlyEditingAutomationId(null);
 				setSelectedActionInstance(null);
 				form.reset();
 				return;
@@ -207,7 +213,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 			form.setError("root", { message: result.error });
 		},
-		[props.stageId, runUpsertRule]
+		[props.stageId, runUpsertAutomation]
 	);
 
 	const [selectedActionInstance, setSelectedActionInstance] = useState<
@@ -277,7 +283,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 		return refineSchema(schemaWithAction);
 	}, [selectedActionInstance, props.actionInstances, actionSchema]);
 
-	const form = useForm<CreateRuleSchema>({
+	const form = useForm<CreateAutomationsSchema>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			actionInstanceId: undefined,
@@ -300,28 +306,31 @@ export const StagePanelAutomationForm = (props: Props) => {
 		if (!selectedActionInstanceId && !event)
 			return { disallowedEvents: [], allowedEvents: Object.values(Event) };
 
-		const disallowedEvents = props.rules
-			.filter((rule) => {
+		const disallowedEvents = props.automations
+			.filter((automation) => {
 				// for regular events, disallow if same action+event already exists
-				if (rule.event !== Event.actionSucceeded && rule.event !== Event.actionFailed) {
-					return rule.actionInstance.id === selectedActionInstanceId;
+				if (
+					automation.event !== Event.actionSucceeded &&
+					automation.event !== Event.actionFailed
+				) {
+					return automation.actionInstance.id === selectedActionInstanceId;
 				}
 
-				// for action chaining events, allow multiple rules with different watched actions
+				// for action chaining events, allow multiple automations with different watched actions
 				return (
-					rule.actionInstance.id === selectedActionInstanceId &&
-					rule.event === event &&
-					rule.sourceAction?.id === sourceActionInstanceId
+					automation.actionInstance.id === selectedActionInstanceId &&
+					automation.event === event &&
+					automation.sourceAction?.id === sourceActionInstanceId
 				);
 			})
-			.map((rule) => rule.event);
+			.map((automation) => automation.event);
 
 		const allowedEvents = Object.values(Event).filter(
 			(event) => !disallowedEvents.includes(event)
 		);
 
 		return { disallowedEvents, allowedEvents };
-	}, [selectedActionInstanceId, event, props.rules, sourceActionInstanceId]);
+	}, [selectedActionInstanceId, event, props.automations, sourceActionInstanceId]);
 
 	useEffect(() => {
 		const actionInstance =
@@ -337,49 +346,52 @@ export const StagePanelAutomationForm = (props: Props) => {
 	}, [form, props.actionInstances, selectedActionInstanceId]);
 
 	useEffect(() => {
-		const currentRule = props.rules.find((rule) => rule.id === currentlyEditingRuleId);
+		const currentAutomation = props.automations.find(
+			(automation) => automation.id === currentlyEditingAutomationId
+		);
 
-		if (!currentRule) {
+		if (!currentAutomation) {
 			return;
 		}
 
 		setIsOpen(true);
 		const actionInstance =
-			props.actionInstances.find((action) => action.id === currentRule.actionInstance.id) ??
-			null;
+			props.actionInstances.find(
+				(action) => action.id === currentAutomation.actionInstance.id
+			) ?? null;
 		setSelectedActionInstance(actionInstance);
 
 		form.reset({
-			actionInstanceId: currentRule.actionInstance.id,
-			event: currentRule.event,
-			actionConfig: currentRule.config?.actionConfig,
-			sourceActionInstanceId: currentRule.sourceAction?.id,
-			ruleConfig: currentRule.config?.ruleConfig,
-		} as CreateRuleSchema);
-	}, [currentlyEditingRuleId, props.actionInstances, props.rules]);
+			actionInstanceId: currentAutomation.actionInstance.id,
+			event: currentAutomation.event,
+			actionConfig: currentAutomation.config?.actionConfig,
+			sourceActionInstanceId: currentAutomation.sourceAction?.id,
+			automationConfig: currentAutomation.config?.automationConfig,
+		} as CreateAutomationsSchema);
+	}, [currentlyEditingAutomationId, props.actionInstances, props.automations]);
 
 	const onOpenChange = useCallback(
 		(open: boolean) => {
 			if (!open) {
 				form.reset();
 				setSelectedActionInstance(null);
-				setCurrentlyEditingRuleId(null);
+				setCurrentlyEditingAutomationId(null);
 			}
 			setIsOpen(open);
 		},
 		[setSelectedActionInstance, setIsOpen]
 	);
 
-	const rule = getRuleByName(event);
+	const automation = getAutomationByName(event);
 
-	const runDeleteRule = useServerAction(deleteRule);
+	const runDeleteAutomation = useServerAction(deleteAutomation);
 	const onDeleteClick = useCallback(async () => {
-		if (!currentlyEditingRuleId) {
+		if (!currentlyEditingAutomationId) {
 			return;
 		}
 
-		runDeleteRule(currentlyEditingRuleId as RulesId, props.stageId);
-	}, [currentlyEditingRuleId, props.stageId, runDeleteRule]);
+		runDeleteAutomation(currentlyEditingAutomationId as AutomationsId, props.stageId);
+	}, [currentlyEditingAutomationId, props.stageId, runDeleteAutomation]);
 
 	const formId = useId();
 
@@ -391,20 +403,20 @@ export const StagePanelAutomationForm = (props: Props) => {
 		return getActionFormComponent(selectedActionInstance.action);
 	}, [selectedActionInstance]);
 
-	const isExistingRule = !!currentlyEditingRuleId;
+	const isExistingAutomation = !!currentlyEditingAutomationId;
 
 	return (
 		<div className="space-y-2 py-2">
 			<Dialog open={isOpen} onOpenChange={onOpenChange}>
 				<DialogTrigger asChild>
-					<Button variant="secondary" data-testid="add-rule-button">
+					<Button variant="secondary" data-testid="add-automation-button">
 						Add automation
 					</Button>
 				</DialogTrigger>
 				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto">
 					<DialogHeader>
 						<DialogTitle>
-							{isExistingRule ? "Edit automation" : "Add automation"}
+							{isExistingAutomation ? "Edit automation" : "Add automation"}
 						</DialogTitle>
 						<DialogDescription>
 							Set up an automation to run whenever a certain event is triggered.
@@ -438,7 +450,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 														<SelectValue placeholder="Event">
 															{field.value ? (
 																<>
-																	<rule.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																	<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
 																	{humanReadableEventBase(
 																		field.value,
 																		community
@@ -451,7 +463,8 @@ export const StagePanelAutomationForm = (props: Props) => {
 													</SelectTrigger>
 													<SelectContent>
 														{allowedEvents.map((event) => {
-															const rule = getRuleByName(event);
+															const automation =
+																getAutomationByName(event);
 
 															return (
 																<SelectItem
@@ -460,7 +473,7 @@ export const StagePanelAutomationForm = (props: Props) => {
 																	className="hover:bg-gray-100"
 																	data-testid={`event-select-item-${event}`}
 																>
-																	<rule.display.icon className="mr-2 inline h-4 w-4 text-xs" />
+																	<automation.display.icon className="mr-2 inline h-4 w-4 text-xs" />
 																	{humanReadableEventBase(
 																		event,
 																		community
@@ -553,10 +566,10 @@ export const StagePanelAutomationForm = (props: Props) => {
 					<DialogFooter
 						className={cn(
 							"sticky -bottom-4 flex w-full items-center",
-							currentlyEditingRuleId && "!justify-between"
+							currentlyEditingAutomationId && "!justify-between"
 						)}
 					>
-						{currentlyEditingRuleId && (
+						{currentlyEditingAutomationId && (
 							<Button type="button" variant="destructive" onClick={onDeleteClick}>
 								<Trash size="14" />
 								Delete automation

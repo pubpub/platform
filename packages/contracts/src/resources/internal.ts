@@ -67,7 +67,7 @@ export const internalApi = contract.router(
 		triggerActions: {
 			method: "POST",
 			path: "/stages/:stageId/actions/trigger",
-			summary: "Run all actions in a stage whose rules match the event",
+			summary: "Run all actions in a stage whose automations match the event",
 			description:
 				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
 			pathParams: z.object({

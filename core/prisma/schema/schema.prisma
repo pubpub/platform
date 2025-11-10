@@ -297,18 +297,18 @@ model MoveConstraint {
 }
 
 model ActionInstance {
-  id        String      @id @default(dbgenerated("gen_random_uuid()"))
-  name      String      @default("")
-  action    Action
-  stage     Stage       @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now()) @updatedAt
+  id          String       @id @default(dbgenerated("gen_random_uuid()"))
+  name        String       @default("")
+  action      Action
+  stage       Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId     String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
   /// @type(BaseActionInstanceConfig, '../types', true, false, true)
-  config    Json?
-  rules     Rule[]
-  runs      ActionRun[]
-  watchedBy Rule[]      @relation("source_action_instance")
+  config      Json?
+  automations Automation[]
+  runs        ActionRun[]
+  watchedBy   Automation[] @relation("source_action_instance")
 
   @@map(name: "action_instances")
 }
@@ -372,12 +372,12 @@ enum ActionRunStatus {
   failure
 }
 
-model Rule {
+model Automation {
   id                     String          @id @default(dbgenerated("gen_random_uuid()"))
   event                  Event
   actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId       String
-  /// @type(RuleConfigBase, '../types', true, false, true)
+  /// @type(AutomationConfig, '../types', true, false, true)
   config                 Json?
   // as the trigger for "actionSucceeded" or "actionFailed"
   sourceActionInstanceId String?
@@ -385,7 +385,7 @@ model Rule {
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @default(now()) @updatedAt
 
-  @@map(name: "rules")
+  @@map(name: "automations")
 }
 
 enum Event {
