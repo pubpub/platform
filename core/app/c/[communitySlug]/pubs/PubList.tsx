@@ -1,16 +1,30 @@
 import { Suspense } from "react";
+import { BookOpen, Icon, Search } from "lucide-react";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
+import type { Button } from "ui/button";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "ui/empty";
 import { PubFieldProvider } from "ui/pubFields";
 import { Skeleton } from "ui/skeleton";
 import { stagesDAO, StagesProvider } from "ui/stages";
 import { cn } from "utils";
 
 import type { AutoReturnType } from "~/lib/types";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import {
+	getCreatablePubTypes,
 	userCanArchiveAllPubs,
+	userCanCreatePub,
 	userCanEditAllPubs,
 	userCanMoveAllPubs,
 	userCanRunActionsAllPubs,
@@ -20,6 +34,7 @@ import { getPubsCount, getPubsWithRelatedValues, getPubTypesForCommunity } from 
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
+import { PubClearSearchButton } from "./PubClearSearchButton";
 import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery";
 import { PubSearchFooter } from "./PubSearchFooter";
 import { PubSearch } from "./PubSearchInput";
@@ -71,8 +86,41 @@ const PaginatedPubListInner = async (
 		userCanViewAllStages(),
 	]);
 
+	const hasSearch =
+		props.searchParams.query !== "" ||
+		(props.searchParams.pubTypes?.length ?? 0) > 0 ||
+		(props.searchParams.stages?.length ?? 0) > 0;
 	return (
 		<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
+			{pubs.length === 0 && (
+				<Empty className="">
+					<EmptyHeader>
+						<EmptyMedia variant="icon">
+							<BookOpen size={16} />
+						</EmptyMedia>
+						<EmptyTitle>No Pubs Found</EmptyTitle>
+						{hasSearch && (
+							<EmptyDescription>
+								Try adjusting your filters or search query.
+							</EmptyDescription>
+						)}
+					</EmptyHeader>
+					<EmptyContent>
+						{hasSearch ? (
+							<PubClearSearchButton />
+						) : (
+							<Suspense fallback={<SkeletonButton className="w-20" />}>
+								<CreatePubButton
+									communityId={props.communityId}
+									className="bg-emerald-500 text-white hover:bg-emerald-600"
+									text="Create Pub"
+								/>
+							</Suspense>
+						)}
+					</EmptyContent>
+				</Empty>
+			)}
+
 			{pubs.map((pub) => {
 				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
 

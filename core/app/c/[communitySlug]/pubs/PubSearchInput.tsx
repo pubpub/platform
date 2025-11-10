@@ -1,23 +1,7 @@
 "use client";
 
-import React, {
-	use,
-	useCallback,
-	useDeferredValue,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import React, { useRef } from "react";
 import { ArrowUpDownIcon, PlusCircle, Search, SortAsc, SortDesc, X } from "lucide-react";
-import {
-	parseAsArrayOf,
-	parseAsInteger,
-	parseAsString,
-	parseAsStringEnum,
-	useQueryStates,
-} from "nuqs";
-import { useDebouncedCallback } from "use-debounce";
 
 import type { PubTypesId, StagesId } from "db/public";
 import { Button } from "ui/button";
@@ -32,9 +16,7 @@ import { Input } from "ui/input";
 import { MultiSelect } from "ui/multi-select";
 import { cn } from "utils";
 
-import type { PubSearchParams } from "./pubQuery";
 import { entries } from "~/lib/mapping";
-import { pubSearchParsers } from "./pubQuery";
 import { usePubSearch } from "./PubSearchProvider";
 
 export type StageFilters = {
@@ -225,7 +207,13 @@ export const PubSearch = (props: PubSearchProps) => {
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</div>
-			<div className={cn(stale && "opacity-50 transition-opacity duration-200", "m-4 mt-1")}>
+			<div
+				className={cn(
+					stale &&
+						'opacity-50 transition-opacity duration-200 [&_[data-testid*="pub-card"]]:animate-pulse',
+					"m-4 mt-1"
+				)}
+			>
 				{props.children}
 			</div>
 		</div>
