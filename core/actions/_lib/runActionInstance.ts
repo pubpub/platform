@@ -21,6 +21,7 @@ import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
+import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
 import { getActionConfigDefaults } from "~/lib/server/actions";
@@ -127,7 +128,12 @@ const _runActionInstance = async (
 		.withDefaults(actionDefaults?.config as Record<string, any>)
 		.validate();
 
-	let inputPubInput = pub;
+	let inputPubInput = pub
+		? {
+				...pub,
+				values: hydratePubValues(pub.values),
+			}
+		: null;
 
 	let config = null;
 	const mergedConfig = actionConfigBuilder.getMergedConfig();
