@@ -51,7 +51,7 @@ const pubTriggerTestSeed = async () => {
 					"3": {
 						action: Action.googleDriveImport,
 						config: {
-							docUrl: "https://docs.google.com/document/d/1234567890",
+							folderUrl: "https://drive.google.com/drive/folders/1234567890",
 							outputField: `${slugName}:title`,
 						},
 					},
