@@ -55,7 +55,7 @@ const seed = createSeed({
 					config: {},
 				},
 			},
-			rules: [
+			automations: [
 				{
 					event: Event.actionSucceeded,
 					actionInstance: "1",
@@ -71,7 +71,7 @@ const seed = createSeed({
 					actionInstance: "3",
 					config: {
 						actionConfig: null,
-						ruleConfig: {
+						automationConfig: {
 							duration: 1000,
 							interval: "s",
 						},
@@ -102,94 +102,94 @@ beforeAll(async () => {
 	community = await seedCommunity(seed);
 });
 
-describe("rules.db", () => {
-	it("should create a rule", async () => {
-		const { createOrUpdateRuleWithCycleCheck } = await import("./rules");
-		const rule = await createOrUpdateRuleWithCycleCheck({
+describe("automations.db", () => {
+	it("should create an automation", async () => {
+		const { createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
+			await import("./automations");
+		const automation = await createOrUpdateAutomationWithCycleCheck({
 			event: Event.pubEnteredStage,
 			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 		});
 
-		expect(rule).toBeDefined();
+		expect(automation).toBeDefined();
 	});
 
-	it("should throw a RegularRuleAlreadyExistsError if a regular rule already exists", async () => {
+	it("should throw a RegularAutomationAlreadyExistsError if a regular automation already exists", async () => {
 		const {
-			createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
-			RegularRuleAlreadyExistsError,
-		} = await import("./rules");
+			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+			RegularAutomationAlreadyExistsError,
+		} = await import("./automations");
 		await expect(
-			createOrUpdateRuleWithCycleCheck({
+			createOrUpdateAutomationWithCycleCheck({
 				event: Event.pubLeftStage,
 				actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 			})
-		).rejects.toThrow(RegularRuleAlreadyExistsError);
+		).rejects.toThrow(RegularAutomationAlreadyExistsError);
 	});
 
-	it("should throw a SequentialRuleAlreadyExistsError if a sequential rule already exists", async () => {
+	it("should throw a SequentialAutomationAlreadyExistsError if a sequential automation already exists", async () => {
 		const {
-			createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
-			SequentialRuleAlreadyExistsError,
-		} = await import("./rules");
+			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+			SequentialAutomationAlreadyExistsError,
+		} = await import("./automations");
 		await expect(
-			createOrUpdateRuleWithCycleCheck({
+			createOrUpdateAutomationWithCycleCheck({
 				event: Event.actionSucceeded,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
 			})
-		).rejects.toThrow(SequentialRuleAlreadyExistsError);
+		).rejects.toThrow(SequentialAutomationAlreadyExistsError);
 	});
 
-	it("should throw a RuleConfigError if the config is invalid", async () => {
+	it("should throw a AutomationConfigError if the config is invalid", async () => {
 		const {
-			createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
-			RuleConfigError,
-		} = await import("./rules");
+			createOrUpdateAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck,
+			AutomationConfigError,
+		} = await import("./automations");
 		await expect(
-			createOrUpdateRuleWithCycleCheck({
+			createOrUpdateAutomationWithCycleCheck({
 				event: Event.pubInStageForDuration,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 			})
-		).rejects.toThrowError(RuleConfigError);
+		).rejects.toThrowError(AutomationConfigError);
 	});
 
 	describe("cycle detection", () => {
-		it("should throw a RuleCycleError if the rule is a cycle", async () => {
-			const {
-				createOrUpdateRuleWithCycleCheck: createOrUpdateRuleWithCycleCheck,
-				RuleCycleError,
-			} = await import("./rules");
+		it("should throw a AutomationCycleError if the automation is a cycle", async () => {
+			const { createOrUpdateAutomationWithCycleCheck, AutomationCycleError } = await import(
+				"./automations"
+			);
 			await expect(
-				createOrUpdateRuleWithCycleCheck({
+				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
-			).rejects.toThrow(RuleCycleError);
+			).rejects.toThrow(AutomationCycleError);
 
 			// should also happen for ActionFailed
 			await expect(
-				createOrUpdateRuleWithCycleCheck({
+				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionFailed,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
-			).rejects.toThrow(RuleCycleError);
+			).rejects.toThrow(AutomationCycleError);
 
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
-				createOrUpdateRuleWithCycleCheck({
+				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
-			).rejects.toThrow(RuleCycleError);
+			).rejects.toThrow(AutomationCycleError);
 		});
-		it("should not throw an error if the rule is not a cycle", async () => {
+		it("should not throw an error if the automation is not a cycle", async () => {
 			// 3 -> 1 is fine, bc we only have 3 -> 2 and 2 -> 1 thus far
-			const { createOrUpdateRuleWithCycleCheck } = await import("./rules");
+			const { createOrUpdateAutomationWithCycleCheck } = await import("./automations");
 			await expect(
-				createOrUpdateRuleWithCycleCheck({
+				createOrUpdateAutomationWithCycleCheck({
 					event: Event.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
@@ -197,10 +197,11 @@ describe("rules.db", () => {
 			).resolves.not.toThrow();
 		});
 
-		it("should throw a RuleMaxDepthError if the rule would exceed the maximum stack depth", async () => {
-			const { createOrUpdateRuleWithCycleCheck, RuleMaxDepthError } = await import("./rules");
+		it("should throw a AutomationMaxDepthError if the automation would exceed the maximum stack depth", async () => {
+			const { createOrUpdateAutomationWithCycleCheck, AutomationMaxDepthError } =
+				await import("./automations");
 			await expect(
-				createOrUpdateRuleWithCycleCheck(
+				createOrUpdateAutomationWithCycleCheck(
 					{
 						event: Event.actionSucceeded,
 						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
@@ -208,7 +209,7 @@ describe("rules.db", () => {
 					},
 					3
 				)
-			).rejects.toThrow(RuleMaxDepthError);
+			).rejects.toThrow(AutomationMaxDepthError);
 		});
 	});
 });

@@ -7,29 +7,29 @@ import type {
 	Action,
 	ActionInstances,
 	ActionInstancesId,
+	AutomationsId,
 	CommunitiesId,
 	Event,
-	RulesId,
 	StagesId,
 } from "db/public";
 import { Button } from "ui/button";
 import { Pencil } from "ui/icon";
 import { cn } from "utils";
 
-import type { RuleForEvent } from "~/actions/_lib/rules";
-import type { RuleConfig } from "~/actions/types";
-import { getActionByName, getRuleByName, humanReadableEventHydrated } from "~/actions/api";
+import type { AutomationForEvent } from "~/actions/_lib/automations";
+import type { AutomationConfig } from "~/actions/types";
+import { getActionByName, getAutomationByName, humanReadableEventHydrated } from "~/actions/api";
 import { useCommunity } from "~/app/components/providers/CommunityProvider";
 
 type Props = {
 	stageId: StagesId;
 	communityId: CommunitiesId;
-	rule: {
-		id: RulesId;
+	automation: {
+		id: AutomationsId;
 		event: Event;
 		actionInstance: ActionInstances;
 		sourceActionInstance?: ActionInstances | null;
-		config: RuleConfig<RuleForEvent<Event>> | null;
+		config: AutomationConfig<AutomationForEvent<Event>> | null;
 		createdAt: Date;
 		updatedAt: Date;
 		actionInstanceId: ActionInstancesId;
@@ -42,16 +42,19 @@ const ActionIcon = (props: { actionName: Action; className?: string }) => {
 	return <action.icon className={cn("inline text-sm", props.className)} />;
 };
 
-export const StagePanelRule = (props: Props) => {
-	const { rule } = props;
+export const StagePanelAutomation = (props: Props) => {
+	const { automation } = props;
 
-	const [, setEditingRuleId] = useQueryState("rule-id", parseAsString.withDefault("new-rule"));
+	const [, setEditingAutomationId] = useQueryState(
+		"automation-id",
+		parseAsString.withDefault("new-automation")
+	);
 
 	const onEditClick = useCallback(() => {
-		setEditingRuleId(rule.id);
-	}, [rule.id, setEditingRuleId]);
+		setEditingAutomationId(automation.id);
+	}, [automation.id, setEditingAutomationId]);
 	const community = useCommunity();
-	const ruleSettings = getRuleByName(rule.event);
+	const automationSettings = getAutomationByName(automation.event);
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
@@ -60,34 +63,36 @@ export const StagePanelRule = (props: Props) => {
 					<span className="flex-grow-0 overflow-auto text-ellipsis">
 						When{" "}
 						<span className="italic underline decoration-dotted">
-							{<ruleSettings.display.icon className="mr-1 inline h-4 w-4 text-xs" />}
-							{rule.sourceActionInstance ? (
+							{
+								<automationSettings.display.icon className="mr-1 inline h-4 w-4 text-xs" />
+							}
+							{automation.sourceActionInstance ? (
 								<>
 									<ActionIcon
-										actionName={rule.sourceActionInstance.action}
+										actionName={automation.sourceActionInstance.action}
 										className="mr-1 inline h-4 w-4 text-xs"
 									/>
-									{humanReadableEventHydrated(rule.event, community, {
-										rule,
-										config: rule.config?.ruleConfig ?? undefined,
-										sourceAction: rule.sourceActionInstance,
+									{humanReadableEventHydrated(automation.event, community, {
+										automation: automation,
+										config: automation.config?.automationConfig ?? undefined,
+										sourceAction: automation.sourceActionInstance,
 									})}
 								</>
 							) : (
-								humanReadableEventHydrated(rule.event, community, {
-									rule,
-									config: rule.config?.ruleConfig ?? undefined,
-									sourceAction: rule.sourceActionInstance,
+								humanReadableEventHydrated(automation.event, community, {
+									automation: automation,
+									config: automation.config?.automationConfig ?? undefined,
+									sourceAction: automation.sourceActionInstance,
 								})
 							)}
 						</span>
 						<br /> run{" "}
 						<span className="italic underline decoration-dotted">
 							<ActionIcon
-								actionName={rule.actionInstance.action}
+								actionName={automation.actionInstance.action}
 								className="mx-1 h-4 w-4 text-xs"
 							/>
-							{rule.actionInstance.name}
+							{automation.actionInstance.name}
 						</span>{" "}
 					</span>
 				</div>

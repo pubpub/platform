@@ -11,6 +11,7 @@ import { Button } from "ui/button";
 import { Field, FieldGroup } from "ui/field";
 import { Form } from "ui/form";
 import { FormSubmitButton } from "ui/submit-button";
+import { toast } from "ui/use-toast";
 
 import type { Action } from "../types";
 import { ActionConfigBuilder } from "./ActionConfigBuilder";
@@ -72,9 +73,23 @@ export function ActionForm(props: ActionFormProps) {
 		return s.getSchema();
 	}, [props.action.config.schema, props.action.name, props.defaultFields]);
 
+	const defaultValues = useMemo(() => {
+		const result = schema.partial().safeParse(props.values);
+		if (result.success) {
+			return result.data;
+		}
+
+		toast({
+			title: "Invalid initial values",
+			description: `Can't parse values ${JSON.stringify(props.values)}: ${result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("\n")}. This is likely an issue on our end, please report this.`,
+			variant: "destructive",
+		});
+		return undefined;
+	}, [schema, props.values]);
+
 	const form = useForm({
 		resolver: zodResolver(schema),
-		defaultValues: props.action.config.schema.partial().parse(props.values),
+		defaultValues,
 	});
 
 	const onSubmit = useCallback(

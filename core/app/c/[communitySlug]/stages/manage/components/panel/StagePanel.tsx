@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList } from "ui/tabs";
 import { getStage } from "~/lib/db/queries";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { StagePanelActions } from "./actionsTab/StagePanelActions";
-import { StagePanelRules } from "./actionsTab/StagePanelRules";
+import { StagePanelAutomations } from "./actionsTab/StagePanelAutomations";
 import { StagePanelMembers } from "./StagePanelMembers";
 import { StagePanelOverview } from "./StagePanelOverview";
 import { StagePanelPubs } from "./StagePanelPubs";
@@ -56,7 +56,7 @@ export const StagePanel = async (props: Props) => {
 				</TabsContent>
 				<TabsContent value="actions" className="space-y-2">
 					<StagePanelActions stageId={props.stageId} userId={props.user.id} />
-					<StagePanelRules stageId={props.stageId} userId={props.user.id} />
+					<StagePanelAutomations stageId={props.stageId} userId={props.user.id} />
 				</TabsContent>
 				<TabsContent value="members">
 					<StagePanelMembers stageId={props.stageId} user={props.user} />

@@ -8,16 +8,16 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 
-import type { RulesId } from "db/public";
+import type { AutomationsId } from "db/public";
 import { Event } from "db/public";
 import { CopyButton } from "ui/copy-button";
 
-import { defineRule } from "~/actions/types";
+import { defineAutomation } from "~/actions/types";
 
 export const intervals = ["minute", "hour", "day", "week", "month", "year"] as const;
 export type Interval = (typeof intervals)[number];
 
-export const pubInStageForDuration = defineRule({
+export const pubInStageForDuration = defineAutomation({
 	event: Event.pubInStageForDuration,
 	additionalConfig: z.object({
 		duration: z.number().int().min(1),
@@ -32,7 +32,7 @@ export const pubInStageForDuration = defineRule({
 });
 export type PubInStageForDuration = typeof pubInStageForDuration;
 
-export const pubLeftStage = defineRule({
+export const pubLeftStage = defineAutomation({
 	event: Event.pubLeftStage,
 	display: {
 		icon: ArrowRightFromLine,
@@ -41,7 +41,7 @@ export const pubLeftStage = defineRule({
 });
 export type PubLeftStage = typeof pubLeftStage;
 
-export const pubEnteredStage = defineRule({
+export const pubEnteredStage = defineAutomation({
 	event: Event.pubEnteredStage,
 	display: {
 		icon: ArrowRightToLine,
@@ -50,7 +50,7 @@ export const pubEnteredStage = defineRule({
 });
 export type PubEnteredStage = typeof pubEnteredStage;
 
-export const actionSucceeded = defineRule({
+export const actionSucceeded = defineAutomation({
 	event: Event.actionSucceeded,
 	display: {
 		icon: CheckCircle,
@@ -60,7 +60,7 @@ export const actionSucceeded = defineRule({
 });
 export type ActionSucceeded = typeof actionSucceeded;
 
-export const actionFailed = defineRule({
+export const actionFailed = defineAutomation({
 	event: Event.actionFailed,
 	display: {
 		icon: XCircle,
@@ -70,25 +70,28 @@ export const actionFailed = defineRule({
 });
 export type ActionFailed = typeof actionFailed;
 
-export const constructWebhookUrl = (ruleId: RulesId, communitySlug: string) =>
-	`/api/v0/c/${communitySlug}/site/webhook/${ruleId}`;
+export const constructWebhookUrl = (automationId: AutomationsId, communitySlug: string) =>
+	`/api/v0/c/${communitySlug}/site/webhook/${automationId}`;
 
-export const webhook = defineRule({
+export const webhook = defineAutomation({
 	event: Event.webhook,
 	display: {
 		icon: Globe,
 		base: ({ community }) => (
 			<span>
 				a request is made to{" "}
-				<code>{constructWebhookUrl("<ruleId>" as RulesId, community.slug)}</code>
+				<code>
+					{constructWebhookUrl("<automationId>" as AutomationsId, community.slug)}
+				</code>
 			</span>
 		),
-		hydrated: ({ rule, community }) => (
+		hydrated: ({ automation: automation, community }) => (
 			<span>
-				a request is made to <code>{constructWebhookUrl(rule.id, community.slug)}</code>
+				a request is made to{" "}
+				<code>{constructWebhookUrl(automation.id, community.slug)}</code>
 				<CopyButton
 					value={new URL(
-						constructWebhookUrl(rule.id, community.slug),
+						constructWebhookUrl(automation.id, community.slug),
 						window.location.origin
 					).toString()}
 				/>
@@ -97,7 +100,7 @@ export const webhook = defineRule({
 	},
 });
 
-export type Rules =
+export type Automation =
 	| PubInStageForDuration
 	| PubLeftStage
 	| PubEnteredStage
@@ -109,13 +112,15 @@ export type SchedulableEvent =
 	| Event.actionFailed
 	| Event.actionSucceeded;
 
-export type RuleForEvent<E extends Event> = E extends E ? Extract<Rules, { event: E }> : never;
+export type AutomationForEvent<E extends Event> = E extends E
+	? Extract<Automation, { event: E }>
+	: never;
 
-export type SchedulableRule = RuleForEvent<SchedulableEvent>;
+export type SchedulableAutomation = AutomationForEvent<SchedulableEvent>;
 
-export type RuleConfig<Rule extends Rules = Rules> = Rule extends Rule
+export type AutomationConfig<A extends Automation = Automation> = A extends A
 	? {
-			ruleConfig: NonNullable<Rule["additionalConfig"]>["_input"] extends infer RC
+			automationConfig: NonNullable<A["additionalConfig"]>["_input"] extends infer RC
 				? undefined extends RC
 					? null
 					: RC
@@ -124,4 +129,4 @@ export type RuleConfig<Rule extends Rules = Rules> = Rule extends Rule
 		}
 	: never;
 
-export type RuleConfigs = RuleConfig | undefined;
+export type AutomationConfigs = AutomationConfig | undefined;

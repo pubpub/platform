@@ -22,7 +22,7 @@ export const run = defineRun<typeof action>(
 			*/
 
 			/* Sample URL: https://drive.google.com/drive/folders/1xUHrOjKhqfXrRclJ1cehDSa24alqEgrK */
-			const folderId: string = input.docUrl.split("/").pop() || "";
+			const folderId: string = input.folderUrl.split("/").pop() || "";
 			const dataFromDrive = await getContentFromFolder(folderId);
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");

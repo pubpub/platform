@@ -21,12 +21,13 @@ import type { ActionSuccess } from "../types";
 import type { ClientException, ClientExceptionOptions } from "~/lib/serverActions";
 import { db } from "~/kysely/database";
 import { env } from "~/lib/env/env";
+import { hydratePubValues } from "~/lib/fields/utils";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { ApiError, getPubsWithRelatedValues } from "~/lib/server";
 import { getActionConfigDefaults } from "~/lib/server/actions";
+import { MAX_STACK_DEPTH } from "~/lib/server/automations";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { getCommunity } from "~/lib/server/community";
-import { MAX_STACK_DEPTH } from "~/lib/server/rules";
 import { isClientExceptionOptions } from "~/lib/serverActions";
 import { getActionByName } from "../api";
 import { ActionConfigBuilder } from "./ActionConfigBuilder";
@@ -127,7 +128,12 @@ const _runActionInstance = async (
 		.withDefaults(actionDefaults?.config as Record<string, any>)
 		.validate();
 
-	let inputPubInput = pub;
+	let inputPubInput = pub
+		? {
+				...pub,
+				values: hydratePubValues(pub.values),
+			}
+		: null;
 
 	let config = null;
 	const mergedConfig = actionConfigBuilder.getMergedConfig();
@@ -375,13 +381,13 @@ export const runInstancesForEvent = async (
 ) => {
 	const instances = await trx
 		.selectFrom("action_instances")
-		.innerJoin("rules", "rules.actionInstanceId", "action_instances.id")
+		.innerJoin("automations", "automations.actionInstanceId", "action_instances.id")
 		.select([
 			"action_instances.id as actionInstanceId",
-			"rules.config as ruleConfig",
+			"automations.config as automationConfig",
 			"action_instances.name as actionInstanceName",
 		])
-		.where("rules.event", "=", event)
+		.where("automations.event", "=", event)
 		.where("action_instances.stageId", "=", stageId)
 		.execute();
 
@@ -396,7 +402,7 @@ export const runInstancesForEvent = async (
 						communityId,
 						actionInstanceId: instance.actionInstanceId,
 						event,
-						actionInstanceArgs: instance.ruleConfig ?? null,
+						actionInstanceArgs: instance.automationConfig ?? null,
 						stack,
 					},
 					trx

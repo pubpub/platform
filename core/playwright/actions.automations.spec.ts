@@ -72,12 +72,12 @@ test.afterAll(async () => {
 	await page.close();
 });
 
-test.describe("sequential rules", () => {
-	test("can run sequential rule", async () => {
+test.describe("sequential automations", () => {
+	test("can run sequential automation", async () => {
 		const stagesManagePage = new StagesManagePage(page, community.community.slug);
 		await stagesManagePage.goTo();
 
-		await stagesManagePage.addRule("Test", {
+		await stagesManagePage.addAutomation("Test", {
 			event: Event.actionSucceeded,
 			actionInstanceName: "Log 1",
 			sourceActionInstanceName: "Log 2",
