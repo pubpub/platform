@@ -18,6 +18,7 @@ export * from "./public/Automations";
 export * from "./public/Capabilities";
 export * from "./public/Communities";
 export * from "./public/CommunityMemberships";
+export * from "./public/ConditionEvaluationTiming";
 export * from "./public/CoreSchemaType";
 export * from "./public/ElementType";
 export * from "./public/Event";

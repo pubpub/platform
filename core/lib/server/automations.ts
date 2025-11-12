@@ -190,12 +190,14 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 		).executeTakeFirstOrThrow();
 
 		// delete all existing conditions/blocks, which should remove all conditions as well
+		console.log("deleting existing conditions/blocks");
 		await trx
 			.deleteFrom("automation_condition_blocks")
 			.where("automationId", "=", automation.id)
 			.execute();
 
 		if (!props.condition) {
+			console.log("no condition, returning");
 			return automation;
 		}
 
@@ -212,6 +214,8 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 			conditions: [],
 		});
 
+		console.log("flatItems", flatItems);
+
 		// create all block
 		await trx
 			.insertInto("automation_condition_blocks")
@@ -226,6 +230,8 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 				}))
 			)
 			.execute();
+
+		console.log("flatItems.conditions", flatItems.conditions);
 
 		if (flatItems.conditions.length > 0) {
 			await trx
@@ -410,13 +416,13 @@ export async function upsertAutomationWithCycleCheck(
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
 	// check the config
-	const config = automations[data.event].additionalConfig;
+	const additionalConfigSchema = automations[data.event].additionalConfig;
 
-	if (config) {
+	if (additionalConfigSchema) {
 		try {
-			config.parse(data.config);
+			additionalConfigSchema.parse(data.config?.automationConfig);
 		} catch (e) {
-			throw new AutomationConfigError(data.event, data.config ?? {}, e);
+			throw new AutomationConfigError(data.event, data.config?.automationConfig ?? {}, e);
 		}
 	}
 

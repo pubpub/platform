@@ -1067,6 +1067,9 @@ export async function seedCommunity<
 				.execute()
 		: [];
 
+	console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+	console.log(createdStages);
+
 	const consolidatedStages = createdStages.map((stage, idx) => ({
 		...stageList[idx][1],
 		...stage,
@@ -1144,6 +1147,9 @@ export async function seedCommunity<
 				.returningAll()
 				.execute()
 		: [];
+
+	console.log("BBBBBBBBBBBBBBBBBBBB");
+	console.log(stageConnectionsList);
 
 	const createPubRecursiveInput = props.pubs
 		? makePubInitializerMatchCreatePubRecursiveInput({
@@ -1363,6 +1369,7 @@ export async function seedCommunity<
 			createdAutomations.push(createdAutomation);
 		}
 	}
+	console.log("createdAutomations", createdAutomations);
 
 	logger.info(
 		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`

@@ -373,18 +373,19 @@ enum ActionRunStatus {
 }
 
 model Automation {
-  id                       String                     @id @default(dbgenerated("gen_random_uuid()"))
-  event                    Event
-  actionInstance           ActionInstance             @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
-  actionInstanceId         String
+  id                        String                     @id @default(dbgenerated("gen_random_uuid()"))
+  event                     Event
+  actionInstance            ActionInstance             @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
+  actionInstanceId          String
   /// @type(AutomationConfig, '../types', true, false, true)
-  config                   Json?
+  config                    Json?
   // as the trigger for "actionSucceeded" or "actionFailed"
-  sourceActionInstanceId   String?
-  sourceActionInstance     ActionInstance?            @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
-  createdAt                DateTime                   @default(now())
-  updatedAt                DateTime                   @default(now()) @updatedAt
-  AutomationConditionBlock AutomationConditionBlock[]
+  sourceActionInstanceId    String?
+  sourceActionInstance      ActionInstance?            @relation("source_action_instance", fields: [sourceActionInstanceId], references: [id], onDelete: SetNull)
+  conditionEvaluationTiming ConditionEvaluationTiming?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @default(now()) @updatedAt
+  AutomationConditionBlock  AutomationConditionBlock[]
 
   @@map(name: "automations")
 }
@@ -396,6 +397,12 @@ enum Event {
   actionSucceeded
   actionFailed
   webhook
+}
+
+enum ConditionEvaluationTiming {
+  onTrigger
+  onExecution
+  both
 }
 
 model AutomationConditionBlock {

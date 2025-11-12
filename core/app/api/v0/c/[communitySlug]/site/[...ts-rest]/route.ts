@@ -20,7 +20,7 @@ import {
 } from "db/public";
 import { logger } from "logger";
 
-import { scheduleActionInstances } from "~/actions/api/server";
+import { runAutomationById } from "~/actions/_lib/runActionInstance";
 import {
 	checkAuthorization,
 	getAuthorization,
@@ -746,12 +746,13 @@ const handler = createNextHandler(
 			}
 
 			try {
-				await scheduleActionInstances({
-					event: Event.webhook,
-					stack: [],
-					stageId: automation.actionInstance.stageId,
+				await runAutomationById({
+					automationId,
 					json: body,
-					config: automation.config?.actionConfig,
+					event: Event.webhook,
+					communityId: community.id as CommunitiesId,
+					stack: [],
+					actionInstanceArgs: automation.config?.actionConfig ?? null,
 				});
 
 				return {

@@ -12,5 +12,13 @@ export const ActionRunsTable = ({
 	communitySlug: string;
 }) => {
 	const actionRunsColumns = getActionRunsTableColumns(communitySlug);
-	return <DataTable columns={actionRunsColumns} data={actionRuns} />;
+	return (
+		<DataTable
+			getRowId={(row) =>
+				`action-run-${row.stage?.name}-${row.event}-${row.actionInstance!.name}-${row.id}`
+			}
+			columns={actionRunsColumns}
+			data={actionRuns}
+		/>
+	);
 };

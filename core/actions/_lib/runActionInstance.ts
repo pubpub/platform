@@ -1,9 +1,10 @@
 import type { ZodError } from "zod";
 
 import { captureException } from "@sentry/nextjs";
-import { sql } from "kysely";
+import { Kysely, sql } from "kysely";
 
 import type { ProcessedPub } from "contracts";
+import type { Database } from "db/Database";
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -17,6 +18,7 @@ import type { BaseActionInstanceConfig, Json } from "db/types";
 import type { Prettify, XOR } from "utils/types";
 import { ActionRunStatus, Event } from "db/public";
 import { logger } from "logger";
+import { tryCatch } from "utils/try-catch";
 
 import type { run as logRun } from "../log/run";
 import type { ActionSuccess } from "../types";
@@ -36,7 +38,6 @@ import { ActionConfigBuilder } from "./ActionConfigBuilder";
 import { evaluateConditions } from "./evaluateConditions";
 import { getActionRunByName } from "./getRuns";
 import { createPubProxy } from "./pubProxy";
-import { scheduleActionInstances } from "./scheduleActionInstance";
 
 export type ActionInstanceRunResult = (ClientException | ClientExceptionOptions | ActionSuccess) & {
 	stack: ActionRunsId[];
@@ -185,7 +186,6 @@ const _runActionInstance = async (
 		actionRunId: args.actionRunId,
 	});
 
-	const jsonOrPubId = pub ? { pubId: pub.id } : { json: args.json! };
 	try {
 		// just hard cast it to one option so we at least have some typesafety
 		const result = await (actionRun as typeof logRun)({
@@ -201,36 +201,13 @@ const _runActionInstance = async (
 		});
 
 		if (isClientExceptionOptions(result)) {
-			await scheduleActionInstances({
-				stageId: args.actionInstance.stageId,
-				event: Event.actionFailed,
-				stack,
-				sourceActionInstanceId: args.actionInstance.id,
-				...jsonOrPubId,
-			});
 			return { ...result, stack };
 		}
-
-		await scheduleActionInstances({
-			stageId: args.actionInstance.stageId,
-			event: Event.actionSucceeded,
-			stack,
-			sourceActionInstanceId: args.actionInstance.id,
-			...jsonOrPubId,
-		});
 
 		return { ...result, stack };
 	} catch (error) {
 		captureException(error);
 		logger.error(error);
-
-		await scheduleActionInstances({
-			stageId: args.actionInstance.stageId,
-			event: Event.actionFailed,
-			stack,
-			sourceActionInstanceId: args.actionInstance.id,
-			...jsonOrPubId,
-		});
 
 		return {
 			title: "Failed to run action",
@@ -299,26 +276,60 @@ export async function runActionInstance(
 			stack: args.stack,
 		};
 	}
-	console.log("BBBBBBBBBBBBbbbbb", automation);
-
+	// check if we need to evaluate conditions at execution time
 	if (automation?.condition) {
-		const input = pub
-			? { pub: createPubProxy(pub, community?.slug) }
-			: { json: args.json ?? ({} as Json) };
-		const res = await evaluateConditions(automation.condition, input);
+		const automationTiming = (automation as any).conditionEvaluationTiming as
+			| string
+			| null
+			| undefined;
+		const shouldEvaluateNow =
+			automationTiming === "onExecution" ||
+			automationTiming === "both" ||
+			// if no timing is set, default to evaluating at execution time for backwards compatibility
+			!automationTiming;
 
-		console.log("AAAAAAAAAAAAA", res);
-		if (!res) {
-			logger.info("Automation condition not met", {
+		if (shouldEvaluateNow) {
+			const input = pub
+				? { pub: createPubProxy(pub, community?.slug) }
+				: { json: args.json ?? ({} as Json) };
+			const [error, res] = await tryCatch(evaluateConditions(automation.condition, input));
+
+			if (error) {
+				await insertActionRun(trx, {
+					actionInstanceId: args.actionInstanceId,
+					pubId: pub?.id,
+					json: args.json,
+					result: { error: error.message },
+					status: ActionRunStatus.failure,
+					event: automation.event,
+					communityId: args.communityId,
+					stack: args.stack,
+					scheduledActionRunId: args.scheduledActionRunId,
+					actionInstanceArgs: args.actionInstanceArgs,
+				});
+
+				return {
+					error: error.message,
+					stack: args.stack,
+				};
+			}
+
+			if (!res) {
+				logger.debug("Automation condition not met at execution time", {
+					automationId: automation.id,
+					conditionEvaluationTiming: automationTiming,
+					condition: automation.condition,
+				});
+				return {
+					error: "Automation condition not met",
+					stack: args.stack,
+				};
+			}
+
+			logger.debug("Automation condition met at execution time", {
 				automationId: automation.id,
-				condition: automation.condition,
-				input,
-				res,
+				conditionEvaluationTiming: automationTiming,
 			});
-			return {
-				error: "Automation condition not met",
-				stack: args.stack,
-			};
 		}
 	}
 
@@ -328,39 +339,19 @@ export async function runActionInstance(
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
 
-	const actionRuns = await autoRevalidate(
-		trx
-			.insertInto("action_runs")
-			.values((eb) => ({
-				id: args.scheduledActionRunId,
-				actionInstanceId: args.actionInstanceId,
-				pubId: pub?.id,
-				json: args.json,
-				userId: isActionUserInitiated ? args.userId : null,
-				result: { scheduled: `Action to be run immediately` },
-				// we are setting it to `scheduled` very briefly
-				status: ActionRunStatus.scheduled,
-				// this is a bit hacky, would be better to pass this around methinks
-				config:
-					args.actionInstanceArgs ??
-					eb
-						.selectFrom("action_instances")
-						.select("config")
-						.where("action_instances.id", "=", args.actionInstanceId),
-				params: args,
-				event: isActionUserInitiated ? undefined : args.event,
-				sourceActionRunId: args.stack.at(-1),
-			}))
-			.returningAll()
-			// conflict should only happen if a scheduled action is excecuted
-			// not on user initiated actions or on other events
-			.onConflict((oc) =>
-				oc.column("id").doUpdateSet({
-					params: args,
-					event: "userId" in args ? undefined : args.event,
-				})
-			)
-	).execute();
+	const actionRuns = await insertActionRun(trx, {
+		actionInstanceId: args.actionInstanceId,
+		pubId: pub?.id,
+		json: args.json as Json,
+		event: args.event as Event,
+		communityId: args.communityId,
+		stack: args.stack,
+		scheduledActionRunId: args.scheduledActionRunId,
+		actionInstanceArgs: args.actionInstanceArgs as Record<string, unknown> | null,
+		result: { scheduled: `Action to be run immediately` },
+		status: ActionRunStatus.scheduled,
+		userId: isActionUserInitiated ? args.userId : undefined,
+	});
 
 	if (actionRuns.length > 1) {
 		const errorMessage: ActionInstanceRunResult = {
@@ -427,15 +418,78 @@ export async function runActionInstance(
 	return result;
 }
 
+export const runAutomationById = async (
+	args:
+		| {
+				automationId: AutomationsId;
+				pubId: PubsId;
+				json?: never;
+				event: Event;
+				communityId: CommunitiesId;
+				stack: ActionRunsId[];
+				scheduledActionRunId?: ActionRunsId;
+				actionInstanceArgs?: Record<string, unknown> | null;
+		  }
+		| {
+				automationId: AutomationsId;
+				pubId?: never;
+				json: Json;
+				event: Event;
+				communityId: CommunitiesId;
+				stack: ActionRunsId[];
+				scheduledActionRunId?: ActionRunsId;
+				actionInstanceArgs?: Record<string, unknown> | null;
+		  }
+): Promise<{
+	actionInstanceId: ActionInstancesId;
+	result: any;
+}> => {
+	const automation = await getAutomation(args.automationId).executeTakeFirst();
+
+	if (!automation) {
+		throw new Error(`Automation ${args.automationId} not found`);
+	}
+
+	const runArgs = args.pubId
+		? ({
+				pubId: args.pubId,
+				communityId: args.communityId,
+				actionInstanceId: automation.actionInstance.id,
+				event: args.event,
+				actionInstanceArgs: args.actionInstanceArgs ?? null,
+				stack: args.stack ?? [],
+				automationId: args.automationId,
+				scheduledActionRunId: args.scheduledActionRunId,
+			} as const)
+		: ({
+				json: args.json!,
+				communityId: args.communityId,
+				actionInstanceId: automation.actionInstance.id,
+				event: args.event,
+				actionInstanceArgs: args.actionInstanceArgs ?? null,
+				stack: args.stack ?? [],
+				automationId: args.automationId,
+				scheduledActionRunId: args.scheduledActionRunId,
+			} as const);
+
+	const result = await runActionInstance(runArgs as any, db);
+
+	return {
+		actionInstanceId: automation.actionInstance.id,
+		result,
+	};
+};
+
 export const runInstancesForEvent = async (
 	pubId: PubsId,
-	stageId: StagesId,
+	stageId: StagesId | null,
 	event: Event,
 	communityId: CommunitiesId,
 	stack: ActionRunsId[],
+	automationId?: AutomationsId,
 	trx = db
 ) => {
-	const instances = await trx
+	let query = trx
 		.selectFrom("action_instances")
 		.innerJoin("automations", "automations.actionInstanceId", "action_instances.id")
 		.select([
@@ -443,10 +497,19 @@ export const runInstancesForEvent = async (
 			"automations.config as automationConfig",
 			"automations.id as automationId",
 			"action_instances.name as actionInstanceName",
+			"action_instances.stageId as stageId",
 		])
-		.where("automations.event", "=", event)
-		.where("action_instances.stageId", "=", stageId)
-		.execute();
+		.where("automations.event", "=", event);
+
+	if (stageId) {
+		query = query.where("action_instances.stageId", "=", stageId);
+	}
+
+	if (automationId) {
+		query = query.where("automations.id", "=", automationId);
+	}
+
+	const instances = await query.execute();
 
 	const results = await Promise.all(
 		instances.map(async (instance) => {
@@ -472,3 +535,53 @@ export const runInstancesForEvent = async (
 
 	return results;
 };
+
+export function insertActionRun(
+	trx: Kysely<Database>,
+	args: {
+		actionInstanceId: ActionInstancesId;
+		pubId?: PubsId;
+		json?: Json;
+		event: Event;
+		communityId: CommunitiesId;
+		stack: ActionRunsId[];
+		scheduledActionRunId?: ActionRunsId;
+		actionInstanceArgs?: Record<string, unknown> | null;
+		result: Record<string, unknown>;
+		status: ActionRunStatus;
+		userId?: UsersId;
+	}
+) {
+	return autoRevalidate(
+		trx
+			.insertInto("action_runs")
+			.values((eb) => ({
+				id: args.scheduledActionRunId,
+				actionInstanceId: args.actionInstanceId,
+				pubId: args.pubId,
+				json: args.json,
+				userId: "userId" in args ? (args.userId as UsersId | null) : null,
+				result: args.result,
+				status: args.status,
+				// this is a bit hacky, would be better to pass this around methinks
+				config:
+					args.actionInstanceArgs ??
+					eb
+						.selectFrom("action_instances")
+						.select("config")
+						.where("action_instances.id", "=", args.actionInstanceId),
+				params: args,
+				event: "userId" in args ? undefined : args.event,
+				sourceActionRunId: args.stack.at(-1),
+			}))
+			.returningAll()
+			// conflict should only happen if a scheduled action is excecuted
+			// not on user initiated actions or on other events
+			.onConflict((oc) =>
+				oc.column("id").doUpdateSet({
+					params: args,
+					event: "userId" in args ? undefined : args.event,
+				})
+			)
+	).execute();
+}

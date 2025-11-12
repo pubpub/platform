@@ -371,6 +371,7 @@ Table automations {
   config Json [note: '@type(AutomationConfig, \'../types\', true, false, true)']
   sourceActionInstanceId String
   sourceActionInstance action_instances
+  conditionEvaluationTiming ConditionEvaluationTiming
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   AutomationConditionBlock automation_condition_blocks [not null]
@@ -648,6 +649,12 @@ Enum Event {
   actionSucceeded
   actionFailed
   webhook
+}
+
+Enum ConditionEvaluationTiming {
+  onTrigger
+  onExecution
+  both
 }
 
 Enum AutomationConditionBlockType {

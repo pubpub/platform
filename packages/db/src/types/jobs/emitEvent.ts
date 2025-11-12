@@ -2,64 +2,72 @@
 // but this way we can make the jobsClient typesafe in `core`
 // by augmenting the `GraphileWorker.Tasks` interface, see `./index.ts`
 
-import type { ActionInstancesId, ActionRunsId, Event, PubsId, StagesId } from "../../public";
-import type { Json } from "../json";
+import type {
+	ActionInstancesId,
+	ActionRunsId,
+	AutomationsId,
+	Event,
+	PubsId,
+	StagesId,
+} from "../../public";
 
-export type PubInStagesRow = {
+// event payload for running an automation in response to an immediate trigger
+export type RunAutomationPayload = {
+	type: "RunAutomation";
+	automationId: AutomationsId;
 	pubId: PubsId;
 	stageId: StagesId;
-};
-
-export type DBTriggerEventPayload<T> = {
-	table: string;
-	operation: string;
-	new: T;
-	old: T;
+	event: Event.pubEnteredStage | Event.pubLeftStage | Event.actionSucceeded | Event.actionFailed;
 	community: {
 		slug: string;
 	};
+	// stack of automation ids to prevent infinite loops
+	stack: ActionRunsId[];
 };
 
-export type ScheduledEventPayload = {
-	event: Event;
-	duration: number;
-	interval: "minute" | "hour" | "day" | "week" | "month" | "year";
-	runAt: Date;
+// event payload for scheduling a specific time-based automation (pubInStageForDuration)
+export type ScheduleDelayedAutomationPayload = {
+	type: "ScheduleDelayedAutomation";
+	automationId: AutomationsId;
+	pubId: PubsId;
 	stageId: StagesId;
-	actionInstanceId: ActionInstancesId;
 	community: {
 		slug: string;
 	};
-	sourceActionRunId?: ActionRunsId;
-	stack?: ActionRunsId[];
-	scheduledActionRunId: ActionRunsId;
-	/**
-	 * The config for the action instance to use when scheduling the action
-	 */
+	// stack of automation ids to prevent infinite loops
+	stack: ActionRunsId[];
+};
+
+// event payload for running a delayed automation that was previously scheduled
+export type RunDelayedAutomationPayload = {
+	type: "RunDelayedAutomation";
+	automationId: AutomationsId;
+	pubId: PubsId;
+	stageId: StagesId;
+	event: Event;
+	community: {
+		slug: string;
+	};
+	actionRunId: ActionRunsId;
+	// stack of automation ids to prevent infinite loops
+	stack: ActionRunsId[];
 	config?: Record<string, unknown> | null;
-} & (
-	| {
-			pubId: PubsId;
-			json?: never;
-	  }
-	| {
-			pubId?: never;
-			json: Json;
-	  }
-);
-
-export type EmitEventPayload = DBTriggerEventPayload<PubInStagesRow> | ScheduledEventPayload;
-
-export type PubEnteredStageEventPayload = PubInStagesRow & {
-	event: Event.pubEnteredStage;
-	community: { slug: string };
-};
-export type PubLeftStageEventPayload = PubInStagesRow & {
-	event: Event.pubLeftStage;
-	community: { slug: string };
 };
 
-export type NormalizedEventPayload =
-	| PubEnteredStageEventPayload
-	| PubLeftStageEventPayload
-	| ScheduledEventPayload;
+// event payload for canceling scheduled automations when pub leaves stage
+export type CancelScheduledAutomationPayload = {
+	type: "CancelScheduledAutomation";
+	actionRunId: ActionRunsId;
+	actionInstanceId: ActionInstancesId;
+	pubId: PubsId;
+	stageId: StagesId;
+	community: {
+		slug: string;
+	};
+};
+
+export type EmitEventPayload =
+	| RunAutomationPayload
+	| ScheduleDelayedAutomationPayload
+	| RunDelayedAutomationPayload
+	| CancelScheduledAutomationPayload;

@@ -3,6 +3,7 @@ import {
 	addHours,
 	addMinutes,
 	addMonths,
+	addSeconds,
 	addWeeks,
 	addYears,
 	differenceInDays,
@@ -13,12 +14,17 @@ import {
 import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/automations";
 
 export const addDuration = (
-	duration: AutomationConfig<PubInStageForDuration>["automationConfig"],
+	duration:
+		| AutomationConfig<PubInStageForDuration>["automationConfig"]
+		| { duration: number; interval: "second" },
 	date = new Date()
 ) => {
 	const now = new Date(date);
 
 	switch (duration.interval) {
+		// this is only used in tests/seeds
+		case "second":
+			return addSeconds(now, duration.duration);
 		case "minute":
 			return addMinutes(now, duration.duration);
 		case "hour":

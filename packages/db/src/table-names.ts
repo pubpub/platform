@@ -987,6 +987,14 @@ export const databaseTables = [
 				isAutoIncrementing: false,
 				hasDefaultValue: false,
 			},
+			{
+				name: "conditionEvaluationTiming",
+				dataType: "ConditionEvaluationTiming",
+				dataTypeSchema: "public",
+				isNullable: true,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
 		],
 	},
 	{

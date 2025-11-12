@@ -198,6 +198,8 @@ export function DataTable<TData, TValue>({
 										onClick={(evt) => {
 											handleRowClick(evt, row);
 										}}
+										data-testid={`data-table-row-${row.id}`}
+										// data-testid={getRowId?.(row.original)}
 										className={cn({
 											"cursor-pointer": Boolean(onRowClick),
 											"bg-gray-100/50": striped && idx % 2,
