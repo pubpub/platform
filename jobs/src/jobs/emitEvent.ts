@@ -168,7 +168,7 @@ const eventConfigs = [
 		effects: [triggerAction],
 	}),
 	defineConfig({
-		type: "InsertOperation",
+		type: "InsertOperation", // pub enter
 		check: (payload: any): payload is DBTriggerEventPayload<PubInStagesRow> =>
 			payload.operation === "INSERT",
 		normalize: (payload: DBTriggerEventPayload<PubInStagesRow>) => ({
@@ -176,10 +176,13 @@ const eventConfigs = [
 			event: Event.pubEnteredStage,
 			...payload.new,
 		}),
-		effects: [scheduleTask, triggerActions],
+		effects: [
+			scheduleTask, // pub in stage for duration
+			triggerActions, // pub enter event
+		],
 	}),
 	defineConfig({
-		type: "DeleteOperation",
+		type: "DeleteOperation", // pub leave
 		check: (payload: any): payload is DBTriggerEventPayload<PubInStagesRow> =>
 			payload.operation === "DELETE",
 		normalize: (payload: DBTriggerEventPayload<PubInStagesRow>) => ({
@@ -187,7 +190,9 @@ const eventConfigs = [
 			event: Event.pubLeftStage,
 			...payload.old,
 		}),
-		effects: [triggerActions],
+		effects: [
+			triggerActions, // pub leave event
+		],
 	}),
 ];
 
