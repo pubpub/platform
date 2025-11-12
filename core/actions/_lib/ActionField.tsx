@@ -107,16 +107,22 @@ export function ActionField(props: ActionFieldProps) {
 				return (
 					<Field data-invalid={p.fieldState.invalid}>
 						<div className="flex flex-row items-center justify-between space-x-2">
-							{props.label && (
-								<FieldLabel
-									htmlFor={p.field.name}
-									aria-required={required}
-									id={labelId}
-								>
-									{props.label}
-									{required && <span className="-ml-1 text-red-500">*</span>}
-								</FieldLabel>
-							)}
+							<div className="flex flex-col space-y-1">
+								{props.label && (
+									<FieldLabel
+										htmlFor={p.field.name}
+										aria-required={required}
+										id={labelId}
+									>
+										{props.label}
+										{required && <span className="-ml-1 text-red-500">*</span>}
+									</FieldLabel>
+								)}
+
+								<FieldDescription className="text-pretty text-xs text-gray-500">
+									{props.description ?? fieldSchema.description}
+								</FieldDescription>
+							</div>
 							<ButtonGroup>
 								{showTestButton && (
 									<Tooltip delayDuration={500}>
@@ -188,9 +194,6 @@ export function ActionField(props: ActionFieldProps) {
 							))
 						)}
 
-						<FieldDescription>
-							{props.description ?? fieldSchema.description}
-						</FieldDescription>
 						{p.fieldState.invalid && <FieldError errors={[p.fieldState.error]} />}
 						{isTestOpen && showTestButton && (
 							<ActionFieldJsonTestPanel
