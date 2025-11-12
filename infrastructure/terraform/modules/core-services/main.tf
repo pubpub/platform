@@ -134,7 +134,13 @@ resource "aws_db_instance" "core_postgres" {
   username               = var.cluster_info.name
   password               = random_password.rds_db_password.result
   parameter_group_name   = "default.postgres14"
-  skip_final_snapshot    = true
+
+  backup_retention_period   = 7
+  backup_window             = "03:00-04:00"
+  maintenance_window        = "mon:04:00-mon:05:00"
+  copy_tags_to_snapshot     = true
+  skip_final_snapshot       = false
+  final_snapshot_identifier = "${var.cluster_info.name}-core-postgres-${var.cluster_info.environment}-final-snapshot"
 }
 
 # see https://github.com/terraform-aws-modules/terraform-aws-s3-bucket/tree/v4.1.0
