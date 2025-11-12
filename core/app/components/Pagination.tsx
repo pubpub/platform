@@ -154,7 +154,7 @@ export const FooterPagination = (
 
 	const prevDisabled = page <= 1;
 	const nextDisabled = props.mode === "total" ? page >= props.totalPages : !props.hasNextPage;
-	const showLastButton = props.mode === "total";
+	const showLastButton = props.mode === "total" && props.totalPages > 1;
 
 	return (
 		<div
@@ -163,7 +163,7 @@ export const FooterPagination = (
 				className
 			)}
 		>
-			<div className="flex w-full items-center gap-2">
+			<div className="flex w-full items-center gap-2 md:flex-col">
 				<ResultsPerPageInput className="justify-self-start" />
 				<Pagination
 					className={cn("items-center gap-2 lg:gap-8", { "mx-0 justify-end": !children })}

@@ -15,7 +15,10 @@ export const ResultsPerPageInput = ({ className }: { className?: string }) => {
 
 	return (
 		<div className="flex items-center gap-2 whitespace-nowrap">
-			<Label htmlFor="pagination-per-page" className="hidden text-sm font-normal md:block">
+			<Label
+				htmlFor="pagination-per-page"
+				className="hidden text-sm font-normal md:block md:text-base"
+			>
 				Results per page:
 			</Label>
 			<Select
@@ -24,7 +27,12 @@ export const ResultsPerPageInput = ({ className }: { className?: string }) => {
 					setPaging({ perPage: parseInt(value) }, { shallow: false });
 				}}
 			>
-				<SelectTrigger className={cn("h-8 w-[4.5rem] text-sm", className)}>
+				<SelectTrigger
+					className={cn(
+						"h-8 w-[4.5rem] text-sm md:h-10 md:w-[6rem] md:text-base",
+						className
+					)}
+				>
 					<SelectValue placeholder={perPage} />
 				</SelectTrigger>
 				<SelectContent side="top">
