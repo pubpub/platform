@@ -34,6 +34,81 @@ export type ActionConfigResult<T = Record<string, any>> =
 
 type BuilderState = "initial" | "validated" | "interpolated";
 
+// helper to check if a value needs interpolation
+const needsInterpolation = (value: string): boolean => {
+	return value.includes("{{") || value.includes("$.") || value.startsWith("<<<");
+};
+
+const collectActionFieldReferences = (obj: Record<string, any>): Record<string, string[]> => {
+	const refMap = {} as Record<string, string[]>;
+	for (const [key, value] of Object.entries(obj)) {
+		const refs: string[] = [];
+		if (typeof value === "string") {
+			const valueJsonata = extractJsonata(value);
+			const actionFieldMatches = valueJsonata.match(/(\$\.action\.config\.[a-zA-Z0-9_]+)/g);
+			if (actionFieldMatches) {
+				for (const match of actionFieldMatches) {
+					refs.push(match.replace("$.action.config.", ""));
+				}
+			}
+		}
+		refMap[key] = refs;
+	}
+	return refMap;
+};
+
+const detectCycles = (graph: Record<string, string[]>): string[] => {
+	const visited = new Set<string>();
+	const stack = new Set<string>();
+	const cycle: string[] = [];
+
+	const dfs = (node: string, path: string[]): boolean => {
+		if (stack.has(node)) {
+			const cycleStart = path.indexOf(node);
+			cycle.push(...path.slice(cycleStart), node);
+			return true;
+		}
+
+		if (visited.has(node)) {
+			return false;
+		}
+
+		visited.add(node);
+		stack.add(node);
+
+		const nodeDependencies = graph[node] ?? [];
+		for (const nodeDependency of nodeDependencies) {
+			if (nodeDependency in graph) {
+				if (dfs(nodeDependency, [...path, node])) {
+					return true;
+				}
+			}
+		}
+
+		stack.delete(node);
+		return false;
+	};
+
+	for (const node of Object.keys(graph)) {
+		if (!visited.has(node)) {
+			if (dfs(node, [])) {
+				break;
+			}
+		}
+	}
+
+	return cycle;
+};
+
+const reportCycle = (cycle: string[]): string => {
+	let message = "Failed to evaluate configuration because ";
+	for (let i = 0; i < cycle.length - 1; i++) {
+		message += i === 0 ? "" : "and ";
+		message += `$.action.config.${cycle[i]} uses $.action.config.${cycle[i + 1]}\n`;
+	}
+	return message;
+};
+
 /**
  * immutable builder for action configurations
  * handles validation, defaults, and interpolation with clear error codes
@@ -252,10 +327,21 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		// to prevent this from being bundled into the main bundle, we import it here
 		const { interpolate } = await import("@pubpub/json-interpolate");
 
-		// helper to check if a value needs interpolation
-		const needsInterpolation = (value: string): boolean => {
-			return value.includes("{{") || value.includes("$.") || value.startsWith("<<<");
-		};
+		const fieldReferences = collectActionFieldReferences(configToInterpolate);
+		const cycle = detectCycles(fieldReferences);
+
+		if (cycle.length > 0) {
+			return this.clone({
+				state: "interpolated",
+				result: {
+					success: false,
+					error: {
+						code: ActionConfigErrorCode.INTERPOLATION_FAILED,
+						message: reportCycle(cycle),
+					},
+				},
+			});
+		}
 
 		try {
 			// interpolate each field individually

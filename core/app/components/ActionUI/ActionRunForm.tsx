@@ -8,6 +8,7 @@ import type { ActionInstances, CommunitiesId, PubsId } from "db/public";
 import { logger } from "logger";
 import { Button } from "ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "ui/dialog";
+import { Separator } from "ui/separator";
 import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
@@ -95,31 +96,39 @@ export const ActionRunForm = (props: Props) => {
 						</span>
 					</Button>
 				</DialogTrigger>
-				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto">
-					<DialogHeader>
-						<DialogTitle>{props.actionInstance.name || action.name}</DialogTitle>
+				<DialogContent className="top-20 max-h-[85vh] translate-y-0 overflow-y-auto p-0">
+					<DialogHeader className="sticky inset-0 top-0 z-10 bg-white p-6 pb-2">
+						<div className="flex items-start gap-x-2">
+							<action.icon size="16" className="mt-0.5 flex-shrink-0" />
+							<DialogTitle className="flex items-baseline gap-x-2 pb-2">
+								{props.actionInstance.name || action.name}
+							</DialogTitle>
+						</div>
+						<Separator />
 					</DialogHeader>
-					<ActionForm
-						action={action}
-						values={props.actionInstance.config ?? {}}
-						defaultFields={props.defaultFields}
-						onSubmit={onSubmit}
-						submitButton={{
-							text: "Run Action",
-							pendingText: "Running Action...",
-							successText: "Action Ran",
-							errorText: "Failed to run action",
-						}}
-						secondaryButton={{
-							text: "Cancel",
-							onClick: onClose,
-						}}
-						context={{ type: "run", pubId: props.pubId }}
-					>
-						<Suspense fallback={<SkeletonCard />}>
-							<ActionFormComponent />
-						</Suspense>
-					</ActionForm>
+					<div className="p-6 pt-0">
+						<ActionForm
+							action={action}
+							values={props.actionInstance.config ?? {}}
+							defaultFields={props.defaultFields}
+							onSubmit={onSubmit}
+							submitButton={{
+								text: "Run Action",
+								pendingText: "Running Action...",
+								successText: "Action Ran",
+								errorText: "Failed to run action",
+							}}
+							secondaryButton={{
+								text: "Cancel",
+								onClick: onClose,
+							}}
+							context={{ type: "run", pubId: props.pubId }}
+						>
+							<Suspense fallback={<SkeletonCard />}>
+								<ActionFormComponent />
+							</Suspense>
+						</ActionForm>
+					</div>
 				</DialogContent>
 			</Dialog>
 		</TokenProvider>
