@@ -2,16 +2,28 @@ import { Suspense } from "react";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
+import { PubFieldProvider } from "ui/pubFields";
 import { Skeleton } from "ui/skeleton";
+import { stagesDAO, StagesProvider } from "ui/stages";
 import { cn } from "utils";
 
-import { searchParamsCache } from "~/app/components/DataTable/PubsDataTable/validations";
-import { FooterPagination } from "~/app/components/Pagination";
-import { PubCard } from "~/app/components/PubCard";
-import { getPubsCount, getPubsWithRelatedValues } from "~/lib/server";
+import type { AutoReturnType } from "~/lib/types";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
+import {
+	userCanArchiveAllPubs,
+	userCanEditAllPubs,
+	userCanMoveAllPubs,
+	userCanRunActionsAllPubs,
+	userCanViewAllStages,
+} from "~/lib/authorization/capabilities";
+import { getPubsCount, getPubsWithRelatedValues, getPubTypesForCommunity } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
+import { getPubFilterParamsFromSearch, pubSearchParamsCache } from "./pubQuery";
+import { PubSearchFooter } from "./PubSearchFooter";
 import { PubSearch } from "./PubSearchInput";
+import { PubSearchProvider } from "./PubSearchProvider";
 import { PubsSelectedProvider } from "./PubsSelectedContext";
 import { PubsSelectedCounter } from "./PubsSelectedCounter";
 
@@ -38,35 +50,51 @@ const PaginatedPubListInner = async (
 	props: PaginatedPubListProps & {
 		communitySlug: string;
 		pubsPromise: Promise<PubListProcessedPub[]>;
+		stagesPromise: Promise<AutoReturnType<typeof getStages>["execute"]>;
 	}
 ) => {
-	const [pubs, stages] = await Promise.all([
+	const [
+		pubs,
+		stages,
+		canEditAllPubs,
+		canArchiveAllPubs,
+		canRunActionsAllPubs,
+		canMoveAllPubs,
+		canViewAllStages,
+	] = await Promise.all([
 		props.pubsPromise,
-		getStages(
-			{ communityId: props.communityId, userId: props.userId },
-			{ withActionInstances: "full" }
-		).execute(),
+		props.stagesPromise,
+		userCanEditAllPubs(),
+		userCanArchiveAllPubs(),
+		userCanRunActionsAllPubs(),
+		userCanMoveAllPubs(),
+		userCanViewAllStages(),
 	]);
 
 	return (
-		<PubsSelectedProvider pubIds={[]}>
-			<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
-				{pubs.map((pub) => {
-					const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
+		<div className="mr-auto flex flex-col gap-3 md:max-w-screen-lg">
+			{pubs.map((pub) => {
+				const stageForPub = stages.find((stage) => stage.id === pub.stage?.id);
 
-					return (
-						<PubCard
-							key={pub.id}
-							pub={pub}
-							communitySlug={props.communitySlug}
-							moveFrom={stageForPub?.moveConstraintSources}
-							moveTo={stageForPub?.moveConstraints}
-							actionInstances={stageForPub?.actionInstances}
-						/>
-					);
-				})}
-			</div>
-		</PubsSelectedProvider>
+				return (
+					<PubCard
+						key={pub.id}
+						pub={pub}
+						communitySlug={props.communitySlug}
+						moveFrom={stageForPub?.moveConstraintSources}
+						moveTo={stageForPub?.moveConstraints}
+						actionInstances={stageForPub?.actionInstances}
+						userId={props.userId}
+						canEditAllPubs={canEditAllPubs}
+						canArchiveAllPubs={canArchiveAllPubs}
+						canRunActionsAllPubs={canRunActionsAllPubs}
+						canMoveAllPubs={canMoveAllPubs}
+						canViewAllStages={canViewAllStages}
+						canFilter={true}
+					/>
+				);
+			})}
+		</div>
 	);
 };
 
@@ -92,84 +120,122 @@ const PubListFooterPagination = async (props: {
 	searchParams: Record<string, unknown>;
 	page: number;
 	communityId: CommunitiesId;
-	children: React.ReactNode;
+	children?: React.ReactNode;
 	pubsPromise: Promise<ProcessedPub[]>;
+	userId: UsersId;
 }) => {
-	const perPage = searchParamsCache.get("perPage");
-	const isQuery = !!searchParamsCache.get("query");
+	const search = pubSearchParamsCache.all();
 
-	const count = await (isQuery
-		? props.pubsPromise.then((pubs) => pubs.length)
-		: getPubsCount({ communityId: props.communityId }));
+	const filterParams = getPubFilterParamsFromSearch(search);
 
-	const paginationProps = isQuery
-		? {
-				mode: "cursor" as const,
-				hasNextPage: count > perPage,
-			}
-		: {
-				mode: "total" as const,
-				totalPages: Math.ceil((count ?? 0) / perPage),
-			};
+	const count = await getPubsCount(
+		{
+			communityId: props.communityId,
+			userId: props.userId,
+
+			pubTypeId: filterParams.pubTypes,
+			stageId: filterParams.stages,
+		},
+		{
+			search: search.query,
+			filters: filterParams.filters,
+		}
+	);
+
+	const paginationProps = {
+		mode: "total" as const,
+		totalPages: Math.ceil((count ?? 0) / search.perPage),
+	};
 
 	return (
-		<FooterPagination {...props} {...paginationProps} className="z-20">
+		<PubSearchFooter {...props} {...paginationProps} className="z-20">
 			{props.children}
-		</FooterPagination>
+			<PubsSelectedCounter pageSize={Math.min(search.perPage, count)} />
+		</PubSearchFooter>
 	);
 };
 
 export const PaginatedPubList: React.FC<PaginatedPubListProps> = async (props) => {
-	const search = searchParamsCache.parse(props.searchParams);
+	const search = pubSearchParamsCache.parse(props.searchParams);
+	const filterParams = getPubFilterParamsFromSearch(search);
 
 	const communitySlug = await getCommunitySlug();
 
 	const basePath = props.basePath ?? `/c/${communitySlug}/pubs`;
 
 	// we do one more than the total amount of pubs to know if there is a next page
-	const limit = search.query ? search.perPage + 1 : search.perPage;
+	// const limit = search.query ? filterParams.perPage + 1 : filterParams.perPage;
 
 	const pubsPromise = getPubsWithRelatedValues(
-		{ communityId: props.communityId, userId: props.userId },
 		{
-			limit,
-			offset: (search.page - 1) * search.perPage,
-			orderBy: "updatedAt",
+			communityId: props.communityId,
+			userId: props.userId,
+			pubTypeId: filterParams.pubTypes,
+			stageId: filterParams.stages,
+		},
+		{
+			limit: filterParams.limit,
+			offset: filterParams.offset,
+			orderBy: filterParams.orderBy,
 			withPubType: true,
 			withRelatedPubs: false,
 			withStage: true,
 			withValues: false,
 			withRelatedCounts: true,
 			search: search.query,
+			orderDirection: filterParams.orderDirection,
+			filters: filterParams.filters,
 		}
 	);
 
+	const [pubTypes, stages, pubFields] = await Promise.all([
+		getPubTypesForCommunity(props.communityId, {
+			limit: 0,
+		}),
+		getStages(
+			{ communityId: props.communityId, userId: props.userId },
+			{ withActionInstances: "full" }
+		).execute(),
+		getPubFields({ communityId: props.communityId }).executeTakeFirstOrThrow(),
+	]);
+
 	return (
 		<div className="relative flex h-full flex-col">
-			<div
-				className={cn("mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll p-4 pb-16")}
-			>
-				<PubSearch>
-					<Suspense fallback={<PubListSkeleton />}>
-						<PaginatedPubListInner
-							{...props}
-							communitySlug={communitySlug}
-							pubsPromise={pubsPromise}
-						/>
-					</Suspense>
-				</PubSearch>
-			</div>
-			<Suspense fallback={null}>
-				<PubListFooterPagination
-					basePath={basePath}
-					searchParams={props.searchParams}
-					page={search.page}
-					communityId={props.communityId}
-					pubsPromise={pubsPromise}
-				>
-					<PubsSelectedCounter pageSize={search.perPage} />
-				</PubListFooterPagination>
-			</Suspense>
+			{/* field and stage provider are necessary for the ActionDropDown used in the pubcard to work */}
+			<PubFieldProvider pubFields={pubFields.fields}>
+				<StagesProvider stages={stagesDAO(stages)}>
+					<PubSearchProvider availablePubTypes={pubTypes} availableStages={stages}>
+						<PubsSelectedProvider pubIds={[]}>
+							<div
+								className={cn(
+									"mb-4 flex h-full w-full flex-col gap-3 overflow-y-scroll pb-16"
+								)}
+							>
+								<PubSearch>
+									<Suspense fallback={<PubListSkeleton />}>
+										<PaginatedPubListInner
+											{...props}
+											communitySlug={communitySlug}
+											pubsPromise={pubsPromise}
+											stagesPromise={Promise.resolve(stages)}
+										/>
+									</Suspense>
+								</PubSearch>
+							</div>
+							<Suspense fallback={null}>
+								<PubListFooterPagination
+									basePath={basePath}
+									searchParams={props.searchParams}
+									userId={props.userId}
+									page={search.page}
+									communityId={props.communityId}
+									pubsPromise={pubsPromise}
+								></PubListFooterPagination>
+							</Suspense>
+						</PubsSelectedProvider>
+					</PubSearchProvider>
+				</StagesProvider>
+			</PubFieldProvider>
 		</div>
 	);
 };

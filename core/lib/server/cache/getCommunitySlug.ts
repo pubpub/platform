@@ -1,10 +1,8 @@
-import type { UnsafeUnwrappedHeaders } from "next/headers";
-
 import { cache } from "react";
-import { cookies, headers } from "next/headers";
+import { headers } from "next/headers";
 import { getParams } from "@nimpl/getters/get-params";
 
-import { PUBPUB_COMMUNITY_SLUG_COOKIE_NAME, PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./constants";
+import { PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./constants";
 
 /**
  * Experimental and likely unstable way to get the community slug.

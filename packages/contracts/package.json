@@ -4,10 +4,10 @@
 	"private": true,
 	"version": "0.0.0",
 	"description": "",
-	"main": "dist/contracts.cjs.js",
-	"module": "dist/contracts.esm.js",
 	"exports": {
 		".": "./dist/contracts.js",
+		"./resources/site": "./dist/contracts-resources-site.js",
+		"./resources/site-builder": "./dist/contracts-resources-site-builder.js",
 		"./package.json": "./package.json"
 	},
 	"files": [
@@ -39,6 +39,11 @@
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"exports": true,
+		"entrypoints": [
+			"index.ts",
+			"resources/site.ts",
+			"resources/site-builder.ts"
+		],
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
 			"distInRoot": true,

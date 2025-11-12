@@ -2,10 +2,9 @@
 	"name": "schemas",
 	"type": "module",
 	"version": "0.0.1",
-	"main": "dist/schemas.cjs.js",
-	"module": "dist/schemas.esm.js",
 	"exports": {
 		".": "./dist/schemas.js",
+		"./utils": "./dist/schemas-utils.js",
 		"./formats": "./dist/schemas-formats.js",
 		"./schemas": "./dist/schemas-schemas.js",
 		"./package.json": "./package.json"
@@ -33,7 +32,8 @@
 		"entrypoints": [
 			"index.ts",
 			"schemas.ts",
-			"formats.ts"
+			"formats.ts",
+			"utils.ts"
 		],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {

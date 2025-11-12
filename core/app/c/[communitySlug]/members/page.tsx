@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 
 import { notFound, redirect } from "next/navigation";
 
-import { Capabilities, MembershipType } from "db/public";
+import type { FormsId } from "db/public";
+import { Capabilities, MemberRole, MembershipType } from "db/public";
+import { Users } from "ui/icon";
 
 import type { TableMember } from "./getMemberTableColumns";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
@@ -12,6 +14,7 @@ import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getSimpleForms } from "~/lib/server/form";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
+import { ContentLayout } from "../ContentLayout";
 import { addMember, createUserWithCommunityMembership } from "./actions";
 import { MemberTable } from "./MemberTable";
 
@@ -33,29 +36,30 @@ export default async function Page(props: {
 
 	const { communitySlug } = params;
 
-	const community = await findCommunityBySlug(communitySlug);
+	const [{ user }, community] = await Promise.all([
+		getPageLoginData(),
+		findCommunityBySlug(communitySlug),
+	]);
 
 	if (!community) {
 		return notFound();
 	}
 
-	const { user } = await getPageLoginData();
+	const page = parseInt(searchParams.page ?? "1", 10);
+	const [members, availableForms, canEditCommunity] = await Promise.all([
+		selectAllCommunityMemberships({ communityId: community.id }).execute(),
 
-	if (
-		!(await userCan(
+		getSimpleForms(),
+		userCan(
 			Capabilities.editCommunity,
 			{ type: MembershipType.community, communityId: community.id },
 			user.id
-		))
-	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
-	}
-
-	const page = parseInt(searchParams.page ?? "1", 10);
-	const [members, availableForms] = await Promise.all([
-		selectAllCommunityMemberships({ communityId: community.id }).execute(),
-		getSimpleForms(),
+		),
 	]);
+
+	if (!canEditCommunity) {
+		return redirect(`/c/${communitySlug}/unauthorized`);
+	}
 
 	if (!members.length && page !== 1) {
 		return notFound();
@@ -71,26 +75,67 @@ export default async function Page(props: {
 			role,
 			email: user.email,
 			joined: new Date(createdAt).toLocaleString(),
-		} satisfies TableMember;
+			form: member.formId,
+		} satisfies TableMember & { form: FormsId | null };
 	});
 
 	const dedupedMembersMap = new Map<TableMember["id"], TableMember>();
-	for (const member of tableMembers) {
+	for (const { form, ...member } of tableMembers) {
+		const correspondingForm = availableForms.find((f) => f.id === form);
 		if (!dedupedMembersMap.has(member.id)) {
-			dedupedMembersMap.set(member.id, member);
-		} else {
-			const m = dedupedMembersMap.get(member.id);
-			if (m && compareMemberRoles(member.role, ">", m.role)) {
-				dedupedMembersMap.set(member.id, m);
-			}
+			const forms =
+				correspondingForm && member.role === MemberRole.contributor
+					? [
+							{
+								id: correspondingForm.id,
+								name: correspondingForm.name,
+								slug: correspondingForm.slug,
+							},
+						]
+					: [];
+			dedupedMembersMap.set(member.id, {
+				...member,
+				forms,
+			});
+			continue;
+		}
+
+		const m = dedupedMembersMap.get(member.id);
+
+		if (m && m.role === MemberRole.contributor && member.role === MemberRole.contributor) {
+			const forms = [
+				...(m.forms ?? []),
+				...(correspondingForm
+					? [
+							{
+								id: correspondingForm.id,
+								name: correspondingForm.name,
+								slug: correspondingForm.slug,
+							},
+						]
+					: []),
+			];
+			dedupedMembersMap.set(member.id, {
+				...member,
+				forms,
+			});
+			continue;
+		}
+
+		if (m && compareMemberRoles(member.role, ">", m.role)) {
+			dedupedMembersMap.set(member.id, m);
 		}
 	}
 	const dedupedMembers = [...dedupedMembersMap.values()];
 
 	return (
-		<>
-			<div className="mb-16 flex items-center justify-between">
-				<h1 className="text-xl font-bold">Members</h1>
+		<ContentLayout
+			title={
+				<>
+					<Users size={24} strokeWidth={1} className="mr-2 text-gray-500" /> Members
+				</>
+			}
+			right={
 				<AddMemberDialog
 					addMember={addMember}
 					addUserMember={createUserWithCommunityMembership}
@@ -98,9 +143,17 @@ export default async function Page(props: {
 					isSuperAdmin={user.isSuperAdmin}
 					membershipType={MembershipType.community}
 					availableForms={availableForms}
+					className="bg-emerald-500 text-white"
+				/>
+			}
+		>
+			<div className="m-4">
+				<MemberTable
+					members={dedupedMembers}
+					availableForms={availableForms}
+					communityId={community.id}
 				/>
 			</div>
-			<MemberTable members={dedupedMembers} />
-		</>
+		</ContentLayout>
 	);
 }

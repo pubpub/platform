@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { Button } from "ui/button";
 import { FlagTriangleRightIcon } from "ui/icon";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
 import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
+import { userCanViewStagePage } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
 import { ContentLayout } from "../ContentLayout";
 import { StageList } from "./components/StageList";
 
@@ -20,14 +24,20 @@ type Props = { params: Promise<{ communitySlug: string }>; searchParams: Record<
 
 export default async function Page(props: Props) {
 	const searchParams = await props.searchParams;
-	const params = await props.params;
-	const [{ user }, community] = await Promise.all([
-		getPageLoginData(),
-		findCommunityBySlug(params.communitySlug),
-	]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+
+	if (!user) {
+		redirectToLogin();
+	}
 
 	if (!community) {
 		notFound();
+	}
+
+	const userCanSeeStage = await userCanViewStagePage(user.id, community.id);
+
+	if (!userCanSeeStage) {
+		return await redirectToUnauthorized();
 	}
 
 	return (
@@ -39,20 +49,25 @@ export default async function Page(props: Props) {
 						strokeWidth={1}
 						className="mr-2 text-gray-500"
 					/>
-					<span>Stages</span>
+					Stages
 				</>
 			}
 			right={
-				<Suspense fallback={<SkeletonButton className="h-8 w-24" />}>
-					<CreatePubButton
-						communityId={community.id}
-						text="Add Pub"
-						className="bg-emerald-500 text-white"
-					/>
-				</Suspense>
+				<div className="flex items-center gap-4">
+					<Button asChild variant="link" className="text-sm underline">
+						<Link href={`/c/${community.slug}/stages/manage`}>Manage</Link>
+					</Button>
+					<Suspense fallback={<SkeletonButton className="h-8 w-24" />}>
+						<CreatePubButton
+							communityId={community.id}
+							text="Add Pub"
+							className="bg-emerald-500 text-white"
+						/>
+					</Suspense>
+				</div>
 			}
 		>
-			<div className="px-4 py-8">
+			<div className="m-4 max-w-screen-lg">
 				<StageList
 					userId={user.id}
 					communityId={community.id}

@@ -5,7 +5,6 @@ import test, { expect } from "@playwright/test";
 import { Action, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
-import page from "~/app/page";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { LoginPage } from "./fixtures/login-page";
@@ -84,6 +83,7 @@ test.describe("Actions SSE", () => {
 				`action-instance-${community.stages.Test.actions["Log 1"].id}-update-circle`
 			)
 		).not.toBeVisible();
+		await page2.reload();
 
 		const extraStringRun1 = "`This is Run 1`";
 		await test.step("trigger action for first time", async () => {
@@ -91,9 +91,7 @@ test.describe("Actions SSE", () => {
 			await page1.getByRole("button", { name: "Run Action" }).first().click();
 			await page1.getByRole("button", { name: "Log 1" }).first().click();
 
-			await page1
-				.getByRole("textbox", { name: "The string to log out in" })
-				.fill(extraStringRun1);
+			await page1.getByRole("textbox", { name: "Log Text" }).fill(extraStringRun1);
 
 			await page1.getByRole("button", { name: "Run" }).first().click();
 
@@ -152,11 +150,9 @@ test.describe("Actions SSE", () => {
 
 		const extraStringRun2 = "`This is Run 2`";
 		await test.step("running the action again should make the stale indicator reappear and update the data", async () => {
-			await page1
-				.getByRole("textbox", { name: "The string to log out in" })
-				.fill(extraStringRun2);
+			await page1.getByRole("textbox", { name: "Log Text" }).fill(extraStringRun2);
 
-			await page1.getByRole("button", { name: "Run" }).first().click();
+			await page1.getByTestId("action-run-button").first().click();
 
 			await page1
 				.getByText("Successfully ran Log 1", { exact: true })

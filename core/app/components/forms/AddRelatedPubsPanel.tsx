@@ -7,44 +7,48 @@ import type { PubsId, PubTypes } from "db/public";
 import { Button } from "ui/button";
 
 import { PanelHeader, SidePanel } from "~/app/components/SidePanel";
-import { PubsDataTableClient } from "../DataTable/PubsDataTable/PubsDataTableClient";
+import { FormPubSearchSelect } from "../pubs/FormPubSearchSelect";
 
-export const AddRelatedPubsPanel = ({
-	title,
-	relatedPubs,
-	onCancel,
-	onChangeRelatedPubs,
-	disabledPubs,
-	pubTypes,
-}: {
+type AddRelatedPubsPanelProps = {
 	title: string;
+	formSlug: string;
+	fieldSlug: string;
 	relatedPubs: ProcessedPub<{ withPubType: true }>[];
 	onCancel: () => void;
 	onChangeRelatedPubs: (pubs: ProcessedPub<{ withPubType: true }>[]) => void;
 	disabledPubs?: PubsId[];
 	pubTypes?: Pick<PubTypes, "id" | "name">[];
-}) => {
+	currentPubId?: PubsId;
+};
+
+export const AddRelatedPubsPanel = (props: AddRelatedPubsPanelProps) => {
 	const sidebarRef = useRef(null);
-	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(relatedPubs);
+	const [selected, setSelected] = useState<NonGenericProcessedPub[]>(props.relatedPubs);
 
 	const handleUpdate = () => {
-		onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[]);
-		onCancel();
+		props.onChangeRelatedPubs(selected as ProcessedPub<{ withPubType: true }>[]);
+		props.onCancel();
 	};
 
 	return (
 		<SidePanel ref={sidebarRef}>
 			<div className="flex flex-col gap-2">
-				<PanelHeader title={title} showCancel onCancel={onCancel} />
-				<PubsDataTableClient
+				<PanelHeader title={props.title} showCancel onCancel={props.onCancel} />
+				<FormPubSearchSelect
+					formSlug={props.formSlug}
+					fieldSlug={props.fieldSlug}
+					currentPubId={props.currentPubId}
 					selectedPubs={selected}
 					onSelectedPubsChange={setSelected}
-					disabledRows={disabledPubs}
-					pubTypes={pubTypes}
+					disabledPubIds={props.disabledPubs}
+					pubTypeIds={props.pubTypes?.map((t) => t.id)}
+					mode="multi"
+					placeholder="Search for pubs to add..."
+					maxHeight="calc(100vh - 200px)"
 				/>
 			</div>
 			<div className="mt-auto flex w-full justify-between gap-2">
-				<Button type="button" variant="outline" className="flex-1" onClick={onCancel}>
+				<Button type="button" variant="outline" className="flex-1" onClick={props.onCancel}>
 					Cancel
 				</Button>
 				<Button

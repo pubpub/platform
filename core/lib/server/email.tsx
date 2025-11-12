@@ -5,10 +5,10 @@ import { render } from "@react-email/render";
 import { FormLink, Invite, PasswordReset, VerifyEmail } from "emails";
 
 import type { Communities, MembershipType, Users } from "db/public";
+import type { XOR } from "utils/types";
 import { AuthTokenType, MemberRole } from "db/public";
 import { logger } from "logger";
 
-import type { XOR } from "../types";
 import type { FormInviteLinkProps } from "./form";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "~/lib/authentication/createMagicLink";
@@ -168,9 +168,7 @@ export function _legacy_signupInvite(
 			{
 				type: AuthTokenType.signup,
 				expiresAt,
-				path: `/signup?redirectTo=${encodeURIComponent(
-					`/c/${props.community.slug}/stages`
-				)}`,
+				path: `/signup?redirectTo=${encodeURIComponent(`/c/${props.community.slug}/pubs`)}`,
 				userId: props.user.id,
 			},
 			trx

@@ -10,6 +10,7 @@ import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
 import { FieldsPage } from "./fixtures/fields-page";
 import { LoginPage } from "./fixtures/login-page";
+import { PubTypesEditPage } from "./fixtures/pub-types-edit-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 
 let page: Page;
@@ -89,8 +90,6 @@ test.describe("Pub types", () => {
 		const typeName = "Article";
 		await pubTypesPage.addType(typeName, "article", ["title", "contributor"]);
 
-		await page.getByTestId(`edit-pubtype-${typeName}`).click();
-
 		await page.getByText(`${community.community.slug}:contributor`, { exact: true }).waitFor();
 	});
 
@@ -102,13 +101,22 @@ test.describe("Pub types", () => {
 		const typename = "Not Article";
 		const pubTypesPage = new PubTypesPage(page, community.community.slug);
 		await pubTypesPage.goto();
-		await pubTypesPage.addType(typename, "article", ["title", "description"], "description");
+		const { id } = await pubTypesPage.addType(typename, "article", ["title", "description"]);
 
-		await page.getByTestId(`edit-pubtype-${typename}`).click();
-		const checkboxLocator = page.getByTestId(
-			`${typename}:${community.community.slug}:description-titleField`
-		);
+		const pubTypesEditPage = new PubTypesEditPage(page, community.community.slug, id);
 
-		await expect(checkboxLocator).toBeChecked();
+		await pubTypesEditPage.setAsTitleField("description");
+
+		await expect(
+			pubTypesEditPage.page.getByTestId(`remove-as-title-description`)
+		).toBeVisible();
+
+		await pubTypesEditPage.saveType();
+
+		await pubTypesEditPage.goto();
+
+		await expect(
+			pubTypesEditPage.page.getByTestId(`remove-as-title-description`)
+		).toBeVisible();
 	});
 });

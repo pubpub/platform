@@ -96,15 +96,16 @@ model Community {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  pubTypes       PubType[]
-  pubs           Pub[]
-  memberGroups   MemberGroup[]
-  stages         Stage[]
-  APIAccessToken ApiAccessToken[]
-  Form           Form[]
-  pubFields      PubField[]
-  members        CommunityMembership[]
-  Invite         Invite[]
+  pubTypes            PubType[]
+  pubs                Pub[]
+  memberGroups        MemberGroup[]
+  stages              Stage[]
+  APIAccessToken      ApiAccessToken[]
+  Form                Form[]
+  pubFields           PubField[]
+  members             CommunityMembership[]
+  Invite              Invite[]
+  ActionConfigDefault ActionConfigDefault[]
 
   @@map(name: "communities")
 }
@@ -240,6 +241,7 @@ model PubFieldToPubType {
   // when this changes, a trigger is run to update the title of all pubs in that pubType
   // see migrations/20241210172906_trigger_for_changing_is_title/migration.sql
   isTitle   Boolean  @default(false)
+  rank      String // Uses "C" collation
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
@@ -294,123 +296,44 @@ model MoveConstraint {
   @@map(name: "move_constraint")
 }
 
-enum MemberRole {
-  // community-wide administrator
-  admin
-  // regular member
-  editor
-  // contributor
-  contributor
-}
-
-model MemberGroup {
-  id          String    @id @default(dbgenerated("gen_random_uuid()"))
-  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @default(now()) @updatedAt
-
-  users                User[]
-  communityMemberships CommunityMembership[]
-  pubMemberships       PubMembership[]
-  stageMemberships     StageMembership[]
-
-  @@map(name: "member_groups")
-}
-
-model CommunityMembership {
-  id            String       @id @default(dbgenerated("gen_random_uuid()"))
-  role          MemberRole
-  community     Community    @relation(fields: [communityId], references: [id], onDelete: Cascade)
-  communityId   String
-  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-  memberGroupId String?
-  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
-  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @default(now()) @updatedAt
-  form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId        String?
-
-  // Indices defined manually in migration to handle null formId case
-  // @@unique([communityId, userId, formId])
-  // @@unique([communityId, memberGroupId, formId])
-  @@map(name: "community_memberships")
-}
-
-model PubMembership {
-  id            String       @id @default(dbgenerated("gen_random_uuid()"))
-  role          MemberRole
-  pub           Pub          @relation(fields: [pubId], references: [id], onDelete: Cascade)
-  pubId         String
-  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-  memberGroupId String?
-  form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId        String?
-
-  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
-  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  // Indices defined manually in migration to handle null formId case
-  // @@unique([pubId, userId, formId])
-  // @@unique([pubId, memberGroupId, formId])
-  @@map(name: "pub_memberships")
-}
-
-model StageMembership {
-  id            String       @id @default(dbgenerated("gen_random_uuid()"))
-  role          MemberRole
-  stage         Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId       String
-  user          User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        String?
-  memberGroup   MemberGroup? @relation(fields: [memberGroupId], references: [id], onDelete: Cascade)
-  memberGroupId String?
-  form          Form?        @relation(fields: [formId], references: [id], onDelete: Cascade)
-  formId        String?
-
-  // This table has a check constraint requiring that exactly one of userId or memberGroupId is set
-  // See core/prisma/migrations/20241017223037_add_new_membership_tables/migration.sql for details
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  // Indices defined manually in migration to handle null formId case
-  // @@unique([stageId, userId, formId])
-  // @@unique([stageId, memberGroupId, formId])
-  @@map(name: "stage_memberships")
-}
-
 model ActionInstance {
-  id        String      @id @default(dbgenerated("gen_random_uuid()"))
-  name      String      @default("")
-  action    Action
-  stage     Stage       @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  stageId   String
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @default(now()) @updatedAt
-  config    Json?
-  rules     Rule[]
-  runs      ActionRun[]
-  watchedBy Rule[]      @relation("source_action_instance")
+  id          String       @id @default(dbgenerated("gen_random_uuid()"))
+  name        String       @default("")
+  action      Action
+  stage       Stage        @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  stageId     String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @default(now()) @updatedAt
+  /// @type(BaseActionInstanceConfig, '../types', true, false, true)
+  config      Json?
+  automations Automation[]
+  runs        ActionRun[]
+  watchedBy   Automation[] @relation("source_action_instance")
 
   @@map(name: "action_instances")
 }
 
 enum Action {
   log
-  pdf
   email
-  pushToV6
   http
   move
   googleDriveImport
   datacite
+  buildJournalSite
+}
+
+model ActionConfigDefault {
+  id          String    @id @default(dbgenerated("gen_random_uuid()"))
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  communityId String
+  action      Action
+  config      Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@unique([communityId, action], name: "action_config_defaults_communityId_action_key")
+  @@map(name: "action_config_defaults")
 }
 
 model ActionRun {
@@ -419,6 +342,7 @@ model ActionRun {
   actionInstanceId String?
   pub              Pub?              @relation(fields: [pubId], references: [id])
   pubId            String?
+  json             Json?
   config           Json?
   event            Event?
   params           Json?
@@ -448,11 +372,12 @@ enum ActionRunStatus {
   failure
 }
 
-model Rule {
+model Automation {
   id                     String          @id @default(dbgenerated("gen_random_uuid()"))
   event                  Event
   actionInstance         ActionInstance  @relation(fields: [actionInstanceId], references: [id], onDelete: Cascade)
   actionInstanceId       String
+  /// @type(AutomationConfig, '../types', true, false, true)
   config                 Json?
   // as the trigger for "actionSucceeded" or "actionFailed"
   sourceActionInstanceId String?
@@ -460,7 +385,7 @@ model Rule {
   createdAt              DateTime        @default(now())
   updatedAt              DateTime        @default(now()) @updatedAt
 
-  @@map(name: "rules")
+  @@map(name: "automations")
 }
 
 enum Event {
@@ -469,6 +394,7 @@ enum Event {
   pubInStageForDuration
   actionSucceeded
   actionFailed
+  webhook
 }
 
 enum FormAccessType {
@@ -579,6 +505,9 @@ model ApiAccessToken {
   PubValueHistory PubValueHistory[]
   InviteHistory   InviteHistory[]
 
+  // has unique index with isSiteBuilderToken = true and communityId
+  isSiteBuilderToken Boolean @default(false)
+
   @@index([token], name: "token_idx")
   @@map(name: "api_access_tokens")
 }
@@ -622,61 +551,6 @@ enum ApiAccessScope {
   stage
   member
   pubType
-}
-
-enum Capabilities {
-  movePub
-  viewPub
-  deletePub
-  createRelatedPub
-  createPubWithForm
-  createPubWithAnyForm
-  editPubWithForm
-  editPubWithAnyForm
-  editPubWithDefaultForm
-  createPubField
-  archivePubField
-  editPubField
-  createPubType
-  editPubType
-  deletePubType
-  runAction
-  viewStage
-  createStage
-  manageStage // includes managing stage name, actions, rules, and move constraints
-  deleteStage
-  addPubMember
-  removePubMember
-  addStageMember
-  removeStageMember
-  addFormMember
-  removeFormMember
-  addCommunityMember
-  removeCommunityMember
-  manageMemberGroups
-  addCommunity
-  editCommunity
-  createForm
-  editForm
-  archiveForm
-  createApiToken
-  revokeApiToken
-  seeExtraPubValues
-}
-
-enum MembershipType {
-  community
-  stage
-  pub
-}
-
-model MembershipCapabilities {
-  role       MemberRole
-  type       MembershipType
-  capability Capabilities
-
-  @@id([role, type, capability])
-  @@map(name: "membership_capabilities")
 }
 
 /// Status of an invite

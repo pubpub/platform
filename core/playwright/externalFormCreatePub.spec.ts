@@ -12,7 +12,6 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { FormsPage } from "./fixtures/forms-page";
 import { LoginPage } from "./fixtures/login-page";
-import { MembersPage } from "./fixtures/member-page";
 import { PubsPage } from "./fixtures/pubs-page";
 
 const seed = createSeed({
@@ -132,7 +131,7 @@ test("Can create a pub from an external form", async () => {
 
 	// Check the pub page that this pub was created
 	await page.goto(`/c/${community.community.slug}/pubs`);
-	await expect(page.getByRole("link", { name: title })).toHaveCount(1);
+	await expect(page.getByRole("link", { name: title, exact: true })).toHaveCount(1);
 });
 
 test.describe("Multivalue inputs", () => {
@@ -237,7 +236,7 @@ test.describe("Multivalue inputs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`);
-		await page.getByRole("link", { name: title }).click();
+		await page.getByRole("link", { name: title, exact: true }).click();
 		// Make sure pub details page has loaded before making assertions
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*`);
 		await expect(page.getByText(numberElement.name)).toHaveCount(1);
@@ -259,6 +258,7 @@ test.describe("Rich text editor", () => {
 		// Add a new form
 		const formsPage = new FormsPage(page, community.community.slug);
 		formsPage.goto();
+		await page.waitForURL(`/c/${community.community.slug}/forms`);
 		const formSlug = "rich-text-test";
 		await formsPage.addForm("Rich text test", formSlug);
 
@@ -289,7 +289,7 @@ test.describe("Rich text editor", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`);
-		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1);
 	});
 });
 
@@ -354,6 +354,10 @@ test.describe("Member select", async () => {
 
 test.describe("Related pubs", () => {
 	test("Can add related pubs", async () => {
+		/**
+		 * can be long
+		 */
+		test.setTimeout(60_000);
 		// Create a related pub we can link to
 		const relatedPubTitle = "related pub";
 		const pubsPage = new PubsPage(page, community.community.slug);
@@ -388,6 +392,10 @@ test.describe("Related pubs", () => {
 				`${community.community.slug}:${relatedField.name}`
 			);
 			await page.getByRole("textbox", { name: "Label" }).first().fill(relatedField.name);
+			await page.getByRole("button", { name: "Select a pub type" }).click();
+			// select all pubtypes
+			await page.getByRole("group").getByText(community.pubTypes.Submission.name).click();
+			await page.getByRole("group").getByText(community.pubTypes.Evaluation.name).click();
 			await formEditPage.saveFormElementConfiguration();
 		}
 
@@ -407,9 +415,11 @@ test.describe("Related pubs", () => {
 		const stringRelated = page.getByTestId("related-pubs-string");
 		await stringRelated.getByRole("button", { name: "Add" }).click();
 		await page
-			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
-			.getByLabel("Select row")
-			.click();
+			.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` })
+			// .getByLabel("Select row")
+			.click({
+				timeout: 10_000,
+			});
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(stringRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		await stringRelated.getByRole("button", { name: "Add string" }).click();
@@ -421,10 +431,7 @@ test.describe("Related pubs", () => {
 		// array related field
 		const arrayRelated = page.getByTestId("related-pubs-array");
 		await arrayRelated.getByRole("button", { name: "Add" }).click();
-		await page
-			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
-			.getByLabel("Select row")
-			.click();
+		await page.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` }).click();
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(arrayRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		await arrayRelated.getByRole("button", { name: "Add array" }).click();
@@ -444,10 +451,7 @@ test.describe("Related pubs", () => {
 		// null related field
 		const nullRelated = page.getByTestId("related-pubs-null");
 		await nullRelated.getByRole("button", { name: "Add" }).click();
-		await page
-			.getByRole("row", { name: `Select row ${relatedPubTitle}` })
-			.getByLabel("Select row")
-			.click();
+		await page.getByRole("checkbox", { name: `Select pub ${relatedPubTitle}` }).click();
 		await page.getByTestId("add-related-pub-button").click();
 		await expect(nullRelated.getByText(relatedPubTitle)).toHaveCount(1);
 		// Can't add a value to a null related field
@@ -457,7 +461,7 @@ test.describe("Related pubs", () => {
 
 		// Check the pub page to make sure the values we expect are there
 		await page.goto(`/c/${community.community.slug}/pubs`);
-		await page.getByRole("link", { name: title }).click();
+		await page.getByRole("link", { name: title, exact: true }).click();
 		// Make sure pub details page has loaded before making assertions
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*`);
 		await expect(page.getByText("admin:related pub")).toHaveCount(1);

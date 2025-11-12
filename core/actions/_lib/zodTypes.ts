@@ -53,6 +53,42 @@ class ActionInstance extends z.ZodObject<typeof actionInstanceShape, "strip", z.
 		});
 }
 
+class FieldName extends z.ZodString {
+	static create = () =>
+		new FieldName({
+			typeName: "FieldName" as z.ZodFirstPartyTypeKind.ZodString,
+			checks: [],
+			coerce: false,
+		});
+}
+
+class Stage extends z.ZodString {
+	static create = () =>
+		new Stage({
+			typeName: "Stage" as z.ZodFirstPartyTypeKind.ZodString,
+			checks: [],
+			coerce: false,
+		});
+}
+
+// @ts-expect-error FIXME:  'ZodObject<{ pubField: ZodString; responseField: ZodString; }, UnknownKeysParam, ZodTypeAny, { pubField: string; responseField: string; }, { pubField: string; responseField: string; }>' is assignable to the constraint of type 'El', but 'El' could be instantiated with a different subtype of constraint 'ZodTypeAny' blahblahblah
+class OutputMap extends z.ZodArray<
+	z.ZodObject<{ pubField: z.ZodString; responseField: z.ZodString }>
+> {
+	static create = () =>
+		new OutputMap({
+			typeName: "OutputMap" as z.ZodFirstPartyTypeKind.ZodArray,
+			type: z.object({ pubField: z.string(), responseField: z.string() }),
+			exactLength: null,
+			minLength: null,
+			maxLength: null,
+			description: "",
+		});
+}
+
 export const markdown = Markdown.create;
 export const stringWithTokens = StringWithTokens.create;
 export const actionInstance = ActionInstance.create;
+export const fieldName = FieldName.create;
+export const stage = Stage.create;
+export const outputMap = OutputMap.create;

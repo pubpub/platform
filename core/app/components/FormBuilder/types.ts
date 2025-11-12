@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { InputComponent, PubFieldsId, StagesId, StructuralFormElement } from "db/public";
+import type { PubFieldsId, StagesId, StructuralFormElement } from "db/public";
 import {
 	CoreSchemaType,
 	ElementType,
@@ -8,6 +8,7 @@ import {
 	formElementsIdSchema,
 	formElementsInitializerSchema,
 	formsIdSchema,
+	InputComponent,
 	pubTypesIdSchema,
 } from "db/public";
 
@@ -17,6 +18,7 @@ const baseElementSchema = z.object({
 	rank: z.string(),
 	deleted: z.boolean().default(false),
 	updated: z.boolean().default(false),
+	added: z.boolean().default(false),
 	configured: z.boolean().default(true),
 	stageId: z.string().nullable().optional(),
 	schemaName: z.nativeEnum(CoreSchemaType).nullable().optional(),

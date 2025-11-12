@@ -6,7 +6,7 @@ import { Action } from "db/public";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { PubCard } from "~/app/components/PubCard";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
 import pubJson from "./assets/pub.json";
 import stagesJson from "./assets/stages.json";
 
@@ -46,6 +46,7 @@ const meta: Meta<typeof PubCard> = {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				name: "test",
+				defaultedActionConfigKeys: null,
 			},
 		],
 	},

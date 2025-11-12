@@ -2,6 +2,8 @@ import type { Locator, Page } from "@playwright/test";
 
 import type { PubsId } from "db/public";
 
+import { closeToast } from "../helpers";
+
 export class PubDetailsPage {
 	constructor(
 		public readonly page: Page,
@@ -9,8 +11,11 @@ export class PubDetailsPage {
 		private readonly pubId: PubsId
 	) {}
 
-	async goTo() {
+	async goTo(waitForUrl = true) {
 		await this.page.goto(`/c/${this.communitySlug}/pubs/${this.pubId}`);
+		if (waitForUrl) {
+			await this.page.waitForURL(`/c/${this.communitySlug}/pubs/${this.pubId}*`);
+		}
 	}
 
 	async runAction(
@@ -26,11 +31,11 @@ export class PubDetailsPage {
 
 		await configureCallback?.(runActionDialog);
 
-		await runActionDialog.getByRole("button", { name: "Run", exact: true }).click();
+		await runActionDialog.getByTestId("action-run-button").click();
 		if (waitForSuccess) {
 			await this.page
 				.getByRole("status")
-				.filter({ hasText: "Action ran successfully!" })
+				.filter({ hasText: `Successfully ran ${actionName}` })
 				.waitFor();
 			await runActionDialog.getByRole("button", { name: "Close", exact: true }).click();
 			await runActionDialog.waitFor({ state: "hidden" });
@@ -42,5 +47,18 @@ export class PubDetailsPage {
 		const addMemberDialog = this.page.getByRole("dialog", { name: "Add Member" });
 		await addMemberDialog.waitFor();
 		return addMemberDialog;
+	}
+
+	async removePub() {
+		await this.page.getByRole("button", { name: "Remove" }).click();
+		await this.page.getByRole("button", { name: "Permanently Remove Pub" }).click({
+			timeout: 5000,
+		});
+		await this.page
+			.getByRole("status")
+			.filter({ hasText: "Successfully removed the pub" })
+			.first()
+			.waitFor();
+		await closeToast(this.page);
 	}
 }

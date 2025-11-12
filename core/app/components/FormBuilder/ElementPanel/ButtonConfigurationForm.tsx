@@ -30,7 +30,7 @@ import { cn } from "utils";
 import type { FormBuilderSchema } from "../types";
 import { findRanksBetween } from "~/lib/rank";
 import { useCommunity } from "../../providers/CommunityProvider";
-import { useFormBuilder } from "../FormBuilderContext";
+import { useBuilder } from "../BuilderContext";
 import { ButtonOption } from "../SubmissionSettings";
 import { isButtonElement } from "../types";
 
@@ -45,7 +45,7 @@ export const ButtonConfigurationForm = ({
 	// The id here is either the button's elementId or its label depending on what is available
 	buttonIdentifier: string | null;
 }) => {
-	const { dispatch, update, stages } = useFormBuilder();
+	const { dispatch, update, stages } = useBuilder();
 	// This uses the parent's form context to get the most up to date version of 'elements'
 	const { getValues } = useFormContext<FormBuilderSchema>();
 	// Derive some initial values based on the state of the parent form when this panel was opened
@@ -80,8 +80,6 @@ export const ButtonConfigurationForm = ({
 		content: z.string().min(1),
 		stageId: z.string().optional(),
 	});
-
-	const community = useCommunity();
 
 	const defaultValues = button
 		? {
@@ -145,29 +143,7 @@ export const ButtonConfigurationForm = ({
 				<FormField
 					control={form.control}
 					name="content"
-					render={({ field }) => (
-						<MarkdownEditor
-							zodInputProps={zodToHtmlInputProps(schema.shape.content)}
-							// @ts-ignore can't seem to infer this is ok for FieldValues
-							field={field}
-							fieldConfigItem={{
-								description: undefined,
-								inputProps: undefined,
-								fieldType: undefined,
-								renderParent: undefined,
-								allowedSchemas: undefined,
-							}}
-							label="Post-submission message"
-							isRequired={false}
-							fieldProps={{
-								...zodToHtmlInputProps(schema.shape.content),
-								...field,
-							}}
-							zodItem={schema.shape.content}
-							description="The message displayed after submission. Markdown supported."
-							descriptionPlacement="bottom"
-						/>
-					)}
+					render={({ field }) => <MarkdownEditor {...field} />}
 				/>
 				<FormField
 					name="stageId"

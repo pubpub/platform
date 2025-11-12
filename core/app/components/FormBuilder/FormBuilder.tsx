@@ -14,13 +14,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm } from "react-hook-form";
 
-import type {
-	FormElementsId,
-	FormsId,
-	NewFormElements,
-	NewFormElementToPubType,
-	Stages,
-} from "db/public";
+import type { FormElementsId, NewFormElements, NewFormElementToPubType, Stages } from "db/public";
 import { formElementsInitializerSchema } from "db/public";
 import { logger } from "logger";
 import { Form, FormControl, FormField, FormItem } from "ui/form";
@@ -37,13 +31,13 @@ import { renderWithPubTokens } from "~/lib/server/render/pub/renderWithPubTokens
 import { didSucceed, useServerAction } from "~/lib/serverActions";
 import { PanelHeader, PanelWrapper, SidePanel } from "../SidePanel";
 import { saveForm } from "./actions";
+import { BuilderProvider } from "./BuilderContext";
 import { ElementPanel } from "./ElementPanel";
-import { FormBuilderProvider } from "./FormBuilderContext";
 import { FormElement } from "./FormElement";
 import { formBuilderSchema, isButtonElement } from "./types";
 import { useIsChanged } from "./useIsChanged";
 
-const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
+export const elementPanelReducer: React.Reducer<PanelState, PanelEvent> = (prevState, event) => {
 	const { eventName } = event;
 	switch (eventName) {
 		case "filterFields":
@@ -244,7 +238,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 
 	const formValues = form.getValues();
 
-	useUnsavedChangesWarning(form.formState.isDirty);
+	useUnsavedChangesWarning(isChanged);
 
 	const payload = useMemo(
 		() => preparePayload({ formValues, defaultValues }),
@@ -274,7 +268,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 	};
 	const addElement = useCallback(
 		(element: FormElementData) => {
-			append(element);
+			append({ ...element, added: true });
 		},
 		[append]
 	);
@@ -329,9 +323,11 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 		})
 	);
 
+	const dndContextId = React.useId();
+
 	return (
 		<TokenProvider tokens={tokens}>
-			<FormBuilderProvider
+			<BuilderProvider
 				removeIfUnconfigured={removeIfUnconfigured}
 				addElement={addElement}
 				removeElement={removeElement}
@@ -348,7 +344,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 				openButtonConfigPanel={(id) => dispatch({ eventName: "editButton", buttonId: id })}
 				update={update}
 				dispatch={dispatch}
-				slug={pubForm.slug}
+				identity={pubForm.slug}
 				stages={stages}
 				isDirty={isChanged}
 			>
@@ -385,6 +381,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 														]}
 														onDragEnd={handleDragEnd}
 														sensors={sensors}
+														id={dndContextId}
 													>
 														<SortableContext
 															items={elements}
@@ -441,7 +438,7 @@ export function FormBuilder({ pubForm, id, stages }: Props) {
 					</div>
 				</Tabs>
 				<SidePanel ref={sidebarRef} />
-			</FormBuilderProvider>
+			</BuilderProvider>
 		</TokenProvider>
 	);
 }

@@ -2,6 +2,8 @@ import type { Page } from "@playwright/test";
 
 import type { PubsId } from "db/public";
 
+import { retryAction } from "../helpers";
+
 export const choosePubType = async ({
 	page,
 	pubType,
@@ -53,8 +55,14 @@ export class PubsPage {
 		stage?: string;
 		values?: Record<string, string>;
 	}) {
-		await this.page.getByRole("button", { name: "Create", exact: true }).click();
-		await this.choosePubType(pubType);
+		await this.page.waitForURL(`/c/${this.communitySlug}/pubs*`);
+		// this is extremely flaky for some reason
+		await retryAction(async () => {
+			await this.page.waitForTimeout(500);
+			await this.page.getByRole("button", { name: "Create", exact: true }).click();
+			await this.page.waitForTimeout(500);
+			await this.choosePubType(pubType);
+		});
 
 		await this.page.waitForTimeout(500);
 

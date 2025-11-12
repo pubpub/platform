@@ -43,6 +43,9 @@ const nextConfig: NextConfig = {
 			},
 		],
 	},
+	turbopack: {
+		root: new URL("./..", import.meta.url).pathname,
+	},
 	serverExternalPackages: [
 		"@aws-sdk",
 		// without this here, next will sort of implode and no longer compile and serve pages properly
@@ -54,6 +57,9 @@ const nextConfig: NextConfig = {
 		optimizePackageImports: ["@icons-pack/react-simple-icons", "lucide-react"],
 		webpackBuildWorker: true,
 		parallelServerBuildTraces: true,
+		serverActions: {
+			bodySizeLimit: "1gb",
+		},
 	},
 	// open telemetry cries a lot during build, don't think it's serious
 	// https://github.com/open-telemetry/opentelemetry-js/issues/4173

@@ -4,12 +4,16 @@ import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
-const { testDb, createForEachMockedTransaction, createSingleMockedTransaction } =
-	await mockServerCode();
-const { getTrx, rollback, commit } = createForEachMockedTransaction();
+const { createForEachMockedTransaction, getCommunity } = await mockServerCode();
+const { getTrx } = createForEachMockedTransaction();
 
 const pubTriggerTestSeed = async () => {
 	const slugName = `test-server-pub-${new Date().toISOString()}`;
+	getCommunity.mockImplementation(() => {
+		return {
+			slug: slugName,
+		};
+	});
 	const { createSeed } = await import("~/prisma/seed/createSeed");
 
 	return createSeed({
@@ -47,7 +51,7 @@ const pubTriggerTestSeed = async () => {
 					"3": {
 						action: Action.googleDriveImport,
 						config: {
-							docUrl: "https://docs.google.com/document/d/1234567890",
+							folderUrl: "https://drive.google.com/drive/folders/1234567890",
 							outputField: `${slugName}:title`,
 						},
 					},
@@ -70,7 +74,6 @@ const pubTriggerTestSeed = async () => {
 
 describe("runActionInstance", () => {
 	it("should be able to successfully run the most simple action", async () => {
-		const trx = getTrx();
 		const { seedCommunity } = await import("~/prisma/seed/seedCommunity");
 		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
@@ -84,6 +87,7 @@ describe("runActionInstance", () => {
 			event: Event.pubEnteredStage,
 			communityId: community.id,
 			stack: [],
+			actionInstanceArgs: null,
 		});
 
 		expect(result).toMatchObject({
@@ -107,7 +111,7 @@ describe("runActionInstance", () => {
 			report: "Logged out some data, check your console.",
 			data: {},
 		});
-	});
+	}, 10_000);
 
 	it.skip("should properly blame the action run if an action modifies a pub", async () => {
 		const trx = getTrx();

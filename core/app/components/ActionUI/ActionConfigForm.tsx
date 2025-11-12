@@ -2,35 +2,56 @@
 
 import type { z } from "zod";
 
-import { startTransition, useCallback } from "react";
+import { startTransition, useCallback, useMemo } from "react";
 
-import type { ActionInstances, ActionInstancesId, Action as ActionName, StagesId } from "db/public";
-import type { FieldConfig } from "ui/auto-form";
-import AutoForm, { AutoFormSubmit } from "ui/auto-form";
+import type { ActionInstances, ActionInstancesId, StagesId } from "db/public";
+import { TokenProvider } from "ui/tokens";
 import { toast } from "ui/use-toast";
 
+import { ActionConfigBuilder } from "~/actions/_lib/ActionConfigBuilder";
+import { ActionForm } from "~/actions/_lib/ActionForm";
 import { getActionByName } from "~/actions/api";
-import { updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
-import { useServerAction } from "~/lib/serverActions";
+import { getActionFormComponent } from "~/actions/forms";
+import { deleteAction, updateAction } from "~/app/c/[communitySlug]/stages/manage/actions";
+import { didSucceed, useServerAction } from "~/lib/serverActions";
 
 export type Props = {
-	actionName: ActionName;
-	instance: ActionInstances;
-	communityId: string;
-	fieldConfig: FieldConfig<any>;
+	actionInstance: ActionInstances;
 	stageId: StagesId;
+	defaultFields: string[];
 };
 
 export const ActionConfigForm = (props: Props) => {
-	const action = getActionByName(props.actionName);
+	const action = getActionByName(props.actionInstance.action);
+	const runDeleteAction = useServerAction(deleteAction);
+
+	const onDelete = useCallback(async () => {
+		const result = await runDeleteAction(
+			props.actionInstance.id as ActionInstancesId,
+			props.stageId
+		);
+		if (didSucceed(result)) {
+			toast({
+				title: "Action deleted successfully!",
+			});
+		}
+	}, [props.actionInstance.id, props.stageId, runDeleteAction]);
+
+	const schema = useMemo(() => {
+		const config = new ActionConfigBuilder(action.name)
+			.withConfig(props.actionInstance.config ?? {})
+			.withDefaults(props.defaultFields)
+			.getSchema();
+		return config;
+	}, [action.name, props.actionInstance.config, props.defaultFields]);
 
 	const runUpdateAction = useServerAction(updateAction);
 
 	const onSubmit = useCallback(
-		async (values: z.infer<typeof action.config.schema>) => {
+		async (values: z.infer<NonNullable<typeof schema>>) => {
 			startTransition(async () => {
 				const result = await runUpdateAction(
-					props.instance.id as ActionInstancesId,
+					props.actionInstance.id as ActionInstancesId,
 					props.stageId,
 					{
 						config: values,
@@ -47,20 +68,46 @@ export const ActionConfigForm = (props: Props) => {
 						),
 					});
 				}
+
+				if (result && "success" in result) {
+					toast({
+						title: "Action updated successfully!",
+						variant: "default",
+						// TODO: SHOULD ABSOLUTELY BE SANITIZED
+						description: (
+							<div dangerouslySetInnerHTML={{ __html: result.report ?? "" }} />
+						),
+					});
+				}
 			});
 		},
-		[runUpdateAction, props.instance.id, props.communityId]
+		[runUpdateAction, props.actionInstance.id, props.stageId]
 	);
 
+	const ActionFormComponent = getActionFormComponent(action.name);
+
 	return (
-		<AutoForm
-			values={props.instance.config ?? {}}
-			fieldConfig={props.fieldConfig}
-			formSchema={action.config.schema}
-			dependencies={action.config.dependencies}
-			onSubmit={onSubmit}
-		>
-			<AutoFormSubmit>Update config</AutoFormSubmit>
-		</AutoForm>
+		<TokenProvider tokens={action.tokens ?? {}}>
+			<ActionForm
+				action={action}
+				values={props.actionInstance.config ?? {}}
+				defaultFields={props.defaultFields}
+				onSubmit={onSubmit}
+				submitButton={{
+					text: "Update Action",
+					pendingText: "Updating Action...",
+					successText: "Action Updated",
+					// any longer and it doesn't fit in the button
+					errorText: "Error",
+				}}
+				secondaryButton={{
+					text: "Remove Action",
+					onClick: onDelete,
+				}}
+				context={{ type: "configure" }}
+			>
+				<ActionFormComponent />
+			</ActionForm>
+		</TokenProvider>
 	);
 };

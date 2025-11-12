@@ -14,7 +14,6 @@ import partition from "lodash.partition";
 import type {
 	CreatePubRequestBodyWithNullsNew,
 	Filter,
-	FTSReturn,
 	Json,
 	JsonValue,
 	MaybePubOptions,
@@ -38,12 +37,12 @@ import type {
 	UsersId,
 } from "db/public";
 import type { LastModifiedBy, StageConstraint } from "db/types";
+import type { DefinitelyHas, MaybeHas, XOR } from "utils/types";
 import { Capabilities, CoreSchemaType, MemberRole, MembershipType, OperationType } from "db/public";
 import { NO_STAGE_OPTION } from "db/types";
 import { logger } from "logger";
 import { assert, expect } from "utils";
 
-import type { DefinitelyHas, MaybeHas, XOR } from "../types";
 import type { SafeUser } from "./user";
 import { db } from "~/kysely/database";
 import { isUniqueConstraintError } from "~/kysely/errors";
@@ -59,7 +58,7 @@ import { maybeWithTrx } from "./maybeWithTrx";
 import { applyFilters } from "./pub-filters";
 import { _getPubFields } from "./pubFields";
 import { getPubTypeBase } from "./pubtype";
-import { movePub } from "./stages";
+import { actionConfigDefaultsSelect, movePub } from "./stages";
 import { SAFE_USER_SELECT } from "./user";
 import { validatePubValuesBySchemaName } from "./validateFields";
 
@@ -1033,7 +1032,7 @@ const getRankedValues = async ({
 					.where("pubId", "=", newValue.pubId)
 					.where("fieldId", "=", value.fieldId)
 					.where("rank", "is not", null)
-					.orderBy("rank desc")
+					.orderBy("rank")
 					.limit(1)
 			);
 		}
@@ -1193,10 +1192,13 @@ export type UnprocessedPub = {
 	}[];
 };
 
-interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions {
+export interface GetPubsWithRelatedValuesOptions
+	extends Omit<GetManyParams, "orderBy">,
+		MaybePubOptions {
+	orderBy?: "createdAt" | "updatedAt" | "title";
 	/**
 	 * The maximum depth to recurse to.
-	 * Does not do anything if `includeRelatedPubs` is `false`.
+	 * Does not do anything if `includeRelatedPubs` is `false`, or if `count` is true.
 	 *
 	 * @default 2
 	 */
@@ -1229,6 +1231,10 @@ interface GetPubsWithRelatedValuesOptions extends GetManyParams, MaybePubOptions
 	 * Constraints on which stages the user/token has access to. Will also filter related pubs.
 	 */
 	allowedStages?: StageConstraint[];
+	/**
+	 * If true, only the count of pubs will be returned, without any other information.
+	 */
+	count?: boolean;
 }
 
 // TODO: We allow calling getPubsWithRelatedValues with no userId so that event driven
@@ -1275,6 +1281,21 @@ const DEFAULT_OPTIONS = {
 	trx: db,
 } as const satisfies GetPubsWithRelatedValuesOptions;
 
+const COUNT_OPTIONS = {
+	...DEFAULT_OPTIONS,
+	withRelatedPubs: false,
+	withValues: false,
+	depth: 1,
+	withRelatedCounts: false,
+	count: true,
+	withPubType: false,
+	withSearchValues: false,
+	withStageActionInstances: false,
+	withMembers: false,
+	withStage: false,
+	trx: db,
+} as const satisfies GetPubsWithRelatedValuesOptions;
+
 export async function getPubsWithRelatedValues<Options extends GetPubsWithRelatedValuesOptions>(
 	props: Extract<PubIdOrPubTypeIdOrStageIdOrCommunityId, { pubId: PubsId }>,
 	options?: Options
@@ -1293,7 +1314,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 	options?: Options
 ): Promise<ProcessedPub<Options> | ProcessedPub<Options>[]> {
 	const opts = {
-		...DEFAULT_OPTIONS,
+		...(options?.count ? COUNT_OPTIONS : DEFAULT_OPTIONS),
 		...options,
 	};
 
@@ -1318,6 +1339,7 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 		allowedPubTypes,
 		allowedStages,
 		withRelatedCounts,
+		count,
 	} = opts;
 
 	if (depth < 1) {
@@ -1854,6 +1876,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 											.selectFrom("action_instances")
 											.whereRef("action_instances.stageId", "=", "pt.stageId")
 											.selectAll()
+											.select((eb) =>
+												actionConfigDefaultsSelect(eb).as(
+													"defaultedActionConfigKeys"
+												)
+											)
 									).as("actionInstances")
 								)
 							)
@@ -1873,7 +1900,11 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 							.selectFrom("pub_memberships")
 							.whereRef("pub_memberships.pubId", "=", "pt.pubId")
 							.innerJoin("users", "users.id", "pub_memberships.userId")
-							.select(["pub_memberships.role", ...SAFE_USER_SELECT])
+							.select([
+								"pub_memberships.role",
+								"pub_memberships.formId",
+								...SAFE_USER_SELECT,
+							])
 					).as("members")
 				)
 			)
@@ -1892,11 +1923,34 @@ export async function getPubsWithRelatedValues<Options extends GetPubsWithRelate
 				"pt.isCycle",
 				"pt.path",
 			])
+
+			.$if(Boolean(count), (qb) =>
+				// aggregate count
+				// @ts-expect-error just trust me its finneee
+				qb
+					.clearGroupBy()
+					.clearGroupBy()
+					.clearSelect()
+					.select((eb) => eb.fn.countAll<number>().as("count"))
+					.where("pt.depth", "=", 1)
+					.groupBy(["pt.depth"])
+			),
+		{
+			// if more than 50 are fetched it likely takes more time to cache/uncache than it does to just execute the query
+			skipCacheFn: () => {
+				return !options?.limit || options?.limit > 50;
+			},
+		}
 	).execute();
 
 	if (options?._debugDontNest) {
 		// @ts-expect-error We should not accomodate the return type for this option
 		return result;
+	}
+
+	if (options?.count) {
+		// @ts-expect-error We should not accomodate the return type for this option
+		return (result?.[0]?.count ?? 0) as number;
 	}
 
 	if (props.pubId) {
@@ -2020,27 +2074,32 @@ export const stagesWhere = <EB extends ExpressionBuilder<any, any>>(
 /**
  * Get the number of pubs in a community, optionally additionally filtered by stage and pub type
  */
-export const getPubsCount = async (props: {
-	communityId: CommunitiesId;
-	stageId?: StageConstraint[];
-	pubTypeId?: PubTypesId[];
-}): Promise<number> => {
-	const pubs = await db
-		.selectFrom("pubs")
-		.where("pubs.communityId", "=", props.communityId)
-		.$if(Boolean(props?.stageId?.length), (qb) => {
-			return qb
-				.innerJoin("PubsInStages", "pubs.id", "PubsInStages.pubId")
-				.where((eb) => stagesWhere(eb, props.stageId!, "PubsInStages.stageId"));
-		})
-		.$if(Boolean(props.pubTypeId?.length), (qb) =>
-			qb.where("pubs.pubTypeId", "in", props.pubTypeId!)
-		)
-		.$if(Boolean(props.pubTypeId), (qb) => qb.where("pubs.pubTypeId", "in", props.pubTypeId!))
-		.select((eb) => eb.fn.countAll<number>().as("count"))
-		.executeTakeFirstOrThrow();
+export const getPubsCount = async (
+	props: {
+		communityId: CommunitiesId;
+		stageId?: StageConstraint[];
+		pubTypeId?: PubTypesId[];
+		userId?: UsersId;
+	},
+	opts?: Pick<
+		GetPubsWithRelatedValuesOptions,
+		"filters" | "search" | "searchConfig" | "allowedPubTypes" | "allowedStages"
+	>
+): Promise<number> => {
+	const pubsCount = await getPubsWithRelatedValues(
+		{
+			communityId: props.communityId,
+			stageId: props.stageId,
+			pubTypeId: props.pubTypeId,
+			userId: props.userId,
+		},
+		{ ...opts, limit: 1_000_000, count: true }
+	);
 
-	return pubs.count;
+	// @ts-expect-error just trust me its a number
+	const count = pubsCount as number;
+
+	return count;
 };
 export type FullProcessedPub = ProcessedPub<{
 	withRelatedPubs: true;

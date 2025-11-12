@@ -3,7 +3,7 @@
 import type { ContextEditorGetter } from "context-editor";
 import type { ControllerRenderProps, FieldValues } from "react-hook-form";
 
-import { memo, useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Value } from "@sinclair/typebox/value";
 import { baseSchema } from "context-editor/schemas";
 import { Node } from "prosemirror-model";
@@ -98,7 +98,7 @@ const EditorFormElement = function EditorFormElement({
 						pubTypeId={pubTypeId}
 						initialDoc={initialDoc}
 						disabled={disabled}
-						className="max-h-96 overflow-scroll"
+						className="h-96 overflow-scroll"
 						onChange={handleChange}
 					/>
 				</FormControl>

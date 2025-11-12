@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { actionInstancesIdSchema, actionRunsIdSchema, eventSchema, pubsIdSchema } from "db/public";
 
+import { jsonSchema } from "./types";
+
 const contract = initContract();
 
 export const internalApi = contract.router(
@@ -36,14 +38,25 @@ export const internalApi = contract.router(
 			description:
 				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
 			pathParams: z.object({
-				actionInstanceId: z.string(),
+				actionInstanceId: actionInstancesIdSchema,
 			}),
-			body: z.object({
-				pubId: pubsIdSchema,
-				event: eventSchema,
-				stack: z.array(actionRunsIdSchema).optional(),
-				scheduledActionRunId: actionRunsIdSchema.optional(),
-			}),
+			body: z
+				.object({
+					event: eventSchema,
+					stack: z.array(actionRunsIdSchema).optional(),
+					scheduledActionRunId: actionRunsIdSchema.optional(),
+					config: z.record(z.unknown()).nullish(),
+				})
+				.and(
+					z.union([
+						z.object({
+							pubId: pubsIdSchema,
+						}),
+						z.object({
+							json: jsonSchema,
+						}),
+					])
+				),
 			responses: {
 				200: z.object({
 					actionInstanceId: z.string(),
@@ -54,7 +67,7 @@ export const internalApi = contract.router(
 		triggerActions: {
 			method: "POST",
 			path: "/stages/:stageId/actions/trigger",
-			summary: "Run all actions in a stage whose rules match the event",
+			summary: "Run all actions in a stage whose automations match the event",
 			description:
 				"Flock's emitEvent job uses this endpoint to run jobs in response to asynchronous events",
 			pathParams: z.object({

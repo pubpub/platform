@@ -46,7 +46,7 @@ export const TextAreaElement = ({
 								disabled={!isEnabled}
 							/>
 						</FormControl>
-						<FormDescription>{config.help}</FormDescription>
+						{config.help && <FormDescription>{config.help}</FormDescription>}
 						<FormMessage />
 					</FormItem>
 				);

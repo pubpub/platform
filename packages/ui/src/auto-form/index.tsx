@@ -1,6 +1,6 @@
 "use client";
 
-import type { DefaultValues } from "react-hook-form";
+import type { DefaultValues, UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 
 import * as React from "react";
@@ -11,32 +11,26 @@ import { cn } from "utils";
 
 import type { Dependency, FieldConfig } from "./types";
 import type { ZodObjectOrWrapped } from "./utils";
-import { Button } from "../button";
 import { Form } from "../form";
+import { FormSubmitButton } from "../submit-button";
 import AutoFormObject from "./fields/object";
 import { getDefaultValues, getObjectFormSchema } from "./utils";
 
 export function AutoFormSubmit({
 	children,
 	className,
-	disabled,
-}: {
-	children?: React.ReactNode;
-	className?: string;
-	disabled?: boolean;
-}) {
+	"data-testid": testId,
+	...props
+}: Omit<Parameters<typeof FormSubmitButton>[0], "formState">) {
 	const form = useFormState();
 
-	const { isSubmitting, isValid } = form;
-
 	return (
-		<Button
-			type="submit"
-			// disabled={disabled && (isSubmitting || !isValid)}
-			className={className}
-		>
-			{children ?? "Submit"}
-		</Button>
+		<FormSubmitButton
+			data-testid={testId ?? "auto-form-submit"}
+			{...props}
+			formState={form}
+			idleText={children}
+		/>
 	);
 }
 
@@ -57,7 +51,10 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	onParsedValuesChange?: (
 		values: Partial<z.infer<SchemaType>> & { pubFields: Record<string, string[]> }
 	) => void;
-	onSubmit?: (values: z.infer<SchemaType> & { pubFields: Record<string, string[]> }) => void;
+	onSubmit?: (
+		values: z.infer<SchemaType> & { pubFields: Record<string, string[]> },
+		form: UseFormReturn<any>
+	) => void | Promise<void>;
 	fieldConfig?: FieldConfig<NonNullable<z.infer<SchemaType>>>;
 	children?: React.ReactNode;
 	className?: string;
@@ -65,10 +62,8 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	stopPropagation?: boolean;
 }) {
 	const objectFormSchema = getObjectFormSchema(formSchema);
-	const defaultValues: DefaultValues<z.infer<typeof objectFormSchema>> | null = getDefaultValues(
-		objectFormSchema,
-		fieldConfig
-	);
+	const defaultValues: DefaultValues<z.infer<typeof objectFormSchema>> | null =
+		getDefaultValues(objectFormSchema);
 
 	const form = useForm<z.infer<typeof objectFormSchema>>({
 		resolver: zodResolver(formSchema),
@@ -83,15 +78,18 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	// valuesString is needed because form.watch() returns a new object every time
 	const valuesString = JSON.stringify(values);
 
-	function onSubmit(submittedValues: z.infer<typeof formSchema>) {
+	async function onSubmit(submittedValues: z.infer<typeof formSchema>) {
 		const parsedValues = formSchema.safeParse(submittedValues);
 		if (parsedValues.success) {
-			onSubmitProp?.({
-				...parsedValues.data,
-				// need to grab this from `values` because it's not in the parsed values,
-				// as pubFields are not part of the schema
-				pubFields: values?.pubFields ?? {},
-			});
+			await onSubmitProp?.(
+				{
+					...parsedValues.data,
+					// need to grab this from `values` because it's not in the parsed values,
+					// as pubFields are not part of the schema
+					pubFields: values?.pubFields ?? {},
+				},
+				form
+			);
 			return;
 		}
 
@@ -116,12 +114,7 @@ function AutoForm<SchemaType extends ZodObjectOrWrapped>({
 	return (
 		<div className="w-full">
 			<Form {...form}>
-				<form
-					onSubmit={(e) => {
-						form.handleSubmit(onSubmit)(e);
-					}}
-					className={cn("space-y-5", className)}
-				>
+				<form onSubmit={form.handleSubmit(onSubmit)} className={cn("space-y-5", className)}>
 					<AutoFormObject
 						schema={objectFormSchema}
 						form={form}

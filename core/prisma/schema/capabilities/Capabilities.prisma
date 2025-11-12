@@ -1,0 +1,39 @@
+enum Capabilities {
+    movePub
+    viewPub
+    deletePub
+    createRelatedPub
+    createPubWithForm
+    createPubWithAnyForm
+    editPubWithForm
+    editPubWithAnyForm
+    editPubWithDefaultForm
+    createPubField
+    archivePubField
+    editPubField
+    createPubType
+    editPubType
+    deletePubType
+    runAction
+    viewStage
+    createStage
+    manageStage // includes managing stage name, actions, rules, and move constraints
+    deleteStage
+    addPubMember
+    removePubMember
+    addStageMember
+    removeStageMember
+    addFormMember
+    removeFormMember
+    addCommunityMember
+    removeCommunityMember
+    manageMemberGroups
+    addCommunity
+    editCommunity
+    createForm
+    editForm
+    archiveForm
+    createApiToken
+    revokeApiToken
+    seeExtraPubValues
+}

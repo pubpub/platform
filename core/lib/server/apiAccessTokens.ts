@@ -30,6 +30,7 @@ const getTokenBase = db
 		"api_access_tokens.expiration",
 		"api_access_tokens.issuedAt",
 		"api_access_tokens.communityId",
+		"api_access_tokens.isSiteBuilderToken",
 		jsonObjectFrom(
 			eb
 				.selectFrom("users")
@@ -60,8 +61,11 @@ export const validateApiAccessToken = async (token: string, communityId: Communi
 		throw new UnauthorizedError("Expired token");
 	}
 
-	if (dbToken.communityId !== communityId) {
-		throw new UnauthorizedError(`Access token ${dbToken.name} is not valid for this community`);
+	// Site builder tokens can access any community
+	if (!dbToken.isSiteBuilderToken && dbToken.communityId !== communityId) {
+		throw new UnauthorizedError(
+			`Access token ${dbToken.name} is not valid for community "${communityId}"`
+		);
 	}
 
 	// This comparison isn't actually constant time if the two items are of different lengths,
@@ -112,38 +116,48 @@ export const createApiAccessToken = (
 	},
 	trx = db
 ) => {
-	const tokenString = generateToken();
+	return autoRevalidate(_createApiAccessToken({ token, permissions }, trx));
+};
 
-	return autoRevalidate(
-		trx
-			.with("new_token", (db) =>
-				db
-					.insertInto("api_access_tokens")
-					.values({
-						token: tokenString,
-						...token,
-					})
-					.returning(["id", "token"])
+const _createApiAccessToken = (
+	{
+		token,
+		permissions,
+	}: {
+		token: Omit<NewApiAccessTokens, "token">;
+		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
+	},
+	trx = db
+) => {
+	const tokenString = generateToken();
+	return trx
+		.with("new_token", (db) =>
+			db
+				.insertInto("api_access_tokens")
+				.values({
+					token: tokenString,
+					...token,
+				})
+				.returning(["id", "token"])
+		)
+		.with("permissions", (db) =>
+			db.insertInto("api_access_permissions").values((eb) =>
+				permissions.map((permission) => ({
+					...permission,
+					apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
+				}))
 			)
-			.with("permissions", (db) =>
-				db.insertInto("api_access_permissions").values((eb) =>
-					permissions.map((permission) => ({
-						...permission,
-						apiAccessTokenId: eb.selectFrom("new_token").select("new_token.id"),
-					}))
-				)
-			)
-			.selectFrom("new_token")
-			.select((eb) => [
-				eb
-					.fn<string>("concat", [
-						eb.selectFrom("new_token").select("new_token.id"),
-						eb.cast<string>(eb.val("."), "text"),
-						eb.selectFrom("new_token").select("new_token.token"),
-					])
-					.as("token"),
-			])
-	);
+		)
+		.selectFrom("new_token")
+		.select((eb) => [
+			eb
+				.fn<string>("concat", [
+					eb.selectFrom("new_token").select("new_token.id"),
+					eb.cast<string>(eb.val("."), "text"),
+					eb.selectFrom("new_token").select("new_token.token"),
+				])
+				.as("token"),
+		]);
 };
 
 export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }, trx = db) =>
@@ -166,3 +180,49 @@ export const allPermissions = Object.values(ApiAccessScope).flatMap((scope) =>
 		accessType,
 	}))
 );
+
+const allReadPermissions = allPermissions.filter(
+	(permission) => permission.accessType === ApiAccessType.read
+);
+
+const ONE_HUNDRED_YEARS_MS = 100 * 365 * 24 * 60 * 60 * 1000;
+
+/**
+ * Create a new site builder API access token that can access all communities
+ */
+export const createSiteBuilderToken = (communityId: CommunitiesId, trx = db) => {
+	// we don't want autoRevalidate here, bc we are executing this in non-community contexts
+	return _createApiAccessToken(
+		{
+			token: {
+				name: "Site Builder Token",
+				communityId,
+				expiration: new Date(Date.now() + ONE_HUNDRED_YEARS_MS),
+				description: "Token used to build websites. Cannot be removed.",
+				issuedAt: new Date(),
+				isSiteBuilderToken: true,
+			},
+			permissions: allReadPermissions,
+		},
+		trx
+	).executeTakeFirstOrThrow(() => new Error("Failed to create site builder token"));
+};
+
+/**
+ * Get the site builder token for a community
+ *
+ * This should be used very sparingly!
+ */
+export const getSiteBuilderToken = async (
+	communityId: CommunitiesId,
+	trx = db
+): Promise<`${string}.${string}`> => {
+	const { id, token } = await trx
+		.selectFrom("api_access_tokens")
+		.where("communityId", "=", communityId)
+		.where("isSiteBuilderToken", "=", true)
+		.select(["id", "token"])
+		.executeTakeFirstOrThrow(() => new Error("Site builder token not found"));
+
+	return `${id}.${token}`;
+};

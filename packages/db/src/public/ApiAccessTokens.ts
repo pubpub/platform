@@ -32,6 +32,8 @@ export interface ApiAccessTokensTable {
 	issuedAt: ColumnType<Date, Date | string | undefined, Date | string>;
 
 	updatedAt: ColumnType<Date, Date | string | undefined, Date | string>;
+
+	isSiteBuilderToken: ColumnType<boolean, boolean | undefined, boolean>;
 }
 
 export type ApiAccessTokens = Selectable<ApiAccessTokensTable>;
@@ -52,6 +54,7 @@ export const apiAccessTokensSchema = z.object({
 	issuedById: usersIdSchema.nullable(),
 	issuedAt: z.date(),
 	updatedAt: z.date(),
+	isSiteBuilderToken: z.boolean(),
 });
 
 export const apiAccessTokensInitializerSchema = z.object({
@@ -64,6 +67,7 @@ export const apiAccessTokensInitializerSchema = z.object({
 	issuedById: usersIdSchema.optional().nullable(),
 	issuedAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	isSiteBuilderToken: z.boolean().optional(),
 });
 
 export const apiAccessTokensMutatorSchema = z.object({
@@ -76,4 +80,5 @@ export const apiAccessTokensMutatorSchema = z.object({
 	issuedById: usersIdSchema.optional().nullable(),
 	issuedAt: z.date().optional(),
 	updatedAt: z.date().optional(),
+	isSiteBuilderToken: z.boolean().optional(),
 });

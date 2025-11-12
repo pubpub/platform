@@ -117,8 +117,16 @@ export const PubFieldsOfEachType = Object.fromEntries(
 	])
 ) as Record<CoreSchemaType, { schemaName: CoreSchemaType }>;
 
-export const waitForBaseCommunityPage = async (page: Page, communitySlug?: string) => {
-	await page.waitForURL(new RegExp(`.*/c/${communitySlug ?? ".*"}/stages.*`), {
+export const waitForBaseCommunityPage = async (
+	page: Page,
+	communitySlug?: string,
+	slug?: "pubs" | "stages"
+) => {
+	await page.waitForURL(new RegExp(`.*/c/${communitySlug ?? ".*"}/${slug ?? "stages"}.*`), {
 		timeout: 10_000,
 	});
+};
+
+export const closeToast = async (page: Page) => {
+	await page.getByTestId("toast-close").click();
 };

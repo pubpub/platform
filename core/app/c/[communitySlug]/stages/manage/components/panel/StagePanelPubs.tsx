@@ -1,16 +1,23 @@
-import { Suspense } from "react";
-import Link from "next/link";
+import assert from "assert";
 
-import type { PubsId, StagesId, UsersId } from "db/public";
+import { Suspense } from "react";
+
+import type { StagesId, UsersId } from "db/public";
 import { Card, CardContent } from "ui/card";
 
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { PubDropDown } from "~/app/components/pubs/PubDropDown";
-import { PubTitle } from "~/app/components/PubTitle";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
-import { getStage, getStageActions, getStagePubs } from "~/lib/db/queries";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
+import {
+	userCanArchiveAllPubs,
+	userCanEditAllPubs,
+	userCanMoveAllPubs,
+	userCanRunActionsAllPubs,
+	userCanViewAllStages,
+} from "~/lib/authorization/capabilities";
+import { getStage } from "~/lib/db/queries";
+import { getPubsWithRelatedValues } from "~/lib/server";
+import { findCommunityBySlug } from "~/lib/server/community";
 
 type PropsInner = {
 	stageId: StagesId;
@@ -19,11 +26,35 @@ type PropsInner = {
 };
 
 const StagePanelPubsInner = async (props: PropsInner) => {
-	const [communitySlug, stagePubs, stageActionInstances, stage] = await Promise.all([
-		getCommunitySlug(),
-		getStagePubs(props.stageId).execute(),
-		getStageActions({ stageId: props.stageId }).execute(),
+	const [community] = await Promise.all([findCommunityBySlug()]);
+
+	assert(community, "Community not found");
+
+	const [
+		stagePubs,
+		stage,
+		canArchiveAllPubs,
+		canEditAllPubs,
+		canRunActionsAllPubs,
+		canMoveAllPubs,
+		canViewAllStages,
+	] = await Promise.all([
+		getPubsWithRelatedValues(
+			{ stageId: [props.stageId], communityId: community.id },
+			{
+				withStage: true,
+				withStageActionInstances: true,
+				withPubType: true,
+				withValues: true,
+				withRelatedPubs: false,
+			}
+		),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
+		userCanArchiveAllPubs(),
+		userCanEditAllPubs(),
+		userCanRunActionsAllPubs(),
+		userCanMoveAllPubs(),
+		userCanViewAllStages(),
 	]);
 
 	if (!stage) {
@@ -40,25 +71,22 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 					</Suspense>
 				</div>
 				{stagePubs.map((pub) => (
-					<div key={pub.id} className="flex items-center justify-between">
-						<Link
-							href={`/c/${communitySlug}/pubs/${pub.id}`}
-							className="hover:underline"
-						>
-							<PubTitle pub={pub} />
-						</Link>
-						<div className="flex items-center gap-x-2">
-							<PubsRunActionDropDownMenu
-								actionInstances={stageActionInstances}
-								pubId={pub.id as PubsId}
-								stage={stage}
-							/>
-							<PubDropDown
-								pubId={pub.id as PubsId}
-								searchParams={props.searchParams}
-							/>
-						</div>
-					</div>
+					<PubCard
+						key={pub.id}
+						pub={{ ...pub, stageId: props.stageId, depth: 0 }}
+						communitySlug={community.slug}
+						userId={props.userId}
+						actionInstances={pub.stage?.actionInstances ?? []}
+						canArchiveAllPubs={canArchiveAllPubs}
+						canEditAllPubs={canEditAllPubs}
+						canRunActionsAllPubs={canRunActionsAllPubs}
+						canMoveAllPubs={canMoveAllPubs}
+						canViewAllStages={canViewAllStages}
+						moveFrom={stage.moveConstraintSources}
+						moveTo={stage.moveConstraints}
+						canFilter={false}
+						withSelection={false}
+					/>
 				))}
 			</CardContent>
 		</Card>

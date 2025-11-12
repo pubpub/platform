@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Circle } from "lucide-react";
 
 import type { ProcessedPub } from "contracts";
-import type { ActionInstances } from "db/public";
 import { Button } from "ui/button";
 import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
 import {
@@ -15,10 +14,10 @@ import {
 	Play,
 	Trash2,
 } from "ui/icon";
-import { Separator } from "ui/separator";
 import { cn } from "utils";
 
 import type { CommunityStage } from "~/lib/server/stages";
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
@@ -27,8 +26,6 @@ import { PubsRunActionDropDownMenu } from "./ActionUI/PubsRunActionDropDownMenu"
 import { PubCardActions } from "./PubCardActions";
 import { RelationsDropDown } from "./pubs/RelationsDropDown";
 import { RemovePubButton } from "./pubs/RemovePubButton";
-
-// import { RemovePubButton } from "./pubs/RemovePubButton";
 
 // TODO: https://github.com/pubpub/platform/issues/1200
 const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
@@ -57,7 +54,7 @@ export const PubCard = async ({
 	communitySlug: string;
 	moveFrom?: CommunityStage["moveConstraintSources"];
 	moveTo?: CommunityStage["moveConstraints"];
-	actionInstances?: ActionInstances[];
+	actionInstances?: ActionInstanceWithConfigDefaults[];
 	withSelection?: boolean;
 }) => {
 	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
@@ -178,7 +175,6 @@ export const PubCard = async ({
 					{hasActions ? (
 						<PubsRunActionDropDownMenu
 							actionInstances={actionInstances}
-							stage={pub.stage!}
 							pubId={pub.id}
 							variant="ghost"
 							className={cn(

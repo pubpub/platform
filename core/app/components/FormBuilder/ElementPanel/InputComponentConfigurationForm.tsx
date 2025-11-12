@@ -39,7 +39,7 @@ import { Textarea } from "ui/textarea";
 
 import type { InputElement } from "../types";
 import type { ConfigFormData } from "./ComponentConfig/types";
-import { useFormBuilder } from "../FormBuilderContext";
+import { useBuilder } from "../BuilderContext";
 import { FieldInputElement } from "../FormElement";
 import { ComponentConfig } from "./ComponentConfig";
 
@@ -204,7 +204,7 @@ const componentInfo: Record<InputComponent, SchemaComponentData> = {
 	},
 	[InputComponent.colorPicker]: {
 		name: "Color Picker",
-		demoComponent: () => {
+		demoComponent: function ColorPickerDemoComponent() {
 			const [color, setColor] = useState("#000000");
 			return (
 				<Popover>
@@ -311,7 +311,7 @@ type Props = {
 };
 
 export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Props) => {
-	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
+	const { update, dispatch, removeIfUnconfigured } = useBuilder();
 
 	const { schemaName, isRelation } = fieldInputElement;
 	const allowedComponents = componentsBySchema[schemaName];
@@ -330,6 +330,11 @@ export const InputComponentConfigurationForm = ({ index, fieldInputElement }: Pr
 				config: values.component
 					? componentConfigSchemas[values.component]
 					: relationBlockConfigSchema,
+				relatedPubTypes: Type.Array(Type.String(), {
+					// if it's a relation we need to have at least one pub type
+					minItems: fieldInputElement.isRelation ? 1 : 0,
+					error: "At least one Pub Type must be selected",
+				}),
 			});
 			const createResolver = typeboxResolver(schema);
 			return createResolver(values, context, options);

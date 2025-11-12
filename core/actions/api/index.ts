@@ -2,35 +2,34 @@
 
 import type * as z from "zod";
 
-import type { ActionInstances, Event } from "db/public";
+import type { ActionInstances, Automations, Communities, Event } from "db/public";
 
-import type { SequentialRuleEvent } from "../types";
+import type { SequentialAutomationEvent } from "../types";
 import {
 	actionFailed,
 	actionSucceeded,
 	pubEnteredStage,
 	pubInStageForDuration,
 	pubLeftStage,
-} from "../_lib/rules";
+	webhook,
+} from "../_lib/automations";
+import * as buildJournalSite from "../buildJournalSite/action";
 import * as datacite from "../datacite/action";
 import * as email from "../email/action";
 import * as googleDriveImport from "../googleDriveImport/action";
 import * as http from "../http/action";
 import * as log from "../log/action";
 import * as move from "../move/action";
-import * as pdf from "../pdf/action";
-import * as pushToV6 from "../pushToV6/action";
-import { isSequentialRuleEvent, sequentialRuleEvents } from "../types";
+import { sequentialAutomationEvents } from "../types";
 
 export const actions = {
 	[log.action.name]: log.action,
-	[pdf.action.name]: pdf.action,
 	[email.action.name]: email.action,
-	[pushToV6.action.name]: pushToV6.action,
 	[http.action.name]: http.action,
 	[move.action.name]: move.action,
 	[googleDriveImport.action.name]: googleDriveImport.action,
 	[datacite.action.name]: datacite.action,
+	[buildJournalSite.action.name]: buildJournalSite.action,
 } as const;
 
 export const getActionByName = <N extends keyof typeof actions>(name: N) => {
@@ -45,45 +44,87 @@ export const getActionNames = () => {
 	return Object.keys(actions) as (keyof typeof actions)[];
 };
 
-export const rules = {
+export const automations = {
 	[pubInStageForDuration.event]: pubInStageForDuration,
 	[pubEnteredStage.event]: pubEnteredStage,
 	[pubLeftStage.event]: pubLeftStage,
 	[actionSucceeded.event]: actionSucceeded,
 	[actionFailed.event]: actionFailed,
-} as const;
+	[webhook.event]: webhook,
+} as const satisfies Record<Event, any>;
 
-export const getRuleByName = <T extends Event>(name: T) => {
-	return rules[name];
+export const getAutomationByName = <T extends Event>(name: T) => {
+	return automations[name];
 };
 
-export const isReferentialRule = (
-	rule: (typeof rules)[keyof typeof rules]
-): rule is Extract<typeof rule, { event: SequentialRuleEvent }> =>
-	sequentialRuleEvents.includes(rule.event as any);
+export const isReferentialAutomation = (
+	automation: (typeof automations)[keyof typeof automations]
+): automation is Extract<typeof automation, { event: SequentialAutomationEvent }> =>
+	sequentialAutomationEvents.includes(automation.event as any);
 
-export const humanReadableEvent = <T extends Event>(
+export const humanReadableEventBase = <T extends Event>(event: T, community: Communities) => {
+	const automation = getAutomationByName(event);
+
+	if (typeof automation.display.base === "function") {
+		return automation.display.base({ community });
+	}
+
+	return automation.display.base;
+};
+
+export const humanReadableEventHydrated = <T extends Event>(
 	event: T,
-	config?: (typeof rules)[T]["additionalConfig"] extends undefined
-		? never
-		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>,
-	sourceAction?: ActionInstances | null
+	community: Communities,
+	options: {
+		automation: Automations;
+		config?: (typeof automations)[T]["additionalConfig"] extends undefined
+			? never
+			: z.infer<NonNullable<(typeof automations)[T]["additionalConfig"]>>;
+		sourceAction?: ActionInstances | null;
+	}
 ) => {
-	const rule = getRuleByName(event);
-	if (config && rule.additionalConfig) {
-		return rule.display.withConfig(config);
+	const automationConf = getAutomationByName(event);
+	if (options.config && automationConf.additionalConfig && automationConf.display.hydrated) {
+		return automationConf.display.hydrated({
+			automation: options.automation,
+			community,
+			config: options.config,
+		});
 	}
-	if (sourceAction && isReferentialRule(rule)) {
-		return rule.display.withConfig(sourceAction);
+	if (
+		options.sourceAction &&
+		isReferentialAutomation(automationConf) &&
+		automationConf.display.hydrated
+	) {
+		return automationConf.display.hydrated({
+			automation: options.automation,
+			community,
+			config: options.sourceAction,
+		});
 	}
 
-	return rule.display.base;
+	if (automationConf.display.hydrated && !automationConf.additionalConfig) {
+		return automationConf.display.hydrated({
+			automation: options.automation,
+			community,
+			config: {} as any,
+		});
+	}
+
+	if (typeof automationConf.display.base === "function") {
+		return automationConf.display.base({ community });
+	}
+
+	return automationConf.display.base;
 };
 
-export const serializeRule = <T extends Event>(
-	event: T,
+export const humanReadableAutomation = <A extends Automations>(
+	automation: A,
+	community: Communities,
 	instanceName: string,
-	config?: (typeof rules)[T]["additionalConfig"] extends undefined
+	config?: (typeof automations)[A["event"]]["additionalConfig"] extends undefined
 		? never
-		: z.infer<NonNullable<(typeof rules)[T]["additionalConfig"]>>
-) => `${instanceName} will run when ${humanReadableEvent(event, config)}`;
+		: z.infer<NonNullable<(typeof automations)[A["event"]]["additionalConfig"]>>,
+	sourceAction?: ActionInstances | null
+) =>
+	`${instanceName} will run when ${humanReadableEventHydrated(automation.event, community, { automation: automation, config, sourceAction })}`;

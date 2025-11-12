@@ -24,12 +24,14 @@ const upsertRelatedPubTypes = async (
 
 	if (formElementIds.length) {
 		// Delete old values
-		await trx.deleteFrom("_FormElementToPubType").where("A", "in", formElementIds).execute();
+		await autoRevalidate(
+			trx.deleteFrom("_FormElementToPubType").where("A", "in", formElementIds)
+		).execute();
 	}
 
 	// Insert new ones
 	if (values.length) {
-		await trx.insertInto("_FormElementToPubType").values(values).execute();
+		await autoRevalidate(trx.insertInto("_FormElementToPubType").values(values)).execute();
 	}
 };
 

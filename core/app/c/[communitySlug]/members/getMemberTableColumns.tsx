@@ -2,7 +2,8 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 
-import type { MemberRole, UsersId } from "db/public";
+import type { CommunitiesId, FormsId, UsersId } from "db/public";
+import { MemberRole, MembershipType } from "db/public";
 import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
 import { Badge } from "ui/badge";
 import { Button } from "ui/button";
@@ -17,6 +18,8 @@ import {
 } from "ui/dropdown-menu";
 import { MoreVertical } from "ui/icon";
 
+import { descriptions } from "~/app/components/Memberships/constants";
+import { EditMemberDialog } from "~/app/components/Memberships/EditMemberDialog";
 import { RemoveMemberButton } from "./RemoveMemberButton";
 
 export type TableMember = {
@@ -26,10 +29,20 @@ export type TableMember = {
 	firstName: string;
 	lastName: string | null;
 	role: MemberRole;
+	forms?: {
+		id: FormsId;
+		slug: string;
+		name: string;
+	}[];
 	joined: string;
 };
 
-export const getMemberTableColumns = () =>
+type TableColumnsProps = {
+	availableForms: { id: FormsId; name: string; isDefault: boolean }[];
+	communityId: CommunitiesId;
+};
+
+export const getMemberTableColumns = (props: TableColumnsProps) =>
 	[
 		{
 			id: "select",
@@ -110,6 +123,30 @@ export const getMemberTableColumns = () =>
 			},
 		},
 		{
+			header: ({ column }) => (
+				<DataTableColumnHeader
+					column={column}
+					title="Forms"
+					info={descriptions[MembershipType.community]}
+				/>
+			),
+			accessorKey: "forms",
+			cell: ({ getValue, row }) => {
+				const forms = getValue() as TableMember["forms"];
+				return forms && row.original.role === MemberRole.contributor ? (
+					<div className="flex gap-2 overflow-x-scroll whitespace-nowrap">
+						{forms.map((form) => (
+							<Badge key={form.id} variant="outline">
+								{form.name}
+							</Badge>
+						))}
+					</div>
+				) : (
+					"-"
+				);
+			},
+		},
+		{
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
 			accessorKey: "joined",
 			cell: ({ getValue }) => {
@@ -119,7 +156,7 @@ export const getMemberTableColumns = () =>
 		{
 			id: "actions",
 			enableHiding: false,
-			cell: ({ row, table }) => {
+			cell: ({ row }) => {
 				return (
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
@@ -133,6 +170,18 @@ export const getMemberTableColumns = () =>
 							<DropdownMenuSeparator />
 							<div className="w-full">
 								<RemoveMemberButton member={row.original} />
+							</div>
+							<div className="w-full">
+								<EditMemberDialog
+									availableForms={props.availableForms}
+									member={{
+										userId: row.original.id,
+										role: row.original.role,
+										forms: row.original.forms?.map((form) => form.id) ?? [],
+									}}
+									membershipType={MembershipType.community}
+									membershipTargetId={props.communityId}
+								/>
 							</div>
 						</DropdownMenuContent>
 					</DropdownMenu>

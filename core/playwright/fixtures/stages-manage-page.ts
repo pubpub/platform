@@ -87,9 +87,9 @@ export class StagesManagePage {
 	/**
 	 * TODO: add support for config
 	 */
-	async addRule(
+	async addAutomation(
 		stageName: string,
-		rule: {
+		automation: {
 			event: Event;
 			actionInstanceName: string;
 			sourceActionInstanceName?: string;
@@ -97,13 +97,13 @@ export class StagesManagePage {
 	) {
 		await this.openStagePanelTab(stageName, "Actions");
 
-		await this.page.getByTestId("add-rule-button").click({ timeout: 1_000 });
+		await this.page.getByTestId("add-automation-button").click({ timeout: 1_000 });
 
 		await this.page.getByTestId("action-selector-select-trigger").click({
 			timeout: 2_000,
 		});
 		await this.page
-			.getByTestId(`action-selector-select-item-${rule.actionInstanceName}`)
+			.getByTestId(`action-selector-select-item-${automation.actionInstanceName}`)
 			.click({
 				timeout: 1_000,
 			});
@@ -111,16 +111,16 @@ export class StagesManagePage {
 		await this.page.getByTestId("event-select-trigger").click({
 			timeout: 1_000,
 		});
-		await this.page.getByTestId(`event-select-item-${rule.event}`).click({
+		await this.page.getByTestId(`event-select-item-${automation.event}`).click({
 			timeout: 1_000,
 		});
 
-		if (rule.sourceActionInstanceName) {
+		if (automation.sourceActionInstanceName) {
 			await this.page.getByTestId("watched-action-select-trigger").click({
 				timeout: 1_000,
 			});
 			await this.page
-				.getByTestId(`watched-action-select-item-${rule.sourceActionInstanceName}`)
+				.getByTestId(`watched-action-select-item-${automation.sourceActionInstanceName}`)
 				.click({
 					timeout: 1_000,
 				});
@@ -128,7 +128,7 @@ export class StagesManagePage {
 
 		await this.page
 			.getByRole("button", {
-				name: "Save rule",
+				name: "Save automation",
 				exact: true,
 			})
 			.click({

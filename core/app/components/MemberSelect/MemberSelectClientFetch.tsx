@@ -1,13 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { skipToken } from "@tanstack/react-query";
 
 import type { Communities, CommunityMembershipsId } from "db/public";
+import { FormItem, FormLabel } from "ui/form";
+import { PubFieldSelectorToggleButton } from "ui/pubFields";
 import { Skeleton } from "ui/skeleton";
+import { cn } from "utils";
 
 import type { MemberSelectUserWithMembership } from "./types";
 import { client } from "~/lib/api";
+import { useCommunity } from "../providers/CommunityProvider";
 import { MemberSelectClient } from "./MemberSelectClient";
 
 /** Hook to wrap all API calls/status for user search */
@@ -67,43 +71,28 @@ const useMemberSelectData = ({
 };
 
 type Props = {
-	community: Communities;
-	fieldLabel: string;
-	fieldName: string;
+	name: string;
 	value?: CommunityMembershipsId;
-	allowPubFieldSubstitution?: boolean;
-	helpText?: string;
+	onChange: (value: CommunityMembershipsId | undefined) => void;
 };
 
-export function MemberSelectClientFetch({
-	community,
-	fieldLabel,
-	fieldName,
-	value,
-	helpText,
-	allowPubFieldSubstitution = true,
-}: Props) {
+export function MemberSelectClientFetch({ name, value, onChange: onChangeProp }: Props) {
+	const community = useCommunity();
 	const [search, setSearch] = useState("");
-	const { initialized, user, users, refetchUsers } = useMemberSelectData({
+	const { user, users, refetchUsers } = useMemberSelectData({
 		community,
 		memberId: value,
 		email: search,
 	});
 
-	if (!initialized) {
-		return <Skeleton className="h-9 w-full" />;
-	}
-
 	return (
 		<MemberSelectClient
-			helpText={helpText}
 			community={community}
-			fieldLabel={fieldLabel}
-			fieldName={fieldName}
+			name={name}
 			member={(user as MemberSelectUserWithMembership) ?? undefined}
 			users={users}
-			allowPubFieldSubstitution={allowPubFieldSubstitution}
-			onChange={setSearch}
+			onChangeSearch={setSearch}
+			onChangeValue={onChangeProp}
 			onUserAdded={refetchUsers}
 		/>
 	);

@@ -1,4 +1,4 @@
-# Common issues
+# Issues you may run into
 
 ## Hard to explain "Foregin key constraints failed" errors
 
@@ -41,3 +41,16 @@ Ones I've observed to cause issues are:
 
 - Astro plugin
 - `better-ts-errors`
+
+### `dispatcher.getOwner is not a function`
+
+If you see something like
+
+```
+TypeError: dispatcher.getOwner is not a function
+    at getOwner (/node_modules/.pnpm/react@19.1.1/node_modules/react/cjs/react.development.js:162:54)
+    at process.env.NODE_ENV.exports.createElement (/node_modules/.pnpm/react@19.1.1/node_modules/react/cjs/react.development.js:1031:9)
+    at Tester
+```
+
+this likely means that React is trying to render a component with no `NODE_ENV` set. This has been observed to happen when running the site-builder with `pnpm start` with no `NODE_ENV` set, eg when running `pnpm start`.

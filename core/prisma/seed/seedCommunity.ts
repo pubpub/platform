@@ -1,4 +1,5 @@
 import type { Static } from "@sinclair/typebox";
+import type { Prettify } from "@ts-rest/core";
 import type {
 	componentConfigSchemas,
 	componentsBySchema,
@@ -16,8 +17,10 @@ import type {
 	ApiAccessScope,
 	ApiAccessTokensId,
 	ApiAccessType,
+	Automations,
 	Communities,
 	CommunitiesId,
+	CommunityMemberships,
 	Event,
 	FormAccessType,
 	FormElements,
@@ -29,7 +32,6 @@ import type {
 	PubsId,
 	PubTypes,
 	PubTypesId,
-	Rules,
 	Stages,
 	StagesId,
 	Users,
@@ -37,10 +39,12 @@ import type {
 } from "db/public";
 import type {
 	ApiAccessPermissionConstraints,
+	AutomationConfig,
 	Invite,
 	NewInviteInput,
 	permissionsSchema,
 } from "db/types";
+import type { MaybeHas } from "utils/types";
 import {
 	Action as ActionName,
 	CoreSchemaType,
@@ -54,13 +58,16 @@ import { logger } from "logger";
 import { expect } from "utils";
 
 import type { actions } from "~/actions/api";
-import type { MaybeHas } from "~/lib/types";
 import { db } from "~/kysely/database";
 import { createPasswordHash } from "~/lib/authentication/password";
 import { createLastModifiedBy } from "~/lib/lastModifiedBy";
 import { findRanksBetween } from "~/lib/rank";
 import { createPubRecursiveNew } from "~/lib/server";
-import { allPermissions, createApiAccessToken } from "~/lib/server/apiAccessTokens";
+import {
+	allPermissions,
+	createApiAccessToken,
+	createSiteBuilderToken,
+} from "~/lib/server/apiAccessTokens";
 import { insertForm } from "~/lib/server/form";
 import { InviteService } from "~/lib/server/invites/InviteService";
 import { generateToken } from "~/lib/server/token";
@@ -146,11 +153,11 @@ export type StagesInitializer<
 			[M in keyof U]?: MemberRole;
 		};
 		actions?: A;
-		rules?: {
+		automations?: {
 			event: Event;
 			actionInstance: keyof A;
 			sourceAction?: keyof A;
-			config?: Record<string, unknown> | null;
+			config?: AutomationConfig | null;
 		}[];
 	}
 >;
@@ -254,29 +261,53 @@ export type PubInitializer<
 	};
 }[keyof PT & string];
 
-export type FormElementInitializer<PF extends PubFieldsInitializer> = {
-	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component extends
-		InputComponent
+export type FormElementInitializer<
+	PF extends PubFieldsInitializer,
+	PT extends PubTypeInitializer<PF>,
+> = {
+	[FieldName in keyof PF]: (typeof componentsBySchema)[PF[FieldName]["schemaName"]][number] extends infer Component
 		? {
 				type: ElementType.pubfield;
 				field: FieldName;
-				component: PF[FieldName]["relation"] extends true
-					? InputComponent.relationBlock
-					: Component;
+				component: PF[FieldName]["schemaName"] extends CoreSchemaType.Null
+					? null
+					: Component extends InputComponent
+						? Component
+						: null;
 				content?: never;
 				element?: never;
 				label?: never;
-				config: Static<(typeof componentConfigSchemas)[Component]> &
-					(PF[FieldName]["relation"] extends true
-						? {
-								relationshipConfig: {
-									label: string;
-									help: string;
-									component: Component;
-								};
-							}
-						: {});
-			}
+				// sorry for the mess, but basically
+				// 1. if the field is a relation, we need to set the relationshipConfig
+				// 2. if the field is Null type, we set the baseConfig to empty object
+				// ideally i'd do (2) by just checking whether the component is defined (Null has no component) but that doesn't seem to work
+				config: Prettify<
+					(PF[FieldName]["schemaName"] extends CoreSchemaType.Null
+						? {}
+						: Component extends InputComponent
+							? Static<(typeof componentConfigSchemas)[Component]>
+							: {}) &
+						(PF[FieldName]["relation"] extends true
+							? {
+									relationshipConfig: {
+										label: string;
+										help: string;
+										component: InputComponent.relationBlock;
+									};
+								}
+							: {
+									relationshipConfig?: never;
+								})
+				>;
+			} & (PF[FieldName]["relation"] extends true
+				? {
+						/**
+						 * The pub types that can be related through this field.
+						 * Min 1 pub type is required.
+						 */
+						relatedPubTypes: [keyof PT, ...(keyof PT)[]];
+					}
+				: { relatedPubTypes?: never })
 		: never;
 }[keyof PF];
 
@@ -299,13 +330,18 @@ export type FormInitializer<
 			isArchived?: boolean;
 			slug?: string;
 			pubType: PubType;
-			members?: (keyof U)[];
+			/**
+			 * This will add grant form access to the specified users if they are comm:cons.
+			 */
+			members?: (keyof {
+				[K in keyof U as U[K]["role"] extends MemberRole.contributor ? K : never]: K;
+			})[];
 			/**
 			 * @default false
 			 */
 			isDefault?: boolean;
 			elements: (
-				| FormElementInitializer<PF>
+				| FormElementInitializer<PF, PT>
 				| {
 						type: ElementType.structural;
 						element: StructuralFormElement;
@@ -314,6 +350,7 @@ export type FormInitializer<
 						label?: never;
 						config?: never;
 						field?: never;
+						relatedPubTypes?: never;
 				  }
 				| {
 						type: ElementType.button;
@@ -324,6 +361,7 @@ export type FormInitializer<
 						stage: keyof SI;
 						config?: never;
 						field?: never;
+						relatedPubTypes?: never;
 				  }
 			)[];
 		};
@@ -472,13 +510,16 @@ type CommunitySeedInput = {
 
 // ========
 // These are helper types to make the output of the seeding functions match the input more closely.
-type PubFieldsByName<PF> = {
-	[K in keyof PF]: PF[K] & Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean };
+type PubFieldsByName<PF, withRank extends boolean = false> = {
+	[K in keyof PF]: PF[K] &
+		Omit<PubFields, "name"> & { name: K } & { isTitle?: boolean } & (withRank extends true
+			? { rank: string }
+			: {});
 };
 
 type PubTypesByName<PT, PF> = {
 	[K in keyof PT]: Omit<PubTypes, "name"> & { name: K } & {
-		fields: PubFieldsByName<PF>;
+		fields: PubFieldsByName<PF, true>;
 		defaultForm: { slug: string };
 	};
 };
@@ -487,7 +528,7 @@ type UsersBySlug<U extends UsersInitializer> = {
 	[K in keyof U]: U[K] & Users;
 };
 
-type StagesWithPermissionsAndActionsAndRulesByName<
+type StagesWithPermissionsAndActionsAndAutomationsByName<
 	U extends UsersInitializer,
 	S extends StagesInitializer<U>,
 	StagePermissions,
@@ -499,10 +540,11 @@ type StagesWithPermissionsAndActionsAndRulesByName<
 					actions: {
 						[KK in keyof S[K]["actions"]]: S[K]["actions"][KK] & ActionInstances;
 					};
-				} & ("rules" extends keyof S[K]
+				} & ("automations" extends keyof S[K]
 					? {
-							rules: {
-								[KK in keyof S[K]["rules"]]: S[K]["rules"][KK] & Rules;
+							automations: {
+								[KK in keyof S[K]["automations"]]: S[K]["automations"][KK] &
+									Automations;
 							};
 						}
 					: {})
@@ -839,8 +881,12 @@ export async function seedCommunity<
 			? await trx
 					.insertInto("_PubFieldToPubType")
 					.values(
-						pubTypesList.flatMap(({ name, id, fields }, idx) =>
-							Object.entries(fields).flatMap(([field, meta]) => {
+						pubTypesList.flatMap(({ name, id, fields }) => {
+							const ranks = findRanksBetween({
+								numberOfRanks: Object.keys(fields).length,
+							});
+
+							return Object.entries(fields).flatMap(([field, meta], fieldIdx) => {
 								const isTitle = meta?.isTitle ?? false;
 								const fieldId = createdPubFields.find(
 									(createdField) => createdField.name === field
@@ -857,10 +903,11 @@ export async function seedCommunity<
 										A: fieldId,
 										B: pubTypeId,
 										isTitle,
+										rank: ranks[fieldIdx],
 									},
 								];
-							})
-						)
+							});
+						})
 					)
 					.returningAll()
 					.execute()
@@ -881,7 +928,11 @@ export async function seedCommunity<
 
 							return [
 								pubField.name,
-								{ ...pubField, isTitle: pubFieldToPubType.isTitle },
+								{
+									...pubField,
+									isTitle: pubFieldToPubType.isTitle,
+									rank: pubFieldToPubType.rank,
+								},
 							] as const;
 						})
 				),
@@ -943,8 +994,8 @@ export async function seedCommunity<
 	]) as UsersBySlug<U>;
 
 	const possibleMembers = Object.entries(usersBySlug)
-		.filter(([slug, userInfo]) => !!userInfo.role)
-		.flatMap(([slug, userWithRole]) => {
+		.filter(([, userInfo]) => !!userInfo.role)
+		.flatMap(([, userWithRole]) => {
 			return [
 				{
 					id: userWithRole.existing ? undefined : userWithRole.id,
@@ -965,7 +1016,7 @@ export async function seedCommunity<
 
 	const usersWithMemberShips = Object.fromEntries(
 		Object.entries(usersBySlug)
-			.filter(([slug, user]) => !!user.role)
+			.filter(([, user]) => !!user.role)
 			.map(([slug, user], idx) => [
 				slug,
 				{
@@ -973,7 +1024,7 @@ export async function seedCommunity<
 					member: createdMembers[idx],
 				},
 			])
-	);
+	) as { [K in keyof U]: UsersBySlug<U>[K] & { member: CommunityMemberships } };
 
 	const stageList = Object.entries(props.stages ?? {});
 
@@ -999,7 +1050,7 @@ export async function seedCommunity<
 	//
 
 	const stageMembers = consolidatedStages
-		.flatMap((stage, idx) => {
+		.flatMap((stage) => {
 			if (!stage.members) return [];
 
 			return Object.entries(stage.members)?.map(([member, role]) => ({
@@ -1016,7 +1067,7 @@ export async function seedCommunity<
 		stageMembers.length > 0
 			? await trx
 					.insertInto("stage_memberships")
-					.values((eb) =>
+					.values(() =>
 						stageMembers.map((stageMember) => ({
 							role: stageMember.role!,
 							stageId: stageMember.stage.id,
@@ -1026,18 +1077,6 @@ export async function seedCommunity<
 					.returningAll()
 					.execute()
 			: [];
-
-	const stagesWithPermissionsByName = Object.fromEntries(
-		consolidatedStages.map((stage) => [
-			stage.name,
-			{
-				...stage,
-				permissions: stageMemberships.filter(
-					(permission) => permission.stageId === stage.id
-				),
-			},
-		])
-	);
 
 	const stageConnectionsList = props.stageConnections
 		? await db
@@ -1120,6 +1159,15 @@ export async function seedCommunity<
 	logger.info(`${createdCommunity.name}: Successfully created pubs`);
 
 	const formList = props.forms ? Object.entries(props.forms) : [];
+	const formElementsWithRelatedPubTypes = formList.flatMap(([formTitle, formInput]) =>
+		formInput.elements
+			.filter((elementInput) => elementInput.relatedPubTypes?.length)
+			.map((elementInput) => ({
+				...elementInput,
+				formTitle,
+			}))
+	);
+
 	const createdForms =
 		formList.length > 0
 			? await trx
@@ -1146,7 +1194,7 @@ export async function seedCommunity<
 						db
 							.insertInto("form_elements")
 							.values((eb) =>
-								formList.flatMap(([formTitle, formInput], idx) => {
+								formList.flatMap(([formTitle, formInput]) => {
 									const ranks = findRanksBetween({
 										numberOfRanks: formInput.elements.length,
 									});
@@ -1175,6 +1223,7 @@ export async function seedCommunity<
 							)
 							.returningAll()
 					)
+
 					.selectFrom("form")
 					.selectAll("form")
 					.select((eb) =>
@@ -1188,18 +1237,64 @@ export async function seedCommunity<
 					.execute()
 			: [];
 
+	if (createdForms.length && formElementsWithRelatedPubTypes.length) {
+		const feee = createdForms.flatMap((form) =>
+			form.elements.flatMap((fe, feIdx) => {
+				const formInput = props.forms?.[form.name];
+				if (!formInput) return [];
+
+				const formElementInput = formInput.elements[feIdx];
+				if (!formElementInput) return [];
+
+				if (!formElementInput.relatedPubTypes || !formElementInput.relatedPubTypes.length)
+					return [];
+
+				return formElementInput.relatedPubTypes.map((relatedPubType) => {
+					const pubType = createdPubTypes.find(
+						(pubType) => pubType.name === relatedPubType
+					);
+
+					if (!pubType) throw new Error(`Pub type ${String(relatedPubType)} not found`);
+
+					return {
+						A: fe.id,
+						B: pubType.id,
+					};
+				});
+			})
+		);
+
+		if (feee.length) {
+			await trx.insertInto("_FormElementToPubType").values(feee).execute();
+		}
+	}
+
+	// form members
+	const toBeCreatedFormMembers = formList.flatMap(([formTitle, formInput]) => {
+		if (!formInput.members) return [];
+		return formInput.members.map((member) => ({
+			formId: createdForms.find((form) => form.name === formTitle)?.id,
+			userId: usersWithMemberShips[member].id,
+			role: usersWithMemberShips[member].role ?? MemberRole.contributor,
+			communityId: communityId,
+		}));
+	});
+
+	if (toBeCreatedFormMembers.length) {
+	}
+
 	const formsByName = Object.fromEntries(
 		createdForms.map((form) => [form.name, form])
 	) as unknown as FormsByName<F>;
 
 	// actions last because they can reference form and pub id's
-	const possibleActions = consolidatedStages.flatMap((stage, idx) =>
+	const possibleActions = consolidatedStages.flatMap((stage) =>
 		stage.actions
 			? Object.entries(stage.actions).map(([actionName, action]) => ({
 					stageId: stage.id,
 					action: action.action,
 					name: actionName,
-					config: JSON.stringify(action.config),
+					config: action.config,
 				}))
 			: []
 	);
@@ -1210,22 +1305,22 @@ export async function seedCommunity<
 
 	logger.info(`${createdCommunity.name}: Successfully created ${createdActions.length} actions`);
 
-	const possibleRules = consolidatedStages.flatMap(
-		(stage, idx) =>
-			stage.rules?.map((rule) => ({
-				event: rule.event,
+	const possibleAutomations = consolidatedStages.flatMap(
+		(stage) =>
+			stage.automations?.map((automation) => ({
+				event: automation.event,
 				actionInstanceId: expect(
-					createdActions.find((action) => action.name === rule.actionInstance)?.id
+					createdActions.find((action) => action.name === automation.actionInstance)?.id
 				),
 				sourceActionInstanceId: createdActions.find(
-					(action) => action.name === rule.sourceAction
+					(action) => action.name === automation.sourceAction
 				)?.id,
-				config: rule.config ? JSON.stringify(rule.config) : null,
+				config: automation.config,
 			})) ?? []
 	);
 
-	const createdRules = possibleRules.length
-		? await trx.insertInto("rules").values(possibleRules).returningAll().execute()
+	const createdAutomations = possibleAutomations.length
+		? await trx.insertInto("automations").values(possibleAutomations).returningAll().execute()
 		: [];
 
 	const fullStages = Object.fromEntries(
@@ -1238,20 +1333,27 @@ export async function seedCommunity<
 					actions: Object.fromEntries(
 						actionsForStage.map((action) => [action.name, action])
 					),
-					rules: createdRules.filter((rule) =>
-						actionsForStage.some((action) => action.id === rule.actionInstanceId)
+					automations: createdAutomations.filter((automation) =>
+						actionsForStage.some((action) => action.id === automation.actionInstanceId)
 					),
 				},
 			];
 		})
-	) as unknown as StagesWithPermissionsAndActionsAndRulesByName<U, S, typeof stageMemberships>;
+	) as unknown as StagesWithPermissionsAndActionsAndAutomationsByName<
+		U,
+		S,
+		typeof stageMemberships
+	>;
 
-	logger.info(`${createdCommunity.name}: Successfully created ${createdRules.length} rules`);
+	logger.info(
+		`${createdCommunity.name}: Successfully created ${createdAutomations.length} automations`
+	);
 
 	const apiTokens = Object.entries(props.apiTokens ?? {});
 	const createdApiTokens = Object.fromEntries(
-		await Promise.all(
-			apiTokens.map(async ([tokenName, tokenInput]) => {
+		await Promise.all([
+			["site-builder", await createSiteBuilderToken(communityId, trx)],
+			...apiTokens.map(async ([tokenName, tokenInput]) => {
 				const [tokenId, tokenString] = tokenInput.id?.split(".") ?? [crypto.randomUUID()];
 
 				const issuedById = createdMembers.find(
@@ -1299,10 +1401,10 @@ export async function seedCommunity<
 				);
 
 				return [tokenName, token];
-			})
-		)
+			}),
+		])
 	) as {
-		[TokenName in keyof NonNullable<AI>]: string;
+		[TokenName in keyof NonNullable<AI> | "site-builder"]: string;
 	};
 
 	const createdInvites = Object.fromEntries(

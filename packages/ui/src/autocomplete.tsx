@@ -11,7 +11,7 @@ import { Button } from "./button";
 import { CommandGroup, CommandInput, CommandItem, CommandList } from "./command";
 import { Skeleton } from "./skeleton";
 
-export type Option = { value: string; label: string; node?: React.ReactNode };
+export type Option = { value: string; label: string; node?: React.ReactNode; className?: string };
 
 type AutoCompleteProps = {
 	options: Option[];
@@ -182,7 +182,8 @@ export const AutoComplete = ({
 											onSelect={() => handleSelectOption(option)}
 											className={cn(
 												"flex w-full items-center gap-2 rounded-lg",
-												!isSelected ? "pl-8" : null
+												!isSelected ? "pl-8" : null,
+												option.className
 											)}
 											aria-label={option.label}
 										>

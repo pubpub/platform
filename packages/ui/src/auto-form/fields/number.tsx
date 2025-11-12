@@ -26,7 +26,7 @@ export default function AutoFormNumber({
 				</>
 			)}
 			<FormControl>
-				<Input type="number" {...fieldPropsWithoutShowLabel} />
+				<Input type="number" {...fieldPropsWithoutShowLabel} className="bg-white" />
 			</FormControl>
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 			<FormMessage />

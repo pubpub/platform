@@ -9,11 +9,8 @@ import { formatDriveData } from "./formatDriveData";
 import { getContentFromFolder } from "./getGDriveFiles";
 
 export const run = defineRun<typeof action>(
-	async ({ pub, config, args, communityId, lastModifiedBy }) => {
-		const input = {
-			...config,
-			...args,
-		};
+	async ({ pub, config, communityId, lastModifiedBy }) => {
+		const input = config;
 
 		try {
 			const communitySlug = await getCommunitySlug();
@@ -25,7 +22,7 @@ export const run = defineRun<typeof action>(
 			*/
 
 			/* Sample URL: https://drive.google.com/drive/folders/1xUHrOjKhqfXrRclJ1cehDSa24alqEgrK */
-			const folderId: string = input.docUrl.split("/").pop() || "";
+			const folderId: string = input.folderUrl.split("/").pop() || "";
 			const dataFromDrive = await getContentFromFolder(folderId);
 			if (dataFromDrive === null) {
 				throw new Error("Failed to retrieve data from Google Drive");

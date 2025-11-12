@@ -9,13 +9,15 @@ import { movePub } from "~/lib/server/stages";
 import { defineRun } from "../types";
 
 export const run = defineRun<typeof action>(async ({ pub, config }) => {
+	const stageToMoveTo = config.stage;
+
 	try {
-		await movePub(pub.id, config.stage as StagesId).execute();
+		await movePub(pub.id, stageToMoveTo as StagesId).execute();
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
 				success: true,
-				report: `Pub was already in stage ${config.stage}`,
+				report: `Pub was already in stage ${stageToMoveTo}`,
 				data: {},
 			};
 		}
@@ -27,7 +29,7 @@ export const run = defineRun<typeof action>(async ({ pub, config }) => {
 		};
 	}
 
-	logger.info({ msg: "move", pub, config });
+	logger.info({ msg: "move", pub, config, stageToMoveTo });
 
 	return {
 		success: true,

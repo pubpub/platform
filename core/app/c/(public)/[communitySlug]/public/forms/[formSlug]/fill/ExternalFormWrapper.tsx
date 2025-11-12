@@ -1,28 +1,14 @@
 "use client";
 
-import type { FieldValues } from "react-hook-form";
-
 import { useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-import type { BasicFormElements } from "~/app/components/forms/types";
 import type { PubEditorClientProps } from "~/app/components/pubs/PubEditor/PubEditorClient";
 import {
 	SAVE_STATUS_QUERY_PARAM,
 	SUBMIT_ID_QUERY_PARAM,
 } from "~/app/components/pubs/PubEditor/constants";
 import { PubEditorClient } from "~/app/components/pubs/PubEditor/PubEditorClient";
-
-const isComplete = (formElements: BasicFormElements[], values: FieldValues) => {
-	const requiredElements = formElements.filter((fe) => fe.required && fe.slug);
-	requiredElements.forEach((element) => {
-		const value = values[element.slug!];
-		if (value == null) {
-			return false;
-		}
-	});
-	return true;
-};
 
 export const ExternalFormWrapper = ({
 	children,
@@ -34,21 +20,19 @@ export const ExternalFormWrapper = ({
 	const [pubId] = useState(props.pub.id);
 
 	const onSuccess = ({
-		values,
 		submitButtonId,
 		isAutoSave,
 	}: {
-		values: FieldValues;
 		submitButtonId?: string;
 		isAutoSave: boolean;
 	}) => {
 		const newParams = new URLSearchParams(params);
 		const currentTime = `${new Date().getTime()}`;
-		if (!props.isUpdating) {
+		if (props.mode !== "edit") {
 			newParams.set("pubId", pubId);
 		}
 
-		if (!isAutoSave && isComplete(props.elements, values)) {
+		if (!isAutoSave) {
 			if (submitButtonId) {
 				newParams.set(SUBMIT_ID_QUERY_PARAM, submitButtonId);
 			}

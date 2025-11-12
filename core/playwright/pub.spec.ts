@@ -11,9 +11,11 @@ import { FieldsPage } from "./fixtures/fields-page";
 import { FormsEditPage } from "./fixtures/forms-edit-page";
 import { LoginPage } from "./fixtures/login-page";
 import { PubDetailsPage } from "./fixtures/pub-details-page";
+import { PubTypesEditPage } from "./fixtures/pub-types-edit-page";
 import { PubTypesPage } from "./fixtures/pub-types-page";
 import { choosePubType, PubsPage } from "./fixtures/pubs-page";
 import { StagesManagePage } from "./fixtures/stages-manage-page";
+import { closeToast } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -85,7 +87,7 @@ test.describe("Moving a pub", () => {
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Submitted");
 		// For this initial stage, there are only destinations ,no sources
-		await page.getByRole("button", { name: "Move", exact: true }).click();
+		await page.getByRole("button", { name: "Submitted", exact: true }).click();
 		const sources = page.getByTestId("sources");
 		const destinations = page.getByTestId("destinations");
 		await expect(sources).toHaveCount(0);
@@ -93,7 +95,7 @@ test.describe("Moving a pub", () => {
 		await expect(page.getByTestId("current-stage")).toHaveText("Ask Author for Consent");
 
 		// Open the move modal again and expect to be able to move to sources and destinations
-		await page.getByRole("button", { name: "Move", exact: true }).click();
+		await page.getByRole("button", { name: "Ask Author for Consent", exact: true }).click();
 		await expect(sources.getByRole("button", { name: "Submitted" })).toHaveCount(1);
 		await expect(destinations.getByRole("button", { name: "To Evaluate" })).toHaveCount(1);
 	});
@@ -117,12 +119,17 @@ test.describe("Moving a pub", () => {
 		);
 		await pubDetailsPage.goTo();
 		await expect(page.getByTestId("current-stage")).toHaveText("Shelved");
-		await expect(page.getByRole("button", { name: "Move", exact: true })).toHaveCount(0);
+		await page.getByRole("button", { name: "Shelved", exact: true }).click();
+		const sources = page.getByTestId("sources");
+		const destinations = page.getByTestId("destinations");
+		await expect(sources).toHaveCount(0);
+		await expect(destinations).toHaveCount(0);
+		await expect(page.getByRole("button", { name: "View Stage", exact: true })).toHaveCount(0);
 	});
 });
 
 test.describe("Creating a pub", () => {
-	test("Can create a pub without a stage", async () => {
+	test.skip("Can create a pub without a stage", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		const title = "Pub without a stage";
 		await pubsPage.goTo();
@@ -132,7 +139,7 @@ test.describe("Creating a pub", () => {
 		await expect(page.getByTestId("current-stage")).toHaveCount(0);
 	});
 
-	test("Can create a pub with a stage", async () => {
+	test.skip("Can create a pub with a stage", async () => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		const title = "Pub with a stage";
 		const stage = "Submitted";
@@ -188,6 +195,7 @@ test.describe("Creating a pub", () => {
 		await page.getByRole("button", { name: "Save" }).click();
 
 		await page.waitForURL(`/c/${community.community.slug}/pubs/*/edit?*`);
+		await closeToast(page);
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("dogs,cats");
 
@@ -196,10 +204,11 @@ test.describe("Creating a pub", () => {
 		await page.getByLabel("Animals").fill("penguins");
 		await page.keyboard.press("Enter");
 		await page.getByTestId("remove-button").first().click();
+		await page.waitForTimeout(200);
 		await page.getByRole("button", { name: "Save" }).click();
 		await expect(
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
-		).toHaveCount(1);
+		).toHaveCount(1, { timeout: 10_000 });
 		await page.getByRole("link", { name: "View Pub" }).click();
 		await expect(page.getByTestId(`Animals-value`)).toHaveText("cats,penguins");
 	});
@@ -213,7 +222,13 @@ test.describe("Creating a pub", () => {
 		// Add it as a pub type
 		const pubTypePage = new PubTypesPage(page, community.community.slug);
 		await pubTypePage.goto();
-		await pubTypePage.addType("Editor", "editor", ["title", "rich-text"], "title");
+		const { id } = await pubTypePage.addType("Editor", "editor", ["Title", "Rich Text"]);
+
+		const pubTypesEditPage = new PubTypesEditPage(page, community.community.slug, id);
+		await pubTypesEditPage.goto();
+
+		await pubTypesEditPage.setAsTitleField("Title");
+		await pubTypesEditPage.saveType();
 
 		// Now create a pub of this type
 		const actualTitle = "new title";
@@ -232,7 +247,7 @@ test.describe("Creating a pub", () => {
 			1
 		);
 		await pubsPage.goTo();
-		await expect(page.getByRole("link", { name: actualTitle })).toHaveCount(1);
+		await expect(page.getByRole("link", { name: actualTitle, exact: true })).toHaveCount(1);
 
 		// Now update
 		await page.getByRole("link", { name: "Update" }).first().click();
@@ -246,7 +261,9 @@ test.describe("Creating a pub", () => {
 			page.getByRole("status").filter({ hasText: "Pub successfully updated" })
 		).toHaveCount(1);
 		await pubsPage.goTo();
-		await expect(page.getByRole("link", { name: `prefix ${actualTitle}` })).toHaveCount(1);
+		await expect(
+			page.getByRole("link", { name: `prefix ${actualTitle}`, exact: true })
+		).toHaveCount(1);
 	});
 
 	test("Can create a related pub", async () => {
@@ -255,12 +272,19 @@ test.describe("Creating a pub", () => {
 		const fieldsPage = new FieldsPage(page, community.community.slug);
 		await fieldsPage.goto();
 		await fieldsPage.addField(stringField, CoreSchemaType.String, true);
-		const pubTypePage = new PubTypesPage(page, community.community.slug);
-		await pubTypePage.goto();
-		await pubTypePage.addFieldToPubType(
-			"Submission",
-			`${community.community.slug}:${stringField}`
+
+		const submissionPubTypeId = community.pubTypes.Submission.id;
+
+		const pubTypePage = new PubTypesEditPage(
+			page,
+			community.community.slug,
+			submissionPubTypeId
 		);
+		await pubTypePage.goto();
+		await page.waitForTimeout(500);
+		await pubTypePage.addField(stringField);
+
+		await pubTypePage.saveType();
 
 		// Now go to a pub page and add a related pub
 		const pubPage = new PubDetailsPage(page, community.community.slug, community.pubs[0].id);

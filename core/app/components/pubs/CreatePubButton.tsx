@@ -1,13 +1,11 @@
 import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
 import type { ButtonProps } from "ui/button";
-import { logger } from "logger";
 import { Plus } from "ui/icon";
 
 import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCreatablePubTypes } from "~/lib/authorization/capabilities";
 import { getPubsWithRelatedValues } from "~/lib/server";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getPubFields } from "~/lib/server/pubFields";
 import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext";
@@ -104,7 +102,7 @@ export const CreatePubButton = async (props: Props) => {
 		return null;
 	}
 
-	const pubTypes = await getCreatablePubTypes(user.id, community.id).execute();
+	const pubTypes = await getCreatablePubTypes(user.id, community.id);
 
 	const stageId = "stageId" in props ? props.stageId : undefined;
 

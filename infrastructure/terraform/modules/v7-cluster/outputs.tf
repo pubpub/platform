@@ -1,9 +1,9 @@
 output "cluster_info" {
   value = {
-    region                       = var.region
-    name                         = var.name
-    vpc_id                       = aws_vpc.main.id
-    environment                  = var.environment
+    region      = var.region
+    name        = var.name
+    vpc_id      = aws_vpc.main.id
+    environment = var.environment
     cluster_arn                  = module.ecs_cluster.arn
     private_subnet_ids           = aws_subnet.private.*.id
     container_security_group_ids = [aws_security_group.ecs_tasks.id]

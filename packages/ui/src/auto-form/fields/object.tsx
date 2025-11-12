@@ -66,7 +66,7 @@ export default function AutoFormObject<SchemaType extends z.ZodObject<any, any>>
 	// probably used when rendering a server component
 	if (isFieldConfigItem(fieldConfig)) {
 		const itemName = schema._def.description ?? beautifyObjectName(path[0]);
-		const [title, description, additionalType] = itemName.split("|");
+		const [title, description] = itemName.split("|");
 
 		return (
 			<FormFieldObject
@@ -239,6 +239,7 @@ function FormFieldObject({
 
 				return (
 					<ParentElement key={`${key}.parent`}>
+						{/* @ts-expect-error FIXME:  dont care */}
 						<InputComponent
 							zodInputProps={zodInputProps}
 							field={field}
@@ -249,6 +250,7 @@ function FormFieldObject({
 							zodItem={item}
 							fieldProps={fieldProps}
 							className={fieldProps.className}
+							placeholder={fieldConfigItem.placeholder}
 						/>
 					</ParentElement>
 				);

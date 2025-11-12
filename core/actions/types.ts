@@ -1,10 +1,12 @@
 import type * as z from "zod";
 
-import type { ProcessedPub } from "contracts";
+import type { Json, ProcessedPub } from "contracts";
 import type {
 	ActionInstances,
 	Action as ActionName,
 	ActionRunsId,
+	Automations,
+	Communities,
 	CommunitiesId,
 	StagesId,
 	UsersId,
@@ -12,12 +14,10 @@ import type {
 import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
+import type { Prettify, XOR } from "utils/types";
 import { Event } from "db/public";
 
 import type { ClientExceptionOptions } from "~/lib/serverActions";
-
-type ZodObjectOrWrapped = z.ZodObject<any, any> | z.ZodEffects<z.ZodObject<any, any>>;
-export type ZodObjectOrWrappedOrOptional = ZodObjectOrWrapped | z.ZodOptional<ZodObjectOrWrapped>;
 
 export type ActionPub = ProcessedPub<{
 	withPubType: true;
@@ -25,28 +25,36 @@ export type ActionPub = ProcessedPub<{
 }>;
 
 export type RunProps<T extends Action> =
-	T extends Action<infer C, infer A extends ZodObjectOrWrappedOrOptional>
-		? {
-				config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
-				configFieldOverrides: Set<string>;
-				pub: ActionPub;
-				args: A["_output"] & { pubFields: { [K in keyof A["_output"]]?: string[] } };
-				argsFieldOverrides: Set<string>;
-				stageId: StagesId;
-				communityId: CommunitiesId;
-				/**
-				 * The lastModifiedBy field, to be used when you are
-				 * creating/modifying pubs
-				 * Will likely look like: `action-run:<action-run-id>
-				 */
-				lastModifiedBy: LastModifiedBy;
-				actionRunId: ActionRunsId;
-				/**
-				 * The user ID of the user who initiated the action, if any
-				 */
-				userId?: UsersId;
-				actionInstance: ActionInstances;
-			}
+	T extends Action<infer C, any, infer Acc extends ActionRunAccepts[]>
+		? Prettify<
+				{
+					config: C["_output"] & { pubFields: { [K in keyof C["_output"]]?: string[] } };
+					stageId: StagesId;
+					communityId: CommunitiesId;
+					/**
+					 * The lastModifiedBy field, to be used when you are
+					 * creating/modifying pubs
+					 * Will likely look like: `action-run:<action-run-id>
+					 */
+					lastModifiedBy: LastModifiedBy;
+					actionRunId: ActionRunsId;
+					/**
+					 * The user ID of the user who initiated the action, if any
+					 */
+					userId?: UsersId;
+					actionInstance: ActionInstances;
+				} &
+					// if both are accepted, it's one or the other.
+					// if only one's accepted, it's only that one
+					("pub" | "json" extends Acc[number]
+						? XOR<{ pub: ActionPub }, { json: Json }>
+						: ("pub" extends Acc[number]
+								? {
+										pub: ActionPub;
+									}
+								: { pub?: never }) &
+								("json" extends Acc[number] ? { json: Json } : { json?: never }))
+			>
 		: never;
 
 export type ConfigProps<C> = {
@@ -59,14 +67,18 @@ export type TokenDef = {
 	};
 };
 
+export const actionRunAccepts = ["pub", "json"] as const;
+export type ActionRunAccepts = (typeof actionRunAccepts)[number];
+
 export type Action<
-	C extends ZodObjectOrWrapped = ZodObjectOrWrapped,
-	A extends ZodObjectOrWrappedOrOptional = ZodObjectOrWrappedOrOptional,
+	C extends z.ZodObject<any> = z.ZodObject<any>,
 	N extends ActionName = ActionName,
+	Accepts extends ActionRunAccepts[] = ActionRunAccepts[],
 > = {
 	id?: string;
 	name: N;
 	description: string;
+	accepts: Accepts;
 	/**
 	 * The action's configuration
 	 *
@@ -75,37 +87,9 @@ export type Action<
 	config: {
 		schema: C;
 		fieldConfig?: {
-			[K in keyof FieldConfig<C["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
-				/**
-				 * The type of the field.
-				 * Either choose one of the predefined types, define a type inline, or use `custom`.
-				 *
-				 * `custom` indicates you are defining the component yourself in `[action]/[config|params]/[fieldName].field.tsx`
-				 */
-				fieldType?: FieldConfigItem["fieldType"] | "custom";
-			};
+			[K in keyof FieldConfig<C["_output"]>]: FieldConfigItem;
 		};
 		dependencies?: Dependency<z.infer<C>>[];
-	};
-	/**
-	 * The run parameters for this action
-	 *
-	 * These are the parameters you can specify when manually running the action.
-	 *
-	 * Defining this as an optional Zod schema (e.g. `z.object({/*...*\/}).optional()`) means that the action can be automatically run
-	 * through a rule.
-	 */
-	params: {
-		schema: A;
-		fieldConfig?: {
-			[K in keyof NonNullable<A["_output"]>]: Omit<FieldConfigItem, "fieldType"> & {
-				/**
-				 * Custom indicates you are defining the component yourself in `[action]/[config/params]/[fieldName].field.tsx`
-				 */
-				fieldType?: FieldConfigItem["fieldType"] | "custom";
-			};
-		};
-		dependencies?: Dependency<NonNullable<z.infer<A>>>[];
 	};
 	/**
 	 * The icon to display for this action. Used in the UI.
@@ -131,11 +115,11 @@ export type Action<
 };
 
 export const defineAction = <
-	C extends ZodObjectOrWrapped,
-	A extends ZodObjectOrWrappedOrOptional,
+	C extends z.ZodObject<any>,
 	N extends ActionName,
+	Acc extends ActionRunAccepts[],
 >(
-	action: Action<C, A, N>
+	action: Action<C, N, Acc>
 ) => action;
 
 export type ActionSuccess = {
@@ -143,7 +127,7 @@ export type ActionSuccess = {
 	/**
 	 * Optionally provide a report to be displayed to the user
 	 */
-	report?: string;
+	report?: React.ReactNode;
 	data: unknown;
 };
 
@@ -153,59 +137,65 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>;
 
-export const sequentialRuleEvents = [Event.actionSucceeded, Event.actionFailed] as const;
-export type SequentialRuleEvent = (typeof sequentialRuleEvents)[number];
+export const sequentialAutomationEvents = [Event.actionSucceeded, Event.actionFailed] as const;
+export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number];
 
-export const isSequentialRuleEvent = (event: Event): event is SequentialRuleEvent =>
-	sequentialRuleEvents.includes(event as any);
+export const isSequentialAutomationEvent = (event: Event): event is SequentialAutomationEvent =>
+	sequentialAutomationEvents.includes(event as any);
 
-export const scheduableRuleEvents = [
+export const schedulableAutomationEvents = [
 	Event.pubInStageForDuration,
 	Event.actionFailed,
 	Event.actionSucceeded,
 ] as const;
-export type ScheduableRuleEvent = (typeof scheduableRuleEvents)[number];
+export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number];
 
-export const isScheduableRuleEvent = (event: Event): event is ScheduableRuleEvent =>
-	scheduableRuleEvents.includes(event as any);
+export const isSchedulableAutomationEvent = (event: Event): event is SchedulableAutomationEvent =>
+	schedulableAutomationEvents.includes(event as any);
 
-export type EventRuleOptionsBase<
+export type EventAutomationOptionsBase<
 	E extends Event,
 	AC extends Record<string, any> | undefined = undefined,
 > = {
 	event: E;
-	canBeRunAfterAddingRule?: boolean;
+	canBeRunAfterAddingAutomation?: boolean;
 	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined;
 	/**
 	 * The display name options for this event
 	 */
 	display: {
+		icon: (typeof Icons)[keyof typeof Icons];
 		/**
-		 * The base display name for this rule, shown e.g. when selecting the event for a rule
+		 * The base display name for this automation, shown e.g. when selecting the event for a automation
 		 */
-		base: string;
-	} & {
+		base: React.ReactNode | ((options: { community: Communities }) => React.ReactNode);
 		/**
-		 * The display name for this event when used in a rule
+		 * String to use when viewing the automation on the stage.
+		 * Useful if you want to show some configuration or automation-specific information
 		 */
-		[K in "withConfig" as AC extends Record<string, any>
-			? K
-			: E extends SequentialRuleEvent
-				? K
-				: never]: (
-			options: AC extends Record<string, any> ? AC : ActionInstances
-		) => string;
+		hydrated?: (
+			options: {
+				automation: Automations;
+				community: Communities;
+			} & (AC extends Record<string, any>
+				? { config: AC }
+				: E extends SequentialAutomationEvent
+					? { config: ActionInstances }
+					: {})
+		) => React.ReactNode;
 	};
 };
 
-export const defineRule = <E extends Event, AC extends Record<string, any> | undefined = undefined>(
-	options: EventRuleOptionsBase<E, AC>
+export const defineAutomation = <
+	E extends Event,
+	AC extends Record<string, any> | undefined = undefined,
+>(
+	options: EventAutomationOptionsBase<E, AC>
 ) => options;
 
-export type { RuleConfig, RuleConfigs } from "./_lib/rules";
+export type { AutomationConfig, AutomationConfigs } from "./_lib/automations";
 
-export type ConfigOf<T extends Action> =
-	T extends Action<infer _, infer C, any> ? z.infer<C> : never;
+export type ConfigOf<T extends Action> = T extends Action<infer C, any, any> ? z.infer<C> : never;
 
 export type ActionInstanceOf<T extends Action> = {
 	id: string;

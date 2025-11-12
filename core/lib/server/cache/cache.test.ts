@@ -6,13 +6,13 @@ import { expect, it, vitest } from "vitest";
 
 import type { Database } from "db/Database";
 import type { ActionInstancesId, CommunitiesId, PubsId, PubTypesId, UsersId } from "db/public";
+import type { Equal, Expect } from "utils/types";
 import { ActionRunStatus, ApiAccessScope, ApiAccessType, Event, MemberRole } from "db/public";
 
 import type { QB } from "./types";
-import type { Equal, Expect } from "~/lib/types";
 import { autoCache } from "./autoCache";
 import { autoRevalidate } from "./autoRevalidate";
-import { AutoCacheWithMutationError, cachedFindTables } from "./sharedAuto";
+import { cachedFindTables } from "./sharedAuto";
 import { getTablesWithLinkedTables } from "./specialTables";
 
 const mockedDb = new Kysely<Database>({

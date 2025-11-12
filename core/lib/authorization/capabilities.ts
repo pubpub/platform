@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import type {
 	CommunitiesId,
 	Forms,
@@ -8,53 +10,26 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
+import type { XOR } from "utils/types";
+import { Capabilities, MemberRole, MembershipType } from "db/public";
 import { logger } from "logger";
 
+import type {
+	CommunityTargetCapabilities,
+	PubTargetCapabilities,
+	StageTargetCapabilities,
+} from "./capabalities.definition";
 import { db } from "~/kysely/database";
 import { getLoginData } from "../authentication/loginData";
 import { autoCache } from "../server/cache/autoCache";
-
-export const pubCapabilities = [
-	Capabilities.movePub,
-	Capabilities.viewPub,
-	Capabilities.deletePub,
-	Capabilities.addPubMember,
-	Capabilities.removePubMember,
-	Capabilities.runAction,
-	Capabilities.seeExtraPubValues,
-] as const;
-
-export const communityCapabilities = [
-	Capabilities.createPubField,
-	Capabilities.archivePubField,
-	Capabilities.editPubField,
-	Capabilities.createPubType,
-	Capabilities.editPubType,
-	Capabilities.deletePubType,
-	Capabilities.createStage,
-	Capabilities.addCommunityMember,
-	Capabilities.removeCommunityMember,
-	Capabilities.manageMemberGroups,
-	Capabilities.editCommunity,
-	Capabilities.createForm,
-	Capabilities.createApiToken,
-	Capabilities.revokeApiToken,
-	Capabilities.seeExtraPubValues,
-] as const;
-export const stageCapabilities = [
-	Capabilities.viewStage,
-	Capabilities.manageStage,
-	Capabilities.deleteStage,
-	Capabilities.addStageMember,
-	Capabilities.removeStageMember,
-	Capabilities.seeExtraPubValues,
-] as const;
+import { findCommunityBySlug } from "../server/community";
+import { getForm } from "../server/form";
+import { getStagesViewableByUser } from "../server/stages";
 
 type CapabilitiesArg = {
-	[MembershipType.pub]: typeof pubCapabilities;
-	[MembershipType.stage]: typeof stageCapabilities;
-	[MembershipType.community]: typeof communityCapabilities;
+	[MembershipType.pub]: PubTargetCapabilities;
+	[MembershipType.stage]: StageTargetCapabilities;
+	[MembershipType.community]: CommunityTargetCapabilities;
 };
 
 export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
@@ -132,7 +107,7 @@ const communityMemberships = ({
 	);
 
 export const userCan = async <T extends CapabilityTarget>(
-	capability: CapabilitiesArg[T["type"]][number],
+	capability: CapabilitiesArg[T["type"]],
 	target: T,
 	userId: UsersId
 ) => {
@@ -308,6 +283,11 @@ export const userCanCreatePub = async ({
 	return forms.length !== 0;
 };
 
+export const userCanCreateAnyPub = cache(async (userId: UsersId, communityId: CommunitiesId) => {
+	const pubTypes = await getCreatablePubTypes(userId, communityId);
+	return pubTypes.length !== 0;
+});
+
 const authorizedCreateFormsBase = ({
 	userId,
 	communityId,
@@ -339,6 +319,14 @@ const authorizedCreateFormsBase = ({
 		.where("forms.communityId", "=", communityId)
 		.where((eb) =>
 			eb.or([
+				eb(
+					eb
+						.selectFrom("users")
+						.where("users.id", "=", userId)
+						.select("users.isSuperAdmin"),
+					"is",
+					true
+				),
 				eb(
 					eb.val(Capabilities.createPubWithAnyForm),
 					"in",
@@ -420,6 +408,17 @@ export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
 			.where((eb) =>
 				eb.or([
+					eb.and([
+						eb(
+							eb
+								.selectFrom("users")
+								.where("users.id", "=", userId)
+								.select("users.isSuperAdmin"),
+							"is",
+							true
+						),
+						eb("forms.pubTypeId", "=", eb.selectFrom("pubtype").select("pubtype.id")),
+					]),
 					eb(
 						eb.val(Capabilities.editPubWithAnyForm),
 						"in",
@@ -457,6 +456,16 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 			.qb.clearWhere()
 			.where((eb) =>
 				eb.or([
+					eb.and([
+						eb(
+							eb
+								.selectFrom("users")
+								.where("users.id", "=", userId)
+								.select("users.isSuperAdmin"),
+							"is",
+							true
+						),
+					]),
 					eb(
 						eb.val(Capabilities.editPubWithAnyForm),
 						"in",
@@ -473,8 +482,6 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 							eb("forms.id", "in", eb.selectFrom("stage_ms").select("formId")),
 						]),
 					]),
-					// Always include the default form (otherwise these conditions are identical to update)
-					eb("forms.isDefault", "is", true),
 				])
 			)
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
@@ -482,7 +489,7 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 
 export type PubTypeWithForm = (Pick<PubTypes, "id" | "name"> & Pick<Forms, "slug" | "isDefault">)[];
 
-export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId) => {
+export const getCreatablePubTypes = cache(async (userId: UsersId, communityId: CommunitiesId) => {
 	return autoCache(
 		authorizedCreateFormsBase({ userId, communityId })
 			.innerJoin("pub_types", "forms.pubTypeId", "pub_types.id")
@@ -491,5 +498,91 @@ export const getCreatablePubTypes = (userId: UsersId, communityId: CommunitiesId
 			.select(["pub_types.id", "pub_types.name", "forms.slug", "forms.isDefault"])
 			.distinctOn(["pub_types.id"])
 			.orderBy(["pub_types.id", "forms.isDefault desc"])
-	);
+	).execute();
+});
+
+export const userIsCommunityRole = async (role: MemberRole[], communitySlug?: string) => {
+	const [{ user }, community] = await Promise.all([
+		getLoginData(),
+		!communitySlug ? findCommunityBySlug() : findCommunityBySlug(communitySlug),
+	]);
+	if (!user || !community) {
+		return false;
+	}
+	if (user.isSuperAdmin) {
+		return true;
+	}
+
+	return user.memberships.some((membership) => role.includes(membership.role));
 };
+
+export const userHasAccessToForm = async (
+	props: { userId: UsersId; pubId?: PubsId; communityId: CommunitiesId } & XOR<
+		{ formId: FormsId },
+		{ formSlug: string }
+	>
+) => {
+	if (props.pubId) {
+		return userCanEditPub({
+			userId: props.userId,
+			pubId: props.pubId,
+			formId: props.formId,
+			formSlug: props.formSlug,
+		});
+	}
+
+	const x = await authorizedCreateFormsBase({
+		userId: props.userId,
+		communityId: props.communityId,
+	})
+		.$if(!!props.formId, (eb) => eb.where("forms.id", "=", props.formId!))
+		.$if(!!props.formSlug, (eb) => eb.where("forms.slug", "=", props.formSlug!))
+		.executeTakeFirst();
+
+	return !!x;
+};
+
+const userIsCommunityAdminOrEditor = cache(
+	async (communitySlug: string | undefined = undefined) => {
+		return userIsCommunityRole([MemberRole.admin, MemberRole.editor], communitySlug);
+	}
+);
+
+export const userCanEditAllPubs = cache(async (communitySlug: string | undefined = undefined) => {
+	return userIsCommunityAdminOrEditor(communitySlug);
+});
+
+export const userCanArchiveAllPubs = cache(
+	async (communitySlug: string | undefined = undefined) => {
+		return userIsCommunityAdminOrEditor(communitySlug);
+	}
+);
+
+export const userCanMoveAllPubs = cache(async (communitySlug: string | undefined = undefined) => {
+	return userIsCommunityAdminOrEditor(communitySlug);
+});
+
+export const userCanRunActionsAllPubs = cache(
+	async (communitySlug: string | undefined = undefined) => {
+		return userIsCommunityAdminOrEditor(communitySlug);
+	}
+);
+
+export const userCanViewAllStages = cache(async (communitySlug: string | undefined = undefined) => {
+	return userIsCommunityAdminOrEditor(communitySlug);
+});
+
+export const userCanViewStagePage = cache(
+	async (
+		userId: UsersId,
+		communityId: CommunitiesId,
+		communitySlug: string | undefined = undefined
+	) => {
+		const userCanViewAnyStage = await Promise.all([
+			getStagesViewableByUser(userId, communityId, communitySlug),
+			userIsCommunityAdminOrEditor(communitySlug),
+		]);
+
+		return userCanViewAnyStage.some((x) => !!x);
+	}
+);

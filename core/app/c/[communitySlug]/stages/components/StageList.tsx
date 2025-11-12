@@ -1,18 +1,30 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { Eye } from "lucide-react";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
-import { Button } from "ui/button";
+import { Pencil } from "ui/icon";
+import { PubFieldProvider } from "ui/pubFields";
+import { stagesDAO, StagesProvider } from "ui/stages";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
 import { BasicPagination } from "~/app/components/Pagination";
-import { PubCard } from "~/app/components/PubCard";
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
+import {
+	userCanArchiveAllPubs,
+	userCanEditAllPubs,
+	userCanMoveAllPubs,
+	userCanRunActionsAllPubs,
+	userCanViewAllStages,
+} from "~/lib/authorization/capabilities";
 import { getStageActions } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
+import { getPubFields } from "~/lib/server/pubFields";
 import { getStages } from "~/lib/server/stages";
 import { getOrderedStages } from "~/lib/stages";
 import { PubListSkeleton } from "../../pubs/PubList";
@@ -25,24 +37,29 @@ type Props = {
 
 export async function StageList(props: Props) {
 	const { communityId, userId } = props;
-	const [communityStages, communityMembers] = await Promise.all([
+	const [communityStages, communityMembers, pubFields] = await Promise.all([
 		getStages({ communityId, userId }).execute(),
 		selectAllCommunityMemberships({ communityId }).execute(),
+		getPubFields({ communityId }).executeTakeFirstOrThrow(),
 	]);
 
 	const stages = getOrderedStages(communityStages);
 
 	return (
-		<div>
-			{stages.map((stage) => (
-				<StageCard
-					userId={props.userId}
-					key={stage.id}
-					stage={stage}
-					members={communityMembers}
-					searchParams={props.searchParams}
-				/>
-			))}
+		<div className="flex flex-col gap-8">
+			<PubFieldProvider pubFields={pubFields.fields}>
+				<StagesProvider stages={stagesDAO(stages)}>
+					{stages.map((stage) => (
+						<StageCard
+							userId={props.userId}
+							key={stage.id}
+							stage={stage}
+							members={communityMembers}
+							searchParams={props.searchParams}
+						/>
+					))}
+				</StagesProvider>
+			</PubFieldProvider>
 		</div>
 	);
 }
@@ -59,27 +76,61 @@ async function StageCard({
 	userId: UsersId;
 }) {
 	const communitySlug = await getCommunitySlug();
+
 	return (
-		<div key={stage.id} className="mb-20">
-			<div className="flex flex-row justify-between">
-				<h3 className="mb-2 text-lg font-semibold hover:underline">
-					<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-						{stage.name} ({stage.pubsCount})
-					</Link>
-				</h3>
+		<div key={stage.id} className="relative rounded-l-md border-l-2 border-gray-400 py-2 pl-4">
+			<div className="flex flex-col justify-between gap-4">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-3">
+						<Link
+							href={`/c/${communitySlug}/stages/${stage.id}`}
+							className="group underline"
+						>
+							<h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-blue-600">
+								{stage.name}
+							</h3>
+						</Link>
+						<p className="mt-1 text-xs text-gray-500">
+							{stage.pubsCount === 0
+								? "No Pubs in this stage"
+								: `${stage.pubsCount} ${stage.pubsCount === 1 ? "Pub" : "Pubs"}`}
+						</p>
+					</div>
+					<EllipsisMenu>
+						<EllipsisMenuButton asChild>
+							<Link
+								href={`/c/${communitySlug}/stages/manage?editingStageId=${stage.id}`}
+							>
+								Edit Stage <Pencil size={10} strokeWidth={1.5} />
+							</Link>
+						</EllipsisMenuButton>
+						<EllipsisMenuButton asChild>
+							<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+								View Stage <Eye size={10} strokeWidth={1.5} />
+							</Link>
+						</EllipsisMenuButton>
+					</EllipsisMenu>
+				</div>
+
+				{!!stage.pubsCount && stage.pubsCount > 0 && (
+					<div className="flex flex-col gap-4">
+						<Suspense
+							fallback={
+								<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-4" />
+							}
+						>
+							<StagePubs
+								userId={userId}
+								stage={stage}
+								searchParams={searchParams}
+								members={members}
+								totalPubLimit={3}
+								basePath={`/c/${communitySlug}/stages`}
+							/>
+						</Suspense>
+					</div>
+				)}
 			</div>
-			<Suspense
-				fallback={<PubListSkeleton amount={stage.pubsCount ?? 3} className="gap-16" />}
-			>
-				<StagePubs
-					userId={userId}
-					stage={stage}
-					searchParams={searchParams}
-					members={members}
-					totalPubLimit={3}
-					basePath={`/c/${communitySlug}/stages`}
-				/>
-			</Suspense>
 		</div>
 	);
 }
@@ -100,7 +151,16 @@ export async function StagePubs({
 	basePath: string;
 	userId: UsersId;
 }) {
-	const [communitySlug, stagePubs, actionInstances] = await Promise.all([
+	const [
+		communitySlug,
+		stagePubs,
+		actionInstances,
+		canEditAllPubs,
+		canArchiveAllPubs,
+		canRunActionsAllPubs,
+		canMoveAllPubs,
+		canViewAllStages,
+	] = await Promise.all([
 		getCommunitySlug(),
 		getPubsWithRelatedValues(
 			{ stageId: [stage.id], communityId: stage.communityId },
@@ -113,9 +173,15 @@ export async function StagePubs({
 				withValues: false,
 				withStage: true,
 				withPubType: true,
+				withStageActionInstances: true,
 			}
 		),
 		getStageActions({ stageId: stage.id }).execute(),
+		userCanEditAllPubs(),
+		userCanArchiveAllPubs(),
+		userCanRunActionsAllPubs(),
+		userCanMoveAllPubs(),
+		userCanViewAllStages(),
 	]);
 
 	const totalPages =
@@ -143,6 +209,13 @@ export async function StagePubs({
 						actionInstances={actionInstances}
 						communitySlug={communitySlug}
 						withSelection={false}
+						userId={userId}
+						canEditAllPubs={canEditAllPubs}
+						canArchiveAllPubs={canArchiveAllPubs}
+						canRunActionsAllPubs={canRunActionsAllPubs}
+						canMoveAllPubs={canMoveAllPubs}
+						canViewAllStages={canViewAllStages}
+						canFilter={false}
 					/>
 				);
 			})}
@@ -154,18 +227,25 @@ export async function StagePubs({
 					totalPages={totalPages}
 				/>
 			)}
-			{!pagination && totalPubLimit && stagePubs.length > totalPubLimit && (
-				<Button
-					variant="ghost"
-					className="text-md inline-flex text-muted-foreground"
-					size="lg"
-					asChild
-				>
-					<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
-						See all pubs in stage {stage.name}
-					</Link>
-				</Button>
-			)}
+			{!pagination &&
+				stage.pubsCount &&
+				totalPubLimit &&
+				stagePubs.length > totalPubLimit && (
+					<div className="flex items-center justify-center pt-4">
+						<Link href={`/c/${communitySlug}/stages/${stage.id}`}>
+							<div className="group flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 transition-all hover:bg-gray-200">
+								<div className="flex gap-1">
+									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+									<div className="h-2 w-2 rounded-full bg-gray-500"></div>
+								</div>
+								<span className="text-sm text-gray-600 group-hover:text-gray-800">
+									{stage.pubsCount - totalPubLimit} more
+								</span>
+							</div>
+						</Link>
+					</div>
+				)}
 		</div>
 	);
 }

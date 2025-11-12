@@ -5,6 +5,7 @@ import { jsonArrayFrom } from "kysely/helpers/postgres";
 import { defaultComponent } from "schemas";
 
 import type { CommunitiesId, FormsId, PublicSchema, PubsId, PubTypesId, UsersId } from "db/public";
+import type { XOR } from "utils/types";
 import {
 	AuthTokenType,
 	ElementType,
@@ -13,13 +14,14 @@ import {
 	StructuralFormElement,
 } from "db/public";
 
-import type { XOR } from "../types";
 import type { GetPubTypesResult } from "./pubtype";
 import type { FormElements } from "~/app/components/forms/types";
 import { db } from "~/kysely/database";
 import { createMagicLink } from "../authentication/createMagicLink";
+import { defaultFormName, defaultFormSlug } from "../form";
 import { findRanksBetween } from "../rank";
 import { autoCache } from "./cache/autoCache";
+import { autoRevalidate } from "./cache/autoRevalidate";
 import { getCommunitySlug } from "./cache/getCommunitySlug";
 import { findCommunityBySlug } from "./community";
 import { insertCommunityMemberships, insertPubMemberships } from "./member";
@@ -27,13 +29,15 @@ import { getUser } from "./user";
 
 /**
  * Get a form by either slug, id, or pubtype ID. If given a pubtype ID, retrieves the
+import { autoRevalidate } from "./cache/autoRevalidate";
  * default form for that pubtype.
  */
 export const getForm = (
 	props: (
-		| { id: FormsId; slug?: never; pubTypeId?: never }
-		| { id?: never; slug: string; pubTypeId?: never }
-		| { id?: never; slug?: never; pubTypeId: PubTypesId }
+		| { id: FormsId; slug?: never; pubTypeId?: never; pubId?: never }
+		| { id?: never; slug: string; pubTypeId?: never; pubId?: never }
+		| { id?: never; slug?: never; pubTypeId: PubTypesId; pubId?: never }
+		| { id?: never; slug?: never; pubTypeId?: never; pubId: PubsId }
 	) & { communityId: CommunitiesId },
 	trx: typeof db | QueryCreator<PublicSchema> = db
 ) =>
@@ -47,6 +51,11 @@ export const getForm = (
 				eb.where((eb) =>
 					eb("forms.pubTypeId", "=", props.pubTypeId!).and("forms.isDefault", "=", true)
 				)
+			)
+			.$if(Boolean(props.pubId), (eb) =>
+				eb
+					.innerJoin("pubs", "pubs.pubTypeId", "forms.pubTypeId")
+					.where("pubs.id", "=", props.pubId!)
 			)
 			.selectAll("forms")
 			.select((eb) =>
@@ -339,6 +348,27 @@ export const insertForm = (
 };
 export const FORM_NAME_UNIQUE_CONSTRAINT = "forms_name_communityId_key";
 export const FORM_SLUG_UNIQUE_CONSTRAINT = "forms_slug_communityId_key";
+
+export const createDefaultForm = (
+	props: {
+		communityId: CommunitiesId;
+		pubType: GetPubTypesResult[number];
+	},
+	trx = db
+) => {
+	const pubType = props.pubType;
+
+	return autoRevalidate(
+		insertForm(
+			pubType,
+			defaultFormName(pubType.name),
+			defaultFormSlug(pubType.name),
+			props.communityId,
+			true,
+			trx
+		)
+	);
+};
 
 export type SimpleForm = {
 	id: FormsId;

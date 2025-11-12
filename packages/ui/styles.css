@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @layer base {
 	:root {
 		--background: 0 0% 100%;
@@ -74,10 +78,6 @@
 	}
 }
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 .editor .token {
 	font-size: 0.7rem;
 	color: #3b90f7;
@@ -85,6 +85,16 @@
 	background-color: rgba(59, 144, 247, 0.2);
 	padding: 2px 1px;
 	box-shadow: 0px 0px 0px 1px rgba(59, 144, 247, 0.5);
+	border-radius: 3px;
+	margin: 0 1px;
+}
+.editor .jsonata-token {
+	font-size: 0.7rem;
+	color: #e7a316;
+	font-family: monospace;
+	background-color: rgba(231, 163, 22, 0.2);
+	padding: 2px 1px;
+	box-shadow: 0px 0px 0px 1px rgba(231, 163, 22, 0.5);
 	border-radius: 3px;
 	margin: 0 1px;
 }

@@ -1,5 +1,8 @@
+import type { ExpressionBuilder } from "kysely";
+
+import { cache } from "react";
 import { QueryCreator, sql } from "kysely";
-import { jsonArrayFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
@@ -74,6 +77,11 @@ export const viewableStagesCte = ({
 				.onRef("stage_memberships.role", "=", "membership_capabilities.role")
 				.on("membership_capabilities.type", "=", MembershipType.stage)
 		)
+		.$if(Boolean(communityId), (qb) =>
+			qb
+				.innerJoin("stages", "stages.id", "stage_memberships.stageId")
+				.where("stages.communityId", "=", communityId!)
+		)
 		.select("stage_memberships.stageId")
 		.where("membership_capabilities.capability", "=", Capabilities.viewStage)
 		.where("stage_memberships.userId", "=", userId);
@@ -104,10 +112,49 @@ export const viewableStagesCte = ({
 		.select("stageId");
 };
 
+export const getStagesViewableByUser = cache(
+	async (
+		userId: UsersId,
+		communityId: CommunitiesId,
+		/* manually supply this when calling outside a community context */
+		communitySlug?: string
+	) => {
+		return autoCache(
+			viewableStagesCte({ db, userId, communityId })
+				.clearSelect()
+				.select((eb) => eb.fn.countAll<number>().as("count")),
+			{
+				communitySlug,
+			}
+		)
+			.executeTakeFirstOrThrow()
+			.then((res) => (res?.count ?? 0) > 0);
+	}
+);
+
 type CommunityStageProps = { communityId: CommunitiesId; stageId?: StagesId; userId: UsersId };
 type CommunityStageOptions = {
 	withActionInstances?: "count" | "full" | false;
 	withMembers?: "count" | "full" | false;
+};
+
+export const actionConfigDefaultsSelect = <EB extends ExpressionBuilder<any, any>>(eb: EB) => {
+	return (
+		eb
+			.selectFrom("action_config_defaults")
+			.whereRef("action_config_defaults.action", "=", "action_instances.action")
+			// only select the keys to prevent possibly leaking "secrets"
+			.select((eb) =>
+				eb.fn
+					.coalesce(
+						sql<
+							string[]
+						>`array(select jsonb_object_keys("action_config_defaults"."config"))`,
+						sql<string[]>`'{}'::text[]`
+					)
+					.as("defaultedConfigKeys")
+			)
+	);
 };
 
 /**
@@ -179,6 +226,9 @@ export const getStages = (
 							.selectFrom("action_instances")
 							.whereRef("action_instances.stageId", "=", "stages.id")
 							.selectAll("action_instances")
+							.select((eb) =>
+								actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
+							)
 					).as("actionInstances")
 				)
 			)

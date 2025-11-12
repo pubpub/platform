@@ -8,9 +8,13 @@ import type {
 	UsersId,
 } from "db/public";
 
-import type { CreateTokenFormSchema } from "./CreateTokenForm";
+import type { CreateTokenFormSchema } from "./types";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { createApiAccessToken, deleteApiAccessToken } from "~/lib/server/apiAccessTokens";
+import {
+	createApiAccessToken,
+	deleteApiAccessToken,
+	getApiAccessToken,
+} from "~/lib/server/apiAccessTokens";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { defineServerAction } from "~/lib/server/defineServerAction";
@@ -75,6 +79,18 @@ export const deleteToken = defineServerAction(async function deleteToken({
 
 	if (!community) {
 		throw new Error("Community not found");
+	}
+
+	const token = await getApiAccessToken(id).executeTakeFirstOrThrow(
+		() => new Error("Token not found")
+	);
+
+	if (token.communityId !== community.id) {
+		throw new Error("You cannot delete a token for another community");
+	}
+
+	if (token.isSiteBuilderToken) {
+		throw new Error("You cannot delete a site builder token");
 	}
 
 	await deleteApiAccessToken({ id }).execute();

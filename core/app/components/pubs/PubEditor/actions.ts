@@ -109,7 +109,8 @@ export const createPubRecursive = defineServerAction(async function createPubRec
 					}
 					if (
 						element.schemaName === CoreSchemaType.FileUpload &&
-						Value.Check(fileUploadSchema, value)
+						Value.Check(fileUploadSchema, value) &&
+						value.length > 0
 					) {
 						fileUploads.push({
 							tempUrl: value[0].fileUploadUrl,
@@ -203,13 +204,11 @@ export const updatePub = defineServerAction(async function updatePub({
 	continueOnValidationError: boolean;
 	deleted: { slug: string; relatedPubId: PubsId }[];
 }) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
-	if (!loginData || !loginData.user) {
+	if (!loginData || !loginData.user || !community) {
 		return ApiError.NOT_LOGGED_IN;
 	}
-
-	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;
@@ -219,8 +218,10 @@ export const updatePub = defineServerAction(async function updatePub({
 		return ApiError.UNAUTHORIZED;
 	}
 
-	const form = await getForm({ slug: formSlug, communityId: community.id }).executeTakeFirst();
-	const canEdit = await userCanEditPub({ pubId, userId: loginData.user.id, formSlug });
+	const [form, canEdit] = await Promise.all([
+		getForm({ slug: formSlug, communityId: community.id }).executeTakeFirst(),
+		userCanEditPub({ pubId, userId: loginData.user.id, formSlug }),
+	]);
 
 	if (!form || !canEdit) {
 		return ApiError.UNAUTHORIZED;
@@ -259,7 +260,11 @@ export const updatePub = defineServerAction(async function updatePub({
 
 			if (
 				element.schemaName === CoreSchemaType.FileUpload &&
-				Value.Check(fileUploadSchema, value)
+				Value.Check(fileUploadSchema, value) &&
+				value.length > 0 &&
+				// otherwise it will try to make permanent already-permanent files
+				// FIXME: better check than this
+				value[0].fileUploadUrl.includes("temporary")
 			) {
 				fileUploads.push({
 					tempUrl: value[0].fileUploadUrl,
@@ -297,9 +302,9 @@ export const updatePub = defineServerAction(async function updatePub({
 });
 
 export const removePub = defineServerAction(async function removePub({ pubId }: { pubId: PubsId }) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
 
-	if (!loginData || !loginData.user) {
+	if (!loginData || !loginData.user || !community) {
 		return ApiError.NOT_LOGGED_IN;
 	}
 
@@ -307,8 +312,6 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 		userId: loginData.user.id,
 	});
 	const { user } = loginData;
-
-	const community = await findCommunityBySlug();
 
 	if (!community) {
 		return ApiError.COMMUNITY_NOT_FOUND;
@@ -332,7 +335,7 @@ export const removePub = defineServerAction(async function removePub({ pubId }: 
 			report: `Successfully removed the pub`,
 		};
 	} catch (error) {
-		logger.debug(error);
+		logger.error({ msg: "Failed to remove pub", err: error });
 		return {
 			error: "Failed to remove pub",
 			cause: error,

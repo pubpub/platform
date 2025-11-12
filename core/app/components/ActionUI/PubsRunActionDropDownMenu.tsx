@@ -1,30 +1,34 @@
 import "server-only";
 
-import type { ActionInstances, PubsId, Stages } from "db/public";
+import type { PubsId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
 import { ChevronDown, Play } from "ui/icon";
 import { cn } from "utils";
 
-import { ActionRunFormWrapper } from "~/app/components/ActionUI/ActionRunFormWrapper";
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
+import { ActionRunForm } from "./ActionRunForm";
+
+export type PubsRunActionDropDownMenuProps = {
+	actionInstances: ActionInstanceWithConfigDefaults[];
+	pubId: PubsId;
+	testId?: string;
+	/* accessible text for the button */
+	buttonText?: string;
+	iconOnly?: boolean;
+	children?: React.ReactNode;
+} & ButtonProps;
 
 export const PubsRunActionDropDownMenu = async ({
 	actionInstances,
 	pubId,
-	stage,
 	testId,
 	iconOnly,
+	buttonText,
 	children,
 	...buttonProps
-}: {
-	actionInstances: ActionInstances[];
-	pubId: PubsId;
-	stage: Stages;
-	testId?: string;
-	iconOnly?: boolean;
-	children?: React.ReactNode;
-} & ButtonProps) => {
+}: PubsRunActionDropDownMenuProps) => {
 	if (!actionInstances.length) {
 		return null;
 	}
@@ -42,7 +46,9 @@ export const PubsRunActionDropDownMenu = async ({
 					{children ?? (
 						<>
 							<Play size="12" strokeWidth="1px" className="text-neutral-500" />
-							<span className={cn({ "sr-only": iconOnly })}>Run action</span>
+							<span className={cn({ "sr-only": iconOnly })}>
+								{buttonText ?? "Run action"}
+							</span>
 							{iconOnly ? null : <ChevronDown size="14" />}
 						</>
 					)}
@@ -50,11 +56,11 @@ export const PubsRunActionDropDownMenu = async ({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
 				{actionInstances.map((actionInstance) => (
-					<ActionRunFormWrapper
-						stage={stage}
+					<ActionRunForm
+						key={actionInstance.id}
+						defaultFields={actionInstance.defaultedActionConfigKeys ?? []}
 						pubId={pubId}
 						actionInstance={actionInstance}
-						key={actionInstance.id}
 					/>
 				))}
 			</DropdownMenuContent>

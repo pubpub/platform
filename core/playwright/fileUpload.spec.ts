@@ -7,11 +7,8 @@ import { CoreSchemaType, MemberRole } from "db/public";
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
 import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { FieldsPage } from "./fixtures/fields-page";
 import { LoginPage } from "./fixtures/login-page";
-import { PubTypesPage } from "./fixtures/pub-types-page";
 import { PubsPage } from "./fixtures/pubs-page";
-import { createCommunity } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -54,9 +51,10 @@ test.afterAll(async () => {
 });
 
 test.describe("File upload", () => {
-	test("should upload a file", async ({ context }) => {
+	test("should upload files", async ({ context }) => {
 		const pubsPage = new PubsPage(page, community.community.slug);
 		await pubsPage.goTo();
+		await page.waitForURL(`/c/${community.community.slug}/pubs*`);
 		const pubId = await pubsPage.createPub({
 			pubType: "File Upload Test",
 			values: { title: "The Activity of Slugs" },
@@ -67,9 +65,11 @@ test.describe("File upload", () => {
 
 		await page.setInputFiles("input[type='file']", [
 			new URL("fixtures/test-assets/test-diagram.png", import.meta.url).pathname,
+			new URL("fixtures/test-assets/sample-pdf.pdf", import.meta.url).pathname,
+			new URL("fixtures/test-assets/shadowman.mov", import.meta.url).pathname,
 		]);
 
-		await page.getByRole("button", { name: "Upload 1 file", exact: true }).click({
+		await page.getByRole("button", { name: "Upload 3 files", exact: true }).click({
 			timeout: 2_000,
 		});
 
@@ -83,35 +83,25 @@ test.describe("File upload", () => {
 		});
 
 		await page.getByRole("link", { name: "View Pub", exact: true }).click();
-		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}`);
+		await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`);
 
-		const fileUploadValue = await page
-			.getByTestId(`FileUpload-value`)
-			.getByRole("button")
-			.click({
-				timeout: 1_000,
-			});
+		// there should be 3 files
+		await page
+			.getByRole("region", { name: "Uploaded files (3 files)" })
+			.waitFor({ timeout: 2_000 });
 
-		const describeThing = await page.getByText("Its MIME type is").first().textContent({
+		await expect(page.getByText("test-diagram.png")).toBeVisible({
 			timeout: 2_000,
 		});
 
-		/**
-		 * So we know the actual file is being uploaded
-		 */
-		const parsedDescription = describeThing?.match(
-			/The file is (\d+) bytes in size. Its MIME type is (\w+\/\w+)./
-		);
-		expect(parsedDescription).not.toBeNull();
+		await expect(page.getByText("image/png")).toBeVisible({
+			timeout: 2_000,
+		});
+		await expect(page.getByText("106.3 KB")).toBeVisible({
+			timeout: 2_000,
+		});
 
-		const fileSize = parsedDescription?.[1];
-		const mimeType = parsedDescription?.[2];
-
-		expect(fileSize).toBeDefined();
-		expect(parseInt(fileSize!)).toBe(108_839);
-		expect(mimeType).toBe("image/png");
-
-		const link = page.getByRole("link", { name: "Open file in new tab" });
+		const link = page.getByTestId("FileUpload-value").getByRole("link").first();
 
 		const url = await link.getAttribute("href", { timeout: 1_000 });
 
@@ -119,5 +109,121 @@ test.describe("File upload", () => {
 		await page.goto(url!);
 
 		await page.waitForURL(/localhost:9000/);
+	});
+
+	// FIXME: THESE TESTS AREN"T WORKING IN CI
+	test.describe.skip("file deletion", () => {
+		test("when creating a pub, deleting an uploaded file should make it not uploaded", async () => {
+			const fileName = "test-diagram.png";
+			const pubsPage = new PubsPage(page, community.community.slug);
+			await pubsPage.goTo();
+			await page.waitForURL(`/c/${community.community.slug}/pubs*`);
+			const pubId = await pubsPage.createPub({
+				pubType: "File Upload Test",
+				values: { title: "The Activity of Slugs" },
+			});
+
+			const pubEditUrl = `/c/${community.community.slug}/pubs/${pubId}/edit`;
+			await page.goto(pubEditUrl);
+
+			await page.setInputFiles("input[type='file']", [
+				new URL(`fixtures/test-assets/${fileName}`, import.meta.url).pathname,
+			]);
+
+			await page.getByRole("button", { name: "Upload 1 file", exact: true }).click({
+				timeout: 2_000,
+			});
+
+			await page.getByText("Complete", { exact: true }).waitFor({
+				timeout: 10_000,
+			});
+
+			// get the url
+			const link = page.getByRole("link", { name: `Open ${fileName}` }).first();
+			const url = await link.getAttribute("href", { timeout: 1_000 });
+			// check legit
+			const opts = await fetch(url!);
+			expect(opts.status).toBe(200);
+			expect(opts.headers.get("content-type")).toContain("image/png");
+
+			await page.getByRole("button", { name: `Delete ${fileName}` }).click();
+
+			// it's immediately deleted
+			await expect(link).toBeHidden({ timeout: 2_000 });
+			const opts2 = await fetch(url!);
+			expect(opts2.status).toBe(404);
+
+			await page.getByRole("button", { name: "Save" }).click();
+			await page.getByText("Pub successfully updated", { exact: true }).waitFor({
+				timeout: 2_000,
+			});
+
+			await page.getByRole("link", { name: "View Pub", exact: true }).click();
+			await page.waitForURL(`/c/${community.community.slug}/pubs/${pubId}*`);
+
+			await expect(page.getByText(fileName)).toBeHidden({ timeout: 1_000 });
+		});
+
+		test("when editing a pub, deleting an uploaded file should make it not uploaded", async () => {
+			const fileName = "test-diagram.png";
+			const fileName2 = "sample-pdf.pdf";
+			const fileName3 = "shadowman.mov";
+			const pubsPage = new PubsPage(page, community.community.slug);
+			await pubsPage.goTo();
+			await page.waitForURL(`/c/${community.community.slug}/pubs*`);
+			const pubId = await pubsPage.createPub({
+				pubType: "File Upload Test",
+				values: { title: "The Activity of Slugs" },
+			});
+
+			const pubEditUrl = `/c/${community.community.slug}/pubs/${pubId}/edit`;
+			await page.goto(pubEditUrl);
+
+			await page.setInputFiles("input[type='file']", [
+				new URL(`fixtures/test-assets/${fileName}`, import.meta.url).pathname,
+				new URL(`fixtures/test-assets/${fileName2}`, import.meta.url).pathname,
+				new URL(`fixtures/test-assets/${fileName3}`, import.meta.url).pathname,
+			]);
+
+			await page.getByRole("button", { name: "Upload 3 files", exact: true }).click({
+				timeout: 2_000,
+			});
+
+			await page.getByText("Complete", { exact: true }).waitFor({
+				timeout: 10_000,
+			});
+
+			await page.getByRole("button", { name: "Save" }).click();
+			await page.getByText("Pub successfully updated", { exact: true }).waitFor({
+				timeout: 2_000,
+			});
+
+			await page.reload();
+
+			const link = page.getByRole("link", { name: `Open ${fileName}` }).first();
+			// takes a second for the element to load in
+			await link.waitFor({ timeout: 1_000 });
+			const url = await link.getAttribute("href", { timeout: 1_000 });
+			const opts = await fetch(url!);
+			expect(opts.status).toBe(200);
+			expect(opts.headers.get("content-type")).toContain("image/png");
+
+			await page.getByRole("button", { name: `Delete ${fileName}` }).click();
+
+			// expect it to be deleted
+			await expect(link).toBeHidden({ timeout: 1_000 });
+			const opts2 = await fetch(url!);
+			expect(opts2.status).toBe(404);
+
+			// don't save the pub, reload the page
+
+			await page.reload();
+
+			// should still be deleted
+			await expect(page.getByText(fileName)).toBeHidden({ timeout: 1_000 });
+			// check that the other files are still there
+			await expect(page.getByText(fileName2)).toBeVisible({ timeout: 1_000 });
+			await expect(page.getByText(fileName3)).toBeVisible({ timeout: 1_000 });
+		});
 	});
 });

@@ -6,13 +6,12 @@ import { useMemo } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { zodToHtmlInputProps } from "ui/auto-form";
 import { Button } from "ui/button";
 import { MarkdownEditor } from "ui/editors";
 import { Form, FormField } from "ui/form";
 import { useUnsavedChangesWarning } from "ui/hooks";
 
-import { useFormBuilder } from "../FormBuilderContext";
+import { useBuilder } from "../BuilderContext";
 import { structuralElements } from "../StructuralElements";
 import { type StructuralElement } from "../types";
 
@@ -22,7 +21,7 @@ type Props = {
 };
 
 export const StructuralElementConfigurationForm = ({ index, structuralElement }: Props) => {
-	const { update, dispatch, removeIfUnconfigured } = useFormBuilder();
+	const { update, dispatch, removeIfUnconfigured } = useBuilder();
 
 	const schema = structuralElements[structuralElement.element].schema;
 
@@ -63,24 +62,7 @@ export const StructuralElementConfigurationForm = ({ index, structuralElement }:
 							name={name}
 							render={({ field }) => (
 								<div className="my-4">
-									<MarkdownEditor
-										zodInputProps={zodToHtmlInputProps(schema.shape[name])}
-										field={field}
-										fieldConfigItem={{
-											description: undefined,
-											inputProps: undefined,
-											fieldType: undefined,
-											renderParent: undefined,
-											allowedSchemas: undefined,
-										}}
-										label={"Paragraph contents (markdown)"}
-										isRequired={false}
-										fieldProps={{
-											...zodToHtmlInputProps(schema.shape[name]),
-											...field,
-										}}
-										zodItem={schema.shape[name]}
-									/>
+									<MarkdownEditor {...field} />
 								</div>
 							)}
 						/>

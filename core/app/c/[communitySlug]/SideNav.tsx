@@ -1,12 +1,10 @@
-import { link } from "fs";
-
 import type { User } from "lucia";
 
 import { cache, Suspense } from "react";
 
 import type { Communities, CommunitiesId, UsersId } from "db/public";
-import { Capabilities, MemberRole, MembershipType } from "db/public";
-import { logger } from "logger";
+import type { MaybeHas } from "utils/types";
+import { Capabilities, MembershipType } from "db/public";
 import {
 	Activity,
 	BookOpen,
@@ -36,9 +34,8 @@ import {
 } from "ui/sidebar";
 
 import type { CommunityData } from "~/lib/server/community";
-import type { MaybeHas } from "~/lib/types";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
+import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities";
 import CommunitySwitcher from "./CommunitySwitcher";
 import LoginSwitcher from "./LoginSwitcher";
 import NavLink from "./NavLink";
@@ -106,7 +103,7 @@ const viewLinks: LinkGroupDefinition = {
 			pattern: "/stages$",
 			text: "All Workflows",
 			icon: <FlagTriangleRightIcon size={16} />,
-			authorization: null,
+			authorization: userCanViewStagePage,
 		},
 		{
 			href: "/activity/actions",
@@ -169,6 +166,16 @@ const adminLinks: LinkGroupDefinition = {
 					text: "API Tokens",
 					authorization: userCanEditCommunityCached,
 				},
+				{
+					href: "/settings/actions",
+					text: "Actions",
+					authorization: userCanEditCommunityCached,
+				},
+				{
+					href: "/settings/legacy-migration",
+					text: "Imports",
+					authorization: userCanEditCommunityCached,
+				},
 			],
 		},
 		{
@@ -206,6 +213,7 @@ const Links = ({
 					return (
 						<Suspense fallback={<SidebarMenuSkeleton />} key={link.href || link.text}>
 							<Link
+								key={link.href || link.text}
 								user={user}
 								community={community}
 								link={link}
@@ -231,7 +239,7 @@ const Link = async ({
 }: {
 	user: User;
 	community: Communities;
-	link: TopLevelLinkDefinition | SubLevelLinkDefinition;
+	link: TopLevelLinkDefinition | SubLevelLinkDefinition | SubMenuLinkDefinition;
 	groupName?: string;
 }) => {
 	if (link.authorization) {
@@ -291,7 +299,7 @@ const SubMenuLinks = async ({
 		>
 			{link.children.map((child) => (
 				<SidebarMenuSubItem key={child.href}>
-					<Links user={user} community={community} links={link.children} />
+					<Link user={user} community={community} link={child} />
 				</SidebarMenuSubItem>
 			))}
 		</NavLinkSubMenu>

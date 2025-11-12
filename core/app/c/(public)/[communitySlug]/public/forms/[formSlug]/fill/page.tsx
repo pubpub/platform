@@ -19,12 +19,14 @@ import {
 	hydrateMarkdownElements,
 	renderElementMarkdownContent,
 } from "~/app/components/forms/structural";
+import { PubFormProvider } from "~/app/components/providers/PubFormProvider";
 import { SUBMIT_ID_QUERY_PARAM } from "~/app/components/pubs/PubEditor/constants";
 import { SaveStatus } from "~/app/components/pubs/PubEditor/SaveStatus";
 import { db } from "~/kysely/database";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { getCommunityRole } from "~/lib/authentication/roles";
 import { userCanCreatePub, userCanEditPub } from "~/lib/authorization/capabilities";
+import { transformRichTextValuesToProsemirror } from "~/lib/editor/serialize-server";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { getForm } from "~/lib/server/form";
 import { getPubsWithRelatedValues } from "~/lib/server/pub";
@@ -219,7 +221,15 @@ export default async function FormPage(props: {
 		}
 	}
 
-	const member = expect(user.memberships.find((m) => m.communityId === community?.id));
+	const member = user.memberships.find((m) => m.communityId === community?.id);
+
+	// if you eg access this as a superadmin
+	if (!member) {
+		return notFound();
+	}
+	const pubWithProsemirrorRichText = pub
+		? transformRichTextValuesToProsemirror(pub, { toJson: true })
+		: undefined;
 
 	const memberWithUser = {
 		...member,
@@ -245,7 +255,7 @@ export default async function FormPage(props: {
 
 	if (submitId && submitElement) {
 		// The post-submission page will only render once we have a pub
-		if (pub) {
+		if (pubWithProsemirrorRichText) {
 			submitElement.content = await renderElementMarkdownContent(
 				submitElement,
 				renderWithPubContext as RenderWithPubContext
@@ -254,16 +264,26 @@ export default async function FormPage(props: {
 	} else {
 		await hydrateMarkdownElements({
 			elements: form.elements,
-			renderWithPubContext: pub ? (renderWithPubContext as RenderWithPubContext) : undefined,
+			renderWithPubContext: pubWithProsemirrorRichText
+				? (renderWithPubContext as RenderWithPubContext)
+				: undefined,
 		});
 	}
 
-	const isUpdating = !!pub;
-	const pubId = pub?.id ?? (randomUUID() as PubsId);
-	const pubForForm = pub ?? { id: pubId, values: [], pubTypeId: form.pubTypeId };
+	const mode = !!pubWithProsemirrorRichText ? "edit" : "create";
+	const withAutoSave = mode === "edit";
+
+	const pubId = pubWithProsemirrorRichText?.id ?? (randomUUID() as PubsId);
+	const pubForForm = pubWithProsemirrorRichText ?? {
+		id: pubId,
+		values: [],
+		pubTypeId: form.pubTypeId,
+	};
 	// For the Context, we want both the pubs from the initial pub query (which is limited)
 	// as well as the pubs related to this pub
-	const relatedPubs = pub ? pub.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) : [];
+	const relatedPubs = pubWithProsemirrorRichText
+		? pubWithProsemirrorRichText.values.flatMap((v) => (v.relatedPub ? [v.relatedPub] : []))
+		: [];
 	const pubsForContext = [...pubs, ...relatedPubs];
 
 	return (
@@ -273,7 +293,7 @@ export default async function FormPage(props: {
 					<h1 className="text-xl font-bold">
 						{capitalize(form.name)} for {community?.name}
 					</h1>
-					<SaveStatus autosave={isUpdating} />
+					<SaveStatus autosave={withAutoSave} />
 				</div>
 			</Header>
 			<div className="container mx-auto">
@@ -281,39 +301,52 @@ export default async function FormPage(props: {
 					<Completed element={submitElement} />
 				) : (
 					<div className="grid grid-cols-4 px-6 py-12">
-						<FormElementToggleProvider
-							fieldSlugs={form.elements.reduce(
-								(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
-								[] as string[]
-							)}
+						<PubFormProvider
+							form={{
+								pubId,
+								form,
+								mode,
+								isExternalForm: true,
+							}}
 						>
-							<ContextEditorContextProvider
-								pubId={pubId}
-								pubTypeId={form.pubTypeId}
-								pubs={pubsForContext}
-								pubTypes={pubTypes}
+							<FormElementToggleProvider
+								fieldSlugs={form.elements.reduce(
+									(acc, e) => (e.slug ? [...acc, e.slug] : acc), // map to element.slug and filter out the undefined ones
+									[] as string[]
+								)}
 							>
-								<ExternalFormWrapper
-									pub={pubForForm}
-									elements={form.elements}
-									formSlug={form.slug}
-									isUpdating={isUpdating}
-									withAutoSave={isUpdating}
-									withButtonElements
-									isExternalForm
-									className="col-span-2 col-start-2"
+								<ContextEditorContextProvider
+									pubId={pubId}
+									pubTypeId={form.pubTypeId}
+									pubs={pubsForContext}
+									pubTypes={pubTypes}
 								>
-									{form.elements.map((e) => (
-										<FormElement
-											key={e.id}
-											pubId={pubId}
-											element={e}
-											values={pub ? pub.values : []}
-										/>
-									))}
-								</ExternalFormWrapper>
-							</ContextEditorContextProvider>
-						</FormElementToggleProvider>
+									<ExternalFormWrapper
+										pub={pubForForm}
+										elements={form.elements}
+										formSlug={form.slug}
+										mode={mode}
+										withAutoSave={withAutoSave}
+										withButtonElements
+										isExternalForm
+										className="col-span-2 col-start-2"
+									>
+										{form.elements.map((e) => (
+											<FormElement
+												key={e.id}
+												pubId={pubId}
+												element={e}
+												values={
+													pubWithProsemirrorRichText
+														? pubWithProsemirrorRichText.values
+														: []
+												}
+											/>
+										))}
+									</ExternalFormWrapper>
+								</ContextEditorContextProvider>
+							</FormElementToggleProvider>
+						</PubFormProvider>
 					</div>
 				)}
 			</div>

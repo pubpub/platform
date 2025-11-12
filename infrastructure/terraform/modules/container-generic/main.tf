@@ -17,14 +17,16 @@ locals {
 }
 
 module "ecs_service" {
-  source = "terraform-aws-modules/ecs/aws//modules/service"
-  name   = "${var.cluster_info.name}-${var.service_name}"
+  source  = "terraform-aws-modules/ecs/aws//modules/service"
+  version = "~> 5.0"
+
+  name = "${var.cluster_info.name}-${var.service_name}"
 
   cluster_arn            = var.cluster_info.cluster_arn
   enable_execute_command = true
 
   # allow github actions to update the service without confusing TF
-  ignore_task_definition_changes = true
+  ignore_task_definition_changes = false
 
   cpu           = var.resources.cpu
   memory        = var.resources.memory
