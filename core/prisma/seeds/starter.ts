@@ -7,7 +7,6 @@ import {
 	AutomationConditionBlockType,
 	CoreSchemaType,
 	ElementType,
-	Event,
 	FormAccessType,
 	InputComponent,
 	MemberRole,
@@ -278,7 +277,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Log Review",
 							conditions: {
 								type: AutomationConditionBlockType.AND,

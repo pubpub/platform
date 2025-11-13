@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
+import { Action, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { mockServerCode } from "~/lib/__tests__/utils";
@@ -57,17 +57,17 @@ const seed = createSeed({
 			},
 			automations: [
 				{
-					event: Event.actionSucceeded,
+					event: AutomationEvent.actionSucceeded,
 					actionInstance: "1",
 					sourceAction: "2",
 				},
 				{
-					event: Event.actionFailed,
+					event: AutomationEvent.actionFailed,
 					actionInstance: "2",
 					sourceAction: "3",
 				},
 				{
-					event: Event.pubInStageForDuration,
+					event: AutomationEvent.pubInStageForDuration,
 					actionInstance: "3",
 					config: {
 						actionConfig: null,
@@ -78,7 +78,7 @@ const seed = createSeed({
 					},
 				},
 				{
-					event: Event.pubLeftStage,
+					event: AutomationEvent.pubLeftStage,
 					actionInstance: "3",
 				},
 			],
@@ -107,7 +107,7 @@ describe("automations.db", () => {
 		const { upsertAutomationWithCycleCheck: createOrUpdateAutomationWithCycleCheck } =
 			await import("./automations");
 		const automation = await createOrUpdateAutomationWithCycleCheck({
-			event: Event.pubEnteredStage,
+			event: AutomationEvent.pubEnteredStage,
 			actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 		});
 
@@ -121,7 +121,7 @@ describe("automations.db", () => {
 		} = await import("./automations");
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
-				event: Event.pubLeftStage,
+				event: AutomationEvent.pubLeftStage,
 				actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 			})
 		).rejects.toThrow(RegularAutomationAlreadyExistsError);
@@ -134,7 +134,7 @@ describe("automations.db", () => {
 		} = await import("./automations");
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
-				event: Event.actionSucceeded,
+				event: AutomationEvent.actionSucceeded,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				sourceActionInstanceId: community.stages["Stage 1"].actions["2"].id,
 			})
@@ -148,7 +148,7 @@ describe("automations.db", () => {
 		} = await import("./automations");
 		await expect(
 			createOrUpdateAutomationWithCycleCheck({
-				event: Event.pubInStageForDuration,
+				event: AutomationEvent.pubInStageForDuration,
 				actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 			})
 		).rejects.toThrowError(AutomationConfigError);
@@ -162,7 +162,7 @@ describe("automations.db", () => {
 			} = await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: Event.actionSucceeded,
+					event: AutomationEvent.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
@@ -171,7 +171,7 @@ describe("automations.db", () => {
 			// should also happen for ActionFailed
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: Event.actionFailed,
+					event: AutomationEvent.actionFailed,
 					actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
@@ -180,7 +180,7 @@ describe("automations.db", () => {
 			// just to check that if we have 2->1, 1->2 will create a cycle
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: Event.actionSucceeded,
+					event: AutomationEvent.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["2"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["1"].id,
 				})
@@ -192,7 +192,7 @@ describe("automations.db", () => {
 				await import("./automations");
 			await expect(
 				createOrUpdateAutomationWithCycleCheck({
-					event: Event.actionSucceeded,
+					event: AutomationEvent.actionSucceeded,
 					actionInstanceId: community.stages["Stage 1"].actions["1"].id,
 					sourceActionInstanceId: community.stages["Stage 1"].actions["3"].id,
 				})
@@ -207,7 +207,7 @@ describe("automations.db", () => {
 			await expect(
 				createOrUpdateAutomationWithCycleCheck(
 					{
-						event: Event.actionSucceeded,
+						event: AutomationEvent.actionSucceeded,
 						actionInstanceId: community.stages["Stage 1"].actions["3"].id,
 						sourceActionInstanceId: community.stages["Stage 1"].actions["4"].id,
 					},

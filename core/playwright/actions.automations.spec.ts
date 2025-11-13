@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import test, { expect } from "@playwright/test";
 
-import { Action, AutomationConditionBlockType, CoreSchemaType, Event, MemberRole } from "db/public";
+import { Action, AutomationConditionBlockType, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";
@@ -59,7 +59,7 @@ const seed = createSeed({
 			},
 			automations: [
 				{
-					event: Event.pubEnteredStage,
+					event: AutomationEvent.pubEnteredStage,
 					actionInstance: "Log Entered Stage",
 					config: {
 						automationConfig: null,
@@ -67,7 +67,7 @@ const seed = createSeed({
 					},
 				},
 				{
-					event: Event.pubLeftStage,
+					event: AutomationEvent.pubLeftStage,
 					actionInstance: "Log Left Stage",
 					config: {
 						automationConfig: null,
@@ -88,7 +88,7 @@ const seed = createSeed({
 
 			automations: [
 				{
-					event: Event.pubInStageForDuration,
+					event: AutomationEvent.pubInStageForDuration,
 					actionInstance: "Log In Stage For Duration",
 					config: {
 						automationConfig: {
@@ -111,7 +111,7 @@ const seed = createSeed({
 			},
 			automations: [
 				{
-					event: Event.pubLeftStage,
+					event: AutomationEvent.pubLeftStage,
 					actionInstance: "Log Left Condition",
 					config: {
 						automationConfig: null,
@@ -200,7 +200,7 @@ test.describe("sequential automations", () => {
 		await stagesManagePage.goTo();
 
 		await stagesManagePage.addAutomation("Test", {
-			event: Event.actionSucceeded,
+			event: AutomationEvent.actionSucceeded,
 			actionInstanceName: "Log 1",
 			sourceActionInstanceName: "Log 2",
 		});

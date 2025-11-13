@@ -14,7 +14,6 @@ import {
 	ApiAccessType,
 	Capabilities,
 	ElementType,
-	Event,
 	InputComponent,
 	MembershipType,
 } from "db/public";
@@ -749,7 +748,7 @@ const handler = createNextHandler(
 				await runAutomationById({
 					automationId,
 					json: body,
-					event: Event.webhook,
+					event: AutomationEvent.webhook,
 					communityId: community.id as CommunitiesId,
 					stack: [],
 					actionInstanceArgs: automation.config?.actionConfig ?? null,

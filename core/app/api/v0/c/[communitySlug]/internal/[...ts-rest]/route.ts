@@ -2,7 +2,7 @@ import { createNextHandler } from "@ts-rest/serverless/next";
 
 import type { ActionRunsId, AutomationsId, CommunitiesId, PubsId } from "db/public";
 import { api } from "contracts";
-import { Event } from "db/public";
+import { AutomationEvent } from "db/public";
 import { logger } from "logger";
 
 import { runAutomationById } from "~/actions/_lib/runActionInstance";
@@ -45,7 +45,7 @@ const handler = createNextHandler(
 			const result = await runAutomationById({
 				automationId: automationId as AutomationsId,
 				pubId: pubId as PubsId,
-				event: event as Event,
+				event: event as AutomationEvent,
 				communityId: community.id as CommunitiesId,
 				stack: stack as unknown as ActionRunsId[],
 			});
@@ -111,7 +111,7 @@ const handler = createNextHandler(
 			const result = await runAutomationById({
 				automationId: automationId as AutomationsId,
 				pubId: pubId as PubsId,
-				event: event as Event,
+				event: event as AutomationEvent,
 				communityId: community.id as CommunitiesId,
 				stack: stack as unknown as ActionRunsId[],
 				scheduledActionRunId: actionRunId,
@@ -164,7 +164,7 @@ const handler = createNextHandler(
 			const result = await runAutomationById({
 				automationId: automationId as AutomationsId,
 				json: json as any,
-				event: Event.webhook,
+				event: AutomationEvent.webhook,
 				communityId: community.id as CommunitiesId,
 				stack: stack as ActionRunsId[],
 			});

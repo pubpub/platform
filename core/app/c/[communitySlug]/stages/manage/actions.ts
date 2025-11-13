@@ -11,7 +11,7 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Capabilities, Event, MemberRole, MembershipType, stagesIdSchema } from "db/public";
+import { Capabilities, MemberRole, MembershipType, stagesIdSchema } from "db/public";
 import { logger } from "logger";
 
 import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm";
@@ -462,7 +462,7 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 			};
 		}
 
-		if (deletedAutomation.event !== Event.pubInStageForDuration) {
+		if (deletedAutomation.event !== AutomationEvent.pubInStageForDuration) {
 			return;
 		}
 
@@ -493,7 +493,7 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 					actionInstanceId: actionInstance.id,
 					pubId: pubInStageId,
 					stageId: actionInstance.stageId,
-					event: Event.pubInStageForDuration,
+					event: AutomationEvent.pubInStageForDuration,
 				})
 			)
 		);

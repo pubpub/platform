@@ -2,7 +2,7 @@
 
 import type * as z from "zod";
 
-import type { ActionInstances, Automations, Communities, Event } from "db/public";
+import type { ActionInstances, Automations, Communities } from "db/public";
 
 import type { SequentialAutomationEvent } from "../types";
 import {
@@ -51,9 +51,9 @@ export const automations = {
 	[actionSucceeded.event]: actionSucceeded,
 	[actionFailed.event]: actionFailed,
 	[webhook.event]: webhook,
-} as const satisfies Record<Event, any>;
+} as const satisfies Record<AutomationEvent, any>;
 
-export const getAutomationByName = <T extends Event>(name: T) => {
+export const getAutomationByName = <T extends AutomationEvent>(name: T) => {
 	return automations[name];
 };
 
@@ -62,7 +62,10 @@ export const isReferentialAutomation = (
 ): automation is Extract<typeof automation, { event: SequentialAutomationEvent }> =>
 	sequentialAutomationEvents.includes(automation.event as any);
 
-export const humanReadableEventBase = <T extends Event>(event: T, community: Communities) => {
+export const humanReadableEventBase = <T extends AutomationEvent>(
+	event: T,
+	community: Communities
+) => {
 	const automation = getAutomationByName(event);
 
 	if (typeof automation.display.base === "function") {
@@ -72,7 +75,7 @@ export const humanReadableEventBase = <T extends Event>(event: T, community: Com
 	return automation.display.base;
 };
 
-export const humanReadableEventHydrated = <T extends Event>(
+export const humanReadableEventHydrated = <T extends AutomationEvent>(
 	event: T,
 	community: Communities,
 	options: {

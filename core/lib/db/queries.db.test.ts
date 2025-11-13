@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { Action, AutomationConditionBlockType, CoreSchemaType, Event, MemberRole } from "db/public";
+import { Action, AutomationConditionBlockType, CoreSchemaType, MemberRole } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
@@ -43,7 +43,7 @@ describe("getStageAutomations", () => {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Test Action",
 							conditions: {
 								type: AutomationConditionBlockType.AND,
@@ -73,7 +73,7 @@ describe("getStageAutomations", () => {
 							},
 						},
 						{
-							event: Event.actionSucceeded,
+							event: AutomationEvent.actionSucceeded,
 							actionInstance: "Another Action",
 							sourceAction: "Test Action",
 						},
@@ -129,7 +129,7 @@ describe("getStageAutomations", () => {
 
 		const automationWithoutConditions = automations.find((a) => !a.condition);
 		expect(automationWithoutConditions).toBeDefined();
-		expect(automationWithoutConditions?.event).toBe(Event.actionSucceeded);
+		expect(automationWithoutConditions?.event).toBe(AutomationEvent.actionSucceeded);
 	});
 
 	test("fetches automations without conditions", async () => {
@@ -160,7 +160,7 @@ describe("getStageAutomations", () => {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Test Action",
 						},
 					],

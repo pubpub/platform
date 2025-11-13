@@ -17,11 +17,11 @@ import type {
 	ApiAccessScope,
 	ApiAccessTokensId,
 	ApiAccessType,
+	AutomationEvent,
 	Automations,
 	Communities,
 	CommunitiesId,
 	CommunityMemberships,
-	Event,
 	FormAccessType,
 	FormElements,
 	Forms,
@@ -168,7 +168,7 @@ export type StagesInitializer<
 		};
 		actions?: A;
 		automations?: {
-			event: Event;
+			event: AutomationEvent;
 			actionInstance: keyof A;
 			sourceAction?: keyof A;
 			config?: AutomationConfig | null;

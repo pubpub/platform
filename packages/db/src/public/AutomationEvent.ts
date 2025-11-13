@@ -3,15 +3,16 @@
 
 import { z } from "zod";
 
-/** Represents the enum public.Event */
-export enum Event {
+/** Represents the enum public.AutomationEvent */
+export enum AutomationEvent {
 	pubEnteredStage = "pubEnteredStage",
 	pubLeftStage = "pubLeftStage",
 	pubInStageForDuration = "pubInStageForDuration",
 	actionSucceeded = "actionSucceeded",
 	actionFailed = "actionFailed",
 	webhook = "webhook",
+	manual = "manual",
 }
 
-/** Zod schema for Event */
-export const eventSchema = z.nativeEnum(Event);
+/** Zod schema for AutomationEvent */
+export const automationEventSchema = z.nativeEnum(AutomationEvent);

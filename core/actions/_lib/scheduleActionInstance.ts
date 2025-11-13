@@ -1,6 +1,6 @@
 import type { Json } from "contracts";
 import type { ActionInstancesId, ActionRunsId, AutomationsId, PubsId, StagesId } from "db/public";
-import { ActionRunStatus, ConditionEvaluationTiming, Event } from "db/public";
+import { ActionRunStatus, AutomationEvent, ConditionEvaluationTiming } from "db/public";
 import { logger } from "logger";
 
 import type { SchedulableAutomation } from "./automations";
@@ -82,7 +82,7 @@ export const scheduleDelayedAutomation = async ({
 	};
 
 	// validate this is a pubInStageForDuration automation with proper config
-	if (automation.event !== Event.pubInStageForDuration) {
+	if (automation.event !== AutomationEvent.pubInStageForDuration) {
 		throw new Error(`Automation ${automationId} is not a pubInStageForDuration automation`);
 	}
 
@@ -216,7 +216,7 @@ export const scheduleDelayedAutomations = async ({
 	}
 
 	const [automations, jobsClient, pub] = await Promise.all([
-		getStageAutomations(stageId, { event: Event.pubInStageForDuration }).execute(),
+		getStageAutomations(stageId, { event: AutomationEvent.pubInStageForDuration }).execute(),
 		getJobsClient(),
 		getPubsWithRelatedValues(
 			{ pubId, communityId: community.id },
@@ -242,7 +242,7 @@ export const scheduleDelayedAutomations = async ({
 	const validAutomations = automations
 		.filter(
 			(automation): automation is typeof automation & SchedulableAutomation =>
-				automation.event === Event.pubInStageForDuration &&
+				automation.event === AutomationEvent.pubInStageForDuration &&
 				Boolean(
 					typeof automation.config === "object" &&
 						automation.config &&
@@ -392,10 +392,10 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 	const validAutomations = automations
 		.filter(
 			(automation): automation is typeof automation & SchedulableAutomation =>
-				automation.event === Event.actionFailed ||
-				automation.event === Event.actionSucceeded ||
-				automation.event === Event.webhook ||
-				(automation.event === Event.pubInStageForDuration &&
+				automation.event === AutomationEvent.actionFailed ||
+				automation.event === AutomationEvent.actionSucceeded ||
+				automation.event === AutomationEvent.webhook ||
+				(automation.event === AutomationEvent.pubInStageForDuration &&
 					Boolean(
 						typeof automation.config === "object" &&
 							automation.config &&
@@ -517,13 +517,13 @@ export const unscheduleAction = async ({
 	actionInstanceId: ActionInstancesId;
 	stageId: StagesId;
 	pubId: PubsId;
-	event: Omit<Event, "webhook" | "actionSucceeded" | "actionFailed">;
+	event: Omit<AutomationEvent, "webhook" | "actionSucceeded" | "actionFailed">;
 }) => {
 	const jobKey = getScheduledActionJobKey({
 		stageId,
 		actionInstanceId,
 		pubId,
-		event: event as Event,
+		event: AutomationEvent as AutomationEvent,
 	});
 	try {
 		const jobsClient = await getJobsClient();

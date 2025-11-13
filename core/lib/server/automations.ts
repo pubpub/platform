@@ -14,7 +14,7 @@ import type {
 	NewAutomations,
 } from "db/public";
 import type { AutomationConfig } from "db/types";
-import { Event } from "db/public";
+import { AutomationEvent } from "db/public";
 import { expect } from "utils";
 
 import type { SequentialAutomationEvent } from "~/actions/types";
@@ -39,7 +39,7 @@ export class AutomationError extends Error {
 
 export class AutomationConfigError extends AutomationError {
 	constructor(
-		public event: Event,
+		public event: AutomationEvent,
 		public config: Record<string, unknown>,
 		public error: ZodError
 	) {
@@ -69,7 +69,7 @@ export class AutomationMaxDepthError extends AutomationError {
 export class AutomationAlreadyExistsError extends AutomationError {
 	constructor(
 		message: string,
-		public event: Event,
+		public event: AutomationEvent,
 		public actionInstanceId: ActionInstancesId,
 		public sourceActionInstanceId?: ActionInstancesId
 	) {
@@ -95,7 +95,7 @@ export class SequentialAutomationAlreadyExistsError extends AutomationAlreadyExi
 
 export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExistsError {
 	constructor(
-		public event: Event,
+		public event: AutomationEvent,
 		public actionInstanceId: ActionInstancesId
 	) {
 		super(
@@ -407,7 +407,7 @@ async function wouldCreateCycle(
 export async function upsertAutomationWithCycleCheck(
 	data: {
 		automationId?: AutomationsId;
-		event: Event;
+		event: AutomationEvent;
 		actionInstanceId: ActionInstancesId;
 		sourceActionInstanceId?: ActionInstancesId;
 		config?: AutomationConfig | null;
@@ -428,7 +428,8 @@ export async function upsertAutomationWithCycleCheck(
 
 	// only check for cycles if this is an action event with a watched action
 	if (
-		(data.event === Event.actionSucceeded || data.event === Event.actionFailed) &&
+		(data.event === AutomationEvent.actionSucceeded ||
+			data.event === AutomationEvent.actionFailed) &&
 		data.sourceActionInstanceId
 	) {
 		const result = await wouldCreateCycle(

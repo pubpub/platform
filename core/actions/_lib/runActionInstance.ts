@@ -8,6 +8,7 @@ import type { Database } from "db/Database";
 import type {
 	ActionInstancesId,
 	ActionRunsId,
+	AutomationEvent,
 	AutomationsId,
 	CommunitiesId,
 	PubsId,
@@ -16,7 +17,7 @@ import type {
 } from "db/public";
 import type { BaseActionInstanceConfig, Json } from "db/types";
 import type { Prettify, XOR } from "utils/types";
-import { ActionRunStatus, Event } from "db/public";
+import { ActionRunStatus, AutomationEvent } from "db/public";
 import { logger } from "logger";
 import { tryCatch } from "utils/try-catch";
 
@@ -55,7 +56,7 @@ export type RunActionInstanceArgs = Prettify<
 		actionInstanceArgs: Record<string, unknown> | null;
 		stack: ActionRunsId[];
 		scheduledActionRunId?: ActionRunsId;
-	} & XOR<{ event: Event }, { userId: UsersId }>
+	} & XOR<{ event: AutomationEvent }, { userId: UsersId }>
 >;
 
 const getActionInstance = (actionInstanceId: ActionInstancesId, trx = db) =>
@@ -343,7 +344,7 @@ export async function runActionInstance(
 		actionInstanceId: args.actionInstanceId,
 		pubId: pub?.id,
 		json: args.json as Json,
-		event: args.event as Event,
+		event: args.event as : AutomationEvent,
 		communityId: args.communityId,
 		stack: args.stack,
 		scheduledActionRunId: args.scheduledActionRunId,
@@ -424,7 +425,7 @@ export const runAutomationById = async (
 				automationId: AutomationsId;
 				pubId: PubsId;
 				json?: never;
-				event: Event;
+				event: AutomationEvent;
 				communityId: CommunitiesId;
 				stack: ActionRunsId[];
 				scheduledActionRunId?: ActionRunsId;
@@ -434,7 +435,7 @@ export const runAutomationById = async (
 				automationId: AutomationsId;
 				pubId?: never;
 				json: Json;
-				event: Event;
+				event: AutomationEvent;
 				communityId: CommunitiesId;
 				stack: ActionRunsId[];
 				scheduledActionRunId?: ActionRunsId;
@@ -483,7 +484,7 @@ export const runAutomationById = async (
 export const runInstancesForEvent = async (
 	pubId: PubsId,
 	stageId: StagesId | null,
-	event: Event,
+	event: AutomationEvent,
 	communityId: CommunitiesId,
 	stack: ActionRunsId[],
 	automationId?: AutomationsId,
@@ -542,7 +543,7 @@ export function insertActionRun(
 		actionInstanceId: ActionInstancesId;
 		pubId?: PubsId;
 		json?: Json;
-		event: Event;
+		event: AutomationEvent;
 		communityId: CommunitiesId;
 		stack: ActionRunsId[];
 		scheduledActionRunId?: ActionRunsId;

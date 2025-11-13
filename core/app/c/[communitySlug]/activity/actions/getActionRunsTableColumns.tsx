@@ -7,7 +7,7 @@ import Link from "next/link";
 import type { Json } from "contracts";
 import type { ActionInstances, PubsId, Stages } from "db/public";
 import type { Writeable, XOR } from "utils/types";
-import { Event } from "db/public";
+import { AutomationEvent } from "db/public";
 import { Badge } from "ui/badge";
 import { DataTableColumnHeader } from "ui/data-table";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "ui/hover-card";

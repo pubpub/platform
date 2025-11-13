@@ -4,12 +4,14 @@ import { z } from "zod";
 
 import type { ActionInstancesId } from "./ActionInstances";
 import type { ActionRunStatus } from "./ActionRunStatus";
-import type { Event } from "./Event";
+import type { AutomationEvent } from "./AutomationEvent";
+import type { AutomationRunId } from "./AutomationRun";
 import type { PubsId } from "./Pubs";
 import type { UsersId } from "./Users";
 import { actionInstancesIdSchema } from "./ActionInstances";
 import { actionRunStatusSchema } from "./ActionRunStatus";
-import { eventSchema } from "./Event";
+import { automationEventSchema } from "./AutomationEvent";
+import { automationRunIdSchema } from "./AutomationRun";
 import { pubsIdSchema } from "./Pubs";
 import { usersIdSchema } from "./Users";
 
@@ -33,7 +35,7 @@ export interface ActionRunsTable {
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 
-	event: ColumnType<Event | null, Event | null, Event | null>;
+	event: ColumnType<AutomationEvent | null, AutomationEvent | null, AutomationEvent | null>;
 
 	params: ColumnType<unknown | null, unknown | null, unknown | null>;
 
@@ -47,9 +49,13 @@ export interface ActionRunsTable {
 
 	result: ColumnType<unknown, unknown, unknown>;
 
-	sourceActionRunId: ColumnType<ActionRunsId | null, ActionRunsId | null, ActionRunsId | null>;
-
 	json: ColumnType<unknown | null, unknown | null, unknown | null>;
+
+	automationRunId: ColumnType<
+		AutomationRunId | null,
+		AutomationRunId | null,
+		AutomationRunId | null
+	>;
 }
 
 export type ActionRuns = Selectable<ActionRunsTable>;
@@ -65,15 +71,15 @@ export const actionRunsSchema = z.object({
 	actionInstanceId: actionInstancesIdSchema.nullable(),
 	pubId: pubsIdSchema.nullable(),
 	config: z.unknown().nullable(),
-	event: eventSchema.nullable(),
+	event: automationEventSchema.nullable(),
 	params: z.unknown().nullable(),
 	status: actionRunStatusSchema,
 	userId: usersIdSchema.nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	result: z.unknown(),
-	sourceActionRunId: actionRunsIdSchema.nullable(),
 	json: z.unknown().nullable(),
+	automationRunId: automationRunIdSchema.nullable(),
 });
 
 export const actionRunsInitializerSchema = z.object({
@@ -81,15 +87,15 @@ export const actionRunsInitializerSchema = z.object({
 	actionInstanceId: actionInstancesIdSchema.optional().nullable(),
 	pubId: pubsIdSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
-	event: eventSchema.optional().nullable(),
+	event: automationEventSchema.optional().nullable(),
 	params: z.unknown().optional().nullable(),
 	status: actionRunStatusSchema,
 	userId: usersIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown(),
-	sourceActionRunId: actionRunsIdSchema.optional().nullable(),
 	json: z.unknown().optional().nullable(),
+	automationRunId: automationRunIdSchema.optional().nullable(),
 });
 
 export const actionRunsMutatorSchema = z.object({
@@ -97,13 +103,13 @@ export const actionRunsMutatorSchema = z.object({
 	actionInstanceId: actionInstancesIdSchema.optional().nullable(),
 	pubId: pubsIdSchema.optional().nullable(),
 	config: z.unknown().optional().nullable(),
-	event: eventSchema.optional().nullable(),
+	event: automationEventSchema.optional().nullable(),
 	params: z.unknown().optional().nullable(),
 	status: actionRunStatusSchema.optional(),
 	userId: usersIdSchema.optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	result: z.unknown().optional(),
-	sourceActionRunId: actionRunsIdSchema.optional().nullable(),
 	json: z.unknown().optional().nullable(),
+	automationRunId: automationRunIdSchema.optional().nullable(),
 });

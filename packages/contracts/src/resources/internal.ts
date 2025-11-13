@@ -1,7 +1,7 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import { actionRunsIdSchema, automationsIdSchema, eventSchema, pubsIdSchema } from "db/public";
+import { actionRunsIdSchema, automationsIdSchema, pubsIdSchema } from "db/public";
 
 const contract = initContract();
 

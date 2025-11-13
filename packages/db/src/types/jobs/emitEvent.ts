@@ -5,8 +5,8 @@
 import type {
 	ActionInstancesId,
 	ActionRunsId,
+	AutomationEvent,
 	AutomationsId,
-	Event,
 	PubsId,
 	StagesId,
 } from "../../public";
@@ -17,7 +17,11 @@ export type RunAutomationPayload = {
 	automationId: AutomationsId;
 	pubId: PubsId;
 	stageId: StagesId;
-	event: Event.pubEnteredStage | Event.pubLeftStage | Event.actionSucceeded | Event.actionFailed;
+	event:
+		| AutomationEvent.pubEnteredStage
+		| AutomationEvent.pubLeftStage
+		| AutomationEvent.actionSucceeded
+		| AutomationEvent.actionFailed;
 	community: {
 		slug: string;
 	};
@@ -44,7 +48,7 @@ export type RunDelayedAutomationPayload = {
 	automationId: AutomationsId;
 	pubId: PubsId;
 	stageId: StagesId;
-	event: Event;
+	event: AutomationEvent;
 	community: {
 		slug: string;
 	};

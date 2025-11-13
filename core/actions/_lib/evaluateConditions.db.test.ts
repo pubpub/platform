@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { Action, AutomationConditionBlockType, CoreSchemaType, Event, MemberRole } from "db/public";
+import { Action, AutomationConditionBlockType, CoreSchemaType, MemberRole } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
@@ -35,7 +35,7 @@ describe("evaluateConditions", () => {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Test Action",
 							conditions: {
 								type: AutomationConditionBlockType.AND,
@@ -113,7 +113,7 @@ describe("evaluateConditions", () => {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Test Action",
 							conditions: {
 								type: AutomationConditionBlockType.OR,
@@ -190,7 +190,7 @@ describe("evaluateConditions", () => {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Test Action",
 							conditions: {
 								type: AutomationConditionBlockType.NOT,
@@ -259,7 +259,7 @@ describe("evaluateConditions", () => {
 					},
 					automations: [
 						{
-							event: Event.pubEnteredStage,
+							event: AutomationEvent.pubEnteredStage,
 							actionInstance: "Test Action",
 							conditions: {
 								type: AutomationConditionBlockType.AND,

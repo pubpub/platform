@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 import { faker } from "@faker-js/faker";
 import test, { expect } from "@playwright/test";
 
-import { Action, CoreSchemaType, Event, MemberRole } from "db/public";
+import { Action, CoreSchemaType, MemberRole } from "db/public";
 
 import type { CommunitySeedOutput } from "~/prisma/seed/createSeed";
 import { createSeed } from "~/prisma/seed/createSeed";

@@ -9,7 +9,7 @@ import {
 import { z } from "zod";
 
 import type { AutomationsId } from "db/public";
-import { Event } from "db/public";
+import { AutomationEvent } from "db/public";
 import { CopyButton } from "ui/copy-button";
 
 import { defineAutomation } from "~/actions/types";

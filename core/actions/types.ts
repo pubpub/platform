@@ -15,7 +15,7 @@ import type { LastModifiedBy } from "db/types";
 import type { Dependency, FieldConfig, FieldConfigItem } from "ui/auto-form";
 import type * as Icons from "ui/icon";
 import type { Prettify, XOR } from "utils/types";
-import { Event } from "db/public";
+import { AutomationEvent } from "db/public";
 
 import type { ClientExceptionOptions } from "~/lib/serverActions";
 
@@ -137,24 +137,31 @@ export const defineRun = <T extends Action = Action>(
 
 export type Run = ReturnType<typeof defineRun>;
 
-export const sequentialAutomationEvents = [Event.actionSucceeded, Event.actionFailed] as const;
+export const sequentialAutomationEvents = [
+	AutomationEvent.actionSucceeded,
+	AutomationEvent.actionFailed,
+] as const;
 export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number];
 
-export const isSequentialAutomationEvent = (event: Event): event is SequentialAutomationEvent =>
+export const isSequentialAutomationEvent = (
+	event: AutomationEvent
+): AutomationEvent is SequentialAutomationEvent =>
 	sequentialAutomationEvents.includes(event as any);
 
 export const schedulableAutomationEvents = [
-	Event.pubInStageForDuration,
-	Event.actionFailed,
-	Event.actionSucceeded,
+	AutomationEvent.pubInStageForDuration,
+	AutomationEvent.actionFailed,
+	AutomationEvent.actionSucceeded,
 ] as const;
 export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number];
 
-export const isSchedulableAutomationEvent = (event: Event): event is SchedulableAutomationEvent =>
+export const isSchedulableAutomationEvent = (
+	event: AutomationEvent
+): AutomationEvent is SchedulableAutomationEvent =>
 	schedulableAutomationEvents.includes(event as any);
 
 export type EventAutomationOptionsBase<
-	E extends Event,
+	E extends : AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 > = {
 	event: E;
@@ -187,10 +194,10 @@ export type EventAutomationOptionsBase<
 };
 
 export const defineAutomation = <
-	E extends Event,
+	E extends : AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 >(
-	options: EventAutomationOptionsBase<E, AC>
+	options: AutomationEventAutomationOptionsBase<E, AC>
 ) => options;
 
 export type { AutomationConfig, AutomationConfigs } from "./_lib/automations";

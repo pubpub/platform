@@ -10,7 +10,6 @@ import { env } from "../env/env";
 import "date-fns";
 
 import type { ActionInstancesId, ActionRunsId, AutomationsId, PubsId, StagesId } from "db/public";
-import { Event } from "db/public";
 
 import type { Interval } from "~/actions/_lib/automations";
 import { addDuration } from "../dates";
@@ -23,7 +22,7 @@ export const getScheduledActionJobKey = ({
 }: {
 	stageId: StagesId;
 	actionInstanceId: ActionInstancesId;
-	event: Event;
+	event: AutomationEvent;
 	pubId?: PubsId;
 }) => `scheduled-action-${stageId}-${actionInstanceId}${pubId ? `-${pubId}` : ""}-${event}`;
 
@@ -39,7 +38,7 @@ export type JobsClient = {
 		community: {
 			slug: string;
 		};
-		event: Event;
+		event: AutomationEvent;
 		stack: ActionRunsId[];
 		scheduledActionRunId: ActionRunsId;
 		config: Record<string, unknown> | null;

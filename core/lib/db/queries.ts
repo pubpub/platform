@@ -12,7 +12,6 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Event } from "db/public";
 import { logger } from "logger";
 
 import type { AutomationConfig } from "~/actions/types";
@@ -143,11 +142,11 @@ export const getStageMembers = cache((stageId: StagesId) => {
 
 export type GetEventAutomationOptions =
 	| {
-			event: Event.pubInStageForDuration | Event.webhook;
+			event: AutomationEvent.pubInStageForDuration | AutomationEvent.webhook;
 			sourceActionInstanceId?: never;
 	  }
 	| {
-			event: Event.actionFailed | Event.actionSucceeded;
+			event: AutomationEvent.actionFailed | AutomationEvent.actionSucceeded;
 			sourceActionInstanceId: ActionInstancesId;
 	  };
 
@@ -199,8 +198,8 @@ const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 			const where = eb.where("automations.event", "=", options!.event);
 
 			if (
-				options!.event === Event.pubInStageForDuration ||
-				options!.event === Event.webhook
+				options!.event === AutomationEvent.pubInStageForDuration ||
+				options!.event === AutomationEvent.webhook
 			) {
 				return where;
 			}

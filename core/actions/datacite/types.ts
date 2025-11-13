@@ -373,18 +373,18 @@ export interface paths {
 				/** @description A JSON array of events. */
 				200: {
 					content: {
-						"application/vnd.api+json": components["schemas"]["Event"];
+						"application/vnd.api+json": components["schemas"]["AutomationEvent"];
 					};
 				};
 			};
 		};
 	};
 	"/events/{id}": {
-		/** Return an event. */
+		/** Return an AutomationEvent. */
 		get: {
 			parameters: {
 				path: {
-					/** @description Event */
+					/** @description AutomationEvent */
 					id: string;
 				};
 			};
@@ -392,7 +392,7 @@ export interface paths {
 				/** @description A JSON array of events. */
 				200: {
 					content: {
-						"application/vnd.api+json": components["schemas"]["Event"];
+						"application/vnd.api+json": components["schemas"]["AutomationEvent"];
 					};
 				};
 			};
@@ -907,7 +907,7 @@ export interface components {
 							| "DataPaper"
 							| "Dataset"
 							| "Dissertation"
-							| "Event"
+							| "AutomationEvent"
 							| "Image"
 							| "InteractiveResource"
 							| "JournalArticle"
@@ -1043,7 +1043,7 @@ export interface components {
 							| "DataPaper"
 							| "Dataset"
 							| "Dissertation"
-							| "Event"
+							| "AutomationEvent"
 							| "Image"
 							| "InteractiveResource"
 							| "JournalArticle"
@@ -1209,7 +1209,7 @@ export interface components {
 				};
 			};
 		};
-		Event: {
+		AutomationEvent: {
 			data?: {
 				id?: string;
 				type?: string;

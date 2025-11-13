@@ -10,6 +10,7 @@ import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
 import type { AutomationConditionBlocksTable } from "./AutomationConditionBlocks";
 import type { AutomationConditionsTable } from "./AutomationConditions";
+import type { AutomationRunTable } from "./AutomationRun";
 import type { AutomationsTable } from "./Automations";
 import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
@@ -76,6 +77,8 @@ export interface PublicSchema {
 	invites_history: InvitesHistoryTable;
 
 	communities: CommunitiesTable;
+
+	AutomationRun: AutomationRunTable;
 
 	users: UsersTable;
 

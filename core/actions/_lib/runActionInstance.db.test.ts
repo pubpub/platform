@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Action, ActionRunStatus, CoreSchemaType, Event } from "db/public";
+import { Action, ActionRunStatus, CoreSchemaType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
@@ -84,7 +84,7 @@ describe("runActionInstance", () => {
 		const result = await runActionInstance({
 			actionInstanceId: logActionInstance.id,
 			pubId: pubs[0].id,
-			event: Event.pubEnteredStage,
+			event: AutomationEvent.pubEnteredStage,
 			communityId: community.id,
 			stack: [],
 			actionInstanceArgs: null,
@@ -134,7 +134,7 @@ describe("runActionInstance", () => {
 			automationId: null,
 			actionInstanceId: googleDriveImportActionInstance.id,
 			pubId: pubs[0].id,
-			event: Event.pubEnteredStage,
+			event: AutomationEvent.pubEnteredStage,
 			actionInstanceArgs: {
 				outputField: `${community.slug}:title`,
 				docUrl: fakeDocURL,

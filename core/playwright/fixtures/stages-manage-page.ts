@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 
 import { test } from "@playwright/test";
 
-import type { Action, Event, StagesId } from "db/public";
+import type { Action, StagesId } from "db/public";
 
 import { slugifyString } from "~/lib/string";
 
@@ -90,7 +90,7 @@ export class StagesManagePage {
 	async addAutomation(
 		stageName: string,
 		automation: {
-			event: Event;
+			event: AutomationEvent;
 			actionInstanceName: string;
 			sourceActionInstanceName?: string;
 		}
