@@ -466,9 +466,9 @@ describe("cachedFindTables", () => {
 			.selectFrom("new_pub")
 			.selectAll();
 
-		await expect(() => compileAndFindTables(query, "select")).rejects.toThrowError(/Insert/);
+		expect(() => compileAndFindTables(query, "select")).toThrow(/Insert/);
 
-		await expect(compileAndFindTables(query, "mutation")).resolves.not.toThrow();
+		expect(() => compileAndFindTables(query, "mutation")).not.toThrow();
 
 		() => {
 			const cachedQuery = autoCache(query);
@@ -486,9 +486,9 @@ describe("cachedFindTables", () => {
 
 		const query = mockedDb.selectFrom("pubs").selectAll();
 
-		await expect(compileAndFindTables(query, "select")).resolves.not.toThrow();
+		expect(() => compileAndFindTables(query, "select")).not.toThrow();
 
-		await expect(() => compileAndFindTables(query, "mutation")).rejects.toThrowError(
+		expect(() => compileAndFindTables(query, "mutation")).toThrow(
 			/Invalid use of `autoRevalidate`/
 		);
 
@@ -502,7 +502,7 @@ describe("cachedFindTables", () => {
 	});
 
 	it("should add extra tags for tables that are linked to other tables", async () => {
-		const tables = await compileAndFindTables(mockedDb.selectFrom("pubs"), "select");
+		const tables = compileAndFindTables(mockedDb.selectFrom("pubs"), "select");
 
 		expect(tables).toEqual(["pubs"]);
 

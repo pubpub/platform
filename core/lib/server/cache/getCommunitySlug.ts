@@ -2,7 +2,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { getParams } from "@nimpl/getters/get-params";
 
-import { PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./constants";
+import { PUBPUB_API_ROUTE_HEADER_NAME, PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./constants";
 
 /**
  * Experimental and likely unstable way to get the community slug.
@@ -39,4 +39,18 @@ export const getCommunitySlug = cache(async () => {
 	}
 
 	return communitySlugHeader;
+});
+
+/**
+ * checks whether we are in an api route
+ * since next 16, they introduce a distinction between `updateTag` and `revalidateTag`, the latter not being available in api routes.
+ *
+ */
+export const getIsApiRoute = cache(async () => {
+	const header = await headers();
+	const apiRouteHeader = header.get(PUBPUB_API_ROUTE_HEADER_NAME);
+	if (!apiRouteHeader) {
+		return false;
+	}
+	return true;
 });

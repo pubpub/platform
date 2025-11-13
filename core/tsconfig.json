@@ -25,7 +25,7 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"instrumentation.node.mts",
-		"cache-handler.js",
+		"cache-handler.mjs",
 		"prisma/generate-history-table.mts",
 		"prisma/seed.cts",
 		"prisma/scripts/comment-generator.mts",
