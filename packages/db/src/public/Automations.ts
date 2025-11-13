@@ -4,8 +4,10 @@ import { z } from "zod";
 
 import type { AutomationConfig } from "../types";
 import type { ActionInstancesId } from "./ActionInstances";
+import type { ConditionEvaluationTiming } from "./ConditionEvaluationTiming";
 import type { Event } from "./Event";
 import { actionInstancesIdSchema } from "./ActionInstances";
+import { conditionEvaluationTimingSchema } from "./ConditionEvaluationTiming";
 import { eventSchema } from "./Event";
 
 // @generated
@@ -33,6 +35,12 @@ export interface AutomationsTable {
 		ActionInstancesId | null,
 		ActionInstancesId | null
 	>;
+
+	conditionEvaluationTiming: ColumnType<
+		ConditionEvaluationTiming | null,
+		ConditionEvaluationTiming | null,
+		ConditionEvaluationTiming | null
+	>;
 }
 
 export type Automations = Selectable<AutomationsTable>;
@@ -51,6 +59,7 @@ export const automationsSchema = z.object({
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	sourceActionInstanceId: actionInstancesIdSchema.nullable(),
+	conditionEvaluationTiming: conditionEvaluationTimingSchema.nullable(),
 });
 
 export const automationsInitializerSchema = z.object({
@@ -61,6 +70,7 @@ export const automationsInitializerSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	sourceActionInstanceId: actionInstancesIdSchema.optional().nullable(),
+	conditionEvaluationTiming: conditionEvaluationTimingSchema.optional().nullable(),
 });
 
 export const automationsMutatorSchema = z.object({
@@ -71,4 +81,5 @@ export const automationsMutatorSchema = z.object({
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
 	sourceActionInstanceId: actionInstancesIdSchema.optional().nullable(),
+	conditionEvaluationTiming: conditionEvaluationTimingSchema.optional().nullable(),
 });

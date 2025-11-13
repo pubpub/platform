@@ -88,6 +88,7 @@ describe("runActionInstance", () => {
 			communityId: community.id,
 			stack: [],
 			actionInstanceArgs: null,
+			automationId: null,
 		});
 
 		expect(result).toMatchObject({
@@ -130,6 +131,7 @@ describe("runActionInstance", () => {
 
 		const fakeDocURL = "https://docs.google.com/document/d/1234567890";
 		const result = await runActionInstance({
+			automationId: null,
 			actionInstanceId: googleDriveImportActionInstance.id,
 			pubId: pubs[0].id,
 			event: Event.pubEnteredStage,

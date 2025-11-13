@@ -29,8 +29,8 @@ import {
 } from "~/lib/server/actions";
 import {
 	AutomationError,
-	createOrUpdateAutomationWithCycleCheck,
 	removeAutomation,
+	upsertAutomationWithCycleCheck,
 } from "~/lib/server/automations";
 import { autoRevalidate } from "~/lib/server/cache/autoRevalidate";
 import { revalidateTagsForCommunity } from "~/lib/server/cache/revalidate";
@@ -398,7 +398,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	}
 
 	try {
-		await createOrUpdateAutomationWithCycleCheck({
+		await upsertAutomationWithCycleCheck({
 			automationId,
 			actionInstanceId: data.actionInstanceId as ActionInstancesId,
 			event: data.event,
@@ -411,6 +411,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			},
 			sourceActionInstanceId:
 				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
+			condition: data.condition,
 		});
 	} catch (error) {
 		logger.error(error);

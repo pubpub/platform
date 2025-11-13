@@ -188,11 +188,6 @@ COMMENT ON TYPE "AuthTokenType" IS '@property generic - For most use-cases. This
 
 
 
--- Enum ConditionEvaluationTiming comments
-
-
-
-
 -- Enum AutomationConditionBlockType comments
 
 

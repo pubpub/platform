@@ -4,8 +4,10 @@ import { defaultMarkdownParser } from "prosemirror-markdown";
 import type { CommunitiesId, UsersId } from "db/public";
 import {
 	Action,
+	AutomationConditionBlockType,
 	CoreSchemaType,
 	ElementType,
+	Event,
 	FormAccessType,
 	InputComponent,
 	MemberRole,
@@ -274,6 +276,39 @@ export async function seedStarter(communityId?: CommunitiesId) {
 							},
 						},
 					},
+					automations: [
+						{
+							event: Event.pubEnteredStage,
+							actionInstance: "Log Review",
+							conditions: {
+								type: AutomationConditionBlockType.AND,
+								items: [
+									{
+										kind: "condition",
+										type: "jsonata",
+										expression:
+											'$.pub.values.Title = "Ancient Giants: Unpacking the Evolutionary History of Crocodiles from Prehistoric to Present"',
+									},
+									{
+										kind: "block",
+										type: AutomationConditionBlockType.OR,
+										items: [
+											{
+												kind: "condition",
+												type: "jsonata",
+												expression: '$.pub.pubType.name = "Article"',
+											},
+											{
+												kind: "condition",
+												type: "jsonata",
+												expression: '$.pub.pubType.name = "Evaluation"',
+											},
+										],
+									},
+								],
+							},
+						},
+					],
 				},
 				Published: {
 					members: { new: MemberRole.contributor },
