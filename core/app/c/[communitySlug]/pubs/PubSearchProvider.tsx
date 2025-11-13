@@ -66,6 +66,10 @@ const PubSearchContext = createContext<PubSearchContextType>({
 const DEBOUNCE_TIME = 300;
 
 const isStale = (query: PubSearchParams, inputValues: PubSearchParams) => {
+	if (inputValues.query.length === 1) {
+		return false;
+	}
+
 	if (query.query !== inputValues.query) {
 		return true;
 	}

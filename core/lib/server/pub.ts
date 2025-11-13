@@ -2173,7 +2173,7 @@ export const createTsQuery = (query: string, config: SearchConfig = {}) => {
 
 	const { prefixSearch = true, minLength = 2 } = options;
 
-	const cleanQuery = query.trim();
+	const cleanQuery = query.trim().replace(/[:@]/g, "");
 	if (cleanQuery.length < minLength) {
 		return null;
 	}
