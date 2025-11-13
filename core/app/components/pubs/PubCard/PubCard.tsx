@@ -15,7 +15,7 @@ import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
-import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
+import { PubSelectorCheckbox } from "../../../c/[communitySlug]/pubs/PubSelector";
 import { PubsRunActionDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonButton } from "../../skeletons/SkeletonButton";
 import { RelationsDropDown } from "../RelationsDropDown";
@@ -227,7 +227,7 @@ export const PubCard = async ({
 						/>
 					</Suspense>
 					{withSelection ? (
-						<PubSelector
+						<PubSelectorCheckbox
 							pubId={pub.id}
 							className={cn(
 								"order-4 ml-2 box-content h-4 w-4 border-neutral-500 data-[state=checked]:opacity-100 peer-data-[state=open]:opacity-100",

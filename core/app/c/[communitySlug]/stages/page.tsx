@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -7,6 +8,7 @@ import { Button } from "ui/button";
 import { FlagTriangleRightIcon } from "ui/icon";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
+import { SkeletonButton } from "~/app/components/skeletons/SkeletonButton";
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCanViewStagePage } from "~/lib/authorization/capabilities";
 import { findCommunityBySlug } from "~/lib/server/community";
@@ -55,11 +57,13 @@ export default async function Page(props: Props) {
 					<Button asChild variant="link" className="text-sm underline">
 						<Link href={`/c/${community.slug}/stages/manage`}>Manage</Link>
 					</Button>
-					<CreatePubButton
-						communityId={community.id}
-						text="Add Pub"
-						className="bg-emerald-500 text-white"
-					/>
+					<Suspense fallback={<SkeletonButton className="h-8 w-24" />}>
+						<CreatePubButton
+							communityId={community.id}
+							text="Add Pub"
+							className="bg-emerald-500 text-white"
+						/>
+					</Suspense>
 				</div>
 			}
 		>
