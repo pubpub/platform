@@ -86,6 +86,7 @@ export type PubTypeInitializer<PF extends PubFieldsInitializer> = Record<
 	| Partial<Record<keyof PF, { isTitle: boolean }>>
 	| {
 			id: PubTypesId;
+			description?: string;
 			fields: Partial<Record<keyof PF, { isTitle: boolean }>>;
 	  }
 >;

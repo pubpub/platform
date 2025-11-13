@@ -76,10 +76,11 @@ export const getPubTypesForCommunity = async (
 		orderBy = GET_MANY_DEFAULT.orderBy,
 		orderDirection = GET_MANY_DEFAULT.orderDirection,
 		name,
-	}: GetManyParams & { name?: string[] } = GET_MANY_DEFAULT
+		trx = db,
+	}: GetManyParams & { name?: string[] } & { trx?: typeof db } = GET_MANY_DEFAULT
 ) =>
 	autoCache(
-		getPubTypeBase()
+		getPubTypeBase(trx)
 			.where("pub_types.communityId", "=", communityId)
 			.$if(Boolean(name), (eb) => eb.where("pub_types.name", "in", name!))
 			.orderBy(orderBy, orderDirection)

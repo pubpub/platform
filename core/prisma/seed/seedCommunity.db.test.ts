@@ -14,177 +14,186 @@ import {
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 import { allPermissions } from "~/lib/server/apiAccessTokens";
+import { createSeed } from "./createSeed";
 
 const { createForEachMockedTransaction } = await mockServerCode();
 
 const { getTrx, rollback, commit } = createForEachMockedTransaction();
+
+const makeSeed = () => {
+	const testUserId = crypto.randomUUID() as UsersId;
+
+	const submissionPubId = crypto.randomUUID() as PubsId;
+	const authorPubId = crypto.randomUUID() as PubsId;
+	const author2PubId = crypto.randomUUID() as PubsId;
+
+	const stage1Id = crypto.randomUUID() as StagesId;
+	const AuthorPubTypeId = crypto.randomUUID() as PubTypesId;
+
+	const email = faker.internet.email();
+
+	const seed = createSeed({
+		community: {
+			name: "test",
+			slug: "test-community",
+		},
+		pubFields: {
+			Title: { schemaName: CoreSchemaType.String },
+			SubmissionAuthor: { schemaName: CoreSchemaType.Number, relation: true },
+		},
+		pubTypes: {
+			Submission: {
+				Title: { isTitle: true },
+				SubmissionAuthor: { isTitle: false },
+			},
+			Author: {
+				id: AuthorPubTypeId,
+				fields: {
+					Title: { isTitle: true },
+				},
+			},
+		},
+		users: {
+			test: {
+				id: testUserId,
+				firstName: "Testy",
+				email,
+				lastName: "McTestFace",
+				role: MemberRole.admin,
+			},
+			hih: {
+				role: MemberRole.contributor,
+			},
+		},
+		stages: {
+			"Stage 1": {
+				id: stage1Id,
+				members: { hih: MemberRole.contributor },
+				actions: {
+					"1": {
+						action: Action.email,
+						config: {
+							body: "hello nerd",
+							subject: "hello nerd",
+							recipientEmail: "all@pubpub.org",
+						},
+					},
+				},
+			},
+			"Stage 2": {},
+		},
+		pubs: [
+			{
+				id: authorPubId,
+				pubType: "Author",
+				values: {
+					Title: "De Heer Frederick I",
+				},
+			},
+			{
+				id: submissionPubId,
+				pubType: "Submission",
+				values: {
+					Title: "HENK",
+					SubmissionAuthor: [{ value: 0, relatedPubId: authorPubId }],
+				},
+				stage: "Stage 1",
+				relatedPubs: {
+					SubmissionAuthor: [
+						{
+							// indicates that it's the first pub
+							value: 1,
+							pub: {
+								pubType: "Author",
+								values: {
+									Title: "De Heer Frederick III",
+								},
+							},
+						},
+						{
+							value: 2,
+							pub: {
+								pubType: "Author",
+								values: {
+									Title: "De Heer Frederick IV",
+								},
+							},
+						},
+					],
+				},
+			},
+			{
+				id: author2PubId,
+				pubType: "Author",
+				values: {
+					Title: "De Heer Frederick II",
+				},
+			},
+		],
+
+		forms: {
+			"submission-form": {
+				pubType: "Submission",
+				elements: [
+					{
+						type: ElementType.structural,
+						element: StructuralFormElement.p,
+						content: "# Hey, what is up.",
+					},
+					{
+						type: ElementType.pubfield,
+						component: InputComponent.textInput,
+						field: "Title",
+						config: {
+							label: "Title hihihi",
+						},
+					},
+					{
+						type: ElementType.button,
+						label: "Submit",
+						content: "Submit",
+						stage: "Stage 1",
+					},
+				],
+			},
+			"author-form": {
+				pubType: "Author",
+				elements: [
+					{
+						type: ElementType.pubfield,
+						component: InputComponent.textInput,
+						field: "Title",
+						config: { label: "Name" },
+					},
+				],
+			},
+		},
+		apiTokens: {
+			"all token": {},
+			"test-token": {
+				permissions: {
+					pub: {
+						read: {
+							stages: ["no-stage", stage1Id],
+							pubTypes: [AuthorPubTypeId],
+						},
+					},
+				},
+			},
+		},
+	});
+
+	return seed;
+};
 
 describe("seedCommunity", () => {
 	test("Should be able to create some sort of community", async () => {
 		const trx = getTrx();
 
 		const seedCommunity = await import("./seedCommunity").then((mod) => mod.seedCommunity);
-		const testUserId = crypto.randomUUID() as UsersId;
+		const seed = makeSeed();
 
-		const submissionPubId = crypto.randomUUID() as PubsId;
-		const authorPubId = crypto.randomUUID() as PubsId;
-		const author2PubId = crypto.randomUUID() as PubsId;
-
-		const stage1Id = crypto.randomUUID() as StagesId;
-		const AuthorPubTypeId = crypto.randomUUID() as PubTypesId;
-
-		const email = faker.internet.email();
-
-		const seededCommunity = await seedCommunity({
-			community: {
-				name: "test",
-				slug: "test-community",
-			},
-			pubFields: {
-				Title: { schemaName: CoreSchemaType.String },
-				SubmissionAuthor: { schemaName: CoreSchemaType.Number, relation: true },
-			},
-			pubTypes: {
-				Submission: {
-					Title: { isTitle: true },
-					SubmissionAuthor: { isTitle: false },
-				},
-				Author: {
-					id: AuthorPubTypeId,
-					fields: {
-						Title: { isTitle: true },
-					},
-				},
-			},
-			users: {
-				test: {
-					id: testUserId,
-					firstName: "Testy",
-					email,
-					lastName: "McTestFace",
-					role: MemberRole.admin,
-				},
-				hih: {
-					role: MemberRole.contributor,
-				},
-			},
-			stages: {
-				"Stage 1": {
-					id: stage1Id,
-					members: { hih: MemberRole.contributor },
-					actions: {
-						"1": {
-							action: Action.email,
-							config: {
-								body: "hello nerd",
-								subject: "hello nerd",
-								recipientEmail: "all@pubpub.org",
-							},
-						},
-					},
-				},
-				"Stage 2": {},
-			},
-			pubs: [
-				{
-					id: authorPubId,
-					pubType: "Author",
-					values: {
-						Title: "De Heer Frederick I",
-					},
-				},
-				{
-					id: submissionPubId,
-					pubType: "Submission",
-					values: {
-						Title: "HENK",
-						SubmissionAuthor: [{ value: 0, relatedPubId: authorPubId }],
-					},
-					stage: "Stage 1",
-					relatedPubs: {
-						SubmissionAuthor: [
-							{
-								// indicates that it's the first pub
-								value: 1,
-								pub: {
-									pubType: "Author",
-									values: {
-										Title: "De Heer Frederick III",
-									},
-								},
-							},
-							{
-								value: 2,
-								pub: {
-									pubType: "Author",
-									values: {
-										Title: "De Heer Frederick IV",
-									},
-								},
-							},
-						],
-					},
-				},
-				{
-					id: author2PubId,
-					pubType: "Author",
-					values: {
-						Title: "De Heer Frederick II",
-					},
-				},
-			],
-
-			forms: {
-				"submission-form": {
-					pubType: "Submission",
-					elements: [
-						{
-							type: ElementType.structural,
-							element: StructuralFormElement.p,
-							content: "# Hey, what is up.",
-						},
-						{
-							type: ElementType.pubfield,
-							component: InputComponent.textInput,
-							field: "Title",
-							config: {
-								label: "Title hihihi",
-							},
-						},
-						{
-							type: ElementType.button,
-							label: "Submit",
-							content: "Submit",
-							stage: "Stage 1",
-						},
-					],
-				},
-				"author-form": {
-					pubType: "Author",
-					elements: [
-						{
-							type: ElementType.pubfield,
-							component: InputComponent.textInput,
-							field: "Title",
-							config: { label: "Name" },
-						},
-					],
-				},
-			},
-			apiTokens: {
-				"all token": {},
-				"test-token": {
-					permissions: {
-						pub: {
-							read: {
-								stages: ["no-stage", stage1Id],
-								pubTypes: [AuthorPubTypeId],
-							},
-						},
-					},
-				},
-			},
-		});
+		const seededCommunity = await seedCommunity(seed);
 
 		expect(seededCommunity).toBeDefined();
 
@@ -236,22 +245,22 @@ describe("seedCommunity", () => {
 				name: "Submission",
 			},
 			Author: {
-				id: AuthorPubTypeId,
+				id: seed.pubTypes?.Author.id,
 				name: "Author",
 			},
 		});
 
 		expect(seededCommunity.pubs, "pubs").toMatchObject([
-			{ id: authorPubId },
+			{ id: seed.pubs?.[0].id },
 			{
-				id: submissionPubId,
+				id: seed.pubs?.[1].id,
 				values: [
 					{
 						relatedPubId: null,
 						value: "HENK",
 					},
 					{
-						relatedPubId: authorPubId,
+						relatedPubId: seed.pubs?.[0].id,
 						value: 0,
 					},
 					{
@@ -270,7 +279,7 @@ describe("seedCommunity", () => {
 				valuesBlob: null,
 				stageId: seededCommunity.stages["Stage 1"].id,
 			},
-			{ id: author2PubId },
+			{ id: seed.pubs?.[2].id },
 		]);
 
 		expect(seededCommunity.stageConnections, "stageConnections").toMatchObject([]);
@@ -390,8 +399,8 @@ describe("seedCommunity", () => {
 				scope: "pub",
 				accessType: "read",
 				constraints: {
-					stages: expect.arrayContaining(["no-stage", stage1Id]),
-					pubTypes: [AuthorPubTypeId],
+					stages: expect.arrayContaining(["no-stage", seed.stages?.["Stage 1"].id]),
+					pubTypes: [seed.pubTypes?.Author.id],
 				},
 			},
 		]);
@@ -407,5 +416,17 @@ describe("seedCommunity", () => {
 		);
 
 		rollback();
+	});
+});
+
+describe("export community", () => {
+	test("Should be able to export a community", async () => {
+		const trx = getTrx();
+		const seed = makeSeed();
+		const { seedCommunity } = await import("./seedCommunity");
+		const { exportCommunity } = await import("../seeds/jsonExport");
+		const seededCommunity = await seedCommunity(seed, { randomSlug: true }, trx);
+		const exportedCommunity = await exportCommunity(seededCommunity.community.slug, trx);
+		expect(exportedCommunity).toMatchObject(seed);
 	});
 });
