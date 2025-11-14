@@ -127,6 +127,7 @@ Table users {
   InvitedUser invites [not null]
   InvitedByUser invites [not null]
   InviteHistory invites_history [not null]
+  automationRuns automation_runs [not null]
 }
 
 Table sessions {
@@ -337,7 +338,7 @@ Table action_config_defaults {
   }
 }
 
-Table AutomationRun {
+Table automation_runs {
   id String [pk]
   automation automations [not null]
   automationId String [not null]
@@ -345,16 +346,18 @@ Table AutomationRun {
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
   actionRuns action_runs [not null]
+  userId String
+  user users
   sourceAutomationRunId String
-  sourceAutomationRun AutomationRun
-  sequentialAutomationRuns AutomationRun [not null]
+  sourceAutomationRun automation_runs
+  sequentialAutomationRuns automation_runs [not null]
 }
 
 Table action_runs {
   id String [pk]
   actionInstance action_instances
   actionInstanceId String
-  automationRun AutomationRun
+  automationRun automation_runs
   automationRunId String
   pub pubs
   pubId String
@@ -377,11 +380,7 @@ Table automations {
   id String [pk]
   name String [not null]
   description String
-  events AutomationEvent[] [not null]
-  config Json [note: '@type(AutomationConfig, \'../types\', true, false, true)']
-  sourceAutomationId String
-  sourceAutomation automations
-  watchedAutomations automations [not null]
+  watchedAutomations automation_triggers [not null]
   stage stages
   stageId String
   community communities [not null]
@@ -391,7 +390,20 @@ Table automations {
   updatedAt DateTime [default: `now()`, not null]
   AutomationConditionBlock automation_condition_blocks [not null]
   actionInstances action_instances [not null]
-  automationRuns AutomationRun [not null]
+  automationRuns automation_runs [not null]
+  automationTriggers automation_triggers [not null]
+}
+
+Table automation_triggers {
+  id String [pk]
+  event AutomationEvent [not null]
+  config Json
+  automation automations [not null]
+  automationId String [not null]
+  sourceAutomationId String
+  sourceAutomation automations
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [default: `now()`, not null]
 }
 
 Table automation_condition_blocks {
@@ -819,23 +831,27 @@ Ref: action_instances.automationId > automations.id [delete: Cascade]
 
 Ref: action_config_defaults.communityId > communities.id [delete: Cascade]
 
-Ref: AutomationRun.automationId > automations.id [delete: Cascade]
+Ref: automation_runs.automationId > automations.id [delete: Cascade]
 
-Ref: AutomationRun.sourceAutomationRunId - AutomationRun.id [delete: Set Null]
+Ref: automation_runs.userId > users.id [delete: Cascade]
+
+Ref: automation_runs.sourceAutomationRunId - automation_runs.id [delete: Set Null]
 
 Ref: action_runs.actionInstanceId > action_instances.id [delete: Cascade]
 
-Ref: action_runs.automationRunId > AutomationRun.id
+Ref: action_runs.automationRunId > automation_runs.id
 
 Ref: action_runs.pubId > pubs.id
 
 Ref: action_runs.userId > users.id [delete: Set Null]
 
-Ref: automations.sourceAutomationId - automations.id [delete: Set Null]
-
 Ref: automations.stageId > stages.id [delete: Set Null]
 
 Ref: automations.communityId > communities.id [delete: Cascade]
+
+Ref: automation_triggers.automationId > automations.id [delete: Cascade]
+
+Ref: automation_triggers.sourceAutomationId > automations.id [delete: Cascade]
 
 Ref: automation_condition_blocks.automationConditionBlockId - automation_condition_blocks.id [delete: Cascade]
 

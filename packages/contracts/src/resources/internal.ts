@@ -1,7 +1,12 @@
 import { initContract } from "@ts-rest/core";
 import { z } from "zod";
 
-import { actionRunsIdSchema, automationsIdSchema, pubsIdSchema } from "db/public";
+import {
+	actionRunsIdSchema,
+	automationEventSchema,
+	automationsIdSchema,
+	pubsIdSchema,
+} from "db/public";
 
 const contract = initContract();
 
@@ -18,7 +23,7 @@ export const internalApi = contract.router(
 			}),
 			body: z.object({
 				pubId: pubsIdSchema,
-				event: eventSchema,
+				event: automationEventSchema,
 				stack: z.array(actionRunsIdSchema),
 			}),
 			responses: {
@@ -60,7 +65,7 @@ export const internalApi = contract.router(
 			}),
 			body: z.object({
 				pubId: pubsIdSchema,
-				event: eventSchema,
+				event: automationEventSchema,
 				actionRunId: actionRunsIdSchema,
 				stack: z.array(actionRunsIdSchema),
 				config: z.record(z.unknown()).nullish(),

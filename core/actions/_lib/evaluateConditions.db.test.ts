@@ -1,6 +1,12 @@
 import { describe, expect, test } from "vitest";
 
-import { Action, AutomationConditionBlockType, CoreSchemaType, MemberRole } from "db/public";
+import {
+	Action,
+	AutomationConditionBlockType,
+	AutomationEvent,
+	CoreSchemaType,
+	MemberRole,
+} from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 

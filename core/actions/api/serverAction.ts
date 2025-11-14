@@ -9,7 +9,7 @@ import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/run
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { runActionInstance as runActionInstanceInner } from "../_lib/runActionInstance";
+import { runAutomation as runActionInstanceInner } from "../_lib/runActionInstance";
 
 export const runActionInstance = defineServerAction(async function runActionInstance(
 	args: Omit<RunActionInstanceArgs, "userId" | "event" | "config"> &

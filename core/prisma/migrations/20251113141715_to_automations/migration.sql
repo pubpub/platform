@@ -27,10 +27,6 @@ ALTER TABLE "automations"
 ALTER TABLE "automations"
   ADD CONSTRAINT "automations_communityId_fkey" FOREIGN KEY ("communityId") REFERENCES "communities"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- step 5: add events array column to automations (temporarily nullable)
-ALTER TABLE "automations"
-  ADD COLUMN "events" "AutomationEvent"[];
-
 -- step 6: add name and description columns to automations (temporarily nullable for data migration)
 ALTER TABLE "automations"
   ADD COLUMN "name" text;
@@ -46,22 +42,40 @@ ALTER TABLE "action_instances"
 ALTER TABLE "action_runs"
   ADD COLUMN "automationRunId" text;
 
--- step 9: create AutomationRun table
-CREATE TABLE "AutomationRun"(
+-- step 9: create automation_runs table
+CREATE TABLE "automation_runs"(
   "id" text NOT NULL DEFAULT gen_random_uuid(),
   "automationId" text NOT NULL,
   "config" jsonb,
   "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "sourceAutomationRunId" text,
-  CONSTRAINT "AutomationRun_pkey" PRIMARY KEY ("id")
+  "userId" text,
+  CONSTRAINT "automation_runs_pkey" PRIMARY KEY ("id")
 );
 
--- step 10: add sourceAutomationId column to automations
-ALTER TABLE "automations"
-  ADD COLUMN "sourceAutomationId" text;
+-- add automation triggers table, this stores the triggers for each automation
+CREATE TABLE "automation_triggers"(
+  "id" text NOT NULL DEFAULT gen_random_uuid(),
+  "automationId" text NOT NULL,
+  "event" "AutomationEvent" NOT NULL,
+  "config" jsonb,
+  "sourceAutomationId" text,
+  "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "automation_triggers_pkey" PRIMARY KEY ("id")
+);
 
--- step 11: populate communityId for existing automations based on their action_instance's stage
+ALTER TABLE "automation_triggers"
+  ADD CONSTRAINT "automation_triggers_automationId_fkey" FOREIGN KEY ("automationId") REFERENCES "automations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "automation_triggers"
+  ADD CONSTRAINT "automation_triggers_sourceAutomationId_fkey" FOREIGN KEY ("sourceAutomationId") REFERENCES "automations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+ALTER TABLE "automation_runs"
+  ADD CONSTRAINT "automation_runs_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- step 10: populate communityId for existing automations based on their action_instance's stage
 UPDATE
   "automations" a
 SET
@@ -72,29 +86,30 @@ FROM
 WHERE
   a."actionInstanceId" = ai.id;
 
+-- step 11: populate stageId for existing automations based on their action_instance's stage
+UPDATE
+  "automations" a
+SET
+  "stageId" = ai."stageId"
+FROM
+  "action_instances" ai
+WHERE
+  a."actionInstanceId" = ai.id;
+
 -- step 12: create dummy automation for each community to re-parent deleted automation runs
-INSERT INTO "automations"(id, name, description, "communityId", "stageId", events, "createdAt", "updatedAt")
+INSERT INTO "automations"(id, name, description, "communityId", "stageId", "createdAt", "updatedAt")
 SELECT
   gen_random_uuid(),
   'Deleted Automations',
-  'Placeholder automation for re-parenting runs from deleted automations',
+  'Placeholder automation for automation runs from deleted automations',
   c.id,
   NULL,
-  ARRAY[]::"AutomationEvent"[],
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
 FROM
   "communities" c;
 
--- step 13: update existing automations to have events array with their current event
-UPDATE
-  "automations"
-SET
-  events = ARRAY[event]::"AutomationEvent"[]
-WHERE
-  event IS NOT NULL;
-
--- step 14: migrate action_instance name to automation name for existing automations
+-- step 13: migrate action_instance name to automation name for existing automations
 UPDATE
   "automations" a
 SET
@@ -105,27 +120,31 @@ WHERE
   a."actionInstanceId" = ai.id
   AND a.name IS NULL;
 
--- step 15: for action_instances that have an automation, add 'manual' to the events array
-UPDATE
-  "automations" a
-SET
-  events = array_append(a.events, 'manual'::"AutomationEvent")
+-- step 14: create automation triggers for existing automations
+-- migrate the event, config, and sourceActionInstanceId to triggers
+INSERT INTO "automation_triggers"(id, "automationId", event, config, "sourceAutomationId", "createdAt", "updatedAt")
+SELECT
+  gen_random_uuid(),
+  a.id,
+  a.event,
+  a.config,
+  a."sourceActionInstanceId",
+  a."createdAt",
+  a."updatedAt"
 FROM
-  "action_instances" ai
+  "automations" a
 WHERE
-  a."actionInstanceId" = ai.id
-  AND ai.id IS NOT NULL;
+  a.event IS NOT NULL;
 
--- step 16: create new automations for action_instances that don't have one yet
+-- step 15: create new automations for action_instances that don't have one yet
 -- this handles standalone actions that were only meant to be run manually
-INSERT INTO "automations"(id, name, description, "communityId", "stageId", events, "createdAt", "updatedAt")
+INSERT INTO "automations"(id, name, description, "communityId", "stageId", "createdAt", "updatedAt")
 SELECT
   gen_random_uuid(),
   ai.name,
   NULL,
   s."communityId",
   ai."stageId",
-  ARRAY['manual']::"AutomationEvent"[],
   ai."createdAt",
   ai."updatedAt"
 FROM
@@ -140,7 +159,54 @@ WHERE
     WHERE
       a."actionInstanceId" = ai.id);
 
--- step 17: update action_instances to reference their automation
+-- step 16: create manual triggers for all new standalone automations
+INSERT INTO "automation_triggers"(id, "automationId", event, config, "createdAt", "updatedAt")
+SELECT
+  gen_random_uuid(),
+  a.id,
+  'manual',
+  NULL,
+  a."createdAt",
+  a."updatedAt"
+FROM
+  "automations" a
+  INNER JOIN "action_instances" ai ON ai.name = a.name
+    AND ai."stageId" = a."stageId"
+WHERE
+  a."actionInstanceId" IS NULL
+  AND NOT EXISTS (
+    SELECT
+      1
+    FROM
+      "automation_triggers" at
+    WHERE
+      at."automationId" = a.id);
+
+-- step 17: add manual triggers to existing automations that came from action_instances
+-- all action instances could be run manually, so add manual trigger to each
+INSERT INTO "automation_triggers"(id, "automationId", event, config, "createdAt", "updatedAt")
+SELECT
+  gen_random_uuid(),
+  a.id,
+  'manual',
+  NULL,
+  a."createdAt",
+  a."updatedAt"
+FROM
+  "automations" a
+WHERE
+  a."actionInstanceId" IS NOT NULL
+  AND a."stageId" IS NOT NULL
+  AND NOT EXISTS (
+    SELECT
+      1
+    FROM
+      "automation_triggers" at
+    WHERE
+      at."automationId" = a.id
+      AND at.event = 'manual');
+
+-- step 18: update action_instances to reference their automation
 -- for those with existing automations
 UPDATE
   "action_instances" ai
@@ -151,7 +217,7 @@ FROM
 WHERE
   a."actionInstanceId" = ai.id;
 
--- step 18: for those we just created (manual-only automations), link them
+-- step 19: for those we just created (manual-only automations), link them
 UPDATE
   "action_instances" ai
 SET
@@ -160,11 +226,10 @@ SET
       a.id
     FROM
       "automations" a
-      INNER JOIN "stages" s ON s.id = a."stageId"
     WHERE
       a.name = ai.name
       AND a."stageId" = ai."stageId"
-      AND a.events = ARRAY['manual']::"AutomationEvent"[]
+      AND a."actionInstanceId" IS NULL
       AND NOT EXISTS (
         SELECT
           1
@@ -176,8 +241,8 @@ SET
 WHERE
   "automationId" IS NULL;
 
--- step 19: create automation runs for all existing action runs, linked to dummy automation
-INSERT INTO "AutomationRun"(id, "automationId", config, "createdAt", "updatedAt", "sourceAutomationRunId")
+-- step 20: create automation runs for all existing action runs, linked to dummy automation
+INSERT INTO "automation_runs"(id, "automationId", config, "createdAt", "updatedAt", "sourceAutomationRunId")
 SELECT
   gen_random_uuid() AS id,
 (
@@ -208,7 +273,7 @@ FROM
 WHERE
   ar."actionInstanceId" IS NOT NULL;
 
--- step 20: link action_runs to their new automation_runs
+-- step 21: link action_runs to their new automation_runs
 -- create a temporary mapping table to match them correctly
 CREATE TEMP TABLE temp_action_run_mapping AS
 SELECT
@@ -217,7 +282,7 @@ SELECT
   ROW_NUMBER() OVER (PARTITION BY ar.id ORDER BY arun."createdAt", arun.id) AS rn
 FROM
   "action_runs" ar
-  INNER JOIN "AutomationRun" arun ON arun."createdAt" = ar."createdAt"
+  INNER JOIN "automation_runs" arun ON arun."createdAt" = ar."createdAt"
     AND arun."updatedAt" = ar."updatedAt"
 WHERE
   ar."actionInstanceId" IS NOT NULL;
@@ -234,7 +299,7 @@ WHERE
 
 DROP TABLE temp_action_run_mapping;
 
--- step 21: drop old foreign key constraints
+-- step 22: drop old foreign key constraints
 ALTER TABLE "action_instances"
   DROP CONSTRAINT IF EXISTS "action_instances_stageId_fkey";
 
@@ -247,18 +312,18 @@ ALTER TABLE "automations"
 ALTER TABLE "automations"
   DROP CONSTRAINT IF EXISTS "automations_sourceActionInstanceId_fkey";
 
--- step 22: drop old columns from action_instances
+-- step 23: drop old columns from action_instances
 ALTER TABLE "action_instances"
   DROP COLUMN IF EXISTS "name";
 
 ALTER TABLE "action_instances"
   DROP COLUMN IF EXISTS "stageId";
 
--- step 23: drop old column from action_runs
+-- step 24: drop old column from action_runs
 ALTER TABLE "action_runs"
   DROP COLUMN IF EXISTS "sourceActionRunId";
 
--- step 24: drop old columns from automations
+-- step 25: drop old columns from automations
 ALTER TABLE "automations"
   DROP COLUMN IF EXISTS "actionInstanceId";
 
@@ -268,47 +333,44 @@ ALTER TABLE "automations"
 ALTER TABLE "automations"
   DROP COLUMN IF EXISTS "sourceActionInstanceId";
 
--- step 25: make name column non-nullable now that data is migrated
+-- step 26: make name column non-nullable now that data is migrated
 ALTER TABLE "automations"
   ALTER COLUMN "name" SET NOT NULL;
 
--- step 26: make communityId column non-nullable now that data is migrated
+-- step 27: make communityId column non-nullable now that data is migrated
 ALTER TABLE "automations"
   ALTER COLUMN "communityId" SET NOT NULL;
 
--- step 27: make automationId column non-nullable now that data is migrated
+-- step 28: make automationId column non-nullable now that data is migrated
 ALTER TABLE "action_instances"
   ALTER COLUMN "automationId" SET NOT NULL;
 
--- step 28: add new foreign key constraints
+-- step 29: add new foreign key constraints
 ALTER TABLE "action_instances"
   ADD CONSTRAINT "action_instances_automationId_fkey" FOREIGN KEY ("automationId") REFERENCES "automations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE "AutomationRun"
-  ADD CONSTRAINT "AutomationRun_automationId_fkey" FOREIGN KEY ("automationId") REFERENCES "automations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "automation_runs"
+  ADD CONSTRAINT "automation_runs_automationId_fkey" FOREIGN KEY ("automationId") REFERENCES "automations"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
-ALTER TABLE "AutomationRun"
-  ADD CONSTRAINT "AutomationRun_sourceAutomationRunId_fkey" FOREIGN KEY ("sourceAutomationRunId") REFERENCES "AutomationRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "automation_runs"
+  ADD CONSTRAINT "automation_runs_sourceAutomationRunId_fkey" FOREIGN KEY ("sourceAutomationRunId") REFERENCES "automation_runs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 ALTER TABLE "action_runs"
-  ADD CONSTRAINT "action_runs_automationRunId_fkey" FOREIGN KEY ("automationRunId") REFERENCES "AutomationRun"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+  ADD CONSTRAINT "action_runs_automationRunId_fkey" FOREIGN KEY ("automationRunId") REFERENCES "automation_runs"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
-ALTER TABLE "automations"
-  ADD CONSTRAINT "automations_sourceAutomationId_fkey" FOREIGN KEY ("sourceAutomationId") REFERENCES "automations"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- step 29: add unique constraint for null stageId per community
+-- step 30: add unique constraint for null stageId per community
 -- this ensures only one dummy automation per community
 CREATE UNIQUE INDEX "automations_null_stageId_per_community" ON "automations"("communityId")
 WHERE
   "stageId" IS NULL;
 
--- step 30: create trigger function to auto-create dummy automation on community creation
+-- step 31: create trigger function to auto-create dummy automation on community creation
 CREATE OR REPLACE FUNCTION create_dummy_automation_for_community()
   RETURNS TRIGGER
   AS $$
 BEGIN
-  INSERT INTO "automations"(id, name, description, "communityId", "stageId", events, "createdAt", "updatedAt")
-    VALUES(gen_random_uuid(), 'Deleted Automations', 'Placeholder automation for re-parenting runs from deleted automations', NEW.id, NULL, ARRAY[]::"AutomationEvent"[], CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+  INSERT INTO "automations"(id, name, description, "communityId", "stageId", "createdAt", "updatedAt")
+    VALUES(gen_random_uuid(), 'Deleted Automations', 'Placeholder automation for re-parenting runs from deleted automations', NEW.id, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
   RETURN NEW;
 END;
 $$
@@ -319,7 +381,7 @@ CREATE TRIGGER create_dummy_automation_after_community_insert
   FOR EACH ROW
   EXECUTE FUNCTION create_dummy_automation_for_community();
 
--- step 31: create trigger function to re-parent automation_runs when automation is deleted
+-- step 32: create trigger function to re-parent automation_runs when automation is deleted
 CREATE OR REPLACE FUNCTION reparent_automation_runs_on_delete()
   RETURNS TRIGGER
   AS $$
@@ -343,7 +405,7 @@ BEGIN
   -- re-parent all automation_runs from the deleted automation to the dummy
   IF dummy_automation_id IS NOT NULL THEN
     UPDATE
-      "AutomationRun"
+      "automation_runs"
     SET
       "automationId" = dummy_automation_id
     WHERE

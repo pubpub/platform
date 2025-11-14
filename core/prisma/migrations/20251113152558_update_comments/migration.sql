@@ -93,7 +93,7 @@ COMMENT ON COLUMN "action_instances"."config" IS '@type(BaseActionInstanceConfig
 
 
 
--- Model AutomationRun comments
+-- Model automation_runs comments
 
 
 

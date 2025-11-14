@@ -44,6 +44,7 @@ model User {
   InvitedUser          Invite[]              @relation("invited_user")
   InvitedByUser        Invite[]              @relation("invited_by")
   InviteHistory        InviteHistory[]
+  automationRuns       AutomationRun[]
 
   @@map(name: "users")
 }
@@ -346,12 +347,17 @@ model AutomationRun {
   updatedAt  DateTime    @default(now()) @updatedAt
   actionRuns ActionRun[]
 
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // action run that triggered this action run
   sourceAutomationRunId String?
   sourceAutomationRun   AutomationRun? @relation("source_automation_run", fields: [sourceAutomationRunId], references: [id], onDelete: SetNull)
 
   // action runs that were triggered by this action run
   sequentialAutomationRuns AutomationRun[] @relation("source_automation_run")
+
+  @@map(name: "automation_runs")
 }
 
 // TODO: move more of the fields from ActionRun to AutomationRun
@@ -395,13 +401,8 @@ model Automation {
   name        String
   description String?
 
-  events             AutomationEvent[]
-  /// @type(AutomationConfig, '../types', true, false, true)
-  config             Json?
   // as the trigger for "automationSucceeded" or "automationFailed"
-  sourceAutomationId String?
-  sourceAutomation   Automation?       @relation("source_automation", fields: [sourceAutomationId], references: [id], onDelete: SetNull)
-  watchedAutomations Automation[]      @relation("source_automation")
+  watchedAutomations AutomationTrigger[] @relation("source_automation")
 
   // stage is nullable to allow one dummy automation per community for re-parenting deleted automation runs
   stage   Stage?  @relation(fields: [stageId], references: [id], onDelete: SetNull)
@@ -417,6 +418,7 @@ model Automation {
   AutomationConditionBlock  AutomationConditionBlock[]
   actionInstances           ActionInstance[]
   automationRuns            AutomationRun[]
+  automationTriggers        AutomationTrigger[]
 
   @@map(name: "automations")
 }
@@ -429,6 +431,23 @@ enum AutomationEvent {
   automationFailed
   webhook
   manual
+}
+
+model AutomationTrigger {
+  id     String          @id @default(dbgenerated("gen_random_uuid()"))
+  event  AutomationEvent
+  config Json?
+
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  automationId String
+
+  sourceAutomationId String?
+  sourceAutomation   Automation? @relation("source_automation", fields: [sourceAutomationId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map(name: "automation_triggers")
 }
 
 enum ConditionEvaluationTiming {

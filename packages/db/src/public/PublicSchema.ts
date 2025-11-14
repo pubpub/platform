@@ -10,8 +10,9 @@ import type { ApiAccessTokensTable } from "./ApiAccessTokens";
 import type { AuthTokensTable } from "./AuthTokens";
 import type { AutomationConditionBlocksTable } from "./AutomationConditionBlocks";
 import type { AutomationConditionsTable } from "./AutomationConditions";
-import type { AutomationRunTable } from "./AutomationRun";
+import type { AutomationRunsTable } from "./AutomationRuns";
 import type { AutomationsTable } from "./Automations";
+import type { AutomationTriggersTable } from "./AutomationTriggers";
 import type { CommunitiesTable } from "./Communities";
 import type { CommunityMembershipsTable } from "./CommunityMemberships";
 import type { FormElementsTable } from "./FormElements";
@@ -41,6 +42,8 @@ import type { UsersTable } from "./Users";
 
 export interface PublicSchema {
 	PubFieldSchema: PubFieldSchemaTable;
+
+	automation_runs: AutomationRunsTable;
 
 	membership_capabilities: MembershipCapabilitiesTable;
 
@@ -78,7 +81,7 @@ export interface PublicSchema {
 
 	communities: CommunitiesTable;
 
-	AutomationRun: AutomationRunTable;
+	automation_triggers: AutomationTriggersTable;
 
 	users: UsersTable;
 

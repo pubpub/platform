@@ -6,7 +6,7 @@ import { Card, CardContent } from "ui/card";
 import { ActionConfigForm } from "~/app/components/ActionUI/ActionConfigForm";
 import { SkeletonCard } from "~/app/components/skeletons/SkeletonCard";
 import { getLoginData } from "~/lib/authentication/loginData";
-import { getStage, getStageActions } from "~/lib/db/queries";
+import { getStage, getStageAutomations } from "~/lib/db/queries";
 import { addAction, deleteAction } from "../../../actions";
 import { StagePanelActionCreator } from "./StagePanelActionCreator";
 import { StagePanelActionEditor } from "./StagePanelActionEditor";
@@ -19,7 +19,7 @@ type PropsInner = {
 const StagePanelActionsInner = async (props: PropsInner) => {
 	const [stage, actionInstances] = await Promise.all([
 		getStage(props.stageId, props.userId).executeTakeFirst(),
-		getStageActions({ stageId: props.stageId }).execute(),
+		getStageAutomations(props.stageId).execute(),
 	]);
 
 	if (stage === undefined) {

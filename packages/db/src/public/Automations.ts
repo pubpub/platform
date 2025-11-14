@@ -6,11 +6,9 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 import { z } from "zod";
 
 import type { AutomationConfig } from "../types";
-import type { AutomationEvent } from "./AutomationEvent";
 import type { CommunitiesId } from "./Communities";
 import type { ConditionEvaluationTiming } from "./ConditionEvaluationTiming";
 import type { StagesId } from "./Stages";
-import { automationEventSchema } from "./AutomationEvent";
 import { communitiesIdSchema } from "./Communities";
 import { conditionEvaluationTimingSchema } from "./ConditionEvaluationTiming";
 import { stagesIdSchema } from "./Stages";
@@ -38,21 +36,9 @@ export interface AutomationsTable {
 
 	communityId: ColumnType<CommunitiesId, CommunitiesId, CommunitiesId>;
 
-	events: ColumnType<
-		AutomationEvent[] | null,
-		AutomationEvent[] | null,
-		AutomationEvent[] | null
-	>;
-
 	name: ColumnType<string, string, string>;
 
 	description: ColumnType<string | null, string | null, string | null>;
-
-	sourceAutomationId: ColumnType<
-		AutomationsId | null,
-		AutomationsId | null,
-		AutomationsId | null
-	>;
 }
 
 export type Automations = Selectable<AutomationsTable>;
@@ -71,10 +57,8 @@ export const automationsSchema = z.object({
 	conditionEvaluationTiming: conditionEvaluationTimingSchema.nullable(),
 	stageId: stagesIdSchema.nullable(),
 	communityId: communitiesIdSchema,
-	events: automationEventSchema.nullable(),
 	name: z.string(),
 	description: z.string().nullable(),
-	sourceAutomationId: automationsIdSchema.nullable(),
 });
 
 export const automationsInitializerSchema = z.object({
@@ -85,10 +69,8 @@ export const automationsInitializerSchema = z.object({
 	conditionEvaluationTiming: conditionEvaluationTimingSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	communityId: communitiesIdSchema,
-	events: automationEventSchema.optional().nullable(),
 	name: z.string(),
 	description: z.string().optional().nullable(),
-	sourceAutomationId: automationsIdSchema.optional().nullable(),
 });
 
 export const automationsMutatorSchema = z.object({
@@ -99,8 +81,6 @@ export const automationsMutatorSchema = z.object({
 	conditionEvaluationTiming: conditionEvaluationTimingSchema.optional().nullable(),
 	stageId: stagesIdSchema.optional().nullable(),
 	communityId: communitiesIdSchema.optional(),
-	events: automationEventSchema.optional().nullable(),
 	name: z.string().optional(),
 	description: z.string().optional().nullable(),
-	sourceAutomationId: automationsIdSchema.optional().nullable(),
 });

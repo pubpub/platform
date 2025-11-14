@@ -5,6 +5,7 @@ import type { CommunitiesId, UsersId } from "db/public";
 import {
 	Action,
 	AutomationConditionBlockType,
+	AutomationEvent,
 	CoreSchemaType,
 	ElementType,
 	FormAccessType,
@@ -253,33 +254,26 @@ export async function seedStarter(communityId?: CommunitiesId) {
 			stages: {
 				Draft: {
 					members: { new: MemberRole.contributor },
-					actions: {
+					automations: {
 						"Log Review": {
-							action: Action.log,
-							config: {},
-						},
-						"Send Public Review email": {
-							action: Action.email,
-							config: {
-								subject: "Hello, :recipientName! Please review this draft!",
-								recipient: memberId,
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="public-review" text="I've never been so excited about a form"}\n\nCurrent time: :value{field='starter:published-at'}`,
-							},
-						},
-						"Send Private Review email": {
-							action: Action.email,
-							config: {
-								subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
-								recipientEmail: "james@jimothy.org",
-								body: `You are invited to fill in a form.\n\n\n\n:link{form="private-review" text="Wow, a great form!"}\n\nCurrent time: :value{field='starter:published-at'}`,
-							},
-						},
-					},
-					automations: [
-						{
-							event: AutomationEvent.pubEnteredStage,
-							actionInstance: "Log Review",
-							conditions: {
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+								{
+									event: AutomationEvent.pubEnteredStage,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.log,
+									config: {},
+								},
+							],
+
+							condition: {
 								type: AutomationConditionBlockType.AND,
 								items: [
 									{
@@ -307,7 +301,44 @@ export async function seedStarter(communityId?: CommunitiesId) {
 								],
 							},
 						},
-					],
+
+						"Send Public Review email": {
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.email,
+									config: {
+										subject: "Hello, :recipientName! Please review this draft!",
+										recipient: memberId,
+										body: `You are invited to fill in a form.\n\n\n\n:link{form="public-review" text="I've never been so excited about a form"}\n\nCurrent time: :value{field='starter:published-at'}`,
+									},
+								},
+							],
+						},
+						"Send Private Review email": {
+							triggers: [
+								{
+									event: AutomationEvent.manual,
+									config: {},
+								},
+							],
+							actions: [
+								{
+									action: Action.email,
+									config: {
+										subject: "HELLO REVIEW OUR STUFF PLEASE... privately",
+										recipientEmail: "james@jimothy.org",
+										body: `You are invited to fill in a form.\n\n\n\n:link{form="private-review" text="Wow, a great form!"}\n\nCurrent time: :value{field='starter:published-at'}`,
+									},
+								},
+							],
+						},
+					},
 				},
 				Published: {
 					members: { new: MemberRole.contributor },

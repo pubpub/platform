@@ -9,6 +9,7 @@ import type {
 	ActionInstancesId,
 	ActionRunsId,
 	AutomationEvent,
+	AutomationRunsId,
 	AutomationsId,
 	CommunitiesId,
 	PubsId,
@@ -17,7 +18,7 @@ import type {
 } from "db/public";
 import type { BaseActionInstanceConfig, Json } from "db/types";
 import type { Prettify, XOR } from "utils/types";
-import { ActionRunStatus, AutomationEvent } from "db/public";
+import { ActionRunStatus } from "db/public";
 import { logger } from "logger";
 import { tryCatch } from "utils/try-catch";
 
@@ -218,9 +219,9 @@ const _runActionInstance = async (
 	}
 };
 
-export async function runActionInstance(
+export async function runAutomation(
 	args: RunActionInstanceArgs & {
-		automationId: AutomationsId | null;
+		automationId: AutomationsId;
 	} & XOR<
 			{
 				pubId: PubsId;
@@ -296,13 +297,12 @@ export async function runActionInstance(
 			const [error, res] = await tryCatch(evaluateConditions(automation.condition, input));
 
 			if (error) {
-				await insertActionRun(trx, {
+				await insertAutomationRun(trx, {
 					actionInstanceId: args.actionInstanceId,
 					pubId: pub?.id,
 					json: args.json,
 					result: { error: error.message },
 					status: ActionRunStatus.failure,
-					event: automation.event,
 					communityId: args.communityId,
 					stack: args.stack,
 					scheduledActionRunId: args.scheduledActionRunId,
@@ -340,11 +340,17 @@ export async function runActionInstance(
 	// in case the action modifies the pub and needs to pass the lastModifiedBy field
 	// which in this case would be `action-run:<action-run-id>`
 
-	const actionRuns = await insertActionRun(trx, {
-		actionInstanceId: args.actionInstanceId,
+	const actionRuns = await insertAutomationRun(trx, {
+		automationId: args.automationId,
+		actionInstances: [
+			{
+				id: args.actionInstanceId,
+				config: args.actionInstanceArgs as BaseActionInstanceConfig,
+			},
+		],
 		pubId: pub?.id,
 		json: args.json as Json,
-		event: args.event as : AutomationEvent,
+		event: args.event as AutomationEvent,
 		communityId: args.communityId,
 		stack: args.stack,
 		scheduledActionRunId: args.scheduledActionRunId,
@@ -473,7 +479,7 @@ export const runAutomationById = async (
 				scheduledActionRunId: args.scheduledActionRunId,
 			} as const);
 
-	const result = await runActionInstance(runArgs as any, db);
+	const result = await runAutomation(runArgs as any, db);
 
 	return {
 		actionInstanceId: automation.actionInstance.id,
@@ -517,7 +523,7 @@ export const runInstancesForEvent = async (
 			return {
 				actionInstanceId: instance.actionInstanceId,
 				actionInstanceName: instance.actionInstanceName,
-				result: await runActionInstance(
+				result: await runAutomation(
 					{
 						pubId,
 						communityId,
@@ -537,28 +543,29 @@ export const runInstancesForEvent = async (
 	return results;
 };
 
-export function insertActionRun(
+export async function insertAutomationRun(
 	trx: Kysely<Database>,
 	args: {
-		actionInstanceId: ActionInstancesId;
+		automationId: AutomationsId;
+		actionInstances: { id: ActionInstancesId; config: BaseActionInstanceConfig }[];
 		pubId?: PubsId;
 		json?: Json;
 		event: AutomationEvent;
 		communityId: CommunitiesId;
 		stack: ActionRunsId[];
-		scheduledActionRunId?: ActionRunsId;
-		actionInstanceArgs?: Record<string, unknown> | null;
+		scheduledAutomationRunId?: AutomationRunsId;
+		config?: Record<string, unknown> | null;
 		result: Record<string, unknown>;
 		status: ActionRunStatus;
 		userId?: UsersId;
 	}
 ) {
-	return autoRevalidate(
+	const automatonRun = await autoRevalidate(
 		trx
-			.insertInto("action_runs")
+			.insertInto("automation_runs")
 			.values((eb) => ({
-				id: args.scheduledActionRunId,
-				actionInstanceId: args.actionInstanceId,
+				id: args.scheduledAutomationRunId,
+				automationId: args.automationId,
 				pubId: args.pubId,
 				json: args.json,
 				userId: "userId" in args ? (args.userId as UsersId | null) : null,
@@ -566,11 +573,15 @@ export function insertActionRun(
 				status: args.status,
 				// this is a bit hacky, would be better to pass this around methinks
 				config:
-					args.actionInstanceArgs ??
+					args.config ??
 					eb
 						.selectFrom("action_instances")
 						.select("config")
-						.where("action_instances.id", "=", args.actionInstanceId),
+						.where(
+							"action_instances.id",
+							"=",
+							args.actionInstances.map((ai) => ai.id)
+						),
 				params: args,
 				event: "userId" in args ? undefined : args.event,
 				sourceActionRunId: args.stack.at(-1),

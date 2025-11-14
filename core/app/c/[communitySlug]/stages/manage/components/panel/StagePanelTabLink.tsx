@@ -3,20 +3,27 @@
 import { parseAsString, useQueryState } from "nuqs";
 
 import { TabsTrigger } from "ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
 
 import { capitalize } from "~/lib/string";
 
-export function TabLink({ tab }: { tab: string }) {
+export function TabLink({ tab, children }: { tab: string; children: React.ReactNode }) {
 	const [, setTabQueryState] = useQueryState("tab", parseAsString);
 
 	return (
-		<TabsTrigger
-			value={tab}
-			onClick={() => {
-				setTabQueryState(tab);
-			}}
-		>
-			{capitalize(tab)}
-		</TabsTrigger>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<TabsTrigger
+					value={tab}
+					onClick={() => {
+						setTabQueryState(tab);
+					}}
+				>
+					{children}
+					<span className="sr-only">{capitalize(tab)}</span>
+				</TabsTrigger>
+			</TooltipTrigger>
+			<TooltipContent>{capitalize(tab)}</TooltipContent>
+		</Tooltip>
 	);
 }

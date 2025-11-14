@@ -5,13 +5,13 @@ import { z } from "zod";
 import type { ActionInstancesId } from "./ActionInstances";
 import type { ActionRunStatus } from "./ActionRunStatus";
 import type { AutomationEvent } from "./AutomationEvent";
-import type { AutomationRunId } from "./AutomationRun";
+import type { AutomationRunsId } from "./AutomationRuns";
 import type { PubsId } from "./Pubs";
 import type { UsersId } from "./Users";
 import { actionInstancesIdSchema } from "./ActionInstances";
 import { actionRunStatusSchema } from "./ActionRunStatus";
 import { automationEventSchema } from "./AutomationEvent";
-import { automationRunIdSchema } from "./AutomationRun";
+import { automationRunsIdSchema } from "./AutomationRuns";
 import { pubsIdSchema } from "./Pubs";
 import { usersIdSchema } from "./Users";
 
@@ -52,9 +52,9 @@ export interface ActionRunsTable {
 	json: ColumnType<unknown | null, unknown | null, unknown | null>;
 
 	automationRunId: ColumnType<
-		AutomationRunId | null,
-		AutomationRunId | null,
-		AutomationRunId | null
+		AutomationRunsId | null,
+		AutomationRunsId | null,
+		AutomationRunsId | null
 	>;
 }
 
@@ -79,7 +79,7 @@ export const actionRunsSchema = z.object({
 	updatedAt: z.date(),
 	result: z.unknown(),
 	json: z.unknown().nullable(),
-	automationRunId: automationRunIdSchema.nullable(),
+	automationRunId: automationRunsIdSchema.nullable(),
 });
 
 export const actionRunsInitializerSchema = z.object({
@@ -95,7 +95,7 @@ export const actionRunsInitializerSchema = z.object({
 	updatedAt: z.date().optional(),
 	result: z.unknown(),
 	json: z.unknown().optional().nullable(),
-	automationRunId: automationRunIdSchema.optional().nullable(),
+	automationRunId: automationRunsIdSchema.optional().nullable(),
 });
 
 export const actionRunsMutatorSchema = z.object({
@@ -111,5 +111,5 @@ export const actionRunsMutatorSchema = z.object({
 	updatedAt: z.date().optional(),
 	result: z.unknown().optional(),
 	json: z.unknown().optional().nullable(),
-	automationRunId: automationRunIdSchema.optional().nullable(),
+	automationRunId: automationRunsIdSchema.optional().nullable(),
 });

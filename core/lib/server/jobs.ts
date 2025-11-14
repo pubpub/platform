@@ -9,9 +9,16 @@ import { env } from "../env/env";
 
 import "date-fns";
 
-import type { ActionInstancesId, ActionRunsId, AutomationsId, PubsId, StagesId } from "db/public";
+import type {
+	ActionInstancesId,
+	ActionRunsId,
+	AutomationEvent,
+	AutomationsId,
+	PubsId,
+	StagesId,
+} from "db/public";
 
-import type { Interval } from "~/actions/_lib/automations";
+import type { Interval } from "~/actions/_lib/triggers";
 import { addDuration } from "../dates";
 
 export const getScheduledActionJobKey = ({

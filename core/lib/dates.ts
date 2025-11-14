@@ -11,7 +11,7 @@ import {
 	formatDistanceToNow,
 } from "date-fns";
 
-import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/automations";
+import type { AutomationConfig, PubInStageForDuration } from "~/actions/_lib/triggers";
 
 export const addDuration = (
 	duration:

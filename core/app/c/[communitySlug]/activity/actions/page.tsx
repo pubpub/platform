@@ -7,7 +7,7 @@ import { Activity } from "ui/icon";
 
 import { getPageLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
-import { getActionRuns } from "~/lib/server/actions";
+import { getAutomationRuns } from "~/lib/server/actions";
 import { findCommunityBySlug } from "~/lib/server/community";
 import { ContentLayout } from "../../ContentLayout";
 import { ActionRunsTable } from "./ActionRunsTable";
@@ -40,7 +40,7 @@ export default async function Page(props: {
 			{ type: MembershipType.community, communityId: community.id },
 			user.id
 		),
-		getActionRuns(community.id).execute(),
+		getAutomationRuns(community.id).execute(),
 	]);
 
 	if (!canEditCommunity) {

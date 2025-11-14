@@ -5,7 +5,7 @@ CREATE OR REPLACE FUNCTION emit_pub_stage_change_event()
 DECLARE
     automation RECORD;
     community RECORD;
-    target_event "Event";
+    target_event "AutomationEvent";
 BEGIN
     -- determine the event type based on operation
     IF TG_OP = 'INSERT' THEN
@@ -35,21 +35,20 @@ BEGIN
         WHERE
             p.id = OLD."pubId";
     END IF;
-    -- loop through all automations for this stage with the matching event
-    FOR automation IN
-    SELECT
+    -- loop through all automation triggers for this stage with the matching event
+    FOR automation IN SELECT DISTINCT
         a.id AS "automationId",
-        a."actionInstanceId"
+        a."stageId"
     FROM
         automations a
-        INNER JOIN action_instances ai ON ai.id = a."actionInstanceId"
+        INNER JOIN automation_triggers at ON at."automationId" = a.id
     WHERE
-        ai."stageId" = CASE WHEN TG_OP = 'INSERT' THEN
+        a."stageId" = CASE WHEN TG_OP = 'INSERT' THEN
             NEW."stageId"
         WHEN TG_OP = 'DELETE' THEN
             OLD."stageId"
         END
-        AND a.event = target_event LOOP
+        AND at.event = target_event LOOP
             -- emit an event for each automation
             PERFORM
                 graphile_worker.add_job('emitEvent', json_build_object('type', 'RunAutomation', 'automationId', automation."automationId", 'pubId', CASE WHEN TG_OP = 'INSERT' THEN
@@ -93,16 +92,15 @@ BEGIN
         JOIN communities c ON p."communityId" = c.id
     WHERE
         p.id = NEW."pubId";
-    -- loop through all pubInStageForDuration automations on this stage
-    FOR automation IN
-    SELECT
+    -- loop through all pubInStageForDuration automation triggers on this stage
+    FOR automation IN SELECT DISTINCT
         a.id AS "automationId"
     FROM
         automations a
-        JOIN action_instances ai ON a."actionInstanceId" = ai.id
+        INNER JOIN automation_triggers at ON at."automationId" = a.id
     WHERE
-        ai."stageId" = NEW."stageId"
-        AND a.event = 'pubInStageForDuration' LOOP
+        a."stageId" = NEW."stageId"
+        AND at.event = 'pubInStageForDuration' LOOP
             -- emit a scheduling event for each specific automation
             PERFORM
                 graphile_worker.add_job('emitEvent', json_build_object('type', 'ScheduleDelayedAutomation', 'automationId', automation."automationId", 'pubId', NEW."pubId", 'stageId', NEW."stageId", 'community', community, 'stack', '[]'::json));
@@ -135,22 +133,25 @@ BEGIN
     WHERE
         p.id = OLD."pubId";
     -- loop through all scheduled action runs for this pub on this stage
+    -- we need to traverse: action_runs -> automation_runs -> automations to find the stage
     FOR scheduled_run IN
     SELECT
         ar.id AS "actionRunId",
-        ar."actionInstanceId",
-        ai."stageId"
+        arun.id AS "automationRunId",
+        arun."automationId",
+        a."stageId"
     FROM
         action_runs ar
-        INNER JOIN action_instances ai ON ai.id = ar."actionInstanceId"
+        INNER JOIN automation_runs arun ON arun.id = ar."automationRunId"
+        INNER JOIN automations a ON a.id = arun."automationId"
     WHERE
         ar."pubId" = OLD."pubId"
-        AND ai."stageId" = OLD."stageId"
+        AND a."stageId" = OLD."stageId"
         AND ar.status = 'scheduled'
         AND ar.event = 'pubInStageForDuration' LOOP
             -- emit cancellation event for each scheduled run
             PERFORM
-                graphile_worker.add_job('emitEvent', json_build_object('type', 'CancelScheduledAutomation', 'actionRunId', scheduled_run."actionRunId", 'actionInstanceId', scheduled_run."actionInstanceId", 'pubId', OLD."pubId", 'stageId', OLD."stageId", 'community', community));
+                graphile_worker.add_job('emitEvent', json_build_object('type', 'CancelScheduledAutomation', 'actionRunId', scheduled_run."actionRunId", 'automationRunId', scheduled_run."automationRunId", 'automationId', scheduled_run."automationId", 'pubId', OLD."pubId", 'stageId', OLD."stageId", 'community', community));
         END LOOP;
     RETURN OLD;
 END;

@@ -31,6 +31,7 @@ export const PubsRunActionDropDownMenu = async ({
 		return null;
 	}
 
+	console.log("AvatarFallback", actionInstances);
 	return (
 		<DropdownMenu modal={true}>
 			<DropdownMenuTrigger asChild>

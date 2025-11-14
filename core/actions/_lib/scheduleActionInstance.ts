@@ -3,7 +3,7 @@ import type { ActionInstancesId, ActionRunsId, AutomationsId, PubsId, StagesId }
 import { ActionRunStatus, AutomationEvent, ConditionEvaluationTiming } from "db/public";
 import { logger } from "logger";
 
-import type { SchedulableAutomation } from "./automations";
+import type { SchedulableAutomation } from "./triggers";
 import type { GetEventAutomationOptions } from "~/lib/db/queries";
 import { db } from "~/kysely/database";
 import { addDuration } from "~/lib/dates";

@@ -5,15 +5,17 @@ import type { ZodError } from "zod";
 import { sql } from "kysely";
 
 import type {
-	ActionInstances,
 	ActionInstancesId,
 	AutomationConditionBlocksId,
 	AutomationConditionBlockType,
 	AutomationConditionsId,
+	Automations,
 	AutomationsId,
+	AutomationTriggersId,
+	NewActionInstances,
 	NewAutomations,
+	NewAutomationTriggers,
 } from "db/public";
-import type { AutomationConfig } from "db/types";
 import { AutomationEvent } from "db/public";
 import { expect } from "utils";
 
@@ -22,10 +24,9 @@ import type {
 	ConditionBlockFormValue,
 	ConditionFormValue,
 } from "~/app/c/[communitySlug]/stages/manage/components/panel/actionsTab/ConditionBlock";
-import { automations } from "~/actions/api";
+import { triggers } from "~/actions/_lib/triggers";
 import { isSequentialAutomationEvent } from "~/actions/types";
 import { db } from "~/kysely/database";
-import { isUniqueConstraintError } from "~/kysely/errors";
 import { findRanksBetween } from "../rank";
 import { autoRevalidate } from "./cache/autoRevalidate";
 import { maybeWithTrx } from "./maybeWithTrx";
@@ -49,7 +50,7 @@ export class AutomationConfigError extends AutomationError {
 }
 
 export class AutomationCycleError extends AutomationError {
-	constructor(public path: ActionInstances[]) {
+	constructor(public path: Automations[]) {
 		super(
 			`Creating this automation would create a cycle: ${path.map((p) => p.name).join(" -> ")}`
 		);
@@ -58,7 +59,7 @@ export class AutomationCycleError extends AutomationError {
 }
 
 export class AutomationMaxDepthError extends AutomationError {
-	constructor(public path: ActionInstances[]) {
+	constructor(public path: Automations[]) {
 		super(
 			`Creating this automation would exceed the maximum stack depth (${MAX_STACK_DEPTH}): ${path.map((p) => p.name).join(" -> ")}`
 		);
@@ -109,6 +110,8 @@ export class RegularAutomationAlreadyExistsError extends AutomationAlreadyExists
 type AutomationUpsertProps = NewAutomations & {
 	id?: AutomationsId;
 	condition?: ConditionBlockFormValue;
+	actionInstances: Omit<NewActionInstances, "automationId">[];
+	triggers: Omit<NewAutomationTriggers, "automationId" | "id" | "createdAt" | "updatedAt">[];
 };
 
 // type FlatItem = (Omit<ConditionBlockFormValue, 'items'> | ConditionItemFormValue )
@@ -173,31 +176,74 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 				.insertInto("automations")
 				.values({
 					id: props.id ?? (randomUUID() as AutomationsId),
-					event: props.event,
-					actionInstanceId: props.actionInstanceId,
-					sourceActionInstanceId: props.sourceActionInstanceId,
-					config: props.config,
+					name: props.name,
+					description: props.description,
+					communityId: props.communityId,
+					stageId: props.stageId,
+					conditionEvaluationTiming: props.conditionEvaluationTiming,
 				})
 				.onConflict((oc) =>
 					oc.columns(["id"]).doUpdateSet((eb) => ({
-						event: eb.ref("excluded.event"),
-						actionInstanceId: eb.ref("excluded.actionInstanceId"),
-						sourceActionInstanceId: eb.ref("excluded.sourceActionInstanceId"),
-						config: eb.ref("excluded.config"),
+						name: eb.ref("excluded.name"),
+						description: eb.ref("excluded.description"),
+						communityId: eb.ref("excluded.communityId"),
+						stageId: eb.ref("excluded.stageId"),
+						conditionEvaluationTiming: eb.ref("excluded.conditionEvaluationTiming"),
 					}))
 				)
 				.returningAll()
 		).executeTakeFirstOrThrow();
 
+		// delete existing triggers and recreate them
+		await trx
+			.deleteFrom("automation_triggers")
+			.where("automationId", "=", automation.id)
+			.execute();
+
+		// insert new triggers
+		if (props.triggers.length > 0) {
+			await trx
+				.insertInto("automation_triggers")
+				.values(
+					props.triggers.map((trigger) => ({
+						id: randomUUID() as AutomationTriggersId,
+						automationId: automation.id,
+						event: trigger.event,
+						config: trigger.config,
+						sourceAutomationId: trigger.sourceAutomationId,
+					}))
+				)
+				.execute();
+		}
+
+		// delete existing action instances and recreate them
+		await trx
+			.deleteFrom("action_instances")
+			.where("automationId", "=", automation.id)
+			.execute();
+
+		// insert the action instances
+		if (props.actionInstances.length > 0) {
+			await trx
+				.insertInto("action_instances")
+				.values(
+					props.actionInstances.map((ai) => ({
+						id: ai.id,
+						automationId: automation.id,
+						config: ai.config,
+						action: ai.action,
+					}))
+				)
+				.execute();
+		}
+
 		// delete all existing conditions/blocks, which should remove all conditions as well
-		console.log("deleting existing conditions/blocks");
 		await trx
 			.deleteFrom("automation_condition_blocks")
 			.where("automationId", "=", automation.id)
 			.execute();
 
 		if (!props.condition) {
-			console.log("no condition, returning");
 			return automation;
 		}
 
@@ -214,8 +260,6 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 			conditions: [],
 		});
 
-		console.log("flatItems", flatItems);
-
 		// create all block
 		await trx
 			.insertInto("automation_condition_blocks")
@@ -230,8 +274,6 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 				}))
 			)
 			.execute();
-
-		console.log("flatItems.conditions", flatItems.conditions);
 
 		if (flatItems.conditions.length > 0) {
 			await trx
@@ -258,83 +300,60 @@ export const upsertAutomation = async (props: AutomationUpsertProps, trx = db) =
 export const removeAutomation = (automationId: AutomationsId) =>
 	autoRevalidate(db.deleteFrom("automations").where("id", "=", automationId));
 
-const getFullPath = (
-	pathResult: { isCycle: boolean; id: ActionInstancesId; path: ActionInstancesId[] },
-	sourceActionInstanceId: ActionInstancesId,
-	toBeRunActionId: ActionInstancesId
-): ActionInstancesId[] => {
-	// for MAX_STACK_DEPTH issues, or for direct cycles, show the full path
-	if (!pathResult.isCycle || pathResult.id === sourceActionInstanceId) {
-		return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path];
-	}
-
-	// indirect cycle (sourceActionInstanceId -> toBeRunActionId -> path -> (some node in path))
-	const cycleIndex = pathResult.path.findIndex((id) => id === pathResult.id);
-
-	if (cycleIndex !== -1) {
-		return [
-			sourceActionInstanceId,
-			toBeRunActionId,
-			...pathResult.path.slice(0, cycleIndex + 1),
-		];
-	}
-
-	// fallback - shouldn't happen but just in case
-	return [sourceActionInstanceId, toBeRunActionId, ...pathResult.path];
-};
-
 /**
- * The maximum number of action instances that can be in a sequence in a single stage.
+ * The maximum number of automations that can be in a sequence in a single stage.
  * TODO: make this trackable across stages
  */
 export const MAX_STACK_DEPTH = 10;
 
 /**
- * checks if adding a automation would create a cycle, or else adding it would create
+ * checks if adding an automation would create a cycle, or else adding it would create
  * a sequence exceeding the MAXIMUM_STACK_DEPTH
+ *
+ * now queries automation_triggers to find chaining relationships
  */
 async function wouldCreateCycle(
-	toBeRunActionId: ActionInstancesId,
-	sourceActionInstanceId: ActionInstancesId,
+	toBeRunAutomationId: AutomationsId,
+	sourceAutomationId: AutomationsId,
 	maxStackDepth = MAX_STACK_DEPTH
 ): Promise<
-	| { hasCycle: true; exceedsMaxDepth: false; path: ActionInstances[] }
-	| { hasCycle: false; exceedsMaxDepth: true; path: ActionInstances[] }
+	| { hasCycle: true; exceedsMaxDepth: false; path: Automations[] }
+	| { hasCycle: false; exceedsMaxDepth: true; path: Automations[] }
 	| { hasCycle: false; exceedsMaxDepth: false; path?: never }
 > {
-	// check if there's a path from toBeRunActionId back to sourceActionInstanceId (cycle)
+	// check if there's a path from toBeRunAutomationId back to sourceAutomationId (cycle)
 	// or if any path would exceed MAX_STACK_DEPTH
 	const result = await db
-		.withRecursive("action_path", (cte) =>
+		.withRecursive("automation_path", (cte) =>
 			cte
-				.selectFrom("action_instances")
+				.selectFrom("automations")
 				.select([
 					"id",
-					sql<ActionInstancesId[]>`array[id]`.as("path"),
+					sql<AutomationsId[]>`array[id]`.as("path"),
 					sql<number>`1`.as("depth"),
 					sql<boolean>`false`.as("isCycle"),
 				])
-				.where("id", "=", toBeRunActionId)
+				.where("id", "=", toBeRunAutomationId)
 				.union((qb) =>
 					qb
-						.selectFrom("action_path")
+						.selectFrom("automation_path")
+						.innerJoin(
+							"automation_triggers",
+							"automation_triggers.sourceAutomationId",
+							"automation_path.id"
+						)
 						.innerJoin(
 							"automations",
-							"automations.sourceActionInstanceId",
-							"action_path.id"
-						)
-						.innerJoin(
-							"action_instances",
-							"action_instances.id",
-							"automations.actionInstanceId"
+							"automations.id",
+							"automation_triggers.automationId"
 						)
 						.select([
-							"action_instances.id",
-							sql<
-								ActionInstancesId[]
-							>`action_path.path || array[action_instances.id]`.as("path"),
-							sql<number>`action_path.depth + 1`.as("depth"),
-							sql<boolean>`action_instances.id = any(action_path.path) OR action_instances.id = ${sourceActionInstanceId}`.as(
+							"automations.id",
+							sql<AutomationsId[]>`automation_path.path || array[automations.id]`.as(
+								"path"
+							),
+							sql<number>`automation_path.depth + 1`.as("depth"),
+							sql<boolean>`automations.id = any(automation_path.path) OR automations.id = ${sourceAutomationId}`.as(
 								"isCycle"
 							),
 						])
@@ -343,17 +362,17 @@ async function wouldCreateCycle(
 							// 1. we haven't found a cycle yet
 							// 2. we haven't exceeded MAX_STACK_DEPTH
 							eb.and([
-								eb("action_path.isCycle", "=", false),
-								eb("action_path.depth", "<=", maxStackDepth),
+								eb("automation_path.isCycle", "=", false),
+								eb("automation_path.depth", "<=", maxStackDepth),
 							])
 						)
 				)
 		)
-		.selectFrom("action_path")
+		.selectFrom("automation_path")
 		.select(["id", "path", "depth", "isCycle"])
 		.where((eb) =>
 			// find either:
-			// 1. a path that creates a cycle (id = sourceActionInstanceId or id already in path)
+			// 1. a path that creates a cycle (id = sourceAutomationId or id already in path)
 			// 2. a path that would exceed MAX_STACK_DEPTH when adding the new automation
 			eb.or([eb("isCycle", "=", true), eb("depth", ">=", maxStackDepth)])
 		)
@@ -370,21 +389,21 @@ async function wouldCreateCycle(
 
 	const pathResult = result[0];
 
-	const fullPath = getFullPath(pathResult, sourceActionInstanceId, toBeRunActionId);
+	const fullPath = [sourceAutomationId, toBeRunAutomationId, ...pathResult.path];
 
-	// Get the action instances for the path
-	const actionInstances = await db
-		.selectFrom("action_instances")
+	// get the automations for the path
+	const automations = await db
+		.selectFrom("automations")
 		.selectAll()
 		.where("id", "in", fullPath)
 		.execute();
 
 	const filledInPath = fullPath.map((id) => {
-		const actionInstance = expect(
-			actionInstances.find((ai) => ai.id === id),
-			`Action instance ${id} not found`
+		const automation = expect(
+			automations.find((a) => a.id === id),
+			`Automation ${id} not found`
 		);
-		return actionInstance;
+		return automation;
 	});
 
 	return {
@@ -395,82 +414,63 @@ async function wouldCreateCycle(
 		| {
 				hasCycle: true;
 				exceedsMaxDepth: false;
-				path: ActionInstances[];
+				path: Automations[];
 		  }
 		| {
 				hasCycle: false;
 				exceedsMaxDepth: true;
-				path: ActionInstances[];
+				path: Automations[];
 		  };
 }
 
 export async function upsertAutomationWithCycleCheck(
-	data: {
-		automationId?: AutomationsId;
-		event: AutomationEvent;
-		actionInstanceId: ActionInstancesId;
-		sourceActionInstanceId?: ActionInstancesId;
-		config?: AutomationConfig | null;
-		condition?: ConditionBlockFormValue;
+	data: AutomationUpsertProps & {
+		id?: AutomationsId;
 	},
 	maxStackDepth = MAX_STACK_DEPTH
 ) {
-	// check the config
-	const additionalConfigSchema = automations[data.event].additionalConfig;
-
-	if (additionalConfigSchema) {
-		try {
-			additionalConfigSchema.parse(data.config?.automationConfig);
-		} catch (e) {
-			throw new AutomationConfigError(data.event, data.config?.automationConfig ?? {}, e);
-		}
-	}
-
-	// only check for cycles if this is an action event with a watched action
-	if (
-		(data.event === AutomationEvent.actionSucceeded ||
-			data.event === AutomationEvent.actionFailed) &&
-		data.sourceActionInstanceId
-	) {
-		const result = await wouldCreateCycle(
-			data.actionInstanceId,
-			data.sourceActionInstanceId,
-			maxStackDepth
-		);
-
-		if (result.hasCycle) {
-			throw new AutomationCycleError(result.path);
-		}
-
-		if ("exceedsMaxDepth" in result && result.exceedsMaxDepth) {
-			throw new AutomationMaxDepthError(result.path);
-		}
-	}
-
-	try {
-		const res = await upsertAutomation({
-			id: data.automationId,
-			event: data.event,
-			actionInstanceId: data.actionInstanceId,
-			sourceActionInstanceId: data.sourceActionInstanceId,
-			config: data.config,
-			condition: data.condition,
-		});
-		return res;
-	} catch (e) {
-		if (isUniqueConstraintError(e)) {
-			if (isSequentialAutomationEvent(data.event)) {
-				if (data.sourceActionInstanceId) {
-					throw new SequentialAutomationAlreadyExistsError(
-						data.event,
-						data.actionInstanceId,
-						data.sourceActionInstanceId
-					);
-				}
-			} else {
-				throw new RegularAutomationAlreadyExistsError(data.event, data.actionInstanceId);
+	// validate trigger configs
+	for (const trigger of data.triggers) {
+		console.log("trigger", trigger);
+		const additionalConfigSchema = triggers[trigger.event].additionalConfig;
+		if (additionalConfigSchema && trigger.config) {
+			try {
+				additionalConfigSchema.parse(trigger.config);
+			} catch (e) {
+				throw new AutomationConfigError(
+					trigger.event,
+					trigger.config as Record<string, unknown>,
+					e
+				);
 			}
 		}
-		throw e;
 	}
+
+	// check for cycles if any trigger is a chaining event with a source automation
+	const chainingTriggers = data.triggers.filter(
+		(t) => isSequentialAutomationEvent(t.event) && t.sourceAutomationId
+	);
+
+	if (chainingTriggers.length > 0 && data.id) {
+		for (const trigger of chainingTriggers) {
+			if (!trigger.sourceAutomationId) continue;
+
+			const result = await wouldCreateCycle(
+				data.id,
+				trigger.sourceAutomationId,
+				maxStackDepth
+			);
+
+			if (result.hasCycle) {
+				throw new AutomationCycleError(result.path);
+			}
+
+			if ("exceedsMaxDepth" in result && result.exceedsMaxDepth) {
+				throw new AutomationMaxDepthError(result.path);
+			}
+		}
+	}
+
+	const res = await upsertAutomation(data);
+	return res;
 }

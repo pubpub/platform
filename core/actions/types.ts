@@ -1,3 +1,4 @@
+import type React from "react";
 import type * as z from "zod";
 
 import type { Json, ProcessedPub } from "contracts";
@@ -138,35 +139,29 @@ export const defineRun = <T extends Action = Action>(
 export type Run = ReturnType<typeof defineRun>;
 
 export const sequentialAutomationEvents = [
-	AutomationEvent.actionSucceeded,
-	AutomationEvent.actionFailed,
+	AutomationEvent.automationSucceeded,
+	AutomationEvent.automationFailed,
 ] as const;
 export type SequentialAutomationEvent = (typeof sequentialAutomationEvents)[number];
 
 export const isSequentialAutomationEvent = (
 	event: AutomationEvent
-): AutomationEvent is SequentialAutomationEvent =>
-	sequentialAutomationEvents.includes(event as any);
+): event is SequentialAutomationEvent => sequentialAutomationEvents.includes(event as any);
 
-export const schedulableAutomationEvents = [
-	AutomationEvent.pubInStageForDuration,
-	AutomationEvent.actionFailed,
-	AutomationEvent.actionSucceeded,
-] as const;
+export const schedulableAutomationEvents = [AutomationEvent.pubInStageForDuration] as const;
 export type SchedulableAutomationEvent = (typeof schedulableAutomationEvents)[number];
 
 export const isSchedulableAutomationEvent = (
 	event: AutomationEvent
-): AutomationEvent is SchedulableAutomationEvent =>
-	schedulableAutomationEvents.includes(event as any);
+): event is SchedulableAutomationEvent => schedulableAutomationEvents.includes(event as any);
 
 export type EventAutomationOptionsBase<
-	E extends : AutomationEvent,
+	E extends AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 > = {
 	event: E;
 	canBeRunAfterAddingAutomation?: boolean;
-	additionalConfig?: AC extends Record<string, any> ? z.ZodType<AC> : undefined;
+	config: undefined extends AC ? undefined : z.ZodType<AC>;
 	/**
 	 * The display name options for this event
 	 */
@@ -194,13 +189,13 @@ export type EventAutomationOptionsBase<
 };
 
 export const defineAutomation = <
-	E extends : AutomationEvent,
+	E extends AutomationEvent,
 	AC extends Record<string, any> | undefined = undefined,
 >(
-	options: AutomationEventAutomationOptionsBase<E, AC>
+	options: EventAutomationOptionsBase<E, AC>
 ) => options;
 
-export type { AutomationConfig, AutomationConfigs } from "./_lib/automations";
+export type { AutomationConfig, AutomationConfigs } from "./_lib/triggers";
 
 export type ConfigOf<T extends Action> = T extends Action<infer C, any, any> ? z.infer<C> : never;
 

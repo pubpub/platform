@@ -27,6 +27,7 @@ type Props = {
 };
 
 export const ActionRunForm = (props: Props) => {
+	console.log("AvatarFallback", props.actionInstance);
 	const action = getActionByName(props.actionInstance.action);
 	const ActionFormComponent = getActionFormComponent(action.name);
 	const community = useCommunity();

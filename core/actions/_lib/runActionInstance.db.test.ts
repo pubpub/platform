@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Action, ActionRunStatus, CoreSchemaType } from "db/public";
+import { Action, ActionRunStatus, AutomationEvent, CoreSchemaType } from "db/public";
 
 import { mockServerCode } from "~/lib/__tests__/utils";
 
@@ -78,7 +78,9 @@ describe("runActionInstance", () => {
 		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
 		});
-		const { runActionInstance } = await import("~/actions/_lib/runActionInstance");
+		const { runAutomation: runActionInstance } = await import(
+			"~/actions/_lib/runActionInstance"
+		);
 
 		const logActionInstance = actions.find((a) => a.action === Action.log)!;
 		const result = await runActionInstance({
@@ -123,7 +125,9 @@ describe("runActionInstance", () => {
 				randomSlug: false,
 			}
 		);
-		const { runActionInstance } = await import("~/actions/_lib/runActionInstance");
+		const { runAutomation: runActionInstance } = await import(
+			"~/actions/_lib/runActionInstance"
+		);
 
 		const googleDriveImportActionInstance = actions.find(
 			(a) => a.action === Action.googleDriveImport

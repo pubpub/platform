@@ -4,12 +4,14 @@ import { Eye } from "lucide-react";
 
 import type { ProcessedPub } from "contracts";
 import type { CommunitiesId, UsersId } from "db/public";
+import { AutomationEvent } from "db/public";
 import { Pencil } from "ui/icon";
 import { PubFieldProvider } from "ui/pubFields";
 import { stagesDAO, StagesProvider } from "ui/stages";
 
 import type { CommunityStage } from "~/lib/server/stages";
 import type { MemberWithUser } from "~/lib/types";
+import { triggers } from "~/actions/api";
 import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
 import { BasicPagination } from "~/app/components/Pagination";
 import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
@@ -20,7 +22,7 @@ import {
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
 } from "~/lib/authorization/capabilities";
-import { getStageActions } from "~/lib/db/queries";
+import { getStageAutomations } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
 import { selectAllCommunityMemberships } from "~/lib/server/member";
@@ -154,7 +156,7 @@ export async function StagePubs({
 	const [
 		communitySlug,
 		stagePubs,
-		actionInstances,
+		manualAutomations,
 		canEditAllPubs,
 		canArchiveAllPubs,
 		canRunActionsAllPubs,
@@ -176,13 +178,15 @@ export async function StagePubs({
 				withStageActionInstances: true,
 			}
 		),
-		getStageActions({ stageId: stage.id }).execute(),
+		getStageAutomations(stage.id, { event: AutomationEvent.manual }).execute(),
 		userCanEditAllPubs(),
 		userCanArchiveAllPubs(),
 		userCanRunActionsAllPubs(),
 		userCanMoveAllPubs(),
 		userCanViewAllStages(),
 	]);
+
+	console.log("manualAutomations", manualAutomations);
 
 	const totalPages =
 		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;
@@ -206,7 +210,7 @@ export async function StagePubs({
 						}
 						moveFrom={stage.moveConstraintSources}
 						moveTo={stage.moveConstraints}
-						actionInstances={actionInstances}
+						manualAutomations={manualAutomations}
 						communitySlug={communitySlug}
 						withSelection={false}
 						userId={userId}

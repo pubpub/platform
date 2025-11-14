@@ -11,7 +11,13 @@ import type {
 	StagesId,
 	UsersId,
 } from "db/public";
-import { Capabilities, MemberRole, MembershipType, stagesIdSchema } from "db/public";
+import {
+	AutomationEvent,
+	Capabilities,
+	MemberRole,
+	MembershipType,
+	stagesIdSchema,
+} from "db/public";
 import { logger } from "logger";
 
 import type { CreateAutomationsSchema } from "./components/panel/actionsTab/StagePanelAutomationForm";
@@ -382,7 +388,10 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 	automationId?: AutomationsId;
 	data: CreateAutomationsSchema;
 }) {
-	const loginData = await getLoginData();
+	const [loginData, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	if (!community) {
+		return ApiError.COMMUNITY_NOT_FOUND;
+	}
 	if (!loginData || !loginData.user) {
 		return ApiError.NOT_LOGGED_IN;
 	}
@@ -399,18 +408,23 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 
 	try {
 		await upsertAutomationWithCycleCheck({
-			automationId,
-			actionInstanceId: data.actionInstanceId as ActionInstancesId,
-			event: data.event,
-			config: {
-				actionConfig: data.actionConfig ?? null,
-				automationConfig:
-					"automationConfig" in data && data.automationConfig
-						? data.automationConfig
-						: null,
-			},
-			sourceActionInstanceId:
-				"sourceActionInstanceId" in data ? data.sourceActionInstanceId : undefined,
+			id: automationId,
+			name: data.name,
+			description: data.description ?? null,
+			communityId: community.id,
+			stageId,
+			conditionEvaluationTiming: null,
+			triggers: data.triggers.map((trigger) => ({
+				event: trigger.event,
+				config: trigger.config ?? null,
+				sourceAutomationId: trigger.sourceAutomationId ?? null,
+			})),
+			actionInstances: [
+				{
+					action: data.action.action,
+					config: data.action.config ?? null,
+				},
+			],
 			condition: data.condition,
 		});
 	} catch (error) {
@@ -427,7 +441,6 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			error: automationId ? "Failed to update automation" : "Failed to create automation",
 			cause: error,
 		};
-	} finally {
 	}
 });
 

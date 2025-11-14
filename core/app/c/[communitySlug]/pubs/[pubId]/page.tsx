@@ -28,7 +28,7 @@ import {
 	userCan,
 	userCanRunActionsAllPubs,
 } from "~/lib/authorization/capabilities";
-import { getStageActions } from "~/lib/db/queries";
+import { getStageAutomations } from "~/lib/db/queries";
 import { constructRedirectToPubEditPage } from "~/lib/links";
 import { getPubByForm, getPubTitle } from "~/lib/pubs";
 import { getPubsWithRelatedValues, NotFoundError } from "~/lib/server";
@@ -125,7 +125,7 @@ export default async function Page(props: {
 	// This is safe because we've already explicitly checked authorization for the root pub
 	const pubPromise = getPubsWithRelatedValuesCached(pubId, community.id);
 
-	const actionsPromise = getStageActions({ pubId: pubId }).execute();
+	const actionsPromise = getStageAutomations({ pubId: pubId }).execute();
 
 	// if a specific form is provided, we use the slug
 	// otherwise, we get the default form for the pub type of the current pub

@@ -2,7 +2,7 @@ import type { ExpressionBuilder } from "kysely";
 
 import { cache } from "react";
 import { QueryCreator, sql } from "kysely";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import { jsonArrayFrom } from "kysely/helpers/postgres";
 
 import type {
 	CommunitiesId,
@@ -211,10 +211,10 @@ export const getStages = (
 			.$if(withActionInstances === "count", (qb) =>
 				qb.select((eb) =>
 					eb
-						.selectFrom("action_instances")
-						.whereRef("action_instances.stageId", "=", "stages.id")
+						.selectFrom("automations")
+						.whereRef("automations.stageId", "=", "stages.id")
 						.select((eb) =>
-							eb.fn.count<number>("action_instances.id").as("actionInstancesCount")
+							eb.fn.count<number>("automations.id").as("actionInstancesCount")
 						)
 						.as("actionInstancesCount")
 				)
@@ -223,9 +223,9 @@ export const getStages = (
 				qb.select((eb) =>
 					jsonArrayFrom(
 						eb
-							.selectFrom("action_instances")
-							.whereRef("action_instances.stageId", "=", "stages.id")
-							.selectAll("action_instances")
+							.selectFrom("automations")
+							.whereRef("automations.stageId", "=", "stages.id")
+							.selectAll("automations")
 							.select((eb) =>
 								actionConfigDefaultsSelect(eb).as("defaultedActionConfigKeys")
 							)

@@ -8,8 +8,8 @@ export enum AutomationEvent {
 	pubEnteredStage = "pubEnteredStage",
 	pubLeftStage = "pubLeftStage",
 	pubInStageForDuration = "pubInStageForDuration",
-	actionSucceeded = "actionSucceeded",
-	actionFailed = "actionFailed",
+	automationSucceeded = "automationSucceeded",
+	automationFailed = "automationFailed",
 	webhook = "webhook",
 	manual = "manual",
 }
