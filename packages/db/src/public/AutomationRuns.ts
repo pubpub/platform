@@ -2,8 +2,10 @@ import type { ColumnType, Insertable, Selectable, Updateable } from "kysely";
 
 import { z } from "zod";
 
+import type { AutomationEvent } from "./AutomationEvent";
 import type { AutomationsId } from "./Automations";
 import type { UsersId } from "./Users";
+import { automationEventSchema } from "./AutomationEvent";
 import { automationsIdSchema } from "./Automations";
 import { usersIdSchema } from "./Users";
 
@@ -18,6 +20,8 @@ export interface AutomationRunsTable {
 	id: ColumnType<AutomationRunsId, AutomationRunsId | undefined, AutomationRunsId>;
 
 	automationId: ColumnType<AutomationsId, AutomationsId, AutomationsId>;
+
+	event: ColumnType<AutomationEvent, AutomationEvent, AutomationEvent>;
 
 	config: ColumnType<unknown | null, unknown | null, unknown | null>;
 
@@ -45,6 +49,7 @@ export const automationRunsIdSchema = z.string().uuid() as unknown as z.Schema<A
 export const automationRunsSchema = z.object({
 	id: automationRunsIdSchema,
 	automationId: automationsIdSchema,
+	event: automationEventSchema,
 	config: z.unknown().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
@@ -55,6 +60,7 @@ export const automationRunsSchema = z.object({
 export const automationRunsInitializerSchema = z.object({
 	id: automationRunsIdSchema.optional(),
 	automationId: automationsIdSchema,
+	event: automationEventSchema,
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),
@@ -65,6 +71,7 @@ export const automationRunsInitializerSchema = z.object({
 export const automationRunsMutatorSchema = z.object({
 	id: automationRunsIdSchema.optional(),
 	automationId: automationsIdSchema.optional(),
+	event: automationEventSchema.optional(),
 	config: z.unknown().optional().nullable(),
 	createdAt: z.date().optional(),
 	updatedAt: z.date().optional(),

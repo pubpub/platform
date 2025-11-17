@@ -78,9 +78,7 @@ describe("runActionInstance", () => {
 		const { pubs, actions, community } = await seedCommunity(await pubTriggerTestSeed(), {
 			randomSlug: false,
 		});
-		const { runAutomation: runActionInstance } = await import(
-			"~/actions/_lib/runActionInstance"
-		);
+		const { runAutomation: runActionInstance } = await import("~/actions/_lib/runAutomation");
 
 		const logActionInstance = actions.find((a) => a.action === Action.log)!;
 		const result = await runActionInstance({
@@ -89,7 +87,7 @@ describe("runActionInstance", () => {
 			event: AutomationEvent.pubEnteredStage,
 			communityId: community.id,
 			stack: [],
-			actionInstanceArgs: null,
+			manualActionInstanceOverrideArgs: null,
 			automationId: null,
 		});
 
@@ -125,9 +123,7 @@ describe("runActionInstance", () => {
 				randomSlug: false,
 			}
 		);
-		const { runAutomation: runActionInstance } = await import(
-			"~/actions/_lib/runActionInstance"
-		);
+		const { runAutomation: runActionInstance } = await import("~/actions/_lib/runAutomation");
 
 		const googleDriveImportActionInstance = actions.find(
 			(a) => a.action === Action.googleDriveImport
@@ -139,7 +135,7 @@ describe("runActionInstance", () => {
 			actionInstanceId: googleDriveImportActionInstance.id,
 			pubId: pubs[0].id,
 			event: AutomationEvent.pubEnteredStage,
-			actionInstanceArgs: {
+			manualActionInstanceOverrideArgs: {
 				outputField: `${community.slug}:title`,
 				docUrl: fakeDocURL,
 			},

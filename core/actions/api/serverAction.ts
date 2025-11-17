@@ -1,19 +1,26 @@
 "use server";
 
-import type { PubsId, UsersId } from "db/public";
+import type { ActionInstancesId, PubsId, UsersId } from "db/public";
 import type { Json } from "db/types";
-import type { XOR } from "utils/types";
-import { Capabilities, MembershipType } from "db/public";
+import type { DefinitelyHas, XOR } from "utils/types";
+import { AutomationEvent, Capabilities, MembershipType } from "db/public";
 
-import type { ActionInstanceRunResult, RunActionInstanceArgs } from "../_lib/runActionInstance";
+import type {
+	ActionInstanceRunResult,
+	RunActionInstanceArgs,
+	RunAutomationArgs,
+} from "../_lib/runAutomation";
 import { getLoginData } from "~/lib/authentication/loginData";
 import { userCan } from "~/lib/authorization/capabilities";
 import { defineServerAction } from "~/lib/server/defineServerAction";
-import { runAutomation as runActionInstanceInner } from "../_lib/runActionInstance";
+import { runAutomation } from "../_lib/runAutomation";
 
-export const runActionInstance = defineServerAction(async function runActionInstance(
-	args: Omit<RunActionInstanceArgs, "userId" | "event" | "config"> &
-		XOR<{ pubId: PubsId }, { json: Json }>
+export const runAutomationManual = defineServerAction(async function runActionInstance(
+	args: Omit<RunAutomationArgs, "userId" | "event" | "eventConfig"> & {
+		manualActionInstancesOverrideArgs: {
+			[actionInstanceId: ActionInstancesId]: Record<string, unknown>;
+		};
+	}
 ): Promise<ActionInstanceRunResult> {
 	const { user } = await getLoginData();
 
@@ -43,14 +50,23 @@ export const runActionInstance = defineServerAction(async function runActionInst
 
 	const { json: _, pubId: __, ...rest } = args;
 
-	const result = await runActionInstanceInner({
+	const result = await runAutomation({
 		...rest,
 		userId: user.id as UsersId,
 		stack: args.stack ?? [],
+		eventConfig: null,
+		communityId: args.communityId,
+		manualActionInstancesOverrideArgs: args.manualActionInstancesOverrideArgs,
 		...(args.json ? { json: args.json } : { pubId: args.pubId! }),
 		// manual run
-		automationId: null,
+		automationId: args.automationId,
+		event: AutomationEvent.manual,
 	});
 
-	return result;
+	return {
+		...result,
+		success: result.success ?? false,
+		title: result.title,
+		...(result.report?.[0]?.result ? { report: result.report?.[0]?.result } : {}),
+	};
 });

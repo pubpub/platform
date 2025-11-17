@@ -46,6 +46,7 @@ ALTER TABLE "action_runs"
 CREATE TABLE "automation_runs"(
   "id" text NOT NULL DEFAULT gen_random_uuid(),
   "automationId" text NOT NULL,
+  "event" "AutomationEvent" NOT NULL,
   "config" jsonb,
   "createdAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" timestamp(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -4,11 +4,11 @@ import type {
 	Action,
 	ActionInstancesId,
 	ActionInstancesUpdate,
+	AutomationRunsId,
 	CommunitiesId,
 	NewActionInstances,
 } from "db/public";
 
-import type { ActionRun } from "~/app/c/[communitySlug]/activity/actions/getActionRunsTableColumns";
 import { db } from "~/kysely/database";
 import { autoCache } from "./cache/autoCache";
 import { autoRevalidate } from "./cache/autoRevalidate";
@@ -79,17 +79,19 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 						)
 						.leftJoin("pubs", "action_runs.pubId", "pubs.id")
 						.select([
+							"action_runs.id",
 							"action_runs.actionInstanceId",
 							"action_runs.config",
 							"action_instances.action",
-							"pubs.id",
-							"pubs.createdAt",
-							"pubs.title",
+							"pubs.id as pubId",
+							"pubs.title as pubTitle",
 							"action_runs.status",
 							"action_runs.result",
 							"action_runs.createdAt",
 							"action_runs.updatedAt",
 							"action_runs.config",
+							"action_runs.event",
+							"action_runs.params",
 						])
 				).as("actionRuns"),
 				"automation_runs.sourceAutomationRunId",
@@ -123,12 +125,20 @@ export const getAutomationRuns = (communityId: CommunitiesId) => {
 					eb
 						.selectFrom("users")
 						.whereRef("users.id", "=", "automation_runs.userId")
-						.select(["id", "firstName", "lastName"])
+						.select(["users.id", "users.firstName", "users.lastName"])
 				).as("user"),
 			])
 			.orderBy("automation_runs.createdAt", "desc")
-			.$castTo<ActionRun>()
 	);
 
 	return actionRuns;
+};
+
+export const getAutomationRunById = (
+	communityId: CommunitiesId,
+	automationRunId: AutomationRunsId
+) => {
+	return autoCache(
+		getAutomationRuns(communityId).qb.where("automation_runs.id", "=", automationRunId)
+	);
 };

@@ -133,13 +133,15 @@ export const scheduleDelayedAutomation = async ({
 		}
 
 		const input = { pub: createPubProxy(pub, community.slug) };
-		const conditionsMet = await evaluateConditions(condition as any, input);
+		const evaluationResult = await evaluateConditions(condition as any, input);
 
-		if (!conditionsMet) {
+		if (!evaluationResult.passed) {
 			logger.info({
 				msg: "Skipping automation scheduling - conditions not met at trigger time",
 				automationId,
 				conditionEvaluationTiming: automationTiming,
+				failureReason: evaluationResult.failureReason,
+				failureMessages: evaluationResult.flatMessages,
 			});
 			throw new Error("Conditions not met");
 		}
@@ -280,13 +282,15 @@ export const scheduleDelayedAutomations = async ({
 			}
 
 			const input = { pub: createPubProxy(pub, community.slug) };
-			const conditionsMet = await evaluateConditions(automation.condition, input);
+			const evaluationResult = await evaluateConditions(automation.condition, input);
 
-			if (!conditionsMet) {
+			if (!evaluationResult.passed) {
 				logger.info({
 					msg: "Skipping automation scheduling - conditions not met at trigger time",
 					automationId: automation.id,
 					conditionEvaluationTiming: automationTiming,
+					failureReason: evaluationResult.failureReason,
+					failureMessages: evaluationResult.flatMessages,
 				});
 				continue;
 			}
@@ -434,13 +438,15 @@ export const scheduleActionInstances = async (options: ScheduleActionInstanceOpt
 			}
 
 			const input = { pub: createPubProxy(pub, community.slug) };
-			const conditionsMet = await evaluateConditions(automation.condition, input);
+			const evaluationResult = await evaluateConditions(automation.condition, input);
 
-			if (!conditionsMet) {
+			if (!evaluationResult.passed) {
 				logger.info({
 					msg: "Skipping automation scheduling - conditions not met at trigger time",
 					automationId: automation.id,
 					conditionEvaluationTiming: automationTiming,
+					failureReason: evaluationResult.failureReason,
+					failureMessages: evaluationResult.flatMessages,
 				});
 				continue;
 			}

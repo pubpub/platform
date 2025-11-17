@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { PubsId } from "db/public";
+import type { ActionInstances, Automations, PubsId } from "db/public";
 import type { ButtonProps } from "ui/button";
 import { Button } from "ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "ui/dropdown-menu";
@@ -8,10 +8,12 @@ import { ChevronDown, Play } from "ui/icon";
 import { cn } from "utils";
 
 import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
-import { ActionRunForm } from "./ActionRunForm";
+import { AutomationRunForm } from "./AutomationRunForm";
 
 export type PubsRunActionDropDownMenuProps = {
-	actionInstances: ActionInstanceWithConfigDefaults[];
+	automations: (Automations & {
+		actionInstances: [ActionInstanceWithConfigDefaults];
+	})[];
 	pubId: PubsId;
 	testId?: string;
 	/* accessible text for the button */
@@ -19,19 +21,18 @@ export type PubsRunActionDropDownMenuProps = {
 	iconOnly?: boolean;
 } & ButtonProps;
 
-export const PubsRunActionDropDownMenu = async ({
-	actionInstances,
+export const PubsRunAutomationsDropDownMenu = async ({
 	pubId,
 	testId,
 	iconOnly,
 	buttonText,
+	automations,
 	...buttonProps
 }: PubsRunActionDropDownMenuProps) => {
-	if (!actionInstances.length) {
+	if (!automations.length) {
 		return null;
 	}
 
-	console.log("AvatarFallback", actionInstances);
 	return (
 		<DropdownMenu modal={true}>
 			<DropdownMenuTrigger asChild>
@@ -50,13 +51,8 @@ export const PubsRunActionDropDownMenu = async ({
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent>
-				{actionInstances.map((actionInstance) => (
-					<ActionRunForm
-						key={actionInstance.id}
-						defaultFields={actionInstance.defaultedActionConfigKeys ?? []}
-						pubId={pubId}
-						actionInstance={actionInstance}
-					/>
+				{automations.map((automation) => (
+					<AutomationRunForm key={automation.id} pubId={pubId} automation={automation} />
 				))}
 			</DropdownMenuContent>
 		</DropdownMenu>

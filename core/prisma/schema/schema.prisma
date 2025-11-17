@@ -341,10 +341,12 @@ model AutomationRun {
   automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
   automationId String
 
-  // automation config
+  // event trigger
+  event      AutomationEvent
+  // trigger config
   config     Json?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @default(now()) @updatedAt
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @default(now()) @updatedAt
   actionRuns ActionRun[]
 
   userId String?

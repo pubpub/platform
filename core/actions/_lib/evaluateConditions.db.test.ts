@@ -84,13 +84,13 @@ describe("evaluateConditions", () => {
 			pub: { title: "test", status: "published" },
 			status: "published",
 		});
-		expect(resultTrue).toBe(true);
+		expect(resultTrue.passed).toBe(true);
 
 		const resultFalse = await evaluateConditions(condition, {
 			pub: { title: "test", status: "draft" },
 			status: "draft",
 		});
-		expect(resultFalse).toBe(false);
+		expect(resultFalse.passed).toBe(false);
 	});
 
 	test("evaluates OR block correctly", async () => {
@@ -159,15 +159,15 @@ describe("evaluateConditions", () => {
 		const condition = automation.condition!;
 
 		const resultDraft = await evaluateConditions(condition, { pub: { status: "draft" } });
-		expect(resultDraft).toBe(true);
+		expect(resultDraft.passed).toBe(true);
 
 		const resultPublished = await evaluateConditions(condition, {
 			pub: { status: "published" },
 		});
-		expect(resultPublished).toBe(true);
+		expect(resultPublished.passed).toBe(true);
 
 		const resultArchived = await evaluateConditions(condition, { pub: { status: "archived" } });
-		expect(resultArchived).toBe(false);
+		expect(resultArchived.passed).toBe(false);
 	});
 
 	test("evaluates NOT block correctly", async () => {
@@ -233,10 +233,10 @@ describe("evaluateConditions", () => {
 		const resultPublished = await evaluateConditions(condition, {
 			pub: { status: "published" },
 		});
-		expect(resultPublished).toBe(true);
+		expect(resultPublished.passed).toBe(true);
 
 		const resultArchived = await evaluateConditions(condition, { pub: { status: "archived" } });
-		expect(resultArchived).toBe(false);
+		expect(resultArchived.passed).toBe(false);
 	});
 
 	test("evaluates nested blocks correctly", async () => {
@@ -334,16 +334,16 @@ describe("evaluateConditions", () => {
 		const resultTrue = await evaluateConditions(condition, {
 			pub: { title: "test", status: "draft", partial: "de" },
 		});
-		expect(resultTrue).toBe(true);
+		expect(resultTrue.passed).toBe(true);
 
 		const resultFalseTitle = await evaluateConditions(condition, {
 			pub: { title: "other", status: "draft", partial: "me" },
 		});
-		expect(resultFalseTitle).toBe(false);
+		expect(resultFalseTitle.passed).toBe(false);
 
 		const resultFalseStatus = await evaluateConditions(condition, {
 			pub: { title: "test", status: "archived", partial: "de" },
 		});
-		expect(resultFalseStatus).toBe(false);
+		expect(resultFalseStatus.passed).toBe(false);
 	});
 });

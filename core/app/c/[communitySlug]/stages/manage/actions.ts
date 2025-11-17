@@ -413,7 +413,7 @@ export const addOrUpdateAutomation = defineServerAction(async function addOrUpda
 			description: data.description ?? null,
 			communityId: community.id,
 			stageId,
-			conditionEvaluationTiming: null,
+			conditionEvaluationTiming: data.conditionEvaluationTiming ?? null,
 			triggers: data.triggers.map((trigger) => ({
 				event: trigger.event,
 				config: trigger.config ?? null,
@@ -468,48 +468,53 @@ export const deleteAutomation = defineServerAction(async function deleteAutomati
 			removeAutomation(automationId).qb.returningAll()
 		).executeTakeFirstOrThrow();
 
-		if (!deletedAutomation) {
-			return {
-				error: "Failed to delete automation",
-				cause: `Automation with id ${automationId} not found`,
-			};
-		}
+		return {
+			success: true,
+			report: "Automation deleted",
+		};
 
-		if (deletedAutomation.event !== AutomationEvent.pubInStageForDuration) {
-			return;
-		}
+		// if (!deletedAutomation) {
+		// 	return {
+		// 		error: "Failed to delete automation",
+		// 		cause: `Automation with id ${automationId} not found`,
+		// 	};
+		// }
 
-		const actionInstance = await getActionInstance(
-			deletedAutomation.actionInstanceId
-		).executeTakeFirst();
+		// if (deletedAutomation.event !== AutomationEvent.pubInStageForDuration) {
+		// 	return;
+		// }
 
-		if (!actionInstance) {
-			// something is wrong here
-			captureException(
-				new Error(
-					`Action instance not found for automation ${automationId} while trying to unschedule jobs`
-				)
-			);
-			return;
-		}
+		// const actionInstance = await getActionInstance(
+		// 	deletedAutomation.actionInstanceId
+		// ).executeTakeFirst();
 
-		const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
-		if (!pubsInStage) {
-			// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
-			return;
-		}
+		// if (!actionInstance) {
+		// 	// something is wrong here
+		// 	captureException(
+		// 		new Error(
+		// 			`Action instance not found for automation ${automationId} while trying to unschedule jobs`
+		// 		)
+		// 	);
+		// 	return;
+		// }
 
-		logger.debug(`Unscheduling jobs for automation ${automationId}`);
-		await Promise.all(
-			pubsInStage.pubIds.map(async (pubInStageId) =>
-				unscheduleAction({
-					actionInstanceId: actionInstance.id,
-					pubId: pubInStageId,
-					stageId: actionInstance.stageId,
-					event: AutomationEvent.pubInStageForDuration,
-				})
-			)
-		);
+		// const pubsInStage = await getPubIdsInStage(actionInstance.stageId).executeTakeFirst();
+		// if (!pubsInStage) {
+		// 	// we don't need to unschedule any jobs, as there are no pubs this automation could have been applied to
+		// 	return;
+		// }
+
+		// logger.debug(`Unscheduling jobs for automation ${automationId}`);
+		// await Promise.all(
+		// 	pubsInStage.pubIds.map(async (pubInStageId) =>
+		// 		unscheduleAction({
+		// 			actionInstanceId: actionInstance.id,
+		// 			pubId: pubInStageId,
+		// 			stageId: actionInstance.stageId,
+		// 			event: AutomationEvent.pubInStageForDuration,
+		// 		})
+		// 	)
+		// );
 	} catch (error) {
 		logger.error(error);
 		return {

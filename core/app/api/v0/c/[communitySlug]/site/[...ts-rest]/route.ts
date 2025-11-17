@@ -19,7 +19,7 @@ import {
 } from "db/public";
 import { logger } from "logger";
 
-import { runAutomationById } from "~/actions/_lib/runActionInstance";
+import { runAutomationById } from "~/actions/_lib/runAutomation";
 import {
 	checkAuthorization,
 	getAuthorization,

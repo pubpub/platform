@@ -163,6 +163,10 @@ const getAutomationBase = cache((options?: GetEventAutomationOptions) => {
 			"automations.stageId",
 			"automations.createdAt",
 			"automations.updatedAt",
+			"automations.communityId",
+			"automations.conditionEvaluationTiming",
+			"automations.description",
+			"automations.config",
 		])
 		.select((eb) => [
 			jsonArrayFrom(

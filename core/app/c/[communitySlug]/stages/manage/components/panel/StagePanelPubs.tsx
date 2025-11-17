@@ -3,6 +3,7 @@ import assert from "assert";
 import { Suspense } from "react";
 
 import type { StagesId, UsersId } from "db/public";
+import { AutomationEvent } from "db/public";
 import { Card, CardContent } from "ui/card";
 
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
@@ -15,7 +16,7 @@ import {
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
 } from "~/lib/authorization/capabilities";
-import { getStage } from "~/lib/db/queries";
+import { getStage, getStageAutomations } from "~/lib/db/queries";
 import { getPubsWithRelatedValues } from "~/lib/server";
 import { findCommunityBySlug } from "~/lib/server/community";
 
@@ -33,7 +34,9 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 	const [
 		stagePubs,
 		stage,
+		manualAutomations,
 		canArchiveAllPubs,
+
 		canEditAllPubs,
 		canRunActionsAllPubs,
 		canMoveAllPubs,
@@ -50,6 +53,7 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 			}
 		),
 		getStage(props.stageId, props.userId).executeTakeFirst(),
+		getStageAutomations(props.stageId, { event: AutomationEvent.manual }).execute(),
 		userCanArchiveAllPubs(),
 		userCanEditAllPubs(),
 		userCanRunActionsAllPubs(),
@@ -76,7 +80,8 @@ const StagePanelPubsInner = async (props: PropsInner) => {
 						pub={{ ...pub, stageId: props.stageId, depth: 0 }}
 						communitySlug={community.slug}
 						userId={props.userId}
-						actionInstances={pub.stage?.actionInstances ?? []}
+						// actionInstances={pub.stage?.actionInstances ?? []}
+						manualAutomations={manualAutomations}
 						canArchiveAllPubs={canArchiveAllPubs}
 						canEditAllPubs={canEditAllPubs}
 						canRunActionsAllPubs={canRunActionsAllPubs}

@@ -941,6 +941,14 @@ export const databaseTables = [
 				hasDefaultValue: false,
 			},
 			{
+				name: "event",
+				dataType: "AutomationEvent",
+				dataTypeSchema: "public",
+				isNullable: false,
+				isAutoIncrementing: false,
+				hasDefaultValue: false,
+			},
+			{
 				name: "config",
 				dataType: "jsonb",
 				dataTypeSchema: "pg_catalog",

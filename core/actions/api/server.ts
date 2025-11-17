@@ -1,5 +1,5 @@
 export {
-	runAutomation as runActionInstance,
-	runInstancesForEvent,
-} from "../_lib/runActionInstance";
+	runAutomation as runAutomation,
+	// runInstancesForEvent,
+} from "../_lib/runAutomation";
 export { scheduleActionInstances } from "../_lib/scheduleActionInstance";

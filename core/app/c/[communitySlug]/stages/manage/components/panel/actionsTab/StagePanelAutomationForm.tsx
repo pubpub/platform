@@ -16,6 +16,7 @@ import {
 	AutomationConditionType,
 	AutomationEvent,
 	automationsIdSchema,
+	ConditionEvaluationTiming,
 	conditionEvaluationTimingSchema,
 } from "db/public";
 import { Button } from "ui/button";
@@ -159,6 +160,7 @@ export type CreateAutomationsSchema = {
 		action: Action;
 		config: Record<string, unknown>;
 	};
+	conditionEvaluationTiming: ConditionEvaluationTiming;
 };
 
 export const StagePanelAutomationForm = (props: Props) => {
@@ -171,7 +173,8 @@ export const StagePanelAutomationForm = (props: Props) => {
 				.object({
 					name: z.string().min(1, "Name is required"),
 					description: z.string().optional(),
-					conditionEvaluationTiming: conditionEvaluationTimingSchema.optional(),
+					conditionEvaluationTiming: conditionEvaluationTimingSchema.nullish(),
+					// .default(ConditionEvaluationTiming.onExecution),
 					condition: conditionBlockSchema.optional(),
 					triggers: z
 						.array(
@@ -265,7 +268,6 @@ export const StagePanelAutomationForm = (props: Props) => {
 
 	const onSubmit = useCallback(
 		async (data: CreateAutomationsSchema) => {
-			console.log("data", data);
 			const result = await runUpsertAutomation({
 				stageId: props.stageId,
 				data,

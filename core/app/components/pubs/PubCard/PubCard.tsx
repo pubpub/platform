@@ -17,7 +17,7 @@ import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
 import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
 import { getPubTitle } from "~/lib/pubs";
 import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
-import { PubsRunActionDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
+import { PubsRunAutomationsDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
 import { SkeletonButton } from "../../skeletons/SkeletonButton";
 import { RelationsDropDown } from "../RelationsDropDown";
 import { RemovePubButton } from "../RemovePubButton";
@@ -48,7 +48,7 @@ export type PubCardProps = {
 	moveFrom?: CommunityStage["moveConstraintSources"];
 	moveTo?: CommunityStage["moveConstraints"];
 	manualAutomations?: (Automations & {
-		actionInstances: ActionInstanceWithConfigDefaults[];
+		actionInstances: [ActionInstanceWithConfigDefaults];
 	})[];
 	withSelection?: boolean;
 	userId: UsersId;
@@ -220,11 +220,7 @@ export const PubCard = async ({
 						}
 					>
 						<PubCardActions
-							actionInstances={
-								manualAutomations
-									?.map((automation) => automation.actionInstances)
-									.flat() ?? []
-							}
+							manualAutomations={manualAutomations ?? []}
 							pub={pub}
 							communitySlug={communitySlug}
 							userId={userId}
@@ -249,7 +245,7 @@ export const PubCard = async ({
 };
 
 const PubCardActions = async ({
-	actionInstances,
+	manualAutomations,
 	pub,
 	communitySlug,
 	userId,
@@ -257,7 +253,9 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	actionInstances?: ActionInstanceWithConfigDefaults[];
+	manualAutomations: (Automations & {
+		actionInstances: [ActionInstanceWithConfigDefaults];
+	})[];
 	pub: ProcessedPub<{
 		withPubType: true;
 		withRelatedPubs: false;
@@ -270,7 +268,7 @@ const PubCardActions = async ({
 	canArchiveAllPubs?: boolean;
 	canRunActionsAllPubs?: boolean;
 }) => {
-	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	const hasAutomations = pub.stage && manualAutomations && manualAutomations.length !== 0;
 	const pubTitle = getPubTitle(pub);
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
 		canArchiveAllPubs ||
@@ -300,9 +298,9 @@ const PubCardActions = async ({
 
 	return (
 		<>
-			{hasActions && canRunActions ? (
-				<PubsRunActionDropDownMenu
-					actionInstances={actionInstances}
+			{hasAutomations && canRunActions ? (
+				<PubsRunAutomationsDropDownMenu
+					automations={manualAutomations}
 					pubId={pub.id}
 					buttonText={`Run actions for ${pubTitle}`}
 					iconOnly

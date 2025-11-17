@@ -16,7 +16,7 @@ import { tryCatch } from "utils/try-catch";
 
 import Move from "~/app/c/[communitySlug]/stages/components/Move";
 import { MembersList } from "~/app/components//Memberships/MembersList";
-import { PubsRunActionDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
+import { PubsRunAutomationsDropDownMenu } from "~/app/components/ActionUI/PubsRunActionDropDownMenu";
 import { FormSwitcher } from "~/app/components/FormSwitcher/FormSwitcher";
 import { AddMemberDialog } from "~/app/components/Memberships/AddMemberDialog";
 import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
@@ -305,7 +305,7 @@ export default async function Page(props: {
 									<div className="mb-1 text-lg font-bold">Actions</div>
 									{actions && actions.length > 0 && stage && canRunActions ? (
 										<div className="ml-4">
-											<PubsRunActionDropDownMenu
+											<PubsRunAutomationsDropDownMenu
 												actionInstances={actions}
 												pubId={pubId}
 												testId="run-action-primary"

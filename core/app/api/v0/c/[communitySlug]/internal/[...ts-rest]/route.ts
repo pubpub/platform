@@ -5,7 +5,7 @@ import { api } from "contracts";
 import { AutomationEvent } from "db/public";
 import { logger } from "logger";
 
-import { runAutomationById } from "~/actions/_lib/runActionInstance";
+import { runAutomationById } from "~/actions/_lib/runAutomation";
 import {
 	cancelScheduledAutomationByActionRunId,
 	scheduleDelayedAutomation,

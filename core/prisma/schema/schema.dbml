@@ -342,6 +342,7 @@ Table automation_runs {
   id String [pk]
   automation automations [not null]
   automationId String [not null]
+  event AutomationEvent [not null]
   config Json
   createdAt DateTime [default: `now()`, not null]
   updatedAt DateTime [default: `now()`, not null]
