@@ -1,26 +1,27 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Plus, X } from "lucide-react";
+import type { PubTypesId } from "db/public"
 
-import type { PubTypesId } from "db/public";
-import { Button } from "ui/button";
-import { cn } from "utils";
+import { useState } from "react"
+import { Plus, X } from "lucide-react"
 
-import { usePubSearch } from "~/app/c/[communitySlug]/pubs/PubSearchProvider";
+import { Button } from "ui/button"
+import { cn } from "utils"
+
+import { usePubSearch } from "~/app/c/[communitySlug]/pubs/PubSearchProvider"
 
 export const PubTypeLabel = ({
 	pubType,
 	canFilter,
 }: {
 	pubType: {
-		id: PubTypesId;
-		name: string;
-	};
-	canFilter?: boolean;
+		id: PubTypesId
+		name: string
+	}
+	canFilter?: boolean
 }) => {
 	if (canFilter) {
-		return <FilterablePubTypeLabel pubType={pubType} />;
+		return <FilterablePubTypeLabel pubType={pubType} />
 	}
 
 	return (
@@ -30,24 +31,24 @@ export const PubTypeLabel = ({
 		>
 			{pubType.name}
 		</Button>
-	);
-};
+	)
+}
 
 export const FilterablePubTypeLabel = ({
 	pubType,
 }: {
 	pubType: {
-		id: PubTypesId;
-		name: string;
-	};
+		id: PubTypesId
+		name: string
+	}
 }) => {
-	const { inputValues, setFilters } = usePubSearch();
+	const { inputValues, setFilters } = usePubSearch()
 
-	const [expanded, setExpanded] = useState(false);
+	const [expanded, setExpanded] = useState(false)
 
-	const currentPubTypes = inputValues.pubTypes ?? [];
+	const currentPubTypes = inputValues.pubTypes ?? []
 
-	const isSelected = currentPubTypes.includes(pubType.id);
+	const isSelected = currentPubTypes.includes(pubType.id)
 
 	return (
 		<Button
@@ -66,7 +67,7 @@ export const FilterablePubTypeLabel = ({
 					pubTypes: isSelected
 						? (old.pubTypes.filter((id) => id !== pubType.id) as PubTypesId[])
 						: [...old.pubTypes, pubType.id],
-				}));
+				}))
 			}}
 		>
 			<span className="transition-transform duration-200">{pubType.name}</span>
@@ -84,5 +85,5 @@ export const FilterablePubTypeLabel = ({
 				</div>
 			</div>
 		</Button>
-	);
-};
+	)
+}

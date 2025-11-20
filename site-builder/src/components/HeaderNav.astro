@@ -1,13 +1,13 @@
 ---
-import type { NonGenericProcessedPub } from "contracts";
-
-import NavMenu from "./NavMenu";
+import type { NonGenericProcessedPub } from "contracts"
+import NavMenu from "./NavMenu"
 
 export interface Props {
-	navMenuPubs: NonGenericProcessedPub[];
+	navMenuPubs: NonGenericProcessedPub[]
 }
 
-const { navMenuPubs = [] } = Astro.props;
+const { navMenuPubs = [] } = Astro.props
+
 ---
 
 <nav class="bg-transparent flex items-center gap-4">

@@ -1,10 +1,10 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 
-import { CopyCurrentUrlButton } from "~/app/components/CopyCurrentUrlButton";
-import { Logo } from "~/app/components/Logo";
-import { HEADER_HEIGHT } from "~/lib/ui";
+import { CopyCurrentUrlButton } from "~/app/components/CopyCurrentUrlButton"
+import { Logo } from "~/app/components/Logo"
+import { HEADER_HEIGHT } from "~/lib/ui"
 
 export const Header = ({ children }: { children: ReactNode }) => {
 	return (
@@ -24,5 +24,5 @@ export const Header = ({ children }: { children: ReactNode }) => {
 				</Button>
 			</div>
 		</div>
-	);
-};
+	)
+}

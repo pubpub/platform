@@ -1,8 +1,9 @@
-import type { OR } from "utils/types";
-import { MemberRole } from "db/public";
+import type { OR } from "utils/types"
+import type { LoginData } from "./loginData"
 
-import type { LoginData } from "./loginData";
-import { getHighestRole } from "../authorization/rolesRanking";
+import { MemberRole } from "db/public"
+
+import { getHighestRole } from "../authorization/rolesRanking"
 
 export const getCommunityRole = (
 	loginData: LoginData["user"],
@@ -10,47 +11,47 @@ export const getCommunityRole = (
 ) => {
 	if (loginData?.isSuperAdmin) {
 		// super admins are treated as admins, regardless of their role
-		return MemberRole.admin;
+		return MemberRole.admin
 	}
 
-	const isIdentifiedWithCommunityId = communityIdentifier.id !== undefined;
+	const isIdentifiedWithCommunityId = communityIdentifier.id !== undefined
 
 	const communityMemberships = loginData?.memberships.filter((m) => {
 		if (isIdentifiedWithCommunityId) {
-			return m.community.id === communityIdentifier.id;
+			return m.community.id === communityIdentifier.id
 		}
 
-		return m.community.slug === communityIdentifier.slug;
-	});
+		return m.community.slug === communityIdentifier.slug
+	})
 
 	if (!communityMemberships?.length) {
-		return null;
+		return null
 	}
 
-	return getHighestRole(communityMemberships);
-};
+	return getHighestRole(communityMemberships)
+}
 
 export const isCommunityAdmin = (
 	loginData: LoginData["user"],
 	communityIdentifier:
 		| {
-				id: string;
-				slug?: never;
+				id: string
+				slug?: never
 		  }
 		| {
-				id?: never;
-				slug: string;
+				id?: never
+				slug: string
 		  }
 		| {
-				id: string;
-				slug: string;
+				id: string
+				slug: string
 		  }
 ) => {
 	if (loginData?.isSuperAdmin) {
 		// Super admins can do anything
-		return true;
+		return true
 	}
 
-	const role = getCommunityRole(loginData, communityIdentifier);
-	return role === MemberRole.admin;
-};
+	const role = getCommunityRole(loginData, communityIdentifier)
+	return role === MemberRole.admin
+}

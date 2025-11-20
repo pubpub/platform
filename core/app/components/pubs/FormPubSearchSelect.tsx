@@ -1,34 +1,35 @@
-"use client";
+"use client"
 
-import { useCallback, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Search, X } from "lucide-react";
-import { useDebounce } from "use-debounce";
+import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
+import type { PubsId, PubTypesId } from "db/public"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
-import type { PubsId, PubTypesId } from "db/public";
-import { Loader2 } from "ui/icon";
-import { Input } from "ui/input";
-import { cn } from "utils";
+import { useCallback, useRef, useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Search, X } from "lucide-react"
+import { useDebounce } from "use-debounce"
 
-import { client } from "~/lib/api";
-import { useCommunity } from "../providers/CommunityProvider";
-import { PubCardClient } from "./PubCard/PubCardClient";
+import { Loader2 } from "ui/icon"
+import { Input } from "ui/input"
+import { cn } from "utils"
+
+import { client } from "~/lib/api"
+import { useCommunity } from "../providers/CommunityProvider"
+import { PubCardClient } from "./PubCard/PubCardClient"
 
 export type FormPubSearchSelectProps = {
-	formSlug: string;
-	fieldSlug: string;
-	currentPubId?: PubsId;
-	selectedPubs?: NonGenericProcessedPub[];
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
-	disabledPubIds?: PubsId[];
-	pubTypeIds?: PubTypesId[];
-	mode?: "single" | "multi";
-	placeholder?: string;
-	emptyMessage?: string;
-	className?: string;
-	maxHeight?: string;
-};
+	formSlug: string
+	fieldSlug: string
+	currentPubId?: PubsId
+	selectedPubs?: NonGenericProcessedPub[]
+	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void
+	disabledPubIds?: PubsId[]
+	pubTypeIds?: PubTypesId[]
+	mode?: "single" | "multi"
+	placeholder?: string
+	emptyMessage?: string
+	className?: string
+	maxHeight?: string
+}
 
 export const FormPubSearchSelect = ({
 	formSlug,
@@ -44,10 +45,10 @@ export const FormPubSearchSelect = ({
 	className,
 	maxHeight = "600px",
 }: FormPubSearchSelectProps) => {
-	const [query, setQuery] = useState("");
-	const [debouncedQuery] = useDebounce(query, 300);
-	const community = useCommunity();
-	const inputRef = useRef<HTMLInputElement>(null);
+	const [query, setQuery] = useState("")
+	const [debouncedQuery] = useDebounce(query, 300)
+	const community = useCommunity()
+	const inputRef = useRef<HTMLInputElement>(null)
 
 	const {
 		data: results,
@@ -75,62 +76,62 @@ export const FormPubSearchSelect = ({
 						formSlug,
 						fieldSlug,
 					},
-				});
+				})
 			}
 
 			const searchResults = await client.pubs.search.query({
 				query: { query: debouncedQuery },
 				params: { communitySlug: community.slug },
-			});
+			})
 
 			if (searchResults.status !== 200 || !pubTypeIds || pubTypeIds.length === 0) {
-				return searchResults;
+				return searchResults
 			}
 
 			return {
 				...searchResults,
 				body: searchResults.body.filter((pub) => pubTypeIds.includes(pub.pubType.id)),
-			};
+			}
 		},
 		placeholderData: (prev) => prev,
-	});
+	})
 
 	const handlePubSelect = useCallback(
 		(pub: NonGenericProcessedPub, isSelected: boolean) => {
 			if (!onSelectedPubsChange) {
-				return;
+				return
 			}
 
 			if (mode === "single") {
-				onSelectedPubsChange(isSelected ? [pub] : []);
-				return;
+				onSelectedPubsChange(isSelected ? [pub] : [])
+				return
 			}
 
 			if (isSelected) {
-				onSelectedPubsChange([...selectedPubs, pub]);
+				onSelectedPubsChange([...selectedPubs, pub])
 			} else {
-				onSelectedPubsChange(selectedPubs.filter((p) => p.id !== pub.id));
+				onSelectedPubsChange(selectedPubs.filter((p) => p.id !== pub.id))
 			}
 		},
 		[mode, selectedPubs, onSelectedPubsChange]
-	);
+	)
 
 	const handleClearSearch = () => {
-		setQuery("");
-		inputRef.current?.focus();
-	};
+		setQuery("")
+		inputRef.current?.focus()
+	}
 
 	const pubs =
 		results?.status === 200
 			? (results.body as ProcessedPub<{
-					withPubType: true;
-					withStage: true;
-					withValues: false;
-					withRelatedPubs: false;
+					withPubType: true
+					withStage: true
+					withValues: false
+					withRelatedPubs: false
 				}>[])
-			: [];
-	const showEmpty = !isFetching && pubs.length === 0;
-	const showLoading = isFetching && pubs.length === 0;
+			: []
+	const showEmpty = !isFetching && pubs.length === 0
+	const showLoading = isFetching && pubs.length === 0
 
 	return (
 		<div className={cn("flex flex-col gap-4", className)}>
@@ -178,8 +179,8 @@ export const FormPubSearchSelect = ({
 				)}
 
 				{pubs.map((pub) => {
-					const isSelected = selectedPubs.some((p) => p.id === pub.id);
-					const isDisabled = disabledPubIds.includes(pub.id);
+					const isSelected = selectedPubs.some((p) => p.id === pub.id)
+					const isDisabled = disabledPubIds.includes(pub.id)
 
 					return (
 						<PubCardClient
@@ -190,7 +191,7 @@ export const FormPubSearchSelect = ({
 							disabled={isDisabled}
 							showCheckbox={mode === "multi"}
 						/>
-					);
+					)
 				})}
 			</div>
 
@@ -202,5 +203,5 @@ export const FormPubSearchSelect = ({
 				</div>
 			)}
 		</div>
-	);
-};
+	)
+}

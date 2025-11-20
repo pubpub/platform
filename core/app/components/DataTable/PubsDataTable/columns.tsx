@@ -1,24 +1,23 @@
-"use client";
+"use client"
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { ProcessedPub } from "contracts"
+import type { PubsId } from "db/public"
+import type * as React from "react"
+import type { DataTableRowAction } from "ui/data-table-paged"
 
-import * as React from "react";
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
+import { cn } from "utils"
 
-import type { ProcessedPub } from "contracts";
-import type { PubsId } from "db/public";
-import type { DataTableRowAction } from "ui/data-table-paged";
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
-import { cn } from "utils";
-
-import { dateFormatOptions } from "~/lib/dates";
-import { getPubTitle } from "~/lib/pubs";
+import { dateFormatOptions } from "~/lib/dates"
+import { getPubTitle } from "~/lib/pubs"
 
 interface GetColumnsProps {
 	setRowAction?: React.Dispatch<
 		React.SetStateAction<DataTableRowAction<ProcessedPub<{ withPubType: true }>> | null>
-	>;
-	disabledRows?: PubsId[];
+	>
+	disabledRows?: PubsId[]
 }
 
 export function getColumns({
@@ -64,7 +63,7 @@ export function getColumns({
 					>
 						<span>{getPubTitle(row.original)}</span>
 					</div>
-				);
+				)
 			},
 			enableSorting: false,
 		},
@@ -84,5 +83,5 @@ export function getColumns({
 			),
 			enableSorting: true,
 		},
-	] as const satisfies ColumnDef<ProcessedPub<{ withPubType: true }>, unknown>[];
+	] as const satisfies ColumnDef<ProcessedPub<{ withPubType: true }>, unknown>[]
 }

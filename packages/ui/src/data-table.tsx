@@ -1,6 +1,6 @@
-import type { Column, Table } from "@tanstack/react-table";
+import type { Column, Table } from "@tanstack/react-table"
+import type * as React from "react"
 
-import * as React from "react";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -10,23 +10,23 @@ import {
 	DoubleArrowLeftIcon,
 	DoubleArrowRightIcon,
 	EyeNoneIcon,
-} from "@radix-ui/react-icons";
+} from "@radix-ui/react-icons"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { Button } from "./button";
+import { Button } from "./button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "./dropdown-menu";
-import { Info } from "./icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+} from "./dropdown-menu"
+import { Info } from "./icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
 
 interface DataTablePaginationProps<TData> {
-	table: Table<TData>;
+	table: Table<TData>
 }
 
 export function DataTablePagination<TData>({ table }: DataTablePaginationProps<TData>) {
@@ -76,18 +76,18 @@ export function DataTablePagination<TData>({ table }: DataTablePaginationProps<T
 				</div>
 			</div>
 		</div>
-	);
+	)
 }
 
 interface DataTableColumnHeaderProps<TData, TValue>
 	extends Omit<React.HTMLAttributes<HTMLDivElement>, "title"> {
-	column: Column<TData, TValue>;
-	title: string | React.ReactNode;
-	icon?: React.ReactNode;
+	column: Column<TData, TValue>
+	title: string | React.ReactNode
+	icon?: React.ReactNode
 	/**
 	 * Optional text to display as a tooltip next to the title.
 	 */
-	info?: string;
+	info?: string
 }
 
 export function DataTableColumnHeader<TData, TValue>({
@@ -98,7 +98,7 @@ export function DataTableColumnHeader<TData, TValue>({
 	info,
 }: DataTableColumnHeaderProps<TData, TValue>) {
 	if (!column.getCanSort()) {
-		return <div className={cn(className)}>{title}</div>;
+		return <div className={cn(className)}>{title}</div>
 	}
 
 	return (
@@ -151,5 +151,5 @@ export function DataTableColumnHeader<TData, TValue>({
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
-	);
+	)
 }

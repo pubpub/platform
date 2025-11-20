@@ -1,23 +1,24 @@
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion";
-import { Card, CardContent, CardFooter } from "ui/card";
-import { InfoButton } from "ui/info-button";
-import { cn } from "utils";
+import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens"
 
-import type { SafeApiAccessToken } from "~/lib/server/apiAccessTokens";
-import { UserAvatar } from "~/app/components/UserAvatar";
-import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
-import { RevokeTokenButton } from "./RevokeTokenButton";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "ui/accordion"
+import { Card } from "ui/card"
+import { InfoButton } from "ui/info-button"
+import { cn } from "utils"
+
+import { UserAvatar } from "~/app/components/UserAvatar"
+import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
+import { RevokeTokenButton } from "./RevokeTokenButton"
 
 export const ExistingToken = ({
 	token,
 	className,
 }: {
-	token: SafeApiAccessToken;
-	className?: string;
+	token: SafeApiAccessToken
+	className?: string
 }) => {
-	const now = new Date();
-	const expirationDate = new Date(token.expiration);
-	const isExpired = expirationDate < now;
+	const now = new Date()
+	const expirationDate = new Date(token.expiration)
+	const isExpired = expirationDate < now
 
 	return (
 		<Card className={cn("p-4 pb-1", className)}>
@@ -80,5 +81,5 @@ export const ExistingToken = ({
 				</AccordionItem>
 			</Accordion>
 		</Card>
-	);
-};
+	)
+}

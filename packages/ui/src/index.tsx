@@ -1,36 +1,34 @@
 /* util/src/index.tsx */
 
-/* Components */
-export * as Icon from "./icon";
-export * from "./alert";
-export * from "./avatar";
-export * from "./badge";
-export * from "./button";
-export * from "./card";
-export * from "./checkbox";
-export * from "./collapsible";
-export * from "./checkbox";
-export * from "./dialog";
-export * from "./dropdown-menu";
-export * from "./field";
-export * from "./form";
-export * from "./hover-card";
-export * from "./input";
-export * from "./label";
-export * from "./popover";
-export * from "./select";
-export * from "./separator";
-export * from "./slider";
-export * from "./tabs";
-export * from "./textarea";
-export * from "./toast";
-export * from "./toaster";
-export * from "./tooltip";
-export * from "./use-toast";
-
+export * from "./alert"
+export * from "./avatar"
+export * from "./badge"
+export * from "./button"
+export * from "./card"
+export * from "./checkbox"
+export * from "./checkbox"
+export * from "./collapsible"
 /* Renderers */
-export * from "./customRenderers/confidence/confidence";
-export * from "./customRenderers/fileUpload/fileUpload";
-
+export * from "./customRenderers/confidence/confidence"
+export * from "./customRenderers/fileUpload/fileUpload"
+export * from "./dialog"
+export * from "./dropdown-menu"
+export * from "./field"
+export * from "./form"
 /* Hooks */
-export * from "./hooks";
+export * from "./hooks"
+export * from "./hover-card"
+/* Components */
+export * as Icon from "./icon"
+export * from "./input"
+export * from "./label"
+export * from "./popover"
+export * from "./select"
+export * from "./separator"
+export * from "./slider"
+export * from "./tabs"
+export * from "./textarea"
+export * from "./toast"
+export * from "./toaster"
+export * from "./tooltip"
+export * from "./use-toast"

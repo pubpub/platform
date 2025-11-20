@@ -1,40 +1,41 @@
-"use client";
+"use client"
 
-import { useCallback, useState } from "react";
-import { ChevronDown, FlagTriangleRightIcon, Plus, X } from "lucide-react";
+import type { StagesId } from "db/public"
 
-import type { StagesId } from "db/public";
-import { Button } from "ui/button";
-import { cn } from "utils";
+import { useCallback, useState } from "react"
+import { ChevronDown, FlagTriangleRightIcon, Plus, X } from "lucide-react"
 
-import { usePubSearch } from "~/app/c/[communitySlug]/pubs/PubSearchProvider";
-import { BasicMoveButton } from "~/app/c/[communitySlug]/stages/components/BasicMoveButton";
+import { Button } from "ui/button"
+import { cn } from "utils"
+
+import { usePubSearch } from "~/app/c/[communitySlug]/pubs/PubSearchProvider"
+import { BasicMoveButton } from "~/app/c/[communitySlug]/stages/components/BasicMoveButton"
 
 interface Props extends React.ComponentPropsWithoutRef<"button"> {
-	withDropdown?: boolean;
+	withDropdown?: boolean
 	stage: {
-		id: StagesId;
-		name: string;
-	};
-	canFilter?: boolean;
-	ref?: React.RefObject<HTMLButtonElement>;
+		id: StagesId
+		name: string
+	}
+	canFilter?: boolean
+	ref?: React.RefObject<HTMLButtonElement>
 }
 
 export const StageMoveButton = ({ stage, canFilter, withDropdown, ...props }: Props) => {
 	if (canFilter) {
-		return <FilterableStageMoveButton stage={stage} withDropdown={withDropdown} {...props} />;
+		return <FilterableStageMoveButton stage={stage} withDropdown={withDropdown} {...props} />
 	}
 
-	return <BasicMoveButton {...props} name={stage.name} withDropdown={withDropdown} />;
-};
+	return <BasicMoveButton {...props} name={stage.name} withDropdown={withDropdown} />
+}
 
 export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...props }: Props) => {
-	const { inputValues, setFilters } = usePubSearch();
-	const [expanded, setExpanded] = useState(false);
+	const { inputValues, setFilters } = usePubSearch()
+	const [expanded, setExpanded] = useState(false)
 
-	const currentStages = inputValues.stages ?? [];
+	const currentStages = inputValues.stages ?? []
 
-	const isSelected = currentStages.includes(stage.id);
+	const isSelected = currentStages.includes(stage.id)
 
 	const toggleStage = useCallback(() => {
 		setFilters((old) => ({
@@ -42,8 +43,8 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 			stages: isSelected
 				? (old.stages.filter((id) => id !== stage.id) as StagesId[])
 				: [...old.stages, stage.id],
-		}));
-	}, [isSelected, stage.id, setFilters]);
+		}))
+	}, [isSelected, stage.id, setFilters])
 
 	return (
 		<Button
@@ -82,7 +83,7 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 				// ugh
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === " ") {
-						toggleStage();
+						toggleStage()
 					}
 				}}
 			>
@@ -98,5 +99,5 @@ export const FilterableStageMoveButton = ({ stage, withDropdown, className, ...p
 				</span>
 			</Button>
 		</Button>
-	);
-};
+	)
+}

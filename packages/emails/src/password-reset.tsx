@@ -1,8 +1,6 @@
-import * as React from "react";
 import {
 	Body,
 	Button,
-	Column,
 	Container,
 	Head,
 	Heading,
@@ -11,17 +9,16 @@ import {
 	Img,
 	Link,
 	Preview,
-	Row,
 	Section,
 	Tailwind,
 	Text,
-} from "@react-email/components";
+} from "@react-email/components"
 
 interface ForgotPasswordProps {
-	firstName: string;
-	lastName?: string;
-	resetPasswordLink: string;
-	previewText?: string;
+	firstName: string
+	lastName?: string
+	resetPasswordLink: string
+	previewText?: string
 }
 
 export const PasswordReset = ({
@@ -30,7 +27,7 @@ export const PasswordReset = ({
 	resetPasswordLink,
 	previewText = `Reset your PubPub password`,
 }: ForgotPasswordProps) => {
-	const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : "";
+	const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : ""
 
 	return (
 		<Html>
@@ -84,5 +81,5 @@ export const PasswordReset = ({
 				</Body>
 			</Tailwind>
 		</Html>
-	);
-};
+	)
+}

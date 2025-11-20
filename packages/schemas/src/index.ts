@@ -1,8 +1,8 @@
-import type { Static } from "@sinclair/typebox";
+import type { Static } from "@sinclair/typebox"
+import type * as Schemas from "./schemas"
 
-import { CoreSchemaType } from "db/public";
+import { CoreSchemaType } from "db/public"
 
-import * as Schemas from "./schemas";
 import {
 	Boolean,
 	Color,
@@ -18,7 +18,7 @@ import {
 	String,
 	URL,
 	Vector3,
-} from "./schemas";
+} from "./schemas"
 
 const schemaMap = {
 	[CoreSchemaType.Boolean]: () => Boolean,
@@ -35,58 +35,59 @@ const schemaMap = {
 	[CoreSchemaType.URL]: () => URL,
 	[CoreSchemaType.Vector3]: () => Vector3,
 	[CoreSchemaType.Color]: () => Color,
-} as const satisfies Record<CoreSchemaType, (config?: unknown) => (typeof Schemas)[CoreSchemaType]>;
+} as const satisfies Record<CoreSchemaType, (config?: unknown) => (typeof Schemas)[CoreSchemaType]>
 
 export function getJsonSchemaByCoreSchemaType<C extends CoreSchemaType>(
 	coreSchemaType: C,
 	config?: unknown
 ) {
-	return schemaMap[coreSchemaType](config) as ReturnType<(typeof schemaMap)[C]>;
+	return schemaMap[coreSchemaType](config) as ReturnType<(typeof schemaMap)[C]>
 }
 
-export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = (typeof Schemas)[C];
+export type JSONSchemaForCoreSchemaType<C extends CoreSchemaType> = (typeof Schemas)[C]
 
-export type InputTypeForCoreSchemaType<C extends CoreSchemaType> = Static<(typeof Schemas)[C]>;
+export type InputTypeForCoreSchemaType<C extends CoreSchemaType> = Static<(typeof Schemas)[C]>
 
 export function getDefaultValueByCoreSchemaType(coreSchemaType: CoreSchemaType) {
 	switch (coreSchemaType) {
 		case CoreSchemaType.Boolean:
-			return undefined;
+			return undefined
 		case CoreSchemaType.DateTime:
-			return undefined;
+			return undefined
 		case CoreSchemaType.Email:
-			return "";
+			return ""
 		case CoreSchemaType.FileUpload:
-			return undefined;
+			return undefined
 		case CoreSchemaType.MemberId:
-			return "";
+			return ""
 		case CoreSchemaType.Null:
-			return null;
+			return null
 		case CoreSchemaType.Number:
-			return undefined;
+			return undefined
 		case CoreSchemaType.NumericArray:
-			return [];
+			return []
 		case CoreSchemaType.RichText:
-			return undefined;
+			return undefined
 		case CoreSchemaType.String:
-			return "";
+			return ""
 		case CoreSchemaType.StringArray:
-			return [];
+			return []
 		case CoreSchemaType.URL:
-			return "";
+			return ""
 		case CoreSchemaType.Vector3:
-			return [0, 50, 100];
+			return [0, 50, 100]
 		case CoreSchemaType.Color:
-			return undefined;
-		default:
-			const _exhaustiveCheck: never = coreSchemaType;
-			return _exhaustiveCheck;
+			return undefined
+		default: {
+			const _exhaustiveCheck: never = coreSchemaType
+			return _exhaustiveCheck
+		}
 	}
 }
 
-export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas";
-export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons";
-export { registerFormats } from "./formats";
-export * from "./schemaComponents";
-export * from "./types";
-export { setErrorFunction } from "./errors";
+export { SCHEMA_TYPES_WITH_ICONS } from "./CoreSchemaWithIcons"
+export { setErrorFunction } from "./errors"
+export { registerFormats } from "./formats"
+export * from "./schemaComponents"
+export * from "./types"
+export { zodTypeToCoreSchemaType } from "./zodTypesToCoreSchemas"

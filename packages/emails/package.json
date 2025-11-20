@@ -36,9 +36,7 @@
 		"typescript": "catalog:"
 	},
 	"preconstruct": {
-		"entrypoints": [
-			"index.tsx"
-		],
+		"entrypoints": ["index.tsx"],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
@@ -46,14 +44,9 @@
 			"importsConditions": true
 		}
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"eslintConfig": {
-		"extends": [
-			"@pubpub/eslint-config/base",
-			"@pubpub/eslint-config/react"
-		]
+		"extends": ["@pubpub/eslint-config/base", "@pubpub/eslint-config/react"]
 	},
 	"prettier": "@pubpub/prettier-config"
 }

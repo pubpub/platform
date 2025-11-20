@@ -1,30 +1,31 @@
-import { useMemo } from "react";
-import { useFormContext } from "react-hook-form";
+import type { FormBuilderSchema } from "./types"
 
-import { Button } from "ui/button";
-import { FormLabel } from "ui/form";
-import { FormInput, Pencil, Plus } from "ui/icon";
-import { cn } from "utils";
+import { useMemo } from "react"
+import { useFormContext } from "react-hook-form"
 
-import type { FormBuilderSchema } from "./types";
-import { useBuilder } from "./BuilderContext";
-import { isButtonElement } from "./types";
+import { Button } from "ui/button"
+import { FormLabel } from "ui/form"
+import { FormInput, Pencil, Plus } from "ui/icon"
+import { cn } from "utils"
+
+import { useBuilder } from "./BuilderContext"
+import { isButtonElement } from "./types"
 
 export const ButtonOption = ({
 	label,
 	id,
 	readOnly,
 }: {
-	label: string;
-	id?: string;
-	readOnly?: boolean;
+	label: string
+	id?: string
+	readOnly?: boolean
 }) => {
 	// TODO: need a way to determine if button is primary or secondary
-	const buttonType: string = "primary";
-	const { openButtonConfigPanel } = useBuilder();
+	const buttonType: string = "primary"
+	const { openButtonConfigPanel } = useBuilder()
 	const handleClick = () => {
-		openButtonConfigPanel(id ?? label);
-	};
+		openButtonConfigPanel(id ?? label)
+	}
 	return (
 		// overflow-hidden to keep the div that is only a color inside the border radius
 		<div
@@ -57,21 +58,21 @@ export const ButtonOption = ({
 				</Button>
 			) : null}
 		</div>
-	);
-};
+	)
+}
 
 export const SubmissionSettings = () => {
-	const { openButtonConfigPanel } = useBuilder();
+	const { openButtonConfigPanel } = useBuilder()
 	// This uses the parent's form context to get the most up to date version of 'elements'
-	const { getValues } = useFormContext<FormBuilderSchema>();
+	const { getValues } = useFormContext<FormBuilderSchema>()
 	const buttons = useMemo(() => {
-		const elements = getValues()["elements"];
-		return elements.filter((e) => isButtonElement(e));
-	}, []);
-	const showAddButton = buttons.length < 2;
+		const elements = getValues().elements
+		return elements.filter((e) => isButtonElement(e))
+	}, [getValues])
+	const showAddButton = buttons.length < 2
 	const handleAddNew = () => {
-		openButtonConfigPanel();
-	};
+		openButtonConfigPanel()
+	}
 
 	return (
 		<div>
@@ -79,7 +80,7 @@ export const SubmissionSettings = () => {
 			<hr className="my-2" />
 			<div className="flex flex-col items-start gap-3">
 				{buttons.map((b) => {
-					return <ButtonOption id={b.elementId} key={b.label} label={b.label} />;
+					return <ButtonOption id={b.elementId} key={b.label} label={b.label} />
 				})}
 				{showAddButton ? (
 					<Button
@@ -94,5 +95,5 @@ export const SubmissionSettings = () => {
 				) : null}
 			</div>
 		</div>
-	);
-};
+	)
+}

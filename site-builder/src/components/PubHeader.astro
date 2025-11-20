@@ -1,18 +1,18 @@
 ---
-import type { NonGenericProcessedPub } from "contracts";
 
-import type { FileUpload } from "../layouts/Layout.astro";
+
+import type { FileUpload } from "../layouts/Layout.astro"
 
 export interface Props {
-	title: string;
-	doi?: string;
-	issueNumber?: string;
-	publicationDate?: string;
-	lastEdited?: string;
-	contributors?: Array<any>;
-	headerImage?: FileUpload;
-	formatDate: (date: string) => string;
-	getMonthsAgo: (date: string) => string;
+	title: string
+	doi?: string
+	issueNumber?: string
+	publicationDate?: string
+	lastEdited?: string
+	contributors?: Array<any>
+	headerImage?: FileUpload
+	formatDate: (date: string) => string
+	getMonthsAgo: (date: string) => string
 }
 
 const {
@@ -25,13 +25,13 @@ const {
 	headerImage,
 	formatDate,
 	getMonthsAgo,
-} = Astro.props;
+} = Astro.props
 
-const formattedPublicationDate = publicationDate ? formatDate(publicationDate) : "";
-const formattedLastEdited = lastEdited ? getMonthsAgo(lastEdited) : "3 years ago";
-const contributorText = contributors.length
+const _formattedPublicationDate = publicationDate ? formatDate(publicationDate) : ""
+const _formattedLastEdited = lastEdited ? getMonthsAgo(lastEdited) : "3 years ago"
+const _contributorText = contributors.length
 	? contributors.map((c) => c.value || c.title || "Contributor").join(", ")
-	: "Julie Leboeuf, Stine Linden-Andersen, and Jonathan Carriere";
+	: "Julie Leboeuf, Stine Linden-Andersen, and Jonathan Carriere"
 ---
 
 <div

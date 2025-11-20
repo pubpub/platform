@@ -1,27 +1,29 @@
-import React, { useMemo, useState } from "react";
+import type React from "react"
+
+import { useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import {
 	useEditorEffect,
 	useEditorEventCallback,
 	useEditorState,
-} from "@handlewithcare/react-prosemirror";
-import { TextSelection } from "prosemirror-state";
-import { createPortal } from "react-dom";
+} from "@handlewithcare/react-prosemirror"
+import { TextSelection } from "prosemirror-state"
 
-import { replaceMark } from "../commands/marks";
-import { AtomDataMenu } from "./AtomDataMenu";
-import { MENU_BAR_HEIGHT } from "./MenuBar";
-import { MarkMenu } from "./menus/MarkMenu";
-import { NodeMenu } from "./menus/NodeMenu";
+import { replaceMark } from "../commands/marks"
+import { AtomDataMenu } from "./AtomDataMenu"
+import { MENU_BAR_HEIGHT } from "./MenuBar"
+import { MarkMenu } from "./menus/MarkMenu"
+import { NodeMenu } from "./menus/NodeMenu"
 
-const animationTimeMS = 150;
-const animationHeightMS = 100;
+const animationTimeMS = 150
+const animationHeightMS = 100
 
 interface PanelProps {
-	top: number;
-	left: number;
-	right: number | string;
-	panelLeft: number;
-	bottom: number;
+	top: number
+	left: number
+	right: number | string
+	panelLeft: number
+	bottom: number
 }
 
 const initPanelProps: PanelProps = {
@@ -30,63 +32,63 @@ const initPanelProps: PanelProps = {
 	right: 1000,
 	panelLeft: 0,
 	bottom: 0,
-};
+}
 
 export function AttributePanel({
 	menuHidden,
 	containerRef,
 }: {
-	menuHidden: boolean;
-	containerRef: React.RefObject<HTMLDivElement | null>;
+	menuHidden: boolean
+	containerRef: React.RefObject<HTMLDivElement | null>
 }) {
-	const [offset, setOffset] = useState(initPanelProps);
-	const [height, setHeight] = useState(0);
-	const state = useEditorState();
-	const nodePos = state.selection.$anchor.pos;
-	const node = useMemo(() => state.selection.$from.nodeAfter, [state]);
+	const [offset, setOffset] = useState(initPanelProps)
+	const [height, setHeight] = useState(0)
+	const state = useEditorState()
+	const nodePos = state.selection.$anchor.pos
+	const node = useMemo(() => state.selection.$from.nodeAfter, [state])
 
 	useEditorEffect(
 		(view) => {
 			if (node === null) {
-				setOffset({ ...offset, right: 1000 });
-				return;
+				setOffset({ ...offset, right: 1000 })
+				return
 			}
 
 			if (!node) {
 				if (!view.hasFocus()) {
-					return;
+					return
 				}
 				// Reset right position so line animation still works when opening the panel again
-				setOffset({ ...offset, right: 1000 });
-				return;
+				setOffset({ ...offset, right: 1000 })
+				return
 			}
 
 			// The attribute panel itself may be focused--don't change the node while it is open
 			// This is primarily for the case where you are editing the id/class of a node.
 			if (!view.hasFocus() && node && node.isBlock && !node.eq(node)) {
-				return;
+				return
 			}
 
 			if (Object.keys(node.attrs).length === 0 && node.marks.length === 0) {
-				setOffset({ ...offset, right: 1000 });
-				return;
+				setOffset({ ...offset, right: 1000 })
+				return
 			}
 		},
 		[state, node]
-	);
+	)
 
 	useEditorEffect(
 		(view) => {
 			if (node === null) {
-				setHeight(0);
-				return;
+				setHeight(0)
+				return
 			}
 
 			if (node) {
-				const viewClientRect = view.dom.getBoundingClientRect();
-				const coords = view.coordsAtPos(nodePos);
-				const topBase = coords.top - 1 - viewClientRect.top;
-				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT;
+				const viewClientRect = view.dom.getBoundingClientRect()
+				const coords = view.coordsAtPos(nodePos)
+				const topBase = coords.top - 1 - viewClientRect.top
+				const top = menuHidden ? topBase : topBase + MENU_BAR_HEIGHT
 				setOffset({
 					...offset,
 					top,
@@ -94,28 +96,28 @@ export function AttributePanel({
 					left: coords.left - viewClientRect.left + 16,
 					panelLeft: containerRef.current?.clientWidth ?? 0,
 					right: -1,
-				});
+				})
 				setTimeout(() => {
-					setHeight(300);
-				}, animationTimeMS);
+					setHeight(300)
+				}, animationTimeMS)
 			} else {
-				setHeight(0);
+				setHeight(0)
 			}
 		},
 		[node, nodePos, containerRef]
-	);
+	)
 
 	const updateMarkAttrs = useEditorEventCallback(
 		(view, index: number, attrs: Record<string, unknown>) => {
-			if (!node) return;
-			const mark = node.marks[index];
-			const markAttrs = { ...mark.attrs, ...attrs };
-			replaceMark(mark, markAttrs)(view.state, view.dispatch);
+			if (!node) return
+			const mark = node.marks[index]
+			const markAttrs = { ...mark.attrs, ...attrs }
+			replaceMark(mark, markAttrs)(view.state, view.dispatch)
 		}
-	);
+	)
 
 	const updateAtomData = useEditorEventCallback((view, key: string, value: unknown) => {
-		if (!view || !node) return;
+		if (!view || !node) return
 		view.dispatch(
 			view.state.tr.setNodeMarkup(
 				nodePos,
@@ -123,30 +125,30 @@ export function AttributePanel({
 				{ ...node.attrs, data: { ...node.attrs.data, [key]: value } },
 				node.marks
 			)
-		);
-	});
+		)
+	})
 
 	const updateNodeAttrs = useEditorEventCallback((view, attrs: Record<string, unknown>) => {
-		if (!view || !node) return;
+		if (!view || !node) return
 		let tr = view.state.tr.setNodeMarkup(
 			nodePos,
 			node.type,
 			{ ...node.attrs, ...attrs },
 			node.marks
-		);
-		tr = tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(nodePos)));
-		view.dispatch(tr);
-	});
+		)
+		tr = tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(nodePos)))
+		view.dispatch(tr)
+	})
 
 	if (!(node && containerRef.current)) {
-		return null;
+		return null
 	}
 
 	if (node.type.name === "text" && node.marks.length === 0) {
-		return null;
+		return null
 	}
 
-	const isMark = node.marks.length > 0;
+	const isMark = node.marks.length > 0
 
 	return createPortal(
 		<>
@@ -204,5 +206,5 @@ export function AttributePanel({
 			/>
 		</>,
 		containerRef.current
-	);
+	)
 }

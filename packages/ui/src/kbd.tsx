@@ -1,6 +1,6 @@
-import React from "react";
+import React from "react"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
 const KBD = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 	({ className, ...props }, ref) => (
@@ -13,8 +13,8 @@ const KBD = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement
 			{...props}
 		/>
 	)
-);
-KBD.displayName = "KBD";
+)
+KBD.displayName = "KBD"
 
 const KeyboardShortcut = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 	({ className, children, ...props }, ref) => (
@@ -29,7 +29,7 @@ const KeyboardShortcut = React.forwardRef<HTMLDivElement, React.HTMLAttributes<H
 			{children}
 		</kbd>
 	)
-);
-KeyboardShortcut.displayName = "KeyboardShortcut";
+)
+KeyboardShortcut.displayName = "KeyboardShortcut"
 
-export { KBD, KeyboardShortcut };
+export { KBD, KeyboardShortcut }

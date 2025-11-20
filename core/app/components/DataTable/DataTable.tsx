@@ -10,9 +10,9 @@ import type {
 	Row,
 	RowSelectionState,
 	SortingState,
-} from "@tanstack/react-table";
+} from "@tanstack/react-table"
 
-import * as React from "react";
+import * as React from "react"
 import {
 	flexRender,
 	getCoreRowModel,
@@ -20,34 +20,34 @@ import {
 	getPaginationRowModel,
 	getSortedRowModel,
 	useReactTable,
-} from "@tanstack/react-table";
+} from "@tanstack/react-table"
 
-import { DataTablePagination } from "ui/data-table";
-import { Search } from "ui/icon";
-import { Input } from "ui/input";
-import { Label } from "ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table";
-import { cn } from "utils";
+import { DataTablePagination } from "ui/data-table"
+import { Search } from "ui/icon"
+import { Input } from "ui/input"
+import { Label } from "ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "ui/table"
+import { cn } from "utils"
 
 export interface DataTableProps<TData, TValue> {
-	columns: ColumnDef<TData, TValue>[];
-	data: TData[];
-	searchBy?: string;
-	hidePaginationWhenSinglePage?: boolean;
-	onRowClick?: (row: Row<TData>) => void;
-	className?: string;
-	striped?: boolean;
-	emptyState?: React.ReactNode;
+	columns: ColumnDef<TData, TValue>[]
+	data: TData[]
+	searchBy?: string
+	hidePaginationWhenSinglePage?: boolean
+	onRowClick?: (row: Row<TData>) => void
+	className?: string
+	striped?: boolean
+	emptyState?: React.ReactNode
 	/** Control row selection */
-	selectedRows?: RowSelectionState;
-	setSelectedRows?: React.Dispatch<React.SetStateAction<{}>>;
-	getRowId?: (data: TData) => string;
-	pagination?: PaginationState;
-	stickyHeader?: boolean;
-	defaultSort?: SortingState;
+	selectedRows?: RowSelectionState
+	setSelectedRows?: React.Dispatch<React.SetStateAction<{}>>
+	getRowId?: (data: TData) => string
+	pagination?: PaginationState
+	stickyHeader?: boolean
+	defaultSort?: SortingState
 }
 
-const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50";
+const STRIPED_ROW_STYLING = "hover:bg-gray-100 data-[state=selected]:bg-sky-50"
 
 export function DataTable<TData, TValue>({
 	columns,
@@ -65,9 +65,9 @@ export function DataTable<TData, TValue>({
 	stickyHeader,
 	defaultSort,
 }: DataTableProps<TData, TValue>) {
-	const [sorting, setSorting] = React.useState<SortingState>(defaultSort ?? []);
-	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-	const [rowSelection, setRowSelection] = React.useState({});
+	const [sorting, setSorting] = React.useState<SortingState>(defaultSort ?? [])
+	const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+	const [rowSelection, setRowSelection] = React.useState({})
 
 	const table = useReactTable({
 		data,
@@ -91,9 +91,9 @@ export function DataTable<TData, TValue>({
 				pageSize: 10,
 			},
 		},
-	});
+	})
 
-	const showPagination = hidePaginationWhenSinglePage ? table.getPageCount() > 1 : true;
+	const showPagination = hidePaginationWhenSinglePage ? table.getPageCount() > 1 : true
 
 	const handleRowClick = (
 		evt:
@@ -102,15 +102,15 @@ export function DataTable<TData, TValue>({
 		row: Row<TData>
 	) => {
 		if (!onRowClick) {
-			return;
+			return
 		}
 		// Do not activate the row click if the element already has a click handler
 		// Ex: a button inside a table cell should still be clickable
 		if (evt.type !== "keydown" && (evt.target as HTMLTableRowElement).onclick) {
-			return;
+			return
 		}
-		onRowClick(row);
-	};
+		onRowClick(row)
+	}
 
 	return (
 		<div>
@@ -149,13 +149,13 @@ export function DataTable<TData, TValue>({
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow key={headerGroup.id}>
 								{headerGroup.headers.map((header) => {
-									const size = header.column.columnDef.size;
-									const isNotDefaultSize = size && size !== 150;
+									const size = header.column.columnDef.size
+									const isNotDefaultSize = size && size !== 150
 									return (
 										<TableHead
 											key={header.id}
 											className={cn([
-												Boolean(isNotDefaultSize)
+												isNotDefaultSize
 													? "overflow-clip"
 													: "max-w-[12rem] overflow-auto",
 											])}
@@ -176,7 +176,7 @@ export function DataTable<TData, TValue>({
 														header.getContext()
 													)}
 										</TableHead>
-									);
+									)
 								})}
 							</TableRow>
 						))}
@@ -192,11 +192,11 @@ export function DataTable<TData, TValue>({
 										aria-pressed={row.getIsSelected() ? "true" : "false"}
 										onKeyDown={(evt) => {
 											if (evt.code === "Enter" || evt.code === "Space") {
-												handleRowClick(evt, row);
+												handleRowClick(evt, row)
 											}
 										}}
 										onClick={(evt) => {
-											handleRowClick(evt, row);
+											handleRowClick(evt, row)
 										}}
 										className={cn({
 											"cursor-pointer": Boolean(onRowClick),
@@ -205,13 +205,13 @@ export function DataTable<TData, TValue>({
 										})}
 									>
 										{row.getVisibleCells().map((cell) => {
-											const size = cell.column.columnDef.size;
-											const isNotDefaultSize = size && size !== 150;
+											const size = cell.column.columnDef.size
+											const isNotDefaultSize = size && size !== 150
 											return (
 												<TableCell
 													key={cell.id}
 													className={cn([
-														Boolean(isNotDefaultSize)
+														isNotDefaultSize
 															? "overflow-clip"
 															: "max-w-[12rem] overflow-auto",
 													])}
@@ -230,7 +230,7 @@ export function DataTable<TData, TValue>({
 														cell.getContext()
 													)}
 												</TableCell>
-											);
+											)
 										})}
 									</TableRow>
 								))
@@ -249,5 +249,5 @@ export function DataTable<TData, TValue>({
 			</div>
 			{showPagination ? <DataTablePagination table={table} /> : null}
 		</div>
-	);
+	)
 }

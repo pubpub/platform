@@ -1,59 +1,58 @@
-import type { z } from "zod";
+import type { z } from "zod"
+import type { FieldConfigItem } from "../../auto-form/types"
+import type { PubFieldContext } from "../PubFieldContext"
 
-import { zodTypeToCoreSchemaType } from "schemas";
+import { zodTypeToCoreSchemaType } from "schemas"
 
 // this makes Zod be imported on the client, we might want to change this in the future
-import { CoreSchemaType, coreSchemaTypeSchema } from "db/public";
-
-import type { FieldConfigItem } from "../../auto-form/types";
-import type { PubFieldContext } from "../PubFieldContext";
+import { CoreSchemaType, coreSchemaTypeSchema } from "db/public"
 
 export const getAllowedSchemaNames = (allowedSchemasOrZodItem: AllowedSchemasOrZodItem) => {
-	const allowedSchemas = allowedSchemasOrZodItem.allowedSchemas;
+	const allowedSchemas = allowedSchemasOrZodItem.allowedSchemas
 
 	if (allowedSchemas === true) {
-		return Object.values(CoreSchemaType);
+		return Object.values(CoreSchemaType)
 	}
 
 	if (!allowedSchemas) {
-		return [];
+		return []
 	}
 
 	if (allowedSchemas?.length === 0) {
-		return [];
+		return []
 	}
 	if (allowedSchemasOrZodItem.zodItem) {
-		const res = zodTypeToCoreSchemaType(allowedSchemasOrZodItem.zodItem);
+		const res = zodTypeToCoreSchemaType(allowedSchemasOrZodItem.zodItem)
 
 		if (res == null) {
-			return [];
+			return []
 		}
 
-		return [res];
+		return [res]
 	}
 	// just to make sure
-	const parsed = coreSchemaTypeSchema.array().safeParse(allowedSchemas);
+	const parsed = coreSchemaTypeSchema.array().safeParse(allowedSchemas)
 
 	if (!parsed.success) {
-		throw new Error(`Invalid allowedSchemas: ${allowedSchemas.join(", ")}`);
+		throw new Error(`Invalid allowedSchemas: ${allowedSchemas.join(", ")}`)
 	}
 
-	return parsed.data;
-};
+	return parsed.data
+}
 
 export type AllowedSchemasOrZodItem =
 	| {
-			allowedSchemas: FieldConfigItem["allowedSchemas"];
-			zodItem?: never;
+			allowedSchemas: FieldConfigItem["allowedSchemas"]
+			zodItem?: never
 	  }
 	| {
-			allowedSchemas?: never;
-			zodItem: z.ZodType<any>;
+			allowedSchemas?: never
+			zodItem: z.ZodType<any>
 	  }
 	| {
-			allowedSchemas: FieldConfigItem["allowedSchemas"];
-			zodItem: z.ZodType<any>;
-	  };
+			allowedSchemas: FieldConfigItem["allowedSchemas"]
+			zodItem: z.ZodType<any>
+	  }
 
 /**
  * Returns all pub fields that match the schema of the current field,
@@ -63,16 +62,16 @@ export const determineAllowedPubFields = ({
 	allPubFields,
 	...allowedSchemasOrZodItem
 }: {
-	allPubFields: PubFieldContext;
+	allPubFields: PubFieldContext
 } & AllowedSchemasOrZodItem) => {
 	// const allowedSchemas = getAllowedSchemaNames(allowedSchemasOrZodItem);
 	return Object.values(allPubFields).filter((pubField) => {
 		if (!pubField.schemaName) {
-			return false;
+			return false
 		}
 		// TODO: this line temporarily enables any field to be used in actions
 		// while we migrate to the new action mapping/value interpolation
 		// system.
-		return true;
-	});
-};
+		return true
+	})
+}

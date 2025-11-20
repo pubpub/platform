@@ -1,31 +1,31 @@
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { ControllerRenderProps, FieldValues } from "react-hook-form"
 
-import { Textarea } from "ui/textarea";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { Textarea } from "ui/textarea"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { extractJsonata, wrapInJsonata } from "./schemaWithJsonFields";
+import { extractJsonata, wrapInJsonata } from "./schemaWithJsonFields"
 
 export type InputState =
 	| {
-			state: "jsonata";
-			jsonValue: string;
-			normalValue: string;
+			state: "jsonata"
+			jsonValue: string
+			normalValue: string
 	  }
 	| {
-			state: "normal";
-			normalValue: string;
-			jsonValue: string;
-	  };
+			state: "normal"
+			normalValue: string
+			jsonValue: string
+	  }
 
 export function ActionFieldJsonataInput(props: {
-	field: ControllerRenderProps<FieldValues, any>;
-	isDefaultField: boolean;
-	actionAccepts: readonly string[];
-	"aria-labelledby": string;
+	field: ControllerRenderProps<FieldValues, any>
+	isDefaultField: boolean
+	actionAccepts: readonly string[]
+	"aria-labelledby": string
 }) {
-	const { field, actionAccepts } = props;
+	const { field, actionAccepts } = props
 
-	const isDefaultField = field.value === undefined;
+	const isDefaultField = field.value === undefined
 
 	return (
 		<div className="relative">
@@ -68,10 +68,10 @@ export function ActionFieldJsonataInput(props: {
 				id={field.name}
 				value={field.value ? extractJsonata(field.value) : ""}
 				onChange={(e) => {
-					const wrappedValue = wrapInJsonata(e.target.value);
-					field.onChange(wrappedValue);
+					const wrappedValue = wrapInJsonata(e.target.value)
+					field.onChange(wrappedValue)
 				}}
 			/>
 		</div>
-	);
+	)
 }

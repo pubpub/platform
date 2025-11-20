@@ -1,26 +1,26 @@
-import type { Metadata } from "next";
+import type { CommunitiesId, StagesId, UsersId } from "db/public"
+import type { Metadata } from "next"
 
-import { cache, Suspense } from "react";
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { FlagTriangleRightIcon } from "lucide-react";
+import { cache, Suspense } from "react"
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { FlagTriangleRightIcon } from "lucide-react"
 
-import type { CommunitiesId, StagesId, UsersId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
-import { PubFieldProvider } from "ui/pubFields";
-import { stagesDAO, StagesProvider } from "ui/stages";
+import { Capabilities, MembershipType } from "db/public"
+import { Button } from "ui/button"
+import { PubFieldProvider } from "ui/pubFields"
+import { StagesProvider, stagesDAO } from "ui/stages"
 
-import { CreatePubButton } from "~/app/components/pubs/CreatePubButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToUnauthorized } from "~/lib/server/navigation/redirects";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getStages } from "~/lib/server/stages";
-import { ContentLayout } from "../../ContentLayout";
-import { PubListSkeleton } from "../../pubs/PubList";
-import { StagePubs } from "../components/StageList";
+import { CreatePubButton } from "~/app/components/pubs/CreatePubButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import { getPubFields } from "~/lib/server/pubFields"
+import { getStages } from "~/lib/server/stages"
+import { ContentLayout } from "../../ContentLayout"
+import { PubListSkeleton } from "../../pubs/PubList"
+import { StagePubs } from "../components/StageList"
 
 const getStageCached = cache(
 	async (stageId: StagesId, communityId: CommunitiesId, userId: UsersId) => {
@@ -34,72 +34,72 @@ const getStageCached = cache(
 				},
 				userId
 			),
-		]);
-		return { stage, canViewStage };
+		])
+		return { stage, canViewStage }
 	}
-);
+)
 
 export async function generateMetadata(props: {
-	params: Promise<{ stageId: StagesId; communitySlug: string }>;
+	params: Promise<{ stageId: StagesId; communitySlug: string }>
 }): Promise<Metadata> {
-	const params = await props.params;
+	const params = await props.params
 
-	const { stageId } = params;
+	const { stageId } = params
 
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
-	const { stage, canViewStage } = await getStageCached(stageId, community.id, user.id);
+	const { stage, canViewStage } = await getStageCached(stageId, community.id, user.id)
 	if (!canViewStage) {
 		return {
 			title: "Unauthorized",
-		};
+		}
 	}
 
 	if (!stage) {
-		notFound();
+		notFound()
 	}
 
-	return { title: `${stage.name} Stage` };
+	return { title: `${stage.name} Stage` }
 }
 
 export default async function Page(props: {
-	searchParams: Promise<Record<string, string> & { page?: string }>;
+	searchParams: Promise<Record<string, string> & { page?: string }>
 
-	params: Promise<{ communitySlug: string; stageId: StagesId }>;
+	params: Promise<{ communitySlug: string; stageId: StagesId }>
 }) {
-	const searchParams = await props.searchParams;
-	const params = await props.params;
-	const { stageId } = params;
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+	const searchParams = await props.searchParams
+	const params = await props.params
+	const { stageId } = params
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
-	const page = searchParams.page ? parseInt(searchParams.page) : 1;
+	const page = searchParams.page ? parseInt(searchParams.page, 10) : 1
 
-	const stagePromise = getStageCached(stageId, community.id, user.id);
+	const stagePromise = getStageCached(stageId, community.id, user.id)
 	const capabilityPromise = userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		user.id
-	);
+	)
 	const [{ stage, canViewStage }, showEditButton, stages, pubFields] = await Promise.all([
 		stagePromise,
 		capabilityPromise,
 		getStages({ communityId: community.id, userId: user.id }).execute(),
 		getPubFields({ communityId: community.id }).executeTakeFirstOrThrow(),
-	]);
+	])
 
 	if (!canViewStage) {
-		return await redirectToUnauthorized();
+		return await redirectToUnauthorized()
 	}
 
 	if (!stage) {
-		notFound();
+		notFound()
 	}
 
 	return (
@@ -152,5 +152,5 @@ export default async function Page(props: {
 				</Suspense>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

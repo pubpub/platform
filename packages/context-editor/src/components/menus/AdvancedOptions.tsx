@@ -1,42 +1,42 @@
-import type { Static } from "@sinclair/typebox";
-import type { Mark, Node } from "prosemirror-model";
+import type { Static } from "@sinclair/typebox"
+import type { Mark, Node } from "prosemirror-model"
 
-import React, { useMemo, useState } from "react";
-import { useEditorEffect } from "@handlewithcare/react-prosemirror";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import { TypeCompiler } from "@sinclair/typebox/compiler";
-import { useForm } from "react-hook-form";
-import { registerFormats } from "schemas";
+import { useMemo, useState } from "react"
+import { useEditorEffect } from "@handlewithcare/react-prosemirror"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import { TypeCompiler } from "@sinclair/typebox/compiler"
+import { useForm } from "react-hook-form"
+import { registerFormats } from "schemas"
 
-import { Button } from "ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
-import { Form } from "ui/form";
-import { ChevronDown, ChevronUp } from "ui/icon";
+import { Button } from "ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
+import { Form } from "ui/form"
+import { ChevronDown, ChevronUp } from "ui/icon"
 
-import { MenuInputField } from "./MenuFields";
+import { MenuInputField } from "./MenuFields"
 
-registerFormats();
+registerFormats()
 
 const formSchema = Type.Object({
 	id: Type.String(),
 	class: Type.String(),
-});
+})
 
-const compiledSchema = TypeCompiler.Compile(formSchema);
+const compiledSchema = TypeCompiler.Compile(formSchema)
 
-type FormSchema = Static<typeof formSchema>;
+type FormSchema = Static<typeof formSchema>
 
 type Props = {
-	node: Node | Mark;
-	nodePos: number;
-	index?: number;
-	onChange: (values: Record<string, unknown>) => void;
-};
+	node: Node | Mark
+	nodePos: number
+	index?: number
+	onChange: (values: Record<string, unknown>) => void
+}
 
 export const AdvancedOptions = (props: Props) => {
-	const resolver = useMemo(() => typeboxResolver(compiledSchema), []);
-	const [isOpen, setIsOpen] = useState(false);
+	const resolver = useMemo(() => typeboxResolver(compiledSchema), [])
+	const [isOpen, setIsOpen] = useState(false)
 
 	const form = useForm<FormSchema>({
 		resolver,
@@ -45,15 +45,15 @@ export const AdvancedOptions = (props: Props) => {
 			id: props.node.attrs?.id ?? "",
 			class: props.node.attrs?.class ?? "",
 		},
-	});
+	})
 
 	useEditorEffect(() => {
 		form.reset({
 			id: props.node.attrs?.id ?? "",
 			class: props.node.attrs?.class ?? "",
-		});
-		setIsOpen(false);
-	}, [props.nodePos]);
+		})
+		setIsOpen(false)
+	}, [props.nodePos])
 
 	return (
 		<Form {...form}>
@@ -84,5 +84,5 @@ export const AdvancedOptions = (props: Props) => {
 				</Collapsible>
 			</form>
 		</Form>
-	);
-};
+	)
+}

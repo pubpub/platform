@@ -1,21 +1,22 @@
-import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public";
-import type { ButtonProps } from "ui/button";
-import { Plus } from "ui/icon";
+import type { CommunitiesId, PubsId, PubTypesId, StagesId } from "db/public"
+import type { ButtonProps } from "ui/button"
+import type { PubTypeWithForm } from "~/lib/authorization/capabilities"
 
-import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { getCreatablePubTypes } from "~/lib/authorization/capabilities";
-import { getPubsWithRelatedValues } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getPubFields } from "~/lib/server/pubFields";
-import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext";
-import { PathAwareDialog } from "../PathAwareDialog";
-import { InitialCreatePubForm } from "./InitialCreatePubForm";
+import { Plus } from "ui/icon"
+
+import { getLoginData } from "~/lib/authentication/loginData"
+import { getCreatablePubTypes } from "~/lib/authorization/capabilities"
+import { getPubsWithRelatedValues } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getPubFields } from "~/lib/server/pubFields"
+import { ContextEditorContextProvider } from "../ContextEditor/ContextEditorContext"
+import { PathAwareDialog } from "../PathAwareDialog"
+import { InitialCreatePubForm } from "./InitialCreatePubForm"
 
 type RelatedPubData = {
-	pubId: PubsId;
-	pubTypeId: PubTypesId;
-};
+	pubId: PubsId
+	pubTypeId: PubTypesId
+}
 
 /**
  * Wrapper around InitialCreatePubForm which includes queries for everything that might
@@ -27,12 +28,12 @@ const InitialCreatePubFormWithRelatedPub = async ({
 	communityId,
 	stageId,
 }: {
-	relatedPub: RelatedPubData;
-	pubTypes: PubTypeWithForm;
-	communityId: CommunitiesId;
-	stageId?: StagesId;
+	relatedPub: RelatedPubData
+	pubTypes: PubTypeWithForm
+	communityId: CommunitiesId
+	stageId?: StagesId
 }) => {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	const [pubs, pubFieldsResponse] = await Promise.all([
 		getPubsWithRelatedValues(
 			{ communityId: communityId, userId: user?.id },
@@ -50,9 +51,9 @@ const InitialCreatePubFormWithRelatedPub = async ({
 			communityId: communityId,
 			isRelated: true,
 		}).executeTakeFirstOrThrow(),
-	]);
+	])
 
-	const pubFields = Object.values(pubFieldsResponse.fields);
+	const pubFields = Object.values(pubFieldsResponse.fields)
 
 	return (
 		<ContextEditorContextProvider
@@ -68,47 +69,47 @@ const InitialCreatePubFormWithRelatedPub = async ({
 				relatedPubId={relatedPub.pubId}
 			/>
 		</ContextEditorContextProvider>
-	);
-};
+	)
+}
 
 type Props = {
-	variant?: ButtonProps["variant"];
-	size?: ButtonProps["size"];
-	className?: string;
-	text?: string;
+	variant?: ButtonProps["variant"]
+	size?: ButtonProps["size"]
+	className?: string
+	text?: string
 	/**
 	 * If specified, pubs created via this button will be related to this relatedPub.pubId
 	 * The relatedPub.pubId will gain a pub value that relates it to the newly created pub
 	 */
-	relatedPub?: RelatedPubData;
+	relatedPub?: RelatedPubData
 } & (
 	| {
 			/** If specified, the pub editor will default to this stage */
-			stageId: StagesId;
+			stageId: StagesId
 	  }
 	| { communityId: CommunitiesId }
-);
+)
 
 export const CreatePubButton = async (props: Props) => {
-	const id = "stageId" in props ? props.stageId : props.communityId;
+	const id = "stageId" in props ? props.stageId : props.communityId
 
-	const [community, { user }] = await Promise.all([findCommunityBySlug(), getLoginData()]);
+	const [community, { user }] = await Promise.all([findCommunityBySlug(), getLoginData()])
 
 	if (!community) {
-		return null;
+		return null
 	}
 
 	if (!user) {
-		return null;
+		return null
 	}
 
-	const pubTypes = await getCreatablePubTypes(user.id, community.id);
+	const pubTypes = await getCreatablePubTypes(user.id, community.id)
 
 	if (pubTypes.length === 0) {
-		return null;
+		return null
 	}
 
-	const stageId = "stageId" in props ? props.stageId : undefined;
+	const stageId = "stageId" in props ? props.stageId : undefined
 
 	return (
 		<PathAwareDialog
@@ -133,5 +134,5 @@ export const CreatePubButton = async (props: Props) => {
 				<InitialCreatePubForm pubTypes={pubTypes} relatedPubFields={[]} stageId={stageId} />
 			)}
 		</PathAwareDialog>
-	);
-};
+	)
+}

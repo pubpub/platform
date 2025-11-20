@@ -1,1 +1,1 @@
-export type BaseActionInstanceConfig = Record<string, unknown> | null;
+export type BaseActionInstanceConfig = Record<string, unknown> | null

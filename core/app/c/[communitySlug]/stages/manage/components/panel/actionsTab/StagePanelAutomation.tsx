@@ -1,7 +1,4 @@
-"use client";
-
-import { useCallback } from "react";
-import { parseAsString, useQueryState } from "nuqs";
+"use client"
 
 import type {
 	Action,
@@ -11,50 +8,54 @@ import type {
 	CommunitiesId,
 	Event,
 	StagesId,
-} from "db/public";
-import { Button } from "ui/button";
-import { Pencil } from "ui/icon";
-import { cn } from "utils";
+} from "db/public"
+import type { AutomationForEvent } from "~/actions/_lib/automations"
+import type { AutomationConfig } from "~/actions/types"
 
-import type { AutomationForEvent } from "~/actions/_lib/automations";
-import type { AutomationConfig } from "~/actions/types";
-import { getActionByName, getAutomationByName, humanReadableEventHydrated } from "~/actions/api";
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
+import { useCallback } from "react"
+import { parseAsString, useQueryState } from "nuqs"
+
+import { Button } from "ui/button"
+import { Pencil } from "ui/icon"
+import { cn } from "utils"
+
+import { getActionByName, getAutomationByName, humanReadableEventHydrated } from "~/actions/api"
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
 
 type Props = {
-	stageId: StagesId;
-	communityId: CommunitiesId;
+	stageId: StagesId
+	communityId: CommunitiesId
 	automation: {
-		id: AutomationsId;
-		event: Event;
-		actionInstance: ActionInstances;
-		sourceActionInstance?: ActionInstances | null;
-		config: AutomationConfig<AutomationForEvent<Event>> | null;
-		createdAt: Date;
-		updatedAt: Date;
-		actionInstanceId: ActionInstancesId;
-		sourceActionInstanceId: ActionInstancesId | null;
-	};
-};
+		id: AutomationsId
+		event: Event
+		actionInstance: ActionInstances
+		sourceActionInstance?: ActionInstances | null
+		config: AutomationConfig<AutomationForEvent<Event>> | null
+		createdAt: Date
+		updatedAt: Date
+		actionInstanceId: ActionInstancesId
+		sourceActionInstanceId: ActionInstancesId | null
+	}
+}
 
 const ActionIcon = (props: { actionName: Action; className?: string }) => {
-	const action = getActionByName(props.actionName);
-	return <action.icon className={cn("inline text-sm", props.className)} />;
-};
+	const action = getActionByName(props.actionName)
+	return <action.icon className={cn("inline text-sm", props.className)} />
+}
 
 export const StagePanelAutomation = (props: Props) => {
-	const { automation } = props;
+	const { automation } = props
 
 	const [, setEditingAutomationId] = useQueryState(
 		"automation-id",
 		parseAsString.withDefault("new-automation")
-	);
+	)
 
 	const onEditClick = useCallback(() => {
-		setEditingAutomationId(automation.id);
-	}, [automation.id, setEditingAutomationId]);
-	const community = useCommunity();
-	const automationSettings = getAutomationByName(automation.event);
+		setEditingAutomationId(automation.id)
+	}, [automation.id, setEditingAutomationId])
+	const community = useCommunity()
+	const automationSettings = getAutomationByName(automation.event)
 
 	return (
 		<div className="w-full space-y-2 border px-3 py-2">
@@ -103,5 +104,5 @@ export const StagePanelAutomation = (props: Props) => {
 				</div>
 			</div>
 		</div>
-	);
-};
+	)
+}

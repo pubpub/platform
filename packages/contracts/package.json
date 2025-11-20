@@ -10,9 +10,7 @@
 		"./resources/site-builder": "./dist/contracts-resources-site-builder.js",
 		"./package.json": "./package.json"
 	},
-	"files": [
-		"dist"
-	],
+	"files": ["dist"],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
@@ -39,11 +37,7 @@
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
 		"exports": true,
-		"entrypoints": [
-			"index.ts",
-			"resources/site.ts",
-			"resources/site-builder.ts"
-		],
+		"entrypoints": ["index.ts", "resources/site.ts", "resources/site-builder.ts"],
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,
 			"distInRoot": true,

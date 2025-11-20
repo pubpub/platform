@@ -1,17 +1,17 @@
-import Link from "next/link";
+import Link from "next/link"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "ui/card"
 
-import LogoutButton from "~/app/components/LogoutButton";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
-import { ResetPasswordButton } from "./ResetPasswordButton";
-import { UserInfoForm } from "./UserInfoForm";
+import LogoutButton from "~/app/components/LogoutButton"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/redirects"
+import { ResetPasswordButton } from "./ResetPasswordButton"
+import { UserInfoForm } from "./UserInfoForm"
 
 export default async function Page() {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
 	// pre-compute redirect urls for each community
 	const communityRedirectUrls = await Promise.all(
@@ -21,11 +21,11 @@ export default async function Page() {
 				communitySlug: community.slug,
 			}),
 		}))
-	);
+	)
 
 	const redirectUrlMap = new Map(
 		communityRedirectUrls.map(({ communityId, redirectUrl }) => [communityId, redirectUrl])
-	);
+	)
 
 	return (
 		<main className="flex min-h-[calc(100vh_-_theme(spacing.16))] flex-1 flex-col gap-4 p-4 md:gap-8 md:p-10">
@@ -68,7 +68,7 @@ export default async function Page() {
 												<div className="flex-grow">{community.name}</div>
 											</Link>
 										</Button>
-									);
+									)
 								})}
 							</div>
 						</div>
@@ -103,5 +103,5 @@ export default async function Page() {
 				</div>
 			</div>
 		</main>
-	);
+	)
 }

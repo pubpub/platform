@@ -1,27 +1,27 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import Link from "next/link"
+import { notFound, redirect } from "next/navigation"
 
-import { Capabilities, MembershipType } from "db/public";
+import { Capabilities, MembershipType } from "db/public"
 
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
 
 export const metadata: Metadata = {
 	title: "Community Settings",
-};
+}
 
 export default async function Page(props: { params: Promise<{ communitySlug: string }> }) {
-	const params = await props.params;
-	const { user } = await getPageLoginData();
-	const { communitySlug } = params;
+	const params = await props.params
+	const { user } = await getPageLoginData()
+	const { communitySlug } = params
 
-	const community = await findCommunityBySlug(communitySlug);
+	const community = await findCommunityBySlug(communitySlug)
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (
@@ -31,7 +31,7 @@ export default async function Page(props: { params: Promise<{ communitySlug: str
 			user.id
 		))
 	) {
-		redirect(`/c/${communitySlug}/unauthorized`);
+		redirect(`/c/${communitySlug}/unauthorized`)
 	}
 
 	return (
@@ -62,5 +62,5 @@ export default async function Page(props: { params: Promise<{ communitySlug: str
 				</ul>
 			</div>
 		</main>
-	);
+	)
 }

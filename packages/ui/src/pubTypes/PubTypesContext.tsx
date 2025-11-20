@@ -1,18 +1,19 @@
-"use client";
+"use client"
 
-import React, { createContext, useContext } from "react";
+import type { PubTypes } from "db/public"
+import type React from "react"
 
-import type { PubTypes } from "db/public";
+import { createContext, useContext } from "react"
 
 type Props = {
-	children: React.ReactNode;
-	pubTypes: PubTypes[];
-};
-
-const PubTypeContext = createContext<PubTypes[]>([]);
-
-export function PubTypeProvider({ children, pubTypes }: Props) {
-	return <PubTypeContext.Provider value={pubTypes}>{children}</PubTypeContext.Provider>;
+	children: React.ReactNode
+	pubTypes: PubTypes[]
 }
 
-export const usePubTypeContext = () => useContext(PubTypeContext);
+const PubTypeContext = createContext<PubTypes[]>([])
+
+export function PubTypeProvider({ children, pubTypes }: Props) {
+	return <PubTypeContext.Provider value={pubTypes}>{children}</PubTypeContext.Provider>
+}
+
+export const usePubTypeContext = () => useContext(PubTypeContext)

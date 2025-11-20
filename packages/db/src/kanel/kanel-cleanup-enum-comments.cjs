@@ -3,33 +3,33 @@
 /**
  * @type {import("kanel").PreRenderHook}
  */
-function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, instantiatedConfig) {
+function kanelDatabaseDefaultExportFixPreRenderHook(outputAcc, _instantiatedConfig) {
 	return Object.fromEntries(
 		Object.entries(outputAcc).map(([name, output]) => {
 			output.declarations = output.declarations.flatMap((declaration) => {
 				if (declaration.declarationType !== "enum") {
-					return declaration;
+					return declaration
 				}
 
-				const comment = declaration.comment;
+				const comment = declaration.comment
 
 				if (!comment) {
-					return declaration;
+					return declaration
 				}
 
-				const cleanedComment = comment.flatMap((line) => line.split(/\n/));
+				const cleanedComment = comment.flatMap((line) => line.split(/\n/))
 
 				return {
 					...declaration,
 					comment: cleanedComment,
-				};
-			});
+				}
+			})
 
-			return [name, output];
+			return [name, output]
 		})
-	);
+	)
 }
 
 module.exports = {
 	cleanupEnumComments: kanelDatabaseDefaultExportFixPreRenderHook,
-};
+}

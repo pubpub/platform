@@ -1,32 +1,32 @@
-import { forwardRef } from "react";
-import { createPortal } from "react-dom";
+import { forwardRef } from "react"
+import { createPortal } from "react-dom"
 
-import { Button } from "ui/button";
-import { X } from "ui/icon";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { X } from "ui/icon"
+import { cn } from "utils"
 
 // Render children in a portal so they can safely use <form> components
 export const PanelWrapper = ({
 	children,
 	sidebar,
 }: {
-	children: React.ReactNode;
-	sidebar: Element | null;
+	children: React.ReactNode
+	sidebar: Element | null
 }) => {
 	if (!sidebar) {
-		return null;
+		return null
 	}
-	return createPortal(children, sidebar);
-};
+	return createPortal(children, sidebar)
+}
 
 export const PanelHeader = ({
 	title,
 	showCancel,
 	onCancel,
 }: {
-	title: string;
-	showCancel: boolean;
-	onCancel: () => void;
+	title: string
+	showCancel: boolean
+	onCancel: () => void
 }) => {
 	return (
 		<>
@@ -46,8 +46,8 @@ export const PanelHeader = ({
 			</div>
 			<hr />
 		</>
-	);
-};
+	)
+}
 
 export const SidePanel = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
 	({ children, className, ...rest }, ref) => {
@@ -62,6 +62,6 @@ export const SidePanel = forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 			>
 				{children}
 			</div>
-		);
+		)
 	}
-);
+)

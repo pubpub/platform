@@ -1,11 +1,11 @@
-import { Button } from "ui/button";
-import { ChevronDown, FlagTriangleRightIcon } from "ui/icon";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { ChevronDown, FlagTriangleRightIcon } from "ui/icon"
+import { cn } from "utils"
 
 interface Props extends React.ComponentPropsWithoutRef<"button"> {
-	name: string;
-	withDropdown?: boolean;
-	ref?: React.RefObject<HTMLButtonElement>;
+	name: string
+	withDropdown?: boolean
+	ref?: React.RefObject<HTMLButtonElement>
 }
 
 export const BasicMoveButton = ({ name, withDropdown, className, ...props }: Props) => {
@@ -23,5 +23,5 @@ export const BasicMoveButton = ({ name, withDropdown, className, ...props }: Pro
 			{name}
 			{withDropdown && <ChevronDown strokeWidth="1px" />}
 		</Button>
-	);
-};
+	)
+}

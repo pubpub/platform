@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
-import { DayPicker, getDefaultClassNames } from "react-day-picker";
+import type * as React from "react"
 
-import "react-day-picker/style.css";
+import { DayPicker, getDefaultClassNames } from "react-day-picker"
 
-import { cn } from "utils";
+import "react-day-picker/style.css"
 
-import { buttonVariants } from "./button";
+import { cn } from "utils"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>;
+import { buttonVariants } from "./button"
+
+export type CalendarProps = React.ComponentProps<typeof DayPicker>
 
 function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
-	const defaultClassNames = getDefaultClassNames();
+	const defaultClassNames = getDefaultClassNames()
 
 	return (
 		<DayPicker
@@ -91,8 +91,8 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
 			}}
 			{...props}
 		/>
-	);
+	)
 }
-Calendar.displayName = "Calendar";
+Calendar.displayName = "Calendar"
 
-export { Calendar };
+export { Calendar }

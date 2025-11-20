@@ -1,10 +1,11 @@
-import type { User } from "lucia";
+import type { Communities, CommunitiesId, UsersId } from "db/public"
+import type { User } from "lucia"
+import type { MaybeHas } from "utils/types"
+import type { CommunityData } from "~/lib/server/community"
 
-import { cache, Suspense } from "react";
+import { cache, Suspense } from "react"
 
-import type { Communities, CommunitiesId, UsersId } from "db/public";
-import type { MaybeHas } from "utils/types";
-import { Capabilities, MembershipType } from "db/public";
+import { Capabilities, MembershipType } from "db/public"
 import {
 	Activity,
 	BookOpen,
@@ -16,7 +17,7 @@ import {
 	Settings2,
 	ToyBrick,
 	UsersRound,
-} from "ui/icon";
+} from "ui/icon"
 import {
 	Sidebar,
 	SidebarContent,
@@ -31,51 +32,47 @@ import {
 	SidebarMenuSubItem,
 	SidebarRail,
 	SidebarSeparator,
-} from "ui/sidebar";
+} from "ui/sidebar"
 
-import type { CommunityData } from "~/lib/server/community";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities";
-import CommunitySwitcher from "./CommunitySwitcher";
-import LoginSwitcher from "./LoginSwitcher";
-import NavLink from "./NavLink";
-import { NavLinkSubMenu } from "./NavLinkSubMenu";
+import { getLoginData } from "~/lib/authentication/loginData"
+import { userCan, userCanViewStagePage } from "~/lib/authorization/capabilities"
+import CommunitySwitcher from "./CommunitySwitcher"
+import LoginSwitcher from "./LoginSwitcher"
+import NavLink from "./NavLink"
+import { NavLinkSubMenu } from "./NavLinkSubMenu"
 
 type Props = {
-	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<CommunityData>[];
-};
+	community: NonNullable<CommunityData>
+	availableCommunities: NonNullable<CommunityData>[]
+}
 
 type BaseLinkDefinition = {
-	href: string;
-	text: string;
-	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>);
-	pattern?: string;
-};
+	href: string
+	text: string
+	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>)
+	pattern?: string
+}
 
 type SubMenuLinkDefinition = MaybeHas<BaseLinkDefinition, "href"> & {
-	children: SubLevelLinkDefinition[] | SubMenuLinkDefinition[];
-	icon: React.ReactNode;
-};
+	children: SubLevelLinkDefinition[] | SubMenuLinkDefinition[]
+	icon: React.ReactNode
+}
 
 type TopLevelLinkDefinition = BaseLinkDefinition & {
-	icon: React.ReactNode;
-};
+	icon: React.ReactNode
+}
 
 type SubLevelLinkDefinition = BaseLinkDefinition & {
-	icon?: React.ReactNode;
-};
+	icon?: React.ReactNode
+}
 
-export type LinkDefinition =
-	| TopLevelLinkDefinition
-	| SubMenuLinkDefinition
-	| SubLevelLinkDefinition;
+export type LinkDefinition = TopLevelLinkDefinition | SubMenuLinkDefinition | SubLevelLinkDefinition
 
 type LinkGroupDefinition = {
-	name: string;
-	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>);
-	links: LinkDefinition[];
-};
+	name: string
+	authorization: null | ((userId: UsersId, communityId: CommunitiesId) => Promise<boolean>)
+	links: LinkDefinition[]
+}
 
 const userCanEditCommunityCached = cache(async (userId: UsersId, communityId: CommunitiesId) => {
 	return await userCan(
@@ -85,8 +82,8 @@ const userCanEditCommunityCached = cache(async (userId: UsersId, communityId: Co
 			communityId,
 		},
 		userId
-	);
-});
+	)
+})
 
 const viewLinks: LinkGroupDefinition = {
 	name: "Views",
@@ -112,7 +109,7 @@ const viewLinks: LinkGroupDefinition = {
 			authorization: userCanEditCommunityCached,
 		},
 	],
-};
+}
 
 const manageLinks: LinkGroupDefinition = {
 	name: "Manage",
@@ -150,7 +147,7 @@ const manageLinks: LinkGroupDefinition = {
 			authorization: userCanEditCommunityCached,
 		},
 	],
-};
+}
 
 const adminLinks: LinkGroupDefinition = {
 	name: "Admin",
@@ -191,9 +188,9 @@ const adminLinks: LinkGroupDefinition = {
 			],
 		},
 	],
-};
+}
 
-export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon";
+export const COLLAPSIBLE_TYPE: Parameters<typeof Sidebar>[0]["collapsible"] = "icon"
 
 const Links = ({
 	user,
@@ -201,10 +198,10 @@ const Links = ({
 	links,
 	groupName,
 }: {
-	user: User;
-	community: Communities;
-	links: LinkDefinition[];
-	groupName?: string;
+	user: User
+	community: Communities
+	links: LinkDefinition[]
+	groupName?: string
 }) => {
 	return (
 		<>
@@ -220,16 +217,16 @@ const Links = ({
 								groupName={groupName}
 							/>
 						</Suspense>
-					);
+					)
 				}
 
 				return (
 					<SubMenuLinks user={user} community={community} link={link} key={link.text} />
-				);
+				)
 			})}
 		</>
-	);
-};
+	)
+}
 
 const Link = async ({
 	user,
@@ -237,16 +234,16 @@ const Link = async ({
 	link,
 	groupName,
 }: {
-	user: User;
-	community: Communities;
-	link: TopLevelLinkDefinition | SubLevelLinkDefinition | SubMenuLinkDefinition;
-	groupName?: string;
+	user: User
+	community: Communities
+	link: TopLevelLinkDefinition | SubLevelLinkDefinition | SubMenuLinkDefinition
+	groupName?: string
 }) => {
 	if (link.authorization) {
-		const userCan = await link.authorization(user.id, community.id);
+		const userCan = await link.authorization(user.id, community.id)
 
 		if (!userCan) {
-			return null;
+			return null
 		}
 	}
 
@@ -260,23 +257,23 @@ const Link = async ({
 			hasChildren
 			isChild={false}
 		/>
-	);
-};
+	)
+}
 
 const SubMenuLinks = async ({
 	user,
 	community,
 	link,
 }: {
-	user: User;
-	community: Communities;
-	link: SubMenuLinkDefinition;
+	user: User
+	community: Communities
+	link: SubMenuLinkDefinition
 }) => {
 	if (link.authorization) {
-		const userCan = await link.authorization(user.id, community.id);
+		const userCan = await link.authorization(user.id, community.id)
 
 		if (!userCan) {
-			return null;
+			return null
 		}
 	}
 
@@ -303,23 +300,23 @@ const SubMenuLinks = async ({
 				</SidebarMenuSubItem>
 			))}
 		</NavLinkSubMenu>
-	);
-};
+	)
+}
 
 const LinkGroup = async ({
 	user,
 	community,
 	group,
 }: {
-	user: User;
-	community: Communities;
-	group: LinkGroupDefinition;
+	user: User
+	community: Communities
+	group: LinkGroupDefinition
 }) => {
 	if (group.authorization) {
-		const userCan = await group.authorization(user.id, community.id);
+		const userCan = await group.authorization(user.id, community.id)
 
 		if (!userCan) {
-			return null;
+			return null
 		}
 	}
 
@@ -337,14 +334,14 @@ const LinkGroup = async ({
 				/>
 			</SidebarGroupContent>
 		</SidebarGroup>
-	);
-};
+	)
+}
 
-const SideNav: React.FC<Props> = async function ({ community, availableCommunities }) {
-	const { user } = await getLoginData();
+const SideNav: React.FC<Props> = async ({ community, availableCommunities }) => {
+	const { user } = await getLoginData()
 
 	if (!user) {
-		return null;
+		return null
 	}
 
 	return (
@@ -378,7 +375,7 @@ const SideNav: React.FC<Props> = async function ({ community, availableCommuniti
 			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
-	);
-};
+	)
+}
 
-export default SideNav;
+export default SideNav

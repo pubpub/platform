@@ -1,11 +1,8 @@
-import type { ZodError } from "zod";
+import type { Action } from "db/public"
+import type { ZodError, z } from "zod"
 
-import { z } from "zod";
-
-import type { Action } from "db/public";
-
-import { getActionByName } from "../api";
-import { extractJsonata, schemaWithJsonFields } from "./schemaWithJsonFields";
+import { getActionByName } from "../api"
+import { extractJsonata, schemaWithJsonFields } from "./schemaWithJsonFields"
 
 // error codes for clear error handling
 export enum ActionConfigErrorCode {
@@ -17,97 +14,97 @@ export enum ActionConfigErrorCode {
 }
 
 export type ActionConfigError = {
-	code: ActionConfigErrorCode;
-	message: string;
-	zodError?: ZodError;
-	cause?: unknown;
-};
+	code: ActionConfigErrorCode
+	message: string
+	zodError?: ZodError
+	cause?: unknown
+}
 
 export type ActionConfigSuccess<T = Record<string, any>> = {
-	success: true;
-	config: T;
-};
+	success: true
+	config: T
+}
 
 export type ActionConfigResult<T = Record<string, any>> =
 	| ActionConfigSuccess<T>
-	| { success: false; error: ActionConfigError };
+	| { success: false; error: ActionConfigError }
 
-type BuilderState = "initial" | "validated" | "interpolated";
+type BuilderState = "initial" | "validated" | "interpolated"
 
 // helper to check if a value needs interpolation
 const needsInterpolation = (value: string): boolean => {
-	return value.includes("{{") || value.includes("$.") || value.startsWith("<<<");
-};
+	return value.includes("{{") || value.includes("$.") || value.startsWith("<<<")
+}
 
 const collectActionFieldReferences = (obj: Record<string, any>): Record<string, string[]> => {
-	const refMap = {} as Record<string, string[]>;
+	const refMap = {} as Record<string, string[]>
 	for (const [key, value] of Object.entries(obj)) {
-		const refs: string[] = [];
+		const refs: string[] = []
 		if (typeof value === "string") {
-			const valueJsonata = extractJsonata(value);
-			const actionFieldMatches = valueJsonata.match(/(\$\.action\.config\.[a-zA-Z0-9_]+)/g);
+			const valueJsonata = extractJsonata(value)
+			const actionFieldMatches = valueJsonata.match(/(\$\.action\.config\.[a-zA-Z0-9_]+)/g)
 			if (actionFieldMatches) {
 				for (const match of actionFieldMatches) {
-					refs.push(match.replace("$.action.config.", ""));
+					refs.push(match.replace("$.action.config.", ""))
 				}
 			}
 		}
-		refMap[key] = refs;
+		refMap[key] = refs
 	}
-	return refMap;
-};
+	return refMap
+}
 
 const detectCycles = (graph: Record<string, string[]>): string[] => {
-	const visited = new Set<string>();
-	const stack = new Set<string>();
-	const cycle: string[] = [];
+	const visited = new Set<string>()
+	const stack = new Set<string>()
+	const cycle: string[] = []
 
 	const dfs = (node: string, path: string[]): boolean => {
 		if (stack.has(node)) {
-			const cycleStart = path.indexOf(node);
-			cycle.push(...path.slice(cycleStart), node);
-			return true;
+			const cycleStart = path.indexOf(node)
+			cycle.push(...path.slice(cycleStart), node)
+			return true
 		}
 
 		if (visited.has(node)) {
-			return false;
+			return false
 		}
 
-		visited.add(node);
-		stack.add(node);
+		visited.add(node)
+		stack.add(node)
 
-		const nodeDependencies = graph[node] ?? [];
+		const nodeDependencies = graph[node] ?? []
 		for (const nodeDependency of nodeDependencies) {
 			if (nodeDependency in graph) {
 				if (dfs(nodeDependency, [...path, node])) {
-					return true;
+					return true
 				}
 			}
 		}
 
-		stack.delete(node);
-		return false;
-	};
+		stack.delete(node)
+		return false
+	}
 
 	for (const node of Object.keys(graph)) {
 		if (!visited.has(node)) {
 			if (dfs(node, [])) {
-				break;
+				break
 			}
 		}
 	}
 
-	return cycle;
-};
+	return cycle
+}
 
 const reportCycle = (cycle: string[]): string => {
-	let message = "Failed to evaluate configuration because ";
+	let message = "Failed to evaluate configuration because "
 	for (let i = 0; i < cycle.length - 1; i++) {
-		message += i === 0 ? "" : "and ";
-		message += `$.action.config.${cycle[i]} uses $.action.config.${cycle[i + 1]}\n`;
+		message += i === 0 ? "" : "and "
+		message += `$.action.config.${cycle[i]} uses $.action.config.${cycle[i + 1]}\n`
 	}
-	return message;
-};
+	return message
+}
 
 /**
  * immutable builder for action configurations
@@ -127,39 +124,39 @@ const reportCycle = (cycle: string[]): string => {
  * ```
  */
 export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<any>> {
-	private readonly actionName: Action;
-	private readonly action: ReturnType<typeof getActionByName>;
-	private readonly defaults: Record<string, any>;
-	private readonly config: Record<string, any>;
-	private readonly overrides: Record<string, any>;
-	private readonly state: BuilderState;
-	private readonly result: ActionConfigResult | null;
+	private readonly actionName: Action
+	private readonly action: ReturnType<typeof getActionByName>
+	private readonly defaults: Record<string, any>
+	private readonly config: Record<string, any>
+	private readonly overrides: Record<string, any>
+	private readonly state: BuilderState
+	private readonly result: ActionConfigResult | null
 
 	constructor(
 		actionName: Action,
 		options: {
-			action?: ReturnType<typeof getActionByName> | null;
-			defaults?: Record<string, any>;
-			config?: Record<string, any>;
-			overrides?: Record<string, any>;
-			state?: BuilderState;
-			result?: ActionConfigResult | null;
+			action?: ReturnType<typeof getActionByName> | null
+			defaults?: Record<string, any>
+			config?: Record<string, any>
+			overrides?: Record<string, any>
+			state?: BuilderState
+			result?: ActionConfigResult | null
 		} = {}
 	) {
-		this.actionName = actionName;
-		this.defaults = options.defaults ?? {};
-		this.config = options.config ?? {};
-		this.overrides = options.overrides ?? {};
-		this.state = options.state ?? "initial";
-		this.result = options.result ?? null;
+		this.actionName = actionName
+		this.defaults = options.defaults ?? {}
+		this.config = options.config ?? {}
+		this.overrides = options.overrides ?? {}
+		this.state = options.state ?? "initial"
+		this.result = options.result ?? null
 
 		if (options.action != null) {
-			this.action = options.action;
-			return;
+			this.action = options.action
+			return
 		}
 
 		// will throw if action not found
-		this.action = getActionByName(actionName);
+		this.action = getActionByName(actionName)
 	}
 
 	/**
@@ -170,11 +167,11 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		if (Array.isArray(defaults)) {
 			defaults = defaults.reduce(
 				(acc, key) => {
-					acc[key] = true;
-					return acc;
+					acc[key] = true
+					return acc
 				},
 				{} as Record<string, true>
-			);
+			)
 		}
 		return new ActionConfigBuilder(this.actionName, {
 			action: this.action,
@@ -183,7 +180,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			overrides: this.overrides,
 			state: this.state,
 			result: this.result,
-		});
+		})
 	}
 
 	/**
@@ -198,7 +195,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			overrides: this.overrides,
 			state: this.state,
 			result: this.result,
-		});
+		})
 	}
 
 	/**
@@ -213,7 +210,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			overrides,
 			state: this.state,
 			result: this.result,
-		});
+		})
 	}
 
 	/**
@@ -226,18 +223,18 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 */
 	validate(): ActionConfigBuilder<TConfig> {
 		if (this.result && !this.result.success) {
-			return this;
+			return this
 		}
 
 		if (this.state === "validated" && this.result) {
-			return this;
+			return this
 		}
 
 		if (this.state === "interpolated") {
-			return this.validateInterpolated();
+			return this.validateInterpolated()
 		}
 
-		return this.validateRaw();
+		return this.validateRaw()
 	}
 
 	/**
@@ -246,10 +243,10 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 */
 	validateWithDefaults(): ActionConfigBuilder<TConfig> {
 		if (this.result && !this.result.success) {
-			return this;
+			return this
 		}
 
-		const schema = this.getSchema();
+		const schema = this.getSchema()
 		if (!schema) {
 			return new ActionConfigBuilder(this.actionName, {
 				action: this.action,
@@ -264,21 +261,21 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						message: `Action ${this.actionName} not found`,
 					},
 				},
-			});
+			})
 		}
 
 		const schemaWithPartialDefaults = schema.partial(
 			Object.keys(this.defaults ?? {}).reduce(
 				(acc, key) => {
-					acc[key] = true;
-					return acc;
+					acc[key] = true
+					return acc
 				},
 				{} as Record<string, true>
 			)
-		);
+		)
 
-		const mergedConfig = this.getMergedConfig();
-		const parseResult = schemaWithPartialDefaults.safeParse(mergedConfig);
+		const mergedConfig = this.getMergedConfig()
+		const parseResult = schemaWithPartialDefaults.safeParse(mergedConfig)
 
 		if (!parseResult.success) {
 			return new ActionConfigBuilder(this.actionName, {
@@ -295,7 +292,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						zodError: parseResult.error,
 					},
 				},
-			});
+			})
 		}
 
 		return new ActionConfigBuilder(this.actionName, {
@@ -305,7 +302,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			overrides: this.overrides,
 			state: "validated",
 			result: { success: true, config: parseResult.data },
-		});
+		})
 	}
 
 	/**
@@ -316,19 +313,19 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 */
 	async interpolate(data: unknown): Promise<ActionConfigBuilder<TConfig>> {
 		if (this.result && !this.result.success) {
-			return this;
+			return this
 		}
 
 		const configToInterpolate =
 			this.result?.success && this.state === "validated"
 				? this.result.config
-				: this.getMergedConfig();
+				: this.getMergedConfig()
 
 		// to prevent this from being bundled into the main bundle, we import it here
-		const { interpolate } = await import("@pubpub/json-interpolate");
+		const { interpolate } = await import("@pubpub/json-interpolate")
 
-		const fieldReferences = collectActionFieldReferences(configToInterpolate);
-		const cycle = detectCycles(fieldReferences);
+		const fieldReferences = collectActionFieldReferences(configToInterpolate)
+		const cycle = detectCycles(fieldReferences)
 
 		if (cycle.length > 0) {
 			return this.clone({
@@ -340,26 +337,26 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						message: reportCycle(cycle),
 					},
 				},
-			});
+			})
 		}
 
 		try {
 			// interpolate each field individually
-			const interpolatedConfig: Record<string, any> = {};
+			const interpolatedConfig: Record<string, any> = {}
 
 			for (const [key, value] of Object.entries(configToInterpolate)) {
 				if (typeof value !== "string") {
-					interpolatedConfig[key] = value;
-					continue;
+					interpolatedConfig[key] = value
+					continue
 				}
 
 				if (!needsInterpolation(value)) {
-					interpolatedConfig[key] = value;
-					continue;
+					interpolatedConfig[key] = value
+					continue
 				}
 
-				const valueJsonata = extractJsonata(value);
-				interpolatedConfig[key] = await interpolate(valueJsonata, data);
+				const valueJsonata = extractJsonata(value)
+				interpolatedConfig[key] = await interpolate(valueJsonata, data)
 			}
 
 			return new ActionConfigBuilder(this.actionName, {
@@ -369,7 +366,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 				overrides: this.overrides,
 				state: "interpolated",
 				result: { success: true, config: interpolatedConfig },
-			});
+			})
 		} catch (error) {
 			return new ActionConfigBuilder(this.actionName, {
 				action: this.action,
@@ -385,7 +382,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						cause: error,
 					},
 				},
-			});
+			})
 		}
 	}
 
@@ -394,7 +391,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * returns null if action not found
 	 */
 	getRawSchema(): z.ZodObject<any> {
-		return this.action.config.schema;
+		return this.action.config.schema
 	}
 
 	/**
@@ -402,8 +399,8 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * throws if action not found
 	 */
 	getSchema(): z.ZodObject<any> {
-		const schema = this.getRawSchema();
-		return schemaWithJsonFields(schema);
+		const schema = this.getRawSchema()
+		return schemaWithJsonFields(schema)
 	}
 
 	/**
@@ -414,7 +411,7 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			...this.defaults,
 			...this.config,
 			...this.overrides,
-		};
+		}
 	}
 
 	/**
@@ -423,11 +420,11 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 */
 	getResult(): ActionConfigResult {
 		if (this.result) {
-			return this.result;
+			return this.result
 		}
 
 		// if no result yet, return the merged config as success
-		return { success: true, config: this.getMergedConfig() };
+		return { success: true, config: this.getMergedConfig() }
 	}
 
 	/**
@@ -435,43 +432,43 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 	 * useful for when you know the config should be valid
 	 */
 	unwrap(): Record<string, any> {
-		const result = this.getResult();
+		const result = this.getResult()
 		if (!result.success) {
 			throw new Error(
 				`Cannot unwrap failed config: ${result.error.code} - ${result.error.message}`
-			);
+			)
 		}
-		return result.config;
+		return result.config
 	}
 
 	/**
 	 * get the current config if successful, return null if error
 	 */
 	unwrapOr(defaultValue: Record<string, any> | null = null): Record<string, any> | null {
-		const result = this.getResult();
-		return result.success ? result.config : defaultValue;
+		const result = this.getResult()
+		return result.success ? result.config : defaultValue
 	}
 
 	/**
 	 * check if the current state is successful
 	 */
 	isSuccess(): boolean {
-		const result = this.getResult();
-		return result.success;
+		const result = this.getResult()
+		return result.success
 	}
 
 	/**
 	 * check if the current state is an error
 	 */
 	isError(): boolean {
-		return !this.isSuccess();
+		return !this.isSuccess()
 	}
 
 	/**
 	 * get the current state
 	 */
 	getState(): BuilderState {
-		return this.state;
+		return this.state
 	}
 
 	// private helper methods
@@ -479,8 +476,8 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 		result,
 		state,
 	}: {
-		state?: BuilderState;
-		result?: ActionConfigResult | null;
+		state?: BuilderState
+		result?: ActionConfigResult | null
 	} = {}): ActionConfigBuilder<TConfig> {
 		return new ActionConfigBuilder(this.actionName, {
 			action: this.action,
@@ -489,11 +486,11 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 			overrides: this.overrides,
 			state: state ?? this.state,
 			result: result ?? this.result,
-		});
+		})
 	}
 
 	private validateRaw(): ActionConfigBuilder<TConfig> {
-		const schema = this.getSchema();
+		const schema = this.getSchema()
 		if (!schema) {
 			return this.clone({
 				result: {
@@ -503,11 +500,11 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						message: `Action ${this.actionName} not found`,
 					},
 				},
-			});
+			})
 		}
 
-		const mergedConfig = this.getMergedConfig();
-		const parseResult = schema.safeParse(mergedConfig);
+		const mergedConfig = this.getMergedConfig()
+		const parseResult = schema.safeParse(mergedConfig)
 
 		if (!parseResult.success) {
 			return this.clone({
@@ -520,13 +517,13 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						zodError: parseResult.error,
 					},
 				},
-			});
+			})
 		}
 
 		return this.clone({
 			state: "validated",
 			result: { success: true, config: parseResult.data },
-		});
+		})
 	}
 
 	private validateInterpolated(): ActionConfigBuilder<TConfig> {
@@ -540,10 +537,10 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						message: "No interpolated config available",
 					},
 				},
-			});
+			})
 		}
 
-		const schema = this.getRawSchema();
+		const schema = this.getRawSchema()
 		if (!schema) {
 			return this.clone({
 				state: "interpolated",
@@ -554,10 +551,10 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						message: `Action ${this.actionName} not found`,
 					},
 				},
-			});
+			})
 		}
 
-		const parseResult = schema.safeParse(this.result.config);
+		const parseResult = schema.safeParse(this.result.config)
 
 		if (!parseResult.success) {
 			return this.clone({
@@ -570,10 +567,10 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
 						zodError: parseResult.error,
 					},
 				},
-			});
+			})
 		}
 
-		return this.clone({ result: { success: true, config: parseResult.data } });
+		return this.clone({ result: { success: true, config: parseResult.data } })
 	}
 }
 
@@ -581,5 +578,5 @@ export class ActionConfigBuilder<TConfig extends z.ZodObject<any> = z.ZodObject<
  * convenience function to create a builder
  */
 export const createActionConfigBuilder = (actionName: Action) => {
-	return new ActionConfigBuilder(actionName);
-};
+	return new ActionConfigBuilder(actionName)
+}

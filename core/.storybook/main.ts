@@ -1,13 +1,13 @@
-import { dirname, join } from "path";
+import type { StorybookConfig } from "@storybook/nextjs-vite"
 
-import type { StorybookConfig } from "@storybook/nextjs-vite";
+import { dirname, join } from "node:path"
 
 /**
  * This function is used to resolve the absolute path of a package.
  * It is needed in projects that use Yarn PnP or are set up within a monorepo.
  */
 function getAbsolutePath(value: string): any {
-	return dirname(require.resolve(join(value, "package.json")));
+	return dirname(require.resolve(join(value, "package.json")))
 }
 const config: StorybookConfig = {
 	stories: ["../stories/**/*.mdx", "../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)"],
@@ -32,14 +32,14 @@ const config: StorybookConfig = {
 			// these options are not propogated to the client i think
 			SKIP_VALIDATION: "true",
 			PUBPUB_URL: "http://localhost:6006",
-		};
+		}
 	},
 	// this causes and error: `expected expression, got reserved word 'enum'`
 	// typescript: {
 	// 	reactDocgen: "react-docgen-typescript",
 	// },
 	viteFinal: async (config) => {
-		config.resolve = config.resolve || {};
+		config.resolve = config.resolve || {}
 
 		if (config.resolve) {
 			config.resolve.alias = [
@@ -69,9 +69,9 @@ const config: StorybookConfig = {
 					find: /.*env\/env$/,
 					replacement: new URL("./__mocks__/env.mock.ts", import.meta.url).pathname,
 				},
-			];
+			]
 		}
-		return config;
+		return config
 	},
-};
-export default config;
+}
+export default config

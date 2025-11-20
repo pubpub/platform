@@ -1,34 +1,34 @@
-import { sql } from "kysely";
-import { jsonBuildObject } from "kysely/helpers/postgres";
+import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public"
+import type { PubField } from "../types"
 
-import type { CommunitiesId, PubFieldsId, PubsId, PubTypesId } from "db/public";
+import { sql } from "kysely"
+import { jsonBuildObject } from "kysely/helpers/postgres"
 
-import type { PubField } from "../types";
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
 
 type GetPubFieldsInput =
 	| {
-			pubId?: never;
-			pubTypeId?: never;
-			communityId: CommunitiesId;
-			isRelated?: boolean;
-			slugs?: string[];
+			pubId?: never
+			pubTypeId?: never
+			communityId: CommunitiesId
+			isRelated?: boolean
+			slugs?: string[]
 	  }
 	| {
-			pubId: PubsId;
-			pubTypeId?: never;
-			communityId: CommunitiesId;
-			isRelated?: boolean;
-			slugs?: string[];
+			pubId: PubsId
+			pubTypeId?: never
+			communityId: CommunitiesId
+			isRelated?: boolean
+			slugs?: string[]
 	  }
 	| {
-			pubId?: never;
-			pubTypeId: PubTypesId;
-			communityId: CommunitiesId;
-			isRelated?: boolean;
-			slugs?: string[];
-	  };
+			pubId?: never
+			pubTypeId: PubTypesId
+			communityId: CommunitiesId
+			isRelated?: boolean
+			slugs?: string[]
+	  }
 
 /**
  * Get pub fields
@@ -40,7 +40,7 @@ type GetPubFieldsInput =
  * @param props.slugs - Adds a `where('pub_fields.slug', 'in', props.slugs)` clause
  */
 export const getPubFields = (props: GetPubFieldsInput, trx = db) =>
-	autoCache(_getPubFields(props, trx));
+	autoCache(_getPubFields(props, trx))
 
 export const _getPubFields = (props: GetPubFieldsInput, trx = db) =>
 	trx
@@ -91,4 +91,4 @@ export const _getPubFields = (props: GetPubFieldsInput, trx = db) =>
 					sql`'{}'`
 				)
 				.as("fields"),
-		]);
+		])

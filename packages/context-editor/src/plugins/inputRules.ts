@@ -1,17 +1,17 @@
-import type { MarkType, NodeType } from "prosemirror-model";
-import type { EditorState } from "prosemirror-state";
+import type { MarkType, NodeType } from "prosemirror-model"
+import type { EditorState } from "prosemirror-state"
 
 import {
 	makeBlockMathInputRule,
 	makeInlineMathInputRule,
 	REGEX_BLOCK_MATH_DOLLARS,
 	REGEX_INLINE_MATH_DOLLARS,
-} from "@benrbray/prosemirror-math";
-import { InputRule, inputRules } from "prosemirror-inputrules";
-import { Fragment, Schema } from "prosemirror-model";
+} from "@benrbray/prosemirror-math"
+import { InputRule, inputRules } from "prosemirror-inputrules"
+import { Fragment, type Schema } from "prosemirror-model"
 
-import initialDoc from "../stories/initialDoc.json";
-import { createLinkRuleHandler, emailOrUriRegexBase, markdownLinkRegex } from "../utils/links";
+import initialDoc from "../stories/initialDoc.json"
+import { createLinkRuleHandler, emailOrUriRegexBase, markdownLinkRegex } from "../utils/links"
 
 const abstract = {
 	type: "doc",
@@ -28,59 +28,59 @@ const abstract = {
 			],
 		},
 	],
-};
+}
 
-const italicsRegex = /([_*])([^]+?)\1\x20$/;
-const boldRegex = /(\*\*|__)([^]+?)\1\x20$/;
-const codeRegex = /(`)([^`]+)\1\x20/;
+const italicsRegex = /([_*])([^*]+?)\1\x20$/
+const boldRegex = /(\*\*|__)([^*]+?)\1\x20$/
+const codeRegex = /(`)([^`]+)\1\x20/
 
 const applyMarkRule = (markType: MarkType, regex: RegExp) => {
 	return new InputRule(
 		regex,
 		(state: EditorState, match: RegExpMatchArray, start: number, end: number) => {
-			const [whole, marks, content] = match;
+			const [_whole, _marks, content] = match
 			const fragment = Fragment.fromArray([
 				state.schema.text(content, [state.schema.mark(markType)]),
 				state.schema.text(" "),
-			]);
-			return state.tr.replaceWith(start, end, fragment);
+			])
+			return state.tr.replaceWith(start, end, fragment)
 		}
-	);
-};
+	)
+}
 const inlineMathRule = (nodeType: NodeType) =>
-	makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, nodeType);
+	makeInlineMathInputRule(REGEX_INLINE_MATH_DOLLARS, nodeType)
 const blockMathRule = (nodeType: NodeType) =>
-	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType);
+	makeBlockMathInputRule(REGEX_BLOCK_MATH_DOLLARS, nodeType)
 
-const EMAIL_OR_URI_REGEX_WITH_SPACE = new RegExp(`${emailOrUriRegexBase}(?<whitespace>\\s)$`);
+const EMAIL_OR_URI_REGEX_WITH_SPACE = new RegExp(`${emailOrUriRegexBase}(?<whitespace>\\s)$`)
 
 // Given a link mark type, returns an input rule that wraps emails and URLs in link marks.
 // Typing www.example.com in the editor will produce <a href="www.example.com">www.example.com</a>
 // and typing email@example.com will produce <a href="mailto:email@example.com">email@example.com</a>
 const linkRule = (markType: MarkType) =>
-	new InputRule(EMAIL_OR_URI_REGEX_WITH_SPACE, createLinkRuleHandler(markType, undefined, true));
+	new InputRule(EMAIL_OR_URI_REGEX_WITH_SPACE, createLinkRuleHandler(markType, undefined, true))
 
 // Rule to recognize markdown link syntax and return a link:
 // [text](https://www.example.com) -> <a href="https://www.example.com">text</a>
 const markdownLinkRule = (markType: MarkType) =>
 	new InputRule(markdownLinkRegex, (state, match, start, end) => {
-		const [_, text, url] = match;
+		const [_, text, url] = match
 		const fragment = Fragment.fromArray([
 			state.schema.text(text, [state.schema.mark(markType, { href: url })]),
 			state.schema.text(" "),
-		]);
-		return state.tr.replaceWith(start, end, fragment);
-	});
+		])
+		return state.tr.replaceWith(start, end, fragment)
+	})
 
 export default (schema: Schema) => {
 	const rules = [
-		new InputRule(/^AI please!$/, (state, match, start, end) => {
-			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content;
-			return state.tr.replaceWith(start - 1, end, contentToInsert);
+		new InputRule(/^AI please!$/, (state, _match, start, end) => {
+			const contentToInsert = state.schema.nodeFromJSON(initialDoc).content
+			return state.tr.replaceWith(start - 1, end, contentToInsert)
 		}),
-		new InputRule(/^Abstract please!$/, (state, match, start, end) => {
-			const contentToInsert = state.schema.nodeFromJSON(abstract).content;
-			return state.tr.replaceWith(start - 1, end, contentToInsert);
+		new InputRule(/^Abstract please!$/, (state, _match, start, end) => {
+			const contentToInsert = state.schema.nodeFromJSON(abstract).content
+			return state.tr.replaceWith(start - 1, end, contentToInsert)
 		}),
 		markdownLinkRule(schema.marks.link),
 		linkRule(schema.marks.link),
@@ -91,6 +91,6 @@ export default (schema: Schema) => {
 		applyMarkRule(schema.marks.code, codeRegex),
 		inlineMathRule(schema.nodes.math_inline),
 		blockMathRule(schema.nodes.math_display),
-	];
-	return inputRules({ rules });
-};
+	]
+	return inputRules({ rules })
+}

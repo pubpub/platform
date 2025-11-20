@@ -1,23 +1,22 @@
-import * as z from "zod";
+import * as z from "zod"
 
-import { Action } from "db/public";
-import { DependencyType } from "ui/auto-form/dependencyType";
-import { Mail } from "ui/icon";
+import { Action } from "db/public"
+import { Mail } from "ui/icon"
 
 import {
 	RenderWithPubToken,
 	renderWithPubTokens,
-} from "~/lib/server/render/pub/renderWithPubTokens";
-import { markdown, stringWithTokens } from "../_lib/zodTypes";
-import { defineAction } from "../types";
+} from "~/lib/server/render/pub/renderWithPubTokens"
+import { markdown, stringWithTokens } from "../_lib/zodTypes"
+import { defineAction } from "../types"
 
 const emptyStringToUndefined = (arg: unknown) => {
 	if (typeof arg === "string" && arg === "") {
-		return undefined;
+		return undefined
 	} else {
-		return arg;
+		return arg
 	}
-};
+}
 
 const schema = z.object({
 	senderName: z
@@ -50,7 +49,7 @@ const schema = z.object({
 		.describe(
 			"The body of the email. Markdown is supported. Tokens can be used to dynamically insert values from the pub or config."
 		),
-});
+})
 
 export const action = defineAction({
 	accepts: ["pub"],
@@ -75,4 +74,4 @@ export const action = defineAction({
 		},
 		body: renderWithPubTokens,
 	},
-});
+})

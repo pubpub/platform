@@ -1,66 +1,67 @@
-import React, { Suspense } from "react";
-import Link from "next/link";
+import type { ProcessedPub } from "contracts"
+import type { UsersId } from "db/public"
+import type { CommunityStage } from "~/lib/server/stages"
+import type { ActionInstanceWithConfigDefaults } from "~/lib/types"
 
-import type { ProcessedPub } from "contracts";
-import type { ActionConfigDefaults, ActionInstances, UsersId } from "db/public";
-import { Capabilities, MembershipType } from "db/public";
-import { Button } from "ui/button";
-import { Card, CardDescription, CardFooter, CardTitle } from "ui/card";
-import { Calendar, History, Pencil, Trash2 } from "ui/icon";
-import { cn } from "utils";
+import React, { Suspense } from "react"
+import Link from "next/link"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import type { ActionInstanceWithConfigDefaults } from "~/lib/types";
-import Move from "~/app/c/[communitySlug]/stages/components/Move";
-import { userCan, userCanEditPub } from "~/lib/authorization/capabilities";
-import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
-import { getPubTitle } from "~/lib/pubs";
-import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector";
-import { PubsRunActionDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu";
-import { SkeletonButton } from "../../skeletons/SkeletonButton";
-import { RelationsDropDown } from "../RelationsDropDown";
-import { RemovePubButton } from "../RemovePubButton";
-import { PubTypeLabel } from "./PubTypeLabel";
-import { StageMoveButton } from "./StageMoveButton";
+import { Capabilities, MembershipType } from "db/public"
+import { Button } from "ui/button"
+import { Card, CardDescription, CardFooter, CardTitle } from "ui/card"
+import { Calendar, History, Pencil, Trash2 } from "ui/icon"
+import { cn } from "utils"
+
+import Move from "~/app/c/[communitySlug]/stages/components/Move"
+import { userCan, userCanEditPub } from "~/lib/authorization/capabilities"
+import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
+import { getPubTitle } from "~/lib/pubs"
+import { PubSelector } from "../../../c/[communitySlug]/pubs/PubSelector"
+import { PubsRunActionDropDownMenu } from "../../ActionUI/PubsRunActionDropDownMenu"
+import { SkeletonButton } from "../../skeletons/SkeletonButton"
+import { RelationsDropDown } from "../RelationsDropDown"
+import { RemovePubButton } from "../RemovePubButton"
+import { PubTypeLabel } from "./PubTypeLabel"
+import { StageMoveButton } from "./StageMoveButton"
 
 // import { RemovePubButton } from "./pubs/RemovePubButton";
 
 // TODO: https://github.com/pubpub/platform/issues/1200
 const PubDescription = ({ pub }: { pub: ProcessedPub }) => {
-	return null;
-};
+	return null
+}
 
 const HOVER_CLASS =
-	"opacity-0 group-hover:opacity-100 transition-opacity duration-200 group-focus-within:opacity-100";
+	"opacity-0 group-hover:opacity-100 transition-opacity duration-200 group-focus-within:opacity-100"
 // So that the whole card can be clickable as a link
 const LINK_AFTER =
-	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0";
+	"after:content-[''] after:z-0 after:absolute after:left-0 after:top-0 after:bottom-0 after:right-0"
 
 export type PubCardProps = {
 	pub: ProcessedPub<{
-		withPubType: true;
-		withRelatedPubs: false;
-		withStage: true;
-		withRelatedCounts: true;
-	}>;
-	communitySlug: string;
-	moveFrom?: CommunityStage["moveConstraintSources"];
-	moveTo?: CommunityStage["moveConstraints"];
-	actionInstances?: ActionInstanceWithConfigDefaults[];
-	withSelection?: boolean;
-	userId: UsersId;
+		withPubType: true
+		withRelatedPubs: false
+		withStage: true
+		withRelatedCounts: true
+	}>
+	communitySlug: string
+	moveFrom?: CommunityStage["moveConstraintSources"]
+	moveTo?: CommunityStage["moveConstraints"]
+	actionInstances?: ActionInstanceWithConfigDefaults[]
+	withSelection?: boolean
+	userId: UsersId
 	/* if true, overrides the view stage capability check */
-	canViewAllStages?: boolean;
+	canViewAllStages?: boolean
 	/* if true, overrides the edit pub capability check */
-	canEditAllPubs?: boolean;
+	canEditAllPubs?: boolean
 	/* if true, overrides the archive pub capability check */
-	canArchiveAllPubs?: boolean;
+	canArchiveAllPubs?: boolean
 	/* if true, overrides the run actions capability check */
-	canRunActionsAllPubs?: boolean;
+	canRunActionsAllPubs?: boolean
 	/* if true, overrides the move pub capability check. dramatically reduces the number of queries for admins and editors and the like */
-	canMoveAllPubs?: boolean;
-	canFilter?: boolean;
-};
+	canMoveAllPubs?: boolean
+	canFilter?: boolean
+}
 
 export const PubCard = async ({
 	pub,
@@ -77,11 +78,11 @@ export const PubCard = async ({
 	canViewAllStages,
 	canFilter,
 }: PubCardProps) => {
-	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
+	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
 
-	const showMatchingValues = matchingValues && matchingValues.length !== 0;
-	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues;
-	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
+	const showMatchingValues = matchingValues && matchingValues.length !== 0
+	const showDescription = "description" in pub && pub.description !== null && !showMatchingValues
+	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0
 	return (
 		<Card
 			// className="group relative flex items-center justify-between gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 has-[[data-state=checked]]:border-blue-500"
@@ -238,8 +239,8 @@ export const PubCard = async ({
 				</div>
 			</div>
 		</Card>
-	);
-};
+	)
+}
 
 const PubCardActions = async ({
 	actionInstances,
@@ -250,21 +251,21 @@ const PubCardActions = async ({
 	canArchiveAllPubs,
 	canRunActionsAllPubs,
 }: {
-	actionInstances?: ActionInstanceWithConfigDefaults[];
+	actionInstances?: ActionInstanceWithConfigDefaults[]
 	pub: ProcessedPub<{
-		withPubType: true;
-		withRelatedPubs: false;
-		withStage: true;
-		withRelatedCounts: true;
-	}>;
-	communitySlug: string;
-	userId: UsersId;
-	canEditAllPubs?: boolean;
-	canArchiveAllPubs?: boolean;
-	canRunActionsAllPubs?: boolean;
+		withPubType: true
+		withRelatedPubs: false
+		withStage: true
+		withRelatedCounts: true
+	}>
+	communitySlug: string
+	userId: UsersId
+	canEditAllPubs?: boolean
+	canArchiveAllPubs?: boolean
+	canRunActionsAllPubs?: boolean
 }) => {
-	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0;
-	const pubTitle = getPubTitle(pub);
+	const hasActions = pub.stage && actionInstances && actionInstances.length !== 0
+	const pubTitle = getPubTitle(pub)
 	const [canArchive, canRunActions, canEdit] = await Promise.all([
 		canArchiveAllPubs ||
 			userCan(
@@ -289,7 +290,7 @@ const PubCardActions = async ({
 				userId,
 				pubId: pub.id,
 			}),
-	]);
+	])
 
 	return (
 		<>
@@ -349,5 +350,5 @@ const PubCardActions = async ({
 				></span>
 			)}
 		</>
-	);
-};
+	)
+}

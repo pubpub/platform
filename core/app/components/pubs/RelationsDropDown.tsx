@@ -1,34 +1,35 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { skipToken } from "@tanstack/react-query";
+import type { ProcessedPub } from "contracts"
+import type { PubsId } from "db/public"
 
-import type { ProcessedPub } from "contracts";
-import type { PubsId } from "db/public";
-import { Badge } from "ui/badge";
-import { Button } from "ui/button";
+import { useState } from "react"
+import Link from "next/link"
+import { skipToken } from "@tanstack/react-query"
+
+import { Badge } from "ui/badge"
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { ChevronDown } from "ui/icon";
-import { Skeleton } from "ui/skeleton";
+} from "ui/dropdown-menu"
+import { ChevronDown } from "ui/icon"
+import { Skeleton } from "ui/skeleton"
 
-import { useCommunity } from "~/app/components/providers/CommunityProvider";
-import { client } from "~/lib/api";
-import { getPubTitle } from "~/lib/pubs";
+import { useCommunity } from "~/app/components/providers/CommunityProvider"
+import { client } from "~/lib/api"
+import { getPubTitle } from "~/lib/pubs"
 
 type Props = {
-	pubId: PubsId;
-	numRelations: number;
-};
+	pubId: PubsId
+	numRelations: number
+}
 
 export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
-	const community = useCommunity();
-	const [isOpen, setIsOpen] = useState(false);
+	const community = useCommunity()
+	const [isOpen, setIsOpen] = useState(false)
 
 	const { data, isLoading } = client.pubs.get.useQuery({
 		queryKey: ["getPub", pubId],
@@ -38,14 +39,14 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 					params: { communitySlug: community.slug, pubId },
 				}
 			: skipToken,
-	});
+	})
 
 	const relatedPubs = (data?.body.values
 		?.filter((v) => v.relatedPub)
 		.flatMap((v) => (v.relatedPub ? [v.relatedPub] : [])) ?? []) as ProcessedPub<{
-		withRelatedPubs: true;
-		withPubType: true;
-	}>[];
+		withRelatedPubs: true
+		withPubType: true
+	}>[]
 
 	return (
 		<DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -91,7 +92,7 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 										{/* TODO: pub description */}
 									</div>
 								</DropdownMenuItem>
-							);
+							)
 						})}
 						{relatedPubs.length !== numRelations && (
 							<DropdownMenuItem>
@@ -111,5 +112,5 @@ export const RelationsDropDown = ({ pubId, numRelations }: Props) => {
 				)}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}

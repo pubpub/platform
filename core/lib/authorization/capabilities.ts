@@ -1,5 +1,3 @@
-import { cache } from "react";
-
 import type {
 	CommunitiesId,
 	Forms,
@@ -9,45 +7,47 @@ import type {
 	PubTypesId,
 	StagesId,
 	UsersId,
-} from "db/public";
-import type { XOR } from "utils/types";
-import { Capabilities, MemberRole, MembershipType } from "db/public";
-import { logger } from "logger";
-
+} from "db/public"
+import type { XOR } from "utils/types"
 import type {
 	CommunityTargetCapabilities,
 	PubTargetCapabilities,
 	StageTargetCapabilities,
-} from "./capabalities.definition";
-import { db } from "~/kysely/database";
-import { getLoginData } from "../authentication/loginData";
-import { autoCache } from "../server/cache/autoCache";
-import { findCommunityBySlug } from "../server/community";
-import { getForm } from "../server/form";
-import { getStagesViewableByUser } from "../server/stages";
+} from "./capabalities.definition"
+
+import { cache } from "react"
+
+import { Capabilities, MemberRole, MembershipType } from "db/public"
+import { logger } from "logger"
+
+import { db } from "~/kysely/database"
+import { getLoginData } from "../authentication/loginData"
+import { autoCache } from "../server/cache/autoCache"
+import { findCommunityBySlug } from "../server/community"
+import { getStagesViewableByUser } from "../server/stages"
 
 type CapabilitiesArg = {
-	[MembershipType.pub]: PubTargetCapabilities;
-	[MembershipType.stage]: StageTargetCapabilities;
-	[MembershipType.community]: CommunityTargetCapabilities;
-};
+	[MembershipType.pub]: PubTargetCapabilities
+	[MembershipType.stage]: StageTargetCapabilities
+	[MembershipType.community]: CommunityTargetCapabilities
+}
 
-export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget;
+export type CapabilityTarget = PubTarget | StageTarget | CommunityTarget
 
 type PubTarget = {
-	type: MembershipType.pub;
-	pubId: PubsId;
-};
+	type: MembershipType.pub
+	pubId: PubsId
+}
 
 type StageTarget = {
-	type: MembershipType.stage;
-	stageId: StagesId;
-};
+	type: MembershipType.stage
+	stageId: StagesId
+}
 
 type CommunityTarget = {
-	type: MembershipType.community;
-	communityId: CommunitiesId;
-};
+	type: MembershipType.community
+	communityId: CommunitiesId
+}
 
 const pubMemberships = ({ userId, pubId }: { userId: UsersId; pubId: PubsId }) =>
 	db
@@ -89,14 +89,14 @@ const pubMemberships = ({ userId, pubId }: { userId: UsersId; pubId: PubsId }) =
 				.where("community_memberships.userId", "=", userId)
 				.whereRef("communityId", "=", db.selectFrom("community").select("communityId"))
 				.select(["role", "formId"])
-		);
+		)
 
 const communityMemberships = ({
 	userId,
 	communityId,
 }: {
-	userId: UsersId;
-	communityId: CommunitiesId;
+	userId: UsersId
+	communityId: CommunitiesId
 }) =>
 	db.with("community_ms", (db) =>
 		db
@@ -104,16 +104,16 @@ const communityMemberships = ({
 			.where("community_memberships.userId", "=", userId)
 			.where("community_memberships.communityId", "=", communityId)
 			.select(["role", "formId"])
-	);
+	)
 
 export const userCan = async <T extends CapabilityTarget>(
 	capability: CapabilitiesArg[T["type"]],
 	target: T,
 	userId: UsersId
 ) => {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (user?.isSuperAdmin) {
-		return true;
+		return true
 	}
 	if (target.type === MembershipType.pub) {
 		const capabilitiesQuery = pubMemberships({ userId, pubId: target.pubId })
@@ -148,9 +148,9 @@ export const userCan = async <T extends CapabilityTarget>(
 			)
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
-			.select("capability");
+			.select("capability")
 
-		return Boolean((await capabilitiesQuery.execute()).length);
+		return Boolean((await capabilitiesQuery.execute()).length)
 	} else if (target.type === MembershipType.stage) {
 		const capabilitiesQuery = db
 			.with("community", (db) =>
@@ -196,9 +196,9 @@ export const userCan = async <T extends CapabilityTarget>(
 			)
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
-			.select("capability");
+			.select("capability")
 
-		return Boolean((await capabilitiesQuery.execute()).length);
+		return Boolean((await capabilitiesQuery.execute()).length)
 	} else if (target.type === MembershipType.community) {
 		const capabilitiesQuery = communityMemberships({ userId, communityId: target.communityId })
 			.selectFrom("membership_capabilities")
@@ -214,12 +214,12 @@ export const userCan = async <T extends CapabilityTarget>(
 			)
 			.where("membership_capabilities.capability", "=", capability)
 			.limit(1)
-			.select("capability");
+			.select("capability")
 
-		return Boolean((await capabilitiesQuery.execute()).length);
+		return Boolean((await capabilitiesQuery.execute()).length)
 	}
-	return false;
-};
+	return false
+}
 
 export const userCanEditPub = async ({
 	userId,
@@ -227,28 +227,28 @@ export const userCanEditPub = async ({
 	formId,
 	formSlug,
 }: {
-	userId: UsersId;
-	pubId: PubsId;
-	formId?: FormsId;
-	formSlug?: string;
+	userId: UsersId
+	pubId: PubsId
+	formId?: FormsId
+	formSlug?: string
 }) => {
-	const forms = await getAuthorizedUpdateForms(userId, pubId).execute();
+	const forms = await getAuthorizedUpdateForms(userId, pubId).execute()
 	logger.debug({
 		msg: "Authorized update forms for user",
 		userId,
 		pubId,
 		formId,
 		formSlug,
-	});
+	})
 	if (formId) {
-		return Boolean(forms.find((form) => form.id === formId));
+		return Boolean(forms.find((form) => form.id === formId))
 	}
 	if (formSlug) {
-		return Boolean(forms.find((form) => form.slug === formSlug));
+		return Boolean(forms.find((form) => form.slug === formSlug))
 	}
 
-	return forms.length !== 0;
-};
+	return forms.length !== 0
+}
 
 export const userCanCreatePub = async ({
 	userId,
@@ -257,13 +257,13 @@ export const userCanCreatePub = async ({
 	formId,
 	formSlug,
 }: {
-	userId: UsersId;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
-	formId?: FormsId;
-	formSlug?: string;
+	userId: UsersId
+	communityId: CommunitiesId
+	pubTypeId: PubTypesId
+	formId?: FormsId
+	formSlug?: string
 }) => {
-	const forms = await getAuthorizedCreateForms({ userId, communityId, pubTypeId }).execute();
+	const forms = await getAuthorizedCreateForms({ userId, communityId, pubTypeId }).execute()
 	logger.debug({
 		msg: "Authorized create forms for user",
 		userId,
@@ -272,28 +272,28 @@ export const userCanCreatePub = async ({
 		formId,
 		formSlug,
 		forms,
-	});
+	})
 	if (formId) {
-		return Boolean(forms.find((form) => form.id === formId));
+		return Boolean(forms.find((form) => form.id === formId))
 	}
 	if (formSlug) {
-		return Boolean(forms.find((form) => form.slug === formSlug));
+		return Boolean(forms.find((form) => form.slug === formSlug))
 	}
 
-	return forms.length !== 0;
-};
+	return forms.length !== 0
+}
 
 export const userCanCreateAnyPub = cache(async (userId: UsersId, communityId: CommunitiesId) => {
-	const pubTypes = await getCreatablePubTypes(userId, communityId);
-	return pubTypes.length !== 0;
-});
+	const pubTypes = await getCreatablePubTypes(userId, communityId)
+	return pubTypes.length !== 0
+})
 
 const authorizedCreateFormsBase = ({
 	userId,
 	communityId,
 }: {
-	userId: UsersId;
-	communityId: CommunitiesId;
+	userId: UsersId
+	communityId: CommunitiesId
 }) =>
 	communityMemberships({ userId, communityId })
 		.with("capabilities", (db) =>
@@ -344,20 +344,20 @@ const authorizedCreateFormsBase = ({
 		)
 		.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
 		.orderBy("forms.isDefault desc")
-		.orderBy("forms.updatedAt desc");
+		.orderBy("forms.updatedAt desc")
 
 export const getAuthorizedCreateForms = ({
 	userId,
 	communityId,
 	pubTypeId,
 }: {
-	userId: UsersId;
-	communityId: CommunitiesId;
-	pubTypeId: PubTypesId;
+	userId: UsersId
+	communityId: CommunitiesId
+	pubTypeId: PubTypesId
 }) =>
 	autoCache(
 		authorizedCreateFormsBase({ userId, communityId }).where("forms.pubTypeId", "=", pubTypeId)
-	);
+	)
 
 export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 	autoCache(
@@ -448,7 +448,7 @@ export const getAuthorizedUpdateForms = (userId: UsersId, pubId: PubsId) =>
 			.select(["forms.name", "forms.isDefault", "forms.id", "forms.slug"])
 			.orderBy("forms.isDefault desc")
 			.orderBy("forms.updatedAt desc")
-	);
+	)
 
 export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 	autoCache(
@@ -485,9 +485,9 @@ export const getAuthorizedViewForms = (userId: UsersId, pubId: PubsId) =>
 				])
 			)
 			.whereRef("forms.pubTypeId", "=", (eb) => eb.selectFrom("pubtype").select("id"))
-	);
+	)
 
-export type PubTypeWithForm = (Pick<PubTypes, "id" | "name"> & Pick<Forms, "slug" | "isDefault">)[];
+export type PubTypeWithForm = (Pick<PubTypes, "id" | "name"> & Pick<Forms, "slug" | "isDefault">)[]
 
 export const getCreatablePubTypes = cache(async (userId: UsersId, communityId: CommunitiesId) => {
 	return autoCache(
@@ -498,23 +498,23 @@ export const getCreatablePubTypes = cache(async (userId: UsersId, communityId: C
 			.select(["pub_types.id", "pub_types.name", "forms.slug", "forms.isDefault"])
 			.distinctOn(["pub_types.id"])
 			.orderBy(["pub_types.id", "forms.isDefault desc"])
-	).execute();
-});
+	).execute()
+})
 
 export const userIsCommunityRole = async (role: MemberRole[], communitySlug?: string) => {
 	const [{ user }, community] = await Promise.all([
 		getLoginData(),
 		!communitySlug ? findCommunityBySlug() : findCommunityBySlug(communitySlug),
-	]);
+	])
 	if (!user || !community) {
-		return false;
+		return false
 	}
 	if (user.isSuperAdmin) {
-		return true;
+		return true
 	}
 
-	return user.memberships.some((membership) => role.includes(membership.role));
-};
+	return user.memberships.some((membership) => role.includes(membership.role))
+}
 
 export const userHasAccessToForm = async (
 	props: { userId: UsersId; pubId?: PubsId; communityId: CommunitiesId } & XOR<
@@ -528,7 +528,7 @@ export const userHasAccessToForm = async (
 			pubId: props.pubId,
 			formId: props.formId,
 			formSlug: props.formSlug,
-		});
+		})
 	}
 
 	const x = await authorizedCreateFormsBase({
@@ -537,40 +537,40 @@ export const userHasAccessToForm = async (
 	})
 		.$if(!!props.formId, (eb) => eb.where("forms.id", "=", props.formId!))
 		.$if(!!props.formSlug, (eb) => eb.where("forms.slug", "=", props.formSlug!))
-		.executeTakeFirst();
+		.executeTakeFirst()
 
-	return !!x;
-};
+	return !!x
+}
 
 const userIsCommunityAdminOrEditor = cache(
 	async (communitySlug: string | undefined = undefined) => {
-		return userIsCommunityRole([MemberRole.admin, MemberRole.editor], communitySlug);
+		return userIsCommunityRole([MemberRole.admin, MemberRole.editor], communitySlug)
 	}
-);
+)
 
 export const userCanEditAllPubs = cache(async (communitySlug: string | undefined = undefined) => {
-	return userIsCommunityAdminOrEditor(communitySlug);
-});
+	return userIsCommunityAdminOrEditor(communitySlug)
+})
 
 export const userCanArchiveAllPubs = cache(
 	async (communitySlug: string | undefined = undefined) => {
-		return userIsCommunityAdminOrEditor(communitySlug);
+		return userIsCommunityAdminOrEditor(communitySlug)
 	}
-);
+)
 
 export const userCanMoveAllPubs = cache(async (communitySlug: string | undefined = undefined) => {
-	return userIsCommunityAdminOrEditor(communitySlug);
-});
+	return userIsCommunityAdminOrEditor(communitySlug)
+})
 
 export const userCanRunActionsAllPubs = cache(
 	async (communitySlug: string | undefined = undefined) => {
-		return userIsCommunityAdminOrEditor(communitySlug);
+		return userIsCommunityAdminOrEditor(communitySlug)
 	}
-);
+)
 
 export const userCanViewAllStages = cache(async (communitySlug: string | undefined = undefined) => {
-	return userIsCommunityAdminOrEditor(communitySlug);
-});
+	return userIsCommunityAdminOrEditor(communitySlug)
+})
 
 export const userCanViewStagePage = cache(
 	async (
@@ -581,8 +581,8 @@ export const userCanViewStagePage = cache(
 		const userCanViewAnyStage = await Promise.all([
 			getStagesViewableByUser(userId, communityId, communitySlug),
 			userIsCommunityAdminOrEditor(communitySlug),
-		]);
+		])
 
-		return userCanViewAnyStage.some((x) => !!x);
+		return userCanViewAnyStage.some((x) => !!x)
 	}
-);
+)

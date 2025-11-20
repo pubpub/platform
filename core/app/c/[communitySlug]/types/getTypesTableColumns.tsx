@@ -1,13 +1,13 @@
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table"
+import type { GetPubTypesResult } from "~/lib/server/pubtype"
 
-import { Hash } from "lucide-react";
+import { Hash } from "lucide-react"
 
-import { Checkbox } from "ui/checkbox";
-import { DataTableColumnHeader } from "ui/data-table";
-import { History } from "ui/icon";
+import { Checkbox } from "ui/checkbox"
+import { DataTableColumnHeader } from "ui/data-table"
+import { History } from "ui/icon"
 
-import type { GetPubTypesResult } from "~/lib/server/pubtype";
-import { formatDateAsPossiblyDistance } from "~/lib/dates";
+import { formatDateAsPossiblyDistance } from "~/lib/dates"
 
 export const getTypesTableColumns = () =>
 	[
@@ -38,7 +38,7 @@ export const getTypesTableColumns = () =>
 			header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
 			accessorKey: "name",
 			cell: ({ row }) => {
-				const { name, description } = row.original;
+				const { name, description } = row.original
 				return (
 					<div className="flex flex-col gap-1">
 						<span className="font-medium">{name}</span>
@@ -46,7 +46,7 @@ export const getTypesTableColumns = () =>
 							<span className="text-sm text-muted-foreground">{description}</span>
 						)}
 					</div>
-				);
+				)
 			},
 		},
 		{
@@ -60,7 +60,7 @@ export const getTypesTableColumns = () =>
 			),
 			accessorFn: (row) => row.fields.length,
 			cell: ({ row }) => {
-				return <div className="pr-10">{row.original.fields.length}</div>;
+				return <div className="pr-10">{row.original.fields.length}</div>
 			},
 		},
 		{
@@ -78,7 +78,7 @@ export const getTypesTableColumns = () =>
 					<div className="pr-10">
 						{formatDateAsPossiblyDistance(new Date(row.original.updatedAt))}
 					</div>
-				);
+				)
 			},
 		},
-	] as const satisfies ColumnDef<GetPubTypesResult[number], unknown>[];
+	] as const satisfies ColumnDef<GetPubTypesResult[number], unknown>[]

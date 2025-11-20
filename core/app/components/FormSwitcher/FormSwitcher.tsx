@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { parseAsString, useQueryState } from "nuqs";
+import type { SimpleForm } from "~/lib/server/form"
+
+import { parseAsString, useQueryState } from "nuqs"
 
 import {
 	Select,
@@ -11,12 +11,10 @@ import {
 	SelectItem,
 	SelectLabel,
 	SelectTrigger,
-} from "ui/select";
-import { cn } from "utils";
+} from "ui/select"
+import { cn } from "utils"
 
-import type { SimpleForm } from "~/lib/server/form";
-
-export const formSwitcherUrlParam = "form";
+export const formSwitcherUrlParam = "form"
 
 export const FormSwitcher = ({
 	forms,
@@ -25,30 +23,30 @@ export const FormSwitcher = ({
 	className,
 	children,
 }: {
-	forms: SimpleForm[];
-	defaultFormSlug?: string;
-	htmlId?: string;
-	className?: string;
-	children?: React.ReactNode;
+	forms: SimpleForm[]
+	defaultFormSlug?: string
+	htmlId?: string
+	className?: string
+	children?: React.ReactNode
 }) => {
 	const [selectedFormSlug, setSelectedFormSlug] = useQueryState(
 		formSwitcherUrlParam,
 		parseAsString.withDefault(defaultFormSlug ?? "").withOptions({
 			shallow: false,
 		})
-	);
+	)
 
 	if (!forms.length) {
-		return null;
+		return null
 	}
 
-	const currentForm = forms.find((form) => form.slug === selectedFormSlug);
+	const currentForm = forms.find((form) => form.slug === selectedFormSlug)
 
 	return (
 		<div className="flex items-center gap-2">
 			<Select
 				onValueChange={(slug: string) => {
-					setSelectedFormSlug(slug);
+					setSelectedFormSlug(slug)
 				}}
 				defaultValue={selectedFormSlug || defaultFormSlug}
 			>
@@ -76,5 +74,5 @@ export const FormSwitcher = ({
 				</SelectContent>
 			</Select>
 		</div>
-	);
-};
+	)
+}

@@ -1,49 +1,50 @@
-import { Suspense } from "react";
-import Link from "next/link";
-import { Eye } from "lucide-react";
+import type { ProcessedPub } from "contracts"
+import type { CommunitiesId, UsersId } from "db/public"
+import type { CommunityStage } from "~/lib/server/stages"
+import type { MemberWithUser } from "~/lib/types"
 
-import type { ProcessedPub } from "contracts";
-import type { CommunitiesId, UsersId } from "db/public";
-import { Pencil } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
-import { stagesDAO, StagesProvider } from "ui/stages";
+import { Suspense } from "react"
+import Link from "next/link"
+import { Eye } from "lucide-react"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import type { MemberWithUser } from "~/lib/types";
-import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu";
-import { BasicPagination } from "~/app/components/Pagination";
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
+import { Pencil } from "ui/icon"
+import { PubFieldProvider } from "ui/pubFields"
+import { StagesProvider, stagesDAO } from "ui/stages"
+
+import { EllipsisMenu, EllipsisMenuButton } from "~/app/components/EllipsisMenu"
+import { BasicPagination } from "~/app/components/Pagination"
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
 import {
 	userCanArchiveAllPubs,
 	userCanEditAllPubs,
 	userCanMoveAllPubs,
 	userCanRunActionsAllPubs,
 	userCanViewAllStages,
-} from "~/lib/authorization/capabilities";
-import { getStageActions } from "~/lib/db/queries";
-import { getPubsWithRelatedValues } from "~/lib/server";
-import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug";
-import { selectAllCommunityMemberships } from "~/lib/server/member";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getStages } from "~/lib/server/stages";
-import { getOrderedStages } from "~/lib/stages";
-import { PubListSkeleton } from "../../pubs/PubList";
+} from "~/lib/authorization/capabilities"
+import { getStageActions } from "~/lib/db/queries"
+import { getPubsWithRelatedValues } from "~/lib/server"
+import { getCommunitySlug } from "~/lib/server/cache/getCommunitySlug"
+import { selectAllCommunityMemberships } from "~/lib/server/member"
+import { getPubFields } from "~/lib/server/pubFields"
+import { getStages } from "~/lib/server/stages"
+import { getOrderedStages } from "~/lib/stages"
+import { PubListSkeleton } from "../../pubs/PubList"
 
 type Props = {
-	userId: UsersId;
-	communityId: CommunitiesId;
-	searchParams: Record<string, unknown>;
-};
+	userId: UsersId
+	communityId: CommunitiesId
+	searchParams: Record<string, unknown>
+}
 
 export async function StageList(props: Props) {
-	const { communityId, userId } = props;
+	const { communityId, userId } = props
 	const [communityStages, communityMembers, pubFields] = await Promise.all([
 		getStages({ communityId, userId }).execute(),
 		selectAllCommunityMemberships({ communityId }).execute(),
 		getPubFields({ communityId }).executeTakeFirstOrThrow(),
-	]);
+	])
 
-	const stages = getOrderedStages(communityStages);
+	const stages = getOrderedStages(communityStages)
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -61,7 +62,7 @@ export async function StageList(props: Props) {
 				</StagesProvider>
 			</PubFieldProvider>
 		</div>
-	);
+	)
 }
 
 async function StageCard({
@@ -70,12 +71,12 @@ async function StageCard({
 	members,
 	userId,
 }: {
-	stage: CommunityStage;
-	members?: MemberWithUser[];
-	searchParams: Record<string, unknown>;
-	userId: UsersId;
+	stage: CommunityStage
+	members?: MemberWithUser[]
+	searchParams: Record<string, unknown>
+	userId: UsersId
 }) {
-	const communitySlug = await getCommunitySlug();
+	const communitySlug = await getCommunitySlug()
 
 	return (
 		<div key={stage.id} className="relative rounded-l-md border-l-2 border-gray-400 py-2 pl-4">
@@ -132,7 +133,7 @@ async function StageCard({
 				)}
 			</div>
 		</div>
-	);
+	)
 }
 
 export async function StagePubs({
@@ -143,13 +144,13 @@ export async function StagePubs({
 	pagination,
 	userId,
 }: {
-	stage: CommunityStage;
-	searchParams: Record<string, unknown>;
-	members?: MemberWithUser[];
-	totalPubLimit?: number;
-	pagination?: { page: number; pubsPerPage: number };
-	basePath: string;
-	userId: UsersId;
+	stage: CommunityStage
+	searchParams: Record<string, unknown>
+	members?: MemberWithUser[]
+	totalPubLimit?: number
+	pagination?: { page: number; pubsPerPage: number }
+	basePath: string
+	userId: UsersId
 }) {
 	const [
 		communitySlug,
@@ -182,16 +183,16 @@ export async function StagePubs({
 		userCanRunActionsAllPubs(),
 		userCanMoveAllPubs(),
 		userCanViewAllStages(),
-	]);
+	])
 
 	const totalPages =
-		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0;
+		stage.pubsCount && pagination ? Math.ceil(stage.pubsCount / pagination.pubsPerPage) : 0
 
 	return (
 		<div className="flex flex-col gap-3">
 			{stagePubs.map((pub, index) => {
 				if (totalPubLimit && index > totalPubLimit - 1) {
-					return null;
+					return null
 				}
 				// this way we don't pass unecessary data to the client
 				return (
@@ -199,9 +200,9 @@ export async function StagePubs({
 						key={pub.id}
 						pub={
 							pub as ProcessedPub<{
-								withStage: true;
-								withPubType: true;
-								withRelatedPubs: false;
+								withStage: true
+								withPubType: true
+								withRelatedPubs: false
 							}>
 						}
 						moveFrom={stage.moveConstraintSources}
@@ -217,7 +218,7 @@ export async function StagePubs({
 						canViewAllStages={canViewAllStages}
 						canFilter={false}
 					/>
-				);
+				)
 			})}
 			{pagination && (
 				<BasicPagination
@@ -247,5 +248,5 @@ export async function StagePubs({
 					</div>
 				)}
 		</div>
-	);
+	)
 }

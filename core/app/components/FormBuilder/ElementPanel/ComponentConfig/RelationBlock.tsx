@@ -1,13 +1,13 @@
-import type { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { MultiSelect } from "ui/multi-select";
-import { usePubTypeContext } from "ui/pubTypes";
+import type { InputComponent } from "db/public"
+import type { ComponentConfigFormProps } from "./types"
 
-import type { ComponentConfigFormProps } from "./types";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { MultiSelect } from "ui/multi-select"
+import { usePubTypeContext } from "ui/pubTypes"
 
 export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>) => {
-	const pubTypes = usePubTypeContext();
+	const pubTypes = usePubTypeContext()
 
 	return (
 		<>
@@ -81,5 +81,5 @@ export default ({ form }: ComponentConfigFormProps<InputComponent.relationBlock>
 				)}
 			/>
 		</>
-	);
-};
+	)
+}

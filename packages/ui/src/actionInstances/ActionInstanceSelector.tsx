@@ -1,15 +1,14 @@
-import React from "react";
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
 
-import { FormField, FormItem, FormLabel, FormMessage } from "../form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select";
-import { useActionInstanceContext } from "./ActionInstancesContext";
+import { FormField, FormItem, FormLabel, FormMessage } from "../form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../select"
+import { useActionInstanceContext } from "./ActionInstancesContext"
 
-type Props = {};
+type Props = {}
 
-export const ActionInstanceSelector = (props: Props) => {
-	const form = useFormContext();
-	const { actions, actionInstances } = useActionInstanceContext();
+export const ActionInstanceSelector = (_props: Props) => {
+	const form = useFormContext()
+	const { actions, actionInstances } = useActionInstanceContext()
 
 	return (
 		<FormField
@@ -24,7 +23,7 @@ export const ActionInstanceSelector = (props: Props) => {
 						</SelectTrigger>
 						<SelectContent>
 							{actionInstances.map((instance) => {
-								const action = actions[instance.action];
+								const action = actions[instance.action]
 
 								return (
 									<SelectItem
@@ -37,7 +36,7 @@ export const ActionInstanceSelector = (props: Props) => {
 											<span>{instance.name}</span>
 										</div>
 									</SelectItem>
-								);
+								)
 							})}
 						</SelectContent>
 					</Select>
@@ -45,5 +44,5 @@ export const ActionInstanceSelector = (props: Props) => {
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}

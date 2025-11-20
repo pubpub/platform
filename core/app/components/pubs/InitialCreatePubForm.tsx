@@ -1,18 +1,20 @@
-"use client";
+"use client"
 
-import type { Static } from "@sinclair/typebox";
-import type { UseFormReturn } from "react-hook-form";
+import type { Static } from "@sinclair/typebox"
+import type { PubsId, StagesId } from "db/public"
+import type { UseFormReturn } from "react-hook-form"
+import type { DeepPartial } from "utils/types"
+import type { PubTypeWithForm } from "~/lib/authorization/capabilities"
+import type { PubField } from "~/lib/types"
 
-import { useCallback, useMemo } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { typeboxResolver } from "@hookform/resolvers/typebox";
-import { Type } from "@sinclair/typebox";
-import QueryString from "qs";
-import { useForm } from "react-hook-form";
+import { useCallback, useMemo } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { typeboxResolver } from "@hookform/resolvers/typebox"
+import { Type } from "@sinclair/typebox"
+import QueryString from "qs"
+import { useForm } from "react-hook-form"
 
-import type { PubsId, StagesId } from "db/public";
-import type { DeepPartial } from "utils/types";
-import { Button } from "ui/button";
+import { Button } from "ui/button"
 import {
 	Form,
 	FormControl,
@@ -21,14 +23,12 @@ import {
 	FormItem,
 	FormLabel,
 	FormMessage,
-} from "ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { FormSubmitButton } from "ui/submit-button";
+} from "ui/form"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { FormSubmitButton } from "ui/submit-button"
 
-import type { PubTypeWithForm } from "~/lib/authorization/capabilities";
-import type { PubField } from "~/lib/types";
-import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher";
-import { useCommunity } from "../providers/CommunityProvider";
+import { formSwitcherUrlParam } from "../FormSwitcher/FormSwitcher"
+import { useCommunity } from "../providers/CommunityProvider"
 
 const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 	return (
@@ -44,7 +44,7 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 					<Select
 						{...field}
 						onValueChange={(value) => {
-							field.onChange(value);
+							field.onChange(value)
 						}}
 						defaultValue={field.value}
 					>
@@ -66,59 +66,57 @@ const PubTypeSelector = ({ pubTypes }: { pubTypes: PubTypeWithForm }) => {
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}
 
 const RelatedPubFieldSelector = ({
 	pubFields,
 	form,
 }: {
-	pubFields: Props["relatedPubFields"];
-	form: UseFormReturn<Schema>;
+	pubFields: Props["relatedPubFields"]
+	form: UseFormReturn<Schema>
 }) => {
 	if (pubFields.length === 0) {
-		return null;
+		return null
 	}
 	return (
-		<>
-			<FormField
-				control={form.control}
-				name="relatedPub.relatedFieldSlug"
-				render={({ field }) => (
-					<FormItem className="flex flex-col gap-y-1">
-						<div className="flex items-center justify-between">
-							<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-								Relationship
-							</FormLabel>
-						</div>
-						<Select
-							{...field}
-							onValueChange={(value) => {
-								field.onChange(value);
-							}}
-							defaultValue={field.value}
-						>
-							<FormControl>
-								<SelectTrigger>
-									<SelectValue placeholder="Select a relationship type" />
-								</SelectTrigger>
-							</FormControl>
-							<SelectContent>
-								{pubFields.map((pubField) => (
-									<SelectItem key={pubField.slug} value={pubField.slug}>
-										{pubField.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-						<FormDescription>Choose the relationship type</FormDescription>
-						<FormMessage />
-					</FormItem>
-				)}
-			/>
-		</>
-	);
-};
+		<FormField
+			control={form.control}
+			name="relatedPub.relatedFieldSlug"
+			render={({ field }) => (
+				<FormItem className="flex flex-col gap-y-1">
+					<div className="flex items-center justify-between">
+						<FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+							Relationship
+						</FormLabel>
+					</div>
+					<Select
+						{...field}
+						onValueChange={(value) => {
+							field.onChange(value)
+						}}
+						defaultValue={field.value}
+					>
+						<FormControl>
+							<SelectTrigger>
+								<SelectValue placeholder="Select a relationship type" />
+							</SelectTrigger>
+						</FormControl>
+						<SelectContent>
+							{pubFields.map((pubField) => (
+								<SelectItem key={pubField.slug} value={pubField.slug}>
+									{pubField.name}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<FormDescription>Choose the relationship type</FormDescription>
+					<FormMessage />
+				</FormItem>
+			)}
+		/>
+	)
+}
 
 const schema = Type.Object({
 	pubTypeId: Type.String(),
@@ -128,26 +126,26 @@ const schema = Type.Object({
 			relatedFieldSlug: Type.String(),
 		})
 	),
-});
+})
 
-type Schema = Static<typeof schema>;
+type Schema = Static<typeof schema>
 
 interface Props {
-	pubTypes: PubTypeWithForm;
-	relatedPubFields: Pick<PubField, "id" | "slug" | "name" | "schemaName">[];
-	stageId?: StagesId;
-	relatedPubId?: PubsId;
+	pubTypes: PubTypeWithForm
+	relatedPubFields: Pick<PubField, "id" | "slug" | "name" | "schemaName">[]
+	stageId?: StagesId
+	relatedPubId?: PubsId
 }
 
 declare const x: {
-	form: string | undefined;
-	relatedPubId?: string | undefined;
-	relatedFieldSlug?: string | undefined;
-	stageId?: StagesId | undefined;
-	pubTypeId: string;
-};
+	form: string | undefined
+	relatedPubId?: string | undefined
+	relatedFieldSlug?: string | undefined
+	stageId?: StagesId | undefined
+	pubTypeId: string
+}
 
-declare let y: Record<string, string>;
+declare let y: Record<string, string>
 
 /** The first step in creating a pub—choosing a pub type, and possibly a related pub */
 export const InitialCreatePubForm = ({
@@ -159,7 +157,7 @@ export const InitialCreatePubForm = ({
 	const defaultValues = useMemo(() => {
 		const defaultValues = {
 			pubTypeId: undefined,
-		} satisfies DeepPartial<Schema>;
+		} satisfies DeepPartial<Schema>
 		if (relatedPubId) {
 			return {
 				...defaultValues,
@@ -167,37 +165,37 @@ export const InitialCreatePubForm = ({
 					relatedPubId,
 					relatedFieldSlug: undefined,
 				},
-			} satisfies DeepPartial<Schema>;
+			} satisfies DeepPartial<Schema>
 		}
-		return defaultValues;
-	}, [relatedPubId]);
+		return defaultValues
+	}, [relatedPubId])
 
 	const form = useForm<Schema>({
 		mode: "onChange",
 		reValidateMode: "onChange",
 		defaultValues,
 		resolver: typeboxResolver(schema),
-	});
+	})
 
-	const path = usePathname();
-	const searchParams = useSearchParams();
-	const router = useRouter();
-	const community = useCommunity();
+	const path = usePathname()
+	const searchParams = useSearchParams()
+	const router = useRouter()
+	const community = useCommunity()
 
 	const pathWithoutFormParam = useMemo(() => {
-		const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
-		urlSearchParams.delete("create-pub-form");
-		return `${path}?${urlSearchParams.toString()}`;
-	}, [path, searchParams]);
+		const urlSearchParams = new URLSearchParams(searchParams ?? undefined)
+		urlSearchParams.delete("create-pub-form")
+		return `${path}?${urlSearchParams.toString()}`
+	}, [path, searchParams])
 
 	const closeForm = useCallback(() => {
-		router.replace(pathWithoutFormParam);
-	}, [pathWithoutFormParam]);
+		router.replace(pathWithoutFormParam)
+	}, [pathWithoutFormParam, router.replace])
 
 	const onSubmit = async (values: Schema) => {
 		const formSwitcherUrlParamValue = pubTypes.find(
 			(pubType) => pubType.id === values.pubTypeId
-		)?.slug;
+		)?.slug
 
 		const pubParams = QueryString.stringify(
 			{
@@ -211,10 +209,10 @@ export const InitialCreatePubForm = ({
 			{
 				skipNulls: true,
 			}
-		);
-		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`;
-		router.push(createPubPath);
-	};
+		)
+		const createPubPath = `/c/${community.slug}/pubs/create?${pubParams.toString()}`
+		router.push(createPubPath)
+	}
 
 	return (
 		<Form {...form}>
@@ -236,5 +234,5 @@ export const InitialCreatePubForm = ({
 				</div>
 			</form>
 		</Form>
-	);
-};
+	)
+}

@@ -1,18 +1,19 @@
-"use client";
+"use client"
 
-import { Value } from "@sinclair/typebox/value";
-import { useFormContext } from "react-hook-form";
-import { colorPickerConfigSchema } from "schemas";
+import type { InputComponent } from "db/public"
+import type { ElementProps } from "../types"
 
-import type { InputComponent } from "db/public";
-import { Button } from "ui/button";
-import { ColorCircle, ColorPicker, ColorValue } from "ui/color";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { cn } from "utils";
+import { Value } from "@sinclair/typebox/value"
+import { useFormContext } from "react-hook-form"
+import { colorPickerConfigSchema } from "schemas"
 
-import type { ElementProps } from "../types";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { Button } from "ui/button"
+import { ColorCircle, ColorPicker, ColorValue } from "ui/color"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { cn } from "utils"
+
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 export const ColorPickerPopover = ({
 	color,
@@ -20,12 +21,12 @@ export const ColorPickerPopover = ({
 	presets,
 	presetsOnly,
 }: {
-	color: string;
-	onChange: (value: string) => void;
-	presets?: { label: string; value: string }[];
-	presetsOnly?: boolean;
+	color: string
+	onChange: (value: string) => void
+	presets?: { label: string; value: string }[]
+	presetsOnly?: boolean
 }) => {
-	const label = presets?.find((preset) => preset.value === color)?.label;
+	const label = presets?.find((preset) => preset.value === color)?.label
 
 	return (
 		<Popover>
@@ -58,24 +59,24 @@ export const ColorPickerPopover = ({
 				/>
 			</PopoverContent>
 		</Popover>
-	);
-};
+	)
+}
 
 export const ColorPickerElement = ({
 	slug,
 	label,
 	config,
 }: ElementProps<InputComponent.colorPicker>) => {
-	const { control } = useFormContext();
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(slug);
+	const { control } = useFormContext()
+	const formElementToggle = useFormElementToggleContext()
+	const _isEnabled = formElementToggle.isEnabled(slug)
 
-	Value.Default(colorPickerConfigSchema, config);
+	Value.Default(colorPickerConfigSchema, config)
 	if (!Value.Check(colorPickerConfigSchema, config)) {
-		return null;
+		return null
 	}
 
-	const defaultColor = config.presets?.length ? config.presets[0].value : "#000000";
+	const defaultColor = config.presets?.length ? config.presets[0].value : "#000000"
 
 	return (
 		<FormField
@@ -88,7 +89,7 @@ export const ColorPickerElement = ({
 						<ColorPickerPopover
 							color={field.value || defaultColor}
 							onChange={(value) => {
-								field.onChange(value);
+								field.onChange(value)
 							}}
 							presets={config.presets}
 							presetsOnly={config.presetsOnly}
@@ -99,5 +100,5 @@ export const ColorPickerElement = ({
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}

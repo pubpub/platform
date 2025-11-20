@@ -1,19 +1,19 @@
-import React from "react";
-import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
+import type { FileUploadProps, FormattedFile } from "ui/customRenderers/fileUpload/fileUpload"
+import type { ImageAttrs } from "../schemas/image"
 
-import type { FileUploadProps, FormattedFile } from "ui/customRenderers/fileUpload/fileUpload";
-import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload";
-import { Label } from "ui/label";
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 
-import type { ImageAttrs } from "../schemas/image";
-import { Alignment } from "../schemas/image";
-import { insertMedia } from "../utils/nodes";
+import { FileUpload } from "ui/customRenderers/fileUpload/fileUpload"
+import { Label } from "ui/label"
 
-export type Upload = FileUploadProps["upload"];
+import { Alignment } from "../schemas/image"
+import { insertMedia } from "../utils/nodes"
+
+export type Upload = FileUploadProps["upload"]
 
 export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: () => void }) => {
 	const onUpload = useEditorEventCallback((view, files: FormattedFile[]) => {
-		if (!view) return;
+		if (!view) return
 		// Reverse the files since files are inserted starting at the selection
 		for (const file of files.reverse()) {
 			const attrs: ImageAttrs = {
@@ -25,11 +25,11 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				width: 100,
 				align: Alignment.center,
 				fullResolution: false,
-			};
-			insertMedia(view.state, view.dispatch, attrs);
+			}
+			insertMedia(view.state, view.dispatch, attrs)
 		}
-		onInsert();
-	});
+		onInsert()
+	})
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -43,5 +43,5 @@ export const ImageUploader = ({ upload, onInsert }: { upload: Upload; onInsert: 
 				}}
 			/>
 		</div>
-	);
-};
+	)
+}

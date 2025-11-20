@@ -1,40 +1,40 @@
-"use client";
+"use client"
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation"
 
-import { CircleHelp } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
+import { CircleHelp } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
 
-import { formatDateAsTime } from "~/lib/dates";
-import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants";
+import { formatDateAsTime } from "~/lib/dates"
+import { SAVE_STATUS_QUERY_PARAM, SUBMIT_ID_QUERY_PARAM } from "./constants"
 
 export const useSaveStatus = ({ defaultMessage }: { defaultMessage?: string }) => {
-	const searchParams = useSearchParams();
-	const urlSearchParams = new URLSearchParams(searchParams ?? undefined);
+	const searchParams = useSearchParams()
+	const urlSearchParams = new URLSearchParams(searchParams ?? undefined)
 
-	const submitId = urlSearchParams.get(SUBMIT_ID_QUERY_PARAM);
-	const saveStatus = urlSearchParams.get(SAVE_STATUS_QUERY_PARAM);
+	const submitId = urlSearchParams.get(SUBMIT_ID_QUERY_PARAM)
+	const saveStatus = urlSearchParams.get(SAVE_STATUS_QUERY_PARAM)
 
-	let status = defaultMessage;
+	let status = defaultMessage
 
 	if (submitId) {
-		status = "Completed";
+		status = "Completed"
 	} else if (saveStatus) {
-		const queryAsNumber = +saveStatus;
-		if (!isNaN(queryAsNumber)) {
-			const lastSavedTime = new Date(queryAsNumber);
-			status = `Last saved at ${formatDateAsTime(lastSavedTime)}`;
+		const queryAsNumber = +saveStatus
+		if (!Number.isNaN(queryAsNumber)) {
+			const lastSavedTime = new Date(queryAsNumber)
+			status = `Last saved at ${formatDateAsTime(lastSavedTime)}`
 		}
 	}
 
-	return status;
-};
+	return status
+}
 
 export const SaveStatus = ({ autosave }: { autosave?: boolean }) => {
 	const defaultMessage = autosave
 		? "Form will save every few seconds while editing"
-		: "Form will save when you click submit";
-	const status = useSaveStatus({ defaultMessage });
+		: "Form will save when you click submit"
+	const status = useSaveStatus({ defaultMessage })
 
 	return (
 		<div className="flex items-center gap-2 text-sm font-normal text-muted-foreground">
@@ -53,5 +53,5 @@ export const SaveStatus = ({ autosave }: { autosave?: boolean }) => {
 				</TooltipTrigger>
 			</Tooltip>
 		</div>
-	);
-};
+	)
+}

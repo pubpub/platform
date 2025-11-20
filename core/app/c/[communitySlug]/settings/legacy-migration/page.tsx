@@ -1,46 +1,45 @@
-import type { Metadata } from "next";
+import type { PubFieldsId, PubsId, PubTypesId } from "db/public"
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import type { PubFieldsId, PubsId, PubTypesId } from "db/public";
-
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-cleanup";
-import { MigrationForm, UndoMigrationForm } from "./MigrationForm";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { getToBeDeletedStructure } from "~/lib/server/legacy-migration/legacy-cleanup"
+import { MigrationForm, UndoMigrationForm } from "./MigrationForm"
 
 export const metadata: Metadata = {
 	title: "Import Legacy Community",
-};
+}
 
 export default async function Page(props: {
 	searchParams: Promise<{
-		undo?: string;
-		pubTypeIds?: PubTypesId[];
-		pubFieldIds?: PubFieldsId[];
-		pubIds?: PubsId[];
-	}>;
+		undo?: string
+		pubTypeIds?: PubTypesId[]
+		pubFieldIds?: PubFieldsId[]
+		pubIds?: PubsId[]
+	}>
 }) {
-	const { undo, pubTypeIds, pubFieldIds, pubIds } = await props.searchParams;
+	const { undo, pubTypeIds, pubFieldIds, pubIds } = await props.searchParams
 
-	const { user } = await getPageLoginData();
-	const community = await findCommunityBySlug();
+	const { user } = await getPageLoginData()
+	const community = await findCommunityBySlug()
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
 	if (!user.isSuperAdmin) {
-		redirect(`/c/${community.slug}/unauthorized`);
+		redirect(`/c/${community.slug}/unauthorized`)
 	}
 
-	let tobeDeletedStructure: Awaited<ReturnType<typeof getToBeDeletedStructure>> | undefined;
+	let tobeDeletedStructure: Awaited<ReturnType<typeof getToBeDeletedStructure>> | undefined
 	if (undo) {
 		tobeDeletedStructure = await getToBeDeletedStructure(community, {
 			pubTypes: pubTypeIds,
 			pubFields: pubFieldIds,
 			pubs: pubIds,
-		});
+		})
 	}
 
 	return (
@@ -52,5 +51,5 @@ export default async function Page(props: {
 			<div className="mt-4" />
 			<UndoMigrationForm community={community} toBeDeletedStructure={tobeDeletedStructure} />
 		</div>
-	);
+	)
 }

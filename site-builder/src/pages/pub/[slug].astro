@@ -1,17 +1,779 @@
 ---
-import { expect } from "utils/assert";
 
-import type { FileUpload } from "../../layouts/Layout.astro";
-import PubAbstract from "../../components/PubAbstract.astro";
-import PubContent from "../../components/PubContent.astro";
-import PubHeader from "../../components/PubHeader.astro";
-import PubSidebar from "../../components/PubSidebar.astro";
-import Layout from "../../layouts/Layout.astro";
-import { getClient } from "../../lib/client/client";
-import { getHeader, getJournal, getJournalArticles } from "../../lib/client/queries";
-import { getFieldValue } from "../../lib/getValue";
 
-const { slug } = Astro.params;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import type { FileUpload } from "../../layouts/Layout.astro"
+
+import { expect } from "utils/assert"
+
+import { getHeader, getJournal, getJournalArticles } from "../../lib/client/queries"
+import { getFieldValue } from "../../lib/getValue"
+
+const { slug } = Astro.params
 
 export async function getStaticPaths() {
 	const [journalArticles, journal, header] = await Promise.all([
@@ -21,57 +783,57 @@ export async function getStaticPaths() {
 			withRelatedPubs: true,
 		}),
 		getHeader(),
-	]);
+	])
 
 	const paths = journalArticles.map((pub) => ({
 		params: {
 			slug: expect(pub.values?.find((value) => value.fieldName === "Slug")?.value),
 		},
 		props: { pub, journal, header },
-	}));
+	}))
 
-	return paths;
+	return paths
 }
 
-const { pub, journal, header } = Astro.props;
-console.log("header", header);
+const { pub, journal, header } = Astro.props
+console.log("header", header)
 
-const title = getFieldValue<string>(pub, "Title");
-const abstract = getFieldValue<string>(pub, "Abstract");
-const publicationDate = getFieldValue<string>(pub, "Publication Date");
-const lastEdited = getFieldValue<string>(pub, "Last Edited");
-const doi = getFieldValue<string>(pub, "DOI");
-const volume = getFieldValue<string>(pub, "Issue Volume");
-const issueNumber = getFieldValue<string>(pub, "Issue Number");
-const content = getFieldValue<string>(pub, "PubContent");
-const headerImage = getFieldValue<FileUpload | undefined>(pub, "Header Background Image");
-const headerTextStyle = getFieldValue<string>(pub, "Header Text Style");
-const headerTheme = getFieldValue<string>(pub, "Header Theme");
-console.log(headerImage);
+const _title = getFieldValue<string>(pub, "Title")
+const _abstract = getFieldValue<string>(pub, "Abstract")
+const _publicationDate = getFieldValue<string>(pub, "Publication Date")
+const _lastEdited = getFieldValue<string>(pub, "Last Edited")
+const _doi = getFieldValue<string>(pub, "DOI")
+const _volume = getFieldValue<string>(pub, "Issue Volume")
+const _issueNumber = getFieldValue<string>(pub, "Issue Number")
+const _content = getFieldValue<string>(pub, "PubContent")
+const headerImage = getFieldValue<FileUpload | undefined>(pub, "Header Background Image")
+const _headerTextStyle = getFieldValue<string>(pub, "Header Text Style")
+const _headerTheme = getFieldValue<string>(pub, "Header Theme")
+console.log(headerImage)
 
 // Assuming contributors are in the values array
-const contributors = pub.values?.filter((value) => value.fieldName === "Contributors") || [];
+const _contributors = pub.values?.filter((value) => value.fieldName === "Contributors") || []
 
 // Calculate months since last update
-const getMonthsAgo = (dateString: string) => {
-	if (!dateString) return "";
-	const lastEditDate = new Date(dateString);
-	const now = new Date();
+const _getMonthsAgo = (dateString: string) => {
+	if (!dateString) return ""
+	const lastEditDate = new Date(dateString)
+	const now = new Date()
 	const months =
 		(now.getFullYear() - lastEditDate.getFullYear()) * 12 +
 		now.getMonth() -
-		lastEditDate.getMonth();
-	return `${months} months ago`;
-};
+		lastEditDate.getMonth()
+	return `${months} months ago`
+}
 
-const formatDate = (dateString: string) => {
-	if (!dateString) return "";
+const _formatDate = (dateString: string) => {
+	if (!dateString) return ""
 	return new Date(dateString).toLocaleDateString("en-US", {
 		month: "short",
 		day: "numeric",
 		year: "numeric",
-	});
-};
+	})
+}
 ---
 
 <Layout journal={journal} title={title} header={header}>

@@ -1,16 +1,14 @@
-import React from "react";
+import type { LexicalEditorProps } from "./LexicalEditor"
 
-import type { LexicalEditorProps } from "./LexicalEditor";
-import { LexicalEditor } from "./LexicalEditor";
+import { LexicalEditor } from "./LexicalEditor"
 
 export const MarkdownEditor = (props: LexicalEditorProps) => {
-	return <LexicalEditor {...props} withMarkdown />;
-};
+	return <LexicalEditor {...props} withMarkdown />
+}
 
 export const InputWithTokens = (props: LexicalEditorProps) => {
-	return <LexicalEditor {...props} singleLine />;
-};
+	return <LexicalEditor {...props} singleLine />
+}
 
-export { LexicalEditor } from "./LexicalEditor";
-
-export { PlainTextWithTokensEditor } from "./PlainTextWithTokensEditor";
+export { LexicalEditor } from "./LexicalEditor"
+export { PlainTextWithTokensEditor } from "./PlainTextWithTokensEditor"

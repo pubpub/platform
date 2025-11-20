@@ -1,19 +1,20 @@
-import { useCallback, useState } from "react";
+import type { Communities } from "db/public"
 
-import type { Communities } from "db/public";
-import { Button } from "ui/button";
-import { cn } from "utils";
+import { useState } from "react"
 
-import { MemberSelectAddUserForm } from "./MemberSelectAddUserForm";
+import { Button } from "ui/button"
+import { cn } from "utils"
+
+import { MemberSelectAddUserForm } from "./MemberSelectAddUserForm"
 
 type Props = {
-	community: Communities;
-	email: string;
-	onUserAdded: () => void;
-};
+	community: Communities
+	email: string
+	onUserAdded: () => void
+}
 
 export const MemberSelectAddUserButton = (props: Props) => {
-	const [open, setOpen] = useState(false);
+	const [open, setOpen] = useState(false)
 
 	return (
 		<>
@@ -31,11 +32,11 @@ export const MemberSelectAddUserButton = (props: Props) => {
 					email={props.email}
 					community={props.community}
 					onSubmitSuccess={() => {
-						props.onUserAdded();
-						setOpen(false);
+						props.onUserAdded()
+						setOpen(false)
 					}}
 				/>
 			)}
 		</>
-	);
-};
+	)
+}

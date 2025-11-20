@@ -29,12 +29,7 @@
 		"vitest": "catalog:"
 	},
 	"preconstruct": {
-		"entrypoints": [
-			"index.ts",
-			"schemas.ts",
-			"formats.ts",
-			"utils.ts"
-		],
+		"entrypoints": ["index.ts", "schemas.ts", "formats.ts", "utils.ts"],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,

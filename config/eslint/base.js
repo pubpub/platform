@@ -1,9 +1,8 @@
 // @ts-check
-import * as path from "node:path";
-
-import { includeIgnoreFile } from "@eslint/compat";
-import importPlugin from "eslint-plugin-import";
-import tseslint from "typescript-eslint";
+import * as path from "node:path"
+import { includeIgnoreFile } from "@eslint/compat"
+import importPlugin from "eslint-plugin-import"
+import tseslint from "typescript-eslint"
 
 /**
  * All packages that leverage t3-env should use this rule
@@ -33,7 +32,7 @@ export const restrictEnvAccess = tseslint.config(
 			],
 		},
 	}
-);
+)
 
 export default tseslint.config(
 	// Ignore files not tracked by VCS and any config files
@@ -67,4 +66,4 @@ export default tseslint.config(
 		},
 	},
 	{ languageOptions: { parserOptions: { projectService: true } } }
-);
+)

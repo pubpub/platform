@@ -1,7 +1,3 @@
-import { afterEach } from "node:test";
-
-import { describe, expect, it, vitest } from "vitest";
-
 import type {
 	ActionInstancesId,
 	ActionRunsId,
@@ -11,15 +7,19 @@ import type {
 	PubTypesId,
 	PubValuesId,
 	StagesId,
-} from "db/public";
-import { Action, CoreSchemaType } from "db/public";
+} from "db/public"
+import type { ClientExceptionOptions } from "~/lib/serverActions"
+import type { ActionPub, RunProps } from "../types"
+import type { action } from "./action"
 
-import type { ActionPub, RunProps } from "../types";
-import type { action } from "./action";
-import type { ClientExceptionOptions } from "~/lib/serverActions";
-import { updatePub } from "~/lib/server";
-import { didSucceed } from "~/lib/serverActions";
-import { run } from "./run";
+import { afterEach } from "node:test"
+import { describe, expect, it, vitest } from "vitest"
+
+import { Action, CoreSchemaType } from "db/public"
+
+import { updatePub } from "~/lib/server"
+import { didSucceed } from "~/lib/serverActions"
+import { run } from "./run"
 
 vitest.mock("~/lib/env/env", () => {
 	return {
@@ -28,40 +28,40 @@ vitest.mock("~/lib/env/env", () => {
 			DATACITE_REPOSITORY_ID: "id",
 			DATACITE_REPOSITORY_PASSWORD: "password",
 		},
-	};
-});
+	}
+})
 
 vitest.mock("~/lib/server", () => {
 	return {
 		getPubsWithRelatedValues: () => {
-			return { ...pub, values: [] };
+			return { ...pub, values: [] }
 		},
 		updatePub: vitest.fn(() => {
-			return {};
+			return {}
 		}),
-	};
-});
+	}
+})
 
-type Fetch = typeof global.fetch;
+type Fetch = typeof global.fetch
 
 // TODO: use vitest.stubGlobal with a little wrapper that lets us pass an array
 // of responses
-let _fetch = global.fetch;
+const _fetch = global.fetch
 const mockFetch = (...fns: Fetch[]) => {
 	const mock = vitest.fn<Fetch>((url, init) => {
-		const next = fns.shift();
+		const next = fns.shift()
 		if (next === undefined) {
-			throw new Error("mocked fetch called too many times");
+			throw new Error("mocked fetch called too many times")
 		}
-		return next(url, init);
-	});
-	global.fetch = mock;
-	return mock;
-};
+		return next(url, init)
+	})
+	global.fetch = mock
+	return mock
+}
 
 const unmockFetch = () => {
-	global.fetch = _fetch;
-};
+	global.fetch = _fetch
+}
 
 const pub = {
 	id: "" as PubsId,
@@ -131,7 +131,7 @@ const pub = {
 	pubTypeId: "" as PubTypesId,
 	stageId: null,
 	depth: 1,
-} as ActionPub;
+} as ActionPub
 
 const RUN_OPTIONS: RunProps<typeof action> = {
 	actionInstance: {
@@ -172,7 +172,7 @@ const RUN_OPTIONS: RunProps<typeof action> = {
 	},
 	pub,
 	lastModifiedBy: "system|0",
-};
+}
 
 const makeStubDatacitePayload = (doi?: string) => {
 	return {
@@ -181,91 +181,91 @@ const makeStubDatacitePayload = (doi?: string) => {
 				doi,
 			},
 		},
-	};
-};
+	}
+}
 
 const makeStubDataciteResponse = (doi?: string) =>
-	new Response(JSON.stringify(makeStubDatacitePayload(doi)));
+	new Response(JSON.stringify(makeStubDatacitePayload(doi)))
 
 describe("DataCite action", () => {
 	afterEach(() => {
-		unmockFetch();
-	});
+		unmockFetch()
+	})
 
 	it("creates a deposit if the pub does not have a DOI and a DOI prefix is configured", async () => {
-		const doi = "10.100/a-preprint";
+		const doi = "10.100/a-preprint"
 		const fetch = mockFetch(
 			async () => new Response(undefined, { status: 404 }),
 			async () => makeStubDataciteResponse(doi)
-		);
-		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doiPrefix: "10.100" } });
+		)
+		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doiPrefix: "10.100" } })
 
-		expect(fetch).toHaveBeenCalledTimes(2);
-		expect(fetch.mock.lastCall![1]!.method).toBe("POST");
+		expect(fetch).toHaveBeenCalledTimes(2)
+		expect(fetch.mock.lastCall?.[1]?.method).toBe("POST")
 		expect(updatePub).toHaveBeenCalledWith(
 			expect.objectContaining({
 				pubValues: {
 					"pubpub:doi": doi,
 				},
 			})
-		);
-	});
+		)
+	})
 
 	it("creates a deposit if the pub has a DOI not recognized by DataCite", async () => {
-		const doi = "10.100/a-preprint";
+		const doi = "10.100/a-preprint"
 		const fetch = mockFetch(
 			async () => new Response(undefined, { status: 404 }),
 			async () => makeStubDataciteResponse(doi)
-		);
-		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doi } });
+		)
+		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doi } })
 
-		expect(fetch.mock.lastCall![1]!.method).toBe("POST");
-	});
+		expect(fetch.mock.lastCall?.[1]?.method).toBe("POST")
+	})
 
 	it("updates a deposit if the pub has a DOI recognized by DataCite", async () => {
-		const doi = "10.100/a-preprint";
+		const doi = "10.100/a-preprint"
 		const fetch = mockFetch(
 			async () => new Response(),
 			async () => makeStubDataciteResponse(doi)
-		);
-		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doi } });
+		)
+		await run({ ...RUN_OPTIONS, config: { ...RUN_OPTIONS.config, doi } })
 
-		expect(fetch.mock.lastCall![1]!.method).toBe("PUT");
-	});
+		expect(fetch.mock.lastCall?.[1]?.method).toBe("PUT")
+	})
 
 	it("reports an error if the pub has neither a DOI nor a DOI suffix and no DOI prefix is configured", async () => {
-		const result = await run(RUN_OPTIONS);
+		const result = await run(RUN_OPTIONS)
 
-		expect(didSucceed(result)).toBe(false);
-	});
+		expect(didSucceed(result)).toBe(false)
+	})
 
 	it("reports an error when the DOI fails to persist", async () => {
-		const error = new Error("Failed to persist DOI");
+		const error = new Error("Failed to persist DOI")
 		vitest.mocked(updatePub).mockImplementationOnce(() => {
-			throw error;
-		});
+			throw error
+		})
 		mockFetch(
 			async () => new Response(undefined, { status: 200 }),
 			async () => makeStubDataciteResponse()
-		);
+		)
 		const result = await run({
 			...RUN_OPTIONS,
 			config: { ...RUN_OPTIONS.config, doiPrefix: "10.100" },
-		});
+		})
 
-		expect(didSucceed(result)).toBe(false);
-		expect((result as ClientExceptionOptions).cause).toBe(error.message);
-	});
+		expect(didSucceed(result)).toBe(false)
+		expect((result as ClientExceptionOptions).cause).toBe(error.message)
+	})
 
 	it("uses the DOI suffix field if provided", async () => {
-		const doiPrefix = "10.100";
-		const doiSuffix = "100";
-		const doi = `${doiPrefix}/${doiSuffix}`;
+		const doiPrefix = "10.100"
+		const doiSuffix = "100"
+		const doi = `${doiPrefix}/${doiSuffix}`
 
 		const fetch = mockFetch(
 			async () => new Response(undefined, { status: 404 }),
 			async () => makeStubDataciteResponse(doi)
-		);
+		)
 
 		await run({
 			...RUN_OPTIONS,
@@ -274,19 +274,19 @@ describe("DataCite action", () => {
 				doiPrefix,
 				doiSuffix,
 			},
-		});
+		})
 
-		const call = fetch.mock.lastCall![1]!;
-		const body = JSON.parse(call.body as string);
-		expect(body.data.attributes.doi).toBe(doi);
-		expect(call.method).toBe("POST");
-	});
+		const call = fetch.mock.lastCall?.[1]!
+		const body = JSON.parse(call.body as string)
+		expect(body.data.attributes.doi).toBe(doi)
+		expect(call.method).toBe("POST")
+	})
 
-	it.todo("transforms related contributor pubs into DataCite creators");
+	it.todo("transforms related contributor pubs into DataCite creators")
 
 	// unsure about these two one:
-	it.todo("transforms child pubs with DOIs and related pubs into relatedIdentifiers");
-	it.todo("transforms child pubs without DOIs into relatedItems");
+	it.todo("transforms child pubs with DOIs and related pubs into relatedIdentifiers")
+	it.todo("transforms child pubs without DOIs into relatedItems")
 
 	it.todo("deposits explicit and pub-provided metadata fields", () => {
 		// Title
@@ -297,5 +297,5 @@ describe("DataCite action", () => {
 		// Resource type -- probably hardcoded "Preprint" for now
 		// URL
 		// And more! (License etc.)
-	});
-});
+	})
+})

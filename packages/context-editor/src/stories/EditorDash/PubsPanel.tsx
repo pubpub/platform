@@ -1,17 +1,16 @@
-import type { EditorState } from "prosemirror-state";
+import type { EditorState } from "prosemirror-state"
 
-import React, { useMemo, useState } from "react";
-import JsonView from "@uiw/react-json-view";
+import JsonView from "@uiw/react-json-view"
 
-import { getPubValues } from "../../utils/pubValues";
-import initialPubs from "../initialPubs.json";
-import initialTypes from "../initialTypes.json";
+import { getPubValues } from "../../utils/pubValues"
+import initialPubs from "../initialPubs.json"
+import initialTypes from "../initialTypes.json"
 
 const getPubTypeName = (pubTypeId: string) => {
 	return initialTypes.find((type) => {
-		return type.id === pubTypeId;
-	})?.name;
-};
+		return type.id === pubTypeId
+	})?.name
+}
 
 const PubList = (props: any) => {
 	return props.list.map((item: any) => {
@@ -24,32 +23,32 @@ const PubList = (props: any) => {
 					return <div className="pl-8 truncate" key={key}><span className="">{key}</span>: {item.values[key]}</div>
 				})} */}
 			</div>
-		);
-	});
-};
+		)
+	})
+}
 
 function filterDuplicatesById(arr: any[]) {
-	const seenIds = new Set();
+	const seenIds = new Set()
 
 	return arr.filter((obj) => {
-		const id = obj.pubId || obj.id;
+		const id = obj.pubId || obj.id
 		if (seenIds.has(id)) {
-			return false; // Duplicate found, filter it out
+			return false // Duplicate found, filter it out
 		} else {
-			seenIds.add(id); // First occurrence, keep it
-			return true;
+			seenIds.add(id) // First occurrence, keep it
+			return true
 		}
-	});
+	})
 }
 
 type Props = {
-	editorState: EditorState;
-	pubId: string;
-};
+	editorState: EditorState
+	pubId: string
+}
 
 export default function PubsPanel({ editorState, pubId }: Props) {
-	const pubValues: { [key: string]: any } = getPubValues(editorState, pubId);
-	const allPubs = filterDuplicatesById([...initialPubs, ...Object.values(pubValues)]);
+	const pubValues: { [key: string]: any } = getPubValues(editorState, pubId)
+	const allPubs = filterDuplicatesById([...initialPubs, ...Object.values(pubValues)])
 
 	return (
 		<>
@@ -77,9 +76,9 @@ export default function PubsPanel({ editorState, pubId }: Props) {
 								/>
 							</div>
 						</div>
-					);
+					)
 				})}
 			</div>
 		</>
-	);
+	)
 }

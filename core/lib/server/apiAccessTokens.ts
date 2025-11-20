@@ -1,25 +1,25 @@
-import crypto from "crypto";
-
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-
 import type {
 	ApiAccessTokensId,
 	CommunitiesId,
 	NewApiAccessPermissions,
 	NewApiAccessTokens,
-} from "db/public";
-import { ApiAccessScope, ApiAccessType } from "db/public";
-import { logger } from "logger";
+} from "db/public"
 
-import { db } from "~/kysely/database";
-import { autoCache } from "./cache/autoCache";
-import { autoRevalidate } from "./cache/autoRevalidate";
-import { UnauthorizedError } from "./errors";
+import crypto from "node:crypto"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
+
+import { ApiAccessScope, ApiAccessType } from "db/public"
+import { logger } from "logger"
+
+import { db } from "~/kysely/database"
+import { autoCache } from "./cache/autoCache"
+import { autoRevalidate } from "./cache/autoRevalidate"
+import { UnauthorizedError } from "./errors"
 
 const generateToken = () => {
-	const bytesLength = 16;
-	return crypto.randomBytes(bytesLength).toString("base64url");
-};
+	const bytesLength = 16
+	return crypto.randomBytes(bytesLength).toString("base64url")
+}
 
 const getTokenBase = db
 	.selectFrom("api_access_tokens")
@@ -43,65 +43,65 @@ const getTokenBase = db
 				.selectAll()
 				.whereRef("api_access_permissions.apiAccessTokenId", "=", "api_access_tokens.id")
 		).as("permissions"),
-	]);
+	])
 
 export const validateApiAccessToken = async (token: string, communityId: CommunitiesId) => {
 	// Parse the token's id and plaintext value from the input
 	// Format: "<token id>.<token plaintext>"
-	const [tokenId, tokenString] = token.split(".");
+	const [tokenId, tokenString] = token.split(".")
 
 	// Retrieve the token's hash, metadata, and associated user
 	const dbToken = await autoCache(
 		getApiAccessToken(tokenId as ApiAccessTokensId).qb.select("token")
-	).executeTakeFirstOrThrow(() => new UnauthorizedError("Token not found"));
+	).executeTakeFirstOrThrow(() => new UnauthorizedError("Token not found"))
 
 	// Check if the token is expired. Expiration times are stored in the DB to enable tokens with
 	// different expiration periods
 	if (dbToken.expiration < new Date()) {
-		throw new UnauthorizedError("Expired token");
+		throw new UnauthorizedError("Expired token")
 	}
 
 	// Site builder tokens can access any community
 	if (!dbToken.isSiteBuilderToken && dbToken.communityId !== communityId) {
 		throw new UnauthorizedError(
 			`Access token ${dbToken.name} is not valid for community "${communityId}"`
-		);
+		)
 	}
 
 	// This comparison isn't actually constant time if the two items are of different lengths,
 	// because timingSafeEqual throws an error in that case, which could leak the length of the key.
 	// We aren't worried about that because we're hashing the values first (so they're constant
 	// length) and because our tokens are all the same length anyways, unlike a password.
-	let isEqual = false;
+	let isEqual = false
 	try {
 		isEqual = crypto.timingSafeEqual(
 			new Uint8Array(Buffer.from(tokenString)),
 			new Uint8Array(Buffer.from(dbToken.token))
-		);
+		)
 	} catch (e) {
 		// token is probably formatted incorrectly, the two strings are not equal in length
 		if (e.type === "RangeError") {
-			throw new UnauthorizedError("Invalid token");
+			throw new UnauthorizedError("Invalid token")
 		}
-		logger.error(e);
-		throw e;
+		logger.error(e)
+		throw e
 	}
 	if (!isEqual) {
-		throw new UnauthorizedError("Invalid token");
+		throw new UnauthorizedError("Invalid token")
 	}
 
-	return dbToken;
-};
+	return dbToken
+}
 
 export const getApiAccessToken = (token: ApiAccessTokensId) =>
-	autoCache(getTokenBase.where("api_access_tokens.id", "=", token));
+	autoCache(getTokenBase.where("api_access_tokens.id", "=", token))
 
 export const getApiAccessTokensByCommunity = (communityId: CommunitiesId) =>
-	autoCache(getTokenBase.where("api_access_tokens.communityId", "=", communityId));
+	autoCache(getTokenBase.where("api_access_tokens.communityId", "=", communityId))
 
 export type SafeApiAccessToken = Awaited<
 	ReturnType<ReturnType<typeof getApiAccessToken>["executeTakeFirstOrThrow"]>
->;
+>
 
 /**
  * Create a new API access token with the given permissions
@@ -111,25 +111,25 @@ export const createApiAccessToken = (
 		token,
 		permissions,
 	}: {
-		token: Omit<NewApiAccessTokens, "token">;
-		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
+		token: Omit<NewApiAccessTokens, "token">
+		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[]
 	},
 	trx = db
 ) => {
-	return autoRevalidate(_createApiAccessToken({ token, permissions }, trx));
-};
+	return autoRevalidate(_createApiAccessToken({ token, permissions }, trx))
+}
 
 const _createApiAccessToken = (
 	{
 		token,
 		permissions,
 	}: {
-		token: Omit<NewApiAccessTokens, "token">;
-		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[];
+		token: Omit<NewApiAccessTokens, "token">
+		permissions: Omit<NewApiAccessPermissions, "apiAccessTokenId">[]
 	},
 	trx = db
 ) => {
-	const tokenString = generateToken();
+	const tokenString = generateToken()
 	return trx
 		.with("new_token", (db) =>
 			db
@@ -157,8 +157,8 @@ const _createApiAccessToken = (
 					eb.selectFrom("new_token").select("new_token.token"),
 				])
 				.as("token"),
-		]);
-};
+		])
+}
 
 export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }, trx = db) =>
 	autoRevalidate(
@@ -169,7 +169,7 @@ export const deleteApiAccessToken = ({ id }: { id: ApiAccessTokensId }, trx = db
 			)
 			.deleteFrom("api_access_logs")
 			.where("accessTokenId", "=", id)
-	);
+	)
 
 /**
  * Simple flat list of all permissions
@@ -179,13 +179,13 @@ export const allPermissions = Object.values(ApiAccessScope).flatMap((scope) =>
 		scope,
 		accessType,
 	}))
-);
+)
 
 const allReadPermissions = allPermissions.filter(
 	(permission) => permission.accessType === ApiAccessType.read
-);
+)
 
-const ONE_HUNDRED_YEARS_MS = 100 * 365 * 24 * 60 * 60 * 1000;
+const ONE_HUNDRED_YEARS_MS = 100 * 365 * 24 * 60 * 60 * 1000
 
 /**
  * Create a new site builder API access token that can access all communities
@@ -205,8 +205,8 @@ export const createSiteBuilderToken = (communityId: CommunitiesId, trx = db) => 
 			permissions: allReadPermissions,
 		},
 		trx
-	).executeTakeFirstOrThrow(() => new Error("Failed to create site builder token"));
-};
+	).executeTakeFirstOrThrow(() => new Error("Failed to create site builder token"))
+}
 
 /**
  * Get the site builder token for a community
@@ -222,7 +222,7 @@ export const getSiteBuilderToken = async (
 		.where("communityId", "=", communityId)
 		.where("isSiteBuilderToken", "=", true)
 		.select(["id", "token"])
-		.executeTakeFirstOrThrow(() => new Error("Site builder token not found"));
+		.executeTakeFirstOrThrow(() => new Error("Site builder token not found"))
 
-	return `${id}.${token}`;
-};
+	return `${id}.${token}`
+}

@@ -1,42 +1,42 @@
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { Activity } from "lucide-react";
+import Link from "next/link"
+import { notFound } from "next/navigation"
+import { Activity } from "lucide-react"
 
-import { Capabilities, MembershipType } from "db/public";
-import { cn } from "utils";
+import { Capabilities, MembershipType } from "db/public"
+import { cn } from "utils"
 
-import { actions } from "~/actions/api";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects";
-import { ContentLayout } from "../../ContentLayout";
+import { actions } from "~/actions/api"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToLogin, redirectToUnauthorized } from "~/lib/server/navigation/redirects"
+import { ContentLayout } from "../../ContentLayout"
 
 type Props = {
-	params: Promise<{ communitySlug: string }>;
-};
+	params: Promise<{ communitySlug: string }>
+}
 
-export default async function Page(props: Props) {
-	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()]);
+export default async function Page(_props: Props) {
+	const [{ user }, community] = await Promise.all([getPageLoginData(), findCommunityBySlug()])
 
 	if (!user) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
 	if (!community) {
-		notFound();
+		notFound()
 	}
 
-	const loginData = await getPageLoginData();
+	const loginData = await getPageLoginData()
 
 	const userCanEditCommunity = await userCan(
 		Capabilities.editCommunity,
 		{ type: MembershipType.community, communityId: community.id },
 		loginData.user.id
-	);
+	)
 
 	if (!userCanEditCommunity) {
-		return await redirectToUnauthorized();
+		return await redirectToUnauthorized()
 	}
 
 	return (
@@ -83,5 +83,5 @@ export default async function Page(props: Props) {
 				</div>
 			</div>
 		</ContentLayout>
-	);
+	)
 }

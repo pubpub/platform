@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
 	Body,
 	Button,
@@ -13,12 +12,12 @@ import {
 	Section,
 	Tailwind,
 	Text,
-} from "@react-email/components";
+} from "@react-email/components"
 
 interface VerifyEmailprops {
-	firstName: string;
-	verifyEmailLink: string;
-	previewText?: string;
+	firstName: string
+	verifyEmailLink: string
+	previewText?: string
 }
 
 export const VerifyEmail = ({
@@ -26,7 +25,7 @@ export const VerifyEmail = ({
 	verifyEmailLink,
 	previewText = `Verify your email`,
 }: VerifyEmailprops) => {
-	const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : "";
+	const baseUrl = process.env.PUBPUB_URL ? process.env.PUBPUB_URL : ""
 
 	return (
 		<Html>
@@ -78,5 +77,5 @@ export const VerifyEmail = ({
 				</Body>
 			</Tailwind>
 		</Html>
-	);
-};
+	)
+}

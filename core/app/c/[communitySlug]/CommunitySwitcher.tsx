@@ -1,30 +1,31 @@
-import Link from "next/link";
+import type { CommunityData } from "~/lib/server/community"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import Link from "next/link"
+
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { ChevronsUpDown } from "ui/icon";
-import { SidebarMenuButton } from "ui/sidebar";
-import { cn } from "utils";
+} from "ui/dropdown-menu"
+import { ChevronsUpDown } from "ui/icon"
+import { SidebarMenuButton } from "ui/sidebar"
+import { cn } from "utils"
 
-import type { CommunityData } from "~/lib/server/community";
-import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/redirects";
+import { constructRedirectToBaseCommunityPage } from "~/lib/server/navigation/redirects"
 
 type Props = {
-	community: NonNullable<CommunityData>;
-	availableCommunities: NonNullable<CommunityData>[];
-};
+	community: NonNullable<CommunityData>
+	availableCommunities: NonNullable<CommunityData>[]
+}
 
-const CommunitySwitcher: React.FC<Props> = async function ({ community, availableCommunities }) {
+const CommunitySwitcher: React.FC<Props> = async ({ community, availableCommunities }) => {
 	const avatarClasses =
-		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 border";
-	const textClasses = "flex-auto text-base font-semibold w-44 text-left";
+		"rounded-md w-9 h-9 mr-1 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8 border"
+	const textClasses = "flex-auto text-base font-semibold w-44 text-left"
 
-	const onlyOneCommunity = availableCommunities.length === 1;
+	const onlyOneCommunity = availableCommunities.length === 1
 
 	// pre-compute redirect urls for all available communities
 	const communityRedirectUrls = await Promise.all(
@@ -34,11 +35,11 @@ const CommunitySwitcher: React.FC<Props> = async function ({ community, availabl
 				communitySlug: community.slug === option.slug ? undefined : option.slug,
 			}),
 		}))
-	);
+	)
 
 	const redirectUrlMap = new Map(
 		communityRedirectUrls.map(({ communityId, redirectUrl }) => [communityId, redirectUrl])
-	);
+	)
 
 	const button = (
 		<SidebarMenuButton
@@ -52,10 +53,10 @@ const CommunitySwitcher: React.FC<Props> = async function ({ community, availabl
 			<span className={textClasses}>{community.name}</span>
 			{!onlyOneCommunity && <ChevronsUpDown className="ml-auto" />}
 		</SidebarMenuButton>
-	);
+	)
 
 	if (onlyOneCommunity) {
-		return button;
+		return button
 	}
 
 	return (
@@ -64,7 +65,7 @@ const CommunitySwitcher: React.FC<Props> = async function ({ community, availabl
 			<DropdownMenuContent className="w-[--radix-popper-anchor-width] min-w-52" side="right">
 				{availableCommunities
 					.filter((option) => {
-						return option?.slug !== community.slug;
+						return option?.slug !== community.slug
 					})
 					.map((option) => {
 						return (
@@ -84,11 +85,11 @@ const CommunitySwitcher: React.FC<Props> = async function ({ community, availabl
 									</div>
 								</Link>
 							</DropdownMenuItem>
-						);
+						)
 					})}
 			</DropdownMenuContent>
 		</DropdownMenu>
-	);
-};
+	)
+}
 
-export default CommunitySwitcher;
+export default CommunitySwitcher

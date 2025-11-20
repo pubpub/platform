@@ -26,9 +26,7 @@
 	},
 	"prettier": "@pubpub/prettier-config",
 	"preconstruct": {
-		"entrypoints": [
-			"index.ts"
-		],
+		"entrypoints": ["index.ts"],
 		"exports": true,
 		"___experimentalFlags_WILL_CHANGE_IN_PATCH": {
 			"typeModule": true,

@@ -1,11 +1,10 @@
-import * as React from "react";
+import type { AutoFormInputComponentProps } from "../types"
 
-import type { AutoFormInputComponentProps } from "../types";
-import { FormControl, FormItem, FormMessage } from "../../form";
-import { Input } from "../../input";
-import AutoFormDescription from "../common/description";
-import AutoFormLabel from "../common/label";
-import AutoFormTooltip from "../common/tooltip";
+import { FormControl, FormItem, FormMessage } from "../../form"
+import { Input } from "../../input"
+import AutoFormDescription from "../common/description"
+import AutoFormLabel from "../common/label"
+import AutoFormTooltip from "../common/tooltip"
 
 export default function AutoFormNumber({
 	label,
@@ -14,8 +13,8 @@ export default function AutoFormNumber({
 	fieldConfigItem,
 	fieldProps,
 }: AutoFormInputComponentProps) {
-	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps;
-	const showLabel = _showLabel === undefined ? true : _showLabel;
+	const { showLabel: _showLabel, ...fieldPropsWithoutShowLabel } = fieldProps
+	const showLabel = _showLabel === undefined ? true : _showLabel
 
 	return (
 		<FormItem>
@@ -31,5 +30,5 @@ export default function AutoFormNumber({
 			<AutoFormTooltip fieldConfigItem={fieldConfigItem} />
 			<FormMessage />
 		</FormItem>
-	);
+	)
 }

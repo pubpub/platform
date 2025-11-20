@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation"
 
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { AlertCircle } from "ui/icon";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { AlertCircle } from "ui/icon"
 
-import LogoutButton from "~/app/components/LogoutButton";
+import LogoutButton from "~/app/components/LogoutButton"
 
 export const WrongUserLoggedIn = ({ email }: { email?: string }) => {
-	const path = usePathname();
-	const searchParams = useSearchParams();
+	const path = usePathname()
+	const searchParams = useSearchParams()
 
-	const currentUrl = `${path}?${searchParams.toString()}`;
+	const currentUrl = `${path}?${searchParams.toString()}`
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
@@ -41,5 +41,5 @@ export const WrongUserLoggedIn = ({ email }: { email?: string }) => {
 				</CardFooter>
 			</Card>
 		</div>
-	);
-};
+	)
+}

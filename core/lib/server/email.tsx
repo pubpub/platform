@@ -1,54 +1,54 @@
-import type { SignupInviteProps } from "emails";
-import type { SendMailOptions } from "nodemailer";
+import type { Communities, MembershipType, Users } from "db/public"
+import type { SignupInviteProps } from "emails"
+import type { SendMailOptions } from "nodemailer"
+import type { XOR } from "utils/types"
+import type { FormInviteLinkProps } from "./form"
 
-import { render } from "@react-email/render";
-import { FormLink, Invite, PasswordReset, VerifyEmail } from "emails";
+import { render } from "@react-email/render"
+import { FormLink, Invite, PasswordReset, VerifyEmail } from "emails"
 
-import type { Communities, MembershipType, Users } from "db/public";
-import type { XOR } from "utils/types";
-import { AuthTokenType, MemberRole } from "db/public";
-import { logger } from "logger";
+import { AuthTokenType, MemberRole } from "db/public"
+import { logger } from "logger"
 
-import type { FormInviteLinkProps } from "./form";
-import { db } from "~/kysely/database";
-import { createMagicLink } from "~/lib/authentication/createMagicLink";
-import { env } from "../env/env";
-import { createFormInviteLink } from "./form";
-import { getSmtpClient } from "./mailgun";
+import { db } from "~/kysely/database"
+import { createMagicLink } from "~/lib/authentication/createMagicLink"
+import { env } from "../env/env"
+import { createFormInviteLink } from "./form"
+import { getSmtpClient } from "./mailgun"
 
-const FIFTEEN_MINUTES = 1000 * 60 * 15;
-const TWO_HOURS = 2 * 60 * 60 * 1000;
+const FIFTEEN_MINUTES = 1000 * 60 * 15
+const TWO_HOURS = 2 * 60 * 60 * 1000
 
 type RequiredOptions = Required<Pick<SendMailOptions, "to" | "subject">> &
-	XOR<{ html: string }, { text: string }>;
+	XOR<{ html: string }, { text: string }>
 
 export const DEFAULT_OPTIONS = {
 	from: env.MAILGUN_SMTP_FROM ?? "hello@pubpub.org",
 	name: env.MAILGUN_SMTP_FROM_NAME ?? "PubPub Team",
-} as const;
+} as const
 
 function buildSend(emailPromise: () => Promise<RequiredOptions>) {
-	const func = send.bind(null, emailPromise);
+	const func = send.bind(null, emailPromise)
 
 	return {
 		send: func as (
 			options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
-				name?: string;
+				name?: string
 			}
 		) => Promise<
 			{ success: true; report?: string; data: Record<string, unknown> } | { error: string }
 		>,
-	};
+	}
 }
 
 async function send(
 	requiredPromise: () => Promise<RequiredOptions>,
 	options?: Partial<Omit<SendMailOptions, "to" | "subject" | "html">> & {
-		name?: string;
+		name?: string
 	}
 ) {
 	try {
-		const required = await requiredPromise();
+		const required = await requiredPromise()
 
 		logger.info({
 			msg: `Sending email to ${required.to}`,
@@ -56,7 +56,7 @@ async function send(
 				...required,
 				...options,
 			},
-		});
+		})
 
 		await getSmtpClient().sendMail({
 			from: `${options?.name ?? DEFAULT_OPTIONS.name} <${options?.from ?? DEFAULT_OPTIONS.from}>`,
@@ -65,18 +65,18 @@ async function send(
 			html: required.html,
 			text: required.text,
 			...options,
-		});
+		})
 
 		return {
 			success: true,
 			report: "Email sent",
 			data: {},
-		};
+		}
 	} catch (error) {
-		logger.error({ msg: "Failed to send email", err: error });
+		logger.error({ msg: "Failed to send email", err: error })
 		return {
 			error: error.message,
-		};
+		}
 	}
 }
 
@@ -93,7 +93,7 @@ export function passwordReset(
 				userId: user.id,
 			},
 			trx
-		);
+		)
 
 		const email = await render(
 			<PasswordReset
@@ -101,14 +101,14 @@ export function passwordReset(
 				lastName={user.lastName ?? undefined}
 				resetPasswordLink={magicLink}
 			/>
-		);
+		)
 
 		return {
 			to: user.email,
 			html: email,
 			subject: "Reset your PubPub password",
-		};
-	});
+		}
+	})
 }
 
 export function verifyEmail(
@@ -131,21 +131,21 @@ export function verifyEmail(
 				userId: user.id,
 			},
 			trx
-		);
+		)
 
 		const email = await render(
 			<VerifyEmail firstName={user.firstName} verifyEmailLink={magicLink} />
-		);
+		)
 
 		return {
 			to: user.email,
 			html: email,
 			subject: "Verify your email",
-		};
-	});
+		}
+	})
 }
 
-function inviteToForm() {
+function _inviteToForm() {
 	// TODO:
 }
 
@@ -154,15 +154,15 @@ function inviteToForm() {
  */
 export function _legacy_signupInvite(
 	props: {
-		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">;
-		community: Pick<Communities, "name" | "avatar" | "slug">;
-		role: MemberRole;
-		membership: { type: MembershipType; name: string };
+		user: Pick<Users, "id" | "email" | "firstName" | "lastName" | "slug">
+		community: Pick<Communities, "name" | "avatar" | "slug">
+		role: MemberRole
+		membership: { type: MembershipType; name: string }
 	},
 	trx = db
 ) {
-	const expiresAt = new Date();
-	expiresAt.setDate(expiresAt.getDate() + 7);
+	const expiresAt = new Date()
+	expiresAt.setDate(expiresAt.getDate() + 7)
 	return buildSend(async () => {
 		const magicLink = await createMagicLink(
 			{
@@ -172,7 +172,7 @@ export function _legacy_signupInvite(
 				userId: props.user.id,
 			},
 			trx
-		);
+		)
 
 		const email = await render(
 			<Invite
@@ -190,61 +190,61 @@ export function _legacy_signupInvite(
 					</>
 				}
 			/>
-		);
+		)
 
 		return {
 			to: props.user.email,
 			html: email,
 			subject: "Join PubPub",
-		};
-	});
+		}
+	})
 }
 
 export function signupInvite(
 	props: SignupInviteProps & {
-		to: string | string[];
+		to: string | string[]
 		/**
 		 * @default "Join {community.name} on PubPub"
 		 */
-		subject?: string;
+		subject?: string
 	},
-	trx = db
+	_trx = db
 ) {
 	return buildSend(async () => {
-		const email = await render(<Invite {...props} />);
+		const email = await render(<Invite {...props} />)
 
 		return {
 			to: props.to,
 			html: email,
 			subject: props.subject ?? `Join ${props.community.name} on PubPub`,
-		};
-	});
+		}
+	})
 }
 
 export function formLink(
 	props: {
-		community: Pick<Communities, "name" | "avatar" | "slug">;
-		form: { name: string };
-		subject: string;
-		to: string | string[];
+		community: Pick<Communities, "name" | "avatar" | "slug">
+		form: { name: string }
+		subject: string
+		to: string | string[]
 	} & (FormInviteLinkProps | { formInviteLink: string })
 ) {
 	return buildSend(async () => {
 		const inviteLink =
-			"formInviteLink" in props ? props.formInviteLink : await createFormInviteLink(props);
+			"formInviteLink" in props ? props.formInviteLink : await createFormInviteLink(props)
 
 		const email = await render(
 			<FormLink community={props.community} formInviteLink={inviteLink} form={props.form} />
-		);
+		)
 
 		return {
 			to: props.to,
 			subject: props.subject,
 			html: email,
-		};
-	});
+		}
+	})
 }
 
 export function generic(opts: RequiredOptions) {
-	return buildSend(async () => opts);
+	return buildSend(async () => opts)
 }

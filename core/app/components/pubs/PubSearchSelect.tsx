@@ -1,40 +1,41 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo, useRef, useState } from "react";
-import { isEnabled } from "@sentry/nextjs";
-import { useDebounce } from "use-debounce";
+import type { NonGenericProcessedPub, ProcessedPub } from "contracts"
+import type { PubsId, PubTypesId } from "db/public"
 
-import type { NonGenericProcessedPub, ProcessedPub } from "contracts";
-import { type PubsId, type PubTypesId } from "db/public";
-import { AutoComplete } from "ui/autocomplete";
+import { useCallback, useMemo, useRef, useState } from "react"
+import { isEnabled } from "@sentry/nextjs"
+import { useDebounce } from "use-debounce"
 
-import { client } from "~/lib/api";
-import { getPubTitle } from "~/lib/pubs";
-import { useCommunity } from "../providers/CommunityProvider";
-import { useUser } from "../providers/UserProvider";
-import { PubCardClient } from "./PubCard/PubCardClient";
+import { AutoComplete } from "ui/autocomplete"
+
+import { client } from "~/lib/api"
+import { getPubTitle } from "~/lib/pubs"
+import { useCommunity } from "../providers/CommunityProvider"
+import { useUser } from "../providers/UserProvider"
+import { PubCardClient } from "./PubCard/PubCardClient"
 
 export type PubSearchSelectProps = {
-	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void;
-	disabledPubIds?: PubsId[];
-	pubTypeIds?: PubTypesId[];
-	mode?: "single" | "multi";
-	placeholder?: string;
-	emptyMessage?: string;
-	className?: string;
-	maxHeight?: string;
-	multiSelect?: boolean;
-};
+	onSelectedPubsChange?: (pubs: NonGenericProcessedPub[]) => void
+	disabledPubIds?: PubsId[]
+	pubTypeIds?: PubTypesId[]
+	mode?: "single" | "multi"
+	placeholder?: string
+	emptyMessage?: string
+	className?: string
+	maxHeight?: string
+	multiSelect?: boolean
+}
 
 export const PubSearchSelect = (props: PubSearchSelectProps) => {
 	const [selectedPubs, setSelectedPubs] = useState<
 		ProcessedPub<{ withPubType: true; withStage: true; withValues: false }>[]
-	>([]);
-	const [query, setQuery] = useState("");
-	const [debouncedQuery] = useDebounce(query, 300);
-	const community = useCommunity();
-	const user = useUser();
-	const inputRef = useRef<HTMLInputElement>(null);
+	>([])
+	const [query, setQuery] = useState("")
+	const [debouncedQuery] = useDebounce(query, 300)
+	const community = useCommunity()
+	const user = useUser()
+	const inputRef = useRef<HTMLInputElement>(null)
 
 	const { data: results } = client.pubs.getMany.useQuery({
 		queryKey: ["pubs", "search", community.id, debouncedQuery, props.pubTypeIds],
@@ -54,30 +55,30 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 			params: { communitySlug: community.slug },
 		},
 		placeholderData: (prev) => prev,
-	});
+	})
 
 	const handleClearSearch = useCallback(() => {
-		setQuery("");
-		inputRef.current?.focus();
-	}, [inputRef]);
+		setQuery("")
+		inputRef.current?.focus()
+	}, [])
 
 	const clear = useCallback(() => {
-		handleClearSearch();
-		props.onSelectedPubsChange?.([]);
-		setSelectedPubs([]);
-	}, [handleClearSearch, props.onSelectedPubsChange]);
+		handleClearSearch()
+		props.onSelectedPubsChange?.([])
+		setSelectedPubs([])
+	}, [handleClearSearch, props.onSelectedPubsChange])
 
 	const pubs = useMemo(
 		() =>
 			results?.status === 200
 				? (results.body as ProcessedPub<{
-						withPubType: true;
-						withStage: true;
-						withValues: false;
+						withPubType: true
+						withStage: true
+						withValues: false
 					}>[])
 				: [],
 		[results]
-	);
+	)
 
 	const options = useMemo(
 		() =>
@@ -88,7 +89,7 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 				className: "p-1",
 			})),
 		[pubs]
-	);
+	)
 
 	return (
 		<AutoComplete
@@ -111,22 +112,22 @@ export const PubSearchSelect = (props: PubSearchSelectProps) => {
 			disabled={!isEnabled}
 			empty={null}
 			onInputValueChange={(val) => {
-				setQuery(val);
+				setQuery(val)
 			}}
 			onValueChange={(option) => {
-				const pub = pubs.find((p) => p.id === option.value);
+				const pub = pubs.find((p) => p.id === option.value)
 				if (!pub) {
-					setSelectedPubs([]);
-					props.onSelectedPubsChange?.([]);
-					return;
+					setSelectedPubs([])
+					props.onSelectedPubsChange?.([])
+					return
 				}
-				setSelectedPubs([pub]);
+				setSelectedPubs([pub])
 
-				props.onSelectedPubsChange?.([pub]);
+				props.onSelectedPubsChange?.([pub])
 			}}
 			onClose={handleClearSearch}
 			onClear={clear}
 			placeholder={props.placeholder}
 		/>
-	);
-};
+	)
+}

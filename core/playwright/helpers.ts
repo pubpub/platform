@@ -1,18 +1,18 @@
 /* eslint-disable no-restricted-properties */
-import type { Page } from "@playwright/test";
+import type { Page } from "@playwright/test"
+import type { CommunitySeedOutput } from "~/prisma/seed/createSeed"
+import type { MessageResponse } from "./inbucketClient"
 
-import { faker } from "@faker-js/faker";
+import { faker } from "@faker-js/faker"
 
-import { CoreSchemaType, MemberRole } from "db/public";
+import { CoreSchemaType, MemberRole } from "db/public"
 
-import type { MessageResponse } from "./inbucketClient";
-import type { CommunitySeedOutput, Seed } from "~/prisma/seed/createSeed";
-import { createSeed } from "~/prisma/seed/createSeed";
-import { seedCommunity } from "~/prisma/seed/seedCommunity";
-import { CommunityPage } from "./fixtures/community-page";
-import { FieldsPage } from "./fixtures/fields-page";
-import { PubTypesPage } from "./fixtures/pub-types-page";
-import { InbucketClient } from "./inbucketClient";
+import { createSeed } from "~/prisma/seed/createSeed"
+import { seedCommunity } from "~/prisma/seed/seedCommunity"
+import { CommunityPage } from "./fixtures/community-page"
+import { FieldsPage } from "./fixtures/fields-page"
+import { PubTypesPage } from "./fixtures/pub-types-page"
+import { InbucketClient } from "./inbucketClient"
 
 export const createCommunity = async ({
 	page,
@@ -23,62 +23,62 @@ export const createCommunity = async ({
 	],
 	types = [["Submission", "A submitted pub", ["title", "content"]]],
 }: {
-	page: Page;
-	community?: Partial<{ name: string; slug: string }>;
-	fields?: Parameters<InstanceType<typeof FieldsPage>["addField"]>[];
-	types?: Parameters<InstanceType<typeof PubTypesPage>["addType"]>[];
+	page: Page
+	community?: Partial<{ name: string; slug: string }>
+	fields?: Parameters<InstanceType<typeof FieldsPage>["addField"]>[]
+	types?: Parameters<InstanceType<typeof PubTypesPage>["addType"]>[]
 }) => {
-	const communitySlug = community?.slug ?? "test-community-slug";
-	const communityPage = new CommunityPage(page);
-	await communityPage.goto();
-	await communityPage.addCommunity(community?.name ?? "test community", communitySlug);
+	const communitySlug = community?.slug ?? "test-community-slug"
+	const communityPage = new CommunityPage(page)
+	await communityPage.goto()
+	await communityPage.addCommunity(community?.name ?? "test community", communitySlug)
 
-	const fieldsPage = new FieldsPage(page, communitySlug);
-	await fieldsPage.goto();
+	const fieldsPage = new FieldsPage(page, communitySlug)
+	await fieldsPage.goto()
 	for (const [name, format] of fields) {
-		await fieldsPage.addField(name, format);
+		await fieldsPage.addField(name, format)
 	}
 
-	const typesPage = new PubTypesPage(page, communitySlug);
-	await typesPage.goto();
+	const typesPage = new PubTypesPage(page, communitySlug)
+	await typesPage.goto()
 	for (const [name, description, fields] of types) {
-		await typesPage.addType(name, description, fields);
+		await typesPage.addType(name, description, fields)
 	}
-};
+}
 
-const INBUCKET_TESTING_URL = process.env.INBUCKET_URL ?? "http://localhost:54324";
+const INBUCKET_TESTING_URL = process.env.INBUCKET_URL ?? "http://localhost:54324"
 
-export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL);
+export const inbucketClient = new InbucketClient(INBUCKET_TESTING_URL)
 
 export const getUrlFromInbucketMessage = async (message: MessageResponse, page: Page) => {
-	const url = message.body.html?.match(/a href="([^"]+)"/)?.[1];
+	const url = message.body.html?.match(/a href="([^"]+)"/)?.[1]
 	if (!url) {
-		return undefined;
+		return undefined
 	}
 
 	// Use the browser to decode the html entities in our URL
 	const decodedUrl = await page.evaluate((url) => {
-		const elem = document.createElement("div");
-		elem.innerHTML = url;
-		return elem.textContent!;
-	}, url!);
+		const elem = document.createElement("div")
+		elem.innerHTML = url
+		return elem.textContent!
+	}, url!)
 
-	return decodedUrl;
-};
+	return decodedUrl
+}
 
 export const retryAction = async (action: () => Promise<void>, maxAttempts = 3) => {
 	for (let attempt = 1; attempt <= maxAttempts; attempt++) {
 		try {
-			await action();
-			return;
+			await action()
+			return
 		} catch (error) {
-			if (attempt === maxAttempts) throw error;
+			if (attempt === maxAttempts) throw error
 		}
 	}
-};
+}
 
 export const createBaseSeed = () => {
-	const id = crypto.randomUUID();
+	const id = crypto.randomUUID()
 	return createSeed({
 		community: { name: `test community ${id}`, slug: `test-community-${id}` },
 		pubFields: {
@@ -98,15 +98,15 @@ export const createBaseSeed = () => {
 				role: MemberRole.admin,
 			},
 		},
-	});
-};
+	})
+}
 
-export type BaseSeedOutput = CommunitySeedOutput<ReturnType<typeof createBaseSeed>>;
+export type BaseSeedOutput = CommunitySeedOutput<ReturnType<typeof createBaseSeed>>
 
 export const seedBase = async () => {
-	const baseSeed = createBaseSeed();
-	return seedCommunity(baseSeed) as any;
-};
+	const baseSeed = createBaseSeed()
+	return seedCommunity(baseSeed) as any
+}
 
 export const PubFieldsOfEachType = Object.fromEntries(
 	Object.values(CoreSchemaType).map((type) => [
@@ -115,7 +115,7 @@ export const PubFieldsOfEachType = Object.fromEntries(
 			schemaName: type,
 		},
 	])
-) as Record<CoreSchemaType, { schemaName: CoreSchemaType }>;
+) as Record<CoreSchemaType, { schemaName: CoreSchemaType }>
 
 export const waitForBaseCommunityPage = async (
 	page: Page,
@@ -124,9 +124,9 @@ export const waitForBaseCommunityPage = async (
 ) => {
 	await page.waitForURL(new RegExp(`.*/c/${communitySlug ?? ".*"}/${slug ?? "stages"}.*`), {
 		timeout: 10_000,
-	});
-};
+	})
+}
 
 export const closeToast = async (page: Page) => {
-	await page.getByTestId("toast-close").click();
-};
+	await page.getByTestId("toast-close").click()
+}

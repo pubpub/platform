@@ -3,7 +3,7 @@
 const resolvedDestination = {
 	url: new URL("./stubs.js", import.meta.url).href,
 	shortCircuit: true,
-};
+}
 
 /**
  * @type {import("node:module").ResolveHook}
@@ -20,7 +20,7 @@ export async function resolve(specifier, context, nextResolve) {
 		/@nimpl/.test(specifier) ||
 		/cache\/auto/.test(specifier)
 	) {
-		return resolvedDestination;
+		return resolvedDestination
 	}
 
 	// if (/kysely\/database.ts/.test(specifier)) {
@@ -32,9 +32,9 @@ export async function resolve(specifier, context, nextResolve) {
 	// }
 
 	// Use the default resolver for all other modules
-	return nextResolve(specifier, context);
+	return nextResolve(specifier, context)
 }
 
 export default async () => {
-	return;
-};
+	return
+}

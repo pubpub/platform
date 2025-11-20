@@ -10,9 +10,7 @@
 		"format:fix": "prettier -w . --ignore-path ../.gitignore",
 		"type-check": "tsc --noEmit"
 	},
-	"files": [
-		"src"
-	],
+	"files": ["src"],
 	"dependencies": {
 		"@honeycombio/opentelemetry-node": "catalog:",
 		"@opentelemetry/auto-instrumentations-node": "catalog:",

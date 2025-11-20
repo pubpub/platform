@@ -1,10 +1,10 @@
 type Props = {
 	params: Promise<{
-		communitySlug: string;
-	}>;
-};
+		communitySlug: string
+	}>
+}
 
-export default async function Page(props: Props) {
+export default async function Page(_props: Props) {
 	return (
 		<div className="flex h-full items-center justify-center">
 			<div className="flex max-w-[444px] flex-col items-center justify-center">
@@ -14,5 +14,5 @@ export default async function Page(props: Props) {
 				</p>
 			</div>
 		</div>
-	);
+	)
 }

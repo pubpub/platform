@@ -1,31 +1,29 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
-import type { InputTypeForCoreSchemaType } from "schemas";
+import type { JsonValue, ProcessedPubWithForm } from "contracts"
+import type { ReactNode } from "react"
+import type { InputTypeForCoreSchemaType } from "schemas"
 
-import { useState } from "react";
-import Link from "next/link";
-import { Value } from "@sinclair/typebox/value";
-import partition from "lodash.partition";
-import { getJsonSchemaByCoreSchemaType } from "schemas";
+import { useState } from "react"
+import Link from "next/link"
+import partition from "lodash.partition"
 
-import type { JsonValue, ProcessedPubWithForm } from "contracts";
-import { CoreSchemaType } from "db/public";
-import { Button } from "ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
-import { ColorCircle, ColorLabel, ColorValue } from "ui/color";
-import { ChevronDown, ChevronRight } from "ui/icon";
-import { ShowMore } from "ui/show-more";
+import { CoreSchemaType } from "db/public"
+import { Button } from "ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
+import { ColorCircle, ColorLabel, ColorValue } from "ui/color"
+import { ChevronDown, ChevronRight } from "ui/icon"
+import { ShowMore } from "ui/show-more"
 
-import { FileUploadPreview } from "~/app/components/forms/FileUpload";
-import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs";
+import { FileUploadPreview } from "~/app/components/forms/FileUpload"
+import { getPubTitle, valuesWithoutTitle } from "~/lib/pubs"
 
 type FullProcessedPubWithForm = ProcessedPubWithForm<{
-	withRelatedPubs: true;
-	withStage: true;
-	withPubType: true;
-	withMembers: true;
-}>;
+	withRelatedPubs: true
+	withStage: true
+	withPubType: true
+	withMembers: true
+}>
 
 /**
  * Get the label a form/pub value combo might have. In preference order:
@@ -35,18 +33,18 @@ type FullProcessedPubWithForm = ProcessedPubWithForm<{
  **/
 const getLabel = (value: FullProcessedPubWithForm["values"][number]) => {
 	// Default to the field name
-	const defaultLabel = value.fieldName;
-	let configLabel;
-	let formElementLabel;
+	const defaultLabel = value.fieldName
+	let configLabel: string | null = null
+	let formElementLabel: string | null = null
 	if ("formElementId" in value) {
-		const config = value.formElementConfig;
+		const config = value.formElementConfig
 		if (config) {
-			configLabel = "label" in config ? config.label : undefined;
+			configLabel = "label" in config ? (config.label ?? null) : null
 		}
-		formElementLabel = value.formElementLabel;
+		formElementLabel = value.formElementLabel
 	}
-	return formElementLabel || configLabel || defaultLabel;
-};
+	return formElementLabel || configLabel || defaultLabel
+}
 
 const PubValueHeading = ({
 	depth,
@@ -55,29 +53,29 @@ const PubValueHeading = ({
 }: React.HTMLAttributes<HTMLHeadingElement> & { depth: number }) => {
 	// For "Other Fields" section header which might be one lower than any pub depth
 	if (depth < 1) {
-		return <h2 {...props}>{children}</h2>;
+		return <h2 {...props}>{children}</h2>
 	}
 	// Pub depth starts at 1
 	switch (depth - 1) {
 		case 0:
-			return <h2 {...props}>{children}</h2>;
+			return <h2 {...props}>{children}</h2>
 		case 1:
-			return <h3 {...props}>{children}</h3>;
+			return <h3 {...props}>{children}</h3>
 		case 2:
-			return <h4 {...props}>{children}</h4>;
+			return <h4 {...props}>{children}</h4>
 		default:
-			return <h5 {...props}>{children}</h5>;
+			return <h5 {...props}>{children}</h5>
 	}
-};
+}
 
 const FieldBlock = ({
 	name,
 	values,
 	depth,
 }: {
-	name: string;
-	values: FullProcessedPubWithForm["values"];
-	depth: number;
+	name: string
+	values: FullProcessedPubWithForm["values"]
+	depth: number
 }) => {
 	return (
 		<div className="my-2" key={name}>
@@ -95,52 +93,52 @@ const FieldBlock = ({
 				)}
 			</div>
 		</div>
-	);
-};
+	)
+}
 
 export const PubValues = ({
 	pub,
 	isNested,
 }: {
-	pub: FullProcessedPubWithForm;
+	pub: FullProcessedPubWithForm
 	/**
 	 * If this is a nested related pub. This can likely be removed once we have related pubs
 	 * using default forms as well, as right now we only need it to not render
 	 * the "Other fields" header which will always show up since related pubs do not have
 	 * forms joined currently
 	 **/
-	isNested?: boolean;
+	isNested?: boolean
 }): ReactNode => {
-	const { values, depth } = pub;
+	const { values, depth } = pub
 	if (!values.length) {
-		return null;
+		return null
 	}
 
-	const filteredValues = valuesWithoutTitle(pub);
+	const filteredValues = valuesWithoutTitle(pub)
 
 	// Group values by field so we only render one heading for relationship values that have multiple entries
 	const groupedValues: Record<
 		string,
 		{ label: string; isInForm: boolean; values: FullProcessedPubWithForm["values"] }
-	> = {};
+	> = {}
 	filteredValues.forEach((value) => {
 		if (groupedValues[value.fieldSlug]) {
-			groupedValues[value.fieldSlug].values.push(value);
+			groupedValues[value.fieldSlug].values.push(value)
 		} else {
-			const label = getLabel(value);
-			const isInForm = "formElementId" in value;
-			groupedValues[value.fieldSlug] = { label, values: [value], isInForm };
+			const label = getLabel(value)
+			const isInForm = "formElementId" in value
+			groupedValues[value.fieldSlug] = { label, values: [value], isInForm }
 		}
-	});
+	})
 
 	const [valuesInForm, valuesNotInForm] = partition(
 		Object.values(groupedValues),
 		(values) => values.isInForm
-	);
+	)
 	return (
 		<article>
 			{valuesInForm.map(({ label, values }) => {
-				return <FieldBlock key={label} name={label} values={values} depth={depth} />;
+				return <FieldBlock key={label} name={label} values={values} depth={depth} />
 			})}
 			{valuesNotInForm.length ? (
 				<div className="flex flex-col gap-2">
@@ -156,16 +154,16 @@ export const PubValues = ({
 				</div>
 			) : null}
 		</article>
-	);
-};
+	)
+}
 
 const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number] }) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 	if (value.relatedPub) {
-		const { relatedPub, ...justValue } = value;
+		const { relatedPub, ...justValue } = value
 		const justValueElement = justValue.value ? (
 			<span className="mr-2 italic">{<PubValue value={justValue} />}:</span>
-		) : null;
+		) : null
 		if (relatedPub.isCycle) {
 			return (
 				<>
@@ -173,10 +171,10 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 					{getPubTitle(value.relatedPub)}
 					<span className="ml-2 rounded-full bg-green-100 px-2 py-1">Current pub</span>
 				</>
-			);
+			)
 		}
 		const renderRelatedValues =
-			value.relatedPub.depth < 3 && valuesWithoutTitle(relatedPub).length > 0;
+			value.relatedPub.depth < 3 && valuesWithoutTitle(relatedPub).length > 0
 		return (
 			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 				<div className="flex items-center">
@@ -206,7 +204,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 					)}
 				</CollapsibleContent>
 			</Collapsible>
-		);
+		)
 	}
 
 	if (value.schemaName === CoreSchemaType.FileUpload) {
@@ -214,13 +212,13 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 			<FileUploadPreview
 				files={value.value as InputTypeForCoreSchemaType<CoreSchemaType.FileUpload>}
 			/>
-		);
+		)
 	}
 
 	if (value.schemaName === CoreSchemaType.DateTime) {
-		const date = new Date(value.value as string);
+		const date = new Date(value.value as string)
 		if (date.toString() !== "Invalid Date") {
-			return date.toISOString().split("T")[0];
+			return date.toISOString().split("T")[0]
 		}
 	}
 
@@ -232,7 +230,7 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 					dangerouslySetInnerHTML={{ __html: value.value as string }}
 				/>
 			</ShowMore>
-		);
+		)
 	}
 
 	if (value.schemaName === CoreSchemaType.Color) {
@@ -241,19 +239,19 @@ const PubValue = ({ value }: { value: FullProcessedPubWithForm["values"][number]
 				<ColorCircle color={value.value as string} size="sm" />
 				<ColorValue color={value.value as string} />
 			</ColorLabel>
-		);
+		)
 	}
 
-	const valueAsString = (value.value as JsonValue)?.toString() || "";
+	const valueAsString = (value.value as JsonValue)?.toString() || ""
 
-	let renderedField: ReactNode = valueAsString;
+	let renderedField: ReactNode = valueAsString
 	if (value.schemaName === CoreSchemaType.URL) {
 		renderedField = (
 			<a className="underline" href={valueAsString} target="_blank" rel="noreferrer">
 				{valueAsString}
 			</a>
-		);
+		)
 	}
 
-	return renderedField;
-};
+	return renderedField
+}

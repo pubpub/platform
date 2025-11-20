@@ -1,21 +1,21 @@
-import "server-only";
+import "server-only"
 
-import { randomUUID } from "crypto";
+import type { Communities, CommunityMemberships, CommunityMembershipsId } from "db/public"
+import type { LoginRedirectOpts } from "../links"
+import type { ExtraSessionValidationOptions } from "./lucia"
 
-import { cache } from "react";
-import { getPathname } from "@nimpl/getters/get-pathname";
+import { cache } from "react"
+import { randomUUID } from "node:crypto"
+import { getPathname } from "@nimpl/getters/get-pathname"
 
-import type { Communities, CommunityMemberships, CommunityMembershipsId } from "db/public";
-import { AuthTokenType, MemberRole } from "db/public";
-import { expect } from "utils";
-import { tryCatch } from "utils/try-catch";
+import { AuthTokenType, MemberRole } from "db/public"
+import { expect } from "utils"
+import { tryCatch } from "utils/try-catch"
 
-import type { LoginRedirectOpts } from "../links";
-import type { ExtraSessionValidationOptions } from "./lucia";
-import { NotInCommunityError } from "../server/cache/getCommunitySlug";
-import { findCommunityBySlug } from "../server/community";
-import { redirectToLogin, redirectToVerify } from "../server/navigation/redirects";
-import { validateRequest } from "./lucia";
+import { NotInCommunityError } from "../server/cache/getCommunitySlug"
+import { findCommunityBySlug } from "../server/community"
+import { redirectToLogin, redirectToVerify } from "../server/navigation/redirects"
+import { validateRequest } from "./lucia"
 
 /**
  * Get the users login data based on the session cookie
@@ -25,27 +25,27 @@ export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) =
 	const [loginData, [err, community]] = await Promise.all([
 		validateRequest(opts),
 		tryCatch(findCommunityBySlug()),
-	]);
+	])
 
 	// if we're not in a community dont do any superadmin checks
 	if (err) {
 		if (!(err instanceof NotInCommunityError)) {
-			throw err;
+			throw err
 		}
-		return loginData;
+		return loginData
 	}
 
 	if (!community) {
-		return loginData;
+		return loginData
 	}
 
 	if (!loginData.user?.isSuperAdmin) {
-		return loginData;
+		return loginData
 	}
 
 	// check to see if we're already a member of the community
 	if (loginData.user.memberships.some((m) => m.community.id === community.id)) {
-		return loginData;
+		return loginData
 	}
 
 	const fakeCommunityMembership = {
@@ -59,8 +59,8 @@ export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) =
 		formId: null,
 		memberGroupId: null,
 	} satisfies CommunityMemberships & {
-		community: Communities;
-	};
+		community: Communities
+	}
 
 	return {
 		...loginData,
@@ -68,34 +68,34 @@ export const getLoginData = cache(async (opts?: ExtraSessionValidationOptions) =
 			...loginData.user,
 			memberships: [...loginData.user.memberships, fakeCommunityMembership],
 		},
-	};
-});
+	}
+})
 
 const defaultPageOpts: ExtraSessionValidationOptions & LoginRedirectOpts = {
 	allowedSessions: [AuthTokenType.generic, AuthTokenType.verifyEmail],
-};
+}
 
 /**
  * Get the login data for the current page, and redirect to the login page if the user is not logged in.
  */
 export const getPageLoginData = cache(
 	async (opts?: ExtraSessionValidationOptions & LoginRedirectOpts) => {
-		const options = opts ?? defaultPageOpts;
-		const loginData = await getLoginData(options);
+		const options = opts ?? defaultPageOpts
+		const loginData = await getLoginData(options)
 
 		if (!loginData.user) {
-			redirectToLogin(options);
+			redirectToLogin(options)
 		}
 
 		if (loginData.session && loginData.session.type === AuthTokenType.verifyEmail) {
-			const pathname = getPathname();
+			const pathname = getPathname()
 			redirectToVerify({
 				redirectTo: expect(pathname, "pathname is missing for redirectToVerify").toString(),
-			});
+			})
 		}
 
-		return loginData;
+		return loginData
 	}
-);
+)
 
-export type LoginData = Awaited<ReturnType<typeof getLoginData>>;
+export type LoginData = Awaited<ReturnType<typeof getLoginData>>

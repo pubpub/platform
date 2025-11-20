@@ -1,28 +1,28 @@
-"use client";
+"use client"
 
-import type { ContextEditorGetter } from "context-editor";
-import type { ControllerRenderProps, FieldValues } from "react-hook-form";
+import type { ContextEditorGetter } from "context-editor"
+import type { InputComponent } from "db/public"
+import type { ControllerRenderProps, FieldValues } from "react-hook-form"
+import type { ElementProps } from "../types"
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { Value } from "@sinclair/typebox/value";
-import { baseSchema } from "context-editor/schemas";
-import { Node } from "prosemirror-model";
-import { useFormContext } from "react-hook-form";
-import { richTextInputConfigSchema } from "schemas";
+import { useCallback, useEffect, useMemo, useRef } from "react"
+import { Value } from "@sinclair/typebox/value"
+import { baseSchema } from "context-editor/schemas"
+import { Node } from "prosemirror-model"
+import { useFormContext } from "react-hook-form"
+import { richTextInputConfigSchema } from "schemas"
 
-import { InputComponent } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
 
-import type { ElementProps } from "../types";
-import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient";
-import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext";
-import { useFormElementToggleContext } from "../FormElementToggleContext";
+import { ContextEditorClient } from "../../ContextEditor/ContextEditorClient"
+import { useContextEditorContext } from "../../ContextEditor/ContextEditorContext"
+import { useFormElementToggleContext } from "../FormElementToggleContext"
 
 /**
  * Symbol to use in lieu of the real value for the context editor, to signal that this value should not be used
  * and should be manually read instead
  */
-export const EvilContextEditorSymbol = Symbol("EvilContextEditor");
+export const EvilContextEditorSymbol = Symbol("EvilContextEditor")
 
 /**
  * Brief explanation of what's going on here:
@@ -41,49 +41,52 @@ const EditorFormElement = function EditorFormElement({
 	label,
 	help,
 }: {
-	field: ControllerRenderProps<FieldValues, string>;
-	label: string;
-	help?: string;
+	field: ControllerRenderProps<FieldValues, string>
+	label: string
+	help?: string
 }) {
-	const formElementToggle = useFormElementToggleContext();
-	const { pubs, pubTypes, pubId, pubTypeId, registerGetter } = useContextEditorContext();
+	const formElementToggle = useFormElementToggleContext()
+	const { pubs, pubTypes, pubId, pubTypeId, registerGetter } = useContextEditorContext()
 
 	const f = useMemo(() => {
-		return field;
-	}, []);
+		return field
+	}, [field])
 
-	const contextEditorRef = useRef<ContextEditorGetter>(null);
+	const contextEditorRef = useRef<ContextEditorGetter>(null)
 
 	useEffect(() => {
-		registerGetter(f.name, contextEditorRef);
-	}, []);
+		registerGetter(f.name, contextEditorRef)
+	}, [f.name, registerGetter])
 
 	const initialDoc = useMemo(() => {
 		if (f.value instanceof Node) {
-			return f.value;
+			return f.value
 		}
 
 		if (!f.value) {
-			return;
+			return
 		}
 
-		return baseSchema.nodeFromJSON(f.value);
-	}, []);
+		return baseSchema.nodeFromJSON(f.value)
+	}, [f.value])
 
-	const form = useFormContext();
+	const form = useFormContext()
 
 	const handleChange = useCallback(() => {
 		// we are simply manually setting the value to _something_ to make the field dirty
 		form.setValue(f.name, EvilContextEditorSymbol, {
 			shouldDirty: true,
 			shouldTouch: true,
-		});
-	}, []);
+		})
+	}, [
+		f.name, // we are simply manually setting the value to _something_ to make the field dirty
+		form.setValue,
+	])
 
 	if (!pubId || !pubTypeId) {
-		return <></>;
+		return <></>
 	}
-	const disabled = !formElementToggle.isEnabled(f.name);
+	const disabled = !formElementToggle.isEnabled(f.name)
 
 	return (
 		<FormItem>
@@ -106,19 +109,19 @@ const EditorFormElement = function EditorFormElement({
 			<FormDescription>{help}</FormDescription>
 			<FormMessage />
 		</FormItem>
-	);
-};
+	)
+}
 
 export const ContextEditorElement = ({
 	slug,
 	label,
 	config,
 }: ElementProps<InputComponent.richText>) => {
-	const { control } = useFormContext();
+	const { control } = useFormContext()
 
-	Value.Default(richTextInputConfigSchema, config);
+	Value.Default(richTextInputConfigSchema, config)
 	if (!Value.Check(richTextInputConfigSchema, config)) {
-		return null;
+		return null
 	}
 
 	return (
@@ -129,5 +132,5 @@ export const ContextEditorElement = ({
 				<EditorFormElement field={field} label={label} help={config.help} />
 			)}
 		/>
-	);
-};
+	)
+}

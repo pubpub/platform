@@ -1,23 +1,23 @@
-import * as React from "react";
-import { HexAlphaColorPicker, HexColorInput } from "react-colorful";
+import * as React from "react"
+import { HexAlphaColorPicker, HexColorInput } from "react-colorful"
 
-import { cn } from "utils";
-import { isColorDark } from "utils/color";
+import { cn } from "utils"
+import { isColorDark } from "utils/color"
 
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
 
 export type ColorPickerProps = React.ComponentPropsWithoutRef<typeof HexAlphaColorPicker> & {
-	onChange: (color: string) => void;
-	presets?: { label: string; value: string }[];
-	presetsOnly?: boolean;
-};
+	onChange: (color: string) => void
+	presets?: { label: string; value: string }[]
+	presetsOnly?: boolean
+}
 
 export function ColorBackground(props: {
-	color: string;
-	className?: string;
-	children?: React.ReactNode;
+	color: string
+	className?: string
+	children?: React.ReactNode
 }) {
-	const isDark = isColorDark(props.color);
+	const isDark = isColorDark(props.color)
 	return (
 		<div
 			className={cn("flex items-center justify-center", props.className)}
@@ -25,13 +25,13 @@ export function ColorBackground(props: {
 		>
 			{props.children}
 		</div>
-	);
+	)
 }
 
 export function ColorCircle(props: {
-	color: string;
-	size: "sm" | "md" | "lg";
-	className?: string;
+	color: string
+	size: "sm" | "md" | "lg"
+	className?: string
 }) {
 	return (
 		<div
@@ -42,7 +42,7 @@ export function ColorCircle(props: {
 			})}
 			style={{ backgroundColor: props.color }}
 		/>
-	);
+	)
 }
 
 export function ColorLabel(props: { className?: string; children: React.ReactNode }) {
@@ -55,7 +55,7 @@ export function ColorLabel(props: { className?: string; children: React.ReactNod
 		>
 			{props.children}
 		</div>
-	);
+	)
 }
 
 export function ColorValue(props: { color: string; className?: string }) {
@@ -63,11 +63,11 @@ export function ColorValue(props: { color: string; className?: string }) {
 		<span className={cn("font-md font-mono uppercase tracking-wider", props.className)}>
 			{props.color}
 		</span>
-	);
+	)
 }
 
 export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps) {
-	const isDark = isColorDark(props.color || "#000000");
+	const isDark = isColorDark(props.color || "#000000")
 
 	return (
 		<div className="flex gap-2 bg-transparent p-10">
@@ -149,5 +149,5 @@ export function ColorPicker({ presets, presetsOnly, ...props }: ColorPickerProps
 				</div>
 			)}
 		</div>
-	);
+	)
 }

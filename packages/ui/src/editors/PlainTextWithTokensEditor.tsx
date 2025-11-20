@@ -1,54 +1,51 @@
-import type { InitialConfigType } from "@lexical/react/LexicalComposer";
-import type { EditorState } from "lexical";
-import type { ControllerRenderProps } from "react-hook-form";
+import type { InitialConfigType } from "@lexical/react/LexicalComposer"
+import type { EditorState } from "lexical"
+import type { ControllerRenderProps } from "react-hook-form"
 
-import * as React from "react";
-import { $convertFromMarkdownString } from "@lexical/markdown";
-import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
-import { $getRoot } from "lexical";
+import * as React from "react"
+import { $convertFromMarkdownString } from "@lexical/markdown"
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
+import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin"
+import { $getRoot } from "lexical"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { JsonataNode } from "./JsonataNode";
-import { JsonataPlugin } from "./JsonataPlugin";
-import { SingleLinePlugin } from "./SingleLinePlugin";
+import { JsonataNode } from "./JsonataNode"
+import { JsonataPlugin } from "./JsonataPlugin"
+import { SingleLinePlugin } from "./SingleLinePlugin"
 
 const theme = {
 	token: "token",
 	jsonataToken: "jsonata-token",
-};
-
-function onError(error: unknown) {
-	// eslint-disable-next-line no-console
-	console.error(error);
 }
 
-const NODES = [JsonataNode];
+function onError(_error: unknown) {}
+
+const NODES = [JsonataNode]
 
 const makeSyntheticChangeEvent = (value: string) => {
 	return {
 		target: {
 			value,
 		},
-	};
-};
+	}
+}
 
 export type PlainTextWithTokensEditorProps = ControllerRenderProps<
 	Record<string, string>,
 	string
 > & {
-	multiLine?: boolean;
-	"aria-labelledby"?: string;
-};
+	multiLine?: boolean
+	"aria-labelledby"?: string
+}
 
 export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps) => {
-	const initialValue = React.useMemo(() => props.value ?? "", []);
+	const initialValue = React.useMemo(() => props.value ?? "", [props.value])
 	const initialConfig = React.useMemo(() => {
 		return {
 			namespace: "LexicalEditor",
@@ -56,17 +53,17 @@ export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps)
 			onError,
 			editorState: () => $convertFromMarkdownString(initialValue),
 			nodes: NODES,
-		} satisfies InitialConfigType;
-	}, [initialValue]);
+		} satisfies InitialConfigType
+	}, [initialValue])
 
 	const onChange = React.useCallback(
 		(editorState: EditorState) => {
 			editorState.read(() => {
-				props.onChange(makeSyntheticChangeEvent($getRoot().getTextContent()));
-			});
+				props.onChange(makeSyntheticChangeEvent($getRoot().getTextContent()))
+			})
 		},
 		[props.onChange]
-	);
+	)
 
 	return (
 		<LexicalComposer initialConfig={initialConfig}>
@@ -93,5 +90,5 @@ export const PlainTextWithTokensEditor = (props: PlainTextWithTokensEditorProps)
 			{!props.multiLine && <SingleLinePlugin />}
 			<JsonataPlugin />
 		</LexicalComposer>
-	);
-};
+	)
+}

@@ -1,10 +1,3 @@
-import type { Adapter, DatabaseSession, DatabaseUser, Session, User } from "lucia";
-
-import { cache } from "react";
-import { cookies } from "next/headers";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
-import { Lucia } from "lucia";
-
 import type {
 	Communities,
 	CommunityMemberships,
@@ -12,27 +5,34 @@ import type {
 	SessionsId,
 	Users,
 	UsersId,
-} from "db/public";
-import { AuthTokenType } from "db/public";
-import { logger } from "logger";
+} from "db/public"
+import type { Adapter, DatabaseSession, DatabaseUser, Session, User } from "lucia"
 
-import { db } from "~/kysely/database";
-import { env } from "~/lib/env/env";
+import { cache } from "react"
+import { cookies } from "next/headers"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
+import { Lucia } from "lucia"
+
+import { AuthTokenType } from "db/public"
+import { logger } from "logger"
+
+import { db } from "~/kysely/database"
+import { env } from "~/lib/env/env"
 
 type UserWithMembersShips = Omit<Users, "passwordHash"> & {
 	memberships: (CommunityMemberships & {
-		community: Communities;
-	})[];
-};
+		community: Communities
+	})[]
+}
 declare module "lucia" {
 	interface Register {
-		UserId: UsersId;
-		Lucia: typeof lucia;
-		DatabaseUserAttributes: Omit<UserWithMembersShips, "id">;
+		UserId: UsersId
+		Lucia: typeof lucia
+		DatabaseUserAttributes: Omit<UserWithMembersShips, "id">
 		DatabaseSessionAttributes: Omit<
 			Sessions,
 			"id" | "expiresAt" | "userId" | "createdAt" | "updatedAt"
-		>;
+		>
 	}
 }
 
@@ -49,11 +49,11 @@ declare module "lucia" {
  */
 class KyselyAdapter implements Adapter {
 	public async deleteSession(sessionId: SessionsId): Promise<void> {
-		await db.deleteFrom("sessions").where("id", "=", sessionId).executeTakeFirstOrThrow();
+		await db.deleteFrom("sessions").where("id", "=", sessionId).executeTakeFirstOrThrow()
 	}
 
 	public async deleteUserSessions(userId: UsersId): Promise<void> {
-		await db.deleteFrom("sessions").where("userId", "=", userId).executeTakeFirstOrThrow();
+		await db.deleteFrom("sessions").where("userId", "=", userId).executeTakeFirstOrThrow()
 	}
 
 	public async getSessionAndUser(
@@ -98,22 +98,22 @@ class KyselyAdapter implements Adapter {
 				).as("user"),
 			])
 			.where("id", "=", sessionId)
-			.executeTakeFirst();
+			.executeTakeFirst()
 
 		if (!session) {
-			return [null, null];
+			return [null, null]
 		}
 
-		const { user: databaseUser, ...databaseSession } = session;
+		const { user: databaseUser, ...databaseSession } = session
 
 		if (!databaseUser) {
-			return [null, null];
+			return [null, null]
 		}
 
 		return [
 			transformIntoDatabaseSession(databaseSession),
 			transformIntoDatabaseUser(databaseUser),
-		];
+		]
 	}
 
 	public async getUserSessions(userId: UsersId): Promise<DatabaseSession[]> {
@@ -121,11 +121,11 @@ class KyselyAdapter implements Adapter {
 			.selectFrom("sessions")
 			.selectAll()
 			.where("userId", "=", userId)
-			.execute();
+			.execute()
 
 		return result.map((val) => {
-			return transformIntoDatabaseSession(val);
-		});
+			return transformIntoDatabaseSession(val)
+		})
 	}
 
 	public async setSession(databaseSession: DatabaseSession): Promise<void> {
@@ -134,9 +134,9 @@ class KyselyAdapter implements Adapter {
 			userId: databaseSession.userId as UsersId,
 			expiresAt: databaseSession.expiresAt,
 			...databaseSession.attributes,
-		};
+		}
 
-		await db.insertInto("sessions").values(value).execute();
+		await db.insertInto("sessions").values(value).execute()
 	}
 
 	public async updateSessionExpiration(sessionId: SessionsId, expiresAt: Date): Promise<void> {
@@ -144,36 +144,36 @@ class KyselyAdapter implements Adapter {
 			.updateTable("sessions")
 			.set("expiresAt", expiresAt)
 			.where("id", "=", sessionId)
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 	}
 
 	public async deleteExpiredSessions(): Promise<void> {
 		await db
 			.deleteFrom("sessions")
 			.where("expiresAt", "<=", new Date())
-			.executeTakeFirstOrThrow();
+			.executeTakeFirstOrThrow()
 	}
 }
 
 function transformIntoDatabaseSession(raw: Sessions): DatabaseSession {
-	const { id, userId, expiresAt, ...attributes } = raw;
+	const { id, userId, expiresAt, ...attributes } = raw
 	return {
 		userId,
 		id,
 		expiresAt,
 		attributes,
-	};
+	}
 }
 
 function transformIntoDatabaseUser(raw: UserWithMembersShips): DatabaseUser {
-	const { id, ...attributes } = raw;
+	const { id, ...attributes } = raw
 	return {
 		id,
 		attributes,
-	};
+	}
 }
 
-const adapter = new KyselyAdapter();
+const adapter = new KyselyAdapter()
 
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
@@ -186,7 +186,7 @@ export const lucia = new Lucia(adapter, {
 	getSessionAttributes: ({ type }) => {
 		return {
 			type,
-		};
+		}
 	},
 	getUserAttributes: ({
 		email,
@@ -213,9 +213,9 @@ export const lucia = new Lucia(adapter, {
 			avatar,
 			orcid,
 			isVerified,
-		};
+		}
 	},
-});
+})
 
 export type ExtraSessionValidationOptions = {
 	/**
@@ -223,23 +223,23 @@ export type ExtraSessionValidationOptions = {
 	 *
 	 * @default  [AuthTokenType.generic]
 	 */
-	allowedSessions?: AuthTokenType[];
-};
+	allowedSessions?: AuthTokenType[]
+}
 
-const DEFAULT_ALLOWED_SESSIONS = [AuthTokenType.generic] as AuthTokenType[];
+const DEFAULT_ALLOWED_SESSIONS = [AuthTokenType.generic] as AuthTokenType[]
 
 const defaultOptions = {
 	allowedSessions: DEFAULT_ALLOWED_SESSIONS,
-} as const satisfies ExtraSessionValidationOptions;
+} as const satisfies ExtraSessionValidationOptions
 
 /**
  * Separately cache this call because validateRequest can be called with different options
  * leading to cache misses
  */
 const validateLuciaSession = cache(async (sessionId: string) => {
-	const result = await lucia.validateSession(sessionId);
-	return result;
-});
+	const result = await lucia.validateSession(sessionId)
+	return result
+})
 
 /**
  * Get the session and corresponding user from cookies
@@ -254,32 +254,32 @@ export const validateRequest = cache(
 		 *
 		 * @default  [AuthTokenType.generic]
 		 */
-		allowedSessions?: AuthTokenType[];
+		allowedSessions?: AuthTokenType[]
 	}): Promise<{ user: User; session: Session } | { user: null; session: null }> => {
 		const options = {
 			...defaultOptions,
 			...opts,
-		};
+		}
 
-		const sessionCookies = (await cookies()).get(lucia.sessionCookieName);
+		const sessionCookies = (await cookies()).get(lucia.sessionCookieName)
 
-		const sessionId = sessionCookies?.value ?? null;
+		const sessionId = sessionCookies?.value ?? null
 
 		if (!sessionId) {
 			return {
 				user: null,
 				session: null,
-			};
+			}
 		}
 
-		const result = await validateLuciaSession(sessionId);
+		const result = await validateLuciaSession(sessionId)
 
 		// do not allow unspecified sessions
 		// eg prevent generic session from being used for password reset
 		// this is to prevent users from being able to reset the password of any logged in user
 		if (result.session?.type && !options.allowedSessions.includes(result.session?.type)) {
-			logger.debug(`Invalid session type: ${result.session?.type}`);
-			return { user: null, session: null };
+			logger.debug(`Invalid session type: ${result.session?.type}`)
+			return { user: null, session: null }
 		}
 
 		// next.js throws when you attempt to set cookie when rendering page
@@ -287,25 +287,25 @@ export const validateRequest = cache(
 			// a "fresh" session indicates that the session should be refreshed
 			// therefore we set the session cookie again with the updated experation dates
 			if (result.session?.fresh) {
-				const sessionCookie = lucia.createSessionCookie(result.session.id);
-				(await cookies()).set(
+				const sessionCookie = lucia.createSessionCookie(result.session.id)
+				;(await cookies()).set(
 					sessionCookie.name,
 					sessionCookie.value,
 					sessionCookie.attributes
-				);
+				)
 			}
 
 			if (!result.session) {
-				const sessionCookie = lucia.createBlankSessionCookie();
-				(await cookies()).set(
+				const sessionCookie = lucia.createBlankSessionCookie()
+				;(await cookies()).set(
 					sessionCookie.name,
 					sessionCookie.value,
 					sessionCookie.attributes
-				);
+				)
 			}
 		} catch {
 			// TODO: handle this?
 		}
-		return result;
+		return result
 	}
-);
+)

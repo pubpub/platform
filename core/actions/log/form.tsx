@@ -1,7 +1,7 @@
-import { FieldSet } from "ui/field";
-import { Input } from "ui/input";
+import { FieldSet } from "ui/field"
+import { Input } from "ui/input"
 
-import { ActionField } from "../_lib/ActionField";
+import { ActionField } from "../_lib/ActionField"
 
 export default function LogActionForm() {
 	return (
@@ -21,5 +21,5 @@ export default function LogActionForm() {
 				)}
 			/>
 		</FieldSet>
-	);
+	)
 }

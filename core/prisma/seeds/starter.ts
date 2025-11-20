@@ -1,7 +1,8 @@
-import { faker } from "@faker-js/faker";
-import { defaultMarkdownParser } from "prosemirror-markdown";
+import type { CommunitiesId, UsersId } from "db/public"
 
-import type { CommunitiesId, UsersId } from "db/public";
+import { faker } from "@faker-js/faker"
+import { defaultMarkdownParser } from "prosemirror-markdown"
+
 import {
 	Action,
 	CoreSchemaType,
@@ -10,14 +11,14 @@ import {
 	InputComponent,
 	MemberRole,
 	StructuralFormElement,
-} from "db/public";
+} from "db/public"
 
-import { env } from "~/lib/env/env";
-import { seedCommunity } from "../seed/seedCommunity";
-import { usersNew } from "./users";
+import { env } from "~/lib/env/env"
+import { seedCommunity } from "../seed/seedCommunity"
+import { usersNew } from "./users"
 
 export async function seedStarter(communityId?: CommunitiesId) {
-	const memberId = crypto.randomUUID() as UsersId;
+	const memberId = crypto.randomUUID() as UsersId
 
 	return seedCommunity(
 		{
@@ -25,7 +26,7 @@ export async function seedStarter(communityId?: CommunitiesId) {
 				id: communityId,
 				name: "Starter",
 				slug: "starter",
-				avatar: env.PUBPUB_URL + "/demo/croc.png",
+				avatar: `${env.PUBPUB_URL}/demo/croc.png`,
 			},
 			pubFields: {
 				Title: { schemaName: CoreSchemaType.String },
@@ -289,5 +290,5 @@ export async function seedStarter(communityId?: CommunitiesId) {
 			// this makes sure that the slug is `starter`, not `starter-${new Date().toISOString()}
 			randomSlug: false,
 		}
-	);
+	)
 }

@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { useFormContext } from "react-hook-form";
+import { useFormContext } from "react-hook-form"
 
-import { FormAccessType } from "db/public";
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Contact, Lock, Users } from "ui/icon";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { FormAccessType } from "db/public"
+import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Lock, Users } from "ui/icon"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
 const iconsAndCopy = {
 	[FormAccessType.private]: {
@@ -20,10 +20,10 @@ const iconsAndCopy = {
 		name: "Public",
 		help: "Anyone with the link can signup can submit. NOTE: this enables public signups to your community.",
 	},
-};
+}
 
 export const SelectAccess = () => {
-	const { control } = useFormContext();
+	const { control } = useFormContext()
 	return (
 		<FormField
 			control={control}
@@ -40,7 +40,7 @@ export const SelectAccess = () => {
 						</FormControl>
 						<SelectContent>
 							{Object.values(FormAccessType).map((t) => {
-								const { Icon, description, name } = iconsAndCopy[t];
+								const { Icon, description, name } = iconsAndCopy[t]
 								return (
 									<SelectItem
 										key={t}
@@ -57,7 +57,7 @@ export const SelectAccess = () => {
 											</div>
 										</div>
 									</SelectItem>
-								);
+								)
 							})}
 						</SelectContent>
 					</Select>
@@ -68,5 +68,5 @@ export const SelectAccess = () => {
 				</FormItem>
 			)}
 		/>
-	);
-};
+	)
+}

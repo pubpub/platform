@@ -1,37 +1,32 @@
 {
-  "extends": "tsconfig/nextjs.json",
-  "compilerOptions": {
-    "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
-    "noErrorTruncation": true,
-    "allowSyntheticDefaultImports": true,
-    // next just straight up does not let you not use their stupid plugin
-    // see docs/development/common-issues.mdx for more
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
-    "baseUrl": ".",
-    "paths": {
-      "~/*": [
-        "./*"
-      ]
-    },
-    "strictNullChecks": true,
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
-  },
-  "include": [
-    "./**/*.ts",
-    "./**/*.tsx",
-    "./.next/types/**/*.ts",
-    "./content/**/*.mdx",
-    "./content/**/_meta.ts",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next/types/**/*.ts"
-  ]
+	"extends": "tsconfig/nextjs.json",
+	"compilerOptions": {
+		"moduleResolution": "Bundler",
+		"allowImportingTsExtensions": true,
+		"noErrorTruncation": true,
+		"allowSyntheticDefaultImports": true,
+		// next just straight up does not let you not use their stupid plugin
+		// see docs/development/common-issues.mdx for more
+		"plugins": [
+			{
+				"name": "next"
+			}
+		],
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./*"]
+		},
+		"strictNullChecks": true,
+		"tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
+	},
+	"include": [
+		"./**/*.ts",
+		"./**/*.tsx",
+		"./.next/types/**/*.ts",
+		"./content/**/*.mdx",
+		"./content/**/_meta.ts",
+		"next-env.d.ts",
+		".next/types/**/*.ts"
+	],
+	"exclude": ["node_modules", ".next/types/**/*.ts"]
 }

@@ -11,7 +11,48 @@
 		"DATABASE_URL": "postgresql://postgres:postgres@localhost:54322/postgres"
 	},
 	"prettier.documentSelectors": ["**/*.astro"],
+	"eslint.enable": false,
+	"prettier.enable": false,
+	"[typescript]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.codeActionsOnSave": {
+			"source.biome": "always",
+			"source.fixAll.biome": "always"
+		}
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.codeActionsOnSave": {
+			"source.biome": "always",
+			"source.fixAll.biome": "always"
+		}
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.codeActionsOnSave": {
+			"source.biome": "always",
+			"source.fixAll.biome": "always"
+		}
+	},
+	"[javascriptreact]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.codeActionsOnSave": {
+			"source.biome": "always",
+			"source.fixAll.biome": "always"
+		}
+	},
+	"[json]": {
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.codeActionsOnSave": {
+			"source.biome": "always",
+			"source.fixAll.biome": "always"
+		}
+	},
 	"[astro]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode"
+		"editor.defaultFormatter": "biomejs.biome",
+		"editor.codeActionsOnSave": {
+			"source.biome": "always",
+			"source.fixAll.biome": "always"
+		}
 	}
 }

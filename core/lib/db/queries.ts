@@ -1,16 +1,17 @@
-import { cache } from "react";
-import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres";
+import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public"
+import type { AutomationConfig } from "~/actions/types"
 
-import type { ActionInstancesId, CommunitiesId, PubsId, StagesId, UsersId } from "db/public";
-import { Event } from "db/public";
-import { logger } from "logger";
+import { cache } from "react"
+import { jsonArrayFrom, jsonObjectFrom } from "kysely/helpers/postgres"
 
-import type { AutomationConfig } from "~/actions/types";
-import { db } from "~/kysely/database";
-import { pubType, pubValuesByRef } from "../server";
-import { autoCache } from "../server/cache/autoCache";
-import { actionConfigDefaultsSelect, viewableStagesCte } from "../server/stages";
-import { SAFE_USER_SELECT } from "../server/user";
+import { Event } from "db/public"
+import { logger } from "logger"
+
+import { db } from "~/kysely/database"
+import { pubType, pubValuesByRef } from "../server"
+import { autoCache } from "../server/cache/autoCache"
+import { actionConfigDefaultsSelect, viewableStagesCte } from "../server/stages"
+import { SAFE_USER_SELECT } from "../server/user"
 
 export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 	return autoCache(
@@ -43,8 +44,8 @@ export const getStage = cache((stageId: StagesId, userId: UsersId) => {
 				).as("moveConstraintSources"),
 			])
 			.where("stages.id", "=", stageId)
-	);
-});
+	)
+})
 
 export const getStageActions = cache(
 	({
@@ -53,19 +54,19 @@ export const getStageActions = cache(
 		pubId,
 	}:
 		| {
-				stageId: StagesId;
-				communityId?: never;
-				pubId?: never;
+				stageId: StagesId
+				communityId?: never
+				pubId?: never
 		  }
 		| {
-				communityId: CommunitiesId;
-				stageId?: never;
-				pubId?: never;
+				communityId: CommunitiesId
+				stageId?: never
+				pubId?: never
 		  }
 		| {
-				pubId: PubsId;
-				stageId?: never;
-				communityId?: never;
+				pubId: PubsId
+				stageId?: never
+				communityId?: never
 		  }) => {
 		return autoCache(
 			db
@@ -98,13 +99,13 @@ export const getStageActions = cache(
 				)
 				.$if(!!stageId, (eb) => eb.where("stageId", "=", stageId!))
 				.$if(!!communityId, (eb) => eb.where("stages.communityId", "=", communityId!))
-		);
+		)
 	}
-);
+)
 
 export type StagePub = Awaited<
 	ReturnType<ReturnType<typeof getStagePubs>["executeTakeFirstOrThrow"]>
->;
+>
 
 export const getStagePubs = cache((stageId: StagesId) => {
 	return autoCache(
@@ -115,8 +116,8 @@ export const getStagePubs = cache((stageId: StagesId) => {
 			.select((eb) => pubType({ eb, pubTypeIdRef: "pubs.pubTypeId" }))
 			.innerJoin("PubsInStages", "PubsInStages.pubId", "pubs.id")
 			.where("PubsInStages.stageId", "=", stageId)
-	);
-});
+	)
+})
 
 export const getStageMembers = cache((stageId: StagesId) => {
 	return autoCache(
@@ -128,18 +129,18 @@ export const getStageMembers = cache((stageId: StagesId) => {
 			.select("stage_memberships.role")
 			.select("stage_memberships.formId")
 			.orderBy("stage_memberships.createdAt asc")
-	);
-});
+	)
+})
 
 export type GetEventAutomationOptions =
 	| {
-			event: Event.pubInStageForDuration | Event.webhook;
-			sourceActionInstanceId?: never;
+			event: Event.pubInStageForDuration | Event.webhook
+			sourceActionInstanceId?: never
 	  }
 	| {
-			event: Event.actionFailed | Event.actionSucceeded;
-			sourceActionInstanceId: ActionInstancesId;
-	  };
+			event: Event.actionFailed | Event.actionSucceeded
+			sourceActionInstanceId: ActionInstancesId
+	  }
 export const getStageAutomations = cache(
 	(stageId: StagesId, options?: GetEventAutomationOptions) => {
 		return autoCache(
@@ -170,31 +171,31 @@ export const getStageAutomations = cache(
 					).as("sourceActionInstance"),
 				])
 				.$if(!!options?.event, (eb) => {
-					const where = eb.where("automations.event", "=", options!.event);
+					const where = eb.where("automations.event", "=", options?.event)
 
 					if (
-						options!.event === Event.pubInStageForDuration ||
-						options!.event === Event.webhook
+						options?.event === Event.pubInStageForDuration ||
+						options?.event === Event.webhook
 					) {
-						return where;
+						return where
 					}
 
-					if (!options!.sourceActionInstanceId) {
+					if (!options?.sourceActionInstanceId) {
 						logger.warn({
-							msg: `Source action instance id is not set for automation with event ${options!.event}`,
-							event: options!.event,
-							sourceActionInstanceId: options!.sourceActionInstanceId,
-						});
-						return where;
+							msg: `Source action instance id is not set for automation with event ${options?.event}`,
+							event: options?.event,
+							sourceActionInstanceId: options?.sourceActionInstanceId,
+						})
+						return where
 					}
 
 					return where.where(
 						"automations.sourceActionInstanceId",
 						"=",
-						options!.sourceActionInstanceId
-					);
+						options?.sourceActionInstanceId
+					)
 				})
 				.$narrowType<{ config: AutomationConfig | null }>()
-		);
+		)
 	}
-);
+)

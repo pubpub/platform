@@ -1,60 +1,59 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
+import type { FormsId } from "db/public"
+import type { SafeUser } from "~/lib/server/user"
+import type { MembersListProps, TargetId } from "./types"
 
-import type { FormsId, UsersId } from "db/public";
-import { MemberRole } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
+import { MemberRole } from "db/public"
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
 
-import type { MembersListProps, TargetId } from "./types";
-import type { SafeUser } from "~/lib/server/user";
-import { compareMemberRoles } from "~/lib/authorization/rolesRanking";
-import { EditMemberDialog } from "./EditMemberDialog";
-import { RemoveMemberButton } from "./RemoveMemberButton";
+import { compareMemberRoles } from "~/lib/authorization/rolesRanking"
+import { EditMemberDialog } from "./EditMemberDialog"
+import { RemoveMemberButton } from "./RemoveMemberButton"
 
 const dedupeMembers = (
 	members: (SafeUser & {
-		role: MemberRole;
-		formId: FormsId | null;
+		role: MemberRole
+		formId: FormsId | null
 	})[],
 	availableForms: {
-		id: FormsId;
-		name: string;
-		isDefault: boolean;
+		id: FormsId
+		name: string
+		isDefault: boolean
 	}[]
 ) => {
-	const dedupedMembersMap = new Map<any, any>();
+	const dedupedMembersMap = new Map<any, any>()
 	for (const { formId, ...member } of members) {
-		const correspondingForm = availableForms.find((f) => f.id === formId);
+		const correspondingForm = availableForms.find((f) => f.id === formId)
 		if (!dedupedMembersMap.has(member.id)) {
 			const forms =
 				correspondingForm && member.role === MemberRole.contributor
 					? [correspondingForm.id]
-					: [];
+					: []
 			dedupedMembersMap.set(member.id, {
 				...member,
 				forms,
-			});
-			continue;
+			})
+			continue
 		}
 
-		const m = dedupedMembersMap.get(member.id);
+		const m = dedupedMembersMap.get(member.id)
 
 		if (m && m.role === MemberRole.contributor && member.role === MemberRole.contributor) {
-			const forms = [...(m.forms ?? []), ...(correspondingForm ? [formId] : [])];
+			const forms = [...(m.forms ?? []), ...(correspondingForm ? [formId] : [])]
 			dedupedMembersMap.set(member.id, {
 				...member,
 				forms,
-			});
-			continue;
+			})
+			continue
 		}
 
 		if (m && compareMemberRoles(member.role, ">", m.role)) {
-			dedupedMembersMap.set(member.id, m);
+			dedupedMembersMap.set(member.id, m)
 		}
 	}
-	return dedupedMembersMap;
-};
+	return dedupedMembersMap
+}
 
 export const MembersList = <T extends TargetId>({
 	members,
@@ -64,7 +63,7 @@ export const MembersList = <T extends TargetId>({
 	readOnly,
 	availableForms,
 }: MembersListProps<T>) => {
-	const finalMembers = dedupeMembers(members, availableForms);
+	const finalMembers = dedupeMembers(members, availableForms)
 	return (
 		<>
 			{[...finalMembers.values()].map((user) => (
@@ -108,5 +107,5 @@ export const MembersList = <T extends TargetId>({
 				</div>
 			))}
 		</>
-	);
-};
+	)
+}

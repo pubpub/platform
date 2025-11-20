@@ -1,9 +1,9 @@
-import { z } from "zod";
+import { z } from "zod"
 
 const baseTimestampsSchema = z.object({
 	createdAt: z.string(),
 	updatedAt: z.string(),
-});
+})
 
 const baseUserSchema = z.object({
 	id: z.string(),
@@ -15,7 +15,7 @@ const baseUserSchema = z.object({
 	initials: z.string(),
 	title: z.string(),
 	orcid: z.string(),
-});
+})
 
 const attributionSchema = z
 	.object({
@@ -33,12 +33,12 @@ const attributionSchema = z
 		collectionId: z.string().optional(),
 		user: baseUserSchema.nullable(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 const downloadSchema = z.object({
 	url: z.string(),
 	type: z.string(),
-});
+})
 // .merge(baseTimestamps);
 
 const exportSchema = z
@@ -50,13 +50,13 @@ const exportSchema = z
 		pubId: z.string(),
 		workerTaskId: z.string(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 const docJsonSchema = z.object({
 	type: z.literal("doc"),
 	attrs: z.record(z.any()).optional(),
 	content: z.array(z.any()),
-});
+})
 
 const draftSchema = z
 	.object({
@@ -79,7 +79,7 @@ const draftSchema = z
 			})
 			.nullable(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 const scopeSummarySchema = z
 	.object({
@@ -90,17 +90,17 @@ const scopeSummarySchema = z
 		reviews: z.number(),
 		submissions: z.number(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
-const collectionMetadataSchema = z.object({
+const _collectionMetadataSchema = z.object({
 	doi: z.string().nullish(),
 	issue: z.string().nullish(),
 	volume: z.string().nullish(),
 	electronicIssn: z.string().nullish(),
 	url: z.string().nullish(),
 	publicationDate: z.string().nullish(),
-});
-const memberPermissions = ["view", "edit", "manage", "admin"] as const;
+})
+const memberPermissions = ["view", "edit", "manage", "admin"] as const
 
 const memberSchema = z.object({
 	id: z.string().uuid(),
@@ -109,11 +109,11 @@ const memberSchema = z.object({
 	subscribedToActivityDigest: z.boolean().default(false),
 	userId: z.string().uuid(),
 	user: baseUserSchema,
-});
+})
 
-const textAligns = ["left", "center"] as const;
+const textAligns = ["left", "center"] as const
 
-const pubPreviewTypes = ["minimal", "small", "medium", "large"] as const;
+const pubPreviewTypes = ["minimal", "small", "medium", "large"] as const
 
 const layoutBlockBannerSchema = z.object({
 	type: z.literal("banner"),
@@ -131,7 +131,7 @@ const layoutBlockBannerSchema = z.object({
 		text: z.string().optional(),
 		defaultCollectionIds: z.array(z.string().uuid()).optional(),
 	}),
-});
+})
 
 const layoutBlockCollectionPagesSchema = z.object({
 	type: z.literal("collections-pages"),
@@ -156,7 +156,7 @@ const layoutBlockCollectionPagesSchema = z.object({
 		title: z.string().optional(),
 		justify: z.enum(["left", "center", "space-between", "space-around"]).optional(),
 	}),
-});
+})
 
 const layoutBlockHtmlSchema = z.object({
 	type: z.literal("html"),
@@ -164,7 +164,7 @@ const layoutBlockHtmlSchema = z.object({
 	content: z.object({
 		html: z.string().optional(),
 	}),
-});
+})
 
 const pubSortOrders = [
 	"creation-date",
@@ -172,7 +172,7 @@ const pubSortOrders = [
 	"publish-date",
 	"publish-date-reversed",
 	"collection-rank",
-] as const;
+] as const
 
 // common schemas
 const scopeSchema = z.discriminatedUnion("kind", [
@@ -191,14 +191,14 @@ const scopeSchema = z.discriminatedUnion("kind", [
 		kind: z.literal("pub"),
 		id: z.string().uuid(),
 	}),
-]);
+])
 
 const sourceSchema = <T extends z.ZodTypeAny>(valueSchema: T) =>
 	z.object({
 		scope: scopeSchema,
 		value: valueSchema.nullable(),
 		facetBindingId: z.string().uuid().nullable(),
-	});
+	})
 
 // citation style schemas
 const citationStyleSchema = z.object({
@@ -210,18 +210,18 @@ const citationStyleSchema = z.object({
 		sources: z.array(sourceSchema(z.string())),
 		value: z.string(),
 	}),
-});
+})
 
 const citationStyleValueSchema = z.object({
 	citationStyle: z.string(),
 	inlineCitationStyle: z.string(),
-});
+})
 
 // license schemas
 const copyrightSelectionSchema = z.object({
 	choice: z.enum(["infer-from-scope"]),
 	year: z.number().nullable(),
-});
+})
 
 const licenseSchema = z.object({
 	kind: z.object({
@@ -232,18 +232,18 @@ const licenseSchema = z.object({
 		sources: z.array(sourceSchema(copyrightSelectionSchema)),
 		value: copyrightSelectionSchema,
 	}),
-});
+})
 
 const licenseValueSchema = z.object({
 	kind: z.string(),
 	copyrightSelection: copyrightSelectionSchema,
-});
+})
 
 // node labels schemas
 const nodeLabelItemSchema = z.object({
 	enabled: z.boolean(),
 	text: z.string(),
-});
+})
 
 const nodeLabelsSchema = z.object({
 	image: z.object({
@@ -270,7 +270,7 @@ const nodeLabelsSchema = z.object({
 		sources: z.array(sourceSchema(nodeLabelItemSchema)),
 		value: nodeLabelItemSchema,
 	}),
-});
+})
 
 const nodeLabelsValueSchema = z.object({
 	image: nodeLabelItemSchema,
@@ -279,7 +279,7 @@ const nodeLabelsValueSchema = z.object({
 	table: nodeLabelItemSchema,
 	math: nodeLabelItemSchema,
 	iframe: nodeLabelItemSchema,
-});
+})
 
 // pub edge display schemas
 const pubEdgeDisplaySchema = z.object({
@@ -291,12 +291,12 @@ const pubEdgeDisplaySchema = z.object({
 		sources: z.array(sourceSchema(z.boolean())),
 		value: z.boolean(),
 	}),
-});
+})
 
 const pubEdgeDisplayValueSchema = z.object({
 	defaultsToCarousel: z.boolean(),
 	descriptionIsVisible: z.boolean(),
-});
+})
 
 // pub header theme schemas
 const pubHeaderThemeSchema = z.object({
@@ -312,13 +312,13 @@ const pubHeaderThemeSchema = z.object({
 		sources: z.array(sourceSchema(z.string())),
 		value: z.string(),
 	}),
-});
+})
 
 const pubHeaderThemeValueSchema = z.object({
 	backgroundImage: z.string().nullable(),
 	backgroundColor: z.string(),
 	textStyle: z.string(),
-});
+})
 
 // facet stack item schemas
 const createFacetStackItemSchema = <T extends z.ZodTypeAny>(valueSchema: T) =>
@@ -326,7 +326,7 @@ const createFacetStackItemSchema = <T extends z.ZodTypeAny>(valueSchema: T) =>
 		scope: scopeSchema,
 		value: valueSchema,
 		facetBindingId: z.string().uuid(),
-	});
+	})
 
 // main facets schema
 const facetsSchema = z.object({
@@ -369,10 +369,10 @@ const facetsSchema = z.object({
 		value: pubHeaderThemeValueSchema,
 		stack: z.array(createFacetStackItemSchema(pubHeaderThemeValueSchema)),
 	}),
-});
+})
 
 // type definition for TypeScript usage
-export type Facets = z.infer<typeof facetsSchema>;
+export type Facets = z.infer<typeof facetsSchema>
 
 const layoutBlockPubsSchema = z.object({
 	type: z.literal("pubs"),
@@ -390,7 +390,7 @@ const layoutBlockPubsSchema = z.object({
 		sort: z.enum(pubSortOrders).optional(),
 		title: z.string().optional(),
 	}),
-});
+})
 
 const layoutBlockTextSchema = z.object({
 	type: z.literal("text"),
@@ -399,7 +399,7 @@ const layoutBlockTextSchema = z.object({
 		text: docJsonSchema.optional(),
 		align: z.enum(textAligns).optional(),
 	}),
-});
+})
 
 const layoutBlockCollectionHeaderSchema = z.object({
 	type: z.literal("collection-header"),
@@ -412,7 +412,7 @@ const layoutBlockCollectionHeaderSchema = z.object({
 		hideCollectionKey: z.boolean().optional(),
 		hiddenMetadataFields: z.array(z.string()).optional(),
 	}),
-});
+})
 
 const layoutBlockSubmissionBannerSchema = z.object({
 	type: z.literal("submission-banner"),
@@ -422,7 +422,7 @@ const layoutBlockSubmissionBannerSchema = z.object({
 		body: docJsonSchema,
 		submissionWorkflowId: z.string(),
 	}),
-});
+})
 
 const layoutBlockSchema = z.discriminatedUnion("type", [
 	layoutBlockBannerSchema,
@@ -432,9 +432,9 @@ const layoutBlockSchema = z.discriminatedUnion("type", [
 	layoutBlockTextSchema,
 	layoutBlockCollectionHeaderSchema,
 	layoutBlockSubmissionBannerSchema,
-]);
+])
 
-export type LayoutBlock = z.infer<typeof layoutBlockSchema>;
+export type LayoutBlock = z.infer<typeof layoutBlockSchema>
 
 const pageSchema = z
 	.object({
@@ -450,7 +450,7 @@ const pageSchema = z
 		layoutAllowsDuplicatePubs: z.boolean().default(false),
 		communityId: z.string().uuid(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 const collectionPubSchema = z
 	.object({
@@ -461,7 +461,7 @@ const collectionPubSchema = z
 		rank: z.string(),
 		pubRank: z.string(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 const collectionSchema = z
 	.discriminatedUnion("kind", [
@@ -527,9 +527,9 @@ const collectionSchema = z
 				facets: facetsSchema,
 			})
 			.merge(baseTimestampsSchema)
-	);
+	)
 
-export type LegacyCollection = z.infer<typeof collectionSchema>;
+export type LegacyCollection = z.infer<typeof collectionSchema>
 
 export const relationTypes = [
 	"comment",
@@ -541,29 +541,29 @@ export const relationTypes = [
 	"supplement",
 	"translation",
 	"version",
-] as const;
+] as const
 
 export type PubEdge = {
-	id: string;
-	pubId: string;
-	relationType: (typeof relationTypes)[number];
-	rank: string;
-	pubIsParent: boolean;
-	approvedByTarget: boolean;
+	id: string
+	pubId: string
+	relationType: (typeof relationTypes)[number]
+	rank: string
+	pubIsParent: boolean
+	approvedByTarget: boolean
 } & (
 	| {
-			targetPubId: string;
-			targetPub: LegacyPub;
-			externalPublication: null;
-			externalPublicationId: null;
+			targetPubId: string
+			targetPub: LegacyPub
+			externalPublication: null
+			externalPublicationId: null
 	  }
 	| {
-			targetPubId: null;
-			targetPub: null;
-			externalPublication: z.infer<typeof externalPublicationSchema>;
-			externalPublicationId: string;
+			targetPubId: null
+			targetPub: null
+			externalPublication: z.infer<typeof externalPublicationSchema>
+			externalPublicationId: string
 	  }
-);
+)
 
 export const pubEdgeSchema = z.lazy(() =>
 	z
@@ -591,7 +591,7 @@ export const pubEdgeSchema = z.lazy(() =>
 				}),
 			])
 		)
-) as z.ZodType<PubEdge>;
+) as z.ZodType<PubEdge>
 
 export const externalPublicationSchema = z.object({
 	id: z.string().uuid(),
@@ -602,7 +602,7 @@ export const externalPublicationSchema = z.object({
 	description: z.string().nullable(),
 	avatar: z.string().nullable(),
 	publicationDate: z.string().nullable(),
-});
+})
 
 export const releaseSchema = z
 	.object({
@@ -616,7 +616,7 @@ export const releaseSchema = z
 		historyKeyMissing: z.boolean(),
 		doc: docJsonSchema.nullish(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 export const pubSchema = z
 	.object({
@@ -659,18 +659,18 @@ export const pubSchema = z
 		 */
 		html: z.string().nullish(),
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 const communityHeaderLinkSchema = z.object({
 	title: z.string(),
 	url: z.string(),
 	external: z.boolean().optional(),
-});
+})
 
 const communityHeroButtonSchema = z.object({
 	title: z.string(),
 	url: z.string(),
-});
+})
 
 const communityNavigationChildSchema = z.union([
 	z.object({
@@ -682,35 +682,35 @@ const communityNavigationChildSchema = z.union([
 		title: z.string(),
 		href: z.string(),
 	}),
-]);
+])
 
 const communityNavigationMenuSchema = z.object({
 	id: z.string(),
 	title: z.string(),
 	children: z.array(communityNavigationChildSchema),
-});
+})
 
-export type PageNavigationChild = z.infer<typeof communityNavigationChildSchema> & { type: "page" };
+export type PageNavigationChild = z.infer<typeof communityNavigationChildSchema> & { type: "page" }
 export type CollectionNavigationChild = z.infer<typeof communityNavigationChildSchema> & {
-	type: "collection";
-};
-export type LinkNavigationChild = z.infer<typeof communityNavigationChildSchema> & { type: "href" };
-export type MenuNavigationChild = z.infer<typeof communityNavigationMenuSchema>;
+	type: "collection"
+}
+export type LinkNavigationChild = z.infer<typeof communityNavigationChildSchema> & { type: "href" }
+export type MenuNavigationChild = z.infer<typeof communityNavigationMenuSchema>
 
 const communityNavigationEntrySchema = z.union([
 	communityNavigationChildSchema,
 	communityNavigationMenuSchema,
-]);
+])
 
 const googleAnalyticsCredentialsSchema = z.object({
 	type: z.literal("google-analytics"),
 	credentials: z.string().regex(/^G-[A-Z0-9]+$/),
-});
+})
 
 const simpleAnalyticsCredentialsSchema = z.object({
 	type: z.literal("simple-analytics"),
 	credentials: z.null(),
-});
+})
 
 /**
  * Schema for analytics settings.
@@ -723,7 +723,7 @@ const analyticsSettingsSchema = z
 		simpleAnalyticsCredentialsSchema,
 	])
 	.nullable()
-	.default(null);
+	.default(null)
 
 const communitySchema = z
 	.object({
@@ -791,7 +791,7 @@ const communitySchema = z
 		analyticsSettings: analyticsSettingsSchema,
 		facets: facetsSchema,
 	})
-	.merge(baseTimestampsSchema);
+	.merge(baseTimestampsSchema)
 
 export const legacyExportSchema = z.object({
 	community: communitySchema.extend({
@@ -801,9 +801,9 @@ export const legacyExportSchema = z.object({
 	pages: z.array(pageSchema),
 	// probably a good idea to just not parse the pubs, it might be too much
 	pubs: z.custom<LegacyPub[]>(),
-});
+})
 
-export type LegacyPub = z.infer<typeof pubSchema>;
-export type LegacyPage = z.infer<typeof pageSchema>;
+export type LegacyPub = z.infer<typeof pubSchema>
+export type LegacyPage = z.infer<typeof pageSchema>
 
-export type LegacyCommunity = z.infer<typeof legacyExportSchema>;
+export type LegacyCommunity = z.infer<typeof legacyExportSchema>

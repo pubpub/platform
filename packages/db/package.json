@@ -11,13 +11,7 @@
 		"./types": "./dist/db-types.js",
 		"./package.json": "./package.json"
 	},
-	"files": [
-		"dist",
-		"Database",
-		"public",
-		"table-names",
-		"types"
-	],
+	"files": ["dist", "Database", "public", "table-names", "types"],
 	"scripts": {
 		"format": "prettier --check . --ignore-path ../../.gitignore",
 		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
@@ -61,11 +55,6 @@
 			"distInRoot": true,
 			"importsConditions": true
 		},
-		"entrypoints": [
-			"./Database.ts",
-			"./public.ts",
-			"./table-names.ts",
-			"./types/index.ts"
-		]
+		"entrypoints": ["./Database.ts", "./public.ts", "./table-names.ts", "./types/index.ts"]
 	}
 }

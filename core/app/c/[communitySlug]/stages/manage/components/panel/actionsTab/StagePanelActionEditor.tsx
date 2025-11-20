@@ -1,33 +1,34 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { isAfter, parseISO } from "date-fns";
+import type { ActionInstances, ActionInstancesId, ActionRuns, StagesId } from "db/public"
 
-import type { ActionInstances, ActionInstancesId, ActionRuns, StagesId } from "db/public";
-import { logger } from "logger";
-import { Button } from "ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible";
-import { ChevronUp, Pencil } from "ui/icon";
-import { Input } from "ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { cn } from "utils";
+import { useEffect, useState } from "react"
+import { isAfter, parseISO } from "date-fns"
 
-import { getActionByName } from "~/actions/api";
-import * as actions from "../../../actions";
+import { logger } from "logger"
+import { Button } from "ui/button"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "ui/collapsible"
+import { ChevronUp, Pencil } from "ui/icon"
+import { Input } from "ui/input"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { cn } from "utils"
+
+import { getActionByName } from "~/actions/api"
+import * as actions from "../../../actions"
 
 type Props = {
-	actionInstance: ActionInstances & { lastActionRun: ActionRuns | null };
-	onDelete: (actionInstanceId: ActionInstancesId, stageId: StagesId) => Promise<unknown>;
-	communityId: string;
-	children: React.ReactNode;
-	stageId: StagesId;
-};
+	actionInstance: ActionInstances & { lastActionRun: ActionRuns | null }
+	onDelete: (actionInstanceId: ActionInstancesId, stageId: StagesId) => Promise<unknown>
+	communityId: string
+	children: React.ReactNode
+	stageId: StagesId
+}
 
 export const UpdateCircle = (
 	props: ActionRuns & {
-		stale: boolean;
-		setStale: (stale: boolean) => void;
-		setInitTime: (initTime: Date) => void;
+		stale: boolean
+		setStale: (stale: boolean) => void
+		setInitTime: (initTime: Date) => void
 	}
 ) => {
 	return (
@@ -35,8 +36,8 @@ export const UpdateCircle = (
 			<TooltipTrigger
 				onMouseOver={() => {
 					if (props.stale === true) {
-						props.setStale(false);
-						props.setInitTime(new Date());
+						props.setStale(false)
+						props.setInitTime(new Date())
 					}
 				}}
 				asChild
@@ -117,31 +118,31 @@ export const UpdateCircle = (
 				</div>
 			</TooltipContent>
 		</Tooltip>
-	);
-};
+	)
+}
 
 export const StagePanelActionEditor = (props: Props) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const action = getActionByName(props.actionInstance.action);
+	const [isOpen, setIsOpen] = useState(false)
+	const action = getActionByName(props.actionInstance.action)
 
-	const [initTime, setInitTime] = useState(new Date());
-	const [isStale, setIsStale] = useState(false);
+	const [initTime, setInitTime] = useState(new Date())
+	const [isStale, setIsStale] = useState(false)
 
 	useEffect(() => {
-		if (!props.actionInstance.lastActionRun) return;
+		if (!props.actionInstance.lastActionRun) return
 
 		// parse both as UTC to ensure proper comparison regardless of local timezone
-		const lastRunTime = parseISO(`${props.actionInstance.lastActionRun.createdAt.toString()}Z`);
+		const lastRunTime = parseISO(`${props.actionInstance.lastActionRun.createdAt.toString()}Z`)
 
 		// compare the dates using date-fns isAfter helper
 		if (isAfter(lastRunTime, initTime)) {
-			setIsStale(true);
+			setIsStale(true)
 		}
-	}, [props.actionInstance.lastActionRun]);
+	}, [props.actionInstance.lastActionRun, initTime])
 
 	if (!action) {
-		logger.warn(`Invalid action name ${props.actionInstance.action}`);
-		return null;
+		logger.warn(`Invalid action name ${props.actionInstance.action}`)
+		return null
 	}
 
 	return (
@@ -166,7 +167,7 @@ export const StagePanelActionEditor = (props: Props) => {
 									{
 										name: evt.target.value?.trim(),
 									}
-								);
+								)
 							}}
 						/>
 					) : (
@@ -175,14 +176,12 @@ export const StagePanelActionEditor = (props: Props) => {
 						</span>
 					)}
 					{props.actionInstance.lastActionRun && (
-						<>
-							<UpdateCircle
-								{...props.actionInstance.lastActionRun}
-								stale={isStale}
-								setStale={setIsStale}
-								setInitTime={setInitTime}
-							/>
-						</>
+						<UpdateCircle
+							{...props.actionInstance.lastActionRun}
+							stale={isStale}
+							setStale={setIsStale}
+							setInitTime={setInitTime}
+						/>
 					)}
 				</div>
 				<div className="flex gap-1">
@@ -198,5 +197,5 @@ export const StagePanelActionEditor = (props: Props) => {
 				<div className="flex flex-col gap-2 py-2">{props.children}</div>
 			</CollapsibleContent>
 		</Collapsible>
-	);
-};
+	)
+}

@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { Footer, Layout, Navbar } from "nextra-theme-docs";
-import { Head } from "nextra/components";
-import { getPageMap } from "nextra/page-map";
+import { Head } from "nextra/components"
+import { getPageMap } from "nextra/page-map"
+import { Footer, Layout, Navbar } from "nextra-theme-docs"
 
-import "./globals.css";
-import "nextra-theme-docs/style.css";
+import "./globals.css"
+import "nextra-theme-docs/style.css"
 
-import { path } from "../../utils/path";
+import { path } from "../../utils/path"
 
 export const metadata: Metadata = {
 	title: {
 		template: "%s | PubPub Developer Docs",
 		default: "PubPub Developer Docs",
 	},
-};
+}
 
 const navbar = (
 	<Navbar
@@ -27,8 +27,8 @@ const navbar = (
 		projectLink="https://github.com/pubpub/platform"
 		logoLink={path("/")}
 	/>
-);
-const footer = <Footer>MIT {new Date().getFullYear()} © Knowledge Futures Inc.</Footer>;
+)
+const footer = <Footer>MIT {new Date().getFullYear()} © Knowledge Futures Inc.</Footer>
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -50,5 +50,5 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 				</Layout>
 			</body>
 		</html>
-	);
+	)
 }

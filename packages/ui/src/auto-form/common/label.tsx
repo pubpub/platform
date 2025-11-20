@@ -1,8 +1,6 @@
-import * as React from "react";
+import { cn } from "utils"
 
-import { cn } from "utils";
-
-import { FormLabel } from "../../form";
+import { FormLabel } from "../../form"
 
 function AutoFormLabel({
 	label,
@@ -10,19 +8,17 @@ function AutoFormLabel({
 	className,
 	id,
 }: {
-	label: string;
-	isRequired: boolean;
-	className?: string;
-	id?: string;
+	label: string
+	isRequired: boolean
+	className?: string
+	id?: string
 }) {
 	return (
-		<>
-			<FormLabel id={id} className={cn(className)}>
-				{label}
-				{isRequired && <span className="text-destructive"> *</span>}
-			</FormLabel>
-		</>
-	);
+		<FormLabel id={id} className={cn(className)}>
+			{label}
+			{isRequired && <span className="text-destructive"> *</span>}
+		</FormLabel>
+	)
 }
 
-export default AutoFormLabel;
+export default AutoFormLabel

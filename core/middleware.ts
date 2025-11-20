@@ -1,13 +1,10 @@
-import type { NextRequest } from "next/server";
+import type { NextRequest } from "next/server"
 
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server"
 
-import {
-	PUBPUB_COMMUNITY_SLUG_COOKIE_NAME,
-	PUBPUB_COMMUNITY_SLUG_HEADER_NAME,
-} from "./lib/server/cache/constants";
+import { PUBPUB_COMMUNITY_SLUG_HEADER_NAME } from "./lib/server/cache/constants"
 
-const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//;
+const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//
 
 /**
  * if you are in /c/[communitySlug] or in /api/v0/c/[communitySlug],
@@ -16,30 +13,30 @@ const communityRouteRegexp = /^\/c\/([^/]*?)(?:$|\/)|\/api\/v\d\/c\/([^/]*?)\//;
  * use the communitySlug to tag or invalidate cached queries.
  */
 const communitySlugMiddleware = async (request: NextRequest) => {
-	const matched = request.nextUrl.pathname.match(communityRouteRegexp);
+	const matched = request.nextUrl.pathname.match(communityRouteRegexp)
 
 	if (!matched) {
-		return NextResponse.next();
+		return NextResponse.next()
 	}
-	const communitySlug = matched[1] || matched[2];
+	const communitySlug = matched[1] || matched[2]
 
 	if (!communitySlug) {
 		// TODO: Handle strange case where no community slug is found.
-		return NextResponse.next();
+		return NextResponse.next()
 	}
 
-	const response = NextResponse.next();
+	const response = NextResponse.next()
 
-	response.headers.set(PUBPUB_COMMUNITY_SLUG_HEADER_NAME, communitySlug);
+	response.headers.set(PUBPUB_COMMUNITY_SLUG_HEADER_NAME, communitySlug)
 
-	return response;
-};
+	return response
+}
 
 export async function middleware(request: NextRequest) {
-	const response = await communitySlugMiddleware(request);
-	return response;
+	const response = await communitySlugMiddleware(request)
+	return response
 }
 
 export const config = {
 	matcher: ["/c/:path*", "/api/v0/c/:path*"],
-};
+}

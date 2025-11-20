@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 
-import { Button } from "ui/button";
-import { DialogTrigger } from "ui/dialog";
-import { Plus } from "ui/icon";
+import { Button } from "ui/button"
+import { DialogTrigger } from "ui/dialog"
+import { Plus } from "ui/icon"
 
-import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog";
-import { FieldForm } from "./FieldForm";
+import { CreateEditDialog, Footer } from "~/app/components/CreateEditDialog"
+import { FieldForm } from "./FieldForm"
 
 export const NewFieldButton = () => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 
 	return (
 		<CreateEditDialog
@@ -27,16 +27,16 @@ export const NewFieldButton = () => {
 		>
 			<FieldForm
 				onSubmitSuccess={() => {
-					setIsOpen(false);
+					setIsOpen(false)
 				}}
 			>
 				<Footer
 					submitText="Create"
 					onCancel={() => {
-						setIsOpen(false);
+						setIsOpen(false)
 					}}
 				/>
 			</FieldForm>
 		</CreateEditDialog>
-	);
-};
+	)
+}

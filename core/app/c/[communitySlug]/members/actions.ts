@@ -1,45 +1,46 @@
-"use server";
+"use server"
 
-import { cache } from "react";
+import type { FormsId, UsersId } from "db/public"
+import type { TableMember } from "./getMemberTableColumns"
 
-import type { FormsId, UsersId } from "db/public";
-import { MemberRole, MembershipType } from "db/public";
+import { cache } from "react"
 
-import type { TableMember } from "./getMemberTableColumns";
-import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema";
-import { isUniqueConstraintError } from "~/kysely/errors";
-import { getLoginData } from "~/lib/authentication/loginData";
-import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles";
-import { env } from "~/lib/env/env";
-import { ApiError } from "~/lib/server";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { defineServerAction } from "~/lib/server/defineServerAction";
-import { deleteCommunityMemberships, insertCommunityMemberships } from "~/lib/server/member";
-import { createUserWithMemberships } from "~/lib/server/user";
+import { type MemberRole, MembershipType } from "db/public"
+
+import { memberInviteFormSchema } from "~/app/components/Memberships/memberInviteFormSchema"
+import { isUniqueConstraintError } from "~/kysely/errors"
+import { getLoginData } from "~/lib/authentication/loginData"
+import { isCommunityAdmin as isAdminOfCommunity } from "~/lib/authentication/roles"
+import { env } from "~/lib/env/env"
+import { ApiError } from "~/lib/server"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { defineServerAction } from "~/lib/server/defineServerAction"
+import { deleteCommunityMemberships, insertCommunityMemberships } from "~/lib/server/member"
+import { createUserWithMemberships } from "~/lib/server/user"
 
 const isCommunityAdmin = cache(async () => {
-	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()]);
+	const [{ user }, community] = await Promise.all([getLoginData(), findCommunityBySlug()])
 
 	if (!user) {
 		return {
 			error: "You are not logged in",
-		};
+		}
 	}
 
 	if (!community) {
 		return {
 			error: "Community not found",
-		};
+		}
 	}
 
 	if (!isAdminOfCommunity(user, community)) {
 		return {
 			error: "You do not have permission to manage members in this community",
-		};
+		}
 	}
 
-	return { user, error: null, community };
-});
+	return { user, error: null, community }
+})
 
 /**
  * Adds a member to a community.
@@ -58,21 +59,21 @@ export const addMember = defineServerAction(async function addMember({
 	role,
 	forms,
 }: {
-	userId: UsersId;
-	role: MemberRole;
-	forms: FormsId[];
+	userId: UsersId
+	role: MemberRole
+	forms: FormsId[]
 }) {
-	const result = await isCommunityAdmin();
+	const result = await isCommunityAdmin()
 
 	if (result.error !== null) {
 		return {
 			title: "Failed to add member",
 			error: "You do not have permission to invite members to this community",
-		};
+		}
 	}
 
 	if (env.FLAGS?.get("invites") === false) {
-		return ApiError.FEATURE_DISABLED;
+		return ApiError.FEATURE_DISABLED
 	}
 
 	try {
@@ -81,25 +82,25 @@ export const addMember = defineServerAction(async function addMember({
 			communityId: result.community.id,
 			role,
 			forms,
-		}).executeTakeFirst();
+		}).executeTakeFirst()
 		// TODO: send email to user confirming their membership,
 		// don't just add them
 
-		return { member };
+		return { member }
 	} catch (error) {
 		if (isUniqueConstraintError(error)) {
 			return {
 				title: "Failed to add member",
 				error: "User is already a member of this community",
-			};
+			}
 		}
 		return {
 			title: "Failed to add member",
 			error: "An unexpected error occurred",
 			cause: error,
-		};
+		}
 	}
-});
+})
 
 /**
  * Create a new user and add them as a member to a community
@@ -108,35 +109,35 @@ export const createUserWithCommunityMembership = defineServerAction(
 	async function createUserWithCommunityMembership({
 		...data
 	}: {
-		firstName: string;
-		lastName?: string | null;
-		email: string;
-		role: MemberRole;
-		isSuperAdmin?: boolean;
-		forms: FormsId[];
+		firstName: string
+		lastName?: string | null
+		email: string
+		role: MemberRole
+		isSuperAdmin?: boolean
+		forms: FormsId[]
 	}) {
 		if (env.FLAGS?.get("invites") === false) {
-			return ApiError.FEATURE_DISABLED;
+			return ApiError.FEATURE_DISABLED
 		}
 
 		const parsed = memberInviteFormSchema
 			.required({ firstName: true, lastName: true })
-			.safeParse(data);
+			.safeParse(data)
 
 		if (!parsed.success) {
 			return {
 				title: "Form values are invalid",
 				error: parsed.error.message,
-			};
+			}
 		}
 
-		const community = await findCommunityBySlug();
+		const community = await findCommunityBySlug()
 
 		if (!community) {
 			return {
 				title: "Failed to add member",
 				error: "Community not found",
-			};
+			}
 		}
 
 		try {
@@ -148,50 +149,50 @@ export const createUserWithCommunityMembership = defineServerAction(
 					communityId: community.id,
 					forms: data.forms,
 				},
-			});
+			})
 		} catch (error) {
 			return {
 				title: "Failed to add member",
 				error: "An unexpected error occurred",
 				cause: error,
-			};
+			}
 		}
 	}
-);
+)
 
 export const removeMember = defineServerAction(async function removeMember({
 	member,
 }: {
-	member: TableMember;
+	member: TableMember
 }) {
 	try {
-		const { error: adminError, community } = await isCommunityAdmin();
+		const { error: adminError, community } = await isCommunityAdmin()
 
 		if (adminError !== null) {
 			return {
 				title: "Failed to remove member",
 				error: adminError,
-			};
+			}
 		}
 
 		const removedMember = await deleteCommunityMemberships({
 			userId: member.id,
 			communityId: community.id,
-		}).executeTakeFirst();
+		}).executeTakeFirst()
 
 		if (!removedMember) {
 			return {
 				title: "Failed to remove member",
 				error: "An unexpected error occurred",
-			};
+			}
 		}
 
-		return { success: true };
+		return { success: true }
 	} catch (error) {
 		return {
 			title: "Failed to remove member",
 			error: "An unexpected error occurred",
 			cause: error,
-		};
+		}
 	}
-});
+})

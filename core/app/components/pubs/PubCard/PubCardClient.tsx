@@ -1,26 +1,27 @@
-"use client";
+"use client"
 
-import { useCallback } from "react";
+import type { ProcessedPub } from "contracts"
 
-import type { ProcessedPub } from "contracts";
-import { Badge } from "ui/badge";
-import { Card, CardFooter, CardTitle } from "ui/card";
-import { Checkbox } from "ui/checkbox";
-import { Calendar, History } from "ui/icon";
-import { cn } from "utils";
+import { useCallback } from "react"
 
-import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates";
-import { getPubTitle } from "~/lib/pubs";
+import { Badge } from "ui/badge"
+import { Card, CardFooter, CardTitle } from "ui/card"
+import { Checkbox } from "ui/checkbox"
+import { Calendar, History } from "ui/icon"
+import { cn } from "utils"
+
+import { formatDateAsMonthDayYear, formatDateAsPossiblyDistance } from "~/lib/dates"
+import { getPubTitle } from "~/lib/pubs"
 
 export type PubCardClientProps = {
-	pub: ProcessedPub<{ withPubType: true; withStage?: boolean }>;
-	selected?: boolean;
-	onSelect?: (pub: ProcessedPub, selected: boolean) => void;
-	disabled?: boolean;
-	showCheckbox?: boolean;
-	className?: string;
-	onClick?: () => void;
-};
+	pub: ProcessedPub<{ withPubType: true; withStage?: boolean }>
+	selected?: boolean
+	onSelect?: (pub: ProcessedPub, selected: boolean) => void
+	disabled?: boolean
+	showCheckbox?: boolean
+	className?: string
+	onClick?: () => void
+}
 
 export const PubCardClient = ({
 	pub,
@@ -31,25 +32,25 @@ export const PubCardClient = ({
 	className,
 	onClick,
 }: PubCardClientProps) => {
-	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle);
-	const showMatchingValues = matchingValues && matchingValues.length !== 0;
+	const matchingValues = pub.matchingValues?.filter((match) => !match.isTitle)
+	const showMatchingValues = matchingValues && matchingValues.length !== 0
 
 	const handleCheckboxChange = useCallback(
 		(checked: boolean) => {
 			if (onSelect && !disabled) {
-				onSelect(pub, checked);
+				onSelect(pub, checked)
 			}
 		},
 		[onSelect, disabled, pub]
-	);
+	)
 
 	const handleCardClick = useCallback(() => {
 		if (onClick) {
-			onClick();
+			onClick()
 		} else if (onSelect && !disabled) {
-			onSelect(pub, !selected);
+			onSelect(pub, !selected)
 		}
-	}, [onClick, onSelect, disabled, selected, pub]);
+	}, [onClick, onSelect, disabled, selected, pub])
 
 	return (
 		<Card
@@ -129,5 +130,5 @@ export const PubCardClient = ({
 				</div>
 			)}
 		</Card>
-	);
-};
+	)
+}

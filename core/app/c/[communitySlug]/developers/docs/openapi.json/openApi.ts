@@ -1,34 +1,34 @@
-import type { AppRoute, AppRouter } from "@ts-rest/core";
-import type { OpenAPIObject } from "openapi3-ts/oas30";
+import type { AppRoute, AppRouter } from "@ts-rest/core"
+import type { OpenAPIObject } from "openapi3-ts/oas30"
 
-import { isAppRoute } from "@ts-rest/core";
-import { generateOpenApi } from "@ts-rest/open-api";
+import { isAppRoute } from "@ts-rest/core"
+import { generateOpenApi } from "@ts-rest/open-api"
 
-import { siteApi } from "contracts";
+import { siteApi } from "contracts"
 
-type TraverseContractResult = "SKIP" | "CONTINUE" | "STOP";
+type TraverseContractResult = "SKIP" | "CONTINUE" | "STOP"
 
 const traverseContract = (
 	contract: AppRouter | AppRoute,
-	fn: (contract: AppRoute) => void | TraverseContractResult
+	fn: (contract: AppRoute) => undefined | TraverseContractResult
 ) => {
 	for (const route in contract) {
 		if (isAppRoute(contract)) {
-			const x = fn(contract);
+			const x = fn(contract)
 			if (x === "STOP") {
-				break;
+				break
 			}
-			continue;
+			continue
 		}
-		traverseContract(contract[route], fn);
+		traverseContract(contract[route], fn)
 	}
-};
+}
 
 export const createOpenApiDocument = (communitySlug?: string): OpenAPIObject => {
 	if (communitySlug) {
 		traverseContract(siteApi, (route) => {
-			route.path = route.path.replace(/:communitySlug/g, communitySlug);
-		});
+			route.path = route.path.replace(/:communitySlug/g, communitySlug)
+		})
 	}
 
 	return generateOpenApi(siteApi, {
@@ -58,5 +58,5 @@ export const createOpenApiDocument = (communitySlug?: string): OpenAPIObject => 
 				description: "The production API server",
 			},
 		],
-	});
-};
+	})
+}

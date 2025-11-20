@@ -4,11 +4,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"license": "MIT",
-	"files": [
-		"./base.js",
-		"./next.js",
-		"./react.js"
-	],
+	"files": ["./base.js", "./next.js", "./react.js"],
 	"exports": {
 		"./base": "./base.js",
 		"./next": "./next.js",

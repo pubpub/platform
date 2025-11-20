@@ -128,12 +128,7 @@
 				"./tailwind.config.cjs": "./tailwind.config.cjs"
 			}
 		},
-		"entrypoints": [
-			"index.ts",
-			"schemas/index.ts",
-			"utils/index.ts",
-			"utils/serialize.ts"
-		]
+		"entrypoints": ["index.ts", "schemas/index.ts", "utils/index.ts", "utils/serialize.ts"]
 	},
 	"prettier": "@pubpub/prettier-config"
 }

@@ -1,103 +1,103 @@
-import type { PropsWithChildren } from "react";
-import type { FieldValues, UseFormReturn } from "react-hook-form";
-import type { ZodObject, ZodOptional } from "zod";
+import type { PubsId } from "db/public"
+import type { PropsWithChildren } from "react"
+import type { FieldValues, UseFormReturn } from "react-hook-form"
+import type { ZodObject, ZodOptional } from "zod"
+import type { Action } from "../types"
 
-import { createContext, useCallback, useContext, useMemo } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { createContext, useCallback, useContext, useMemo } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 
-import type { PubsId } from "db/public";
-import { Button } from "ui/button";
-import { Field, FieldGroup } from "ui/field";
-import { Form } from "ui/form";
-import { FormSubmitButton } from "ui/submit-button";
-import { toast } from "ui/use-toast";
+import { Button } from "ui/button"
+import { Field, FieldGroup } from "ui/field"
+import { Form } from "ui/form"
+import { FormSubmitButton } from "ui/submit-button"
+import { toast } from "ui/use-toast"
 
-import type { Action } from "../types";
-import { ActionConfigBuilder } from "./ActionConfigBuilder";
+import { ActionConfigBuilder } from "./ActionConfigBuilder"
 
-export type ActionFormContextContextValue = "run" | "configure" | "automation" | "default";
+export type ActionFormContextContextValue = "run" | "configure" | "automation" | "default"
 export type ActionFormContextContext =
 	| {
-			type: "run";
-			pubId: PubsId;
+			type: "run"
+			pubId: PubsId
 	  }
 	| {
-			type: Exclude<ActionFormContextContextValue, "run">;
-			pubId?: never;
-	  };
+			type: Exclude<ActionFormContextContextValue, "run">
+			pubId?: never
+	  }
 
 type ActionFormContext = {
-	action: Action;
-	schema: ZodOptional<ZodObject<any>> | ZodObject<any>;
-	form: UseFormReturn<FieldValues>;
-	defaultFields: string[];
-	context: ActionFormContextContext;
+	action: Action
+	schema: ZodOptional<ZodObject<any>> | ZodObject<any>
+	form: UseFormReturn<FieldValues>
+	defaultFields: string[]
+	context: ActionFormContextContext
 	/* when rendering a nested form, the path is the path to the form */
-	path?: string;
-};
+	path?: string
+}
 
 type ActionFormProps = PropsWithChildren<{
-	action: Action;
-	values: Record<string, unknown> | null;
+	action: Action
+	values: Record<string, unknown> | null
 	/* when rendering a nested form, the path is the path to the form */
-	path?: string;
-	defaultFields: string[];
+	path?: string
+	defaultFields: string[]
 
-	context: ActionFormContextContext;
+	context: ActionFormContextContext
 
-	onSubmit(values: Record<string, unknown>, form: UseFormReturn<FieldValues>): Promise<void>;
+	onSubmit(values: Record<string, unknown>, form: UseFormReturn<FieldValues>): Promise<void>
 
 	submitButton: {
-		text: string;
-		pendingText?: string;
-		successText?: string;
-		errorText?: string;
-		className?: string;
-	};
+		text: string
+		pendingText?: string
+		successText?: string
+		errorText?: string
+		className?: string
+	}
 	secondaryButton?: {
-		text?: string;
-		className?: string;
-		onClick: () => void;
-	};
-}>;
+		text?: string
+		className?: string
+		onClick: () => void
+	}
+}>
 
-export const ActionFormContext = createContext<ActionFormContext | undefined>(undefined);
+export const ActionFormContext = createContext<ActionFormContext | undefined>(undefined)
 
 export function ActionForm(props: ActionFormProps) {
 	const schema = useMemo(() => {
 		const s = new ActionConfigBuilder(props.action.name)
 			.withConfig(props.action.config.schema)
-			.withDefaults(props.defaultFields);
+			.withDefaults(props.defaultFields)
 
-		return s.getSchema();
-	}, [props.action.config.schema, props.action.name, props.defaultFields]);
+		return s.getSchema()
+	}, [props.action.config.schema, props.action.name, props.defaultFields])
 
 	const defaultValues = useMemo(() => {
-		const result = schema.partial().safeParse(props.values);
+		const result = schema.partial().safeParse(props.values)
 		if (result.success) {
-			return result.data;
+			return result.data
 		}
 
 		toast({
 			title: "Invalid initial values",
 			description: `Can't parse values ${JSON.stringify(props.values)}: ${result.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("\n")}. This is likely an issue on our end, please report this.`,
 			variant: "destructive",
-		});
-		return undefined;
-	}, [schema, props.values]);
+		})
+		return undefined
+	}, [schema, props.values])
 
 	const form = useForm({
 		resolver: zodResolver(schema),
 		defaultValues,
-	});
+	})
 
 	const onSubmit = useCallback(
 		async (data: Record<string, unknown>) => {
-			await props.onSubmit(data, form);
+			await props.onSubmit(data, form)
 		},
 		[props.onSubmit, form]
-	);
+	)
 
 	return (
 		<ActionFormContext.Provider
@@ -139,9 +139,9 @@ export function ActionForm(props: ActionFormProps) {
 				</form>
 			</Form>
 		</ActionFormContext.Provider>
-	);
+	)
 }
 
 export function useActionForm() {
-	return useContext(ActionFormContext)!;
+	return useContext(ActionFormContext)!
 }

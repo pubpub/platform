@@ -1,49 +1,49 @@
-import type { FieldArrayWithId } from "react-hook-form";
+import type { PubFieldsId } from "db/public"
+import type { FieldArrayWithId } from "react-hook-form"
+import type { FormBuilderSchema, InputElement, StructuralElement } from "./types"
 
-import { useId } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import Markdown from "react-markdown";
+import { useId } from "react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import Markdown from "react-markdown"
 
-import type { PubFieldsId } from "db/public";
-import { Button } from "ui/button";
-import { ArchiveRestore, GripVertical, Pencil, Trash } from "ui/icon";
-import { usePubFieldContext } from "ui/pubFields";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { ArchiveRestore, GripVertical, Pencil, Trash } from "ui/icon"
+import { usePubFieldContext } from "ui/pubFields"
+import { cn } from "utils"
 
-import type { FormBuilderSchema, InputElement, StructuralElement } from "./types";
-import { useBuilder } from "./BuilderContext";
-import { FieldIcon } from "./FieldIcon";
-import { structuralElements } from "./StructuralElements";
-import { isFieldInput, isStructuralElement } from "./types";
+import { useBuilder } from "./BuilderContext"
+import { FieldIcon } from "./FieldIcon"
+import { structuralElements } from "./StructuralElements"
+import { isFieldInput, isStructuralElement } from "./types"
 
 type FormElementProps = {
-	element: FieldArrayWithId<FormBuilderSchema, "elements", "id">;
-	index: number;
-	isEditing: boolean;
-	isDisabled: boolean;
-};
+	element: FieldArrayWithId<FormBuilderSchema, "elements", "id">
+	index: number
+	isEditing: boolean
+	isDisabled: boolean
+}
 
 export const FormElement = ({ element, index, isEditing, isDisabled }: FormElementProps) => {
 	const { attributes, listeners, isDragging, setNodeRef, transform, transition } = useSortable({
 		id: element.id,
 		disabled: isDisabled,
-	});
+	})
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	};
+	}
 
-	const pubFields = usePubFieldContext();
-	const field = pubFields[element.fieldId as PubFieldsId];
+	const pubFields = usePubFieldContext()
+	const field = pubFields[element.fieldId as PubFieldsId]
 	const labelName = field
 		? (element.label ?? (element.config as any)?.label ?? field.name)
-		: (element.label ?? element.elementId);
+		: (element.label ?? element.elementId)
 
-	const { openConfigPanel, removeElement, restoreElement } = useBuilder();
+	const { openConfigPanel, removeElement, restoreElement } = useBuilder()
 
-	const labelId = useId();
+	const labelId = useId()
 
 	const restoreRemoveButton = element.deleted ? (
 		<>
@@ -55,7 +55,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
 				aria-label={`Restore ${labelName}`}
 				onClick={() => {
-					restoreElement(index);
+					restoreElement(index)
 				}}
 				data-testid={`restore-${labelName}`}
 			>
@@ -71,12 +71,12 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 			aria-label={`Delete ${labelName}`}
 			data-testid={`delete-${labelName}`}
 			onClick={() => {
-				removeElement(index);
+				removeElement(index)
 			}}
 		>
 			<Trash size={24} className="text-neutral-400" />
 		</Button>
-	);
+	)
 	return (
 		<li
 			aria-labelledby={labelId}
@@ -99,7 +99,11 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 					<FieldInputElement element={element} isEditing={isEditing} labelId={labelId} />
 				)}
 				{isStructuralElement(element) && (
-					<StructuralElement element={element} isEditing={isEditing} labelId={labelId} />
+					<StructuralElementComponent
+						element={element}
+						isEditing={isEditing}
+						labelId={labelId}
+					/>
 				)}
 				{isEditing ? (
 					<div className="my-auto ml-auto text-xs text-blue-500">EDITING</div>
@@ -114,7 +118,7 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 							className="p-2 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100"
 							data-testid={`edit-${labelName}`}
 							onClick={() => {
-								openConfigPanel(index);
+								openConfigPanel(index)
 							}}
 						>
 							<Pencil size={24} className="text-neutral-400" />
@@ -139,17 +143,17 @@ export const FormElement = ({ element, index, isEditing, isDisabled }: FormEleme
 				)}
 			</div>
 		</li>
-	);
-};
+	)
+}
 
 type FieldInputElementProps = {
-	element: InputElement;
-	isEditing: boolean;
-	labelId?: string;
-};
+	element: InputElement
+	isEditing: boolean
+	labelId?: string
+}
 export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputElementProps) => {
-	const pubFields = usePubFieldContext();
-	const field = pubFields[element.fieldId as PubFieldsId];
+	const pubFields = usePubFieldContext()
+	const field = pubFields[element.fieldId as PubFieldsId]
 
 	return (
 		<>
@@ -178,16 +182,16 @@ export const FieldInputElement = ({ element, isEditing, labelId }: FieldInputEle
 				</div>
 			</div>
 		</>
-	);
-};
+	)
+}
 
 type StructuralElementProps = {
-	element: StructuralElement;
-	isEditing: boolean;
-	labelId?: string;
-};
-const StructuralElement = ({ element, isEditing, labelId }: StructuralElementProps) => {
-	const { Icon, name } = structuralElements[element.element];
+	element: StructuralElement
+	isEditing: boolean
+	labelId?: string
+}
+const StructuralElementComponent = ({ element, isEditing, labelId }: StructuralElementProps) => {
+	const { Icon, name } = structuralElements[element.element]
 
 	return (
 		<div>
@@ -209,5 +213,5 @@ const StructuralElement = ({ element, isEditing, labelId }: StructuralElementPro
 				<Markdown className="line-clamp-2">{element.content}</Markdown>
 			</div>
 		</div>
-	);
-};
+	)
+}

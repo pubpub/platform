@@ -1,42 +1,42 @@
-import type { Metadata } from "next";
+import type { Metadata } from "next"
 
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation"
 
-import { Capabilities, MembershipType } from "db/public";
-import { ToyBrick } from "ui/icon";
-import { PubFieldProvider } from "ui/pubFields";
+import { Capabilities, MembershipType } from "db/public"
+import { ToyBrick } from "ui/icon"
+import { PubFieldProvider } from "ui/pubFields"
 
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { userCan } from "~/lib/authorization/capabilities";
-import { findCommunityBySlug } from "~/lib/server/community";
-import { redirectToLogin } from "~/lib/server/navigation/redirects";
-import { getPubFields } from "~/lib/server/pubFields";
-import { getPubTypesForCommunity } from "~/lib/server/pubtype";
-import { ContentLayout } from "../ContentLayout";
-import { CreatePubTypeButton } from "./CreatePubTypeDialog";
-import { TypesTable } from "./TypesTable";
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { userCan } from "~/lib/authorization/capabilities"
+import { findCommunityBySlug } from "~/lib/server/community"
+import { redirectToLogin } from "~/lib/server/navigation/redirects"
+import { getPubFields } from "~/lib/server/pubFields"
+import { getPubTypesForCommunity } from "~/lib/server/pubtype"
+import { ContentLayout } from "../ContentLayout"
+import { CreatePubTypeButton } from "./CreatePubTypeDialog"
+import { TypesTable } from "./TypesTable"
 
 export const metadata: Metadata = {
 	title: "Pub Types",
-};
+}
 
 export default async function Page(props: {
 	params: Promise<{
-		communitySlug: string;
-	}>;
+		communitySlug: string
+	}>
 }) {
-	const params = await props.params;
+	const params = await props.params
 
 	const [{ user }, community] = await Promise.all([
 		getPageLoginData(),
 		findCommunityBySlug(params.communitySlug),
-	]);
+	])
 	if (!user) {
-		redirectToLogin();
+		redirectToLogin()
 	}
 
 	if (!user || !community) {
-		return notFound();
+		return notFound()
 	}
 
 	const [canEditCommunity, types, { fields }] = await Promise.all([
@@ -51,15 +51,15 @@ export default async function Page(props: {
 		getPubFields({
 			communityId: community.id,
 		}).executeTakeFirstOrThrow(),
-	]);
+	])
 
 	//TODO: Add capability to allow non-admins to view this page
 	if (!canEditCommunity) {
-		redirect(`/c/${community.slug}/unauthorized`);
+		redirect(`/c/${community.slug}/unauthorized`)
 	}
 
 	if (!types || !fields) {
-		return null;
+		return null
 	}
 
 	return (
@@ -77,5 +77,5 @@ export default async function Page(props: {
 				</div>
 			</ContentLayout>
 		</PubFieldProvider>
-	);
+	)
 }

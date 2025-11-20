@@ -1,14 +1,15 @@
-import type { TableCommunity } from "./getCommunityTableColumns";
-import { db } from "~/kysely/database";
-import { getPageLoginData } from "~/lib/authentication/loginData";
-import { AddCommunity } from "./AddCommunityDialog";
-import { CommunityTable } from "./CommunityTable";
+import type { TableCommunity } from "./getCommunityTableColumns"
+
+import { db } from "~/kysely/database"
+import { getPageLoginData } from "~/lib/authentication/loginData"
+import { AddCommunity } from "./AddCommunityDialog"
+import { CommunityTable } from "./CommunityTable"
 
 export default async function Page() {
-	const { user } = await getPageLoginData();
+	const { user } = await getPageLoginData()
 
 	if (!user.isSuperAdmin) {
-		return null;
+		return null
 	}
 
 	const communities = await db
@@ -20,18 +21,18 @@ export default async function Page() {
 			"communities.avatar",
 			"createdAt",
 		])
-		.execute();
+		.execute()
 
 	const tableMembers = communities.map((community) => {
-		const { id, name, slug, avatar, createdAt } = community;
+		const { id, name, slug, avatar, createdAt } = community
 		return {
 			id,
 			name,
 			slug,
 			avatar,
 			created: new Date(createdAt),
-		} satisfies TableCommunity;
-	});
+		} satisfies TableCommunity
+	})
 	return (
 		<>
 			<div className="mb-16 flex items-center justify-between">
@@ -42,5 +43,5 @@ export default async function Page() {
 				<CommunityTable communities={tableMembers} />
 			</div>
 		</>
-	);
+	)
 }

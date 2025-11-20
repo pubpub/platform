@@ -1,69 +1,71 @@
-"use client";
+"use client"
 
-import React, { useRef } from "react";
-import { ArrowUpDownIcon, PlusCircle, Search, SortAsc, SortDesc, X } from "lucide-react";
+import type { PubTypesId, StagesId } from "db/public"
+import type React from "react"
 
-import type { PubTypesId, StagesId } from "db/public";
-import { Button } from "ui/button";
+import { useRef } from "react"
+import { ArrowUpDownIcon, PlusCircle, Search, SortAsc, SortDesc, X } from "lucide-react"
+
+import { Button } from "ui/button"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "ui/dropdown-menu";
-import { KeyboardShortcutPriority, useKeyboardShortcut, usePlatformModifierKey } from "ui/hooks";
-import { Input } from "ui/input";
-import { MultiSelect } from "ui/multi-select";
-import { cn } from "utils";
+} from "ui/dropdown-menu"
+import { KeyboardShortcutPriority, useKeyboardShortcut, usePlatformModifierKey } from "ui/hooks"
+import { Input } from "ui/input"
+import { MultiSelect } from "ui/multi-select"
+import { cn } from "utils"
 
-import { entries } from "~/lib/mapping";
-import { usePubSearch } from "./PubSearchProvider";
+import { entries } from "~/lib/mapping"
+import { usePubSearch } from "./PubSearchProvider"
 
 export type StageFilters = {
-	id: StagesId;
-	name: string;
-}[];
+	id: StagesId
+	name: string
+}[]
 
 export type TypeFilters = {
-	id: PubTypesId;
-	name: string;
-}[];
+	id: PubTypesId
+	name: string
+}[]
 
 export type PubSearchFilters = {
 	default: {
-		stage?: StageFilters;
-		type?: TypeFilters;
-	};
+		stage?: StageFilters
+		type?: TypeFilters
+	}
 	available: {
-		stage: Promise<StageFilters>;
-		type: Promise<TypeFilters>;
-	};
-};
+		stage: Promise<StageFilters>
+		type: Promise<TypeFilters>
+	}
+}
 
 export type PubSearchProps = React.PropsWithChildren<{
 	// filters: PubSearchFilters;
-}>;
+}>
 
 const sorts = {
 	updatedAt: "Updated",
 	createdAt: "Created",
 	title: "Title",
-};
+}
 
 export const PubSearch = (props: PubSearchProps) => {
-	const inputRef = useRef<HTMLInputElement>(null);
+	const inputRef = useRef<HTMLInputElement>(null)
 
-	const { symbol, platform } = usePlatformModifierKey();
+	const { symbol, platform } = usePlatformModifierKey()
 	useKeyboardShortcut(
 		"Mod+k",
 		() => {
-			inputRef.current?.focus();
-			inputRef.current?.select();
+			inputRef.current?.focus()
+			inputRef.current?.select()
 		},
 		{
 			priority: KeyboardShortcutPriority.MEDIUM,
 		}
-	);
+	)
 
 	const {
 		queryParams,
@@ -73,11 +75,11 @@ export const PubSearch = (props: PubSearchProps) => {
 		stale,
 		availableStages,
 		availablePubTypes,
-	} = usePubSearch();
+	} = usePubSearch()
 
 	const handleClearInput = () => {
-		setQuery("");
-	};
+		setQuery("")
+	}
 	// determine if content is stale, in order to provide a visual feedback to the user
 
 	return (
@@ -92,7 +94,7 @@ export const PubSearch = (props: PubSearchProps) => {
 						ref={inputRef}
 						value={inputValues?.query}
 						onChange={(e) => {
-							setQuery(e.target.value);
+							setQuery(e.target.value)
 						}}
 						placeholder="Search updates as you type..."
 						className={cn(
@@ -217,5 +219,5 @@ export const PubSearch = (props: PubSearchProps) => {
 				{props.children}
 			</div>
 		</div>
-	);
-};
+	)
+}

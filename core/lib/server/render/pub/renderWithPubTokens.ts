@@ -25,4 +25,4 @@ export const renderWithPubTokens = {
 	[RenderWithPubToken.Link]: {
 		description: "Insert a link.",
 	},
-};
+}

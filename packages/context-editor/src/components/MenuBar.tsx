@@ -1,8 +1,10 @@
-import type { LucideProps } from "lucide-react";
-import type { ReactNode } from "react";
+import type { LucideProps } from "lucide-react"
+import type { ReactNode } from "react"
+import type { CommandSpec } from "../commands/types"
+import type { Upload } from "./ImageUploader"
 
-import React, { Fragment, useState } from "react";
-import { useEditorEventCallback } from "@handlewithcare/react-prosemirror";
+import { Fragment, useState } from "react"
+import { useEditorEventCallback } from "@handlewithcare/react-prosemirror"
 import {
 	Bold,
 	Code,
@@ -21,15 +23,13 @@ import {
 	Superscript,
 	Table,
 	Underline,
-} from "lucide-react";
+} from "lucide-react"
 
-import { Button } from "ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
+import { cn } from "utils"
 
-import type { CommandSpec } from "../commands/types";
-import type { Upload } from "./ImageUploader";
 import {
 	blockquoteToggle,
 	bulletListToggle,
@@ -42,9 +42,9 @@ import {
 	heading6Toggle,
 	orderedListToggle,
 	paragraphToggle,
-} from "../commands/blocks";
-import { insertHorizontalLine } from "../commands/horizontal";
-import { isImageActive as isImageActiveCommand } from "../commands/images";
+} from "../commands/blocks"
+import { insertHorizontalLine } from "../commands/horizontal"
+import { isImageActive as isImageActiveCommand } from "../commands/images"
 import {
 	codeToggle,
 	emToggle,
@@ -54,23 +54,23 @@ import {
 	subscriptToggle,
 	superscriptToggle,
 	underlineToggle,
-} from "../commands/marks";
-import { mathToggleBlock, mathToggleInline } from "../commands/math";
-import { insertTable } from "../commands/tables";
-import { ImageUploader } from "./ImageUploader";
+} from "../commands/marks"
+import { mathToggleBlock, mathToggleInline } from "../commands/math"
+import { insertTable } from "../commands/tables"
+import { ImageUploader } from "./ImageUploader"
 
-export const MENU_BAR_HEIGHT = 56;
+export const MENU_BAR_HEIGHT = 56
 
 type MenuItem = {
-	key: string;
-	name: string;
-	icon: ReactNode;
-	command: CommandSpec;
-};
+	key: string
+	name: string
+	icon: ReactNode
+	command: CommandSpec
+}
 
 const iconProps: LucideProps = {
 	strokeWidth: "1px",
-};
+}
 
 const menuBlocks: MenuItem[][] = [
 	[
@@ -170,7 +170,7 @@ const menuBlocks: MenuItem[][] = [
 			command: mathToggleBlock,
 		},
 	],
-];
+]
 
 const paragraphTypeItems: MenuItem[] = [
 	{
@@ -215,33 +215,33 @@ const paragraphTypeItems: MenuItem[] = [
 		icon: <span className="font-serif text-sm font-normal">Heading 6</span>,
 		command: heading6Toggle,
 	},
-];
+]
 
 const ParagraphDropdown = () => {
 	const itemCommand = useEditorEventCallback((view, item: MenuItem) => {
-		if (!view) return;
-		return item.command(view)(view.state);
-	});
+		if (!view) return
+		return item.command(view)(view.state)
+	})
 
-	const activeType = paragraphTypeItems.find((item) => itemCommand(item)?.isActive);
+	const activeType = paragraphTypeItems.find((item) => itemCommand(item)?.isActive)
 
 	const handleValueChange = useEditorEventCallback((view, value: string) => {
-		if (!view) return;
-		const item = paragraphTypeItems.find((i) => i.key === value);
+		if (!view) return
+		const item = paragraphTypeItems.find((i) => i.key === value)
 		if (!item) {
-			return;
+			return
 		}
 
-		const { run } = item.command(view)(view.state);
-		view.focus();
-		run();
-	});
+		const { run } = item.command(view)(view.state)
+		view.focus()
+		run()
+	})
 
 	return (
 		<Select
 			value={activeType?.key}
 			onValueChange={(value) => {
-				handleValueChange(value);
+				handleValueChange(value)
 			}}
 			disabled={!activeType}
 		>
@@ -256,20 +256,20 @@ const ParagraphDropdown = () => {
 						<SelectItem key={key} value={key}>
 							{icon}
 						</SelectItem>
-					);
+					)
 				})}
 			</SelectContent>
 		</Select>
-	);
-};
+	)
+}
 
 const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isOpen, setIsOpen] = useState(false)
 	const isImageActive = useEditorEventCallback((view) => {
-		if (!view) return false;
-		return isImageActiveCommand(view.state);
-	});
-	const isActive = isImageActive();
+		if (!view) return false
+		return isImageActiveCommand(view.state)
+	})
+	const isActive = isImageActive()
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
@@ -288,30 +288,30 @@ const ImagePopoverMenuItem = ({ upload }: { upload: Upload }) => {
 				<ImageUploader
 					upload={upload}
 					onInsert={() => {
-						setIsOpen(false);
+						setIsOpen(false)
 					}}
 				/>
 			</PopoverContent>
 		</Popover>
-	);
-};
+	)
+}
 
 const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
-	const { key, name, icon } = menuItem;
+	const { key, name, icon } = menuItem
 
 	const itemCommand = useEditorEventCallback((view) => {
-		if (!view) return;
-		return menuItem.command(view)(view.state);
-	});
-	const cmdResult = itemCommand();
-	const { canRun, isActive } = cmdResult ?? { canRun: false, isActive: false };
+		if (!view) return
+		return menuItem.command(view)(view.state)
+	})
+	const cmdResult = itemCommand()
+	const { canRun, isActive } = cmdResult ?? { canRun: false, isActive: false }
 
 	const handleClick = useEditorEventCallback((view) => {
-		if (!view) return;
-		view.focus();
-		const { run } = menuItem.command(view)(view.state);
-		run();
-	});
+		if (!view) return
+		view.focus()
+		const { run } = menuItem.command(view)(view.state)
+		run()
+	})
 
 	return (
 		<Button
@@ -329,16 +329,16 @@ const MenuItemButton = ({ menuItem }: { menuItem: MenuItem }) => {
 		>
 			{icon}
 		</Button>
-	);
-};
+	)
+}
 
 const Separator = () => {
 	return (
 		<div className="flex items-center px-4">
 			<div className="h-6 w-px bg-gray-300" />
 		</div>
-	);
-};
+	)
+}
 
 export const MenuBar = ({ upload }: { upload: Upload }) => {
 	return (
@@ -358,19 +358,17 @@ export const MenuBar = ({ upload }: { upload: Upload }) => {
 						<Fragment key={index}>
 							<div className={cn("flex items-center gap-1")}>
 								{menuBlock.map((menuItem) => {
-									return (
-										<MenuItemButton key={menuItem.key} menuItem={menuItem} />
-									);
+									return <MenuItemButton key={menuItem.key} menuItem={menuItem} />
 								})}
 							</div>
 							<Separator />
 						</Fragment>
-					);
+					)
 				})}
 			</div>
 			<div className="flex items-center">
 				<ImagePopoverMenuItem upload={upload} />
 			</div>
 		</div>
-	);
-};
+	)
+}

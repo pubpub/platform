@@ -1,26 +1,26 @@
-import { describe, expect, it } from "vitest";
+import type { PubsId } from "db/public"
 
-import type { PubsId } from "db/public";
+import { describe, expect, it } from "vitest"
 
-import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText";
+import { parseRichTextForPubFieldsAndRelatedPubs } from "../fields/richText"
 
 describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
-	const pubId = crypto.randomUUID() as PubsId;
+	const pubId = crypto.randomUUID() as PubsId
 	it("should do nothing if there is no rich text field", () => {
 		const values = {
 			"croccroc:title": "my title",
 			"croccroc:content": "my content",
-		};
+		}
 
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
-		});
+		})
 		expect(result).toEqual({
 			"croccroc:title": "my title",
 			"croccroc:content": "my content",
-		});
-	});
+		})
+	})
 
 	it("should not overwrite if another field is not referenced", () => {
 		const richTextValue = {
@@ -43,23 +43,23 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 					],
 				},
 			],
-		};
+		}
 
 		const values = {
 			"croccroc:title": "original title",
 
 			"croccroc:richtext": richTextValue,
-		};
+		}
 
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
-		});
+		})
 		expect(result).toEqual({
 			"croccroc:title": "original title",
 			"croccroc:richtext": richTextValue,
-		});
-	});
+		})
+	})
 
 	it("should overwrite string pubfields", () => {
 		const richTextValue = {
@@ -96,22 +96,22 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 					],
 				},
 			],
-		};
+		}
 		const values = {
 			"croccroc:title": "old title",
 
 			"croccroc:richtext": richTextValue,
-		};
+		}
 
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
-		});
+		})
 		expect(result).toEqual({
 			"croccroc:title": "new title",
 			"croccroc:richtext": richTextValue,
-		});
-	});
+		})
+	})
 
 	it("should collapse multipart fields", () => {
 		// Adding a Title field with two parts
@@ -162,18 +162,18 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 					],
 				},
 			],
-		};
-		const values = { "croccroc:title": "old title", "croccroc:richtext": richTextValue };
+		}
+		const values = { "croccroc:title": "old title", "croccroc:richtext": richTextValue }
 
 		const { values: result } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
-		});
+		})
 		expect(result).toEqual({
 			"croccroc:title": "new title, second part",
 			"croccroc:richtext": richTextValue,
-		});
-	});
+		})
+	})
 
 	it("returns related pub", () => {
 		// Adding a pub of type Submission
@@ -205,20 +205,20 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 					},
 				},
 			],
-		};
+		}
 		const values = {
 			"croccroc:title": "old title",
 			"croccroc:richtext": richTextValue,
-		};
+		}
 		const { values: result, relatedPubs } = parseRichTextForPubFieldsAndRelatedPubs({
 			pubId,
 			values,
-		});
+		})
 		// No change to pub fields
 		expect(result).toEqual({
 			"croccroc:title": "old title",
 			"croccroc:richtext": richTextValue,
-		});
+		})
 		// But there should be related pubs
 		expect(relatedPubs).toEqual([
 			{
@@ -235,6 +235,6 @@ describe("parseRichTextForPubFieldsAndRelatedPubs", () => {
 					"croccroc:confidence": "",
 				},
 			},
-		]);
-	});
-});
+		])
+	})
+})

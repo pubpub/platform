@@ -1,14 +1,13 @@
-import type { Table } from "@tanstack/react-table";
+import type { Table } from "@tanstack/react-table"
 
-import React from "react";
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 
-import { Button } from "ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select";
+import { Button } from "ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "ui/select"
 
 interface DataTablePaginationProps<TData> {
-	table: Table<TData>;
-	pageSizeOptions?: number[];
+	table: Table<TData>
+	pageSizeOptions?: number[]
 }
 
 export function DataTablePagination<TData>({
@@ -26,7 +25,7 @@ export function DataTablePagination<TData>({
 				<Select
 					value={`${table.getState().pagination.pageSize}`}
 					onValueChange={(value) => {
-						table.setPageSize(Number(value));
+						table.setPageSize(Number(value))
 					}}
 				>
 					<SelectTrigger className="h-8 w-[4.5rem]">
@@ -88,5 +87,5 @@ export function DataTablePagination<TData>({
 				</div>
 			</div>
 		</div>
-	);
+	)
 }

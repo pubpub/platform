@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { UserLoginData } from "~/lib/types"
 
-import type { Users } from "db/public";
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Loader2, Undo2, X, XCircle } from "ui/icon";
-import { Input } from "ui/input";
-import { toast } from "ui/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
 
-import type { UserLoginData } from "~/lib/types";
-import { useServerAction } from "~/lib/serverActions";
-import * as actions from "./actions";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Loader2, Undo2, XCircle } from "ui/icon"
+import { Input } from "ui/input"
+import { toast } from "ui/use-toast"
+
+import { useServerAction } from "~/lib/serverActions"
+import * as actions from "./actions"
 
 export const userInfoFormSchema = z.object({
 	id: z.string().uuid(),
@@ -27,10 +27,10 @@ export const userInfoFormSchema = z.object({
 		.optional()
 		.or(z.literal("").transform((v) => v || null))
 		.or(z.null()),
-});
+})
 
 export function UserInfoForm({ user }: { user: UserLoginData }) {
-	const runUpdateUserInfo = useServerAction(actions.updateUserInfo);
+	const runUpdateUserInfo = useServerAction(actions.updateUserInfo)
 
 	const form = useForm<z.infer<typeof userInfoFormSchema>>({
 		resolver: zodResolver(userInfoFormSchema),
@@ -42,17 +42,17 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 			email: user.email,
 			avatar: user.avatar,
 		},
-	});
+	})
 
 	const onSubmit = async (data: z.infer<typeof userInfoFormSchema>) => {
-		const result = await runUpdateUserInfo({ data });
+		const result = await runUpdateUserInfo({ data })
 		if (result && "success" in result) {
 			toast({
 				title: "Success",
 				description: "User information updated",
-			});
+			})
 		}
-	};
+	}
 
 	return (
 		<Form {...form}>
@@ -74,7 +74,7 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 										variant="ghost"
 										className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 p-0 text-red-500 group-hover:text-red-500"
 										onClick={() => {
-											form.setValue("avatar", "");
+											form.setValue("avatar", "")
 										}}
 									>
 										<XCircle
@@ -146,5 +146,5 @@ export function UserInfoForm({ user }: { user: UserLoginData }) {
 				</Button>
 			</form>
 		</Form>
-	);
+	)
 }

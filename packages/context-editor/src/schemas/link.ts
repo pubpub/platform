@@ -1,4 +1,4 @@
-import type { DOMOutputSpec, MarkSpec } from "prosemirror-model";
+import type { DOMOutputSpec, MarkSpec } from "prosemirror-model"
 
 export default {
 	inclusive: false,
@@ -17,11 +17,11 @@ export default {
 					class: dom.getAttribute("class"),
 					href: dom.getAttribute("href"),
 					target: dom.getAttribute("target"),
-				};
+				}
 			},
 		},
 	],
 	toDOM: (node) => {
-		return ["a", { ...node.attrs }] as DOMOutputSpec;
+		return ["a", { ...node.attrs }] as DOMOutputSpec
 	},
-} satisfies MarkSpec;
+} satisfies MarkSpec

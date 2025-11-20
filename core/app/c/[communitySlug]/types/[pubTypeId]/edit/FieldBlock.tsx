@@ -1,28 +1,29 @@
-"use client";
+"use client"
 
-import { useId } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { type Static } from "@sinclair/typebox";
-import { ArchiveRestore, GripVertical, Trash, TypeOutline } from "lucide-react";
+import type { Static } from "@sinclair/typebox"
+import type { pubTypeBuilderSchema } from "./TypeBuilder"
 
-import { Button } from "ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip";
-import { cn } from "utils";
+import { useId } from "react"
+import { useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { ArchiveRestore, GripVertical, Trash, TypeOutline } from "lucide-react"
 
-import { useBuilder } from "~/app/components/FormBuilder/BuilderContext";
-import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon";
-import { pubFieldCanBeTitle } from "../../utils";
-import { pubTypeBuilderSchema } from "./TypeBuilder";
+import { Button } from "ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "ui/tooltip"
+import { cn } from "utils"
+
+import { useBuilder } from "~/app/components/FormBuilder/BuilderContext"
+import { FieldIcon } from "~/app/components/FormBuilder/FieldIcon"
+import { pubFieldCanBeTitle } from "../../utils"
 
 export type FieldThingProps = {
-	field: Static<typeof pubTypeBuilderSchema>["fields"][number];
-	isEditing: boolean;
-	isDisabled: boolean;
-	isTitle: boolean;
-	index: number;
-	toggleTitle: () => void;
-};
+	field: Static<typeof pubTypeBuilderSchema>["fields"][number]
+	isEditing: boolean
+	isDisabled: boolean
+	isTitle: boolean
+	index: number
+	toggleTitle: () => void
+}
 
 export const FieldBlock = ({
 	field,
@@ -34,16 +35,16 @@ export const FieldBlock = ({
 }: FieldThingProps) => {
 	const { attributes, listeners, isDragging, setNodeRef, transform, transition } = useSortable({
 		id: field.id,
-	});
+	})
 
 	const style = {
 		transform: CSS.Translate.toString(transform),
 		transition,
-	};
+	}
 
 	const { openConfigPanel, removeElement, restoreElement } =
-		useBuilder<Static<typeof pubTypeBuilderSchema>["fields"][number]>();
-	const labelId = useId();
+		useBuilder<Static<typeof pubTypeBuilderSchema>["fields"][number]>()
+	const labelId = useId()
 
 	const restoreRemoveButton = field.deleted ? (
 		<>
@@ -57,7 +58,7 @@ export const FieldBlock = ({
 						className="p-2 opacity-0 hover:bg-white group-focus-within:opacity-100 group-hover:opacity-100 [&_svg]:pointer-events-auto [&_svg]:hover:text-red-500"
 						aria-label={`Restore ${field.name}`}
 						onClick={() => {
-							restoreElement(index);
+							restoreElement(index)
 						}}
 						data-testid={`restore-${field.name}`}
 					>
@@ -78,7 +79,7 @@ export const FieldBlock = ({
 					aria-label={`Delete ${field.name}`}
 					data-testid={`delete-${field.name}`}
 					onClick={() => {
-						removeElement(index);
+						removeElement(index)
 					}}
 				>
 					<Trash size={24} className="text-neutral-400" />
@@ -86,7 +87,7 @@ export const FieldBlock = ({
 			</TooltipTrigger>
 			<TooltipContent>Remove this field from this Pub Type</TooltipContent>
 		</Tooltip>
-	);
+	)
 
 	return (
 		<li
@@ -102,25 +103,24 @@ export const FieldBlock = ({
 			)}
 		>
 			<div className="flex flex-1 flex-shrink-0 flex-wrap justify-start gap-0.5">
-				<>
-					<FieldIcon
-						field={field}
-						className={cn(
-							"mr-4 mt-3 shrink-0",
-							isEditing ? "text-blue-500" : "text-emerald-500",
-							field.deleted && "text-gray-500"
-						)}
-					/>
-					<div>
-						<div className="text-gray-500">{field.slug}</div>
-						<div
-							id={labelId}
-							className={cn("font-semibold", field.deleted ? "text-gray-500" : "")}
-						>
-							{field.name}
-						</div>
+				<FieldIcon
+					field={field}
+					className={cn(
+						"mr-4 mt-3 shrink-0",
+						isEditing ? "text-blue-500" : "text-emerald-500",
+						field.deleted && "text-gray-500"
+					)}
+				/>
+				<div>
+					<div className="text-gray-500">{field.slug}</div>
+					<div
+						id={labelId}
+						className={cn("font-semibold", field.deleted ? "text-gray-500" : "")}
+					>
+						{field.name}
 					</div>
-				</>
+				</div>
+
 				<div className="my-auto ml-auto flex gap-1">
 					{pubFieldCanBeTitle(field) && (
 						<Tooltip delayDuration={300}>
@@ -136,7 +136,7 @@ export const FieldBlock = ({
 										isTitle && "text-blue-500 opacity-100"
 									)}
 									onClick={() => {
-										toggleTitle();
+										toggleTitle()
 									}}
 									tabIndex={0}
 									data-testid={`${isTitle ? "remove" : "set"}-as-title-${field.name}`}
@@ -184,5 +184,5 @@ export const FieldBlock = ({
 				{/* )} */}
 			</div>
 		</li>
-	);
-};
+	)
+}

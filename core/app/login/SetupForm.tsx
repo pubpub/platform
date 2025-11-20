@@ -1,20 +1,21 @@
-"use client";
+"use client"
 
-import { useEffect } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod"
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form";
-import { Input } from "ui/input";
-import { PasswordInput } from "ui/password-input";
-import { FormSubmitButton } from "ui/submit-button";
+import { useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
 
-import { initializeSetup } from "~/lib/authentication/actions";
-import { setupSchema } from "~/lib/authentication/schemas";
-import { useServerAction } from "~/lib/serverActions";
-import { slugifyString } from "~/lib/string";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "ui/form"
+import { Input } from "ui/input"
+import { PasswordInput } from "ui/password-input"
+import { FormSubmitButton } from "ui/submit-button"
+
+import { initializeSetup } from "~/lib/authentication/actions"
+import { setupSchema } from "~/lib/authentication/schemas"
+import { useServerAction } from "~/lib/serverActions"
+import { slugifyString } from "~/lib/string"
 
 export default function SetupForm() {
 	const form = useForm<z.infer<typeof setupSchema>>({
@@ -28,25 +29,25 @@ export default function SetupForm() {
 			communitySlug: "",
 			communityAvatar: "",
 		},
-	});
+	})
 
-	const runInitializeSetup = useServerAction(initializeSetup);
+	const runInitializeSetup = useServerAction(initializeSetup)
 
 	const handleSubmit = async (formData: z.infer<typeof setupSchema>) => {
-		const result = await runInitializeSetup(formData);
+		const result = await runInitializeSetup(formData)
 
-		if (result && result.error) {
-			form.setError("root", { message: result.error });
+		if (result?.error) {
+			form.setError("root", { message: result.error })
 		}
-	};
+	}
 
-	const watchCommunityName = form.watch("communityName");
+	const watchCommunityName = form.watch("communityName")
 
 	useEffect(() => {
 		if (watchCommunityName) {
-			form.setValue("communitySlug", slugifyString(watchCommunityName));
+			form.setValue("communitySlug", slugifyString(watchCommunityName))
 		}
-	}, [watchCommunityName]);
+	}, [watchCommunityName, form.setValue])
 
 	return (
 		<Form {...form}>
@@ -183,5 +184,5 @@ export default function SetupForm() {
 				</Card>
 			</form>
 		</Form>
-	);
+	)
 }

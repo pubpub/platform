@@ -1,6 +1,6 @@
 // @ts-check
 
-import baseConfig from "./index.js";
+import baseConfig from "./index.js"
 
 /** @typedef {import("prettier").Config} PrettierConfig */
 /** @typedef {import("prettier-plugin-tailwindcss").PluginOptions} TailwindConfig */
@@ -18,6 +18,6 @@ const config = {
 			},
 		},
 	],
-};
+}
 
-export default config;
+export default config

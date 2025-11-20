@@ -1,44 +1,41 @@
-import type { EditorState, LexicalNode } from "lexical";
-import type { ControllerRenderProps } from "react-hook-form";
+import type { EditorState, LexicalNode } from "lexical"
+import type { ControllerRenderProps } from "react-hook-form"
 
-import * as React from "react";
-import { CodeNode } from "@lexical/code";
-import { LinkNode } from "@lexical/link";
-import { ListItemNode, ListNode } from "@lexical/list";
+import * as React from "react"
+import { CodeNode } from "@lexical/code"
+import { LinkNode } from "@lexical/link"
+import { ListItemNode, ListNode } from "@lexical/list"
 import {
 	$convertFromMarkdownString,
 	$convertToMarkdownString,
 	TRANSFORMERS,
-} from "@lexical/markdown";
-import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { ContentEditable } from "@lexical/react/LexicalContentEditable";
-import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
-import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
-import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode";
-import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
-import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+} from "@lexical/markdown"
+import { AutoFocusPlugin } from "@lexical/react/LexicalAutoFocusPlugin"
+import { LexicalComposer } from "@lexical/react/LexicalComposer"
+import { ContentEditable } from "@lexical/react/LexicalContentEditable"
+import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary"
+import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin"
+import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode"
+import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin"
+import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin"
+import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin"
+import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 
-import { cn } from "utils";
+import { cn } from "utils"
 
-import { useTokenContext } from "../tokens";
-import { JsonataNode } from "./JsonataNode";
-import { JsonataPlugin } from "./JsonataPlugin";
-import { SingleLinePlugin } from "./SingleLinePlugin";
-import { TokenNode } from "./TokenNode";
-import { TokenPlugin } from "./TokenPlugin";
+import { useTokenContext } from "../tokens"
+import { JsonataNode } from "./JsonataNode"
+import { JsonataPlugin } from "./JsonataPlugin"
+import { SingleLinePlugin } from "./SingleLinePlugin"
+import { TokenNode } from "./TokenNode"
+import { TokenPlugin } from "./TokenPlugin"
 
 const theme = {
 	token: "token",
 	jsonataToken: "jsonata-token",
-};
-
-function onError(error: unknown) {
-	// eslint-disable-next-line no-console
-	console.error(error);
 }
+
+function onError(_error: unknown) {}
 
 const NODES = [
 	HorizontalRuleNode,
@@ -50,25 +47,25 @@ const NODES = [
 	QuoteNode,
 	TokenNode,
 	JsonataNode,
-];
+]
 
 const makeSyntheticChangeEvent = (value: string) => {
 	return {
 		target: {
 			value,
 		},
-	};
-};
+	}
+}
 
 export type LexicalEditorProps = ControllerRenderProps<any, string> & {
-	withMarkdown?: boolean;
-	singleLine?: boolean;
-	"aria-labelledby"?: string;
-	allowedNodes?: LexicalNode[];
-};
+	withMarkdown?: boolean
+	singleLine?: boolean
+	"aria-labelledby"?: string
+	allowedNodes?: LexicalNode[]
+}
 
 export const LexicalEditor = (props: LexicalEditorProps) => {
-	const initialValue = React.useMemo(() => props.value ?? "", []);
+	const initialValue = React.useMemo(() => props.value ?? "", [props.value])
 	const initialConfig = React.useMemo(() => {
 		return {
 			namespace: "LexicalEditor",
@@ -76,19 +73,19 @@ export const LexicalEditor = (props: LexicalEditorProps) => {
 			onError,
 			editorState: () => $convertFromMarkdownString(initialValue, TRANSFORMERS),
 			nodes: NODES,
-		};
-	}, [initialValue]);
-	const tokens = useTokenContext();
+		}
+	}, [initialValue])
+	const tokens = useTokenContext()
 
 	const onChange = React.useCallback(
 		(editorState: EditorState) => {
 			editorState.read(() => {
-				const markdown = $convertToMarkdownString(TRANSFORMERS);
-				props.onChange(makeSyntheticChangeEvent(markdown));
-			});
+				const markdown = $convertToMarkdownString(TRANSFORMERS)
+				props.onChange(makeSyntheticChangeEvent(markdown))
+			})
 		},
 		[props.onChange]
-	);
+	)
 
 	return (
 		<LexicalComposer initialConfig={initialConfig}>
@@ -117,5 +114,5 @@ export const LexicalEditor = (props: LexicalEditorProps) => {
 			<TokenPlugin tokens={Object.keys(tokens[props.name] ?? {})} />
 			<JsonataPlugin />
 		</LexicalComposer>
-	);
-};
+	)
+}

@@ -1,16 +1,16 @@
-import type { User } from "lucia";
+import type { User } from "lucia"
 
-import Link from "next/link";
+import Link from "next/link"
 
-import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar";
-import { Button } from "ui/button";
-import { ChevronsUpDown, UserRoundCog } from "ui/icon";
-import { Popover, PopoverContent, PopoverTrigger } from "ui/popover";
-import { Separator } from "ui/separator";
-import { SidebarMenuButton } from "ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "ui/avatar"
+import { Button } from "ui/button"
+import { ChevronsUpDown, UserRoundCog } from "ui/icon"
+import { Popover, PopoverContent, PopoverTrigger } from "ui/popover"
+import { Separator } from "ui/separator"
+import { SidebarMenuButton } from "ui/sidebar"
 
-import { getLoginData } from "~/lib/authentication/loginData";
-import LogoutButton from "../../components/LogoutButton";
+import { getLoginData } from "~/lib/authentication/loginData"
+import LogoutButton from "../../components/LogoutButton"
 
 const AvatarThing = ({ user }: { user: User }) => (
 	<div className="flex w-full items-center gap-x-2">
@@ -24,12 +24,12 @@ const AvatarThing = ({ user }: { user: User }) => (
 			<p className="truncate text-xs text-gray-500">{user.email}</p>
 		</div>
 	</div>
-);
+)
 
 export default async function LoginSwitcher() {
-	const { user } = await getLoginData();
+	const { user } = await getLoginData()
 	if (!user) {
-		return null;
+		return null
 	}
 	return (
 		<div className="w-max-[100%] borderp-2 flex flex-col gap-y-2 rounded-lg">
@@ -77,5 +77,5 @@ export default async function LoginSwitcher() {
 				</PopoverContent>
 			</Popover>
 		</div>
-	);
+	)
 }

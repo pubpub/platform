@@ -1,7 +1,7 @@
-import { FieldSet } from "ui/field";
-import { StagesSelect } from "ui/stages";
+import { FieldSet } from "ui/field"
+import { StagesSelect } from "ui/stages"
 
-import { ActionField } from "../_lib/ActionField";
+import { ActionField } from "../_lib/ActionField"
 
 export default function MoveActionForm() {
 	return (
@@ -12,5 +12,5 @@ export default function MoveActionForm() {
 				render={({ field }) => <StagesSelect field={field} />}
 			/>
 		</FieldSet>
-	);
+	)
 }

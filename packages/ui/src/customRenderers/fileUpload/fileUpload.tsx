@@ -1,50 +1,50 @@
-"use client";
+"use client"
 
-import type { Body, Meta, UppyFile } from "@uppy/core";
+import type { Meta } from "@uppy/core"
 
-import React, { forwardRef, useEffect, useState } from "react";
-import Uppy from "@uppy/core";
-import { Dashboard } from "@uppy/react";
+import { forwardRef, useEffect, useState } from "react"
+import Uppy from "@uppy/core"
+import { Dashboard } from "@uppy/react"
 
 // import "./fileUpload.css";
 // TODO: impot on prod?
-import "@uppy/core/dist/style.min.css";
-import "@uppy/dashboard/dist/style.min.css";
+import "@uppy/core/dist/style.min.css"
+import "@uppy/dashboard/dist/style.min.css"
 
-import type { AwsBody } from "@uppy/aws-s3";
-import type { Restrictions } from "@uppy/core/lib/Restricter";
+import type { AwsBody } from "@uppy/aws-s3"
+import type { Restrictions } from "@uppy/core/lib/Restricter"
 
-import AwsS3Multipart from "@uppy/aws-s3";
+import AwsS3Multipart from "@uppy/aws-s3"
 
-const pluginName = "AwsS3Multipart" as const;
+const pluginName = "AwsS3Multipart" as const
 
 export type FormattedFile = {
-	id: string;
-	fileName: string;
-	fileSource: string;
-	fileType: string;
-	fileSize: number | null;
-	fileMeta: Meta;
-	fileUploadUrl?: string;
-	filePreview?: string;
-};
+	id: string
+	fileName: string
+	fileSource: string
+	fileType: string
+	fileSize: number | null
+	fileMeta: Meta
+	fileUploadUrl?: string
+	filePreview?: string
+}
 
 export type FileUploadProps = {
-	upload: (fileName: string) => Promise<string | { error: string }>;
-	onUpdateFiles: (files: FormattedFile[]) => void;
-	disabled?: boolean;
-	id?: string;
-	restrictions?: Partial<Restrictions>;
-};
+	upload: (fileName: string) => Promise<string | { error: string }>
+	onUpdateFiles: (files: FormattedFile[]) => void
+	disabled?: boolean
+	id?: string
+	restrictions?: Partial<Restrictions>
+}
 
-const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
-	const id = props.id ? `dashboard-${props.id}` : "uppy-dashboard";
+const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, _ref) {
+	const id = props.id ? `dashboard-${props.id}` : "uppy-dashboard"
 	const [uppy] = useState(() =>
 		new Uppy<Meta, AwsBody>({ id, restrictions: props.restrictions }).use(AwsS3Multipart)
-	);
+	)
 	useEffect(() => {
 		const handler = () => {
-			const uploadedFiles = uppy.getFiles();
+			const uploadedFiles = uppy.getFiles()
 			const formattedFiles = uploadedFiles.map((file) => {
 				return {
 					id: file.id,
@@ -55,34 +55,34 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 					fileMeta: file.meta,
 					fileUploadUrl: file.response?.uploadURL,
 					filePreview: file.preview,
-				};
-			}) as FormattedFile[];
-			props.onUpdateFiles(formattedFiles);
-		};
-		uppy.on("complete", handler);
+				}
+			}) as FormattedFile[]
+			props.onUpdateFiles(formattedFiles)
+		}
+		uppy.on("complete", handler)
 
 		// Make sure we only have one listener at a time
 		return () => {
-			uppy.off("complete", handler);
-		};
-	}, [props.onUpdateFiles]);
+			uppy.off("complete", handler)
+		}
+	}, [props.onUpdateFiles, uppy.getFiles, uppy.off, uppy.on])
 
 	useEffect(() => {
-		uppy.getPlugin<AwsS3Multipart<Meta, AwsBody>>(pluginName)!.setOptions({
+		uppy.getPlugin<AwsS3Multipart<Meta, AwsBody>>(pluginName)?.setOptions({
 			// TODO: maybe use more specific types for Meta and Body
 			getUploadParameters: async (file) => {
 				if (!file || !file.type) {
-					throw new Error("Could not read file.");
+					throw new Error("Could not read file.")
 				}
 
 				if (!file.name) {
-					throw new Error("File name is required");
+					throw new Error("File name is required")
 				}
 
-				const signedUrl = await props.upload(file.name);
+				const signedUrl = await props.upload(file.name)
 
 				if (typeof signedUrl === "object" && "error" in signedUrl) {
-					throw new Error(signedUrl.error);
+					throw new Error(signedUrl.error)
 				}
 
 				return {
@@ -91,12 +91,12 @@ const FileUpload = forwardRef(function FileUpload(props: FileUploadProps, ref) {
 					headers: {
 						"content-type": file.type,
 					},
-				};
+				}
 			},
-		});
-	}, [props.upload]);
+		})
+	}, [props.upload, uppy.getPlugin])
 
-	return <Dashboard uppy={uppy} disabled={props.disabled} id={id} width="100%" />;
-});
+	return <Dashboard uppy={uppy} disabled={props.disabled} id={id} width="100%" />
+})
 
-export { FileUpload };
+export { FileUpload }

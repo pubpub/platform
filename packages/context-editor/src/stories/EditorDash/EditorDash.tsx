@@ -1,37 +1,38 @@
-import React, { useMemo, useState } from "react";
-import { Braces, Files, PanelTop } from "lucide-react";
+import type { ContextEditorProps } from "../../ContextEditor"
 
-import { Button } from "ui/button";
+import { useMemo, useState } from "react"
+import { Braces, Files, PanelTop } from "lucide-react"
 
-import type { ContextEditorProps } from "../../ContextEditor";
-import ContextEditor from "../../ContextEditor";
-import JsonPanel from "./JsonPanel";
-import PubsPanel from "./PubsPanel";
-import SitePanel from "./SitePanel";
+import { Button } from "ui/button"
 
-import "./dashStyles.css";
+import ContextEditor from "../../ContextEditor"
+import JsonPanel from "./JsonPanel"
+import PubsPanel from "./PubsPanel"
+import SitePanel from "./SitePanel"
 
-import { EditorState } from "prosemirror-state";
+import "./dashStyles.css"
+
+import type { EditorState } from "prosemirror-state"
 
 export default function EditorDash(props: ContextEditorProps) {
-	const [editorState, setEditorState] = useState<EditorState | null>(null);
-	const [activeDash, setActiveDash] = useState("");
+	const [editorState, setEditorState] = useState<EditorState | null>(null)
+	const [activeDash, setActiveDash] = useState("")
 	const memoEditor = useMemo(() => {
 		return (
 			<ContextEditor
 				{...props}
 				onChange={(newState) => {
-					setEditorState(newState);
+					setEditorState(newState)
 				}}
 			/>
-		);
-	}, [props]);
+		)
+	}, [props])
 
 	const dashes = [
 		{ key: "json", icon: <Braces size={16} /> },
 		{ key: "pubs", icon: <Files size={16} /> },
 		{ key: "site", icon: <PanelTop size={16} /> },
-	];
+	]
 	return (
 		<div className="min-h-screen bg-[#f4f4f4]">
 			<div className="fixed right-0 flex h-screen flex-col justify-center space-y-2 p-2">
@@ -43,12 +44,12 @@ export default function EditorDash(props: ContextEditorProps) {
 							size="icon"
 							className={`h-8 w-8 rounded-full hover:border-neutral-400 ${activeDash === dash.key ? "border-neutral-400 bg-white hover:bg-white" : "border-neutral-300"}`}
 							onClick={() => {
-								setActiveDash(activeDash === dash.key ? "" : dash.key);
+								setActiveDash(activeDash === dash.key ? "" : dash.key)
 							}}
 						>
 							{dash.icon}
 						</Button>
-					);
+					)
 				})}
 			</div>
 			{memoEditor}
@@ -65,5 +66,5 @@ export default function EditorDash(props: ContextEditorProps) {
 				</div>
 			)}
 		</div>
-	);
+	)
 }

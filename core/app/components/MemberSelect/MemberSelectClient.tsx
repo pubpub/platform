@@ -1,23 +1,24 @@
-"use client";
+"use client"
 
-import { useCallback, useMemo, useState } from "react";
-import { useDebouncedCallback } from "use-debounce";
+import type { Communities, CommunityMembershipsId } from "db/public"
+import type { Option } from "ui/autocomplete"
+import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types"
 
-import type { Communities, CommunityMembershipsId } from "db/public";
-import type { Option } from "ui/autocomplete";
-import { MemberRole } from "db/public";
-import { AutoComplete } from "ui/autocomplete";
-import { UserCheck } from "ui/icon";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip";
-import { expect } from "utils";
+import { useCallback, useMemo, useState } from "react"
+import { useDebouncedCallback } from "use-debounce"
 
-import type { MemberSelectUser, MemberSelectUserWithMembership } from "./types";
-import { addMember } from "~/app/c/[communitySlug]/members/actions";
-import { didSucceed, useServerAction } from "~/lib/serverActions";
-import { useFormElementToggleContext } from "../forms/FormElementToggleContext";
-import { UserAvatar } from "../UserAvatar";
-import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton";
-import { isMemberSelectUserWithMembership } from "./types";
+import { MemberRole } from "db/public"
+import { AutoComplete } from "ui/autocomplete"
+import { UserCheck } from "ui/icon"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "ui/tooltip"
+import { expect } from "utils"
+
+import { addMember } from "~/app/c/[communitySlug]/members/actions"
+import { didSucceed, useServerAction } from "~/lib/serverActions"
+import { useFormElementToggleContext } from "../forms/FormElementToggleContext"
+import { UserAvatar } from "../UserAvatar"
+import { MemberSelectAddUserButton } from "./MemberSelectAddUserButton"
+import { isMemberSelectUserWithMembership } from "./types"
 
 const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 	value: user.id,
@@ -42,17 +43,17 @@ const makeOptionFromUser = (user: MemberSelectUser): Option => ({
 			</div>
 		</TooltipProvider>
 	),
-});
+})
 
 type Props = {
-	community: Communities;
-	name: string;
-	member?: MemberSelectUserWithMembership;
-	users: MemberSelectUser[];
-	onChangeSearch: (search: string) => void;
-	onChangeValue: (value: CommunityMembershipsId | undefined) => void;
-	onUserAdded: () => void;
-};
+	community: Communities
+	name: string
+	member?: MemberSelectUserWithMembership
+	users: MemberSelectUser[]
+	onChangeSearch: (search: string) => void
+	onChangeValue: (value: CommunityMembershipsId | undefined) => void
+	onUserAdded: () => void
+}
 
 export function MemberSelectClient({
 	community,
@@ -63,36 +64,36 @@ export function MemberSelectClient({
 	onChangeValue,
 	onUserAdded,
 }: Props) {
-	const options = useMemo(() => users.map(makeOptionFromUser), [users]);
-	const runAddMember = useServerAction(addMember);
-	const formElementToggle = useFormElementToggleContext();
-	const isEnabled = formElementToggle.isEnabled(name);
+	const options = useMemo(() => users.map(makeOptionFromUser), [users])
+	const runAddMember = useServerAction(addMember)
+	const formElementToggle = useFormElementToggleContext()
+	const isEnabled = formElementToggle.isEnabled(name)
 
 	// Force a re-mount of the <UserSelectAddUserButton> element when the
 	// autocomplete dropdown is closed.
-	const [addUserButtonKey, setAddUserButtonKey] = useState(0);
+	const [addUserButtonKey, setAddUserButtonKey] = useState(0)
 	const resetAddUserButton = useCallback(() => {
-		setAddUserButtonKey((x) => x + 1);
-	}, []);
+		setAddUserButtonKey((x) => x + 1)
+	}, [])
 
-	const [selectedUser, setSelectedUser] = useState(member);
+	const [selectedUser, setSelectedUser] = useState(member)
 
-	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "");
+	const [inputValue, setInputValue] = useState(selectedUser?.email ?? "")
 
 	const updateSearch = useDebouncedCallback((value: string) => {
-		onChangeSearch(value);
-	}, 400);
+		onChangeSearch(value)
+	}, 400)
 
 	const onInputValueChange = (value: string) => {
-		setInputValue(value);
-		updateSearch(value);
-	};
+		setInputValue(value)
+		updateSearch(value)
+	}
 
 	const unsetUser = () => {
-		setSelectedUser(undefined);
-		onChangeValue(undefined);
-	};
-	const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser);
+		setSelectedUser(undefined)
+		onChangeValue(undefined)
+	}
+	const selectedUserOption = selectedUser && makeOptionFromUser(selectedUser)
 	return (
 		<AutoComplete
 			name={name}
@@ -109,28 +110,28 @@ export function MemberSelectClient({
 			}
 			onInputValueChange={(val) => {
 				if (val === "") {
-					unsetUser();
+					unsetUser()
 				}
-				onInputValueChange(val);
+				onInputValueChange(val)
 			}}
 			onValueChange={async (option) => {
-				const user = users.find((user) => user.id === option.value);
+				const user = users.find((user) => user.id === option.value)
 				if (!user) {
-					return;
+					return
 				}
 				if (isMemberSelectUserWithMembership(user)) {
-					setSelectedUser(user);
-					onChangeValue(user.member.id);
+					setSelectedUser(user)
+					onChangeValue(user.member.id)
 				} else {
 					const result = await runAddMember({
 						userId: user.id,
 						role: MemberRole.contributor,
 						forms: [],
-					});
+					})
 					if (didSucceed(result)) {
-						const member = expect(result.member);
-						setSelectedUser({ ...user, member });
-						onChangeValue(member.id);
+						const member = expect(result.member)
+						setSelectedUser({ ...user, member })
+						onChangeValue(member.id)
 					}
 				}
 			}}
@@ -138,5 +139,5 @@ export function MemberSelectClient({
 			icon={selectedUser ? <UserAvatar user={selectedUser} /> : null}
 			onClear={selectedUser ? unsetUser : undefined}
 		/>
-	);
+	)
 }

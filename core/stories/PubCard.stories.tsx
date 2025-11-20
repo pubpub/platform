@@ -1,26 +1,26 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import type { Meta, StoryObj } from "@storybook/nextjs-vite"
+import type { ProcessedPub } from "contracts"
+import type { ActionInstancesId, CommunitiesId } from "db/public"
+import type { CommunityStage } from "~/lib/server/stages"
 
-import type { ProcessedPub } from "contracts";
-import type { ActionInstancesId, CommunitiesId } from "db/public";
-import { Action } from "db/public";
+import { Action } from "db/public"
 
-import type { CommunityStage } from "~/lib/server/stages";
-import { CommunityProvider } from "~/app/components/providers/CommunityProvider";
-import { PubCard } from "~/app/components/pubs/PubCard/PubCard";
-import pubJson from "./assets/pub.json";
-import stagesJson from "./assets/stages.json";
+import { CommunityProvider } from "~/app/components/providers/CommunityProvider"
+import { PubCard } from "~/app/components/pubs/PubCard/PubCard"
+import pubJson from "./assets/pub.json"
+import stagesJson from "./assets/stages.json"
 
 const pub = {
 	...pubJson,
 	createdAt: new Date(pubJson.createdAt),
 	updatedAt: new Date(pubJson.updatedAt),
 } as unknown as ProcessedPub<{
-	withPubType: true;
-	withRelatedPubs: false;
-	withStage: true;
-}>;
+	withPubType: true
+	withRelatedPubs: false
+	withStage: true
+}>
 
-const stages = stagesJson as unknown as CommunityStage[];
+const stages = stagesJson as unknown as CommunityStage[]
 
 const meta: Meta<typeof PubCard> = {
 	title: "PubCard",
@@ -64,19 +64,19 @@ const meta: Meta<typeof PubCard> = {
 			>
 				<PubCard {...args} />
 			</CommunityProvider>
-		);
+		)
 	},
-};
-export default meta;
+}
+export default meta
 
-type Story = StoryObj<typeof PubCard>;
+type Story = StoryObj<typeof PubCard>
 
 export const Base: Story = {
 	args: {},
-};
+}
 
 export const WithSelection: Story = {
 	args: {
 		withSelection: true,
 	},
-};
+}

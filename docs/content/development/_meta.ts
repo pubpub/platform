@@ -1,6 +1,6 @@
 // @ts-check
 
-import type { MetaRecord } from "nextra";
+import type { MetaRecord } from "nextra"
 
 const meta: MetaRecord = {
 	"getting-started": {},
@@ -10,6 +10,6 @@ const meta: MetaRecord = {
 	testing: {
 		title: "🧪 Testing",
 	},
-};
+}
 
-export default meta;
+export default meta

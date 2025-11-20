@@ -1,4 +1,4 @@
-import type { ActionInstancesId } from "db/public";
+import type { ActionInstancesId } from "db/public"
 import type {
 	DBTriggerEventPayload,
 	EmitEventPayload,
@@ -7,88 +7,89 @@ import type {
 	PubInStagesRow,
 	PubLeftStageEventPayload,
 	ScheduledEventPayload,
-} from "db/types";
-import type { logger } from "logger";
-import { Event } from "db/public";
+} from "db/types"
+import type { logger } from "logger"
+import type { InternalClient } from "../clients"
 
-import type { InternalClient } from "../clients";
-import { defineJob } from "../defineJob";
+import { Event } from "db/public"
 
-type Logger = typeof logger;
+import { defineJob } from "../defineJob"
+
+type Logger = typeof logger
 
 // TODO: Use kanel generated types for these
 
 interface OperationConfig<P extends EmitEventPayload, N extends NormalizedEventPayload> {
-	type: string;
-	check: (payload: any) => payload is P;
-	normalize: (payload: P) => N;
-	effects: ((client: InternalClient, payload: N, logger: Logger) => Promise<any>)[];
+	type: string
+	check: (payload: any) => payload is P
+	normalize: (payload: P) => N
+	effects: ((client: InternalClient, payload: N, logger: Logger) => Promise<any>)[]
 }
 
 const defineConfig = <P extends EmitEventPayload, N extends NormalizedEventPayload>(
 	config: OperationConfig<P, N>
-) => config;
+) => config
 
 const scheduleTask = async (
 	client: InternalClient,
 	payload: PubEnteredStageEventPayload,
 	logger: Logger
 ) => {
-	const { stageId, pubId, ...context } = payload;
+	const { stageId, pubId, ...context } = payload
 	logger.info({
 		msg: `Attempting to schedule actions for stage ${stageId} and pub ${pubId}`,
 		stageId,
 		pubId,
 		...context,
-	});
+	})
 
 	try {
 		const { status, body } = await client.scheduleAction({
 			params: { stageId, communitySlug: payload.community.slug },
 			body: { pubId },
-		});
+		})
 		if (status > 400) {
 			logger.error({
 				msg: "API error scheduling action",
 				error: body,
 				...context,
-			});
-			return;
+			})
+			return
 		}
 
 		if (status === 200 && body?.length > 0) {
-			logger.info({ msg: "Action scheduled", results: body, ...context });
+			logger.info({ msg: "Action scheduled", results: body, ...context })
 		}
 	} catch (e) {
-		logger.error({ msg: "Error scheduling action", error: e, ...context });
+		logger.error({ msg: "Error scheduling action", error: e, ...context })
 	}
-};
+}
 
 const triggerActions = async (
 	client: InternalClient,
 	payload: PubEnteredStageEventPayload | PubLeftStageEventPayload,
 	logger: Logger
 ) => {
-	const { stageId, event, pubId } = payload;
+	const { stageId, event, pubId } = payload
 
 	try {
 		const { status, body } = await client.triggerActions({
 			params: { stageId, communitySlug: payload.community.slug },
 			body: { event, pubId },
-		});
+		})
 
 		if (status > 300) {
-			logger.error({ msg: `API error triggering actions`, body });
-			return;
+			logger.error({ msg: `API error triggering actions`, body })
+			return
 		}
 
-		logger.info({ msg: "Action run results", results: body });
-	} catch (e) {
+		logger.info({ msg: "Action run results", results: body })
+	} catch (_e) {
 		logger.error({
 			msg: `Error trigger actions for "${event}" event for Stage ${stageId} and Pub ${pubId}`,
-		});
+		})
 	}
-};
+}
 
 const triggerAction = async (
 	client: InternalClient,
@@ -108,10 +109,9 @@ const triggerAction = async (
 		config,
 		sourceActionRunId,
 		...jsonOrPubId
-	} = payload;
+	} = payload
 
 	try {
-		console.log("TRIGGERING ACTION", jsonOrPubId);
 		const { status, body } = await client.triggerAction({
 			params: {
 				communitySlug: community.slug,
@@ -124,7 +124,7 @@ const triggerAction = async (
 				config,
 				...jsonOrPubId,
 			},
-		});
+		})
 
 		if (status >= 400) {
 			logger.error({
@@ -135,8 +135,8 @@ const triggerAction = async (
 				scheduledActionRunId,
 				stack,
 				sourceActionRunId,
-			});
-			return;
+			})
+			return
 		}
 
 		if (status === 200) {
@@ -148,17 +148,17 @@ const triggerAction = async (
 				scheduledActionRunId,
 				stack,
 				sourceActionRunId,
-			});
+			})
 		}
 	} catch (e) {
 		logger.error({
 			msg: `Error trigger action ${actionInstanceId} for "${event}" event for Stage ${stageId} and Pub ${jsonOrPubId.pubId ?? "json"}`,
-		});
+		})
 		if (e instanceof Error) {
-			logger.error({ message: e.message });
+			logger.error({ message: e.message })
 		}
 	}
-};
+}
 
 const eventConfigs = [
 	defineConfig({
@@ -189,7 +189,7 @@ const eventConfigs = [
 		}),
 		effects: [triggerActions],
 	}),
-];
+]
 
 const processEventPayload = (
 	client: InternalClient,
@@ -198,16 +198,16 @@ const processEventPayload = (
 ) => {
 	for (const config of eventConfigs) {
 		if (!config.check(payload)) {
-			continue;
+			continue
 		}
 		const normalized = config.normalize(
 			// this is guaranteed to be a valid payload
 			// typescript narrowing just isn't smart enough
 			payload as any
-		);
+		)
 
 		if (!normalized) {
-			continue;
+			continue
 		}
 
 		return config.effects.map((action) =>
@@ -218,34 +218,34 @@ const processEventPayload = (
 				normalized as any,
 				eventLogger
 			)
-		);
+		)
 	}
-	return [];
-};
+	return []
+}
 
 export const emitEvent = defineJob(
 	async (client: InternalClient, payload: EmitEventPayload, eventLogger, job) => {
-		eventLogger.info({ msg: "Starting emitEvent", payload });
+		eventLogger.info({ msg: "Starting emitEvent", payload })
 
 		if (!payload?.community?.slug) {
 			eventLogger.error({
 				msg: "No community slug found in payload, probably an old scheduled job",
 				job,
-			});
-			return;
+			})
+			return
 		}
 
 		const completedEffects = await Promise.allSettled(
 			processEventPayload(client, payload, eventLogger)
-		);
+		)
 
 		completedEffects.forEach((effect) => {
 			if (effect.status === "rejected") {
 				eventLogger.error({
 					msg: "Unexpected error running emitEvent action",
 					error: effect.reason,
-				});
+				})
 			}
-		});
+		})
 	}
-);
+)

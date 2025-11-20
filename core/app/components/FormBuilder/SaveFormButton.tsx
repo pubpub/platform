@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { Button } from "ui/button";
-import { cn } from "utils";
+import { Button } from "ui/button"
+import { cn } from "utils"
 
-import { useIsChanged } from "./useIsChanged";
+import { useIsChanged } from "./useIsChanged"
 
 type Props = {
-	form: string;
-	className?: string;
-	disabled?: boolean;
-};
+	form: string
+	className?: string
+	disabled?: boolean
+}
 
 export const SaveFormButton = ({ form, className, disabled }: Props) => {
-	const [isChanged] = useIsChanged();
+	const [isChanged] = useIsChanged()
 	return (
 		<Button
 			variant="default"
@@ -25,5 +25,5 @@ export const SaveFormButton = ({ form, className, disabled }: Props) => {
 		>
 			Save
 		</Button>
-	);
-};
+	)
+}

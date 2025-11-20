@@ -1,4 +1,4 @@
-import { hash, verify } from "@node-rs/argon2";
+import { hash, verify } from "@node-rs/argon2"
 
 /**
  * Validates a password against a user's password hash
@@ -10,9 +10,9 @@ export const validatePassword = async (password: string, passwordHash: string) =
 		timeCost: 2,
 		outputLen: 32,
 		parallelism: 1,
-	});
-	return validPassword;
-};
+	})
+	return validPassword
+}
 
 export const createPasswordHash = async (password: string) => {
 	const passwordHash = await hash(password, {
@@ -20,7 +20,7 @@ export const createPasswordHash = async (password: string) => {
 		timeCost: 2,
 		outputLen: 32,
 		parallelism: 1,
-	});
+	})
 
-	return passwordHash;
-};
+	return passwordHash
+}

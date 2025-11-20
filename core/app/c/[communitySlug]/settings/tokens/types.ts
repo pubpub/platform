@@ -1,9 +1,9 @@
-import type { UseFormReturn } from "react-hook-form";
+import type { UseFormReturn } from "react-hook-form"
 
-import { z } from "zod";
+import { z } from "zod"
 
-import { apiAccessTokensInitializerSchema } from "db/public";
-import { permissionsSchema } from "db/types";
+import { apiAccessTokensInitializerSchema } from "db/public"
+import { permissionsSchema } from "db/types"
 
 export const createTokenFormSchema = apiAccessTokensInitializerSchema
 	.omit({
@@ -29,16 +29,16 @@ export const createTokenFormSchema = apiAccessTokensInitializerSchema
 				.flatMap((scope) => Object.values(scope))
 				.filter((value) => value).length > 0
 		) {
-			return true;
+			return true
 		}
 		ctx.addIssue({
 			path: ["permissions"],
 			code: z.ZodIssueCode.custom,
 
 			message: "At least one permission must be selected",
-		});
-		return false;
-	});
+		})
+		return false
+	})
 
-export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>;
-export type CreateTokenForm = UseFormReturn<CreateTokenFormSchema>;
+export type CreateTokenFormSchema = z.infer<typeof createTokenFormSchema>
+export type CreateTokenForm = UseFormReturn<CreateTokenFormSchema>

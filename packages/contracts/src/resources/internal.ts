@@ -1,11 +1,11 @@
-import { initContract } from "@ts-rest/core";
-import { z } from "zod";
+import { initContract } from "@ts-rest/core"
+import { z } from "zod"
 
-import { actionInstancesIdSchema, actionRunsIdSchema, eventSchema, pubsIdSchema } from "db/public";
+import { actionInstancesIdSchema, actionRunsIdSchema, eventSchema, pubsIdSchema } from "db/public"
 
-import { jsonSchema } from "./types";
+import { jsonSchema } from "./types"
 
-const contract = initContract();
+const contract = initContract()
 
 export const internalApi = contract.router(
 	{
@@ -95,4 +95,4 @@ export const internalApi = contract.router(
 			authorization: z.string(),
 		}),
 	}
-);
+)

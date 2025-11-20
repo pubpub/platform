@@ -1,10 +1,11 @@
-"use client";
+"use client"
 
-import { ArrowRight, Check, LogIn, UserPlus, X } from "lucide-react";
-import { useForm } from "react-hook-form";
+import type { Invite } from "db/types"
 
-import type { Invite } from "db/types";
-import { MemberRole } from "db/public";
+import { ArrowRight, Check, LogIn, UserPlus, X } from "lucide-react"
+import { useForm } from "react-hook-form"
+
+import { MemberRole } from "db/public"
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -15,31 +16,31 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "ui/alert-dialog";
-import { Button } from "ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card";
-import { Form } from "ui/form";
-import { FormSubmitButton } from "ui/submit-button";
+} from "ui/alert-dialog"
+import { Button } from "ui/button"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "ui/card"
+import { Form } from "ui/form"
+import { FormSubmitButton } from "ui/submit-button"
 
-import { useServerAction } from "~/lib/serverActions";
-import { acceptInviteAction, rejectInviteAction } from "./actions";
+import { useServerAction } from "~/lib/serverActions"
+import { acceptInviteAction, rejectInviteAction } from "./actions"
 
 const roleToVerb = {
 	[MemberRole.admin]: "admin",
 	[MemberRole.editor]: "edit",
 	[MemberRole.contributor]: "contribute to",
-} as const satisfies Record<MemberRole, string>;
+} as const satisfies Record<MemberRole, string>
 
 const communityRoleToVerb = {
 	[MemberRole.admin]: "become an admin at",
 	[MemberRole.editor]: "become an editor at",
 	[MemberRole.contributor]: "join",
-} as const satisfies Record<MemberRole, string>;
+} as const satisfies Record<MemberRole, string>
 
 const inviteMessage = (invite: Invite) => {
-	let extraText = "";
+	let extraText = ""
 	if (invite.stageId) {
-		extraText = ` and ${roleToVerb[invite.stageRole]} the stage ${invite.stage.name}`;
+		extraText = ` and ${roleToVerb[invite.stageRole]} the stage ${invite.stage.name}`
 	}
 
 	if (invite.pubId) {
@@ -48,16 +49,16 @@ const inviteMessage = (invite: Invite) => {
 			invite.pub.title
 				? `the Pub "${invite.pub.title}"`
 				: `to a(n) ${invite.pub.pubType.name}`
-		}`;
+		}`
 	}
 
 	return (
 		invite.message ||
 		`You've been invited to ${communityRoleToVerb[invite.communityRole]} ${invite.community.name}${extraText}.`
-	);
-};
+	)
+}
 
-type AcceptRejectInviteMode = "accept" | "needsSignup" | "needsLogin" | "complete";
+type AcceptRejectInviteMode = "accept" | "needsSignup" | "needsLogin" | "complete"
 
 const modeStyles = {
 	accept: {
@@ -104,17 +105,17 @@ const modeStyles = {
 } satisfies Record<
 	AcceptRejectInviteMode,
 	{
-		bodyMessage: string;
+		bodyMessage: string
 		button: {
-			text: string;
-			loadingText: string;
-			successText: string;
-			errorText: string;
-			icon: React.ReactNode;
-		};
-		hideRejectButton?: boolean;
+			text: string
+			loadingText: string
+			successText: string
+			errorText: string
+			icon: React.ReactNode
+		}
+		hideRejectButton?: boolean
 	}
->;
+>
 
 export function AcceptRejectInvite({
 	inviteToken,
@@ -122,20 +123,20 @@ export function AcceptRejectInvite({
 	invite,
 	mode,
 }: {
-	inviteToken: string;
-	invite: Invite;
-	redirectTo: string;
-	mode: AcceptRejectInviteMode;
+	inviteToken: string
+	invite: Invite
+	redirectTo: string
+	mode: AcceptRejectInviteMode
 }) {
 	// TODO: we should really have useServerAction return some state that keeps track of the status
-	const acceptInvite = useServerAction(acceptInviteAction);
-	const rejectInvite = useServerAction(rejectInviteAction);
+	const acceptInvite = useServerAction(acceptInviteAction)
+	const rejectInvite = useServerAction(rejectInviteAction)
 
-	const acceptForm = useForm();
-	const rejectForm = useForm();
+	const acceptForm = useForm()
+	const rejectForm = useForm()
 
 	const hideRejectButton =
-		"hideRejectButton" in modeStyles[mode] && modeStyles[mode].hideRejectButton;
+		"hideRejectButton" in modeStyles[mode] && modeStyles[mode].hideRejectButton
 
 	return (
 		<div className="flex min-h-screen items-center justify-center bg-background">
@@ -163,7 +164,7 @@ export function AcceptRejectInvite({
 								acceptInvite({
 									inviteToken: inviteToken,
 									redirectTo: redirectTo,
-								});
+								})
 							})}
 							className="flex-grow"
 						>
@@ -206,11 +207,11 @@ export function AcceptRejectInvite({
 
 									<Form {...rejectForm}>
 										<form
-											onSubmit={rejectForm.handleSubmit(async (data) => {
+											onSubmit={rejectForm.handleSubmit(async (_data) => {
 												rejectInvite({
 													inviteToken: inviteToken,
 													redirectTo: redirectTo,
-												});
+												})
 											})}
 										>
 											<AlertDialogAction
@@ -242,5 +243,5 @@ export function AcceptRejectInvite({
 				</CardFooter>
 			</Card>
 		</div>
-	);
+	)
 }
