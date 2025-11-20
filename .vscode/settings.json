@@ -10,8 +10,7 @@
 		"SKIP_VALIDATION": "true",
 		"DATABASE_URL": "postgresql://postgres:postgres@localhost:54322/postgres"
 	},
-	"prettier.documentSelectors": ["**/*.astro"],
-	"eslint.enable": false,
+
 	"prettier.enable": false,
 	"[typescript]": {
 		"editor.defaultFormatter": "biomejs.biome",

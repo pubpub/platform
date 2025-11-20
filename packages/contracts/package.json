@@ -12,8 +12,6 @@
 	},
 	"files": ["dist"],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit"
 	},
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
@@ -28,7 +26,6 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"@ts-rest/core": "catalog:",
 		"tsconfig": "workspace:*",
 		"typescript": "catalog:",

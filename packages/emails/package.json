@@ -10,15 +10,9 @@
 	"scripts": {
 		"dev": "cp .env.development ./node_modules/react-email/ && pnpm email dev -d src -p 3003",
 		"type-check": "tsc --noEmit",
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
-		"lint": "eslint **/*.tsx",
-		"lint:fix": "eslint --fix **/*.tsx",
 		"export": "email export"
 	},
 	"devDependencies": {
-		"@pubpub/eslint-config": "workspace:*",
-		"@pubpub/prettier-config": "workspace:*",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:react19",
 		"dotenv-cli": "^7.4.4",
@@ -29,7 +23,7 @@
 		"@react-email/components": "0.0.31",
 		"browserslist": "^4.25.3",
 		"db": "workspace:*",
-		"eslint": "catalog:",
+
 		"react": "catalog:react19",
 		"react-email": "3.0.4",
 		"tsconfig": "workspace:*",
@@ -44,8 +38,5 @@
 			"importsConditions": true
 		}
 	},
-	"files": ["dist"],
-	"eslintConfig": {
-		"extends": ["@pubpub/eslint-config/base", "@pubpub/eslint-config/react"]
-	}
+	"files": ["dist"]
 }

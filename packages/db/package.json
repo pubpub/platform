@@ -13,11 +13,9 @@
 	},
 	"files": ["dist", "Database", "public", "table-names", "types"],
 	"scripts": {
-		"format": "prettier --check . --ignore-path ../../.gitignore",
-		"format:fix": "prettier -w . --ignore-path ../../.gitignore",
 		"type-check": "tsc --noEmit",
 		"generate-db-table-names": "dotenv -e .env.local -e .env.development tsx ./scripts/generateDbTableNames.ts ./src/table-names.ts public | pino-pretty",
-		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && prettier -w src/"
+		"make-kysely-types": "dotenv -e .env.local -e .env.development kanel --config ./src/kanel/.kanelrc.js && pnpm generate-db-table-names && biome check --write src/"
 	},
 	"author": "Knowledge Futures, Inc <hello@knowledgefutures.org>",
 	"license": "GPL-2.0+",
@@ -32,16 +30,13 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@pubpub/prettier-config": "workspace:*",
 		"@ts-rest/core": "catalog:",
 		"@types/pg": "^8.15.5",
 		"dotenv-cli": "^7.4.4",
-		"eslint": "catalog:",
 		"kanel": "^3.14.4",
 		"kanel-kysely": "^0.4.0",
 		"kanel-zod": "^1.5.2",
 		"pg": "^8.16.3",
-		"prettier": "catalog:",
 		"tsconfig": "workspace:*",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
