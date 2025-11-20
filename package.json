@@ -12,6 +12,7 @@
 		"p:build": "turbo run turbo:p:build",
 		"turbo:p:build": "preconstruct build",
 		"lint": "biome check --max-diagnostics=10000 --diagnostic-level=error",
+		"lint:ci": "biome ci --max-diagnostics=10000 --diagnostic-level=error",
 		"lint:fix": "biome check  --write --max-diagnostics=10000 --html-formatter-enabled=false --diagnostic-level=error",
 		"lint:ws": "pnpm dlx sherif@latest",
 		"test": "turbo test",
